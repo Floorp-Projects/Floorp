@@ -170,7 +170,6 @@ class XPCShellTestThread(Thread):
         self.debuggerInfo = kwargs.get('debuggerInfo')
         self.jsDebuggerInfo = kwargs.get('jsDebuggerInfo')
         self.pluginsPath = kwargs.get('pluginsPath')
-        self.httpdManifest = kwargs.get('httpdManifest')
         self.httpdJSPath = kwargs.get('httpdJSPath')
         self.headJSPath = kwargs.get('headJSPath')
         self.testharnessdir = kwargs.get('testharnessdir')
@@ -541,7 +540,6 @@ class XPCShellTestThread(Thread):
             self.xpcshell,
             '-g', self.xrePath,
             '-a', self.appPath,
-            '-r', self.httpdManifest,
             '-m',
             '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath,
             '-e', 'const _MOZINFO_JS_PATH = "%s";' % self.mozInfoJSPath,
@@ -1041,9 +1039,6 @@ class XPCShellTests(object):
         # httpd.js belongs in xrePath/components, which is Contents/Resources on mac
         self.httpdJSPath = os.path.join(self.xrePath, 'components', 'httpd.js')
         self.httpdJSPath = self.httpdJSPath.replace('\\', '/')
-
-        self.httpdManifest = os.path.join(self.xrePath, 'components', 'httpd.manifest')
-        self.httpdManifest = self.httpdManifest.replace('\\', '/')
 
         if self.mozInfo is None:
             self.mozInfo = os.path.join(self.testharnessdir, "mozinfo.json")
@@ -1591,7 +1586,6 @@ class XPCShellTests(object):
             'debuggerInfo': self.debuggerInfo,
             'jsDebuggerInfo': self.jsDebuggerInfo,
             'pluginsPath': self.pluginsPath,
-            'httpdManifest': self.httpdManifest,
             'httpdJSPath': self.httpdJSPath,
             'headJSPath': self.headJSPath,
             'tempDir': self.tempDir,
