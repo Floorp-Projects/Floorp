@@ -891,8 +891,7 @@ const DEFAULT_WELCOME_CONTENT = {
         string_id: "onboarding-multistage-import-subtitle"
       },
       tiles: {
-        type: "topsites",
-        info: true
+        type: "topsites"
       },
       primary_button: {
         label: {
