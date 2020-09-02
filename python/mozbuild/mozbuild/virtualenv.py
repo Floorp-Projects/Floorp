@@ -65,7 +65,33 @@ def ensure_text(s, encoding='utf-8'):
         raise TypeError("not expecting type '%s'" % type(s))
 
 
-class VirtualenvManager(object):
+class VirtualenvHelper(object):
+    """Contains basic logic for getting information about virtualenvs."""
+
+    def __init__(self, virtualenv_path):
+        self.virtualenv_root = virtualenv_path
+
+    @property
+    def bin_path(self):
+        # virtualenv.py provides a similar API via path_locations(). However,
+        # we have a bit of a chicken-and-egg problem and can't reliably
+        # import virtualenv. The functionality is trivial, so just implement
+        # it here.
+        if IS_CYGWIN or IS_NATIVE_WIN:
+            return os.path.join(self.virtualenv_root, 'Scripts')
+
+        return os.path.join(self.virtualenv_root, 'bin')
+
+    @property
+    def python_path(self):
+        binary = 'python'
+        if sys.platform in ('win32', 'cygwin'):
+            binary += '.exe'
+
+        return os.path.join(self.bin_path, binary)
+
+
+class VirtualenvManager(VirtualenvHelper):
     """Contains logic for managing virtualenvs for building the tree."""
 
     def __init__(
@@ -76,10 +102,11 @@ class VirtualenvManager(object):
         Each manager is associated with a source directory, a path where you
         want the virtualenv to be created, and a handle to write output to.
         """
+        super(VirtualenvManager, self).__init__(virtualenv_path)
+
         assert os.path.isabs(
             manifest_path), "manifest_path must be an absolute path: %s" % (manifest_path)
         self.topsrcdir = topsrcdir
-        self.virtualenv_root = virtualenv_path
 
         # Record the Python executable that was used to create the Virtualenv
         # so we can check this against sys.executable when verifying the
@@ -100,25 +127,6 @@ class VirtualenvManager(object):
         """Path to virtualenv's own populator script."""
         return os.path.join(self.topsrcdir, 'third_party', 'python',
                             'virtualenv', 'virtualenv.py')
-
-    @property
-    def bin_path(self):
-        # virtualenv.py provides a similar API via path_locations(). However,
-        # we have a bit of a chicken-and-egg problem and can't reliably
-        # import virtualenv. The functionality is trivial, so just implement
-        # it here.
-        if IS_CYGWIN or IS_NATIVE_WIN:
-            return os.path.join(self.virtualenv_root, 'Scripts')
-
-        return os.path.join(self.virtualenv_root, 'bin')
-
-    @property
-    def python_path(self):
-        binary = 'python'
-        if sys.platform in ('win32', 'cygwin'):
-            binary += '.exe'
-
-        return os.path.join(self.bin_path, binary)
 
     @property
     def version_info(self):
