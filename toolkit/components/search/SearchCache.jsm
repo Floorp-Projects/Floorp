@@ -173,7 +173,6 @@ class SearchCache {
     let cache = {};
     let locale = Services.locale.requestedLocale;
     let buildID = Services.appinfo.platformBuildID;
-    let appVersion = Services.appinfo.version;
 
     // Allows us to force a cache refresh should the cache format change.
     cache.version = SearchUtils.CACHE_VERSION;
@@ -183,8 +182,6 @@ class SearchCache {
     // Extension-shipped plugins are the only exception to this, but their
     // directories are blown away during updates, so we'll detect their changes.
     cache.buildID = buildID;
-    // Store the appVersion as well so we can do extra things during major updates.
-    cache.appVersion = appVersion;
     cache.locale = locale;
     cache.builtInEngineList = this._searchService._searchOrder;
     cache.engines = [...this._searchService._engines.values()];
@@ -214,19 +211,6 @@ class SearchCache {
   }
 
   /**
-   * Sets an attribute.
-   *
-   * @param {string} name
-   *   The name of the attribute to set.
-   * @param {*} val
-   *   The value to set.
-   */
-  setAttribute(name, val) {
-    this._metaData[name] = val;
-    this._delayedWrite();
-  }
-
-  /**
    * Sets a verified attribute. This will save an additional hash
    * value, that can be verified when reading back.
    *
@@ -244,7 +228,7 @@ class SearchCache {
   }
 
   /**
-   * Gets an attribute.
+   * Gets an attribute without verification.
    *
    * @param {string} name
    *   The name of the attribute to get.
@@ -272,7 +256,7 @@ class SearchCache {
         SearchUtils.getVerificationHash(val)
     ) {
       logConsole.warn("getVerifiedGlobalAttr, invalid hash for", name);
-      return "";
+      return undefined;
     }
     return val;
   }
