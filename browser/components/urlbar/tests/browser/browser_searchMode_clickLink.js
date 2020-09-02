@@ -80,6 +80,7 @@ async function doClickLinkTest(searchString, href) {
     await UrlbarTestUtils.promisePopupClose(window);
     await UrlbarTestUtils.assertSearchMode(window, {
       source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+      entry: "oneoff",
     });
 
     // Add a link to the page and click it.

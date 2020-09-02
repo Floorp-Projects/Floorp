@@ -58,6 +58,15 @@ var UrlbarTestUtils = {
   },
 
   /**
+   * If tests initialize UrlbarTestUtils, they may need to call this function in
+   * their cleanup callback, or else their scope will affect subsequent tests.
+   * This is usually only required for tests outside browser/components/urlbar.
+   */
+  uninit() {
+    this._testScope = null;
+  },
+
+  /**
    * Waits to a search to be complete.
    * @param {object} win The window containing the urlbar
    * @returns {Promise} Resolved when done.
@@ -524,6 +533,10 @@ var UrlbarTestUtils = {
       if (UrlbarUtils.WEB_ENGINE_NAMES.has(searchMode.engineName)) {
         searchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
       }
+    }
+
+    if (!searchMode.entry) {
+      searchMode.entry = "oneoff";
     }
 
     let oneOff = buttons.find(o =>

@@ -285,6 +285,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     this.handleSearchCommand(event, {
       engineName: button.engine?.name,
       source: button.source,
+      entry: "oneoff",
     });
   }
 
