@@ -95,7 +95,7 @@ class TrySelect(MachCommandBase):
         self._presets = MergedHandler(*preset_paths)
         return self._presets
 
-    def handle_presets(self, preset_action, save, preset, **kwargs):
+    def handle_presets(self, preset_action=None, save=None, preset=None, **kwargs):
         """Handle preset related arguments.
 
         This logic lives here so that the underlying selectors don't need
@@ -112,6 +112,9 @@ class TrySelect(MachCommandBase):
         if preset_action == 'edit':
             user_presets.edit()
             sys.exit()
+
+        if 'preset' not in self.parser.common_groups:
+            return kwargs
 
         default = self.parser.get_default
         if save:
@@ -175,8 +178,7 @@ class TrySelect(MachCommandBase):
         return kwargs
 
     def run(self, **kwargs):
-        if 'preset' in self.parser.common_groups:
-            kwargs = self.handle_presets(**kwargs)
+        kwargs = self.handle_presets(**kwargs)
 
         if self.parser.task_configs:
             kwargs = self.handle_try_config(**kwargs)
