@@ -478,14 +478,16 @@ set_config('MOZ_RUST_SIMD', rust_simd)
 set_define('MOZ_RUST_SIMD', rust_simd)
 
 
-# Experimental support for wasm code generation with Cranelift
-#
-# Note, you may have to disable features not supported by Cranelift
-# (multi-value, threads) to make Cranelift actually available
+# Support for wasm code generation with Cranelift
 # ==============================================================
 
+@depends(milestone.is_nightly, target, simulator)
+def cranelift_default(is_nightly, target, simulator):
+    if is_nightly or target.cpu == 'aarch64' or simulator.arm64:
+        return True
+
 js_option('--enable-cranelift',
-          default=milestone.is_nightly,
+          default=cranelift_default,
           help='{Enable|Disable} Cranelift code generator for wasm')
 
 set_config('ENABLE_WASM_CRANELIFT', depends_if('--enable-cranelift')(lambda x: True))

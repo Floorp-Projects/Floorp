@@ -10199,22 +10199,30 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   // Default values for wasm.
   enableWasm = true;
   enableWasmBaseline = true;
+#ifdef JS_CODEGEN_ARM64
+  enableWasmCranelift = true;
+#else
   enableWasmIon = true;
+#endif
   if (const char* str = op.getStringOption("wasm-compiler")) {
     if (strcmp(str, "none") == 0) {
       enableWasm = false;
     } else if (strcmp(str, "baseline") == 0) {
       // Baseline is enabled by default.
       enableWasmIon = false;
+      enableWasmCranelift = false;
     } else if (strcmp(str, "ion") == 0) {
-      // Ion is enabled by default.
       enableWasmBaseline = false;
+      enableWasmIon = true;
+      enableWasmCranelift = false;
     } else if (strcmp(str, "cranelift") == 0) {
       enableWasmBaseline = false;
       enableWasmIon = false;
       enableWasmCranelift = true;
     } else if (strcmp(str, "baseline+ion") == 0) {
-      // Default.
+      // Baseline is enabled by default.
+      enableWasmIon = true;
+      enableWasmCranelift = false;
     } else if (strcmp(str, "baseline+cranelift") == 0) {
       // Baseline is enabled by default.
       enableWasmIon = false;
