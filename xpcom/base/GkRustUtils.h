@@ -12,6 +12,8 @@
 class GkRustUtils {
  public:
   static void GenerateUUID(nsACString& aResult);
+  static bool ParseSemVer(const nsACString& aVersion, uint64_t& aOutMajor,
+                          uint64_t& aOutMinor, uint64_t& aOutPatch);
 };
 
 #endif
