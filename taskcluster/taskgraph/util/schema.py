@@ -235,6 +235,8 @@ OptimizationSchema = voluptuous.Any(
     # optimize strategy aliases for the test kind
     {'test': list(schedules.ALL_COMPONENTS)},
     {'test-inclusive': list(schedules.ALL_COMPONENTS)},
+    # optimize strategy alias for test-verify tasks
+    {'test-verify': list(schedules.ALL_COMPONENTS)},
 )
 
 # shortcut for a string where task references are allowed

@@ -57,6 +57,8 @@ test-verify:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
             default: null
+    optimization:
+        test-verify: ["test-verify"]
     tier: 2
     mozharness:
         script:
@@ -110,7 +112,6 @@ test-verify-gpu:
     suite:
         category: test-verify
         name: test-verify-gpu
-    schedules-component: test-verify-gpu
     treeherder-symbol: TVg
     loopback-video: true
     virtualization: virtual-with-gpu
@@ -125,6 +126,8 @@ test-verify-gpu:
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
             default: ['integration']
     built-projects-only: true
+    optimization:
+        test-verify: ["test-verify-gpu"]
     tier: 2
     mozharness:
         script:
