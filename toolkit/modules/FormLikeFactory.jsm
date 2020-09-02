@@ -106,6 +106,27 @@ let FormLikeFactory = {
   },
 
   /**
+   * Find the closest <form> if any when aField is inside a ShadowRoot.
+   *
+   * @param {HTMLInputElement} aField - a password or username field in a document
+   * @return {HTMLFormElement|null}
+   */
+  closestFormIgnoringShadowRoots(aField) {
+    let form = aField.closest("form");
+    let current = aField;
+    while (!form) {
+      let shadowRoot = current.getRootNode();
+      if (ChromeUtils.getClassName(shadowRoot) !== "ShadowRoot") {
+        break;
+      }
+      let host = shadowRoot.host;
+      form = host.closest("form");
+      current = host;
+    }
+    return form;
+  },
+
+  /**
    * Determine the Element that encapsulates the related fields. For example, if
    * a page contains a login form and a checkout form which are "submitted"
    * separately, and the username field is passed in, ideally this would return
@@ -116,8 +137,9 @@ let FormLikeFactory = {
    * @return {HTMLElement} - the root element surrounding related fields
    */
   findRootForField(aField) {
-    if (aField.form) {
-      return aField.form;
+    let form = aField.form || this.closestFormIgnoringShadowRoots(aField);
+    if (form) {
+      return form;
     }
 
     return aField.ownerDocument.documentElement;
