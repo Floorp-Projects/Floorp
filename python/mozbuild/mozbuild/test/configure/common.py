@@ -284,7 +284,8 @@ class BaseConfigureTest(unittest.TestCase):
             environ = dict(
                 environ,
                 OLD_CONFIGURE=os.path.join(topsrcdir, 'old-configure'),
-                MOZCONFIG=mozconfig_path)
+                MOZCONFIG=mozconfig_path,
+                VIRTUALENV_NAME='python-test')
 
             paths = dict(paths)
             autoconf_dir = mozpath.join(topsrcdir, 'build', 'autoconf')

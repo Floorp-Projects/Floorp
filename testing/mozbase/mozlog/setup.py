@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from setuptools import setup, find_packages
 
 PACKAGE_NAME = 'mozlog'
-PACKAGE_VERSION = '6.1'
+PACKAGE_VERSION = '7.0'
 DEPS = [
     'blessings>=1.3',
     'mozterm',
@@ -41,8 +41,5 @@ setup(name=PACKAGE_NAME,
       entry_points={
           "console_scripts": [
               "structlog = mozlog.scripts:main"
-          ],
-          'pytest11': [
-              'mozlog = mozlog.pytest_mozlog.plugin',
           ]}
       )

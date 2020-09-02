@@ -30,7 +30,9 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             del sandbox._implied_options[:]
             result = sandbox._value_for(sandbox['all_configure_options'])
             shell = mozpath.abspath('/bin/sh')
-            return result.replace('CONFIG_SHELL=%s ' % shell, '')
+            return (result
+                    .replace('CONFIG_SHELL=%s ' % shell, '')
+                    .replace('VIRTUALENV_NAME=python-test ', ''))
 
         self.assertEquals('--enable-application=browser',
                           get_value_for(['--enable-application=browser']))
