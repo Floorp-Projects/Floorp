@@ -494,6 +494,7 @@ register_strategy('build-fuzzing', args=('push-interval-10', 'backstop'))(All)
 register_strategy('test', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-verify', args=('skip-unless-schedules',))(Alias)
+register_strategy('upload-symbols', args=('never',))(Alias)
 
 
 # Strategy overrides used to tweak the default strategies. These are referenced
@@ -673,4 +674,5 @@ tryselect = ExperimentalOverride(experimental, {
     'build': Any('skip-unless-schedules', 'bugbug-reduced', split_args=split_bugbug_arg),
     'build-fuzzing': Alias('bugbug-reduced'),
     'test-verify': 'base:test',
+    'upload-symbols': Alias('always'),
 })
