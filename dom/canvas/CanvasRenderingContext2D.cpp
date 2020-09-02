@@ -2314,7 +2314,7 @@ bool CanvasRenderingContext2D::ParseFilter(
   }
 
   RefPtr<PresShell> presShell = GetPresShell();
-  if (!presShell) {
+  if (NS_WARN_IF(!presShell)) {
     aError.Throw(NS_ERROR_FAILURE);
     return false;
   }
@@ -3186,7 +3186,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   }
 
   RefPtr<PresShell> presShell = GetPresShell();
-  if (!presShell) {
+  if (NS_WARN_IF(!presShell)) {
     aError.Throw(NS_ERROR_FAILURE);
     return false;
   }
@@ -3715,7 +3715,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   }
 
   RefPtr<PresShell> presShell = GetPresShell();
-  if (!presShell) {
+  if (NS_WARN_IF(!presShell)) {
     aError = NS_ERROR_FAILURE;
     return nullptr;
   }
