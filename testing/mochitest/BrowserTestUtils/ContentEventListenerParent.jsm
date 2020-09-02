@@ -16,7 +16,7 @@ class ContentEventListenerParent extends JSWindowActorParent {
       case "ContentEventListener:Run": {
         BrowserTestUtils._receivedContentEventListener(
           aMessage.data.listenerId,
-          this.browsingContext.top
+          this.browsingContext.browserId
         );
         break;
       }
