@@ -2305,6 +2305,8 @@ SearchService.prototype = {
   },
 
   _onSeparateDefaultPrefChanged() {
+    // Clear out the sorted engines cache, so that we re-sort it if necessary.
+    this.__sortedEngines = null;
     // We should notify if the normal default, and the currently saved private
     // default are different. Otherwise, save the energy.
     if (this.defaultEngine != this._getEngineDefault(true)) {
