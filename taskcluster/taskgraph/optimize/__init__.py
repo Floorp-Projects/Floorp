@@ -493,6 +493,7 @@ register_strategy('build', args=('skip-unless-schedules',))(Alias)
 register_strategy('build-fuzzing', args=('push-interval-10', 'backstop'))(All)
 register_strategy('test', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
+register_strategy('test-verify', args=('skip-unless-schedules',))(Alias)
 
 
 # Strategy overrides used to tweak the default strategies. These are referenced
@@ -660,11 +661,16 @@ class ExperimentalOverride(object):
 
     def __getattr__(self, name):
         val = getattr(self.base, name).copy()
-        val.update(self.overrides)
+        for name, strategy in self.overrides.items():
+            if isinstance(strategy, str) and strategy.startswith('base:'):
+                strategy = val[strategy[len('base:'):]]
+
+            val[name] = strategy
         return val
 
 
 tryselect = ExperimentalOverride(experimental, {
     'build': Any('skip-unless-schedules', 'bugbug-reduced', split_args=split_bugbug_arg),
     'build-fuzzing': Alias('bugbug-reduced'),
+    'test-verify': 'base:test',
 })
