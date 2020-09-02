@@ -26,7 +26,7 @@ class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
         this.goBackFromErrorPage(this.browser.ownerGlobal);
         break;
       case "openInsecure":
-        this.openWebsiteInsecure(this.browser);
+        this.openWebsiteInsecure(this.browser, aMessage.data.inFrame);
         break;
     }
   }
@@ -50,10 +50,9 @@ class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
     }
   }
 
-  openWebsiteInsecure(aBrowser) {
-    // HTTPS-Only Mode does an internal redirect from HTTP to HTTPS and
-    // displays the error page if the request fails. So if we want to load the
-    // page with the exception, we need to replace http:// with https://
+  openWebsiteInsecure(aBrowser, aIsIFrame) {
+    // No matter if the the error-page shows up within an iFrame or not, we always
+    // create an exception for the top-level page.
     const currentURI = aBrowser.currentURI;
     const isViewSource = currentURI.schemeIs("view-source");
 
@@ -68,10 +67,17 @@ class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
       );
     }
 
-    let newURI = innerURI
-      .mutate()
-      .setScheme("http")
-      .finalize();
+    // If the error page is within an iFrame, we create an exception for whatever
+    // scheme the top-level site is currently on, because the user wants to
+    // unbreak the iFrame and not the top-level page. When the error page shows up
+    // on a top-level request, then we replace the scheme with http, because the
+    // user wants to unbreak the whole page.
+    let newURI = aIsIFrame
+      ? innerURI
+      : innerURI
+          .mutate()
+          .setScheme("http")
+          .finalize();
 
     let principal = Services.scriptSecurityManager.createContentPrincipal(
       newURI,
