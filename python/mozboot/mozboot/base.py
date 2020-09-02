@@ -14,6 +14,7 @@ import sys
 from distutils.version import LooseVersion
 from mozboot import rust
 from mozboot.util import MINIMUM_RUST_VERSION
+from mozbuild.virtualenv import VirtualenvHelper
 
 # NOTE: This script is intended to be run with a vanilla Python install.  We
 # have to rely on the standard library instead of Python 2+3 helpers like
@@ -343,13 +344,18 @@ class BaseBootstrapper(object):
         if not os.path.exists(mach_binary):
             raise ValueError("mach not found at %s" % mach_binary)
 
-        # If Python can't figure out what its own executable is, there's little
-        # chance we're going to be able to execute mach on its own, particularly
-        # on Windows.
-        if not sys.executable:
-            raise ValueError("cannot determine path to Python executable")
+        # NOTE: Use self.state_dir over the passed-in state_dir, which might be
+        # a subdirectory of the actual state directory.
+        if not self.state_dir:
+            raise ValueError(
+                'Need a state directory (e.g. ~/.mozbuild) to download '
+                'artifacts')
+        python_location = VirtualenvHelper(os.path.join(
+            self.state_dir, '_virtualenvs', 'mach')).python_path
+        if not os.path.exists(python_location):
+            raise ValueError('python not found at %s' % python_location)
 
-        cmd = [sys.executable, mach_binary, 'artifact', 'toolchain',
+        cmd = [python_location, mach_binary, 'artifact', 'toolchain',
                '--bootstrap', '--from-build', toolchain_job]
 
         if no_unpack:

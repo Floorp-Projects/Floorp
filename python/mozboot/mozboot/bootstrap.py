@@ -412,6 +412,7 @@ class Bootstrapper(object):
             env=self.instance._hg_cleanenv(load_hgrc=True),
             hg=self.instance.which('hg'))
         self.instance.validate_environment(checkout_root)
+        self.instance.ensure_mach_environment(checkout_root)
         have_clone = bool(checkout_type)
 
         if self.instance.no_system_changes:
@@ -421,7 +422,6 @@ class Bootstrapper(object):
                                                         state_dir_available,
                                                         have_clone,
                                                         checkout_root)
-            self.instance.ensure_mach_environment(checkout_root)
             self._output_mozconfig(application)
             sys.exit(0)
 
@@ -477,7 +477,6 @@ class Bootstrapper(object):
                                                     state_dir_available,
                                                     have_clone,
                                                     checkout_root)
-        self.instance.ensure_mach_environment(checkout_root)
 
         print(self.finished % name)
         if not (self.instance.which('rustc') and self.instance._parse_version('rustc')
