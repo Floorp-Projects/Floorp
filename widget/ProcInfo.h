@@ -72,8 +72,6 @@ struct ProcInfo {
   nsCString origin;
   // Process filename (without the path name).
   nsString filename;
-  // VMS in bytes.
-  uint64_t virtualMemorySize = 0;
   // RSS in bytes.
   int64_t residentSetSize = 0;
   // Unshared resident size in bytes.
@@ -176,7 +174,6 @@ nsresult CopySysProcInfoToDOM(const ProcInfo& source, T* dest) {
   // Copy system info.
   dest->mPid = source.pid;
   dest->mFilename.Assign(source.filename);
-  dest->mVirtualMemorySize = source.virtualMemorySize;
   dest->mResidentSetSize = source.residentSetSize;
   dest->mResidentUniqueSize = source.residentUniqueSize;
   dest->mCpuUser = source.cpuUser;
