@@ -30,8 +30,7 @@ add_task(async function() {
   info(
     "Closing the browser console and waiting for the session restore to reopen it"
   );
-  await waitForAllTargetsToBeAttached(hud);
-  await BrowserConsoleManager.closeBrowserConsole();
+  await safeCloseBrowserConsole();
 
   const opened = waitForBrowserConsole(hud);
   await gDevTools.restoreDevToolsSession({

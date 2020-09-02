@@ -80,8 +80,6 @@ add_task(async function testFilter() {
 
   await resetFilters(hud);
   await clearOutput(hud);
-  await waitForAllTargetsToBeAttached(hud);
-  await BrowserConsoleManager.closeBrowserConsole();
 });
 
 // Test that console.profile / profileEnd trigger the right events

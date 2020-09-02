@@ -55,9 +55,6 @@ add_task(async function() {
     oi.querySelector(".objectBox-array"),
     JSON.stringify(["hello", "world"], null, 2)
   );
-
-  info("Close the browser console");
-  await BrowserConsoleManager.toggleBrowserConsole();
 });
 
 async function testCopyObject(hud, element, expected) {

@@ -81,6 +81,10 @@ class LegacyWorkersWatcher {
     // windows, and also the window-less ones.
     // TODO: For Content Toolbox, expose SW of the page, maybe optionally?
     const front = targetFront.isParentProcess ? this.rootFront : targetFront;
+    if (!front || front.isDestroyed() || this.targetList.isDestroyed()) {
+      return;
+    }
+
     const { workers } = await front.listWorkers();
 
     // Fetch the list of already existing worker targets for this process target front.
@@ -116,7 +120,8 @@ class LegacyWorkersWatcher {
   async _processNewWorkerTarget(workerTarget, existingTargets) {
     if (
       !this._recordWorkerTarget(workerTarget) ||
-      existingTargets.has(workerTarget)
+      existingTargets.has(workerTarget) ||
+      this.targetList.isDestroyed()
     ) {
       return;
     }
