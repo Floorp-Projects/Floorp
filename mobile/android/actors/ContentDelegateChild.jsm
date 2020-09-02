@@ -122,16 +122,6 @@ class ContentDelegateChild extends GeckoViewActorChild {
           this.notifyParentOfViewportFit();
         }
         break;
-      case "DOMWindowClose":
-        if (!aEvent.isTrusted) {
-          return;
-        }
-
-        aEvent.preventDefault();
-        this.eventDispatcher.sendRequest({
-          type: "GeckoView:DOMWindowClose",
-        });
-        break;
       case "DOMContentLoaded": {
         if (aEvent.originalTarget.ownerGlobal == this.contentWindow) {
           // If loaded content doesn't have viewport-fit, parent still
