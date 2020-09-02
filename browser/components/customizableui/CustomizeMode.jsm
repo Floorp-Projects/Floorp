@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["CustomizeMode"];
+var EXPORTED_SYMBOLS = ["CustomizeMode", "_defaultImportantThemes"];
 
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPaletteId = "customization-palette";
@@ -87,6 +87,18 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   };
   return new scope.ConsoleAPI(consoleOptions);
 });
+
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
+const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
+const ALPENGLOW_THEME_ID = "firefox-alpenglow@mozilla.org";
+
+const _defaultImportantThemes = [
+  DEFAULT_THEME_ID,
+  LIGHT_THEME_ID,
+  DARK_THEME_ID,
+  ALPENGLOW_THEME_ID,
+];
 
 var gDraggingInToolbars;
 
@@ -1462,10 +1474,6 @@ CustomizeMode.prototype = {
   },
 
   async onThemesMenuShowing(aEvent) {
-    const DEFAULT_THEME_ID = "default-theme@mozilla.org";
-    const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
-    const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
-    const ALPENGLOW_THEME_ID = "firefox-alpenglow@mozilla.org";
     const MAX_THEME_COUNT = 6;
 
     this._clearThemesMenu(aEvent.target);
@@ -1505,13 +1513,8 @@ CustomizeMode.prototype = {
     let themes = await AddonManager.getAddonsByTypes(["theme"]);
     let currentTheme = themes.find(theme => theme.isActive);
 
-    // Move the current theme (if any) and the light/dark themes to the start:
-    let importantThemes = new Set([
-      DEFAULT_THEME_ID,
-      LIGHT_THEME_ID,
-      DARK_THEME_ID,
-      ALPENGLOW_THEME_ID,
-    ]);
+    // Move the current theme (if any) and the default themes to the start:
+    let importantThemes = new Set(_defaultImportantThemes);
     if (currentTheme) {
       importantThemes.add(currentTheme.id);
     }
