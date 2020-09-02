@@ -563,6 +563,10 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
   return NS_OK;
 }
 
+static bool IsWebglOutOfProcessEnabled() {
+  return StaticPrefs::webgl_out_of_process();
+}
+
 bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
   const auto pNotLost = std::make_shared<webgl::NotLostData>(*this);
   auto& notLost = *pNotLost;
@@ -581,7 +585,7 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
 
     // -
 
-    auto useOop = StaticPrefs::webgl_out_of_process();
+    auto useOop = IsWebglOutOfProcessEnabled();
     if (XRE_IsParentProcess()) {
       useOop = false;
     }
@@ -596,6 +600,8 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     }
 
     // -
+
+    ScopedGfxFeatureReporter reporter("IpcWebGL");
 
     webgl::RemotingData outOfProcess;
 
@@ -652,6 +658,7 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     }
 
     notLost.outOfProcess = Some(std::move(outOfProcess));
+    reporter.SetSuccessful();
     return Ok();
   }();
   if (!res.isOk()) {
@@ -2103,7 +2110,13 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
   if (asString) {
     const auto maybe = GetString(pname);
     if (maybe) {
-      retval.set(StringValue(cx, maybe->c_str(), rv));
+      auto str = *maybe;
+      if (pname == dom::MOZ_debug_Binding::WSI_INFO) {
+        nsPrintfCString more("\nIsWebglOutOfProcessEnabled: %i",
+                             int(IsWebglOutOfProcessEnabled()));
+        str += more.BeginReading();
+      }
+      retval.set(StringValue(cx, str.c_str(), rv));
     }
   } else {
     const auto maybe = GetNumber(pname);
