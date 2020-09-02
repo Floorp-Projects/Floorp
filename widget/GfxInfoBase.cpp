@@ -490,19 +490,15 @@ static bool BlocklistEntryToDriverInfo(nsCString& aBlocklistEntry,
         << GfxInfoBase::GetApplicationVersion().get();
   }
 
-  nsTArray<nsCString> keyValues;
-  ParseString(aBlocklistEntry, '\t', keyValues);
-
   aDriverInfo.mRuleId = "FEATURE_FAILURE_DL_BLOCKLIST_NO_ID"_ns;
 
-  for (uint32_t i = 0; i < keyValues.Length(); ++i) {
-    const nsCString& keyValue = keyValues[i];
+  for (const auto& keyValue : aBlocklistEntry.Split('\t')) {
     nsTArray<nsCString> splitted;
     ParseString(keyValue, ':', splitted);
     if (splitted.Length() != 2) {
       // If we don't recognize the input data, we do not want to proceed.
       gfxCriticalErrorOnce(CriticalLog::DefaultOptions(false))
-          << "Unrecognized data " << keyValue.get();
+          << "Unrecognized data " << nsCString(keyValue).get();
       return false;
     }
     const nsCString& key = splitted[0];
