@@ -67,6 +67,9 @@ class RendererOGL {
   void WaitForGPU();
 
   /// This can be called on the render thread only.
+  ipc::FileDescriptor GetAndResetReleaseFence();
+
+  /// This can be called on the render thread only.
   RenderedFrameId GetLastCompletedFrameId();
 
   /// This can be called on the render thread only.

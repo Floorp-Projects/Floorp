@@ -11,6 +11,7 @@
 
 #include "CompositableHost.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -67,7 +68,8 @@ class AsyncImagePipelineManager final {
   // @param aLastCompletedFrameId RenderedFrameId for the last completed frame
   void NotifyPipelinesUpdated(RefPtr<const wr::WebRenderPipelineInfo> aInfo,
                               wr::RenderedFrameId aLatestFrameId,
-                              wr::RenderedFrameId aLastCompletedFrameId);
+                              wr::RenderedFrameId aLastCompletedFrameId,
+                              ipc::FileDescriptor&& aFenceFd);
 
   // This is run on the compositor thread to process mRenderSubmittedUpdates. We
   // make this public because we need to invoke it from other places.
@@ -245,10 +247,16 @@ class AsyncImagePipelineManager final {
 
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 
-  // PipelineInfo updates that have been submitted for rendering. This is
-  // accessed on render and compositor threads, so requires a Lock.
-  std::vector<
-      std::pair<wr::RenderedFrameId, RefPtr<const wr::WebRenderPipelineInfo>>>
+  struct WebRenderPipelineInfoHolder {
+    WebRenderPipelineInfoHolder(RefPtr<const wr::WebRenderPipelineInfo>&& aInfo,
+                                ipc::FileDescriptor&& aFenceFd)
+        : mInfo(aInfo), mFenceFd(aFenceFd) {}
+    ~WebRenderPipelineInfoHolder() {}
+    RefPtr<const wr::WebRenderPipelineInfo> mInfo;
+    ipc::FileDescriptor mFenceFd;
+  };
+
+  std::vector<std::pair<wr::RenderedFrameId, WebRenderPipelineInfoHolder>>
       mRenderSubmittedUpdates;
   Mutex mRenderSubmittedUpdatesLock;
 
@@ -256,6 +264,7 @@ class AsyncImagePipelineManager final {
   std::vector<std::pair<wr::RenderedFrameId,
                         std::vector<UniquePtr<ForwardingTextureHost>>>>
       mTexturesInUseByGPU;
+  ipc::FileDescriptor mReleaseFenceFd;
 };
 
 }  // namespace layers

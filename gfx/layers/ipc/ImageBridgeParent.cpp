@@ -426,7 +426,7 @@ void ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture,
   }
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (auto bufferTexture = texture->AsAndroidHardwareBufferTextureHost()) {
+  if (auto hardwareBuffer = texture->GetAndroidHardwareBuffer()) {
     MOZ_ASSERT(texture->GetFlags() & TextureFlags::RECYCLE);
 
     ipc::FileDescriptor fenceFd;
@@ -437,9 +437,14 @@ void ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture,
       fenceFd = compositor->GetReleaseFence();
     }
 
+    auto* wrTexture = texture->AsWebRenderTextureHost();
+    if (wrTexture) {
+      MOZ_ASSERT(!fenceFd.IsValid());
+      fenceFd = texture->GetAndResetReleaseFence();
+    }
+
     mPendingAsyncMessage.push_back(OpDeliverReleaseFence(
-        std::move(fenceFd), bufferTexture->GetAndroidHardwareBuffer()->mId,
-        aTransactionId,
+        std::move(fenceFd), hardwareBuffer->mId, aTransactionId,
         /* usesImageBridge */ true));
   }
 #endif
@@ -471,7 +476,7 @@ void ImageBridgeParent::NotifyBufferNotUsedOfCompositorBridge(
 void ImageBridgeParent::NotifyBufferNotUsedOfCompositorBridge(
     TextureHost* aTexture, uint64_t aTransactionId) {
   MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aTexture->AsAndroidHardwareBufferTextureHost());
+  MOZ_ASSERT(aTexture->GetAndroidHardwareBuffer());
 
 #ifdef MOZ_WIDGET_ANDROID
   auto* compositor = aTexture->GetProvider()
@@ -480,6 +485,12 @@ void ImageBridgeParent::NotifyBufferNotUsedOfCompositorBridge(
   ipc::FileDescriptor fenceFd;
   if (compositor) {
     fenceFd = compositor->GetReleaseFence();
+  }
+
+  auto* wrTexture = aTexture->AsWebRenderTextureHost();
+  if (wrTexture) {
+    MOZ_ASSERT(!fenceFd.IsValid());
+    fenceFd = aTexture->GetAndResetReleaseFence();
   }
 
   mPendingAsyncMessage.push_back(

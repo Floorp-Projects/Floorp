@@ -87,6 +87,14 @@ class WebRenderTextureHost : public TextureHost {
 
   bool NeedsYFlip() const override;
 
+  void SetAcquireFence(mozilla::ipc::FileDescriptor&& aFenceFd) override;
+
+  void SetReleaseFence(mozilla::ipc::FileDescriptor&& aFenceFd) override;
+
+  mozilla::ipc::FileDescriptor GetAndResetReleaseFence() override;
+
+  AndroidHardwareBuffer* GetAndroidHardwareBuffer() const override;
+
   void MaybeNotifyForUse(wr::TransactionBuilder& aTxn);
 
  protected:
