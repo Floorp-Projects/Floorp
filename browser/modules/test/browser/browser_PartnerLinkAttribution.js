@@ -73,6 +73,9 @@ add_task(async function setup() {
         "browser.partnerlink.attributionURL",
         `http://localhost:${gHttpServer.identity.primaryPort}/`,
       ],
+      // TODO: (Bug 1662556) Rewrite this test with update2 enabled.
+      ["browser.urlbar.update2", false],
+      ["browser.urlbar.update2.oneOffsRefresh", false],
     ],
   });
 
@@ -95,6 +98,25 @@ function searchInAwesomebar(value, win = window) {
     value,
     fireInputEvent: true,
   });
+}
+
+async function searchInSearchbar(inputText) {
+  let win = window;
+  await new Promise(r => waitForFocus(r, win));
+  let sb = BrowserSearch.searchBar;
+  // Write the search query in the searchbar.
+  sb.focus();
+  sb.value = inputText;
+  sb.textbox.controller.startSearch(inputText);
+  // Wait for the popup to show.
+  await BrowserTestUtils.waitForEvent(sb.textbox.popup, "popupshown");
+  // And then for the search to complete.
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      sb.textbox.controller.searchStatus >=
+      Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH,
+    "The search in the searchbar must complete."
+  );
 }
 
 add_task(async function test_simpleQuery_no_attribution() {
@@ -143,7 +165,7 @@ async function checkAttributionRecorded(actionFn, cleanupFn) {
     "Should have received an attribution submission"
   );
   Assert.equal(
-    gRequests[0].getHeader("x-region"),
+    gRequests[0].getHeader("X-Region"),
     Region.home,
     "Should have set the region correctly"
   );
@@ -248,7 +270,7 @@ add_task(async function test_about_newtab() {
     await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
   });
 
-  info("Trigger a simple serch, just text + enter.");
+  info("Trigger a simple search, just text + enter.");
   let promiseLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
     "https://mochi.test:8888/browser/browser/components/search/test/browser/?search=simple+query&foo=1",
     tab
@@ -266,7 +288,7 @@ add_task(async function test_about_newtab() {
     "Should have received an attribution submission"
   );
   Assert.equal(
-    gRequests[0].getHeader("x-region"),
+    gRequests[0].getHeader("X-Region"),
     Region.home,
     "Should have set the region correctly"
   );
@@ -282,5 +304,97 @@ add_task(async function test_about_newtab() {
   );
 
   BrowserTestUtils.removeTab(tab);
+  gRequests = [];
+});
+
+add_task(async function test_urlbar_oneOff_click() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  info("Type a query.");
+  let promiseLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
+    "https://mochi.test:8888/browser/browser/components/search/test/browser/?search=query&foo=1",
+    tab
+  );
+  await searchInAwesomebar("query");
+  info("Click the first one-off button.");
+  UrlbarTestUtils.getOneOffSearchButtons(window)
+    .getSelectableButtons(false)[0]
+    .click();
+  await promiseLoad;
+
+  await BrowserTestUtils.waitForCondition(
+    () => gRequests.length == 1,
+    "Should have received an attribution submission"
+  );
+  Assert.equal(
+    gRequests[0].getHeader("X-Region"),
+    Region.home,
+    "Should have set the region correctly"
+  );
+  Assert.equal(
+    gRequests[0].getHeader("X-Source"),
+    "searchurl",
+    "Should have set the source correctly"
+  );
+  Assert.equal(
+    gRequests[0].getHeader("X-Target-url"),
+    "https://mochi.test:8888/browser/browser/components/search/test/browser/?foo=1",
+    "Should have set the target url correctly and stripped the search terms"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+  gRequests = [];
+});
+
+add_task(async function test_searchbar_oneOff_click() {
+  // For this test, set the other engine as default, so that we can select
+  // the attribution engine as the first one in the one-offs.
+  await Services.search.setDefault(
+    Services.search.getEngineByName("Simple Engine")
+  );
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  info("Type a query.");
+  let promiseLoad = BrowserTestUtils.waitForDocLoadAndStopIt(
+    "https://mochi.test:8888/browser/browser/components/search/test/browser/?search=searchbar&foo=1",
+    tab
+  );
+  await searchInSearchbar("searchbar");
+  info("Click the first one-off button.");
+  BrowserSearch.searchBar.textbox.popup.oneOffButtons
+    .getSelectableButtons(false)[0]
+    .click();
+  await promiseLoad;
+
+  await BrowserTestUtils.waitForCondition(
+    () => gRequests.length == 1,
+    "Should have received an attribution submission"
+  );
+  Assert.equal(
+    gRequests[0].getHeader("X-Region"),
+    Region.home,
+    "Should have set the region correctly"
+  );
+  Assert.equal(
+    gRequests[0].getHeader("X-Source"),
+    "searchurl",
+    "Should have set the source correctly"
+  );
+  Assert.equal(
+    gRequests[0].getHeader("X-Target-url"),
+    "https://mochi.test:8888/browser/browser/components/search/test/browser/?foo=1",
+    "Should have set the target url correctly and stripped the search terms"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+  // Set back the engine in case of other tests in this file.
+  await Services.search.setDefault(Services.search.getEngineByName("basic"));
   gRequests = [];
 });
