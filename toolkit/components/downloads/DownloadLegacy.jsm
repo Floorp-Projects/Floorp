@@ -122,11 +122,6 @@ DownloadLegacyTransfer.prototype = {
             // Only cancel if the object executing the download is still running.
             if (this._cancelable && !this._componentFailed) {
               this._cancelable.cancel(Cr.NS_ERROR_ABORT);
-              if (this._cancelable instanceof Ci.nsIWebBrowserPersist) {
-                // This component will not send the STATE_STOP notification.
-                download.saver.onTransferFinished(Cr.NS_ERROR_ABORT);
-                this._cancelable = null;
-              }
             }
           });
         })
