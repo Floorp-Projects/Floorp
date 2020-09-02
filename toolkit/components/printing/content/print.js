@@ -640,7 +640,7 @@ const PrintSettingsViewProxy = {
     printerInfo.settings.isInitializedFromPrinter = true;
 
     // The printer properties don't change, mark this as resolved for next time
-    printerInfo._resolved;
+    printerInfo._resolved = true;
     return printerInfo;
   },
 
