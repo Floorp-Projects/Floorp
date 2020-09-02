@@ -19,7 +19,7 @@ class NativeDNSResolverOverrideParent : public PNativeDNSResolverOverrideParent,
   NS_DECL_ISUPPORTS
   NS_DECL_NSINATIVEDNSRESOLVEROVERRIDE
 
-  explicit NativeDNSResolverOverrideParent() {}
+  explicit NativeDNSResolverOverrideParent() = default;
   static already_AddRefed<nsINativeDNSResolverOverride> GetSingleton();
 
  private:

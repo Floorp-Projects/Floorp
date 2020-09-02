@@ -99,7 +99,7 @@ class nsIDNService final : public nsIIDNService,
   void prefsChanged(const char* pref);
 
   static void PrefChanged(const char* aPref, void* aSelf) {
-    auto self = static_cast<nsIDNService*>(aSelf);
+    auto* self = static_cast<nsIDNService*>(aSelf);
     mozilla::MutexAutoLock lock(self->mLock);
     self->prefsChanged(aPref);
   }
