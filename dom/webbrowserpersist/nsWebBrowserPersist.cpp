@@ -889,8 +889,34 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest* request,
       SendErrorStatusChange(true, status, request, data->mFile);
     }
 
+    // If there is a stream ref and we weren't canceled,
+    // close it away from the main thread.
+    // We don't do this when there's an error/cancelation,
+    // because our consumer may try to delete the file, which will error
+    // if we're still holding on to it, so we have to close it pronto.
+    {
+      MutexAutoLock lock(data->mStreamMutex);
+      if (data->mStream && NS_SUCCEEDED(status) && !mCancel) {
+        if (!mBackgroundQueue) {
+          nsresult rv = NS_CreateBackgroundTaskQueue(
+              "WebBrowserPersist", getter_AddRefs(mBackgroundQueue));
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+        }
+        // Now steal the stream ref and close it away from the main thread,
+        // keeping the promise around so we don't finish before all files
+        // are flushed and closed.
+        mFileClosePromises.AppendElement(InvokeAsync(
+            mBackgroundQueue, __func__, [stream = std::move(data->mStream)]() {
+              nsresult rv = stream->Close();
+              // We don't care if closing failed; we don't care in the
+              // destructor either...
+              return ClosePromise::CreateAndResolve(rv, __func__);
+            }));
+      }
+    }
     MutexAutoLock lock(mOutputMapMutex);
-    // This will automatically close the output stream
     mOutputMap.Remove(keyPtr);
   } else {
     // if we didn't find the data in mOutputMap, try mUploadList
@@ -2275,7 +2301,14 @@ void nsWebBrowserPersist::EndDownload(nsresult aResult) {
   if (NS_SUCCEEDED(mPersistResult) && NS_FAILED(aResult)) {
     mPersistResult = aResult;
   }
+  ClosePromise::All(GetCurrentSerialEventTarget(), mFileClosePromises)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr{this}, aResult]() {
+               self->EndDownloadInternal(aResult);
+             });
+}
 
+void nsWebBrowserPersist::EndDownloadInternal(nsresult aResult) {
   // mCompleted needs to be set before issuing the stop notification.
   // (Bug 1224437)
   mCompleted = true;
