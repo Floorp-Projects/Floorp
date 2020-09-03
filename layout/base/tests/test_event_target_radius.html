@@ -176,6 +176,14 @@ function test3() {
   t2.onclick = function() {};
   testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onclick");
   t2.onclick = null;
+  t2.onpointerdown = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onpointerdown");
+  t2.onpointerdown = null;
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "DIV with onpointerdown removed");
+  t2.onpointerup = function() {};
+  testMouseClick("t2", 100 + 11*mm, 10, "t2", "DIV with onpointerup");
+  t2.onpointerup = null;
+  testMouseClick("t2", 100 + 11*mm, 10, "body", "DIV with onpointerup removed");
   // Keypresses don't make click radius targets
   t2.onkeypress = function() {};
   testMouseClick("t2", 100 + 11*mm, 10, "body", "DIV with onkeypress");

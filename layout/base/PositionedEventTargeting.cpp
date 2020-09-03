@@ -151,6 +151,20 @@ static bool HasTouchListener(nsIContent* aContent) {
          elm->HasListenersFor(nsGkAtoms::ontouchend);
 }
 
+static bool HasPointerListener(nsIContent* aContent) {
+  EventListenerManager* elm = aContent->GetExistingListenerManager();
+  if (!elm) {
+    return false;
+  }
+
+  if (!StaticPrefs::dom_w3c_pointer_events_enabled()) {
+    return false;
+  }
+
+  return elm->HasListenersFor(nsGkAtoms::onpointerdown) ||
+         elm->HasListenersFor(nsGkAtoms::onpointerup);
+}
+
 static bool IsDescendant(nsIFrame* aFrame, nsIContent* aAncestor,
                          nsAutoString* aLabelTargetId) {
   for (nsIContent* content = aFrame->GetContent(); content;
@@ -194,7 +208,8 @@ static nsIContent* GetClickableAncestor(
     if (stopAt && content->IsHTMLElement(stopAt)) {
       break;
     }
-    if (HasTouchListener(content) || HasMouseListener(content)) {
+    if (HasTouchListener(content) || HasMouseListener(content) ||
+        HasPointerListener(content)) {
       return content;
     }
     if (content->IsAnyOfHTMLElements(nsGkAtoms::button, nsGkAtoms::input,
