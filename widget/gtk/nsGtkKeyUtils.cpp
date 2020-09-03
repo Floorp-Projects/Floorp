@@ -1525,6 +1525,7 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
               ("  HandleKeyPressEvent(), dispatched \"Forward\" command "
                "event"));
       return;
+    case GDK_Reload:
     case GDK_Refresh:
       aWindow->DispatchCommandEvent(nsGkAtoms::Reload);
       return;
