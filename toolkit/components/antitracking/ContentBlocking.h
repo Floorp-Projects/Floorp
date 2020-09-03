@@ -90,7 +90,7 @@ class ContentBlocking final {
   typedef std::function<RefPtr<StorageAccessFinalCheckPromise>()>
       PerformFinalChecks;
   typedef MozPromise<int, bool, true> StorageAccessPermissionGrantPromise;
-  static MOZ_MUST_USE RefPtr<StorageAccessPermissionGrantPromise>
+  [[nodiscard]] static RefPtr<StorageAccessPermissionGrantPromise>
   AllowAccessFor(
       nsIPrincipal* aPrincipal, dom::BrowsingContext* aParentContext,
       ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason,
