@@ -586,9 +586,11 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   void PrintOuter(mozilla::ErrorResult& aError);
 
+  enum class IsPreview : bool { No, Yes };
+  enum class BlockUntilDone : bool { No, Yes };
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Print(
-      nsIPrintSettings*, nsIWebProgressListener*, nsIDocShell*, bool aIsPreview,
-      PrintPreviewResolver&& aPrintPreviewCallback, mozilla::ErrorResult&);
+      nsIPrintSettings*, nsIWebProgressListener*, nsIDocShell*, IsPreview,
+      BlockUntilDone, PrintPreviewResolver&&, mozilla::ErrorResult&);
   mozilla::dom::Selection* GetSelectionOuter();
   already_AddRefed<mozilla::dom::Selection> GetSelection() override;
   nsScreen* GetScreen();
