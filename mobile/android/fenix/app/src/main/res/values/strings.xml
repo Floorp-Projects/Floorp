@@ -284,6 +284,8 @@
     <string name="preferences_theme">Theme</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Home</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gestures</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Customize</string>
     <!-- Preference description for banner about signing in -->
@@ -452,6 +454,16 @@
     <string name="preference_auto_battery_theme">Set by Battery Saver</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Follow device theme</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Pull to refresh</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Scroll to hide toolbar</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Swipe toolbar sideways to switch tabs</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Swipe toolbar up to open tabs</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->

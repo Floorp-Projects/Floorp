@@ -888,4 +888,19 @@ class Settings(private val appContext: Context) : PreferencesHolder {
                     SavedLoginsSortingStrategyMenu.Item.LastUsedSort.strategyString
             }
         }
+
+    var isPullToRefreshEnabledInBrowser by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_website_pull_to_refresh),
+        default = true
+    )
+
+    var isDynamicToolbarEnabled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_dynamic_toolbar),
+        default = true
+    )
+
+    var isSwipeToolbarToSwitchTabsEnabled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_swipe_toolbar_switch_tabs),
+        default = true
+    )
 }

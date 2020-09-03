@@ -125,6 +125,12 @@
     <!-- Customization Settings -->
     <string name="pref_home_category" translatable="false">pref_home_category</string>
 
+    <!-- Customization Settings -->
+    <string name="pref_key_website_pull_to_refresh" translatable="false">pref_key_website_pull_to_refresh</string>
+    <string name="pref_key_dynamic_toolbar" translatable="false">pref_key_dynamic_toolbar</string>
+    <string name="pref_key_swipe_toolbar_switch_tabs" translatable="false">pref_key_swipe_toolbar_switch_tabs</string>
+    <string name="pref_key_swipe_toolbar_show_tabs" translatable="false">pref_key_swipe_toolbar_show_tabs</string>
+
     <!-- Tracking Protection Settings -->
     <string name="pref_key_etp_learn_more" translatable="false">pref_key_etp_learn_more</string>
     <string name="pref_key_tracking_protection_settings" translatable="false">pref_key_tracking_protection_settings</string>

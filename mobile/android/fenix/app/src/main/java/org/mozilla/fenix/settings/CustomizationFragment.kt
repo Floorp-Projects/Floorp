@@ -51,6 +51,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         setupRadioGroups()
         setupToolbarCategory()
         setupHomeCategory()
+        setupGesturesCategory()
     }
 
     private fun setupRadioGroups() {
@@ -141,6 +142,22 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         requirePreference<SwitchPreference>(R.string.pref_key_enable_top_frecent_sites).apply {
             isVisible = FeatureFlags.topFrecentSite
             isChecked = context.settings().showTopFrecentSites
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+    }
+
+    private fun setupGesturesCategory() {
+        requirePreference<SwitchPreference>(R.string.pref_key_website_pull_to_refresh).apply {
+            isVisible = FeatureFlags.pullToRefreshEnabled
+            isChecked = context.settings().isPullToRefreshEnabledInBrowser
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+        requirePreference<SwitchPreference>(R.string.pref_key_dynamic_toolbar).apply {
+            isChecked = context.settings().isDynamicToolbarEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+        requirePreference<SwitchPreference>(R.string.pref_key_swipe_toolbar_switch_tabs).apply {
+            isChecked = context.settings().isSwipeToolbarToSwitchTabsEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }

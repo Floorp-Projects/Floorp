@@ -657,9 +657,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 }
             }
 
-            view.swipeRefresh.isEnabled = FeatureFlags.pullToRefreshEnabled
-            @Suppress("ConstantConditionIf")
-            if (FeatureFlags.pullToRefreshEnabled) {
+            view.swipeRefresh.isEnabled =
+                FeatureFlags.pullToRefreshEnabled && context.settings().isPullToRefreshEnabledInBrowser
+            if (view.swipeRefresh.isEnabled) {
                 val primaryTextColor =
                     ThemeManager.resolveAttribute(R.attr.primaryText, context)
                 view.swipeRefresh.setColorSchemeColors(primaryTextColor)

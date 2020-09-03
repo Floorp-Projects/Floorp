@@ -56,4 +56,24 @@
             android:key="@string/pref_key_enable_top_frecent_sites"
             android:title="@string/top_sites_toggle_top_frecent_sites" />
     </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_gestures"
+        app:allowDividerAbove="false"
+        app:iconSpaceReserved="false">
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_website_pull_to_refresh"
+            android:title="@string/preference_gestures_website_pull_to_refresh" />
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_dynamic_toolbar"
+            android:title="@string/preference_gestures_dynamic_toolbar" />
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_swipe_toolbar_switch_tabs"
+            android:title="@string/preference_gestures_swipe_toolbar_switch_tabs" />
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_swipe_toolbar_show_tabs"
+            android:title="@string/preference_gestures_swipe_toolbar_show_tabs"
+            app:isPreferenceVisible="false"/>
+    </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>
