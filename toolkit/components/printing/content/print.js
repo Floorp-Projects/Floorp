@@ -14,6 +14,11 @@ ChromeUtils.defineModuleGetter(
   "DownloadPaths",
   "resource://gre/modules/DownloadPaths.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
 
 const INPUT_DELAY_MS = 500;
 const MM_PER_POINT = 25.4 / 72;
@@ -168,7 +173,16 @@ var PrintEventHandler = {
     });
 
     await this.refreshSettings(selectedPrinter.value);
-    this.updatePrintPreview(sourceBrowsingContext);
+
+    // Use a DeferredTask for updating the preview. This will ensure that we
+    // only have one update running at a time.
+    this._updatePrintPreviewTask = new DeferredTask(async () => {
+      await this._updatePrintPreview(sourceBrowsingContext);
+      // After the first use of sourceBrowsingContext we want to use the preview
+      // browser's browsing context so throw this one away.
+      sourceBrowsingContext = undefined;
+    }, 0);
+    this.updatePrintPreview();
 
     document.dispatchEvent(
       new CustomEvent("available-destinations", {
@@ -400,24 +414,11 @@ var PrintEventHandler = {
   },
 
   /**
-   * Prepare the print preview. A browsingContext must be provided on the
-   * first call to initialize the preview, if no browsingContext is provided
-   * then this.previewBrowser.browsingContext will be used.
-   *
-   * @param browsingContext {BrowsingContext} (optional)
-   *        The BrowsingContext to initialize the preview from.
+   * Queue a task to update the print preview. It will start immediately or when
+   * the in progress update completes.
    */
-  async updatePrintPreview(browsingContext) {
-    if (this._previewUpdatingPromise) {
-      if (!this._queuedPreviewUpdatePromise) {
-        this._queuedPreviewUpdatePromise = this._previewUpdatingPromise.then(
-          () => this._updatePrintPreview(browsingContext)
-        );
-      }
-      // else there's already an update queued.
-    } else {
-      this._previewUpdatingPromise = this._updatePrintPreview(browsingContext);
-    }
+  async updatePrintPreview() {
+    this._updatePrintPreviewTask.arm();
   },
 
   /**
