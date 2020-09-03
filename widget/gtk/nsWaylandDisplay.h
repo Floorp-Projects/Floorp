@@ -24,15 +24,15 @@ namespace widget {
 
 // Our general connection to Wayland display server,
 // holds our display connection and runs event loop.
-// We have a global nsWaylandDisplay object for each thread.
+// We have a global nsWaylandDisplay object for each thread,
+// recently we have three for main, compositor and render one.
 class nsWaylandDisplay {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsWaylandDisplay)
-
   // Create nsWaylandDisplay object on top of native Wayland wl_display
   // connection. When aLighWrapper is set we don't get wayland registry
   // objects and only event loop is provided.
   explicit nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper = false);
+  virtual ~nsWaylandDisplay();
 
   bool DispatchEventQueue();
 
@@ -77,8 +77,6 @@ class nsWaylandDisplay {
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
 
  private:
-  ~nsWaylandDisplay();
-
   MessageLoop* mThreadLoop;
   PRThread* mThreadId;
   wl_display* mDisplay;
@@ -98,9 +96,7 @@ class nsWaylandDisplay {
 
 void WaylandDispatchDisplays();
 void WaylandDisplayShutdown();
-void WaylandDisplayRelease();
-
-RefPtr<nsWaylandDisplay> WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
+nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
 wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay = nullptr);
 
 }  // namespace widget
