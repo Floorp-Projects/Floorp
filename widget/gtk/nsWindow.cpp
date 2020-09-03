@@ -4305,20 +4305,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
             // argb visual is explicitly required so use it
             needsAlphaVisual =
                 Preferences::GetBool("mozilla.widget.use-argb-visuals");
-          } else if (!mIsX11Display) {
-            // Wayland uses ARGB visual by default
+          } else if (!mIsX11Display || mCSDSupportLevel != CSD_SUPPORT_NONE) {
             needsAlphaVisual = true;
-          } else if (mCSDSupportLevel != CSD_SUPPORT_NONE) {
-            if (mIsAccelerated) {
-              needsAlphaVisual = true;
-            } else {
-              // We want to draw a transparent titlebar but we can't use
-              // ARGB visual due to Bug 1516224.
-              // If we're on Mutter/X.org (Bug 1530252) just give up
-              // and don't render transparent corners at all.
-              mTransparencyBitmapForTitlebar = TitlebarCanUseShapeMask();
-            }
           }
+        } else {
+          // Don't use shape masks on Mutter/X.org (Bug 1530252).
+          mTransparencyBitmapForTitlebar = TitlebarCanUseShapeMask();
         }
       }
 
