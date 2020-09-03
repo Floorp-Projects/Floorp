@@ -1803,11 +1803,11 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   nsPresContext::nsPresContextType type =
       mIsCreatingPrintPreview ? nsPresContext::eContext_PrintPreview
                               : nsPresContext::eContext_Print;
-  nsView* parentView = aPO->mParent && aPO->mParent->PrintingIsEnabled()
-                           ? nullptr
-                           : GetParentViewForRoot();
-  aPO->mPresContext = parentView ? new nsPresContext(aPO->mDocument, type)
-                                 : new nsRootPresContext(aPO->mDocument, type);
+  const bool shouldBeRoot =
+      (!aPO->mParent || !aPO->mParent->PrintingIsEnabled()) &&
+      !GetParentViewForRoot();
+  aPO->mPresContext = shouldBeRoot ? new nsRootPresContext(aPO->mDocument, type)
+                                   : new nsPresContext(aPO->mDocument, type);
   aPO->mPresContext->SetPrintSettings(printData->mPrintSettings);
 
   // set the presentation context to the value in the print settings
