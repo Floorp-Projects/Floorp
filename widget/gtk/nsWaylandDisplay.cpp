@@ -170,56 +170,57 @@ static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
-  auto display = reinterpret_cast<nsWaylandDisplay*>(data);
-  if (!display) return;
+  auto* display = static_cast<nsWaylandDisplay*>(data);
+  if (!display) {
+    return;
+  }
 
   if (strcmp(interface, "wl_shm") == 0) {
-    auto shm = static_cast<wl_shm*>(
-        wl_registry_bind(registry, id, &wl_shm_interface, 1));
+    auto* shm = WaylandRegistryBind<wl_shm>(registry, id, &wl_shm_interface, 1);
     wl_proxy_set_queue((struct wl_proxy*)shm, display->GetEventQueue());
     display->SetShm(shm);
   } else if (strcmp(interface, "wl_data_device_manager") == 0) {
     int data_device_manager_version = MIN(version, 3);
-    auto data_device_manager = static_cast<wl_data_device_manager*>(
-        wl_registry_bind(registry, id, &wl_data_device_manager_interface,
-                         data_device_manager_version));
+    auto* data_device_manager = WaylandRegistryBind<wl_data_device_manager>(
+        registry, id, &wl_data_device_manager_interface,
+        data_device_manager_version);
     wl_proxy_set_queue((struct wl_proxy*)data_device_manager,
                        display->GetEventQueue());
     display->SetDataDeviceManager(data_device_manager);
   } else if (strcmp(interface, "wl_seat") == 0) {
-    auto seat = static_cast<wl_seat*>(
-        wl_registry_bind(registry, id, &wl_seat_interface, 1));
+    auto* seat =
+        WaylandRegistryBind<wl_seat>(registry, id, &wl_seat_interface, 1);
     wl_proxy_set_queue((struct wl_proxy*)seat, display->GetEventQueue());
     display->SetSeat(seat);
   } else if (strcmp(interface, "gtk_primary_selection_device_manager") == 0) {
-    auto primary_selection_device_manager =
-        static_cast<gtk_primary_selection_device_manager*>(wl_registry_bind(
-            registry, id, &gtk_primary_selection_device_manager_interface, 1));
+    auto* primary_selection_device_manager =
+        WaylandRegistryBind<gtk_primary_selection_device_manager>(
+            registry, id, &gtk_primary_selection_device_manager_interface, 1);
     wl_proxy_set_queue((struct wl_proxy*)primary_selection_device_manager,
                        display->GetEventQueue());
     display->SetPrimarySelectionDeviceManager(primary_selection_device_manager);
   } else if (strcmp(interface, "zwp_idle_inhibit_manager_v1") == 0) {
-    auto idle_inhibit_manager =
-        static_cast<zwp_idle_inhibit_manager_v1*>(wl_registry_bind(
-            registry, id, &zwp_idle_inhibit_manager_v1_interface, 1));
+    auto* idle_inhibit_manager =
+        WaylandRegistryBind<zwp_idle_inhibit_manager_v1>(
+            registry, id, &zwp_idle_inhibit_manager_v1_interface, 1);
     wl_proxy_set_queue((struct wl_proxy*)idle_inhibit_manager,
                        display->GetEventQueue());
     display->SetIdleInhibitManager(idle_inhibit_manager);
   } else if (strcmp(interface, "wl_compositor") == 0) {
     // Requested wl_compositor version 4 as we need wl_surface_damage_buffer().
-    auto compositor = static_cast<wl_compositor*>(
-        wl_registry_bind(registry, id, &wl_compositor_interface, 4));
+    auto* compositor = WaylandRegistryBind<wl_compositor>(
+        registry, id, &wl_compositor_interface, 4);
     wl_proxy_set_queue((struct wl_proxy*)compositor, display->GetEventQueue());
     display->SetCompositor(compositor);
   } else if (strcmp(interface, "wl_subcompositor") == 0) {
-    auto subcompositor = static_cast<wl_subcompositor*>(
-        wl_registry_bind(registry, id, &wl_subcompositor_interface, 1));
+    auto* subcompositor = WaylandRegistryBind<wl_subcompositor>(
+        registry, id, &wl_subcompositor_interface, 1);
     wl_proxy_set_queue((struct wl_proxy*)subcompositor,
                        display->GetEventQueue());
     display->SetSubcompositor(subcompositor);
   } else if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
-    auto dmabuf = static_cast<zwp_linux_dmabuf_v1*>(
-        wl_registry_bind(registry, id, &zwp_linux_dmabuf_v1_interface, 3));
+    auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
+        registry, id, &zwp_linux_dmabuf_v1_interface, 3);
     LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
     display->SetDmabuf(dmabuf);
     // Get formats for main thread display only
