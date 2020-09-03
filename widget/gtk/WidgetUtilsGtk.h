@@ -17,6 +17,8 @@ class WidgetUtilsGTK {
   static int32_t IsTouchDeviceSupportPresent();
 };
 
+bool IsMainWindowTransparent();
+
 }  // namespace widget
 
 }  // namespace mozilla
