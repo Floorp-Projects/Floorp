@@ -105,6 +105,8 @@ for (let searchProvider of ["amazon", "google"]) {
 }
 
 const REMOTE_SETTING_DEFAULTS_PREF = "browser.topsites.useRemoteSetting";
+const REMOTE_SETTING_MIGRATION_ID_PREF =
+  "browser.topsites.migratedToRemoteSetting.id";
 const DEFAULT_SITES_POLICY_PREF =
   "browser.newtabpage.activity-stream.default.sites";
 
@@ -204,6 +206,19 @@ this.TopSitesFeed = class TopSitesFeed {
         { isStartup }
       );
       return;
+    }
+
+    // Unpin old search shortcuts.
+    const remoteSettingMigrationID = 1;
+    if (
+      Services.prefs.getIntPref(REMOTE_SETTING_MIGRATION_ID_PREF, 0) <
+      remoteSettingMigrationID
+    ) {
+      this.unpinAllSearchShortcuts();
+      Services.prefs.setIntPref(
+        REMOTE_SETTING_MIGRATION_ID_PREF,
+        remoteSettingMigrationID
+      );
     }
 
     // Try using default top sites from enterprise policies. The pref is locked
@@ -379,9 +394,12 @@ this.TopSitesFeed = class TopSitesFeed {
         .filter(s => s); // Filter out empty strings
       const newInsertedShortcuts = [];
 
-      const shouldPin = this.store
-        .getState()
-        .Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF].split(",")
+      let shouldPin = this._useRemoteSetting
+        ? DEFAULT_TOP_SITES.filter(s => s.searchTopSite).map(s => s.hostname)
+        : this.store
+            .getState()
+            .Prefs.values[SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF].split(",");
+      shouldPin = shouldPin
         .map(getSearchProvider)
         .filter(s => s && s.shortURL !== this._currentSearchHostname);
 
@@ -516,18 +534,12 @@ this.TopSitesFeed = class TopSitesFeed {
     }
 
     // Get pinned links augmented with desired properties
-    if (this._useRemoteSetting) {
-      this.disableSearchImprovements();
-    }
     let plainPinned = await this.pinnedCache.request();
 
     // Insert search shortcuts if we need to.
     // _maybeInsertSearchShortcuts returns true if any search shortcuts are
     // inserted, meaning we need to expire and refresh the pinnedCache
-    if (
-      !this._useRemoteSetting &&
-      (await this._maybeInsertSearchShortcuts(plainPinned))
-    ) {
+    if (await this._maybeInsertSearchShortcuts(plainPinned)) {
       this.pinnedCache.expire();
       plainPinned = await this.pinnedCache.request();
     }
@@ -917,14 +929,10 @@ this.TopSitesFeed = class TopSitesFeed {
     this._broadcastPinnedSitesUpdated();
   }
 
-  disableSearchImprovements() {
+  unpinAllSearchShortcuts() {
     Services.prefs.clearUserPref(
       `browser.newtabpage.activity-stream.${SEARCH_SHORTCUTS_HAVE_PINNED_PREF}`
     );
-    this.unpinAllSearchShortcuts();
-  }
-
-  unpinAllSearchShortcuts() {
     for (let pinnedLink of NewTabUtils.pinnedLinks.links) {
       if (pinnedLink && pinnedLink.searchTopSite) {
         NewTabUtils.pinnedLinks.unpin(pinnedLink);
@@ -1073,7 +1081,7 @@ this.TopSitesFeed = class TopSitesFeed {
             if (action.data.value) {
               this.updateCustomSearchShortcuts();
             } else {
-              this.disableSearchImprovements();
+              this.unpinAllSearchShortcuts();
             }
             this.refresh({ broadcast: true });
         }
