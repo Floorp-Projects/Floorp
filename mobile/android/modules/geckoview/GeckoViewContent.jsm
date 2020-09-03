@@ -54,6 +54,7 @@ class GeckoViewContent extends GeckoViewModule {
       /* untrusted */ false
     );
 
+    this.window.addEventListener("DOMWindowClose", this);
     this.window.addEventListener("pagetitlechanged", this);
 
     Services.obs.addObserver(this, "oop-frameloader-crashed");
@@ -77,6 +78,7 @@ class GeckoViewContent extends GeckoViewModule {
       /* capture */ true
     );
 
+    this.window.removeEventListener("DOMWindowClose", this);
     this.window.removeEventListener("pagetitlechanged", this);
 
     Services.obs.removeObserver(this, "oop-frameloader-crashed");
