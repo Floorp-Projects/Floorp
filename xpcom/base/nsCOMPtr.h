@@ -345,7 +345,20 @@ class nsCOMPtr_base {
   void NS_FASTCALL assign_from_query_referent(const nsQueryReferent&,
                                               const nsIID&);
   void NS_FASTCALL assign_from_helper(const nsCOMPtr_helper&, const nsIID&);
-  void** NS_FASTCALL begin_assignment();
+// Since in most cases, begin_assignment is called on a default-constructed
+// nsCOMPtr, the call to assign_assuming_AddRef becomes a no-op in release
+// builds. However, the compiler does not always optimize this away and emits a
+// call to begin_assignment without MOZ_ALWAYS_INLINE. When logging is enabled,
+// this might cause code bloat, so we MOZ_NEVER_INLINE in that case.
+#ifdef NSCAP_LOG_EXTERNAL_ASSIGNMENT
+  MOZ_NEVER_INLINE
+#else
+  MOZ_ALWAYS_INLINE
+#endif
+  void** NS_FASTCALL begin_assignment() {
+    assign_assuming_AddRef(nullptr);
+    return reinterpret_cast<void**>(&mRawPtr);
+  }
 
  protected:
   NS_MAY_ALIAS_PTR(nsISupports) MOZ_OWNING_REF mRawPtr;

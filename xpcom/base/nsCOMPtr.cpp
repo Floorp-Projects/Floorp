@@ -111,8 +111,3 @@ void nsCOMPtr_base::assign_from_helper(const nsCOMPtr_helper& aHelper,
   }
   assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
 }
-
-void** nsCOMPtr_base::begin_assignment() {
-  assign_assuming_AddRef(nullptr);
-  return reinterpret_cast<void**>(&mRawPtr);
-}
