@@ -92,7 +92,10 @@ class MasterPasswordTipProvider(
 
         val passwordErrorText = context.getString(R.string.mp_dialog_error_transfer_saved_logins)
         val migrationContinueButton =
-            dialogView.findViewById<MaterialButton>(R.id.migration_continue)
+            dialogView.findViewById<MaterialButton>(R.id.migration_continue).apply {
+                alpha = HALF_OPACITY
+                isEnabled = false
+            }
         val passwordView = dialogView.findViewById<TextInputEditText>(R.id.password_field)
         val passwordLayout =
             dialogView.findViewById<TextInputLayout>(R.id.password_text_input_layout)
@@ -179,7 +182,7 @@ class MasterPasswordTipProvider(
         dialogView.findViewById<MaterialButton>(R.id.positive_button).apply {
             text = context.getString(R.string.mp_dialog_close_transfer)
             setOnClickListener {
-                tip?.let { dismissTip(it) }
+                dismissMPTip()
                 dialog.dismiss()
             }
         }
@@ -212,8 +215,21 @@ class MasterPasswordTipProvider(
         }
     }
 
+    private fun dismissMPTip() {
+        tip?.let {
+            context.metrics.track(Event.TipClosed(it.identifier))
+
+            context.components.settings.preferences
+                .edit()
+                .putBoolean(it.identifier, false)
+                .apply()
+
+            dismissTip(it)
+        }
+    }
+
     private fun showSuccessDialog() {
-        tip?.let { dismissTip(it) }
+        dismissMPTip()
 
         context.metrics.track(Event.MasterPasswordMigrationSuccess)
 
