@@ -214,6 +214,10 @@ static EGLSurface CreateSurfaceFromNativeWindow(
   ANativeWindow_release(nativeWindow);
 #else
   newSurface = egl.fCreateWindowSurface(config, window, 0);
+  if (!newSurface) {
+    const auto err = egl.mLib->fGetError();
+    gfxCriticalNote << "Failed to create EGLSurface!: " << gfx::hexa(err);
+  }
 #endif
   return newSurface;
 }
