@@ -421,6 +421,7 @@ class nsWindow final : public nsBaseWidget {
   static void HideWaylandOpenedPopups();
   void NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
                                       bool aFlippedX, bool aFlippedY);
+  static bool IsMainWindowTransparent();
 
  protected:
   virtual ~nsWindow();
@@ -698,6 +699,8 @@ class nsWindow final : public nsBaseWidget {
 
   mozilla::UniquePtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
   static CSDSupportLevel sCSDSupportLevel;
+
+  static bool sTransparentMainWindow;
 };
 
 #endif /* __nsWindow_h__ */

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WidgetUtilsGtk.h"
-
+#include "nsWindow.h"
 #include <gtk/gtk.h>
 
 namespace mozilla {
@@ -42,6 +42,8 @@ int32_t WidgetUtilsGTK::IsTouchDeviceSupportPresent() {
 
   return result;
 }
+
+bool IsMainWindowTransparent() { return nsWindow::IsMainWindowTransparent(); }
 
 }  // namespace widget
 
