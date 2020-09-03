@@ -67,7 +67,6 @@ def fixture_marionette(binary, ping_server):
         # Disable smart sizing because it changes prefs at startup. (bug 1547750)
         "browser.cache.disk.smart_size.enabled": False,
         "toolkit.telemetry.server": server_url,
-        "telemetry.fog.test.localhost_port": 1337,
         "toolkit.telemetry.initDelay": 1,
         "toolkit.telemetry.minSubsessionLength": 0,
         "datareporting.healthreport.uploadEnabled": True,

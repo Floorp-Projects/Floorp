@@ -112,7 +112,6 @@ add_task(async function run_test() {
         "toolkit.telemetry.server",
         "http://a.telemetry.server"
       );
-      Services.prefs.setIntPref("telemetry.fog.test.localhost_port", 1337);
       Services.prefs.setCharPref(
         "toolkit.telemetry.cachedClientID",
         "f3582dee-22b9-4d73-96d1-79ef5bf2fc24"

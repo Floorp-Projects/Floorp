@@ -7,13 +7,13 @@ testing FOG is a matter of choosing the right tool for the situation.
 
 An often-overlooked first line of testing is "what do the logs say?".
 To turn on logging for FOG, use any of the following:
-* Run Firefox with `RUST_LOG="fog_control,fog,glean_core"`.
+* Run Firefox with `RUST_LOG="glean=info,fog=info,glean_core=info"`.
     * On some platforms this will use terminal colours to indicate log level.
 * Run Firefox with `MOZ_LOG="timestamp,glean::*:5,fog::*:5,glean_core::*:5"`.
 * Set the following prefs:
     * `logging.config.timestamp` to `true`
-    * `logging.fog_control::*` to `5`
     * `logging.fog::*` to `5`
+    * `logging.glean::*` to `5`
     * `logging.glean_core::*` to `5`
 
 For more information on logging in Firefox Desktop, see the
