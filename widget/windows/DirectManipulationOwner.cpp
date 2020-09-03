@@ -298,17 +298,6 @@ DManipEventHandler::OnContentUpdated(IDirectManipulationViewport* viewport,
     TransitionToState(State::ePinching);
   }
 
-  if (mState == State::ePanning || mState == State::eInertia) {
-    // Accumulate the offset (by not updating mLastX/YOffset) until we have at
-    // least one pixel both before and after scaling by the window scale.
-    float dx = std::abs(mLastXOffset - xoffset);
-    float dy = std::abs(mLastYOffset - yoffset);
-    float minDelta = std::max(1., windowScale);
-    if (dx < minDelta && dy < minDelta) {
-      return S_OK;
-    }
-  }
-
   bool updateLastScale = true;
   if (mState == State::ePanning) {
     if (mShouldSendPanStart) {
