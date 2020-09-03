@@ -40,6 +40,9 @@ enum class PackingStrategy {
   PackedVariant,
 };
 
+template <typename T>
+struct UnusedZero;
+
 template <typename V, typename E, PackingStrategy Strategy>
 class ResultImplementation;
 
@@ -95,33 +98,123 @@ class ResultImplementation<V, E&, PackingStrategy::Variant> {
   const E& inspectErr() const { return *mStorage.template as<E*>(); }
 };
 
-// XXX For NullIsOk, we don't actually need default-constructibility. If V is
-// not, we just couldn't use a CompactPair<V, ...> but would need to use
-// uninitialized storage, which is much more complex (but would also be more
-// efficient if default construction of V is complex).
+// The purpose of EmptyWrapper is to make an empty class look like
+// AlignedStorage2 for the purposes of the PackingStrategy::NullIsOk
+// specializations of ResultImplementation below. We can't use AlignedStorage2
+// itself with an empty class, since it would no longer be empty, and we want to
+// avoid changing AlignedStorage2 just for this purpose.
+template <typename V>
+struct EmptyWrapper : V {
+  const V* addr() const { return this; }
+  V* addr() { return this; }
+};
 
-/**
- * Specialization for when the success type is default-constructible and the
- * error type is a reference.
- */
+template <typename V>
+using AlignedStorageOrEmpty =
+    std::conditional_t<std::is_empty_v<V>, EmptyWrapper<V>, AlignedStorage2<V>>;
+
 template <typename V, typename E>
-class ResultImplementation<V, E&, PackingStrategy::NullIsOk> {
-  CompactPair<V, E*> mValue;
+class ResultImplementationNullIsOkBase {
+ protected:
+  using ErrorStorageType = typename UnusedZero<E>::StorageType;
+
+  static constexpr auto kNullValue = UnusedZero<E>::nullValue;
+  static inline const auto kMovedFromMarker = UnusedZero<E>::defaultValue;
+
+  static_assert(std::is_trivially_copyable_v<ErrorStorageType>);
+  static_assert(kNullValue == decltype(kNullValue)(0));
+
+  CompactPair<AlignedStorageOrEmpty<V>, ErrorStorageType> mValue;
 
  public:
-  explicit ResultImplementation(const V& aSuccessValue)
-      : mValue(aSuccessValue, nullptr) {}
-  explicit ResultImplementation(V&& aSuccessValue)
-      : mValue(std::move(aSuccessValue), nullptr) {}
-  explicit ResultImplementation(E& aErrorValue) : mValue(V{}, &aErrorValue) {}
+  explicit ResultImplementationNullIsOkBase(const V& aSuccessValue)
+      : mValue(std::piecewise_construct, std::tuple<>(),
+               std::tuple(kNullValue)) {
+    if constexpr (!std::is_empty_v<V>) {
+      new (mValue.first().addr()) V(aSuccessValue);
+    }
+  }
+  explicit ResultImplementationNullIsOkBase(V&& aSuccessValue)
+      : mValue(std::piecewise_construct, std::tuple<>(),
+               std::tuple(kNullValue)) {
+    if constexpr (!std::is_empty_v<V>) {
+      new (mValue.first().addr()) V(std::move(aSuccessValue));
+    }
+  }
+  explicit ResultImplementationNullIsOkBase(E aErrorValue)
+      : mValue(std::piecewise_construct, std::tuple<>(),
+               std::tuple(UnusedZero<E>::Store(aErrorValue))) {
+    MOZ_ASSERT(mValue.second() != kNullValue);
+  }
 
-  bool isOk() const { return mValue.second() == nullptr; }
+  ResultImplementationNullIsOkBase(ResultImplementationNullIsOkBase&& aOther)
+      : mValue(std::piecewise_construct, std::tuple<>(),
+               std::tuple(std::move(aOther.mValue.second()))) {
+    if constexpr (!std::is_empty_v<V>) {
+      if (isOk()) {
+        new (mValue.first().addr()) V(std::move(*aOther.mValue.first().addr()));
+        aOther.mValue.first().addr()->~V();
+        aOther.mValue.second() = kMovedFromMarker;
+      }
+    }
+  }
+  ResultImplementationNullIsOkBase& operator=(
+      ResultImplementationNullIsOkBase&& aOther) {
+    if constexpr (!std::is_empty_v<V>) {
+      if (isOk()) {
+        mValue.first().addr()->~V();
+      }
+    }
+    mValue.second() = std::move(aOther.mValue.second());
+    if constexpr (!std::is_empty_v<V>) {
+      if (isOk()) {
+        new (mValue.first().addr()) V(std::move(*aOther.mValue.first().addr()));
+        aOther.mValue.first().addr()->~V();
+        aOther.mValue.second() = kMovedFromMarker;
+      }
+    }
+    return *this;
+  }
 
-  const V& inspect() const { return mValue.first(); }
-  V unwrap() { return std::move(mValue.first()); }
+  bool isOk() const { return mValue.second() == kNullValue; }
 
-  const E& inspectErr() const { return *mValue.second(); }
-  E& unwrapErr() { return *mValue.second(); }
+  const V& inspect() const { return *mValue.first().addr(); }
+  V unwrap() { return std::move(*mValue.first().addr()); }
+
+  const E& inspectErr() const {
+    return UnusedZero<E>::Inspect(mValue.second());
+  }
+  E unwrapErr() { return UnusedZero<E>::Unwrap(std::move(mValue.second())); }
+};
+
+template <typename V, typename E,
+          bool IsVTriviallyDestructible = std::is_trivially_destructible_v<V>>
+class ResultImplementationNullIsOk;
+
+template <typename V, typename E>
+class ResultImplementationNullIsOk<V, E, true>
+    : public ResultImplementationNullIsOkBase<V, E> {
+ public:
+  using ResultImplementationNullIsOkBase<V,
+                                         E>::ResultImplementationNullIsOkBase;
+};
+
+template <typename V, typename E>
+class ResultImplementationNullIsOk<V, E, false>
+    : public ResultImplementationNullIsOkBase<V, E> {
+ public:
+  using ResultImplementationNullIsOkBase<V,
+                                         E>::ResultImplementationNullIsOkBase;
+
+  ResultImplementationNullIsOk(ResultImplementationNullIsOk&&) = default;
+  ResultImplementationNullIsOk& operator=(ResultImplementationNullIsOk&&) =
+      default;
+
+  ~ResultImplementationNullIsOk() {
+    if (this->isOk()) {
+      this->mValue.first().addr()->~V();
+    }
+  }
 };
 
 /**
@@ -130,34 +223,15 @@ class ResultImplementation<V, E&, PackingStrategy::NullIsOk> {
  * UnusedZero<>).
  */
 template <typename V, typename E>
-class ResultImplementation<V, E, PackingStrategy::NullIsOk> {
-  static constexpr E NullValue = E(0);
-
-  CompactPair<V, E> mValue;
-
-  static_assert(std::is_trivially_copyable_v<E>);
-
+class ResultImplementation<V, E, PackingStrategy::NullIsOk>
+    : public ResultImplementationNullIsOk<V, E> {
  public:
-  explicit ResultImplementation(const V& aSuccessValue)
-      : mValue(aSuccessValue, NullValue) {}
-  explicit ResultImplementation(V&& aSuccessValue)
-      : mValue(std::move(aSuccessValue), NullValue) {}
-  explicit ResultImplementation(E aErrorValue) : mValue(V{}, aErrorValue) {
-    MOZ_ASSERT(aErrorValue != NullValue);
-  }
-
-  bool isOk() const { return mValue.second() == NullValue; }
-
-  const V& inspect() const { return mValue.first(); }
-  V unwrap() { return std::move(mValue.first()); }
-
-  const E& inspectErr() const { return mValue.second(); }
-  E unwrapErr() { return std::move(mValue.second()); }
+  using ResultImplementationNullIsOk<V, E>::ResultImplementationNullIsOk;
 };
 
 /**
- * Specialization for when alignment permits using the least significant bit as
- * a tag bit.
+ * Specialization for when alignment permits using the least significant bit
+ * as a tag bit.
  */
 template <typename V, typename E>
 class ResultImplementation<V*, E&, PackingStrategy::LowBitTagIsError> {
@@ -244,7 +318,28 @@ struct UnusedZero {
 // References can't be null.
 template <typename T>
 struct UnusedZero<T&> {
-  static const bool value = true;
+  using StorageType = T*;
+
+  static constexpr bool value = true;
+
+  static inline StorageType const defaultValue =
+      reinterpret_cast<StorageType>(~ptrdiff_t(0));
+  static constexpr StorageType nullValue = nullptr;
+
+  static constexpr const T& Inspect(StorageType aValue) {
+    AssertValid(aValue);
+    return *aValue;
+  }
+  static constexpr T& Unwrap(StorageType aValue) {
+    AssertValid(aValue);
+    return *aValue;
+  }
+  static constexpr StorageType Store(T& aValue) { return &aValue; }
+
+ private:
+  static constexpr void AssertValid(StorageType aValue) {
+    MOZ_ASSERT(aValue != defaultValue);
+  }
 };
 
 // A bit of help figuring out which of the above specializations to use.
@@ -283,8 +378,7 @@ struct SelectResultImpl {
   static const PackingStrategy value =
       (HasFreeLSB<V>::value && HasFreeLSB<E>::value)
           ? PackingStrategy::LowBitTagIsError
-          : (std::is_trivially_default_constructible_v<V> &&
-             UnusedZero<E>::value && sizeof(E) <= sizeof(uintptr_t))
+          : (UnusedZero<E>::value && sizeof(E) <= sizeof(uintptr_t))
                 ? PackingStrategy::NullIsOk
                 : (std::is_default_constructible_v<V> &&
                    std::is_default_constructible_v<E> &&

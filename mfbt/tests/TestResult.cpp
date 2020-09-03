@@ -19,7 +19,18 @@ enum struct UnusedZeroEnum : int32_t { Ok = 0, NotOk = 1 };
 namespace mozilla::detail {
 template <>
 struct UnusedZero<UnusedZeroEnum> {
-  static const bool value = true;
+  using StorageType = UnusedZeroEnum;
+
+  static constexpr bool value = true;
+  static constexpr StorageType nullValue = UnusedZeroEnum::Ok;
+  static constexpr StorageType defaultValue = UnusedZeroEnum::NotOk;
+
+  static constexpr void AssertValid(StorageType aValue) {}
+  static constexpr const UnusedZeroEnum& Inspect(const StorageType& aValue) {
+    return aValue;
+  }
+  static constexpr UnusedZeroEnum Unwrap(StorageType aValue) { return aValue; }
+  static constexpr StorageType Store(UnusedZeroEnum aValue) { return aValue; }
 };
 }  // namespace mozilla::detail
 
@@ -33,6 +44,9 @@ static_assert(mozilla::detail::SelectResultImpl<uintptr_t, Failed&>::value ==
               mozilla::detail::PackingStrategy::NullIsOk);
 static_assert(mozilla::detail::SelectResultImpl<Ok, UnusedZeroEnum>::value ==
               mozilla::detail::PackingStrategy::NullIsOk);
+
+static_assert(std::is_trivially_destructible_v<Result<uintptr_t, Failed&>>);
+static_assert(std::is_trivially_destructible_v<Result<Ok, UnusedZeroEnum>>);
 
 static_assert(sizeof(Result<Ok, Failed&>) == sizeof(uintptr_t),
               "Result with empty value type should be pointer-sized");
