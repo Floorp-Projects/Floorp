@@ -285,7 +285,7 @@ var PrintUtils = {
 
     // At some point we should handle the Promise that this returns (report
     // rejection to telemetry?)
-    topBrowser.print(windowID, printSettings);
+    let promise = topBrowser.print(windowID, printSettings);
 
     if (printPreviewIsOpen) {
       if (this._shouldSimplify) {
@@ -296,6 +296,8 @@ var PrintUtils = {
     } else {
       this._logKeyedTelemetry("PRINT_COUNT", "WITHOUT_PREVIEW");
     }
+
+    return promise;
   },
 
   /**
