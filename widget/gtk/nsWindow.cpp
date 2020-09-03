@@ -7833,19 +7833,10 @@ bool nsWindow::HideTitlebarByDefault() {
   hideTitlebar =
       (currentDesktop && GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE);
 
-  // Disable system titlebar for Gnome/ElementaryOS only for now. It uses window
-  // manager decorations and does not suffer from CSD Bugs #1525850, #1527837.
-  if (hideTitlebar) {
-    hideTitlebar =
-        (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
-         strstr(currentDesktop, "GNOME") != nullptr ||
-         strstr(currentDesktop, "Pantheon") != nullptr);
-  }
-
-  // We use shape mask to render the titlebar by default so check for it.
-  if (hideTitlebar) {
-    hideTitlebar = TitlebarCanUseShapeMask();
-  }
+  GdkScreen* screen;
+  hideTitlebar = ((screen = gdk_screen_get_default()) &&
+                  gdk_screen_is_composited(screen)) ||
+                 TitlebarCanUseShapeMask();
 
   return hideTitlebar;
 }
