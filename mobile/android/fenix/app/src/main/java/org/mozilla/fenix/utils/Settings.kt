@@ -663,6 +663,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
+    var shouldShowOpenInAppBanner by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_open_in_app_banner),
+        default = true
+    )
+
     @VisibleForTesting(otherwise = PRIVATE)
     internal val trackingProtectionOnboardingCount = counterPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_onboarding),
