@@ -141,9 +141,9 @@ NS_IMETHODIMP InsertNodeTransaction::DoTransaction() {
   NS_WARNING_ASSERTION(afterInsertedNode.IsSet(),
                        "Failed to set after the inserted node");
   IgnoredErrorResult ignoredError;
-  selection->CollapseInLimiter(afterInsertedNode, ignoredError);
+  selection->Collapse(afterInsertedNode, ignoredError);
   NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "Selection::CollapseInLimiter() failed, but ignored");
+                       "Selection::Collapse() failed, but ignored");
   return NS_OK;
 }
 

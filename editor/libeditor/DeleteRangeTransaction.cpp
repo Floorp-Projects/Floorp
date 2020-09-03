@@ -98,9 +98,8 @@ NS_IMETHODIMP DeleteRangeTransaction::DoTransaction() {
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  rv = selection->CollapseInLimiter(startRef.AsRaw());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Selection::CollapseInLimiter() failed");
+  rv = selection->Collapse(startRef.AsRaw());
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapsed() failed");
   return rv;
 }
 

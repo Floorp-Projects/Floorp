@@ -179,8 +179,8 @@ NS_IMETHODIMP CompositionTransaction::UndoTransaction() {
   }
 
   // set the selection to the insertion point where the string was removed
-  nsresult rv = selection->CollapseInLimiter(textNode, mOffset);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Selection::CollapseInLimiter() failed");
+  nsresult rv = selection->Collapse(textNode, mOffset);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
   return rv;
 }
 
@@ -299,10 +299,10 @@ nsresult CompositionTransaction::SetIMESelection(
           std::min(textRange.mStartOffset, aLengthOfCompositionString));
       MOZ_ASSERT(caretOffset >= 0 &&
                  static_cast<uint32_t>(caretOffset) <= maxOffset);
-      rv = selection->CollapseInLimiter(aTextNode, caretOffset);
+      rv = selection->Collapse(aTextNode, caretOffset);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
-          "Selection::CollapseInLimiter() failed, but might be ignored");
+          "Selection::Collapse() failed, but might be ignored");
       setCaret = setCaret || NS_SUCCEEDED(rv);
       if (!setCaret) {
         continue;
@@ -372,9 +372,8 @@ nsresult CompositionTransaction::SetIMESelection(
         static_cast<int32_t>(aOffsetInNode + aLengthOfCompositionString);
     MOZ_ASSERT(caretOffset >= 0 &&
                static_cast<uint32_t>(caretOffset) <= maxOffset);
-    rv = selection->CollapseInLimiter(aTextNode, caretOffset);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Selection::CollapseInLimiter() failed");
+    rv = selection->Collapse(aTextNode, caretOffset);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
 
     // If caret range isn't specified explicitly, we should hide the caret.
     // Hiding the caret benefits a Windows build (see bug 555642 comment #6).

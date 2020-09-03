@@ -52,13 +52,13 @@ NS_IMETHODIMP ReplaceTextTransaction::DoTransaction() {
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
   }
-  DebugOnly<nsresult> rvIgnored = selection->CollapseInLimiter(
-      textNode, mOffset + mStringToInsert.Length());
+  DebugOnly<nsresult> rvIgnored =
+      selection->Collapse(textNode, mOffset + mStringToInsert.Length());
   if (NS_WARN_IF(editorBase->Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-               "Selection::CollapseInLimiter() failed, but ignored");
+               "Selection::Collapse() failed, but ignored");
   return NS_OK;
 }
 
@@ -107,13 +107,13 @@ NS_IMETHODIMP ReplaceTextTransaction::UndoTransaction() {
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
   }
-  DebugOnly<nsresult> rvIgnored = selection->CollapseInLimiter(
-      textNode, mOffset + mStringToBeReplaced.Length());
+  DebugOnly<nsresult> rvIgnored =
+      selection->Collapse(textNode, mOffset + mStringToBeReplaced.Length());
   if (NS_WARN_IF(editorBase->Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-               "Selection::CollapseInLimiter() failed, but ignored");
+               "Selection::Collapse() failed, but ignored");
   return NS_OK;
 }
 
@@ -162,13 +162,13 @@ NS_IMETHODIMP ReplaceTextTransaction::RedoTransaction() {
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
   }
-  DebugOnly<nsresult> rvIgnored = selection->CollapseInLimiter(
-      textNode, mOffset + mStringToInsert.Length());
+  DebugOnly<nsresult> rvIgnored =
+      selection->Collapse(textNode, mOffset + mStringToInsert.Length());
   if (NS_WARN_IF(editorBase->Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-               "Selection::CollapseInLimiter() failed, but ignored");
+               "Selection::Collapse() failed, but ignored");
   return NS_OK;
 }
 
