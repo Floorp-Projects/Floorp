@@ -497,6 +497,12 @@ nsresult HTMLCanvasElement::DispatchPrintCallback(nsITimerCallback* aCallback) {
 
 MOZ_CAN_RUN_SCRIPT
 void HTMLCanvasElement::CallPrintCallback() {
+  if (!mPrintState) {
+    // `mPrintState` might have been destroyed by cancelling the previous
+    // printing (especially the canvas frame destruction) during processing
+    // event loops in the printing.
+    return;
+  }
   RefPtr<PrintCallback> callback = GetMozPrintCallback();
   RefPtr<HTMLCanvasPrintState> state = mPrintState;
   callback->Call(*state);
