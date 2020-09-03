@@ -2186,7 +2186,8 @@ void Selection::CollapseToStart(ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  CollapseInLimiter(*container, firstRange->StartOffset(), aRv);
+  CollapseInternal(InLimiter::eNo,
+                   RawRangeBoundary(container, firstRange->StartOffset()), aRv);
 }
 
 /*
@@ -2222,7 +2223,8 @@ void Selection::CollapseToEnd(ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  CollapseInLimiter(*container, lastRange->EndOffset(), aRv);
+  CollapseInternal(InLimiter::eNo,
+                   RawRangeBoundary(container, lastRange->EndOffset()), aRv);
 }
 
 void Selection::GetType(nsAString& aOutType) const {
