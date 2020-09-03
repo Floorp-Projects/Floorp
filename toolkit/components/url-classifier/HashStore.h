@@ -73,27 +73,28 @@ class TableUpdateV2 : public TableUpdate {
 
   // Throughout, uint32_t aChunk refers only to the chunk number. Chunk data is
   // stored in the Prefix structures.
-  MOZ_MUST_USE nsresult NewAddChunk(uint32_t aChunk) {
+  [[nodiscard]] nsresult NewAddChunk(uint32_t aChunk) {
     return mAddChunks.Set(aChunk);
   };
-  MOZ_MUST_USE nsresult NewSubChunk(uint32_t aChunk) {
+  [[nodiscard]] nsresult NewSubChunk(uint32_t aChunk) {
     return mSubChunks.Set(aChunk);
   };
-  MOZ_MUST_USE nsresult NewAddExpiration(uint32_t aChunk) {
+  [[nodiscard]] nsresult NewAddExpiration(uint32_t aChunk) {
     return mAddExpirations.Set(aChunk);
   };
-  MOZ_MUST_USE nsresult NewSubExpiration(uint32_t aChunk) {
+  [[nodiscard]] nsresult NewSubExpiration(uint32_t aChunk) {
     return mSubExpirations.Set(aChunk);
   };
-  MOZ_MUST_USE nsresult NewAddPrefix(uint32_t aAddChunk, const Prefix& aPrefix);
-  MOZ_MUST_USE nsresult NewSubPrefix(uint32_t aAddChunk, const Prefix& aPrefix,
-                                     uint32_t aSubChunk);
-  MOZ_MUST_USE nsresult NewAddComplete(uint32_t aChunk,
-                                       const Completion& aCompletion);
-  MOZ_MUST_USE nsresult NewSubComplete(uint32_t aAddChunk,
-                                       const Completion& aCompletion,
-                                       uint32_t aSubChunk);
-  MOZ_MUST_USE nsresult NewMissPrefix(const Prefix& aPrefix);
+  [[nodiscard]] nsresult NewAddPrefix(uint32_t aAddChunk,
+                                      const Prefix& aPrefix);
+  [[nodiscard]] nsresult NewSubPrefix(uint32_t aAddChunk, const Prefix& aPrefix,
+                                      uint32_t aSubChunk);
+  [[nodiscard]] nsresult NewAddComplete(uint32_t aChunk,
+                                        const Completion& aCompletion);
+  [[nodiscard]] nsresult NewSubComplete(uint32_t aAddChunk,
+                                        const Completion& aCompletion,
+                                        uint32_t aSubChunk);
+  [[nodiscard]] nsresult NewMissPrefix(const Prefix& aPrefix);
 
   const ChunkSet& AddChunks() const { return mAddChunks; }
   const ChunkSet& SubChunks() const { return mSubChunks; }
