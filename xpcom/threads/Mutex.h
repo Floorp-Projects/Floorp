@@ -66,7 +66,7 @@ class OffTheBooksMutex : public detail::MutexImpl, BlockingResourceBase {
   /**
    * Try to lock this mutex, returning true if we were successful.
    **/
-  bool TryLock() { return this->tryLock(); }
+  [[nodiscard]] bool TryLock() { return this->tryLock(); }
 
   /**
    * Unlock this mutex.
@@ -92,7 +92,7 @@ class OffTheBooksMutex : public detail::MutexImpl, BlockingResourceBase {
 
 #else
   void Lock();
-  bool TryLock();
+  [[nodiscard]] bool TryLock();
   void Unlock();
 
   void AssertCurrentThreadOwns() const;
