@@ -163,7 +163,7 @@ handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 #define BUFFER_BPP 4
 gfx::SurfaceFormat WindowBackBuffer::mFormat = gfx::SurfaceFormat::B8G8R8A8;
 
-RefPtr<nsWaylandDisplay> WindowBackBuffer::GetWaylandDisplay() {
+nsWaylandDisplay* WindowBackBuffer::GetWaylandDisplay() {
   return mWindowSurfaceWayland->GetWaylandDisplay();
 }
 
@@ -200,8 +200,7 @@ static int WaylandAllocateShmMemory(int aSize) {
   return fd;
 }
 
-WaylandShmPool::WaylandShmPool(RefPtr<nsWaylandDisplay> aWaylandDisplay,
-                               int aSize)
+WaylandShmPool::WaylandShmPool(nsWaylandDisplay* aWaylandDisplay, int aSize)
     : mAllocatedSize(aSize) {
   mShmPoolFd = WaylandAllocateShmMemory(mAllocatedSize);
   mImageData = mmap(nullptr, mAllocatedSize, PROT_READ | PROT_WRITE, MAP_SHARED,

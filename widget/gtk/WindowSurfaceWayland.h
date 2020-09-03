@@ -25,7 +25,7 @@ class WindowSurfaceWayland;
 // Allocates and owns shared memory for Wayland drawing surface
 class WaylandShmPool {
  public:
-  WaylandShmPool(RefPtr<nsWaylandDisplay> aDisplay, int aSize);
+  WaylandShmPool(nsWaylandDisplay* aDisplay, int aSize);
   ~WaylandShmPool();
 
   bool Resize(int aSize);
@@ -72,7 +72,7 @@ class WindowBackBuffer {
 
   static gfx::SurfaceFormat GetSurfaceFormat() { return mFormat; }
 
-  RefPtr<nsWaylandDisplay> GetWaylandDisplay();
+  nsWaylandDisplay* GetWaylandDisplay();
 
   WindowBackBuffer(WindowSurfaceWayland* aWindowSurfaceWayland)
       : mWindowSurfaceWayland(aWindowSurfaceWayland){};
@@ -183,7 +183,7 @@ class WindowSurfaceWayland : public WindowSurface {
   // (see WindowBackBufferShm::Detach() for instance).
   void CommitWaylandBuffer();
 
-  RefPtr<nsWaylandDisplay> GetWaylandDisplay() { return mWaylandDisplay; };
+  nsWaylandDisplay* GetWaylandDisplay() { return mWaylandDisplay; };
 
   // Image cache mode can be set by widget.wayland_cache_mode
   typedef enum {
@@ -229,7 +229,7 @@ class WindowSurfaceWayland : public WindowSurface {
   // during resize when mBounds are updated immediately but actual
   // GtkWidget size is updated asynchronously (see Bug 1489463).
   LayoutDeviceIntRect mWLBufferRect;
-  RefPtr<nsWaylandDisplay> mWaylandDisplay;
+  nsWaylandDisplay* mWaylandDisplay;
 
   // Actual buffer (backed by wl_buffer) where all drawings go into.
   // Drawn areas are stored at mWaylandBufferDamage and if there's
