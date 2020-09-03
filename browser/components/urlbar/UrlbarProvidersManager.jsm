@@ -194,15 +194,7 @@ class ProvidersManager {
     }
     // Providers can use queryContext.sources to decide whether they want to be
     // invoked or not.
-    // The sources may be defined in the context, then the whole search string
-    // can be used for searching. Otherwise sources are extracted from prefs and
-    // restriction tokens, then restriction tokens must be filtered out of the
-    // search string.
-    if (updateSourcesIfEmpty(queryContext)) {
-      queryContext.shouldFilterRestrictionTokens = true;
-      queryContext.restrictSource =
-        queryContext.sources.length == 1 && queryContext.sources[0];
-    }
+    updateSourcesIfEmpty(queryContext);
     logger.debug(`Context sources ${queryContext.sources}`);
 
     let query = new Query(queryContext, controller, muxer, providers);
@@ -613,11 +605,10 @@ class Query {
 /**
  * Updates in place the sources for a given UrlbarQueryContext.
  * @param {UrlbarQueryContext} context The query context to examine
- * @returns {boolean} Whether a restriction token was used to set sources.
  */
 function updateSourcesIfEmpty(context) {
   if (context.sources && context.sources.length) {
-    return false;
+    return;
   }
   let acceptedSources = [];
   // There can be only one restrict token about sources.
@@ -690,5 +681,4 @@ function updateSourcesIfEmpty(context) {
     }
   }
   context.sources = acceptedSources;
-  return !!restrictToken;
 }
