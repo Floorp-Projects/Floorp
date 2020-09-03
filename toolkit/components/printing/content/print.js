@@ -25,6 +25,20 @@ const MM_PER_POINT = 25.4 / 72;
 const INCHES_PER_POINT = 1 / 72;
 const ourBrowser = window.docShell.chromeEventHandler;
 
+let deferredTasks = [];
+function createDeferredTask(fn, timeout) {
+  let task = new DeferredTask(fn, timeout);
+  deferredTasks.push(task);
+  return task;
+}
+
+function cancelDeferredTasks() {
+  for (let task of deferredTasks) {
+    task.disarm();
+  }
+  deferredTasks = [];
+}
+
 document.addEventListener(
   "DOMContentLoaded",
   e => {
@@ -38,6 +52,7 @@ document.addEventListener(
 
 window.addEventListener("dialogclosing", () => {
   PrintEventHandler.unload();
+  cancelDeferredTasks();
 });
 
 window.addEventListener(
@@ -176,7 +191,7 @@ var PrintEventHandler = {
 
     // Use a DeferredTask for updating the preview. This will ensure that we
     // only have one update running at a time.
-    this._updatePrintPreviewTask = new DeferredTask(async () => {
+    this._updatePrintPreviewTask = createDeferredTask(async () => {
       await this._updatePrintPreview(sourceBrowsingContext);
       // After the first use of sourceBrowsingContext we want to use the preview
       // browser's browsing context so throw this one away.
@@ -247,16 +262,15 @@ var PrintEventHandler = {
     );
     this.settings = currentPrinter.settings;
     this.defaultSettings = currentPrinter.defaultSettings;
-    // restore settings which do not have a corresponding flag
-    for (let key of Object.keys(this._nonFlaggedChangedSettings)) {
-      if (key in this.settings) {
-        this.settings[key] = this._nonFlaggedChangedSettings[key];
-      }
-    }
 
     // Some settings are only used by the UI
     // assigning new values should update the underlying settings
     this.viewSettings = new Proxy(this.settings, PrintSettingsViewProxy);
+
+    // restore settings which do not have a corresponding flag
+    for (let key of Object.keys(this._nonFlaggedChangedSettings)) {
+      this.viewSettings[key] = this._nonFlaggedChangedSettings[key];
+    }
 
     // Ensure the output format is set properly
     this.viewSettings.printerName = printerName;
@@ -1149,6 +1163,7 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
     this.addEventListener("submit", this);
     this.addEventListener("click", this);
     this.addEventListener("input", this);
+    this.addEventListener("revalidate", this);
   }
 
   update(settings) {
@@ -1181,7 +1196,11 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
           this.dispatchEvent(new Event("cancel-print", { bubbles: true }));
           break;
       }
-    } else if (e.type == "change" || e.type == "input") {
+    } else if (
+      e.type == "change" ||
+      e.type == "input" ||
+      e.type == "revalidate"
+    ) {
       let isValid = this.checkValidity();
       let section = e.target.closest(".section-block");
       document.body.toggleAttribute("invalid", !isValid);
@@ -1314,6 +1333,11 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       "#error-invalid-start-range-overflow"
     );
 
+    this._updatePageRangeTask = createDeferredTask(
+      () => this.updatePageRange(),
+      INPUT_DELAY_MS
+    );
+
     this.addEventListener("input", this);
     this.addEventListener("keypress", this);
     this.addEventListener("paste", this);
@@ -1322,6 +1346,14 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
   get templateId() {
     return "page-range-template";
+  }
+
+  updatePageRange() {
+    this.dispatchSettingsChange({
+      printAllOrCustomRange: this._rangePicker.value,
+      startPageRange: this._startRange.value,
+      endPageRange: this._endRange.value,
+    });
   }
 
   update(settings) {
@@ -1338,16 +1370,40 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       this.handlePaste(e);
     }
 
+    this._updatePageRangeTask.disarm();
+
     if (e.type == "page-count") {
-      this._startRange.max = this._endRange.max = this._numPages =
-        e.detail.totalPages;
+      let { totalPages } = e.detail;
+      this._startRange.max = this._endRange.max = this._numPages = totalPages;
       this._startRange.disabled = this._endRange.disabled = false;
+      let isChanged = false;
+
+      // Changing certain settings (like orientation, scale or printer) can
+      // change the number of pages. We need to update the start and end rages
+      // if their values are no longer valid.
+      if (!this._startRange.checkValidity()) {
+        this._startRange.value = this._numPages;
+        isChanged = true;
+      }
       if (!this._endRange.checkValidity()) {
         this._endRange.value = this._numPages;
-        this.dispatchSettingsChange({
-          endPageRange: this._endRange.value,
-        });
-        this._endRange.dispatchEvent(new Event("change", { bubbles: true }));
+        isChanged = true;
+      }
+      if (isChanged) {
+        window.clearTimeout(this.showErrorTimeoutId);
+        this._startRange.max = Math.min(this._endRange.value, totalPages);
+        this._endRange.min = Math.max(this._startRange.value, 1);
+
+        this.dispatchEvent(new Event("revalidate", { bubbles: true }));
+
+        if (this._startRange.validity.valid && this._endRange.validity.valid) {
+          this.dispatchSettingsChange({
+            startPageRange: this._startRange.value,
+            endPageRange: this._endRange.value,
+          });
+          this._rangeError.hidden = true;
+          this._startRangeOverflowError.hidden = true;
+        }
       }
       return;
     }
@@ -1359,11 +1415,8 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       this._startRange.value = 1;
       this._endRange.value = this._numPages || 1;
 
-      this.dispatchSettingsChange({
-        printAllOrCustomRange: e.target.value,
-        startPageRange: this._startRange.value,
-        endPageRange: this._endRange.value,
-      });
+      this.updatePageRange();
+
       window.clearTimeout(this.showErrorTimeoutId);
       this._rangeError.hidden = true;
       this._startRangeOverflowError.hidden = true;
@@ -1379,10 +1432,10 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       }
       if (this._startRange.checkValidity() && this._endRange.checkValidity()) {
         if (this._startRange.value && this._endRange.value) {
-          this.dispatchSettingsChange({
-            startPageRange: this._startRange.value,
-            endPageRange: this._endRange.value,
-          });
+          // Update the page range after a short delay so we don't update
+          // multiple times as the user types a multi-digit number or uses
+          // up/down/mouse wheel.
+          this._updatePageRangeTask.arm();
         }
       }
     }

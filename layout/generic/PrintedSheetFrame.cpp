@@ -178,8 +178,6 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   // subsequent sheets because we should only create an additional sheet when
   // we discover a displayable (i.e. non-skipped) page that we need to push
   // to that new sheet.
-  MOZ_ASSERT(numPagesOnThisSheet > 0 &&
-             "Shouldn't create a sheet with no displayable pages on it");
   MOZ_ASSERT(numPagesOnThisSheet <= kDesiredPagesPerSheet,
              "Shouldn't have more than desired number of displayable pages "
              "on this sheet");
