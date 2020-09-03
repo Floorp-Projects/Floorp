@@ -46,14 +46,16 @@ fn global_state() -> &'static AppState {
     STATE.get().unwrap()
 }
 
-/// Run a closure with a mutable reference to the locked global Glean object,
-/// or return None if the global Glean isn't available.
-fn with_glean_mut<F, R>(f: F) -> Option<R>
+/// Run a closure with a mutable reference to the locked global Glean object.
+fn with_glean_mut<F, R>(f: F) -> R
 where
     F: Fn(&mut Glean) -> R,
 {
-    let mut glean = global_glean()?.lock().unwrap();
-    Some(f(&mut glean))
+    let mut glean = global_glean()
+        .expect("Global Glean not initialized")
+        .lock()
+        .unwrap();
+    f(&mut glean)
 }
 
 /// Create and initialize a new Glean object.
@@ -136,7 +138,6 @@ pub fn set_upload_enabled(enabled: bool) -> bool {
 
         enabled
     })
-    .expect("Setting upload enabled failed!")
 }
 
 fn register_uploader() {
@@ -186,13 +187,13 @@ fn register_uploader() {
 }
 
 pub fn set_debug_view_tag(value: &str) -> bool {
-    with_glean_mut(|glean| glean.set_debug_view_tag(value)).unwrap_or(false)
+    with_glean_mut(|glean| glean.set_debug_view_tag(value))
 }
 
 pub fn submit_ping(ping_name: &str) -> Result<bool> {
-    with_glean_mut(|glean| glean.submit_ping_by_name(ping_name, None)).unwrap_or(Ok(false))
+    with_glean_mut(|glean| glean.submit_ping_by_name(ping_name, None))
 }
 
 pub fn set_log_pings(value: bool) -> bool {
-    with_glean_mut(|glean| glean.set_log_pings(value)).unwrap_or(false)
+    with_glean_mut(|glean| glean.set_log_pings(value))
 }
