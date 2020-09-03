@@ -1188,8 +1188,8 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
       return rv;
     }
 
-    rv = selection->CollapseInLimiter(itEntry->mNode,
-                                      itEntry->mNodeOffset + itEntry->mLength);
+    rv = selection->Collapse(itEntry->mNode,
+                             itEntry->mNodeOffset + itEntry->mLength);
 
     if (NS_FAILED(rv)) {
       return rv;
@@ -1757,7 +1757,7 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
 
   if (!aLength) {
     if (aDoUpdate) {
-      nsresult rv = selection->CollapseInLimiter(startNode, startNodeOffset);
+      nsresult rv = selection->Collapse(startNode, startNodeOffset);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1801,7 +1801,7 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
   }
 
   if (!endNode) {
-    nsresult rv = selection->CollapseInLimiter(startNode, startNodeOffset);
+    nsresult rv = selection->Collapse(startNode, startNodeOffset);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse selection");
     return rv;
   }

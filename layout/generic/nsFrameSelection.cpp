@@ -789,7 +789,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
         node = anchorFocusRange->GetEndContainer();
         offset = anchorFocusRange->EndOffset();
       }
-      sel->CollapseInLimiter(node, offset);
+      sel->Collapse(node, offset);
     }
     sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
                         ScrollAxis(), ScrollAxis(), scrollFlags);
@@ -873,7 +873,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     //  1. bumped into the BRFrame, bug 207623
     //  2. had select-all in a text input (DIV range), bug 352759.
     bool isBRFrame = frame->IsBrFrame();
-    sel->CollapseInLimiter(sel->GetFocusNode(), sel->FocusOffset());
+    sel->Collapse(sel->GetFocusNode(), sel->FocusOffset());
     // Note: 'frame' might be dead here.
     if (!isBRFrame) {
       mCaret.mHint = CARET_ASSOCIATE_BEFORE;  // We're now at the end of the
@@ -1419,7 +1419,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
         bool oldDesiredPosSet =
             mDesiredCaretPos.mIsSet;  // need to keep old desired
                                       // position if it was set.
-        mDomSelections[index]->CollapseInLimiter(aNewFocus, aContentOffset);
+        mDomSelections[index]->Collapse(aNewFocus, aContentOffset);
         mDesiredCaretPos.mIsSet =
             oldDesiredPosSet;  // now reset desired pos back.
         mBatching = saveBatching;
@@ -2574,7 +2574,7 @@ nsresult nsFrameSelection::TableSelection::HandleMouseUpOrDown(
             // Even better, should we collapse to just after the LAST deepest
             // child
             //  (i.e., at the end of the cell's contents)?
-            return aNormalSelection.CollapseInLimiter(aChildContent, 0);
+            return aNormalSelection.Collapse(aChildContent, 0);
           }
 #ifdef DEBUG_TABLE_SELECTION
           printf(

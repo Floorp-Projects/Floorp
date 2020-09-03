@@ -266,9 +266,9 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
       !pointAfterInsertedLineFeed.GetChild(),
       "After inserting text into a text node, pointAfterInsertedLineFeed."
       "GetChild() should be nullptr");
-  rv = SelectionRefPtr()->CollapseInLimiter(pointAfterInsertedLineFeed);
+  rv = SelectionRefPtr()->Collapse(pointAfterInsertedLineFeed);
   if (NS_FAILED(rv)) {
-    NS_WARNING("Selection::CollapseInLimiter() failed");
+    NS_WARNING("Selection::Collapse() failed");
     return EditActionIgnored(rv);
   }
 
@@ -346,12 +346,11 @@ nsresult TextEditor::EnsureCaretNotAtEndOfTextNode() {
     return NS_ERROR_FAILURE;
   }
   IgnoredErrorResult ignoredError;
-  SelectionRefPtr()->CollapseInLimiter(afterStartContainer, ignoredError);
+  SelectionRefPtr()->Collapse(afterStartContainer, ignoredError);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "Selection::CollapseInLimiter() failed");
+  NS_WARNING_ASSERTION(!ignoredError.Failed(), "Selection::Collapse() failed");
   return ignoredError.StealNSResult();
 }
 
@@ -590,14 +589,12 @@ EditActionResult TextEditor::HandleInsertText(
           "After inserting text into a text node, pointAfterStringInserted."
           "GetChild() should be nullptr");
       ignoredError = IgnoredErrorResult();
-      SelectionRefPtr()->CollapseInLimiter(pointAfterStringInserted,
-                                           ignoredError);
+      SelectionRefPtr()->Collapse(pointAfterStringInserted, ignoredError);
       if (NS_WARN_IF(Destroyed())) {
         return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(
-          !ignoredError.Failed(),
-          "Selection::CollapseInLimiter() failed, but ignored");
+      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                           "Selection::Collapse() failed, but ignored");
     }
   }
 

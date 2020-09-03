@@ -598,10 +598,9 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
     //     we can saving the expensive cost of modifying `Selection` here.
     nsresult rv;
     if (IsEmpty()) {
-      rv = SelectionRefPtr()->CollapseInLimiter(rootElement, 0);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "Selection::CollapseInLimiter() failed, but ignored");
+      rv = SelectionRefPtr()->Collapse(rootElement, 0);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "Selection::Collapse() failed, but ignored");
     } else {
       // XXX Oh, we shouldn't select padding `<br>` element for empty last
       //     line here since we will need to recreate it in multiline
@@ -1546,9 +1545,8 @@ nsresult TextEditor::SelectEntireDocument() {
   // If we're empty, don't select all children because that would select the
   // padding <br> element for empty editor.
   if (IsEmpty()) {
-    nsresult rv = SelectionRefPtr()->CollapseInLimiter(anonymousDivElement, 0);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Selection::CollapseInLimiter() failed");
+    nsresult rv = SelectionRefPtr()->Collapse(anonymousDivElement, 0);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
     return rv;
   }
 

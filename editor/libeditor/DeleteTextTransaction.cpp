@@ -131,9 +131,8 @@ NS_IMETHODIMP DeleteTextTransaction::DoTransaction() {
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
   }
-  selection->CollapseInLimiter(EditorRawDOMPoint(textNode, mOffset), error);
-  NS_WARNING_ASSERTION(!error.Failed(),
-                       "Selection::CollapseInLimiter() failed");
+  selection->Collapse(EditorRawDOMPoint(textNode, mOffset), error);
+  NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
   return error.StealNSResult();
 }
 

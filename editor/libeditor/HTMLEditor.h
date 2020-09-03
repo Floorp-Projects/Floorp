@@ -3029,13 +3029,12 @@ class HTMLEditor final : public TextEditor,
     MOZ_ASSERT(IsEditActionDataAvailable());
     MOZ_ASSERT(!aRv.Failed());
 
-    SelectionRefPtr()->CollapseInLimiter(aPoint, aRv);
+    SelectionRefPtr()->Collapse(aPoint, aRv);
     if (NS_WARN_IF(Destroyed())) {
       aRv = NS_ERROR_EDITOR_DESTROYED;
       return;
     }
-    NS_WARNING_ASSERTION(!aRv.Failed(),
-                         "Selection::CollapseInLimiter() failed");
+    NS_WARNING_ASSERTION(!aRv.Failed(), "Selection::Collapse() failed");
   }
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG nsresult

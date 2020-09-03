@@ -105,12 +105,11 @@ nsresult TextEditor::PrepareToInsertContent(
   }
 
   IgnoredErrorResult error;
-  SelectionRefPtr()->CollapseInLimiter(pointToInsert, error);
+  SelectionRefPtr()->Collapse(pointToInsert, error);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(!error.Failed(),
-                       "Selection::CollapseInLimiter() failed");
+  NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
   return error.StealNSResult();
 }
 
