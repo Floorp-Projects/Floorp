@@ -704,11 +704,16 @@ add_task(async function test_devicelist_pushendpointexpired() {
       },
     ]);
   };
+  let polledForMissedCommands = false;
+  fxa._internal.commands.pollDeviceCommands = () => {
+    polledForMissedCommands = true;
+  };
 
   await fxa.device.refreshDeviceList();
 
   Assert.equal(spy.getDeviceList.count, 1);
   Assert.equal(spy.updateDevice.count, 1);
+  Assert.ok(polledForMissedCommands);
   await fxa.signOut(true);
 });
 
@@ -751,10 +756,16 @@ add_task(async function test_devicelist_nopushcallback() {
     ]);
   };
 
+  let polledForMissedCommands = false;
+  fxa._internal.commands.pollDeviceCommands = () => {
+    polledForMissedCommands = true;
+  };
+
   await fxa.device.refreshDeviceList();
 
   Assert.equal(spy.getDeviceList.count, 1);
   Assert.equal(spy.updateDevice.count, 1);
+  Assert.ok(polledForMissedCommands);
   await fxa.signOut(true);
 });
 
