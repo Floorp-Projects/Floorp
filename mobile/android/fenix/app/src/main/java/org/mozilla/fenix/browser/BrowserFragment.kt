@@ -157,6 +157,20 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
         session?.register(toolbarSessionObserver, viewLifecycleOwner, autoPause = true)
 
+        if (settings.shouldShowOpenInAppBanner) {
+            session?.register(
+                OpenInAppOnboardingObserver(
+                    context = context,
+                    navController = findNavController(),
+                    settings = settings,
+                    appLinksUseCases = context.components.useCases.appLinksUseCases,
+                    container = browserToolbarView.view.parent as ViewGroup
+                ),
+                owner = this,
+                autoPause = true
+            )
+        }
+
         if (!settings.userKnowsAboutPwas) {
             session?.register(
                 PwaOnboardingObserver(
