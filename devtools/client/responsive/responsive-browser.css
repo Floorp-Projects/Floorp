@@ -124,3 +124,10 @@ html[dir="rtl"] .browserContainer.responsive-mode.left-aligned > .browserStack {
 .browserContainer.responsive-mode.left-aligned > .browserStack > .viewport-vertical-resize-handle {
   left: 0;
 }
+
+/* tabdialogbox handling - it needs to not be treated as part of the grid: */
+.browserContainer.responsive-mode > .browserStack > .dialogStack {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
