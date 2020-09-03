@@ -143,6 +143,7 @@ var PrintEventHandler = {
         this.settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER
           ? PrintUtils.getPrintSettings(this.viewSettings.defaultSystemPrinter)
           : this.settings.clone();
+      settings.showPrintProgress = true;
       const PRINTPROMPTSVC = Cc[
         "@mozilla.org/embedcomp/printingprompt-service;1"
       ].getService(Ci.nsIPrintingPromptService);
@@ -158,6 +159,7 @@ var PrintEventHandler = {
             "printing.dialog_via_preview_cancelled_tm",
             1
           );
+          window.close();
           return; // user cancelled
         }
         throw e;
@@ -287,6 +289,11 @@ var PrintEventHandler = {
   },
 
   async print(systemDialogSettings) {
+    // Disable the form when a print is in progress
+    for (let element of document.querySelector("#print").elements) {
+      element.disabled = true;
+    }
+
     let settings = systemDialogSettings || this.settings;
 
     if (settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
@@ -304,7 +311,17 @@ var PrintEventHandler = {
     // This seems like it should be handled automatically but it isn't.
     Services.prefs.setStringPref("print_printer", settings.printerName);
 
-    PrintUtils.printWindow(this.previewBrowser.browsingContext, settings);
+    try {
+      this.settings.showPrintProgress = true;
+      await PrintUtils.printWindow(
+        this.previewBrowser.browsingContext,
+        settings
+      );
+    } catch (e) {
+      Cu.reportError(e);
+    }
+
+    window.close();
   },
 
   cancelPrint() {
