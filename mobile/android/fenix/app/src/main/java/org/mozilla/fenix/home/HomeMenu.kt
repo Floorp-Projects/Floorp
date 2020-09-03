@@ -145,7 +145,7 @@ class HomeMenu(
         }
 
         val downloadsItem = BrowserMenuImageText(
-            "Downloads",
+            context.getString(R.string.library_downloads),
             R.drawable.ic_download,
             primaryTextColor
         ) {
