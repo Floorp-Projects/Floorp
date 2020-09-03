@@ -662,6 +662,16 @@ async function runTest24() {
     },
     expectDifference: true,
   });
+  requestAnimationFrame(() => setTimeout(runTest25));
+}
+
+async function runTest25() {
+  await compareFiles("printpreview_downloadable_font.html", "printpreview_downloadable_font_ref.html");
+  requestAnimationFrame(() => setTimeout(runTest26));
+}
+
+async function runTest26() {
+  await compareFiles("printpreview_downloadable_font_in_iframe.html", "printpreview_downloadable_font_in_iframe_ref.html");
   finish();
 }
 
