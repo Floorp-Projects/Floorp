@@ -263,8 +263,11 @@ class FxAccountsDevice {
                 pushState,
                 1
               );
+              log.warn(`Our push status is '${pushState}' - resubscribing`);
               await this._fxai.fxaPushService.unsubscribe();
               await this._registerOrUpdateDevice(currentState, accountData);
+              // and there's a reasonable chance there are commands waiting.
+              await this._fxai.commands.pollDeviceCommands();
             }
             return devices;
           }
