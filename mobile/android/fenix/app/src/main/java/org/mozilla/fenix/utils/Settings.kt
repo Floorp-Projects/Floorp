@@ -368,7 +368,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             appContext.getString(R.string.close_tabs_after_one_week)
         }
         closeTabsAfterOneMonth -> {
-            appContext.getString(R.string.close_tabs_after_one_week)
+            appContext.getString(R.string.close_tabs_after_one_month)
         }
         else -> {
             appContext.getString(R.string.close_tabs_manually)
