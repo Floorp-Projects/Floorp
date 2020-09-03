@@ -2285,8 +2285,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
 
   sourceWindow->Print(printSettings,
                       /* aListener = */ nullptr, docShellToCloneInto,
-                      /* aIsPreview = */ true, std::move(aCallback),
-                      IgnoreErrors());
+                      nsGlobalWindowOuter::IsPreview::Yes,
+                      nsGlobalWindowOuter::BlockUntilDone::No,
+                      std::move(aCallback), IgnoreErrors());
 #endif
   return IPC_OK();
 }
@@ -2338,7 +2339,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(const uint64_t& aOuterWindowID,
     outerWindow->Print(printSettings,
                        /* aListener = */ nullptr,
                        /* aWindowToCloneInto = */ nullptr,
-                       /* aIsPreview = */ false,
+                       nsGlobalWindowOuter::IsPreview::No,
+                       nsGlobalWindowOuter::BlockUntilDone::No,
                        /* aPrintPreviewCallback = */ nullptr, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return IPC_OK();
