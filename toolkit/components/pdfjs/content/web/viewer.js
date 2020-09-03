@@ -2053,9 +2053,7 @@ function webViewerPageMode({
 }
 
 function webViewerNamedAction(evt) {
-  const action = evt.action;
-
-  switch (action) {
+  switch (evt.action) {
     case "GoToPage":
       PDFViewerApplication.appConfig.toolbar.pageNumber.select();
       break;
@@ -2065,6 +2063,17 @@ function webViewerNamedAction(evt) {
         PDFViewerApplication.findBar.toggle();
       }
 
+      break;
+
+    case "Print":
+      if (PDFViewerApplication.supportsPrinting) {
+        webViewerPrint();
+      }
+
+      break;
+
+    case "SaveAs":
+      webViewerSave();
       break;
   }
 }
@@ -12849,6 +12858,7 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
   const canvasWrapper = document.createElement("div");
   canvasWrapper.appendChild(canvas);
   printContainer.appendChild(canvasWrapper);
+  let currentRenderTask = null;
 
   canvas.mozPrintCallback = function (obj) {
     const ctx = obj.context;
@@ -12856,7 +12866,13 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
     ctx.fillStyle = "rgb(255, 255, 255)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
+    let thisRenderTask = null;
     pdfDocument.getPage(pageNumber).then(function (pdfPage) {
+      if (currentRenderTask) {
+        currentRenderTask.cancel();
+        currentRenderTask = null;
+      }
+
       const renderContext = {
         canvasContext: ctx,
         transform: [PRINT_UNITS, 0, 0, PRINT_UNITS, 0, 0],
@@ -12868,11 +12884,21 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
         annotationStorage: pdfDocument.annotationStorage,
         optionalContentConfigPromise
       };
-      return pdfPage.render(renderContext).promise;
+      currentRenderTask = thisRenderTask = pdfPage.render(renderContext);
+      return thisRenderTask.promise;
     }).then(function () {
+      if (currentRenderTask === thisRenderTask) {
+        currentRenderTask = null;
+      }
+
       obj.done();
     }, function (error) {
       console.error(error);
+
+      if (currentRenderTask === thisRenderTask) {
+        currentRenderTask.cancel();
+        currentRenderTask = null;
+      }
 
       if ("abort" in obj) {
         obj.abort();

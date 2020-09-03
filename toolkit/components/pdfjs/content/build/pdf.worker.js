@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.336';
-const pdfjsBuild = 'aa27e7fb';
+const pdfjsVersion = '2.6.345';
+const pdfjsBuild = '84da13b4';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.336';
+    const workerVersion = '2.6.345';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1760,26 +1760,75 @@ var Dict = function DictClosure() {
   };
   Dict.empty = new Dict(null);
 
-  Dict.merge = function (xref, dictArray) {
+  Dict.merge = function ({
+    xref,
+    dictArray,
+    mergeSubDicts = false
+  }) {
     const mergedDict = new Dict(xref);
 
-    for (let i = 0, ii = dictArray.length; i < ii; i++) {
-      const dict = dictArray[i];
-
-      if (!isDict(dict)) {
-        continue;
-      }
-
-      for (const keyName in dict._map) {
-        if (mergedDict._map[keyName] !== undefined) {
+    if (!mergeSubDicts) {
+      for (const dict of dictArray) {
+        if (!(dict instanceof Dict)) {
           continue;
         }
 
-        mergedDict._map[keyName] = dict._map[keyName];
+        for (const [key, value] of Object.entries(dict._map)) {
+          if (mergedDict._map[key] === undefined) {
+            mergedDict._map[key] = value;
+          }
+        }
+      }
+
+      return mergedDict.size > 0 ? mergedDict : Dict.empty;
+    }
+
+    const properties = new Map();
+
+    for (const dict of dictArray) {
+      if (!(dict instanceof Dict)) {
+        continue;
+      }
+
+      for (const [key, value] of Object.entries(dict._map)) {
+        let property = properties.get(key);
+
+        if (property === undefined) {
+          property = [];
+          properties.set(key, property);
+        }
+
+        property.push(value);
       }
     }
 
-    return mergedDict;
+    for (const [name, values] of properties) {
+      if (values.length === 1 || !(values[0] instanceof Dict)) {
+        mergedDict._map[name] = values[0];
+        continue;
+      }
+
+      const subDict = new Dict(xref);
+
+      for (const dict of values) {
+        if (!(dict instanceof Dict)) {
+          continue;
+        }
+
+        for (const [key, value] of Object.entries(dict._map)) {
+          if (subDict._map[key] === undefined) {
+            subDict._map[key] = value;
+          }
+        }
+      }
+
+      if (subDict.size > 0) {
+        mergedDict._map[name] = subDict;
+      }
+    }
+
+    properties.clear();
+    return mergedDict.size > 0 ? mergedDict : Dict.empty;
   };
 
   return Dict;
@@ -2975,7 +3024,10 @@ class Page {
       return value[0];
     }
 
-    return _primitives.Dict.merge(this.xref, value);
+    return _primitives.Dict.merge({
+      xref: this.xref,
+      dictArray: value
+    });
   }
 
   get content() {
@@ -22034,9 +22086,11 @@ class PartialEvaluator {
 
   handleTilingType(fn, args, resources, pattern, patternDict, operatorList, task) {
     const tilingOpList = new _operator_list.OperatorList();
-    const resourcesArray = [patternDict.get("Resources"), resources];
 
-    const patternResources = _primitives.Dict.merge(this.xref, resourcesArray);
+    const patternResources = _primitives.Dict.merge({
+      xref: this.xref,
+      dictArray: [patternDict.get("Resources"), resources]
+    });
 
     return this.getOperatorList({
       stream: pattern,
