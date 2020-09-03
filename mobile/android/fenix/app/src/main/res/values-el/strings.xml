@@ -290,6 +290,9 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Πρόσθετα</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Ειδοποιήσεις</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Συγχρονισμός τώρα</string>
@@ -439,6 +442,26 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Κλείσιμο</string>
 
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d καρτέλες</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d καρτέλα</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Κλείσιμο καρτελών</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Χειροκίνητα</string>
+
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Μετά από μια μέρα</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Μετά από μια εβδομάδα</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Μετά από ένα μήνα</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Ανοικτές καρτέλες</string>
@@ -458,6 +481,8 @@
     <string name="tab_tray_menu_item_save">Αποθήκευση στη συλλογή</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Κοινή χρήση όλων των καρτελών</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Πρόσφατα κλεισμένες καρτέλες</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Κλείσιμο όλων των καρτελών</string>
     <!-- Shortcut action to open new tab -->
@@ -503,6 +528,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Αφαίρεση</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Διαγραφή από ιστορικό</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Ιδιωτική λειτουργία)</string>
 
@@ -547,6 +574,10 @@
 
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Δεν υπάρχει ιστορικό</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Καμία λήψη</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -700,10 +731,6 @@
     <string name="collections_header">Συλλογές</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Μενού συλλογής</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Συλλέξτε όλα όσα έχουν σημασία για εσάς</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Ομαδοποιήστε παρόμοιες αναζητήσεις, σελίδες και καρτέλες για γρήγορη πρόσβαση αργότερα.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Επιλέξτε καρτέλες</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -946,9 +973,8 @@
     <string name="onboarding_whats_new_description">Έχετε ερωτήσεις σχετικά με το επανασχεδιασμένο %s; Θέλετε να μάθετε τι έχει αλλάξει;</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Λάβετε απαντήσεις εδώ</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Αξιοποιήστε στο έπακρο το %s.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Μάθετε περισσότερα</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ναι, σύνδεση</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1389,10 +1415,24 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Σύνδεση στο Sync</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Καμία ανοικτή καρτέλα</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Έχετε φτάσει το ανώτατο όριο κορυφαίων ιστοσελίδων</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, το κατάλαβα</string>
 
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Αφαίρεση</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Αξιοποιήστε στο έπακρο το %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Συλλέξτε όλα όσα έχουν σημασία για εσάς</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Ομαδοποιήστε παρόμοιες αναζητήσεις, σελίδες και καρτέλες για γρήγορη πρόσβαση αργότερα.</string>
     </resources>
