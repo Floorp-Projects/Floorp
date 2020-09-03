@@ -262,6 +262,8 @@
     <string name="preferences_open_links_in_a_private_tab">Open links in a private tab</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Allow screenshots in private browsing</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">If allowed, private tabs will also be visible when multiple apps are open</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Add private browsing shortcut</string>
     <!-- Preference for accessibility -->
