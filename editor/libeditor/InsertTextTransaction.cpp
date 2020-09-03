@@ -65,10 +65,10 @@ NS_IMETHODIMP InsertTextTransaction::DoTransaction() {
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
     }
-    DebugOnly<nsresult> rvIgnored = selection->CollapseInLimiter(
-        textNode, mOffset + mStringToInsert.Length());
+    DebugOnly<nsresult> rvIgnored =
+        selection->Collapse(textNode, mOffset + mStringToInsert.Length());
     NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                 "Selection::CollapseInLimiter() failed, but ignored");
+                 "Selection::Collapse() failed, but ignored");
   } else {
     // Do nothing - DOM Range gravity will adjust selection
   }

@@ -1115,17 +1115,15 @@ NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   nsCOMPtr<nsINode> firstNode = GetFirstEditableNode(rootElement);
   if (!firstNode) {
     // just the root node, set selection to inside the root
-    nsresult rv = SelectionRefPtr()->CollapseInLimiter(rootElement, 0);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Selection::CollapseInLimiter() failed");
+    nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
     return rv;
   }
 
   if (firstNode->IsText()) {
     // If firstNode is text, set selection to beginning of the text node.
-    nsresult rv = SelectionRefPtr()->CollapseInLimiter(firstNode, 0);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Selection::CollapseInLimiter() failed");
+    nsresult rv = SelectionRefPtr()->Collapse(firstNode, 0);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
     return rv;
   }
 
@@ -1138,9 +1136,8 @@ NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   MOZ_ASSERT(
       parent->ComputeIndexOf(firstNode) == 0,
       "How come the first node isn't the left most child in its parent?");
-  nsresult rv = SelectionRefPtr()->CollapseInLimiter(parent, 0);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Selection::CollapseInLimiter() failed");
+  nsresult rv = SelectionRefPtr()->Collapse(parent, 0);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
   return rv;
 }
 
@@ -1179,10 +1176,9 @@ nsresult EditorBase::CollapseSelectionToEnd() const {
   }
 
   uint32_t length = lastContent->Length();
-  nsresult rv = SelectionRefPtr()->CollapseInLimiter(
-      lastContent, static_cast<int32_t>(length));
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Selection::CollapseInLimiter() failed");
+  nsresult rv =
+      SelectionRefPtr()->Collapse(lastContent, static_cast<int32_t>(length));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
   return rv;
 }
 
@@ -2711,12 +2707,12 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
   }
 
   DebugOnly<nsresult> rvIgnored =
-      SelectionRefPtr()->CollapseInLimiter(&aTextNode, aString.Length());
+      SelectionRefPtr()->Collapse(&aTextNode, aString.Length());
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-               "Selection::CollapseInLimiter() failed, but ignored");
+               "Selection::Collapse() failed, but ignored");
 
   RangeUpdaterRef().SelAdjReplaceText(aTextNode, 0, length, aString.Length());
 
@@ -3241,13 +3237,12 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
   }
 
   // Set selection.
-  SelectionRefPtr()->CollapseInLimiter(EditorRawDOMPoint(rootElement, 0),
-                                       ignoredError);
+  SelectionRefPtr()->Collapse(EditorRawDOMPoint(rootElement, 0), ignoredError);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "Selection::CollapseInLimiter() failed, but ignored");
+                       "Selection::Collapse() failed, but ignored");
   return NS_OK;
 }
 
