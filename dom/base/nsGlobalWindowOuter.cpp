@@ -5274,15 +5274,13 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     settings->SetShowPrintProgress(false);
   }
 
-  Print(settings, nullptr, nullptr, IsPreview(isPreview),
-        BlockUntilDone(isPreview), nullptr, aError);
+  Print(settings, nullptr, nullptr, isPreview, nullptr, aError);
 #endif
 }
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     nsIPrintSettings* aPrintSettings, nsIWebProgressListener* aListener,
-    nsIDocShell* aDocShellToCloneInto, IsPreview aIsPreview,
-    BlockUntilDone aBlockUntilDone,
+    nsIDocShell* aDocShellToCloneInto, bool aIsPreview,
     PrintPreviewResolver&& aPrintPreviewCallback, ErrorResult& aError) {
 #ifdef NS_PRINTING
   nsCOMPtr<nsIPrintSettingsService> printSettingsService =
@@ -5312,7 +5310,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
 
   nsCOMPtr<nsIContentViewer> cv;
   RefPtr<BrowsingContext> bc;
-  if (docToPrint->IsStaticDocument() && bool(aIsPreview)) {
+  if (docToPrint->IsStaticDocument() && aIsPreview) {
     // We're already a print preview window, just reuse our browsing context /
     // content viewer.
     //
@@ -5339,8 +5337,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       bc = aDocShellToCloneInto->GetBrowsingContext();
     } else {
       AutoNoJSAPI nojsapi;
-      auto printKind =
-          bool(aIsPreview) ? PrintKind::PrintPreview : PrintKind::Print;
+      auto printKind = aIsPreview ? PrintKind::PrintPreview : PrintKind::Print;
       aError = OpenInternal(EmptyString(), EmptyString(), EmptyString(),
                             false,             // aDialog
                             false,             // aContentModal
@@ -5441,22 +5438,13 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     return nullptr;
   }
 
-  if (bool(aIsPreview)) {
+  if (aIsPreview) {
     aError = webBrowserPrint->PrintPreview(aPrintSettings, aListener,
                                            std::move(aPrintPreviewCallback));
-    if (aError.Failed()) {
-      return nullptr;
-    }
   } else {
     // Historically we've eaten this error.
     webBrowserPrint->Print(aPrintSettings, aListener);
   }
-
-  if (bool(aBlockUntilDone)) {
-    // Wait until print document is closed.
-    SpinEventLoopUntil([&] { return bc->IsDiscarded(); });
-  }
-
   return WindowProxyHolder(std::move(bc));
 #else
   return nullptr;
