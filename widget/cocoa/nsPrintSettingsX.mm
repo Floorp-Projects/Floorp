@@ -419,13 +419,24 @@ NS_IMETHODIMP
 nsPrintSettingsX::SetScaling(double aScaling) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Only use NSPrintInfo data in the parent process. The
-  // child process' instance is not needed or used.
-  if (XRE_IsParentProcess()) {
-    [mPrintInfo setScalingFactor:CGFloat(aScaling)];
-  } else {
-    nsPrintSettings::SetScaling(aScaling);
-  }
+  // This code used to set the scaling to NSPrintInfo on the parent process
+  // and to nsPrintSettings::SetScaling() on content processes.
+  // This was causing a double-scaling effect, for example, setting scaling
+  // to 50% would cause the printed results to be 25% the size of the original.
+  // See bug 1662389.
+  //
+  // XXX(nordzilla) It's not clear to me why this fixes the scaling problem
+  // when other similar solutions are not as effective. I've tried simply
+  // deleting the overriden getters and setters, and also just setting the
+  // NSPrintInfo scaling to 1.0 in the constructor; but that does not yield
+  // the same results as setting it here, particularly when printing from
+  // the system dialog.
+  //
+  // It would be worth investigating the scaling issue further and
+  // seeing if there is a cleaner way to fix it compared to this.
+  // See bug 1662934.
+  [mPrintInfo setScalingFactor:CGFloat(1.0)];
+  nsPrintSettings::SetScaling(aScaling);
 
   return NS_OK;
 
@@ -436,14 +447,7 @@ NS_IMETHODIMP
 nsPrintSettingsX::GetScaling(double* aScaling) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Only use NSPrintInfo data in the parent process. The
-  // child process' instance is not needed or used.
-  if (XRE_IsParentProcess()) {
-    // Limit scaling precision to whole number percent values
-    *aScaling = round(double([mPrintInfo scalingFactor]) * 100.0) / 100.0;
-  } else {
-    nsPrintSettings::GetScaling(aScaling);
-  }
+  nsPrintSettings::GetScaling(aScaling);
 
   return NS_OK;
 
