@@ -13,8 +13,6 @@
 
 #  include <gdk/gdkwayland.h>
 
-using namespace mozilla::widget;
-
 namespace mozilla {
 
 static void WaylandVsyncSourceCallbackHandler(void* data,
@@ -39,7 +37,7 @@ WaylandVsyncSource::WaylandDisplay::WaylandDisplay(MozContainer* container)
 
   // We store the display here so all the frame callbacks won't have to look it
   // up all the time.
-  mDisplay = WaylandDisplayGetWLDisplay();
+  mDisplay = widget::WaylandDisplayGet()->GetDisplay();
 }
 
 void WaylandVsyncSource::WaylandDisplay::ClearFrameCallback() {
