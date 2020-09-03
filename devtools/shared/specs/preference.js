@@ -9,6 +9,10 @@ const preferenceSpec = generateActorSpec({
   typeName: "preference",
 
   methods: {
+    getTraits: {
+      request: {},
+      response: { traits: RetVal("json") },
+    },
     getBoolPref: {
       request: { value: Arg(0) },
       response: { value: RetVal("boolean") },

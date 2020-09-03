@@ -19,8 +19,34 @@ function enableRuntimeClientFactoryMock(mock) {
     mock,
     "devtools/client/aboutdebugging/src/modules/runtime-client-factory"
   );
+
+  // When using a mocked client, we should not attempt to check default
+  // preferences.
+  mockRuntimeDefaultPreferences();
 }
 /* exported enableRuntimeClientFactoryMock */
+
+const mockRuntimeDefaultPreferences = function() {
+  const {
+    removeMockedModule,
+    setMockedModule,
+  } = require("devtools/client/shared/browser-loader-mocks");
+
+  const mock = {
+    setDefaultPreferencesIfNeeded: () => {},
+    DEFAULT_PREFERENCES: [],
+  };
+  setMockedModule(
+    mock,
+    "devtools/client/aboutdebugging/src/modules/runtime-default-preferences"
+  );
+
+  registerCleanupFunction(() => {
+    removeMockedModule(
+      "devtools/client/aboutdebugging/src/modules/runtime-default-preferences"
+    );
+  });
+};
 
 /**
  * Update the loader to clear the mock entry for the runtime-client-factory module.

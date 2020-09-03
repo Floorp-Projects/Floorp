@@ -17,6 +17,21 @@ class PreferenceFront extends FrontClassWithSpec(preferenceSpec) {
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "preferenceActor";
   }
+
+  async getTraits() {
+    if (this._traits) {
+      return this._traits;
+    }
+
+    try {
+      this._traits = await this.getTraits();
+    } catch (e) {
+      // Backward compatibility: can be removed when FF82 is on the release
+      // channel.
+      this._traits = {};
+    }
+    return this._traits;
+  }
 }
 
 exports.PreferenceFront = PreferenceFront;
