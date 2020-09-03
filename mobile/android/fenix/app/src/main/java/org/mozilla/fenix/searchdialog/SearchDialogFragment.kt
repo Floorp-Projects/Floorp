@@ -229,7 +229,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                             SupportUtils.SumoTopic.SEARCH_SUGGESTION
                         ),
                         newTab = store.state.tabId == null,
-                        from = BrowserDirection.FromSearch
+                        from = BrowserDirection.FromSearchDialog
                     )
             }
 
@@ -331,7 +331,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                                 .openToBrowserAndLoad(
                                     searchTermOrURL = result,
                                     newTab = store.state.tabId == null,
-                                    from = BrowserDirection.FromSearch
+                                    from = BrowserDirection.FromSearchDialog
                                 )
                             dialog.dismiss()
                         }
