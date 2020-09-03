@@ -23,16 +23,13 @@ wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
   return gdk_wayland_display_get_wl_display(aGdkDisplay);
 }
 
-// nsWaylandDisplay needs to be created for each calling thread(main thread,
-// compositor thread and render thread)
-#define MAX_DISPLAY_CONNECTIONS 5
-
-static nsWaylandDisplay* gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
-static StaticMutex gWaylandDisplayArrayMutex;
-static StaticMutex gWaylandThreadLoopMutex;
+// An array of active wayland displays. We need a display for every thread
+// where is wayland interface used as we need to dispatch waylands events
+// there.
+static nsTArray<RefPtr<nsWaylandDisplay>> gWaylandDisplays;
+static StaticMutex gWaylandDisplayArrayWriteMutex;
 
 void WaylandDisplayShutdown() {
-  StaticMutexAutoLock lock(gWaylandDisplayArrayMutex);
   for (auto& display : gWaylandDisplays) {
     if (display) {
       display->ShutdownThreadLoop();
@@ -40,16 +37,17 @@ void WaylandDisplayShutdown() {
   }
 }
 
-static void ReleaseDisplaysAtExit() {
-  StaticMutexAutoLock lock(gWaylandDisplayArrayMutex);
-  for (int i = 0; i < MAX_DISPLAY_CONNECTIONS; i++) {
-    delete gWaylandDisplays[i];
-    gWaylandDisplays[i] = nullptr;
+static void DispatchDisplay(RefPtr<nsWaylandDisplay> aDisplay) {
+  // We can't use aDisplay directly here as it can be already released.
+  // Instead look for aDisplay in gWaylandDisplays and dispatch it only when
+  // it's still active.
+  for (auto& display : gWaylandDisplays) {
+    if (display == aDisplay) {
+      aDisplay->DispatchEventQueue();
+      return;
+    }
   }
-}
-
-static void DispatchDisplay(nsWaylandDisplay* aDisplay) {
-  aDisplay->DispatchEventQueue();
+  NS_WARNING("DispatchDisplay was called for released display!");
 }
 
 // Each thread which is using wayland connection (wl_display) has to operate
@@ -60,10 +58,8 @@ static void DispatchDisplay(nsWaylandDisplay* aDisplay) {
 // global objects as we need (wl_display, wl_shm) and operates wl_event_queue on
 // compositor (not the main) thread.
 void WaylandDispatchDisplays() {
-  StaticMutexAutoLock arrayLock(gWaylandDisplayArrayMutex);
   for (auto& display : gWaylandDisplays) {
     if (display) {
-      StaticMutexAutoLock loopLock(gWaylandThreadLoopMutex);
       MessageLoop* loop = display->GetThreadLoop();
       if (loop) {
         loop->PostTask(NewRunnableFunction("WaylandDisplayDispatch",
@@ -73,10 +69,17 @@ void WaylandDispatchDisplays() {
   }
 }
 
+void WaylandDisplayRelease() {
+  StaticMutexAutoLock lock(gWaylandDisplayArrayWriteMutex);
+  gWaylandDisplays.Clear();
+}
+
 // Get WaylandDisplay for given wl_display and actual calling thread.
-static nsWaylandDisplay* WaylandDisplayGetLocked(GdkDisplay* aGdkDisplay,
-                                                 const StaticMutexAutoLock&) {
+RefPtr<nsWaylandDisplay> WaylandDisplayGet(GdkDisplay* aGdkDisplay) {
   wl_display* waylandDisplay = WaylandDisplayGetWLDisplay(aGdkDisplay);
+  if (!waylandDisplay) {
+    return nullptr;
+  }
 
   // Search existing display connections for wl_display:thread combination.
   for (auto& display : gWaylandDisplays) {
@@ -85,28 +88,9 @@ static nsWaylandDisplay* WaylandDisplayGetLocked(GdkDisplay* aGdkDisplay,
     }
   }
 
-  for (auto& display : gWaylandDisplays) {
-    if (display == nullptr) {
-      display = new nsWaylandDisplay(waylandDisplay);
-      atexit(ReleaseDisplaysAtExit);
-      return display;
-    }
-  }
-
-  MOZ_CRASH("There's too many wayland display conections!");
-  return nullptr;
-}
-
-nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay) {
-  if (!aGdkDisplay) {
-    aGdkDisplay = gdk_display_get_default();
-    if (!aGdkDisplay || GDK_IS_X11_DISPLAY(aGdkDisplay)) {
-      return nullptr;
-    }
-  }
-
-  StaticMutexAutoLock lock(gWaylandDisplayArrayMutex);
-  return WaylandDisplayGetLocked(aGdkDisplay, lock);
+  StaticMutexAutoLock arrayLock(gWaylandDisplayArrayWriteMutex);
+  gWaylandDisplays.AppendElement(new nsWaylandDisplay(waylandDisplay));
+  return gWaylandDisplays[gWaylandDisplays.Length() - 1];
 }
 
 void nsWaylandDisplay::SetShm(wl_shm* aShm) { mShm = aShm; }
@@ -358,10 +342,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper)
   }
 }
 
-void nsWaylandDisplay::ShutdownThreadLoop() {
-  StaticMutexAutoLock lock(gWaylandThreadLoopMutex);
-  mThreadLoop = nullptr;
-}
+void nsWaylandDisplay::ShutdownThreadLoop() { mThreadLoop = nullptr; }
 
 nsWaylandDisplay::~nsWaylandDisplay() {
   wl_registry_destroy(mRegistry);
