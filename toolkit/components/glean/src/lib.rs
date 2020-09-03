@@ -30,10 +30,8 @@ use std::ffi::CStr;
 use std::os::raw::c_char;
 
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_NO_CONTENT, NS_OK};
-use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsStr, nsString};
-use xpcom::interfaces::{
-    mozIViaduct, nsIFile, nsIObserver, nsIPrefBranch, nsIPropertyBag2, nsISupports, nsIXULAppInfo,
-};
+use nsstring::{nsACString, nsCStr};
+use xpcom::interfaces::{mozIViaduct, nsIObserver, nsIPrefBranch, nsISupports};
 use xpcom::{RefPtr, XpCom};
 
 use client_info::ClientInfo;
@@ -48,28 +46,29 @@ mod core_metrics;
 /// This assembles client information and the Glean configuration and then initializes the global
 /// Glean instance.
 #[no_mangle]
-pub unsafe extern "C" fn fog_init() -> nsresult {
+pub unsafe extern "C" fn fog_init(
+    data_path: &nsACString,
+    app_build: &nsACString,
+    app_display_version: &nsACString,
+    channel: *const c_char,
+    os_version: &nsACString,
+    architecture: &nsACString,
+) -> nsresult {
     log::debug!("Initializing FOG.");
 
-    let data_path = match get_data_path() {
-        Ok(dp) => dp,
-        Err(e) => return e,
-    };
+    let app_build = app_build.to_string();
+    let app_display_version = app_display_version.to_string();
 
-    let (app_build, app_display_version, channel) = match get_app_info() {
-        Ok(ai) => ai,
-        Err(e) => return e,
-    };
+    let channel = CStr::from_ptr(channel);
+    let channel = Some(channel.to_string_lossy().to_string());
 
-    let (os_version, architecture) = match get_system_info() {
-        Ok(si) => si,
-        Err(e) => return e,
-    };
+    let os_version = os_version.to_string();
+    let architecture = architecture.to_string();
 
     let client_info = ClientInfo {
         app_build,
         app_display_version,
-        channel: Some(channel),
+        channel,
         os_version,
         architecture,
     };
@@ -111,108 +110,12 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
     }
 
     if configuration.data_path.len() > 0 {
-        std::thread::spawn(move || {
-            if let Err(e) = api::initialize(configuration, client_info) {
-                log::error!("Failed to init FOG due to {:?}", e);
-            }
-        });
+        if let Err(e) = api::initialize(configuration, client_info) {
+            log::error!("Failed to init FOG due to {:?}", e);
+        }
     }
 
     NS_OK
-}
-
-/// Construct and return the data_path from the profile dir, or return an error.
-fn get_data_path() -> Result<String, nsresult> {
-    let dir_svc = match xpcom::services::get_DirectoryService() {
-        Some(ds) => ds,
-        _ => return Err(NS_ERROR_FAILURE),
-    };
-    let mut profile_dir = xpcom::GetterAddrefs::<nsIFile>::new();
-    unsafe {
-        dir_svc
-            .Get(
-                cstr!("ProfD").as_ptr(),
-                &nsIFile::IID,
-                profile_dir.void_ptr(),
-            )
-            .to_result()?;
-    }
-    let profile_dir = profile_dir.refptr().ok_or(NS_ERROR_FAILURE)?;
-    let mut profile_path = nsString::new();
-    unsafe {
-        (*profile_dir).GetPath(&mut *profile_path).to_result()?;
-    }
-    let profile_path = String::from_utf16(&profile_path[..]).map_err(|_| NS_ERROR_FAILURE)?;
-    let data_path = profile_path + "/datareporting/glean";
-    Ok(data_path)
-}
-
-/// Return a tuple of the build_id, app version, and build channel.
-/// If the XUL Runtime isn't a XULAppInfo (e.g. in xpcshell),
-/// build_id ad app_version will be "unknown".
-/// Other problems result in an error being returned instead.
-fn get_app_info() -> Result<(String, String, String), nsresult> {
-    let xul = xpcom::services::get_XULRuntime().ok_or(NS_ERROR_FAILURE)?;
-
-    let mut channel = nsCString::new();
-    unsafe {
-        xul.GetDefaultUpdateChannel(&mut *channel).to_result()?;
-    }
-
-    let app_info = match xul.query_interface::<nsIXULAppInfo>() {
-        Some(ai) => ai,
-        // In e.g. xpcshell the XULRuntime isn't XULAppInfo.
-        // We still want to return sensible values so tests don't explode.
-        _ => {
-            return Ok((
-                "unknown".to_owned(),
-                "unknown".to_owned(),
-                channel.to_string(),
-            ))
-        }
-    };
-
-    let mut build_id = nsCString::new();
-    unsafe {
-        app_info.GetAppBuildID(&mut *build_id).to_result()?;
-    }
-
-    let mut version = nsCString::new();
-    unsafe {
-        app_info.GetVersion(&mut *version).to_result()?;
-    }
-
-    Ok((
-        build_id.to_string(),
-        version.to_string(),
-        channel.to_string(),
-    ))
-}
-
-/// Return a tuple of os_version and architecture, or an error.
-fn get_system_info() -> Result<(String, String), nsresult> {
-    let info_service = xpcom::get_service::<nsIPropertyBag2>(cstr!("@mozilla.org/system-info;1"))
-        .ok_or(NS_ERROR_FAILURE)?;
-
-    let os_version_key: Vec<u16> = "version".encode_utf16().collect();
-    let os_version_key = &nsStr::from(&os_version_key) as &nsAString;
-    let mut os_version = nsCString::new();
-    unsafe {
-        info_service
-            .GetPropertyAsACString(os_version_key, &mut *os_version)
-            .to_result()?;
-    }
-
-    let arch_key: Vec<u16> = "arch".encode_utf16().collect();
-    let arch_key = &nsStr::from(&arch_key) as &nsAString;
-    let mut arch = nsCString::new();
-    unsafe {
-        info_service
-            .GetPropertyAsACString(arch_key, &mut *arch)
-            .to_result()?;
-    }
-
-    Ok((os_version.to_string(), arch.to_string()))
 }
 
 // Partially cargo-culted from https://searchfox.org/mozilla-central/rev/598e50d2c3cd81cd616654f16af811adceb08f9f/security/manager/ssl/cert_storage/src/lib.rs#1192
