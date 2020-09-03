@@ -26,6 +26,9 @@
 #include "YCbCrUtils.h"
 #include <algorithm>
 #include "ImageContainer.h"
+#ifdef MOZ_WIDGET_GTK
+#  include "mozilla/WidgetUtilsGtk.h"
+#endif
 
 namespace mozilla {
 using namespace mozilla::gfx;
@@ -583,6 +586,15 @@ static bool AttemptVideoConvertAndScale(
             ptrdiff_t(dstRect.Y()) * dstStride,
         dstStride);
     aDest->ReleaseBits(dstData);
+#  ifdef MOZ_WIDGET_GTK
+    if (mozilla::widget::IsMainWindowTransparent()) {
+      gfx::Rect rect(dstRect.X(), dstRect.Y(), dstRect.Width(),
+                     dstRect.Height());
+      aDest->FillRect(rect, ColorPattern(DeviceColor(0, 0, 0, 1)),
+                      DrawOptions(1.f, CompositionOp::OP_ADD));
+      aDest->Flush();
+    }
+#  endif
     return true;
   } else
 #endif  // MOZILLA_SSE_HAVE_CPUID_DETECTION
