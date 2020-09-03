@@ -111,7 +111,7 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
              * This is consistent with both Fennec and Firefox Desktop.
              */
             if (Config.channel.isNightlyOrDebug || Config.channel.isBeta) {
-                WebCompatReporterFeature.install(it)
+                WebCompatReporterFeature.install(it, "fenix")
             }
         }
     }
