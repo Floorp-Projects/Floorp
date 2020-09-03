@@ -16,6 +16,10 @@ const {
 
 const { l10n } = require("devtools/client/aboutdebugging/src/modules/l10n");
 const {
+  setDefaultPreferencesIfNeeded,
+  DEFAULT_PREFERENCES,
+} = require("devtools/client/aboutdebugging/src/modules/runtime-default-preferences");
+const {
   createClientForRuntime,
 } = require("devtools/client/aboutdebugging/src/modules/runtime-client-factory");
 const {
@@ -113,6 +117,8 @@ function connectRuntime(id) {
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const clientWrapper = await createClientForRuntime(runtime);
+
+      await setDefaultPreferencesIfNeeded(clientWrapper, DEFAULT_PREFERENCES);
 
       const deviceDescription = await clientWrapper.getDeviceDescription();
       const compatibilityReport = await clientWrapper.checkVersionCompatibility();
