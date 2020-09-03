@@ -750,8 +750,8 @@ static void gdk_registry_handle_global(void* data, struct wl_registry* registry,
                                        uint32_t id, const char* interface,
                                        uint32_t version) {
   if (strcmp(interface, "wl_seat") == 0) {
-    wl_seat* seat =
-        (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface, 1);
+    auto* seat =
+        WaylandRegistryBind<wl_seat>(registry, id, &wl_seat_interface, 1);
     wl_seat_add_listener(seat, &seat_listener, data);
   }
 }

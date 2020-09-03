@@ -102,4 +102,26 @@ wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay = nullptr);
 }  // namespace widget
 }  // namespace mozilla
 
+template <class T>
+static inline T* WaylandRegistryBind(struct wl_registry* wl_registry,
+                                     uint32_t name,
+                                     const struct wl_interface* interface,
+                                     uint32_t version) {
+  struct wl_proxy* id;
+
+  // When libwayland-client does not provide this symbol, it will be
+  // linked to the fallback in libmozwayland, which returns NULL.
+  id = wl_proxy_marshal_constructor_versioned(
+      (struct wl_proxy*)wl_registry, WL_REGISTRY_BIND, interface, version, name,
+      interface->name, version, nullptr);
+
+  if (id == nullptr) {
+    id = wl_proxy_marshal_constructor((struct wl_proxy*)wl_registry,
+                                      WL_REGISTRY_BIND, interface, name,
+                                      interface->name, version, nullptr);
+  }
+
+  return reinterpret_cast<T*>(id);
+}
+
 #endif  // __MOZ_WAYLAND_DISPLAY_H__
