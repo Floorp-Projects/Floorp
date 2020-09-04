@@ -61,38 +61,6 @@ struct ThreadInfo {
   uint64_t cpuKernel = 0;
 };
 
-// Info on a DOM window.
-struct WindowInfo {
-  explicit WindowInfo()
-      : outerWindowId(0),
-        documentURI(nullptr),
-        documentTitle(u""_ns),
-        isProcessRoot(false),
-        isInProcess(false) {}
-  WindowInfo(uint64_t aOuterWindowId, nsIURI* aDocumentURI,
-             nsAString&& aDocumentTitle, bool aIsProcessRoot, bool aIsInProcess)
-      : outerWindowId(aOuterWindowId),
-        documentURI(aDocumentURI),
-        documentTitle(std::move(aDocumentTitle)),
-        isProcessRoot(aIsProcessRoot),
-        isInProcess(aIsInProcess) {}
-
-  // Internal window id.
-  const uint64_t outerWindowId;
-
-  // URI of the document.
-  const nsCOMPtr<nsIURI> documentURI;
-
-  // Title of the document.
-  const nsString documentTitle;
-
-  // True if this is the toplevel window of the process.
-  // Note that this may be an iframe from another process.
-  const bool isProcessRoot;
-
-  const bool isInProcess;
-};
-
 struct ProcInfo {
   // Process Id
   base::ProcessId pid = 0;
@@ -114,8 +82,6 @@ struct ProcInfo {
   uint64_t cpuKernel = 0;
   // Threads owned by this process.
   CopyableTArray<ThreadInfo> threads;
-  // DOM windows represented by this process.
-  CopyableTArray<WindowInfo> windows;
 };
 
 typedef MozPromise<mozilla::HashMap<base::ProcessId, ProcInfo>, nsresult, true>
@@ -133,8 +99,7 @@ typedef MozPromise<mozilla::HashMap<base::ProcessId, ProcInfo>, nsresult, true>
  */
 struct ProcInfoRequest {
   ProcInfoRequest(base::ProcessId aPid, ProcType aProcessType,
-                  const nsACString& aOrigin, nsTArray<WindowInfo>&& aWindowInfo,
-                  uint32_t aChildId = 0
+                  const nsACString& aOrigin, uint32_t aChildId = 0
 #ifdef XP_MACOSX
                   ,
                   mach_port_t aChildTask = 0
@@ -143,7 +108,6 @@ struct ProcInfoRequest {
       : pid(aPid),
         processType(aProcessType),
         origin(aOrigin),
-        windowInfo(std::move(aWindowInfo)),
         childId(aChildId)
 #ifdef XP_MACOSX
         ,
@@ -154,7 +118,6 @@ struct ProcInfoRequest {
   const base::ProcessId pid;
   const ProcType processType;
   const nsCString origin;
-  const nsTArray<WindowInfo> windowInfo;
   // If the process is a child, its child id, otherwise `0`.
   const int32_t childId;
 #ifdef XP_MACOSX

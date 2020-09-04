@@ -23,15 +23,6 @@ add_task(async function test_proc_info() {
       let cpuThreads = 0;
       let cpuUser = 0;
 
-      // Open a few `about:home` tabs, they'll end up in `privilegedabout`.
-      let tabsAboutHome = [];
-      for (let i = 0; i < 5; ++i) {
-        tabsAboutHome.push(BrowserTestUtils.addTab(gBrowser, "about:home"));
-      }
-      for (let tab of tabsAboutHome) {
-        await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-      }
-
       // We test `SAMPLE_SIZE` times to increase a tad the chance of encountering race conditions.
       for (let z = 0; z < SAMPLE_SIZE; z++) {
         let parentProc = await ChromeUtils.requestProcInfo();
@@ -107,15 +98,16 @@ add_task(async function test_proc_info() {
         }
 
         // We only check other properties on the `privilegedabout` subprocess, which
-        // as of this writing is always active and available.
-        var hasPrivilegedAbout = false;
-        var numberOfAboutTabs = 0;
+        // as of this writing is hosting the page we test, so should be active and
+        // available. If we ever move `about:processes` to another process type, we'll
+        // need to update this test.
+        var hasSocketProcess = false;
         for (i = 0; i < parentProc.children.length; i++) {
           let childProc = parentProc.children[i];
           if (childProc.type != "privilegedabout") {
             continue;
           }
-          hasPrivilegedAbout = true;
+          hasSocketProcess = true;
           Assert.ok(
             childProc.residentUniqueSize > 0,
             "Resident-unique-size was set"
@@ -125,41 +117,17 @@ add_task(async function test_proc_info() {
             `Resident-unique-size should be bounded by resident-set-size ${childProc.residentUniqueSize} <= ${childProc.residentSetSize}`
           );
 
-          for (var win of childProc.windows) {
-            if (win.documentURI.spec != "about:home") {
-              // We're only interested in about:home for this test.
-              continue;
-            }
-            numberOfAboutTabs++;
-            Assert.ok(
-              win.outerWindowId > 0,
-              `ContentParentID should be > 0 ${win.outerWindowId}`
-            );
-            Assert.equal(win.documentTitle, "New Tab");
-          }
-          Assert.ok(
-            numberOfAboutTabs >= tabsAboutHome.length,
-            "We have found at least as many about:home tabs as we opened"
-          );
-
-          // Once we have verified the privileged about process, bailout.
+          // Once we have found the socket process, bailout.
           break;
         }
 
-        Assert.ok(
-          hasPrivilegedAbout,
-          "We have found the privileged about process"
-        );
+        Assert.ok(hasSocketProcess, "We have found the socket process");
       }
       // see https://bugzilla.mozilla.org/show_bug.cgi?id=1529023
       if (!MAC) {
         Assert.greater(cpuThreads, 0, "Got some cpu time in the threads");
       }
       Assert.greater(cpuUser, 0, "Got some cpu time");
-
-      for (let tab of tabsAboutHome) {
-        BrowserTestUtils.removeTab(tab);
-      }
     }
   );
 });

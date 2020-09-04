@@ -85,7 +85,6 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.childId = request.childId;
           info.type = request.processType;
           info.origin = request.origin;
-          info.windows = std::move(request.windowInfo);
           info.filename.Assign(filename);
           info.cpuKernel = ToNanoSeconds(kernelTime);
           info.cpuUser = ToNanoSeconds(userTime);
