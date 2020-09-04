@@ -75,7 +75,7 @@ class DefaultTopSitesStorage(
         topSites.addAll(pinnedSites)
 
         if (includeFrecent && numSitesRequired > 0) {
-            // Get twice the required size to buffer for duplicate entries with
+            // Get 'totalSites' sites for duplicate entries with
             // existing pinned sites
             val frecentSites = historyStorage
                 .getTopFrecentSites(totalSites)
