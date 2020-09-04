@@ -31,14 +31,11 @@
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/MediaMetadata.h"
 #include "mozilla/dom/MediaSessionBinding.h"
-#include "mozilla/dom/PBrowserParent.h"
-#include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowBinding.h"  // For IdleRequestCallback/Options
-#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -813,8 +810,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
   requests.EmplaceBack(
       /* aPid = */ base::GetCurrentProcId(),
       /* aProcessType = */ ProcType::Browser,
-      /* aOrigin = */ ""_ns,
-      /* aWindowInfo = */ nsTArray<WindowInfo>());
+      /* aOrigin = */ ""_ns);
 
   mozilla::ipc::GeckoChildProcessHost::GetAll(
       [&requests,
@@ -829,8 +825,6 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
         base::ProcessId childPid = base::GetProcId(handle);
         int32_t childId = 0;
         mozilla::ProcType type = mozilla::ProcType::Unknown;
-        nsTArray<WindowInfo> windows;
-
         switch (aGeckoProcess->GetProcessType()) {
           case GeckoProcessType::GeckoProcessType_Content: {
             ContentParent* contentParent = nullptr;
@@ -847,35 +841,6 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
               // FIXME: When can this happen?
               return;
             }
-
-            // Attach DOM window information to the process.
-            for (const auto& browserParentWrapper :
-                 contentParent->ManagedPBrowserParent()) {
-              for (const auto& windowGlobalParentWrapper :
-                   browserParentWrapper.GetKey()
-                       ->ManagedPWindowGlobalParent()) {
-                // WindowGlobalParent is the only immediate subclass of
-                // PWindowGlobalParent.
-                auto* windowGlobalParent = static_cast<WindowGlobalParent*>(
-                    windowGlobalParentWrapper.GetKey());
-
-                nsString documentTitle;
-                windowGlobalParent->GetDocumentTitle(documentTitle);
-                WindowInfo* window = windows.EmplaceBack(
-                    fallible,
-                    /* aOuterWindowId = */ windowGlobalParent->OuterWindowId(),
-                    /* aDocumentURI = */ windowGlobalParent->GetDocumentURI(),
-                    /* aDocumentTitle = */ std::move(documentTitle),
-                    /* aIsProcessRoot = */ windowGlobalParent->IsProcessRoot(),
-                    /* aIsInProcess = */ windowGlobalParent->IsInProcess());
-                if (!window) {
-                  // That's bad sign, but we don't have a good place to return
-                  // an OOM error from.
-                  return;
-                }
-              }
-            }
-
             // Converting the remoteType into a ProcType.
             // Ideally, the remoteType should be strongly typed
             // upstream, this would make the conversion less brittle.
@@ -957,7 +922,6 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
             /* aPid = */ childPid,
             /* aProcessType = */ type,
             /* aOrigin = */ origin,
-            /* aWindowInfo = */ std::move(windows),
             /* aChild = */ childId
 #ifdef XP_MACOSX
             ,
@@ -1012,19 +976,6 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                 childInfo->mChildID = sysProcInfo.childId;
                 childInfo->mOrigin = sysProcInfo.origin;
                 childInfo->mType = ProcTypeToWebIDL(sysProcInfo.type);
-
-                for (const auto& source : sysProcInfo.windows) {
-                  auto* dest = childInfo->mWindows.AppendElement(fallible);
-                  if (!dest) {
-                    domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-                    return;
-                  }
-                  dest->mOuterWindowId = source.outerWindowId;
-                  dest->mDocumentURI = source.documentURI;
-                  dest->mDocumentTitle = source.documentTitle;
-                  dest->mIsProcessRoot = source.isProcessRoot;
-                  dest->mIsInProcess = source.isInProcess;
-                }
               }
             }
 

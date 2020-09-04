@@ -63,7 +63,7 @@ td:nth-child(4) {
 
 /* column-cpu-threads */
 td:nth-child(5) {
-  width: 10%;
+  width: 5%;
 }
 
 #process-thead > tr {
@@ -88,17 +88,6 @@ td {
   overflow: hidden;
   white-space: nowrap;
 }
-td.type, td.favicon {
-  background-repeat: no-repeat;
-  background-origin: border-box;
-  background-size: 16px 16px;
-  background-position: 16px center;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-td.type:dir(rtl), td.favicon:dir(rtl) {
-  background-position-x: right 16px;
-}
 #process-tbody > tr > td:first-child {
   text-overflow: ellipsis;
 }
@@ -115,23 +104,20 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
   display: block;
   line-height: 50%;
   top: 4px; /* Half the image's height */
-  inset-inline-start: 0;
-  padding-inline-start: 2px;
+  left: 0;
   width: 100%;
+  text-align: center;
   -moz-context-properties: fill;
   fill: currentColor;
 }
 .twisty:dir(rtl)::before {
-  content: url("chrome://global/skin/icons/twisty-collapsed-rtl.svg");
+  transform: scaleX(-1);
 }
 .twisty.open::before {
   content: url("chrome://global/skin/icons/twisty-expanded.svg");
 }
 #process-tbody > tr > td.indent {
-  padding-inline: 48px 0;
-}
-#process-tbody > tr > td.double_indent {
-  padding-inline: 58px 0;
+  padding-inline: 36px 0;
 }
 
 #process-tbody > tr[selected] > td {
@@ -194,7 +180,7 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
 /* column-name */
 
 /* When the process is reported as frozen, we display an hourglass before its name. */
-.process.hung > :first-child > :not(.twisty)::before {
+.process.hung > :nth-child(2)::before {
   content: "⌛️";
 }
 
