@@ -30,8 +30,8 @@ job-defaults:
             by-release-type:
                 beta: beta
                 release: candidate
-                esr68: esr/stable
-                esr78: esr/candidate
+                esr78: esr/stable
+                # esrXX: esr/candidate
                 default: mock
 
 jobs:
