@@ -2415,6 +2415,11 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
       const WSRunScanner& aWSRunScannerAtCaret,
       const WSScanResult& aScanFromCaretPointResult);
+  nsresult ComputeRangesToDeleteAroundCollapsedRanges(
+      const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
+      const WSRunScanner& aWSRunScannerAtCaret,
+      const WSScanResult& aScanFromCaretPointResult) const;
 
   /**
    * HandleDeleteNonCollapsedRanges() handles deletion with non-collapsed
@@ -2439,17 +2444,20 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
                                  SelectionWasCollapsed aSelectionWasCollapsed);
 
   /**
-   * HandleDeleteTextAroundCollapsedSelection() handles deletion of
-   * collapsed selection in a text node.
+   * HandleDeleteTextAroundCollapsedRanges() handles deletion of collapsed
+   * ranges in a text node.
    *
    * @param aDirectionAndAmount Must be eNext or ePrevious.
    * @param aCaretPoisition     The position where caret is.  This container
    *                            must be a text node.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleDeleteTextAroundCollapsedSelection(
+  HandleDeleteTextAroundCollapsedRanges(
       HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
-      const EditorDOMPoint& aCaretPosition);
+      AutoRangeArray& aRangesToDelete);
+  nsresult ComputeRangesToDeleteTextAroundCollapsedRanges(
+      const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      AutoRangeArray& aRangesToDelete) const;
 
   /**
    * HandleDeleteCollapsedSelectionAtWhiteSpaces() handles deletion of
@@ -3236,6 +3244,15 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
           return NS_OK;
         }
       }
+
+      nsresult rv = ComputeRangesToDeleteAroundCollapsedRanges(
+          aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete,
+          wsRunScannerAtCaret, scanFromCaretPointResult);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges("
+          ") failed");
+      return rv;
     }
   }
 
@@ -3460,6 +3477,31 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
   return result;
 }
 
+nsresult
+HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
+    const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
+    const WSRunScanner& aWSRunScannerAtCaret,
+    const WSScanResult& aScanFromCaretPointResult) const {
+  if (aScanFromCaretPointResult.InNormalWhiteSpaces() ||
+      aScanFromCaretPointResult.InNormalText()) {
+    nsresult rv = aRangesToDelete.Collapse(aScanFromCaretPointResult.Point());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("AutoRangeArray::Collapse() failed");
+      return NS_ERROR_FAILURE;
+    }
+    rv = ComputeRangesToDeleteTextAroundCollapsedRanges(
+        aHTMLEditor, aDirectionAndAmount, aRangesToDelete);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoDeleteRangesHandler::"
+        "ComputeRangesToDeleteTextAroundCollapsedRanges() failed");
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 EditActionResult
 HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
     HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
@@ -3477,11 +3519,16 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
   if (StaticPrefs::editor_white_space_normalization_blink_compatible()) {
     if (aScanFromCaretPointResult.InNormalWhiteSpaces() ||
         aScanFromCaretPointResult.InNormalText()) {
-      EditActionResult result = HandleDeleteTextAroundCollapsedSelection(
-          aHTMLEditor, aDirectionAndAmount, aScanFromCaretPointResult.Point());
+      nsresult rv = aRangesToDelete.Collapse(aScanFromCaretPointResult.Point());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("AutoRangeArray::Collapse() failed");
+        return EditActionResult(NS_ERROR_FAILURE);
+      }
+      EditActionResult result = HandleDeleteTextAroundCollapsedRanges(
+          aHTMLEditor, aDirectionAndAmount, aRangesToDelete);
       NS_WARNING_ASSERTION(result.Succeeded(),
                            "AutoDeleteRangesHandler::"
-                           "HandleDeleteCollapsedSelectionInTextNode() failed");
+                           "HandleDeleteTextAroundCollapsedRanges() failed");
       return result;
     }
   }
@@ -3584,52 +3631,89 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
   return EditActionIgnored();
 }
 
-EditActionResult
-HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedSelection(
-    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
-    const EditorDOMPoint& aCaretPosition) {
+nsresult HTMLEditor::AutoDeleteRangesHandler::
+    ComputeRangesToDeleteTextAroundCollapsedRanges(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount,
+        AutoRangeArray& aRangesToDelete) const {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
              aDirectionAndAmount == nsIEditor::ePrevious);
+
+  EditorDOMPoint caretPosition(aRangesToDelete.GetStartPointOfFirstRange());
+  MOZ_ASSERT(caretPosition.IsSetAndValid());
+  if (NS_WARN_IF(!caretPosition.IsInContentNode())) {
+    return NS_ERROR_FAILURE;
+  }
 
   EditorDOMRangeInTexts rangeToDelete;
   if (aDirectionAndAmount == nsIEditor::eNext) {
     Result<EditorDOMRangeInTexts, nsresult> result =
         WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(aHTMLEditor,
-                                                             aCaretPosition);
+                                                             caretPosition);
     if (result.isErr()) {
       NS_WARNING(
           "WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom() failed");
-      return EditActionHandled(result.unwrapErr());
+      return result.unwrapErr();
     }
     rangeToDelete = result.unwrap();
     if (!rangeToDelete.IsPositioned()) {
-      return EditActionHandled();  // no range to delete
+      return NS_OK;  // no range to delete, but consume it.
     }
   } else {
     Result<EditorDOMRangeInTexts, nsresult> result =
         WSRunScanner::GetRangeInTextNodesToBackspaceFrom(aHTMLEditor,
-                                                         aCaretPosition);
+                                                         caretPosition);
     if (result.isErr()) {
       NS_WARNING("WSRunScanner::GetRangeInTextNodesToBackspaceFrom() failed");
-      return EditActionHandled(result.unwrapErr());
+      return result.unwrapErr();
     }
     rangeToDelete = result.unwrap();
     if (!rangeToDelete.IsPositioned()) {
-      return EditActionHandled();  // no range to delete
+      return NS_OK;  // no range to delete, but consume it.
     }
+  }
+
+  nsresult rv = aRangesToDelete.SetStartAndEnd(rangeToDelete.StartRef(),
+                                               rangeToDelete.EndRef());
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "AutoArrayRanges::SetStartAndEnd() failed");
+  return rv;
+}
+
+EditActionResult
+HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedRanges(
+    HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    AutoRangeArray& aRangesToDelete) {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
+             aDirectionAndAmount == nsIEditor::ePrevious);
+
+  nsresult rv = ComputeRangesToDeleteTextAroundCollapsedRanges(
+      aHTMLEditor, aDirectionAndAmount, aRangesToDelete);
+  if (NS_FAILED(rv)) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
+  if (aRangesToDelete.IsCollapsed()) {
+    return EditActionHandled();  // no range to delete
   }
 
   // FYI: rangeToDelete does not contain newly empty inline ancestors which
   //      are removed by DeleteTextAndNormalizeSurroundingWhiteSpaces().
-  //      So, when computing `getTargetRanges()`, we need to extend the range
-  //      with
+  //      So, if `getTargetRanges()` needs to include parent empty elements,
+  //      we need to extend the range with
   //      HTMLEditUtils::GetMostDistantAnscestorEditableEmptyInlineElement().
+  EditorRawDOMRange rangeToDelete(aRangesToDelete.FirstRangeRef());
+  if (!rangeToDelete.IsInTextNodes()) {
+    NS_WARNING("The extended range to delete character was not in text nodes");
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
 
   AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
   Result<EditorDOMPoint, nsresult> result =
       aHTMLEditor.DeleteTextAndNormalizeSurroundingWhiteSpaces(
-          rangeToDelete.StartRef(), rangeToDelete.EndRef(),
+          rangeToDelete.StartRef().AsInText(),
+          rangeToDelete.EndRef().AsInText(),
           TreatEmptyTextNodes::RemoveAllEmptyInlineAncestors,
           aDirectionAndAmount == nsIEditor::eNext ? DeleteDirection::Forward
                                                   : DeleteDirection::Backward);

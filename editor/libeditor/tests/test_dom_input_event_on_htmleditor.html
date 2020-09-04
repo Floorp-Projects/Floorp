@@ -196,7 +196,10 @@ async function runTests() {
       `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);  // XXX bug 1658702
+    checkTargetRanges(beforeInputEvent, [{startContainer: selectionRanges[0].endContainer,
+                                          startOffset: selectionRanges[0].endOffset - 1,
+                                          endContainer: selectionRanges[0].endContainer,
+                                          endOffset: selectionRanges[0].endOffset}]);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentBackward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
