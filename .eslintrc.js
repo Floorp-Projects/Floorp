@@ -564,16 +564,6 @@ module.exports = {
     },
     {
       files: [
-        "toolkit/components/aboutmemory/tests/test_aboutmemory.xhtml",
-        "toolkit/components/aboutmemory/tests/test_aboutmemory2.xhtml",
-        "toolkit/components/aboutmemory/tests/test_aboutmemory3.xhtml",
-        "toolkit/components/aboutmemory/tests/test_aboutmemory4.xhtml",
-        "toolkit/components/aboutmemory/tests/test_aboutmemory5.xhtml",
-        "toolkit/components/aboutmemory/tests/test_aboutmemory7.xhtml",
-        "toolkit/components/aboutmemory/tests/test_dumpGCAndCCLogsToFile.xhtml",
-        "toolkit/components/aboutmemory/tests/test_memoryReporters.xhtml",
-        "toolkit/components/aboutmemory/tests/test_memoryReporters2.xhtml",
-        "toolkit/components/aboutmemory/tests/test_sqliteMultiReporter.xhtml",
         "toolkit/components/ctypes/tests/chrome/test_ctypes.xhtml",
         "toolkit/components/osfile/tests/mochi/test_osfile_back.xhtml",
         "toolkit/components/osfile/tests/mochi/test_osfile_comms.xhtml",

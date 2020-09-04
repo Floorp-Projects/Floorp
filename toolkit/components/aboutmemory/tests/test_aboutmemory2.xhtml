@@ -36,7 +36,7 @@
   let jk2Path = "explicit/j/k2";
 
   let fakeReporters = [
-    { collectReports: function(aCbObj, aClosure, aAnonymize) {
+    { collectReports(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aA) {
           aCbObj.callback("Main Process ABC", aP, aK, BYTES, aA, "Desc.", aClosure);
         }
@@ -136,9 +136,8 @@
     let x = aIds.shift();
     if (x) {
       return function() { test(x.id, x.swap, x.expected, chain(aIds)); }
-    } else {
-      return function() { finish(); };
     }
+    return function() { finish(); };
   }
 
   let startExpected =

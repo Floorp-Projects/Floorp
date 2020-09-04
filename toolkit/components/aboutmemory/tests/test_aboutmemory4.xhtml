@@ -18,9 +18,7 @@
   "use strict";
 
   function makePathname(aFilename) {
-    let file = Cc["@mozilla.org/file/directory_service;1"]
-               .getService(Ci.nsIProperties)
-               .get("CurWorkD", Ci.nsIFile);
+    let file = SpecialPowers.Services.dirsvc.get("CurWorkD", Ci.nsIFile);
     file.append("chrome");
     file.append("toolkit");
     file.append("components");
@@ -38,7 +36,6 @@
     frame.src = "about:memory?file=" + makePathname(aFilename);
     document.documentElement.appendChild(frame);
     frame.addEventListener("load", function onFrameLoad(e) {
-      frame.removeEventListener("load", onFrameLoad);
       frame.focus();
 
       // Initialize the clipboard contents.
@@ -75,7 +72,7 @@
         }
       }
       copyPasteAndCheck();
-    });
+    }, {once: true});
   }
 
   // Returns a function that chains together multiple test() calls.
@@ -83,9 +80,8 @@
     let x = aFrameIds.shift();
     if (x) {
       return function() { test(x.filename, x.expected, chain(aFrameIds)); }
-    } else {
-      return function() { SimpleTest.finish(); };
     }
+    return function() { SimpleTest.finish(); };
   }
 
   // This is pretty simple output, but that's ok;  this file is about testing
