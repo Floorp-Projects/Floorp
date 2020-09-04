@@ -27,7 +27,6 @@ function runTests()
 
 function mouseMove(e) {
   e.stopPropagation();
-  var element = e.target;
   var el = document.getElementById("cap1");
   el.label = "client: (" + e.clientX + "," + e.clientY + ")";
   parent.arguments[0].SimpleTest.is(e.clientX, 3, "mouse event clientX on sub frame 1");
@@ -36,7 +35,7 @@ function mouseMove(e) {
   frames[0].runTests();
 }
 
-window.addEventListener("mousemove", mouseMove, false);
+window.addEventListener("mousemove", mouseMove);
 
 </script>
 </window>

@@ -40,9 +40,8 @@ function openTestWindow() {
 
 function listenOnce(event, callback) {
     win.addEventListener(event, function listener() {
-        win.removeEventListener(event, listener, false);
         callback();
-    }, false);
+    }, { once: true});
 }
 
 function childFocused() {

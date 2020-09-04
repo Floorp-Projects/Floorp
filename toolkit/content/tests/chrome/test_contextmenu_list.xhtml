@@ -163,12 +163,12 @@ function nextTest()
 
 function isRoundedX(a, b, msg)
 {
-  is(Math.round(a + mozInnerScreenX), Math.round(b + mozInnerScreenX), msg);
+  is(Math.round(a + window.mozInnerScreenX), Math.round(b + window.mozInnerScreenX), msg);
 }
 
 function isRoundedY(a, b, msg)
 {
-  is(Math.round(a + mozInnerScreenY), Math.round(b + mozInnerScreenY), msg);
+  is(Math.round(a + window.mozInnerScreenY), Math.round(b + window.mozInnerScreenY), msg);
 }
 
 function checkContextMenu(event)
@@ -189,6 +189,7 @@ function checkContextMenu(event)
   // context menu from mouse click
   switch (gTestId) {
     case -1:
+      // eslint-disable-next-line no-nested-ternary
       var expected = gSelectionStep == 2 ? 1 : (platformIsMac() ? 3 : 0);
       is($(gTestElement).selectedIndex, expected, "index after click " + gSelectionStep);
       break;
@@ -251,14 +252,14 @@ function checkPopup()
   }
   else if (gTestId == 1) {
     // activating a context menu with the mouse from position (7, 4).
-    var elementrect = $(gTestElement).getBoundingClientRect();
+    let elementrect = $(gTestElement).getBoundingClientRect();
     isRoundedX(menurect.left, elementrect.left + 7 + contextMenuOffsetX,
        gTestElement + " mouse left");
     isRoundedY(menurect.top, elementrect.top + 4 + contextMenuOffsetY,
        gTestElement + " mouse top");
   }
   else {
-    var elementrect = $(gTestElement).getBoundingClientRect();
+    let elementrect = $(gTestElement).getBoundingClientRect();
     isRoundedX(menurect.left, elementrect.left + contextMenuOffsetX,
        gTestElement + " no selection keyboard left");
     isRoundedY(menurect.top, elementrect.bottom + contextMenuOffsetY,

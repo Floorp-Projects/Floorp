@@ -30,13 +30,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1048178
 /** Test for Bug 1048178 **/
 var scrollbarTester = {
   scrollbar: null,
-  startTest: function() {
+  startTest() {
     this.scrollbar = $("scroller");
     this.setScrollToClick(false);
     this.testThumbDragging();
     SimpleTest.finish();
   },
-  testThumbDragging: function() {
+  testThumbDragging() {
     var x = 400; // on the right half of the scroolbar
     var y = 5;
 
@@ -55,22 +55,21 @@ var scrollbarTester = {
     ok(newPos2 < newPos,
        "Scrollbar thumb should follow the mouse when dragged.");
   },
-  setScrollToClick: function(value) {
-    var prefService = Cc["@mozilla.org/preferences-service;1"]
-                        .getService(Ci.nsIPrefService);
+  setScrollToClick(value) {
+    var prefService = SpecialPowers.Services.prefs.nsIPrefService;
     var uiBranch = prefService.getBranch("ui.");
     uiBranch.setIntPref("scrollToClick", value ? 1 : 0);
   },
-  getPos: function() {
+  getPos() {
     return this.scrollbar.getAttribute("curpos");
   },
-  mousedown: function(x, y, button) {
+  mousedown(x, y, button) {
     synthesizeMouse(this.scrollbar, x, y, { type: "mousedown", 'button': button });
   },
-  mousemove: function(x, y, button) {
+  mousemove(x, y, button) {
     synthesizeMouse(this.scrollbar, x, y, { type: "mousemove", 'button': button });
   },
-  mouseup: function(x, y, button) {
+  mouseup(x, y, button) {
     synthesizeMouse(this.scrollbar, x, y, { type: "mouseup", 'button': button });
   }
 }

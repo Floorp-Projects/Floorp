@@ -44,38 +44,31 @@ nsAutoCompleteSimpleResult.prototype = {
  defaultIndex: 0,
  errorDescription: null,
  matchCount: 0,
- getValueAt: function() { return this._param; },
- getCommentAt: function() { return null; },
- getStyleAt: function() { return null; },
- getImageAt: function() { return null; },
- getFinalCompleteValueAt: function() { return this.getValueAt(); },
- getLabelAt: function() { return null; },
- removeValueAt: function() {}
+ getValueAt() { return this._param; },
+ getCommentAt() { return null; },
+ getStyleAt() { return null; },
+ getImageAt() { return null; },
+ getFinalCompleteValueAt() { return this.getValueAt(); },
+ getLabelAt() { return null; },
+ removeValueAt() {}
 };
 
 // A basic autocomplete implementation that either returns one result or none
 var autoCompleteSimpleID = Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca");
 var autoCompleteSimpleName = "@mozilla.org/autocomplete/search;1?name=simple"
 var autoCompleteSimple = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIFactory) ||
-        iid.equals(Ci.nsIAutoCompleteSearch))
-      return this;
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIAutoCompleteSearch"]),
 
-    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
-  },
-
-  createInstance: function(outer, iid) {
+  createInstance(outer, iid) {
     return this.QueryInterface(iid);
   },
 
-  startSearch: function(aString, aParam, aResult, aListener) {
+  startSearch(aString, aParam, aResult, aListener) {
     var result = new nsAutoCompleteSimpleResult(aString);
     aListener.onSearchResult(this, result);
   },
 
-  stopSearch: function() {}
+  stopSearch() {}
 };
 
 var componentManager = Components.manager
@@ -221,7 +214,7 @@ function runCurrentTest() {
 
 function searchComplete() {
   var autocomplete = $("autocomplete");
-  autocomplete.setAttribute("forcecomplete", currentTest.forceComplete ? true : false);
+  autocomplete.setAttribute("forcecomplete", currentTest.forceComplete);
 
   if (currentTest.completeFromMiddle) {
     if (!currentTest.forceComplete) {

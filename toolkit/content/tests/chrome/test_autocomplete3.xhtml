@@ -41,38 +41,31 @@ nsAutoCompleteSimpleResult.prototype = {
  defaultIndex: 0,
  errorDescription: null,
  matchCount: 0,
- getValueAt: function() { return this._param; },
- getCommentAt: function() { return null; },
- getStyleAt: function() { return null; },
- getImageAt: function() { return null; },
- getFinalCompleteValueAt: function() { return this.getValueAt(); },
- getLabelAt: function() { return null; },
- removeValueAt: function() {}
+ getValueAt() { return this._param; },
+ getCommentAt() { return null; },
+ getStyleAt() { return null; },
+ getImageAt() { return null; },
+ getFinalCompleteValueAt() { return this.getValueAt(); },
+ getLabelAt() { return null; },
+ removeValueAt() {}
 };
 
 // A basic autocomplete implementation that either returns one result or none
 var autoCompleteSimpleID = Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca");
 var autoCompleteSimpleName = "@mozilla.org/autocomplete/search;1?name=simple"
 var autoCompleteSimple = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIFactory) ||
-        iid.equals(Ci.nsIAutoCompleteSearch))
-      return this;
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIAutoCompleteSearch"]),
 
-    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
-  },
-
-  createInstance: function(outer, iid) {
+  createInstance(outer, iid) {
     return this.QueryInterface(iid);
   },
 
-  startSearch: function(aString, aParam, aResult, aListener) {
+  startSearch(aString, aParam, aResult, aListener) {
     var result = new nsAutoCompleteSimpleResult(aString);
     aListener.onSearchResult(this, result);
   },
 
-  stopSearch: function() {}
+  stopSearch() {}
 };
 
 var componentManager = Components.manager
@@ -142,7 +135,6 @@ function checkNext() {
 
 function checkResult() {
   var autocomplete = $("autocomplete");
-  var style = window.getComputedStyle(autocomplete);
 
   is(autocomplete.value, tests[currentTest].result,
      "Test " + currentTest + ": autocomplete.value should equal '" +
@@ -158,26 +150,38 @@ function checkResult() {
 
   ++currentTest;
 
-  if (currentTest < tests.length)
+  if (currentTest < tests.length) {
     setTimeout(checkNext, 0);
-  else {
+  } else {
     // TODO (bug 494809): Autocomplete-in-the-middle should take in count RTL
     // and complete on KEY_ArrowRight or KEY_ArrowLeft based on that.  It should also revert
     // what user has typed to far if he moves in the opposite direction.
     if (!autocomplete.value.includes(">>")) {
       // Test result if user accepts autocomplete suggestion.
       synthesizeKey("KEY_ArrowRight");
-      is(autocomplete.value, "Result",
-         "Test complete: autocomplete.value should equal 'Result'");
-      is(autocomplete.selectionStart, 6,
-         "Test complete: autocomplete selection should start at 6");
-      is(autocomplete.selectionEnd, 6,
-         "Test complete: autocomplete selection should end at 6");
+      is(
+        autocomplete.value,
+        "Result",
+        "Test complete: autocomplete.value should equal 'Result'"
+      );
+      is(
+        autocomplete.selectionStart,
+        6,
+        "Test complete: autocomplete selection should start at 6"
+      );
+      is(
+        autocomplete.selectionEnd,
+        6,
+        "Test complete: autocomplete selection should end at 6"
+      );
     }
 
-    setTimeout(function() {
+    setTimeout(function () {
       // Unregister the factory so that we don't get in the way of other tests
-      componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);
+      componentManager.unregisterFactory(
+        autoCompleteSimpleID,
+        autoCompleteSimple
+      );
       SimpleTest.finish();
     }, 0);
   }

@@ -201,7 +201,7 @@ function* nextTest()
     }
 
     // Check that the transition occurs for an arrow panel with animate="true"
-    $("animatepanel").addEventListener("transitionend", transitionEnded, false);
+    $("animatepanel").addEventListener("transitionend", transitionEnded);
     $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
     is($("animatepanel").state, "showing", "state is showing");
     yield;
