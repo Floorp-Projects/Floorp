@@ -42,8 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
       /** Test for Bug 437844 and Bug 348233 **/
       SimpleTest.waitForExplicitFinish();
 
-      let prefs = Cc["@mozilla.org/preferences-service;1"]
-                    .getService(Ci.nsIPrefBranch);
+      let prefs = SpecialPowers.Services.prefs.nsIPrefBranch;
       prefs.setIntPref("intl.uidirection", 1);
 
       let rootDir = getRootDirectory(window.location.href);
@@ -66,27 +65,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
       let frame = document.createXULElement("iframe");
       frame.setAttribute("src", "about:plugins");
       frame.addEventListener("load", function () {
-          frame.removeEventListener("load", arguments.callee, false);
           is(frame.contentDocument.dir, "rtl", "about:plugins should be RTL in RTL locales");
 
-          let gDirSvc    = Cc["@mozilla.org/file/directory_service;1"].
-                                      getService(Ci.nsIDirectoryService).
-                                      QueryInterface(Ci.nsIProperties);
-          let tmpd = gDirSvc.get("ProfD", Ci.nsIFile);
+          // eslint-disable-next-line no-unused-vars
+          let tmpd = SpecialPowers.Services.dirsvc.get("ProfD", Ci.nsIFile);
 
           frame = document.createXULElement("iframe");
           frame.setAttribute("src", "file://" + tmpd.path); // a file:// URI, bug 348233
           frame.addEventListener("load", function () {
-              frame.removeEventListener("load", arguments.callee, false);
-
               is(frame.contentDocument.body.dir, "rtl", "file:// listings should be RTL in RTL locales");
 
               cleanupFunc();
               prefs.clearUserPref("intl.uidirection");
               SimpleTest.finish();
-            }, false);
+            });
           document.documentElement.appendChild(frame);
-        }, false);
+        }, { once: true });
       document.documentElement.appendChild(frame);
 
     ]]>

@@ -45,10 +45,8 @@ function test_crash(when, andThen) {
   var attrChanges = { "REMOVAL": 0, "ADDITION": 0 };
   var storedEvent = null;
   menupopup.addEventListener("popupshown", function () {
-    menupopup.removeEventListener("popupshown", arguments.callee, false);
     menuitem.addEventListener("mouseup", function (e) {
-      menuitem.removeEventListener("mouseup", arguments.callee, true);
-      menuitem.addEventListener("DOMAttrModified", function (e) {
+      menuitem.addEventListener("DOMAttrModified", function onDOMAttrModified(e) {
         if (e.target != e.currentTarget) {
           return;
         }
@@ -63,16 +61,15 @@ function test_crash(when, andThen) {
             menuitem.getBoundingClientRect();
             ok(true, "Didn't crash on _moz-menuactive " + when.toLowerCase() + " during blinking")
             menuitem.hidden = false;
-            menuitem.removeEventListener("DOMAttrModified", arguments.callee, false);
+            menuitem.removeEventListener("DOMAttrModified", onDOMAttrModified);
             SimpleTest.executeSoon(function () {
               menupopup.hidePopup();
             });
           }
         }
-      }, false);
-    }, true);
+      });
+    }, {once: true});
     menupopup.addEventListener("popuphidden", function() {
-      menupopup.removeEventListener("popuphidden", arguments.callee, false);
       if (!when) {
         // Test whether we've blinked at all.
         var shouldBlink = navigator.platform.match(/Mac/);
@@ -83,14 +80,14 @@ function test_crash(when, andThen) {
         is(attrChanges[storedEvent.ADDITION], expectedNumAddition, "blinking set attributes correctly");
       }
       SimpleTest.executeSoon(andThen);
-    }, false);
+    }, {once: true});
     synthesizeMouse(menuitem, 10, 5, { type : "mousemove" });
     synthesizeMouse(menuitem, 10, 5, { type : "mousemove" });
     synthesizeMouse(menuitem, 10, 5, { type : "mousedown" });
     SimpleTest.executeSoon(function () {
       synthesizeMouse(menuitem, 10, 5, { type : "mouseup" });
     });
-  }, false);
+  }, {once: true});
   document.getElementById("menulist").open = true;
 }
 
