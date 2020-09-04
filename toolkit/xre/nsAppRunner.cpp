@@ -298,6 +298,7 @@ nsString gAbsoluteArgv0Path;
 #  include <gtk/gtk.h>
 #  ifdef MOZ_WAYLAND
 #    include <gdk/gdkwayland.h>
+#    include "mozilla/widget/nsWaylandDisplay.h"
 #  endif
 #  ifdef MOZ_X11
 #    include <gdk/gdkx.h>
@@ -334,6 +335,7 @@ bool RunningGTest() { return RunGTest; }
 }  // namespace mozilla
 
 using namespace mozilla;
+using namespace mozilla::widget;
 using namespace mozilla::startup;
 using mozilla::Unused;
 using mozilla::dom::ContentChild;
@@ -4975,6 +4977,9 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // gdk_display_close also calls gdk_display_manager_set_default_display
   // appropriately when necessary.
   if (!gfxPlatform::IsHeadless()) {
+#  ifdef MOZ_WAYLAND
+    WaylandDisplayRelease();
+#  endif
     MOZ_gdk_display_close(mGdkDisplay);
   }
 #endif

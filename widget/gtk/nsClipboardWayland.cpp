@@ -29,6 +29,9 @@
 #include <fcntl.h>
 #include <errno.h>
 
+using namespace mozilla;
+using namespace mozilla::widget;
+
 const char* nsRetrievalContextWayland::sTextMimeTypes[TEXT_MIME_TYPES_NUM] = {
     "text/plain;charset=utf-8", "UTF8_STRING", "COMPOUND_TEXT"};
 
@@ -658,7 +661,7 @@ bool nsRetrievalContextWayland::HasSelectionSupport(void) {
 
 nsRetrievalContextWayland::nsRetrievalContextWayland(void)
     : mInitialized(false),
-      mDisplay(mozilla::widget::WaylandDisplayGet()),
+      mDisplay(WaylandDisplayGet()),
       mActiveOffers(g_hash_table_new(NULL, NULL)),
       mClipboardOffer(nullptr),
       mPrimaryOffer(nullptr),
