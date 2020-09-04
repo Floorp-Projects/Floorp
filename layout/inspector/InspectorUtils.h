@@ -239,6 +239,7 @@ class InspectorUtils {
 
   static Element* ContainingBlockOf(GlobalObject&, Element&);
 
+  MOZ_CAN_RUN_SCRIPT
   static already_AddRefed<nsINodeList> GetOverflowingChildrenOfElement(
       GlobalObject& aGlobal, Element& element);
 
