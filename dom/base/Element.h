@@ -623,6 +623,7 @@ class Element : public FragmentOrElement {
   already_AddRefed<ShadowRoot> AttachShadowInternal(ShadowRootMode,
                                                     ErrorResult& aError);
 
+ public:
   MOZ_CAN_RUN_SCRIPT
   nsIScrollableFrame* GetScrollFrame(nsIFrame** aStyledFrame = nullptr,
                                      FlushType aFlushType = FlushType::Layout);
