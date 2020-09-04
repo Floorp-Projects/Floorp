@@ -23,9 +23,7 @@
   SimpleTest.waitForExplicitFinish();
 
   // Make a fake DB file.
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
+  let file = SpecialPowers.Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("test_sqliteMultiReporter-fake-DB-tmp.sqlite");
 
   // Open and close the DB.
