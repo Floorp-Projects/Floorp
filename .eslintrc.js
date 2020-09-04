@@ -564,14 +564,6 @@ module.exports = {
     },
     {
       files: [
-        "toolkit/components/ctypes/tests/chrome/test_ctypes.xhtml",
-        "toolkit/components/osfile/tests/mochi/test_osfile_back.xhtml",
-        "toolkit/components/osfile/tests/mochi/test_osfile_comms.xhtml",
-        "toolkit/components/osfile/tests/mochi/test_osfile_front.xhtml",
-        "toolkit/components/places/tests/chrome/browser_disableglobalhistory.xhtml",
-        "toolkit/components/places/tests/chrome/test_browser_disableglobalhistory.xhtml",
-        "toolkit/components/places/tests/chrome/test_favicon_annotations.xhtml",
-        "toolkit/components/workerloader/tests/test_loading.xhtml",
         "toolkit/content/tests/chrome/bug263683_window.xhtml",
         "toolkit/content/tests/chrome/bug304188_window.xhtml",
         "toolkit/content/tests/chrome/bug331215_window.xhtml",
