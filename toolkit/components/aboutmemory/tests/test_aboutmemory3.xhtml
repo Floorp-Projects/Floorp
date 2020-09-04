@@ -31,7 +31,7 @@
   const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
 
   let fakeReporters = [
-    { collectReports: function(aCbObj, aClosure, aAnonymize) {
+    { collectReports(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aA, aD) {
           aCbObj.callback("", aP, aK, BYTES, aA, aD, aClosure);
         }
@@ -71,9 +71,7 @@
     verbosity.checked = aVerbose;
 
     function getFilePath(aFilename) {
-      let file = Cc["@mozilla.org/file/directory_service;1"]
-                 .getService(Ci.nsIProperties)
-                 .get("CurWorkD", Ci.nsIFile);
+      let file = SpecialPowers.Services.dirsvc.get("CurWorkD", Ci.nsIFile);
       file.append("chrome");
       file.append("toolkit");
       file.append("components");
@@ -175,9 +173,8 @@
     let x = aPieces.shift();
     if (x) {
       return function() { test(x.filename, x.filename2, x.expected, x.dumpFirst, x.verbose, chain(aPieces)); }
-    } else {
-      return function() { finish(); };
     }
+    return function() { finish(); };
   }
 
   let expectedGood =

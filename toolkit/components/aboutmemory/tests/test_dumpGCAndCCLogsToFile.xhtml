@@ -27,7 +27,6 @@
       let w = remotes[i] = window.browsingContext.topChromeWindow.open("remote.xhtml", "", "chrome");
 
       w.addEventListener("load", function loadHandler() {
-        w.removeEventListener("load", loadHandler);
         let remoteBrowser = w.document.getElementById("remote");
         let mm = remoteBrowser.messageManager;
         mm.addMessageListener("test:ready", function readyHandler() {
@@ -39,39 +38,37 @@
           }
         });
         mm.loadFrameScript("data:," + encodeURI("sendAsyncMessage('test:ready');"), true);
-      });
+      }, {once: true});
     }
   });
 
   let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
                getService(Ci.nsIMemoryInfoDumper);
 
-  function runTest()
-  {
-      let numParents = 0;
-      let numChildren = 0;
-      dumper.dumpGCAndCCLogsToFile(
-	  /* identifier: */ "test." + Date.now(),
-	  /* allTraces: */ false,
-	  /* childProcesses: */ true,
-	  {
-	      onDump: function(gcLog, ccLog, isParent) {
-		  if (isParent) {
-		      numParents++;
-		  } else {
-		      numChildren++;
-		  }
-		  checkAndRemoveLog(gcLog);
-		  checkAndRemoveLog(ccLog);
-	      },
-	      onFinish: function() {
-		  is(numParents, 1,
-		     "GC/CC logs for the parent process");
-		  is(numChildren, numRemotes,
-		     "GC/CC logs for each child process");
-		  cleanUpAndFinish();
-	      }
-	  });
+  function runTest() {
+    let numParents = 0;
+    let numChildren = 0;
+    dumper.dumpGCAndCCLogsToFile(
+      /* identifier: */ "test." + Date.now(),
+      /* allTraces: */ false,
+      /* childProcesses: */ true,
+      {
+        onDump(gcLog, ccLog, isParent) {
+          if (isParent) {
+            numParents++;
+          } else {
+            numChildren++;
+          }
+          checkAndRemoveLog(gcLog);
+          checkAndRemoveLog(ccLog);
+        },
+        onFinish() {
+          is(numParents, 1, "GC/CC logs for the parent process");
+          is(numChildren, numRemotes, "GC/CC logs for each child process");
+          cleanUpAndFinish();
+        },
+      }
+    );
   }
 
   function cleanUpAndFinish() {

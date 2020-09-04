@@ -30,7 +30,7 @@
   const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
 
   let fakeReporters = [
-    { collectReports: function(aCbObj, aClosure, aAnonymize) {
+    { collectReports(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aA) {
           aCbObj.callback("Main Process", aP, aK, BYTES, aA, "Desc.", aClosure);
         }
@@ -138,12 +138,10 @@
     if (x) {
       if (x.click) {
         return function() { testClick(x.click, x.expected, chain(aIds)); }
-      } else {
-        return function() { testFilter(x.filter, x.regex, x.expected, chain(aIds)); }
       }
-    } else {
-      return function() { finish(); };
+      return function() { testFilter(x.filter, x.regex, x.expected, chain(aIds)); }
     }
+    return function() { finish(); };
   }
 
   let startExpected =
