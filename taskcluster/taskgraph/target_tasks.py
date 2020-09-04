@@ -1046,7 +1046,7 @@ def target_tasks_release_simulation(full_task_graph, parameters, graph_config):
         'nightly': 'mozilla-central',
         'beta': 'mozilla-beta',
         'release': 'mozilla-release',
-        'esr68': 'mozilla-esr68',
+        'esr78': 'mozilla-esr78',
     }
     target_project = project_by_release.get(parameters['release_type'])
     if target_project is None:
