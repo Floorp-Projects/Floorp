@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test InspectorUtils.GetOverflowingChildrenOfElement applied to the body element
+-->
+<head>
+<meta charset="utf-8">
+<title>Test InspectorUtils.GetOverflowingChildrenOfElement on the body element</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+body {
+  overflow: auto;
+  margin: 0;
+}
+.tallBox {
+  overflow: auto;
+  background: lavender;
+  width: 200px;
+  height: 110vh;
+}
+</style>
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+function runTests() {
+  const body = document.documentElement;
+  const overflowing_children = InspectorUtils.getOverflowingChildrenOfElement(body);
+
+  is(overflowing_children.length, 1, `body has the expected number of children.`);
+
+  SimpleTest.finish();
+};
+window.onload = runTests;
+</script>
+</head>
+<body>
+<div class="tallBox"><div>
+</body>
+</html>
