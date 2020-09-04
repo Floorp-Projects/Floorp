@@ -28,37 +28,38 @@ let test = function test() {
     worker.onerror = function onerror(error) {
       SimpleTest.ok(false, "received error "+error);
     }
-   worker.onmessage = function onmessage(msg) {
-    Cu.forceShrinkingGC();
-    switch (msg.data.kind) {
-      case "is":
-        SimpleTest.ok(msg.data.outcome, msg.data.description +
-        " ("+ msg.data.a + " ==? " + msg.data.b + ")" );
-        return;
-      case "isnot":
-        SimpleTest.ok(msg.data.outcome, msg.data.description +
-        " ("+ msg.data.a + " !=? " + msg.data.b + ")" );
-        return;
-      case "ok":
-        SimpleTest.ok(msg.data.condition, msg.data.description);
-        return;
-      case "info":
-        SimpleTest.info(msg.data.description);
-        return;
-      case "finish":
-        SimpleTest.finish();
-        return;
-      case "value":
-        SimpleTest.ok(true, "test_osfile_comms.xhtml: Received value " + JSON.stringify(msg.data.value));
-        let type = eval(msg.data.typename);
-        let check = eval(msg.data.check);
-        let value = msg.data.value;
-        let deserialized = type.fromMsg(value);
-        check(deserialized, "Main thread test: ");
-       return;
+    worker.onmessage = function onmessage(msg) {
+      Cu.forceShrinkingGC();
+      switch (msg.data.kind) {
+        case "is":
+          SimpleTest.ok(msg.data.outcome, msg.data.description +
+          " ("+ msg.data.a + " ==? " + msg.data.b + ")" );
+          return;
+        case "isnot":
+          SimpleTest.ok(msg.data.outcome, msg.data.description +
+          " ("+ msg.data.a + " !=? " + msg.data.b + ")" );
+          return;
+        case "ok":
+          SimpleTest.ok(msg.data.condition, msg.data.description);
+          return;
+        case "info":
+          SimpleTest.info(msg.data.description);
+          return;
+        case "finish":
+          SimpleTest.finish();
+          return;
+        case "value":
+          SimpleTest.ok(true, "test_osfile_comms.xhtml: Received value " + JSON.stringify(msg.data.value));
+          // eslint-disable-next-line no-eval
+          let type = eval(msg.data.typename);
+          // eslint-disable-next-line no-eval
+          let check = eval(msg.data.check);
+          let value = msg.data.value;
+          let deserialized = type.fromMsg(value);
+          check(deserialized, "Main thread test: ");
+          return;
       default:
         SimpleTest.ok(false, "test_osfile_comms.xhtml: wrong message "+JSON.stringify(msg.data));
-        return;
       }
     };
     worker.postMessage(0)

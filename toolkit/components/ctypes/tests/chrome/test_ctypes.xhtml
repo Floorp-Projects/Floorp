@@ -16,8 +16,8 @@
   <![CDATA[
     const {ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
-    CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
-    CTYPES_UNICODE_LIB = ctypes.libraryName("jsctyp\u00E8s-t\u00EB\u00DFt");
+    const CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
+    const CTYPES_UNICODE_LIB = ctypes.libraryName("jsctyp\u00E8s-t\u00EB\u00DFt");
 
     /*
      * input: string of the url where we are running from
@@ -29,15 +29,12 @@
 
       if (jar) {
         return extractJarToTmp(jar);
-      } else {
-        return getLocalDir(path);
       }
+      return getLocalDir(path);
     }
 
     function getLocalDir(path) {
-      let dir = Cc["@mozilla.org/file/directory_service;1"]
-                  .getService(Ci.nsIProperties)
-                  .get("CurWorkD", Ci.nsIFile);
+      let dir = SpecialPowers.Services.dirsvc.get("CurWorkD", Ci.nsIFile);
       path = location.pathname;
       path = path.slice("content/".length,
                                          -1 * "/test_ctypes.xhtml".length);
@@ -97,7 +94,7 @@
         SimpleTest.finish();
       }
 
-      worker.postMessage({dir: dir.path, os: Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS});
+      worker.postMessage({dir: dir.path, os: Services.appinfo.OS});
     }
 
     function onunload()

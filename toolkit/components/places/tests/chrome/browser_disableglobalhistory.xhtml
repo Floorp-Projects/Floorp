@@ -14,7 +14,7 @@
 
   <script type="text/javascript">
 
-  Cu.import("resource://testing-common/ContentTask.jsm");
+  const { ContentTask } = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
   ContentTask.setTestScope(window.arguments[0].wrappedJSObject);
 
   function expectUseGlobalHistory(id, expected) {
