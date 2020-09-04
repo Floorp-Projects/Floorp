@@ -153,7 +153,7 @@ function test_nsIDOMXULMenuListElement(element)
 function test_nsIDOMXULMenuListElement_properties(element, thirditem, properties)
 {
   let {attr, value} = properties.shift();
-  let last = (properties.length == 0);
+  let last = !properties.length;
 
   let mutObserver = new MutationObserver(() => {
     is(element.getAttribute(attr), value, `${attr} modified`);

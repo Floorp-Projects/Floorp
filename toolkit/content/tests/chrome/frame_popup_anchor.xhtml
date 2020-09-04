@@ -35,13 +35,13 @@ function popupShown()
   var left, top;
   var popuprect = document.getElementById("popup").getBoundingClientRect();
   if (isSecondTest) {
-    var buttonrect = document.getElementById("button").getBoundingClientRect();
+    let buttonrect = document.getElementById("button").getBoundingClientRect();
     left = buttonrect.left + 6;
     top = buttonrect.top + 6;
   }
   else {
-    var iframerect = parent.document.getElementById("frame").getBoundingClientRect();
-    var buttonrect = parent.document.getElementById("outerbutton").getBoundingClientRect();
+    let iframerect = parent.document.getElementById("frame").getBoundingClientRect();
+    let buttonrect = parent.document.getElementById("outerbutton").getBoundingClientRect();
 
     // The popup should appear anchored on the bottom left edge of the button, however
     // the client rectangle is relative to the iframe's document. Thus the coordinates

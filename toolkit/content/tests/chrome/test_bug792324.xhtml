@@ -47,7 +47,6 @@ function clicked(event) {
 function checkAccessKeyOnPanel(panelid, buttonid, cb) {
   let panel = document.getElementById(panelid);
   panel.addEventListener("popupshown", function onpopupshown() {
-    panel.removeEventListener("popupshown", onpopupshown);
     panel.firstChild.focus();
     after_click = function(event) {
       is(event.target.id, buttonid, "Accesskey was directed to the button '" + buttonid + "'");

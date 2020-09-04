@@ -101,14 +101,12 @@ function runCurrentTest()
     default:
       SetPrefs(false);
       SimpleTest.finish();
-      return;
   }
 }
 
 function SetPrefs(aSet)
 {
-  var prefSvc = Cc["@mozilla.org/preferences-service;1"].
-                           getService(Ci.nsIPrefBranch);
+  var prefSvc = SpecialPowers.Services.prefs.nsIPrefBranch;
   const kPrefName = "ui.cursor_snapping.always_enabled";
   if (aSet) {
     prefSvc.setBoolPref(kPrefName, true);

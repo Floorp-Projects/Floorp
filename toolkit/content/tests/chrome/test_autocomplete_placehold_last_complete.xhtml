@@ -43,12 +43,12 @@ autoCompleteSimpleResult.prototype = {
   defaultIndex: 0,
   errorDescription: null,
   matchCount: 0,
-  getValueAt: function() { return this._param; },
-  getCommentAt: function() { return null; },
-  getStyleAt: function() { return null; },
-  getImageAt: function() { return null; },
-  getLabelAt: function() { return null; },
-  removeValueAt: function() {}
+  getValueAt() { return this._param; },
+  getCommentAt() { return null; },
+  getStyleAt() { return null; },
+  getImageAt() { return null; },
+  getLabelAt() { return null; },
+  removeValueAt() {}
 };
 
 var searchCounter = 0;
@@ -64,23 +64,23 @@ let autoCompleteSimple = {
     "nsIFactory",
     "nsIAutoCompleteSearch"
   ]),
-  createInstance: function (outer, iid) {
+  createInstance(outer, iid) {
     return this.QueryInterface(iid);
   },
 
-  registerFactory: function () {
+  registerFactory() {
     let registrar =
       Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.registerFactory(this.classID, "Test Simple Autocomplete",
                               this.contractID, this);
   },
-  unregisterFactory: function () {
+  unregisterFactory() {
     let registrar =
       Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.unregisterFactory(this.classID, this);
   },
 
-  startSearch: function (aString, aParam, aResult, aListener) {
+  startSearch(aString, aParam, aResult, aListener) {
     let result = new autoCompleteSimpleResult(aString);
 
     if (this.searchAsync) {
@@ -99,7 +99,7 @@ let autoCompleteSimple = {
       aListener.onSearchResult(this, result);
     }
   },
-  stopSearch: function () {
+  stopSearch() {
     clearTimeout(this.pendingSearch);
   }
 };
