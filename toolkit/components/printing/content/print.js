@@ -1169,10 +1169,10 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
   update(settings) {
     // If there are no default system printers available and we are not on mac,
     // we should hide the system dialog because it won't be populated with
-    // the correct settings. Mac supports save to pdf functionality
+    // the correct settings. Mac and Gtk support save to pdf functionality
     // in the native dialog, so it can be shown regardless.
     this.querySelector("#system-print").hidden =
-      !settings.defaultSystemPrinter && AppConstants.platform !== "macosx";
+      AppConstants.platform === "win" && !settings.defaultSystemPrinter;
 
     this.querySelector("#copies").hidden = settings.willSaveToFile;
   }
