@@ -34,10 +34,13 @@ function loaded()
         break;
       case 3:
         document.getElementById("one").hidden = true;
+        // no-fallthrough
       case 4:
         document.getElementById("tabbutton2").setAttribute("noinitialfocus", "true");
+        // no-fallthrough
       case 5:
         document.getElementById("tabbutton").setAttribute("noinitialfocus", "true");
+        // no-fallthrough
       case 6:
         document.getElementById("tabbox").hidden = false;
         break;

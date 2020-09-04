@@ -18,7 +18,7 @@
     const SEARCH_TEXT = "minefield";
 
     let gFindBar = null;
-    let gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    let gPrefsvc = SpecialPowers.Services.prefs.nsIPrefBranch;
     let gBrowser;
 
     let sendCtrl = true;
@@ -28,17 +28,17 @@
       sendMeta = true;
     }
 
-    let imports = [ "SimpleTest", "ok", "is", "info"];
-    for (let name of imports) {
-      window[name] = window.arguments[0][name];
-    }
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var ok = window.arguments[0].ok;
+    var is = window.arguments[0].is;
+    var info = window.arguments[0].info;
 
     SimpleTest.requestLongerTimeout(2);
 
     function startTest() {
       gFindBar = document.getElementById("FindToolbar");
       gBrowser = document.getElementById("content");
-      gBrowser.addEventListener("pageshow", onPageShow, false);
+      gBrowser.addEventListener("pageshow", onPageShow, { once: true });
       let data = `data:text/html,<input id="inp" type="text" />
                                  <textarea id="tarea"/>`;
       BrowserTestUtils.loadURI(gBrowser, data);
@@ -233,7 +233,6 @@
     }
 
     function onPageShow() {
-      gBrowser.removeEventListener("load", onPageShow, true);
       (async function() {
         gFindBar.open();
         await testInput("inp", "Input:");

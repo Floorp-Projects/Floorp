@@ -20,14 +20,14 @@
     const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
-    var gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    var gPrefsvc = SpecialPowers.Services.prefs.nsIPrefBranch;
     var gFindBar = null;
     var gBrowser;
 
-    var imports = ["SimpleTest", "ok", "info", "is"];
-    for (var name of imports) {
-      window[name] = window.arguments[0][name];
-    }
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var ok = window.arguments[0].ok;
+    var info = window.arguments[0].info;
+    var is = window.arguments[0].is;
 
     function startTest() {
       (async function() {
@@ -62,7 +62,7 @@
     function toggleHighlightAndWait(highlight) {
       return new Promise(resolve => {
         let listener = {
-          onHighlightFinished: function() {
+          onHighlightFinished() {
             gFindBar.browser.finder.removeResultListener(listener);
             resolve();
           }

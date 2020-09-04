@@ -40,13 +40,13 @@
     // for the input even though the input's controller for this command
     // disables it.
     var gShouldNotBeReachedController = {
-      supportsCommand: function(aCommand) {
+      supportsCommand(aCommand) {
         return aCommand == "cmd_delete";
       },
-      isCommandEnabled: function(aCommand) {
+      isCommandEnabled(aCommand) {
         return aCommand == "cmd_delete";
       },
-      doCommand: function(aCommand) { }
+      doCommand(aCommand) { }
     }
 
     function ok(condition, message) {

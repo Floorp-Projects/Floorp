@@ -24,10 +24,12 @@
     var gFindBar = null;
     var gBrowser;
 
-    var imports = ["SimpleTest", "SpecialPowers", "ok", "is", "isnot", "info"];
-    for (var name of imports) {
-      window[name] = window.arguments[0][name];
-    }
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var SpecialPowers = window.arguments[0].SpecialPowers;
+    var ok = window.arguments[0].ok;
+    var is = window.arguments[0].is;
+    var isnot = window.arguments[0].isnot;
+    var info = window.arguments[0].info;
     SimpleTest.requestLongerTimeout(2);
 
     const kBaseURL = "chrome://mochitests/content/chrome/toolkit/content/tests/chrome";

@@ -22,7 +22,7 @@
     const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
-    var gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    var gPrefsvc = SpecialPowers.Services.prefs.nsIPrefBranch;
 
     const SAMPLE_URL = "http://www.mozilla.org/";
     const SAMPLE_TEXT = "Some text in a text field.";
@@ -38,25 +38,19 @@
 
     var gStatusText;
     var gXULBrowserWindow = {
-      QueryInterface: function(aIID) {
-        if (aIID.Equals(Ci.nsIXULBrowserWindow) ||
-            aIID.Equals(Ci.nsISupports))
-         return this;
+      QueryInterface: ChromeUtils.generateQI(["nsIXULBrowserWindow"]),
 
-        throw Components.Exception("", Cr.NS_NOINTERFACE);
-      },
-
-      setOverLink: function(aStatusText) {
+      setOverLink(aStatusText) {
         gStatusText = aStatusText;
       },
 
-      onBeforeLinkTraversal: function() { }
+      onBeforeLinkTraversal() { }
     };
 
-    var imports = ["SimpleTest", "ok", "is", "info"];
-    for (var name of imports) {
-      window[name] = window.arguments[0][name];
-    }
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var ok = window.arguments[0].ok;
+    var is = window.arguments[0].is;
+    var info = window.arguments[0].info;
     SimpleTest.requestLongerTimeout(2);
 
     function onLoad() {
@@ -228,14 +222,14 @@
     function promiseFindResult(expectedString) {
       return new Promise(resolve => {
         let listener = {
-          onFindResult: function(result) {
+          onFindResult(result) {
             if (expectedString && result.searchString != expectedString) {
               return;
             }
 
             gFindBar.browser.finder.removeResultListener(listener);
             resolve(result);
-          }
+          },
         };
         gFindBar.browser.finder.addResultListener(listener);
       });
@@ -244,13 +238,13 @@
     function promiseMatchesCountResult(expectedString) {
       return new Promise(resolve => {
         let listener = {
-          onMatchesCountResult: function(result) {
+          onMatchesCountResult(result) {
             if (expectedString && result.searchString != expectedString)
               return;
 
             gFindBar.browser.finder.removeResultListener(listener);
             resolve();
-          }
+          },
         };
         gFindBar.browser.finder.addResultListener(listener);
         // Make sure we resolve _at least_ after five times the find iterator timeout.
@@ -652,7 +646,7 @@
             let current = (test.current + i - 1) % test.total + 1;
             assertMatches({
               text: test.text,
-              current: current,
+              current,
               total: test.total
             }, foundMatches.value.match(regex));
           }
@@ -687,7 +681,7 @@
     async function testFailedStringReset() {
       gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
 
-      promise = promiseFindResult(gBrowser.hasAttribute("remote") ? SEARCH_TEXT.toUpperCase() : "");
+      let promise = promiseFindResult(gBrowser.hasAttribute("remote") ? SEARCH_TEXT.toUpperCase() : "");
       await enterStringIntoFindField(SEARCH_TEXT.toUpperCase(), false);
       await promise;
       await SpecialPowers.spawn(gBrowser, [], async function() {

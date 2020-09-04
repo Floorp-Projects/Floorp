@@ -23,10 +23,10 @@
     var gBrowser;
     const kTimeout = 5000; // 5 seconds.
 
-    var imports = ["SimpleTest", "ok", "is", "info"];
-    for (var name of imports) {
-      window[name] = window.arguments[0][name];
-    }
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var ok = window.arguments[0].ok;
+    var is = window.arguments[0].is;
+    var info = window.arguments[0].info;
     SimpleTest.requestLongerTimeout(2);
 
     function startTest() {
