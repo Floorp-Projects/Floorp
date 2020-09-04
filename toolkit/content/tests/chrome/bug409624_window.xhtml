@@ -19,10 +19,9 @@
     var gFindBar = null;
     var gBrowser;
 
-    var imports = ["SimpleTest", "ok", "is"];
-    for (var name of imports) {
-      window[name] = window.arguments[0][name];
-    }
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var ok = window.arguments[0].ok;
+    var is = window.arguments[0].is;
 
     function finish() {
       window.close();
@@ -32,12 +31,11 @@
     function startTest() {
       gFindBar = document.getElementById("FindToolbar");
       gBrowser = document.getElementById("content");
-      gBrowser.addEventListener("pageshow", onPageShow, false);
+      gBrowser.addEventListener("pageshow", onPageShow, { once: true });
       BrowserTestUtils.loadURI(gBrowser, 'data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
     }
 
     function onPageShow() {
-      gBrowser.removeEventListener("pageshow", onPageShow, false);
       gFindBar.clear();
       let textbox = gFindBar.getElement("findbar-textbox");
 

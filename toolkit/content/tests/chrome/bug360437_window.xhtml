@@ -25,10 +25,10 @@
     var gFindBar = null;
     var gBrowser;
 
-    var imports = ["SimpleTest", "ok", "is", "info"];
-    for (var name of imports) {
-      window[name] = window.arguments[0][name];
-    }
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var ok = window.arguments[0].ok;
+    var is = window.arguments[0].is;
+    var info = window.arguments[0].info;
 
     function startTest() {
       (async function() {
@@ -91,7 +91,7 @@
     function promiseFindResult(str = null) {
       return new Promise(resolve => {
         let listener = {
-          onFindResult: function({ searchString }) {
+          onFindResult({ searchString }) {
             if (str !== null && str != searchString) {
               return;
             }

@@ -564,18 +564,6 @@ module.exports = {
     },
     {
       files: [
-        "toolkit/content/tests/chrome/bug263683_window.xhtml",
-        "toolkit/content/tests/chrome/bug304188_window.xhtml",
-        "toolkit/content/tests/chrome/bug331215_window.xhtml",
-        "toolkit/content/tests/chrome/bug360437_window.xhtml",
-        "toolkit/content/tests/chrome/bug366992_window.xhtml",
-        "toolkit/content/tests/chrome/bug409624_window.xhtml",
-        "toolkit/content/tests/chrome/bug429723_window.xhtml",
-        "toolkit/content/tests/chrome/bug451540_window.xhtml",
-        "toolkit/content/tests/chrome/dialog_dialogfocus.xhtml",
-        "toolkit/content/tests/chrome/findbar_entireword_window.xhtml",
-        "toolkit/content/tests/chrome/findbar_events_window.xhtml",
-        "toolkit/content/tests/chrome/findbar_window.xhtml",
         "toolkit/content/tests/chrome/frame_popup_anchor.xhtml",
         "toolkit/content/tests/chrome/frame_subframe_origin_subframe1.xhtml",
         "toolkit/content/tests/chrome/frame_subframe_origin_subframe2.xhtml",
