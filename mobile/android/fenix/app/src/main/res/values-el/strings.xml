@@ -27,6 +27,8 @@
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s ανοικτές καρτέλες. Πατήστε για εναλλαγή καρτελών.</string>
 
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d επιλογή(ές)</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">Προσθήκη νέας συλλογής</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
@@ -48,6 +50,10 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Είστε σε ιδιωτική συνεδρία</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">
+        Το %1$s διαγράφει το ιστορικό αναζήτησης και περιήγησης των ιδιωτικών καρτελών όταν τις κλείνετε ή αποχωρείτε από την εφαρμογή. Αυτό δεν σας παρέχει ανωνυμία στις ιστοσελίδες ή τον πάροχο διαδικτύου σας, αλλά σας βοηθά να προστατέψετε το απόρρητό σας από τους άλλους χρήστες αυτής της συσκευής.</string>
     <string name="private_browsing_common_myths">Κοινοί μύθοι σχετικά με την ιδιωτική περιήγηση</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Διαγραφή συνεδρίας</string>
@@ -62,6 +68,9 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Όχι τώρα</string>
 
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Απόρριψη</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Νέα καρτέλα</string>
@@ -69,7 +78,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Νέα ιδιωτική καρτέλα</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Κορυφαίες ιστοσελίδες</string>
+    <string name="home_screen_top_sites_heading">Κορυφαίες σελίδες</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -247,6 +256,8 @@
 
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Θέμα</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Αρχική σελίδα</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Προσαρμογή</string>
     <!-- Preference description for banner about signing in -->
@@ -388,7 +399,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions_2"><![CDATA[Σαρώστε το κωδικό QR που εμφανίζεται στο <b>firefox.com/pair</b>]]></string>
+    <string name="pair_instructions_2"><![CDATA[Σαρώστε τον κωδικό QR που εμφανίζεται στο <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Άνοιγμα κάμερας</string>
     <!-- Button to cancel pairing -->
@@ -442,6 +453,8 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Κλείσιμο</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Πρόσφατα κλεισμένες καρτέλες</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tabs">%d καρτέλες</string>
@@ -483,6 +496,8 @@
     <string name="tab_tray_menu_item_share">Κοινή χρήση όλων των καρτελών</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Πρόσφατα κλεισμένες καρτέλες</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Ρυθμίσεις καρτελών</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Κλείσιμο όλων των καρτελών</string>
     <!-- Shortcut action to open new tab -->
@@ -559,7 +574,7 @@
     <string name="history_delete_item">Διαγραφή</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
-    <string name="history_multi_select_title">Επιλέχθηκαν %1$d</string>
+    <string name="history_multi_select_title">%1$d επιλογή(ές)</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Διαγραφή %1$d στοιχείων</string>
@@ -578,6 +593,10 @@
     <!-- Downloads -->
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">Καμία λήψη</string>
+
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d επιλογή(ές)</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -637,7 +656,7 @@
     <string name="bookmark_menu_save_button">Αποθήκευση</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
-    <string name="bookmarks_multi_select_title">Επιλέχθηκαν %1$d</string>
+    <string name="bookmarks_multi_select_title">%1$d επιλογή(ές)</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Επεξεργασία σελιδοδείκτη</string>
     <!-- Bookmark folder editing screen title -->
@@ -698,11 +717,11 @@
     <!-- Preference for altering the location access for all websites -->
     <string name="preference_phone_feature_location">Τοποθεσία</string>
     <!-- Preference for altering the notification access for all websites -->
-    <string name="preference_phone_feature_notification">Ειδοποίηση</string>
+    <string name="preference_phone_feature_notification">Ειδοποιήσεις</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Ερώτηση για αποδοχή</string>
     <!-- Label that indicates that a permission must be blocked -->
-    <string name="preference_option_phone_feature_blocked">Αποκλεισμένο</string>
+    <string name="preference_option_phone_feature_blocked">Φραγή</string>
     <!-- Label that indicates that a permission must be allowed -->
     <string name="preference_option_phone_feature_allowed">Επιτρέπεται</string>
     <!--Label that indicates a permission is by the Android OS-->
@@ -870,11 +889,18 @@
     <string name="full_screen_notification">Είσοδος σε λειτουργία πλήρους οθόνης</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Το URL αντιγράφτηκε</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Δοκιμαστικό κείμενο. Σας δείχνει πώς εμφανίζεται το κείμενο για κάθε αυξομείωση μεγέθους που κάνετε με αυτή τη ρύθμιση.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Αύξηση ή μείωση μεγέθους κειμένου των ιστοσελίδων</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Μέγεθος γραμματοσειράς</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Αυτόματο μέγεθος γραμματοσειράς</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Θα χρησιμοποιούνται οι ρυθμίσεις γραμματοσειράς Android σας. Κάντε απενεργοποίηση για διαχείριση μεγέθους από εδώ.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Διαγραφή δεδομένων περιήγησης</string>
@@ -907,9 +933,9 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Διαγραφή δεδομένων περιήγησης στην έξοδο</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Διαγράφει αυτόματα τα δεδομένα περιήγησης όταν επιλέγετε &quot;Έξοδος&quot; από το κύριο μενού</string>
+    <string name="preference_summary_delete_browsing_data_on_quit">Αυτόματη διαγραφή δεδομένων περιήγησης όταν επιλέγετε &quot;Έξοδος&quot; από το κύριο μενού</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">Διαγράφει αυτόματα τα δεδομένα περιήγησης όταν επιλέγετε \&quot;Quit\&quot; από το κύριο μενού</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Αυτόματη διαγραφή δεδομένων περιήγησης όταν επιλέγετε \&quot;Έξοδος\&quot; από το κύριο μενού</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Έξοδος</string>
 
@@ -1106,7 +1132,7 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
-    <string name="enhanced_tracking_protection_blocked">Αποκλείεται</string>
+    <string name="enhanced_tracking_protection_blocked">Αποκλείονται</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Επιτρέπεται</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
@@ -1214,6 +1240,8 @@
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Μάθετε περισσότερα σχετικά με το Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Εξαιρέσεις</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Εδώ εμφανίζονται οι συνδέσεις και οι κωδικοί πρόσβασης που δεν αποθηκεύονται.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Διαγραφή όλων των εξαιρέσεων</string>
     <!-- Hint for search box in logins list -->
@@ -1270,6 +1298,8 @@
     <string name="logins_biometric_prompt_message_pin">Ξεκλειδώστε τη συσκευή σας</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Ζουμ σε όλες τις ιστοσελίδες</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Ενεργοποιήστε το για χρήση χειρονομιών ζουμ, ακόμη και σε ιστοσελίδες που δεν τις επιτρέπουν.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Όνομα (Α-Ω)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1364,7 +1394,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Θέλετε σίγουρα να διαγράψετε αυτό το σελιδοδείκτη;</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Προσθήκη στις κορυφαίες ιστοσελίδες</string>
+    <string name="browser_menu_add_to_top_sites">Προσθήκη στις κορυφαίες σελίδες</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Επαλήθευση από: %1$s</string>
@@ -1423,6 +1453,9 @@
     <string name="top_sites_max_limit_title">Έχετε φτάσει το ανώτατο όριο κορυφαίων ιστοσελίδων</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, το κατάλαβα</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Εμφάνιση ιστοσελίδων με τις περισσότερες επισκέψεις</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Αφαίρεση</string>

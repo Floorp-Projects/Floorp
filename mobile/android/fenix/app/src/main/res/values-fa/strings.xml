@@ -32,8 +32,18 @@
     <string name="tab_tray_add_new_collection_name">نام</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">انتخاب مجموعه</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">از حالت چند انتخابی خارج شوید</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">ذخیره‌سازی زبانه‌های انتخاب شده داخل مجموعه</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">%1$s انتخاب شد</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">انتخاب نشدند %1$s</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">از حالت چند انتخابی خارج شوید</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">شما وارد حالت چند انتخابی شده‌اید،‌ جهت ذخیره‌ سازی زبانه ها در مجموعه آن‌ها را انتخاب کنید</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">انتخاب شده</string>
 
@@ -65,6 +75,29 @@
     <string name="search_widget_cfr_pos_button_text">ویجت را اضافه کنید</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">اکنون نه</string>
+
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">می توانید Firefox را طوری تنظیم کنید تا پیوندها را به صورت خودکار در برنامه ها باز کند.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">برو به تنظیمات</string>
+
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">رد کردن</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">دسترسی به دوربین مورد نیاز است. به تنظیمات Android بروید ، روی مجوزها ضربه بزنید و روی اجازه ضربه بزنید.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">برو به تنظیمات</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">رد کردن</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">زبانه‌های باز رو طوری تنظیم کنید که پس از چند روز، هفته یا ماه  عدم استفاه بسته شوند.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">دیدن گزینه‌ها</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">رد کردن</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -249,6 +282,8 @@
     <string name="preferences_toolbar">نوار ابزار</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">زمینه</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">خانه</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">سفارشی‌سازی</string>
     <!-- Preference description for banner about signing in -->
@@ -288,8 +323,13 @@
     <string name="preferences_account_settings">تنظیمات حساب</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">پیوندها را در برنامه ها باز کنید</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">  مدیریت بارگیری خارجی</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">افزونه‌ها</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">اعلان‌ها</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -448,6 +488,31 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">بستن</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">زبانه‌های تازه بسته شده</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">نمایش تمام تاریخچه</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">زبانه‌های %d</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">زبانه‌ %d</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">زبانه‌هایی که اخیرا بسته نشدند</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">بستن زبانه‌ها</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">دستی</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">بعد از یک روز</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">بعد از یک هفته</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">بعد از یک ماه</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">زبانه‌های باز</string>
@@ -467,6 +532,10 @@
     <string name="tab_tray_menu_item_save">افزودن به مجموعه</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">به اشتراک‌گذار همه‌ی زبانه‌ها</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">زبانه‌های تازه بسته شده</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">تنظیمات سربرگ</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">بستن همه‌ی زبانه‌ها</string>
     <!-- Shortcut action to open new tab -->
@@ -515,6 +584,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">حذف</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">حذف از تاریخچه</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s( حالت خصوصی)</string>
 
@@ -558,6 +629,13 @@
     <string name="history_older">‏‏قدیمی‌تر</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">هیچ تاریخیچه‌ای در اینجا نیست</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">اینجا هیچ بارگیری وجود ندارد</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d انتخاب شد</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -713,10 +791,8 @@
     <string name="collections_header">مجموعه‌ها</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">فهرست مجموعه</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">ذخیره کردن چیزهایی که برای شما اهمیت دارد</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">برای دسترسی سریع در آینده، جستجوها ، سایتها و برگه های مشابه را با هم جمع کنید.</string>
+    <string name="no_collections_description2">مواردی را که برای شما مهم هستند جمع آوری کنید.\nجستجوهای مشابه ، سایتها و برگه ها را با هم گروه کنید تا بعدا دسترسی سریع داشته باشید.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">انتخاب زبانه‌ها</string>
 
@@ -846,6 +922,8 @@
     <string name="qr_scanner_dialog_negative">ردکردن</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">آیا در خصوص حذف کردن%1$s مطئنید؟</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">با حذف این برگه کل مجموعه حذف خواهد شد. هر زمانی که مایل بودید می توانید مجموعه های جدیدی ایجاد کنید.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">%1$s حذف شود؟</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -962,9 +1040,10 @@
     <string name="onboarding_whats_new_description">در مورد طراحی مجدد %s سؤالی دارید؟ آیا می خواهید بدانید چه چیزی تغییر کرده است؟</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">پاسخ را از اینجا دریافت کنید</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">نهایت استفاده از %s ببرید.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">شروع به همگام سازی نشانک‌ها،‌ گذرواژه ها و چیزهای بیشتر با حساب Firefox شما.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">اطلاعات بیشتر</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1247,6 +1326,8 @@
     <string name="preferences_passwords_exceptions_description_empty">ورود و گذرواژه‌های ذخیره نشده در اینجا نشان داده خواهد شد.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">ورود به سیستم و کلمه عبور برای این سایت ها ذخیره نمی شود.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">حذف تمام استثاناها</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">جست‌وجو در اطلاعات ورودها</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1286,6 +1367,8 @@
     <string name="saved_login_copy_username">رونوشت نام کاربری</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">رونوشت از سایت</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">باز کردن سایت در مرورگر</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">نمایش گذرواژه</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1450,6 +1533,9 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">برای همگام‌سازی وارد شوید</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">بدون زبانهٔ باز</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">حد نصاب سایت‌های برتر شما پر شده است</string>
@@ -1457,5 +1543,18 @@
     <string name="top_sites_max_limit_content">برای اضافه کردن یک سایت برتر جدید ، یکی از آنها را حذف کنید.  سایت را کمی طولانی فشار داده و حذف را انتخاب کنید.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">باشه،‌ متوجه شدم</string>
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">نمایش سایت های پربازدید</string>
 
-</resources>
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">حذف</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">نهایت استفاده از %s ببرید.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">ذخیره کردن چیزهایی که برای شما اهمیت دارد</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">برای دسترسی سریع در آینده، جستجوها ، سایتها و برگه های مشابه را با هم جمع کنید.</string>
+    </resources>

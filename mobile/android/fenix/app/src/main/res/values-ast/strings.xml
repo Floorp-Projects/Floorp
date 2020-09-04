@@ -507,6 +507,8 @@
     <string name="tab_tray_menu_item_share">Compartir toles llingüetes</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Llingüetes zarraes apocayá</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Axustes de llingüetes</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Zarrar toles llingüetes</string>
     <!-- Shortcut action to open new tab -->

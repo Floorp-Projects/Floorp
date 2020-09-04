@@ -350,7 +350,7 @@
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">Chan fhaod ainm an uidheim a bhith bàn.</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing_in_progress">’Ga shioncronachadh…</string>
+    <string name="sync_syncing_in_progress">Ga shioncronachadh…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Dh’fhàillig an sioncronachadh. Soirbheas mu dheireadh: %s</string>
     <!-- Label summary showing never synced -->
@@ -931,7 +931,7 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Lethbhreac dhen URL air a dhèanamh</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Seo ball-eisimpleir de theacsa. Tha e an-seo airson ’s gum faic thu cò ris a bhios an teacsa coltach ’s tu ’ga lùghdachadh no meudachadh leis an roghainn seo.</string>
+    <string name="accessibility_text_size_sample_text_1">Seo ball-eisimpleir de theacsa. Tha e an-seo airson ’s gum faic thu cò ris a bhios an teacsa coltach ’s tu ga lùghdachadh no meudachadh leis an roghainn seo.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Dèan an teacsa air làraichean-lìn nas motha no nas lugha</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -1048,7 +1048,7 @@
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Bu toil, clàraich a-steach mi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">’Gad chlàradh a-steach…</string>
+    <string name="onboarding_firefox_account_signing_in">Gad chlàradh a-steach…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Clàraich a-steach gu Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
@@ -1134,7 +1134,7 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Clàraich a-steach leis a’ chamara agad</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">Cleachd post-d ’na àite</string>
+    <string name="sign_in_with_email">Cleachd post-d na àite</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Sguiridh Firefox de shioncronachadh a’ chunntais agad ach cha sguab e às gin dhen dàta brabhsaidh agad air an uidheam seo.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1296,7 +1296,7 @@
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Sàbhail clàraidhean a-steach is faclan-faire</string>
     <!-- Preference option for asking to save passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_ask_to_save">Faighnich mus dèid a shàbhaladh</string>
+    <string name="preferences_passwords_save_logins_ask_to_save">Faighnich mus tèid a shàbhaladh</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Na sàbhail idir</string>
     <!-- Preference for autofilling saved logins in Fenix -->
@@ -1320,9 +1320,9 @@
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Eisgeachdan</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Nochdaidh clàraidhean a-steach is faclan-faire nach eil ’gan sàbhaladh an-seo.</string>
+    <string name="preferences_passwords_exceptions_description_empty">Nochdaidh clàraidhean a-steach is faclan-faire nach eil gan sàbhaladh an-seo.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Cha dèid clàraidhean a-steach agus faclan-faire a shàbhaladh airson nan làraichean seo.</string>
+    <string name="preferences_passwords_exceptions_description">Cha tèid clàraidhean a-steach agus faclan-faire a shàbhaladh airson nan làraichean seo.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Sguab gach eisgeachd às</string>
     <!-- Hint for search box in logins list -->

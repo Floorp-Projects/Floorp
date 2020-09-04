@@ -77,6 +77,19 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">ไม่ใช่ตอนนี้</string>
 
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">ไปยังการตั้งค่า</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">ยกเลิก</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">ไปยังการตั้งค่า</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">ยกเลิก</string>
+
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">ยกเลิก</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">แท็บใหม่</string>
@@ -263,6 +276,8 @@
     <string name="preferences_toolbar">แถบเครื่องมือ</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ชุดตกแต่ง</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">หน้าแรก</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ปรับแต่ง</string>
     <!-- Preference description for banner about signing in -->
@@ -302,8 +317,13 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">เปิดลิงก์ในแอป</string>
 
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">ตัวจัดการการดาวน์โหลดภายนอก</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ส่วนเสริม</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">การแจ้งเตือน</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -463,6 +483,31 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">ปิด</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">แท็บที่ปิดล่าสุด</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">แสดงประวัติแบบเต็ม</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d แท็บ</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d แท็บ</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">ไม่มีแท็บที่ปิดล่าสุด</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">ปิดแท็บ</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">กำหนดเอง</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">หลังจากผ่านไปหนึ่งวัน</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">หลังจากผ่านไปหนึ่งสัปดาห์</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">หลังจากผ่านไปหนึ่งเดือน</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">แท็บที่เปิด</string>
@@ -482,6 +527,10 @@
     <string name="tab_tray_menu_item_save">บันทึกไปยังชุดสะสม</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">แบ่งปันแท็บทั้งหมด</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">แท็บที่ปิดล่าสุด</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">การตั้งค่าแท็บ</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">ปิดแท็บทั้งหมด</string>
     <!-- Shortcut action to open new tab -->
@@ -529,6 +578,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">เอาออก</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">ลบออกจากประวัติ</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (โหมดส่วนตัว)</string>
 
@@ -572,6 +623,10 @@
     <string name="history_older">เก่ากว่า</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ไม่มีประวัติที่นี่</string>
+
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">ไม่มีการดาวน์โหลด</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -726,10 +781,6 @@
     <string name="collections_header">ชุดสะสม</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">เมนูชุดสะสม</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">รวบรวมสิ่งที่สำคัญสำหรับคุณ</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">จัดกลุ่มการค้นหา ไซต์ และแท็บที่คล้ายกันเพื่อการเข้าถึงอย่างรวดเร็วในภายหลัง</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">เลือกแท็บ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -976,9 +1027,8 @@
     <string name="onboarding_whats_new_description">มีคำถามเกี่ยวกับ %s ที่ออกแบบใหม่หรือไม่? ต้องการรู้ว่ามีอะไรเปลี่ยนไปบ้างหรือไม่?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">พบคำตอบได้ที่นี่</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">รับประโยชน์สูงสุดจาก %s</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">เรียนรู้เพิ่มเติม</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1468,6 +1518,9 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">ลงชื่อเข้าใช้เพื่อซิงค์</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">ไม่มีแท็บที่เปิดอยู่</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">ถึงขีดจำกัดของไซต์เด่นแล้ว</string>
@@ -1476,4 +1529,15 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ตกลง เข้าใจแล้ว</string>
 
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">ลบ</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">รับประโยชน์สูงสุดจาก %s</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">รวบรวมสิ่งที่สำคัญสำหรับคุณ</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">จัดกลุ่มการค้นหา ไซต์ และแท็บที่คล้ายกันเพื่อการเข้าถึงอย่างรวดเร็วในภายหลัง</string>
     </resources>
