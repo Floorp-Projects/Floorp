@@ -286,6 +286,7 @@ static nscoord GetBaselinePosition(nsTextFrame* aFrame, gfxTextRun* aTextRun,
 
   switch (aDominantBaseline) {
     case StyleDominantBaseline::Hanging:
+      return metrics.mAscent * 0.2;
     case StyleDominantBaseline::TextBeforeEdge:
       return writingMode.IsVerticalRL() ? metrics.mAscent + metrics.mDescent
                                         : 0;
@@ -308,8 +309,9 @@ static nscoord GetBaselinePosition(nsTextFrame* aFrame, gfxTextRun* aTextRun,
                                         : metrics.mAscent + metrics.mDescent;
 
     case StyleDominantBaseline::Central:
-    case StyleDominantBaseline::Mathematical:
       return (metrics.mAscent + metrics.mDescent) / 2.0;
+    case StyleDominantBaseline::Mathematical:
+      return metrics.mAscent / 2.0;
   }
 
   MOZ_ASSERT_UNREACHABLE("unexpected dominant-baseline value");
