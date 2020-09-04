@@ -62,7 +62,7 @@ job-defaults:
                         default: "56.0b3"
                 release(-rc)?: "72.0.2"
                 esr68: "68.0esr"
-                esr78: "78.0esr"
+                esr78: "68.0esr"
                 default: "default"
 
 jobs:
