@@ -431,7 +431,7 @@ static struct wl_surface* moz_container_wayland_get_surface_locked(
 
 struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container) {
   GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(container));
-  nsWaylandDisplay* waylandDisplay = WaylandDisplayGet(display);
+  RefPtr<nsWaylandDisplay> waylandDisplay = WaylandDisplayGet(display);
 
   LOGWAYLAND(("%s [%p] surface %p\n", __FUNCTION__, (void*)container,
               (void*)container->wl_container.surface));
@@ -458,7 +458,7 @@ void moz_container_wayland_surface_unlock(MozContainer* container,
 struct wl_egl_window* moz_container_wayland_get_egl_window(
     MozContainer* container, int scale) {
   GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(container));
-  nsWaylandDisplay* waylandDisplay = WaylandDisplayGet(display);
+  RefPtr<nsWaylandDisplay> waylandDisplay = WaylandDisplayGet(display);
   MozContainerWayland* wl_container = &container->wl_container;
 
   LOGWAYLAND(("%s [%p] eglwindow %p\n", __FUNCTION__, (void*)container,
