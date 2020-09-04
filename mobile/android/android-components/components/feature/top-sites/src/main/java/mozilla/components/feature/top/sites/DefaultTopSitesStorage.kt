@@ -78,7 +78,7 @@ class DefaultTopSitesStorage(
             // Get twice the required size to buffer for duplicate entries with
             // existing pinned sites
             val frecentSites = historyStorage
-                .getTopFrecentSites(numSitesRequired * 2)
+                .getTopFrecentSites(totalSites)
                 .map { it.toTopSite() }
                 .filter { !pinnedSites.hasUrl(it.url) }
                 .take(numSitesRequired)
