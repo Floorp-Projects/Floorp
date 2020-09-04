@@ -248,7 +248,6 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.childId = request.childId;
           info.type = request.processType;
           info.origin = request.origin;
-          info.windows = std::move(request.windowInfo);
 
           // Let's look at the threads
           nsCString taskPath;

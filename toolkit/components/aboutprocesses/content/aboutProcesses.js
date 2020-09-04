@@ -27,7 +27,6 @@ const ONE_MEGA = 1024 * 1024;
 const ONE_KILO = 1024;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 
 /**
  * Returns a Promise that's resolved after the next turn of the event loop.
@@ -56,57 +55,6 @@ function wait(ms = 0) {
     return undefined;
   }
 }
-
-let tabFinder = {
-  update() {
-    this._map = new Map();
-    for (let win of Services.wm.getEnumerator("navigator:browser")) {
-      let tabbrowser = win.gBrowser;
-      for (let browser of tabbrowser.browsers) {
-        let id = browser.outerWindowID; // May be `null` if the browser isn't loaded yet
-        if (id != null) {
-          this._map.set(id, browser);
-        }
-      }
-      if (tabbrowser.preloadedBrowser) {
-        let browser = tabbrowser.preloadedBrowser;
-        if (browser.outerWindowID) {
-          this._map.set(browser.outerWindowID, browser);
-        }
-      }
-    }
-  },
-
-  /**
-   * Find the <xul:tab> for a window id.
-   *
-   * This is useful e.g. for reloading or closing tabs.
-   *
-   * @return null If the xul:tab could not be found, e.g. if the
-   * windowId is that of a chrome window.
-   * @return {{tabbrowser: <xul:tabbrowser>, tab: <xul.tab>}} The
-   * tabbrowser and tab if the latter could be found.
-   */
-  get(id) {
-    let browser = this._map.get(id);
-    if (!browser) {
-      return null;
-    }
-    let tabbrowser = browser.getTabBrowser();
-    if (!tabbrowser) {
-      return {
-        tabbrowser: null,
-        tab: {
-          getAttribute() {
-            return "";
-          },
-          linkedBrowser: browser,
-        },
-      };
-    }
-    return { tabbrowser, tab: tabbrowser.getTabForBrowser(browser) };
-  },
-};
 
 /**
  * Utilities for dealing with state
@@ -197,63 +145,6 @@ var State = {
     return result;
   },
 
-  _getDOMWindows(process) {
-    if (!process.windows) {
-      return [];
-    }
-    let windows = process.windows.map(win => {
-      let tab = tabFinder.get(win.outerWindowId);
-      let addon =
-        process.type == "extension"
-          ? WebExtensionPolicy.getByHostname(win.documentURI.host)
-          : null;
-      let displayRank;
-      if (tab) {
-        displayRank = 1;
-      } else if (win.isProcessRoot) {
-        displayRank = 2;
-      } else if (win.documentTitle) {
-        displayRank = 3;
-      } else {
-        displayRank = 4;
-      }
-      return {
-        outerWindowId: win.outerWindowId,
-        documentURI: win.documentURI,
-        documentTitle: win.documentTitle,
-        isProcessRoot: win.isProcessRoot,
-        isInProcess: win.isInProcess,
-        tab,
-        addon,
-        // The number of instances we have collapsed.
-        count: 1,
-        // A rank used to quickly sort windows.
-        displayRank,
-      };
-    });
-
-    // We keep all tabs and addons but we collapse subframes that have the same host.
-
-    // A map from host -> subframe.
-    let collapsible = new Map();
-    let result = [];
-    for (let win of windows) {
-      if (win.tab || win.addon) {
-        result.push(win);
-        continue;
-      }
-      let prev = collapsible.get(win.documentURI.prePath);
-      if (prev) {
-        prev.count += 1;
-      } else {
-        collapsible.set(win.documentURI.prePath, win);
-        result.push(win);
-      }
-    }
-
-    return result;
-  },
-
   /**
    * Compute the delta between two process snapshots.
    *
@@ -277,21 +168,7 @@ var State = {
       origin: cur.origin || "",
       threads: null,
       displayRank: Control._getDisplayGroupRank(cur.type),
-      windows: this._getDOMWindows(cur),
-      // If this process has an unambiguous title, store it here.
-      title: null,
     };
-    // Attempt to determine a title for this process.
-    let titles = [
-      ...new Set(
-        result.windows
-          .filter(win => win.documentTitle)
-          .map(win => win.documentTitle)
-      ),
-    ];
-    if (titles.length == 1) {
-      result.title = titles[0];
-    }
     if (!prev) {
       result.threads = cur.threads.map(data =>
         this._getThreadDelta(data, null, null)
@@ -323,8 +200,6 @@ var State = {
   },
 
   getCounters() {
-    tabFinder.update();
-
     // We rebuild the maps during each iteration to make sure that
     // we do not maintain references to processes that have been
     // shutdown.
@@ -391,28 +266,14 @@ var View = {
       row.classList.add("hung");
     }
 
-    // Column: Name
+    // Column: type / twisty image
     {
-      let elt;
-      if (data.type == "browser") {
-        elt = this._addCell(row, {
-          fluentName: "about-processes-browser-name",
-          fluentArgs: {},
-          classes: ["type", "favicon"],
-        });
-      } else {
-        let name = data.title;
-        if (name) {
-          name = `${name} (${data.type})`;
-        } else {
-          name = data.origin ? `${data.origin} (${data.type})` : data.type;
-        }
-        elt = this._addCell(row, {
-          fluentName: "about-processes-process-name",
-          fluentArgs: { name },
-          classes: ["type", "favicon"],
-        });
-      }
+      let content = data.origin ? `${data.origin} (${data.type})` : data.type;
+      let elt = this._addCell(row, {
+        content,
+        classes: ["type"],
+      });
+
       if (data.threads.length) {
         let img = document.createElement("span");
         img.classList.add("twisty", "process");
@@ -421,33 +282,6 @@ var View = {
         }
         elt.insertBefore(img, elt.firstChild);
       }
-
-      let image;
-      switch (data.type) {
-        case "browser":
-        case "privilegedabout":
-          image = "chrome://branding/content/icon32.png";
-          break;
-        case "extension":
-          image = "chrome://mozapps/skin/extensions/extension.svg";
-          break;
-        default:
-          // If available, pick the first favicon.
-          if (data.windows) {
-            for (let win of data.windows) {
-              if (win.tab) {
-                image = win.tab.tab.getAttribute("image");
-              }
-              if (image) {
-                break;
-              }
-            }
-          }
-          if (!image) {
-            image = "chrome://browser/skin/link.svg";
-          }
-      }
-      elt.style.backgroundImage = `url('${image}')`;
     }
 
     // Column: Resident size
@@ -493,80 +327,6 @@ var View = {
     return row;
   },
 
-  appendDOMWindowRow(data, parent) {
-    let row = document.createElement("tr");
-    row.classList.add("window");
-
-    // Column: filename
-    let tab = tabFinder.get(data.outerWindowId);
-    let fluentName;
-    let name;
-    if (parent.type == "extension") {
-      fluentName = "about-processes-extension-name";
-      if (data.addon) {
-        name = data.addon.name;
-      } else {
-        name = data.documentURI.host;
-      }
-    } else if (tab && tab.tabbrowser) {
-      fluentName = "about-processes-tab-name";
-      name = data.documentTitle;
-    } else if (tab) {
-      fluentName = "about-processes-preloaded-tab";
-      name = null;
-    } else if (data.count == 1) {
-      fluentName = "about-processes-frame-name-one";
-      name = data.prePath;
-    } else {
-      fluentName = "about-processes-frame-name-many";
-      name = data.prePath;
-    }
-    let elt = this._addCell(row, {
-      fluentName,
-      fluentArgs: {
-        name,
-        url: data.documentURI.spec,
-        number: data.count,
-        shortUrl:
-          data.documentURI.scheme == "about"
-            ? data.documentURI.spec
-            : data.documentURI.prePath,
-      },
-      classes: ["name", "indent", "favicon"],
-    });
-    let image = tab?.tab.getAttribute("image");
-    if (image) {
-      elt.style.backgroundImage = `url('${image}')`;
-    }
-
-    // Column: Resident size (empty)
-    this._addCell(row, {
-      content: "",
-      classes: ["totalResidentSize"],
-    });
-
-    // Column: CPU (empty)
-    this._addCell(row, {
-      content: "",
-      classes: ["cpu"],
-    });
-
-    // Column: id (empty)
-    this._addCell(row, {
-      content: "",
-      classes: ["windowId"],
-    });
-
-    // Column: Number of threads (empty)
-    this._addCell(row, {
-      content: "",
-      classes: ["numberOfThreads"],
-    });
-
-    this._fragment.appendChild(row);
-    return row;
-  },
-
   /**
    * Append a row showing a single thread.
    *
@@ -579,10 +339,7 @@ var View = {
 
     // Column: filename
     this._addCell(row, {
-      fluentName: "about-processes-thread-name",
-      fluentArgs: {
-        name: data.name,
-      },
+      content: data.name,
       classes: ["name", "indent"],
     });
 
@@ -620,16 +377,9 @@ var View = {
     return row;
   },
 
-  _addCell(row, { content, classes, fluentName, fluentArgs }) {
+  _addCell(row, { content, classes }) {
     let elt = document.createElement("td");
-    if (fluentName) {
-      let span = document.createElement("span");
-      document.l10n.setAttributes(span, fluentName, fluentArgs);
-      elt.appendChild(span);
-    } else {
-      elt.textContent = content;
-      elt.setAttribute("title", content);
-    }
+    this._setTextAndTooltip(elt, content);
     elt.classList.add(...classes);
     row.appendChild(elt);
     return elt;
@@ -753,6 +503,10 @@ var View = {
       formatedValue: `${amount}${unitValue}`,
     };
   },
+  _setTextAndTooltip(elt, text, tooltip = text) {
+    elt.textContent = text;
+    elt.setAttribute("title", tooltip);
+  },
 };
 
 var Control = {
@@ -764,13 +518,8 @@ var Control = {
   _sortColumn: null,
   _sortAscendent: true,
   _removeSubtree(row) {
-    let sibling = row.nextSibling;
-    while (sibling && !sibling.classList.contains("process")) {
-      let next = sibling.nextSibling;
-      if (sibling.classList.contains("thread")) {
-        sibling.remove();
-      }
-      sibling = next;
+    while (row.nextSibling && row.nextSibling.classList.contains("thread")) {
+      row.nextSibling.remove();
     }
   },
   init() {
@@ -919,8 +668,6 @@ var Control = {
     let previousRow = null;
     let previousProcess = null;
     for (let process of counters) {
-      this._sortDOMWindows(process.windows);
-
       let isOpen = openItems.has(process.pid);
       process.isOpen = isOpen;
 
@@ -930,13 +677,7 @@ var Control = {
       let processRow = View.appendProcessRow(process, isOpen);
       processRow.process = process;
 
-      let winRow;
-      for (let win of process.windows) {
-        winRow = View.appendDOMWindowRow(win, process);
-        winRow.win = win;
-      }
-
-      let latestRow = winRow || processRow;
+      let latestRow = processRow;
       if (isOpen) {
         this._openItems.add(process.pid);
         latestRow = this._showChildren(processRow);
@@ -984,7 +725,6 @@ var Control = {
         case "column-memory-resident":
         case "column-type":
         case "column-pid":
-        case "column-twisty":
         case null:
           order = b.tid - a.tid;
           break;
@@ -1025,7 +765,6 @@ var Control = {
         case "column-memory-resident":
           order = b.totalResidentUniqueSize - a.totalResidentUniqueSize;
           break;
-        case "column-twisty":
         case null:
           // Default order: classify processes by group.
           order = a.displayRank - b.displayRank;
@@ -1041,21 +780,6 @@ var Control = {
           break;
         default:
           throw new Error("Unsupported order: " + this._sortColumn);
-      }
-      if (!this._sortAscendent) {
-        order = -order;
-      }
-      return order;
-    });
-  },
-  _sortDOMWindows(windows) {
-    return windows.sort((a, b) => {
-      let order = a.displayRank - b.displayRank;
-      if (order == 0) {
-        order = a.documentTitle.localeCompare(b.documentTitle);
-      }
-      if (order == 0) {
-        order = a.documentURI.spec.localeCompare(b.documentURI.spec);
       }
       if (!this._sortAscendent) {
         order = -order;
