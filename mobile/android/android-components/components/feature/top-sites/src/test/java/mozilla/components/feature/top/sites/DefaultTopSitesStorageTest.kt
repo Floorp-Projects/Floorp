@@ -90,6 +90,7 @@ class DefaultTopSitesStorageTest {
         defaultTopSitesStorage.removeTopSite(pinnedSite)
 
         verify(pinnedSitesStorage).removePinnedSite(pinnedSite)
+        verify(historyStorage).deleteVisitsFor(pinnedSite.url)
 
         val defaultSite = TopSite(
             id = 3,
@@ -101,6 +102,7 @@ class DefaultTopSitesStorageTest {
         defaultTopSitesStorage.removeTopSite(defaultSite)
 
         verify(pinnedSitesStorage).removePinnedSite(defaultSite)
+        verify(historyStorage).deleteVisitsFor(defaultSite.url)
     }
 
     @Test

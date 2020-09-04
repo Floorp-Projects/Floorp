@@ -53,13 +53,15 @@ class DefaultTopSitesStorage(
 
     override fun removeTopSite(topSite: TopSite) {
         scope.launch {
-            if (topSite.type == FRECENT) {
-                historyStorage.deleteVisitsFor(topSite.url)
-                notifyObservers { onStorageUpdated() }
-            } else {
+            if (topSite.type != FRECENT) {
                 pinnedSitesStorage.removePinnedSite(topSite)
-                notifyObservers { onStorageUpdated() }
             }
+
+            // Remove the top site from both history and pinned sites storage to avoid having it
+            // show up as a frecent site if it is a pinned site.
+            historyStorage.deleteVisitsFor(topSite.url)
+
+            notifyObservers { onStorageUpdated() }
         }
     }
 
