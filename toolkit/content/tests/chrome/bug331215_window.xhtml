@@ -22,10 +22,9 @@
     var gFindBar = null;
     var gBrowser;
 
-    var imports = ["SimpleTest", "ok", "info"];
-    for (var name of imports) {
-      window[name] = window.arguments[0][name];
-    }
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var info = window.arguments[0].info;
+    var ok = window.arguments[0].ok;
     SimpleTest.requestLongerTimeout(2);
 
     function startTest() {
@@ -67,7 +66,7 @@
     function promiseEnterStringIntoFindField(aString) {
       return new Promise(resolve => {
         let listener = {
-          onFindResult: function(result) {
+          onFindResult(result) {
             if (result.result == Ci.nsITypeAheadFind.FIND_FOUND && result.searchString != aString)
               return;
             gFindBar.browser.finder.removeResultListener(listener);

@@ -24,10 +24,9 @@ find-menu appears in editor element which has had makeEditable() called but desi
     var gFindBar = null;
     var gBrowser;
 
-    var imports = ["SimpleTest", "ok", "info"];
-    for (var name of imports) {
-      window[name] = window.arguments[0][name];
-    }
+    var SimpleTest = window.arguments[0].SimpleTest;
+    var info = window.arguments[0].info;
+    var ok = window.arguments[0].ok;
 
     function onLoad() {
       (async function() {
