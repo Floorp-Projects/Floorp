@@ -4,7 +4,6 @@
 
 DIRS += [
     '/config/external/zlib',
-    '/testing/tools/fileid',
     '/toolkit/crashreporter/google-breakpad/src/common',
     '/toolkit/crashreporter/google-breakpad/src/processor',
     '/toolkit/crashreporter/rust',

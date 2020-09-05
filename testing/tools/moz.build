@@ -7,9 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Testing", "General")
 
-with Files("fileid/**"):
-    BUG_COMPONENT = ("Toolkit", "Crash Reporting")
-
 with Files("iceserver/**"):
     BUG_COMPONENT = ("Core", "WebRTC: Networking")
 
