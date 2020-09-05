@@ -22,10 +22,7 @@ add_task(async function() {
   const onExpanded = BrowserTestUtils.waitForCondition(() => {
     return (
       codeEl.textContent ===
-      `@font-face {
-  font-family: bar;
-  src: url("bad/font/name.ttf"), url("ostrich-regular.ttf") format("truetype");
-}`
+      `@font-face { font-family: bar; src: url("bad/font/name.ttf"), url("ostrich-regular.ttf") format("truetype"); }`
     );
   }, "Waiting for the font-face rule 1");
 

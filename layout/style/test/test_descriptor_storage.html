@@ -67,7 +67,7 @@ function test_descriptor(descriptor)
     // semicolons, but for simplicity we'll test the current behavior.
     var expected_serialization = "";
     if (step1val != "")
-      expected_serialization = "  " + descriptor + ": " + step1val + ";\n";
+      expected_serialization = descriptor + ": " + step1val + "; ";
     is(step1ser, expected_serialization,
        "serialization should match descriptor value");
 
