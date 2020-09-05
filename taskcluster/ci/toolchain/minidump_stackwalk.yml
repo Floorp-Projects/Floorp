@@ -17,7 +17,6 @@ job-defaults:
             - 'config/external/zlib'
             - 'mfbt'
             - 'moz.configure'
-            - 'testing/tools/fileid'
             - 'toolkit/crashreporter'
             - 'toolkit/crashreporter/google-breakpad/src/common'
             - 'toolkit/crashreporter/google-breakpad/src/processor'
