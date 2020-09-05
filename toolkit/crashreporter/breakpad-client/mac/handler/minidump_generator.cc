@@ -1450,19 +1450,54 @@ bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type, int cpu
   // Get the module identifier
   unsigned char identifier[16];
   bool result = false;
-  if (in_memory) {
-    MacFileUtilities::MachoID macho(module_path,
-        reinterpret_cast<void *>(module->base_of_image),
-        static_cast<size_t>(module->size_of_image));
-    result = macho.UUIDCommand(cpu_type, cpu_subtype, identifier);
-    if (!result)
-      result = macho.MD5(cpu_type, cpu_subtype, identifier);
-  }
+  bool in_memory_changed = false;
+  // As of macOS 11, most system libraries no longer have separate copies in
+  // the macOS file system. They only exist all lumped together in the "dyld
+  // shared cache", which gets loaded into each process on startup. If one of
+  // our system libraries isn't in the file system, we can only get a UUID
+  // (aka a debug id) for it by looking at a copy of the module loaded into
+  // the currently running process. Setting 'in_memory' to 'true' makes this
+  // happen.
+  //
+  // We're always called in the main process. But the crashing process might
+  // be either the same process or a different one (a child process). If it's
+  // a child process, it makes sense to set 'in_memory' to 'false', since (in
+  // principle) the child process might not have the same modules in memory as
+  // the main process does. But if we do that on macOS 11 we'll fail to get
+  // debug ids for most of the system libraries. Moreover it's fair to assume
+  // that all (or at least almost all) the system libraries loaded into any
+  // child process will also be loaded into the main process.
+  //
+  // We should be reluctant to change the value of 'in_memory' from 'false' to
+  // 'true'. But we'll sometimes need to do that to work around the problem
+  // discussed above. In any case we only do it if all else has failed.
+  //
+  // These changes resolve https://bugzilla.mozilla.org/show_bug.cgi?id=1662862.
+  while (true) {
+    if (in_memory) {
+      MacFileUtilities::MachoID macho(module_path,
+          reinterpret_cast<void *>(module->base_of_image),
+          static_cast<size_t>(module->size_of_image));
+      result = macho.UUIDCommand(cpu_type, cpu_subtype, identifier);
+      if (!result)
+        result = macho.MD5(cpu_type, cpu_subtype, identifier);
+      if (result || in_memory_changed)
+        break;
+    }
 
-  if (!result) {
-     FileID file_id(module_path);
-     result = file_id.MachoIdentifier(cpu_type, cpu_subtype,
-                                      identifier);
+    if (!result) {
+       FileID file_id(module_path);
+       result = file_id.MachoIdentifier(cpu_type, cpu_subtype,
+                                        identifier);
+    }
+    if (result)
+      break;
+
+    if (!in_memory) {
+      in_memory = true;
+      in_memory_changed = true;
+    } else
+      break;
   }
 
   if (result) {
