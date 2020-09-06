@@ -2633,6 +2633,13 @@ class Document : public nsINode,
            IsStaticDocument();
   }
 
+  void SetHasPrintCallbacks() {
+    MOZ_DIAGNOSTIC_ASSERT(IsStaticDocument());
+    mHasPrintCallbacks = true;
+  }
+
+  bool HasPrintCallbacks() const { return mHasPrintCallbacks; }
+
   /**
    * Register/Unregister the ActivityObserver into mActivityObservers to listen
    * the document's activity changes such as OnPageHide, visibility, activity.
@@ -4382,6 +4389,10 @@ class Document : public nsINode,
 
   // True while this document is being cloned to a static document.
   bool mCreatingStaticClone : 1;
+
+  // True if this static document has any <canvas> element with a
+  // mozPrintCallback property at the time of the clone.
+  bool mHasPrintCallbacks : 1;
 
   // True iff the document is being unlinked or deleted.
   bool mInUnlinkOrDeletion : 1;
