@@ -2127,7 +2127,8 @@ nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   }
 
   // Async scripts and blocking scripts can be executed right away.
-  if (aRequest->IsAsyncScript() || aRequest->IsBlockingScript()) {
+  if ((aRequest->IsAsyncScript() || aRequest->IsBlockingScript()) &&
+      !aRequest->isInList()) {
     return ProcessRequest(aRequest);
   }
 
