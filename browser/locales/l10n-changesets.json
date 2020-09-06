@@ -1047,7 +1047,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "9d7d763200270b4c6dc25114c3731bd657dbc40e"
+        "revision": "c80aa422bedfed3e1ea021796acfefb5e44e97cf"
     },
     "lv": {
         "pin": false,
