@@ -254,9 +254,10 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
                         fd, path, buf, flags);
       return BlockedSyscallTrap(aArgs, nullptr);
     }
-    if ((flags & ~AT_SYMLINK_NOFOLLOW) != 0) {
+    if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT)) != 0) {
       SANDBOX_LOG_ERROR("unsupported flags %d in fstatat(%d, \"%s\", %p, %d)",
-                        (flags & ~AT_SYMLINK_NOFOLLOW), fd, path, buf, flags);
+                        (flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT)), fd,
+                        path, buf, flags);
       return BlockedSyscallTrap(aArgs, nullptr);
     }
     return (flags & AT_SYMLINK_NOFOLLOW) == 0 ? broker->Stat(path, buf)
