@@ -2776,6 +2776,7 @@ nsresult nsFrameLoader::FinishStaticClone(nsFrameLoader* aStaticCloneOf,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  MaybeCreateDocShell();
   RefPtr<nsDocShell> docShell = GetDocShell();
   NS_ENSURE_STATE(docShell);
 
