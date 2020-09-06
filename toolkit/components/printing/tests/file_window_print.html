@@ -1,0 +1,21 @@
+<!doctype html>
+<div id="before-print">Before print</div>
+<canvas id="canvas" width="100" height="100"></canvas>
+<script>
+  onload = function() {
+    // window.print() is special until after the load event is finished firing.
+    setTimeout(function() {
+      // This one should block until we're done printing.
+      window.print();
+      document.body.insertAdjacentHTML('beforeend', `<div id="after-first-print">After first print</div>`);
+
+      let canvas = document.getElementById("canvas");
+      canvas.mozPrintCallback = function() {};
+
+      // This one shouldn't, because the print callbacks need to run.
+      window.print();
+
+      document.body.insertAdjacentHTML('beforeend', `<div id="after-second-print">After second print</div>`);
+    }, 0);
+  }
+</script>
