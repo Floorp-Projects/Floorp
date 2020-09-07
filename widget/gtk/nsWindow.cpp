@@ -4167,7 +4167,7 @@ bool nsWindow::IsMainWindowTransparent() {
             Preferences::GetBool("mozilla.widget.use-argb-visuals");
       } else {
         sTransparentMainWindow =
-            (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay() &&
+            (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay() ||
              GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE);
       }
     }
@@ -7781,7 +7781,7 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(bool aIsPopup) {
     } else if (strstr(currentDesktop, "LXQt") != nullptr) {
       sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
     } else if (strstr(currentDesktop, "Deepin") != nullptr) {
-      sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
+      sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     } else {
 // Release or beta builds are not supposed to be broken
 // so disable titlebar rendering on untested/unknown systems.
@@ -7846,15 +7846,37 @@ bool nsWindow::HideTitlebarByDefault() {
     return hideTitlebar;
   }
 
+  // We want to hide the system titlebar by default.
+  hideTitlebar = true;
+
+  // Don't hide titlebar when we can't draw round corners.
+  GdkScreen* screen = gdk_screen_get_default();
+  if (!gdk_screen_is_composited(screen) && !TitlebarCanUseShapeMask()) {
+    hideTitlebar = false;
+    return hideTitlebar;
+  }
+  // Don't hide titlebar when it's disabled on current desktop.
   const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  hideTitlebar =
-      (currentDesktop && GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE);
+  if (!currentDesktop || GetSystemCSDSupportLevel() == CSD_SUPPORT_NONE) {
+    hideTitlebar = false;
+    return hideTitlebar;
+  }
 
-  GdkScreen* screen;
-  hideTitlebar = ((screen = gdk_screen_get_default()) &&
-                  gdk_screen_is_composited(screen)) ||
-                 TitlebarCanUseShapeMask();
+  // We hide system titlebar on Gnome/ElementaryOS without any restriction.
+  if ((strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
+       strstr(currentDesktop, "GNOME") != nullptr ||
+       strstr(currentDesktop, "Pantheon") != nullptr)) {
+    return hideTitlebar;
+  }
 
+  // We hide system titlebar on KDE on recent enough systems.
+  if (gtk_check_version(3, 24, 0) == nullptr &&
+      strstr(currentDesktop, "KDE") != nullptr) {
+    return hideTitlebar;
+  }
+
+  // Don't hide system titlebar by default for other desktops.
+  hideTitlebar = false;
   return hideTitlebar;
 }
 
