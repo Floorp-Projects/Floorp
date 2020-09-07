@@ -810,12 +810,14 @@ const PrintSettingsViewProxy = {
         return "default";
 
       case "paperSizes":
-        return Object.values(this.availablePaperSizes).map(paper => {
-          return {
-            name: paper.name,
-            value: paper.name,
-          };
-        });
+        return Object.values(this.availablePaperSizes)
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(paper => {
+            return {
+              name: paper.name,
+              value: paper.name,
+            };
+          });
 
       case "printBackgrounds":
         return target.printBGImages || target.printBGColors;
