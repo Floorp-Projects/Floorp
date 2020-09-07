@@ -1080,6 +1080,8 @@ void profiler_save_profile_to_file(const char* aFilename);
 // RAII classes
 //---------------------------------------------------------------------------
 
+class TLSRegisteredThread;  // Needed for friendship in ProfilingStackOwnerTLS.
+
 namespace mozilla {
 
 class MOZ_RAII AutoProfilerInit {
@@ -1232,29 +1234,33 @@ class MOZ_RAII AutoProfilerLabel {
   // See the comment on the definition in platform.cpp for details about this.
   class ProfilingStackOwnerTLS {
    public:
-    static bool Init() {
-      // Only one call to MOZ_THREAD_LOCAL::init() is needed, we cache the
-      // result for later calls to Init(), in particular before using get() and
-      // set().
-      static const bool ok = sProfilingStackOwnerTLS.init();
-      return ok;
-    }
-
     static ProfilingStackOwner* Get() {
-      if (!Init()) {
+      MOZ_ASSERT(
+          sState != State::Uninitialized,
+          "ProfilingStackOwnerTLS::Get() should only be called after Init()");
+      if (sState != State::Initialized) {
         return nullptr;
       }
       return sProfilingStackOwnerTLS.get();
     }
 
     static void Set(ProfilingStackOwner* aProfilingStackOwner) {
-      MOZ_RELEASE_ASSERT(Init(),
-                         "ProfilingStackOwnerTLS::Set() should only be called "
-                         "after a successful Init()");
+      MOZ_ASSERT(
+          sState != State::Uninitialized,
+          "ProfilingStackOwnerTLS::Set() should only be called after Init()");
+      MOZ_DIAGNOSTIC_ASSERT(sState == State::Initialized,
+                            "ProfilingStackOwnerTLS::Set() should only be "
+                            "called after a successful Init()");
       sProfilingStackOwnerTLS.set(aProfilingStackOwner);
     }
 
    private:
+    friend TLSRegisteredThread;
+    static void Init();
+
+    enum class State { Uninitialized = 0, Initialized, Unavailable };
+    static State sState;
+
     static MOZ_THREAD_LOCAL(ProfilingStackOwner*) sProfilingStackOwnerTLS;
   };
 };

@@ -1448,17 +1448,34 @@ Atomic<uint32_t, MemoryOrdering::Relaxed> RacyFeatures::sActiveAndFeatures(0);
 // profiling stack used by AutoProfilerLabel.
 class TLSRegisteredThread {
  public:
-  static bool Init() {
-    // Only one call to MOZ_THREAD_LOCAL::init() is needed, we cache the result
-    // for later calls to Init(), in particular before using get() and set().
-    static const bool ok = AutoProfilerLabel::ProfilingStackOwnerTLS::Init() &&
-                           sRegisteredThread.init();
-    return ok;
+  // This should only be called once before any other access.
+  // In this case it's called from `profiler_init()` on the main thread, before
+  // the main thread registers itself.
+  static void Init() {
+    MOZ_ASSERT(sState == State::Uninitialized, "Already initialized");
+    AutoProfilerLabel::ProfilingStackOwnerTLS::Init();
+    MOZ_ASSERT(
+        AutoProfilerLabel::ProfilingStackOwnerTLS::sState !=
+            AutoProfilerLabel::ProfilingStackOwnerTLS::State::Uninitialized,
+        "Unexpected ProfilingStackOwnerTLS::sState after "
+        "ProfilingStackOwnerTLS::Init()");
+    sState =
+        (AutoProfilerLabel::ProfilingStackOwnerTLS::sState ==
+             AutoProfilerLabel::ProfilingStackOwnerTLS::State::Initialized &&
+         sRegisteredThread.init())
+            ? State::Initialized
+            : State::Unavailable;
+  }
+
+  static bool IsTLSInited() {
+    MOZ_ASSERT(sState != State::Uninitialized,
+               "TLSRegisteredThread should only be accessed after Init()");
+    return sState == State::Initialized;
   }
 
   // Get the entire RegisteredThread. Accesses are guarded by gPSMutex.
   static class RegisteredThread* RegisteredThread(PSLockRef) {
-    if (!Init()) {
+    if (!IsTLSInited()) {
       return nullptr;
     }
     return sRegisteredThread.get();
@@ -1466,7 +1483,7 @@ class TLSRegisteredThread {
 
   // Get only the RacyRegisteredThread. Accesses are not guarded by gPSMutex.
   static class RacyRegisteredThread* RacyRegisteredThread() {
-    if (!Init()) {
+    if (!IsTLSInited()) {
       return nullptr;
     }
     class RegisteredThread* registeredThread = sRegisteredThread.get();
@@ -1478,7 +1495,7 @@ class TLSRegisteredThread {
   // RacyRegisteredThread() can also be used to get the ProfilingStack, but that
   // is marginally slower because it requires an extra pointer indirection.
   static ProfilingStack* Stack() {
-    if (!Init()) {
+    if (!IsTLSInited()) {
       return nullptr;
     }
     ProfilingStackOwner* profilingStackOwner =
@@ -1491,7 +1508,7 @@ class TLSRegisteredThread {
 
   static void SetRegisteredThreadAndAutoProfilerLabelProfilingStack(
       PSLockRef, class RegisteredThread* aRegisteredThread) {
-    if (!Init()) {
+    if (!IsTLSInited()) {
       return;
     }
     MOZ_RELEASE_ASSERT(
@@ -1508,7 +1525,7 @@ class TLSRegisteredThread {
   // is kept, because the thread may not have unregistered itself yet, so it may
   // still push/pop labels even after the profiler has shut down.
   static void ResetRegisteredThread(PSLockRef) {
-    if (!Init()) {
+    if (!IsTLSInited()) {
       return;
     }
     sRegisteredThread.set(nullptr);
@@ -1517,7 +1534,7 @@ class TLSRegisteredThread {
   // Reset the AutoProfilerLabels' ProfilingStack, because the thread is
   // unregistering itself.
   static void ResetAutoProfilerLabelProfilingStack(PSLockRef) {
-    if (!Init()) {
+    if (!IsTLSInited()) {
       return;
     }
     MOZ_RELEASE_ASSERT(
@@ -1528,6 +1545,12 @@ class TLSRegisteredThread {
   }
 
  private:
+  // Only written once from `profiler_init` calling
+  // `TLSRegisteredThread::Init()`; all reads should only happen after `Init()`,
+  // so there is no need to make it atomic.
+  enum class State { Uninitialized = 0, Initialized, Unavailable };
+  static State sState;
+
   // This is a non-owning reference to the RegisteredThread;
   // CorePS::mRegisteredThreads is the owning reference. On thread
   // deregistration, this reference is cleared and the RegisteredThread is
@@ -1535,7 +1558,20 @@ class TLSRegisteredThread {
   static MOZ_THREAD_LOCAL(class RegisteredThread*) sRegisteredThread;
 };
 
+// Zero-initialized to State::Uninitialized.
+/* static */
+TLSRegisteredThread::State TLSRegisteredThread::sState;
+
+/* static */
 MOZ_THREAD_LOCAL(RegisteredThread*) TLSRegisteredThread::sRegisteredThread;
+
+// Only written once from `profiler_init` (through `TLSRegisteredThread::Init()`
+// and `AutoProfilerLabel::ProfilingStackOwnerTLS::Init()`); all reads should
+// only happen after `Init()`, so there is no need to make it atomic.
+// Zero-initialized to State::Uninitialized.
+/* static */
+AutoProfilerLabel::ProfilingStackOwnerTLS::State
+    AutoProfilerLabel::ProfilingStackOwnerTLS::sState;
 
 // Although you can access a thread's ProfilingStack via
 // TLSRegisteredThread::sRegisteredThread, we also have a second TLS pointer
@@ -1558,8 +1594,16 @@ MOZ_THREAD_LOCAL(RegisteredThread*) TLSRegisteredThread::sRegisteredThread;
 // responsible for destroying the ProfilingStack; Because MOZ_THREAD_LOCAL
 // doesn't support RefPtr, AddRef&Release are done explicitly in
 // TLSRegisteredThread.
+/* static */
 MOZ_THREAD_LOCAL(ProfilingStackOwner*)
 AutoProfilerLabel::ProfilingStackOwnerTLS::sProfilingStackOwnerTLS;
+
+/* static */
+void AutoProfilerLabel::ProfilingStackOwnerTLS::Init() {
+  MOZ_ASSERT(sState == State::Uninitialized, "Already initialized");
+  sState =
+      sProfilingStackOwnerTLS.init() ? State::Initialized : State::Unavailable;
+}
 
 void ProfilingStackOwner::DumpStackAndCrash() const {
   fprintf(stderr,
@@ -3838,7 +3882,7 @@ static ProfilingStack* locked_register_thread(PSLockRef aLock,
 
   VTUNE_REGISTER_THREAD(aName);
 
-  if (!TLSRegisteredThread::Init()) {
+  if (!TLSRegisteredThread::IsTLSInited()) {
     return nullptr;
   }
 
@@ -3992,6 +4036,9 @@ void profiler_init(void* aStackTop) {
   if (getenv("MOZ_PROFILER_HELP")) {
     PrintUsageThenExit(1);  // terminates execution
   }
+
+  // This must be before any TLS access (e.g.: Thread registration, labels...).
+  TLSRegisteredThread::Init();
 
   SharedLibraryInfo::Initialize();
 
@@ -5109,7 +5156,7 @@ ProfilingStack* profiler_register_thread(const char* aName,
         TextMarkerPayload(text, TimeStamp::NowUnfuzzed()), &lock);
 
     MOZ_RELEASE_ASSERT(
-        TLSRegisteredThread::Init(),
+        TLSRegisteredThread::IsTLSInited(),
         "Thread should not have already been registered without TLS::Init()");
     MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(lock),
                        "TLS should be set when re-registering thread");
@@ -5143,7 +5190,7 @@ void profiler_unregister_thread() {
           FindCurrentThreadRegisteredThread(lock);
       registeredThread) {
     MOZ_RELEASE_ASSERT(
-        TLSRegisteredThread::Init(),
+        TLSRegisteredThread::IsTLSInited(),
         "Thread should not have been registered without TLS::Init()");
     MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(lock),
                        "TLS should be set when un-registering thread");
