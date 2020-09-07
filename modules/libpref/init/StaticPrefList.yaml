@@ -3410,6 +3410,15 @@
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------
 
+# Allow or disallow to delete `<hr>` element when caret is at start of
+# following line of the element.  If false, Backspace from start of following
+# line of an `<hr>` element causes moving caret to immediatly after the `<hr>`
+# element, and then, another Backspace can delete it.
+- name: editor.hr_element.allow_to_delete_from_following_line
+  type: bool
+  value: false
+  mirror: always
+
 # Delay to mask last input character in password fields.
 # If negative value, to use platform's default behavior.
 # If 0, no delay to mask password.
