@@ -1017,6 +1017,11 @@ function makeDReportMap(aJSONReports, aForgetIsolation) {
       "moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}"
     );
 
+    // Strip segment counts from address-space.
+    if (path.startsWith("address-space")) {
+      path = path.replace(/\(segments=\d+\)/g, "(segments=NNNN)");
+    }
+
     // Normalize omni.ja! paths.
     path = path.replace(
       /jar:file:\\\\\\(.+)\\omni.ja!/,
