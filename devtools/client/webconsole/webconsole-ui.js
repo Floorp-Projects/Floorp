@@ -353,7 +353,7 @@ class WebConsoleUI {
     });
   }
 
-  _onResourceAvailable({ targetFront, resource }) {
+  _onResourceAvailable({ resource }) {
     if (!this.hud) {
       return;
     }
@@ -372,7 +372,7 @@ class WebConsoleUI {
     this.wrapper.dispatchMessageAdd(resource);
   }
 
-  _onResourceUpdated({ targetFront, resource }) {
+  _onResourceUpdated({ resource }) {
     if (resource.resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT) {
       this.wrapper.dispatchMessageUpdate(resource);
     }

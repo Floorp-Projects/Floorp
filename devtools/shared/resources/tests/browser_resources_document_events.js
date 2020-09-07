@@ -129,7 +129,7 @@ function assertEvents(loadingEvent, interactiveEvent, completeEvent) {
 class ResourceListener {
   _listeners = new Map();
 
-  dispatch({ targetFront, resource }) {
+  dispatch({ resource }) {
     const resolve = this._listeners.get(resource.name);
     if (resolve) {
       resolve(resource);
