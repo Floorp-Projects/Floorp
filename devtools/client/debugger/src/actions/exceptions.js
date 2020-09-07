@@ -9,24 +9,26 @@ import { hasException } from "../selectors";
 import type { ThunkArgs } from "./types";
 import type { Exception } from "../types";
 
-export function addExceptionFromResource({ resource }: Object) {
+export function addExceptionFromResources(resources: Array<Object>) {
   return async function({ dispatch }: ThunkArgs) {
-    const { pageError } = resource;
-    if (!pageError.error) {
-      return;
+    for (const resource of resources) {
+      const { pageError } = resource;
+      if (!pageError.error) {
+        continue;
+      }
+      const { columnNumber, lineNumber, sourceId, errorMessage } = pageError;
+      const stacktrace = pageError.stacktrace || [];
+
+      const exception = {
+        columnNumber,
+        lineNumber,
+        sourceActorId: sourceId,
+        errorMessage,
+        stacktrace,
+      };
+
+      dispatch(addException(exception));
     }
-    const { columnNumber, lineNumber, sourceId, errorMessage } = pageError;
-    const stacktrace = pageError.stacktrace || [];
-
-    const exception = {
-      columnNumber,
-      lineNumber,
-      sourceActorId: sourceId,
-      errorMessage,
-      stacktrace,
-    };
-
-    dispatch(addException(exception));
   };
 }
 

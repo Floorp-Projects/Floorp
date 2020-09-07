@@ -79,7 +79,7 @@ class DebuggerPanel {
     const resourceWatcher = this.toolbox.resourceWatcher;
     await resourceWatcher.watchResources(
       [resourceWatcher.TYPES.ERROR_MESSAGE],
-      { onAvailable: actions.addExceptionFromResource }
+      { onAvailable: actions.addExceptionFromResources }
     );
 
     return this;

@@ -80,8 +80,10 @@ async function generatePlatformMessagesStubs() {
   // resource to `handlePlatformMessage`, dynamically updated for each command.
   let handlePlatformMessage = function() {};
 
-  const onPlatformMessageAvailable = ({ resource }) => {
-    handlePlatformMessage(resource);
+  const onPlatformMessageAvailable = resources => {
+    for (const resource of resources) {
+      handlePlatformMessage(resource);
+    }
   };
   await resourceWatcher.watchResources(
     [resourceWatcher.TYPES.PLATFORM_MESSAGE],
