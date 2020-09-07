@@ -18,7 +18,6 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -50,15 +49,16 @@ class SuspendMiddlewareTest {
         )
 
         val engineSession: EngineSession = mock()
-        val state: EngineSessionState = mock()
-        whenever(engineSession.saveState()).thenReturn(state)
         store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
 
+        val state: EngineSessionState = mock()
+        store.dispatch(EngineAction.UpdateEngineSessionStateAction(tab.id, state)).joinBlocking()
+
         store.dispatch(EngineAction.SuspendEngineSessionAction(tab.id)).joinBlocking()
-        verify(engineSession).saveState()
 
         store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
+
         assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
         assertEquals(state, store.state.findTab(tab.id)?.engineState?.engineSessionState)
         verify(engineSession).close()

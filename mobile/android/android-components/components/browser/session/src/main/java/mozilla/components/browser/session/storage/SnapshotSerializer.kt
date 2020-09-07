@@ -59,12 +59,9 @@ class SnapshotSerializer(
         sessionJson.put(Keys.SESSION_LAST_ACCESS, item.lastAccess)
         itemJson.put(Keys.SESSION_KEY, sessionJson)
 
-        val engineSessionState = if (item.engineSessionState != null) {
-            item.engineSessionState.toJSON()
-        } else {
-            item.engineSession?.saveState()?.toJSON() ?: JSONObject()
-        }
+        val engineSessionState = item.engineSessionState?.toJSON() ?: JSONObject()
         itemJson.put(Keys.ENGINE_SESSION_KEY, engineSessionState)
+
         return itemJson
     }
 
@@ -111,7 +108,6 @@ class SnapshotSerializer(
 
         return SessionManager.Snapshot.Item(
             session,
-            engineSession = null,
             engineSessionState = engineState,
             readerState = readerState,
             lastAccess = lastAccess

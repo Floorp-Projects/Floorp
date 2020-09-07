@@ -18,13 +18,15 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
-import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 
 class TrimMemoryMiddlewareTest {
     private lateinit var engineSessionReddit: EngineSession
@@ -48,10 +50,6 @@ class TrimMemoryMiddlewareTest {
         engineSessionStateTheVerge = mock()
         engineSessionStateTwitch = mock()
 
-        doReturn(engineSessionStateReddit).`when`(engineSessionReddit).saveState()
-        doReturn(engineSessionStateTheVerge).`when`(engineSessionTheVerge).saveState()
-        doReturn(engineSessionStateTwitch).`when`(engineSessionTwitch).saveState()
-
         store = Mockito.spy(
             BrowserStore(
                 middleware = listOf(
@@ -64,6 +62,7 @@ class TrimMemoryMiddlewareTest {
                         createTab("https://www.theverge.com/", id = "theverge").copy(
                             engineState = EngineState(
                                 engineSession = engineSessionTheVerge,
+                                engineSessionState = engineSessionStateTheVerge,
                                 engineObserver = mock())
                         ),
                         createTab(
@@ -73,6 +72,7 @@ class TrimMemoryMiddlewareTest {
                         ).copy(
                             engineState = EngineState(
                                 engineSession = engineSessionReddit,
+                                engineSessionState = engineSessionStateReddit,
                                 engineObserver = mock()
                             )
                         ),
@@ -82,6 +82,7 @@ class TrimMemoryMiddlewareTest {
                         createCustomTab("https://www.twitch.tv/", id = "twitch").copy(
                             engineState = EngineState(
                                 engineSession = engineSessionTwitch,
+                                engineSessionState = engineSessionStateTwitch,
                                 engineObserver = mock()
                             )
                         ),
@@ -99,24 +100,61 @@ class TrimMemoryMiddlewareTest {
             level = ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
         )).joinBlocking()
 
+        store.waitUntilIdle()
         dispatcher.advanceUntilIdle()
 
         store.state.findTab("theverge")!!.engineState.apply {
             assertNotNull(engineSession)
             assertNotNull(engineObserver)
-            assertNull(engineSessionState)
+            assertNotNull(engineSessionState)
         }
 
         store.state.findTab("reddit")!!.engineState.apply {
             assertNotNull(engineSession)
             assertNotNull(engineObserver)
-            assertNull(engineSessionState)
+            assertNotNull(engineSessionState)
         }
 
         store.state.findCustomTab("twitch")!!.engineState.apply {
             assertNotNull(engineSession)
             assertNotNull(engineObserver)
-            assertNull(engineSessionState)
+            assertNotNull(engineSessionState)
         }
+
+        verify(engineSessionTheVerge, never()).close()
+        verify(engineSessionReddit, never()).close()
+        verify(engineSessionTwitch, never()).close()
+    }
+
+    @Test
+    fun `TrimMemoryMiddleware - TRIM_MEMORY_RUNNING_CRITICAL`() {
+        store.dispatch(SystemAction.LowMemoryAction(
+            level = ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
+        )).joinBlocking()
+
+        store.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+
+        store.state.findTab("theverge")!!.engineState.apply {
+            assertNull(engineSession)
+            assertNull(engineObserver)
+            assertNotNull(engineSessionState)
+        }
+
+        store.state.findTab("reddit")!!.engineState.apply {
+            assertNotNull(engineSession)
+            assertNotNull(engineObserver)
+            assertNotNull(engineSessionState)
+        }
+
+        store.state.findCustomTab("twitch")!!.engineState.apply {
+            assertNotNull(engineSession)
+            assertNotNull(engineObserver)
+            assertNotNull(engineSessionState)
+        }
+
+        verify(engineSessionTheVerge).close()
+        verify(engineSessionReddit, never()).close()
+        verify(engineSessionTwitch, never()).close()
     }
 }

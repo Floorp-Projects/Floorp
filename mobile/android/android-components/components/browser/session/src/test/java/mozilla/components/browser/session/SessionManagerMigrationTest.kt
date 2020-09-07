@@ -788,7 +788,6 @@ class SessionManagerMigrationTest {
         val store = BrowserStore()
         val sessionManager = SessionManager(engine, store)
 
-        val engineSession: EngineSession = mock()
         val engineSessionState: EngineSessionState = mock()
 
         val snapshot = SessionManager.Snapshot(
@@ -798,8 +797,7 @@ class SessionManagerMigrationTest {
                     engineSessionState = engineSessionState
                 ),
                 SessionManager.Snapshot.Item(
-                    session = Session(id = "session2", initialUrl = "http://www.mozilla.org"),
-                    engineSession = engineSession
+                    session = Session(id = "session2", initialUrl = "http://www.mozilla.org")
                 )
             ),
             selectedSessionIndex = 0
@@ -810,10 +808,6 @@ class SessionManagerMigrationTest {
 
         store.state.findTab("session1")!!.also { tab ->
             assertEquals(engineSessionState, tab.engineState.engineSessionState)
-        }
-
-        store.state.findTab("session2")!!.also { tab ->
-            assertEquals(engineSession, tab.engineState.engineSession)
         }
     }
 

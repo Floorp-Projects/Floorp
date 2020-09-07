@@ -80,6 +80,7 @@ import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
 import java.security.Principal
 import java.security.cert.X509Certificate
+
 typealias GeckoAntiTracking = ContentBlocking.AntiTracking
 typealias GeckoSafeBrowsing = ContentBlocking.SafeBrowsing
 typealias GeckoCookieBehavior = ContentBlocking.CookieBehavior
@@ -1935,19 +1936,6 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `after onCrash get called geckoSession must be reset`() {
-        val engineSession = GeckoEngineSession(runtime)
-        val oldGeckoSession = engineSession.geckoSession
-
-        assertTrue(engineSession.geckoSession.isOpen)
-
-        oldGeckoSession.contentDelegate!!.onCrash(mock())
-
-        assertFalse(oldGeckoSession.isOpen)
-        assertTrue(engineSession.geckoSession != oldGeckoSession)
-    }
-
-    @Test
     fun `Closing engine session should close underlying gecko session`() {
         val geckoSession = mockGeckoSession()
 
@@ -2158,25 +2146,6 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `State provided through delegate will be returned from saveState`() {
-        val engineSession = GeckoEngineSession(mock(),
-            geckoSessionProvider = geckoSessionProvider)
-
-        captureDelegates()
-
-        val state: GeckoSession.SessionState = mock()
-
-        progressDelegate.value.onSessionStateChange(mock(), state)
-
-        val savedState = engineSession.saveState()
-        assertNotNull(savedState)
-        assertTrue(savedState is GeckoEngineSessionState)
-
-        val actualState = (savedState as GeckoEngineSessionState).actualState
-        assertEquals(state, actualState)
-    }
-
-    @Test
     fun `onFirstContentfulPaint notifies observers`() {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
@@ -2232,52 +2201,6 @@ class GeckoEngineSessionTest {
         contentDelegate.value.onCrash(mock())
 
         assertEquals(true, crashedState)
-    }
-
-    @Test
-    fun `recoverFromCrash does not restore state if no state has been saved previously`() {
-        val engineSession = GeckoEngineSession(mock(),
-            geckoSessionProvider = geckoSessionProvider)
-
-        assertFalse(engineSession.recoverFromCrash())
-        verify(engineSession.geckoSession, never()).restoreState(any())
-    }
-
-    @Test
-    fun `recoverFromCrash restores last known state`() {
-        val engineSession = GeckoEngineSession(mock(),
-            geckoSessionProvider = geckoSessionProvider)
-
-        captureDelegates()
-
-        val state1: GeckoSession.SessionState = mock()
-        val state2: GeckoSession.SessionState = mock()
-
-        progressDelegate.value.onSessionStateChange(engineSession.geckoSession, state1)
-        progressDelegate.value.onSessionStateChange(engineSession.geckoSession, state2)
-
-        contentDelegate.value.onCrash(engineSession.geckoSession)
-
-        assertTrue(engineSession.recoverFromCrash())
-
-        verify(engineSession.geckoSession).restoreState(state2)
-    }
-
-    @Test
-    fun `recoverFromCrash does not restore last known state if no crash occurred`() {
-        val engineSession = GeckoEngineSession(mock(),
-            geckoSessionProvider = geckoSessionProvider)
-
-        captureDelegates()
-
-        val state: GeckoSession.SessionState = mock()
-
-        progressDelegate.value.onSessionStateChange(engineSession.geckoSession, state)
-
-        assertFalse(engineSession.recoverFromCrash())
-
-        verify(engineSession.geckoSession, never()).restoreState(state)
-        verify(engineSession.geckoSession, never()).restoreState(any())
     }
 
     @Test
@@ -2690,7 +2613,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `onKill will recover, restore state and notify observers`() {
+    fun `onKill will notify observers`() {
         val engineSession = GeckoEngineSession(mock(),
             geckoSessionProvider = geckoSessionProvider)
 
@@ -2707,11 +2630,8 @@ class GeckoEngineSessionTest {
         val mockedState: GeckoSession.SessionState = mock()
         progressDelegate.value.onSessionStateChange(geckoSession, mockedState)
 
-        verify(geckoSession, never()).restoreState(mockedState)
-
         contentDelegate.value.onKill(geckoSession)
 
-        verify(geckoSession).restoreState(mockedState)
         assertTrue(observerNotified)
     }
 

@@ -21,9 +21,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.never
-import org.mockito.Mockito.reset
-import org.mockito.Mockito.verify
 
 class CrashMiddlewareTest {
     @Test
@@ -65,13 +62,9 @@ class CrashMiddlewareTest {
             "tab3"
         )).joinBlocking()
 
-        assertTrue(store.state.tabs[0].crashed)
-        assertFalse(store.state.tabs[1].crashed)
-        assertTrue(store.state.tabs[2].crashed)
-
-        verify(engineSession1, never()).recoverFromCrash()
-        verify(engineSession2, never()).recoverFromCrash()
-        verify(engineSession3, never()).recoverFromCrash()
+        assertTrue(store.state.tabs[0].engineState.crashed)
+        assertFalse(store.state.tabs[1].engineState.crashed)
+        assertTrue(store.state.tabs[2].engineState.crashed)
 
         // Restoring crashed session
         store.dispatch(CrashAction.RestoreCrashedSessionAction(
@@ -80,14 +73,9 @@ class CrashMiddlewareTest {
 
         dispatcher.advanceUntilIdle()
 
-        verify(engineSession1).recoverFromCrash()
-        verify(engineSession2, never()).recoverFromCrash()
-        verify(engineSession3, never()).recoverFromCrash()
-        reset(engineSession1, engineSession2, engineSession3)
-
-        assertFalse(store.state.tabs[0].crashed)
-        assertFalse(store.state.tabs[1].crashed)
-        assertTrue(store.state.tabs[2].crashed)
+        assertFalse(store.state.tabs[0].engineState.crashed)
+        assertFalse(store.state.tabs[1].engineState.crashed)
+        assertTrue(store.state.tabs[2].engineState.crashed)
 
         // Restoring a non crashed session
         store.dispatch(CrashAction.RestoreCrashedSessionAction(
@@ -96,13 +84,6 @@ class CrashMiddlewareTest {
 
         dispatcher.advanceUntilIdle()
 
-        // EngineSession.recoverFromCrash() handles internally the situation where there's no
-        // crashed state.
-        verify(engineSession1, never()).recoverFromCrash()
-        verify(engineSession2).recoverFromCrash()
-        verify(engineSession3, never()).recoverFromCrash()
-        reset(engineSession1, engineSession2, engineSession3)
-
         // Restoring unknown session
         store.dispatch(CrashAction.RestoreCrashedSessionAction(
             "unknown"
@@ -110,13 +91,9 @@ class CrashMiddlewareTest {
 
         dispatcher.advanceUntilIdle()
 
-        verify(engineSession1, never()).recoverFromCrash()
-        verify(engineSession2, never()).recoverFromCrash()
-        verify(engineSession3, never()).recoverFromCrash()
-
-        assertFalse(store.state.tabs[0].crashed)
-        assertFalse(store.state.tabs[1].crashed)
-        assertTrue(store.state.tabs[2].crashed)
+        assertFalse(store.state.tabs[0].engineState.crashed)
+        assertFalse(store.state.tabs[1].engineState.crashed)
+        assertTrue(store.state.tabs[2].engineState.crashed)
     }
 
     @Test
@@ -147,7 +124,7 @@ class CrashMiddlewareTest {
 
         dispatcher.advanceUntilIdle()
 
-        assertTrue(store.state.tabs[0].crashed)
+        assertTrue(store.state.tabs[0].engineState.crashed)
 
         store.dispatch(CrashAction.RestoreCrashedSessionAction(
             "tab1"
@@ -155,9 +132,6 @@ class CrashMiddlewareTest {
 
         dispatcher.advanceUntilIdle()
 
-        verify(engine).createSession()
-        verify(engineSession).recoverFromCrash()
-
-        assertFalse(store.state.tabs[0].crashed)
+        assertFalse(store.state.tabs[0].engineState.crashed)
     }
 }

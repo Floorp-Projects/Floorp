@@ -58,7 +58,7 @@ class EngineActionTest {
 
         store.dispatch(EngineAction.UnlinkEngineSessionAction(tab.id)).joinBlocking()
         assertNull(engineState().engineSession)
-        assertNull(engineState().engineSessionState)
+        assertNotNull(engineState().engineSessionState)
         assertNull(engineState().engineObserver)
     }
 

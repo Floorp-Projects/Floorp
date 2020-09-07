@@ -57,9 +57,7 @@ class BrowserStateSerializer {
         itemJson.put(Keys.SESSION_KEY, sessionJson)
 
         val engineSessionState = tab.engineState.engineSessionState
-        val engineSessionStateJson = engineSessionState?.toJSON()
-            ?: (tab.engineState.engineSession?.saveState()?.toJSON()
-                ?: JSONObject())
+        val engineSessionStateJson = engineSessionState?.toJSON() ?: JSONObject()
         itemJson.put(Keys.ENGINE_SESSION_KEY, engineSessionStateJson)
 
         return itemJson

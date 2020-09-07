@@ -11,7 +11,6 @@ import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
-import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -23,7 +22,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
-import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.gecko.util.GeckoBundle
@@ -47,7 +45,7 @@ class GeckoEngineViewTest {
         val geckoView = mock<NestedGeckoView>()
 
         whenever(engineSession.geckoSession).thenReturn(geckoSession)
-        engineView.currentGeckoView = geckoView
+        engineView.geckoView = geckoView
 
         engineView.render(engineSession)
         verify(geckoView, times(1)).setSession(geckoSession)
@@ -65,7 +63,7 @@ class GeckoEngineViewTest {
 
         var geckoResult = GeckoResult<Bitmap>()
         whenever(mockGeckoView.capturePixels()).thenReturn(geckoResult)
-        engineView.currentGeckoView = mockGeckoView
+        engineView.geckoView = mockGeckoView
 
         // Test GeckoResult resolves successfuly
         engineView.captureThumbnail {
@@ -98,7 +96,7 @@ class GeckoEngineViewTest {
     @Test
     fun `clearSelection is forwarded to BasicSelectionAction instance`() {
         val engineView = GeckoEngineView(context)
-        engineView.currentGeckoView = mock()
+        engineView.geckoView = mock()
         engineView.currentSelection = mock()
 
         engineView.clearSelection()
@@ -109,21 +107,21 @@ class GeckoEngineViewTest {
     @Test
     fun `setVerticalClipping is forwarded to GeckoView instance`() {
         val engineView = GeckoEngineView(context)
-        engineView.currentGeckoView = mock()
+        engineView.geckoView = mock()
 
         engineView.setVerticalClipping(-42)
 
-        verify(engineView.currentGeckoView).setVerticalClipping(-42)
+        verify(engineView.geckoView).setVerticalClipping(-42)
     }
 
     @Test
     fun `setDynamicToolbarMaxHeight is forwarded to GeckoView instance`() {
         val engineView = GeckoEngineView(context)
-        engineView.currentGeckoView = mock()
+        engineView.geckoView = mock()
 
         engineView.setDynamicToolbarMaxHeight(42)
 
-        verify(engineView.currentGeckoView).setDynamicToolbarMaxHeight(42)
+        verify(engineView.geckoView).setDynamicToolbarMaxHeight(42)
     }
 
     @Test
@@ -134,57 +132,15 @@ class GeckoEngineViewTest {
         val geckoView = mock<NestedGeckoView>()
 
         whenever(engineSession.geckoSession).thenReturn(geckoSession)
-        engineView.currentGeckoView = geckoView
+        engineView.geckoView = geckoView
 
         engineView.render(engineSession)
 
         verify(geckoView, never()).releaseSession()
-        verify(engineSession, never()).unregister(any())
 
         engineView.release()
 
         verify(geckoView).releaseSession()
-        verify(engineSession).unregister(any())
-    }
-
-    @Test
-    fun `View will rebind session if process gets killed`() {
-        val engineView = GeckoEngineView(context)
-        val engineSession = mock<GeckoEngineSession>()
-        val geckoSession = mock<GeckoSession>()
-        val geckoView = mock<NestedGeckoView>()
-
-        whenever(engineSession.geckoSession).thenReturn(geckoSession)
-        engineView.currentGeckoView = geckoView
-
-        engineView.render(engineSession)
-
-        reset(geckoView)
-        verify(geckoView, never()).setSession(geckoSession)
-
-        engineView.observer.onProcessKilled()
-
-        verify(geckoView).setSession(geckoSession)
-    }
-
-    @Test
-    fun `View will rebind session if session crashed`() {
-        val engineView = GeckoEngineView(context)
-        val engineSession = mock<GeckoEngineSession>()
-        val geckoSession = mock<GeckoSession>()
-        val geckoView = mock<NestedGeckoView>()
-
-        whenever(engineSession.geckoSession).thenReturn(geckoSession)
-        engineView.currentGeckoView = geckoView
-
-        engineView.render(engineSession)
-
-        reset(geckoView)
-        verify(geckoView, never()).setSession(geckoSession)
-
-        engineView.observer.onCrash()
-
-        verify(geckoView).setSession(geckoSession)
     }
 
     @Test
@@ -197,7 +153,7 @@ class GeckoEngineViewTest {
         val geckoView = mock<NestedGeckoView>()
 
         whenever(engineSession.geckoSession).thenReturn(geckoSession)
-        engineView.currentGeckoView = geckoView
+        engineView.geckoView = geckoView
 
         engineView.render(engineSession)
 
@@ -216,7 +172,7 @@ class GeckoEngineViewTest {
         val geckoView = mock<NestedGeckoView>()
 
         whenever(engineSession.geckoSession).thenReturn(geckoSession)
-        engineView.currentGeckoView = geckoView
+        engineView.geckoView = geckoView
 
         engineView.render(engineSession)
 
@@ -247,7 +203,7 @@ class GeckoEngineViewTest {
         val geckoView = mock<NestedGeckoView>()
 
         whenever(engineSession.geckoSession).thenReturn(geckoSession)
-        engineView.currentGeckoView = geckoView
+        engineView.geckoView = geckoView
 
         engineView.render(engineSession)
 
@@ -273,16 +229,16 @@ class GeckoEngineViewTest {
     @Test
     fun `setVisibility is propagated to gecko view`() {
         val engineView = GeckoEngineView(context)
-        engineView.currentGeckoView = mock()
+        engineView.geckoView = mock()
 
         engineView.visibility = View.GONE
-        verify(engineView.currentGeckoView)?.visibility = View.GONE
+        verify(engineView.geckoView)?.visibility = View.GONE
     }
 
     @Test
     fun `canClearSelection should return false for null selection, null and empty selection text`() {
         val engineView = GeckoEngineView(context)
-        engineView.currentGeckoView = mock()
+        engineView.geckoView = mock()
         engineView.currentSelection = mock()
 
         // null selection returns false

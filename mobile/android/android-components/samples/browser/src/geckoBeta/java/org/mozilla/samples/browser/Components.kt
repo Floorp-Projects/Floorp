@@ -11,6 +11,7 @@ import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
+import mozilla.components.lib.crash.handler.CrashHandlerService
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 
@@ -21,6 +22,7 @@ class Components(applicationContext: Context) : DefaultComponents(applicationCon
     private val runtime by lazy {
         // Allow for exfiltrating Gecko metrics through the Glean SDK.
         val builder = GeckoRuntimeSettings.Builder()
+        builder.crashHandler(CrashHandlerService::class.java)
         builder.telemetryDelegate(GeckoAdapter())
         GeckoRuntime.create(applicationContext, builder.build())
     }

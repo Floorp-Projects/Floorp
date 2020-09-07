@@ -59,9 +59,6 @@ class SessionStorageTest {
             override fun toJSON() = JSONObject()
         }
 
-        val engineSession = mock(EngineSession::class.java)
-        `when`(engineSession.saveState()).thenReturn(engineSessionState)
-
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))

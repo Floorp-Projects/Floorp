@@ -330,7 +330,7 @@ class SessionUseCases(
             val tabIds = store.state.let {
                 it.tabs + it.customTabs
             }.filter {
-                it.crashed
+                it.engineState.crashed
             }.map {
                 it.id
             }

@@ -77,8 +77,6 @@ class GeckoEngineSession(
     internal var scrollY: Int = 0
 
     internal var job: Job = Job()
-    private var lastSessionState: GeckoSession.SessionState? = null
-    private var stateBeforeCrash: GeckoSession.SessionState? = null
     private var canGoBack: Boolean = false
 
     /**
@@ -187,13 +185,6 @@ class GeckoEngineSession(
      */
     override fun goToHistoryIndex(index: Int) {
         geckoSession.gotoHistoryIndex(index)
-    }
-
-    /**
-     * See [EngineSession.saveState]
-     */
-    override fun saveState(): EngineSessionState {
-        return GeckoEngineSessionState(lastSessionState)
     }
 
     /**
@@ -369,22 +360,6 @@ class GeckoEngineSession(
      */
     override fun exitFullScreenMode() {
         geckoSession.exitFullScreen()
-    }
-
-    /**
-     * See [EngineSession.recoverFromCrash]
-     */
-    @Synchronized
-    override fun recoverFromCrash(): Boolean {
-        val state = stateBeforeCrash
-
-        return if (state != null) {
-            geckoSession.restoreState(state)
-            stateBeforeCrash = null
-            true
-        } else {
-            false
-        }
     }
 
     /**
@@ -601,7 +576,9 @@ class GeckoEngineSession(
         }
 
         override fun onSessionStateChange(session: GeckoSession, sessionState: GeckoSession.SessionState) {
-            lastSessionState = sessionState
+            notifyObservers {
+                onStateUpdated(GeckoEngineSessionState(sessionState))
+            }
         }
     }
 
@@ -722,23 +699,10 @@ class GeckoEngineSession(
         }
 
         override fun onCrash(session: GeckoSession) {
-            stateBeforeCrash = lastSessionState
-
-            recoverGeckoSession()
-
             notifyObservers { onCrash() }
         }
 
         override fun onKill(session: GeckoSession) {
-            // The content process of this session got killed (resources reclaimed by Android).
-            // Let's recover and restore the last known state.
-
-            val state = lastSessionState
-
-            recoverGeckoSession()
-
-            state?.let { geckoSession.restoreState(it) }
-
             notifyObservers { onProcessKilled() }
         }
 

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.session
 
+import android.view.View
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -55,7 +56,11 @@ class SessionFeatureTest {
     @Test
     fun `start renders selected session`() {
         val store = prepareStore()
+
+        val actualView: View = mock()
         val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession)).joinBlocking()
 
@@ -64,6 +69,7 @@ class SessionFeatureTest {
 
         feature.start()
         testDispatcher.advanceUntilIdle()
+
         store.waitUntilIdle()
         verify(view).render(engineSession)
     }
@@ -71,7 +77,11 @@ class SessionFeatureTest {
     @Test
     fun `start renders fixed session`() {
         val store = prepareStore()
+
+        val actualView: View = mock()
         val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("C", engineSession)).joinBlocking()
 
@@ -79,8 +89,10 @@ class SessionFeatureTest {
         verify(view, never()).render(any())
 
         feature.start()
+
         testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
+
         verify(view).render(engineSession)
     }
 
@@ -88,7 +100,10 @@ class SessionFeatureTest {
     fun `start renders custom tab session`() {
         val store = prepareStore()
 
+        val actualView: View = mock()
         val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("D", engineSession)).joinBlocking()
 
@@ -98,13 +113,18 @@ class SessionFeatureTest {
 
         testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
+
         verify(view).render(engineSession)
     }
 
     @Test
     fun `renders selected tab after changes`() {
         val store = prepareStore()
+
+        val actualView: View = mock()
         val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
         val engineSessionA: EngineSession = mock()
         val engineSessionB: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSessionA)).joinBlocking()
@@ -127,7 +147,9 @@ class SessionFeatureTest {
     @Test
     fun `creates engine session if needed`() {
         val store = spy(prepareStore())
+        val actualView: View = mock()
         val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
 
         val feature = SessionFeature(store, mock(), view)
         verify(view, never()).render(any())
@@ -141,7 +163,11 @@ class SessionFeatureTest {
     @Test
     fun `does not render new selected session after stop`() {
         val store = prepareStore()
+
+        val actualView: View = mock()
         val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
         val engineSessionA: EngineSession = mock()
         val engineSessionB: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("A", engineSessionA)).joinBlocking()
@@ -166,14 +192,20 @@ class SessionFeatureTest {
     @Test
     fun `releases when last selected session gets removed`() {
         val store = prepareStore()
+
+        val actualView: View = mock()
         val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession)).joinBlocking()
         val feature = SessionFeature(store, mock(), view)
 
         feature.start()
+
         testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
+
         verify(view).render(engineSession)
         verify(view, never()).release()
 
@@ -184,7 +216,11 @@ class SessionFeatureTest {
     @Test
     fun `release stops observing and releases session from view`() {
         val store = prepareStore()
+        val actualView: View = mock()
+
         val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("B", engineSession)).joinBlocking()
 
@@ -192,8 +228,10 @@ class SessionFeatureTest {
         verify(view, never()).render(any())
 
         feature.start()
+
         testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
+
         verify(view).render(engineSession)
 
         val newEngineSession: EngineSession = mock()
@@ -208,7 +246,10 @@ class SessionFeatureTest {
     fun `releases when custom tab gets removed`() {
         val store = prepareStore()
 
+        val actualView: View = mock()
         val view: EngineView = mock()
+        doReturn(actualView).`when`(view).asView()
+
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("D", engineSession)).joinBlocking()
 
@@ -216,8 +257,10 @@ class SessionFeatureTest {
         verify(view, never()).render(any())
 
         feature.start()
+
         testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
+
         verify(view).render(engineSession)
         verify(view, never()).release()
 

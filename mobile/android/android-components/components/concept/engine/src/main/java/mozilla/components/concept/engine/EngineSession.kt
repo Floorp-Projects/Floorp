@@ -89,6 +89,11 @@ abstract class EngineSession(
         fun onRecordingStateChanged(devices: List<RecordingDevice>) = Unit
 
         /**
+         * Event to indicate that a new saved [EngineSessionState] is available.
+         */
+        fun onStateUpdated(state: EngineSessionState) = Unit
+
+        /**
          * The engine received a request to load a request.
          *
          * @param url The string url that was requested.
@@ -508,19 +513,10 @@ abstract class EngineSession(
     abstract fun goToHistoryIndex(index: Int)
 
     /**
-     * Saves and returns the engine state. Engine implementations are not required
-     * to persist the state anywhere else than in the returned map. Engines that
-     * already provide a serialized state can use a single entry in this map to
-     * provide this state. The only requirement is that the same map can be used
-     * to restore the original state. See [restoreState] and the specific
-     * engine implementation for details.
-     */
-    abstract fun saveState(): EngineSessionState
-
-    /**
-     * Restores the engine state as provided by [saveState].
+     * Restore a saved state; only data that is saved (history, scroll position, zoom, and form data)
+     * will be restored.
      *
-     * @param state state retrieved from [saveState]
+     * @param state A saved session state.
      * @return true if the engine session has successfully been restored with the provided state,
      * false otherwise.
      */
@@ -567,13 +563,6 @@ abstract class EngineSession(
      * Exits fullscreen mode if currently in it that state.
      */
     abstract fun exitFullScreenMode()
-
-    /**
-     * Tries to recover from a crash by restoring the last know state.
-     *
-     * Returns true if a last known state was restored, otherwise false.
-     */
-    abstract fun recoverFromCrash(): Boolean
 
     /**
      * Marks this session active/inactive for web extensions to support

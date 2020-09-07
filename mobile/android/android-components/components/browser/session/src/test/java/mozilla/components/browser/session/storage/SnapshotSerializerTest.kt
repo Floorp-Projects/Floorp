@@ -10,7 +10,6 @@ import mozilla.components.browser.session.SessionManager.Snapshot
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -52,8 +51,6 @@ class SnapshotSerializerTest {
     fun `Serialize and deserialize with engine session state`() {
         val engineSessionState: EngineSessionState = mock()
         val engineSessionJson = JSONObject().apply { put("state", "test") }
-        val engineSession: EngineSession = mock()
-        whenever(engineSession.saveState()).thenReturn(engineSessionState)
         whenever(engineSessionState.toJSON()).thenReturn(engineSessionJson)
 
         val engine: Engine = mock()
@@ -73,7 +70,7 @@ class SnapshotSerializerTest {
         val json = serializer.itemToJSON(
             Snapshot.Item(
                 originalSession,
-                engineSession = engineSession,
+                engineSessionState = engineSessionState,
                 lastAccess = 1
             )
         )

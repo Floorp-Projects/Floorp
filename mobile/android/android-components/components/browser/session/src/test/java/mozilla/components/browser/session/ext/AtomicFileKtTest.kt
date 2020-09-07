@@ -12,6 +12,7 @@ import mozilla.components.browser.session.storage.BrowserStateSerializer
 import mozilla.components.browser.session.storage.SnapshotSerializer
 import mozilla.components.browser.session.storage.getFileForEngine
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -84,12 +85,8 @@ class AtomicFileKtTest {
             override fun toJSON() = JSONObject()
         }
 
-        val engineSession = mock(EngineSession::class.java)
-        `when`(engineSession.saveState()).thenReturn(engineSessionState)
-
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
-        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
         `when`(engine.createSessionState(any())).thenReturn(engineSessionState)
 
         val file = AtomicFile(File.createTempFile(
@@ -97,12 +94,17 @@ class AtomicFileKtTest {
             UUID.randomUUID().toString()))
 
         val state = BrowserState(tabs = listOf(
-                session1.toTabSessionState(),
+                session1.toTabSessionState().copy(
+                    engineState = EngineState(
+                        engineSessionState = engineSessionState
+                    )
+                ),
                 session2.toTabSessionState(),
                 session3.toTabSessionState()
             ),
             selectedTabId = session1.id
         )
+
         file.writeState(state)
 
         // Read it back
@@ -184,14 +186,11 @@ class AtomicFileKtTest {
             override fun toJSON() = JSONObject()
         }
 
-        val engineSession = mock(EngineSession::class.java)
-        `when`(engineSession.saveState()).thenReturn(engineSessionState)
-
         `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
         `when`(engine.createSessionState(any())).thenReturn(engineSessionState)
 
-        val item = SessionManager.Snapshot.Item(session, engineSession)
+        val item = SessionManager.Snapshot.Item(session, engineSessionState)
 
         val file = AtomicFile(File.createTempFile(
                 UUID.randomUUID().toString(),

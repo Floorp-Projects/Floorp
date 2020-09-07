@@ -59,16 +59,13 @@ object EngineMiddleware {
             WebExtensionMiddleware(),
             TrimMemoryMiddleware(),
             LastAccessMiddleware(),
-            CrashMiddleware(
-                engine,
-                sessionLookup,
-                scope
-            )
+            CrashMiddleware()
         )
     }
 }
 
 @MainThread
+@Suppress("ReturnCount")
 internal fun getOrCreateEngineSession(
     engine: Engine,
     logger: Logger,
@@ -82,8 +79,13 @@ internal fun getOrCreateEngineSession(
         return null
     }
 
+    if (tab.engineState.crashed) {
+        logger.warn("Not creating engine session, since tab is crashed. Waiting for restore.")
+        return null
+    }
+
     tab.engineState.engineSession?.let {
-        logger.debug("Engine Session already exists for tab $tabId")
+        logger.debug("Engine session already exists for tab $tabId")
         return it
     }
 
