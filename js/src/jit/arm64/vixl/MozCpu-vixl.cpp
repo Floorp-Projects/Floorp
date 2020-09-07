@@ -38,6 +38,7 @@
 #    include <linux/membarrier.h>
 #    include <sys/syscall.h>
 #    include <sys/utsname.h>
+#    include <unistd.h>
 #   elif defined(__ANDROID__)
 #    include <sys/syscall.h>
 #    include <unistd.h>
