@@ -4020,7 +4020,7 @@ printing:
     products:
       - 'firefox'
     record_in_processes:
-      - 'content'
+      - 'main'
 
   dialog_via_preview_cancelled:
     bug_numbers:
@@ -4052,7 +4052,7 @@ printing:
     products:
       - 'firefox'
     record_in_processes:
-      - 'content'
+      - 'main'
 
   error:
     bug_numbers:
@@ -4118,7 +4118,7 @@ printing:
     products:
       - 'firefox'
     record_in_processes:
-      - 'content'
+      - 'main'
 
   preview_cancelled:
     bug_numbers:
@@ -4152,7 +4152,7 @@ printing:
     products:
       - 'firefox'
     record_in_processes:
-      - 'content'
+      - 'main'
 
   settings_changed:
     bug_numbers:
