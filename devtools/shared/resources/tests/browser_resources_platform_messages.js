@@ -42,7 +42,7 @@ async function testPlatformMessagesResources() {
 
   let done;
   const onAllMessagesReceived = new Promise(resolve => (done = resolve));
-  const onAvailable = ({ targetFront, resource }) => {
+  const onAvailable = ({ resource }) => {
     if (!expectedMessages.includes(resource.message)) {
       return;
     }

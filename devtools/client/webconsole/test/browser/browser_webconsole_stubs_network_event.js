@@ -85,14 +85,14 @@ async function generateNetworkEventStubs() {
   for (const [key, code] of getCommands()) {
     const noExpectedUpdates = 7;
     const networkEventDone = new Promise(resolve => {
-      addNetworkStub = ({ targetFront, resource }) => {
+      addNetworkStub = ({ resource }) => {
         stubs.set(key, getCleanedPacket(key, getOrderedResource(resource)));
         resolve();
       };
     });
     const networkEventUpdateDone = new Promise(resolve => {
       let updateCount = 0;
-      addNetworkUpdateStub = ({ targetFront, resource }) => {
+      addNetworkUpdateStub = ({ resource }) => {
         const updateKey = `${key} update`;
         // make sure all the updates have been happened
         if (updateCount >= noExpectedUpdates) {
