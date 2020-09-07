@@ -647,14 +647,14 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
   RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
   TextFragmentData textFragmentDataAtStart(aRangeToBeReplaced.StartRef(),
                                            editingHost);
-  const bool insertionPointEqualsOrIsBeforeStartOfText =
+  const bool isInsertionPointEqualsOrIsBeforeStartOfText =
       aRangeToBeReplaced.StartRef().EqualsOrIsBefore(
           textFragmentDataAtStart.StartRef());
   TextFragmentData textFragmentDataAtEnd =
       aRangeToBeReplaced.Collapsed()
           ? textFragmentDataAtStart
           : TextFragmentData(aRangeToBeReplaced.EndRef(), editingHost);
-  const bool insertionPointAfterEndOfText =
+  const bool isInsertionPointEqualsOrAfterEndOfText =
       textFragmentDataAtEnd.EndRef().EqualsOrIsBefore(
           aRangeToBeReplaced.EndRef());
 
@@ -813,7 +813,7 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
     // immediately after a hard line break, the first ASCII white-space should
     // be replaced with an NBSP for making it visible.
     else if (textFragmentDataAtStart.StartsFromHardLineBreak() &&
-             insertionPointEqualsOrIsBeforeStartOfText) {
+             isInsertionPointEqualsOrIsBeforeStartOfText) {
       theString.SetCharAt(kNBSP, 0);
     }
   }
@@ -830,12 +830,12 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
     // If inserting around visible white-spaces, check whether the inclusive
     // next character of end of replaced range is an NBSP or an ASCII
     // white-space.
-    if (pointPositionWithVisibleWhiteSpacesAtStart ==
+    if (pointPositionWithVisibleWhiteSpacesAtEnd ==
             PointPosition::StartOfFragment ||
-        pointPositionWithVisibleWhiteSpacesAtStart ==
+        pointPositionWithVisibleWhiteSpacesAtEnd ==
             PointPosition::MiddleOfFragment) {
       EditorDOMPointInText atNextChar =
-          textFragmentDataAtStart.GetInclusiveNextEditableCharPoint(
+          textFragmentDataAtEnd.GetInclusiveNextEditableCharPoint(
               pointToInsert);
       if (atNextChar.IsSet() && !atNextChar.IsEndOfContainer() &&
           atNextChar.IsCharASCIISpace()) {
@@ -846,7 +846,7 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
     // immediately before block boundary, the last ASCII white-space should
     // be replaced with an NBSP for making it visible.
     else if (textFragmentDataAtEnd.EndsByBlockBoundary() &&
-             insertionPointAfterEndOfText) {
+             isInsertionPointEqualsOrAfterEndOfText) {
       theString.SetCharAt(kNBSP, lastCharIndex);
     }
   }
