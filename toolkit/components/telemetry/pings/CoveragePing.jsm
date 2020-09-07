@@ -47,11 +47,6 @@ log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
 var CoveragePing = Object.freeze({
   async startup() {
-    if (!Services.prefs.getCharPref(REPORTING_ENDPOINT_BASE_PREF, null)) {
-      log.error("no endpoint base set");
-      return;
-    }
-
     if (!Services.prefs.getBoolPref(COVERAGE_ENABLED_PREF, false)) {
       log.debug("coverage not enabled");
       return;
@@ -64,6 +59,11 @@ var CoveragePing = Object.freeze({
 
     if (Services.prefs.getBoolPref(ALREADY_RUN_PREF, false)) {
       log.debug("already run on this profile");
+      return;
+    }
+
+    if (!Services.prefs.getCharPref(REPORTING_ENDPOINT_BASE_PREF, null)) {
+      log.error("no endpoint base set");
       return;
     }
 
