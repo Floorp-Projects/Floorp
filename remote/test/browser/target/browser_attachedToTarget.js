@@ -16,10 +16,16 @@ add_task(
     const attachedEvent = await attachedToTarget;
 
     is(
+      typeof attachedEvent.sessionId,
+      "string",
+      "attachedToTarget contains the session id as string"
+    );
+    is(
       attachedEvent.sessionId,
       sessionId,
       "attachedToTarget and attachToTarget refer to the same session id"
     );
+
     is(
       attachedEvent.targetInfo.type,
       "page",

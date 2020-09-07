@@ -35,7 +35,11 @@ add_task(
       targetId: targetInfo.targetId,
     });
 
-    ok(!!sessionId, "attachToTarget returns a non-empty session id");
+    is(
+      typeof sessionId,
+      "string",
+      "attachToTarget returns the session id as string"
+    );
   },
   { createTab: false }
 );
