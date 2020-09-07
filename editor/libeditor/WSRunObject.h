@@ -361,6 +361,23 @@ class MOZ_STACK_CLASS WSRunScanner final {
                                      const EditorDOMPoint& aPoint);
 
   /**
+   * GetRangesForDeletingAtomicContent() returns the range to delete
+   * aAtomicContent.  If it's followed by invisible white-spaces, they will
+   * be included into the range.
+   */
+  static EditorDOMRange GetRangesForDeletingAtomicContent(
+      const HTMLEditor& aHTMLEditor, const nsIContent& aAtomicContent);
+
+  /**
+   * ShrinkRangeIfStartsFromOrEndsAfterAtomicContent() may shrink aRange if it
+   * starts and/or ends with an atomic content, but the range boundary
+   * is in adjacent text nodes.  Returns true if this modifies the range.
+   */
+  static Result<bool, nsresult> ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
+      const HTMLEditor& aHTMLEditor, nsRange& aRange,
+      const Element* aEditingHost);
+
+  /**
    * GetPrecedingBRElementUnlessVisibleContentFound() scans a `<br>` element
    * backward, but stops scanning it if the scanner finds visible character
    * or something.  In other words, this method ignores only invisible
@@ -868,6 +885,13 @@ class MOZ_STACK_CLASS WSRunScanner final {
         const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
     EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
         const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
+
+    /**
+     * GetNonCollapsedRangeInTexts() returns non-empty range in texts which
+     * is the largest range in aRange if there is some text nodes.
+     */
+    EditorDOMRangeInTexts GetNonCollapsedRangeInTexts(
+        const EditorDOMRange& aRange) const;
 
     /**
      * InvisibleLeadingWhiteSpaceRangeRef() retruns reference to two DOM points,
