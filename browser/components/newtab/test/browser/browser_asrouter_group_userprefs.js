@@ -54,6 +54,7 @@ add_task(async function setup() {
   const msg = ASRouter.state.messages.find(m => m.id === testMessage.id);
   Assert.equal(msg.targeting, "true");
   Assert.equal(msg.groups[0], "messaging-experiments");
+  Assert.ok(ASRouter.isUnblockedMessage(msg), "Message is unblocked");
 
   registerCleanupFunction(async () => {
     await client.db.clear();
@@ -110,7 +111,6 @@ add_task(async function test_heartbeat_tactic_2() {
   );
   Assert.ok(groupState, "Group config found");
   Assert.ok(groupState.enabled, "Group is enabled");
-  Assert.ok(ASRouter.isUnblockedMessage(msg), "Message is unblocked");
 
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   await BrowserTestUtils.loadURI(tab1.linkedBrowser, TEST_URL);
@@ -147,7 +147,8 @@ add_task(async function test_heartbeat_tactic_2() {
   BrowserTestUtils.removeTab(tab2);
   await client.db.clear();
   // Reset group impressions
-  await ASRouter.setGroupState({ id: "messaging-experiments", value: false });
+  await ASRouter.setGroupState({ id: "messaging-experiments", value: true });
+  await ASRouter.setGroupState({ id: "cfr", value: true });
   // Reload the providers
   await ASRouter._updateMessageProviders();
   await ASRouter.loadMessagesFromAllProviders();
