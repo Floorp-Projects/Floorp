@@ -33,12 +33,12 @@
 
 #include "mozilla/Vector.h"
 
+#include "jit/arm64/MozCachingDecoder.h"
 #include "jit/arm64/vixl/Assembler-vixl.h"
 #include "jit/arm64/vixl/Disasm-vixl.h"
 #include "jit/arm64/vixl/Globals-vixl.h"
 #include "jit/arm64/vixl/Instructions-vixl.h"
 #include "jit/arm64/vixl/Instrument-vixl.h"
-#include "jit/arm64/vixl/MozCachingDecoder.h"
 #include "jit/arm64/vixl/Simulator-Constants-vixl.h"
 #include "jit/arm64/vixl/Utils-vixl.h"
 #include "jit/IonTypes.h"

@@ -34,77 +34,54 @@ bool Instruction::IsUncondB() const {
   return Mask(UnconditionalBranchMask) == (UnconditionalBranchFixed | B);
 }
 
-
 bool Instruction::IsCondB() const {
   return Mask(ConditionalBranchMask) == (ConditionalBranchFixed | B_cond);
 }
-
 
 bool Instruction::IsBL() const {
   return Mask(UnconditionalBranchMask) == (UnconditionalBranchFixed | BL);
 }
 
-
 bool Instruction::IsBR() const {
-  return Mask(UnconditionalBranchToRegisterMask) == (UnconditionalBranchToRegisterFixed | BR);
+  return Mask(UnconditionalBranchToRegisterMask) ==
+         (UnconditionalBranchToRegisterFixed | BR);
 }
-
 
 bool Instruction::IsBLR() const {
-  return Mask(UnconditionalBranchToRegisterMask) == (UnconditionalBranchToRegisterFixed | BLR);
+  return Mask(UnconditionalBranchToRegisterMask) ==
+         (UnconditionalBranchToRegisterFixed | BLR);
 }
 
+bool Instruction::IsTBZ() const { return Mask(TestBranchMask) == TBZ; }
 
-bool Instruction::IsTBZ() const {
-  return Mask(TestBranchMask) == TBZ;
-}
-
-
-bool Instruction::IsTBNZ() const {
-  return Mask(TestBranchMask) == TBNZ;
-}
-
+bool Instruction::IsTBNZ() const { return Mask(TestBranchMask) == TBNZ; }
 
 bool Instruction::IsCBZ() const {
   return Mask(CompareBranchMask) == CBZ_w || Mask(CompareBranchMask) == CBZ_x;
 }
 
-
 bool Instruction::IsCBNZ() const {
   return Mask(CompareBranchMask) == CBNZ_w || Mask(CompareBranchMask) == CBNZ_x;
 }
 
-
-bool Instruction::IsLDR() const {
-  return Mask(LoadLiteralMask) == LDR_x_lit;
-}
-
+bool Instruction::IsLDR() const { return Mask(LoadLiteralMask) == LDR_x_lit; }
 
 bool Instruction::IsNOP() const {
   return Mask(SystemHintMask) == HINT && ImmHint() == NOP;
 }
 
-
 bool Instruction::IsCSDB() const {
   return Mask(SystemHintMask) == HINT && ImmHint() == CSDB;
 }
 
+bool Instruction::IsADR() const { return Mask(PCRelAddressingMask) == ADR; }
 
-bool Instruction::IsADR() const {
-  return Mask(PCRelAddressingMask) == ADR;
-}
-
-
-bool Instruction::IsADRP() const {
-  return Mask(PCRelAddressingMask) == ADRP;
-}
-
+bool Instruction::IsADRP() const { return Mask(PCRelAddressingMask) == ADRP; }
 
 bool Instruction::IsMovz() const {
   return (Mask(MoveWideImmediateMask) == MOVZ_x) ||
          (Mask(MoveWideImmediateMask) == MOVZ_w);
 }
-
 
 bool Instruction::IsMovk() const {
   return (Mask(MoveWideImmediateMask) == MOVK_x) ||
@@ -115,24 +92,22 @@ bool Instruction::IsBranchLinkImm() const {
   return Mask(UnconditionalBranchFMask) == (UnconditionalBranchFixed | BL);
 }
 
-
 bool Instruction::IsTargetReachable(const Instruction* target) const {
-    VIXL_ASSERT(((target - this) & 3) == 0);
-    int offset = (target - this) >> kInstructionSizeLog2;
-    switch (BranchType()) {
-      case CondBranchType:
-        return IsInt19(offset);
-      case UncondBranchType:
-        return IsInt26(offset);
-      case CompareBranchType:
-        return IsInt19(offset);
-      case TestBranchType:
-        return IsInt14(offset);
-      default:
-        VIXL_UNREACHABLE();
-    }
+  VIXL_ASSERT(((target - this) & 3) == 0);
+  int offset = (target - this) >> kInstructionSizeLog2;
+  switch (BranchType()) {
+    case CondBranchType:
+      return IsInt19(offset);
+    case UncondBranchType:
+      return IsInt26(offset);
+    case CompareBranchType:
+      return IsInt19(offset);
+    case TestBranchType:
+      return IsInt14(offset);
+    default:
+      VIXL_UNREACHABLE();
+  }
 }
-
 
 ptrdiff_t Instruction::ImmPCRawOffset() const {
   ptrdiff_t offset;
@@ -147,9 +122,7 @@ ptrdiff_t Instruction::ImmPCRawOffset() const {
   return offset;
 }
 
-void
-Instruction::SetImmPCRawOffset(ptrdiff_t offset)
-{
+void Instruction::SetImmPCRawOffset(ptrdiff_t offset) {
   if (IsPCRelAddressing()) {
     // ADR and ADRP. We're encoding a raw offset here.
     // See also SetPCRelImmTarget().
@@ -162,12 +135,11 @@ Instruction::SetImmPCRawOffset(ptrdiff_t offset)
 
 // Is this a stack pointer synchronization instruction as inserted by
 // MacroAssembler::syncStackPtr()?
-bool
-Instruction::IsStackPtrSync() const
-{
-    // The stack pointer sync is a move to the stack pointer.
-    // This is encoded as 'add sp, Rs, #0'.
-    return IsAddSubImmediate() && Rd() == js::jit::Registers::sp && ImmAddSub() == 0;
+bool Instruction::IsStackPtrSync() const {
+  // The stack pointer sync is a move to the stack pointer.
+  // This is encoded as 'add sp, Rs, #0'.
+  return IsAddSubImmediate() && Rd() == js::jit::Registers::sp &&
+         ImmAddSub() == 0;
 }
 
 // Skip over a constant pool at |this| if there is one.
@@ -178,34 +150,32 @@ Instruction::IsStackPtrSync() const
 // This function does not skip constant pools with a natural guard branch. It
 // is assumed that anyone inspecting the instruction stream understands about
 // branches that were inserted naturally.
-const Instruction*
-Instruction::skipPool() const
-{
-    // Artificial pool guards can only be B (rather than BR), and they must be
-    // forward branches.
-    if (!IsUncondB() || ImmUncondBranch() <= 0)
-        return this;
+const Instruction* Instruction::skipPool() const {
+  // Artificial pool guards can only be B (rather than BR), and they must be
+  // forward branches.
+  if (!IsUncondB() || ImmUncondBranch() <= 0) {
+    return this;
+  }
 
-    // Check for a constant pool header which has the high 16 bits set. See
-    // struct PoolHeader. Bit 15 indicates a natural pool guard when set. It
-    // must be clear which indicates an artificial pool guard.
-    const Instruction *header = InstructionAtOffset(kInstructionSize);
-    if (header->Mask(0xffff8000) != 0xffff0000)
-        return this;
+  // Check for a constant pool header which has the high 16 bits set. See
+  // struct PoolHeader. Bit 15 indicates a natural pool guard when set. It
+  // must be clear which indicates an artificial pool guard.
+  const Instruction* header = InstructionAtOffset(kInstructionSize);
+  if (header->Mask(0xffff8000) != 0xffff0000) {
+    return this;
+  }
 
-    // OK, this is an artificial jump around a constant pool.
-    return ImmPCOffsetTarget();
+  // OK, this is an artificial jump around a constant pool.
+  return ImmPCOffsetTarget();
 }
-
 
 void Instruction::SetBits32(int msb, int lsb, unsigned value) {
   uint32_t me;
   memcpy(&me, this, sizeof(me));
-  uint32_t new_mask = (1 << (msb+1)) - (1 << lsb);
+  uint32_t new_mask = (1 << (msb + 1)) - (1 << lsb);
   uint32_t keep_mask = ~new_mask;
   me = (me & keep_mask) | ((value << lsb) & new_mask);
   memcpy(this, &me, sizeof(me));
 }
 
-
-} // namespace vixl
+}  // namespace vixl
