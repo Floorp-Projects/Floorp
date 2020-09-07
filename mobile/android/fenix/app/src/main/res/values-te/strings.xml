@@ -78,6 +78,24 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">ఇప్పుడు కాదు</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">లంకెలను Firefox స్వయంచాలకంగా అనువర్తనాలలో తెరిచేలా మీరు అమర్చుకోవచ్చు.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">అమరికలకు వెళ్లు</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">విస్మరించు</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">అమరికలకు వెళ్లు</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">విస్మరించు</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">ఎంపికలు చూడండి</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">విస్మరించు</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">కొత్త ట్యాబు</string>
@@ -485,6 +503,21 @@
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tab">%d ట్యాబు</string>
 
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">ఇటీవల మూసివేసిన ట్యాబులు ఏమీ ఇక్కడ లేవు</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">ట్యాబుల మూసివేత</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">మానవీయంగా</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">ఒక రోజు తరువాత</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">ఒక వారం తరువాత</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">ఒక నెల తరువాత</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">తెరిచివున్న ట్యాబులు</string>
@@ -504,6 +537,10 @@
     <string name="tab_tray_menu_item_save">సేకరణకు భద్రపరుచు</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">అన్ని ట్యాబులను పంచుకో</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">ఇటీవల మూసిన ట్యాబులు</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">ట్యాబు అమరికలు</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">ట్యాబులన్నీ మూసివేయి</string>
     <!-- Shortcut action to open new tab -->
@@ -551,6 +588,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">తీసివేయి</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">చరిత్ర నుండి తొలగించు</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (అంతరంగిక రీతి)</string>
 
@@ -1527,7 +1566,16 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">సరే, అర్థమయ్యింది</string>
 
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">ఎక్కువగా చూసిన సైట్లను చూపించు</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">తొలగించు</string>
 
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">%s నుండి ఎక్కువగా పొందండి.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">మీకు ముఖ్యమైన విషయాలను సేకరించండి</string>
     </resources>

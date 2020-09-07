@@ -1467,6 +1467,8 @@
     <string name="synced_tabs_reauth">Tornatz vos autentificar.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Activatz la sincronizacion dels onglets.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Avètz pas cap d’autres onglets dubèrts sus Firefox de vòstres autres periferics.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Vejatz la lista dels onglets dels autres periferics.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

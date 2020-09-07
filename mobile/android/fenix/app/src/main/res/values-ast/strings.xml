@@ -18,7 +18,7 @@
     <string name="no_open_tabs_description">Equí van amosase les llingüetes abiertes.</string>
 
     <!-- No Private Tabs Message Description -->
-    <string name="no_private_tabs_description">Equí van amosase les llingüetes abiertes.</string>
+    <string name="no_private_tabs_description">Equí van amosase les llingüetes privaes abiertes.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 llingüeta abierta. Toca pa cambiar a otra.</string>
@@ -53,7 +53,7 @@
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s llimpia los historiales cuando coles de l\'aplicación o zarres toles llingüetes privaes. Magar qu\'esto nun t\'anonimiza n\'internet, fai que la to actividá en llinia seya fácil d\'anubrir a otros usuarios qu\'usen el preséu.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s llimpia los historiales de restolar en privao cuando coles de l\'aplicación o zarres toles llingüetes privaes. Magar qu\'esto nun t\'anonimiza n\'internet, fai que la to actividá en llinia seya fácil d\'anubrir a otros usuarios qu\'usen el preséu.</string>
     <string name="private_browsing_common_myths">Mitos comunes tocante al restolar en privao</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Desaniciar la sesión</string>
@@ -543,7 +543,7 @@
     <!-- Text for the menu button to rename a collection -->
     <string name="collection_rename">Renomar la coleición</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">Abrir les llingüetes</string>
+    <string name="collection_open_tabs">Abrir lo qu\'heba</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Desaniciar</string>
 
@@ -808,7 +808,7 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Sesión de restolar en privao</string>
+    <string name="notification_pbm_channel_name">Sesiones de restolar en privao</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Toca pa zarrar les llingüetes privaes</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
@@ -995,7 +995,7 @@
     <string name="onboarding_tracking_protection_header_2">Privacidá automática</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Los axustes de privacidá y seguranza bloquien rastrexadores, malware y compañes que t\'escorren.</string>
+    <string name="onboarding_tracking_protection_description_2">Los axustes de privacidá y seguranza bloquien rastrexadores, malware y compañes que te siguen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Estándar (por defeutu)</string>
     <!-- text for standard blocking option button description -->
@@ -1450,6 +1450,11 @@
     <string name="synced_tabs_enable_tab_syncing">Activa la sincronización de llingüetes, por favor.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Nun tienes llingüetes abiertes nel Firefox de los demás preseos de to.</string>
+
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Ve una llista de les llingüetes que tienes nos demás preseos de to.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Aniciar sesión pa sincronizar</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

@@ -68,8 +68,20 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Όχι τώρα</string>
 
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Μετάβαση στις ρυθμίσεις</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Απόρριψη</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Μετάβαση στις ρυθμίσεις</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Απόρριψη</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Εμφάνιση επιλογών</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Απόρριψη</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -455,12 +467,17 @@
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Πρόσφατα κλεισμένες καρτέλες</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Εμφάνιση πλήρους ιστορικού</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tabs">%d καρτέλες</string>
     <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tab">%d καρτέλα</string>
+
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Καμία πρόσφατα κλεισμένη καρτέλα</string>
 
     <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
@@ -734,6 +751,8 @@
     <string name="tracking_protection_off">Ανενεργό</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Αποδοχή ήχου και βίντεο</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Φραγή ήχου και βίντεο μόνο σε σύνδεση δεδομένων κινητής</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Η αναπαραγωγή ήχων/βίντεο θα γίνεται σε Wi-Fi</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
@@ -1137,6 +1156,8 @@
     <string name="enhanced_tracking_protection_allowed">Επιτρέπεται</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Ιχνηλάτες κοινωνικών δικτύων</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Περιορίζει την ικανότητα των κοινωνικών δικτύων να παρακολουθούν τη δραστηριότητά σας στο διαδίκτυο.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookies ιχνηλάτησης μεταξύ ιστοσελίδων</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -1242,6 +1263,8 @@
     <string name="preferences_passwords_exceptions">Εξαιρέσεις</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">Εδώ εμφανίζονται οι συνδέσεις και οι κωδικοί πρόσβασης που δεν αποθηκεύονται.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Οι συνδέσεις και οι κωδικοί πρόσβασης δεν θα αποθηκευτούν για αυτές τις ιστοσελίδες.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Διαγραφή όλων των εξαιρέσεων</string>
     <!-- Hint for search box in logins list -->
@@ -1344,6 +1367,8 @@
     <string name="search_add_custom_engine_error_existing_name">Η μηχανή αναζήτησης με το όνομα “%s” υπάρχει ήδη.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Εισάγετε νήμα αναζήτησης</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Βεβαιωθείτε ότι το νήμα αναζήτησης συμφωνεί με την μορφή του παραδείγματος</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">Σφάλμα σύνδεσης στο “%s”</string>
 

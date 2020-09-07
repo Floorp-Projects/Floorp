@@ -33,9 +33,19 @@
     <string name="tab_tray_add_new_collection_name">Ime</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Izberi zbirko</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Izhod iz večizbirnega načina</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Shrani izbrane zavihke v zbirko</string>
 
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">Izbran %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Neizbran %1$s</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Večizbirni način končan</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Vstopili ste v večizbirni način, izberite zavihke, ki jih želite shraniti v zbirko</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Izbrano</string>
 

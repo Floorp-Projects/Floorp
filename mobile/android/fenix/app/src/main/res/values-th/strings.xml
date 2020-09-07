@@ -628,6 +628,10 @@
     <!-- Text shown when no download exists -->
     <string name="download_empty_message">ไม่มีการดาวน์โหลด</string>
 
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">เลือกอยู่ %1$d</string>
+
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">ขออภัย %1$s ไม่สามารถโหลดหน้านั้นได้</string>

@@ -1096,7 +1096,7 @@
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (recomendada)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Estricto</string>
+    <string name="onboarding_tracking_protection_strict_option">Estricta</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description_2">Bloquea más rastreadores, anuncios y ventanas emergentes. Las páginas se cargan más rápido, pero podés perder cierta funcionalidad.</string>
     <!-- text for the toolbar position card header
@@ -1470,7 +1470,7 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Bienvenido a un %s completamente nuevo</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Te espera un navegador completamente rediseñado, con un rendimiento y funciones mejoradas para ayudarte a hacer más en línea.\n\nEsperá mientras actualizamos %s con tu</string>
+    <string name="migration_description">Te espera un navegador completamente rediseñado, con un rendimiento y funciones mejoradas para ayudarte a hacer más en línea.\n\nEsperá mientras actualizamos %s con tus</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Actualizando %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

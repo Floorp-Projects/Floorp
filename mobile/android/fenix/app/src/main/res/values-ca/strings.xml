@@ -78,6 +78,28 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Ara no</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Podeu fer que el Firefox obri automàticament els enllaços en aplicacions.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Vés als paràmetres</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Descarta</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Es necessita accés a la càmera. Aneu als paràmetres de l’Android, toqueu els permisos i trieu permetre.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Vés als paràmetres</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Descarta</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Feu que les pestanyes obertes es tanquin automàticament si no s’han vist des de fa un dia, una setmana o un mes.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Mostra les opcions</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Descarta</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Pestanya nova</string>
@@ -266,6 +288,8 @@
     <string name="preferences_toolbar">Barra d’eines</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Inici</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalitza</string>
     <!-- Preference description for banner about signing in -->
@@ -471,6 +495,31 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Tanca</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Pestanyes tancades recentment</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Mostra tot l’historial</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d pestanyes</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d pestanya</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">No hi ha cap pestanya tancada recentment</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Tanca les pestanyes</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Manualment</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Al cap d’un dia</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Al cap d’una setmana</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Al cap d’un mes</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Pestanyes obertes</string>
@@ -490,6 +539,10 @@
     <string name="tab_tray_menu_item_save">Desa a la col·lecció</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Comparteix totes les pestanyes</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Pestanyes tancades recentment</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Paràmetres de les pestanyes</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Tanca totes les pestanyes</string>
     <!-- Shortcut action to open new tab -->
@@ -536,6 +589,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Elimina</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Suprimeix de l’historial</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (mode privat)</string>
 
@@ -742,10 +797,8 @@
     <string name="collections_header">Col·leccions</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menú de col·lecció</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Recolliu tot allò que us insteressa</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Agrupeu les cerques, els llocs i les pestanyes similars per accedir-hi ràpidament en el futur.</string>
+    <string name="no_collections_description2">Recolliu tot allò que us insteressa.\nAgrupeu les cerques, els llocs i les pestanyes similars per accedir-hi ràpidament en el futur.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Trieu les pestanyes</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -995,8 +1048,8 @@
     <string name="onboarding_whats_new_description">Teniu preguntes sobre el redisseny del %s? Voleu saber què ha canviat?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Vegeu les respostes aquí</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Traieu tot el profit al %s.</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Comenceu a sincronitzar les adreces d’interès, les contrasenyes i molt més amb el vostre compte del Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Més informació</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1500,4 +1553,18 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Entesos</string>
 
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Mostra els llocs més visitats</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Elimina</string>
+
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Traieu tot el profit al %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Recolliu tot allò que us insteressa</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agrupeu les cerques, els llocs i les pestanyes similars per accedir-hi ràpidament en el futur.</string>
     </resources>

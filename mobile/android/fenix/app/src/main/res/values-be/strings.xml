@@ -39,6 +39,8 @@
     <string name="tab_tray_collection_button_multiselect_content_description">Захаваць абраныя карткі ў калекцыю</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">Вылучана %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Зняты выбар %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">Пакінуты рэжым мультывыбару</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
@@ -52,6 +54,9 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Вы ў прыватным сеансе</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">        %1$s выдаляе гісторыю пошуку і аглядання з прыватных картак, калі вы закрываеце іх ці выходзіце з праграмы. Гэта не робіць вас ананімным для вэб-сайтаў ці вашага правайдара, але дазваляе трымаць у сакрэце вашу сеціўную дзейнасць ад кагосьці, хто карыстаецца вашай прыладай.</string>
     <string name="private_browsing_common_myths">Шырокавядомыя забабоны пра прыватнае агляданне</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Выдаліць сеанс</string>
@@ -66,12 +71,15 @@
 
     <!-- Search widget "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Знаходзьце Firefox хутчэй. Дадайце віжэт на галоўны экран.</string>
+    <string name="search_widget_cfr_message">Знаходзьце Firefox хутчэй. Дадайце віджэт на галоўны экран.</string>
     <!-- Text for the positive button -->
     <string name="search_widget_cfr_pos_button_text">Дадаць віджэт</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Не зараз</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Вы можаце наладзіць Firefox аўтаматычна адкрываць спасылкі ў праграмах.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Перайсці ў налады</string>
     <!-- Text for the negative action button -->
@@ -86,6 +94,8 @@
 
     <!-- Text for the banner message to tell users about our auto close feature. -->
     <string name="tab_tray_close_tabs_banner_message">Наладзіць аўтаматычнае закрыццё картак, якія не праглядаліся на працягу дня, месяца ці года.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Паглядзець параметры</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Адхіліць</string>
 
@@ -353,6 +363,8 @@
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Атрыманыя карткі</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Апавяшчэнні для картак, атрыманых ад іншых прылад Firefox.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Атрыманая картка</string>
     <!-- When multiple tabs have been received -->
@@ -371,8 +383,13 @@
     <string name="preferences_tracking_protection_exceptions_description">Ахова ад сачэння выключана на гэтых сайтах</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Уключыць для ўсіх сайтаў</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Выключэнні дазваляюць адключыць функцыю аховы ад сачэння для абраных сайтаў.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Даведацца больш</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Выключана паўсюль. Перайдзіце ў Налады, каб уключыць.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Тэлеметрыя</string>
@@ -401,6 +418,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Выдаліць уліковы запіс</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Адскануйце QR-код на <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Адкрыць камеру</string>
 
@@ -456,6 +476,29 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Закрыць</string>
 
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Паказаць усю гісторыю</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d карткі(-ак)</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d картка</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Тут няма нядаўна закрытых картак</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Закрываць карткі</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Уручную</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Праз дзень</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Праз тыдзень</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Праз месяц</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Адкрытыя карткі</string>
@@ -476,6 +519,10 @@
     <string name="tab_tray_menu_item_save">Захаваць у калекцыі</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Падзяліцца ўсімі карткамі</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Нядаўна закрытыя карткі</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Налады картак</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Закрыць усе карткі</string>
     <!-- Shortcut action to open new tab -->
@@ -521,8 +568,13 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Выдаліць</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Выдаліць з гісторыі</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Прыватны рэжым)</string>
+
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Захаваць</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -564,6 +616,13 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Няма гісторыі</string>
 
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">Тут яшчэ няма спамповак</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">Вылучана: %1$d</string>
+
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Выбачайце. %1$s не можа загрузіць гэтую старонку.</string>
@@ -591,6 +650,8 @@
     <string name="bookmark_select_folder">Выбраць папку</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Вы ўпэўнены, што жадаеце выдаліць гэту папку?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s выдаліць вылучаныя элементы.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s выдалена</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -657,6 +718,10 @@
     <string name="permissions_header">Дазволы</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Перайсці ў налады</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Панэль хуткіх налад</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Рэкамендуецца</string>
     <!-- button that allows editing site permissions settings -->
@@ -695,6 +760,8 @@
     <string name="tracking_protection_off">Выключана</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Дазволіць гук і відэа</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Аўдыё і відэа будуць прайгравацца праз Wi-Fi</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Блакаваць толькі гук</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
@@ -709,6 +776,8 @@
     <string name="collections_header">Калекцыі</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Меню калекцыі</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Збірайце усё важнае для вас.\nГрупуйце падобныя пошукавыя запыты, сайты і карткі, каб потым хутчэй імі карыстацца.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Выберыце карткі</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -731,6 +800,8 @@
     <string name="create_collection_save_to_collection_tab_selected">Выбрана картка: %d</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Карткі захаваны!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Калекцыя захаваная!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Картка захавана!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -840,6 +911,10 @@
     <string name="qr_scanner_dialog_negative">АДМОВІЦЬ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Вы ўпэўнены, што хочаце выдаліць %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Выдаленне гэтай карткі прывядзе да выдалення ўсёй калекцыі. Вы можаце стварыць новыя калекцыі ў любы час.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Выдаліць %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Выдаліць</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
@@ -881,6 +956,8 @@
     <string name="preferences_delete_browsing_data_cookies_subtitle">Вы выйдзеце з большасці сайтаў</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Кэшаваныя відарысы і файлы</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Вызваліць месца</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Дазволы для сайтаў</string>
     <!-- Text for the button to delete browsing data -->
@@ -942,6 +1019,10 @@
     <string name="onboarding_whats_new_description">Маеце пытанні па абноўленым выглядзе %s? Хочаце ведаць, што змянілася?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Адказы тут</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Пачніце сінхранізаваць закладкі, паролі і шмат іншага праз свой уліковы запіс Firefox.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Падрабязней</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Так, увайсці</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1107,6 +1188,8 @@
     <string name="etp_tracking_content_title">Змест з элементамі сачэння</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ахова ўключана на гэтым сайце</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Ахова для гэтага сайта ВЫКЛЮЧАНА</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Узмоцненая ахова ад сачэння выключана на гэтых сайтах</string>
 
@@ -1119,6 +1202,10 @@
     <string name="about_open_source_licenses">Выкарыстаныя бібліятэкі з адкрытым зыходным кодам</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Што новага ў %s</string>
+
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Бібліятэкі OSS</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Падтрымка</string>
@@ -1134,6 +1221,8 @@
 
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Бібліятэкі, якімі мы карыстаемся</string>
+
+    <string name="about_debug_menu_toast_done">Меню адладкі ўключана</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 картка</string>
@@ -1185,11 +1274,19 @@
     <string name="preferences_passwords_sync_logins_sign_in">Увайсці ў сінхранізацыю</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Захаваныя лагіны</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Лагіны, якія вы захаваеце альбо сінхранізуеце праз %s, з’явяцца тут.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Даведацца больш пра сінхранізацыю.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Выключэнні</string>
 
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Не захаваныя лагіны і паролі з’явяцца тут.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Лагіны і паролі не будуць захаваны для гэтых сайтаў.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Выдаліць усе выключэнні</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Шукаць лагіны</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1206,9 +1303,13 @@
     <string name="preferences_passwords_saved_logins_enter_pin">Паўторна ўвядзіце свой PIN-код</string>
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">Разблакуйце, каб пабачыць захаваныя лагіны</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Гэта злучэнне неабароненае. Пры аўтарызацыі Вашы лагіны могуць быць перахопленыя.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Даведацца больш</string>
 
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Ці жадаеце Вы, каб %s захаваў гэты лагін?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Захаваць</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
@@ -1225,6 +1326,8 @@
     <string name="saved_login_copy_username">Капіяваць імя карыстальніка</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Капіяваць сайт</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Адкрыць сайт у браўзеры</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Паказаць пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1234,8 +1337,18 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Абараніце свае лагіны і паролі</string>
 
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Наладзьце графічны ключ, пін ці пароль для блакавання прылады, каб абараніць захаваныя лагіны і паролі ад крадзяжу, калі Вашай прыладай завалодае хтосьці іншы.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Пазней</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Наладзіць зараз</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Разблакаваць прыладу</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Маштабаванне на ўсіх сайтах</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Актываваць, каб дазволіць маштабаванне нават на тых вэб-сайтах, якія гэта забараняюць.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Назва (А-Я)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1243,6 +1356,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Дадаць пашукавік</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Змяніць пашукавік</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Дадаць</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
@@ -1257,6 +1372,10 @@
     <string name="search_add_custom_engine_label_other">Іншы</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Назва</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Пошукавы радок</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Змяніць запыт на “%s”. Прыклад:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Падрабязней</string>
 
@@ -1269,6 +1388,22 @@
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Увядзіце радок пошуку</string>
 
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Пераканайцеся, што пошукавы запыт адпавядае Ўзорнаму фармату</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Памылка злучэння з “%s”</string>
+
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">Пашукавік %s створаны</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">Пашукавік %s захаваны</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Пашукавік %s выдалены</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Вітаем у найноўшым %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Вас чакае цалкам перапрацаваны аглядальнік з палепшанай прадукцыйнасцю і функцыямі, дзякуючы якім Вы зможаце зрабіць больш у Сеціве. \n\nПачакайце, пакуль мы абновім %s з Вашым(і)</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Абнаўленне %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1292,8 +1427,16 @@
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Не бяспечнае злучэнне</string>
 
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Ці ўпэўнены Вы, што хочаце выдаліць усе дазволы на ўсіх сайтах?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Ці ўпэўнены Вы, што хочаце выдаліць усе дазволы для гэтага сайта?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Ці ўпэўнены, што хочаце выдаліць гэты дазвол для гэтага сайта?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Няма выняткаў для сайта</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Ці ўпэўнены Вы, што хочаце выдаліць гэту закладку?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Дадаць да папулярных сайтаў</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
@@ -1312,6 +1455,10 @@
     <string name="saved_login_hostname_description">Тэкставае поле для рэдагавання вэб-адраса для ўваходу ў сістэму.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Тэкставае поле для рэдагавання імені карыстальніка для ўваходу ў сістэму.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Тэкставае поле для рэдагавання пароля для ўваходу ў сістэму.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Захаваць змены ва ўваходных даных.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Адмяніць змены</string>
     <!--  The page title for editing a saved login. -->
@@ -1323,15 +1470,33 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Гаварыце</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Лагін з такім імем карыстальніка ўжо існуе</string>
+
     <!-- Synced Tabs -->
    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Падключыць іншую прыладу.</string>
 
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Калі ласка, аўтарызуйцеся яшчэ раз.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Калі ласка, уключыце сінхранізацыю картак.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Пабачыць спіс картак з іншых прылад.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Увайсці ў сінхранізацыю</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Няма адкрытых картак</string>
+
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, зразумела</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Паказаць найбольш наведаныя сайты</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Выдаліць</string>
 
     <!-- depcrecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
