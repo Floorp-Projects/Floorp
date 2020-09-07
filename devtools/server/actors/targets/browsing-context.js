@@ -306,6 +306,18 @@ const browsingContextTargetPrototype = {
     TargetActorRegistry.registerTargetActor(this);
   },
 
+  addWatcherDataEntry(type, entries) {
+    if (type == "resources") {
+      this.watchTargetResources(entries);
+    }
+  },
+
+  removeWatcherDataEntry(type, entries) {
+    if (type == "resources") {
+      this.unwatchTargetResources(entries);
+    }
+  },
+
   /**
    * These two methods will create and destroy resource watchers
    * for each resource type. This will end up calling `notifyResourceAvailable`

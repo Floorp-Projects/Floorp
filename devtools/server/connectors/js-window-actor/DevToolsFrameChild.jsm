@@ -148,15 +148,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
 
     // Create one Target actor for each prefix/client which listen to frames
-    for (const [
-      watcherActorID,
-      { targets, connectionPrefix, browserId, resources },
-    ] of watchedDataByWatcherActor) {
+    for (const [watcherActorID, watchedData] of watchedDataByWatcherActor) {
+      const { connectionPrefix, browserId } = watchedData;
       if (
-        targets.includes("frame") &&
+        watchedData.targets.includes("frame") &&
         shouldNotifyWindowGlobal(this.manager, browserId)
       ) {
-        this._createTargetActor(watcherActorID, connectionPrefix, resources);
+        this._createTargetActor(watcherActorID, connectionPrefix, watchedData);
       }
     }
   }
@@ -169,14 +167,12 @@ class DevToolsFrameChild extends JSWindowActorChild {
    * @param String parentConnectionPrefix
    *        The prefix of the DevToolsServerConnection of the Watcher Actor.
    *        This is used to compute a unique ID for the target actor.
-   * @param Set<String> initialWatchedResources
-   *        The list of resources already watched by the watcher actor.
+   * @param Object initialData
+   *        All data managed by the Watcher Actor and WatcherRegistry.jsm, containing
+   *        target types, resources types to be listened as well as breakpoints and any
+   *        other data meant to be shared across processes and threads.
    */
-  _createTargetActor(
-    watcherActorID,
-    parentConnectionPrefix,
-    initialWatchedResources
-  ) {
+  _createTargetActor(watcherActorID, parentConnectionPrefix, initialData) {
     if (this._connections.get(watcherActorID)) {
       throw new Error(
         "DevToolsFrameChild _createTargetActor was called more than once" +
@@ -206,9 +202,9 @@ class DevToolsFrameChild extends JSWindowActorChild {
       actor: targetActor,
     });
 
-    // Start listening for resources that are already being watched
-    if (initialWatchedResources.length > 0) {
-      targetActor.watchTargetResources(initialWatchedResources);
+    // Pass initialization data to the target actor
+    for (const type in initialData) {
+      targetActor.addWatcherDataEntry(type, initialData[type]);
     }
 
     // Immediately queue a message for the parent process,
@@ -367,13 +363,23 @@ class DevToolsFrameChild extends JSWindowActorChild {
         const { watcherActorID } = message.data;
         return this._destroyTargetActor(watcherActorID);
       }
-      case "DevToolsFrameParent:watchResources": {
-        const { watcherActorID, browserId, resourceTypes } = message.data;
-        return this._watchResources(watcherActorID, browserId, resourceTypes);
+      case "DevToolsFrameParent:addWatcherDataEntry": {
+        const { watcherActorID, browserId, type, entries } = message.data;
+        return this._addWatcherDataEntry(
+          watcherActorID,
+          browserId,
+          type,
+          entries
+        );
       }
-      case "DevToolsFrameParent:unwatchResources": {
-        const { watcherActorID, browserId, resourceTypes } = message.data;
-        return this._unwatchResources(watcherActorID, browserId, resourceTypes);
+      case "DevToolsFrameParent:removeWatcherDataEntry": {
+        const { watcherActorID, browserId, type, entries } = message.data;
+        return this._removeWatcherDataEntry(
+          watcherActorID,
+          browserId,
+          type,
+          entries
+        );
       }
       case "DevToolsFrameParent:packet":
         return this.emit("packet-received", message);
@@ -407,7 +413,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     return targetActor;
   }
 
-  _watchResources(watcherActorID, browserId, resourceTypes) {
+  _addWatcherDataEntry(watcherActorID, browserId, type, entries) {
     const targetActor = this._getTargetActorForWatcherActorID(
       watcherActorID,
       browserId
@@ -417,17 +423,17 @@ class DevToolsFrameChild extends JSWindowActorChild {
         `No target actor for this Watcher Actor ID:"${watcherActorID}" / BrowserId:${browserId}`
       );
     }
-    return targetActor.watchTargetResources(resourceTypes);
+    return targetActor.addWatcherDataEntry(type, entries);
   }
 
-  _unwatchResources(watcherActorID, browserId, resourceTypes) {
+  _removeWatcherDataEntry(watcherActorID, browserId, type, entries) {
     const targetActor = this._getTargetActorForWatcherActorID(
       watcherActorID,
       browserId
     );
-    // By the time we are calling unwatchResource, the target may already have been destroyed.
+    // By the time we are calling this, the target may already have been destroyed.
     if (targetActor) {
-      return targetActor.unwatchTargetResources(resourceTypes);
+      return targetActor.removeWatcherDataEntry(type, entries);
     }
     return null;
   }
