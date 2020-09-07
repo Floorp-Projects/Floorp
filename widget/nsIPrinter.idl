@@ -46,6 +46,13 @@ interface nsIPrinter : nsISupports
 
   /**
    * Returns a Promise that resolves to true or false to indicate whether this
+   * printer supports monochrome printing.
+   */
+  [implicit_jscontext]
+  readonly attribute Promise supportsMonochrome;
+
+  /**
+   * Returns a Promise that resolves to true or false to indicate whether this
    * printer supports collation.
    */
   [implicit_jscontext]

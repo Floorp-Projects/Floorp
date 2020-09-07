@@ -28,58 +28,78 @@ already_AddRefed<nsPrinterWin> nsPrinterWin::Create(const nsAString& aName) {
   return do_AddRef(new nsPrinterWin(aName));
 }
 
-PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
+template <typename Callback>
+static bool WithDefaultDevMode(const nsString& aName,
+                               nsTArray<uint8_t>& aStorage,
+                               Callback&& aCallback) {
   nsHPRINTER hPrinter = nullptr;
-  BOOL status = ::OpenPrinterW(mName.get(), &hPrinter, nullptr);
+  BOOL status = ::OpenPrinterW(aName.get(), &hPrinter, nullptr);
   if (NS_WARN_IF(!status)) {
-    return PrintSettingsInitializer();
+    return false;
   }
   nsAutoPrinter autoPrinter(hPrinter);
-
   // Allocate devmode storage of the correct size.
   LONG bytesNeeded = ::DocumentPropertiesW(nullptr, autoPrinter.get(),
-                                           mName.get(), nullptr, nullptr, 0);
+                                           aName.get(), nullptr, nullptr, 0);
   if (NS_WARN_IF(bytesNeeded < 0)) {
-    return PrintSettingsInitializer();
+    return false;
   }
 
-  nsTArray<uint8_t> devmodeWStorage(bytesNeeded);
-  devmodeWStorage.SetLength(bytesNeeded);
-  DEVMODEW* devmode = reinterpret_cast<DEVMODEW*>(devmodeWStorage.Elements());
-  LONG ret = ::DocumentPropertiesW(nullptr, autoPrinter.get(), mName.get(),
+  aStorage.SetLength(bytesNeeded);
+  auto* devmode = reinterpret_cast<DEVMODEW*>(aStorage.Elements());
+  LONG ret = ::DocumentPropertiesW(nullptr, autoPrinter.get(), aName.get(),
                                    devmode, nullptr, DM_OUT_BUFFER);
   if (NS_WARN_IF(ret != IDOK)) {
-    return PrintSettingsInitializer();
+    return false;
   }
 
-  nsAutoHDC printerDc(::CreateICW(nullptr, mName.get(), nullptr, devmode));
-  if (NS_WARN_IF(!printerDc)) {
-    return PrintSettingsInitializer();
-  }
+  return aCallback(autoPrinter.get(), devmode);
+}
 
+PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
   nsString paperName;
   SizeDouble paperSize;
-  for (auto paperInfo : PaperList()) {
-    if (paperInfo.mPaperId == devmode->dmPaperSize) {
-      paperName.Assign(paperInfo.mName);
-      paperSize = paperInfo.mSize;
-      break;
-    }
+  gfx::MarginDouble margin;
+  int resolution = 0;
+  bool color = false;
+
+  nsTArray<uint8_t> devmodeWStorage;
+  bool success = WithDefaultDevMode(
+      mName, devmodeWStorage, [&](HANDLE, DEVMODEW* devmode) {
+        for (auto paperInfo : PaperList()) {
+          if (paperInfo.mPaperId == devmode->dmPaperSize) {
+            paperName.Assign(paperInfo.mName);
+            paperSize = paperInfo.mSize;
+            break;
+          }
+        }
+
+        nsAutoHDC printerDc(
+            ::CreateICW(nullptr, mName.get(), nullptr, devmode));
+        if (NS_WARN_IF(!printerDc)) {
+          return false;
+        }
+
+        margin = WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
+        margin.top *= POINTS_PER_INCH_FLOAT;
+        margin.right *= POINTS_PER_INCH_FLOAT;
+        margin.bottom *= POINTS_PER_INCH_FLOAT;
+        margin.left *= POINTS_PER_INCH_FLOAT;
+
+        // Using Y to match existing code for print scaling calculations.
+        resolution = GetDeviceCaps(printerDc, LOGPIXELSY);
+        color =
+            (devmode->dmFields & DM_COLOR) && devmode->dmColor == DMCOLOR_COLOR;
+        return true;
+      });
+
+  if (!success) {
+    return {};
   }
 
-  auto margin = WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
-  margin.top *= POINTS_PER_INCH_FLOAT;
-  margin.right *= POINTS_PER_INCH_FLOAT;
-  margin.bottom *= POINTS_PER_INCH_FLOAT;
-  margin.left *= POINTS_PER_INCH_FLOAT;
-
-  // Using Y to match existing code for print scaling calculations.
-  int resolution = GetDeviceCaps(printerDc, LOGPIXELSY);
-
-  return PrintSettingsInitializer{mName,
-                                  PaperInfo(paperName, paperSize, Some(margin)),
-                                  devmode->dmColor == DMCOLOR_COLOR, resolution,
-                                  std::move(devmodeWStorage)};
+  return PrintSettingsInitializer{
+      mName, PaperInfo(paperName, paperSize, Some(margin)), color, resolution,
+      std::move(devmodeWStorage)};
 }
 
 template <class T>
@@ -134,6 +154,29 @@ bool nsPrinterWin::SupportsDuplex() const {
 bool nsPrinterWin::SupportsColor() const {
   return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_COLORDEVICE, nullptr,
                                nullptr) == 1;
+}
+
+bool nsPrinterWin::SupportsMonochrome() const {
+  if (!SupportsColor()) {
+    return true;
+  }
+  nsTArray<uint8_t> storage;
+  return WithDefaultDevMode(
+      mName, storage, [&](HANDLE aPrinter, DEVMODEW* aDevMode) {
+        aDevMode->dmFields |= DM_COLOR;
+        aDevMode->dmColor = DMCOLOR_MONOCHROME;
+        // Try to modify the devmode settings and see if the setting sticks.
+        //
+        // This has been the only reliable way to detect it that we've found.
+        LONG ret =
+            ::DocumentPropertiesW(nullptr, aPrinter, mName.get(), aDevMode,
+                                  aDevMode, DM_IN_BUFFER | DM_OUT_BUFFER);
+        if (ret != IDOK) {
+          return false;
+        }
+        return !(aDevMode->dmFields & DM_COLOR) ||
+               aDevMode->dmColor == DMCOLOR_MONOCHROME;
+      });
 }
 
 bool nsPrinterWin::SupportsCollation() const {
