@@ -43,7 +43,7 @@ add_task(async function() {
 
   const availableResources = [];
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_CHANGE], {
-    onAvailable: resources => availableResources.push(...resources),
+    onAvailable: ({ resource }) => availableResources.push(resource),
   });
   assertResource(
     availableResources[0],
@@ -83,7 +83,7 @@ add_task(async function() {
   info("Check whether ResourceWatcher sends all resources added in this test");
   const existingResources = [];
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_CHANGE], {
-    onAvailable: resources => existingResources.push(...resources),
+    onAvailable: ({ resource }) => existingResources.push(resource),
   });
   await waitUntil(() => existingResources.length === 4);
   is(availableResources[0], existingResources[0], "1st resource is correct");

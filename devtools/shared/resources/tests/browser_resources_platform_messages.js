@@ -42,33 +42,31 @@ async function testPlatformMessagesResources() {
 
   let done;
   const onAllMessagesReceived = new Promise(resolve => (done = resolve));
-  const onAvailable = resources => {
-    for (const resource of resources) {
-      if (!expectedMessages.includes(resource.message)) {
-        continue;
-      }
+  const onAvailable = ({ resourceType, targetFront, resource }) => {
+    if (!expectedMessages.includes(resource.message)) {
+      return;
+    }
 
-      is(
-        resource.targetFront,
-        targetList.targetFront,
-        "The targetFront property is the expected one"
-      );
+    is(
+      resource.targetFront,
+      targetList.targetFront,
+      "The targetFront property is the expected one"
+    );
 
-      receivedMessages.push(resource.message);
-      is(
-        resource.message,
-        expectedMessages[receivedMessages.length - 1],
-        `Received the expected «${resource.message}» message, in the expected order`
-      );
+    receivedMessages.push(resource.message);
+    is(
+      resource.message,
+      expectedMessages[receivedMessages.length - 1],
+      `Received the expected «${resource.message}» message, in the expected order`
+    );
 
-      ok(
-        resource.timeStamp.toString().match(/^\d+$/),
-        "The resource has a timeStamp property"
-      );
+    ok(
+      resource.timeStamp.toString().match(/^\d+$/),
+      "The resource has a timeStamp property"
+    );
 
-      if (receivedMessages.length == expectedMessages.length) {
-        done();
-      }
+    if (receivedMessages.length == expectedMessages.length) {
+      done();
     }
   };
 
@@ -112,14 +110,12 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.PLATFORM_MESSAGE],
     {
-      onAvailable: resources => {
-        for (const resource of resources) {
-          if (!expectedMessages.includes(resource.message)) {
-            continue;
-          }
-
-          availableResources.push(resource);
+      onAvailable: ({ resource }) => {
+        if (!expectedMessages.includes(resource.message)) {
+          return;
         }
+
+        availableResources.push(resource);
       },
       ignoreExistingResources: true,
     }

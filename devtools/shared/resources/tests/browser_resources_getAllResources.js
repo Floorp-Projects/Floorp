@@ -32,7 +32,7 @@ add_task(async function() {
     "Start to watch the available resources in order to compare with resources gotten from getAllResources"
   );
   const availableResources = [];
-  const onAvailable = resources => availableResources.push(...resources);
+  const onAvailable = ({ resource }) => availableResources.push(resource);
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     { onAvailable }

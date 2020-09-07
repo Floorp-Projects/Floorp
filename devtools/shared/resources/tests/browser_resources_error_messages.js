@@ -52,31 +52,29 @@ async function testErrorMessagesResources() {
 
   let done;
   const onAllErrorReceived = new Promise(resolve => (done = resolve));
-  const onAvailable = resources => {
-    for (const resource of resources) {
-      const { pageError } = resource;
+  const onAvailable = ({ resourceType, targetFront, resource }) => {
+    const { pageError } = resource;
 
-      is(
-        resource.targetFront,
-        targetList.targetFront,
-        "The targetFront property is the expected one"
-      );
+    is(
+      resource.targetFront,
+      targetList.targetFront,
+      "The targetFront property is the expected one"
+    );
 
-      if (!pageError.sourceName.includes("test_page_errors")) {
-        info(`Ignore error from unknown source: "${pageError.sourceName}"`);
-        continue;
-      }
+    if (!pageError.sourceName.includes("test_page_errors")) {
+      info(`Ignore error from unknown source: "${pageError.sourceName}"`);
+      return;
+    }
 
-      const index = receivedMessages.length;
-      receivedMessages.push(pageError);
+    const index = receivedMessages.length;
+    receivedMessages.push(pageError);
 
-      info(`checking received page error #${index}: ${pageError.errorMessage}`);
-      ok(pageError, "The resource has a pageError attribute");
-      checkPageErrorResource(pageError, expectedMessages[index]);
+    info(`checking received page error #${index}: ${pageError.errorMessage}`);
+    ok(pageError, "The resource has a pageError attribute");
+    checkPageErrorResource(pageError, expectedMessages[index]);
 
-      if (receivedMessages.length == expectedMessages.length) {
-        done();
-      }
+    if (receivedMessages.length == expectedMessages.length) {
+      done();
     }
   };
 
@@ -119,7 +117,7 @@ async function testErrorMessagesResourcesWithIgnoreExistingResources() {
 
   const availableResources = [];
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.ERROR_MESSAGE], {
-    onAvailable: resources => availableResources.push(...resources),
+    onAvailable: ({ resource }) => availableResources.push(resource),
     ignoreExistingResources: true,
   });
   is(

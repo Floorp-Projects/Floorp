@@ -256,15 +256,13 @@ class CompatibilityView {
     );
   }
 
-  _onResourceAvailable(resources) {
-    for (const resource of resources) {
-      // Style changes applied inline directly to
-      // the element and its changes are monitored by
-      // _onMarkupMutation via markupmutation events.
-      // Hence those changes can be ignored here
-      if (resource.source?.type !== "element") {
-        this._onChangeAdded(resource);
-      }
+  _onResourceAvailable({ resource }) {
+    // Style changes applied inline directly to
+    // the element and its changes are monitored by
+    // _onMarkupMutation via markupmutation events.
+    // Hence those changes can be ignored here
+    if (resource.source?.type !== "element") {
+      this._onChangeAdded(resource);
     }
   }
 

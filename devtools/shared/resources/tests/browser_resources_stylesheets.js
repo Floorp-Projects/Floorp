@@ -106,7 +106,7 @@ add_task(async function() {
   info("Check whether ResourceWatcher gets existing stylesheet");
   const availableResources = [];
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
-    onAvailable: resources => availableResources.push(...resources),
+    onAvailable: ({ resource }) => availableResources.push(resource),
   });
 
   is(
@@ -176,8 +176,8 @@ add_task(async function() {
   const availableResources = [];
   const updates = [];
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
-    onAvailable: resources => availableResources.push(...resources),
-    onUpdated: newUpdates => updates.push(...newUpdates),
+    onAvailable: ({ resource }) => availableResources.push(resource),
+    onUpdated: ({ resource, update }) => updates.push({ resource, update }),
   });
   is(
     availableResources.length,
