@@ -125,20 +125,18 @@ bool CPU::CanFlushICacheFromBackgroundThreads() {
         strcmp(uts.sysname, "Linux") == 0 &&
         sscanf(uts.release, "%d.%d", &major, &minor) == 2 &&
         major >= kRequiredMajor && (major != kRequiredMajor || minor >= kRequiredMinor);
+
+    // As a test bed, try to run the syscall with the command registering the
+    // intent to use the actual membarrier we'll want to carry out later.
+    if (kernelHasMembarrier &&
+        membarrier(MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE, 0) != 0) {
+      kernelHasMembarrier = false;
+    }
+
     computed = true;
   }
 
-  if (!kernelHasMembarrier) {
-    return false;
-  }
-
-  // As a test bed, try to run the syscall with the command registering the
-  // intent to use the actual membarrier we'll want to carry out later.
-  if (membarrier(MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE, 0) != 0) {
-    return false;
-  }
-
-  return true;
+  return kernelHasMembarrier;
 #else
   // On other platforms, we assume that the provided syscall does the right thing.
   return true;
