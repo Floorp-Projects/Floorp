@@ -2654,7 +2654,6 @@ impl Renderer {
             });
         let sampler = options.sampler;
         let namespace_alloc_by_client = options.namespace_alloc_by_client;
-        let max_glyph_cache_size = options.max_glyph_cache_size.unwrap_or(GlyphCache::DEFAULT_MAX_BYTES_USED);
 
         let font_instances = SharedFontInstanceMap::new();
 
@@ -2750,7 +2749,7 @@ impl Renderer {
                 texture_cache_max_evictions_per_frame,
             );
 
-            let glyph_cache = GlyphCache::new(max_glyph_cache_size);
+            let glyph_cache = GlyphCache::new();
 
             let mut resource_cache = ResourceCache::new(
                 texture_cache,
@@ -7123,7 +7122,6 @@ pub struct RendererOptions {
     pub clear_color: Option<ColorF>,
     pub enable_clear_scissor: bool,
     pub max_texture_size: Option<i32>,
-    pub max_glyph_cache_size: Option<usize>,
     pub upload_method: UploadMethod,
     pub workers: Option<Arc<ThreadPool>>,
     pub enable_multithreading: bool,
@@ -7215,7 +7213,6 @@ impl Default for RendererOptions {
             clear_color: Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
             enable_clear_scissor: true,
             max_texture_size: None,
-            max_glyph_cache_size: None,
             // This is best as `Immediate` on Angle, or `Pixelbuffer(Dynamic)` on GL,
             // but we are unable to make this decision here, so picking the reasonable medium.
             upload_method: UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT),
