@@ -1127,7 +1127,7 @@ pub struct GpuProfile {
 }
 
 impl GpuProfile {
-    fn new<T>(frame_id: GpuFrameId, timers: &[GpuTimer<T>]) -> GpuProfile {
+    fn new(frame_id: GpuFrameId, timers: &[GpuTimer]) -> GpuProfile {
         let mut paint_time_ns = 0;
         for timer in timers {
             paint_time_ns += timer.time_ns;
@@ -2213,7 +2213,7 @@ pub struct Renderer {
 
     last_time: u64,
 
-    pub gpu_profiler: GpuProfiler<GpuProfileTag>,
+    pub gpu_profiler: GpuProfiler,
     vaos: RendererVAOs,
 
     gpu_cache_texture: GpuCacheTexture,
