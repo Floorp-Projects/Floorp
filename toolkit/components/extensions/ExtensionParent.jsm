@@ -742,11 +742,14 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     await this._currentDevToolsTarget.attach();
   }
 
-  async _onResourceAvailable({ targetFront, resource }) {
-    if (targetFront.isTopLevel && resource.name === "dom-complete") {
-      const url = targetFront.localTab.linkedBrowser.currentURI.spec;
-      for (const listener of this._onNavigatedListeners) {
-        listener(url);
+  async _onResourceAvailable(resources) {
+    for (const resource of resources) {
+      const { targetFront } = resource;
+      if (targetFront.isTopLevel && resource.name === "dom-complete") {
+        const url = targetFront.localTab.linkedBrowser.currentURI.spec;
+        for (const listener of this._onNavigatedListeners) {
+          listener(url);
+        }
       }
     }
   }

@@ -295,6 +295,8 @@ class ResourceWatcher {
    *        which describes the resource.
    */
   async _onResourceAvailable({ targetFront, watcherFront }, resources) {
+    let currentType = null;
+    let resourceBuffer = [];
     for (let resource of resources) {
       const { resourceType } = resource;
 
@@ -320,11 +322,23 @@ class ResourceWatcher {
         });
       }
 
-      this._availableListeners.emit(resourceType, {
-        resource,
-      });
+      if (!currentType) {
+        currentType = resourceType;
+      }
+      // Flush the current list of buffered resource if we switch to another type
+      else if (currentType != resourceType) {
+        this._availableListeners.emit(currentType, resourceBuffer);
+        currentType = resourceType;
+        resourceBuffer = [];
+      }
+      resourceBuffer.push(resource);
 
       this._cache.push(resource);
+    }
+
+    // Flush the buffered resources if there is any
+    if (resourceBuffer.length > 0) {
+      this._availableListeners.emit(currentType, resourceBuffer);
     }
   }
 
@@ -361,6 +375,8 @@ class ResourceWatcher {
    *        }
    */
   async _onResourceUpdated({ targetFront, watcherFront }, updates) {
+    let currentType = null;
+    let resourceBuffer = [];
     for (const update of updates) {
       const { resourceType, resourceId, resourceUpdates } = update;
 
@@ -385,10 +401,24 @@ class ResourceWatcher {
         Object.assign(existingResource, resourceUpdates);
       }
 
-      this._updatedListeners.emit(resourceType, {
+      if (!currentType) {
+        currentType = resourceType;
+      }
+      // Flush the current list of buffered resource if we switch to another type
+      if (currentType != resourceType) {
+        this._updatedListeners.emit(currentType, resourceBuffer);
+        currentType = resourceType;
+        resourceBuffer = [];
+      }
+      resourceBuffer.push({
         resource: existingResource,
         update,
       });
+    }
+
+    // Flush the buffered resources if there is any
+    if (resourceBuffer.length > 0) {
+      this._updatedListeners.emit(currentType, resourceBuffer);
     }
   }
 
@@ -397,6 +427,8 @@ class ResourceWatcher {
    * See _onResourceAvailable for the argument description.
    */
   async _onResourceDestroyed({ targetFront, watcherFront }, resources) {
+    let currentType = null;
+    let resourceBuffer = [];
     for (const resource of resources) {
       const { resourceType, resourceId } = resource;
 
@@ -425,9 +457,21 @@ class ResourceWatcher {
         );
       }
 
-      this._destroyedListeners.emit(resourceType, {
-        resource,
-      });
+      if (!currentType) {
+        currentType = resourceType;
+      }
+      // Flush the current list of buffered resource if we switch to another type
+      if (currentType != resourceType) {
+        this._destroyedListeners.emit(currentType, resourceBuffer);
+        currentType = resourceType;
+        resourceBuffer = [];
+      }
+      resourceBuffer.push(resource);
+    }
+
+    // Flush the buffered resources if there is any
+    if (resourceBuffer.length > 0) {
+      this._destroyedListeners.emit(currentType, resourceBuffer);
     }
   }
 
@@ -508,15 +552,11 @@ class ResourceWatcher {
   }
 
   async _forwardCachedResources(resourceTypes, onAvailable) {
-    for (const resource of this._cache) {
-      if (resourceTypes.includes(resource.resourceType)) {
-        await onAvailable({
-          resourceType: resource.resourceType,
-          targetFront: resource.targetFront,
-          resource,
-        });
-      }
-    }
+    await onAvailable(
+      this._cache.filter(resource =>
+        resourceTypes.includes(resource.resourceType)
+      )
+    );
   }
 
   /**

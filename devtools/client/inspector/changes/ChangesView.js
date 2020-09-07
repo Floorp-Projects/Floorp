@@ -119,20 +119,22 @@ class ChangesView {
     );
   }
 
-  onResourceAvailable({ resource }) {
-    if (resource.resourceType === this.resourceWatcher.TYPES.CSS_CHANGE) {
-      this.onAddChange(resource);
-      return;
-    }
+  onResourceAvailable(resources) {
+    for (const resource of resources) {
+      if (resource.resourceType === this.resourceWatcher.TYPES.CSS_CHANGE) {
+        this.onAddChange(resource);
+        continue;
+      }
 
-    if (resource.name === "dom-loading" && resource.targetFront.isTopLevel) {
-      // will-navigate doesn't work when we navigate to a new process,
-      // and for now, onTargetAvailable/onTargetDestroyed doesn't fire on navigation and
-      // only when navigating to another process.
-      // So we fallback on DOCUMENT_EVENTS to be notified when we navigate. When we
-      // navigate within the same process as well as when we navigate to a new process.
-      // (We would probably revisit that in bug 1632141)
-      this.onClearChanges();
+      if (resource.name === "dom-loading" && resource.targetFront.isTopLevel) {
+        // will-navigate doesn't work when we navigate to a new process,
+        // and for now, onTargetAvailable/onTargetDestroyed doesn't fire on navigation and
+        // only when navigating to another process.
+        // So we fallback on DOCUMENT_EVENTS to be notified when we navigate. When we
+        // navigate within the same process as well as when we navigate to a new process.
+        // (We would probably revisit that in bug 1632141)
+        this.onClearChanges();
+      }
     }
   }
 
