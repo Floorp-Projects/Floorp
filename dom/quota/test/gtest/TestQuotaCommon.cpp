@@ -111,6 +111,73 @@ TEST(QuotaCommon_Try, Failure_WithCleanup)
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 }
 
+TEST(QuotaCommon_DebugTry, Success)
+{
+  bool debugTryBodyRan = false;
+  bool debugTryDidNotReturn = false;
+
+  nsresult rv = [
+#ifdef DEBUG
+                    &debugTryBodyRan, &debugTryDidNotReturn
+#else
+                    &debugTryDidNotReturn
+#endif
+  ]() -> nsresult {
+    QM_DEBUG_TRY(ToResultInvoke<Ok>([&debugTryBodyRan](Ok* out) {
+      debugTryBodyRan = true;
+
+      *out = Ok();
+      return NS_OK;
+    }));
+
+    debugTryDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+#ifdef DEBUG
+  EXPECT_TRUE(debugTryBodyRan);
+#else
+  EXPECT_FALSE(debugTryBodyRan);
+#endif
+  EXPECT_TRUE(debugTryDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_DebugTry, Failure)
+{
+  bool debugTryBodyRan = false;
+  bool debugTryDidNotReturn = false;
+
+  nsresult rv = [
+#ifdef DEBUG
+                    &debugTryBodyRan, &debugTryDidNotReturn
+#else
+                    &debugTryDidNotReturn
+#endif
+  ]() -> nsresult {
+    QM_DEBUG_TRY(ToResultInvoke<Ok>([&debugTryBodyRan](Ok* out) {
+      debugTryBodyRan = true;
+
+      return NS_ERROR_FAILURE;
+    }));
+
+    debugTryDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+#ifdef DEBUG
+  EXPECT_TRUE(debugTryBodyRan);
+  EXPECT_FALSE(debugTryDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+#else
+  EXPECT_FALSE(debugTryBodyRan);
+  EXPECT_TRUE(debugTryDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+#endif
+}
+
 TEST(QuotaCommon_TryVar, Success)
 {
   bool tryVarDidNotReturn = false;
@@ -260,6 +327,81 @@ TEST(QuotaCommon_TryVar, ParenDecl)
   EXPECT_EQ(y, true);
 }
 
+TEST(QuotaCommon_DebugTryVar, Success)
+{
+  bool debugTryVarBodyRan = false;
+  bool debugTryVarDidNotReturn = false;
+
+  nsresult rv = [
+#ifdef DEBUG
+                    &debugTryVarBodyRan, &debugTryVarDidNotReturn
+#else
+                    &debugTryVarDidNotReturn
+#endif
+  ]() -> nsresult {
+    QM_DEBUG_TRY_VAR(const auto x, ToResultInvoke<int32_t>(
+                                       [&debugTryVarBodyRan](int32_t* out) {
+                                         debugTryVarBodyRan = true;
+
+                                         *out = 42;
+                                         return NS_OK;
+                                       }));
+#ifdef DEBUG
+    EXPECT_EQ(x, 42);
+#endif
+
+    debugTryVarDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+#ifdef DEBUG
+  EXPECT_TRUE(debugTryVarBodyRan);
+#else
+  EXPECT_FALSE(debugTryVarBodyRan);
+#endif
+  EXPECT_TRUE(debugTryVarDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_DebugTryVar, Failure)
+{
+  bool debugTryVarBodyRan = false;
+  bool debugTryVarDidNotReturn = false;
+
+  nsresult rv = [
+#ifdef DEBUG
+                    &debugTryVarBodyRan, &debugTryVarDidNotReturn
+#else
+                    &debugTryVarDidNotReturn
+#endif
+  ]() -> nsresult {
+    QM_DEBUG_TRY_VAR(const auto x, ToResultInvoke<int32_t>(
+                                       [&debugTryVarBodyRan](int32_t* out) {
+                                         debugTryVarBodyRan = true;
+
+                                         return NS_ERROR_FAILURE;
+                                       }));
+#ifdef DEBUG
+    Unused << x;
+#endif
+
+    debugTryVarDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+#ifdef DEBUG
+  EXPECT_TRUE(debugTryVarBodyRan);
+  EXPECT_FALSE(debugTryVarDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+#else
+  EXPECT_FALSE(debugTryVarBodyRan);
+  EXPECT_TRUE(debugTryVarDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+#endif
+}
+
 TEST(QuotaCommon_Fail, ReturnValue)
 {
   bool failDidNotReturn = false;
@@ -292,6 +434,27 @@ TEST(QuotaCommon_Fail, ReturnValue_WithCleanup)
   EXPECT_TRUE(failCleanupRan);
   EXPECT_FALSE(failDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_DebugFail, ReturnValue)
+{
+  bool debugFailDidNotReturn = false;
+
+  nsresult rv = [&debugFailDidNotReturn]() -> nsresult {
+    QM_DEBUG_FAIL(NS_ERROR_FAILURE);
+
+    debugFailDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+#ifdef DEBUG
+  EXPECT_FALSE(debugFailDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+#else
+  EXPECT_TRUE(debugFailDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+#endif
 }
 
 TEST(QuotaCommon_OkIf, True)

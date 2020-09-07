@@ -186,15 +186,33 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "nsString.h"
 
-// LocalStorage equivalent of QM_TRY.
+// LocalStorage equivalents of QM_TRY and QM_DEBUG_TRY.
 #define LS_TRY(...) QM_TRY_META(mozilla::dom::localstorage, ##__VA_ARGS__)
 
-// LocalStorage equivalent of QM_TRY_VAR.
+#ifdef DEBUG
+#  define LS_DEBUG_TRY(...) LS_TRY(__VA_ARGS__)
+#else
+#  define LS_DEBUG_TRY(...)
+#endif
+
+// LocalStorage equivalents of QM_TRY_VAR and QM_DEBUG_TRY_VAR.
 #define LS_TRY_VAR(...) \
   QM_TRY_VAR_META(mozilla::dom::localstorage, ##__VA_ARGS__)
 
-// LocalStorage equivalent of QM_FAIL.
+#ifdef DEBUG
+#  define LS_DEBUG_TRY_VAR(...) LS_TRY_VAR(__VA_ARGS__)
+#else
+#  define LS_DEBUG_TRY_VAR(...)
+#endif
+
+// LocalStorage equivalents of QM_FAIL and QM_DEBUG_FAIL.
 #define LS_FAIL(...) QM_FAIL_META(mozilla::dom::localstorage, ##__VA_ARGS__)
+
+#ifdef DEBUG
+#  define LS_DEBUG_FAIL(...) LS_FAIL(__VA_ARGS__)
+#else
+#  define LS_DEBUG_FAIL(...)
+#endif
 
 namespace mozilla {
 

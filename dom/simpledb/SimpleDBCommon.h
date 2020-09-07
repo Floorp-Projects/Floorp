@@ -9,14 +9,32 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
-// SimpleDB equivalent of QM_TRY.
+// SimpleDB equivalents of QM_TRY and QM_DEBUG_TRY.
 #define SDB_TRY(...) QM_TRY_META(mozilla::dom::simpledb, ##__VA_ARGS__)
 
-// SimpleDB equivalent of QM_TRY_VAR.
+#ifdef DEBUG
+#  define SDB_DEBUG_TRY(...) SDB_TRY(__VA_ARGS__)
+#else
+#  define SDB_DEBUG_TRY(...)
+#endif
+
+// SimpleDB equivalents of QM_TRY_VAR and QM_DEBUG_TRY_VAR.
 #define SDB_TRY_VAR(...) QM_TRY_VAR_META(mozilla::dom::simpledb, ##__VA_ARGS__)
 
-// SimpleDB equivalent of QM_FAIL.
+#ifdef DEBUG
+#  define SDB_DEBUG_TRY_VAR(...) SDB_TRY_VAR(__VA_ARGS__)
+#else
+#  define SDB_DEBUG_TRY_VAR(...)
+#endif
+
+// SimpleDB equivalents of QM_FAIL and QM_DEBUG_FAIL.
 #define SDB_FAIL(...) QM_FAIL_META(mozilla::dom::simpledb, ##__VA_ARGS__)
+
+#ifdef DEBUG
+#  define SDB_DEBUG_FAIL(...) SDB_FAIL(__VA_ARGS__)
+#else
+#  define SDB_DEBUG_FAIL(...)
+#endif
 
 namespace mozilla {
 namespace dom {
