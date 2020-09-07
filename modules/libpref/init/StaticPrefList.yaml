@@ -2607,6 +2607,13 @@
   value: false
   mirror: always
 
+# If true, sends http background request for top-level sites to
+# counter long timeouts.
+- name: dom.security.https_only_mode_send_http_background_request
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # If true and HTTPS-only mode is enabled, requests
 # to local IP addresses are also upgraded
 - name: dom.security.https_only_mode.upgrade_local
