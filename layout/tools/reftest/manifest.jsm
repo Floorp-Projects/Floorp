@@ -718,9 +718,9 @@ function CreateUrls(test) {
             return file;
 
         var testURI = g.ioService.newURI(file, null, testbase);
-        let isChrome = testURI.scheme == "chrome";
-        let principal = isChrome ? secMan.getSystemPrincipal() :
-                                   secMan.createContentPrincipal(manifestURL, {});
+        let isChromeOrViewSource = testURI.scheme == "chrome" || testURI.scheme == "view-source";
+        let principal = isChromeOrViewSource ? secMan.getSystemPrincipal() :
+                                               secMan.createContentPrincipal(manifestURL, {});
         secMan.checkLoadURIWithPrincipal(principal, testURI,
                                          Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
         return testURI;

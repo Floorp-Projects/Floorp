@@ -698,12 +698,6 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     if (sourceURI == aTargetURI) {
       return NS_OK;
     }
-  } else if (StaticPrefs::
-                 security_view_source_reachable_from_inner_protocol() &&
-             sourceScheme.EqualsIgnoreCase(targetScheme.get()) &&
-             aTargetURI->SchemeIs("view-source")) {
-    // exception for foo: linking to view-source:foo for reftests...
-    return NS_OK;
   } else if (sourceScheme.EqualsIgnoreCase("file") &&
              targetScheme.EqualsIgnoreCase("moz-icon")) {
     // exception for file: linking to moz-icon://.ext?size=...

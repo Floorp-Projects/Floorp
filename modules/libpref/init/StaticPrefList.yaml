@@ -9132,14 +9132,6 @@
   mirror: once
 #endif
 
-# When comparing schemes, if this pref is set, view-source URIs are reachable
-# from same-protocol (so e.g. file: can link to view-source:file). This is
-# required for reftests.
-- name: security.view-source.reachable-from-inner-protocol
-  type: bool
-  value: false
-  mirror: always
-
 # Pref to show warning when submitting from secure to insecure.
 - name: security.warn_submit_secure_to_insecure
   type: bool
