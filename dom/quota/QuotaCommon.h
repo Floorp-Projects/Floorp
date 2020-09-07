@@ -435,7 +435,7 @@
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                      \
     auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);               \
     ns::QM_HANDLE_ERROR(expr);                                                \
-    cleanup();                                                                \
+    cleanup(tryTempResult);                                                   \
     return customRetVal;                                                      \
   }
 
@@ -508,7 +508,7 @@
   if (MOZ_UNLIKELY(tryResult.isErr())) {                                    \
     auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);             \
     ns::QM_HANDLE_ERROR(expr);                                              \
-    cleanup();                                                              \
+    cleanup(tryTempResult);                                                 \
     return customRetVal;                                                    \
   }                                                                         \
   MOZ_REMOVE_PAREN(target) = tryResult.unwrap();

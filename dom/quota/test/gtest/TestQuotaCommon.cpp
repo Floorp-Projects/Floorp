@@ -35,7 +35,8 @@ TEST(QuotaCommon_Try, Success_WithCleanup)
   bool tryDidNotReturn = false;
 
   nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
-    QM_TRY(NS_OK, QM_PROPAGATE, [&tryCleanupRan]() { tryCleanupRan = true; });
+    QM_TRY(NS_OK, QM_PROPAGATE,
+           [&tryCleanupRan](const auto&) { tryCleanupRan = true; });
 
     tryDidNotReturn = true;
 
@@ -99,12 +100,44 @@ TEST(QuotaCommon_Try, Failure_WithCleanup)
 
   nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
     QM_TRY(NS_ERROR_FAILURE, QM_PROPAGATE,
-           [&tryCleanupRan]() { tryCleanupRan = true; });
+           [&tryCleanupRan](const auto& result) {
+             EXPECT_TRUE(result.isErr());
+             EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+
+             tryCleanupRan = true;
+           });
 
     tryDidNotReturn = true;
 
     return NS_OK;
   }();
+
+  EXPECT_TRUE(tryCleanupRan);
+  EXPECT_FALSE(tryDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_Try, Failure_WithCleanup_UnwrapErr)
+{
+  bool tryCleanupRan = false;
+  bool tryDidNotReturn = false;
+
+  nsresult rv;
+
+  [&tryCleanupRan, &tryDidNotReturn](nsresult& aRv) -> void {
+    QM_TRY(NS_ERROR_FAILURE, QM_VOID, ([&tryCleanupRan, &aRv](auto& result) {
+             EXPECT_TRUE(result.isErr());
+             EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+
+             aRv = result.unwrapErr();
+
+             tryCleanupRan = true;
+           }));
+
+    tryDidNotReturn = true;
+
+    aRv = NS_OK;
+  }(rv);
 
   EXPECT_TRUE(tryCleanupRan);
   EXPECT_FALSE(tryDidNotReturn);
@@ -352,7 +385,7 @@ TEST(QuotaCommon_TryVar, Success_WithCleanup)
 
   nsresult rv = [&tryVarCleanupRan, &tryVarDidNotReturn]() -> nsresult {
     QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{42}), QM_PROPAGATE,
-               [&tryVarCleanupRan]() { tryVarCleanupRan = true; });
+               [&tryVarCleanupRan](const auto&) { tryVarCleanupRan = true; });
     EXPECT_EQ(x, 42);
 
     tryVarDidNotReturn = true;
@@ -423,14 +456,47 @@ TEST(QuotaCommon_TryVar, Failure_WithCleanup)
 
   nsresult rv = [&tryVarCleanupRan, &tryVarDidNotReturn]() -> nsresult {
     QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
-               QM_PROPAGATE,
-               [&tryVarCleanupRan]() { tryVarCleanupRan = true; });
+               QM_PROPAGATE, [&tryVarCleanupRan](const auto& result) {
+                 EXPECT_TRUE(result.isErr());
+                 EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+
+                 tryVarCleanupRan = true;
+               });
     Unused << x;
 
     tryVarDidNotReturn = true;
 
     return NS_OK;
   }();
+
+  EXPECT_TRUE(tryVarCleanupRan);
+  EXPECT_FALSE(tryVarDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_TryVar, Failure_WithCleanup_UnwrapErr)
+{
+  bool tryVarCleanupRan = false;
+  bool tryVarDidNotReturn = false;
+
+  nsresult rv;
+
+  [&tryVarCleanupRan, &tryVarDidNotReturn](nsresult& aRv) -> void {
+    QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
+               QM_VOID, ([&tryVarCleanupRan, &aRv](auto& result) {
+                 EXPECT_TRUE(result.isErr());
+                 EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+
+                 aRv = result.unwrapErr();
+
+                 tryVarCleanupRan = true;
+               }));
+    Unused << x;
+
+    tryVarDidNotReturn = true;
+
+    aRv = NS_OK;
+  }(rv);
 
   EXPECT_TRUE(tryVarCleanupRan);
   EXPECT_FALSE(tryVarDidNotReturn);
