@@ -87,7 +87,7 @@ add_task(async function navigateFrameNotExpandedInMarkupView() {
   );
 
   is(
-    resource?.resourceType,
+    resource.resourceType,
     resourceWatcher.TYPES.ROOT_NODE,
     "A resource with resourceType ROOT_NODE was received when navigating"
   );
