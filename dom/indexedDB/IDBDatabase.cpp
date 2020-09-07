@@ -16,9 +16,11 @@
 #include "IDBFactory.h"
 #include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
+#include "IndexedDBCommon.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventDispatcher.h"
 #include "MainThreadUtils.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/storage.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -881,12 +883,8 @@ nsresult IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       return NS_OK;
 
     case PrincipalInfo::TContentPrincipalInfo: {
-      auto principalOrErr = PrincipalInfoToPrincipal(*principalInfo);
-      if (NS_WARN_IF(principalOrErr.isErr())) {
-        return principalOrErr.unwrapErr();
-      }
+      IDB_TRY_VAR(auto principal, PrincipalInfoToPrincipal(*principalInfo));
 
-      nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
       nsresult rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr,
                                                        nullptr, &aOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
