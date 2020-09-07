@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::convert::TryInto;
 use nsstring::nsACString;
 use nsstring::nsCString;
+use std::convert::TryInto;
 use thin_vec::ThinVec;
 pub use unic_langid::{subtags, CharacterDirection, LanguageIdentifier, LanguageIdentifierError};
 
@@ -71,10 +71,7 @@ pub unsafe extern "C" fn unic_langid_destroy(langid: *mut LanguageIdentifier) {
 }
 
 #[no_mangle]
-pub extern "C" fn unic_langid_as_string(
-    langid: &mut LanguageIdentifier,
-    ret_val: &mut nsACString,
-) {
+pub extern "C" fn unic_langid_as_string(langid: &mut LanguageIdentifier, ret_val: &mut nsACString) {
     ret_val.assign(&langid.to_string());
 }
 
@@ -104,12 +101,12 @@ pub extern "C" fn unic_langid_clear_language(langid: &mut LanguageIdentifier) {
 }
 
 #[no_mangle]
-pub extern "C" fn unic_langid_get_script(
-    langid: &LanguageIdentifier,
-    len: &mut u32,
-) -> *const u8 {
+pub extern "C" fn unic_langid_get_script(langid: &LanguageIdentifier, len: &mut u32) -> *const u8 {
     let script: &str = helpers::get_script_str(langid);
-    *len = script.len().try_into().expect("string should be at most 4 chars");
+    *len = script
+        .len()
+        .try_into()
+        .expect("string should be at most 4 chars");
     script.as_ptr()
 }
 
@@ -129,12 +126,12 @@ pub extern "C" fn unic_langid_clear_script(langid: &mut LanguageIdentifier) {
 }
 
 #[no_mangle]
-pub extern "C" fn unic_langid_get_region(
-    langid: &LanguageIdentifier,
-    len: &mut u32,
-) -> *const u8 {
+pub extern "C" fn unic_langid_get_region(langid: &LanguageIdentifier, len: &mut u32) -> *const u8 {
     let region: &str = helpers::get_region_str(langid);
-    *len = region.len().try_into().expect("string should be at most 4 chars");
+    *len = region
+        .len()
+        .try_into()
+        .expect("string should be at most 4 chars");
     region.as_ptr()
 }
 

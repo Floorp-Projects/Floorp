@@ -185,10 +185,7 @@ pub unsafe extern "C" fn fluent_bundle_destroy(bundle: *mut FluentBundleRc) {
 }
 
 #[no_mangle]
-pub extern "C" fn fluent_bundle_has_message(
-    bundle: &FluentBundleRc,
-    id: &nsACString,
-) -> bool {
+pub extern "C" fn fluent_bundle_has_message(bundle: &FluentBundleRc, id: &nsACString) -> bool {
     bundle.has_message(id.to_string().as_str())
 }
 
