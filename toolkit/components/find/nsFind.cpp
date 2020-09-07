@@ -218,8 +218,9 @@ static const nsIContent* GetBlockParent(const Text& aNode) {
   return nullptr;
 }
 
-static bool NodeForcesBreak(const nsIContent& aContent) {
-  nsIFrame* frame = aContent.GetPrimaryFrame();
+static bool NonTextNodeForcesBreak(const nsINode& aNode) {
+  nsIFrame* frame =
+      aNode.IsContent() ? aNode.AsContent()->GetPrimaryFrame() : nullptr;
   // TODO(emilio): Maybe we should treat <br> more like a space instead of a
   // forced break? Unclear...
   return frame && frame->IsBrFrame();
@@ -270,25 +271,43 @@ struct nsFind::State final {
   // Sets up the first node position and offset.
   void Initialize();
 
-  static bool ValidTextNode(const nsINode& aNode, const Text* aPrev,
-                            bool aAlreadyMatching) {
+  // Returns whether the node should be used (true) or skipped over (false)
+  static bool AnalyzeNode(const nsINode& aNode, const Text* aPrev,
+                          bool aAlreadyMatching, bool* aForcedBreak) {
     if (!aNode.IsText()) {
+      *aForcedBreak = *aForcedBreak || NonTextNodeForcesBreak(aNode);
       return false;
     }
     if (SkipNode(aNode.AsText())) {
       return false;
     }
+    *aForcedBreak = *aForcedBreak ||
+                    (aPrev && ForceBreakBetweenText(*aPrev, *aNode.AsText()));
+    if (*aForcedBreak) {
+      // If we've already found a break, we can stop searching and just use this
+      // node, regardless of the subtree we're on. There's no point to continue
+      // a match across different blocks, regardless of which subtree you're
+      // looking into.
+      return true;
+    }
+
     // TODO(emilio): We can't represent ranges that span native anonymous /
     // shadow tree boundaries, but if we did the following check could / should
     // be removed.
     if (aAlreadyMatching && aPrev &&
         !nsContentUtils::IsInSameAnonymousTree(&aNode, aPrev)) {
-      DEBUG_FIND_PRINTF("Skipping due to different anon subtrees: ");
-      DumpNode(aPrev);
-      DEBUG_FIND_PRINTF("Next: ");
-      DumpNode(&aNode);
+      // As an optimization, if we were finding inside an native-anonymous
+      // subtree (like a pseudo-element), we know those trees are "atomic" and
+      // can't have any other subtrees in between, so we can just break the
+      // match here.
+      if (aPrev->IsInNativeAnonymousSubtree()) {
+        *aForcedBreak = true;
+        return true;
+      }
+      // Otherwise we can skip the node and keep looking past this subtree.
       return false;
     }
+
     return true;
   }
 
@@ -324,12 +343,9 @@ void nsFind::State::Advance(Initializing aInitializing, bool aAlreadyMatching) {
     if (!current) {
       return;
     }
-    if (ValidTextNode(*current, prev, aAlreadyMatching)) {
-      mFoundBreak = mFoundBreak ||
-                    (prev && ForceBreakBetweenText(*prev, *current->AsText()));
-      return;
+    if (AnalyzeNode(*current, prev, aAlreadyMatching, &mFoundBreak)) {
+      break;
     }
-    mFoundBreak = mFoundBreak || NodeForcesBreak(*current);
   }
 }
 
@@ -363,7 +379,7 @@ void nsFind::State::Initialize() {
   }
 
   const bool kAlreadyMatching = false;
-  if (!ValidTextNode(*current, nullptr, kAlreadyMatching)) {
+  if (!AnalyzeNode(*current, nullptr, kAlreadyMatching, &mFoundBreak)) {
     Advance(Initializing::Yes, kAlreadyMatching);
     current = mIterator.GetCurrent();
     if (!current) {
