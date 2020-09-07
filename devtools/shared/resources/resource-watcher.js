@@ -321,7 +321,6 @@ class ResourceWatcher {
       }
 
       this._availableListeners.emit(resourceType, {
-        targetFront,
         resource,
       });
 
@@ -387,7 +386,6 @@ class ResourceWatcher {
       }
 
       this._updatedListeners.emit(resourceType, {
-        targetFront,
         resource: existingResource,
         update,
       });
@@ -428,7 +426,6 @@ class ResourceWatcher {
       }
 
       this._destroyedListeners.emit(resourceType, {
-        targetFront,
         resource,
       });
     }
