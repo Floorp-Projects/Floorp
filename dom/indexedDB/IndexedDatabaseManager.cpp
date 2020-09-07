@@ -526,12 +526,7 @@ bool IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
     return false;
   }
 
-  auto res = IDBFactory::CreateForMainThreadJS(global);
-  if (res.isErr()) {
-    return false;
-  }
-
-  auto factory = res.unwrap();
+  IDB_TRY_VAR(auto factory, IDBFactory::CreateForMainThreadJS(global), false);
 
   MOZ_ASSERT(factory, "This should never fail for chrome!");
 
