@@ -35,9 +35,9 @@ async function testConsoleMessagesResources() {
   const expectedExistingCalls = [...expectedExistingConsoleCalls];
   const expectedRuntimeCalls = [...expectedRuntimeConsoleCalls];
   const onRuntimeDone = new Promise(resolve => (runtimeDoneResolve = resolve));
-  const onAvailable = ({ resourceType, targetFront, resource }) => {
+  const onAvailable = ({ targetFront, resource }) => {
     is(
-      resourceType,
+      resource.resourceType,
       ResourceWatcher.TYPES.CONSOLE_MESSAGE,
       "Received a message"
     );
