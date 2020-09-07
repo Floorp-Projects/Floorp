@@ -2879,7 +2879,8 @@ impl Renderer {
             allocated_native_surfaces: FastHashSet::default(),
             debug_overlay_state: DebugOverlayState::new(),
             prev_dirty_rect: DeviceRect::zero(),
-            max_primitive_instance_count: options.max_instance_buffer_size / mem::size_of::<PrimitiveInstanceData>(),
+            max_primitive_instance_count:
+                RendererOptions::MAX_INSTANCE_BUFFER_SIZE / mem::size_of::<PrimitiveInstanceData>(),
         };
 
         // We initially set the flags to default and then now call set_debug_flags
@@ -7182,19 +7183,20 @@ pub struct RendererOptions {
     /// the items incrementally over a number of frames, even if that means the total allocated
     /// size of the cache is above the desired threshold for a small number of frames.
     pub texture_cache_max_evictions_per_frame: usize,
-    /// Since we are re-initializing the instance buffers on every draw call,
-    /// the driver has to internally manage PBOs in flight.
-    /// It's typically done by bucketing up to a specific limit, and then
-    /// just individually managing the largest buffers.
-    /// Having a limit here allows the drivers to more easily manage
-    /// the PBOs for us.
-    pub max_instance_buffer_size: usize,
 }
 
 impl RendererOptions {
     /// Number of batches to look back in history for adding the current
     /// transparent instance into.
     const BATCH_LOOKBACK_COUNT: usize = 10;
+
+    /// Since we are re-initializing the instance buffers on every draw call,
+    /// the driver has to internally manage PBOs in flight.
+    /// It's typically done by bucketing up to a specific limit, and then
+    /// just individually managing the largest buffers.
+    /// Having a limit here allows the drivers to more easily manage
+    /// the PBOs for us.
+    const MAX_INSTANCE_BUFFER_SIZE: usize = 0x20000; // actual threshold in macOS GL drivers
 }
 
 impl Default for RendererOptions {
@@ -7250,8 +7252,6 @@ impl Default for RendererOptions {
             panic_on_gl_error: false,
             texture_cache_eviction_threshold_bytes: 64 * 1024 * 1024,
             texture_cache_max_evictions_per_frame: 32,
-            // Actual threshold in macOS GL drivers
-            max_instance_buffer_size: 0x20000,
         }
     }
 }
