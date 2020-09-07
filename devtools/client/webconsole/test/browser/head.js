@@ -998,7 +998,7 @@ async function openMessageInNetmonitor(toolbox, hud, url, urlInConsole) {
   await waitFor(() => {
     const selected = getSelectedRequest(store.getState());
     return selected && selected.url === url;
-  }, "network entry for the URL wasn't found");
+  }, `network entry for the URL "${url}" wasn't found`);
 
   ok(true, "The attached url is correct.");
 

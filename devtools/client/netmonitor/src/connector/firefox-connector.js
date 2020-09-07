@@ -149,61 +149,69 @@ class FirefoxConnector {
     this.responsiveFront = await this.currentTarget.getFront("responsive");
   }
 
-  async onResourceAvailable({ resource }) {
-    const { TYPES } = this.toolbox.resourceWatcher;
+  async onResourceAvailable(resources) {
+    for (const resource of resources) {
+      const { TYPES } = this.toolbox.resourceWatcher;
 
-    if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
-      this.onDocEvent(resource);
-      return;
-    }
+      if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
+        this.onDocEvent(resource);
+        continue;
+      }
 
-    if (resource.resourceType === TYPES.NETWORK_EVENT) {
-      this.dataProvider.onNetworkResourceAvailable(resource);
-      return;
-    }
+      if (resource.resourceType === TYPES.NETWORK_EVENT) {
+        this.dataProvider.onNetworkResourceAvailable(resource);
+        continue;
+      }
 
-    if (resource.resourceType === TYPES.WEBSOCKET) {
-      const { wsMessageType } = resource;
+      if (resource.resourceType === TYPES.WEBSOCKET) {
+        const { wsMessageType } = resource;
 
-      switch (wsMessageType) {
-        case "webSocketOpened": {
-          this.dataProvider.onWebSocketOpened(
-            resource.httpChannelId,
-            resource.effectiveURI,
-            resource.protocols,
-            resource.extensions
-          );
-          break;
-        }
-        case "webSocketClosed": {
-          this.dataProvider.onWebSocketClosed(
-            resource.httpChannelId,
-            resource.wasClean,
-            resource.code,
-            resource.reason
-          );
-          break;
-        }
-        case "frameReceived": {
-          this.dataProvider.onFrameReceived(
-            resource.httpChannelId,
-            resource.data
-          );
-          break;
-        }
-        case "frameSent": {
-          this.dataProvider.onFrameSent(resource.httpChannelId, resource.data);
-          break;
+        switch (wsMessageType) {
+          case "webSocketOpened": {
+            this.dataProvider.onWebSocketOpened(
+              resource.httpChannelId,
+              resource.effectiveURI,
+              resource.protocols,
+              resource.extensions
+            );
+            break;
+          }
+          case "webSocketClosed": {
+            this.dataProvider.onWebSocketClosed(
+              resource.httpChannelId,
+              resource.wasClean,
+              resource.code,
+              resource.reason
+            );
+            break;
+          }
+          case "frameReceived": {
+            this.dataProvider.onFrameReceived(
+              resource.httpChannelId,
+              resource.data
+            );
+            break;
+          }
+          case "frameSent": {
+            this.dataProvider.onFrameSent(
+              resource.httpChannelId,
+              resource.data
+            );
+            break;
+          }
         }
       }
     }
   }
 
-  async onResourceUpdated({ targetFront, resource }) {
-    if (
-      resource.resourceType === this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT
-    ) {
-      this.dataProvider.onNetworkResourceUpdated(resource);
+  async onResourceUpdated(updates) {
+    for (const { resource } of updates) {
+      if (
+        resource.resourceType ===
+        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT
+      ) {
+        this.dataProvider.onNetworkResourceUpdated(resource);
+      }
     }
   }
 

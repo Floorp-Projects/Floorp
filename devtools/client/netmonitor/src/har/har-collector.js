@@ -166,136 +166,140 @@ HarCollector.prototype = {
 
   // Event Handlers
 
-  onResourceAvailable: function({ resource }) {
-    trace.log("HarCollector.onNetworkEvent; ", resource);
+  onResourceAvailable: function(resources) {
+    for (const resource of resources) {
+      trace.log("HarCollector.onNetworkEvent; ", resource);
 
-    const {
-      actor,
-      startedDateTime,
-      request: { method, url },
-      isXHR,
-    } = resource;
-    const startTime = Date.parse(startedDateTime);
+      const {
+        actor,
+        startedDateTime,
+        request: { method, url },
+        isXHR,
+      } = resource;
+      const startTime = Date.parse(startedDateTime);
 
-    if (this.firstRequestStart == -1) {
-      this.firstRequestStart = startTime;
+      if (this.firstRequestStart == -1) {
+        this.firstRequestStart = startTime;
+      }
+
+      if (this.lastRequestEnd < startTime) {
+        this.lastRequestEnd = startTime;
+      }
+
+      let file = this.getFile(actor);
+      if (file) {
+        console.error(
+          "HarCollector.onNetworkEvent; ERROR " + "existing file conflict!"
+        );
+        continue;
+      }
+
+      file = {
+        id: actor,
+        startedDeltaMs: startTime - this.firstRequestStart,
+        startedMs: startTime,
+        method: method,
+        url: url,
+        isXHR: isXHR,
+      };
+
+      this.files.set(actor, file);
+
+      // Mimic the Net panel data structure
+      this.items.push(file);
     }
-
-    if (this.lastRequestEnd < startTime) {
-      this.lastRequestEnd = startTime;
-    }
-
-    let file = this.getFile(actor);
-    if (file) {
-      console.error(
-        "HarCollector.onNetworkEvent; ERROR " + "existing file conflict!"
-      );
-      return;
-    }
-
-    file = {
-      id: actor,
-      startedDeltaMs: startTime - this.firstRequestStart,
-      startedMs: startTime,
-      method: method,
-      url: url,
-      isXHR: isXHR,
-    };
-
-    this.files.set(actor, file);
-
-    // Mimic the Net panel data structure
-    this.items.push(file);
   },
 
-  onResourceUpdated: function({ resource }) {
-    // Skip events from unknown actors (not in the list).
-    // It can happen when there are zombie requests received after
-    // the target is closed or multiple tabs are attached through
-    // one connection (one DevToolsClient object).
-    const file = this.getFile(resource.actor);
-    if (!file) {
-      return;
-    }
+  onResourceUpdated: function(updates) {
+    for (const { resource } of updates) {
+      // Skip events from unknown actors (not in the list).
+      // It can happen when there are zombie requests received after
+      // the target is closed or multiple tabs are attached through
+      // one connection (one DevToolsClient object).
+      const file = this.getFile(resource.actor);
+      if (!file) {
+        return;
+      }
 
-    trace.log(
-      "HarCollector.onNetworkEventUpdate; " + resource.updateType,
-      resource
-    );
+      trace.log(
+        "HarCollector.onNetworkEventUpdate; " + resource.updateType,
+        resource
+      );
 
-    const includeResponseBodies = Services.prefs.getBoolPref(
-      "devtools.netmonitor.har.includeResponseBodies"
-    );
+      const includeResponseBodies = Services.prefs.getBoolPref(
+        "devtools.netmonitor.har.includeResponseBodies"
+      );
 
-    let request;
-    switch (resource.updateType) {
-      case "requestHeaders":
-        request = this.getData(
-          resource.actor,
-          "getRequestHeaders",
-          this.onRequestHeaders
-        );
-        break;
-      case "requestCookies":
-        request = this.getData(
-          resource.actor,
-          "getRequestCookies",
-          this.onRequestCookies
-        );
-        break;
-      case "requestPostData":
-        request = this.getData(
-          resource.actor,
-          "getRequestPostData",
-          this.onRequestPostData
-        );
-        break;
-      case "responseHeaders":
-        request = this.getData(
-          resource.actor,
-          "getResponseHeaders",
-          this.onResponseHeaders
-        );
-        break;
-      case "responseCookies":
-        request = this.getData(
-          resource.actor,
-          "getResponseCookies",
-          this.onResponseCookies
-        );
-        break;
-      case "responseStart":
-        file.httpVersion = resource.response.httpVersion;
-        file.status = resource.response.status;
-        file.statusText = resource.response.statusText;
-        break;
-      case "responseContent":
-        file.contentSize = resource.contentSize;
-        file.mimeType = resource.mimeType;
-        file.transferredSize = resource.transferredSize;
-
-        if (includeResponseBodies) {
+      let request;
+      switch (resource.updateType) {
+        case "requestHeaders":
           request = this.getData(
             resource.actor,
-            "getResponseContent",
-            this.onResponseContent
+            "getRequestHeaders",
+            this.onRequestHeaders
           );
-        }
-        break;
-      case "eventTimings":
-        request = this.getData(
-          resource.actor,
-          "getEventTimings",
-          this.onEventTimings
-        );
-        break;
-    }
+          break;
+        case "requestCookies":
+          request = this.getData(
+            resource.actor,
+            "getRequestCookies",
+            this.onRequestCookies
+          );
+          break;
+        case "requestPostData":
+          request = this.getData(
+            resource.actor,
+            "getRequestPostData",
+            this.onRequestPostData
+          );
+          break;
+        case "responseHeaders":
+          request = this.getData(
+            resource.actor,
+            "getResponseHeaders",
+            this.onResponseHeaders
+          );
+          break;
+        case "responseCookies":
+          request = this.getData(
+            resource.actor,
+            "getResponseCookies",
+            this.onResponseCookies
+          );
+          break;
+        case "responseStart":
+          file.httpVersion = resource.response.httpVersion;
+          file.status = resource.response.status;
+          file.statusText = resource.response.statusText;
+          break;
+        case "responseContent":
+          file.contentSize = resource.contentSize;
+          file.mimeType = resource.mimeType;
+          file.transferredSize = resource.transferredSize;
 
-    if (request) {
-      this.requests.push(request);
-    }
+          if (includeResponseBodies) {
+            request = this.getData(
+              resource.actor,
+              "getResponseContent",
+              this.onResponseContent
+            );
+          }
+          break;
+        case "eventTimings":
+          request = this.getData(
+            resource.actor,
+            "getEventTimings",
+            this.onEventTimings
+          );
+          break;
+      }
 
-    this.resetPageLoadTimeout();
+      if (request) {
+        this.requests.push(request);
+      }
+
+      this.resetPageLoadTimeout();
+    }
   },
 
   getData: function(actor, method, callback) {

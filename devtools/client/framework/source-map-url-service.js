@@ -428,9 +428,11 @@ class SourceMapURLService {
           return;
         }
 
-        this._onResourceAvailable = async ({ resource }) => {
+        this._onResourceAvailable = async resources => {
           if (this._sourcesLoading === sourcesLoading) {
-            this._onNewStyleSheet(resource);
+            for (const resource of resources) {
+              this._onNewStyleSheet(resource);
+            }
           }
         };
 

@@ -353,28 +353,34 @@ class WebConsoleUI {
     });
   }
 
-  _onResourceAvailable({ resource }) {
+  _onResourceAvailable(resources) {
     if (!this.hud) {
       return;
     }
-    const { TYPES } = this.hud.resourceWatcher;
-    // Ignore messages forwarded from content processes if we're in fission browser toolbox.
-    if (
-      !this.wrapper ||
-      ((resource.resourceType === TYPES.ERROR_MESSAGE ||
-        resource.resourceType === TYPES.CSS_MESSAGE) &&
-        resource.pageError?.isForwardedFromContentProcess &&
-        (this.isBrowserToolboxConsole || this.isBrowserConsole) &&
-        this.fissionSupport)
-    ) {
-      return;
+    for (const resource of resources) {
+      const { TYPES } = this.hud.resourceWatcher;
+      // Ignore messages forwarded from content processes if we're in fission browser toolbox.
+      if (
+        !this.wrapper ||
+        ((resource.resourceType === TYPES.ERROR_MESSAGE ||
+          resource.resourceType === TYPES.CSS_MESSAGE) &&
+          resource.pageError?.isForwardedFromContentProcess &&
+          (this.isBrowserToolboxConsole || this.isBrowserConsole) &&
+          this.fissionSupport)
+      ) {
+        continue;
+      }
+      this.wrapper.dispatchMessageAdd(resource);
     }
-    this.wrapper.dispatchMessageAdd(resource);
   }
 
-  _onResourceUpdated({ resource }) {
-    if (resource.resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT) {
-      this.wrapper.dispatchMessageUpdate(resource);
+  _onResourceUpdated(updates) {
+    for (const { resource } of updates) {
+      if (
+        resource.resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT
+      ) {
+        this.wrapper.dispatchMessageUpdate(resource);
+      }
     }
   }
 
