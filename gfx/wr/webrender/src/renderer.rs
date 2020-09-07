@@ -125,7 +125,6 @@ cfg_if! {
     }
 }
 
-const DEFAULT_BATCH_LOOKBACK_COUNT: usize = 10;
 const VERTEX_TEXTURE_EXTRA_ROWS: i32 = 10;
 
 /// The size of the array of each type of vertex data texture that
@@ -2615,7 +2614,7 @@ impl Renderer {
             gpu_supports_fast_clears: options.gpu_supports_fast_clears,
             gpu_supports_advanced_blend: ext_blend_equation_advanced,
             advanced_blend_is_coherent: ext_blend_equation_advanced_coherent,
-            batch_lookback_count: options.batch_lookback_count,
+            batch_lookback_count: RendererOptions::BATCH_LOOKBACK_COUNT,
             background_color: options.clear_color,
             compositor_kind,
             tile_size_override: None,
@@ -7161,9 +7160,6 @@ pub struct RendererOptions {
     /// one expected by the driver, pretending the format is matching, and
     /// swizzling the components on all the shader sampling.
     pub allow_texture_swizzling: bool,
-    /// Number of batches to look back in history for adding the current
-    /// transparent instance into.
-    pub batch_lookback_count: usize,
     /// Use `ps_clear` shader with batched quad rendering to clear the rects
     /// in texture cache and picture cache tasks.
     /// This helps to work around some Intel drivers
@@ -7195,6 +7191,12 @@ pub struct RendererOptions {
     /// Having a limit here allows the drivers to more easily manage
     /// the PBOs for us.
     pub max_instance_buffer_size: usize,
+}
+
+impl RendererOptions {
+    /// Number of batches to look back in history for adding the current
+    /// transparent instance into.
+    const BATCH_LOOKBACK_COUNT: usize = 10;
 }
 
 impl Default for RendererOptions {
@@ -7238,7 +7240,6 @@ impl Default for RendererOptions {
             allow_pixel_local_storage_support: false,
             allow_texture_storage_support: true,
             allow_texture_swizzling: true,
-            batch_lookback_count: DEFAULT_BATCH_LOOKBACK_COUNT,
             clear_caches_with_quads: true,
             // For backwards compatibility we set this to true by default, so
             // that if the debugger feature is enabled, the debug server will
