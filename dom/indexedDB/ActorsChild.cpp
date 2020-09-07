@@ -20,6 +20,7 @@
 #include "IDBTransaction.h"
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
+#include "IndexedDBCommon.h"
 #include "js/Array.h"  // JS::NewArrayObject, JS::SetArrayLength
 #include "js/Date.h"   // JS::NewDateObject, JS::TimeClip
 #include <mozIRemoteLazyInputStream.h>
@@ -27,6 +28,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -782,13 +784,8 @@ class WorkerPermissionChallenge final : public Runnable {
       return true;
     }
 
-    auto principalOrErr =
-        mozilla::ipc::PrincipalInfoToPrincipal(mPrincipalInfo);
-    if (NS_WARN_IF(principalOrErr.isErr())) {
-      return true;
-    }
-
-    const nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+    IDB_TRY_VAR(auto principal,
+                mozilla::ipc::PrincipalInfoToPrincipal(mPrincipalInfo), true);
 
     if (XRE_IsParentProcess()) {
       const nsCOMPtr<Element> ownerElement =
@@ -1469,11 +1466,9 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     return IPC_OK();
   }
 
-  auto principalOrErr = mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo);
-  if (NS_WARN_IF(principalOrErr.isErr())) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+  IDB_TRY_VAR(auto principal,
+              mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo),
+              IPC_FAIL_NO_REASON(this));
 
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIGlobalObject> global = mFactory->GetParentObject();
