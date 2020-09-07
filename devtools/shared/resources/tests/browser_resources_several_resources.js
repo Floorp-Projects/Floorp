@@ -32,8 +32,8 @@ add_task(async function() {
   // We are only interested in console messages as a resource, the ROOT_NODE one
   // is here to test the ResourceWatcher::unwatchResources API with several resources.
   const receivedMessages = [];
-  const onAvailable = ({ resource, resourceType }) => {
-    if (resourceType === CONSOLE_MESSAGE) {
+  const onAvailable = ({ resource }) => {
+    if (resource.resourceType === CONSOLE_MESSAGE) {
       receivedMessages.push(resource);
     }
   };

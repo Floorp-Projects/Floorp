@@ -97,10 +97,10 @@ add_task(async function testRootNodeFrontIsCorrect() {
   });
 
   info("Wait until onAvailable has been called");
-  const { resource: root1, resourceType } = await rootNodePromise;
+  const { resource: root1 } = await rootNodePromise;
   ok(!!root1, "onAvailable has been called with a valid argument");
   is(
-    resourceType,
+    root1.resourceType,
     ResourceWatcher.TYPES.ROOT_NODE,
     "The resource has the expected type"
   );

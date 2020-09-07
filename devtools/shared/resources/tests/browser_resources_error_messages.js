@@ -52,7 +52,7 @@ async function testErrorMessagesResources() {
 
   let done;
   const onAllErrorReceived = new Promise(resolve => (done = resolve));
-  const onAvailable = ({ resourceType, targetFront, resource }) => {
+  const onAvailable = ({ targetFront, resource }) => {
     const { pageError } = resource;
 
     is(

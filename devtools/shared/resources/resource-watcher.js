@@ -321,8 +321,6 @@ class ResourceWatcher {
       }
 
       this._availableListeners.emit(resourceType, {
-        // XXX: We may want to read resource.resourceType instead of passing this resourceType argument?
-        resourceType,
         targetFront,
         resource,
       });
@@ -389,7 +387,6 @@ class ResourceWatcher {
       }
 
       this._updatedListeners.emit(resourceType, {
-        resourceType,
         targetFront,
         resource: existingResource,
         update,
@@ -431,7 +428,6 @@ class ResourceWatcher {
       }
 
       this._destroyedListeners.emit(resourceType, {
-        resourceType,
         targetFront,
         resource,
       });
