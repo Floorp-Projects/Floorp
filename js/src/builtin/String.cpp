@@ -3581,8 +3581,8 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN(js_toSource_str, str_toSource, 0, 0),
 
     /* Java-like methods. */
-    JS_FN(js_toString_str, str_toString, 0, 0),
-    JS_FN(js_valueOf_str, str_toString, 0, 0),
+    JS_INLINABLE_FN(js_toString_str, str_toString, 0, 0, StringToString),
+    JS_INLINABLE_FN(js_valueOf_str, str_toString, 0, 0, StringValueOf),
     JS_INLINABLE_FN("toLowerCase", str_toLowerCase, 0, 0, StringToLowerCase),
     JS_INLINABLE_FN("toUpperCase", str_toUpperCase, 0, 0, StringToUpperCase),
     JS_INLINABLE_FN("charAt", str_charAt, 1, 0, StringCharAt),
