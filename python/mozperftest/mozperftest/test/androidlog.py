@@ -6,8 +6,7 @@ from mozperftest.layers import Layer
 
 
 class AndroidLog(Layer):
-    """Runs an android log test.
-    """
+    """Runs an android log test."""
 
     name = "androidlog"
     activated = False
