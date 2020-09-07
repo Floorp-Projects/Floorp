@@ -9,8 +9,7 @@ from .transformer import get_transformers
 
 
 class Constant(object):
-    """A singleton class to store all constants.
-    """
+    """A singleton class to store all constants."""
 
     __instance = None
 

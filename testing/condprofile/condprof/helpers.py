@@ -13,8 +13,7 @@ def is_mobile(platform):
 
 
 class TabSwitcher:
-    """ Helper used to create tabs and circulate in them.
-    """
+    """Helper used to create tabs and circulate in them."""
 
     def __init__(self, session, options):
         self.handles = None

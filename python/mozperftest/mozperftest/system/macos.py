@@ -21,8 +21,7 @@ POTENTIAL_DMGS = {
 
 
 class MacosDevice(Layer):
-    """Runs on macOS to mount DMGs if we see one.
-    """
+    """Runs on macOS to mount DMGs if we see one."""
 
     name = "macos"
     activated = platform.system() == "Darwin"

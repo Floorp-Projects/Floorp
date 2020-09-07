@@ -20,8 +20,7 @@ PERFHERDER_SCHEMA = pathlib.Path(
 
 
 class Perfherder(Layer):
-    """Output data in the perfherder format.
-    """
+    """Output data in the perfherder format."""
 
     name = "perfherder"
     activated = False

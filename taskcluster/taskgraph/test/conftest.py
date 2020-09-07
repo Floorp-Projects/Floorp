@@ -21,7 +21,8 @@ def patch_prefherder(request):
 
     m = MonkeyPatch()
     m.setattr(
-        "taskgraph.util.bugbug._write_perfherder_data", lambda lower_is_better: None,
+        "taskgraph.util.bugbug._write_perfherder_data",
+        lambda lower_is_better: None,
     )
     yield
     m.undo()
