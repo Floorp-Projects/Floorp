@@ -38,8 +38,7 @@
     SimpleTest.waitForFocus(checkTest2, win);
   }
   function checkTest2() {
-    let runTime = Cc["@mozilla.org/xre/app-info;1"]
-                    .getService(Ci.nsIXULRuntime);
+    let runTime = SpecialPowers.Services.appinfo;
     if (runTime.OS != "Linux") {
       is(win.screenX, 80, "The window should be placed now at x=80px");
       is(win.screenY, 80, "The window should be placed now at y=80px");

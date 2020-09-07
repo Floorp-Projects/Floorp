@@ -25,17 +25,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=543854
   const ASCIIName = "myprofile";
   const UnicodeName = "\u09A0\u09BE\u0995\u09C1\u09B0"; // A Bengali name
 
-  var gDirService;
-  var gIOService;
+  var gDirService = SpecialPowers.Services.dirsvc;
+  var gIOService = SpecialPowers.Services.io;
   var gProfileService;
-
   var gDefaultLocalProfileParent;
-
-  gDirService = Cc["@mozilla.org/file/directory_service;1"].
-    getService(Ci.nsIProperties);
-
-  gIOService = Cc["@mozilla.org/network/io-service;1"].
-    getService(Ci.nsIIOService);
 
   gProfileService = Cc["@mozilla.org/toolkit/profile-service;1"].
     getService(Ci.nsIToolkitProfileService);

@@ -22,7 +22,7 @@ let panel, anchor, arrow;
 // done by the panel.
 let observer = {
   reflows: [],
-  reflow: function (start, end) {
+  reflow (start, end) {
     // Ignore reflows triggered by native code
     // (Reflows from native code only have an empty stack after the first frame)
     var path = (new Error().stack).split("\n").slice(1).join("");
@@ -33,7 +33,7 @@ let observer = {
     this.reflows.push(new Error().stack);
   },
 
-  reflowInterruptible: function (start, end) {
+  reflowInterruptible (start, end) {
     // We're not interested in interruptible reflows.  Why, you ask?  Because
     // we've simply cargo-culted this test from browser_tabopen_reflows.js!
   },
@@ -64,9 +64,8 @@ function countReflows(testfn, expected) {
 function openPopup() {
   return new Promise(resolve => {
     panel.addEventListener("popupshown", function popupshown() {
-      panel.removeEventListener("popupshown", popupshown);
       resolve();
-    });
+    }, {once: true});
     panel.openPopup(anchor, "before_start");
   });
 }

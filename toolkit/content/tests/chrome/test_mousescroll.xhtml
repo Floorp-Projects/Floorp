@@ -156,7 +156,7 @@ function* testArrowScrollbox(id)
     var orientIsHorizontal = (orient == "horizontal");
 
     scrollbox.scrollTo(aStart, aStart);
-    for (var i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
+    for (let i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
       // Note, vertical mouse scrolling is allowed to scroll horizontal
       // arrowscrollboxes, because many users have no horizontal mouse scroll
       // capability
@@ -189,7 +189,7 @@ function* testArrowScrollbox(id)
     }
 
     scrollbox.scrollTo(aStart, aStart);
-    for (var i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
+    for (let i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
       // horizontal mouse scrolling is never allowed to scroll vertical
       // arrowscrollboxes
       let expected = (!i && orientIsHorizontal) ? aExpected : aStart;

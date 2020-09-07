@@ -35,9 +35,9 @@ function getScreenXY(element)
   }
 
   // a hacky way to get the screen position of an element without using the box object
-  window.addEventListener("mousedown", mouseFn, false);
+  window.addEventListener("mousedown", mouseFn);
   synthesizeMouse(element, 1, 1, { });
-  window.removeEventListener("mousedown", mouseFn, false);
+  window.removeEventListener("mousedown", mouseFn);
 
   return [screenX, screenY];
 }
@@ -60,7 +60,7 @@ function runTests()
 
 function nextTest()
 {
-  gOverflowed = false, gUnderflowed = false;
+  gOverflowed = false; gUnderflowed = false;
 
   var y = screen.height;
   if (gTestIndex == 1) // open with bottom overlap test:
@@ -158,7 +158,7 @@ function popupShown()
 
   is(scrollbox.scrollTop, expectedScrollPos, "menu scroll position")
 
-  hidePopup();
+  return hidePopup();
 }
 
 function is(l, r, n) { window.arguments[0].SimpleTest.is(l,r,n); }
@@ -227,8 +227,9 @@ function contextMenuPopupShown()
   var labelrect = document.getElementById("label").getBoundingClientRect();
   
   // Click to open popup in popupHidden() occurs at (4,4) in label's coordinate space
-  var clickX = clickY = 4;
-  
+  var clickX = 4;
+  var clickY = 4;
+
   var testPopupAppearedRightOfCursor = true;
   switch (gTests[gTestIndex]) {
     case "context menu enough space below":
@@ -311,11 +312,10 @@ function nextContextMenuTest(desiredHeight)
 
 function testPopupMovement()
 {
-  var button = document.getElementById("label");
   var isPanelTest = (gTests[gTestIndex] == "panel movement");
   var popup = document.getElementById(isPanelTest ? "panel" : "popup");
 
-  var screenX, screenY, buttonScreenX, buttonScreenY;
+  var screenX, screenY;
   var rect = popup.getBoundingClientRect();
 
   var overlapOSChrome = !platformIsMac();

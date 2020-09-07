@@ -24,7 +24,7 @@ var gMenus = [];
 function popupsOpened()
 {
   var framedoc = $("frame").contentDocument;
-  framedoc.addEventListener("DOMAttrModified", modified, false);
+  framedoc.addEventListener("DOMAttrModified", modified);
 
   // this is the order in which the menus should be hidden (reverse of the
   // order they were opened in). The second menu is removed during the
@@ -61,7 +61,7 @@ function modified(event)
   }
 
   is(event.target, gMenus.shift(), event.target.id + " hidden");
-  if (gMenus.length == 0)
+  if (!gMenus.length)
     SimpleTest.finish();
 }
 

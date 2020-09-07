@@ -65,7 +65,7 @@ function runTest()
   keyset.setAttribute("disabled", "true");
   iterateKeys(false, "disabled");
 
-  var keyset = document.getElementById("keyset");
+  keyset = document.getElementById("keyset");
   keyset.removeAttribute("disabled");
   iterateKeys(true, "reenabled");
 

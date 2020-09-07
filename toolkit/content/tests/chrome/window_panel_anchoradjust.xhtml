@@ -132,7 +132,7 @@ function runTests() {
     await popupshown;
 
     popuphidden = waitForPanel(panel, "popuphidden");
-    menupopuphidden = waitForPanel(menupopup, "popuphidden");
+    let menupopuphidden = waitForPanel(menupopup, "popuphidden");
     menupopup.hidePopup();
     await popuphidden;
     await menupopuphidden;

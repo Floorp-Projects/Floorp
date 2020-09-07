@@ -26,7 +26,6 @@ function runTests()
 window.arguments[0].SimpleTest.waitForFocus(runTests, window);
 
 function mouseMove(e) {
-  var element = e.target;
   var el = document.getElementById("parentcap");
   el.label = "client: (" + e.clientX + "," + e.clientY + ")";
   window.arguments[0].SimpleTest.is(e.clientX, 1, "mouse event clientX");
@@ -35,7 +34,7 @@ function mouseMove(e) {
   frames[0].runTests();
 }
 
-window.addEventListener("mousemove",mouseMove, false);
+window.addEventListener("mousemove",mouseMove);
 
 </script>
 </window>

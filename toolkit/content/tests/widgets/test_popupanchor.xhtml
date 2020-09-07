@@ -50,7 +50,7 @@ function isArrowPositionedOn(side, offset) {
       ok(arrowMidY >= panelMidY, "arrow should be on the bottom of the panel");
       break;
     default:
-      ok(false, "invalid position " + where);
+      ok(false, "invalid position " + side);
       break;
   }
   // Now check the arrow really is pointing where we expect.  The middle of
@@ -91,9 +91,8 @@ function openPopup(position, callback) {
 function waitForPopupPositioned(actionFn, callback)
 {
   panel.addEventListener("popuppositioned", function listener() {
-    panel.removeEventListener("popuppositioned", listener, false);
     SimpleTest.executeSoon(callback);
-  }, false);
+  }, {once: true});
   actionFn();
 }
 
@@ -116,13 +115,11 @@ function _openPopup(position, callback) {
       callback();
   };
   panel.addEventListener("popupshown", function popupshown() {
-    panel.removeEventListener("popupshown", popupshown);
     onEvent();
-  });
+  }, {once: true});
   arrow.addEventListener("load", function imageload() {
-    arrow.removeEventListener("load", imageload);
     onEvent();
-  });
+  }, {once: true});
   panel.openPopup(anchor, position);
 }
 

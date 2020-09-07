@@ -67,13 +67,13 @@ function nextTest()
       step = "large menu";
       popup.removeAttribute("left");
       popup.removeAttribute("top");
-      for (var i = 0; i < 80; i++)
+      for (let i = 0; i < 80; i++)
         menu.appendItem("Test", "");
       synthesizeMouse(menu, 2, 2, { });
       break;
     case "large menu":
       step = "shorter menu again";
-      for (var i = 0; i < 80; i++)
+      for (let i = 0; i < 80; i++)
         popup.lastChild.remove();
       synthesizeMouse(menu, 2, 2, { });
       break;

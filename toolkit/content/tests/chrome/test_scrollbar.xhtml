@@ -29,7 +29,7 @@
 var scrollbarTester = {
   scrollbar: null,
   middlePref: false,
-  startTest: function() {
+  startTest() {
     this.scrollbar = $("scroller");
     this.middlePref = this.getMiddlePref();
     var self = this;
@@ -42,14 +42,13 @@ var scrollbarTester = {
     });
     SimpleTest.finish();
   },
-  testThumbDragging: function(button, withAlt, withShift) {
+  testThumbDragging(button, withAlt, withShift) {
     this.reset();
     var x = 160; // on the right half of the thumb
     var y = 5;
-    
+
     var isMac = navigator.platform.includes("Mac");
-    var runtime = Cc["@mozilla.org/xre/app-info;1"]
-                    .getService(Ci.nsIXULRuntime);
+    let runtime = SpecialPowers.Services.appinfo;
     var isGtk = runtime.widgetToolkit.includes("gtk");
     
     // Start the drag.
@@ -67,7 +66,7 @@ var scrollbarTester = {
                         "thumb with the middle mouse button should center it "+
                         "around the cursor.")
     }
-    
+
     // Move one pixel to the right.
     this.mousemove(x+1, y, button, withAlt, withShift);
     var newPos2 = this.getPos();
@@ -76,16 +75,14 @@ var scrollbarTester = {
       ok(newPos2 - newPos < 3, "Scrollbar shouldn't move further than the mouse when dragged.");
       ok(button == 0 || (button == 1 && this.middlePref) || (button == 2 && isGtk),
          "Dragging the scrollbar should only be possible with the left mouse button.");
-    } else {
+    } else if (button == 0) {
       // Dragging had no effect.
-      if (button == 0) {
-        ok(false, "Dragging the scrollbar thumb should work.");
-      } else if (button == 1 && this.middlePref && (!isGtk && !isMac)) {
-        ok(false, "When middlemouse.scrollbarPosition is on, dragging the "+
-           "scrollbar thumb should be possible using the middle mouse button.");
-      } else {
-        ok(true, "Dragging works correctly.");
-      }
+      ok(false, "Dragging the scrollbar thumb should work.");
+    } else if (button == 1 && this.middlePref && (!isGtk && !isMac)) {
+      ok(false, "When middlemouse.scrollbarPosition is on, dragging the "+
+                "scrollbar thumb should be possible using the middle mouse button.");
+    } else {
+      ok(true, "Dragging works correctly.");
     }
 
     // Release the mouse button.
@@ -94,33 +91,31 @@ var scrollbarTester = {
     ok(newPos3 == newPos2,
        "Releasing the mouse button after dragging the thumb shouldn't move it.");
   },
-  getMiddlePref: function() {
+  getMiddlePref() {
     // It would be better to test with different middlePref settings,
     // but the setting is only queried once, at browser startup, so
     // changing it here wouldn't have any effect
-    var prefService = Cc["@mozilla.org/preferences-service;1"]
-                        .getService(Ci.nsIPrefService);
-    var mouseBranch = prefService.getBranch("middlemouse.");
+    var mouseBranch = SpecialPowers.Services.prefs.getBranch("middlemouse.");
     return mouseBranch.getBoolPref("scrollbarPosition");
   },
-  setPos: function(pos) {
+  setPos(pos) {
     this.scrollbar.setAttribute("curpos", pos);
   },
-  getPos: function() {
+  getPos() {
     return this.scrollbar.getAttribute("curpos");
   },
-  reset: function() {
+  reset() {
     this.setPos(0);
   },
-  mousedown: function(x, y, button, alt, shift) {
+  mousedown(x, y, button, alt, shift) {
     synthesizeMouse(this.scrollbar, x, y, { type: "mousedown", 'button': button,
                                                 altKey: alt, shiftKey: shift });
   },
-  mousemove: function(x, y, button, alt, shift) {
+  mousemove(x, y, button, alt, shift) {
     synthesizeMouse(this.scrollbar, x, y, { type: "mousemove", 'button': button,
                                                 altKey: alt, shiftKey: shift });
   },
-  mouseup: function(x, y, button, alt, shift) {
+  mouseup(x, y, button, alt, shift) {
     synthesizeMouse(this.scrollbar, x, y, { type: "mouseup", 'button': button,
                                                 altKey: alt, shiftKey: shift });
   }

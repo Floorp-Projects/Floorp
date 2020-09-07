@@ -67,7 +67,7 @@ function test_richlistbox()
     richListBox.selectedItem = richListBox.firstChild;
     richListBox.focus();
     synthesizeKey("KEY_ArrowDown", {shiftKey: true}, window);
-    items = [richListBox.selectedItems[0],
+    let items = [richListBox.selectedItems[0],
              richListBox.selectedItems[1]];
     is(items[0], richListBox.firstChild, "The last element should still be selected");
     is(items[1], richListBox.firstChild.nextSibling, "Both elements should now be selected");
@@ -81,9 +81,8 @@ function test_richlistbox()
     is(items[0], richListBox.firstChild, "The last element should still be selected");
     is(items[1], richListBox.firstChild.nextSibling, "Both elements should now be selected");
     richListBox.addEventListener("keypress", function(aEvent) {
-      richListBox.removeEventListener("keypress", arguments.callee, true);
       aEvent.preventDefault();
-    }, true);
+    }, { useCapture: true, once: true });
     richListBox.selectedIndex = 1;
     sendKey("HOME");
     is(richListBox.selectedIndex, 1, "A stopped event should return indexing to normal");
