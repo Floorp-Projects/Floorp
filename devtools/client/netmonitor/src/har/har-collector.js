@@ -166,7 +166,7 @@ HarCollector.prototype = {
 
   // Event Handlers
 
-  onResourceAvailable: function({ resourceType, targetFront, resource }) {
+  onResourceAvailable: function({ targetFront, resource }) {
     trace.log("HarCollector.onNetworkEvent; ", resource);
 
     const {
@@ -208,7 +208,7 @@ HarCollector.prototype = {
     this.items.push(file);
   },
 
-  onResourceUpdated: function({ resourceType, targetFront, resource }) {
+  onResourceUpdated: function({ targetFront, resource }) {
     // Skip events from unknown actors (not in the list).
     // It can happen when there are zombie requests received after
     // the target is closed or multiple tabs are attached through

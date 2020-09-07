@@ -190,9 +190,9 @@ async function testNetworkEventResources(options) {
     () => expectedOnUpdatedCounts == 0
   );
 
-  const onAvailable = ({ resourceType, targetFront, resource }) => {
+  const onAvailable = ({ targetFront, resource }) => {
     is(
-      resourceType,
+      resource.resourceType,
       ResourceWatcher.TYPES.NETWORK_EVENT,
       "Received a network event resource"
     );
@@ -205,9 +205,9 @@ async function testNetworkEventResources(options) {
     expectedOnAvailableCounts--;
   };
 
-  const onUpdated = ({ resourceType, targetFront, resource }) => {
+  const onUpdated = ({ targetFront, resource }) => {
     is(
-      resourceType,
+      resource.resourceType,
       ResourceWatcher.TYPES.NETWORK_EVENT,
       "Received a network update event resource"
     );
