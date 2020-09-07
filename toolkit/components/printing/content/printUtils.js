@@ -208,11 +208,14 @@ var PrintUtils = {
   startPrintWindow(aBrowsingContext, aOpenWindowInfo) {
     let browser = null;
     if (aOpenWindowInfo) {
-      browser = gBrowser.createBrowser({
-        remoteType: aBrowsingContext.currentRemoteType,
-        openWindowInfo: aOpenWindowInfo,
-        skipLoad: false,
-      });
+      browser = document.createXULElement("browser");
+      browser.openWindowInfo = aOpenWindowInfo;
+      browser.setAttribute("type", "content");
+      let remoteType = aBrowsingContext.currentRemoteType;
+      if (remoteType) {
+        browser.setAttribute("remoteType", remoteType);
+        browser.setAttribute("remote", "true");
+      }
       // When the print process finishes, we get closed by
       // nsDocumentViewer::OnDonePrinting, or by the print preview code.
       //
