@@ -98,6 +98,8 @@
   _(MathTrunc)                                     \
   _(MathCbrt)                                      \
                                                    \
+  _(NumberToString)                                \
+                                                   \
   _(ReflectGetPrototypeOf)                         \
                                                    \
   _(RegExpMatcher)                                 \

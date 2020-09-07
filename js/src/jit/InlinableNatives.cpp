@@ -248,6 +248,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::DataViewSetFloat64:
     case InlinableNative::DataViewSetBigInt64:
     case InlinableNative::DataViewSetBigUint64:
+    case InlinableNative::NumberToString:
     case InlinableNative::ReflectGetPrototypeOf:
     case InlinableNative::String:
     case InlinableNative::StringToString:
