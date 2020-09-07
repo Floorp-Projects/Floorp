@@ -13,8 +13,13 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-#define MOZ_UNIQUE_VAR(base) MOZ_CONCAT(base, __LINE__)
+// Proper use of unique variable names can be tricky (especially if nesting of
+// the final macro is required).
+// See https://lifecs.likai.org/2016/07/c-preprocessor-hygienic-macros.html
+#define MOZ_UNIQUE_VAR(base) MOZ_CONCAT(base, __COUNTER__)
 
+// See
+// https://stackoverflow.com/questions/24481810/how-to-remove-the-enclosing-parentheses-with-macro
 #define MOZ_REMOVE_PAREN(X) MOZ_REMOVE_PAREN_HELPER2(MOZ_REMOVE_PAREN_HELPER X)
 #define MOZ_REMOVE_PAREN_HELPER(...) MOZ_REMOVE_PAREN_HELPER __VA_ARGS__
 #define MOZ_REMOVE_PAREN_HELPER2(...) MOZ_REMOVE_PAREN_HELPER3(__VA_ARGS__)
@@ -381,7 +386,7 @@
 
 #define QM_VOID
 
-#define QM_PROPAGATE MOZ_UNIQUE_VAR(tryResult).propagateErr()
+#define QM_PROPAGATE tryTempResult.propagateErr()
 
 // QM_MISSING_ARGS and QM_HANDLE_ERROR macros are implementation details of
 // QM_TRY/QM_TRY_VAR/QM_FAIL and shouldn't be used directly.
@@ -400,44 +405,56 @@
                 __LINE__)
 #endif
 
-// QM_TRY_PROPAGATE_ERR, QM_TRY_CUSTOM_RET_VAL and
-// QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP macros are implementation details of
-// QM_TRY and shouldn't be used directly.
+// QM_TRY_PROPAGATE_ERR, QM_TRY_CUSTOM_RET_VAL,
+// QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP and QM_TRY_GLUE macros are implementation
+// details of QM_TRY and shouldn't be used directly.
 
-// Handles the two arguments case when the eror is propagated.
-#define QM_TRY_PROPAGATE_ERR(ns, expr)                        \
-  auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr); \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {      \
-    ns::QM_HANDLE_ERROR(expr);                                \
-    return QM_PROPAGATE;                                      \
+// Handles the three arguments case when the error is propagated.
+#define QM_TRY_PROPAGATE_ERR(ns, tryResult, expr) \
+  auto tryResult = ::mozilla::ToResult(expr);     \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {          \
+    ns::QM_HANDLE_ERROR(expr);                    \
+    return tryResult.propagateErr();              \
   }
 
-// Handles the three arguments case when a custom return value needs to be
+// Handles the four arguments case when a custom return value needs to be
 // returned
-#define QM_TRY_CUSTOM_RET_VAL(ns, expr, customRetVal)         \
-  auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr); \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {      \
-    ns::QM_HANDLE_ERROR(expr);                                \
-    return customRetVal;                                      \
+#define QM_TRY_CUSTOM_RET_VAL(ns, tryResult, expr, customRetVal) \
+  auto tryResult = ::mozilla::ToResult(expr);                    \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                         \
+    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);  \
+    ns::QM_HANDLE_ERROR(expr);                                   \
+    return customRetVal;                                         \
   }
 
-// Handles the four arguments case when a cleanup function needs to be called
+// Handles the five arguments case when a cleanup function needs to be called
 // before a custom return value is returned
-#define QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(ns, expr, customRetVal, cleanup) \
-  auto MOZ_UNIQUE_VAR(tryResult) = ::mozilla::ToResult(expr);               \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                    \
-    ns::QM_HANDLE_ERROR(expr);                                              \
-    cleanup();                                                              \
-    return customRetVal;                                                    \
+#define QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(ns, tryResult, expr, customRetVal, \
+                                           cleanup)                           \
+  auto tryResult = ::mozilla::ToResult(expr);                                 \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                                      \
+    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);               \
+    ns::QM_HANDLE_ERROR(expr);                                                \
+    cleanup();                                                                \
+    return customRetVal;                                                      \
   }
 
 // Chooses the final implementation macro for given argument count.
 // It can be used by other modules to define module specific error handling.
+// This could use MOZ_PASTE_PREFIX_AND_ARG_COUNT, but explicit named suffxes
+// read slightly better than plain numbers.
+// See also
+// https://stackoverflow.com/questions/3046889/optional-parameters-with-c-macros
 #define QM_TRY_META(...)                                                      \
-  MOZ_ARG_6(, ##__VA_ARGS__, QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
+  MOZ_ARG_7(, ##__VA_ARGS__, QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
             QM_TRY_CUSTOM_RET_VAL(__VA_ARGS__),                               \
             QM_TRY_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__),  \
-            QM_MISSING_ARGS(__VA_ARGS__))
+            QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))
+
+// Specifies the namespace and generates unique variable name. This extra
+// internal macro (along with __COUNTER__) allows nesting of the final macro.
+#define QM_TRY_GLUE(...) \
+  QM_TRY_META(mozilla::dom::quota, MOZ_UNIQUE_VAR(tryResult), ##__VA_ARGS__)
 
 /**
  * QM_TRY(expr[, customRetVal, cleanup]) is the C++ equivalent of Rust's
@@ -447,7 +464,7 @@
  * passed) and finally returns an error Result from the enclosing function or a
  * custom return value (if the second argument was passed).
  */
-#define QM_TRY(...) QM_TRY_META(mozilla::dom::quota, ##__VA_ARGS__)
+#define QM_TRY(...) QM_TRY_GLUE(__VA_ARGS__)
 
 /**
  * QM_DEBUG_TRY works like QM_TRY in debug builds, it has has no effect in
@@ -459,49 +476,58 @@
 #  define QM_DEBUG_TRY(...)
 #endif
 
-// QM_TRY_VAR_PROPAGATE_ERR, QM_TRY_VAR_CUSTOM_RET_VAL and
-// QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP macros are implementation details of
-// QM_TRY_VAR and shouldn't be used directly.
+// QM_TRY_VAR_PROPAGATE_ERR, QM_TRY_VAR_CUSTOM_RET_VAL,
+// QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP and QM_TRY_VAR_GLUE macros are
+// implementation details of QM_TRY_VAR and shouldn't be used directly.
 
-// Handles the three arguments case when the eror is propagated.
-#define QM_TRY_VAR_PROPAGATE_ERR(ns, target, expr)       \
-  auto MOZ_UNIQUE_VAR(tryResult) = (expr);               \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) { \
-    ns::QM_HANDLE_ERROR(expr);                           \
-    return QM_PROPAGATE;                                 \
-  }                                                      \
-  MOZ_REMOVE_PAREN(target) = MOZ_UNIQUE_VAR(tryResult).unwrap();
+// Handles the four arguments case when the error is propagated.
+#define QM_TRY_VAR_PROPAGATE_ERR(ns, tryResult, target, expr) \
+  auto tryResult = (expr);                                    \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                      \
+    ns::QM_HANDLE_ERROR(expr);                                \
+    return tryResult.propagateErr();                          \
+  }                                                           \
+  MOZ_REMOVE_PAREN(target) = tryResult.unwrap();
 
-// Handles the four arguments case when a custom return value needs to be
+// Handles the five arguments case when a custom return value needs to be
 // returned
-#define QM_TRY_VAR_CUSTOM_RET_VAL(ns, target, expr, customRetVal) \
-  auto MOZ_UNIQUE_VAR(tryResult) = (expr);                        \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {          \
-    ns::QM_HANDLE_ERROR(expr);                                    \
-    return customRetVal;                                          \
-  }                                                               \
-  MOZ_REMOVE_PAREN(target) = MOZ_UNIQUE_VAR(tryResult).unwrap();
+#define QM_TRY_VAR_CUSTOM_RET_VAL(ns, tryResult, target, expr, customRetVal) \
+  auto tryResult = (expr);                                                   \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                                     \
+    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);              \
+    ns::QM_HANDLE_ERROR(expr);                                               \
+    return customRetVal;                                                     \
+  }                                                                          \
+  MOZ_REMOVE_PAREN(target) = tryResult.unwrap();
 
-// Handles the five arguments case when a cleanup function needs to be called
+// Handles the six arguments case when a cleanup function needs to be called
 // before a custom return value is returned
-#define QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP(ns, target, expr, customRetVal, \
-                                               cleanup)                        \
-  auto MOZ_UNIQUE_VAR(tryResult) = (expr);                                     \
-  if (MOZ_UNLIKELY(MOZ_UNIQUE_VAR(tryResult).isErr())) {                       \
-    ns::QM_HANDLE_ERROR(expr);                                                 \
-    cleanup();                                                                 \
-    return customRetVal;                                                       \
-  }                                                                            \
-  MOZ_REMOVE_PAREN(target) = MOZ_UNIQUE_VAR(tryResult).unwrap();
+#define QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP(ns, tryResult, target, expr, \
+                                               customRetVal, cleanup)       \
+  auto tryResult = (expr);                                                  \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                                    \
+    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);             \
+    ns::QM_HANDLE_ERROR(expr);                                              \
+    cleanup();                                                              \
+    return customRetVal;                                                    \
+  }                                                                         \
+  MOZ_REMOVE_PAREN(target) = tryResult.unwrap();
 
 // Chooses the final implementation macro for given argument count.
 // It can be used by other modules to define module specific error handling.
-#define QM_TRY_VAR_META(...)                                                \
-  MOZ_ARG_7(                                                                \
-      , ##__VA_ARGS__, QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
-      QM_TRY_VAR_CUSTOM_RET_VAL(__VA_ARGS__),                               \
-      QM_TRY_VAR_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__),  \
-      QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))
+// See also the comment for QM_TRY_META.
+#define QM_TRY_VAR_META(...)                                            \
+  MOZ_ARG_8(, ##__VA_ARGS__,                                            \
+            QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__),        \
+            QM_TRY_VAR_CUSTOM_RET_VAL(__VA_ARGS__),                     \
+            QM_TRY_VAR_PROPAGATE_ERR(__VA_ARGS__),                      \
+            QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__), \
+            QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))
+
+// Specifies the namespace and generates unique variable name. This extra
+// internal macro (along with __COUNTER__) allows nesting of the final macro.
+#define QM_TRY_VAR_GLUE(...) \
+  QM_TRY_VAR_META(mozilla::dom::quota, MOZ_UNIQUE_VAR(tryResult), ##__VA_ARGS__)
 
 /**
  * QM_TRY_VAR(target, expr[, customRetVal, cleanup]) is the C++ equivalent of
@@ -512,7 +538,7 @@
  * custom return value (if the third argument was passed). |target| must be an
  * lvalue.
  */
-#define QM_TRY_VAR(...) QM_TRY_VAR_META(mozilla::dom::quota, ##__VA_ARGS__)
+#define QM_TRY_VAR(...) QM_TRY_VAR_GLUE(__VA_ARGS__)
 
 /**
  * QM_DEBUG_VAR_TRY works like QM_TRY_VAR in debug builds, it has has no effect
@@ -541,15 +567,20 @@
 
 // Chooses the final implementation macro for given argument count.
 // It can be used by other modules to define module specific error handling.
+// See also the comment for QM_TRY_META.
 #define QM_FAIL_META(...)                                               \
   MOZ_ARG_5(, ##__VA_ARGS__, QM_FAIL_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
             QM_FAIL_RET_VAL(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))
+
+// Specifies the namespace. This extra internal macro allows nesting of the
+// final macro.
+#define QM_FAIL_GLUE(...) QM_FAIL_META(mozilla::dom::quota, ##__VA_ARGS__)
 
 /**
  * QM_FAIL(retVal[, cleanup]) calls HandleError and an additional cleanup
  * function (if the second argument was passed) and returns a return value.
  */
-#define QM_FAIL(...) QM_FAIL_META(mozilla::dom::quota, ##__VA_ARGS__)
+#define QM_FAIL(...) QM_FAIL_GLUE(__VA_ARGS__)
 
 /**
  * QM_DEBUG_FAIL works like QM_FAIL in debug builds, it has has no effect in

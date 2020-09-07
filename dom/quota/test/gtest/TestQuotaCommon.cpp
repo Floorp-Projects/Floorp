@@ -111,6 +111,157 @@ TEST(QuotaCommon_Try, Failure_WithCleanup)
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 }
 
+TEST(QuotaCommon_Try, SameLine)
+{
+  // clang-format off
+  QM_TRY(NS_OK, QM_VOID); QM_TRY(NS_OK, QM_VOID);
+  // clang-format on
+}
+
+TEST(QuotaCommon_Try, NestingMadness_Success)
+{
+  bool nestedTryDidNotReturn = false;
+  bool tryDidNotReturn = false;
+
+  nsresult rv = [&nestedTryDidNotReturn, &tryDidNotReturn]() -> nsresult {
+    QM_TRY(([&nestedTryDidNotReturn]() -> Result<Ok, nsresult> {
+      QM_TRY(NS_OK);
+
+      nestedTryDidNotReturn = true;
+
+      return Ok();
+    }()));
+
+    tryDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_TRUE(nestedTryDidNotReturn);
+  EXPECT_TRUE(tryDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_Try, NestingMadness_Failure)
+{
+  bool nestedTryDidNotReturn = false;
+  bool tryDidNotReturn = false;
+
+  nsresult rv = [&nestedTryDidNotReturn, &tryDidNotReturn]() -> nsresult {
+    QM_TRY(([&nestedTryDidNotReturn]() -> Result<Ok, nsresult> {
+      QM_TRY(NS_ERROR_FAILURE);
+
+      nestedTryDidNotReturn = true;
+
+      return Ok();
+    }()));
+
+    tryDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_FALSE(nestedTryDidNotReturn);
+  EXPECT_FALSE(tryDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_Try, NestingMadness_Multiple_Success)
+{
+  bool nestedTry1DidNotReturn = false;
+  bool nestedTry2DidNotReturn = false;
+  bool tryDidNotReturn = false;
+
+  nsresult rv = [&nestedTry1DidNotReturn, &nestedTry2DidNotReturn,
+                 &tryDidNotReturn]() -> nsresult {
+    QM_TRY(([&nestedTry1DidNotReturn,
+             &nestedTry2DidNotReturn]() -> Result<Ok, nsresult> {
+      QM_TRY(NS_OK);
+
+      nestedTry1DidNotReturn = true;
+
+      QM_TRY(NS_OK);
+
+      nestedTry2DidNotReturn = true;
+
+      return Ok();
+    }()));
+
+    tryDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_TRUE(nestedTry1DidNotReturn);
+  EXPECT_TRUE(nestedTry2DidNotReturn);
+  EXPECT_TRUE(tryDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_Try, NestingMadness_Multiple_Failure1)
+{
+  bool nestedTry1DidNotReturn = false;
+  bool nestedTry2DidNotReturn = false;
+  bool tryDidNotReturn = false;
+
+  nsresult rv = [&nestedTry1DidNotReturn, &nestedTry2DidNotReturn,
+                 &tryDidNotReturn]() -> nsresult {
+    QM_TRY(([&nestedTry1DidNotReturn,
+             &nestedTry2DidNotReturn]() -> Result<Ok, nsresult> {
+      QM_TRY(NS_ERROR_FAILURE);
+
+      nestedTry1DidNotReturn = true;
+
+      QM_TRY(NS_OK);
+
+      nestedTry2DidNotReturn = true;
+
+      return Ok();
+    }()));
+
+    tryDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_FALSE(nestedTry1DidNotReturn);
+  EXPECT_FALSE(nestedTry2DidNotReturn);
+  EXPECT_FALSE(tryDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_Try, NestingMadness_Multiple_Failure2)
+{
+  bool nestedTry1DidNotReturn = false;
+  bool nestedTry2DidNotReturn = false;
+  bool tryDidNotReturn = false;
+
+  nsresult rv = [&nestedTry1DidNotReturn, &nestedTry2DidNotReturn,
+                 &tryDidNotReturn]() -> nsresult {
+    QM_TRY(([&nestedTry1DidNotReturn,
+             &nestedTry2DidNotReturn]() -> Result<Ok, nsresult> {
+      QM_TRY(NS_OK);
+
+      nestedTry1DidNotReturn = true;
+
+      QM_TRY(NS_ERROR_FAILURE);
+
+      nestedTry2DidNotReturn = true;
+
+      return Ok();
+    }()));
+
+    tryDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_TRUE(nestedTry1DidNotReturn);
+  EXPECT_FALSE(nestedTry2DidNotReturn);
+  EXPECT_FALSE(tryDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+}
+
 TEST(QuotaCommon_DebugTry, Success)
 {
   bool debugTryBodyRan = false;
@@ -123,12 +274,11 @@ TEST(QuotaCommon_DebugTry, Success)
                     &debugTryDidNotReturn
 #endif
   ]() -> nsresult {
-    QM_DEBUG_TRY(ToResultInvoke<Ok>([&debugTryBodyRan](Ok* out) {
+    QM_DEBUG_TRY(([&debugTryBodyRan]() -> Result<Ok, nsresult> {
       debugTryBodyRan = true;
 
-      *out = Ok();
-      return NS_OK;
-    }));
+      return Ok();
+    }()));
 
     debugTryDidNotReturn = true;
 
@@ -156,11 +306,11 @@ TEST(QuotaCommon_DebugTry, Failure)
                     &debugTryDidNotReturn
 #endif
   ]() -> nsresult {
-    QM_DEBUG_TRY(ToResultInvoke<Ok>([&debugTryBodyRan](Ok* out) {
+    QM_DEBUG_TRY(([&debugTryBodyRan]() -> Result<Ok, nsresult> {
       debugTryBodyRan = true;
 
-      return NS_ERROR_FAILURE;
-    }));
+      return Err(NS_ERROR_FAILURE);
+    }()));
 
     debugTryDidNotReturn = true;
 
@@ -314,6 +464,16 @@ TEST(QuotaCommon_TryVar, SameScopeDecl)
   EXPECT_EQ(y, 42);
 }
 
+TEST(QuotaCommon_TryVar, SameLine)
+{
+  // clang-format off
+  QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{42}), QM_VOID); QM_TRY_VAR(const auto y, (Result<int32_t, nsresult>{42}), QM_VOID);
+  // clang-format on
+
+  EXPECT_EQ(x, 42);
+  EXPECT_EQ(y, 42);
+}
+
 TEST(QuotaCommon_TryVar, ParenDecl)
 {
   QM_TRY_VAR((const auto [x, y]),
@@ -325,6 +485,163 @@ TEST(QuotaCommon_TryVar, ParenDecl)
 
   EXPECT_EQ(x, 42);
   EXPECT_EQ(y, true);
+}
+
+TEST(QuotaCommon_TryVar, NestingMadness_Success)
+{
+  bool nestedTryVarDidNotReturn = false;
+  bool tryVarDidNotReturn = false;
+
+  nsresult rv = [&nestedTryVarDidNotReturn, &tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto x,
+               ([&nestedTryVarDidNotReturn]() -> Result<int32_t, nsresult> {
+                 QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{42}));
+
+                 nestedTryVarDidNotReturn = true;
+
+                 return x;
+               }()));
+    EXPECT_EQ(x, 42);
+
+    tryVarDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_TRUE(nestedTryVarDidNotReturn);
+  EXPECT_TRUE(tryVarDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_TryVar, NestingMadness_Failure)
+{
+  bool nestedTryVarDidNotReturn = false;
+  bool tryVarDidNotReturn = false;
+
+  nsresult rv = [&nestedTryVarDidNotReturn, &tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto x,
+               ([&nestedTryVarDidNotReturn]() -> Result<int32_t, nsresult> {
+                 QM_TRY_VAR(const auto x,
+                            (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
+
+                 nestedTryVarDidNotReturn = true;
+
+                 return x;
+               }()));
+    Unused << x;
+
+    tryVarDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_FALSE(nestedTryVarDidNotReturn);
+  EXPECT_FALSE(tryVarDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_TryVar, NestingMadness_Multiple_Success)
+{
+  bool nestedTryVar1DidNotReturn = false;
+  bool nestedTryVar2DidNotReturn = false;
+  bool tryVarDidNotReturn = false;
+
+  nsresult rv = [&nestedTryVar1DidNotReturn, &nestedTryVar2DidNotReturn,
+                 &tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto z,
+               ([&nestedTryVar1DidNotReturn,
+                 &nestedTryVar2DidNotReturn]() -> Result<int32_t, nsresult> {
+                 QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{42}));
+
+                 nestedTryVar1DidNotReturn = true;
+
+                 QM_TRY_VAR(const auto y, (Result<int32_t, nsresult>{42}));
+
+                 nestedTryVar2DidNotReturn = true;
+
+                 return x + y;
+               }()));
+    EXPECT_EQ(z, 84);
+
+    tryVarDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_TRUE(nestedTryVar1DidNotReturn);
+  EXPECT_TRUE(nestedTryVar2DidNotReturn);
+  EXPECT_TRUE(tryVarDidNotReturn);
+  EXPECT_EQ(rv, NS_OK);
+}
+
+TEST(QuotaCommon_TryVar, NestingMadness_Multiple_Failure1)
+{
+  bool nestedTryVar1DidNotReturn = false;
+  bool nestedTryVar2DidNotReturn = false;
+  bool tryVarDidNotReturn = false;
+
+  nsresult rv = [&nestedTryVar1DidNotReturn, &nestedTryVar2DidNotReturn,
+                 &tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto z,
+               ([&nestedTryVar1DidNotReturn,
+                 &nestedTryVar2DidNotReturn]() -> Result<int32_t, nsresult> {
+                 QM_TRY_VAR(const auto x,
+                            (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
+
+                 nestedTryVar1DidNotReturn = true;
+
+                 QM_TRY_VAR(const auto y, (Result<int32_t, nsresult>{42}));
+
+                 nestedTryVar2DidNotReturn = true;
+
+                 return x + y;
+               }()));
+    Unused << z;
+
+    tryVarDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_FALSE(nestedTryVar1DidNotReturn);
+  EXPECT_FALSE(nestedTryVar2DidNotReturn);
+  EXPECT_FALSE(tryVarDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_TryVar, NestingMadness_Multiple_Failure2)
+{
+  bool nestedTryVar1DidNotReturn = false;
+  bool nestedTryVar2DidNotReturn = false;
+  bool tryVarDidNotReturn = false;
+
+  nsresult rv = [&nestedTryVar1DidNotReturn, &nestedTryVar2DidNotReturn,
+                 &tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto z,
+               ([&nestedTryVar1DidNotReturn,
+                 &nestedTryVar2DidNotReturn]() -> Result<int32_t, nsresult> {
+                 QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{42}));
+
+                 nestedTryVar1DidNotReturn = true;
+
+                 QM_TRY_VAR(const auto y,
+                            (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
+
+                 nestedTryVar2DidNotReturn = true;
+
+                 return x + y;
+               }()));
+    Unused << z;
+
+    tryVarDidNotReturn = true;
+
+    return NS_OK;
+  }();
+
+  EXPECT_TRUE(nestedTryVar1DidNotReturn);
+  EXPECT_FALSE(nestedTryVar2DidNotReturn);
+  EXPECT_FALSE(tryVarDidNotReturn);
+  EXPECT_EQ(rv, NS_ERROR_FAILURE);
 }
 
 TEST(QuotaCommon_DebugTryVar, Success)
@@ -339,13 +656,12 @@ TEST(QuotaCommon_DebugTryVar, Success)
                     &debugTryVarDidNotReturn
 #endif
   ]() -> nsresult {
-    QM_DEBUG_TRY_VAR(const auto x, ToResultInvoke<int32_t>(
-                                       [&debugTryVarBodyRan](int32_t* out) {
-                                         debugTryVarBodyRan = true;
+    QM_DEBUG_TRY_VAR(const auto x,
+                     ([&debugTryVarBodyRan]() -> Result<int32_t, nsresult> {
+                       debugTryVarBodyRan = true;
 
-                                         *out = 42;
-                                         return NS_OK;
-                                       }));
+                       return 42;
+                     }()));
 #ifdef DEBUG
     EXPECT_EQ(x, 42);
 #endif
@@ -376,12 +692,12 @@ TEST(QuotaCommon_DebugTryVar, Failure)
                     &debugTryVarDidNotReturn
 #endif
   ]() -> nsresult {
-    QM_DEBUG_TRY_VAR(const auto x, ToResultInvoke<int32_t>(
-                                       [&debugTryVarBodyRan](int32_t* out) {
-                                         debugTryVarBodyRan = true;
+    QM_DEBUG_TRY_VAR(const auto x,
+                     ([&debugTryVarBodyRan]() -> Result<int32_t, nsresult> {
+                       debugTryVarBodyRan = true;
 
-                                         return NS_ERROR_FAILURE;
-                                       }));
+                       return Err(NS_ERROR_FAILURE);
+                     }()));
 #ifdef DEBUG
     Unused << x;
 #endif

@@ -187,7 +187,10 @@
 #include "nsString.h"
 
 // LocalStorage equivalents of QM_TRY and QM_DEBUG_TRY.
-#define LS_TRY(...) QM_TRY_META(mozilla::dom::localstorage, ##__VA_ARGS__)
+#define LS_TRY_GLUE(...)                                             \
+  QM_TRY_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
+              ##__VA_ARGS__)
+#define LS_TRY(...) LS_TRY_GLUE(__VA_ARGS__)
 
 #ifdef DEBUG
 #  define LS_DEBUG_TRY(...) LS_TRY(__VA_ARGS__)
@@ -196,8 +199,10 @@
 #endif
 
 // LocalStorage equivalents of QM_TRY_VAR and QM_DEBUG_TRY_VAR.
-#define LS_TRY_VAR(...) \
-  QM_TRY_VAR_META(mozilla::dom::localstorage, ##__VA_ARGS__)
+#define LS_TRY_VAR_GLUE(...)                                             \
+  QM_TRY_VAR_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
+                  ##__VA_ARGS__)
+#define LS_TRY_VAR(...) LS_TRY_VAR_GLUE(__VA_ARGS__)
 
 #ifdef DEBUG
 #  define LS_DEBUG_TRY_VAR(...) LS_TRY_VAR(__VA_ARGS__)
@@ -206,7 +211,9 @@
 #endif
 
 // LocalStorage equivalents of QM_FAIL and QM_DEBUG_FAIL.
-#define LS_FAIL(...) QM_FAIL_META(mozilla::dom::localstorage, ##__VA_ARGS__)
+#define LS_FAIL_GLUE(...) \
+  QM_FAIL_META(mozilla::dom::localstorage, ##__VA_ARGS__)
+#define LS_FAIL(...) LS_FAIL_GLUE(__VA_ARGS__)
 
 #ifdef DEBUG
 #  define LS_DEBUG_FAIL(...) LS_FAIL(__VA_ARGS__)
