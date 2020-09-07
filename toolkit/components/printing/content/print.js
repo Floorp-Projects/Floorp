@@ -529,6 +529,7 @@ var PrintEventHandler = {
     };
     printersByName[PrintUtils.SAVE_TO_PDF_PRINTER] = {
       supportsColor: true,
+      supportsMonochrome: false,
       name: PrintUtils.SAVE_TO_PDF_PRINTER,
     };
 
@@ -717,10 +718,12 @@ const PrintSettingsViewProxy = {
     if (printerInfo.printer) {
       [
         printerInfo.supportsColor,
+        printerInfo.supportsMonochrome,
         printerInfo.paperList,
         printerInfo.defaultSettings,
       ] = await Promise.all([
         printerInfo.printer.supportsColor,
+        printerInfo.printer.supportsMonochrome,
         printerInfo.printer.paperList,
         // get a set of default settings for this printer
         printerInfo.printer.createDefaultSettings(printerName),
@@ -842,29 +845,8 @@ const PrintSettingsViewProxy = {
           target.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF ||
           this.knownSaveToFilePrinters.has(target.printerName)
         );
-      case "supportsMonochrome": {
-        // We assume that we support either color or monochrome.
-        if (!this.get(target, "supportsColor")) {
-          return true;
-        }
-        // On Mac there's no API to print in monochrome, so we can't claim to
-        // support it if the printer supports color.
-        if (AppConstants.platform === "macosx") {
-          return false;
-        }
-        // For Gecko's PDF printing it'd require rasterization and thus bad
-        // quality, so we don't claim to support it.
-        if (target.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF) {
-          return false;
-        }
-        // Other PDF drivers on Windows also don't support monochrome printing.
-        // TODO(emilio): We should probably call into Gecko to get this
-        // information.
-        if (this.knownSaveToFilePrinters.has(target.printerName)) {
-          return false;
-        }
-        return true;
-      }
+      case "supportsMonochrome":
+        return this.availablePrinters[target.printerName].supportsMonochrome;
       case "defaultSystemPrinter":
         return (
           this.defaultSystemPrinter?.value ||

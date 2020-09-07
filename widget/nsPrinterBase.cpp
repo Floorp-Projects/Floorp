@@ -77,9 +77,11 @@ nsresult nsPrinterBase::AsyncPromiseAttributeGetter(
     BackgroundTask<T, Args...> aBackgroundTask, Args... aArgs) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  static const EnumeratedArray<AsyncAttribute, AsyncAttribute::Last, nsCString>
+  static constexpr EnumeratedArray<AsyncAttribute, AsyncAttribute::Last,
+                                   nsLiteralCString>
       attributeKeys{"SupportsDuplex"_ns, "SupportsColor"_ns,
-                    "SupportsCollation"_ns, "PaperList"_ns};
+                    "SupportsMonochrome"_ns, "SupportsCollation"_ns,
+                    "PaperList"_ns};
   return mozilla::AsyncPromiseAttributeGetter(
       *this, mAsyncAttributePromises[aAttribute], aCx, aResultPromise,
       attributeKeys[aAttribute], aBackgroundTask, std::forward<Args>(aArgs)...);
@@ -125,6 +127,13 @@ NS_IMETHODIMP nsPrinterBase::GetSupportsColor(JSContext* aCx,
   return AsyncPromiseAttributeGetter(aCx, aResultPromise,
                                      AsyncAttribute::SupportsColor,
                                      &nsPrinterBase::SupportsColor);
+}
+
+NS_IMETHODIMP nsPrinterBase::GetSupportsMonochrome(JSContext* aCx,
+                                                   Promise** aResultPromise) {
+  return AsyncPromiseAttributeGetter(aCx, aResultPromise,
+                                     AsyncAttribute::SupportsMonochrome,
+                                     &nsPrinterBase::SupportsMonochrome);
 }
 
 NS_IMETHODIMP nsPrinterBase::GetSupportsCollation(JSContext* aCx,
