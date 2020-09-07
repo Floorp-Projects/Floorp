@@ -173,9 +173,6 @@ elif CONFIG['JS_CODEGEN_ARM64']:
         'arm64/Lowering-arm64.cpp',
         'arm64/MacroAssembler-arm64.cpp',
         'arm64/MoveEmitter-arm64.cpp',
-        'arm64/MozAssembler-vixl.cpp',
-        'arm64/MozCpu-vixl.cpp',
-        'arm64/MozInstructions-vixl.cpp',
         'arm64/Trampoline-arm64.cpp',
         'arm64/vixl/Assembler-vixl.cpp',
         'arm64/vixl/Cpu-Features-vixl.cpp',
@@ -183,6 +180,9 @@ elif CONFIG['JS_CODEGEN_ARM64']:
         'arm64/vixl/Decoder-vixl.cpp',
         'arm64/vixl/Instructions-vixl.cpp',
         'arm64/vixl/MacroAssembler-vixl.cpp',
+        'arm64/vixl/MozAssembler-vixl.cpp',
+        'arm64/vixl/MozCpu-vixl.cpp',
+        'arm64/vixl/MozInstructions-vixl.cpp',
         'arm64/vixl/Utils-vixl.cpp',
         'shared/AtomicOperations-shared-jit.cpp',
     ]
@@ -196,10 +196,10 @@ elif CONFIG['JS_CODEGEN_ARM64']:
             SOURCES[f].flags += ['-Wno-c++11-narrowing']
     if CONFIG['JS_SIMULATOR_ARM64']:
         UNIFIED_SOURCES += [
-            'arm64/MozSimulator-vixl.cpp',
             'arm64/vixl/Debugger-vixl.cpp',
             'arm64/vixl/Logic-vixl.cpp',
-            'arm64/vixl/Simulator-vixl.cpp',
+            'arm64/vixl/MozSimulator-vixl.cpp',
+            'arm64/vixl/Simulator-vixl.cpp'
         ]
 elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
     lir_inputs += ['mips-shared/LIR-mips-shared.h']

@@ -55,28 +55,33 @@ void Assembler::FinalizeCode() {
 
 static const ptrdiff_t kEndOfLabelUseList = 0;
 
-BufferOffset MozBaseAssembler::NextLink(BufferOffset cur) {
-  Instruction* link = getInstructionAt(cur);
-  // Raw encoded offset.
-  ptrdiff_t offset = link->ImmPCRawOffset();
-  // End of the list is encoded as 0.
-  if (offset == kEndOfLabelUseList) {
-    return BufferOffset();
-  }
-  // The encoded offset is the number of instructions to move.
-  return BufferOffset(cur.getOffset() + offset * kInstructionSize);
+BufferOffset
+MozBaseAssembler::NextLink(BufferOffset cur)
+{
+    Instruction* link = getInstructionAt(cur);
+    // Raw encoded offset.
+    ptrdiff_t offset = link->ImmPCRawOffset();
+    // End of the list is encoded as 0.
+    if (offset == kEndOfLabelUseList)
+        return BufferOffset();
+    // The encoded offset is the number of instructions to move.
+    return BufferOffset(cur.getOffset() + offset * kInstructionSize);
 }
 
-static ptrdiff_t EncodeOffset(BufferOffset cur, BufferOffset next) {
-  MOZ_ASSERT(next.assigned() && cur.assigned());
-  ptrdiff_t offset = next.getOffset() - cur.getOffset();
-  MOZ_ASSERT(offset % kInstructionSize == 0);
-  return offset / kInstructionSize;
+static ptrdiff_t
+EncodeOffset(BufferOffset cur, BufferOffset next)
+{
+    MOZ_ASSERT(next.assigned() && cur.assigned());
+    ptrdiff_t offset = next.getOffset() - cur.getOffset();
+    MOZ_ASSERT(offset % kInstructionSize == 0);
+    return offset / kInstructionSize;
 }
 
-void MozBaseAssembler::SetNextLink(BufferOffset cur, BufferOffset next) {
-  Instruction* link = getInstructionAt(cur);
-  link->SetImmPCRawOffset(EncodeOffset(cur, next));
+void
+MozBaseAssembler::SetNextLink(BufferOffset cur, BufferOffset next)
+{
+    Instruction* link = getInstructionAt(cur);
+    link->SetImmPCRawOffset(EncodeOffset(cur, next));
 }
 
 // A common implementation for the LinkAndGet<Type>OffsetTo helpers.
@@ -95,13 +100,12 @@ void MozBaseAssembler::SetNextLink(BufferOffset cur, BufferOffset next) {
 // sure that it is in range, and emit the necessary branch instrutions if it
 // isn't.
 //
-ptrdiff_t MozBaseAssembler::LinkAndGetOffsetTo(BufferOffset branch,
-                                               ImmBranchRangeType branchRange,
-                                               unsigned elementShift,
-                                               Label* label) {
-  if (armbuffer_.oom()) {
+ptrdiff_t
+MozBaseAssembler::LinkAndGetOffsetTo(BufferOffset branch, ImmBranchRangeType branchRange,
+                                     unsigned elementShift, Label* label)
+{
+  if (armbuffer_.oom())
     return kEndOfLabelUseList;
-  }
 
   if (label->bound()) {
     // The label is bound: all uses are already linked.
@@ -113,10 +117,10 @@ ptrdiff_t MozBaseAssembler::LinkAndGetOffsetTo(BufferOffset branch,
   // Keep track of short-range branches targeting unbound labels. We may need
   // to insert veneers in PatchShortRangeBranchToVeneer() below.
   if (branchRange < NumShortBranchRangeTypes) {
-    // This is the last possible branch target.
-    BufferOffset deadline(branch.getOffset() +
-                          Instruction::ImmBranchMaxForwardOffset(branchRange));
-    armbuffer_.registerBranchDeadline(branchRange, deadline);
+      // This is the last possible branch target.
+      BufferOffset deadline(branch.getOffset() +
+                            Instruction::ImmBranchMaxForwardOffset(branchRange));
+      armbuffer_.registerBranchDeadline(branchRange, deadline);
   }
 
   // The label is unbound and previously unused: Store the offset in the label
@@ -134,15 +138,15 @@ ptrdiff_t MozBaseAssembler::LinkAndGetOffsetTo(BufferOffset branch,
   // What is the earliest buffer offset that would be reachable by the branch
   // we're about to add?
   ptrdiff_t earliestReachable =
-      branch.getOffset() + Instruction::ImmBranchMinBackwardOffset(branchRange);
+    branch.getOffset() + Instruction::ImmBranchMinBackwardOffset(branchRange);
 
   // If the existing instruction at the head of the list is within reach of the
   // new branch, we can simply insert the new branch at the front of the list.
   if (label->offset() >= earliestReachable) {
-    ptrdiff_t offset = EncodeOffset(branch, BufferOffset(label));
-    label->use(branch.getOffset());
-    MOZ_ASSERT(offset != kEndOfLabelUseList);
-    return offset;
+      ptrdiff_t offset = EncodeOffset(branch, BufferOffset(label));
+      label->use(branch.getOffset());
+      MOZ_ASSERT(offset != kEndOfLabelUseList);
+      return offset;
   }
 
   // The label already has a linked list of uses, but we can't reach the head
@@ -168,8 +172,8 @@ ptrdiff_t MozBaseAssembler::LinkAndGetOffsetTo(BufferOffset branch,
   BufferOffset next(label);
   BufferOffset exbr;
   do {
-    exbr = next;
-    next = NextLink(next);
+      exbr = next;
+      next = NextLink(next);
   } while (next.assigned());
   SetNextLink(exbr, branch);
 
@@ -177,52 +181,51 @@ ptrdiff_t MozBaseAssembler::LinkAndGetOffsetTo(BufferOffset branch,
   return kEndOfLabelUseList;
 }
 
-ptrdiff_t MozBaseAssembler::LinkAndGetByteOffsetTo(BufferOffset branch,
-                                                   Label* label) {
+ptrdiff_t MozBaseAssembler::LinkAndGetByteOffsetTo(BufferOffset branch, Label* label) {
   return LinkAndGetOffsetTo(branch, UncondBranchRangeType, 0, label);
 }
 
-ptrdiff_t MozBaseAssembler::LinkAndGetInstructionOffsetTo(
-    BufferOffset branch, ImmBranchRangeType branchRange, Label* label) {
+ptrdiff_t MozBaseAssembler::LinkAndGetInstructionOffsetTo(BufferOffset branch,
+                                                          ImmBranchRangeType branchRange,
+                                                          Label* label) {
   return LinkAndGetOffsetTo(branch, branchRange, kInstructionSizeLog2, label);
 }
 
-ptrdiff_t MozBaseAssembler::LinkAndGetPageOffsetTo(BufferOffset branch,
-                                                   Label* label) {
-  return LinkAndGetOffsetTo(branch, UncondBranchRangeType, kPageSizeLog2,
-                            label);
+ptrdiff_t MozBaseAssembler::LinkAndGetPageOffsetTo(BufferOffset branch, Label* label) {
+  return LinkAndGetOffsetTo(branch, UncondBranchRangeType, kPageSizeLog2, label);
 }
 
 BufferOffset Assembler::b(int imm26, const LabelDoc& doc) {
   return EmitBranch(B | ImmUncondBranch(imm26), doc);
 }
 
+
 void Assembler::b(Instruction* at, int imm26) {
   return EmitBranch(at, B | ImmUncondBranch(imm26));
 }
+
 
 BufferOffset Assembler::b(int imm19, Condition cond, const LabelDoc& doc) {
   return EmitBranch(B_cond | ImmCondBranch(imm19) | cond, doc);
 }
 
+
 void Assembler::b(Instruction* at, int imm19, Condition cond) {
   EmitBranch(at, B_cond | ImmCondBranch(imm19) | cond);
 }
 
+
 BufferOffset Assembler::b(Label* label) {
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(),
-                                         UncondBranchRangeType, label),
-           doc);
+  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), UncondBranchRangeType, label), doc);
 }
+
 
 BufferOffset Assembler::b(Label* label, Condition cond) {
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType,
-                                         label),
-           cond, doc);
+  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label), cond, doc);
 }
 
 void Assembler::br(Instruction* at, const Register& xn) {
@@ -231,117 +234,114 @@ void Assembler::br(Instruction* at, const Register& xn) {
   Emit(at, BR | Rn(xn));
 }
 
+
 void Assembler::blr(Instruction* at, const Register& xn) {
   VIXL_ASSERT(xn.Is64Bits());
   // No need for EmitBranch(): no immediate offset needs fixing.
   Emit(at, BLR | Rn(xn));
 }
 
+
 void Assembler::bl(int imm26, const LabelDoc& doc) {
   EmitBranch(BL | ImmUncondBranch(imm26), doc);
 }
+
 
 void Assembler::bl(Instruction* at, int imm26) {
   EmitBranch(at, BL | ImmUncondBranch(imm26));
 }
 
+
 void Assembler::bl(Label* label) {
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  return bl(LinkAndGetInstructionOffsetTo(nextInstrOffset(),
-                                          UncondBranchRangeType, label),
-            doc);
+  return bl(LinkAndGetInstructionOffsetTo(nextInstrOffset(), UncondBranchRangeType, label), doc);
 }
+
 
 void Assembler::cbz(const Register& rt, int imm19, const LabelDoc& doc) {
   EmitBranch(SF(rt) | CBZ | ImmCmpBranch(imm19) | Rt(rt), doc);
 }
 
+
 void Assembler::cbz(Instruction* at, const Register& rt, int imm19) {
   EmitBranch(at, SF(rt) | CBZ | ImmCmpBranch(imm19) | Rt(rt));
 }
 
+
 void Assembler::cbz(const Register& rt, Label* label) {
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  return cbz(rt,
-             LinkAndGetInstructionOffsetTo(nextInstrOffset(),
-                                           CondBranchRangeType, label),
-             doc);
+  return cbz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label), doc);
 }
+
 
 void Assembler::cbnz(const Register& rt, int imm19, const LabelDoc& doc) {
   EmitBranch(SF(rt) | CBNZ | ImmCmpBranch(imm19) | Rt(rt), doc);
 }
 
+
 void Assembler::cbnz(Instruction* at, const Register& rt, int imm19) {
   EmitBranch(at, SF(rt) | CBNZ | ImmCmpBranch(imm19) | Rt(rt));
 }
 
+
 void Assembler::cbnz(const Register& rt, Label* label) {
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  return cbnz(rt,
-              LinkAndGetInstructionOffsetTo(nextInstrOffset(),
-                                            CondBranchRangeType, label),
-              doc);
+  return cbnz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label), doc);
 }
 
-void Assembler::tbz(const Register& rt, unsigned bit_pos, int imm14,
-                    const LabelDoc& doc) {
+
+void Assembler::tbz(const Register& rt, unsigned bit_pos, int imm14, const LabelDoc& doc) {
   VIXL_ASSERT(rt.Is64Bits() || (rt.Is32Bits() && (bit_pos < kWRegSize)));
-  EmitBranch(TBZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt),
-             doc);
+  EmitBranch(TBZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt), doc);
 }
 
-void Assembler::tbz(Instruction* at, const Register& rt, unsigned bit_pos,
-                    int imm14) {
+
+void Assembler::tbz(Instruction* at, const Register& rt, unsigned bit_pos, int imm14) {
   VIXL_ASSERT(rt.Is64Bits() || (rt.Is32Bits() && (bit_pos < kWRegSize)));
-  EmitBranch(at,
-             TBZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt));
+  EmitBranch(at, TBZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt));
 }
+
 
 void Assembler::tbz(const Register& rt, unsigned bit_pos, Label* label) {
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  return tbz(rt, bit_pos,
-             LinkAndGetInstructionOffsetTo(nextInstrOffset(),
-                                           TestBranchRangeType, label),
-             doc);
+  return tbz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), TestBranchRangeType, label), doc);
 }
 
-void Assembler::tbnz(const Register& rt, unsigned bit_pos, int imm14,
-                     const LabelDoc& doc) {
+
+void Assembler::tbnz(const Register& rt, unsigned bit_pos, int imm14, const LabelDoc& doc) {
   VIXL_ASSERT(rt.Is64Bits() || (rt.Is32Bits() && (bit_pos < kWRegSize)));
-  EmitBranch(TBNZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt),
-             doc);
+  EmitBranch(TBNZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt), doc);
 }
 
-void Assembler::tbnz(Instruction* at, const Register& rt, unsigned bit_pos,
-                     int imm14) {
+
+void Assembler::tbnz(Instruction* at, const Register& rt, unsigned bit_pos, int imm14) {
   VIXL_ASSERT(rt.Is64Bits() || (rt.Is32Bits() && (bit_pos < kWRegSize)));
-  EmitBranch(at,
-             TBNZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt));
+  EmitBranch(at, TBNZ | ImmTestBranchBit(bit_pos) | ImmTestBranch(imm14) | Rt(rt));
 }
+
 
 void Assembler::tbnz(const Register& rt, unsigned bit_pos, Label* label) {
   // Encode the relative offset from the inserted branch to the label.
   LabelDoc doc = refLabel(label);
-  return tbnz(rt, bit_pos,
-              LinkAndGetInstructionOffsetTo(nextInstrOffset(),
-                                            TestBranchRangeType, label),
-              doc);
+  return tbnz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), TestBranchRangeType, label), doc);
 }
+
 
 void Assembler::adr(const Register& rd, int imm21, const LabelDoc& doc) {
   VIXL_ASSERT(rd.Is64Bits());
   EmitBranch(ADR | ImmPCRelAddress(imm21) | Rd(rd), doc);
 }
 
+
 void Assembler::adr(Instruction* at, const Register& rd, int imm21) {
   VIXL_ASSERT(rd.Is64Bits());
   EmitBranch(at, ADR | ImmPCRelAddress(imm21) | Rd(rd));
 }
+
 
 void Assembler::adr(const Register& rd, Label* label) {
   // Encode the relative offset from the inserted adr to the label.
@@ -349,15 +349,18 @@ void Assembler::adr(const Register& rd, Label* label) {
   return adr(rd, LinkAndGetByteOffsetTo(nextInstrOffset(), label), doc);
 }
 
+
 void Assembler::adrp(const Register& rd, int imm21, const LabelDoc& doc) {
   VIXL_ASSERT(rd.Is64Bits());
   EmitBranch(ADRP | ImmPCRelAddress(imm21) | Rd(rd), doc);
 }
 
+
 void Assembler::adrp(Instruction* at, const Register& rd, int imm21) {
   VIXL_ASSERT(rd.Is64Bits());
   EmitBranch(at, ADRP | ImmPCRelAddress(imm21) | Rd(rd));
 }
+
 
 void Assembler::adrp(const Register& rd, Label* label) {
   VIXL_ASSERT(AllowPageOffsetDependentCode());
@@ -366,39 +369,52 @@ void Assembler::adrp(const Register& rd, Label* label) {
   return adrp(rd, LinkAndGetPageOffsetTo(nextInstrOffset(), label), doc);
 }
 
-BufferOffset Assembler::ands(const Register& rd, const Register& rn,
-                             const Operand& operand) {
+
+BufferOffset Assembler::ands(const Register& rd, const Register& rn, const Operand& operand) {
   return Logical(rd, rn, operand, ANDS);
 }
+
 
 BufferOffset Assembler::tst(const Register& rn, const Operand& operand) {
   return ands(AppropriateZeroRegFor(rn), rn, operand);
 }
+
 
 void Assembler::ldr(Instruction* at, const CPURegister& rt, int imm19) {
   LoadLiteralOp op = LoadLiteralOpFor(rt);
   Emit(at, op | ImmLLiteral(imm19) | Rt(rt));
 }
 
+
 BufferOffset Assembler::hint(SystemHint code) {
   return Emit(HINT | ImmHint(code));
 }
 
+
 void Assembler::hint(Instruction* at, SystemHint code) {
   Emit(at, HINT | ImmHint(code));
 }
+
 
 void Assembler::svc(Instruction* at, int code) {
   VIXL_ASSERT(IsUint16(code));
   Emit(at, SVC | ImmException(code));
 }
 
-void Assembler::nop(Instruction* at) { hint(at, NOP); }
 
-void Assembler::csdb(Instruction* at) { hint(at, CSDB); }
+void Assembler::nop(Instruction* at) {
+  hint(at, NOP);
+}
+
+
+void Assembler::csdb(Instruction* at) {
+  hint(at, CSDB);
+}
+
 
 BufferOffset Assembler::Logical(const Register& rd, const Register& rn,
-                                const Operand& operand, LogicalOp op) {
+                                const Operand& operand, LogicalOp op)
+{
   VIXL_ASSERT(rd.size() == rn.size());
   if (operand.IsImmediate()) {
     int64_t immediate = operand.immediate();
@@ -430,27 +446,27 @@ BufferOffset Assembler::Logical(const Register& rd, const Register& rn,
   }
 }
 
+
 BufferOffset Assembler::LogicalImmediate(const Register& rd, const Register& rn,
-                                         unsigned n, unsigned imm_s,
-                                         unsigned imm_r, LogicalOp op) {
-  unsigned reg_size = rd.size();
-  Instr dest_reg = (op == ANDS) ? Rd(rd) : RdSP(rd);
-  return Emit(SF(rd) | LogicalImmediateFixed | op | BitN(n, reg_size) |
-              ImmSetBits(imm_s, reg_size) | ImmRotate(imm_r, reg_size) |
-              dest_reg | Rn(rn));
+                                         unsigned n, unsigned imm_s, unsigned imm_r, LogicalOp op)
+{
+    unsigned reg_size = rd.size();
+    Instr dest_reg = (op == ANDS) ? Rd(rd) : RdSP(rd);
+    return Emit(SF(rd) | LogicalImmediateFixed | op | BitN(n, reg_size) |
+                ImmSetBits(imm_s, reg_size) | ImmRotate(imm_r, reg_size) | dest_reg | Rn(rn));
 }
 
-BufferOffset Assembler::DataProcShiftedRegister(const Register& rd,
-                                                const Register& rn,
-                                                const Operand& operand,
-                                                FlagsUpdate S, Instr op) {
+
+BufferOffset Assembler::DataProcShiftedRegister(const Register& rd, const Register& rn,
+                                                const Operand& operand, FlagsUpdate S, Instr op)
+{
   VIXL_ASSERT(operand.IsShiftedRegister());
-  VIXL_ASSERT(rn.Is64Bits() ||
-              (rn.Is32Bits() && IsUint5(operand.shift_amount())));
-  return Emit(SF(rd) | op | Flags(S) | ShiftDP(operand.shift()) |
-              ImmDPShift(operand.shift_amount()) | Rm(operand.reg()) | Rn(rn) |
-              Rd(rd));
+  VIXL_ASSERT(rn.Is64Bits() || (rn.Is32Bits() && IsUint5(operand.shift_amount())));
+  return Emit(SF(rd) | op | Flags(S) |
+              ShiftDP(operand.shift()) | ImmDPShift(operand.shift_amount()) |
+              Rm(operand.reg()) | Rn(rn) | Rd(rd));
 }
+
 
 void MozBaseAssembler::InsertIndexIntoTag(uint8_t* load, uint32_t index) {
   // Store the js::jit::PoolEntry index into the instruction.
@@ -459,8 +475,8 @@ void MozBaseAssembler::InsertIndexIntoTag(uint8_t* load, uint32_t index) {
   *((uint32_t*)load) |= Assembler::ImmLLiteral(index);
 }
 
-bool MozBaseAssembler::PatchConstantPoolLoad(void* loadAddr,
-                                             void* constPoolAddr) {
+
+bool MozBaseAssembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr) {
   Instruction* load = reinterpret_cast<Instruction*>(loadAddr);
 
   // The load currently contains the js::jit::PoolEntry's index,
@@ -473,24 +489,21 @@ bool MozBaseAssembler::PatchConstantPoolLoad(void* loadAddr,
   Instruction* source = reinterpret_cast<Instruction*>(&constPool[index]);
 
   load->SetImmLLiteral(source);
-  return false;  // Nothing uses the return value.
+  return false; // Nothing uses the return value.
 }
 
-void MozBaseAssembler::PatchShortRangeBranchToVeneer(ARMBuffer* buffer,
-                                                     unsigned rangeIdx,
-                                                     BufferOffset deadline,
-                                                     BufferOffset veneer) {
+void
+MozBaseAssembler::PatchShortRangeBranchToVeneer(ARMBuffer* buffer, unsigned rangeIdx,
+                                                BufferOffset deadline, BufferOffset veneer)
+{
   // Reconstruct the position of the branch from (rangeIdx, deadline).
-  vixl::ImmBranchRangeType branchRange =
-      static_cast<vixl::ImmBranchRangeType>(rangeIdx);
-  BufferOffset branch(deadline.getOffset() -
-                      Instruction::ImmBranchMaxForwardOffset(branchRange));
-  Instruction* branchInst = buffer->getInst(branch);
-  Instruction* veneerInst = buffer->getInst(veneer);
+  vixl::ImmBranchRangeType branchRange = static_cast<vixl::ImmBranchRangeType>(rangeIdx);
+  BufferOffset branch(deadline.getOffset() - Instruction::ImmBranchMaxForwardOffset(branchRange));
+  Instruction *branchInst = buffer->getInst(branch);
+  Instruction *veneerInst = buffer->getInst(veneer);
 
   // Verify that the branch range matches what's encoded.
-  MOZ_ASSERT(Instruction::ImmBranchTypeToRange(branchInst->BranchType()) ==
-             branchRange);
+  MOZ_ASSERT(Instruction::ImmBranchTypeToRange(branchInst->BranchType()) == branchRange);
 
   // We want to insert veneer after branch in the linked list of instructions
   // that use the same unbound label.
@@ -499,11 +512,11 @@ void MozBaseAssembler::PatchShortRangeBranchToVeneer(ARMBuffer* buffer,
 
   // If offset is 0, this is the end of the linked list.
   if (nextElemOffset != kEndOfLabelUseList) {
-    // Make the offset relative to veneer so it targets the same instruction
-    // as branchInst.
-    nextElemOffset *= kInstructionSize;
-    nextElemOffset += branch.getOffset() - veneer.getOffset();
-    nextElemOffset /= kInstructionSize;
+      // Make the offset relative to veneer so it targets the same instruction
+      // as branchInst.
+      nextElemOffset *= kInstructionSize;
+      nextElemOffset += branch.getOffset() - veneer.getOffset();
+      nextElemOffset /= kInstructionSize;
   }
   Assembler::b(veneerInst, nextElemOffset);
 
@@ -521,9 +534,9 @@ struct PoolHeader {
       struct {
         uint32_t size : 15;
 
-        // "Natural" guards are part of the normal instruction stream,
-        // while "non-natural" guards are inserted for the sole purpose
-        // of skipping around a pool.
+	// "Natural" guards are part of the normal instruction stream,
+	// while "non-natural" guards are inserted for the sole purpose
+	// of skipping around a pool.
         uint32_t isNatural : 1;
         uint32_t ONES : 16;
       };
@@ -531,9 +544,14 @@ struct PoolHeader {
     };
 
     Header(int size_, bool isNatural_)
-        : size(size_), isNatural(isNatural_), ONES(0xffff) {}
+      : size(size_),
+        isNatural(isNatural_),
+        ONES(0xffff)
+    { }
 
-    Header(uint32_t data) : data(data) {
+    Header(uint32_t data)
+      : data(data)
+    {
       VIXL_STATIC_ASSERT(sizeof(Header) == sizeof(uint32_t));
       VIXL_ASSERT(ONES == 0xffff);
     }
@@ -545,7 +563,8 @@ struct PoolHeader {
   };
 
   PoolHeader(int size_, bool isNatural_)
-      : data(Header(size_, isNatural_).raw()) {}
+    : data(Header(size_, isNatural_).raw())
+  { }
 
   uint32_t size() const {
     Header tmp(data);
@@ -558,8 +577,8 @@ struct PoolHeader {
   }
 };
 
-void MozBaseAssembler::WritePoolHeader(uint8_t* start, js::jit::Pool* p,
-                                       bool isNatural) {
+
+void MozBaseAssembler::WritePoolHeader(uint8_t* start, js::jit::Pool* p, bool isNatural) {
   static_assert(sizeof(PoolHeader) == 4);
 
   // Get the total size of the pool.
@@ -573,18 +592,19 @@ void MozBaseAssembler::WritePoolHeader(uint8_t* start, js::jit::Pool* p,
   *(PoolHeader*)start = header;
 }
 
-void MozBaseAssembler::WritePoolFooter(uint8_t* start, js::jit::Pool* p,
-                                       bool isNatural) {
+
+void MozBaseAssembler::WritePoolFooter(uint8_t* start, js::jit::Pool* p, bool isNatural) {
   return;
 }
 
-void MozBaseAssembler::WritePoolGuard(BufferOffset branch, Instruction* inst,
-                                      BufferOffset dest) {
+
+void MozBaseAssembler::WritePoolGuard(BufferOffset branch, Instruction* inst, BufferOffset dest) {
   int byteOffset = dest.getOffset() - branch.getOffset();
   VIXL_ASSERT(byteOffset % kInstructionSize == 0);
 
   int instOffset = byteOffset >> kInstructionSizeLog2;
   Assembler::b(inst, instOffset);
 }
+
 
 }  // namespace vixl

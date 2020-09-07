@@ -34,26 +34,27 @@
 #endif
 
 #if defined(__aarch64__) && !defined(_MSC_VER) && !defined(XP_DARWIN)
-#  if defined(__linux__)
+#   if defined(__linux__)
 #    include <linux/membarrier.h>
 #    include <sys/syscall.h>
 #    include <sys/utsname.h>
-#  elif defined(__ANDROID__)
+#   elif defined(__ANDROID__)
 #    include <sys/syscall.h>
 #    include <unistd.h>
-#  else
+#   else
 #    error "Missing platform-specific declarations for membarrier syscall!"
-#  endif  // __linux__ / ANDROID
+#   endif // __linux__ / ANDROID
 
-#  include "vm/JSContext.h"  // TlsContext
+#  include "vm/JSContext.h" // TlsContext
 
 static int membarrier(int cmd, int flags) {
-  return syscall(__NR_membarrier, cmd, flags);
+    return syscall(__NR_membarrier, cmd, flags);
 }
 
-#endif  // __aarch64__
+#endif // __aarch64__
 
 namespace vixl {
+
 
 // Currently computes I and D cache line size.
 void CPU::SetUp() {
@@ -86,12 +87,13 @@ void CPU::SetUp() {
   icache_line_size_ = std::min(icache_line_size_, conservative_line_size);
 }
 
+
 uint32_t CPU::GetCacheType() {
 #if defined(__aarch64__) && !defined(_MSC_VER) && !defined(XP_DARWIN)
   uint64_t cache_type_register;
   // Copy the content of the cache type register to a core register.
-  __asm__ __volatile__("mrs %[ctr], ctr_el0"  // NOLINT
-                       : [ ctr ] "=r"(cache_type_register));
+  __asm__ __volatile__ ("mrs %[ctr], ctr_el0"  // NOLINT
+                        : [ctr] "=r" (cache_type_register));
   VIXL_ASSERT(IsUint32(cache_type_register));
   return static_cast<uint32_t>(cache_type_register);
 #else
@@ -119,10 +121,9 @@ bool CPU::CanFlushICacheFromBackgroundThreads() {
     struct utsname uts;
     int major, minor;
     kernelHasMembarrier = uname(&uts) == 0 &&
-                          strcmp(uts.sysname, "Linux") == 0 &&
-                          sscanf(uts.release, "%d.%d", &major, &minor) == 2 &&
-                          major >= kRequiredMajor &&
-                          (major != kRequiredMajor || minor >= kRequiredMinor);
+        strcmp(uts.sysname, "Linux") == 0 &&
+        sscanf(uts.release, "%d.%d", &major, &minor) == 2 &&
+        major >= kRequiredMajor && (major != kRequiredMajor || minor >= kRequiredMinor);
     computed = true;
   }
 
@@ -138,14 +139,12 @@ bool CPU::CanFlushICacheFromBackgroundThreads() {
 
   return true;
 #else
-  // On other platforms, we assume that the provided syscall does the right
-  // thing.
+  // On other platforms, we assume that the provided syscall does the right thing.
   return true;
 #endif
 }
 
-void CPU::EnsureIAndDCacheCoherency(void* address, size_t length,
-                                    bool codeIsThreadLocal) {
+void CPU::EnsureIAndDCacheCoherency(void *address, size_t length, bool codeIsThreadLocal) {
 #if defined(JS_SIMULATOR_ARM64) && defined(JS_CACHE_SIMULATOR_ARM64)
   // This code attempts to emulate what the following assembly sequence is
   // doing, which is sending the information to all cores that some cache line
@@ -203,71 +202,67 @@ void CPU::EnsureIAndDCacheCoherency(void* address, size_t length,
   uintptr_t end = start + length;
 
   do {
-    __asm__ __volatile__(
-        // Clean each line of the D cache containing the target data.
-        //
-        // dc       : Data Cache maintenance
-        //     c    : Clean
-        //      i   : Invalidate
-        //      va  : by (Virtual) Address
-        //        c : to the point of Coherency
-        // Original implementation used cvau, but changed to civac due to
-        // errata on Cortex-A53 819472, 826319, 827319 and 824069.
-        // See ARM DDI 0406B page B2-12 for more information.
-        //
-        "   dc    civac, %[dline]\n"
-        :
-        : [ dline ] "r"(dline)
-        // This code does not write to memory, but the "memory" dependency
-        // prevents GCC from reordering the code.
-        : "memory");
+    __asm__ __volatile__ (
+      // Clean each line of the D cache containing the target data.
+      //
+      // dc       : Data Cache maintenance
+      //     c    : Clean
+      //      i   : Invalidate
+      //      va  : by (Virtual) Address
+      //        c : to the point of Coherency
+      // Original implementation used cvau, but changed to civac due to
+      // errata on Cortex-A53 819472, 826319, 827319 and 824069.
+      // See ARM DDI 0406B page B2-12 for more information.
+      //
+      "   dc    civac, %[dline]\n"
+      :
+      : [dline] "r" (dline)
+      // This code does not write to memory, but the "memory" dependency
+      // prevents GCC from reordering the code.
+      : "memory");
     dline += dsize;
   } while (dline < end);
 
-  __asm__ __volatile__(
-      // Make sure that the data cache operations (above) complete before the
-      // instruction cache operations (below).
-      //
-      // dsb      : Data Synchronisation Barrier
-      //      ish : Inner SHareable domain
-      //
-      // The point of unification for an Inner Shareable shareability domain is
-      // the point by which the instruction and data caches of all the
-      // processors in that Inner Shareable shareability domain are guaranteed
-      // to see the same copy of a memory location.  See ARM DDI 0406B page
-      // B2-12 for more information.
-      "   dsb   ish\n"
-      :
-      :
-      : "memory");
+  __asm__ __volatile__ (
+    // Make sure that the data cache operations (above) complete before the
+    // instruction cache operations (below).
+    //
+    // dsb      : Data Synchronisation Barrier
+    //      ish : Inner SHareable domain
+    //
+    // The point of unification for an Inner Shareable shareability domain is
+    // the point by which the instruction and data caches of all the processors
+    // in that Inner Shareable shareability domain are guaranteed to see the
+    // same copy of a memory location.  See ARM DDI 0406B page B2-12 for more
+    // information.
+    "   dsb   ish\n"
+    : : : "memory");
 
   do {
-    __asm__ __volatile__(
-        // Invalidate each line of the I cache containing the target data.
-        //
-        // ic      : Instruction Cache maintenance
-        //    i    : Invalidate
-        //     va  : by Address
-        //       u : to the point of Unification
-        "   ic   ivau, %[iline]\n"
-        :
-        : [ iline ] "r"(iline)
-        : "memory");
+    __asm__ __volatile__ (
+      // Invalidate each line of the I cache containing the target data.
+      //
+      // ic      : Instruction Cache maintenance
+      //    i    : Invalidate
+      //     va  : by Address
+      //       u : to the point of Unification
+      "   ic   ivau, %[iline]\n"
+      :
+      : [iline] "r" (iline)
+      : "memory");
     iline += isize;
   } while (iline < end);
 
-  __asm__ __volatile__(
-      // Make sure that the instruction cache operations (above) take effect
-      // before the isb (below).
-      "   dsb  ish\n"
+  __asm__ __volatile__ (
+    // Make sure that the instruction cache operations (above) take effect
+    // before the isb (below).
+    "   dsb  ish\n"
 
-      // Ensure that any instructions already in the pipeline are discarded and
-      // reloaded from the new data.
-      // isb : Instruction Synchronisation Barrier
-      "   isb\n"
-      :
-      :
-      : "memory");
+    // Ensure that any instructions already in the pipeline are discarded and
+    // reloaded from the new data.
+    // isb : Instruction Synchronisation Barrier
+    "   isb\n"
+    : : : "memory");
 
   if (!codeIsThreadLocal) {
     // If we're on a background thread, emit a membarrier that will synchronize
