@@ -48,6 +48,7 @@ var tests = [
   ];
 
 var loadCount = 0;
+var retrying = false;
 var script;
 
 var loadListener = async function(evt) {
@@ -111,14 +112,25 @@ function continueTest(evt) {
       var dict = spellchecker.GetCurrentDictionary();
     } catch (e) {}
 
-    if (tests[loadCount][2] != "*") {
-      is(dict, tests[loadCount][2], "expected " + tests[loadCount][2]);
+    if (!dict && !retrying) {
+      // It's possible for an asynchronous font-list update to cause a reflow
+      // that disrupts the async spell-check and results in not getting a
+      // current dictionary here; if that happens, we retry the same testcase
+      // by reloading the iframe without bumping loadCount.
+      info(`No current dictionary: retrying testcase ${loadCount}`);
+      retrying = true;
     } else {
-      var gotEn = (dict == "en-GB" || dict == "en-AU" || dict == "en-US");
-      is(gotEn, true, "expected en-AU or en-GB or en-US");
+      if (tests[loadCount][2] != "*") {
+        is(dict, tests[loadCount][2], "expected " + tests[loadCount][2]);
+      } else {
+        var gotEn = (dict == "en-GB" || dict == "en-AU" || dict == "en-US");
+        is(gotEn, true, "expected en-AU or en-GB or en-US");
+      }
+
+      loadCount++;
+      retrying = false;
     }
 
-    loadCount++;
     if (loadCount < tests.length) {
       // Load the iframe again.
       content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=false";
