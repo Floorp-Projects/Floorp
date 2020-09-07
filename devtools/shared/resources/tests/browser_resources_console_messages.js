@@ -35,7 +35,7 @@ async function testConsoleMessagesResources() {
   const expectedExistingCalls = [...expectedExistingConsoleCalls];
   const expectedRuntimeCalls = [...expectedRuntimeConsoleCalls];
   const onRuntimeDone = new Promise(resolve => (runtimeDoneResolve = resolve));
-  const onAvailable = ({ targetFront, resource }) => {
+  const onAvailable = ({ resource }) => {
     is(
       resource.resourceType,
       ResourceWatcher.TYPES.CONSOLE_MESSAGE,
