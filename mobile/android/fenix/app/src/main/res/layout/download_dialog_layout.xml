@@ -78,6 +78,7 @@
         android:backgroundTint="?accent"
         android:text="@string/mozac_feature_downloads_button_open"
         android:textAllCaps="false"
+        android:padding="16dp"
         android:textColor="?contrastText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
