@@ -16336,9 +16336,7 @@ nsresult FileManager::Init(nsIFile* aDirectory,
                   std::mem_fn(&mozIStorageConnection::CreateStatement),
                   aConnection, "SELECT id, refcount FROM file"_ns));
 
-  // XXX gcc doesn't like multiple IDB_TRY_VAR within a macro, so can't use
-  // MOZ_TRY directly here.
-  auto res = CollectWhile(
+  IDB_TRY(CollectWhile(
       [&stmt]() -> Result<bool, nsresult> {
         IDB_TRY_VAR(auto hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
         return hasResult;
@@ -16359,8 +16357,7 @@ nsresult FileManager::Init(nsIFile* aDirectory,
         mLastFileId = std::max(id, mLastFileId);
 
         return mozilla::Ok{};
-      });
-  MOZ_TRY(std::move(res));
+      }));
 
   return NS_OK;
 }
@@ -16509,7 +16506,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
     bool hasJournals = false;
 
-    MOZ_TRY(CollectEach(
+    IDB_TRY(CollectEach(
         [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
           IDB_TRY_VAR(
               auto file,
@@ -16564,9 +16561,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
       IDB_TRY(stmt->BindStringByIndex(0, path));
 
-      // XXX gcc doesn't like multiple IDB_TRY_VAR within a macro, so can't use
-      // MOZ_TRY directly here.
-      auto res = CollectWhile(
+      IDB_TRY(CollectWhile(
           [&stmt]() -> Result<bool, nsresult> {
             IDB_TRY_VAR(auto hasResult,
                         MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
@@ -16608,8 +16603,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
             }
 
             return mozilla::Ok{};
-          });
-      MOZ_TRY(std::move(res));
+          }));
 
       IDB_TRY(connection->ExecuteSimpleSQL("DROP TABLE fs;"_ns));
       IDB_TRY(transaction.Commit());
@@ -16636,8 +16630,7 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
 
   FileUsageType usage;
 
-  nsCOMPtr<nsIFile> file;
-  MOZ_TRY(CollectEach(
+  IDB_TRY(CollectEach(
       [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
         IDB_TRY_VAR(
             auto file,
