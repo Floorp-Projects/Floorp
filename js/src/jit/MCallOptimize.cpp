@@ -429,6 +429,7 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     case InlinableNative::IntrinsicTypedArrayElementShift:
       return inlineTypedArrayElementShift(callInfo);
 
+    case InlinableNative::NumberToString:
     case InlinableNative::StringToString:
     case InlinableNative::StringValueOf:
     case InlinableNative::IntrinsicIsSuspendedGenerator:
