@@ -124,7 +124,7 @@ nodeType = entRef.nodeType;
 	if(
 	(1 == nodeType)
 	) {
-	entRef = doc.createEntityReference("ent4");
+	entRef = doc.createEntityReference("ent4"); // See bug 1663402.
       assertNotNull("createdEntRefNotNull",entRef);
 
 	}
