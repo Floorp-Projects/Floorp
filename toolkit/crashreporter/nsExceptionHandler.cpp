@@ -30,6 +30,7 @@
 #include "jsfriendapi.h"
 #include "ThreadAnnotation.h"
 #include "private/pprio.h"
+#include "base/process_util.h"
 #include "common/basictypes.h"
 
 #if defined(XP_WIN)
@@ -256,19 +257,27 @@ static char* childCrashNotifyPipe;
 #elif defined(XP_LINUX)
 static int serverSocketFd = -1;
 static int clientSocketFd = -1;
-static int gMagicChildCrashReportFd =
+
+// On Linux these file descriptors are created in the parent process and
+// remapped in the child ones. See PosixProcessLauncher::DoSetup() for more
+// details.
+static FileHandle gMagicChildCrashReportFd =
 #  if defined(MOZ_WIDGET_ANDROID)
     // On android the fd is set at the time of child creation.
-    -1
+    kInvalidFileHandle
 #  else
     4
 #  endif  // defined(MOZ_WIDGET_ANDROID)
     ;
 #endif
 
-#if defined(MOZ_WIDGET_ANDROID)
-static int gChildCrashAnnotationReportFd = -1;
+static FileHandle gChildCrashAnnotationReportFd =
+#if (defined(XP_LINUX) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_ANDROID)
+    7
+#else
+    kInvalidFileHandle
 #endif
+    ;
 
 // |dumpMapLock| must protect all access to |pidToMinidump|.
 static Mutex* dumpMapLock;
@@ -504,25 +513,8 @@ bool copy_file(const char* from, const char* to) {
  */
 class PlatformWriter {
  public:
-#ifdef XP_WIN
-  typedef HANDLE NativeFileDesc;
-  typedef wchar_t NativeChar;
-#elif defined(XP_UNIX)
-  typedef int NativeFileDesc;
-  typedef char NativeChar;
-#else
-#  error "Need implementation of PlatformWriter for this platform"
-#endif
-
-  const NativeFileDesc kInvalidFileDesc =
-#ifdef XP_WIN
-      INVALID_HANDLE_VALUE;
-#elif defined(XP_UNIX)
-      -1;
-#endif
-
-  PlatformWriter() : mBuffer{}, mPos(0), mFD(kInvalidFileDesc) {}
-  explicit PlatformWriter(const NativeChar* aPath) : PlatformWriter() {
+  PlatformWriter() : mBuffer{}, mPos(0), mFD(kInvalidFileHandle) {}
+  explicit PlatformWriter(const XP_CHAR* aPath) : PlatformWriter() {
     Open(aPath);
   }
 
@@ -537,7 +529,7 @@ class PlatformWriter {
     }
   }
 
-  void Open(const NativeChar* aPath) {
+  void Open(const XP_CHAR* aPath) {
 #ifdef XP_WIN
     mFD = CreateFile(aPath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
                      FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -546,8 +538,8 @@ class PlatformWriter {
 #endif
   }
 
-  void OpenHandle(NativeFileDesc aFD) { mFD = aFD; }
-  bool Valid() { return mFD != kInvalidFileDesc; }
+  void OpenHandle(FileHandle aFD) { mFD = aFD; }
+  bool Valid() { return mFD != kInvalidFileHandle; }
 
   void WriteBuffer(const char* aBuffer, size_t aLen) {
     if (!Valid()) {
@@ -566,7 +558,7 @@ class PlatformWriter {
     WriteBuffer(aStr, N - 1);
   }
 
-  NativeFileDesc FileDesc() { return mFD; }
+  FileHandle FileDesc() { return mFD; }
 
  private:
   PlatformWriter(const PlatformWriter&) = delete;
@@ -603,7 +595,7 @@ class PlatformWriter {
 
   char mBuffer[kBufferSize];
   size_t mPos;
-  NativeFileDesc mFD;
+  FileHandle mFD;
 };
 
 class JSONAnnotationWriter : public AnnotationWriter {
@@ -1652,18 +1644,14 @@ static bool BuildTempPath(PathStringT& aResult) {
   return true;
 }
 
+FileHandle GetAnnotationTimeCrashFd() { return gChildCrashAnnotationReportFd; }
+
 static void PrepareChildExceptionTimeAnnotations(
-    void* context, const phc::AddrInfo* addrInfo) {
+    const phc::AddrInfo* addrInfo) {
   MOZ_ASSERT(!XRE_IsParentProcess());
 
-  FileHandle f;
-#ifdef XP_WIN
-  f = static_cast<HANDLE>(context);
-#else
-  f = GetAnnotationTimeCrashFd();
-#endif
   PlatformWriter apiData;
-  apiData.OpenHandle(f);
+  apiData.OpenHandle(GetAnnotationTimeCrashFd());
   BinaryAnnotationWriter writer(apiData);
 
   char oomAllocationSizeBuffer[32] = "";
@@ -1775,7 +1763,7 @@ static bool ChildMinidumpCallback(const wchar_t* dump_path,
                                   const mozilla::phc::AddrInfo* addr_info,
                                   bool succeeded) {
   if (succeeded) {
-    PrepareChildExceptionTimeAnnotations(context, addr_info);
+    PrepareChildExceptionTimeAnnotations(addr_info);
   }
 
   return true;
@@ -1841,7 +1829,7 @@ static bool ChildFilter(void* context, const phc::AddrInfo* addrInfo) {
   }
 
   mozilla::IOInterposer::Disable();
-  PrepareChildExceptionTimeAnnotations(context, addrInfo);
+  PrepareChildExceptionTimeAnnotations(addrInfo);
   return true;
 }
 
@@ -1873,11 +1861,58 @@ static nsresult LocateExecutable(nsIFile* aXREDirectory,
 
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
+#if defined(XP_WIN)
+
+DWORD WINAPI FlushContentProcessAnnotationsThreadFunc(LPVOID aContext) {
+  PrepareChildExceptionTimeAnnotations(nullptr);
+  return 0;
+}
+
+#else
+
+static const int kAnnotationSignal = SIGUSR2;
+
+static void AnnotationSignalHandler(int aSignal, siginfo_t* aInfo,
+                                    void* aContext) {
+  PrepareChildExceptionTimeAnnotations(nullptr);
+}
+
+#endif  // defined(XP_WIN)
+
+static void InitChildAnnotationsFlusher() {
+#if !defined(XP_WIN)
+  struct sigaction oldSigAction = {};
+  struct sigaction sigAction = {};
+  sigAction.sa_sigaction = AnnotationSignalHandler;
+  sigAction.sa_flags = SA_RESTART | SA_SIGINFO;
+  sigemptyset(&sigAction.sa_mask);
+  mozilla::DebugOnly<int> rv =
+      sigaction(kAnnotationSignal, &sigAction, &oldSigAction);
+  MOZ_ASSERT(rv == 0, "Failed to install the crash reporter's SIGUSR2 handler");
+  MOZ_ASSERT(oldSigAction.sa_sigaction == nullptr,
+             "A SIGUSR2 handler was already present");
+#endif  // !defined(XP_WIN)
+}
+
+static bool FlushContentProcessAnnotations(ProcessHandle aTargetPid) {
+#if defined(XP_WIN)
+  nsAutoHandle hThread(CreateRemoteThread(
+      aTargetPid, nullptr, 0, FlushContentProcessAnnotationsThreadFunc, nullptr,
+      0, nullptr));
+  return !!hThread;
+#else  // POSIX platforms
+  return kill(aTargetPid, kAnnotationSignal) == 0;
+#endif
+}
+
 static void InitializeAnnotationFacilities() {
   crashReporterAPILock = new Mutex("crashReporterAPILock");
   notesFieldLock = new Mutex("notesFieldLock");
   notesField = new nsCString();
   InitThreadAnnotation();
+  if (!XRE_IsParentProcess()) {
+    InitChildAnnotationsFlusher();
+  }
 }
 
 static void TeardownAnnotationFacilities() {
@@ -3164,7 +3199,7 @@ bool WriteExtraFile(const nsAString& id, const AnnotationTable& annotations) {
 }
 
 static void ReadExceptionTimeAnnotations(AnnotationTable& aAnnotations,
-                                         uint32_t aPid) {
+                                         ProcessId aPid) {
   // Read exception-time annotations
   StaticMutexAutoLock pidMapLock(processMapLock);
   if (aPid && processToCrashFd.count(aPid)) {
@@ -3228,7 +3263,7 @@ static void OnChildProcessDumpRequested(void* aContext,
 
   CreateFileFromPath(aFilePath, getter_AddRefs(minidump));
 
-  uint32_t pid = aClientInfo.pid();
+  ProcessId pid = aClientInfo.pid();
 
   if (ShouldReport()) {
     nsCOMPtr<nsIFile> memoryReport;
@@ -3263,7 +3298,7 @@ static void OnChildProcessDumpRequested(void* aContext,
 
 static void OnChildProcessDumpWritten(void* aContext,
                                       const ClientInfo& aClientInfo) {
-  uint32_t pid = aClientInfo.pid();
+  ProcessId pid = aClientInfo.pid();
   ChildProcessData* pd = pidToMinidump->GetEntry(pid);
   MOZ_ASSERT(pd);
   if (!pd->minidumpOnly) {
@@ -3446,16 +3481,6 @@ void UnregisterInjectorCallback(DWORD processID) {
 
 #endif  // MOZ_CRASHREPORTER_INJECTOR
 
-#if !defined(XP_WIN)
-int GetAnnotationTimeCrashFd() {
-#  if defined(MOZ_WIDGET_ANDROID)
-  return gChildCrashAnnotationReportFd;
-#  else
-  return 7;
-#  endif  // defined(MOZ_WIDGET_ANDROID)
-}
-#endif
-
 void RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess,
                                                 PRFileDesc* aFd) {
   StaticMutexAutoLock pidMapLock(processMapLock);
@@ -3498,9 +3523,10 @@ bool SetRemoteExceptionHandler(const char* aCrashPipe,
   InitializeAnnotationFacilities();
 
 #if defined(XP_WIN)
+  gChildCrashAnnotationReportFd = (FileHandle)aCrashTimeAnnotationFile;
   gExceptionHandler = new google_breakpad::ExceptionHandler(
       L"", ChildFPEFilter, ChildMinidumpCallback,
-      reinterpret_cast<void*>(aCrashTimeAnnotationFile),
+      nullptr,  // no callback context
       google_breakpad::ExceptionHandler::HANDLER_ALL, GetMinidumpType(),
       NS_ConvertASCIItoUTF16(aCrashPipe).get(), nullptr);
   gExceptionHandler->set_handle_debug_exceptions(true);
@@ -3600,7 +3626,7 @@ bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
 }
 
 //-----------------------------------------------------------------------------
-// CreatePairedMinidumps() and helpers
+// CreateMinidumpsAndPair() and helpers
 //
 
 /*
@@ -3735,7 +3761,7 @@ bool TakeMinidump(nsIFile** aResult, bool aMoveToPending) {
   return true;
 }
 
-bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
+bool CreateMinidumpsAndPair(ProcessHandle aTargetHandle,
                             ThreadId aTargetBlamedThread,
                             const nsACString& aIncomingPairName,
                             nsIFile* aIncomingDumpToPair,
@@ -3748,7 +3774,7 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
   AutoIOInterposerDisable disableIOInterposition;
 
 #ifdef XP_MACOSX
-  mach_port_t targetThread = GetChildThread(aTargetPid, aTargetBlamedThread);
+  mach_port_t targetThread = GetChildThread(aTargetHandle, aTargetBlamedThread);
 #else
   ThreadId targetThread = aTargetBlamedThread;
 #endif
@@ -3763,7 +3789,7 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
   // dump the target
   nsCOMPtr<nsIFile> targetMinidump;
   if (!google_breakpad::ExceptionHandler::WriteMinidumpForChild(
-          aTargetPid, targetThread, dump_path, PairedDumpCallback,
+          aTargetHandle, targetThread, dump_path, PairedDumpCallback,
           static_cast<void*>(&targetMinidump)
 #ifdef XP_WIN
               ,
@@ -3804,8 +3830,11 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
   DllBlocklist_Shutdown();
 #endif
 
-  MergeContentCrashAnnotations(aTargetAnnotations);
-  AddCommonAnnotations(aTargetAnnotations);
+  PopulateContentProcessAnnotations(aTargetAnnotations);
+  if (FlushContentProcessAnnotations(aTargetHandle)) {
+    ProcessId targetPid = base::GetProcId(aTargetHandle);
+    ReadExceptionTimeAnnotations(aTargetAnnotations, targetPid);
+  }
 
   targetMinidump.forget(aMainDumpOut);
 

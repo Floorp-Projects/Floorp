@@ -210,20 +210,23 @@ typedef HANDLE ProcessHandle;
 typedef DWORD ProcessId;
 typedef DWORD ThreadId;
 typedef HANDLE FileHandle;
+const FileHandle kInvalidFileHandle = INVALID_HANDLE_VALUE;
 #elif defined(XP_MACOSX)
 typedef task_t ProcessHandle;
 typedef pid_t ProcessId;
 typedef mach_port_t ThreadId;
 typedef int FileHandle;
+const FileHandle kInvalidFileHandle = -1;
 #else
 typedef int ProcessHandle;
 typedef pid_t ProcessId;
 typedef int ThreadId;
 typedef int FileHandle;
+const FileHandle kInvalidFileHandle = -1;
 #endif
 
 #if !defined(XP_WIN)
-int GetAnnotationTimeCrashFd();
+FileHandle GetAnnotationTimeCrashFd();
 #endif
 void RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess,
                                                 PRFileDesc* aFd);
