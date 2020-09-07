@@ -8,7 +8,6 @@ import androidx.test.uiautomator.UiSelector
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -61,6 +60,7 @@ class MediaNotificationTest {
         }.enterURLAndEnterToBrowser(videoTestPage.url) {
             mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
+            waitForPlaybackToStart()
         }.openNotificationShade {
             verifySystemNotificationExists(videoTestPage.title)
             clickMediaSystemNotificationControlButton("Pause")
@@ -136,7 +136,6 @@ class MediaNotificationTest {
         }
     }
 
-    @Ignore("Flaky test, temp disabled: https://github.com/mozilla-mobile/fenix/issues/12645")
     @Test
     fun mediaSystemNotificationInPrivateModeTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
@@ -160,6 +159,7 @@ class MediaNotificationTest {
             verifyMediaIsPaused()
         }.openTabDrawer {
             closeTab()
+            verifySnackBarText("Private tab closed")
         }
 
         mDevice.openNotification()
