@@ -110,6 +110,8 @@
   _(GetFirstDollarIndex)                           \
                                                    \
   _(String)                                        \
+  _(StringToString)                                \
+  _(StringValueOf)                                 \
   _(StringCharCodeAt)                              \
   _(StringFromCharCode)                            \
   _(StringFromCodePoint)                           \

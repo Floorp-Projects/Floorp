@@ -429,6 +429,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     case InlinableNative::IntrinsicTypedArrayElementShift:
       return inlineTypedArrayElementShift(callInfo);
 
+    case InlinableNative::StringToString:
+    case InlinableNative::StringValueOf:
     case InlinableNative::IntrinsicIsSuspendedGenerator:
       // Not supported in Ion.
       return InliningStatus_NotInlined;
