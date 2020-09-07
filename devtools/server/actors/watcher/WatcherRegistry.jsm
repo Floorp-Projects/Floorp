@@ -56,6 +56,12 @@ const watcherActors = new Map();
 // Name of the attribute into which we save this Map in `sharedData` object.
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
+// List of all arrays stored in `sharedData` which are replicated across processes and threads
+const SUPPORTED_DATA = {
+  TARGETS: "targets",
+  RESOURCES: "resources",
+};
+
 /**
  * Retrieve the data saved into `sharedData` that is used to know
  * about which type of targets and resources we care listening about.
@@ -77,8 +83,6 @@ function getWatchedData(watcher, { createData = false } = {}) {
   let watchedData = watchedDataByWatcherActor.get(watcherActorID);
   if (!watchedData && createData) {
     watchedData = {
-      targets: [],
-      resources: [],
       // The Browser ID will be helpful to identify which BrowsingContext should be considered
       // when running code in the content process. Browser ID, compared to BrowsingContext ID won't change
       // if we navigate to the parent process or if a new BrowsingContext is used for the <browser> element
@@ -87,6 +91,10 @@ function getWatchedData(watcher, { createData = false } = {}) {
       // The DevToolsServerConnection prefix will be used to compute actor IDs created in the content process
       connectionPrefix: watcher.conn.prefix,
     };
+    // Define empty default array for all data
+    for (const name of Object.values(SUPPORTED_DATA)) {
+      watchedData[name] = [];
+    }
     watchedDataByWatcherActor.set(watcherActorID, watchedData);
     watcherActors.set(watcherActorID, watcher);
   }
@@ -150,6 +158,86 @@ const WatcherRegistry = {
   },
 
   /**
+   * Notify that a given watcher added an entry in a given data type.
+   *
+   * @param WatcherActor watcher
+   *               The WatcherActor which starts observing.
+   * @param string type
+   *               The type of data to be added
+   * @param Array<Object> entries
+   *               The values to be added to this type of data
+   */
+  addWatcherDataEntry(watcher, type, entries) {
+    const watchedData = getWatchedData(watcher, {
+      createData: true,
+    });
+
+    if (!(type in watchedData)) {
+      throw new Error(`Unsupported watcher data type: ${type}`);
+    }
+
+    for (const entry of entries) {
+      if (watchedData[type].includes(entry)) {
+        throw new Error(
+          `'${type}:${entry} already exists for Watcher Actor ${watcher.actorID}`
+        );
+      }
+    }
+
+    // Register the JS Window Actor the first time we start watching for something (e.g. resource, target, …).
+    registerJSWindowActor();
+
+    for (const entry of entries) {
+      watchedData[type].push(entry);
+    }
+
+    persistMapToSharedData();
+  },
+
+  /**
+   * Notify that a given watcher removed an entry in a given data type.
+   *
+   * See `addWatcherDataEntry` for argument definition.
+   *
+   * @return boolean
+   *         True if we such entry was already registered, for this watcher actor.
+   */
+  removeWatcherDataEntry(watcher, type, entries) {
+    const watchedData = getWatchedData(watcher);
+    if (!watchedData) {
+      return false;
+    }
+
+    if (!(type in watchedData)) {
+      throw new Error(`Unsupported watcher data type: ${type}`);
+    }
+
+    let includesAtLeastOne = false;
+    for (const entry of entries) {
+      const idx = watchedData[type].indexOf(entry);
+      if (idx !== -1) {
+        watchedData[type].splice(idx, 1);
+        includesAtLeastOne = true;
+      }
+    }
+    if (!includesAtLeastOne) {
+      return false;
+    }
+
+    const isWatchingSomething = Object.values(SUPPORTED_DATA).some(
+      dataType => watchedData[dataType].length > 0
+    );
+    if (!isWatchingSomething) {
+      watchedDataByWatcherActor.delete(watcher.actorID);
+      watcherActors.delete(watcher.actorID);
+    }
+
+    persistMapToSharedData();
+
+    return true;
+  },
+
+  /**
    * Notify that a given watcher starts observing a new target type.
    *
    * @param WatcherActor watcher
@@ -158,21 +246,7 @@ const WatcherRegistry = {
    *               The new target type to start listening to.
    */
   watchTargets(watcher, targetType) {
-    const watchedData = getWatchedData(watcher, {
-      createData: true,
-    });
-    if (watchedData.targets.includes(targetType)) {
-      throw new Error(
-        `Already watching for '${targetType}' targets for Watcher Actor ${watcher.actorID}`
-      );
-    }
-
-    // Register the JS Window Actor the first time we start watching for a resource -or- a target.
-    registerJSWindowActor();
-
-    watchedData.targets.push(targetType);
-
-    persistMapToSharedData();
+    this.addWatcherDataEntry(watcher, SUPPORTED_DATA.TARGETS, [targetType]);
   },
 
   /**
@@ -184,28 +258,9 @@ const WatcherRegistry = {
    *         True if we were watching for this target type, for this watcher actor.
    */
   unwatchTargets(watcher, targetType) {
-    const watchedData = getWatchedData(watcher);
-    if (!watchedData) {
-      return false;
-    }
-
-    const idx = watchedData.targets.indexOf(targetType);
-    if (idx === -1) {
-      return false;
-    }
-    watchedData.targets.splice(idx, 1);
-
-    if (
-      watchedData.targets.length === 0 &&
-      watchedData.resources.length === 0
-    ) {
-      watchedDataByWatcherActor.delete(watcher.actorID);
-      watcherActors.delete(watcher.actorID);
-    }
-
-    persistMapToSharedData();
-
-    return true;
+    return this.removeWatcherDataEntry(watcher, SUPPORTED_DATA.TARGETS, [
+      targetType,
+    ]);
   },
 
   /**
@@ -217,25 +272,7 @@ const WatcherRegistry = {
    *               The new resource types to start listening to.
    */
   watchResources(watcher, resourceTypes) {
-    const watchedData = getWatchedData(watcher, {
-      createData: true,
-    });
-
-    // Register the JS Window Actor the first time we start watching for a resource -or- a target.
-    registerJSWindowActor();
-
-    for (const resourceType of resourceTypes) {
-      if (watchedData.resources.includes(resourceType)) {
-        throw new Error(
-          `Already watching for '${resourceType}' resource for Watcher Actor ${watcher.actorID}`
-        );
-      }
-    }
-    for (const resourceType of resourceTypes) {
-      watchedData.resources.push(resourceType);
-    }
-
-    persistMapToSharedData();
+    this.addWatcherDataEntry(watcher, SUPPORTED_DATA.RESOURCES, resourceTypes);
   },
 
   /**
@@ -247,34 +284,11 @@ const WatcherRegistry = {
    *         True if we were watching for this resource type, for this watcher actor.
    */
   unwatchResources(watcher, resourceTypes) {
-    const watchedData = getWatchedData(watcher);
-    if (!watchedData) {
-      return false;
-    }
-
-    let atLeastOneWasRegistered = false;
-    for (const resourceType of resourceTypes) {
-      const idx = watchedData.resources.indexOf(resourceType);
-      if (idx !== -1) {
-        watchedData.resources.splice(idx, 1);
-        atLeastOneWasRegistered = true;
-      }
-    }
-    if (!atLeastOneWasRegistered) {
-      return false;
-    }
-
-    if (
-      watchedData.targets.length === 0 &&
-      watchedData.resources.length === 0
-    ) {
-      watchedDataByWatcherActor.delete(watcher.actorID);
-      watcherActors.delete(watcher.actorID);
-    }
-
-    persistMapToSharedData();
-
-    return true;
+    return this.removeWatcherDataEntry(
+      watcher,
+      SUPPORTED_DATA.RESOURCES,
+      resourceTypes
+    );
   },
 
   /**
