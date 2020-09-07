@@ -1300,11 +1300,11 @@ Inspector.prototype = {
     }
   },
 
-  onResourceAvailable: function({ targetFront, resource }) {
+  onResourceAvailable: function({ resource }) {
     if (
       resource.resourceType === this.toolbox.resourceWatcher.TYPES.ROOT_NODE
     ) {
-      const isTopLevelTarget = !!targetFront.isTopLevel;
+      const isTopLevelTarget = !!resource.targetFront.isTopLevel;
       if (resource.isTopLevelDocument && isTopLevelTarget) {
         // Note: the resource (ie the root node here) will be fetched from the
         // walker later on in _getDefaultNodeForSelection.
