@@ -153,7 +153,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       { targets, connectionPrefix, browserId, resources },
     ] of watchedDataByWatcherActor) {
       if (
-        targets.has("frame") &&
+        targets.includes("frame") &&
         shouldNotifyWindowGlobal(this.manager, browserId)
       ) {
         this._createTargetActor(watcherActorID, connectionPrefix, resources);
@@ -207,8 +207,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
     });
 
     // Start listening for resources that are already being watched
-    if (initialWatchedResources.size > 0) {
-      targetActor.watchTargetResources([...initialWatchedResources]);
+    if (initialWatchedResources.length > 0) {
+      targetActor.watchTargetResources(initialWatchedResources);
     }
 
     // Immediately queue a message for the parent process,

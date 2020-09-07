@@ -77,8 +77,8 @@ function getWatchedData(watcher, { createData = false } = {}) {
   let watchedData = watchedDataByWatcherActor.get(watcherActorID);
   if (!watchedData && createData) {
     watchedData = {
-      targets: new Set(),
-      resources: new Set(),
+      targets: [],
+      resources: [],
       // The Browser ID will be helpful to identify which BrowsingContext should be considered
       // when running code in the content process. Browser ID, compared to BrowsingContext ID won't change
       // if we navigate to the parent process or if a new BrowsingContext is used for the <browser> element
@@ -120,7 +120,7 @@ const WatcherRegistry = {
    */
   isWatchingTargets(watcher, targetType) {
     const watchedData = getWatchedData(watcher);
-    return watchedData && watchedData.targets.has(targetType);
+    return watchedData && watchedData.targets.includes(targetType);
   },
 
   /**
@@ -132,8 +132,7 @@ const WatcherRegistry = {
   getWatchedResources(watcher) {
     const watchedData = getWatchedData(watcher);
     if (watchedData) {
-      // Convert the Set into an array
-      return [...watchedData.resources];
+      return watchedData.resources;
     }
     return [];
   },
@@ -162,7 +161,7 @@ const WatcherRegistry = {
     const watchedData = getWatchedData(watcher, {
       createData: true,
     });
-    if (watchedData.targets.has(targetType)) {
+    if (watchedData.targets.includes(targetType)) {
       throw new Error(
         `Already watching for '${targetType}' targets for Watcher Actor ${watcher.actorID}`
       );
@@ -171,7 +170,7 @@ const WatcherRegistry = {
     // Register the JS Window Actor the first time we start watching for a resource -or- a target.
     registerJSWindowActor();
 
-    watchedData.targets.add(targetType);
+    watchedData.targets.push(targetType);
 
     persistMapToSharedData();
   },
@@ -186,12 +185,20 @@ const WatcherRegistry = {
    */
   unwatchTargets(watcher, targetType) {
     const watchedData = getWatchedData(watcher);
-    if (!watchedData || !watchedData.targets.has(targetType)) {
+    if (!watchedData) {
       return false;
     }
 
-    watchedData.targets.delete(targetType);
-    if (watchedData.targets.size === 0 && watchedData.resources.size === 0) {
+    const idx = watchedData.targets.indexOf(targetType);
+    if (idx === -1) {
+      return false;
+    }
+    watchedData.targets.splice(idx, 1);
+
+    if (
+      watchedData.targets.length === 0 &&
+      watchedData.resources.length === 0
+    ) {
       watchedDataByWatcherActor.delete(watcher.actorID);
       watcherActors.delete(watcher.actorID);
     }
@@ -218,14 +225,14 @@ const WatcherRegistry = {
     registerJSWindowActor();
 
     for (const resourceType of resourceTypes) {
-      if (watchedData.resources.has(resourceType)) {
+      if (watchedData.resources.includes(resourceType)) {
         throw new Error(
           `Already watching for '${resourceType}' resource for Watcher Actor ${watcher.actorID}`
         );
       }
     }
     for (const resourceType of resourceTypes) {
-      watchedData.resources.add(resourceType);
+      watchedData.resources.push(resourceType);
     }
 
     persistMapToSharedData();
@@ -247,8 +254,9 @@ const WatcherRegistry = {
 
     let atLeastOneWasRegistered = false;
     for (const resourceType of resourceTypes) {
-      if (watchedData.resources.has(resourceType)) {
-        watchedData.resources.delete(resourceType);
+      const idx = watchedData.resources.indexOf(resourceType);
+      if (idx !== -1) {
+        watchedData.resources.splice(idx, 1);
         atLeastOneWasRegistered = true;
       }
     }
@@ -256,7 +264,10 @@ const WatcherRegistry = {
       return false;
     }
 
-    if (watchedData.targets.size === 0 && watchedData.resources.size === 0) {
+    if (
+      watchedData.targets.length === 0 &&
+      watchedData.resources.length === 0
+    ) {
       watchedDataByWatcherActor.delete(watcher.actorID);
       watcherActors.delete(watcher.actorID);
     }
