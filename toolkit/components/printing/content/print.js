@@ -842,19 +842,29 @@ const PrintSettingsViewProxy = {
           target.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF ||
           this.knownSaveToFilePrinters.has(target.printerName)
         );
-      // Black and white is always supported except:
-      //
-      //  * For PDF printing, where it'd require rasterization and thus bad
-      //    quality.
-      //
-      //  * For Mac, where there's no API to print in monochrome.
-      //
-      case "supportsMonochrome":
-        return (
-          !this.get(target, "supportsColor") ||
-          (target.printerName != PrintUtils.SAVE_TO_PDF_PRINTER &&
-            AppConstants.platform !== "macosx")
-        );
+      case "supportsMonochrome": {
+        // We assume that we support either color or monochrome.
+        if (!this.get(target, "supportsColor")) {
+          return true;
+        }
+        // On Mac there's no API to print in monochrome, so we can't claim to
+        // support it if the printer supports color.
+        if (AppConstants.platform === "macosx") {
+          return false;
+        }
+        // For Gecko's PDF printing it'd require rasterization and thus bad
+        // quality, so we don't claim to support it.
+        if (target.outputFormat == Ci.nsIPrintSettings.kOutputFormatPDF) {
+          return false;
+        }
+        // Other PDF drivers on Windows also don't support monochrome printing.
+        // TODO(emilio): We should probably call into Gecko to get this
+        // information.
+        if (this.knownSaveToFilePrinters.has(target.printerName)) {
+          return false;
+        }
+        return true;
+      }
       case "defaultSystemPrinter":
         return (
           this.defaultSystemPrinter?.value ||
