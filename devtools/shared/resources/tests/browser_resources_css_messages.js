@@ -163,7 +163,7 @@ function setupOnAvailableFunction(targetList, receivedMessages) {
 
   let done;
   const onAllMessagesReceived = new Promise(resolve => (done = resolve));
-  const onAvailable = ({ resourceType, targetFront, resource }) => {
+  const onAvailable = ({ targetFront, resource }) => {
     const { pageError } = resource;
 
     is(
