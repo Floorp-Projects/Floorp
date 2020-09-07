@@ -42,6 +42,13 @@ bool nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(bool aFromPrivateWindow) {
 /* static */
 void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
     mozilla::net::DocumentLoadListener* aDocumentLoadListener) {
+  // only send http background request to counter timeouts if the
+  // pref allows us to do that.
+  if (!mozilla::StaticPrefs::
+          dom_security_https_only_mode_send_http_background_request()) {
+    return;
+  }
+
   nsCOMPtr<nsIChannel> channel = aDocumentLoadListener->GetChannel();
   if (!channel) {
     return;
@@ -490,13 +497,26 @@ TestHTTPAnswerRunnable::Notify(nsITimer* aTimer) {
       nsIRequest::INHIBIT_PERSISTENT_CACHING | nsIRequest::LOAD_BYPASS_CACHE |
       nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
 
+  // No need to connect to the URI including the path because we only care about
+  // the round trip time if a server responds to an http request.
+  nsCOMPtr<nsIURI> backgroundChannelURI;
+  nsAutoCString prePathStr;
+  nsresult rv = mURI->GetPrePath(prePathStr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = NS_NewURI(getter_AddRefs(backgroundChannelURI), prePathStr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   // we are using TYPE_OTHER because TYPE_DOCUMENT might have side effects
   nsCOMPtr<nsIChannel> testHTTPChannel;
-  nsresult rv =
-      NS_NewChannel(getter_AddRefs(testHTTPChannel), mURI, nullPrincipal,
-                    nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-                    nsIContentPolicy::TYPE_OTHER, nullptr, nullptr, nullptr,
-                    nullptr, loadFlags);
+  rv = NS_NewChannel(getter_AddRefs(testHTTPChannel), backgroundChannelURI,
+                     nullPrincipal,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+                     nsIContentPolicy::TYPE_OTHER, nullptr, nullptr, nullptr,
+                     nullptr, loadFlags);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
