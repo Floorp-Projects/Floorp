@@ -813,6 +813,24 @@ class MOZ_STACK_CLASS AutoRangeArray final {
                             nsIEditor::EDirection aDirectionAndAmount);
 
   /**
+   * For compatiblity with the other browsers, we should shrink ranges to
+   * start from an atomic content and/or end after one instead of start
+   * from end of a preceding text node and end by start of a follwing text
+   * node.  Returns true if this modifies a range.
+   */
+  enum class IfSelectingOnlyOneAtomicContent {
+    Collapse,  // Collapse to the range selecting only one atomic content to
+               // start or after of it.  Whether to collapse start or after
+               // it depends on aDirectionAndAmount.  This is ignored if
+               // there are multiple ranges.
+    KeepSelecting,  // Won't collapse the range.
+  };
+  Result<bool, nsresult> ShrinkRangesIfStartFromOrEndAfterAtomicContent(
+      const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      IfSelectingOnlyOneAtomicContent aIfSelectingOnlyOneAtomicContent,
+      const dom::Element* aEditingHost);
+
+  /**
    * The following methods are same as `Selection`'s methods.
    */
   bool IsCollapsed() const {

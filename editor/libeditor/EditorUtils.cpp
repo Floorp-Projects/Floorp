@@ -5,9 +5,11 @@
 
 #include "EditorUtils.h"
 
+#include "WSRunObject.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Document.h"
@@ -239,6 +241,7 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
     NS_WARNING("Failed to extend the range, but ignored");
     return directionAndAmountResult;
   }
+
   if (NS_WARN_IF(!frameSelection->IsValidSelectionPoint(
           extendedRange->GetStartContainer())) ||
       NS_WARN_IF(!frameSelection->IsValidSelectionPoint(
@@ -259,6 +262,58 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
   MOZ_ASSERT(found);
   mAnchorFocusRange.swap(extendedRange);
   return directionAndAmountResult;
+}
+
+Result<bool, nsresult>
+AutoRangeArray::ShrinkRangesIfStartFromOrEndAfterAtomicContent(
+    const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    IfSelectingOnlyOneAtomicContent aIfSelectingOnlyOneAtomicContent,
+    const Element* aEditingHost) {
+  if (IsCollapsed()) {
+    return false;
+  }
+
+  switch (aDirectionAndAmount) {
+    case nsIEditor::eNext:
+    case nsIEditor::eNextWord:
+    case nsIEditor::ePrevious:
+    case nsIEditor::ePreviousWord:
+      break;
+    default:
+      return false;
+  }
+
+  bool changed = false;
+  for (auto& range : mRanges) {
+    MOZ_ASSERT(!range->IsInSelection(),
+               "Changing range in selection may cause running script");
+    Result<bool, nsresult> result =
+        WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
+            aHTMLEditor, range, aEditingHost);
+    if (result.isErr()) {
+      NS_WARNING(
+          "WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent() "
+          "failed");
+      return Err(result.inspectErr());
+    }
+    changed |= result.inspect();
+  }
+
+  if (mRanges.Length() == 1 && aIfSelectingOnlyOneAtomicContent ==
+                                   IfSelectingOnlyOneAtomicContent::Collapse) {
+    MOZ_ASSERT(mRanges[0].get() == mAnchorFocusRange.get());
+    if (mAnchorFocusRange->GetStartContainer() ==
+            mAnchorFocusRange->GetEndContainer() &&
+        mAnchorFocusRange->GetChildAtStartOffset() &&
+        mAnchorFocusRange->StartRef().GetNextSiblingOfChildAtOffset() ==
+            mAnchorFocusRange->GetChildAtEndOffset()) {
+      mAnchorFocusRange->Collapse(aDirectionAndAmount == nsIEditor::eNext ||
+                                  aDirectionAndAmount == nsIEditor::eNextWord);
+      changed = true;
+    }
+  }
+
+  return changed;
 }
 
 /******************************************************************************
