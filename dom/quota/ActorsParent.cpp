@@ -6588,8 +6588,11 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     if (newDatabase && newDirectory) {
       QM_TRY(CreateTables(connection));
 
-      MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&storageVersion)));
-      MOZ_ASSERT(storageVersion == kStorageVersion);
+      {
+        QM_DEBUG_TRY_VAR(const auto storageVersion,
+                         MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion));
+        MOZ_ASSERT(storageVersion == kStorageVersion);
+      }
 
       QM_TRY(connection->ExecuteSimpleSQL(
           nsLiteralCString("INSERT INTO database (cache_version) "
