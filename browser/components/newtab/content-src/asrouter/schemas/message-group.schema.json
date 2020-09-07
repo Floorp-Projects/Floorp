@@ -42,8 +42,14 @@
                   {
                     "type": "integer",
                     "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
+                  },
+                  {
+                    "type": "string",
+                    "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
+                    "enum": ["daily"]
                   }
                 ]
+
               },
               "cap": {
                 "type": "integer",
@@ -56,8 +62,12 @@
           }
         }
       }
+    },
+    "type": {
+      "type": "string",
+      "description": "Local auto-generated group or remote group configuration from RS.",
+      "enum": ["remote-settings", "local", "default"]
     }
   },
-  "required": ["id", "enabled"],
-  "additionalProperties": false
+  "required": ["id", "enabled", "type"]
 }

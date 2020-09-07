@@ -95,7 +95,6 @@ export class TogglePrefCheckbox extends React.PureComponent {
           type="checkbox"
           checked={this.props.checked}
           onChange={this.onChange}
-          disabled={this.props.disabled}
         />{" "}
         {this.props.pref}{" "}
       </>
@@ -483,9 +482,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
     this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
-    this.onChangeMessageGroupsFilter = this.onChangeMessageGroupsFilter.bind(
-      this
-    );
     this.handleClearAllImpressionsByProvider = this.handleClearAllImpressionsByProvider.bind(
       this
     );
@@ -508,16 +504,13 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.restoreWNMessageState = this.restoreWNMessageState.bind(this);
     this.toggleJSON = this.toggleJSON.bind(this);
     this.toggleAllMessages = this.toggleAllMessages.bind(this);
-    this.toggleGroups = this.toggleGroups.bind(this);
     this.state = {
       messageFilter: "all",
-      messageGroupsFilter: "all",
       WNMessages: [],
       collapsedMessages: [],
       modifiedMessages: [],
       evaluationStatus: {},
       trailhead: {},
-      toggledGroups: [],
       stringTargetingParameters: null,
       newStringTargetingParameters: null,
       copiedToClipboard: false,
@@ -635,11 +628,6 @@ export class ASRouterAdminInner extends React.PureComponent {
       type: "SET_GROUP_STATE",
       data: { id, value },
     });
-    this.setState(({ toggledGroups }) => ({
-      toggledGroups: toggledGroups.includes(id)
-        ? toggledGroups
-        : toggledGroups.concat([id]),
-    }));
   }
 
   handleExpressionEval() {
@@ -752,10 +740,6 @@ export class ASRouterAdminInner extends React.PureComponent {
 
   onChangeMessageFilter(event) {
     this.setState({ messageFilter: event.target.value });
-  }
-
-  onChangeMessageGroupsFilter(event) {
-    this.setState({ messageGroupsFilter: event.target.value });
   }
 
   // Simulate a copy event that sets to clipboard all targeting paramters and values
@@ -1060,24 +1044,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
   }
 
-  renderMessagesByGroup() {
-    if (!this.state.messages) {
-      return null;
-    }
-    const messagesToShow =
-      this.state.messageGroupsFilter === "all"
-        ? this.state.messages.filter(m => m.groups.length)
-        : this.state.messages.filter(message =>
-            message.groups.includes(this.state.messageGroupsFilter)
-          );
-
-    return (
-      <table>
-        <tbody>{messagesToShow.map(msg => this.renderMessageItem(msg))}</tbody>
-      </table>
-    );
-  }
-
   renderWNMessages() {
     if (!this.state.messages) {
       return null;
@@ -1123,29 +1089,6 @@ export class ASRouterAdminInner extends React.PureComponent {
             Reset All
           </button>
         ) : null}
-      </p>
-    );
-  }
-
-  renderMessageGroupsFilter() {
-    if (!this.state.groups) {
-      return null;
-    }
-
-    return (
-      <p>
-        Show messages from {/* eslint-disable-next-line jsx-a11y/no-onchange */}
-        <select
-          value={this.state.messageGroupsFilter}
-          onChange={this.onChangeMessageGroupsFilter}
-        >
-          <option value="all">all groups</option>
-          {this.state.groups.map(group => (
-            <option key={group.id} value={group.id}>
-              {group.id}
-            </option>
-          ))}
-        </select>
       </p>
     );
   }
@@ -1740,22 +1683,10 @@ export class ASRouterAdminInner extends React.PureComponent {
                   ({ id, enabled, frequency, userPreferences = [] }, index) => (
                     <Row key={id}>
                       <td>
-                        {console.log(id, enabled, this.state.toggledGroups)}
                         <TogglePrefCheckbox
                           checked={enabled}
                           pref={id}
                           onChange={this.toggleGroups}
-                          // Disabled checkbox for groups tied to user prefs that are false.
-                          // We don't want to have calls that modify arbitrary preferences.
-                          // Use state for simple toggle off/on that allows resetting
-                          // impressions.
-                          disabled={
-                            !enabled &&
-                            !(
-                              this.state.toggledGroups.includes(id) ||
-                              !userPreferences.length
-                            )
-                          }
                         />
                       </td>
                       <td>{this._getGroupImpressionsCount(id, frequency)}</td>
@@ -1765,8 +1696,6 @@ export class ASRouterAdminInner extends React.PureComponent {
                   )
                 )}
             </table>
-            {this.renderMessageGroupsFilter()}
-            {this.renderMessagesByGroup()}
           </React.Fragment>
         );
       case "ds":

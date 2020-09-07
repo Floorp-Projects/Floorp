@@ -47,7 +47,7 @@ RemoteSettings("cfr").verifySignature = false;
 **3. Set ASRouter CFR pref to use Remote Settings provider and enable asrouter devtools.**
 
 ```javascript
-Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.providers.cfr", JSON.stringify({"id":"cfr-remote","enabled":true,"type":"remote-settings","bucket":"cfr"}));
+Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.providers.cfr", JSON.stringify({"id":"cfr-remote","enabled":true,"type":"remote-settings","bucket":"cfr","frequency":{"custom":[{"period":"daily","cap":1}]},"categories":["cfrAddons","cfrFeatures"]}));
 Services.prefs.setBoolPref("browser.newtabpage.activity-stream.asrouter.devtoolsEnabled", true);
 ```
 
