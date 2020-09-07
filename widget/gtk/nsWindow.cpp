@@ -598,10 +598,8 @@ void nsWindow::OnDestroy(void) {
   NotifyWindowDestroyed();
 }
 
-bool nsWindow::AreBoundsSane(void) {
-  if (mBounds.width > 0 && mBounds.height > 0) return true;
-
-  return false;
+bool nsWindow::AreBoundsSane() {
+  return mBounds.width > 0 && mBounds.height > 0;
 }
 
 static GtkWidget* EnsureInvisibleContainer() {
@@ -1098,6 +1096,12 @@ void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
 
   ConstrainSize(&aWidth, &aHeight);
 
+  // If we used to have insane bounds, we may have skipped actually positioning
+  // the widget in NativeMoveResizeWaylandPopup, in which case we need to
+  // actually position it now as well.
+  const bool hadInsaneWaylandPopupDimensions =
+      !AreBoundsSane() && IsWaylandPopup();
+
   if (aMove) {
     mBounds.x = aX;
     mBounds.y = aY;
@@ -1119,8 +1123,9 @@ void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
 
   if (!mCreated) return;
 
-  if (aMove || mPreferredPopupRectFlushed) {
-    LOG(("  Need also to move, flushed? %d\n", mPreferredPopupRectFlushed));
+  if (aMove || mPreferredPopupRectFlushed || hadInsaneWaylandPopupDimensions) {
+    LOG(("  Need also to move, flushed? %d, bounds were insane: %d\n",
+         mPreferredPopupRectFlushed, hadInsaneWaylandPopupDimensions));
     NativeMoveResize();
   } else {
     NativeResize();
