@@ -70,8 +70,10 @@ async function generateConsoleApiStubs() {
   // resource to `handleConsoleMessage`, dynamically updated for each command.
   let handleConsoleMessage = function() {};
 
-  const onConsoleMessage = ({ resource }) => {
-    handleConsoleMessage(resource);
+  const onConsoleMessage = resources => {
+    for (const resource of resources) {
+      handleConsoleMessage(resource);
+    }
   };
   await resourceWatcher.watchResources(
     [resourceWatcher.TYPES.CONSOLE_MESSAGE],
