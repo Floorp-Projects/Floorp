@@ -647,7 +647,8 @@ void MacroAssembler::Pop(Register reg) {
 }
 
 void MacroAssembler::Pop(FloatRegister f) {
-  MOZ_CRASH("NYI: Pop(FloatRegister)");
+  loadDouble(Address(getStackPointer(), 0), f);
+  freeStack(sizeof(double));
 }
 
 void MacroAssembler::Pop(const ValueOperand& val) {
