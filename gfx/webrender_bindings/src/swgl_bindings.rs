@@ -473,7 +473,7 @@ impl SwCompositeJob {
                     band_offset,
                     band_height,
                 );
-            },
+            }
             SwCompositeSource::YUV(ref y, ref u, ref v, color_space) => {
                 let swgl_color_space = match color_space {
                     YuvColorSpace::Rec601 => swgl::YUVColorSpace::Rec601,
@@ -498,7 +498,7 @@ impl SwCompositeJob {
                     band_offset,
                     band_height,
                 );
-            },
+            }
         }
     }
 }
