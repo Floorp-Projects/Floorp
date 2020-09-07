@@ -1616,6 +1616,9 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
  * @param {boolean=} focus
  *     A boolean value which determines whether to focus
  *     the window. Defaults to true.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.switchToWindow = async function(cmd) {
   const { focus = true, handle } = cmd.parameters;
@@ -1628,9 +1631,18 @@ GeckoDriver.prototype.switchToWindow = async function(cmd) {
 
   const id = parseInt(handle);
   const found = this.findWindow(this.windows, (win, winId) => id == winId);
+
+  let selected = false;
   if (found) {
-    await this.setWindowHandle(found, focus);
-  } else {
+    try {
+      await this.setWindowHandle(found, focus);
+      selected = true;
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+
+  if (!selected) {
     throw new error.NoSuchWindowError(`Unable to locate window: ${handle}`);
   }
 };
