@@ -22,7 +22,6 @@
         android:contentDescription="@string/content_description_close_button"
         android:padding="12dp"
         app:iconTint="@color/neutral_text"
-        app:layout_constraintEnd_toStartOf="@id/title"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/mozac_ic_close" />
