@@ -6,6 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["Target"];
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 const { ContextualIdentityService } = ChromeUtils.import(
   "resource://gre/modules/ContextualIdentityService.jsm"
 );
@@ -22,7 +32,6 @@ const { WindowManager } = ChromeUtils.import(
   "chrome://remote/content/WindowManager.jsm"
 );
 
-let sessionIds = 1;
 let browserContextIds = 1;
 
 class Target extends Domain {
@@ -130,7 +139,9 @@ class Target extends Domain {
     const tabSession = new TabSession(
       this.session.connection,
       target,
-      sessionIds++
+      UUIDGen.generateUUID()
+        .toString()
+        .slice(1, -1)
     );
     this.session.connection.registerSession(tabSession);
     this.emit("Target.attachedToTarget", {
