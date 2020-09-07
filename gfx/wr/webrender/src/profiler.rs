@@ -4,7 +4,7 @@
 
 use api::{ColorF, ColorU};
 use crate::debug_render::DebugRenderer;
-use crate::device::query::{GpuSampler, GpuTimer, NamedTag};
+use crate::device::query::{GpuSampler, GpuTimer};
 use euclid::{Point2D, Rect, Size2D, vec2, default};
 use crate::internal_types::FastHashMap;
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, wr_has_been_initialized};
@@ -179,12 +179,6 @@ macro_rules! profile_marker {
 pub struct GpuProfileTag {
     pub label: &'static str,
     pub color: ColorF,
-}
-
-impl NamedTag for GpuProfileTag {
-    fn get_label(&self) -> &str {
-        self.label
-    }
 }
 
 trait ProfileCounter {
@@ -885,7 +879,7 @@ pub struct RendererProfileCounters {
 pub struct RendererProfileTimers {
     pub cpu_time: TimeProfileCounter,
     pub gpu_graph: TimeProfileCounter,
-    pub gpu_samples: Vec<GpuTimer<GpuProfileTag>>,
+    pub gpu_samples: Vec<GpuTimer>,
 }
 
 impl RendererProfileCounters {
@@ -1120,7 +1114,7 @@ impl ProfileCounter for ProfileGraph {
 
 struct GpuFrame {
     total_time: u64,
-    samples: Vec<GpuTimer<GpuProfileTag>>,
+    samples: Vec<GpuTimer>,
 }
 
 struct GpuFrameCollection {
@@ -1134,7 +1128,7 @@ impl GpuFrameCollection {
         }
     }
 
-    fn push(&mut self, total_time: u64, samples: Vec<GpuTimer<GpuProfileTag>>) {
+    fn push(&mut self, total_time: u64, samples: Vec<GpuTimer>) {
         if self.frames.len() == 20 {
             self.frames.pop_back();
         }
@@ -1559,7 +1553,7 @@ impl Profiler {
         backend_profile: &BackendProfileCounters,
         renderer_profile: &RendererProfileCounters,
         renderer_timers: &mut RendererProfileTimers,
-        gpu_samplers: &[GpuSampler<GpuProfileTag>],
+        gpu_samplers: &[GpuSampler],
         screen_fraction: f32,
         debug_renderer: &mut DebugRenderer,
     ) {
@@ -1792,7 +1786,7 @@ impl Profiler {
         backend_profile: &BackendProfileCounters,
         renderer_profile: &RendererProfileCounters,
         renderer_timers: &mut RendererProfileTimers,
-        gpu_samplers: &[GpuSampler<GpuProfileTag>],
+        gpu_samplers: &[GpuSampler],
         screen_fraction: f32,
         debug_renderer: &mut DebugRenderer,
         style: ProfileStyle,
