@@ -417,16 +417,6 @@ class SourceMapURLService {
     }
   }
 
-  /**
-   * Allows to wait for the full retrieval of JS Sources and stylesheets.
-   * This function is especially useful for tests in order to avoid closing
-   * the toolbox with pending requests.
-   * This may return null if no source are being mapped.
-   */
-  waitForPendingSources() {
-    return this._sourcesLoading;
-  }
-
   _ensureAllSourcesPopulated() {
     if (!this._prefValue) {
       return null;

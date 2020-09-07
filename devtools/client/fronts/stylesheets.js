@@ -153,7 +153,11 @@ class StyleSheetsFront extends FrontClassWithSpec(styleSheetsSpec) {
     this.formAttributeName = "styleSheetsActor";
   }
 
-  async initialize() {
+  async getTraits() {
+    if (this._traits) {
+      return this._traits;
+    }
+
     try {
       // FF81+ getTraits() is supported.
       const { traits } = await super.getTraits();
@@ -161,9 +165,7 @@ class StyleSheetsFront extends FrontClassWithSpec(styleSheetsSpec) {
     } catch (e) {
       this._traits = {};
     }
-  }
 
-  get traits() {
     return this._traits;
   }
 }

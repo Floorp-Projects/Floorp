@@ -276,13 +276,14 @@ StyleSheetEditor.prototype = {
    */
   async _getSourceTextAndPrettify() {
     const styleSheetsFront = await this._getStyleSheetsFront();
+    const traits = await styleSheetsFront.getTraits();
 
     let longStr = null;
     if (this.styleSheet.isOriginalSource) {
       // If the stylesheet is OriginalSource, we should get the texts from SourceMapService.
       // So, for now, we use OriginalSource.getText() as it is.
       longStr = await this.styleSheet.getText();
-    } else if (!styleSheetsFront.traits.supportResourceRequests) {
+    } else if (!traits.supportResourceRequests) {
       // Backward compat, can be removed when FF 81 hits release.
       longStr = await this.styleSheet.getText();
     } else {
@@ -562,7 +563,9 @@ StyleSheetEditor.prototype = {
    */
   async toggleDisabled() {
     const styleSheetsFront = await this._getStyleSheetsFront();
-    if (styleSheetsFront.traits.supportResourceRequests) {
+    const traits = await styleSheetsFront.getTraits();
+
+    if (traits.supportResourceRequests) {
       styleSheetsFront.toggleDisabled(this.resourceId).catch(console.error);
     } else {
       this.styleSheet.toggleDisabled().catch(console.error);
@@ -612,7 +615,9 @@ StyleSheetEditor.prototype = {
 
     try {
       const styleSheetsFront = await this._getStyleSheetsFront();
-      if (styleSheetsFront.traits.supportResourceRequests) {
+      const traits = await styleSheetsFront.getTraits();
+
+      if (traits.supportResourceRequests) {
         await styleSheetsFront.update(
           this.resourceId,
           this._state.text,
@@ -827,7 +832,9 @@ StyleSheetEditor.prototype = {
       this._isUpdating = true;
 
       const styleSheetsFront = await this._getStyleSheetsFront();
-      if (styleSheetsFront.traits.supportResourceRequests) {
+      const traits = await styleSheetsFront.getTraits();
+
+      if (traits.supportResourceRequests) {
         await styleSheetsFront.update(
           this.resourceId,
           text,

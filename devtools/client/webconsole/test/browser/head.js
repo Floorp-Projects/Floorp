@@ -849,14 +849,6 @@ async function openNetMonitor(tab) {
 async function openConsole(tab) {
   const target = await TargetFactory.forTab(tab || gBrowser.selectedTab);
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
-
-  // Approximately half of webconsole tests call source-map-url-service and load the source
-  // codes and stylesheets. However, the processing of the request may have not been
-  // finished when closing the windows and related toolboxes, it may cause test failure.
-  // Hence, we call it explicitly, then wait for finishing the pending requests.
-  toolbox.sourceMapURLService._ensureAllSourcesPopulated();
-  await toolbox.sourceMapURLService.waitForPendingSources();
-
   return toolbox.getCurrentPanel().hud;
 }
 
