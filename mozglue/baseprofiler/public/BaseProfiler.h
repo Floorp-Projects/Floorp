@@ -69,9 +69,13 @@
 // Function stubs for when MOZ_GECKO_PROFILER is not defined.
 
 namespace mozilla {
-class ProfileChunkedBuffer;
+// This won't be used, it's just there to allow the empty definition of
+// `profiler_capture_backtrace`.
+class ProfileChunkedBuffer {};
 
 namespace baseprofiler {
+// This won't be used, it's just there to allow the empty definition of
+// `profiler_get_backtrace`.
 struct ProfilerBacktrace {};
 using UniqueProfilerBacktrace = UniquePtr<ProfilerBacktrace>;
 

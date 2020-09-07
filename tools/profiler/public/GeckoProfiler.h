@@ -84,6 +84,8 @@
 
 // Function stubs for when MOZ_GECKO_PROFILER is not defined.
 
+// This won't be used, it's just there to allow the empty definition of
+// `profiler_get_backtrace`.
 struct ProfilerBacktrace {};
 using UniqueProfilerBacktrace = mozilla::UniquePtr<int>;
 
@@ -94,9 +96,6 @@ static inline UniqueProfilerBacktrace profiler_get_backtrace() {
   return nullptr;
 }
 
-namespace mozilla {
-class ProfileChunkedBuffer;
-}  // namespace mozilla
 static inline bool profiler_capture_backtrace_into(
     mozilla::ProfileChunkedBuffer& aChunkedBuffer) {
   return false;
