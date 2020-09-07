@@ -6553,11 +6553,11 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   if (storageVersion == kHackyPreDowngradeStorageVersion) {
     storageVersion = kHackyPostDowngradeStorageVersion;
     QM_TRY(connection->SetSchemaVersion(storageVersion), QM_PROPAGATE,
-           []() { MOZ_ASSERT(false, "Downgrade didn't take."); });
+           [](const auto&) { MOZ_ASSERT(false, "Downgrade didn't take."); });
   }
 
   QM_TRY(OkIf(GetMajorStorageVersion(storageVersion) <= kMajorStorageVersion),
-         NS_ERROR_FAILURE, []() {
+         NS_ERROR_FAILURE, [](const auto&) {
            NS_WARNING("Unable to initialize storage, version is too high!");
          });
 
