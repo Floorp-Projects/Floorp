@@ -353,17 +353,16 @@ class WebConsoleUI {
     });
   }
 
-  _onResourceAvailable({ resourceType, targetFront, resource }) {
+  _onResourceAvailable({ targetFront, resource }) {
     if (!this.hud) {
       return;
     }
-
     const { TYPES } = this.hud.resourceWatcher;
     // Ignore messages forwarded from content processes if we're in fission browser toolbox.
     if (
       !this.wrapper ||
-      ((resourceType === TYPES.ERROR_MESSAGE ||
-        resourceType === TYPES.CSS_MESSAGE) &&
+      ((resource.resourceType === TYPES.ERROR_MESSAGE ||
+        resource.resourceType === TYPES.CSS_MESSAGE) &&
         resource.pageError?.isForwardedFromContentProcess &&
         (this.isBrowserToolboxConsole || this.isBrowserConsole) &&
         this.fissionSupport)
@@ -373,8 +372,8 @@ class WebConsoleUI {
     this.wrapper.dispatchMessageAdd(resource);
   }
 
-  _onResourceUpdated({ resourceType, targetFront, resource }) {
-    if (resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT) {
+  _onResourceUpdated({ targetFront, resource }) {
+    if (resource.resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT) {
       this.wrapper.dispatchMessageUpdate(resource);
     }
   }

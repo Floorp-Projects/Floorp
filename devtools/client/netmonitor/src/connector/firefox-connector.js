@@ -149,20 +149,20 @@ class FirefoxConnector {
     this.responsiveFront = await this.currentTarget.getFront("responsive");
   }
 
-  async onResourceAvailable({ resourceType, targetFront, resource }) {
+  async onResourceAvailable({ targetFront, resource }) {
     const { TYPES } = this.toolbox.resourceWatcher;
 
-    if (resourceType === TYPES.DOCUMENT_EVENT) {
+    if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
       this.onDocEvent(targetFront, resource);
       return;
     }
 
-    if (resourceType === TYPES.NETWORK_EVENT) {
+    if (resource.resourceType === TYPES.NETWORK_EVENT) {
       this.dataProvider.onNetworkResourceAvailable(resource);
       return;
     }
 
-    if (resourceType === TYPES.WEBSOCKET) {
+    if (resource.resourceType === TYPES.WEBSOCKET) {
       const { wsMessageType } = resource;
 
       switch (wsMessageType) {
@@ -199,8 +199,10 @@ class FirefoxConnector {
     }
   }
 
-  async onResourceUpdated({ resourceType, targetFront, resource }) {
-    if (resourceType === this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT) {
+  async onResourceUpdated({ targetFront, resource }) {
+    if (
+      resource.resourceType === this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT
+    ) {
       this.dataProvider.onNetworkResourceUpdated(resource);
     }
   }
