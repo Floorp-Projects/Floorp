@@ -77,7 +77,7 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
   info("Check whether the existing document events will not be fired");
   const documentEvents = [];
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
-    onAvailable: resources => documentEvents.push(...resources),
+    onAvailable: ({ resource }) => documentEvents.push(resource),
     ignoreExistingResources: true,
   });
   is(documentEvents.length, 0, "Existing document events are not fired");
@@ -129,13 +129,11 @@ function assertEvents(loadingEvent, interactiveEvent, completeEvent) {
 class ResourceListener {
   _listeners = new Map();
 
-  dispatch(resources) {
-    for (const resource of resources) {
-      const resolve = this._listeners.get(resource.name);
-      if (resolve) {
-        resolve(resource);
-        this._listeners.delete(resource.name);
-      }
+  dispatch({ resourceType, targetFront, resource }) {
+    const resolve = this._listeners.get(resource.name);
+    if (resolve) {
+      resolve(resource);
+      this._listeners.delete(resource.name);
     }
   }
 

@@ -35,22 +35,20 @@ async function testConsoleMessagesResources() {
   const expectedExistingCalls = [...expectedExistingConsoleCalls];
   const expectedRuntimeCalls = [...expectedRuntimeConsoleCalls];
   const onRuntimeDone = new Promise(resolve => (runtimeDoneResolve = resolve));
-  const onAvailable = resources => {
-    for (const resource of resources) {
-      is(
-        resource.resourceType,
-        ResourceWatcher.TYPES.CONSOLE_MESSAGE,
-        "Received a message"
-      );
-      ok(resource.message, "message is wrapped into a message attribute");
-      const expected = (expectedExistingCalls.length > 0
-        ? expectedExistingCalls
-        : expectedRuntimeCalls
-      ).shift();
-      checkConsoleAPICall(resource.message, expected);
-      if (expectedRuntimeCalls.length == 0) {
-        runtimeDoneResolve();
-      }
+  const onAvailable = ({ resourceType, targetFront, resource }) => {
+    is(
+      resourceType,
+      ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+      "Received a message"
+    );
+    ok(resource.message, "message is wrapped into a message attribute");
+    const expected = (expectedExistingCalls.length > 0
+      ? expectedExistingCalls
+      : expectedRuntimeCalls
+    ).shift();
+    checkConsoleAPICall(resource.message, expected);
+    if (expectedRuntimeCalls.length == 0) {
+      runtimeDoneResolve();
     }
   };
 
@@ -103,7 +101,7 @@ async function testConsoleMessagesResourcesWithIgnoreExistingResources() {
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => availableResources.push(...resources),
+      onAvailable: ({ resource }) => availableResources.push(resource),
       ignoreExistingResources: true,
     }
   );

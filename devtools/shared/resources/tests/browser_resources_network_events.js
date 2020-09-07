@@ -128,42 +128,38 @@ async function testNetworkEventResources(options) {
   const waitOnAllExpectedUpdatesForExistingRequests = new Promise(resolve => {
     const existingRequestUrl = `${EXAMPLE_DOMAIN}existing_post.html`;
 
-    onResourceAvailable = resources => {
-      for (const resource of resources) {
-        // A blocked request would only have two updates so lets also resolve here
-        if (
-          resource.request.url == existingRequestUrl &&
-          resource.blockedReason &&
-          resource.updates.length == 2
-        ) {
-          // Reset the updates expectation as the request is blocked
-          if (options.expectedResourcesOnAvailable[resource.request.url]) {
-            options.expectedResourcesOnAvailable[
-              resource.request.url
-            ].updates = [...resource.updates];
-          }
-          resolve();
+    onResourceAvailable = ({ resource }) => {
+      // A blocked request would only have two updates so lets also resolve here
+      if (
+        resource.request.url == existingRequestUrl &&
+        resource.blockedReason &&
+        resource.updates.length == 2
+      ) {
+        // Reset the updates expectation as the request is blocked
+        if (options.expectedResourcesOnAvailable[resource.request.url]) {
+          options.expectedResourcesOnAvailable[resource.request.url].updates = [
+            ...resource.updates,
+          ];
         }
+        resolve();
       }
     };
 
-    onResourceUpdated = updates => {
-      for (const { resource } of updates) {
-        // Wait until all the update events have fired for the existing request.
-        // Handle both blocked and unblocked requests
-        if (
-          resource.request.url == existingRequestUrl &&
-          (resource.updates.length == 8 ||
-            (resource.blockedReason && resource.updates.length == 2))
-        ) {
-          // Makes sure the expectation always correct (for either blocked or unblocked requests)
-          if (options.expectedResourcesOnAvailable[resource.request.url]) {
-            options.expectedResourcesOnAvailable[
-              resource.request.url
-            ].updates = [...resource.updates];
-          }
-          resolve();
+    onResourceUpdated = ({ resource }) => {
+      // Wait until all the update events have fired for the existing request.
+      // Handle both blocked and unblocked requests
+      if (
+        resource.request.url == existingRequestUrl &&
+        (resource.updates.length == 8 ||
+          (resource.blockedReason && resource.updates.length == 2))
+      ) {
+        // Makes sure the expectation always correct (for either blocked or unblocked requests)
+        if (options.expectedResourcesOnAvailable[resource.request.url]) {
+          options.expectedResourcesOnAvailable[resource.request.url].updates = [
+            ...resource.updates,
+          ];
         }
+        resolve();
       }
     };
 
@@ -194,38 +190,34 @@ async function testNetworkEventResources(options) {
     () => expectedOnUpdatedCounts == 0
   );
 
-  const onAvailable = resources => {
-    for (const resource of resources) {
-      is(
-        resource.resourceType,
-        ResourceWatcher.TYPES.NETWORK_EVENT,
-        "Received a network event resource"
-      );
-      actualResourcesOnAvailable[resource.request.url] = {
-        resourceId: resource.resourceId,
-        resourceType: resource.resourceType,
-        request: resource.request,
-        updates: [...resource.updates],
-      };
-      expectedOnAvailableCounts--;
-    }
+  const onAvailable = ({ resourceType, targetFront, resource }) => {
+    is(
+      resourceType,
+      ResourceWatcher.TYPES.NETWORK_EVENT,
+      "Received a network event resource"
+    );
+    actualResourcesOnAvailable[resource.request.url] = {
+      resourceId: resource.resourceId,
+      resourceType: resource.resourceType,
+      request: resource.request,
+      updates: [...resource.updates],
+    };
+    expectedOnAvailableCounts--;
   };
 
-  const onUpdated = updates => {
-    for (const { resource } of updates) {
-      is(
-        resource.resourceType,
-        ResourceWatcher.TYPES.NETWORK_EVENT,
-        "Received a network update event resource"
-      );
-      actualResourcesOnUpdated[resource.request.url] = {
-        resourceId: resource.resourceId,
-        resourceType: resource.resourceType,
-        request: resource.request,
-        updates: [...resource.updates],
-      };
-      expectedOnUpdatedCounts--;
-    }
+  const onUpdated = ({ resourceType, targetFront, resource }) => {
+    is(
+      resourceType,
+      ResourceWatcher.TYPES.NETWORK_EVENT,
+      "Received a network update event resource"
+    );
+    actualResourcesOnUpdated[resource.request.url] = {
+      resourceId: resource.resourceId,
+      resourceType: resource.resourceType,
+      request: resource.request,
+      updates: [...resource.updates],
+    };
+    expectedOnUpdatedCounts--;
   };
 
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.NETWORK_EVENT], {

@@ -70,15 +70,11 @@ async function generateNetworkEventStubs() {
   let addNetworkStub = function() {};
   let addNetworkUpdateStub = function() {};
 
-  const onAvailable = resources => {
-    for (const resource of resources) {
-      addNetworkStub(resource);
-    }
+  const onAvailable = resource => {
+    addNetworkStub(resource);
   };
-  const onUpdated = updates => {
-    for (const { resource } of updates) {
-      addNetworkUpdateStub(resource);
-    }
+  const onUpdated = resource => {
+    addNetworkUpdateStub(resource);
   };
 
   await resourceWatcher.watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
@@ -89,14 +85,14 @@ async function generateNetworkEventStubs() {
   for (const [key, code] of getCommands()) {
     const noExpectedUpdates = 7;
     const networkEventDone = new Promise(resolve => {
-      addNetworkStub = resource => {
+      addNetworkStub = ({ resourceType, targetFront, resource }) => {
         stubs.set(key, getCleanedPacket(key, getOrderedResource(resource)));
         resolve();
       };
     });
     const networkEventUpdateDone = new Promise(resolve => {
       let updateCount = 0;
-      addNetworkUpdateStub = resource => {
+      addNetworkUpdateStub = ({ resourceType, targetFront, resource }) => {
         const updateKey = `${key} update`;
         // make sure all the updates have been happened
         if (updateCount >= noExpectedUpdates) {
