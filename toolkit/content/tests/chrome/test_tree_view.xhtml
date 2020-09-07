@@ -13,7 +13,7 @@
 
 <script>
 <![CDATA[
-
+/* import-globals-from ../widgets/tree_shared.js */
 // This is our custom view, based on the treeview interface
 var view =
 {
@@ -23,25 +23,25 @@ var view =
                 ["John", "99 Westminster Avenue"]],
   value: "",
   rowCount: 8,
-  getCellText: function(row, column) { return this.treeData[row % 4][column.index]; },
-  getCellValue: function(row, column) { return this.value; },
-  setCellText: function(row, column, val) { this.treeData[row % 4][column.index] = val; },
-  setCellValue: function(row, column, val) { this.value = val; },
-  setTree: function(tree) { this.tree = tree; },
-  isContainer: function(row) { return false; },
-  isContainerOpen: function(row) { return false; },
-  isContainerEmpty: function(row) { return false; },
-  isSeparator: function(row) { return false; },
-  isSorted: function(row) { return false; },
-  isEditable: function(row, column) { return row != 2 || column.index != 1; },
-  getParentIndex: function(row, column) { return -1; },
-  getLevel: function(row) { return 0; },
-  hasNextSibling: function(row, column) { return row != this.rowCount - 1; },
-  getImageSrc: function(row, column) { return ""; },
-  cycleHeader: function(column) { },
-  getRowProperties: function(row) { return ""; },
-  getCellProperties: function(row, column) { return ""; },
-  getColumnProperties: function(column)
+  getCellText(row, column) { return this.treeData[row % 4][column.index]; },
+  getCellValue(row, column) { return this.value; },
+  setCellText(row, column, val) { this.treeData[row % 4][column.index] = val; },
+  setCellValue(row, column, val) { this.value = val; },
+  setTree(tree) { this.tree = tree; },
+  isContainer(row) { return false; },
+  isContainerOpen(row) { return false; },
+  isContainerEmpty(row) { return false; },
+  isSeparator(row) { return false; },
+  isSorted(row) { return false; },
+  isEditable(row, column) { return row != 2 || column.index != 1; },
+  getParentIndex(row, column) { return -1; },
+  getLevel(row) { return 0; },
+  hasNextSibling(row, column) { return row != this.rowCount - 1; },
+  getImageSrc(row, column) { return ""; },
+  cycleHeader(column) { },
+  getRowProperties(row) { return ""; },
+  getCellProperties(row, column) { return ""; },
+  getColumnProperties(column)
   {
     if (!column.index) {
       return "one two";

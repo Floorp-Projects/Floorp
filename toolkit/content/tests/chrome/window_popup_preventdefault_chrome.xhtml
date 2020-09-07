@@ -16,8 +16,7 @@ var gBlockHiding = true;
 var gShownNotAllowed = true;
 var gHiddenNotAllowed = true;
 
-var fm = Components.classes["@mozilla.org/focus-manager;1"].
-           getService(Components.interfaces.nsIFocusManager);
+var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
 
 var is = function(l, r, v) { window.arguments[0].SimpleTest.is(l, r, v); }
 var isnot = function(l, r, v) { window.arguments[0].SimpleTest.isnot(l, r, v); }

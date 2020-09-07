@@ -119,9 +119,7 @@ function testXHRLoad(aEvent) {
      "passed to checkCert has an element that has the same issuerName and " +
      "commonName as the certificate's and builtin certificates aren't enforced");
 
-  var mockChannel = { originalURI: Cc["@mozilla.org/network/io-service;1"].
-                                   getService(Ci.nsIIOService).
-                                   newURI("http://example.com/") };
+  var mockChannel = { originalURI: SpecialPowers.Services.io.newURI("http://example.com/") };
 
   certs = [ ];
   is(getCheckCertResult(mockChannel, false, certs), Cr.NS_ERROR_UNEXPECTED,

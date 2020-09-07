@@ -38,9 +38,8 @@ var gKeyPressCount = 0;
 function waitForEvent(target, eventName) {
   return new Promise(resolve => {
     target.addEventListener(eventName, function eventOccurred(event) {
-      target.removeEventListener(eventName, eventOccurred, false);
       resolve();
-    }, false);
+    }, { once: true});
   });
 }
 

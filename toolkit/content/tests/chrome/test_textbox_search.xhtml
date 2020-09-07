@@ -145,7 +145,7 @@ function doTests() {
   gExpectedValue = false;
   textbox.value = "foo";
   iconClick(searchIcon);
-  ok(gExpectedValue == false, "search *not* triggered when clicking the search icon in search button mode while the textbox is disabled");
+  ok(!gExpectedValue, "search *not* triggered when clicking the search icon in search button mode while the textbox is disabled");
   is(icons.selectedPanel, searchIcon, "search icon persists in search button mode when trying to submit while the textbox is disabled");
   textbox.disabled = false;
   ok(!searchIcon.hasAttribute("disabled"), "disabled attribute removed from the search icon");

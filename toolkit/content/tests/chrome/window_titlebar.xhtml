@@ -103,7 +103,7 @@ function test_titlebar()
   origoldy = window.screenY;
 
   var mousedownListener = event => mouseDownTarget = event.originalTarget;
-  window.addEventListener("mousedown", mousedownListener, false);
+  window.addEventListener("mousedown", mousedownListener);
   synthesizeMouse(label, 2, 2, { type: "mousedown" });
   SimpleTest.is(mouseDownTarget, titlebar, "movedown on titlebar");
   waitForWindowMove(label, 22, 22, test_titlebar_step2, mousedownListener);
@@ -129,7 +129,7 @@ function test_titlebar_step2(mousedownListener)
   SimpleTest.is(window.screenY, origoldy + 20, "mouse on label move window vertical");
   synthesizeMouse(label, 22, 22, { type: "mouseup" });
 
-  window.removeEventListener("mousedown", mousedownListener, false);
+  window.removeEventListener("mousedown", mousedownListener);
 
   document.getElementById("panel").openPopupAtScreen(window.screenX + 50, window.screenY + 60, false);
 }
@@ -207,13 +207,12 @@ function popuphidden(nextPopup)
     var panel = document.getElementById(nextPopup);
     if (panel.id == "panelnoautohide") {
       panel.openPopupAtScreen(window.screenX + 50, window.screenY + 60, false);
-    }
-    else {
+    } else {
       panel.openPopup(document.getElementById("button"), "after_start");
     }
-  }
-  else
+  } else {
     window.arguments[0].done(window);
+  }
 }
 
 ]]>

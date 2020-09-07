@@ -33,58 +33,58 @@ ok(gMenuPopup, "Got the reference to the context menu");
 var popupTests = [
 {
   testname: "one-down-key",
-  condition: function() { return (!navigator.platform.includes("Mac")); },
+  condition() { return (!navigator.platform.includes("Mac")); },
   events: [ "popupshowing context", "popupshown context", "DOMMenuItemActive a" ],
-  test: function () {
+  test() {
     synthesizeMouse($("popuparea"), 4, 4, {});
     synthesizeKey("KEY_ArrowDown");
   },
-  result: function (testname) {
+  result(testname) {
     checkActive(gMenuPopup, "a", testname);
   }
 },
 {
   testname: "two-down-keys",
-  condition: function() { return (!navigator.platform.includes("Mac")); },
+  condition() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive a", "DOMMenuItemActive b" ],
   test: () => synthesizeKey("KEY_ArrowDown"),
-  result: function (testname) {
+  result(testname) {
     checkActive(gMenuPopup, "b", testname);
   }
 },
 {
   testname: "three-down-keys",
-  condition: function() { return (!navigator.platform.includes("Mac")); },
+  condition() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive b", "DOMMenuItemActive c" ],
   test: () => synthesizeKey("KEY_ArrowDown"),
-  result: function (testname) {
+  result(testname) {
     checkActive(gMenuPopup, "c", testname);
   }
 },
 {
   testname: "three-down-keys-one-up-key",
-  condition: function() { return (!navigator.platform.includes("Mac")); },
+  condition() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive c", "DOMMenuItemActive b" ],
   test: () => synthesizeKey("KEY_ArrowUp"),
-  result: function (testname) {
+  result (testname) {
     checkActive(gMenuPopup, "b", testname);
   }
 },
 {
   testname: "three-down-keys-two-up-keys",
-  condition: function() { return (!navigator.platform.includes("Mac")); },
+  condition() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive b", "DOMMenuItemActive a" ],
   test: () => synthesizeKey("KEY_ArrowUp"),
-  result: function (testname) {
+  result(testname) {
     checkActive(gMenuPopup, "a", testname);
   }
 },
 {
   testname: "three-down-keys-three-up-key",
-  condition: function() { return (!navigator.platform.includes("Mac")); },
+  condition() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemInactive a", "DOMMenuItemActive c" ],
   test: () => synthesizeKey("KEY_ArrowUp"),
-  result: function (testname) {
+  result(testname) {
     checkActive(gMenuPopup, "c", testname);
   }
 },

@@ -60,7 +60,7 @@ async function expectLink(browser, expectedLinks, data, testid, onbody=false) {
   let lastLinksPromise = new Promise(resolve => {
     browser.droppedLinkHandler = function(event, links) {
       info(`droppedLinkHandler called, received links ${JSON.stringify(links)}`);
-      if (expectedLinks.length == 0) {
+      if (!expectedLinks.length) {
         ok(false, `droppedLinkHandler called for ${JSON.stringify(links)} which we didn't expect.`);
       }
       lastLinks = links;
@@ -74,14 +74,14 @@ async function expectLink(browser, expectedLinks, data, testid, onbody=false) {
   }
   let links;
   if (browser.isRemoteBrowser) {
-    let remoteLinks = await dropOnRemoteBrowserAsync(browser, data, expectedLinks.length != 0);
+    let remoteLinks = await dropOnRemoteBrowserAsync(browser, data, expectedLinks.length);
     is(remoteLinks.length, expectedLinks.length, testid + " remote links length");
     for (let i = 0, length = remoteLinks.length; i < length; i++) {
       is(remoteLinks[i].url, expectedLinks[i].url, testid + "[" + i + "] remote link");
       is(remoteLinks[i].name, expectedLinks[i].name, testid + "[" + i + "] remote name");
     }
 
-    if (expectedLinks.length == 0) {
+    if (!expectedLinks.length) {
       // There is no way to check if nothing happens asynchronously.
       return;
     }

@@ -79,7 +79,7 @@ function runContextMenuTest()
         var undoAddDict = inputBox.getMenuItem("spell-undo-add-to-dictionary");
         ok(!undoAddDict.hidden, "Is Undo Add to Dictioanry visible?");
 
-        var separator = inputBox.getMenuItem("spell-suggestions-separator");
+        separator = inputBox.getMenuItem("spell-suggestions-separator");
         ok(!separator.hidden, "Is separator hidden?");
 
         undoAddDict.doCommand();
