@@ -7,7 +7,7 @@
 #include "js/AllocPolicy.h"
 
 #ifdef DEBUG
-#define JS_CACHE_SIMULATOR_ARM64 1
+#  define JS_CACHE_SIMULATOR_ARM64 1
 #endif
 
 #ifdef JS_CACHE_SIMULATOR_ARM64
@@ -18,9 +18,9 @@ namespace vixl {
 // Decoder.
 enum class InstDecodedKind : uint8_t {
   NotDecodedYet,
-#define DECLARE(E) E,
+#  define DECLARE(E) E,
   VISITOR_LIST(DECLARE)
-#undef DECLARE
+#  undef DECLARE
 };
 
 // A SinglePageDecodeCache is used to store the decoded kind of all instructions
@@ -45,10 +45,9 @@ class SinglePageDecodeCache {
   static const uintptr_t InstMask = InstSize - 1;
   static const uintptr_t InstPerPage = PageSize / InstSize;
 
-  SinglePageDecodeCache(const Instruction* inst)
-    : pageStart_(PageStart(inst))
-  {
-    memset(&decodeCache_, int(InstDecodedKind::NotDecodedYet), sizeof(decodeCache_));
+  SinglePageDecodeCache(const Instruction* inst) : pageStart_(PageStart(inst)) {
+    memset(&decodeCache_, int(InstDecodedKind::NotDecodedYet),
+           sizeof(decodeCache_));
   }
   // Compute the start address of the page which contains this instruction.
   static uintptr_t PageStart(const Instruction* inst) {
@@ -98,20 +97,19 @@ class CachingDecoderVisitor : public DecoderVisitor {
   CachingDecoderVisitor() = default;
   virtual ~CachingDecoderVisitor() {}
 
-#define DECLARE(A) virtual void Visit##A(const Instruction* instr) { \
-    if (last_) { \
-      MOZ_ASSERT(*last_ == InstDecodedKind::NotDecodedYet); \
-      *last_ = InstDecodedKind::A; \
-      last_ = nullptr; \
-    } \
-  };
+#  define DECLARE(A)                                          \
+    virtual void Visit##A(const Instruction* instr) {         \
+      if (last_) {                                            \
+        MOZ_ASSERT(*last_ == InstDecodedKind::NotDecodedYet); \
+        *last_ = InstDecodedKind::A;                          \
+        last_ = nullptr;                                      \
+      }                                                       \
+    };
 
   VISITOR_LIST(DECLARE)
-#undef DECLARE
+#  undef DECLARE
 
-  void setDecodePtr(InstDecodedKind* ptr) {
-    last_ = ptr;
-  }
+  void setDecodePtr(InstDecodedKind* ptr) { last_ = ptr; }
 
  private:
   InstDecodedKind* last_;
@@ -143,15 +141,10 @@ class CachingDecoderVisitor : public DecoderVisitor {
 // CPU::EnsureIAndDCacheCoherency.
 class CachingDecoder : public Decoder {
   using ICacheMap = mozilla::HashMap<uintptr_t, SinglePageDecodeCache*>;
+
  public:
-  CachingDecoder()
-      : lastPage_(nullptr)
-  {
-    PrependVisitor(&cachingDecoder_);
-  }
-  ~CachingDecoder() {
-    RemoveVisitor(&cachingDecoder_);
-  }
+  CachingDecoder() : lastPage_(nullptr) { PrependVisitor(&cachingDecoder_); }
+  ~CachingDecoder() { RemoveVisitor(&cachingDecoder_); }
 
   void Decode(const Instruction* instr);
   void Decode(Instruction* instr) {
@@ -174,6 +167,6 @@ class CachingDecoder : public Decoder {
   SinglePageDecodeCache* lastPage_;
 };
 
-}
-#endif // !JS_CACHE_SIMULATOR_ARM64
-#endif // !VIXL_A64_MOZ_CACHING_DECODER_A64_H_
+}  // namespace vixl
+#endif  // !JS_CACHE_SIMULATOR_ARM64
+#endif  // !VIXL_A64_MOZ_CACHING_DECODER_A64_H_
