@@ -72,8 +72,10 @@ async function generatePageErrorStubs() {
   // resource to `handleErrorMessage`, dynamically updated for each command.
   let handleErrorMessage = function() {};
 
-  const onErrorMessageAvailable = ({ resource }) => {
-    handleErrorMessage(resource);
+  const onErrorMessageAvailable = resources => {
+    for (const resource of resources) {
+      handleErrorMessage(resource);
+    }
   };
   await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
     onAvailable: onErrorMessageAvailable,
