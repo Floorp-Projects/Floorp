@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1369309</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1461454">Mozilla Bug 1461454</a>
+<a target="_blank" href="https://gitlab.torproject.org/tpo/applications/tor-browser/-/issues/13543">Tor Issue 13543</a>
+
+<script type="application/javascript">
+async function testWhetherSpoofed(resistFingerprinting) {
+
+    var unsupportedVideoConfiguration = {
+        contentType: 'video/bogus',
+        width: 800,
+        height: 600,
+        bitrate: 3000,
+        framerate: 24,
+    };
+    var supportedVideoConfiguration = {
+        contentType: 'video/webm; codecs="vp09.00.10.08"',
+        width: 800,
+        height: 600,
+        bitrate: 3000,
+        framerate: 24,
+    };
+
+    await SpecialPowers.pushPrefEnv({
+        "set": [
+            ["privacy.resistFingerprinting", resistFingerprinting]
+        ],
+    });
+
+    var result;
+
+    result = await navigator.mediaCapabilities.decodingInfo({
+        type: 'file',
+        video: unsupportedVideoConfiguration
+    });
+    is(result.supported, false, "video/bogus should be unsupported.");
+    is(result.smooth, false, "smooth is false when unsupported.");
+    is(result.powerEfficient, false, "powerEfficient is false when unsupported.");
+
+    result = await navigator.mediaCapabilities.decodingInfo({
+        type: 'file',
+        video: supportedVideoConfiguration
+    });
+    is(result.supported, true, "'video/webm; codecs=\"vp09.00.10.08\"' should be supported.");
+    if (resistFingerprinting) {
+        is(result.smooth, true, "smooth should be spoofed to true in RFP mode.");
+        is(result.powerEfficient, false, "powerEfficient should be spoofed to false in RFP mode.");
+    }
+}
+
+async function start() {
+    await testWhetherSpoofed(true);
+    await testWhetherSpoofed(false);
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+start();
+</script>
+</body>
+</html>
