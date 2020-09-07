@@ -31,7 +31,7 @@ add_task(async function() {
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => cachedResources1.push(...resources),
+      onAvailable: ({ resource }) => cachedResources1.push(resource),
     }
   );
 
@@ -40,7 +40,7 @@ add_task(async function() {
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => cachedResources2.push(...resources),
+      onAvailable: ({ resource }) => cachedResources2.push(resource),
     }
   );
 
@@ -73,7 +73,7 @@ add_task(async function() {
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => availableResources.push(...resources),
+      onAvailable: ({ resource }) => availableResources.push(resource),
     }
   );
 
@@ -90,7 +90,7 @@ add_task(async function() {
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => cachedResources.push(...resources),
+      onAvailable: ({ resource }) => cachedResources.push(resource),
     }
   );
 
@@ -134,7 +134,7 @@ add_task(async function() {
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => cachedResources.push(...resources),
+      onAvailable: ({ resource }) => cachedResources.push(resource),
     }
   );
 
@@ -163,7 +163,7 @@ add_task(async function() {
       ResourceWatcher.TYPES.ERROR_MESSAGE,
     ],
     {
-      onAvailable: resources => availableResources.push(...resources),
+      onAvailable: ({ resource }) => availableResources.push(resource),
     }
   );
 
@@ -194,7 +194,7 @@ add_task(async function() {
       ResourceWatcher.TYPES.ERROR_MESSAGE,
     ],
     {
-      onAvailable: resources => cachedResources.push(...resources),
+      onAvailable: ({ resource }) => cachedResources.push(resource),
     }
   );
 
@@ -228,7 +228,7 @@ async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => cachedResources1.push(...resources),
+      onAvailable: ({ resource }) => cachedResources1.push(resource),
       ignoreExistingResources: isFirstListenerIgnoreExisting,
     }
   );
@@ -238,7 +238,7 @@ async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
     {
-      onAvailable: resources => cachedResources2.push(...resources),
+      onAvailable: ({ resource }) => cachedResources2.push(resource),
       ignoreExistingResources: !isFirstListenerIgnoreExisting,
     }
   );

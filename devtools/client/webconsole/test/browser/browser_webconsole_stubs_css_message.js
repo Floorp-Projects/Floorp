@@ -68,10 +68,8 @@ async function generateCssMessageStubs() {
   // resource to `handleErrorMessage`, dynamically updated for each command.
   let handleCSSMessage = function() {};
 
-  const onCSSMessageAvailable = resources => {
-    for (const resource of resources) {
-      handleCSSMessage(resource);
-    }
+  const onCSSMessageAvailable = ({ resource }) => {
+    handleCSSMessage(resource);
   };
 
   await resourceWatcher.watchResources([resourceWatcher.TYPES.CSS_MESSAGE], {

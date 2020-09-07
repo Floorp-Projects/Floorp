@@ -24,7 +24,7 @@ add_task(async function() {
   info("Check available resources at initial");
   const availableResources = [];
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.WEBSOCKET], {
-    onAvailable: resources => availableResources.push(...resources),
+    onAvailable: ({ resource }) => availableResources.push(resource),
   });
   is(
     availableResources.length,
@@ -101,7 +101,7 @@ add_task(async function() {
   info("Check existing resources");
   const existingResources = [];
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.WEBSOCKET], {
-    onAvailable: resources => existingResources.push(...resources),
+    onAvailable: ({ resource }) => existingResources.push(resource),
   });
   is(
     availableResources.length,
