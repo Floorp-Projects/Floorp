@@ -130,6 +130,13 @@ let runTests = t.step_func_done(function() {
     document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = "Shadow text";
   }, "Test inside a shadow-root mid-match");
 
+  testFindable(false, "Outside shadow", function(document) {
+    document.documentElement.innerHTML = `
+      Outside <div id="host"></div> shadow
+    `;
+    document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = "inside shadow";
+  }, "Block in different subtree");
+
   // NOTE(emilio): It is probably doable / worth changing this to return true,
   // maybe, by relaxing the security checks in the ranges nsFind returns or
   // such.
