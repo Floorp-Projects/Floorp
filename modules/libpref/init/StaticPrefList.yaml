@@ -2159,8 +2159,8 @@
   value: 1000
   mirror: always
 
-# Timeout clamp in ms for background windows before throttling has started.
-- name: dom.min_background_timeout_value_before_throttling
+# Timeout clamp in ms for background windows when throttling isn't enabled.
+- name: dom.min_background_timeout_value_without_budget_throttling
   type: int32_t
   value: 1000
   mirror: always
