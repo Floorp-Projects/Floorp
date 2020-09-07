@@ -30,6 +30,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.feature.tab.collections.TabCollection
@@ -255,26 +256,22 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
     }
 
     private fun showUndoSnackbarForTab(sessionId: String) {
-        val sessionManager = view?.context?.components?.core?.sessionManager
+        val store = requireComponents.core.store
+        val sessionManager = requireComponents.core.sessionManager
 
-        val snapshot = sessionManager
-            ?.findSessionById(sessionId)?.let {
-                sessionManager.createSessionSnapshot(it)
-            } ?: return
+        val tab = requireComponents.core.store.state.findTab(sessionId) ?: return
+        val session = sessionManager.findSessionById(sessionId) ?: return
 
         // Check if this is the last tab of this session type
-        val isLastOpenTab =
-            sessionManager.sessions.filter { snapshot.session.private == it.private }.size == 1
-
+        val isLastOpenTab = store.state.tabs.filter { it.content.private == tab.content.private }.size == 1
         if (isLastOpenTab) {
             dismissTabTrayAndNavigateHome(sessionId)
             return
         }
 
-        val state = snapshot.engineSession?.saveState()
         val isSelected = sessionId == requireComponents.core.store.state.selectedTabId ?: false
 
-        val snackbarMessage = if (snapshot.session.private) {
+        val snackbarMessage = if (tab.content.private) {
             getString(R.string.snackbar_private_tab_closed)
         } else {
             getString(R.string.snackbar_tab_closed)
@@ -285,8 +282,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             snackbarMessage,
             getString(R.string.snackbar_deleted_undo),
             {
-                sessionManager.add(snapshot.session, isSelected, engineSessionState = state)
-                _tabTrayView?.scrollToTab(snapshot.session.id)
+                sessionManager.add(session, isSelected, engineSessionState = tab.engineState.engineSessionState)
+                _tabTrayView?.scrollToTab(session.id)
             },
             operation = { },
             elevation = ELEVATION,

@@ -55,6 +55,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
@@ -471,16 +472,10 @@ class HomeFragment : Fragment() {
     private fun removeAllTabsAndShowSnackbar(sessionCode: String) {
         val tabs = sessionManager.sessionsOfType(private = sessionCode == ALL_PRIVATE_TABS).toList()
         val selectedIndex = sessionManager
-            .selectedSession?.let { sessionManager.sessions.indexOf(it) } ?: 0
+            .selectedSession?.let { sessionManager.sessions.indexOf(it) } ?: SessionManager.NO_SELECTION
 
         val snapshot = tabs
             .map(sessionManager::createSessionSnapshot)
-            .map {
-                it.copy(
-                    engineSession = null,
-                    engineSessionState = it.engineSession?.saveState()
-                )
-            }
             .let { SessionManager.Snapshot(it, selectedIndex) }
 
         tabs.forEach {
@@ -508,7 +503,7 @@ class HomeFragment : Fragment() {
     private fun removeTabAndShowSnackbar(sessionId: String) {
         sessionManager.findSessionById(sessionId)?.let { session ->
             val snapshot = sessionManager.createSessionSnapshot(session)
-            val state = snapshot.engineSession?.saveState()
+            val state = store.state.findTab(sessionId)?.engineState?.engineSessionState
             val isSelected =
                 session.id == requireComponents.core.store.state.selectedTabId ?: false
 

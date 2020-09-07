@@ -38,6 +38,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -252,13 +253,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         BrowserFragmentDirections.actionGlobalTabTrayDialogFragment()
                     )
                 },
-                onCloseTab = {
-                    val snapshot = sessionManager.createSessionSnapshot(it)
-                    val state = snapshot.engineSession?.saveState()
-                    val isSelected =
-                        it.id == context.components.core.store.state.selectedTabId ?: false
+                onCloseTab = { closedSession ->
+                    val tab = store.state.findTab(closedSession.id) ?: return@DefaultBrowserToolbarController
+                    val isSelected = tab.id == context.components.core.store.state.selectedTabId
 
-                    val snackbarMessage = if (snapshot.session.private) {
+                    val snackbarMessage = if (tab.content.private) {
                         requireContext().getString(R.string.snackbar_private_tab_closed)
                     } else {
                         requireContext().getString(R.string.snackbar_tab_closed)
@@ -270,9 +269,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         requireContext().getString(R.string.snackbar_deleted_undo),
                         {
                             sessionManager.add(
-                                snapshot.session,
+                                closedSession,
                                 isSelected,
-                                engineSessionState = state
+                                engineSessionState = tab.engineState.engineSessionState
                             )
                         },
                         operation = { }
