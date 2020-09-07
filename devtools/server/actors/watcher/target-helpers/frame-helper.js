@@ -74,14 +74,16 @@ function destroyTargets(watcher) {
 }
 
 /**
- * Go over all existing BrowsingContext in order to fetch already existing resources
+ * Go over all existing BrowsingContext in order to communicate about new data entries
  *
  * @param WatcherActor watcher
  *        The Watcher Actor requesting to stop watching for new targets.
- * @param Array<String> resourceTypes
- *        List of all resource types to fetch.
+ * @param string type
+ *        The type of data to be added
+ * @param Array<Object> entries
+ *        The values to be added to this type of data
  */
-async function watchResources({ watcher, resourceTypes }) {
+async function addWatcherDataEntry({ watcher, type, entries }) {
   const browsingContexts = getWatchingBrowsingContexts(watcher);
   const promises = [];
   for (const browsingContext of browsingContexts) {
@@ -92,23 +94,24 @@ async function watchResources({ watcher, resourceTypes }) {
 
     const promise = browsingContext.currentWindowGlobal
       .getActor("DevToolsFrame")
-      .watchFrameResources({
+      .addWatcherDataEntry({
         watcherActorID: watcher.actorID,
         browserId: watcher.browserId,
-        resourceTypes,
+        type,
+        entries,
       });
     promises.push(promise);
   }
-  // Await for the queries in order to try to resolve only *after* we received all resources
+  // Await for the queries in order to try to resolve only *after* the remote code processed the new data
   return Promise.all(promises);
 }
 
 /**
- * Notify all existing frame targets to stop listening for some resource types.
+ * Notify all existing frame targets that some data entries have been removed
  *
- * See watchResources for argument documentation.
+ * See addWatcherDataEntry for argument documentation.
  */
-function unwatchResources({ watcher, resourceTypes }) {
+function removeWatcherDataEntry({ watcher, type, entries }) {
   const browsingContexts = getWatchingBrowsingContexts(watcher);
   for (const browsingContext of browsingContexts) {
     logWindowGlobal(
@@ -118,10 +121,11 @@ function unwatchResources({ watcher, resourceTypes }) {
 
     browsingContext.currentWindowGlobal
       .getActor("DevToolsFrame")
-      .unwatchFrameResources({
+      .removeWatcherDataEntry({
         watcherActorID: watcher.actorID,
         browserId: watcher.browserId,
-        resourceTypes,
+        type,
+        entries,
       });
   }
 }
@@ -129,8 +133,8 @@ function unwatchResources({ watcher, resourceTypes }) {
 module.exports = {
   createTargets,
   destroyTargets,
-  watchResources,
-  unwatchResources,
+  addWatcherDataEntry,
+  removeWatcherDataEntry,
 };
 
 /**

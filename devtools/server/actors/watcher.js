@@ -264,9 +264,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         targetType
       );
       const targetHelperModule = TARGET_HELPERS[targetType];
-      await targetHelperModule.watchResources({
+      await targetHelperModule.addWatcherDataEntry({
         watcher: this,
-        resourceTypes: targetResourceTypes,
+        type: "resources",
+        entries: targetResourceTypes,
       });
     }
 
@@ -347,9 +348,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           targetType
         );
         const targetHelperModule = TARGET_HELPERS[targetType];
-        targetHelperModule.unwatchResources({
+        targetHelperModule.removeWatcherDataEntry({
           watcher: this,
-          resourceTypes: targetResourceTypes,
+          type: "resources",
+          entries: targetResourceTypes,
         });
       }
     }
