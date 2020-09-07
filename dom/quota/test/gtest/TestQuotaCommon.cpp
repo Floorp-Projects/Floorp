@@ -15,235 +15,214 @@ using namespace mozilla::dom::quota;
 
 TEST(QuotaCommon_Try, Success)
 {
-  bool flag = false;
+  bool tryDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
+  nsresult rv = [&tryDidNotReturn]() -> nsresult {
     QM_TRY(NS_OK);
 
-    flag = true;
+    tryDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_TRUE(tryDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
-  EXPECT_TRUE(flag);
 }
 
 TEST(QuotaCommon_Try, Success_WithCleanup)
 {
-  bool flag = false;
-  bool flag2 = false;
+  bool tryCleanupRan = false;
+  bool tryDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
-    QM_TRY(NS_OK, QM_PROPAGATE, [&flag2]() { flag2 = true; });
+  nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
+    QM_TRY(NS_OK, QM_PROPAGATE, [&tryCleanupRan]() { tryCleanupRan = true; });
 
-    flag = true;
+    tryDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_FALSE(tryCleanupRan);
+  EXPECT_TRUE(tryDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
-  EXPECT_TRUE(flag);
-  EXPECT_FALSE(flag2);
 }
 
 TEST(QuotaCommon_Try, Failure_PropagateErr)
 {
-  bool flag = false;
+  bool tryDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
+  nsresult rv = [&tryDidNotReturn]() -> nsresult {
     QM_TRY(NS_ERROR_FAILURE);
 
-    flag = true;
+    tryDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_FALSE(tryDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
-  EXPECT_FALSE(flag);
 }
 
 TEST(QuotaCommon_Try, Failure_CustomErr)
 {
-  bool flag = false;
+  bool tryDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
+  nsresult rv = [&tryDidNotReturn]() -> nsresult {
     QM_TRY(NS_ERROR_FAILURE, NS_ERROR_UNEXPECTED);
 
-    flag = true;
+    tryDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_FALSE(tryDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_UNEXPECTED);
-  EXPECT_FALSE(flag);
 }
 
 TEST(QuotaCommon_Try, Failure_NoErr)
 {
-  bool flag = false;
+  bool tryDidNotReturn = false;
 
-  [&]() -> void {
+  [&tryDidNotReturn]() -> void {
     QM_TRY(NS_ERROR_FAILURE, QM_VOID);
 
-    flag = true;
+    tryDidNotReturn = true;
   }();
 
-  EXPECT_FALSE(flag);
+  EXPECT_FALSE(tryDidNotReturn);
 }
 
 TEST(QuotaCommon_Try, Failure_WithCleanup)
 {
-  bool flag = false;
-  bool flag2 = false;
+  bool tryCleanupRan = false;
+  bool tryDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
-    QM_TRY(NS_ERROR_FAILURE, QM_PROPAGATE, [&flag2]() { flag2 = true; });
+  nsresult rv = [&tryCleanupRan, &tryDidNotReturn]() -> nsresult {
+    QM_TRY(NS_ERROR_FAILURE, QM_PROPAGATE,
+           [&tryCleanupRan]() { tryCleanupRan = true; });
 
-    flag = true;
+    tryDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_TRUE(tryCleanupRan);
+  EXPECT_FALSE(tryDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
-  EXPECT_FALSE(flag);
-  EXPECT_TRUE(flag2);
 }
 
 TEST(QuotaCommon_TryVar, Success)
 {
-  bool flag = false;
+  bool tryVarDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
-    auto task = []() -> Result<int32_t, nsresult> { return 42; };
-
-    int32_t x = 0;
-    QM_TRY_VAR(x, task());
+  nsresult rv = [&tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{42}));
     EXPECT_EQ(x, 42);
 
-    flag = true;
+    tryVarDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_TRUE(tryVarDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
-  EXPECT_TRUE(flag);
 }
 
 TEST(QuotaCommon_TryVar, Success_WithCleanup)
 {
-  bool flag = false;
-  bool flag2 = false;
+  bool tryVarCleanupRan = false;
+  bool tryVarDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
-    auto task = []() -> Result<int32_t, nsresult> { return 42; };
-
-    int32_t x = 0;
-    QM_TRY_VAR(x, task(), QM_PROPAGATE, [&flag2]() { flag2 = true; });
+  nsresult rv = [&tryVarCleanupRan, &tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{42}), QM_PROPAGATE,
+               [&tryVarCleanupRan]() { tryVarCleanupRan = true; });
     EXPECT_EQ(x, 42);
 
-    flag = true;
+    tryVarDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_FALSE(tryVarCleanupRan);
+  EXPECT_TRUE(tryVarDidNotReturn);
   EXPECT_EQ(rv, NS_OK);
-  EXPECT_TRUE(flag);
-  EXPECT_FALSE(flag2);
 }
 
 TEST(QuotaCommon_TryVar, Failure_PropagateErr)
 {
-  bool flag = false;
+  bool tryVarDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
-    auto task = []() -> Result<int32_t, nsresult> {
-      return Err(NS_ERROR_FAILURE);
-    };
+  nsresult rv = [&tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto x,
+               (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
+    Unused << x;
 
-    int32_t x = 0;
-    QM_TRY_VAR(x, task());
-    EXPECT_EQ(x, 0);
-
-    flag = true;
+    tryVarDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_FALSE(tryVarDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
-  EXPECT_FALSE(flag);
 }
 
 TEST(QuotaCommon_TryVar, Failure_CustomErr)
 {
-  bool flag = false;
+  bool tryVarDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
-    auto task = []() -> Result<int32_t, nsresult> {
-      return Err(NS_ERROR_FAILURE);
-    };
+  nsresult rv = [&tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
+               NS_ERROR_UNEXPECTED);
+    Unused << x;
 
-    int32_t x = 0;
-    QM_TRY_VAR(x, task(), NS_ERROR_UNEXPECTED);
-    EXPECT_EQ(x, 0);
-
-    flag = true;
+    tryVarDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_FALSE(tryVarDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_UNEXPECTED);
-  EXPECT_FALSE(flag);
 }
 
 TEST(QuotaCommon_TryVar, Failure_NoErr)
 {
-  bool flag = false;
+  bool tryVarDidNotReturn = false;
 
-  [&]() -> void {
-    auto task = []() -> Result<int32_t, nsresult> {
-      return Err(NS_ERROR_FAILURE);
-    };
+  [&tryVarDidNotReturn]() -> void {
+    QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
+               QM_VOID);
+    Unused << x;
 
-    int32_t x = 0;
-    QM_TRY_VAR(x, task(), QM_VOID);
-    EXPECT_EQ(x, 0);
-
-    flag = true;
+    tryVarDidNotReturn = true;
   }();
 
-  EXPECT_FALSE(flag);
+  EXPECT_FALSE(tryVarDidNotReturn);
 }
 
 TEST(QuotaCommon_TryVar, Failure_WithCleanup)
 {
-  bool flag = false;
-  bool flag2 = false;
+  bool tryVarCleanupRan = false;
+  bool tryVarDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
-    auto task = []() -> Result<int32_t, nsresult> {
-      return Err(NS_ERROR_FAILURE);
-    };
+  nsresult rv = [&tryVarCleanupRan, &tryVarDidNotReturn]() -> nsresult {
+    QM_TRY_VAR(const auto x, (Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
+               QM_PROPAGATE,
+               [&tryVarCleanupRan]() { tryVarCleanupRan = true; });
+    Unused << x;
 
-    int32_t x = 0;
-    QM_TRY_VAR(x, task(), QM_PROPAGATE, [&flag2]() { flag2 = true; });
-    EXPECT_EQ(x, 0);
-
-    flag = true;
+    tryVarDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_TRUE(tryVarCleanupRan);
+  EXPECT_FALSE(tryVarDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
-  EXPECT_FALSE(flag);
-  EXPECT_TRUE(flag2);
 }
 
 TEST(QuotaCommon_TryVar, Decl)
 {
-  auto task = []() -> Result<int32_t, nsresult> { return 42; };
-
-  QM_TRY_VAR(int32_t x, task(), QM_VOID);
+  QM_TRY_VAR(int32_t x, (Result<int32_t, nsresult>{42}), QM_VOID);
 
   static_assert(std::is_same_v<decltype(x), int32_t>);
 
@@ -252,9 +231,7 @@ TEST(QuotaCommon_TryVar, Decl)
 
 TEST(QuotaCommon_TryVar, ConstDecl)
 {
-  auto task = []() -> Result<int32_t, nsresult> { return 42; };
-
-  QM_TRY_VAR(const int32_t x, task(), QM_VOID);
+  QM_TRY_VAR(const int32_t x, (Result<int32_t, nsresult>{42}), QM_VOID);
 
   static_assert(std::is_same_v<decltype(x), const int32_t>);
 
@@ -263,22 +240,18 @@ TEST(QuotaCommon_TryVar, ConstDecl)
 
 TEST(QuotaCommon_TryVar, SameScopeDecl)
 {
-  auto task = []() -> Result<int32_t, nsresult> { return 42; };
-
-  QM_TRY_VAR(const int32_t x, task(), QM_VOID);
+  QM_TRY_VAR(const int32_t x, (Result<int32_t, nsresult>{42}), QM_VOID);
   EXPECT_EQ(x, 42);
 
-  QM_TRY_VAR(const int32_t y, task(), QM_VOID);
+  QM_TRY_VAR(const int32_t y, (Result<int32_t, nsresult>{42}), QM_VOID);
   EXPECT_EQ(y, 42);
 }
 
 TEST(QuotaCommon_TryVar, ParenDecl)
 {
-  auto task = []() -> Result<std::pair<int32_t, bool>, nsresult> {
-    return std::pair{42, true};
-  };
-
-  QM_TRY_VAR((const auto [x, y]), task(), QM_VOID);
+  QM_TRY_VAR((const auto [x, y]),
+             (Result<std::pair<int32_t, bool>, nsresult>{std::pair{42, true}}),
+             QM_VOID);
 
   static_assert(std::is_same_v<decltype(x), const int32_t>);
   static_assert(std::is_same_v<decltype(y), const bool>);
@@ -289,36 +262,36 @@ TEST(QuotaCommon_TryVar, ParenDecl)
 
 TEST(QuotaCommon_Fail, ReturnValue)
 {
-  bool flag = false;
+  bool failDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
+  nsresult rv = [&failDidNotReturn]() -> nsresult {
     QM_FAIL(NS_ERROR_FAILURE);
 
-    flag = true;
+    failDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_FALSE(failDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
-  EXPECT_FALSE(flag);
 }
 
 TEST(QuotaCommon_Fail, ReturnValue_WithCleanup)
 {
-  bool flag = false;
-  bool flag2 = false;
+  bool failCleanupRan = false;
+  bool failDidNotReturn = false;
 
-  nsresult rv = [&]() -> nsresult {
-    QM_FAIL(NS_ERROR_FAILURE, [&flag2]() { flag2 = true; });
+  nsresult rv = [&failCleanupRan, &failDidNotReturn]() -> nsresult {
+    QM_FAIL(NS_ERROR_FAILURE, [&failCleanupRan]() { failCleanupRan = true; });
 
-    flag = true;
+    failDidNotReturn = true;
 
     return NS_OK;
   }();
 
+  EXPECT_TRUE(failCleanupRan);
+  EXPECT_FALSE(failDidNotReturn);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
-  EXPECT_FALSE(flag);
-  EXPECT_TRUE(flag2);
 }
 
 TEST(QuotaCommon_OkIf, True)
@@ -335,70 +308,70 @@ TEST(QuotaCommon_OkIf, False)
   EXPECT_TRUE(res.isErr());
 }
 
-TEST(QuotaCommon_OkToOk, OkToBool_True)
+TEST(QuotaCommon_OkToOk, Bool_True)
 {
   auto res = OkToOk<true>(Ok());
   EXPECT_TRUE(res.isOk());
   EXPECT_EQ(res.unwrap(), true);
 }
 
-TEST(QuotaCommon_OkToOk, OkToBool_False)
+TEST(QuotaCommon_OkToOk, Bool_False)
 {
   auto res = OkToOk<false>(Ok());
   EXPECT_TRUE(res.isOk());
   EXPECT_EQ(res.unwrap(), false);
 }
 
-TEST(QuotaCommon_OkToOk, OkToInt_42)
+TEST(QuotaCommon_OkToOk, Int_42)
 {
   auto res = OkToOk<42>(Ok());
   EXPECT_TRUE(res.isOk());
   EXPECT_EQ(res.unwrap(), 42);
 }
 
-TEST(QuotaCommon_ErrToOkOrErr, NsresultToBool_True)
+TEST(QuotaCommon_ErrToOkOrErr, Bool_True)
 {
   auto res = ErrToOkOrErr<NS_ERROR_FAILURE, true>(NS_ERROR_FAILURE);
   EXPECT_TRUE(res.isOk());
   EXPECT_EQ(res.unwrap(), true);
 }
 
-TEST(QuotaCommon_ErrToOkOrErr, NsresultToBool_True_Err)
+TEST(QuotaCommon_ErrToOkOrErr, Bool_True_Err)
 {
   auto res = ErrToOkOrErr<NS_ERROR_FAILURE, true>(NS_ERROR_UNEXPECTED);
   EXPECT_TRUE(res.isErr());
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
 }
 
-TEST(QuotaCommon_ErrToOkOrErr, NsresultToBool_False)
+TEST(QuotaCommon_ErrToOkOrErr, Bool_False)
 {
   auto res = ErrToOkOrErr<NS_ERROR_FAILURE, false>(NS_ERROR_FAILURE);
   EXPECT_TRUE(res.isOk());
   EXPECT_EQ(res.unwrap(), false);
 }
 
-TEST(QuotaCommon_ErrToOkOrErr, NsresultToBool_False_Err)
+TEST(QuotaCommon_ErrToOkOrErr, Bool_False_Err)
 {
   auto res = ErrToOkOrErr<NS_ERROR_FAILURE, false>(NS_ERROR_UNEXPECTED);
   EXPECT_TRUE(res.isErr());
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
 }
 
-TEST(QuotaCommon_ErrToOkOrErr, NsresultToInt_42)
+TEST(QuotaCommon_ErrToOkOrErr, Int_42)
 {
   auto res = ErrToOkOrErr<NS_ERROR_FAILURE, 42>(NS_ERROR_FAILURE);
   EXPECT_TRUE(res.isOk());
   EXPECT_EQ(res.unwrap(), 42);
 }
 
-TEST(QuotaCommon_ErrToOkOrErr, NsresultToInt_42_Err)
+TEST(QuotaCommon_ErrToOkOrErr, Int_42_Err)
 {
   auto res = ErrToOkOrErr<NS_ERROR_FAILURE, 42>(NS_ERROR_UNEXPECTED);
   EXPECT_TRUE(res.isErr());
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
 }
 
-TEST(QuotaCommon_ErrToOkOrErr, NsresultToNsCOMPtr_nullptr)
+TEST(QuotaCommon_ErrToOkOrErr, NsCOMPtr_nullptr)
 {
   auto res = ErrToOkOrErr<NS_ERROR_FAILURE, nullptr, nsCOMPtr<nsISupports>>(
       NS_ERROR_FAILURE);
@@ -406,7 +379,7 @@ TEST(QuotaCommon_ErrToOkOrErr, NsresultToNsCOMPtr_nullptr)
   EXPECT_EQ(res.unwrap(), nullptr);
 }
 
-TEST(QuotaCommon_ErrToOkOrErr, NsresultToNsCOMPtr_nullptr_Err)
+TEST(QuotaCommon_ErrToOkOrErr, NsCOMPtr_nullptr_Err)
 {
   auto res = ErrToOkOrErr<NS_ERROR_FAILURE, nullptr, nsCOMPtr<nsISupports>>(
       NS_ERROR_UNEXPECTED);
@@ -427,7 +400,7 @@ TEST(QuotaCommon_ErrToDefaultOkOrErr, Ok_Err)
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
 }
 
-TEST(QuotaCommon_ErrToDefaultOkOrErr, NsresultToNsCOMPtr)
+TEST(QuotaCommon_ErrToDefaultOkOrErr, NsCOMPtr)
 {
   auto res = ErrToDefaultOkOrErr<NS_ERROR_FAILURE, nsCOMPtr<nsISupports>>(
       NS_ERROR_FAILURE);
@@ -435,7 +408,7 @@ TEST(QuotaCommon_ErrToDefaultOkOrErr, NsresultToNsCOMPtr)
   EXPECT_EQ(res.unwrap(), nullptr);
 }
 
-TEST(QuotaCommon_ErrToDefaultOkOrErr, NsresultToNsCOMPtr_Err)
+TEST(QuotaCommon_ErrToDefaultOkOrErr, NsCOMPtr_Err)
 {
   auto res = ErrToDefaultOkOrErr<NS_ERROR_FAILURE, nsCOMPtr<nsISupports>>(
       NS_ERROR_UNEXPECTED);
@@ -461,14 +434,13 @@ INSTANTIATE_TEST_CASE_P(
         std::pair("https://foo.bar.com:8000", "https://aaa.aaa.aaa:DDDD"),
         std::pair("file://UNIVERSAL_FILE_ORIGIN",
                   "file://aaaaaaaaa_aaaa_aaaaaa")));
+
 TEST(QuotaCommon_ToResultGet, Lambda_NoInput)
 {
-  auto task = [](nsresult* aRv) -> int32_t {
+  auto res = ToResultGet<int32_t>([](nsresult* aRv) -> int32_t {
     *aRv = NS_OK;
     return 42;
-  };
-
-  auto res = ToResultGet<int32_t>(task);
+  });
 
   static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
 
@@ -478,12 +450,10 @@ TEST(QuotaCommon_ToResultGet, Lambda_NoInput)
 
 TEST(QuotaCommon_ToResultGet, Lambda_NoInput_Err)
 {
-  auto task = [](nsresult* aRv) -> int32_t {
+  auto res = ToResultGet<int32_t>([](nsresult* aRv) -> int32_t {
     *aRv = NS_ERROR_FAILURE;
     return -1;
-  };
-
-  auto res = ToResultGet<int32_t>(task);
+  });
 
   static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
 
@@ -493,12 +463,12 @@ TEST(QuotaCommon_ToResultGet, Lambda_NoInput_Err)
 
 TEST(QuotaCommon_ToResultGet, Lambda_WithInput)
 {
-  auto task = [](int32_t aValue, nsresult* aRv) -> int32_t {
-    *aRv = NS_OK;
-    return aValue * 2;
-  };
-
-  auto res = ToResultGet<int32_t>(task, 42);
+  auto res = ToResultGet<int32_t>(
+      [](int32_t aValue, nsresult* aRv) -> int32_t {
+        *aRv = NS_OK;
+        return aValue * 2;
+      },
+      42);
 
   static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
 
@@ -508,12 +478,12 @@ TEST(QuotaCommon_ToResultGet, Lambda_WithInput)
 
 TEST(QuotaCommon_ToResultGet, Lambda_WithInput_Err)
 {
-  auto task = [](int32_t aValue, nsresult* aRv) -> int32_t {
-    *aRv = NS_ERROR_FAILURE;
-    return -1;
-  };
-
-  auto res = ToResultGet<int32_t>(task, 42);
+  auto res = ToResultGet<int32_t>(
+      [](int32_t aValue, nsresult* aRv) -> int32_t {
+        *aRv = NS_ERROR_FAILURE;
+        return -1;
+      },
+      42);
 
   static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
 
