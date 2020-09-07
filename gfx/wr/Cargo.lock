@@ -1961,10 +1961,7 @@ dependencies = [
 name = "wrench"
 version = "0.3.0"
 dependencies = [
- "app_units 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bincode 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1972,7 +1969,6 @@ dependencies = [
  "crossbeam 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "dwrote 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.5.13 (registry+https://github.com/rust-lang/crates.io-index)",
- "euclid 0.22.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "font-loader 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin 0.21.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1981,7 +1977,6 @@ dependencies = [
  "mozangle 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "osmesa-src 0.1.1 (git+https://github.com/servo/osmesa-src)",
  "osmesa-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ron 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.106 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1989,7 +1984,6 @@ dependencies = [
  "time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracy-rs 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "webrender 0.61.0",
- "webrender_api 0.61.0",
  "winit 0.19.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "yaml-rust 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
