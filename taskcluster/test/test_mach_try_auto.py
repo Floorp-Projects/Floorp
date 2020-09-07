@@ -71,7 +71,10 @@ def test_only_important_manifests(params, full_task_graph, filter_tasks):
             id="no build-signing",
             marks=pytest.mark.xfail,
         ),
-        pytest.param(lambda t: t.kind == "upload-symbols", id="no upload-symbols",),
+        pytest.param(
+            lambda t: t.kind == "upload-symbols",
+            id="no upload-symbols",
+        ),
     ),
 )
 def test_tasks_are_not_scheduled(optimized_task_graph, filter_tasks, func):

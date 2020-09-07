@@ -130,8 +130,7 @@ class Runner:
         ).run(not self.visible)
 
     async def run_all(self):
-        """Runs the conditioned profile builders
-        """
+        """Runs the conditioned profile builders"""
         if self.scenario != "all":
             selected_scenario = [self.scenario]
         else:
