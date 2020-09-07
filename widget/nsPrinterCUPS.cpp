@@ -10,6 +10,8 @@
 
 #include "plstr.h"
 
+using namespace mozilla;
+
 static PaperInfo MakePaperInfo(const char* aName, const cups_size_t& aMedia) {
   // XXX Do we actually have the guarantee that this is utf-8?
   NS_ConvertUTF8toUTF16 name(aName ? aName : aMedia.media);
@@ -18,10 +20,10 @@ static PaperInfo MakePaperInfo(const char* aName, const cups_size_t& aMedia) {
       name,
       {aMedia.width * kPointsPerHundredthMillimeter,
        aMedia.length * kPointsPerHundredthMillimeter},
-      Some(MarginDouble{aMedia.top * kPointsPerHundredthMillimeter,
-                        aMedia.right * kPointsPerHundredthMillimeter,
-                        aMedia.bottom * kPointsPerHundredthMillimeter,
-                        aMedia.left * kPointsPerHundredthMillimeter}));
+      Some(gfx::MarginDouble{aMedia.top * kPointsPerHundredthMillimeter,
+                             aMedia.right * kPointsPerHundredthMillimeter,
+                             aMedia.bottom * kPointsPerHundredthMillimeter,
+                             aMedia.left * kPointsPerHundredthMillimeter}));
 }
 
 nsPrinterCUPS::~nsPrinterCUPS() {
@@ -107,6 +109,17 @@ const char* nsPrinterCUPS::LocalizeMediaName(http_t& aConnection,
 
 bool nsPrinterCUPS::SupportsDuplex() const {
   return Supports(CUPS_SIDES, CUPS_SIDES_TWO_SIDED_PORTRAIT);
+}
+
+bool nsPrinterCUPS::SupportsMonochrome() const {
+#ifdef XP_MACOSX
+  // On Cocoa/CorePrinting there's no driver-independent API to switch a printer
+  // from color to monochrome printing, so we can't claim to support it if we
+  // support color.
+  return !SupportsColor();
+#else
+  return true;
+#endif
 }
 
 bool nsPrinterCUPS::SupportsColor() const {
