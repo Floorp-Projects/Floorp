@@ -49,17 +49,15 @@ var gRetry = false;
 function finishByTimeout()
 {
   var button = document.getElementById("wizard").getButton("next");
-  if (button.disabled)
+  if (button.disabled) {
     ok(true, "cursor is NOT snapped to the disabled button (wizard)");
-  else if (button.hidden)
+  } else if (button.hidden) {
     ok(true, "cursor is NOT snapped to the hidden button (wizard)");
-  else {
-    if (!canRetryTest()) {
-      ok(false, "cursor is NOT snapped to the default button (wizard)");
-    } else {
-      // otherwise, this may be unexpected timeout, we should retry the test.
-      gRetry = true;
-    }
+  } else if (!canRetryTest()) {
+    ok(false, "cursor is NOT snapped to the default button (wizard)");
+  } else {
+    // otherwise, this may be unexpected timeout, we should retry the test.
+    gRetry = true;
   }
   finish();
 }
@@ -85,7 +83,7 @@ function onMouseMove()
 function onload()
 {
   var button = document.getElementById("wizard").getButton("next");
-  button.addEventListener("mousemove", onMouseMove, false);
+  button.addEventListener("mousemove", onMouseMove);
 
   if (window.opener.wrappedJSObject.gDisable) {
     button.disabled = true;

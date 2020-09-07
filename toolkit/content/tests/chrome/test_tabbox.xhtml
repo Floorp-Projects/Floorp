@@ -195,11 +195,10 @@ function test_tabbox_focus()
 
       var textboxExtra = $("textbox-extra");
       textboxExtra.addEventListener("focus", function () {
-        textboxExtra.removeEventListener("focus", arguments.callee, true);
         is(document.activeElement, textboxExtra, "focus in tab with focus currently in textbox that is sibling of tabs");
 
         SimpleTest.finish();
-      }, true);
+      }, {once: true});
 
       tabbox.selectedIndex = 0;
       textboxExtra.hidden = false;
@@ -214,9 +213,8 @@ function test_tabbox_focus()
 
 function when_tab_focused(tab, callback) {
   tab.addEventListener("focus", function onFocused() {
-    tab.removeEventListener("focus", onFocused, true);
     SimpleTest.executeSoon(callback);
-  }, true);
+  }, {once: true});
 }
 
 ]]>

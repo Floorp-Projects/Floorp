@@ -41,7 +41,7 @@ var popupTests = [
   testname: "open outer popup",
   events: [ "popupshowing outermain", "popupshown outermain" ],
   test: () => synthesizeMouse($("popuparea"), 4, 4, {}),
-  result: function (testname) {
+  result (testname) {
     is($("outermain").triggerNode, $("popuparea"), testname);
     is(document.popupNode, $("popuparea"), testname + " document.popupNode");
   }
@@ -49,11 +49,11 @@ var popupTests = [
 {
   testname: "open inner popup",
   events: [ "DOMMenuItemActive outermenu", "popupshowing innermain", "popupshown innermain" ],
-  test: function () {
+  test () {
     synthesizeMouse($("outermenu"), 4, 4, { type: "mousemove" });
     synthesizeMouse($("outermenu"), 2, 2, { type: "mousemove" });
   },
-  result: function (testname) {
+  result (testname) {
     is($("outermain").triggerNode, $("popuparea"), testname + " outer");
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, null, testname + " outer context");
@@ -62,10 +62,10 @@ var popupTests = [
 },
 {
   testname: "open outer context",
-  condition: function() { return (!navigator.platform.includes("Mac")); },
+  condition() { return (!navigator.platform.includes("Mac")); },
   events: [ "popupshowing outercontext", "popupshown outercontext" ],
   test: () => synthesizeMouse($("innermenu"), 4, 4, { type: "contextmenu", button: 2 }),
-  result: function (testname) {
+  result (testname) {
     is($("outermain").triggerNode, $("popuparea"), testname + " outer");
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, $("innermenu"), testname + " outer context");
@@ -74,15 +74,15 @@ var popupTests = [
 },
 {
   testname: "open inner context",
-  condition: function() { return (!navigator.platform.includes("Mac")); },
+  condition() { return (!navigator.platform.includes("Mac")); },
   events: [ "DOMMenuItemActive outercontextmenu", "popupshowing innercontext", "popupshown innercontext" ],
-  test: function () {
+  test () {
     synthesizeMouse($("outercontextmenu"), 4, 4, { type: "mousemove" });
     setTimeout(function() {
         synthesizeMouse($("outercontextmenu"), 2, 2, { type: "mousemove" });
       }, 1000);
   },
-  result: function (testname) {
+  result (testname) {
     is($("outermain").triggerNode, $("popuparea"), testname + " outer");
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, $("innermenu"), testname + " outer context");
@@ -92,14 +92,14 @@ var popupTests = [
 },
 {
   testname: "close context",
-  condition: function() { return (!navigator.platform.includes("Mac")); },
+  condition() { return (!navigator.platform.includes("Mac")); },
   events: [ "popuphiding innercontext", "popuphidden innercontext",
             "popuphiding outercontext", "popuphidden outercontext",
             "DOMMenuInactive innercontext",
             "DOMMenuItemInactive outercontextmenu", "DOMMenuItemInactive outercontextmenu",
             "DOMMenuInactive outercontext" ],
   test: () => $("outercontext").hidePopup(),
-  result: function (testname) {
+  result (testname) {
     is($("outermain").triggerNode, $("popuparea"), testname + " outer");
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, null, testname + " outer context");
@@ -116,7 +116,7 @@ var popupTests = [
             "DOMMenuInactive outermain" ],
 
   test: () => $("outermain").hidePopup(),
-  result: function (testname) {
+  result (testname) {
     is($("outermain").triggerNode, null, testname + " outer");
     is($("innermain").triggerNode, null, testname + " inner");
     is($("outercontext").triggerNode, null, testname + " outer context");

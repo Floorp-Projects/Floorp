@@ -12,8 +12,7 @@
   <![CDATA[
     SimpleTest.waitForExplicitFinish();
 
-    const kPref = Cc["@mozilla.org/preferences-service;1"]
-                    .getService(Ci.nsIPrefBranch);
+    const kPref = SpecialPowers.Services.prefs;
 
     // preference values, set 1
     const kPrefValueSet1 =
@@ -97,8 +96,11 @@
     {
       // read preference data via XPCOM
       var result = CreateEmptyPrefValueSet();
+      // eslint-disable-next-line mozilla/use-default-preference-values
       try {result.int    = kPref.getIntPref ("tests.static_preference_int")   } catch (ignored) {};
+      // eslint-disable-next-line mozilla/use-default-preference-values
       try {result.bool   = kPref.getBoolPref("tests.static_preference_bool")  } catch (ignored) {};
+      // eslint-disable-next-line mozilla/use-default-preference-values
       try {result.string = kPref.getCharPref("tests.static_preference_string")} catch (ignored) {};
       try
       {
@@ -449,8 +451,8 @@
       // - test deferred reset in child window
       InitTestPrefs(true);
       window.browsingContext.topChromeWindow.openDialog("window_preferences2.xhtml", "", "modal", RunResetPrefTest, false);
-      expected = kPrefValueSet1;
-      found    = ReadPrefsFromSystem();
+      let expected = kPrefValueSet1;
+      let found    = ReadPrefsFromSystem();
       ok(found.int          === expected.int,          "instant reset deferred int"    );
       ok(found.bool         === expected.bool,         "instant reset deferred bool"   );
       ok(found.string       === expected.string,       "instant reset deferred string" );

@@ -42,17 +42,15 @@ var gRetry;
 function finishByTimeout()
 {
   var button = document.getElementById("dialog").getButton("accept");
-  if (button.disabled)
+  if (button.disabled) {
     ok(true, "cursor is NOT snapped to the disabled button (dialog)");
-  else if (button.hidden)
+  } else if (button.hidden) {
     ok(true, "cursor is NOT snapped to the hidden button (dialog)");
-  else {
-    if (!canRetryTest()) {
-      ok(false, "cursor is NOT snapped to the default button (dialog)");
-    } else {
-      // otherwise, this may be unexpected timeout, we should retry the test.
-      gRetry = true;
-    }
+  } else if (!canRetryTest()) {
+    ok(false, "cursor is NOT snapped to the default button (dialog)");
+  } else {
+    // otherwise, this may be unexpected timeout, we should retry the test.
+    gRetry = true;
   }
   finish();
 }
@@ -78,7 +76,7 @@ function onMouseMove(aEvent)
 function onload()
 {
   var button = document.getElementById("dialog").getButton("accept");
-  button.addEventListener("mousemove", onMouseMove, false);
+  button.addEventListener("mousemove", onMouseMove);
 
   if (window.arguments[0].gDisable) {
     button.disabled = true;

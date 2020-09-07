@@ -138,9 +138,8 @@ function differentPressed()
     gOpenPhase = true;
 
     list.addEventListener("popupshown", function popupShownListener() {
-      list.removeEventListener("popupshown", popupShownListener, false);
       pressLetter();
-    }, false);
+    }, { once: true});
 
     list.open = true;
   }
@@ -199,7 +198,7 @@ function keyCheck(list, key, index, defaultindex, testname)
   var defaultitem = $("i" + defaultindex || 1);
 
   synthesizeKeyExpectEvent(key, { }, item, expectCommandEvent ? "command" : "!command", testname);
-  is(list.selectedItem, expectCommandEvent ? item : defaultitem, testname + " selectedItem" + "----" + list.selectedItem.id);
+  is(list.selectedItem, expectCommandEvent ? item : defaultitem, testname + " selectedItem----" + list.selectedItem.id);
 }
 
 function checkModifiers(event)
@@ -214,8 +213,8 @@ function checkModifiers(event)
 
 function checkEnter()
 {
-  list.addEventListener("popuphidden", checkEnterWithModifiers, false);
-  list.addEventListener("command", checkModifiers, false);
+  list.addEventListener("popuphidden", checkEnterWithModifiers);
+  list.addEventListener("command", checkModifiers);
   list.open = true;
   synthesizeKey("KEY_Enter");
 }
@@ -225,9 +224,9 @@ function checkEnterWithModifiers()
   is(gModifiers, 1, "modifiers checked when not set");
 
   ok(!list.open, "list closed on enter press");
-  list.removeEventListener("popuphidden", checkEnterWithModifiers, false);
+  list.removeEventListener("popuphidden", checkEnterWithModifiers);
 
-  list.addEventListener("popuphidden", verifyPopupOnClose, false);
+  list.addEventListener("popuphidden", verifyPopupOnClose);
   list.open = true;
 
   synthesizeKey("KEY_Enter", {shiftKey: true, ctrlKey: true, altKey: true, metaKey: true});
@@ -238,7 +237,7 @@ function verifyPopupOnClose()
   is(gModifiers, 2, "modifiers checked when set");
 
   ok(!list.open, "list closed on enter press with modifiers");
-  list.removeEventListener("popuphidden", verifyPopupOnClose, false);
+  list.removeEventListener("popuphidden", verifyPopupOnClose);
 
   list = $("list2");
   list.focus();
@@ -251,7 +250,7 @@ function checkCursorNavigation()
   list.addEventListener("command", event => {
     is(event.target, list.selectedItem, "command event fired on selected item");
     commandEventsCount++;
-  }, false);
+  });
 
   is(list.selectedIndex, 1, "selectedIndex before cursor down");
   synthesizeKey("KEY_ArrowDown");
