@@ -449,6 +449,16 @@
  */
 #define QM_TRY(...) QM_TRY_META(mozilla::dom::quota, ##__VA_ARGS__)
 
+/**
+ * QM_DEBUG_TRY works like QM_TRY in debug builds, it has has no effect in
+ * non-debug builds.
+ */
+#ifdef DEBUG
+#  define QM_DEBUG_TRY(...) QM_TRY(__VA_ARGS__)
+#else
+#  define QM_DEBUG_TRY(...)
+#endif
+
 // QM_TRY_VAR_PROPAGATE_ERR, QM_TRY_VAR_CUSTOM_RET_VAL and
 // QM_TRY_VAR_CUSTOM_RET_VAL_WITH_CLEANUP macros are implementation details of
 // QM_TRY_VAR and shouldn't be used directly.
@@ -504,6 +514,16 @@
  */
 #define QM_TRY_VAR(...) QM_TRY_VAR_META(mozilla::dom::quota, ##__VA_ARGS__)
 
+/**
+ * QM_DEBUG_VAR_TRY works like QM_TRY_VAR in debug builds, it has has no effect
+ * in non-debug builds.
+ */
+#ifdef DEBUG
+#  define QM_DEBUG_TRY_VAR(...) QM_TRY_VAR(__VA_ARGS__)
+#else
+#  define QM_DEBUG_TRY_VAR(...)
+#endif
+
 // QM_FAIL_RET_VAL and QM_FAIL_RET_VAL_WITH_CLEANUP macros are implementation
 // details of QM_FAIL and shouldn't be used directly.
 
@@ -530,6 +550,16 @@
  * function (if the second argument was passed) and returns a return value.
  */
 #define QM_FAIL(...) QM_FAIL_META(mozilla::dom::quota, ##__VA_ARGS__)
+
+/**
+ * QM_DEBUG_FAIL works like QM_FAIL in debug builds, it has has no effect in
+ * non-debug builds.
+ */
+#ifdef DEBUG
+#  define QM_DEBUG_FAIL(...) QM_FAIL(__VA_ARGS__)
+#else
+#  define QM_DEBUG_FAIL(...)
+#endif
 
 // Telemetry probes to collect number of failure during the initialization.
 #ifdef NIGHTLY_BUILD
