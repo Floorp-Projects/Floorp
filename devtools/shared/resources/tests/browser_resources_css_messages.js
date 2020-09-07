@@ -163,29 +163,33 @@ function setupOnAvailableFunction(targetList, receivedMessages) {
 
   let done;
   const onAllMessagesReceived = new Promise(resolve => (done = resolve));
-  const onAvailable = ({ resource }) => {
-    const { pageError } = resource;
+  const onAvailable = resources => {
+    for (const resource of resources) {
+      const { pageError } = resource;
 
-    is(
-      resource.targetFront,
-      targetList.targetFront,
-      "The targetFront property is the expected one"
-    );
+      is(
+        resource.targetFront,
+        targetList.targetFront,
+        "The targetFront property is the expected one"
+      );
 
-    if (!pageError.sourceName.includes("test_css_messages")) {
-      info(`Ignore error from unknown source: "${pageError.sourceName}"`);
-      return;
-    }
+      if (!pageError.sourceName.includes("test_css_messages")) {
+        info(`Ignore error from unknown source: "${pageError.sourceName}"`);
+        continue;
+      }
 
-    const index = receivedMessages.length;
-    receivedMessages.push(pageError);
+      const index = receivedMessages.length;
+      receivedMessages.push(pageError);
 
-    info(`checking received css message #${index}: ${pageError.errorMessage}`);
-    ok(pageError, "The resource has a pageError attribute");
-    checkObject(resource, expectedMessages[index]);
+      info(
+        `checking received css message #${index}: ${pageError.errorMessage}`
+      );
+      ok(pageError, "The resource has a pageError attribute");
+      checkObject(resource, expectedMessages[index]);
 
-    if (receivedMessages.length == expectedMessages.length) {
-      done();
+      if (receivedMessages.length == expectedMessages.length) {
+        done();
+      }
     }
   };
   return { onAvailable, onAllMessagesReceived };

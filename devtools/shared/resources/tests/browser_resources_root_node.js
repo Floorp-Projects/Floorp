@@ -34,7 +34,7 @@ add_task(async function() {
 
   info("Call watchResources([ROOT_NODE], ...)");
   let onAvailableCounter = 0;
-  const onAvailable = () => onAvailableCounter++;
+  const onAvailable = resources => (onAvailableCounter += resources.length);
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.ROOT_NODE], {
     onAvailable,
   });
@@ -91,13 +91,13 @@ add_task(async function testRootNodeFrontIsCorrect() {
 
   let rootNodeResolve;
   let rootNodePromise = new Promise(r => (rootNodeResolve = r));
-  const onAvailable = rootNodeFront => rootNodeResolve(rootNodeFront);
+  const onAvailable = ([rootNodeFront]) => rootNodeResolve(rootNodeFront);
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.ROOT_NODE], {
     onAvailable,
   });
 
   info("Wait until onAvailable has been called");
-  const { resource: root1 } = await rootNodePromise;
+  const root1 = await rootNodePromise;
   ok(!!root1, "onAvailable has been called with a valid argument");
   is(
     root1.resourceType,
@@ -113,7 +113,7 @@ add_task(async function testRootNodeFrontIsCorrect() {
   rootNodePromise = new Promise(r => (rootNodeResolve = r));
   browser.reload();
 
-  const { resource: root2 } = await rootNodePromise;
+  const root2 = await rootNodePromise;
   ok(
     root1 !== root2,
     "onAvailable has been called with a different node front after reload"
@@ -122,7 +122,7 @@ add_task(async function testRootNodeFrontIsCorrect() {
   info("Navigate to another URL");
   rootNodePromise = new Promise(r => (rootNodeResolve = r));
   BrowserTestUtils.loadURI(browser, `data:text/html,<div id=div3>`);
-  const { resource: root3 } = await rootNodePromise;
+  const root3 = await rootNodePromise;
   info("Check we can query an expected node under the retrieved root");
   const div3 = await root3.walkerFront.querySelector(root3, "div");
   is(div3.getAttribute("id"), "div3", "Correct root node retrieved");
