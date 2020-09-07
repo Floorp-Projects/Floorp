@@ -315,6 +315,7 @@ WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
 
   EventMessage msg = eVoidEvent;
   uint32_t clickCount = 0;
+  Maybe<WidgetMouseEvent::ExitFrom> exitFrom;
   switch (mType) {
     case MOUSE_MOVE:
       msg = eMouseMove;
@@ -338,6 +339,7 @@ WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
       break;
     case MOUSE_WIDGET_EXIT:
       msg = eMouseExitFromWidget;
+      exitFrom = Some(WidgetMouseEvent::eChild);
       break;
     case MOUSE_HITTEST:
       msg = eMouseHitTest;
@@ -381,6 +383,7 @@ WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
   event.mClickCount = clickCount;
   event.mInputSource = mInputSource;
   event.mFocusSequenceNumber = mFocusSequenceNumber;
+  event.mExitFrom = exitFrom;
 
   return event;
 }
