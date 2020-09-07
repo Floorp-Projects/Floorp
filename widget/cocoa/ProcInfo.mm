@@ -45,6 +45,7 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.childId = request.childId;
           info.type = request.processType;
           info.origin = std::move(request.origin);
+          info.windows = std::move(request.windowInfo);
           struct proc_bsdinfo proc;
           if ((unsigned long)proc_pidinfo(request.pid, PROC_PIDTBSDINFO, 0, &proc,
                                           PROC_PIDTBSDINFO_SIZE) < PROC_PIDTBSDINFO_SIZE) {
