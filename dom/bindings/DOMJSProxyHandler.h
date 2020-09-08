@@ -30,10 +30,10 @@ namespace dom {
  * interface is annotated with the [OverrideBuiltins] extended attribute.
  *
  * If it is, the proxy is initialized with a PrivateValue, which contains a
- * pointer to a js::ExpandoAndGeneration object; this contains a pointer to
+ * pointer to a JS::ExpandoAndGeneration object; this contains a pointer to
  * the actual expando object as well as the "generation" of the object.  The
  * proxy handler will trace the expando object stored in the
- * js::ExpandoAndGeneration while the proxy itself is alive.
+ * JS::ExpandoAndGeneration while the proxy itself is alive.
  *
  * If it is not, the proxy is initialized with an UndefinedValue. In
  * EnsureExpandoObject, it is set to an ObjectValue that points to the
@@ -156,7 +156,7 @@ class DOMProxyHandler : public BaseDOMProxyHandler {
 };
 
 // Class used by shadowing handlers (the ones that have [OverrideBuiltins].
-// This handles tracing the expando in ExpandoAndGeneration.
+// This handles tracing the expando in JS::ExpandoAndGeneration.
 class ShadowingDOMProxyHandler : public DOMProxyHandler {
   virtual void trace(JSTracer* trc, JSObject* proxy) const override;
 };

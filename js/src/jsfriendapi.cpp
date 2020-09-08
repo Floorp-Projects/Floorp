@@ -735,34 +735,6 @@ JS_FRIEND_API const DOMCallbacks* js::GetDOMCallbacks(JSContext* cx) {
   return cx->runtime()->DOMcallbacks;
 }
 
-static const void* gDOMProxyHandlerFamily = nullptr;
-static DOMProxyShadowsCheck gDOMProxyShadowsCheck;
-static const void* gDOMRemoteProxyHandlerFamily = nullptr;
-
-JS_FRIEND_API void js::SetDOMProxyInformation(
-    const void* domProxyHandlerFamily,
-    DOMProxyShadowsCheck domProxyShadowsCheck,
-    const void* domRemoteProxyHandlerFamily) {
-  gDOMProxyHandlerFamily = domProxyHandlerFamily;
-  gDOMProxyShadowsCheck = domProxyShadowsCheck;
-  gDOMRemoteProxyHandlerFamily = domRemoteProxyHandlerFamily;
-}
-
-const void* js::GetDOMProxyHandlerFamily() { return gDOMProxyHandlerFamily; }
-
-DOMProxyShadowsCheck js::GetDOMProxyShadowsCheck() {
-  return gDOMProxyShadowsCheck;
-}
-
-const void* js::GetDOMRemoteProxyHandlerFamily() {
-  return gDOMRemoteProxyHandlerFamily;
-}
-
-JS_FRIEND_API bool js::IsDOMRemoteProxyObject(JSObject* object) {
-  return js::IsProxy(object) && js::GetProxyHandler(object)->family() ==
-                                    js::GetDOMRemoteProxyHandlerFamily();
-}
-
 JS_FRIEND_API void js::PrepareScriptEnvironmentAndInvoke(
     JSContext* cx, HandleObject global,
     ScriptEnvironmentPreparer::Closure& closure) {
