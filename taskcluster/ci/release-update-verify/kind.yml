@@ -9,6 +9,7 @@ kind-dependencies:
     - post-beetmover-dummy
     - release-balrog-submit-toplevel
     - release-update-verify-config
+    - upload-symbols
 
 transforms:
     - taskgraph.transforms.release_deps:transforms
