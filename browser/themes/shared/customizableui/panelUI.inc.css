@@ -581,6 +581,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   -moz-box-align: center;
 }
 
+:root[fxadisabled=true] #appMenu-fxa-status {
+  display: none;
+}
+
 #appMenu-fxa-avatar,
 #fxa-menu-account-fxa-avatar {
   pointer-events: none;
