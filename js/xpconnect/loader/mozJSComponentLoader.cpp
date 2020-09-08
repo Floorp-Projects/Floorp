@@ -313,14 +313,6 @@ StaticRefPtr<mozJSComponentLoader> mozJSComponentLoader::sSelf;
 // True if ShutdownPhase::ShutdownFinal has been reached.
 static bool sShutdownFinal = false;
 
-nsresult mozJSComponentLoader::ReallyInit() {
-  MOZ_ASSERT(!mInitialized);
-
-  mInitialized = true;
-
-  return NS_OK;
-}
-
 // For terrible compatibility reasons, we need to consider both the global
 // lexical environment and the global of modules when searching for exported
 // symbols.
@@ -387,12 +379,7 @@ const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
   nsresult rv = info.EnsureURI();
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  if (!mInitialized) {
-    rv = ReallyInit();
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-  }
+  mInitialized = true;
 
   AUTO_PROFILER_TEXT_MARKER_CAUSE("JS XPCOM", spec, JS, Nothing(),
                                   profiler_get_backtrace());
@@ -970,12 +957,7 @@ nsresult mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
                                               bool* retval) {
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  nsresult rv;
-  if (!mInitialized) {
-    rv = ReallyInit();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
+  mInitialized = true;
   ComponentLoaderInfo info(aLocation);
   *retval = !!mImports.Get(info.Key());
   return NS_OK;
@@ -1213,17 +1195,14 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
                                       JS::MutableHandleObject aModuleGlobal,
                                       JS::MutableHandleObject aModuleExports,
                                       bool aIgnoreExports) {
-  nsresult rv;
-  if (!mInitialized) {
-    rv = ReallyInit();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  mInitialized = true;
 
   AUTO_PROFILER_TEXT_MARKER_CAUSE("ChromeUtils.import", aLocation, JS,
                                   Nothing(), profiler_get_backtrace());
 
   ComponentLoaderInfo info(aLocation);
 
+  nsresult rv;
   ModuleEntry* mod;
   UniquePtr<ModuleEntry> newEntry;
   if (!mImports.Get(info.Key(), &mod) &&
