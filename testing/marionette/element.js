@@ -26,6 +26,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   pprint: "chrome://marionette/content/format.js",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 const ORDERED_NODE_ITERATOR_TYPE = 5;
 const FIRST_ORDERED_NODE_TYPE = 9;
 
@@ -46,10 +53,6 @@ const XUL_SELECTED_ELS = new Set([
   "richlistitem",
   "tab",
 ]);
-
-const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
 
 /**
  * This module provides shared functionality for dealing with DOM-
