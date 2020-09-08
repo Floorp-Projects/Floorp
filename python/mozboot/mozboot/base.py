@@ -13,8 +13,10 @@ import sys
 
 from distutils.version import LooseVersion
 from mozboot import rust
-from mozboot.util import MINIMUM_RUST_VERSION
-from mozbuild.virtualenv import VirtualenvHelper
+from mozboot.util import (
+    get_mach_virtualenv_binary,
+    MINIMUM_RUST_VERSION,
+)
 
 # NOTE: This script is intended to be run with a vanilla Python install.  We
 # have to rely on the standard library instead of Python 2+3 helpers like
@@ -350,8 +352,7 @@ class BaseBootstrapper(object):
             raise ValueError(
                 'Need a state directory (e.g. ~/.mozbuild) to download '
                 'artifacts')
-        python_location = VirtualenvHelper(os.path.join(
-            self.state_dir, '_virtualenvs', 'mach')).python_path
+        python_location = get_mach_virtualenv_binary(state_dir=self.state_dir)
         if not os.path.exists(python_location):
             raise ValueError('python not found at %s' % python_location)
 

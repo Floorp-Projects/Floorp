@@ -1522,14 +1522,12 @@ class CreateMachEnvironment(MachCommandBase):
         help=('Force re-creating the virtualenv even if it is already '
               'up-to-date.'))
     def create_mach_environment(self, force=False):
-        from mozboot.util import get_state_dir
+        from mozboot.util import get_mach_virtualenv_root
         from mozbuild.pythonutil import find_python2_executable
         from mozbuild.virtualenv import VirtualenvManager
-        from six import PY3
+        from six import PY2
 
-        state_dir = get_state_dir()
-        virtualenv_path = os.path.join(state_dir, '_virtualenvs',
-                                       'mach' if PY3 else 'mach_py2')
+        virtualenv_path = get_mach_virtualenv_root(py2=PY2)
         if sys.executable.startswith(virtualenv_path):
             print('You can only create a mach environment with the system '
                   'Python. Re-run this `mach` command with the system Python.',
@@ -1549,7 +1547,7 @@ class CreateMachEnvironment(MachCommandBase):
 
         manager.install_pip_package('zstandard>=0.9.0,<=0.13.0')
 
-        if PY3:
+        if not PY2:
             # This can fail on some platforms. See
             # https://bugzilla.mozilla.org/show_bug.cgi?id=1660120
             try:

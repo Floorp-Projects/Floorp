@@ -7,6 +7,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import hashlib
 import os
 
+from mozbuild.virtualenv import VirtualenvHelper
+
 
 here = os.path.join(os.path.dirname(__file__))
 
@@ -52,3 +54,14 @@ def get_state_dir(srcdir=False):
             fh.write(srcdir)
 
     return state_dir
+
+
+def get_mach_virtualenv_root(state_dir=None, py2=False):
+    return os.path.join(
+        state_dir or get_state_dir(), '_virtualenvs',
+        'mach_py2' if py2 else 'mach')
+
+
+def get_mach_virtualenv_binary(state_dir=None, py2=False):
+    root = get_mach_virtualenv_root(state_dir=state_dir, py2=py2)
+    return VirtualenvHelper(root).python_path
