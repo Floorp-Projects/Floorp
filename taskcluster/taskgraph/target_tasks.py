@@ -642,9 +642,7 @@ def target_tasks_fennec_v68(full_task_graph, parameters, graph_config):
             return False
 
         if '-fennec' in try_name:
-            if 'raptor-scn-power-idle' in try_name:
-                return True
-            if 'raptor-speedometer' in try_name and 'power' in try_name:
+            if '-power' in try_name:
                 return True
             if 'browsertime' in try_name:
                 if 'tp6m' in try_name:
@@ -758,9 +756,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 return _run_live_site()
             # Select fenix resource usage tests
             if 'fenix' in try_name:
-                if 'raptor-scn-power-idle' in try_name:
-                    return True
-                if 'raptor-speedometer' in try_name and 'power' in try_name:
+                if '-power' in try_name:
                     return True
             # Select geckoview resource usage tests
             if 'geckoview' in try_name:
@@ -770,11 +766,13 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 # Ignore cpu+memory+power tests
                 if power_task and cpu_n_memory_task:
                     return False
-                if power_task or cpu_n_memory_task:
+                if cpu_n_memory_task:
                     if '-speedometer-' in try_name:
                         return True
                     if '-scn' in try_name and '-idle' in try_name:
                         return True
+                if power_task:
+                    return 'browsertime' in try_name
             # Select browsertime-specific tests
             if 'browsertime' in try_name:
                 if 'speedometer' in try_name:
