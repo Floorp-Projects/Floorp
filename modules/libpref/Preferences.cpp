@@ -4332,24 +4332,10 @@ struct Internals {
   template <typename T>
   static void UpdateMirror(const char* aPref, void* aMirror) {
     StripAtomic<T> value;
-    nsresult rv = GetPrefValue(aPref, &value, PrefValueKind::User);
-    if (NS_SUCCEEDED(rv)) {
-      *static_cast<T*>(aMirror) = value;
-    } else {
-      // GetPrefValue() can fail if the update is caused by the pref being
-      // deleted. In that case the mirror variable will be untouched, thus
-      // keeping the value it had prior to the deletion. (Note that this case
-      // won't happen for a deletion via DeleteBranch() unless bug 343600 is
-      // fixed, but it will happen for a deletion via ClearUserPref().)
-      //
-      // This is a case we want to avoid in general because it's a bit unclear
-      // what value the mirror variable should take; hence the assertion
-      // failure. Once all VarCache prefs are removed in favour of static prefs
-      // (bug 1448219) the plan is to mark static prefs as undeletable and this
-      // case will become impossible.
-      NS_WARNING(nsPrintfCString("VarChanged failure: %s\n", aPref).get());
-      MOZ_ASSERT(false);
-    }
+    // We disallow the deletion of mirrored prefs.
+    // This assertion is the only place where we enforce this.
+    MOZ_ALWAYS_SUCCEEDS(GetPrefValue(aPref, &value, PrefValueKind::User));
+    *static_cast<T*>(aMirror) = value;
   }
 
   template <typename T>
@@ -5072,85 +5058,6 @@ static MOZ_NEVER_INLINE void AddMirror(T* aMirror, const nsACString& aPref,
                                        StripAtomic<T> aDefault) {
   *aMirror = Internals::GetPref(PromiseFlatCString(aPref).get(), aDefault);
   AddMirrorCallback(aMirror, aPref);
-}
-
-/* static */
-void Preferences::AddBoolVarCache(bool* aCache, const nsACString& aPref,
-                                  bool aDefault) {
-  AddMirror(aCache, aPref, aDefault);
-}
-
-template <MemoryOrdering Order>
-/* static */
-void Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
-                                        const nsACString& aPref,
-                                        bool aDefault) {
-  AddMirror(aCache, aPref, aDefault);
-}
-
-/* static */
-void Preferences::AddIntVarCache(int32_t* aCache, const nsACString& aPref,
-                                 int32_t aDefault) {
-  AddMirror(aCache, aPref, aDefault);
-}
-
-template <MemoryOrdering Order>
-/* static */
-void Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
-                                       const nsACString& aPref,
-                                       int32_t aDefault) {
-  AddMirror(aCache, aPref, aDefault);
-}
-
-/* static */
-void Preferences::AddUintVarCache(uint32_t* aCache, const nsACString& aPref,
-                                  uint32_t aDefault) {
-  AddMirror(aCache, aPref, aDefault);
-}
-
-template <MemoryOrdering Order>
-/* static */
-void Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
-                                        const nsACString& aPref,
-                                        uint32_t aDefault) {
-  AddMirror(aCache, aPref, aDefault);
-}
-
-// Since the definition of template functions is not in a header file, we
-// need to explicitly specify the instantiations that are required. Currently
-// limited orders are needed and therefore implemented.
-template void Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*,
-                                                 const nsACString&, bool);
-
-template void Preferences::AddAtomicBoolVarCache(Atomic<bool, ReleaseAcquire>*,
-                                                 const nsACString&, bool);
-
-template void Preferences::AddAtomicBoolVarCache(
-    Atomic<bool, SequentiallyConsistent>*, const nsACString&, bool);
-
-template void Preferences::AddAtomicIntVarCache(Atomic<int32_t, Relaxed>*,
-                                                const nsACString&, int32_t);
-
-template void Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Relaxed>*,
-                                                 const nsACString&, uint32_t);
-
-template void Preferences::AddAtomicUintVarCache(
-    Atomic<uint32_t, ReleaseAcquire>*, const nsACString&, uint32_t);
-
-template void Preferences::AddAtomicUintVarCache(
-    Atomic<uint32_t, SequentiallyConsistent>*, const nsACString&, uint32_t);
-
-/* static */
-void Preferences::AddFloatVarCache(float* aCache, const nsACString& aPref,
-                                   float aDefault) {
-  AddMirror(aCache, aPref, aDefault);
-}
-
-/* static */
-void Preferences::AddAtomicFloatVarCache(std::atomic<float>* aCache,
-                                         const nsACString& aPref,
-                                         float aDefault) {
-  AddMirror(aCache, aPref, aDefault);
 }
 
 // The InitPref_*() functions below end in a `_<type>` suffix because they are

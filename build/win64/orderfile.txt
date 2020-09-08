@@ -472,11 +472,9 @@ XPCOMService_GetObserverService
 ?AddRef@AccessibleCaretEventHub@mozilla@@UEAAKXZ
 ??$AppendElement@AEAV?$nsTAutoStringN@D$0EA@@@UnsTArrayInfallibleAllocator@@@?$nsTArray_Impl@V?$nsTString@D@@UnsTArrayInfallibleAllocator@@@@IEAAPEAV?$nsTString@D@@AEAV?$nsTAutoStringN@D$0EA@@@@Z
 ?GetIsExtraState@xpcAccStateChangeEvent@@UEAA?AW4nsresult@@PEA_N@Z
-??$AddAtomicBoolVarCache@$0A@@Preferences@mozilla@@SAXPEAV?$Atomic@_N$0A@X@1@AEBV?$nsTSubstring@D@@_N@Z
 ??$RegisterCallbackImpl@$$CBV?$nsTSubstring@D@@@Preferences@mozilla@@CA?AW4nsresult@@P6AXPEBDPEAX@ZAEBV?$nsTSubstring@D@@1W4MatchKind@01@_N@Z
 ??$GetPrefValue@AEAPEAM@Internals@mozilla@@SA?AW4nsresult@@PEBDAEAPEAMW4PrefValueKind@1@@Z
 ?GetBool@Preferences@mozilla@@SA?AW4nsresult@@PEBDPEA_NW4PrefValueKind@2@@Z
-??$AddAtomicBoolVarCache@$01@Preferences@mozilla@@SAXPEAV?$Atomic@_N$01X@1@AEBV?$nsTSubstring@D@@_N@Z
 ?SetPreference@Preferences@mozilla@@SAXAEBVPref@dom@2@@Z
 ?GetComplex@Preferences@mozilla@@SA?AW4nsresult@@PEBDAEBUnsID@@PEAPEAXW4PrefValueKind@2@@Z
 ?Allocate@ArenaChunk@?$ArenaAllocator@$0BAAA@$00@mozilla@@QEAAPEAX_K@Z
@@ -6419,7 +6417,6 @@ Gecko_TakeFromCString
 ?ComputeCrossOriginOpenerPolicy@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@W4CrossOriginOpenerPolicy@nsILoadInfo@@PEAW456@@Z
 ?OnStartRequest@nsDocumentOpenInfo@@UEAA?AW4nsresult@@PEAVnsIRequest@@@Z
 ?GetResponseStatus@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@PEAI@Z
-?AddBoolVarCache@Preferences@mozilla@@SAXPEA_NAEBV?$nsTSubstring@D@@_N@Z
 ?GetResponseHeader@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@AEBV?$nsTSubstring@D@@AEAV5@@Z
 ?GetHeader@nsHttpResponseHead@net@mozilla@@QEAA?AW4nsresult@@UnsHttpAtom@23@AEAV?$nsTSubstring@D@@@Z
 ?GetStatus@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@PEAW44@@Z
