@@ -88,8 +88,8 @@ class MutableBlobStorage final {
   bool MaybeCreateTemporaryFile(const MutexAutoLock& aProofOfLock);
   void MaybeCreateTemporaryFileOnMainThread(const MutexAutoLock& aProofOfLock);
 
-  MOZ_MUST_USE nsresult
-  DispatchToIOThread(already_AddRefed<nsIRunnable> aRunnable);
+  [[nodiscard]] nsresult DispatchToIOThread(
+      already_AddRefed<nsIRunnable> aRunnable);
 
   Mutex mMutex;
 
