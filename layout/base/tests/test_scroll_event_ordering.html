@@ -44,7 +44,7 @@ function doTest() {
   window.getSelection().collapse(inner.firstChild, 0);
   window.requestAnimationFrame(onFrame);
   d.onscroll = onScroll;
-  sendKey("DOWN");
+  d.scroll(0, 100);
 }
 
 function prepareTest() {
