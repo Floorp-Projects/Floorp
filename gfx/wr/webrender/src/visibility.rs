@@ -7,12 +7,11 @@
 //! TODO: document what this pass does!
 //!
 
-use api::{ColorF, DebugFlags};
+use api::{ColorF, DebugFlags, EdgeAaSegmentMask};
 use api::units::*;
+use api::image_tiling;
 use euclid::Scale;
 use std::{u32, usize, mem};
-use crate::image_tiling;
-use crate::segment::EdgeAaSegmentMask;
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::composite::CompositeState;
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};

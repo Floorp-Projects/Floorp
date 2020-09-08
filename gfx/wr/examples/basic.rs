@@ -17,7 +17,6 @@ use winit::TouchPhase;
 use std::collections::HashMap;
 use webrender::ShaderPrecacheFlags;
 use webrender::api::*;
-use webrender::render_api::*;
 use webrender::api::units::*;
 
 

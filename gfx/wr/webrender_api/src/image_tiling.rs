@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::api::TileSize;
-use crate::api::units::*;
-use crate::segment::EdgeAaSegmentMask;
+use crate::{TileSize, EdgeAaSegmentMask};
+use crate::units::*;
 use euclid::{point2, size2};
 use std::i32;
 use std::ops::Range;

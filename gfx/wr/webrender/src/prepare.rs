@@ -9,11 +9,11 @@
 use std::{cmp, u32, usize};
 use api::{PremultipliedColorF, PropertyBinding, GradientStop, ExtendMode};
 use api::{BoxShadowClipMode, LineOrientation, BorderStyle, ClipMode};
+use api::image_tiling::{self, Repetition};
 use api::units::*;
 use euclid::Scale;
 use euclid::approxeq::ApproxEq;
 use smallvec::SmallVec;
-use crate::image_tiling::{self, Repetition};
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::clip::{ClipStore};
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};

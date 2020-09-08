@@ -142,11 +142,7 @@ use crate::scene_builder_thread::InternerUpdates;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::intern::{Internable, UpdateList};
 #[cfg(any(feature = "capture", feature = "replay"))]
-use crate::clip::ClipIntern;
-#[cfg(any(feature = "capture", feature = "replay"))]
-use crate::filterdata::FilterDataIntern;
-#[cfg(any(feature = "capture", feature = "replay"))]
-use api::PrimitiveKeyKind;
+use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::prim_store::backdrop::Backdrop;
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -2016,7 +2012,7 @@ macro_rules! declare_tile_cache_logger_updatelists {
 }
 
 #[cfg(any(feature = "capture", feature = "replay"))]
-crate::enumerate_interners!(declare_tile_cache_logger_updatelists);
+enumerate_interners!(declare_tile_cache_logger_updatelists);
 
 #[cfg(not(any(feature = "capture", feature = "replay")))]
 pub struct TileCacheLoggerUpdateLists {

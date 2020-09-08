@@ -14,7 +14,6 @@ mod boilerplate;
 use crate::boilerplate::Example;
 use euclid::Scale;
 use webrender::api::*;
-use webrender::render_api::*;
 use webrender::api::units::*;
 
 // This example creates multiple documents overlapping each other with

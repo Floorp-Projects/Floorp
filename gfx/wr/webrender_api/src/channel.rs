@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::{Epoch, PipelineId};
+use crate::api::{Epoch, PipelineId};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::io::{self, Cursor, Error, ErrorKind, Read};

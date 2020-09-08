@@ -17,7 +17,6 @@ use std::sync::mpsc::Receiver;
 use time;
 use webrender;
 use webrender::api::*;
-use webrender::render_api::*;
 use webrender::api::units::*;
 use webrender::{DebugFlags, RenderResults, ShaderPrecacheFlags};
 use crate::{WindowWrapper, NotifierEvent};

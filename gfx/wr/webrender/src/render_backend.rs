@@ -8,20 +8,18 @@
 //! See the comment at the top of the `renderer` module for a description of
 //! how these two pieces interact.
 
-use api::{DebugFlags, BlobImageHandler};
-use api::{DocumentId, DocumentLayer, ExternalScrollId, HitTestResult};
-use api::{IdNamespace, PipelineId, RenderNotifier, ScrollClamping};
+use api::{ApiMsg, ClearCache, DebugCommand, DebugFlags, BlobImageHandler};
+use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestResult};
+use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, ScrollClamping};
+use api::{TransactionMsg, ResourceUpdate};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
-use api::{PrimitiveKeyKind};
+use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 use api::units::*;
-use api::channel::{single_msg_channel, Sender, Receiver};
 #[cfg(any(feature = "capture", feature = "replay"))]
-use crate::render_api::CaptureBits;
+use api::CaptureBits;
 #[cfg(feature = "replay")]
-use crate::render_api::CapturedDocument;
-use crate::render_api::{MemoryReport, TransactionMsg, ResourceUpdate, ApiMsg, FrameMsg, ClearCache, DebugCommand};
-use crate::clip::ClipIntern;
-use crate::filterdata::FilterDataIntern;
+use api::CapturedDocument;
+use api::channel::{single_msg_channel, Sender, Receiver};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::CaptureConfig;
 use crate::composite::{CompositorKind, CompositeDescriptor};
@@ -288,7 +286,7 @@ macro_rules! declare_data_stores {
     }
 }
 
-crate::enumerate_interners!(declare_data_stores);
+enumerate_interners!(declare_data_stores);
 
 impl DataStores {
     /// Returns the local rect for a primitive. For most primitives, this is
@@ -796,6 +794,8 @@ pub struct RenderBackend {
     result_tx: Sender<ResultMsg>,
     scene_tx: Sender<SceneBuilderRequest>,
     low_priority_scene_tx: Sender<SceneBuilderRequest>,
+    backend_scene_tx: Sender<BackendSceneBuilderRequest>,
+    scene_rx: Receiver<SceneBuilderResult>,
 
     default_device_pixel_ratio: f32,
 
@@ -835,6 +835,8 @@ impl RenderBackend {
         result_tx: Sender<ResultMsg>,
         scene_tx: Sender<SceneBuilderRequest>,
         low_priority_scene_tx: Sender<SceneBuilderRequest>,
+        backend_scene_tx: Sender<BackendSceneBuilderRequest>,
+        scene_rx: Receiver<SceneBuilderResult>,
         default_device_pixel_ratio: f32,
         resource_cache: ResourceCache,
         notifier: Box<dyn RenderNotifier>,
@@ -850,6 +852,8 @@ impl RenderBackend {
             result_tx,
             scene_tx,
             low_priority_scene_tx,
+            backend_scene_tx,
+            scene_rx,
             default_device_pixel_ratio,
             resource_cache,
             gpu_cache: GpuCache::new(),
@@ -885,6 +889,87 @@ impl RenderBackend {
         }
 
         while let RenderBackendStatus::Continue = status {
+            while let Ok(msg) = self.scene_rx.try_recv() {
+                profile_scope!("rb_msg");
+
+                match msg {
+                    SceneBuilderResult::Transactions(txns, result_tx) => {
+                        self.process_transaction(
+                            txns,
+                            result_tx,
+                            &mut frame_counter,
+                            &mut profile_counters,
+                        );
+                        self.bookkeep_after_frames();
+                    },
+                    #[cfg(feature = "capture")]
+                    SceneBuilderResult::CapturedTransactions(txns, capture_config, result_tx) => {
+                        if let Some(ref mut old_config) = self.capture_config {
+                            assert!(old_config.scene_id <= capture_config.scene_id);
+                            if old_config.scene_id < capture_config.scene_id {
+                                old_config.scene_id = capture_config.scene_id;
+                                old_config.frame_id = 0;
+                            }
+                        } else {
+                            self.capture_config = Some(capture_config);
+                        }
+
+                        let built_frame = self.process_transaction(
+                            txns,
+                            result_tx,
+                            &mut frame_counter,
+                            &mut profile_counters,
+                        );
+
+                        if built_frame {
+                            self.save_capture_sequence();
+                        }
+
+                        self.bookkeep_after_frames();
+                    },
+                    SceneBuilderResult::GetGlyphDimensions(request) => {
+                        let mut glyph_dimensions = Vec::with_capacity(request.glyph_indices.len());
+                        if let Some(base) = self.resource_cache.get_font_instance(request.key) {
+                            let font = FontInstance::from_base(Arc::clone(&base));
+                            for glyph_index in &request.glyph_indices {
+                                let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, *glyph_index);
+                                glyph_dimensions.push(glyph_dim);
+                            }
+                        }
+                        request.sender.send(glyph_dimensions).unwrap();
+                    }
+                    SceneBuilderResult::GetGlyphIndices(request) => {
+                        let mut glyph_indices = Vec::with_capacity(request.text.len());
+                        for ch in request.text.chars() {
+                            let index = self.resource_cache.get_glyph_index(request.key, ch);
+                            glyph_indices.push(index);
+                        }
+                        request.sender.send(glyph_indices).unwrap();
+                    }
+                    SceneBuilderResult::FlushComplete(tx) => {
+                        tx.send(()).ok();
+                    }
+                    SceneBuilderResult::ExternalEvent(evt) => {
+                        self.notifier.external_event(evt);
+                    }
+                    SceneBuilderResult::ClearNamespace(id) => {
+                        self.resource_cache.clear_namespace(id);
+                        self.documents.retain(|doc_id, _doc| doc_id.namespace_id != id);
+                        if let Some(handler) = &mut self.blob_image_handler {
+                            handler.clear_namespace(id);
+                        }
+                    }
+                    SceneBuilderResult::Stopped => {
+                        panic!("We haven't sent a Stop yet, how did we get a Stopped back?");
+                    }
+                    SceneBuilderResult::DocumentsForDebugger(json) => {
+                        let msg = ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json));
+                        self.result_tx.send(msg).unwrap();
+                        self.notifier.wake_up();
+                    }
+                }
+            }
+
             status = match self.api_rx.recv() {
                 Ok(msg) => {
                     self.process_api_msg(msg, &mut profile_counters, &mut frame_counter)
@@ -896,16 +981,16 @@ impl RenderBackend {
         let _ = self.low_priority_scene_tx.send(SceneBuilderRequest::Stop);
         // Ensure we read everything the scene builder is sending us from
         // inflight messages, otherwise the scene builder might panic.
-        while let Ok(msg) = self.api_rx.recv() {
+        while let Ok(msg) = self.scene_rx.recv() {
             match msg {
-                ApiMsg::SceneBuilderResult(SceneBuilderResult::FlushComplete(tx)) => {
+                SceneBuilderResult::FlushComplete(tx) => {
                     // If somebody's blocked waiting for a flush, how did they
                     // trigger the RB thread to shut down? This shouldn't happen
                     // but handle it gracefully anyway.
                     debug_assert!(false);
                     tx.send(()).ok();
                 }
-                ApiMsg::SceneBuilderResult(SceneBuilderResult::Stopped) => break,
+                SceneBuilderResult::Stopped => break,
                 _ => continue,
             }
         }
@@ -1138,7 +1223,7 @@ impl RenderBackend {
                     DebugCommand::FetchDocuments => {
                         // Ask SceneBuilderThread to send JSON presentation of the documents,
                         // that will be forwarded to Renderer.
-                        self.send_backend_message(SceneBuilderRequest::DocumentsForDebugger);
+                        self.send_backend_message(BackendSceneBuilderRequest::DocumentsForDebugger);
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::FetchClipScrollTree => {
@@ -1269,103 +1354,14 @@ impl RenderBackend {
                     profile_counters,
                 );
             }
-            ApiMsg::SceneBuilderResult(msg) => {
-                self.process_scene_builder_result(msg, profile_counters, frame_counter);
-            }
         }
 
         RenderBackendStatus::Continue
     }
 
-    fn process_scene_builder_result(
-        &mut self,
-        msg: SceneBuilderResult,
-        profile_counters: &mut BackendProfileCounters,
-        frame_counter: &mut u32,
-    ) {
-        profile_scope!("sb_msg");
-
-        match msg {
-            SceneBuilderResult::Transactions(txns, result_tx) => {
-                self.process_transaction(
-                    txns,
-                    result_tx,
-                    frame_counter,
-                    profile_counters,
-                );
-                self.bookkeep_after_frames();
-            },
-            #[cfg(feature = "capture")]
-            SceneBuilderResult::CapturedTransactions(txns, capture_config, result_tx) => {
-                if let Some(ref mut old_config) = self.capture_config {
-                    assert!(old_config.scene_id <= capture_config.scene_id);
-                    if old_config.scene_id < capture_config.scene_id {
-                        old_config.scene_id = capture_config.scene_id;
-                        old_config.frame_id = 0;
-                    }
-                } else {
-                    self.capture_config = Some(capture_config);
-                }
-
-                let built_frame = self.process_transaction(
-                    txns,
-                    result_tx,
-                    frame_counter,
-                    profile_counters,
-                );
-
-                if built_frame {
-                    self.save_capture_sequence();
-                }
-
-                self.bookkeep_after_frames();
-            },
-            SceneBuilderResult::GetGlyphDimensions(request) => {
-                let mut glyph_dimensions = Vec::with_capacity(request.glyph_indices.len());
-                if let Some(base) = self.resource_cache.get_font_instance(request.key) {
-                    let font = FontInstance::from_base(Arc::clone(&base));
-                    for glyph_index in &request.glyph_indices {
-                        let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, *glyph_index);
-                        glyph_dimensions.push(glyph_dim);
-                    }
-                }
-                request.sender.send(glyph_dimensions).unwrap();
-            }
-            SceneBuilderResult::GetGlyphIndices(request) => {
-                let mut glyph_indices = Vec::with_capacity(request.text.len());
-                for ch in request.text.chars() {
-                    let index = self.resource_cache.get_glyph_index(request.key, ch);
-                    glyph_indices.push(index);
-                }
-                request.sender.send(glyph_indices).unwrap();
-            }
-            SceneBuilderResult::FlushComplete(tx) => {
-                tx.send(()).ok();
-            }
-            SceneBuilderResult::ExternalEvent(evt) => {
-                self.notifier.external_event(evt);
-            }
-            SceneBuilderResult::ClearNamespace(id) => {
-                self.resource_cache.clear_namespace(id);
-                self.documents.retain(|doc_id, _doc| doc_id.namespace_id != id);
-                if let Some(handler) = &mut self.blob_image_handler {
-                    handler.clear_namespace(id);
-                }
-            }
-            SceneBuilderResult::Stopped => {
-                panic!("We haven't sent a Stop yet, how did we get a Stopped back?");
-            }
-            SceneBuilderResult::DocumentsForDebugger(json) => {
-                let msg = ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json));
-                self.result_tx.send(msg).unwrap();
-                self.notifier.wake_up();
-            }
-        }
-    }
-
     fn update_frame_builder_config(&self) {
         self.send_backend_message(
-            SceneBuilderRequest::SetFrameBuilderConfig(
+            BackendSceneBuilderRequest::SetFrameBuilderConfig(
                 self.frame_config.clone()
             )
         );
@@ -1681,8 +1677,9 @@ impl RenderBackend {
         build_frame
     }
 
-    fn send_backend_message(&self, msg: SceneBuilderRequest) {
-        self.scene_tx.send(msg).unwrap();
+    fn send_backend_message(&self, msg: BackendSceneBuilderRequest) {
+        self.backend_scene_tx.send(msg).unwrap();
+        self.low_priority_scene_tx.send(SceneBuilderRequest::BackendMessage).unwrap();
     }
 
     #[cfg(not(feature = "debugger"))]
@@ -1729,7 +1726,7 @@ impl RenderBackend {
         // will add its report to this one and send the result back to the original
         // thread waiting on the request.
         self.send_backend_message(
-            SceneBuilderRequest::ReportMemory(report, tx)
+            BackendSceneBuilderRequest::ReportMemory(report, tx)
         );
     }
 
@@ -1837,7 +1834,7 @@ impl RenderBackend {
 
         debug!("\tscene builder");
         self.send_backend_message(
-            SceneBuilderRequest::SaveScene(config.clone())
+            BackendSceneBuilderRequest::SaveScene(config.clone())
         );
 
         debug!("\tresource cache");
@@ -1886,7 +1883,7 @@ impl RenderBackend {
         bits: CaptureBits,
     ) {
         self.send_backend_message(
-            SceneBuilderRequest::StartCaptureSequence(CaptureConfig::new(root, bits))
+            BackendSceneBuilderRequest::StartCaptureSequence(CaptureConfig::new(root, bits))
         );
     }
 
@@ -1895,7 +1892,7 @@ impl RenderBackend {
         &mut self,
     ) {
         self.send_backend_message(
-            SceneBuilderRequest::StopCaptureSequence
+            BackendSceneBuilderRequest::StopCaptureSequence
         );
     }
 
@@ -2059,7 +2056,7 @@ impl RenderBackend {
 
         if !scenes_to_build.is_empty() {
             self.send_backend_message(
-                SceneBuilderRequest::LoadScenes(scenes_to_build)
+                BackendSceneBuilderRequest::LoadScenes(scenes_to_build)
             );
         }
     }

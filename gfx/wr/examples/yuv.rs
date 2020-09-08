@@ -13,7 +13,6 @@ mod boilerplate;
 use crate::boilerplate::Example;
 use gleam::gl;
 use webrender::api::*;
-use webrender::render_api::*;
 use webrender::api::units::*;
 
 

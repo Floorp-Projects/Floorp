@@ -18,7 +18,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::collections::HashMap;
 // local imports
-use crate::IdNamespace;
+use crate::api::IdNamespace;
 use crate::channel::Sender;
 use crate::color::ColorU;
 use crate::units::LayoutPoint;

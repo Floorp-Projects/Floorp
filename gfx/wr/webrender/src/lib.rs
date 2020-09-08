@@ -71,8 +71,7 @@ extern crate malloc_size_of_derive;
 extern crate serde;
 #[macro_use]
 extern crate tracy_rs;
-#[macro_use]
-extern crate derive_more;
+
 extern crate malloc_size_of;
 extern crate svg_fmt;
 
@@ -105,6 +104,7 @@ mod glyph_rasterizer;
 mod gpu_cache;
 mod gpu_types;
 mod hit_test;
+mod intern;
 mod internal_types;
 mod lru_cache;
 mod picture;
@@ -131,12 +131,6 @@ mod texture_cache;
 mod tile_cache;
 mod util;
 mod visibility;
-mod api_resources;
-mod image_tiling;
-///
-pub mod intern;
-///
-pub mod render_api;
 
 mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
@@ -205,6 +199,7 @@ extern crate png;
 #[cfg(test)]
 extern crate rand;
 
+#[macro_use]
 pub extern crate api;
 extern crate webrender_build;
 
@@ -233,4 +228,3 @@ pub use crate::picture::{TileDescriptor, TileId, InvalidationReason};
 pub use crate::picture::{PrimitiveCompareResult, PrimitiveCompareResultDetail, CompareHelperResult};
 pub use crate::picture::{TileNode, TileNodeKind, TileSerializer, TileCacheInstanceSerializer, TileOffset, TileCacheLoggerUpdateLists};
 pub use crate::intern::ItemUid;
-pub use crate::render_api::*;
