@@ -238,23 +238,48 @@ class TestPreprocessor(unittest.TestCase):
             'blank lines',
         ])
 
-    def test_filter_slashslash(self):
+    def test_filter_dumbComments(self):
         self.do_include_compare([
-            '#filter slashslash',
-            'PASS//FAIL  // FAIL',
+            '#filter dumbComments',
+            'PASS//PASS  // PASS',
             '  //FAIL',
-            '//FAIL',
+            '//     FAIL',
             'PASS  //',
+            'PASS  //    FAIL',
             '//',
-            '#unfilter slashslash',
-            'PASS // PASS',
+            '',
+            '#unfilter dumbComments',
+            '// PASS',
         ], [
-            'PASS',
-            '  ',
+            'PASS//PASS  // PASS',
             '',
-            'PASS  ',
             '',
-            'PASS // PASS',
+            'PASS  //',
+            'PASS  //    FAIL',
+            '',
+            '',
+            '// PASS',
+        ])
+
+    def test_filter_dumbComments_and_emptyLines(self):
+        self.do_include_compare([
+            '#filter dumbComments emptyLines',
+            'PASS//PASS  // PASS',
+            '  //FAIL',
+            '//     FAIL',
+            'PASS  //',
+            'PASS  //    FAIL',
+            '//',
+            '',
+            '#unfilter dumbComments emptyLines',
+            '',
+            '// PASS',
+        ], [
+            'PASS//PASS  // PASS',
+            'PASS  //',
+            'PASS  //    FAIL',
+            '',
+            '// PASS',
         ])
 
     def test_filter_substitution(self):

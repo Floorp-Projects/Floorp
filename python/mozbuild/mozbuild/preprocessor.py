@@ -764,14 +764,10 @@ class Preprocessor:
             return ''
         return aLine
 
-    # slashslash: Strips everything after //.
-    def filter_slashslash(self, aLine):
-        if (aLine.find('//') == -1):
-            return aLine
-        [aLine, rest] = aLine.split('//', 1)
-        if rest:
-            aLine += '\n'
-        return aLine
+    # dumbComments: Empties out lines that consists of optional whitespace
+    # followed by a `//`.
+    def filter_dumbComments(self, aLine):
+        return re.sub('^\s*//.*', '', aLine)
 
     # substitution: variables wrapped in @ are replaced with their value.
     def filter_substitution(self, aLine, fatal=True):
