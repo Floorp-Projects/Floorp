@@ -3925,8 +3925,10 @@ void MediaDecoderStateMachine::GetDebugInfo(
   aInfo.mPlayState = int32_t(mPlayState.Ref());
   aInfo.mSentFirstFrameLoadedEvent = mSentFirstFrameLoadedEvent;
   aInfo.mIsPlaying = IsPlaying();
-  CopyUTF8toUTF16(MakeStringSpan(AudioRequestStatus()), aInfo.mAudioRequestStatus);
-  CopyUTF8toUTF16(MakeStringSpan(VideoRequestStatus()), aInfo.mVideoRequestStatus);
+  CopyUTF8toUTF16(MakeStringSpan(AudioRequestStatus()),
+                  aInfo.mAudioRequestStatus);
+  CopyUTF8toUTF16(MakeStringSpan(VideoRequestStatus()),
+                  aInfo.mVideoRequestStatus);
   aInfo.mDecodedAudioEndTime = mDecodedAudioEndTime.ToMicroseconds();
   aInfo.mDecodedVideoEndTime = mDecodedVideoEndTime.ToMicroseconds();
   aInfo.mAudioCompleted = mAudioCompleted;

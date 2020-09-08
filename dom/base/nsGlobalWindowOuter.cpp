@@ -5296,9 +5296,8 @@ static bool BuildNestedClones(Document& aJustClonedDoc) {
 
     nsCOMPtr<nsIDocShell> docshell;
     RefPtr<Document> doc;
-    nsresult rv = frameLoader->FinishStaticClone(clone.mStaticCloneOf,
-                                                 getter_AddRefs(docshell),
-                                                 getter_AddRefs(doc));
+    nsresult rv = frameLoader->FinishStaticClone(
+        clone.mStaticCloneOf, getter_AddRefs(docshell), getter_AddRefs(doc));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
     }
