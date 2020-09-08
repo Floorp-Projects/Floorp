@@ -33,8 +33,4 @@ toolkit.jar:
   content/mozapps/extensions/rating-star.css                    (content/rating-star.css)
   content/mozapps/extensions/shortcuts.css                      (content/shortcuts.css)
   content/mozapps/extensions/shortcuts.js                       (content/shortcuts.js)
-
-% resource default-theme %content/mozapps/extensions/default-theme/
-  content/mozapps/extensions/default-theme/icon.svg             (default-theme/icon.svg)
-  content/mozapps/extensions/default-theme/manifest.json        (default-theme/manifest.json)
 #endif
