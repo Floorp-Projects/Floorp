@@ -33,6 +33,7 @@
 #include "jit/JitRealm.h"
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
+#include "js/AllocationLogging.h"  // JS_COUNT_CTOR, JS_COUNT_DTOR
 #include "js/Date.h"
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"

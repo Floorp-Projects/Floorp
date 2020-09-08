@@ -865,29 +865,6 @@ JS_FRIEND_API void js::SetRealmValidAccessPtr(JSContext* cx,
 
 JS_FRIEND_API bool js::SystemZoneAvailable(JSContext* cx) { return true; }
 
-static LogCtorDtor sLogCtor = nullptr;
-static LogCtorDtor sLogDtor = nullptr;
-
-JS_FRIEND_API void js::SetLogCtorDtorFunctions(LogCtorDtor ctor,
-                                               LogCtorDtor dtor) {
-  MOZ_ASSERT(!sLogCtor && !sLogDtor);
-  MOZ_ASSERT(ctor && dtor);
-  sLogCtor = ctor;
-  sLogDtor = dtor;
-}
-
-JS_FRIEND_API void js::LogCtor(void* self, const char* type, uint32_t sz) {
-  if (LogCtorDtor fun = sLogCtor) {
-    fun(self, type, sz);
-  }
-}
-
-JS_FRIEND_API void js::LogDtor(void* self, const char* type, uint32_t sz) {
-  if (LogCtorDtor fun = sLogDtor) {
-    fun(self, type, sz);
-  }
-}
-
 JS_FRIEND_API JS::Value js::MaybeGetScriptPrivate(JSObject* object) {
   if (!object->is<ScriptSourceObject>()) {
     return UndefinedValue();

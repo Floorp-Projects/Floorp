@@ -13,6 +13,7 @@
 
 #include "XPCWrapper.h"
 #include "jsfriendapi.h"
+#include "js/AllocationLogging.h"  // JS::SetLogCtorDtorFunctions
 #include "js/Object.h"  // JS::GetClass
 #include "js/ProfilingStack.h"
 #include "GeckoProfiler.h"
@@ -136,7 +137,7 @@ void nsXPConnect::InitStatics() {
 #ifdef NS_BUILD_REFCNT_LOGGING
   // These functions are used for reporting leaks, so we register them as early
   // as possible to avoid missing any classes' creations.
-  js::SetLogCtorDtorFunctions(NS_LogCtor, NS_LogDtor);
+  JS::SetLogCtorDtorFunctions(NS_LogCtor, NS_LogDtor);
 #endif
   ReadOnlyPage::Init();
 
