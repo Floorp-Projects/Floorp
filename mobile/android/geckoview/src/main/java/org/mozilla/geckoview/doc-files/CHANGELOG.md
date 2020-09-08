@@ -24,6 +24,9 @@ exclude: true
   parameter is now a [`WebResponse`][65.15] 
   ([bug 1530022]({{bugzilla}}1530022))
 - Added [`Image`][82.3] support for size-dependent bitmap retrieval from image resources.
+  ([bug 1658456]({{bugzilla}}1658456))
+- ⚠️ Use [`Image`][82.3] for [`MediaSession`][81.6] artwork and [`WebExtension`][69.5] icon support.
+  ([bug 1662508]({{bugzilla}}1662508))
   
 [82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.WebResponseInfo-
 [82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-
@@ -786,4 +789,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 986633cde6e17640f1efcf15b6100936cfa8380d
+[api-version]: 802b991116bf1a90050c412c32bc8ac3e7343fed
