@@ -4166,9 +4166,7 @@ bool nsWindow::IsMainWindowTransparent() {
         sTransparentMainWindow =
             Preferences::GetBool("mozilla.widget.use-argb-visuals");
       } else {
-        sTransparentMainWindow =
-            (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay() ||
-             GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE);
+        sTransparentMainWindow = GetSystemCSDSupportLevel() != CSD_SUPPORT_NONE;
       }
     }
     transparencyConfigured = true;
