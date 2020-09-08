@@ -3,15 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// Tests that static preference varcaches in the content process
+// Tests that static preferences in the content process
 // correctly handle values which are different from their
 // statically-defined defaults.
 //
-// Since we can't access varcaches values from JS, this tests relies on
+// Since we can't access static preference values from JS, this tests relies on
 // assertions in debug builds to detect mismatches. The default and user
 // values of two preferences are changed (respectively) before a content
 // process is started. Once the content process is launched, the
-// preference service asserts that the values stored in all var caches
+// preference service asserts that the values stored in all static prefs
 // match their current values as known to the preference service. If
 // there's a mismatch, the shell will crash, and the test will fail.
 //
@@ -35,7 +35,7 @@ ExtensionTestUtils.init(this);
 const { prefs } = Services;
 const defaultPrefs = prefs.getDefaultBranch("");
 
-add_task(async function test_sharedMap_var_caches() {
+add_task(async function test_sharedMap_static_prefs() {
   equal(
     prefs.getBoolPref(PREF1_NAME),
     PREF1_VALUE,

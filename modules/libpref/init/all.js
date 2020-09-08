@@ -9,8 +9,8 @@
 // mobile/android/app/mobile.js.
 //
 // NOTE: Not all prefs should be defined in this (or any other) data file.
-// Static prefs, especially VarCache prefs, are defined in StaticPrefList.yaml.
-// Those prefs should *not* appear in this file.
+// Static prefs are defined in StaticPrefList.yaml. Those prefs should *not*
+// appear in this file.
 //
 // For the syntax used by this file, consult the comments at the top of
 // modules/libpref/parser/src/lib.rs.
