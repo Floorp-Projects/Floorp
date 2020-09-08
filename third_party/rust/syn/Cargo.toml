@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "syn"
-version = "1.0.5"
+version = "1.0.40"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = ["/benches/**", "/build.rs", "/Cargo.toml", "/LICENSE-APACHE", "/LICENSE-MIT", "/README.md", "/src/**", "/tests/**"]
 description = "Parser for Rust source code"
@@ -24,25 +24,21 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/syn"
 [package.metadata.docs.rs]
 all-features = true
+targets = ["x86_64-unknown-linux-gnu"]
 
 [package.metadata.playground]
-all-features = true
-
-[lib]
-name = "syn"
+features = ["full", "visit", "visit-mut", "fold", "extra-traits"]
 
 [[bench]]
 name = "rust"
 harness = false
 required-features = ["full", "parsing"]
-edition = "2018"
 
 [[bench]]
 name = "file"
 required-features = ["full", "parsing"]
-edition = "2018"
 [dependencies.proc-macro2]
-version = "1.0"
+version = "1.0.13"
 default-features = false
 
 [dependencies.quote]
@@ -52,17 +48,33 @@ default-features = false
 
 [dependencies.unicode-xid]
 version = "0.2"
+[dev-dependencies.anyhow]
+version = "1.0"
+
+[dev-dependencies.flate2]
+version = "1.0"
+
 [dev-dependencies.insta]
-version = "0.9"
+version = "0.16"
 
 [dev-dependencies.rayon]
 version = "1.0"
 
 [dev-dependencies.ref-cast]
-version = "0.2"
+version = "1.0"
 
 [dev-dependencies.regex]
 version = "1.0"
+
+[dev-dependencies.reqwest]
+version = "0.10"
+features = ["blocking"]
+
+[dev-dependencies.syn-test-suite]
+version = "0"
+
+[dev-dependencies.tar]
+version = "0.4"
 
 [dev-dependencies.termcolor]
 version = "1.0"
@@ -80,7 +92,6 @@ full = []
 parsing = []
 printing = ["quote"]
 proc-macro = ["proc-macro2/proc-macro", "quote/proc-macro"]
+test = ["syn-test-suite/all-features"]
 visit = []
 visit-mut = []
-[badges.travis-ci]
-repository = "dtolnay/syn"

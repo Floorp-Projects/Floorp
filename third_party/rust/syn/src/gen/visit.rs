@@ -20,7 +20,6 @@ macro_rules! full {
         unreachable!()
     };
 }
-#[cfg(any(feature = "full", feature = "derive"))]
 macro_rules! skip {
     ($($tt:tt)*) => {};
 }
@@ -30,7 +29,7 @@ macro_rules! skip {
 ///
 /// [module documentation]: self
 ///
-/// *This trait is available if Syn is built with the `"visit"` feature.*
+/// *This trait is available only if Syn is built with the `"visit"` feature.*
 pub trait Visit<'ast> {
     #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_abi(&mut self, i: &'ast Abi) {
@@ -434,35 +433,27 @@ pub trait Visit<'ast> {
     fn visit_lifetime_def(&mut self, i: &'ast LifetimeDef) {
         visit_lifetime_def(self, i)
     }
-    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit(&mut self, i: &'ast Lit) {
         visit_lit(self, i)
     }
-    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_bool(&mut self, i: &'ast LitBool) {
         visit_lit_bool(self, i)
     }
-    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_byte(&mut self, i: &'ast LitByte) {
         visit_lit_byte(self, i)
     }
-    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_byte_str(&mut self, i: &'ast LitByteStr) {
         visit_lit_byte_str(self, i)
     }
-    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_char(&mut self, i: &'ast LitChar) {
         visit_lit_char(self, i)
     }
-    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_float(&mut self, i: &'ast LitFloat) {
         visit_lit_float(self, i)
     }
-    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_int(&mut self, i: &'ast LitInt) {
         visit_lit_int(self, i)
     }
-    #[cfg(any(feature = "derive", feature = "full"))]
     fn visit_lit_str(&mut self, i: &'ast LitStr) {
         visit_lit_str(self, i)
     }
@@ -2537,7 +2528,6 @@ where
         }
     }
 }
-#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit<'ast, V>(v: &mut V, node: &'ast Lit)
 where
     V: Visit<'ast> + ?Sized,
@@ -2569,7 +2559,6 @@ where
         }
     }
 }
-#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_bool<'ast, V>(v: &mut V, node: &'ast LitBool)
 where
     V: Visit<'ast> + ?Sized,
@@ -2577,37 +2566,31 @@ where
     skip!(node.value);
     v.visit_span(&node.span);
 }
-#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_byte<'ast, V>(v: &mut V, node: &'ast LitByte)
 where
     V: Visit<'ast> + ?Sized,
 {
 }
-#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_byte_str<'ast, V>(v: &mut V, node: &'ast LitByteStr)
 where
     V: Visit<'ast> + ?Sized,
 {
 }
-#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_char<'ast, V>(v: &mut V, node: &'ast LitChar)
 where
     V: Visit<'ast> + ?Sized,
 {
 }
-#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_float<'ast, V>(v: &mut V, node: &'ast LitFloat)
 where
     V: Visit<'ast> + ?Sized,
 {
 }
-#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_int<'ast, V>(v: &mut V, node: &'ast LitInt)
 where
     V: Visit<'ast> + ?Sized,
 {
 }
-#[cfg(any(feature = "derive", feature = "full"))]
 pub fn visit_lit_str<'ast, V>(v: &mut V, node: &'ast LitStr)
 where
     V: Visit<'ast> + ?Sized,

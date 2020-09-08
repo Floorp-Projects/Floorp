@@ -74,19 +74,19 @@
 ///     let _: PathSegments = syn::parse_str(input).unwrap();
 /// }
 /// ```
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! custom_punctuation {
     ($ident:ident, $($tt:tt)+) => {
         pub struct $ident {
-            pub spans: custom_punctuation_repr!($($tt)+),
+            pub spans: $crate::custom_punctuation_repr!($($tt)+),
         }
 
         #[doc(hidden)]
-        #[allow(non_snake_case)]
-        pub fn $ident<__S: $crate::export::IntoSpans<custom_punctuation_repr!($($tt)+)>>(
+        #[allow(dead_code, non_snake_case)]
+        pub fn $ident<__S: $crate::export::IntoSpans<$crate::custom_punctuation_repr!($($tt)+)>>(
             spans: __S,
         ) -> $ident {
-            let _validate_len = 0 $(+ custom_punctuation_len!(strict, $tt))*;
+            let _validate_len = 0 $(+ $crate::custom_punctuation_len!(strict, $tt))*;
             $ident {
                 spans: $crate::export::IntoSpans::into_spans(spans)
             }
@@ -98,33 +98,33 @@ macro_rules! custom_punctuation {
             }
         }
 
-        impl_parse_for_custom_punctuation!($ident, $($tt)+);
-        impl_to_tokens_for_custom_punctuation!($ident, $($tt)+);
-        impl_clone_for_custom_punctuation!($ident, $($tt)+);
-        impl_extra_traits_for_custom_punctuation!($ident, $($tt)+);
+        $crate::impl_parse_for_custom_punctuation!($ident, $($tt)+);
+        $crate::impl_to_tokens_for_custom_punctuation!($ident, $($tt)+);
+        $crate::impl_clone_for_custom_punctuation!($ident, $($tt)+);
+        $crate::impl_extra_traits_for_custom_punctuation!($ident, $($tt)+);
     };
 }
 
 // Not public API.
 #[cfg(feature = "parsing")]
 #[doc(hidden)]
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! impl_parse_for_custom_punctuation {
     ($ident:ident, $($tt:tt)+) => {
         impl $crate::token::CustomToken for $ident {
             fn peek(cursor: $crate::buffer::Cursor) -> bool {
-                $crate::token::parsing::peek_punct(cursor, stringify_punct!($($tt)+))
+                $crate::token::parsing::peek_punct(cursor, $crate::stringify_punct!($($tt)+))
             }
 
             fn display() -> &'static $crate::export::str {
-                custom_punctuation_concat!("`", stringify_punct!($($tt)+), "`")
+                concat!("`", $crate::stringify_punct!($($tt)+), "`")
             }
         }
 
         impl $crate::parse::Parse for $ident {
             fn parse(input: $crate::parse::ParseStream) -> $crate::parse::Result<$ident> {
-                let spans: custom_punctuation_repr!($($tt)+) =
-                    $crate::token::parsing::punct(input, stringify_punct!($($tt)+))?;
+                let spans: $crate::custom_punctuation_repr!($($tt)+) =
+                    $crate::token::parsing::punct(input, $crate::stringify_punct!($($tt)+))?;
                 Ok($ident(spans))
             }
         }
@@ -142,12 +142,12 @@ macro_rules! impl_parse_for_custom_punctuation {
 // Not public API.
 #[cfg(feature = "printing")]
 #[doc(hidden)]
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! impl_to_tokens_for_custom_punctuation {
     ($ident:ident, $($tt:tt)+) => {
         impl $crate::export::ToTokens for $ident {
             fn to_tokens(&self, tokens: &mut $crate::export::TokenStream2) {
-                $crate::token::printing::punct(stringify_punct!($($tt)+), &self.spans, tokens)
+                $crate::token::printing::punct($crate::stringify_punct!($($tt)+), &self.spans, tokens)
             }
         }
     };
@@ -221,16 +221,16 @@ macro_rules! impl_extra_traits_for_custom_punctuation {
 
 // Not public API.
 #[doc(hidden)]
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! custom_punctuation_repr {
     ($($tt:tt)+) => {
-        [$crate::export::Span; 0 $(+ custom_punctuation_len!(lenient, $tt))+]
+        [$crate::export::Span; 0 $(+ $crate::custom_punctuation_len!(lenient, $tt))+]
     };
 }
 
 // Not public API.
 #[doc(hidden)]
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[rustfmt::skip]
 macro_rules! custom_punctuation_len {
     ($mode:ident, +)     => { 1 };
@@ -279,7 +279,7 @@ macro_rules! custom_punctuation_len {
     ($mode:ident, -=)    => { 2 };
     ($mode:ident, ~)     => { 1 };
     (lenient, $tt:tt)    => { 0 };
-    (strict, $tt:tt)     => {{ custom_punctuation_unexpected!($tt); 0 }};
+    (strict, $tt:tt)     => {{ $crate::custom_punctuation_unexpected!($tt); 0 }};
 }
 
 // Not public API.
@@ -295,15 +295,5 @@ macro_rules! custom_punctuation_unexpected {
 macro_rules! stringify_punct {
     ($($tt:tt)+) => {
         concat!($(stringify!($tt)),+)
-    };
-}
-
-// Not public API.
-// Without this, local_inner_macros breaks when looking for concat!
-#[doc(hidden)]
-#[macro_export]
-macro_rules! custom_punctuation_concat {
-    ($($tt:tt)*) => {
-        concat!($($tt)*)
     };
 }

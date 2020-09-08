@@ -9,15 +9,11 @@ use proc_macro2::TokenStream;
 use crate::parse::{Parse, ParseBuffer, ParseStream, Parser, Result};
 #[cfg(feature = "parsing")]
 use crate::punctuated::Pair;
-#[cfg(feature = "extra-traits")]
-use crate::tt::TokenStreamHelper;
-#[cfg(feature = "extra-traits")]
-use std::hash::{Hash, Hasher};
 
 ast_struct! {
     /// An attribute like `#[repr(transparent)]`.
     ///
-    /// *This type is available if Syn is built with the `"derive"` or `"full"`
+    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
     /// feature.*
     ///
     /// <br>
@@ -111,7 +107,46 @@ ast_struct! {
     ///
     /// [`parse_meta()`]: Attribute::parse_meta
     /// [`parse_args()`]: Attribute::parse_args
-    pub struct Attribute #manual_extra_traits {
+    ///
+    /// <p><br></p>
+    ///
+    /// # Doc comments
+    ///
+    /// The compiler transforms doc comments, such as `/// comment` and `/*!
+    /// comment */`, into attributes before macros are expanded. Each comment is
+    /// expanded into an attribute of the form `#[doc = r"comment"]`.
+    ///
+    /// As an example, the following `mod` items are expanded identically:
+    ///
+    /// ```
+    /// # use syn::{ItemMod, parse_quote};
+    /// let doc: ItemMod = parse_quote! {
+    ///     /// Single line doc comments
+    ///     /// We write so many!
+    ///     /**
+    ///      * Multi-line comments...
+    ///      * May span many lines
+    ///      */
+    ///     mod example {
+    ///         //! Of course, they can be inner too
+    ///         /*! And fit in a single line */
+    ///     }
+    /// };
+    /// let attr: ItemMod = parse_quote! {
+    ///     #[doc = r" Single line doc comments"]
+    ///     #[doc = r" We write so many!"]
+    ///     #[doc = r"
+    ///      * Multi-line comments...
+    ///      * May span many lines
+    ///      "]
+    ///     mod example {
+    ///         #![doc = r" Of course, they can be inner too"]
+    ///         #![doc = r" And fit in a single line "]
+    ///     }
+    /// };
+    /// assert_eq!(doc, attr);
+    /// ```
+    pub struct Attribute {
         pub pound_token: Token![#],
         pub style: AttrStyle,
         pub bracket_token: token::Bracket,
@@ -120,39 +155,11 @@ ast_struct! {
     }
 }
 
-#[cfg(feature = "extra-traits")]
-impl Eq for Attribute {}
-
-#[cfg(feature = "extra-traits")]
-impl PartialEq for Attribute {
-    fn eq(&self, other: &Self) -> bool {
-        self.style == other.style
-            && self.pound_token == other.pound_token
-            && self.bracket_token == other.bracket_token
-            && self.path == other.path
-            && TokenStreamHelper(&self.tokens) == TokenStreamHelper(&other.tokens)
-    }
-}
-
-#[cfg(feature = "extra-traits")]
-impl Hash for Attribute {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.style.hash(state);
-        self.pound_token.hash(state);
-        self.bracket_token.hash(state);
-        self.path.hash(state);
-        TokenStreamHelper(&self.tokens).hash(state);
-    }
-}
-
 impl Attribute {
     /// Parses the content of the attribute, consisting of the path and tokens,
     /// as a [`Meta`] if possible.
     ///
-    /// *This function is available if Syn is built with the `"parsing"`
+    /// *This function is available only if Syn is built with the `"parsing"`
     /// feature.*
     #[cfg(feature = "parsing")]
     pub fn parse_meta(&self) -> Result<Meta> {
@@ -199,7 +206,7 @@ impl Attribute {
     ///           ^^^^^^^^^ what gets parsed
     /// ```
     ///
-    /// *This function is available if Syn is built with the `"parsing"`
+    /// *This function is available only if Syn is built with the `"parsing"`
     /// feature.*
     #[cfg(feature = "parsing")]
     pub fn parse_args<T: Parse>(&self) -> Result<T> {
@@ -208,7 +215,7 @@ impl Attribute {
 
     /// Parse the arguments to the attribute using the given parser.
     ///
-    /// *This function is available if Syn is built with the `"parsing"`
+    /// *This function is available only if Syn is built with the `"parsing"`
     /// feature.*
     #[cfg(feature = "parsing")]
     pub fn parse_args_with<F: Parser>(&self, parser: F) -> Result<F::Output> {
@@ -221,7 +228,7 @@ impl Attribute {
 
     /// Parses zero or more outer attributes from the stream.
     ///
-    /// *This function is available if Syn is built with the `"parsing"`
+    /// *This function is available only if Syn is built with the `"parsing"`
     /// feature.*
     #[cfg(feature = "parsing")]
     pub fn parse_outer(input: ParseStream) -> Result<Vec<Self>> {
@@ -234,7 +241,7 @@ impl Attribute {
 
     /// Parses zero or more inner attributes from the stream.
     ///
-    /// *This function is available if Syn is built with the `"parsing"`
+    /// *This function is available only if Syn is built with the `"parsing"`
     /// feature.*
     #[cfg(feature = "parsing")]
     pub fn parse_inner(input: ParseStream) -> Result<Vec<Self>> {
@@ -247,7 +254,7 @@ impl Attribute {
 }
 
 #[cfg(feature = "parsing")]
-fn error_expected_args(attr: &Attribute) -> Error {
+fn expected_parentheses(attr: &Attribute) -> String {
     let style = match attr.style {
         AttrStyle::Outer => "#",
         AttrStyle::Inner(_) => "#!",
@@ -261,19 +268,23 @@ fn error_expected_args(attr: &Attribute) -> Error {
         path += &segment.ident.to_string();
     }
 
-    let msg = format!("expected attribute arguments: {}[{}(...)]", style, path);
-
-    #[cfg(feature = "printing")]
-    return Error::new_spanned(attr, msg);
-
-    #[cfg(not(feature = "printing"))]
-    return Error::new(attr.bracket_token.span, msg);
+    format!("{}[{}(...)]", style, path)
 }
 
 #[cfg(feature = "parsing")]
 fn enter_args<'a>(attr: &Attribute, input: ParseStream<'a>) -> Result<ParseBuffer<'a>> {
     if input.is_empty() {
-        return Err(error_expected_args(attr));
+        let expected = expected_parentheses(attr);
+        let msg = format!("expected attribute arguments in parentheses: {}", expected);
+        return Err(crate::error::new2(
+            attr.pound_token.span,
+            attr.bracket_token.span,
+            msg,
+        ));
+    } else if input.peek(Token![=]) {
+        let expected = expected_parentheses(attr);
+        let msg = format!("expected parentheses: {}", expected);
+        return Err(input.error(msg));
     };
 
     let content;
@@ -298,7 +309,7 @@ ast_enum! {
     /// Distinguishes between attributes that decorate an item and attributes
     /// that are contained within an item.
     ///
-    /// *This type is available if Syn is built with the `"derive"` or `"full"`
+    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
     /// feature.*
     ///
     /// # Outer attributes
@@ -312,7 +323,6 @@ ast_enum! {
     /// - `#![feature(proc_macro)]`
     /// - `//! # Example`
     /// - `/*! Please file an issue */`
-    #[cfg_attr(feature = "clone-impls", derive(Copy))]
     pub enum AttrStyle {
         Outer,
         Inner(Token![!]),
@@ -322,7 +332,7 @@ ast_enum! {
 ast_enum_of_structs! {
     /// Content of a compile-time structured attribute.
     ///
-    /// *This type is available if Syn is built with the `"derive"` or `"full"`
+    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
     /// feature.*
     ///
     /// ## Path
@@ -360,7 +370,7 @@ ast_enum_of_structs! {
 ast_struct! {
     /// A structured list within an attribute, like `derive(Copy, Clone)`.
     ///
-    /// *This type is available if Syn is built with the `"derive"` or
+    /// *This type is available only if Syn is built with the `"derive"` or
     /// `"full"` feature.*
     pub struct MetaList {
         pub path: Path,
@@ -372,7 +382,7 @@ ast_struct! {
 ast_struct! {
     /// A name-value pair within an attribute, like `feature = "nightly"`.
     ///
-    /// *This type is available if Syn is built with the `"derive"` or
+    /// *This type is available only if Syn is built with the `"derive"` or
     /// `"full"` feature.*
     pub struct MetaNameValue {
         pub path: Path,
@@ -398,7 +408,7 @@ impl Meta {
 ast_enum_of_structs! {
     /// Element of a compile-time attribute list.
     ///
-    /// *This type is available if Syn is built with the `"derive"` or `"full"`
+    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
     /// feature.*
     pub enum NestedMeta {
         /// A structured meta item, like the `Copy` in `#[derive(Copy)]` which
@@ -429,8 +439,8 @@ ast_enum_of_structs! {
 /// as type `AttributeArgs`.
 ///
 /// ```
-/// extern crate proc_macro;
-///
+/// # extern crate proc_macro;
+/// #
 /// use proc_macro::TokenStream;
 /// use syn::{parse_macro_input, AttributeArgs, ItemFn};
 ///
@@ -464,7 +474,7 @@ where
         fn is_outer(attr: &&Attribute) -> bool {
             match attr.style {
                 AttrStyle::Outer => true,
-                _ => false,
+                AttrStyle::Inner(_) => false,
             }
         }
         self.into_iter().filter(is_outer)
@@ -474,7 +484,7 @@ where
         fn is_inner(attr: &&Attribute) -> bool {
             match attr.style {
                 AttrStyle::Inner(_) => true,
-                _ => false,
+                AttrStyle::Outer => false,
             }
         }
         self.into_iter().filter(is_inner)

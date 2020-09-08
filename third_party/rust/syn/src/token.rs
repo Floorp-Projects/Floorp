@@ -88,7 +88,6 @@
 //! [Printing]: https://docs.rs/quote/1.0/quote/trait.ToTokens.html
 //! [`Span`]: https://docs.rs/proc-macro2/1.0/proc_macro2/struct.Span.html
 
-use std;
 #[cfg(feature = "extra-traits")]
 use std::cmp;
 #[cfg(feature = "extra-traits")]
@@ -97,13 +96,13 @@ use std::fmt::{self, Debug};
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
 
-#[cfg(feature = "parsing")]
-use proc_macro2::Delimiter;
 #[cfg(any(feature = "parsing", feature = "printing"))]
 use proc_macro2::Ident;
 use proc_macro2::Span;
 #[cfg(feature = "printing")]
 use proc_macro2::TokenStream;
+#[cfg(feature = "parsing")]
+use proc_macro2::{Delimiter, Literal, Punct, TokenTree};
 #[cfg(feature = "printing")]
 use quote::{ToTokens, TokenStreamExt};
 
@@ -112,10 +111,8 @@ use self::private::WithSpan;
 use crate::buffer::Cursor;
 #[cfg(feature = "parsing")]
 use crate::error::Result;
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "parsing")]
 use crate::lifetime::Lifetime;
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "parsing")]
 use crate::lit::{Lit, LitBool, LitByte, LitByteStr, LitChar, LitFloat, LitInt, LitStr};
 #[cfg(feature = "parsing")]
@@ -155,21 +152,20 @@ mod private {
 #[cfg(feature = "parsing")]
 impl private::Sealed for Ident {}
 
-#[cfg(any(feature = "full", feature = "derive"))]
 #[cfg(feature = "parsing")]
 fn peek_impl(cursor: Cursor, peek: fn(ParseStream) -> bool) -> bool {
+    use crate::parse::Unexpected;
     use std::cell::Cell;
     use std::rc::Rc;
 
     let scope = Span::call_site();
-    let unexpected = Rc::new(Cell::new(None));
+    let unexpected = Rc::new(Cell::new(Unexpected::None));
     let buffer = crate::parse::new_parse_buffer(scope, cursor, unexpected);
     peek(&buffer)
 }
 
-#[cfg(any(feature = "full", feature = "derive"))]
 macro_rules! impl_token {
-    ($name:ident $display:expr) => {
+    ($display:tt $name:ty) => {
         #[cfg(feature = "parsing")]
         impl Token for $name {
             fn peek(cursor: Cursor) -> bool {
@@ -189,24 +185,38 @@ macro_rules! impl_token {
     };
 }
 
-#[cfg(any(feature = "full", feature = "derive"))]
-impl_token!(Lifetime "lifetime");
-#[cfg(any(feature = "full", feature = "derive"))]
-impl_token!(Lit "literal");
-#[cfg(any(feature = "full", feature = "derive"))]
-impl_token!(LitStr "string literal");
-#[cfg(any(feature = "full", feature = "derive"))]
-impl_token!(LitByteStr "byte string literal");
-#[cfg(any(feature = "full", feature = "derive"))]
-impl_token!(LitByte "byte literal");
-#[cfg(any(feature = "full", feature = "derive"))]
-impl_token!(LitChar "character literal");
-#[cfg(any(feature = "full", feature = "derive"))]
-impl_token!(LitInt "integer literal");
-#[cfg(any(feature = "full", feature = "derive"))]
-impl_token!(LitFloat "floating point literal");
-#[cfg(any(feature = "full", feature = "derive"))]
-impl_token!(LitBool "boolean literal");
+impl_token!("lifetime" Lifetime);
+impl_token!("literal" Lit);
+impl_token!("string literal" LitStr);
+impl_token!("byte string literal" LitByteStr);
+impl_token!("byte literal" LitByte);
+impl_token!("character literal" LitChar);
+impl_token!("integer literal" LitInt);
+impl_token!("floating point literal" LitFloat);
+impl_token!("boolean literal" LitBool);
+impl_token!("group token" proc_macro2::Group);
+
+macro_rules! impl_low_level_token {
+    ($display:tt $ty:ident $get:ident) => {
+        #[cfg(feature = "parsing")]
+        impl Token for $ty {
+            fn peek(cursor: Cursor) -> bool {
+                cursor.$get().is_some()
+            }
+
+            fn display() -> &'static str {
+                $display
+            }
+        }
+
+        #[cfg(feature = "parsing")]
+        impl private::Sealed for $ty {}
+    };
+}
+
+impl_low_level_token!("punctuation token" Punct punct);
+impl_low_level_token!("literal" Literal literal);
+impl_low_level_token!("token" TokenTree token_tree);
 
 // Not public API.
 #[doc(hidden)]
@@ -233,7 +243,6 @@ impl<T: CustomToken> Token for T {
 macro_rules! define_keywords {
     ($($token:tt pub struct $name:ident #[$doc:meta])*) => {
         $(
-            #[cfg_attr(feature = "clone-impls", derive(Copy, Clone))]
             #[$doc]
             ///
             /// Don't try to remember the name of this type &mdash; use the
@@ -257,6 +266,16 @@ macro_rules! define_keywords {
                     $name {
                         span: Span::call_site(),
                     }
+                }
+            }
+
+            #[cfg(feature = "clone-impls")]
+            impl Copy for $name {}
+
+            #[cfg(feature = "clone-impls")]
+            impl Clone for $name {
+                fn clone(&self) -> Self {
+                    *self
                 }
             }
 
@@ -338,7 +357,6 @@ macro_rules! impl_deref_if_len_is_1 {
 macro_rules! define_punctuation_structs {
     ($($token:tt pub struct $name:ident/$len:tt #[$doc:meta])*) => {
         $(
-            #[cfg_attr(feature = "clone-impls", derive(Copy, Clone))]
             #[repr(C)]
             #[$doc]
             ///
@@ -363,6 +381,16 @@ macro_rules! define_punctuation_structs {
                     $name {
                         spans: [Span::call_site(); $len],
                     }
+                }
+            }
+
+            #[cfg(feature = "clone-impls")]
+            impl Copy for $name {}
+
+            #[cfg(feature = "clone-impls")]
+            impl Clone for $name {
+                fn clone(&self) -> Self {
+                    *self
                 }
             }
 
@@ -436,7 +464,6 @@ macro_rules! define_punctuation {
 macro_rules! define_delimiters {
     ($($token:tt pub struct $name:ident #[$doc:meta])*) => {
         $(
-            #[cfg_attr(feature = "clone-impls", derive(Copy, Clone))]
             #[$doc]
             pub struct $name {
                 pub span: Span,
@@ -455,6 +482,16 @@ macro_rules! define_delimiters {
                     $name {
                         span: Span::call_site(),
                     }
+                }
+            }
+
+            #[cfg(feature = "clone-impls")]
+            impl Copy for $name {}
+
+            #[cfg(feature = "clone-impls")]
+            impl Clone for $name {
+                fn clone(&self) -> Self {
+                    *self
                 }
             }
 
@@ -855,7 +892,7 @@ pub mod parsing {
     }
 
     pub fn punct<S: FromSpans>(input: ParseStream, token: &str) -> Result<S> {
-        let mut spans = [input.cursor().span(); 3];
+        let mut spans = [input.span(); 3];
         punct_helper(input, token, &mut spans)?;
         Ok(S::from_spans(&spans))
     }

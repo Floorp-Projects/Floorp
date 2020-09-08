@@ -2,7 +2,7 @@
 // It is not intended for manual editing.
 
 use super::{Lite, RefCast};
-use std::fmt::{self, Debug};
+use std::fmt::{self, Debug, Display};
 impl Debug for Lite<syn::Abi> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         let _val = &self.value;
@@ -1039,9 +1039,9 @@ impl Debug for Lite<syn::Expr> {
             }
             syn::Expr::Verbatim(_val) => {
                 formatter.write_str("Verbatim")?;
-                formatter.write_str("(")?;
-                Debug::fmt(Lite(_val), formatter)?;
-                formatter.write_str(")")?;
+                formatter.write_str("(`")?;
+                Display::fmt(_val, formatter)?;
+                formatter.write_str("`)")?;
                 Ok(())
             }
             syn::Expr::While(_val) => {
@@ -2116,9 +2116,9 @@ impl Debug for Lite<syn::ForeignItem> {
             }
             syn::ForeignItem::Verbatim(_val) => {
                 formatter.write_str("Verbatim")?;
-                formatter.write_str("(")?;
-                Debug::fmt(Lite(_val), formatter)?;
-                formatter.write_str(")")?;
+                formatter.write_str("(`")?;
+                Display::fmt(_val, formatter)?;
+                formatter.write_str("`)")?;
                 Ok(())
             }
             _ => unreachable!(),
@@ -2432,9 +2432,9 @@ impl Debug for Lite<syn::ImplItem> {
             }
             syn::ImplItem::Verbatim(_val) => {
                 formatter.write_str("Verbatim")?;
-                formatter.write_str("(")?;
-                Debug::fmt(Lite(_val), formatter)?;
-                formatter.write_str(")")?;
+                formatter.write_str("(`")?;
+                Display::fmt(_val, formatter)?;
+                formatter.write_str("`)")?;
                 Ok(())
             }
             _ => unreachable!(),
@@ -2940,9 +2940,9 @@ impl Debug for Lite<syn::Item> {
             }
             syn::Item::Verbatim(_val) => {
                 formatter.write_str("Verbatim")?;
-                formatter.write_str("(")?;
-                Debug::fmt(Lite(_val), formatter)?;
-                formatter.write_str(")")?;
+                formatter.write_str("(`")?;
+                Display::fmt(_val, formatter)?;
+                formatter.write_str("`)")?;
                 Ok(())
             }
             _ => unreachable!(),
@@ -3437,9 +3437,9 @@ impl Debug for Lite<syn::Lit> {
             }
             syn::Lit::Verbatim(_val) => {
                 formatter.write_str("Verbatim")?;
-                formatter.write_str("(")?;
-                Debug::fmt(Lite(_val), formatter)?;
-                formatter.write_str(")")?;
+                formatter.write_str("(`")?;
+                Display::fmt(_val, formatter)?;
+                formatter.write_str("`)")?;
                 Ok(())
             }
         }
@@ -3878,9 +3878,9 @@ impl Debug for Lite<syn::Pat> {
             }
             syn::Pat::Verbatim(_val) => {
                 formatter.write_str("Verbatim")?;
-                formatter.write_str("(")?;
-                Debug::fmt(Lite(_val), formatter)?;
-                formatter.write_str(")")?;
+                formatter.write_str("(`")?;
+                Display::fmt(_val, formatter)?;
+                formatter.write_str("`)")?;
                 Ok(())
             }
             syn::Pat::Wild(_val) => {
@@ -4674,9 +4674,9 @@ impl Debug for Lite<syn::TraitItem> {
             }
             syn::TraitItem::Verbatim(_val) => {
                 formatter.write_str("Verbatim")?;
-                formatter.write_str("(")?;
-                Debug::fmt(Lite(_val), formatter)?;
-                formatter.write_str(")")?;
+                formatter.write_str("(`")?;
+                Display::fmt(_val, formatter)?;
+                formatter.write_str("`)")?;
                 Ok(())
             }
             _ => unreachable!(),
@@ -5040,9 +5040,9 @@ impl Debug for Lite<syn::Type> {
             }
             syn::Type::Verbatim(_val) => {
                 formatter.write_str("Verbatim")?;
-                formatter.write_str("(")?;
-                Debug::fmt(Lite(_val), formatter)?;
-                formatter.write_str(")")?;
+                formatter.write_str("(`")?;
+                Display::fmt(_val, formatter)?;
+                formatter.write_str("`)")?;
                 Ok(())
             }
             _ => unreachable!(),

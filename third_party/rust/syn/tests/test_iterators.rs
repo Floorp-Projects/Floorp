@@ -1,10 +1,5 @@
 use syn::punctuated::{Pair, Punctuated};
-
-extern crate quote;
-#[macro_use]
-extern crate syn;
-
-mod features;
+use syn::Token;
 
 #[macro_use]
 mod macros;

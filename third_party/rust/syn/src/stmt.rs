@@ -3,7 +3,7 @@ use super::*;
 ast_struct! {
     /// A braced block containing Rust statements.
     ///
-    /// *This type is available if Syn is built with the `"full"` feature.*
+    /// *This type is available only if Syn is built with the `"full"` feature.*
     pub struct Block {
         pub brace_token: token::Brace,
         /// Statements in a block
@@ -14,7 +14,7 @@ ast_struct! {
 ast_enum! {
     /// A statement, usually ending in a semicolon.
     ///
-    /// *This type is available if Syn is built with the `"full"` feature.*
+    /// *This type is available only if Syn is built with the `"full"` feature.*
     pub enum Stmt {
         /// A local (let) binding.
         Local(Local),
@@ -33,7 +33,7 @@ ast_enum! {
 ast_struct! {
     /// A local `let` binding: `let x: u64 = s.parse()?`.
     ///
-    /// *This type is available if Syn is built with the `"full"` feature.*
+    /// *This type is available only if Syn is built with the `"full"` feature.*
     pub struct Local {
         pub attrs: Vec<Attribute>,
         pub let_token: Token![let],
@@ -47,14 +47,15 @@ ast_struct! {
 pub mod parsing {
     use super::*;
 
+    use crate::parse::discouraged::Speculative;
     use crate::parse::{Parse, ParseStream, Result};
-    use crate::punctuated::Punctuated;
+    use proc_macro2::TokenStream;
 
     impl Block {
         /// Parse the body of a block as zero or more statements, possibly
         /// including one trailing expression.
         ///
-        /// *This function is available if Syn is built with the `"parsing"`
+        /// *This function is available only if Syn is built with the `"parsing"`
         /// feature.*
         ///
         /// # Example
@@ -106,8 +107,8 @@ pub mod parsing {
         pub fn parse_within(input: ParseStream) -> Result<Vec<Stmt>> {
             let mut stmts = Vec::new();
             loop {
-                while input.peek(Token![;]) {
-                    input.parse::<Token![;]>()?;
+                while let Some(semi) = input.parse::<Option<Token![;]>>()? {
+                    stmts.push(Stmt::Semi(Expr::Verbatim(TokenStream::new()), semi));
                 }
                 if input.is_empty() {
                     break;
@@ -146,55 +147,55 @@ pub mod parsing {
     }
 
     fn parse_stmt(input: ParseStream, allow_nosemi: bool) -> Result<Stmt> {
-        // TODO: optimize using advance_to
-        let ahead = input.fork();
-        ahead.call(Attribute::parse_outer)?;
+        let mut attrs = input.call(Attribute::parse_outer)?;
 
-        if {
-            let ahead = ahead.fork();
-            // Only parse braces here; paren and bracket will get parsed as
-            // expression statements
-            ahead.call(Path::parse_mod_style).is_ok()
-                && ahead.parse::<Token![!]>().is_ok()
-                && (ahead.peek(token::Brace) || ahead.peek(Ident))
-        } {
-            stmt_mac(input)
-        } else if ahead.peek(Token![let]) {
-            stmt_local(input).map(Stmt::Local)
-        } else if ahead.peek(Token![pub])
-            || ahead.peek(Token![crate]) && !ahead.peek2(Token![::])
-            || ahead.peek(Token![extern]) && !ahead.peek2(Token![::])
-            || ahead.peek(Token![use])
-            || ahead.peek(Token![static]) && (ahead.peek2(Token![mut]) || ahead.peek2(Ident))
-            || ahead.peek(Token![const])
-            || ahead.peek(Token![unsafe]) && !ahead.peek2(token::Brace)
-            || ahead.peek(Token![async])
-                && (ahead.peek2(Token![unsafe])
-                    || ahead.peek2(Token![extern])
-                    || ahead.peek2(Token![fn]))
-            || ahead.peek(Token![fn])
-            || ahead.peek(Token![mod])
-            || ahead.peek(Token![type])
-            || ahead.peek(item::parsing::existential) && ahead.peek2(Token![type])
-            || ahead.peek(Token![struct])
-            || ahead.peek(Token![enum])
-            || ahead.peek(Token![union]) && ahead.peek2(Ident)
-            || ahead.peek(Token![auto]) && ahead.peek2(Token![trait])
-            || ahead.peek(Token![trait])
-            || ahead.peek(Token![default])
-                && (ahead.peek2(Token![unsafe]) || ahead.peek2(Token![impl]))
-            || ahead.peek(Token![impl])
-            || ahead.peek(Token![macro])
+        // brace-style macros; paren and bracket macros get parsed as
+        // expression statements.
+        let ahead = input.fork();
+        if let Ok(path) = ahead.call(Path::parse_mod_style) {
+            if ahead.peek(Token![!]) && (ahead.peek2(token::Brace) || ahead.peek2(Ident)) {
+                input.advance_to(&ahead);
+                return stmt_mac(input, attrs, path);
+            }
+        }
+
+        if input.peek(Token![let]) {
+            stmt_local(input, attrs).map(Stmt::Local)
+        } else if input.peek(Token![pub])
+            || input.peek(Token![crate]) && !input.peek2(Token![::])
+            || input.peek(Token![extern])
+            || input.peek(Token![use])
+            || input.peek(Token![static]) && (input.peek2(Token![mut]) || input.peek2(Ident))
+            || input.peek(Token![const])
+            || input.peek(Token![unsafe]) && !input.peek2(token::Brace)
+            || input.peek(Token![async])
+                && (input.peek2(Token![unsafe])
+                    || input.peek2(Token![extern])
+                    || input.peek2(Token![fn]))
+            || input.peek(Token![fn])
+            || input.peek(Token![mod])
+            || input.peek(Token![type])
+            || input.peek(item::parsing::existential) && input.peek2(Token![type])
+            || input.peek(Token![struct])
+            || input.peek(Token![enum])
+            || input.peek(Token![union]) && input.peek2(Ident)
+            || input.peek(Token![auto]) && input.peek2(Token![trait])
+            || input.peek(Token![trait])
+            || input.peek(Token![default])
+                && (input.peek2(Token![unsafe]) || input.peek2(Token![impl]))
+            || input.peek(Token![impl])
+            || input.peek(Token![macro])
         {
-            input.parse().map(Stmt::Item)
+            let mut item: Item = input.parse()?;
+            attrs.extend(item.replace_attrs(Vec::new()));
+            item.replace_attrs(attrs);
+            Ok(Stmt::Item(item))
         } else {
-            stmt_expr(input, allow_nosemi)
+            stmt_expr(input, allow_nosemi, attrs)
         }
     }
 
-    fn stmt_mac(input: ParseStream) -> Result<Stmt> {
-        let attrs = input.call(Attribute::parse_outer)?;
-        let path = input.call(Path::parse_mod_style)?;
+    fn stmt_mac(input: ParseStream, attrs: Vec<Attribute>, path: Path) -> Result<Stmt> {
         let bang_token: Token![!] = input.parse()?;
         let ident: Option<Ident> = input.parse()?;
         let (delimiter, tokens) = mac::parse_delimiter(input)?;
@@ -213,33 +214,12 @@ pub mod parsing {
         })))
     }
 
-    fn stmt_local(input: ParseStream) -> Result<Local> {
+    fn stmt_local(input: ParseStream, attrs: Vec<Attribute>) -> Result<Local> {
         Ok(Local {
-            attrs: input.call(Attribute::parse_outer)?,
+            attrs,
             let_token: input.parse()?,
             pat: {
-                let leading_vert: Option<Token![|]> = input.parse()?;
-                let mut pat: Pat = input.parse()?;
-                if leading_vert.is_some()
-                    || input.peek(Token![|]) && !input.peek(Token![||]) && !input.peek(Token![|=])
-                {
-                    let mut cases = Punctuated::new();
-                    cases.push_value(pat);
-                    while input.peek(Token![|])
-                        && !input.peek(Token![||])
-                        && !input.peek(Token![|=])
-                    {
-                        let punct = input.parse()?;
-                        cases.push_punct(punct);
-                        let pat: Pat = input.parse()?;
-                        cases.push_value(pat);
-                    }
-                    pat = Pat::Or(PatOr {
-                        attrs: Vec::new(),
-                        leading_vert,
-                        cases,
-                    });
-                }
+                let mut pat: Pat = pat::parsing::multi_pat_with_leading_vert(input)?;
                 if input.peek(Token![:]) {
                     let colon_token: Token![:] = input.parse()?;
                     let ty: Type = input.parse()?;
@@ -265,12 +245,19 @@ pub mod parsing {
         })
     }
 
-    fn stmt_expr(input: ParseStream, allow_nosemi: bool) -> Result<Stmt> {
-        let mut attrs = input.call(Attribute::parse_outer)?;
+    fn stmt_expr(
+        input: ParseStream,
+        allow_nosemi: bool,
+        mut attrs: Vec<Attribute>,
+    ) -> Result<Stmt> {
         let mut e = expr::parsing::expr_early(input)?;
 
-        attrs.extend(e.replace_attrs(Vec::new()));
-        e.replace_attrs(attrs);
+        let mut attr_target = &mut e;
+        while let Expr::Binary(e) = attr_target {
+            attr_target = &mut e.left;
+        }
+        attrs.extend(attr_target.replace_attrs(Vec::new()));
+        attr_target.replace_attrs(attrs);
 
         if input.peek(Token![;]) {
             return Ok(Stmt::Semi(e, input.parse()?));

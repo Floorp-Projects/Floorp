@@ -1,7 +1,3 @@
-extern crate syn;
-
-mod features;
-
 #[macro_use]
 mod macros;
 
@@ -12,14 +8,14 @@ fn test_parse_meta_item_word() {
     let input = "hello";
 
     snapshot!(input as Meta, @r###"
-   ⋮Path(Path {
-   ⋮    segments: [
-   ⋮        PathSegment {
-   ⋮            ident: "hello",
-   ⋮            arguments: None,
-   ⋮        },
-   ⋮    ],
-   ⋮})
+    Path(Path {
+        segments: [
+            PathSegment {
+                ident: "hello",
+                arguments: None,
+            },
+        ],
+    })
     "###);
 }
 
@@ -29,31 +25,31 @@ fn test_parse_meta_name_value() {
     let (inner, meta) = (input, input);
 
     snapshot!(inner as MetaNameValue, @r###"
-   ⋮MetaNameValue {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "foo",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    lit: 5,
-   ⋮}
+    MetaNameValue {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "foo",
+                    arguments: None,
+                },
+            ],
+        },
+        lit: 5,
+    }
     "###);
 
     snapshot!(meta as Meta, @r###"
-   ⋮Meta::NameValue {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "foo",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    lit: 5,
-   ⋮}
+    Meta::NameValue {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "foo",
+                    arguments: None,
+                },
+            ],
+        },
+        lit: 5,
+    }
     "###);
 
     assert_eq!(meta, inner.into());
@@ -65,31 +61,31 @@ fn test_parse_meta_name_value_with_keyword() {
     let (inner, meta) = (input, input);
 
     snapshot!(inner as MetaNameValue, @r###"
-   ⋮MetaNameValue {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "static",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    lit: 5,
-   ⋮}
+    MetaNameValue {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "static",
+                    arguments: None,
+                },
+            ],
+        },
+        lit: 5,
+    }
     "###);
 
     snapshot!(meta as Meta, @r###"
-   ⋮Meta::NameValue {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "static",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    lit: 5,
-   ⋮}
+    Meta::NameValue {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "static",
+                    arguments: None,
+                },
+            ],
+        },
+        lit: 5,
+    }
     "###);
 
     assert_eq!(meta, inner.into());
@@ -101,31 +97,31 @@ fn test_parse_meta_name_value_with_bool() {
     let (inner, meta) = (input, input);
 
     snapshot!(inner as MetaNameValue, @r###"
-   ⋮MetaNameValue {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "true",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    lit: 5,
-   ⋮}
+    MetaNameValue {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "true",
+                    arguments: None,
+                },
+            ],
+        },
+        lit: 5,
+    }
     "###);
 
     snapshot!(meta as Meta, @r###"
-   ⋮Meta::NameValue {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "true",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    lit: 5,
-   ⋮}
+    Meta::NameValue {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "true",
+                    arguments: None,
+                },
+            ],
+        },
+        lit: 5,
+    }
     "###);
 
     assert_eq!(meta, inner.into());
@@ -137,35 +133,35 @@ fn test_parse_meta_item_list_lit() {
     let (inner, meta) = (input, input);
 
     snapshot!(inner as MetaList, @r###"
-   ⋮MetaList {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "foo",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    nested: [
-   ⋮        Lit(5),
-   ⋮    ],
-   ⋮}
+    MetaList {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "foo",
+                    arguments: None,
+                },
+            ],
+        },
+        nested: [
+            Lit(5),
+        ],
+    }
     "###);
 
     snapshot!(meta as Meta, @r###"
-   ⋮Meta::List {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "foo",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    nested: [
-   ⋮        Lit(5),
-   ⋮    ],
-   ⋮}
+    Meta::List {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "foo",
+                    arguments: None,
+                },
+            ],
+        },
+        nested: [
+            Lit(5),
+        ],
+    }
     "###);
 
     assert_eq!(meta, inner.into());
@@ -177,133 +173,133 @@ fn test_parse_meta_item_multiple() {
     let (inner, meta) = (input, input);
 
     snapshot!(inner as MetaList, @r###"
-   ⋮MetaList {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "foo",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    nested: [
-   ⋮        Meta(Path(Path {
-   ⋮            segments: [
-   ⋮                PathSegment {
-   ⋮                    ident: "word",
-   ⋮                    arguments: None,
-   ⋮                },
-   ⋮            ],
-   ⋮        })),
-   ⋮        Meta(Meta::NameValue {
-   ⋮            path: Path {
-   ⋮                segments: [
-   ⋮                    PathSegment {
-   ⋮                        ident: "name",
-   ⋮                        arguments: None,
-   ⋮                    },
-   ⋮                ],
-   ⋮            },
-   ⋮            lit: 5,
-   ⋮        }),
-   ⋮        Meta(Meta::List {
-   ⋮            path: Path {
-   ⋮                segments: [
-   ⋮                    PathSegment {
-   ⋮                        ident: "list",
-   ⋮                        arguments: None,
-   ⋮                    },
-   ⋮                ],
-   ⋮            },
-   ⋮            nested: [
-   ⋮                Meta(Meta::NameValue {
-   ⋮                    path: Path {
-   ⋮                        segments: [
-   ⋮                            PathSegment {
-   ⋮                                ident: "name2",
-   ⋮                                arguments: None,
-   ⋮                            },
-   ⋮                        ],
-   ⋮                    },
-   ⋮                    lit: 6,
-   ⋮                }),
-   ⋮            ],
-   ⋮        }),
-   ⋮        Meta(Path(Path {
-   ⋮            segments: [
-   ⋮                PathSegment {
-   ⋮                    ident: "word2",
-   ⋮                    arguments: None,
-   ⋮                },
-   ⋮            ],
-   ⋮        })),
-   ⋮    ],
-   ⋮}
+    MetaList {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "foo",
+                    arguments: None,
+                },
+            ],
+        },
+        nested: [
+            Meta(Path(Path {
+                segments: [
+                    PathSegment {
+                        ident: "word",
+                        arguments: None,
+                    },
+                ],
+            })),
+            Meta(Meta::NameValue {
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "name",
+                            arguments: None,
+                        },
+                    ],
+                },
+                lit: 5,
+            }),
+            Meta(Meta::List {
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "list",
+                            arguments: None,
+                        },
+                    ],
+                },
+                nested: [
+                    Meta(Meta::NameValue {
+                        path: Path {
+                            segments: [
+                                PathSegment {
+                                    ident: "name2",
+                                    arguments: None,
+                                },
+                            ],
+                        },
+                        lit: 6,
+                    }),
+                ],
+            }),
+            Meta(Path(Path {
+                segments: [
+                    PathSegment {
+                        ident: "word2",
+                        arguments: None,
+                    },
+                ],
+            })),
+        ],
+    }
     "###);
 
     snapshot!(meta as Meta, @r###"
-   ⋮Meta::List {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "foo",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    nested: [
-   ⋮        Meta(Path(Path {
-   ⋮            segments: [
-   ⋮                PathSegment {
-   ⋮                    ident: "word",
-   ⋮                    arguments: None,
-   ⋮                },
-   ⋮            ],
-   ⋮        })),
-   ⋮        Meta(Meta::NameValue {
-   ⋮            path: Path {
-   ⋮                segments: [
-   ⋮                    PathSegment {
-   ⋮                        ident: "name",
-   ⋮                        arguments: None,
-   ⋮                    },
-   ⋮                ],
-   ⋮            },
-   ⋮            lit: 5,
-   ⋮        }),
-   ⋮        Meta(Meta::List {
-   ⋮            path: Path {
-   ⋮                segments: [
-   ⋮                    PathSegment {
-   ⋮                        ident: "list",
-   ⋮                        arguments: None,
-   ⋮                    },
-   ⋮                ],
-   ⋮            },
-   ⋮            nested: [
-   ⋮                Meta(Meta::NameValue {
-   ⋮                    path: Path {
-   ⋮                        segments: [
-   ⋮                            PathSegment {
-   ⋮                                ident: "name2",
-   ⋮                                arguments: None,
-   ⋮                            },
-   ⋮                        ],
-   ⋮                    },
-   ⋮                    lit: 6,
-   ⋮                }),
-   ⋮            ],
-   ⋮        }),
-   ⋮        Meta(Path(Path {
-   ⋮            segments: [
-   ⋮                PathSegment {
-   ⋮                    ident: "word2",
-   ⋮                    arguments: None,
-   ⋮                },
-   ⋮            ],
-   ⋮        })),
-   ⋮    ],
-   ⋮}
+    Meta::List {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "foo",
+                    arguments: None,
+                },
+            ],
+        },
+        nested: [
+            Meta(Path(Path {
+                segments: [
+                    PathSegment {
+                        ident: "word",
+                        arguments: None,
+                    },
+                ],
+            })),
+            Meta(Meta::NameValue {
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "name",
+                            arguments: None,
+                        },
+                    ],
+                },
+                lit: 5,
+            }),
+            Meta(Meta::List {
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "list",
+                            arguments: None,
+                        },
+                    ],
+                },
+                nested: [
+                    Meta(Meta::NameValue {
+                        path: Path {
+                            segments: [
+                                PathSegment {
+                                    ident: "name2",
+                                    arguments: None,
+                                },
+                            ],
+                        },
+                        lit: 6,
+                    }),
+                ],
+            }),
+            Meta(Path(Path {
+                segments: [
+                    PathSegment {
+                        ident: "word2",
+                        arguments: None,
+                    },
+                ],
+            })),
+        ],
+    }
     "###);
 
     assert_eq!(meta, inner.into());
@@ -316,28 +312,28 @@ fn test_parse_nested_meta() {
 
     let input = "list(name2 = 6)";
     snapshot!(input as NestedMeta, @r###"
-   ⋮Meta(Meta::List {
-   ⋮    path: Path {
-   ⋮        segments: [
-   ⋮            PathSegment {
-   ⋮                ident: "list",
-   ⋮                arguments: None,
-   ⋮            },
-   ⋮        ],
-   ⋮    },
-   ⋮    nested: [
-   ⋮        Meta(Meta::NameValue {
-   ⋮            path: Path {
-   ⋮                segments: [
-   ⋮                    PathSegment {
-   ⋮                        ident: "name2",
-   ⋮                        arguments: None,
-   ⋮                    },
-   ⋮                ],
-   ⋮            },
-   ⋮            lit: 6,
-   ⋮        }),
-   ⋮    ],
-   ⋮})
+    Meta(Meta::List {
+        path: Path {
+            segments: [
+                PathSegment {
+                    ident: "list",
+                    arguments: None,
+                },
+            ],
+        },
+        nested: [
+            Meta(Meta::NameValue {
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "name2",
+                            arguments: None,
+                        },
+                    ],
+                },
+                lit: 6,
+            }),
+        ],
+    })
     "###);
 }

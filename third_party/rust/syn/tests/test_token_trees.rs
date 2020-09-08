@@ -1,9 +1,3 @@
-extern crate proc_macro2;
-extern crate quote;
-extern crate syn;
-
-mod features;
-
 #[macro_use]
 mod macros;
 
@@ -21,7 +15,11 @@ fn test_struct() {
         }
     ";
 
-    snapshot!(input as TokenStream, @"`# [ derive ( Debug , Clone ) ] pub struct Item { pub ident : Ident , pub attrs : Vec < Attribute >, }`");
+    snapshot!(input as TokenStream, @r###"
+    TokenStream(
+        `# [derive (Debug , Clone)] pub struct Item { pub ident : Ident , pub attrs : Vec < Attribute >, }`,
+    )
+    "###);
 }
 
 #[test]

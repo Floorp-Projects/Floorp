@@ -4,35 +4,26 @@
 
 //! The tests in this module do the following:
 //!
-//! 1. Parse a given expression in both `syn` and `libsyntax`.
+//! 1. Parse a given expression in both `syn` and `librustc`.
 //! 2. Fold over the expression adding brackets around each subexpression (with
-//!    some complications - see the `syn_brackets` and `libsyntax_brackets`
+//!    some complications - see the `syn_brackets` and `librustc_brackets`
 //!    methods).
 //! 3. Serialize the `syn` expression back into a string, and re-parse it with
-//!    `libsyntax`.
+//!    `librustc`.
 //! 4. Respan all of the expressions, replacing the spans with the default
 //!    spans.
 //! 5. Compare the expressions with one another, if they are not equal fail.
 
-extern crate quote;
-extern crate rayon;
-extern crate regex;
+extern crate rustc_ast;
 extern crate rustc_data_structures;
-extern crate smallvec;
-extern crate syn;
-extern crate syntax;
-extern crate syntax_pos;
-extern crate walkdir;
-
-mod features;
+extern crate rustc_span;
 
 use quote::quote;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
-use smallvec::smallvec;
-use syntax::ast;
-use syntax::ptr::P;
-use syntax_pos::edition::Edition;
+use rustc_ast::ast;
+use rustc_ast::ptr::P;
+use rustc_span::edition::Edition;
 use walkdir::{DirEntry, WalkDir};
 
 use std::fs::File;
@@ -73,7 +64,7 @@ fn test_simple_precedence() {
             continue;
         };
 
-        let pf = match test_expressions(vec![expr]) {
+        let pf = match test_expressions(Edition::Edition2018, vec![expr]) {
             (1, 0) => "passed",
             (0, 1) => {
                 failed += 1;
@@ -91,8 +82,8 @@ fn test_simple_precedence() {
 
 /// Test expressions from rustc, like in `test_round_trip`.
 #[test]
-#[cfg_attr(target_os = "windows", ignore = "requires nix .sh")]
 fn test_rustc_precedence() {
+    common::rayon_init();
     repo::clone_rust();
     let abort_after = common::abort_after();
     if abort_after == 0 {
@@ -118,15 +109,6 @@ fn test_rustc_precedence() {
                 return;
             }
 
-            // Our version of `libsyntax` can't parse this tests
-            if path
-                .to_str()
-                .unwrap()
-                .ends_with("optional_comma_in_match_arm.rs")
-            {
-                return;
-            }
-
             let mut file = File::open(path).unwrap();
             let mut content = String::new();
             file.read_to_string(&mut content).unwrap();
@@ -134,8 +116,9 @@ fn test_rustc_precedence() {
 
             let (l_passed, l_failed) = match syn::parse_file(&content) {
                 Ok(file) => {
+                    let edition = repo::edition(path).parse().unwrap();
                     let exprs = collect_exprs(file);
-                    test_expressions(exprs)
+                    test_expressions(edition, exprs)
                 }
                 Err(msg) => {
                     errorf!("syn failed to parse\n{:?}\n", msg);
@@ -169,36 +152,36 @@ fn test_rustc_precedence() {
     }
 }
 
-fn test_expressions(exprs: Vec<syn::Expr>) -> (usize, usize) {
+fn test_expressions(edition: Edition, exprs: Vec<syn::Expr>) -> (usize, usize) {
     let mut passed = 0;
     let mut failed = 0;
 
-    syntax::with_globals(Edition::Edition2018, || {
+    rustc_span::with_session_globals(edition, || {
         for expr in exprs {
             let raw = quote!(#expr).to_string();
 
-            let libsyntax_ast = if let Some(e) = libsyntax_parse_and_rewrite(&raw) {
+            let librustc_ast = if let Some(e) = librustc_parse_and_rewrite(&raw) {
                 e
             } else {
                 failed += 1;
-                errorf!("\nFAIL - libsyntax failed to parse raw\n");
+                errorf!("\nFAIL - librustc failed to parse raw\n");
                 continue;
             };
 
             let syn_expr = syn_brackets(expr);
-            let syn_ast = if let Some(e) = parse::libsyntax_expr(&quote!(#syn_expr).to_string()) {
+            let syn_ast = if let Some(e) = parse::librustc_expr(&quote!(#syn_expr).to_string()) {
                 e
             } else {
                 failed += 1;
-                errorf!("\nFAIL - libsyntax failed to parse bracketed\n");
+                errorf!("\nFAIL - librustc failed to parse bracketed\n");
                 continue;
             };
 
-            if SpanlessEq::eq(&syn_ast, &libsyntax_ast) {
+            if SpanlessEq::eq(&syn_ast, &librustc_ast) {
                 passed += 1;
             } else {
                 failed += 1;
-                errorf!("\nFAIL\n{:?}\n!=\n{:?}\n", syn_ast, libsyntax_ast);
+                errorf!("\nFAIL\n{:?}\n!=\n{:?}\n", syn_ast, librustc_ast);
             }
         }
     });
@@ -206,54 +189,106 @@ fn test_expressions(exprs: Vec<syn::Expr>) -> (usize, usize) {
     (passed, failed)
 }
 
-fn libsyntax_parse_and_rewrite(input: &str) -> Option<P<ast::Expr>> {
-    parse::libsyntax_expr(input).and_then(libsyntax_brackets)
+fn librustc_parse_and_rewrite(input: &str) -> Option<P<ast::Expr>> {
+    parse::librustc_expr(input).and_then(librustc_brackets)
 }
 
 /// Wrap every expression which is not already wrapped in parens with parens, to
 /// reveal the precidence of the parsed expressions, and produce a stringified
 /// form of the resulting expression.
 ///
-/// This method operates on libsyntax objects.
-fn libsyntax_brackets(mut libsyntax_expr: P<ast::Expr>) -> Option<P<ast::Expr>> {
+/// This method operates on librustc objects.
+fn librustc_brackets(mut librustc_expr: P<ast::Expr>) -> Option<P<ast::Expr>> {
+    use rustc_ast::ast::{
+        Block, BorrowKind, Expr, ExprKind, Field, GenericArg, MacCall, Pat, Stmt, StmtKind, Ty,
+    };
+    use rustc_ast::mut_visit::{noop_visit_generic_arg, MutVisitor};
+    use rustc_data_structures::map_in_place::MapInPlace;
     use rustc_data_structures::thin_vec::ThinVec;
-    use smallvec::SmallVec;
+    use rustc_span::DUMMY_SP;
     use std::mem;
-    use syntax::ast::{Expr, ExprKind, Field, Mac, Pat, Stmt, StmtKind, Ty};
-    use syntax::mut_visit::{noop_visit_expr, MutVisitor};
-    use syntax_pos::DUMMY_SP;
 
     struct BracketsVisitor {
         failed: bool,
     };
 
+    fn flat_map_field<T: MutVisitor>(mut f: Field, vis: &mut T) -> Vec<Field> {
+        if f.is_shorthand {
+            noop_visit_expr(&mut f.expr, vis);
+        } else {
+            vis.visit_expr(&mut f.expr);
+        }
+        vec![f]
+    }
+
+    fn flat_map_stmt<T: MutVisitor>(stmt: Stmt, vis: &mut T) -> Vec<Stmt> {
+        let kind = match stmt.kind {
+            // Don't wrap toplevel expressions in statements.
+            StmtKind::Expr(mut e) => {
+                noop_visit_expr(&mut e, vis);
+                StmtKind::Expr(e)
+            }
+            StmtKind::Semi(mut e) => {
+                noop_visit_expr(&mut e, vis);
+                StmtKind::Semi(e)
+            }
+            s => s,
+        };
+
+        vec![Stmt { kind, ..stmt }]
+    }
+
+    fn noop_visit_expr<T: MutVisitor>(e: &mut Expr, vis: &mut T) {
+        use rustc_ast::mut_visit::{noop_visit_expr, visit_opt, visit_thin_attrs};
+        match &mut e.kind {
+            ExprKind::AddrOf(BorrowKind::Raw, ..) => {}
+            ExprKind::Struct(path, fields, expr) => {
+                vis.visit_path(path);
+                fields.flat_map_in_place(|field| flat_map_field(field, vis));
+                visit_opt(expr, |expr| vis.visit_expr(expr));
+                vis.visit_id(&mut e.id);
+                vis.visit_span(&mut e.span);
+                visit_thin_attrs(&mut e.attrs, vis);
+            }
+            _ => noop_visit_expr(e, vis),
+        }
+    }
+
     impl MutVisitor for BracketsVisitor {
         fn visit_expr(&mut self, e: &mut P<Expr>) {
             noop_visit_expr(e, self);
-            match e.node {
+            match e.kind {
                 ExprKind::If(..) | ExprKind::Block(..) | ExprKind::Let(..) => {}
                 _ => {
                     let inner = mem::replace(
                         e,
                         P(Expr {
                             id: ast::DUMMY_NODE_ID,
-                            node: ExprKind::Err,
+                            kind: ExprKind::Err,
                             span: DUMMY_SP,
                             attrs: ThinVec::new(),
+                            tokens: None,
                         }),
                     );
-                    e.node = ExprKind::Paren(inner);
+                    e.kind = ExprKind::Paren(inner);
                 }
             }
         }
 
-        fn flat_map_field(&mut self, mut f: Field) -> SmallVec<[Field; 1]> {
-            if f.is_shorthand {
-                noop_visit_expr(&mut f.expr, self);
-            } else {
-                self.visit_expr(&mut f.expr);
+        fn visit_generic_arg(&mut self, arg: &mut GenericArg) {
+            match arg {
+                // Don't wrap const generic arg as that's invalid syntax.
+                GenericArg::Const(arg) => noop_visit_expr(&mut arg.value, self),
+                _ => noop_visit_generic_arg(arg, self),
             }
-            SmallVec::from([f])
+        }
+
+        fn visit_block(&mut self, block: &mut P<Block>) {
+            self.visit_id(&mut block.id);
+            block
+                .stmts
+                .flat_map_in_place(|stmt| flat_map_stmt(stmt, self));
+            self.visit_span(&mut block.span);
         }
 
         // We don't want to look at expressions that might appear in patterns or
@@ -267,25 +302,8 @@ fn libsyntax_brackets(mut libsyntax_expr: P<ast::Expr>) -> Option<P<ast::Expr>> 
             let _ = ty;
         }
 
-        fn flat_map_stmt(&mut self, stmt: Stmt) -> SmallVec<[Stmt; 1]> {
-            let node = match stmt.node {
-                // Don't wrap toplevel expressions in statements.
-                StmtKind::Expr(mut e) => {
-                    noop_visit_expr(&mut e, self);
-                    StmtKind::Expr(e)
-                }
-                StmtKind::Semi(mut e) => {
-                    noop_visit_expr(&mut e, self);
-                    StmtKind::Semi(e)
-                }
-                s => s,
-            };
-
-            smallvec![Stmt { node, ..stmt }]
-        }
-
-        fn visit_mac(&mut self, mac: &mut Mac) {
-            // By default when folding over macros, libsyntax panics. This is
+        fn visit_mac(&mut self, mac: &mut MacCall) {
+            // By default when folding over macros, librustc panics. This is
             // because it's usually not what you want, you want to run after
             // macro expansion. We do want to do that (syn doesn't do macro
             // expansion), so we implement visit_mac to just return the macro
@@ -295,11 +313,11 @@ fn libsyntax_brackets(mut libsyntax_expr: P<ast::Expr>) -> Option<P<ast::Expr>> 
     }
 
     let mut folder = BracketsVisitor { failed: false };
-    folder.visit_expr(&mut libsyntax_expr);
+    folder.visit_expr(&mut librustc_expr);
     if folder.failed {
         None
     } else {
-        Some(libsyntax_expr)
+        Some(librustc_expr)
     }
 }
 
@@ -318,11 +336,30 @@ fn syn_brackets(syn_expr: syn::Expr) -> syn::Expr {
                 Expr::If(..) | Expr::Unsafe(..) | Expr::Block(..) | Expr::Let(..) => {
                     fold_expr(self, expr)
                 }
-                node => Expr::Paren(ExprParen {
+                _ => Expr::Paren(ExprParen {
                     attrs: Vec::new(),
-                    expr: Box::new(fold_expr(self, node)),
+                    expr: Box::new(fold_expr(self, expr)),
                     paren_token: token::Paren::default(),
                 }),
+            }
+        }
+
+        fn fold_generic_argument(&mut self, arg: GenericArgument) -> GenericArgument {
+            match arg {
+                // Don't wrap const generic arg as that's invalid syntax.
+                GenericArgument::Const(a) => GenericArgument::Const(fold_expr(self, a)),
+                _ => fold_generic_argument(self, arg),
+            }
+        }
+
+        fn fold_generic_method_argument(
+            &mut self,
+            arg: GenericMethodArgument,
+        ) -> GenericMethodArgument {
+            match arg {
+                // Don't wrap const generic arg as that's invalid syntax.
+                GenericMethodArgument::Const(a) => GenericMethodArgument::Const(fold_expr(self, a)),
+                _ => fold_generic_method_argument(self, arg),
             }
         }
 
@@ -360,7 +397,10 @@ fn collect_exprs(file: syn::File) -> Vec<syn::Expr> {
     struct CollectExprs(Vec<Expr>);
     impl Fold for CollectExprs {
         fn fold_expr(&mut self, expr: Expr) -> Expr {
-            self.0.push(expr);
+            match expr {
+                Expr::Verbatim(tokens) if tokens.is_empty() => {}
+                _ => self.0.push(expr),
+            }
 
             Expr::Tuple(ExprTuple {
                 attrs: vec![],

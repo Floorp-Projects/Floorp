@@ -1,13 +1,11 @@
-extern crate proc_macro2;
-extern crate quote;
-extern crate syn;
+#[macro_use]
+mod macros;
 
-mod features;
-
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Group, Literal, Span, TokenStream, TokenTree};
 use quote::ToTokens;
+use std::iter::FromIterator;
 use std::str::FromStr;
-use syn::Lit;
+use syn::{Lit, LitFloat, LitInt};
 
 fn lit(s: &str) -> Lit {
     match TokenStream::from_str(s)
@@ -50,6 +48,9 @@ fn strings() {
         "contains\nnewlinesescaped newlines",
     );
     test_string("r\"raw\nstring\\\nhere\"", "raw\nstring\\\nhere");
+    test_string("\"...\"q", "...");
+    test_string("r\"...\"q", "...");
+    test_string("r##\"...\"##q", "...");
 }
 
 #[test]
@@ -79,6 +80,9 @@ fn byte_strings() {
         b"contains\nnewlinesescaped newlines",
     );
     test_byte_string("br\"raw\nstring\\\nhere\"", b"raw\nstring\\\nhere");
+    test_byte_string("b\"...\"q", b"...");
+    test_byte_string("br\"...\"q", b"...");
+    test_byte_string("br##\"...\"##q", b"...");
 }
 
 #[test]
@@ -100,6 +104,7 @@ fn bytes() {
     test_byte("b'\\t'", b'\t');
     test_byte("b'\\''", b'\'');
     test_byte("b'\"'", b'"');
+    test_byte("b'a'q", b'a');
 }
 
 #[test]
@@ -125,6 +130,7 @@ fn chars() {
     test_char("'\\''", '\'');
     test_char("'\"'", '"');
     test_char("'\\u{1F415}'", '\u{1F415}');
+    test_char("'a'q", 'a');
 }
 
 #[test]
@@ -185,4 +191,59 @@ fn floats() {
     test_float("5.5e12", 5.5e12, "");
     test_float("1.0__3e-12", 1.03e-12, "");
     test_float("1.03e+12", 1.03e12, "");
+    test_float("9e99e99", 9e99, "e99");
+}
+
+#[test]
+fn negative() {
+    let span = Span::call_site();
+    assert_eq!("-1", LitInt::new("-1", span).to_string());
+    assert_eq!("-1i8", LitInt::new("-1i8", span).to_string());
+    assert_eq!("-1i16", LitInt::new("-1i16", span).to_string());
+    assert_eq!("-1i32", LitInt::new("-1i32", span).to_string());
+    assert_eq!("-1i64", LitInt::new("-1i64", span).to_string());
+    assert_eq!("-1.5", LitFloat::new("-1.5", span).to_string());
+    assert_eq!("-1.5f32", LitFloat::new("-1.5f32", span).to_string());
+    assert_eq!("-1.5f64", LitFloat::new("-1.5f64", span).to_string());
+}
+
+#[test]
+fn suffix() {
+    fn get_suffix(token: &str) -> String {
+        let lit = syn::parse_str::<Lit>(token).unwrap();
+        match lit {
+            Lit::Str(lit) => lit.suffix().to_owned(),
+            Lit::ByteStr(lit) => lit.suffix().to_owned(),
+            Lit::Byte(lit) => lit.suffix().to_owned(),
+            Lit::Char(lit) => lit.suffix().to_owned(),
+            Lit::Int(lit) => lit.suffix().to_owned(),
+            Lit::Float(lit) => lit.suffix().to_owned(),
+            _ => unimplemented!(),
+        }
+    }
+
+    assert_eq!(get_suffix("\"\"s"), "s");
+    assert_eq!(get_suffix("r\"\"r"), "r");
+    assert_eq!(get_suffix("b\"\"b"), "b");
+    assert_eq!(get_suffix("br\"\"br"), "br");
+    assert_eq!(get_suffix("r#\"\"#r"), "r");
+    assert_eq!(get_suffix("'c'c"), "c");
+    assert_eq!(get_suffix("b'b'b"), "b");
+    assert_eq!(get_suffix("1i32"), "i32");
+    assert_eq!(get_suffix("1_i32"), "i32");
+    assert_eq!(get_suffix("1.0f32"), "f32");
+    assert_eq!(get_suffix("1.0_f32"), "f32");
+}
+
+#[test]
+fn test_deep_group_empty() {
+    let tokens = TokenStream::from_iter(vec![TokenTree::Group(Group::new(
+        Delimiter::None,
+        TokenStream::from_iter(vec![TokenTree::Group(Group::new(
+            Delimiter::None,
+            TokenStream::from_iter(vec![TokenTree::Literal(Literal::string("hi"))]),
+        ))]),
+    ))]);
+
+    snapshot!(tokens as Lit, @r#""hi""# );
 }

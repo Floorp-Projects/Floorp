@@ -1,6 +1,6 @@
 //! Extension traits to provide parsing methods on foreign types.
 //!
-//! *This module is available if Syn is built with the `"parsing"` feature.*
+//! *This module is available only if Syn is built with the `"parsing"` feature.*
 
 use proc_macro2::Ident;
 
@@ -16,7 +16,7 @@ use crate::token::CustomToken;
 /// This trait is sealed and cannot be implemented for types outside of Syn. It
 /// is implemented only for `proc_macro2::Ident`.
 ///
-/// *This trait is available if Syn is built with the `"parsing"` feature.*
+/// *This trait is available only if Syn is built with the `"parsing"` feature.*
 pub trait IdentExt: Sized + private::Sealed {
     /// Parses any identifier including keywords.
     ///
@@ -129,7 +129,13 @@ mod private {
 
     impl Sealed for Ident {}
 
-    #[derive(Copy, Clone)]
     pub struct PeekFn;
     pub struct IdentAny;
+
+    impl Copy for PeekFn {}
+    impl Clone for PeekFn {
+        fn clone(&self) -> Self {
+            *self
+        }
+    }
 }
