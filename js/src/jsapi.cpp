@@ -66,6 +66,7 @@
 #include "js/SliceBudget.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
+#include "js/String.h"  // JS::MaxStringLength
 #include "js/StructuredClone.h"
 #include "js/Symbol.h"
 #include "js/Utility.h"
@@ -1504,10 +1505,6 @@ JS_PUBLIC_API JSString* JS_NewMaybeExternalString(
   CHECK_THREAD(cx);
   return NewMaybeExternalString(cx, chars, length, callbacks,
                                 allocatedExternal);
-}
-
-extern JS_PUBLIC_API bool JS_IsExternalString(JSString* str) {
-  return str->isExternal();
 }
 
 extern JS_PUBLIC_API const JSExternalStringCallbacks*
@@ -4259,7 +4256,7 @@ JS_PUBLIC_API size_t JS_GetStringLength(JSString* str) { return str->length(); }
 
 JS_PUBLIC_API bool JS_StringIsLinear(JSString* str) { return str->isLinear(); }
 
-JS_PUBLIC_API bool JS_StringHasLatin1Chars(JSString* str) {
+JS_PUBLIC_API bool JS_DeprecatedStringHasLatin1Chars(JSString* str) {
   return str->hasLatin1Chars();
 }
 
@@ -4312,11 +4309,6 @@ JS_PUBLIC_API bool JS_GetStringCharAt(JSContext* cx, JSString* str,
   return true;
 }
 
-JS_PUBLIC_API char16_t JS_GetLinearStringCharAt(JSLinearString* str,
-                                                size_t index) {
-  return str->latin1OrTwoByteChar(index);
-}
-
 JS_PUBLIC_API bool JS_CopyStringChars(JSContext* cx,
                                       mozilla::Range<char16_t> dest,
                                       JSString* str) {
@@ -4346,7 +4338,7 @@ extern JS_PUBLIC_API JS::UniqueTwoByteChars JS_CopyStringCharsZ(JSContext* cx,
 
   size_t len = linear->length();
 
-  static_assert(js::MaxStringLength < UINT32_MAX,
+  static_assert(JS::MaxStringLength < UINT32_MAX,
                 "len + 1 must not overflow on 32-bit platforms");
 
   UniqueTwoByteChars chars(cx->pod_malloc<char16_t>(len + 1));
@@ -4366,16 +4358,6 @@ extern JS_PUBLIC_API JSLinearString* JS_EnsureLinearString(JSContext* cx,
   CHECK_THREAD(cx);
   cx->check(str);
   return str->ensureLinear(cx);
-}
-
-extern JS_PUBLIC_API const Latin1Char* JS_GetLatin1LinearStringChars(
-    const JS::AutoRequireNoGC& nogc, JSLinearString* str) {
-  return str->latin1Chars(nogc);
-}
-
-extern JS_PUBLIC_API const char16_t* JS_GetTwoByteLinearStringChars(
-    const JS::AutoRequireNoGC& nogc, JSLinearString* str) {
-  return str->twoByteChars(nogc);
 }
 
 JS_PUBLIC_API bool JS_CompareStrings(JSContext* cx, JSString* str1,

@@ -23,6 +23,7 @@
 #include "js/MemoryFunctions.h"           // JS_malloc
 #include "js/RootingAPI.h"                // JS::MutableHandle, JS::Rooted
 #include "js/SourceText.h"                // JS::SourceOwnership, JS::SourceText
+#include "js/String.h"  // JS::GetLatin1LinearStringChars, JS::GetTwoByteLinearStringChars, JS::StringHasLatin1Chars
 #include "js/UniquePtr.h"                 // js::UniquePtr
 #include "js/Utility.h"                   // JS::FreePolicy
 #include "js/Value.h"  // JS::NullValue, JS::ObjectValue, JS::Value
@@ -185,11 +186,11 @@ static bool IsExpectedFunctionString(JS::Handle<JSString*> str,
   };
 
   bool hasExpectedContents;
-  if (JS_StringHasLatin1Chars(str)) {
-    const JS::Latin1Char* chars = JS_GetLatin1LinearStringChars(nogc, lstr);
+  if (JS::StringHasLatin1Chars(str)) {
+    const JS::Latin1Char* chars = JS::GetLatin1LinearStringChars(nogc, lstr);
     hasExpectedContents = CheckContents(chars);
   } else {
-    const char16_t* chars = JS_GetTwoByteLinearStringChars(nogc, lstr);
+    const char16_t* chars = JS::GetTwoByteLinearStringChars(nogc, lstr);
     hasExpectedContents = CheckContents(chars);
   }
 

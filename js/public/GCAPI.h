@@ -1116,12 +1116,6 @@ extern JS_PUBLIC_API JSString* JS_NewMaybeExternalString(
     const JSExternalStringCallbacks* callbacks, bool* allocatedExternal);
 
 /**
- * Return whether 'str' was created with JS_NewExternalString or
- * JS_NewExternalStringWithClosure.
- */
-extern JS_PUBLIC_API bool JS_IsExternalString(JSString* str);
-
-/**
  * Return the 'callbacks' arg passed to JS_NewExternalString or
  * JS_NewMaybeExternalString.
  */

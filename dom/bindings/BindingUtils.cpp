@@ -23,6 +23,7 @@
 #include "js/Id.h"
 #include "js/JSON.h"
 #include "js/StableStringChars.h"
+#include "js/String.h"  // JS::GetStringLength, JS::MaxStringLength, JS::StringHasLatin1Chars
 #include "js/Symbol.h"
 #include "jsfriendapi.h"
 #include "nsContentCreatorFunctions.h"
@@ -2658,7 +2659,7 @@ bool ConvertJSValueToByteString(BindingCallContext& cx, JS::Handle<JS::Value> v,
   // Conversion from Javascript string to ByteString is only valid if all
   // characters < 256. This is always the case for Latin1 strings.
   size_t length;
-  if (!js::StringHasLatin1Chars(s)) {
+  if (!JS::StringHasLatin1Chars(s)) {
     // ThrowErrorMessage can GC, so we first scan the string for bad chars
     // and report the error outside the AutoCheckCannotGC scope.
     bool foundBadChar = false;
@@ -2704,7 +2705,7 @@ bool ConvertJSValueToByteString(BindingCallContext& cx, JS::Handle<JS::Value> v,
     length = JS::GetStringLength(s);
   }
 
-  static_assert(js::MaxStringLength < UINT32_MAX,
+  static_assert(JS::MaxStringLength < UINT32_MAX,
                 "length+1 shouldn't overflow");
 
   if (!result.SetLength(length, fallible)) {

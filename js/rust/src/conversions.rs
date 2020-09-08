@@ -561,7 +561,7 @@ impl FromJSValConvertible for f64 {
 /// Converts a `JSString`, encoded in "Latin1" (i.e. U+0000-U+00FF encoded as 0x00-0xFF) into a
 /// `String`.
 pub unsafe fn latin1_to_string(cx: *mut JSContext, s: *mut JSString) -> String {
-    assert!(JS_StringHasLatin1Chars(s));
+    assert!(JS_DeprecatedStringHasLatin1Chars(s));
 
     let mut length = 0;
     let chars = JS_GetLatin1StringCharsAndLength(cx, ptr::null(), s, &mut length);
@@ -612,7 +612,7 @@ impl FromJSValConvertible for String {
             debug!("ToString failed");
             return Err(());
         }
-        if JS_StringHasLatin1Chars(jsstr) {
+        if JS_DeprecatedStringHasLatin1Chars(jsstr) {
             return Ok(latin1_to_string(cx, jsstr)).map(ConversionResult::Success);
         }
 

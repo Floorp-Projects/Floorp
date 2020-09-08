@@ -33,6 +33,7 @@ typedef uint32_t HashNumber;
 #include "js/shadow/Realm.h"
 #include "js/shadow/Zone.h"
 #include "js/SourceText.h"
+#include "js/String.h"
 #include "js/StructuredClone.h"
 #include "js/ValueArray.h"
 #include "js/Warnings.h"

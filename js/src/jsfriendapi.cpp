@@ -26,6 +26,7 @@
 #include "js/Printf.h"
 #include "js/Proxy.h"
 #include "js/shadow/Object.h"  // JS::shadow::Object
+#include "js/String.h"         // JS::detail::StringToLinearStringSlow
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "util/Poison.h"
@@ -567,8 +568,8 @@ JS_FRIEND_API void js::VisitGrayWrapperTargets(Zone* zone,
   }
 }
 
-JS_FRIEND_API JSLinearString* js::StringToLinearStringSlow(JSContext* cx,
-                                                           JSString* str) {
+JSLinearString* JS::detail::StringToLinearStringSlow(JSContext* cx,
+                                                     JSString* str) {
   return str->ensureLinear(cx);
 }
 
