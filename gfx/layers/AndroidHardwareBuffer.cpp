@@ -397,15 +397,17 @@ bool AndroidHardwareBufferManager::WaitForBufferOwnership(
     return true;
   }
 
-  const double maxTimeoutSec = 10;
+  const double waitWarningTimeoutMs = 300;
+  const double maxTimeoutSec = 3;
   auto begin = TimeStamp::Now();
 
-  // XXX fix wait implementation.
-  // When mMonitor.NotifyAll() is not called in NotifyNotUsed(),
-  // mMonitor.Wait() could wait forever.
   bool isWaiting = true;
   while (isWaiting) {
-    mMonitor.Wait();
+    TimeDuration timeout = TimeDuration::FromMilliseconds(waitWarningTimeoutMs);
+    CVStatus status = mMonitor.Wait(timeout);
+    if (status == CVStatus::Timeout) {
+      gfxCriticalNoteOnce << "AndroidHardwareBuffer wait is slow";
+    }
     const auto it = mWaitingNotifyNotUsed.find(aBuffer->mId);
     if (it == mWaitingNotifyNotUsed.end()) {
       return true;
@@ -413,7 +415,7 @@ bool AndroidHardwareBufferManager::WaitForBufferOwnership(
     auto now = TimeStamp::Now();
     if ((now - begin).ToSeconds() > maxTimeoutSec) {
       isWaiting = false;
-      gfxCriticalNote << "AndroidHardwareBuffer was waited too long";
+      gfxCriticalNote << "AndroidHardwareBuffer wait timeout";
     }
   }
 
