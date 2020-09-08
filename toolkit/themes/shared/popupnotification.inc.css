@@ -43,6 +43,10 @@
   margin-top: .5em !important;
 }
 
+.popup-notification-hint-text:empty {
+  display: none;
+}
+
 .popup-notification-learnmore-link {
   margin-top: .5em !important;
 }
