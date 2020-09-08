@@ -56,6 +56,7 @@
 #include "js/UbiNodeUtils.h"
 #include "js/friend/UsageStatistics.h"  // JS_TELEMETRY_*, JS_SetAccumulateTelemetryCallback
 #include "js/friend/WindowProxy.h"  // js::SetWindowProxyClass
+#include "js/friend/XrayJitInfo.h"  // JS::SetXrayJitInfo
 #include "mozilla/dom/AbortSignalBinding.h"
 #include "mozilla/dom/GeneratedAtomList.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -3010,7 +3011,7 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
                                 isAborted, cx);
   }
 
-  js::SetXrayJitInfo(&gXrayJitInfo);
+  JS::SetXrayJitInfo(&gXrayJitInfo);
   JS::SetProcessLargeAllocationFailureCallback(
       OnLargeAllocationFailureCallback);
   JS::SetProcessBuildIdOp(GetBuildId);

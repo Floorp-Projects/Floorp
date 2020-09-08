@@ -12,6 +12,7 @@
 #include "WrapperFactory.h"
 
 #include "jsapi.h"
+#include "js/friend/XrayJitInfo.h"  // JS::XrayJitInfo
 #include "js/Proxy.h"
 #include "js/Wrapper.h"
 
@@ -481,7 +482,7 @@ void ClearXrayExpandoSlots(JSObject* target, size_t slotIndex);
 JSObject* EnsureXrayExpandoObject(JSContext* cx, JS::HandleObject wrapper);
 
 // Information about xrays for use by the JITs.
-extern js::XrayJitInfo gXrayJitInfo;
+extern JS::XrayJitInfo gXrayJitInfo;
 
 }  // namespace xpc
 

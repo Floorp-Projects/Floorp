@@ -98,6 +98,7 @@ UNIFIED_SOURCES += [
     'WarpOracle.cpp',
     'WarpSnapshot.cpp',
     'WasmBCE.cpp',
+    'XrayJitInfo.cpp',
 ]
 
 if CONFIG['JS_CODEGEN_NONE']:
