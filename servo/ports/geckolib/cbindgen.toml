@@ -221,7 +221,6 @@ include = [
   "FontSizeKeyword",
   "AspectRatio",
   "DefaultFontSizes",
-  "ButtonAppearance",
   "RuleChangeKind",
 ]
 item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]
