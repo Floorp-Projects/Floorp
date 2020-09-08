@@ -43,14 +43,13 @@
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/close_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_alignBaseline="@id/icon"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="3dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="12dp"
+        android:scaleType="centerInside"
         android:background="@null"
         android:contentDescription="@string/mozac_feature_downloads_button_close"
         app:srcCompat="@drawable/mozac_ic_close"
