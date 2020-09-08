@@ -19,6 +19,7 @@
 #include "jsfriendapi.h"
 #include "xpcprivate.h"                   // xpc::OptionsBase
 #include "js/CompilationAndEvaluation.h"  // JS::Compile{,ForNonSyntacticScope}
+#include "js/friend/JSMEnvironment.h"  // JS::ExecuteInJSMEnvironment, JS::IsJSMEnvironment
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "js/Wrapper.h"
 
@@ -158,8 +159,8 @@ static bool EvalScript(JSContext* cx, HandleObject targetObj,
     if (!JS::CloneAndExecuteScript(cx, script, retval)) {
       return false;
     }
-  } else if (js::IsJSMEnvironment(targetObj)) {
-    if (!ExecuteInJSMEnvironment(cx, script, targetObj)) {
+  } else if (JS::IsJSMEnvironment(targetObj)) {
+    if (!JS::ExecuteInJSMEnvironment(cx, script, targetObj)) {
       return false;
     }
     retval.setUndefined();
@@ -190,8 +191,8 @@ static bool EvalScript(JSContext* cx, HandleObject targetObj,
         return false;
       }
     } else {
-      MOZ_ASSERT(js::IsJSMEnvironment(loadScope));
-      if (!js::ExecuteInJSMEnvironment(cx, script, loadScope, envChain)) {
+      MOZ_ASSERT(JS::IsJSMEnvironment(loadScope));
+      if (!JS::ExecuteInJSMEnvironment(cx, script, loadScope, envChain)) {
         return false;
       }
       retval.setUndefined();

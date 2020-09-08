@@ -6,6 +6,7 @@
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include "js/CompilationAndEvaluation.h"  // JS::CompileForNonSyntacticScope
+#include "js/friend/JSMEnvironment.h"  // JS::ExecuteInJSMEnvironment, JS::GetJSMEnvironmentOfScriptedCaller, JS::NewJSMEnvironment
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
@@ -37,7 +38,7 @@ BEGIN_TEST(testExecuteInJSMEnvironment_Basic) {
                           JS::CompileForNonSyntacticScope(cx, options, srcBuf));
   CHECK(script);
 
-  JS::RootedObject varEnv(cx, js::NewJSMEnvironment(cx));
+  JS::RootedObject varEnv(cx, JS::NewJSMEnvironment(cx));
   JS::RootedObject lexEnv(cx, JS_ExtensibleLexicalEnvironment(varEnv));
   CHECK(varEnv && varEnv->is<js::NonSyntacticVariablesObject>());
   CHECK(lexEnv && js::IsExtensibleLexicalEnvironment(lexEnv));
@@ -46,7 +47,7 @@ BEGIN_TEST(testExecuteInJSMEnvironment_Basic) {
   JS::RootedValue vi(cx, JS::Int32Value(1000));
   CHECK(JS_SetProperty(cx, varEnv, "input", vi));
 
-  CHECK(js::ExecuteInJSMEnvironment(cx, script, varEnv));
+  CHECK(JS::ExecuteInJSMEnvironment(cx, script, varEnv));
 
   JS::RootedValue v(cx);
   CHECK(JS_GetProperty(cx, varEnv, "output", &v) && v == vi);
@@ -65,7 +66,7 @@ BEGIN_TEST(testExecuteInJSMEnvironment_Basic) {
 END_TEST(testExecuteInJSMEnvironment_Basic);
 
 static bool test_callback(JSContext* cx, unsigned argc, JS::Value* vp) {
-  JS::RootedObject env(cx, js::GetJSMEnvironmentOfScriptedCaller(cx));
+  JS::RootedObject env(cx, JS::GetJSMEnvironmentOfScriptedCaller(cx));
   if (!env) {
     return false;
   }
@@ -95,9 +96,9 @@ BEGIN_TEST(testExecuteInJSMEnvironment_Callback) {
                           JS::CompileForNonSyntacticScope(cx, options, srcBuf));
   CHECK(script);
 
-  JS::RootedObject nsvo(cx, js::NewJSMEnvironment(cx));
+  JS::RootedObject nsvo(cx, JS::NewJSMEnvironment(cx));
   CHECK(nsvo);
-  CHECK(js::ExecuteInJSMEnvironment(cx, script, nsvo));
+  CHECK(JS::ExecuteInJSMEnvironment(cx, script, nsvo));
 
   JS::RootedValue v(cx);
   CHECK(JS_GetProperty(cx, nsvo, "output", &v) && v == JS::ObjectValue(*nsvo));

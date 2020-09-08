@@ -21,6 +21,7 @@
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/friend/JSMEnvironment.h"  // JS::ExecuteInJSMEnvironment, JS::GetJSMEnvironmentOfScriptedCaller, JS::NewJSMEnvironment
 #include "js/Object.h"  // JS::GetCompartment
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
@@ -499,7 +500,7 @@ const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
 
 void mozJSComponentLoader::FindTargetObject(JSContext* aCx,
                                             MutableHandleObject aTargetObject) {
-  aTargetObject.set(js::GetJSMEnvironmentOfScriptedCaller(aCx));
+  aTargetObject.set(JS::GetJSMEnvironmentOfScriptedCaller(aCx));
 
   // The above could fail if the scripted caller is not a component/JSM (it
   // could be a DOM scope, for instance).
@@ -625,7 +626,7 @@ JSObject* mozJSComponentLoader::PrepareObjectForLocation(
 
   JSAutoRealm ar(aCx, thisObj);
 
-  thisObj = js::NewJSMEnvironment(aCx);
+  thisObj = JS::NewJSMEnvironment(aCx);
   NS_ENSURE_TRUE(thisObj, nullptr);
 
   *aRealFile = false;
@@ -865,7 +866,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       JS::RootedValue rval(cx);
       executeOk = JS::CloneAndExecuteScript(aescx, script, &rval);
     } else {
-      executeOk = js::ExecuteInJSMEnvironment(aescx, script, obj);
+      executeOk = JS::ExecuteInJSMEnvironment(aescx, script, obj);
     }
 
     if (!executeOk) {
