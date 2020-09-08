@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ChildSHistory.h"
 #include "mozilla/dom/ChildSHistoryBinding.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/StaticPrefs_fission.h"
@@ -105,6 +106,20 @@ void ChildSHistory::SetIndexAndLength(uint32_t aIndex, uint32_t aLength,
 }
 
 void ChildSHistory::Reload(uint32_t aReloadFlags, ErrorResult& aRv) {
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (XRE_IsParentProcess()) {
+      nsISHistory* shistory =
+          mBrowsingContext->Canonical()->GetSessionHistory();
+      if (shistory) {
+        aRv = shistory->Reload(aReloadFlags);
+      }
+    } else {
+      ContentChild::GetSingleton()->SendHistoryReload(mBrowsingContext,
+                                                      aReloadFlags);
+    }
+
+    return;
+  }
   aRv = mHistory->Reload(aReloadFlags);
 }
 

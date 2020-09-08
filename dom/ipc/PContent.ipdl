@@ -1668,6 +1668,8 @@ parent:
      */
     async AbortOtherOrientationPendingPromises(MaybeDiscardedBrowsingContext aContext);
 
+    async HistoryReload(MaybeDiscardedBrowsingContext aContext, uint32_t aReloadFlags);
+
     async NotifyOnHistoryReload(MaybeDiscardedBrowsingContext aContext)
             returns (bool canReload, nsDocShellLoadState? loadState,
                      bool? reloadActiveEntry);
