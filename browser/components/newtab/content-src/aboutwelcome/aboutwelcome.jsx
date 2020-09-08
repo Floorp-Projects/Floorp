@@ -117,9 +117,9 @@ function ComputeMessageId(experimentId, branchId, settings) {
 
 async function mount() {
   const { slug, branch } = await window.AWGetStartupData();
-  let settings = branch && branch.feature ? branch.feature.value : {};
+  let settings = branch?.feature ? branch.feature.value : {};
 
-  if (!(branch && branch.feature)) {
+  if (!branch?.feature) {
     // Check for override content in pref browser.aboutwelcome.overrideContent
     settings = await window.AWGetMultiStageScreens();
   }
