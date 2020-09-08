@@ -33,6 +33,15 @@ var iframe1Loaded = onloadPromiseFor("iframe_diff_origin");
 var iframe2Loaded = onloadPromiseFor("iframe_same_origin");
 var iframe_prompt = document.getElementById("iframe_prompt");
 
+// Depending on pref state we either show auth prompts as windows or on tab level.
+let authPromptModalType = SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW;
+if (SpecialPowers.Services.prefs.getBoolPref("prompts.tab_modal.enabled")) {
+  authPromptModalType = SpecialPowers.Services.prefs.getIntPref(
+    "prompts.modalType.httpAuth"
+  );
+}
+
+
 add_task(async function runTest() {
   // This test depends on tab modal prompts being enabled.
   if (!tabModalPromptEnabled) {
@@ -101,12 +110,11 @@ add_task(async function runTest() {
 });
 
 add_task(async function runTestAuth() {
-  // Following tests chack prompt message for a cross-origin and not
+  // Following tests check prompt message for a cross-origin and not
   // cross-origin subresources load
 
-
-  // Auth prompts are window modal
-  modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
+  // Let prompt_common know what kind of modal type is enabled for auth prompts.
+  modalType = authPromptModalType;
 
   let state, action;
 
