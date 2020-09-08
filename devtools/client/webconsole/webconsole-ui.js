@@ -61,6 +61,8 @@ class WebConsoleUI {
     this.hud = hud;
     this.hudId = this.hud.hudId;
     this.isBrowserConsole = this.hud.isBrowserConsole;
+    // Map of all stacktrace resources keyed by network event's channelId
+    this.netEventStackTraces = new Map();
 
     this.isBrowserToolboxConsole =
       this.hud.currentTarget &&
@@ -338,6 +340,7 @@ class WebConsoleUI {
         resourceWatcher.TYPES.ERROR_MESSAGE,
         resourceWatcher.TYPES.PLATFORM_MESSAGE,
         resourceWatcher.TYPES.NETWORK_EVENT,
+        resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
       ],
       {
         onAvailable: this._onResourceAvailable,
@@ -370,6 +373,24 @@ class WebConsoleUI {
       ) {
         continue;
       }
+
+      if (resource.resourceType === TYPES.NETWORK_EVENT_STACKTRACE) {
+        this.netEventStackTraces.set(resource.channelId, resource);
+        continue;
+      }
+
+      if (resource.resourceType === TYPES.NETWORK_EVENT) {
+        // Add the stacktrace
+        if (this.netEventStackTraces.has(resource.channelId)) {
+          const { stacktrace, lastFrame } = this.netEventStackTraces.get(
+            resource.channelId
+          );
+          resource.cause.stacktraceAvailable = stacktrace;
+          resource.cause.lastFrame = lastFrame;
+          this.netEventStackTraces.delete(resource.channelId);
+        }
+      }
+
       this.wrapper.dispatchMessageAdd(resource);
     }
   }

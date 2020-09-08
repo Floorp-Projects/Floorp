@@ -66,13 +66,28 @@ async function generateNetworkEventStubs() {
   const stubs = new Map();
   const tab = await addTab(TEST_URI);
   const resourceWatcher = await createResourceWatcherForTab(tab);
+  const stacktraces = new Map();
 
   let addNetworkStub = function() {};
   let addNetworkUpdateStub = function() {};
 
   const onAvailable = resources => {
     for (const resource of resources) {
-      addNetworkStub(resource);
+      if (resource.resourceType == resourceWatcher.TYPES.NETWORK_EVENT) {
+        if (stacktraces.has(resource.channelId)) {
+          const { stacktrace, lastFrame } = stacktraces.get(resource.channelId);
+          resource.cause.stacktraceAvailable = stacktrace;
+          resource.cause.lastFrame = lastFrame;
+          stacktraces.delete(resource.channelId);
+        }
+        addNetworkStub(resource);
+        continue;
+      }
+      if (
+        resource.resourceType == resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE
+      ) {
+        stacktraces.set(resource.channelId, resource);
+      }
     }
   };
   const onUpdated = updates => {
@@ -81,10 +96,16 @@ async function generateNetworkEventStubs() {
     }
   };
 
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
-    onAvailable,
-    onUpdated,
-  });
+  await resourceWatcher.watchResources(
+    [
+      resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+      resourceWatcher.TYPES.NETWORK_EVENT,
+    ],
+    {
+      onAvailable,
+      onUpdated,
+    }
+  );
 
   for (const [key, code] of getCommands()) {
     const noExpectedUpdates = 7;
@@ -128,10 +149,16 @@ async function generateNetworkEventStubs() {
     });
     await Promise.all([networkEventDone, networkEventUpdateDone]);
   }
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.NETWORK_EVENT], {
-    onAvailable,
-    onUpdated,
-  });
+  resourceWatcher.unwatchResources(
+    [
+      resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+      resourceWatcher.TYPES.NETWORK_EVENT,
+    ],
+    {
+      onAvailable,
+      onUpdated,
+    }
+  );
   return stubs;
 }
 // Ensures the order of the resource properties
