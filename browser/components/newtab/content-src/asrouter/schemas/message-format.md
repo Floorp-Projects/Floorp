@@ -28,7 +28,7 @@ Field name | Type     | Required | Description | Example / Note
   targeting: "usesFirefoxSync && !addonsInfo.addons['activity-stream@mozilla.org']",
   frequency: {
     lifetime: 20,
-    custom: [{period: "daily", cap: 5}, {period: 3600000, cap: 1}]
+    custom: [{period: 86400000, cap: 5}, {period: 3600000, cap: 1}]
   }
 }
 ```
