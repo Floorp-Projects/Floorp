@@ -29,7 +29,7 @@ class Metadata(
     title: String?,
     artist: String?,
     album: String?)
-        : MediaSession.Metadata(title, artist, album) {}
+        : MediaSession.Metadata(title, artist, album, null) {}
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -227,6 +227,10 @@ class MediaSessionTest : BaseSessionTest() {
                                 DOM_META[1].album,
                                 DOM_META[2].album,
                                 DOM_META[1].album)))
+                assertThat(
+                        "Artwork image should be non-null",
+                        meta.artwork!!.getBitmap(200),
+                        notNullValue())
 
                 onMetadataCalled[sessionRule.currentCall.counter - 1]
                         .complete(null)
@@ -599,6 +603,10 @@ class MediaSessionTest : BaseSessionTest() {
                         equalTo(forEachCall(
                                 DOM_META[0].album,
                                 DOM_META[1].album)))
+                assertThat(
+                        "Artwork image should be non-null",
+                        meta.artwork!!.getBitmap(200),
+                        notNullValue())
             }
 
             @AssertCalled(count = 2)
