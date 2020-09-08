@@ -81,7 +81,7 @@ internal object DownloadNotification {
         val downloadState = downloadJobState.state
         val bytesCopied = downloadJobState.currentBytesCopied
         val channelId = ensureChannelExists(context)
-        val isIndeterminate = downloadState.contentLength == null
+        val isIndeterminate = downloadJobState.isIndeterminate()
 
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.mozac_feature_download_ic_ongoing_download)
@@ -281,12 +281,16 @@ internal fun NotificationCompat.Builder.setCompatGroup(groupKey: String): Notifi
 @VisibleForTesting
 internal fun DownloadJobState.getProgress(): String {
     val bytesCopied = currentBytesCopied
-    val isIndeterminate = state.contentLength == null || bytesCopied == 0L
-    return if (isIndeterminate) {
+    return if (isIndeterminate()) {
         ""
     } else {
         "${DownloadNotification.PERCENTAGE_MULTIPLIER * bytesCopied / state.contentLength!!}%"
     }
+}
+
+private fun DownloadJobState.isIndeterminate(): Boolean {
+    val bytesCopied = currentBytesCopied
+    return state.contentLength == null || bytesCopied == 0L || state.contentLength == 0L
 }
 
 @VisibleForTesting
