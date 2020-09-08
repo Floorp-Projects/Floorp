@@ -97,3 +97,19 @@ function checkValue(name, value, expected) {
     checkObject(value, expected);
   }
 }
+
+async function triggerNetworkRequests(browser, commands) {
+  for (let i = 0; i < commands.length; i++) {
+    await SpecialPowers.spawn(browser, [commands[i]], async function(code) {
+      const script = content.document.createElement("script");
+      script.append(
+        content.document.createTextNode(
+          `async function triggerRequest() {${code}}`
+        )
+      );
+      content.document.body.append(script);
+      await content.wrappedJSObject.triggerRequest();
+      script.remove();
+    });
+  }
+}
