@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["proxy"];
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -18,8 +20,6 @@ const { modal } = ChromeUtils.import("chrome://marionette/content/modal.js");
 const { MessageManagerDestroyedPromise } = ChromeUtils.import(
   "chrome://marionette/content/sync.js"
 );
-
-this.EXPORTED_SYMBOLS = ["proxy"];
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 XPCOMUtils.defineLazyServiceGetter(

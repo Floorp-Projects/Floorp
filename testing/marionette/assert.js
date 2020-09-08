@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["assert"];
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -19,8 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   evaluate: "chrome://marionette/content/evaluate.js",
   browser: "chrome://marionette/content/browser.js",
 });
-
-this.EXPORTED_SYMBOLS = ["assert"];
 
 const isFennec = () => AppConstants.platform == "android";
 const isFirefox = () =>

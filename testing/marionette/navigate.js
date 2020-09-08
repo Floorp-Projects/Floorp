@@ -4,11 +4,11 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["navigate"];
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-
-this.EXPORTED_SYMBOLS = ["navigate"];
 
 /** @namespace */
 this.navigate = {};

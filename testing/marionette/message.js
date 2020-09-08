@@ -4,13 +4,13 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["Command", "Message", "Response"];
+
 const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
 const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { truncate } = ChromeUtils.import(
   "chrome://marionette/content/format.js"
 );
-
-this.EXPORTED_SYMBOLS = ["Command", "Message", "Response"];
 
 /** Representation of the packets transproted over the wire. */
 class Message {

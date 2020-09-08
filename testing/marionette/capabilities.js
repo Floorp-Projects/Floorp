@@ -4,6 +4,14 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = [
+  "Capabilities",
+  "PageLoadStrategy",
+  "Proxy",
+  "Timeouts",
+  "UnhandledPromptBehavior",
+];
+
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -17,14 +25,6 @@ const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
-this.EXPORTED_SYMBOLS = [
-  "Capabilities",
-  "PageLoadStrategy",
-  "Proxy",
-  "Timeouts",
-  "UnhandledPromptBehavior",
-];
 
 // Enable testing this module, as Services.appinfo.* is not available
 // in xpcshell tests.
