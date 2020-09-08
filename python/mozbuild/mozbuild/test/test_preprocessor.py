@@ -257,27 +257,6 @@ class TestPreprocessor(unittest.TestCase):
             'PASS // PASS',
         ])
 
-    def test_filter_spaces(self):
-        self.do_include_compare([
-            '#filter spaces',
-            'You should see two nice ascii tables',
-            ' +-+-+-+',
-            ' | |   |     |',
-            ' +-+-+-+',
-            '#unfilter spaces',
-            '+-+---+',
-            '| |   |',
-            '+-+---+',
-        ], [
-            'You should see two nice ascii tables',
-            '+-+-+-+',
-            '| | | |',
-            '+-+-+-+',
-            '+-+---+',
-            '| |   |',
-            '+-+---+',
-        ])
-
     def test_filter_substitution(self):
         self.do_include_pass([
             '#define VAR ASS',
