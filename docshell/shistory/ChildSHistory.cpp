@@ -21,6 +21,10 @@ namespace dom {
 ChildSHistory::ChildSHistory(BrowsingContext* aBrowsingContext)
     : mBrowsingContext(aBrowsingContext) {}
 
+void ChildSHistory::SetBrowsingContext(BrowsingContext* aBrowsingContext) {
+  mBrowsingContext = aBrowsingContext;
+}
+
 void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
   if (!aIsInProcess) {
     mHistory = nullptr;

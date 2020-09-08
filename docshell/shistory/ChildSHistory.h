@@ -44,6 +44,8 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
 
   explicit ChildSHistory(BrowsingContext* aBrowsingContext);
 
+  void SetBrowsingContext(BrowsingContext* aBrowsingContext);
+
   // Create or destroy the session history implementation in the child process.
   // This can be removed once session history is stored exclusively in the
   // parent process.

@@ -409,8 +409,12 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
   }
 
   context->mWindowless = aInit.mWindowless;
-  if (aInit.mHasSessionHistory) {
-    context->InitSessionHistory();
+  if (context->GetHasSessionHistory()) {
+    context->CreateChildSHistory();
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
+      context->GetChildSessionHistory()->SetIndexAndLength(
+          aInit.mSessionHistoryIndex, aInit.mSessionHistoryCount, nsID());
+    }
   }
 
   // NOTE: Call through the `Set` methods for these values to ensure that any
@@ -607,7 +611,7 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
     PopupBlocker::RegisterOpenPopupSpam();
   }
 
-  if (IsTop() && GetHasSessionHistory()) {
+  if (IsTop() && GetHasSessionHistory() && !mChildSessionHistory) {
     CreateChildSHistory();
   }
 
@@ -2069,7 +2073,10 @@ BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
   init.mUseRemoteTabs = mUseRemoteTabs;
   init.mUseRemoteSubframes = mUseRemoteSubframes;
   init.mOriginAttributes = mOriginAttributes;
-  init.mHasSessionHistory = mChildSessionHistory != nullptr;
+  if (mChildSessionHistory && StaticPrefs::fission_sessionHistoryInParent()) {
+    init.mSessionHistoryIndex = mChildSessionHistory->Index();
+    init.mSessionHistoryCount = mChildSessionHistory->Count();
+  }
   init.mRequestContextId = mRequestContextId;
   init.mFields = mFields.RawValues();
   return init;
@@ -2726,6 +2733,12 @@ void BrowsingContext::HistoryGo(int32_t aIndex,
   }
 }
 
+void BrowsingContext::SetChildSHistory(ChildSHistory* aChildSHistory) {
+  mChildSessionHistory = aChildSHistory;
+  mChildSessionHistory->SetBrowsingContext(this);
+  mFields.SetWithoutSyncing<IDX_HasSessionHistory>(true);
+}
+
 }  // namespace dom
 
 namespace ipc {
@@ -2768,6 +2781,8 @@ void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
   WriteIPDLParam(aMessage, aActor, aInit.mUseRemoteSubframes);
   WriteIPDLParam(aMessage, aActor, aInit.mOriginAttributes);
   WriteIPDLParam(aMessage, aActor, aInit.mRequestContextId);
+  WriteIPDLParam(aMessage, aActor, aInit.mSessionHistoryIndex);
+  WriteIPDLParam(aMessage, aActor, aInit.mSessionHistoryCount);
   WriteIPDLParam(aMessage, aActor, aInit.mFields);
 }
 
@@ -2783,6 +2798,10 @@ bool IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Read(
                      &aInit->mUseRemoteSubframes) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mOriginAttributes) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mRequestContextId) ||
+      !ReadIPDLParam(aMessage, aIterator, aActor,
+                     &aInit->mSessionHistoryIndex) ||
+      !ReadIPDLParam(aMessage, aIterator, aActor,
+                     &aInit->mSessionHistoryCount) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mFields)) {
     return false;
   }
