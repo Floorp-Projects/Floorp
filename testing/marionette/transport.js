@@ -20,7 +20,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   StreamUtils: "chrome://marionette/content/stream-utils.js",
 });
 
-const CC = Components.Constructor;
+XPCOMUtils.defineLazyGetter(this, "Pipe", () => {
+  return Components.Constructor("@mozilla.org/pipe;1", "nsIPipe", "init");
+});
+
+XPCOMUtils.defineLazyGetter(this, "ScriptableInputStream", () => {
+  return Components.Constructor(
+    "@mozilla.org/scriptableinputstream;1",
+    "nsIScriptableInputStream",
+    "init"
+  );
+});
 
 const flags = { wantVerbose: false, wantLogging: false };
 
@@ -29,14 +39,6 @@ const dumpv = flags.wantVerbose
       dump(msg + "\n");
     }
   : function() {};
-
-const Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
-
-const ScriptableInputStream = CC(
-  "@mozilla.org/scriptableinputstream;1",
-  "nsIScriptableInputStream",
-  "init"
-);
 
 const PACKET_HEADER_MAX = 200;
 

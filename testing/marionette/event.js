@@ -20,7 +20,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 /** Provides functionality for creating and sending DOM events. */
 this.event = {};
 
-const dblclickTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+XPCOMUtils.defineLazyGetter(this, "dblclickTimer", () => {
+  return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+});
 
 //  Max interval between two clicks that should result in a dblclick (in ms)
 const DBLCLICK_INTERVAL = 640;
