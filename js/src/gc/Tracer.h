@@ -128,7 +128,8 @@ inline void TraceEdge(JSTracer* trc, const WriteBarriered<T>* thingp,
 
 template <typename T>
 inline void TraceEdge(JSTracer* trc, WeakHeapPtr<T>* thingp, const char* name) {
-  gc::TraceEdgeInternal(trc, gc::ConvertToBase(thingp->unbarrieredAddress()), name);
+  gc::TraceEdgeInternal(trc, gc::ConvertToBase(thingp->unbarrieredAddress()),
+                        name);
 }
 
 template <class BC, class T>

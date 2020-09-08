@@ -69,9 +69,7 @@ class WebGLActiveInfoJS final : public RefCounted<WebGLActiveInfoJS> {
   GLint Size() const { return static_cast<GLint>(mInfo.elemCount); }
   GLenum Type() const { return mInfo.elemType; }
 
-  void GetName(nsString& retval) const {
-    CopyUTF8toUTF16(mInfo.name, retval);
-  }
+  void GetName(nsString& retval) const { CopyUTF8toUTF16(mInfo.name, retval); }
 
   bool WrapObject(JSContext*, JS::Handle<JSObject*>,
                   JS::MutableHandle<JSObject*>);

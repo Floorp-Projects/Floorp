@@ -67,6 +67,7 @@ class nsSharedPageData {
 // on the "pages-per-sheet" setting.)
 class nsPageSequenceFrame final : public nsContainerFrame {
   using LogicalSize = mozilla::LogicalSize;
+
  public:
   friend nsPageSequenceFrame* NS_NewPageSequenceFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);

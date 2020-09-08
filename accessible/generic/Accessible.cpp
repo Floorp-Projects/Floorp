@@ -604,7 +604,7 @@ nsRect Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
       if (canvasFrame) {
         *aBoundingFrame = canvasFrame;
         if (auto* canvas =
-              dom::HTMLCanvasElement::FromNode(canvasFrame->GetContent())) {
+                dom::HTMLCanvasElement::FromNode(canvasFrame->GetContent())) {
           if (auto* context = canvas->GetCurrentContext()) {
             nsRect bounds;
             if (context->GetHitRegionRect(mContent->AsElement(), bounds)) {

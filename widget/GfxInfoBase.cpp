@@ -598,10 +598,12 @@ static bool BlocklistEntryToDriverInfo(const nsACString& aBlocklistEntry,
   return true;
 }
 
-static void BlocklistEntriesToDriverInfo(const nsTSubstringSplitter<char>& aBlocklistEntries,
-                                         nsTArray<GfxDriverInfo>& aDriverInfo) {
+static void BlocklistEntriesToDriverInfo(
+    const nsTSubstringSplitter<char>& aBlocklistEntries,
+    nsTArray<GfxDriverInfo>& aDriverInfo) {
   aDriverInfo.Clear();
-  const uint32_t n = std::distance(aBlocklistEntries.begin(), aBlocklistEntries.end());
+  const uint32_t n =
+      std::distance(aBlocklistEntries.begin(), aBlocklistEntries.end());
   aDriverInfo.SetLength(n);
 
   for (uint32_t i = 0; i < n; ++i) {

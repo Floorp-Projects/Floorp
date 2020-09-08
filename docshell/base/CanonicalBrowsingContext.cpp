@@ -764,8 +764,8 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
   }
 
   // While process switching, we need to check if any of our ancestors are
-  // discarded or no longer current, in which case the process switch needs to be
-  // aborted.
+  // discarded or no longer current, in which case the process switch needs to
+  // be aborted.
   if (!target->AncestorsAreCurrent()) {
     NS_WARNING("Ancestor context is no longer current");
     Cancel(NS_ERROR_FAILURE);

@@ -581,9 +581,7 @@ class nsTArray_base {
     return const_cast<Header*>(&sEmptyTArrayHeader);
   }
 
-  [[nodiscard]] bool HasEmptyHeader() const {
-    return mHdr == EmptyHdr();
-  }
+  [[nodiscard]] bool HasEmptyHeader() const { return mHdr == EmptyHdr(); }
 };
 
 namespace detail {

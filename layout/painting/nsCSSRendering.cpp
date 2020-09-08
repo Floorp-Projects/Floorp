@@ -2466,9 +2466,9 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayerWithSC(
   bool drawBackgroundColor = !paintMask;
   nscolor bgColor = NS_RGBA(0, 0, 0, 0);
   if (!paintMask) {
-    bgColor = DetermineBackgroundColor(
-        &aParams.presCtx, aBackgroundSC, aParams.frame, drawBackgroundImage,
-        drawBackgroundColor);
+    bgColor =
+        DetermineBackgroundColor(&aParams.presCtx, aBackgroundSC, aParams.frame,
+                                 drawBackgroundImage, drawBackgroundColor);
   }
 
   // Masks shouldn't be suppressed for print.
