@@ -14,6 +14,7 @@ use std::fs::File;
 use std::io::Read;
 use webrender::api::*;
 use webrender::api::units::*;
+use webrender::render_api::*;
 use webrender::DebugFlags;
 use winit::dpi::LogicalSize;
 

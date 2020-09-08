@@ -46,6 +46,7 @@ use std::slice;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use webrender::DebugFlags;
 use webrender::api::*;
+use webrender::render_api::*;
 use webrender::api::units::*;
 use winit::dpi::{LogicalPosition, LogicalSize};
 use winit::VirtualKeyCode;

@@ -4,9 +4,9 @@
 
 use api::{BuiltDisplayList, DisplayListWithCache, ColorF, DynamicProperties, Epoch, FontRenderMode};
 use api::{PipelineId, PropertyBinding, PropertyBindingId, PropertyValue, MixBlendMode, StackingContext};
-use api::MemoryReport;
 use api::units::*;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
+use crate::render_api::MemoryReport;
 use crate::composite::CompositorKind;
 use crate::clip::{ClipStore, ClipDataStore};
 use crate::spatial_tree::SpatialTree;
