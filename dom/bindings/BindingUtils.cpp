@@ -19,6 +19,7 @@
 #include "mozilla/UseCounter.h"
 
 #include "AccessCheck.h"
+#include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJit{Getter,Setter}Op, JSJitInfo
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimitConservative
 #include "js/Id.h"
 #include "js/JSON.h"

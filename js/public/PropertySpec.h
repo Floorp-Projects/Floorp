@@ -23,7 +23,7 @@
 #include "js/Value.h"               // JS::Value
 
 struct JS_PUBLIC_API JSContext;
-struct JSJitInfo;
+class JSJitInfo;
 
 /**
  * Wrapper to relace JSNative for JSPropertySpecs and JSFunctionSpecs. This will
