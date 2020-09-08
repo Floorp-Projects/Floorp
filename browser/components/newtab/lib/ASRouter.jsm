@@ -362,11 +362,7 @@ const MessageLoaderUtils = {
         continue;
       }
 
-      if (
-        experimentData &&
-        experimentData.branch &&
-        experimentData.branch.feature
-      ) {
+      if (experimentData?.branch?.feature) {
         experiments.push(experimentData.branch.feature.value);
 
         if (!REACH_EVENT_GROUPS.includes(featureId)) {
