@@ -13,12 +13,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { element, WebElement } = ChromeUtils.import(
-  "chrome://marionette/content/element.js"
-);
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  assert: "chrome://marionette/content/assert.js",
+  element: "chrome://marionette/content/element.js",
+  error: "chrome://marionette/content/error.js",
+  Log: "chrome://marionette/content/log.js",
+  WebElement: "chrome://marionette/content/element.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 

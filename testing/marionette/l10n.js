@@ -22,14 +22,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  error: "chrome://marionette/content/error.js",
+});
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 XPCOMUtils.defineLazyGetter(this, "domParser", () => {
   const parser = new DOMParser();
   parser.forceEnableDTD();
   return parser;
 });
-
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 
 /** @namespace */
 this.l10n = {};

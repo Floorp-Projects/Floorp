@@ -11,15 +11,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { evaluate } = ChromeUtils.import(
-  "chrome://marionette/content/evaluate.js"
-);
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
-const { modal } = ChromeUtils.import("chrome://marionette/content/modal.js");
-const { MessageManagerDestroyedPromise } = ChromeUtils.import(
-  "chrome://marionette/content/sync.js"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "chrome://marionette/content/log.js",
+  error: "chrome://marionette/content/error.js",
+  evaluate: "chrome://marionette/content/evaluate.js",
+  MessageManagerDestroyedPromise: "chrome://marionette/content/sync.js",
+  modal: "chrome://marionette/content/modal.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 XPCOMUtils.defineLazyServiceGetter(

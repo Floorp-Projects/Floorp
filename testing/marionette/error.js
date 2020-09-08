@@ -6,7 +6,13 @@
 
 const EXPORTED_SYMBOLS = ["error"];
 
-const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  pprint: "chrome://marionette/content/format.js",
+});
 
 const ERRORS = new Set([
   "ElementClickInterceptedError",
