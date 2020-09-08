@@ -555,12 +555,6 @@ WebrtcTCPSocket::OnTransportAvailable(nsISocketTransport* aTransport,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-WebrtcTCPSocket::OnWebSocketConnectionAvailable(
-    nsIWebSocketConnection* aConnection) {
-  return NS_OK;
-}
-
 void WebrtcTCPSocket::FinishOpen() {
   MOZ_ASSERT(OnSocketThread());
   // mTransport, mSocketIn, and mSocketOut are all set. We may have set them in
