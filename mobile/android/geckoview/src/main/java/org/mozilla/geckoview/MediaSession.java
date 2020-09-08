@@ -18,6 +18,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ImageResource;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 
@@ -522,19 +523,28 @@ public class MediaSession {
         public final @Nullable String album;
 
         /**
+         * The media artwork image.
+         * May be null.
+         */
+        public final @Nullable Image artwork;
+
+        /**
          * Metadata constructor.
          *
          * @param title The media title string.
          * @param artist The media artist string.
          * @param album The media album string.
+         * @param artwork The media artwork {@link Image}.
          */
         protected Metadata(
                 final @Nullable String title,
                 final @Nullable String artist,
-                final @Nullable String album) {
+                final @Nullable String album,
+                final @Nullable Image artwork) {
             this.title = title;
             this.artist = artist;
             this.album = album;
+            this.artwork = artwork;
         }
 
         @AnyThread
@@ -567,10 +577,21 @@ public class MediaSession {
 
         /* package */ static @NonNull Metadata fromBundle(
                 final GeckoBundle bundle) {
+            final GeckoBundle[] artworkBundles =
+                    bundle.getBundleArray("artwork");
+
+            final ImageResource.Collection.Builder artworkBuilder =
+                    new ImageResource.Collection.Builder();
+
+            for (final GeckoBundle artworkBundle: artworkBundles) {
+                artworkBuilder.add(ImageResource.fromBundle(artworkBundle));
+            }
+
             return new Metadata(
                   bundle.getString("title"),
                   bundle.getString("artist"),
-                  bundle.getString("album"));
+                  bundle.getString("album"),
+                  new Image(artworkBuilder.build()));
         }
 
         /* package */ @NonNull GeckoBundle toBundle() {
@@ -588,6 +609,7 @@ public class MediaSession {
                 .append(", title=").append(title)
                 .append(", artist=").append(artist)
                 .append(", album=").append(album)
+                .append(", artwork=").append(artwork)
                 .append("}");
             return builder.toString();
         }
