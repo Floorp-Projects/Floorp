@@ -752,7 +752,7 @@ macro_rules! declare_intern_profile_counters {
     }
 }
 
-enumerate_interners!(declare_intern_profile_counters);
+crate::enumerate_interners!(declare_intern_profile_counters);
 
 impl TransactionProfileCounters {
     pub fn set(

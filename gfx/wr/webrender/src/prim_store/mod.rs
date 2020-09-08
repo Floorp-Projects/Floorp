@@ -5,10 +5,11 @@
 use api::{BorderRadius, ClipMode, ColorF, ColorU};
 use api::{ImageRendering, RepeatMode, PrimitiveFlags};
 use api::{PremultipliedColorF, PropertyBinding, Shadow};
-use api::{PrimitiveKeyKind, EdgeAaSegmentMask};
+use api::{PrimitiveKeyKind};
 use api::units::*;
 use euclid::{SideOffsets2D, Size2D};
 use malloc_size_of::MallocSizeOf;
+use crate::segment::EdgeAaSegmentMask;
 use crate::border::BorderSegmentCacheKey;
 use crate::clip::{ClipChainId, ClipSet};
 use crate::debug_render::DebugItem;
