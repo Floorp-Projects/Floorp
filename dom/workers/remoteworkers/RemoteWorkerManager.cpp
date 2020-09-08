@@ -154,8 +154,41 @@ Result<nsCString, nsresult> RemoteWorkerManager::GetRemoteType(
     LOG(
         ("GetRemoteType Abort: E10SUtils.getRemoteTypeForWorkerPrincipal "
          "exception"));
-    MOZ_DIAGNOSTIC_ASSERT(
-        false, "E10SUtils.getRemoteTypeForworkerPrincipal did throw");
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    nsCString principalTypeOrScheme;
+    if (aPrincipal->IsSystemPrincipal()) {
+      principalTypeOrScheme = "system"_ns;
+    } else if (aPrincipal->GetIsExpandedPrincipal()) {
+      principalTypeOrScheme = "expanded"_ns;
+    } else if (aPrincipal->GetIsNullPrincipal()) {
+      principalTypeOrScheme = "null"_ns;
+    } else {
+      nsCOMPtr<nsIURI> uri = aPrincipal->GetURI();
+      nsresult rv2 = uri->GetScheme(principalTypeOrScheme);
+      if (NS_FAILED(rv2)) {
+        principalTypeOrScheme = "content"_ns;
+      }
+    }
+
+    nsCString processRemoteType = "parent"_ns;
+    if (auto* contentChild = ContentChild::GetSingleton()) {
+      // RemoteTypePrefix make sure that we are not going to include
+      // the full origin that may be part of the current remote type.
+      processRemoteType = RemoteTypePrefix(contentChild->GetRemoteType());
+    }
+
+    char buf[1024];
+    SprintfLiteral(
+        buf,
+        "workerType=%s, principal=%s, preferredRemoteType=%s, "
+        "processRemoteType=%s",
+        aWorkerType == WorkerType::WorkerTypeService ? "service" : "shared",
+        principalTypeOrScheme.get(),
+        PromiseFlatCString(RemoteTypePrefix(preferredRemoteType)).get(),
+        processRemoteType.get());
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "E10SUtils.getRemoteTypeForWorkerPrincipal did throw: %s", buf);
+#endif
     return Err(NS_ERROR_DOM_ABORT_ERR);
   }
 
