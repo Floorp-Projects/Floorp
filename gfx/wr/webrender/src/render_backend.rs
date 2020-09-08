@@ -796,7 +796,6 @@ pub struct RenderBackend {
     result_tx: Sender<ResultMsg>,
     scene_tx: Sender<SceneBuilderRequest>,
     low_priority_scene_tx: Sender<SceneBuilderRequest>,
-    backend_scene_tx: Sender<BackendSceneBuilderRequest>,
 
     default_device_pixel_ratio: f32,
 
@@ -836,7 +835,6 @@ impl RenderBackend {
         result_tx: Sender<ResultMsg>,
         scene_tx: Sender<SceneBuilderRequest>,
         low_priority_scene_tx: Sender<SceneBuilderRequest>,
-        backend_scene_tx: Sender<BackendSceneBuilderRequest>,
         default_device_pixel_ratio: f32,
         resource_cache: ResourceCache,
         notifier: Box<dyn RenderNotifier>,
@@ -852,7 +850,6 @@ impl RenderBackend {
             result_tx,
             scene_tx,
             low_priority_scene_tx,
-            backend_scene_tx,
             default_device_pixel_ratio,
             resource_cache,
             gpu_cache: GpuCache::new(),
@@ -1141,7 +1138,7 @@ impl RenderBackend {
                     DebugCommand::FetchDocuments => {
                         // Ask SceneBuilderThread to send JSON presentation of the documents,
                         // that will be forwarded to Renderer.
-                        self.send_backend_message(BackendSceneBuilderRequest::DocumentsForDebugger);
+                        self.send_backend_message(SceneBuilderRequest::DocumentsForDebugger);
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::FetchClipScrollTree => {
@@ -1368,7 +1365,7 @@ impl RenderBackend {
 
     fn update_frame_builder_config(&self) {
         self.send_backend_message(
-            BackendSceneBuilderRequest::SetFrameBuilderConfig(
+            SceneBuilderRequest::SetFrameBuilderConfig(
                 self.frame_config.clone()
             )
         );
@@ -1684,9 +1681,8 @@ impl RenderBackend {
         build_frame
     }
 
-    fn send_backend_message(&self, msg: BackendSceneBuilderRequest) {
-        self.backend_scene_tx.send(msg).unwrap();
-        self.low_priority_scene_tx.send(SceneBuilderRequest::BackendMessage).unwrap();
+    fn send_backend_message(&self, msg: SceneBuilderRequest) {
+        self.scene_tx.send(msg).unwrap();
     }
 
     #[cfg(not(feature = "debugger"))]
@@ -1733,7 +1729,7 @@ impl RenderBackend {
         // will add its report to this one and send the result back to the original
         // thread waiting on the request.
         self.send_backend_message(
-            BackendSceneBuilderRequest::ReportMemory(report, tx)
+            SceneBuilderRequest::ReportMemory(report, tx)
         );
     }
 
@@ -1841,7 +1837,7 @@ impl RenderBackend {
 
         debug!("\tscene builder");
         self.send_backend_message(
-            BackendSceneBuilderRequest::SaveScene(config.clone())
+            SceneBuilderRequest::SaveScene(config.clone())
         );
 
         debug!("\tresource cache");
@@ -1890,7 +1886,7 @@ impl RenderBackend {
         bits: CaptureBits,
     ) {
         self.send_backend_message(
-            BackendSceneBuilderRequest::StartCaptureSequence(CaptureConfig::new(root, bits))
+            SceneBuilderRequest::StartCaptureSequence(CaptureConfig::new(root, bits))
         );
     }
 
@@ -1899,7 +1895,7 @@ impl RenderBackend {
         &mut self,
     ) {
         self.send_backend_message(
-            BackendSceneBuilderRequest::StopCaptureSequence
+            SceneBuilderRequest::StopCaptureSequence
         );
     }
 
@@ -2063,7 +2059,7 @@ impl RenderBackend {
 
         if !scenes_to_build.is_empty() {
             self.send_backend_message(
-                BackendSceneBuilderRequest::LoadScenes(scenes_to_build)
+                SceneBuilderRequest::LoadScenes(scenes_to_build)
             );
         }
     }
