@@ -284,6 +284,7 @@ mochitest-media:
     variants:
         by-test-platform:
             android.*: ['socketprocess']
+            macosx.*64-ccov/.*: []
             default: ['fission', 'socketprocess', 'webgl-ipc']
     loopback-video: true
     instance-size: large
@@ -385,6 +386,7 @@ mochitest-webgl1-ext:
     variants:
         by-test-platform:
             android.*: []
+            macosx.*64-ccov/.*: []
             default: ['webgl-ipc']
     chunks:
         by-test-platform:
@@ -441,6 +443,7 @@ mochitest-webgl2-ext:
     variants:
         by-test-platform:
             android.*: []
+            macosx.*64-ccov/.*: []
             default: ['webgl-ipc']
     chunks: 4
     e10s: true
