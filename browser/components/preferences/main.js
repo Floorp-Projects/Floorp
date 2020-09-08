@@ -119,6 +119,7 @@ Preferences.addAll([
   Preferences:
 
   browser.link.open_newwindow
+      1 opens such links in the most recent window or tab,
       2 opens such links in a new window,
       3 opens such links in a new tab
   browser.tabs.loadInBackground
@@ -1219,6 +1220,7 @@ var gMainPane = {
    * browser.link.open_newwindow - int
    *   Determines where links targeting new windows should open.
    *   Values:
+   *     1 - Open in the current window or tab.
    *     2 - Open in a new window.
    *     3 - Open in a new tab in the most recent window.
    * browser.tabs.loadInBackground - bool
