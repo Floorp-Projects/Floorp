@@ -24,6 +24,8 @@ import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.UndoHistoryState
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -156,6 +158,32 @@ sealed class TabListAction : BrowserAction() {
      * Removes all non-private [TabSessionState]s.
      */
     object RemoveAllNormalTabsAction : TabListAction()
+}
+
+/**
+ * [BrowserAction] implementations dealing with "undo" after removing a tab.
+ */
+sealed class UndoAction : BrowserAction() {
+    /**
+     * Adds the list of [tabs] to [UndoHistoryState] with the given [tag].
+     */
+    data class AddRecoverableTabs(
+        val tag: String,
+        val tabs: List<RecoverableTab>,
+        val selectedTabId: String?
+    ) : UndoAction()
+
+    /**
+     * Clears the tabs from [UndoHistoryState] for the given [tag].
+     */
+    data class ClearRecoverableTabs(
+        val tag: String
+    ) : UndoAction()
+
+    /**
+     * Restores the tabs in [UndoHistoryState].
+     */
+    object RestoreRecoverableTabs : UndoAction()
 }
 
 /**
@@ -687,7 +715,7 @@ sealed class ReaderAction : BrowserAction() {
         ReaderAction()
 
     /**
-     * Updates the [ReaderState.readerBaseUrl].
+     * Updates the [ReaderState.baseUrl].
      */
     data class UpdateReaderBaseUrlAction(val tabId: String, val baseUrl: String) : ReaderAction()
 

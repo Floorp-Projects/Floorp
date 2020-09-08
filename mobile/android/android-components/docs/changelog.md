@@ -12,6 +12,11 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-session**
+  * Added "undo" functionality via `UndoMiddleware`.
+* **feature-tabs**
+  * Added `TabsUseCases.UndoTabRemovalUseCase` for undoing the removal of tabs.
+
 # 60.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v59.0.0...v60.0.0)

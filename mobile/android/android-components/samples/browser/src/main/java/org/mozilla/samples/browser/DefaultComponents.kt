@@ -29,6 +29,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
+import mozilla.components.browser.session.undo.UndoMiddleware
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.thumbnails.ThumbnailsMiddleware
@@ -131,7 +132,8 @@ open class DefaultComponents(private val applicationContext: Context) {
             MediaMiddleware(applicationContext, MediaService::class.java),
             DownloadMiddleware(applicationContext, DownloadService::class.java),
             ReaderViewMiddleware(),
-            ThumbnailsMiddleware(thumbnailStorage)
+            ThumbnailsMiddleware(thumbnailStorage),
+            UndoMiddleware(::sessionManagerLookup)
         ) + EngineMiddleware.create(engine, ::findSessionById))
     }
 
@@ -139,6 +141,10 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     private fun findSessionById(tabId: String): Session? {
         return sessionManager.findSessionById(tabId)
+    }
+
+    private fun sessionManagerLookup(): SessionManager {
+        return sessionManager
     }
 
     val sessionManager by lazy {

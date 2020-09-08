@@ -8,6 +8,8 @@ import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.recover.toRecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
@@ -284,6 +286,34 @@ class SessionManagerTest {
         assertEquals("1", manager.sessions[3].contextId)
 
         verify(observer).onSessionsRestored()
+    }
+
+    @Test
+    fun `Restore list of RecoverableTab`() {
+        val sessionManager = SessionManager(mock())
+
+        val mozilla = createTab("https://www.mozilla.org", id = "mozilla")
+        val pocket = createTab("https://getpocket.com", id = "pocket")
+        val wikipedia = createTab("https://www.wikipedia.org", id = "wikipedia", parent = mozilla)
+
+        assertEquals(0, sessionManager.size)
+
+        sessionManager.restore(listOf(
+            mozilla.toRecoverableTab(),
+            pocket.toRecoverableTab(),
+            wikipedia.toRecoverableTab()
+        ))
+
+        assertEquals(3, sessionManager.size)
+        assertNull(sessionManager.selectedSession)
+
+        assertEquals("https://www.mozilla.org", sessionManager.sessions[0].url)
+        assertEquals("https://getpocket.com", sessionManager.sessions[1].url)
+        assertEquals("https://www.wikipedia.org", sessionManager.sessions[2].url)
+
+        assertNull(sessionManager.sessions[0].parentId)
+        assertNull(sessionManager.sessions[1].parentId)
+        assertEquals("mozilla", sessionManager.sessions[2].parentId)
     }
 
     @Test

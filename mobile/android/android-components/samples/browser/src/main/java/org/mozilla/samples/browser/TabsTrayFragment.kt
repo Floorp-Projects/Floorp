@@ -10,10 +10,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_tabstray.tabsTray
 import kotlinx.android.synthetic.main.fragment_tabstray.toolbar
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.tabstray.TabsAdapter
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -56,7 +59,11 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
                 tabsTray = tabsAdapter,
                 store = components.store,
                 selectTabUseCase = components.tabsUseCases.selectTab,
-                removeTabUseCase = components.tabsUseCases.removeTab,
+                removeTabUseCase = RemoveTabWithUndoUseCase(
+                    components.tabsUseCases.removeTab,
+                    view,
+                    components.tabsUseCases.undo
+                ),
                 closeTabsTray = ::closeTabsTray
             ),
             owner = this,
@@ -79,5 +86,33 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
     private fun createTabsAdapter(): TabsAdapter {
         val thumbnailLoader = ThumbnailLoader(components.thumbnailStorage)
         return TabsAdapter(thumbnailLoader)
+    }
+}
+
+private class RemoveTabWithUndoUseCase(
+    private val actual: TabsUseCases.RemoveTabUseCase,
+    private val view: View,
+    private val undo: TabsUseCases.UndoTabRemovalUseCase
+) : TabsUseCases.RemoveTabUseCase {
+    override fun invoke(sessionId: String) {
+        actual.invoke(sessionId)
+        showSnackbar()
+    }
+
+    override fun invoke(session: Session) {
+        actual.invoke(session)
+        showSnackbar()
+    }
+
+    private fun showSnackbar() {
+        Snackbar.make(
+            view,
+            "Tab removed.",
+            Snackbar.LENGTH_LONG
+        ).setAction(
+            "Undo"
+        ) {
+            undo.invoke()
+        }.show()
     }
 }

@@ -8,6 +8,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
@@ -252,6 +253,20 @@ class TabsUseCases(
         }
     }
 
+    /**
+     * Use case for restoring removed tabs ("undo").
+     */
+    class UndoTabRemovalUseCase(
+        private val store: BrowserStore
+    ) {
+        /**
+         * Restores the list of tabs in the undo history.
+         */
+        operator fun invoke() {
+            store.dispatch(UndoAction.RestoreRecoverableTabs)
+        }
+    }
+
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(sessionManager) }
     val removeTab: RemoveTabUseCase by lazy { DefaultRemoveTabUseCase(sessionManager) }
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(store, sessionManager) }
@@ -259,4 +274,5 @@ class TabsUseCases(
     val removeAllTabs: RemoveAllTabsUseCase by lazy { RemoveAllTabsUseCase(sessionManager) }
     val removeNormalTabs: RemoveNormalTabsUseCase by lazy { RemoveNormalTabsUseCase(sessionManager) }
     val removePrivateTabs: RemovePrivateTabsUseCase by lazy { RemovePrivateTabsUseCase(sessionManager) }
+    val undo by lazy { UndoTabRemovalUseCase(store) }
 }

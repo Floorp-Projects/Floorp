@@ -19,6 +19,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
+import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
@@ -51,6 +52,7 @@ internal object BrowserStateReducer {
             is SearchAction -> SearchReducer.reduce(state, action)
             is CrashAction -> CrashReducer.reduce(state, action)
             is LastAccessAction -> LastAccessReducer.reduce(state, action)
+            is UndoAction -> UndoReducer.reduce(state, action)
         }
     }
 }

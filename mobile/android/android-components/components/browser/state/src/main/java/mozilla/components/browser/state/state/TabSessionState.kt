@@ -21,6 +21,7 @@ import java.util.UUID
  * that contains the overridden values for this tab.
  * @property readerState the [ReaderState] of this tab.
  * @property contextId the session context ID of this tab.
+ * @param lastAccess The last time this tab was selected (requires LastAccessMiddleware).
  */
 data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),

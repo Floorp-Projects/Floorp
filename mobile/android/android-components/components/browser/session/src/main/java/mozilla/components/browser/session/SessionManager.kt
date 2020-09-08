@@ -15,6 +15,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -164,6 +165,33 @@ class SessionManager(
         store?.syncDispatch(TabListAction.AddMultipleTabsAction(
             tabs = sessions.map { it.toTabSessionState() }
         ))
+    }
+
+    /**
+     * Restores the given list of [RecoverableTab].
+     */
+    fun restore(tabs: List<RecoverableTab>) {
+        // As a workaround we squint here and pretend this is a Snapshot..
+
+        val items = tabs.map {
+            Snapshot.Item(
+                session = Session(
+                    id = it.id,
+                    initialUrl = it.url,
+                    contextId = it.contextId
+                ).apply {
+                    title = it.title
+                    parentId = it.parentId
+                },
+                engineSessionState = it.state,
+                readerState = it.readerState,
+                lastAccess = it.lastAccess
+            )
+        }
+
+        val snapshot = Snapshot(items, NO_SELECTION)
+
+        restore(snapshot, updateSelection = false)
     }
 
     /**

@@ -22,6 +22,7 @@ import mozilla.components.lib.state.State
  * @property media The state of all media elements and playback states for all tabs.
  * @property search the state of search for this browser state.
  * @property downloads Downloads ([DownloadState]s) mapped to their IDs.
+ * @property undoHistory History of recently closed tabs to support "undo" (Requires UndoMiddleware).
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
@@ -32,5 +33,6 @@ data class BrowserState(
     val extensions: Map<String, WebExtensionState> = emptyMap(),
     val media: MediaState = MediaState(),
     val downloads: Map<String, DownloadState> = emptyMap(),
-    val search: SearchState = SearchState()
+    val search: SearchState = SearchState(),
+    val undoHistory: UndoHistoryState = UndoHistoryState()
 ) : State
