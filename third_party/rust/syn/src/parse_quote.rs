@@ -24,7 +24,7 @@
 /// }
 /// ```
 ///
-/// *This macro is available if Syn is built with the `"parsing"` feature,
+/// *This macro is available only if Syn is built with the `"parsing"` feature,
 /// although interpolation of syntax tree nodes into the quoted tokens is only
 /// supported if Syn is built with the `"printing"` feature as well.*
 ///
@@ -56,8 +56,10 @@
 ///   or inner like `#![...]`
 /// - [`Punctuated<T, P>`] — parses zero or more `T` separated by punctuation
 ///   `P` with optional trailing punctuation
+/// - [`Vec<Stmt>`] — parses the same as `Block::parse_within`
 ///
 /// [`Punctuated<T, P>`]: punctuated::Punctuated
+/// [`Vec<Stmt>`]: Block::parse_within
 ///
 /// # Panics
 ///
@@ -67,7 +69,7 @@
 //
 // TODO: allow Punctuated to be inferred as intra doc link, currently blocked on
 // https://github.com/rust-lang/rust/issues/62834
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! parse_quote {
     ($($tt:tt)*) => {
         $crate::parse_quote::parse(
@@ -112,6 +114,8 @@ impl<T: Parse> ParseQuote for T {
 use crate::punctuated::Punctuated;
 #[cfg(any(feature = "full", feature = "derive"))]
 use crate::{attr, Attribute};
+#[cfg(feature = "full")]
+use crate::{Block, Stmt};
 
 #[cfg(any(feature = "full", feature = "derive"))]
 impl ParseQuote for Attribute {
@@ -127,5 +131,12 @@ impl ParseQuote for Attribute {
 impl<T: Parse, P: Parse> ParseQuote for Punctuated<T, P> {
     fn parse(input: ParseStream) -> Result<Self> {
         Self::parse_terminated(input)
+    }
+}
+
+#[cfg(feature = "full")]
+impl ParseQuote for Vec<Stmt> {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Block::parse_within(input)
     }
 }

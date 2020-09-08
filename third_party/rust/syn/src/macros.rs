@@ -4,15 +4,11 @@ macro_rules! ast_struct {
         struct $name:ident #full $($rest:tt)*
     ) => {
         #[cfg(feature = "full")]
-        #[cfg_attr(feature = "extra-traits", derive(Debug, Eq, PartialEq, Hash))]
-        #[cfg_attr(feature = "clone-impls", derive(Clone))]
         $($attrs_pub)* struct $name $($rest)*
 
         #[cfg(not(feature = "full"))]
-        #[cfg_attr(feature = "extra-traits", derive(Debug, Eq, PartialEq, Hash))]
-        #[cfg_attr(feature = "clone-impls", derive(Clone))]
         $($attrs_pub)* struct $name {
-            _noconstruct: (),
+            _noconstruct: ::std::marker::PhantomData<::proc_macro2::Span>,
         }
 
         #[cfg(all(not(feature = "full"), feature = "printing"))]
@@ -25,27 +21,8 @@ macro_rules! ast_struct {
 
     (
         [$($attrs_pub:tt)*]
-        struct $name:ident #manual_extra_traits $($rest:tt)*
-    ) => {
-        #[cfg_attr(feature = "extra-traits", derive(Debug))]
-        #[cfg_attr(feature = "clone-impls", derive(Clone))]
-        $($attrs_pub)* struct $name $($rest)*
-    };
-
-    (
-        [$($attrs_pub:tt)*]
-        struct $name:ident #manual_extra_traits_debug $($rest:tt)*
-    ) => {
-        #[cfg_attr(feature = "clone-impls", derive(Clone))]
-        $($attrs_pub)* struct $name $($rest)*
-    };
-
-    (
-        [$($attrs_pub:tt)*]
         struct $name:ident $($rest:tt)*
     ) => {
-        #[cfg_attr(feature = "extra-traits", derive(Debug, Eq, PartialEq, Hash))]
-        #[cfg_attr(feature = "clone-impls", derive(Clone))]
         $($attrs_pub)* struct $name $($rest)*
     };
 
@@ -65,19 +42,8 @@ macro_rules! ast_enum {
 
     (
         [$($attrs_pub:tt)*]
-        enum $name:ident #manual_extra_traits $($rest:tt)*
-    ) => (
-        #[cfg_attr(feature = "extra-traits", derive(Debug))]
-        #[cfg_attr(feature = "clone-impls", derive(Clone))]
-        $($attrs_pub)* enum $name $($rest)*
-    );
-
-    (
-        [$($attrs_pub:tt)*]
         enum $name:ident $($rest:tt)*
     ) => (
-        #[cfg_attr(feature = "extra-traits", derive(Debug, Eq, PartialEq, Hash))]
-        #[cfg_attr(feature = "clone-impls", derive(Clone))]
         $($attrs_pub)* enum $name $($rest)*
     );
 
@@ -120,15 +86,9 @@ macro_rules! ast_enum_of_structs_impl {
         check_keyword_matches!(pub $pub);
         check_keyword_matches!(enum $enum);
 
-        $(
-            $(
-                impl From<$member> for $name {
-                    fn from(e: $member) -> $name {
-                        $name::$variant(e)
-                    }
-                }
-            )*
-        )*
+        $($(
+            ast_enum_from_struct!($name::$variant, $member);
+        )*)*
 
         #[cfg(feature = "printing")]
         generate_to_tokens! {
@@ -136,6 +96,19 @@ macro_rules! ast_enum_of_structs_impl {
             ()
             tokens
             $name { $($variant $($member)*,)* }
+        }
+    };
+}
+
+macro_rules! ast_enum_from_struct {
+    // No From<TokenStream> for verbatim variants.
+    ($name:ident::Verbatim, $member:ident) => {};
+
+    ($name:ident::$variant:ident, $member:ident) => {
+        impl From<$member> for $name {
+            fn from(e: $member) -> $name {
+                $name::$variant(e)
+            }
         }
     };
 }

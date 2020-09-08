@@ -1,7 +1,5 @@
 #![cfg(target_pointer_width = "64")]
 
-mod features;
-
 use std::mem;
 use syn::*;
 

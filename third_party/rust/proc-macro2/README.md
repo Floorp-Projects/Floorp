@@ -1,6 +1,6 @@
 # proc-macro2
 
-[![Build Status](https://api.travis-ci.com/alexcrichton/proc-macro2.svg?branch=master)](https://travis-ci.com/alexcrichton/proc-macro2)
+[![Build Status](https://img.shields.io/github/workflow/status/alexcrichton/proc-macro2/build%20and%20test)](https://github.com/alexcrichton/proc-macro2/actions)
 [![Latest Version](https://img.shields.io/crates/v/proc-macro2.svg)](https://crates.io/crates/proc-macro2)
 [![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/proc-macro2)
 

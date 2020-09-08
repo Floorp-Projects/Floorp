@@ -3,7 +3,7 @@ use super::*;
 ast_struct! {
     /// A complete file of Rust source code.
     ///
-    /// *This type is available if Syn is built with the `"full"` feature.*
+    /// *This type is available only if Syn is built with the `"full"` feature.*
     ///
     /// # Example
     ///
@@ -37,6 +37,8 @@ ast_struct! {
     ///     file.read_to_string(&mut src).expect("Unable to read file");
     ///
     ///     let syntax = syn::parse_file(&src).expect("Unable to parse file");
+    ///
+    ///     // Debug impl is available if Syn is built with "extra-traits" feature.
     ///     println!("{:#?}", syntax);
     /// }
     /// ```

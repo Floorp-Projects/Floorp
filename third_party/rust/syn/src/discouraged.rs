@@ -16,7 +16,7 @@ pub trait Speculative {
     /// syntax of the form `A* B*` for arbitrary syntax `A` and `B`. The problem
     /// is that when the fork fails to parse an `A`, it's impossible to tell
     /// whether that was because of a syntax error and the user meant to provide
-    /// an `A`, or that the `A`s are finished and its time to start parsing
+    /// an `A`, or that the `A`s are finished and it's time to start parsing
     /// `B`s. Use with care.
     ///
     /// Also note that if `A` is a subset of `B`, `A* B*` can be parsed by
@@ -72,7 +72,6 @@ pub trait Speculative {
     ///             || input.peek(Token![self])
     ///             || input.peek(Token![Self])
     ///             || input.peek(Token![crate])
-    ///             || input.peek(Token![extern])
     ///         {
     ///             let ident = input.call(Ident::parse_any)?;
     ///             return Ok(PathSegment::from(ident));
@@ -162,6 +161,30 @@ impl<'a> Speculative for ParseBuffer<'a> {
     fn advance_to(&self, fork: &Self) {
         if !crate::buffer::same_scope(self.cursor(), fork.cursor()) {
             panic!("Fork was not derived from the advancing parse stream");
+        }
+
+        let (self_unexp, self_sp) = inner_unexpected(self);
+        let (fork_unexp, fork_sp) = inner_unexpected(fork);
+        if !Rc::ptr_eq(&self_unexp, &fork_unexp) {
+            match (fork_sp, self_sp) {
+                // Unexpected set on the fork, but not on `self`, copy it over.
+                (Some(span), None) => {
+                    self_unexp.set(Unexpected::Some(span));
+                }
+                // Unexpected unset. Use chain to propagate errors from fork.
+                (None, None) => {
+                    fork_unexp.set(Unexpected::Chain(self_unexp));
+
+                    // Ensure toplevel 'unexpected' tokens from the fork don't
+                    // bubble up the chain by replacing the root `unexpected`
+                    // pointer, only 'unexpected' tokens from existing group
+                    // parsers should bubble.
+                    fork.unexpected
+                        .set(Some(Rc::new(Cell::new(Unexpected::None))));
+                }
+                // Unexpected has been set on `self`. No changes needed.
+                (_, Some(_)) => {}
+            }
         }
 
         // See comment on `cell` in the struct definition.

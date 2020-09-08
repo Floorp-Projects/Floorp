@@ -1,7 +1,7 @@
 //! A stably addressed token buffer supporting efficient traversal based on a
 //! cheaply copyable cursor.
 //!
-//! *This module is available if Syn is built with the `"parsing"` feature.*
+//! *This module is available only if Syn is built with the `"parsing"` feature.*
 
 // This module is heavily commented as it contains most of the unsafe code in
 // Syn, and caution should be used when editing it. The public-facing interface
@@ -36,7 +36,7 @@ enum Entry {
 /// `TokenStream` which requires a deep copy in order to traverse more than
 /// once.
 ///
-/// *This type is available if Syn is built with the `"parsing"` feature.*
+/// *This type is available only if Syn is built with the `"parsing"` feature.*
 pub struct TokenBuffer {
     // NOTE: Do not derive clone on this - there are raw pointers inside which
     // will be messed up. Moving the `TokenBuffer` itself is safe as the actual
@@ -98,7 +98,7 @@ impl TokenBuffer {
     /// Creates a `TokenBuffer` containing all the tokens from the input
     /// `TokenStream`.
     ///
-    /// *This method is available if Syn is built with both the `"parsing"` and
+    /// *This method is available only if Syn is built with both the `"parsing"` and
     /// `"proc-macro"` features.*
     #[cfg(all(
         not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
@@ -133,8 +133,7 @@ impl TokenBuffer {
 /// Two cursors are equal if they have the same location in the same input
 /// stream, and have the same scope.
 ///
-/// *This type is available if Syn is built with the `"parsing"` feature.*
-#[derive(Copy, Clone, Eq, PartialEq)]
+/// *This type is available only if Syn is built with the `"parsing"` feature.*
 pub struct Cursor<'a> {
     // The current entry which the `Cursor` is pointing at.
     ptr: *const Entry,
@@ -201,13 +200,13 @@ impl<'a> Cursor<'a> {
         Cursor::create(self.ptr.offset(1), self.scope)
     }
 
-    /// If the cursor is looking at a `None`-delimited group, move it to look at
-    /// the first token inside instead. If the group is empty, this will move
+    /// While the cursor is looking at a `None`-delimited group, move it to look
+    /// at the first token inside instead. If the group is empty, this will move
     /// the cursor past the `None`-delimited group.
     ///
     /// WARNING: This mutates its argument.
     fn ignore_none(&mut self) {
-        if let Entry::Group(group, buf) = self.entry() {
+        while let Entry::Group(group, buf) = self.entry() {
             if group.delimiter() == Delimiter::None {
                 // NOTE: We call `Cursor::create` here to make sure that
                 // situations where we should immediately exit the span after
@@ -215,13 +214,14 @@ impl<'a> Cursor<'a> {
                 unsafe {
                     *self = Cursor::create(&buf.data[0], self.scope);
                 }
+            } else {
+                break;
             }
         }
     }
 
     /// Checks whether the cursor is currently pointing at the end of its valid
     /// scope.
-    #[inline]
     pub fn eof(self) -> bool {
         // We're at eof if we're at the end of our scope.
         self.ptr == self.scope
@@ -341,6 +341,44 @@ impl<'a> Cursor<'a> {
             Entry::Punct(o) => o.span(),
             Entry::End(..) => Span::call_site(),
         }
+    }
+
+    /// Skip over the next token without cloning it. Returns `None` if this
+    /// cursor points to eof.
+    ///
+    /// This method treats `'lifetimes` as a single token.
+    pub(crate) fn skip(self) -> Option<Cursor<'a>> {
+        match self.entry() {
+            Entry::End(..) => None,
+
+            // Treat lifetimes as a single tt for the purposes of 'skip'.
+            Entry::Punct(op) if op.as_char() == '\'' && op.spacing() == Spacing::Joint => {
+                let next = unsafe { self.bump() };
+                match next.entry() {
+                    Entry::Ident(_) => Some(unsafe { next.bump() }),
+                    _ => Some(next),
+                }
+            }
+            _ => Some(unsafe { self.bump() }),
+        }
+    }
+}
+
+impl<'a> Copy for Cursor<'a> {}
+
+impl<'a> Clone for Cursor<'a> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<'a> Eq for Cursor<'a> {}
+
+impl<'a> PartialEq for Cursor<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        let Cursor { ptr, scope, marker } = self;
+        let _ = marker;
+        *ptr == other.ptr && *scope == other.scope
     }
 }
 
