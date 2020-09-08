@@ -37,6 +37,8 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvInitializePrint(
       InitializePrintDevice(aDocumentTitle, aPrintToFile, aStartPage, aEndPage);
   if (NS_FAILED(rv)) {
     Unused << SendPrintInitializationResult(rv, FileDescriptor());
+    // Let any listeners know about the failure before we delete.
+    Unused << RecvStatusChange(rv);
     Unused << Send__delete__(this);
     return IPC_OK();
   }
@@ -46,6 +48,8 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvInitializePrint(
   rv = PrepareNextPageFD(&fd);
   if (NS_FAILED(rv)) {
     Unused << SendPrintInitializationResult(rv, FileDescriptor());
+    // Let any listeners know about the failure before we delete.
+    Unused << RecvStatusChange(rv);
     Unused << Send__delete__(this);
     return IPC_OK();
   }
