@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui
 
 import android.content.Context
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
+import androidx.test.espresso.IdlingRegistry
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import okhttp3.mockwebserver.MockWebServer
@@ -13,8 +14,10 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.ui.robots.historyMenu
@@ -30,6 +33,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class HistoryTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
+    private var historyListIdlingResource: RecyclerViewIdlingResource? = null
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
@@ -51,6 +55,10 @@ class HistoryTest {
 
         runBlocking {
             historyStorage.deleteEverything()
+        }
+
+        if (historyListIdlingResource != null) {
+            IdlingRegistry.getInstance().unregister(historyListIdlingResource!!)
         }
     }
 
@@ -74,6 +82,9 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             verifyHistoryMenuView()
             verifyVisitedTimeTitle()
             verifyFirstTestPageTitle("Test_Page_1")
@@ -90,6 +101,9 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickCopy {
             verifyCopySnackBarText()
@@ -105,6 +119,9 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickShare {
             verifyShareOverlay()
@@ -123,6 +140,9 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickOpenInNormalTab {
             verifyUrl(firstWebPage.url.toString())
@@ -140,6 +160,9 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
         }.clickOpenInPrivateTab {
             verifyUrl(firstWebPage.url.toString())
@@ -157,7 +180,11 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
         }.openThreeDotMenu {
+            IdlingRegistry.getInstance().unregister(historyListIdlingResource!!)
         }.clickDelete {
             verifyDeleteSnackbarText("Deleted")
             verifyEmptyHistoryView()
@@ -173,7 +200,11 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             clickDeleteHistoryButton()
+            IdlingRegistry.getInstance().unregister(historyListIdlingResource!!)
             verifyDeleteConfirmationMessage()
             confirmDeleteAllHistory()
             verifyDeleteSnackbarText("Browsing data deleted")
@@ -190,6 +221,9 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
         }
 
@@ -216,6 +250,9 @@ class HistoryTest {
 
         homeScreen { }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
         }
@@ -236,6 +273,9 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
         }
@@ -259,9 +299,13 @@ class HistoryTest {
         }.submitQuery(secondWebPage.url.toString()) {
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
             longTapSelectItem(secondWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
+            IdlingRegistry.getInstance().unregister(historyListIdlingResource!!)
         }
 
         multipleSelectionToolbar {
@@ -282,6 +326,9 @@ class HistoryTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openHistory {
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list))
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
             longTapSelectItem(firstWebPage.url)
         }
 

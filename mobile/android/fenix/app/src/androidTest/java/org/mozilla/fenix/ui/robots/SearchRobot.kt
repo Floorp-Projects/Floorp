@@ -29,10 +29,12 @@ import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.Matchers
 import org.junit.Assert.assertEquals
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
@@ -122,6 +124,7 @@ class SearchRobot {
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
 
         fun dismiss(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             mDevice.waitForIdle()
@@ -139,8 +142,19 @@ class SearchRobot {
         }
 
         fun submitQuery(query: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            sessionLoadedIdlingResource = SessionLoadedIdlingResource()
             mDevice.waitForIdle()
             browserToolbarEditView().perform(typeText(query + "\n"))
+
+            runWithIdleRes(sessionLoadedIdlingResource) {
+                onView(
+                    anyOf(
+                        ViewMatchers.withResourceName("browserLayout"),
+                        ViewMatchers.withResourceName("onboarding_message") // Req ETP dialog
+                    )
+                )
+                    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+            }
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
