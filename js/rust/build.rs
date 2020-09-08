@@ -163,7 +163,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::RealmOptions",
     "JS::ContextOptions",
     "js::DOMCallbacks",
-    "js::DOMProxyShadowsResult",
+    "JS::DOMProxyShadowsResult",
     "js::ESClass",
     "JS::ForOfIterator",
     "JS::Handle",

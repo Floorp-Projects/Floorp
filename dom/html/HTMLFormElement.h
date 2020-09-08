@@ -21,7 +21,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsDataHashtable.h"
-#include "jsfriendapi.h"  // For js::ExpandoAndGeneration
+#include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
 
 class nsIMutableArray;
 class nsIURI;
@@ -398,7 +398,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
       nsIContent* aForm);
 #endif
 
-  js::ExpandoAndGeneration mExpandoAndGeneration;
+  JS::ExpandoAndGeneration mExpandoAndGeneration;
 
  protected:
   virtual JSObject* WrapNode(JSContext* aCx,

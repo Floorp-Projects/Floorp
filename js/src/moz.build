@@ -235,6 +235,7 @@ EXPORTS.js.experimental += [
 # a clean design.  Use this only if you absolutely must, and feel free to
 # propose clean APIs to replace what's here!
 EXPORTS.js.friend += [
+    '../public/friend/DOMProxy.h',
     '../public/friend/DumpFunctions.h',
     '../public/friend/ErrorMessages.h',
     '../public/friend/ErrorNumbers.msg',
@@ -326,6 +327,7 @@ UNIFIED_SOURCES += [
     'proxy/BaseProxyHandler.cpp',
     'proxy/CrossCompartmentWrapper.cpp',
     'proxy/DeadObjectProxy.cpp',
+    'proxy/DOMProxy.cpp',
     'proxy/OpaqueCrossCompartmentWrapper.cpp',
     'proxy/Proxy.cpp',
     'proxy/ScriptedProxyHandler.cpp',

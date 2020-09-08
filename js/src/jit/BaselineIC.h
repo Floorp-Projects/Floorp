@@ -17,6 +17,7 @@
 #include "jit/ICState.h"
 #include "jit/SharedICRegisters.h"
 #include "js/GCVector.h"
+#include "proxy/DOMProxy.h"  // js::GetDOMProxyHandlerFamily
 #include "vm/ArrayObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSContext.h"
