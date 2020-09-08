@@ -379,7 +379,7 @@ add_task(async function test_update_account_data() {
   };
   await Assert.rejects(
     account._internal.updateUserAccountData(newCreds),
-    /The specified credentials aren't for the current user/
+    /The specified credentials have no uid/
   );
 
   // and should fail with a field name that's not known by storage.
