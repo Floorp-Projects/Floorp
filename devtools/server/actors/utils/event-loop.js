@@ -169,24 +169,29 @@ EventLoop.prototype = {
    * Prepare to enter a nested event loop by disabling debuggee events.
    */
   preNest() {
-    const windows = [];
+    const docShells = [];
     // Disable events in all open windows.
     for (const window of this.getAllWindowDebuggees()) {
       const { windowUtils } = window;
       windowUtils.suppressEventHandling(true);
       windowUtils.suspendTimeouts();
-      windows.push(window);
+      docShells.push(window.docShell);
     }
-    return windows;
+    return docShells;
   },
 
   /**
    * Prepare to exit a nested event loop by enabling debuggee events.
    */
-  postNest(pausedWindows) {
-    // Enable events in all open windows.
-    for (const window of pausedWindows) {
-      const { windowUtils } = window;
+  postNest(pausedDocShells) {
+    // Enable events in all window paused in preNest
+    for (const docShell of pausedDocShells) {
+      // Do not try to resume documents which are in destruction
+      // as resume methods would throw
+      if (docShell.isBeingDestroyed()) {
+        continue;
+      }
+      const { windowUtils } = docShell.domWindow;
       windowUtils.resumeTimeouts();
       windowUtils.suppressEventHandling(false);
     }
