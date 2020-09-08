@@ -29,7 +29,7 @@ object FeatureFlags {
     /**
      * Enables showing the top frequently visited sites
      */
-    val topFrecentSite = Config.channel.isNightlyOrDebug
+    const val topFrecentSite = true
 
     /**
      * Enables wait til first contentful paint
