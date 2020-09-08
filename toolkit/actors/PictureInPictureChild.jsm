@@ -94,6 +94,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       TOGGLE_EXPERIMENTAL_MODE_PREF,
       this.observerFunction
     );
+    Services.cpmm.sharedData.addEventListener("change", this);
   }
 
   willDestroy() {
@@ -103,6 +104,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       TOGGLE_EXPERIMENTAL_MODE_PREF,
       this.observerFunction
     );
+    Services.cpmm.sharedData.removeEventListener("change", this);
   }
 
   observe(subject, topic, data) {
@@ -224,6 +226,22 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     }
 
     switch (event.type) {
+      case "change": {
+        const { changedKeys } = event;
+        if (changedKeys.includes("PictureInPicture:ToggleOverrides")) {
+          // For now we only update our cache if the toggle overrides change.
+          // the user will need to refresh the page for changes to apply.
+          try {
+            gToggleOverrides = PictureInPictureToggleChild.getToggleOverrides();
+          } catch (e) {
+            // Ignore resulting TypeError if gToggleOverrides is still unloaded
+            if (!(e instanceof TypeError)) {
+              throw e;
+            }
+          }
+        }
+        break;
+      }
       case "UAWidgetSetupOrChange": {
         if (
           this.toggleEnabled &&
