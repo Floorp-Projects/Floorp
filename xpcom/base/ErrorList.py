@@ -1227,6 +1227,8 @@ def error_list_h(output):
 #ifndef ErrorList_h__
 #define ErrorList_h__
 
+#include <stdint.h>
+
 """)
 
     output.write("#define NS_ERROR_MODULE_BASE_OFFSET {}\n".format(MODULE_BASE_OFFSET))
