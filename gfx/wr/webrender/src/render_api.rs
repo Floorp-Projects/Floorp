@@ -25,6 +25,7 @@ use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation
 use crate::api::DEFAULT_TILE_SIZE;
 use crate::api::units::*;
 use crate::api_resources::ApiResources;
+use crate::scene_builder_thread::SceneBuilderResult;
 use crate::intern::InterningMemoryReport;
 
 #[repr(C)]
@@ -945,6 +946,8 @@ pub enum ApiMsg {
     FlushSceneBuilder(Sender<()>),
     /// Shut the WebRender instance down.
     ShutDown(Option<Sender<()>>),
+    /// Message from the scene builder thread.
+    SceneBuilderResult(SceneBuilderResult),
 }
 
 impl fmt::Debug for ApiMsg {
@@ -966,6 +969,7 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::WakeUp => "ApiMsg::WakeUp",
             ApiMsg::WakeSceneBuilder => "ApiMsg::WakeSceneBuilder",
             ApiMsg::FlushSceneBuilder(..) => "ApiMsg::FlushSceneBuilder",
+            ApiMsg::SceneBuilderResult(..) => "ApiMsg::SceneBuilderResult",
         })
     }
 }

@@ -244,8 +244,7 @@ pub struct SceneBuilderThread {
     documents: FastHashMap<DocumentId, Document>,
     rx: Receiver<SceneBuilderRequest>,
     backend_rx: Receiver<BackendSceneBuilderRequest>,
-    tx: Sender<SceneBuilderResult>,
-    api_tx: Sender<ApiMsg>,
+    tx: Sender<ApiMsg>,
     config: FrameBuilderConfig,
     default_device_pixel_ratio: f32,
     font_instances: SharedFontInstanceMap,
@@ -260,27 +259,23 @@ pub struct SceneBuilderThread {
 pub struct SceneBuilderThreadChannels {
     rx: Receiver<SceneBuilderRequest>,
     backend_rx: Receiver<BackendSceneBuilderRequest>,
-    tx: Sender<SceneBuilderResult>,
-    api_tx: Sender<ApiMsg>,
+    tx: Sender<ApiMsg>,
 }
 
 impl SceneBuilderThreadChannels {
     pub fn new(
-        api_tx: Sender<ApiMsg>
-    ) -> (Self, Sender<SceneBuilderRequest>, Sender<BackendSceneBuilderRequest>, Receiver<SceneBuilderResult>) {
+        tx: Sender<ApiMsg>
+    ) -> (Self, Sender<SceneBuilderRequest>, Sender<BackendSceneBuilderRequest>) {
         let (in_tx, in_rx) = unbounded_channel();
-        let (out_tx, out_rx) = unbounded_channel();
         let (backend_tx, backend_rx) = unbounded_channel();
         (
             Self {
                 rx: in_rx,
                 backend_rx,
-                tx: out_tx,
-                api_tx,
+                tx,
             },
             in_tx,
             backend_tx,
-            out_rx,
         )
     }
 }
@@ -294,14 +289,13 @@ impl SceneBuilderThread {
         hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
         channels: SceneBuilderThreadChannels,
     ) -> Self {
-        let SceneBuilderThreadChannels { rx, backend_rx, tx, api_tx } = channels;
+        let SceneBuilderThreadChannels { rx, backend_rx, tx } = channels;
 
         Self {
             documents: Default::default(),
             rx,
             backend_rx,
             tx,
-            api_tx,
             config,
             default_device_pixel_ratio,
             font_instances,
@@ -319,8 +313,7 @@ impl SceneBuilderThread {
     /// We first put something in the result queue and then send a wake-up
     /// message to the api queue that the render backend is blocking on.
     pub fn send(&self, msg: SceneBuilderResult) {
-        self.tx.send(msg).unwrap();
-        let _ = self.api_tx.send(ApiMsg::WakeUp);
+        self.tx.send(ApiMsg::SceneBuilderResult(msg)).unwrap();
     }
 
     /// The scene builder thread's event loop.
@@ -373,9 +366,7 @@ impl SceneBuilderThread {
                     self.send(SceneBuilderResult::GetGlyphIndices(request))
                 }
                 Ok(SceneBuilderRequest::Stop) => {
-                    self.tx.send(SceneBuilderResult::Stopped).unwrap();
-                    // We don't need to send a WakeUp to api_tx because we only
-                    // get the Stop when the RenderBackend loop is exiting.
+                    self.send(SceneBuilderResult::Stopped);
                     break;
                 }
                 Ok(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)) => {
@@ -799,14 +790,14 @@ impl SceneBuilderThread {
 
         #[cfg(feature = "capture")]
         match self.capture_config {
-            Some(ref config) => self.tx.send(SceneBuilderResult::CapturedTransactions(txns, config.clone(), result_tx)).unwrap(),
-            None => self.tx.send(SceneBuilderResult::Transactions(txns, result_tx)).unwrap(),
-        }
+            Some(ref config) => self.send(SceneBuilderResult::CapturedTransactions(txns, config.clone(), result_tx)),
+            None => self.send(SceneBuilderResult::Transactions(txns, result_tx)),
+        };
 
         #[cfg(not(feature = "capture"))]
-        self.tx.send(SceneBuilderResult::Transactions(txns, result_tx)).unwrap();
+        self.send(SceneBuilderResult::Transactions(txns, result_tx));
 
-        let _ = self.api_tx.send(ApiMsg::WakeUp);
+        let _ = self.tx.send(ApiMsg::WakeUp);
 
         if let Some(pipeline_info) = pipeline_info {
             // Block until the swap is done, then invoke the hook.
