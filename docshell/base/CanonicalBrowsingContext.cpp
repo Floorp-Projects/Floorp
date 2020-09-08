@@ -514,6 +514,23 @@ void CanonicalBrowsingContext::RemoveFromSessionHistory() {
   }
 }
 
+void CanonicalBrowsingContext::HistoryGo(
+    int32_t aIndex, std::function<void(int32_t&&)>&& aResolver) {
+  nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
+  if (!shistory) {
+    return;
+  }
+
+  nsTArray<nsSHistory::LoadEntryResult> loadResults;
+  nsresult rv = shistory->GotoIndex(aIndex, loadResults);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  aResolver(shistory->GetRequestedIndex());
+  nsSHistory::LoadURIs(loadResults);
+}
+
 JSObject* CanonicalBrowsingContext::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CanonicalBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);

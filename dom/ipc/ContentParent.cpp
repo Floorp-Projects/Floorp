@@ -6941,15 +6941,8 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
     const MaybeDiscarded<BrowsingContext>& aContext, int32_t aIndex,
     HistoryGoResolver&& aResolveRequestedIndex) {
   if (!aContext.IsDiscarded()) {
-    nsSHistory* shistory =
-        static_cast<nsSHistory*>(aContext.get_canonical()->GetSessionHistory());
-    nsTArray<nsSHistory::LoadEntryResult> loadResults;
-    nsresult rv = shistory->GotoIndex(aIndex, loadResults);
-    if (NS_FAILED(rv)) {
-      return IPC_FAIL(this, "GotoIndex failed");
-    }
-    aResolveRequestedIndex(shistory->GetRequestedIndex());
-    shistory->LoadURIs(loadResults);
+    aContext.get_canonical()->HistoryGo(aIndex,
+                                        std::move(aResolveRequestedIndex));
   }
   return IPC_OK();
 }
