@@ -14,13 +14,19 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 });
 
-const sss = Cc["@mozilla.org/ssservice;1"].getService(
-  Ci.nsISiteSecurityService
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "sss",
+  "@mozilla.org/ssservice;1",
+  "nsISiteSecurityService"
 );
 
-const certOverrideService = Cc[
-  "@mozilla.org/security/certoverride;1"
-].getService(Ci.nsICertOverrideService);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "certOverrideService",
+  "@mozilla.org/security/certoverride;1",
+  "nsICertOverrideService"
+);
 
 const CERT_PINNING_ENFORCEMENT_PREF = "security.cert_pinning.enforcement_level";
 const HSTS_PRELOAD_LIST_PREF = "network.stricttransportsecurity.preloadlist";
