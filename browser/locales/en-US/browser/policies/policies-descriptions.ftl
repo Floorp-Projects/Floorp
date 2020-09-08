@@ -130,6 +130,8 @@ policy-LegacySameSiteCookieBehaviorEnabledForDomainList = Revert to legacy SameS
 
 policy-LocalFileLinks = Allow specific websites to link to local files.
 
+policy-ManagedBookmarks = Configures a list of bookmarks managed by an administrator that cannot be changed by the user.
+
 policy-PrimaryPassword = Require or prevent using a Primary Password.
 
 policy-NetworkPrediction = Enable or disable network prediction (DNS prefetching).

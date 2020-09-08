@@ -336,6 +336,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   margin-inline-end: 0;
 }
 
+#managed-bookmarks > .toolbarbutton-icon,
 #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 #PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon[label]:not([label=""]) {
   margin-inline-end: 4px;
