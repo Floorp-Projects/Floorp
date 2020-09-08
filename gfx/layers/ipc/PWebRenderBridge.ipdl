@@ -41,7 +41,7 @@ sync protocol PWebRenderBridge
 
 parent:
   sync EnsureConnected()
-    returns (TextureFactoryIdentifier textureFactoryIdentifier, MaybeIdNamespace maybeIdNamespace);
+    returns (TextureFactoryIdentifier textureFactoryIdentifier, MaybeIdNamespace maybeIdNamespace, nsCString error);
 
   async NewCompositable(CompositableHandle handle, TextureInfo info);
   async ReleaseCompositable(CompositableHandle compositable);

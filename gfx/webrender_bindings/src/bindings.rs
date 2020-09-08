@@ -1430,6 +1430,7 @@ pub extern "C" fn wr_window_new(
     out_handle: &mut *mut DocumentHandle,
     out_renderer: &mut *mut Renderer,
     out_max_texture_size: *mut i32,
+    out_err: &mut *mut c_char,
     enable_gpu_markers: bool,
     panic_on_gl_error: bool,
 ) -> bool {
@@ -1578,6 +1579,7 @@ pub extern "C" fn wr_window_new(
             unsafe {
                 gfx_critical_note(msg.as_ptr());
             }
+            *out_err = msg.into_raw();
             return false;
         }
     };
@@ -1596,6 +1598,13 @@ pub extern "C" fn wr_window_new(
     *out_renderer = Box::into_raw(Box::new(renderer));
 
     return true;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_free_error_msg(msg: *mut c_char) {
+    if msg != ptr::null_mut() {
+        CString::from_raw(msg);
+    }
 }
 
 #[no_mangle]

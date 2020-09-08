@@ -231,7 +231,8 @@ class WebRenderAPI final {
   static already_AddRefed<WebRenderAPI> Create(
       layers::CompositorBridgeParent* aBridge,
       RefPtr<widget::CompositorWidget>&& aWidget,
-      const wr::WrWindowId& aWindowId, LayoutDeviceIntSize aSize);
+      const wr::WrWindowId& aWindowId, LayoutDeviceIntSize aSize,
+      nsACString& aError);
 
   already_AddRefed<WebRenderAPI> Clone();
 
