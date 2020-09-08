@@ -1354,17 +1354,17 @@ BrowserGlue.prototype = {
     AddonManager.maybeInstallBuiltinAddon(
       "firefox-compact-light@mozilla.org",
       "1.0",
-      "resource://builtin-themes/light/"
+      "resource:///modules/themes/light/"
     );
     AddonManager.maybeInstallBuiltinAddon(
       "firefox-compact-dark@mozilla.org",
       "1.0",
-      "resource://builtin-themes/dark/"
+      "resource:///modules/themes/dark/"
     );
     AddonManager.maybeInstallBuiltinAddon(
       "firefox-alpenglow@mozilla.org",
       "1.0",
-      "resource://builtin-themes/alpenglow/"
+      "resource:///modules/themes/alpenglow/"
     );
 
     if (AppConstants.MOZ_NORMANDY) {
