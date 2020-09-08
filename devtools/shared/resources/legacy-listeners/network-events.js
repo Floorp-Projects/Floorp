@@ -64,6 +64,13 @@ module.exports = async function({
       channelId: actor.channelId,
       updates: [],
     };
+
+    // Lets remove the stacktrace info here as
+    // it is passed from the the server by the NETWORK_EVENT_STACKTRACE
+    // resource type.
+    delete resource.cause.stacktraceAvailable;
+    delete resource.cause.lastFrame;
+
     _resources.set(actor.actor, resource);
     onAvailable([resource]);
   }
