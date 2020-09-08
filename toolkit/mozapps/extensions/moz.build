@@ -16,7 +16,6 @@ if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
     DEFINES['MOZ_FENNEC'] = True
 
 DIRS += [
-    'default-theme',
     'internal',
 ]
 TEST_DIRS += ['test']
