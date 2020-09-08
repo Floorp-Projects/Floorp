@@ -438,7 +438,6 @@ const PREFS_CONFIG = new Map([
         enabled: true,
         type: "remote-settings",
         bucket: "cfr-fxa",
-        frequency: { custom: [{ period: "daily", cap: 1 }] },
         updateCycleInMs: 3600000,
       }),
     },
