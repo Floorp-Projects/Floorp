@@ -83,6 +83,16 @@ class QrFragmentTest {
     }
 
     @Test
+    fun `onStop resets state`() {
+        val qrFragment = QrFragment.newInstance(mock())
+        QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
+
+        qrFragment.onStop()
+
+        assertEquals(QrFragment.STATE_FIND_QRCODE, QrFragment.qrState)
+    }
+
+    @Test
     fun `onViewCreated sets initial state`() {
         val qrFragment = QrFragment.newInstance(mock())
         val view: View = mock()
@@ -99,62 +109,84 @@ class QrFragmentTest {
     }
 
     @Test
-    fun `async scanning task invokes listener on successful qr scan`() {
+    fun `listener is invoked on successful qr scan`() {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
-        val task = QrFragment.AsyncScanningTask(listener, reader)
-
+        val qrFragment = spy(QrFragment.newInstance(listener))
         val bitmap = mock<BinaryBitmap>()
         val result = com.google.zxing.Result("qrcode-result", ByteArray(0), emptyArray(), BarcodeFormat.ITF)
         whenever(reader.decodeWithState(any())).thenReturn(result)
-
+        qrFragment.multiFormatReader = reader
+        qrFragment.scanCompleteListener = listener
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
-        task.processImage(bitmap)
+
+        qrFragment.tryScanningBitmap(bitmap)
 
         verify(listener).onScanComplete(eq("qrcode-result"))
         assertEquals(QrFragment.STATE_QRCODE_EXIST, QrFragment.qrState)
     }
 
     @Test
-    fun `async scanning task resets state on error`() {
+    fun `resets state on error`() {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
-        val task = QrFragment.AsyncScanningTask(listener, reader)
-
+        val qrFragment = spy(QrFragment.newInstance(listener))
         val bitmap = mock<BinaryBitmap>()
+        qrFragment.multiFormatReader = reader
         whenever(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
-
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
-        task.processImage(bitmap)
+
+        qrFragment.tryScanningBitmap(bitmap)
 
         assertEquals(QrFragment.STATE_FIND_QRCODE, QrFragment.qrState)
+        verify(reader).reset()
     }
 
     @Test
-    fun `async scanning task does nothing if decoding not in progress`() {
+    fun `don't consider scanning complete if decoding not in progress`() {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
-        val task = QrFragment.AsyncScanningTask(listener, reader)
-
+        val qrFragment = spy(QrFragment.newInstance(listener))
         val bitmap = mock<BinaryBitmap>()
+        qrFragment.scanCompleteListener = listener
+        qrFragment.multiFormatReader = reader
         whenever(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
-
         QrFragment.qrState = QrFragment.STATE_FIND_QRCODE
-        assertNull(task.processImage(bitmap))
+
+        qrFragment.tryScanningBitmap(bitmap)
+
         verify(reader, never()).decodeWithState(any())
+        verify(listener, never()).onScanComplete(any())
+    }
+
+    @Test
+    fun `early return null for decoding attempt if decoding not in progress`() {
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val reader = mock<MultiFormatReader>()
+        val qrFragment = spy(QrFragment.newInstance(listener))
+        val bitmap = mock<BinaryBitmap>()
+        qrFragment.multiFormatReader = reader
+        whenever(reader.decodeWithState(any())).thenThrow(NotFoundException::class.java)
+        QrFragment.qrState = QrFragment.STATE_FIND_QRCODE
+
+        val decodeResult = qrFragment.decodeBitmap(bitmap)
+
+        assertNull(decodeResult)
+        verify(reader, never()).decodeWithState(any())
+        verify(listener, never()).onScanComplete(any())
     }
 
     @Test
     fun `async scanning decodes original unmodified image`() {
         val listener = mock<QrFragment.OnScanCompleteListener>()
         val reader = mock<MultiFormatReader>()
-        val task = QrFragment.AsyncScanningTask(listener, reader)
+        val qrFragment = QrFragment.newInstance(listener)
         val imageCaptor = argumentCaptor<BinaryBitmap>()
-
         val bitmap = mock<BinaryBitmap>()
-
+        qrFragment.multiFormatReader = reader
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
-        task.processImage(bitmap)
+
+        qrFragment.decodeBitmap(bitmap)
         verify(reader).decodeWithState(imageCaptor.capture())
         assertSame(bitmap, imageCaptor.value)
     }

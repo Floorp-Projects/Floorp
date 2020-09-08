@@ -30,7 +30,6 @@ import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
 import android.media.Image
 import android.media.ImageReader
-import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -43,6 +42,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import com.google.zxing.BinaryBitmap
@@ -50,6 +50,9 @@ import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.feature.qr.views.AutoFitTextureView
 import mozilla.components.feature.qr.views.CustomViewFinder
 import mozilla.components.support.base.log.logger.Logger
@@ -75,7 +78,9 @@ import kotlin.math.min
 @Suppress("TooManyFunctions", "LargeClass")
 class QrFragment : Fragment() {
     private val logger = Logger("mozac-qr")
-
+    @VisibleForTesting
+    internal var multiFormatReader = MultiFormatReader()
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
     /**
      * [TextureView.SurfaceTextureListener] handles several lifecycle events on a [TextureView].
      */
@@ -192,12 +197,15 @@ class QrFragment : Fragment() {
             try {
                 image = reader.acquireNextImage()
                 val availableImage = image
-                if (availableImage != null) {
+                if (availableImage != null && scanCompleteListener != null) {
                     val source = readImageSource(availableImage)
                     val bitmap = BinaryBitmap(HybridBinarizer(source))
                     if (qrState == STATE_FIND_QRCODE) {
                         qrState = STATE_DECODE_PROGRESS
-                        AsyncScanningTask(scanCompleteListener).execute(bitmap)
+
+                        coroutineScope.launch {
+                            tryScanningBitmap(bitmap)
+                        }
                     }
                 }
             } finally {
@@ -239,6 +247,13 @@ class QrFragment : Fragment() {
         closeCamera()
         stopBackgroundThread()
         super.onPause()
+    }
+
+    override fun onStop() {
+        // Ensure we'll continue tracking qr codes when the user returns to the application
+        qrState = STATE_FIND_QRCODE
+
+        super.onStop()
     }
 
     internal fun startBackgroundThread() {
@@ -593,33 +608,35 @@ class QrFragment : Fragment() {
         @Volatile internal var qrState: Int = 0
     }
 
-    internal class AsyncScanningTask(
-        private val scanCompleteListener: OnScanCompleteListener?,
-        private val multiFormatReader: MultiFormatReader = MultiFormatReader()
-    ) : AsyncTask<BinaryBitmap, Void, Void>() {
+    @VisibleForTesting
+    internal fun tryScanningBitmap(bitmap: BinaryBitmap) {
+        scanCompleteListener?.let {
+            decodeBitmap(bitmap)?.let {
+                scanCompleteListener?.onScanComplete(it)
+            }
+        }
+    }
 
-        override fun doInBackground(vararg bitmaps: BinaryBitmap): Void? {
-            return processImage(bitmaps[0])
+    @VisibleForTesting
+    internal fun decodeBitmap(bitmap: BinaryBitmap): String? {
+        if (qrState != STATE_DECODE_PROGRESS) {
+            return null
         }
 
-        fun processImage(bitmap: BinaryBitmap): Void? {
-            if (qrState != STATE_DECODE_PROGRESS) {
-                return null
-            }
-
-            try {
-                val rawResult = multiFormatReader.decodeWithState(bitmap)
-                if (rawResult != null) {
-                    qrState = STATE_QRCODE_EXIST
-                    scanCompleteListener?.onScanComplete(rawResult.toString())
-                }
-            } catch (e: NotFoundException) {
+        return try {
+            val rawResult = multiFormatReader.decodeWithState(bitmap)
+            if (rawResult != null) {
+                qrState = STATE_QRCODE_EXIST
+                rawResult.toString()
+            } else {
                 qrState = STATE_FIND_QRCODE
-            } finally {
-                multiFormatReader.reset()
+                null
             }
-
-            return null
+        } catch (e: NotFoundException) {
+            qrState = STATE_FIND_QRCODE
+            null
+        } finally {
+            multiFormatReader.reset()
         }
     }
 }
