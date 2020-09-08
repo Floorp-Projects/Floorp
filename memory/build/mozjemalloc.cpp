@@ -127,7 +127,6 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/HelperMacros.h"
@@ -971,8 +970,8 @@ struct arena_t {
 
   void DallocRun(arena_run_t* aRun, bool aDirty);
 
-  MOZ_MUST_USE bool SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
-                             bool aZero);
+  [[nodiscard]] bool SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
+                              bool aZero);
 
   void TrimRunHead(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize,
                    size_t aNewSize);
@@ -1310,7 +1309,7 @@ static inline void pages_decommit(void* aAddr, size_t aSize) {
 }
 
 // Commit pages. Returns whether pages were committed.
-MOZ_MUST_USE static inline bool pages_commit(void* aAddr, size_t aSize) {
+[[nodiscard]] static inline bool pages_commit(void* aAddr, size_t aSize) {
 #ifdef XP_WIN
   // The region starting at addr may have been allocated in multiple calls
   // to VirtualAlloc and recycled, so committing the entire region in one
