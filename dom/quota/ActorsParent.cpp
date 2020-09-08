@@ -89,6 +89,18 @@
 #  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
 
+// As part of bug 1536596 in order to identify the remaining sources of
+// principal info inconsistencies, we have added anonymized crash logging and
+// are temporarily making these checks occur on both debug and optimized
+// nightly, dev-edition, and early beta builds through use of
+// EARLY_BETA_OR_EARLIER during Firefox 82.  The plan is to return this
+// condition to MOZ_DIAGNOSTIC_ASSERT_ENABLED during Firefox 84 at the latest.
+// The analysis and disabling is tracked by bug 1536596.
+
+#ifdef EARLY_BETA_OR_EARLIER
+#  define QM_PRINCIPALINFO_VERIFICATION_ENABLED
+#endif
+
 #define QM_LOG_TEST() MOZ_LOG_TEST(GetQuotaManagerLogger(), LogLevel::Info)
 #define QM_LOG(_args) MOZ_LOG(GetQuotaManagerLogger(), LogLevel::Info, _args)
 
@@ -1771,7 +1783,7 @@ class RecordQuotaInfoLoadTimeHelper final : public Runnable {
  * Helper classes
  ******************************************************************************/
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
 
 class PrincipalVerifier final : public Runnable {
   nsTArray<PrincipalInfo> mPrincipalInfos;
@@ -1789,7 +1801,8 @@ class PrincipalVerifier final : public Runnable {
 
   virtual ~PrincipalVerifier() = default;
 
-  bool IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo);
+  Result<Ok, nsCString> CheckPrincipalInfoValidity(
+      const PrincipalInfo& aPrincipalInfo);
 
   NS_DECL_NSIRUNNABLE
 };
@@ -1889,7 +1902,7 @@ nsresult MaybeUpdateGroupForOrigin(const nsACString& aOrigin,
       aGroup = upToDateGroup;
       aUpdated = true;
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
       ContentPrincipalInfo contentPrincipalInfo;
       contentPrincipalInfo.attrs() = originAttributes;
       contentPrincipalInfo.originNoSuffix() = originNoSuffix;
@@ -10454,7 +10467,7 @@ void ListOriginsOp::GetResponse(RequestResponse& aResponse) {
   mOrigins.SwapElements(origins);
 }
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
 
 // static
 already_AddRefed<PrincipalVerifier> PrincipalVerifier::CreateAndDispatch(
@@ -10469,14 +10482,14 @@ already_AddRefed<PrincipalVerifier> PrincipalVerifier::CreateAndDispatch(
   return verifier.forget();
 }
 
-bool PrincipalVerifier::IsPrincipalInfoValid(
+Result<Ok, nsCString> PrincipalVerifier::CheckPrincipalInfoValidity(
     const PrincipalInfo& aPrincipalInfo) {
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (aPrincipalInfo.type()) {
     // A system principal is acceptable.
     case PrincipalInfo::TSystemPrincipalInfo: {
-      return true;
+      return Ok{};
     }
 
     case PrincipalInfo::TContentPrincipalInfo: {
@@ -10486,40 +10499,51 @@ bool PrincipalVerifier::IsPrincipalInfoValid(
       nsCOMPtr<nsIURI> uri;
       nsresult rv = NS_NewURI(getter_AddRefs(uri), info.spec());
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
+        return Err("NS_NewURI failed"_ns);
       }
 
       nsCOMPtr<nsIPrincipal> principal =
           BasePrincipal::CreateContentPrincipal(uri, info.attrs());
       if (NS_WARN_IF(!principal)) {
-        return false;
+        return Err("CreateContentPrincipal failed"_ns);
       }
 
       nsCString originNoSuffix;
       rv = principal->GetOriginNoSuffix(originNoSuffix);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
+        return Err("GetOriginNoSuffix failed"_ns);
       }
 
       if (NS_WARN_IF(originNoSuffix != info.originNoSuffix())) {
-        QM_WARNING("originNoSuffix (%s) doesn't match passed one (%s)!",
-                   originNoSuffix.get(), info.originNoSuffix().get());
-        return false;
+        static const char messageTemplate[] =
+            "originNoSuffix (%s) doesn't match passed one (%s)!";
+
+        QM_WARNING(messageTemplate, originNoSuffix.get(),
+                   info.originNoSuffix().get());
+
+        return Err(nsPrintfCString(
+            messageTemplate, AnonymizedOriginString(originNoSuffix).get(),
+            AnonymizedOriginString(info.originNoSuffix()).get()));
       }
 
       nsCString baseDomain;
       rv = principal->GetBaseDomain(baseDomain);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
+        return Err("GetBaseDomain failed"_ns);
       }
 
       if (NS_WARN_IF(baseDomain != info.baseDomain())) {
-        QM_WARNING("baseDomain (%s) doesn't match passed one (%s)!",
-                   baseDomain.get(), info.baseDomain().get());
-        return false;
+        static const char messageTemplate[] =
+            "baseDomain (%s) doesn't match passed one (%s)!";
+
+        QM_WARNING(messageTemplate, baseDomain.get(), info.baseDomain().get());
+
+        return Err(nsPrintfCString(messageTemplate,
+                                   AnonymizedCString(baseDomain).get(),
+                                   AnonymizedCString(info.baseDomain()).get()));
       }
 
-      return true;
+      return Ok{};
     }
 
     default: {
@@ -10527,16 +10551,39 @@ bool PrincipalVerifier::IsPrincipalInfoValid(
     }
   }
 
-  // Null and expanded principals are not acceptable.
-  return false;
+  return Err("Null and expanded principals are not acceptable"_ns);
 }
 
 NS_IMETHODIMP
 PrincipalVerifier::Run() {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsAutoCString allDetails;
   for (auto& principalInfo : mPrincipalInfos) {
-    MOZ_DIAGNOSTIC_ASSERT(IsPrincipalInfoValid(principalInfo));
+    const auto res = CheckPrincipalInfoValidity(principalInfo);
+    if (res.isErr()) {
+      if (!allDetails.IsEmpty()) {
+        allDetails.AppendLiteral(", ");
+      }
+
+      allDetails.Append(res.inspectErr());
+    }
+  }
+
+  if (!allDetails.IsEmpty()) {
+    allDetails.Insert("Invalid principal infos found: ", 0);
+
+    // In case of invalid principal infos, this will produce a crash reason such
+    // as:
+    //   Invalid principal infos found: originNoSuffix (https://aaa.aaaaaaa.aaa)
+    //   doesn't match passed one (about:aaaa)!
+    //
+    // In case of errors while validating a principal, it will contain a
+    // different message describing that error, which does not contain any
+    // details of the actual principal info at the moment.
+    //
+    // This string will be leaked.
+    MOZ_CRASH_UNSAFE(strdup(allDetails.BeginReading()));
   }
 
   return NS_OK;
@@ -10685,7 +10732,7 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
 
   nsresult rv;
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
   nsTArray<PrincipalInfo> principalInfos;
 #endif
 
@@ -10738,7 +10785,7 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
             principalInfo, &originProps.mSuffix, &originProps.mGroup,
             &originProps.mOrigin);
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
         principalInfos.AppendElement(principalInfo);
 #endif
 
@@ -10755,7 +10802,7 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
     }
   }
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
   if (!principalInfos.IsEmpty()) {
     RefPtr<PrincipalVerifier> principalVerifier =
         PrincipalVerifier::CreateAndDispatch(std::move(principalInfos));
