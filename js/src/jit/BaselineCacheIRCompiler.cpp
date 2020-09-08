@@ -11,6 +11,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
+#include "js/friend/DOMProxy.h"       // JS::ExpandoAndGeneration
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
 #include "util/Unicode.h"
@@ -25,6 +26,8 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::Maybe;
+
+using JS::ExpandoAndGeneration;
 
 namespace js {
 namespace jit {

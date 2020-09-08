@@ -19,6 +19,7 @@
 #include "jit/Ion.h"  // IsIonEnabled
 #include "jit/JitContext.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
+#include "js/friend/DOMProxy.h"       // JS::ExpandoAndGeneration
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowIfWindowProxy
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo, JS::XrayJitInfo
 #include "js/ScalarType.h"  // js::Scalar::Type
@@ -44,6 +45,9 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
+
+using JS::DOMProxyShadowsResult;
+using JS::ExpandoAndGeneration;
 
 const char* const js::jit::CacheKindNames[] = {
 #define DEFINE_KIND(kind) #kind,
@@ -271,20 +275,21 @@ static ProxyStubType GetProxyStubType(JSContext* cx, HandleObject obj,
   }
 
   DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
-  if (shadows == ShadowCheckFailed) {
+  if (shadows == DOMProxyShadowsResult::ShadowCheckFailed) {
     cx->clearPendingException();
     return ProxyStubType::None;
   }
 
   if (DOMProxyIsShadowing(shadows)) {
-    if (shadows == ShadowsViaDirectExpando ||
-        shadows == ShadowsViaIndirectExpando) {
+    if (shadows == DOMProxyShadowsResult::ShadowsViaDirectExpando ||
+        shadows == DOMProxyShadowsResult::ShadowsViaIndirectExpando) {
       return ProxyStubType::DOMExpando;
     }
     return ProxyStubType::DOMShadowed;
   }
 
-  MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
+  MOZ_ASSERT(shadows == DOMProxyShadowsResult::DoesntShadow ||
+             shadows == DOMProxyShadowsResult::DoesntShadowUnique);
   return ProxyStubType::DOMUnshadowed;
 }
 

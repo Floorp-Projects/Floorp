@@ -12,7 +12,8 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Element.h"
-#include "jsfriendapi.h"  // For js::ExpandoAndGeneration
+#include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
+#include "js/RootingAPI.h"       // JS::Handle
 
 namespace mozilla {
 class ErrorResult;
@@ -44,7 +45,7 @@ class nsDOMStringMap : public nsStubMutationObserver, public nsWrapperCache {
   void NamedDeleter(const nsAString& aProp, bool& found);
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
-  js::ExpandoAndGeneration mExpandoAndGeneration;
+  JS::ExpandoAndGeneration mExpandoAndGeneration;
 
  private:
   virtual ~nsDOMStringMap();
