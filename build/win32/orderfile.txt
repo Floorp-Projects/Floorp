@@ -465,11 +465,9 @@ XPCOMService_GetObserverService
 ?AddRef@AccessibleCaretEventHub@mozilla@@UAGKXZ
 ??$AppendElement@AAV?$nsTAutoStringN@D$0EA@@@UnsTArrayInfallibleAllocator@@@?$nsTArray_Impl@V?$nsTString@D@@UnsTArrayInfallibleAllocator@@@@IAEPAV?$nsTString@D@@AAV?$nsTAutoStringN@D$0EA@@@@Z
 ?GetPreference@Preferences@mozilla@@SAXPAVPref@dom@2@@Z
-??$AddAtomicBoolVarCache@$0A@@Preferences@mozilla@@SAXPAV?$Atomic@_N$0A@X@1@ABV?$nsTSubstring@D@@_N@Z
 ??$RegisterCallbackImpl@$$CBV?$nsTSubstring@D@@@Preferences@mozilla@@CA?AW4nsresult@@P6AXPBDPAX@ZABV?$nsTSubstring@D@@1W4MatchKind@01@_N@Z
 ?GetComplex@Preferences@mozilla@@SA?AW4nsresult@@PBDABUnsID@@PAPAXW4PrefValueKind@2@@Z
 ?GetBool@Preferences@mozilla@@SA?AW4nsresult@@PBDPA_NW4PrefValueKind@2@@Z
-??$AddAtomicBoolVarCache@$01@Preferences@mozilla@@SAXPAV?$Atomic@_N$01X@1@ABV?$nsTSubstring@D@@_N@Z
 ?SetPreference@Preferences@mozilla@@SAXABVPref@dom@2@@Z
 ?Allocate@ArenaChunk@?$ArenaAllocator@$0BAAA@$00@mozilla@@QAEPAXI@Z
 ?SavePrefFileBlocking@Preferences@mozilla@@QAE?AW4nsresult@@XZ
@@ -6465,7 +6463,6 @@ Gecko_TakeFromCString
 ?ComputeCrossOriginOpenerPolicy@HttpBaseChannel@net@mozilla@@UAG?AW4nsresult@@W4CrossOriginOpenerPolicy@nsILoadInfo@@PAW456@@Z
 ?OnStartRequest@nsDocumentOpenInfo@@UAG?AW4nsresult@@PAVnsIRequest@@@Z
 ?GetResponseStatus@HttpBaseChannel@net@mozilla@@UAG?AW4nsresult@@PAI@Z
-?AddBoolVarCache@Preferences@mozilla@@SAXPA_NABV?$nsTSubstring@D@@_N@Z
 ?GetResponseHeader@HttpBaseChannel@net@mozilla@@UAG?AW4nsresult@@ABV?$nsTSubstring@D@@AAV5@@Z
 ?GetHeader@nsHttpRequestHead@net@mozilla@@QAE?AW4nsresult@@UnsHttpAtom@23@AAV?$nsTSubstring@D@@@Z
 ?GetStatus@HttpBaseChannel@net@mozilla@@UAG?AW4nsresult@@PAW44@@Z

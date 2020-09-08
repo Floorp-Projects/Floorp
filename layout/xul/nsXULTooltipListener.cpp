@@ -53,7 +53,7 @@ nsXULTooltipListener::nsXULTooltipListener()
       mLastTreeRow(-1)
 #endif
 {
-  // FIXME(emilio): This can be faster, this should use BoolVarCache.
+  // FIXME(emilio): This can be faster, this should use static prefs.
   //
   // register the callback so we get notified of updates
   Preferences::RegisterCallback(ToolbarTipsPrefChanged,
