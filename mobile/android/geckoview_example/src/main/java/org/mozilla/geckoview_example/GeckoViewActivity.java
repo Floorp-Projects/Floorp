@@ -17,6 +17,7 @@ import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.GeckoWebExecutor;
+import org.mozilla.geckoview.Image;
 import org.mozilla.geckoview.SlowScriptResponse;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
@@ -108,7 +109,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
                                      TabSessionManager.TabObserver {
     public WebExtension extension;
 
-    private LruCache<WebExtension.Icon, Bitmap> mBitmapCache = new LruCache<>(5);
+    private LruCache<Image, Bitmap> mBitmapCache = new LruCache<>(5);
     private GeckoRuntime mRuntime;
     private WebExtension.Action mDefaultAction;
     private TabSessionManager mTabManager;
@@ -274,7 +275,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
                         resolved.badgeBackgroundColor
                 ));
             } else {
-                resolved.icon.get(100).accept(bitmap -> {
+                resolved.icon.getBitmap(100).accept(bitmap -> {
                     mBitmapCache.put(resolved.icon, bitmap);
                     extensionDelegate.onActionButton(new ActionButton(
                         bitmap, resolved.badgeText,
