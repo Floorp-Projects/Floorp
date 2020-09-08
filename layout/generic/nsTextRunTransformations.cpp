@@ -123,8 +123,6 @@ nsTransformingTextRunFactory::MakeTextRun(
 void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
                               const bool* aCharsToMerge,
                               const bool* aDeletedChars) {
-  aDest->ResetGlyphRuns();
-
   gfxTextRun::GlyphRunIterator iter(aSrc, gfxTextRun::Range(aSrc));
   uint32_t offset = 0;
   AutoTArray<gfxTextRun::DetailedGlyph, 2> glyphs;
@@ -176,14 +174,21 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
           !aCharsToMerge[mergeRunStart],
           "unable to merge across a glyph run boundary, glyph(s) discarded");
       if (!aCharsToMerge[mergeRunStart]) {
-        if (anyMissing) {
-          mergedGlyph.SetMissing(glyphs.Length());
+        // Determine if we can just copy the existing simple glyph record.
+        if (mergedGlyph.IsSimpleGlyph() && glyphs.Length() == 1) {
+          // Do nothing, we will store mergedGlyph into destGlyphs below.
         } else {
-          mergedGlyph.SetComplex(mergedGlyph.IsClusterStart(),
-                                 mergedGlyph.IsLigatureGroupStart(),
-                                 glyphs.Length());
+          // Otherwise set up complex glyph record and store detailed glyphs.
+          destGlyphs[offset].ClearGlyphInfo();
+          if (anyMissing) {
+            mergedGlyph.SetMissing(glyphs.Length());
+          } else {
+            mergedGlyph.SetComplex(mergedGlyph.IsClusterStart(),
+                                   mergedGlyph.IsLigatureGroupStart(),
+                                   glyphs.Length());
+          }
+          aDest->SetDetailedGlyphs(offset, glyphs.Length(), glyphs.Elements());
         }
-        aDest->SetDetailedGlyphs(offset, glyphs.Length(), glyphs.Elements());
         destGlyphs[offset++] = mergedGlyph;
 
         while (offset < aDest->GetLength() && aDeletedChars[offset]) {
@@ -854,6 +859,7 @@ void nsCaseTransformTextRunFactory::RebuildTextRun(
     transformedChild->FinishSettingProperties(aRefDrawTarget, aMFR);
   }
 
+  aTextRun->ResetGlyphRuns();
   if (mergeNeeded) {
     // Now merge multiple characters into one multi-glyph character as required
     // and deal with skipping deleted accent chars
@@ -867,7 +873,6 @@ void nsCaseTransformTextRunFactory::RebuildTextRun(
     // No merging to do, so just copy; this produces a more optimized textrun.
     // We can't steal the data because the child may be cached and stealing
     // the data would break the cache.
-    aTextRun->ResetGlyphRuns();
     aTextRun->CopyGlyphDataFrom(child, gfxTextRun::Range(child), 0);
   }
 }
