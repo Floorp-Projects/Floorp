@@ -52,7 +52,7 @@ class txLoadedDocumentsHash : public nsTHashtable<txLoadedDocumentEntry> {
  public:
   txLoadedDocumentsHash() : nsTHashtable<txLoadedDocumentEntry>(4) {}
   ~txLoadedDocumentsHash();
-  MOZ_MUST_USE nsresult init(const txXPathNode& aSource);
+  [[nodiscard]] nsresult init(const txXPathNode& aSource);
 
  private:
   friend class txExecutionState;
