@@ -81,20 +81,41 @@ class TabCounterMenu(
     }
 
     @VisibleForTesting
-    internal fun menuItems(showOnly: BrowsingMode?): List<MenuCandidate> {
+    internal fun menuItems(showOnly: BrowsingMode): List<MenuCandidate> {
         return when (showOnly) {
             BrowsingMode.Normal -> listOf(newTabItem)
             BrowsingMode.Private -> listOf(newPrivateTabItem)
-            null -> listOf(
-                newTabItem,
-                newPrivateTabItem,
-                DividerMenuCandidate(),
-                closeTabItem
-            )
         }
     }
 
-    fun updateMenu(showOnly: BrowsingMode? = null) {
+    @VisibleForTesting
+    internal fun menuItems(toolbarPosition: ToolbarPosition): List<MenuCandidate> {
+        val items = listOf(
+            newTabItem,
+            newPrivateTabItem,
+            DividerMenuCandidate(),
+            closeTabItem
+        )
+
+        return when (toolbarPosition) {
+            ToolbarPosition.BOTTOM -> items.reversed()
+            ToolbarPosition.TOP -> items
+        }
+    }
+
+    /**
+     * Update the displayed menu items.
+     * @param showOnly Show only the new tab item corresponding to the given [BrowsingMode].
+     */
+    fun updateMenu(showOnly: BrowsingMode) {
         menuController.submitList(menuItems(showOnly))
+    }
+
+    /**
+     * Update the displayed menu items.
+     * @param toolbarPosition Return a list that is ordered based on the given [ToolbarPosition].
+     */
+    fun updateMenu(toolbarPosition: ToolbarPosition) {
+        menuController.submitList(menuItems(toolbarPosition))
     }
 }

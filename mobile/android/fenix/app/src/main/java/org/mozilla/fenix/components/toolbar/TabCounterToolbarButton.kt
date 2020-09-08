@@ -34,6 +34,7 @@ class TabCounterToolbarButton(
     override fun createView(parent: ViewGroup): View {
         val store = parent.context.components.core.store
         val metrics = parent.context.components.analytics.metrics
+        val settings = parent.context.components.settings
 
         store.flowScoped(lifecycleOwner) { flow ->
             flow.map { state -> state.getNormalOrPrivateTabs(isPrivate).size }
@@ -42,7 +43,7 @@ class TabCounterToolbarButton(
         }
 
         val menu = TabCounterMenu(parent.context, metrics, onItemTapped)
-        menu.updateMenu()
+        menu.updateMenu(settings.toolbarPosition)
 
         val view = TabCounter(parent.context).apply {
             reference = WeakReference(this)

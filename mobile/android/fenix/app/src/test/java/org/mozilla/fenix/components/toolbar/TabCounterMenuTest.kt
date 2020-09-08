@@ -40,7 +40,7 @@ class TabCounterMenuTest {
 
     @Test
     fun `all items use primary text color styling`() {
-        val items = menu.menuItems(showOnly = null)
+        val items = menu.menuItems(ToolbarPosition.BOTTOM)
         assertEquals(4, items.size)
 
         val textItems = items.mapNotNull { it as? TextMenuCandidate }
@@ -85,7 +85,7 @@ class TabCounterMenuTest {
 
     @Test
     fun `return two new tab items and a close button`() {
-        val (newTab, newPrivateTab, divider, closeTab) = menu.menuItems(showOnly = null)
+        val (newTab, newPrivateTab, divider, closeTab) = menu.menuItems(ToolbarPosition.TOP)
 
         assertEquals("New tab", (newTab as TextMenuCandidate).text)
         assertEquals("New private tab", (newPrivateTab as TextMenuCandidate).text)
