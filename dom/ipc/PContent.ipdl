@@ -554,6 +554,8 @@ child:
 
     async ClearImageCache(bool privateLoader, bool chrome);
 
+    async ClearStyleSheetCache(nsIPrincipal? aForPrincipal);
+
     async SetOffline(bool offline);
     async SetConnectivity(bool connectivity);
     async SetCaptivePortalState(int32_t aState);

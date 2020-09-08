@@ -999,7 +999,7 @@ nsDOMWindowUtils::SuppressAnimation(bool aSuppress) {
 
 NS_IMETHODIMP
 nsDOMWindowUtils::ClearSharedStyleSheetCache() {
-  SharedStyleSheetCache::ClearForTest();
+  SharedStyleSheetCache::Clear();
   return NS_OK;
 }
 
