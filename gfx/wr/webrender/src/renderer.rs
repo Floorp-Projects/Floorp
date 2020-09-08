@@ -2668,7 +2668,7 @@ impl Renderer {
         let lp_scene_thread_name = format!("WRSceneBuilderLP#{}", options.renderer_id.unwrap_or(0));
         let glyph_rasterizer = GlyphRasterizer::new(workers)?;
 
-        let (scene_builder_channels, scene_tx, backend_scene_tx, scene_rx) =
+        let (scene_builder_channels, scene_tx, backend_scene_tx) =
             SceneBuilderThreadChannels::new(api_tx.clone());
 
         let sb_font_instances = font_instances.clone();
@@ -2763,7 +2763,6 @@ impl Renderer {
                 scene_tx,
                 low_priority_scene_tx,
                 backend_scene_tx,
-                scene_rx,
                 device_pixel_ratio,
                 resource_cache,
                 backend_notifier,
