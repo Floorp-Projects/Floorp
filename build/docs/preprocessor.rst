@@ -182,9 +182,10 @@ Filters are run in alphabetical order on a per-line basis.
 
 emptyLines
    strips blank lines from the output
-slashslash
-   strips everything from the first two consecutive slash (``/``)
-   characters until the end of the line
+dumbComments
+    dumbComments: empties out any line that consists of optional whitespace
+    followed by a ``//``. Good for getting rid of comments that are on their
+    own lines, and being smarter with a simple regexp filter is impossible
 substitution
    all variables wrapped in @ are replaced with their value. If the
    variable is not defined, it is a fatal error. Similar to ``#expand``
