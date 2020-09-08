@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const EXPORTED_SYMBOLS = ["legacyaction"];
+
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -22,8 +24,6 @@ XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
 const DEFAULT_CONTEXT_MENU_DELAY = 750; // ms
-
-this.EXPORTED_SYMBOLS = ["legacyaction"];
 
 /* global action */
 /** @namespace */

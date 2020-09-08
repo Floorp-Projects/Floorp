@@ -41,7 +41,7 @@ requirements.
 To export symbols to other Marionette modules, remember to assign
 your exported symbols to the shared global `this`:
 
-	this.EXPORTED_SYMBOLS = ["PollPromise", "TimedPromise"];
+	const EXPORTED_SYMBOLS = ["PollPromise", "TimedPromise"];
 
 When importing symbols in Marionette code, try to be specific about
 what you need:

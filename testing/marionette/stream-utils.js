@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["StreamUtils"];
+
 const CC = Components.Constructor;
 
 const { EventEmitter } = ChromeUtils.import(
@@ -17,8 +19,6 @@ const ScriptableInputStream = CC(
   "nsIScriptableInputStream",
   "init"
 );
-
-this.EXPORTED_SYMBOLS = ["StreamUtils"];
 
 const BUFFER_SIZE = 0x8000;
 

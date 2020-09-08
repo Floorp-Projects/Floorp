@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["evaluate", "sandbox", "Sandboxes"];
+
 const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
@@ -19,8 +21,6 @@ const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
-
-this.EXPORTED_SYMBOLS = ["evaluate", "sandbox", "Sandboxes"];
 
 const ARGUMENTS = "__webDriverArguments";
 const CALLBACK = "__webDriverCallback";

@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["DebuggerTransport"];
+
 const CC = Components.Constructor;
 
 const { EventEmitter } = ChromeUtils.import(
@@ -34,8 +36,6 @@ const ScriptableInputStream = CC(
   "nsIScriptableInputStream",
   "init"
 );
-
-this.EXPORTED_SYMBOLS = ["DebuggerTransport"];
 
 const PACKET_HEADER_MAX = 200;
 

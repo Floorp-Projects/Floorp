@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["Branch", "MarionettePrefs"];
+
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -18,8 +20,6 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 const { PREF_BOOL, PREF_INT, PREF_INVALID, PREF_STRING } = Ci.nsIPrefBranch;
-
-this.EXPORTED_SYMBOLS = ["Branch", "MarionettePrefs"];
 
 class Branch {
   /**

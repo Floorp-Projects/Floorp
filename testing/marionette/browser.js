@@ -5,6 +5,8 @@
 "use strict";
 /* global frame */
 
+const EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -25,8 +27,6 @@ const {
 } = ChromeUtils.import("chrome://marionette/content/sync.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
-
-this.EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
 
 /** @namespace */
 this.browser = {};

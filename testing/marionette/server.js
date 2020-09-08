@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["TCPConnection", "TCPListener"];
+
 const CC = Components.Constructor;
 
 const ServerSocket = CC(
@@ -40,8 +42,6 @@ const { DebuggerTransport } = ChromeUtils.import(
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 const { KeepWhenOffline, LoopbackOnly } = Ci.nsIServerSocket;
-
-this.EXPORTED_SYMBOLS = ["TCPConnection", "TCPListener"];
 
 /** @namespace */
 this.server = {};

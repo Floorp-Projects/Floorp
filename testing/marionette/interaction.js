@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
 /* eslint-disable no-restricted-globals */
+
+"use strict";
+
+const EXPORTED_SYMBOLS = ["interaction"];
 
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
@@ -27,8 +30,6 @@ const { TimedPromise } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
-
-this.EXPORTED_SYMBOLS = ["interaction"];
 
 /** XUL elements that support disabled attribute. */
 const DISABLED_ATTRIBUTE_SUPPORTED_XUL = new Set([

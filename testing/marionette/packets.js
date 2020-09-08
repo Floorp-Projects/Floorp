@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["RawPacket", "Packet", "JSONPacket", "BulkPacket"];
+
 /**
  * Packets contain read / write functionality for the different packet types
  * supported by the debugging protocol, so that a transport can focus on
@@ -42,8 +44,6 @@ const defer = function() {
   };
   return deferred;
 };
-
-this.EXPORTED_SYMBOLS = ["RawPacket", "Packet", "JSONPacket", "BulkPacket"];
 
 // The transport's previous check ensured the header length did not
 // exceed 20 characters.  Here, we opt for the somewhat smaller, but still

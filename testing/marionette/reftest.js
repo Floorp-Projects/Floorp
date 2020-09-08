@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["reftest"];
+
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
@@ -28,8 +30,6 @@ ChromeUtils.defineModuleGetter(
   "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm"
 );
-
-this.EXPORTED_SYMBOLS = ["reftest"];
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

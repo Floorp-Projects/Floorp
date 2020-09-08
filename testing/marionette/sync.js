@@ -4,6 +4,19 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = [
+  "executeSoon",
+  "DebounceCallback",
+  "IdlePromise",
+  "MessageManagerDestroyedPromise",
+  "PollPromise",
+  "Sleep",
+  "TimedPromise",
+  "waitForEvent",
+  "waitForMessage",
+  "waitForObserverTopic",
+];
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -19,19 +32,6 @@ const { truncate } = ChromeUtils.import(
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
-
-this.EXPORTED_SYMBOLS = [
-  "executeSoon",
-  "DebounceCallback",
-  "IdlePromise",
-  "MessageManagerDestroyedPromise",
-  "PollPromise",
-  "Sleep",
-  "TimedPromise",
-  "waitForEvent",
-  "waitForMessage",
-  "waitForObserverTopic",
-];
 
 const { TYPE_ONE_SHOT, TYPE_REPEATING_SLACK } = Ci.nsITimer;
 

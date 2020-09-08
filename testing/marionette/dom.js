@@ -4,6 +4,11 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = [
+  "ContentEventObserverService",
+  "WebElementEventTarget",
+];
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -11,11 +16,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
-
-this.EXPORTED_SYMBOLS = [
-  "ContentEventObserverService",
-  "WebElementEventTarget",
-];
 
 /**
  * The ``EventTarget`` for web elements can be used to observe DOM
