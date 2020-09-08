@@ -7,6 +7,7 @@
 #include "QuotaCommon.h"
 
 #include "mozilla/Logging.h"  // LazyLogModule
+#include "nsIConsoleService.h"
 #include "nsIFile.h"
 #include "nsXPCOM.h"
 #include "nsXULAppAPI.h"
@@ -127,6 +128,57 @@ Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath) {
   return file;
 }
 
+nsAutoString GetIntString(const int64_t aInteger) {
+  nsAutoString res;
+  res.AppendInt(aInteger);
+  return res;
+}
+
+nsAutoCString GetIntCString(const int64_t aInteger) {
+  nsAutoCString res;
+  res.AppendInt(aInteger);
+  return res;
+}
+
+nsDependentCSubstring GetLeafName(const nsACString& aPath) {
+  nsACString::const_iterator start, end;
+  aPath.BeginReading(start);
+  aPath.EndReading(end);
+
+  bool found = RFindInReadable("/"_ns, start, end);
+  if (found) {
+    start = end;
+  }
+
+  aPath.EndReading(end);
+
+  return nsDependentCSubstring(start.get(), end.get());
+}
+
+void LogError(const nsLiteralCString& aModule, const nsLiteralCString& aExpr,
+              const nsLiteralCString& aSourceFile, int32_t aSourceLine) {
+#ifdef DEBUG
+  NS_DebugBreak(NS_DEBUG_WARNING, nsAutoCString(aModule + " failure"_ns).get(),
+                aExpr.get(), nsAutoCString(GetLeafName(aSourceFile)).get(),
+                aSourceLine);
+#endif
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+  nsCOMPtr<nsIConsoleService> console =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  if (console) {
+    NS_ConvertUTF8toUTF16 message(aModule + " failure: '"_ns + aExpr +
+                                  "', file "_ns + GetLeafName(aSourceFile) +
+                                  ", line "_ns + GetIntCString(aSourceLine));
+
+    // The concatenation above results in a message like:
+    // QuotaManager failure: 'EXP', file XYZ, line N)
+
+    console->LogStringMessage(message.get());
+  }
+#endif
+}
+
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
                                            const char* aSourceFile,
@@ -174,12 +226,7 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
 
 void HandleError(const nsLiteralCString& aExpr,
                  const nsLiteralCString& aSourceFile, int32_t aSourceLine) {
-#ifdef DEBUG
-  NS_DebugBreak(NS_DEBUG_WARNING, "Error", aExpr.get(), aSourceFile.get(),
-                aSourceLine);
-#endif
-
-  // TODO: Report to browser console
+  LogError(nsLiteralCString("QuotaManager"), aExpr, aSourceFile, aSourceLine);
 
   // TODO: Report to telemetry
 }
