@@ -17,6 +17,7 @@
 #include "js/Date.h"
 #include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject, JS_GetObjectAsArrayBufferView
 #include "js/MemoryFunctions.h"
+#include "js/Object.h"  // JS::GetBuiltinClass
 #include "js/Value.h"
 #include "jsfriendapi.h"
 #include "mozilla/Casting.h"
@@ -414,7 +415,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
     JS::RootedObject object(aCx, &aVal.toObject());
 
     js::ESClass builtinClass;
-    if (!js::GetBuiltinClass(aCx, object, &builtinClass)) {
+    if (!JS::GetBuiltinClass(aCx, object, &builtinClass)) {
       IDB_REPORT_INTERNAL_ERR();
       return {SpecialValues::Exception,
               ErrorResult{NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR}};

@@ -20,6 +20,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/ContextOptions.h"
 #include "js/friend/WindowProxy.h"  // js::ToWindowProxyIfWindow
+#include "js/Object.h"              // JS::GetClass, JS::GetCompartment
 #include "js/SavedFrameAPI.h"
 #include "js/StructuredClone.h"
 #include "mozilla/AppShutdown.h"
@@ -1985,7 +1986,7 @@ nsXPCComponents_Utils::RecomputeWrappers(HandleValue vobj, JSContext* cx) {
   // Determine the compartment of the given object, if any.
   JS::Compartment* c =
       vobj.isObject()
-          ? js::GetObjectCompartment(js::UncheckedUnwrap(&vobj.toObject()))
+          ? JS::GetCompartment(js::UncheckedUnwrap(&vobj.toObject()))
           : nullptr;
 
   // If no compartment was given, recompute all.
@@ -2010,7 +2011,7 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext* cx) {
   JSObject* scopeObj = js::UncheckedUnwrap(&vscope.toObject());
   MOZ_RELEASE_ASSERT(!AccessCheck::isChrome(scopeObj),
                      "Don't call setWantXrays on system-principal scopes");
-  JS::Compartment* compartment = js::GetObjectCompartment(scopeObj);
+  JS::Compartment* compartment = JS::GetCompartment(scopeObj);
   CompartmentPrivate::Get(scopeObj)->wantXrays = true;
   bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
                                   js::AllCompartments());
@@ -2196,7 +2197,7 @@ nsXPCComponents_Utils::GetClassName(HandleValue aObj, bool aUnwrap,
   if (aUnwrap) {
     obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
   }
-  *aRv = NS_xstrdup(js::GetObjectClass(obj)->name);
+  *aRv = NS_xstrdup(JS::GetClass(obj)->name);
   return NS_OK;
 }
 

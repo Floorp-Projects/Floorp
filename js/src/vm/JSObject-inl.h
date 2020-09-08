@@ -9,6 +9,7 @@
 
 #include "vm/JSObject.h"
 
+#include "js/Object.h"  // JS::GetBuiltinClass
 #include "vm/ArrayObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSFunction.h"
@@ -638,7 +639,7 @@ inline bool GetClassOfValue(JSContext* cx, HandleValue v, ESClass* cls) {
   }
 
   RootedObject obj(cx, &v.toObject());
-  return GetBuiltinClass(cx, obj, cls);
+  return JS::GetBuiltinClass(cx, obj, cls);
 }
 
 extern NativeObject* InitClass(JSContext* cx, HandleObject obj,

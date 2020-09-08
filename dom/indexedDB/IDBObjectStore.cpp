@@ -28,6 +28,7 @@
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/Class.h"
 #include "js/Date.h"
+#include "js/Object.h"  // JS::GetClass
 #include "js/StructuredClone.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorResult.h"
@@ -160,7 +161,7 @@ bool StructuredCloneWriteCallback(JSContext* aCx,
   auto* const cloneWriteInfo =
       static_cast<IDBObjectStore::StructuredCloneWriteInfo*>(aClosure);
 
-  if (JS_GetClass(aObj) == IDBObjectStore::DummyPropClass()) {
+  if (JS::GetClass(aObj) == IDBObjectStore::DummyPropClass()) {
     MOZ_ASSERT(!cloneWriteInfo->mOffsetToKeyProp);
     cloneWriteInfo->mOffsetToKeyProp = js::GetSCOffset(aWriter);
 

@@ -158,6 +158,7 @@ EXPORTS.js += [
     '../public/MemoryFunctions.h',
     '../public/MemoryMetrics.h',
     '../public/Modules.h',
+    '../public/Object.h',
     '../public/OffThreadScriptCompilation.h',
     '../public/Principals.h',
     '../public/Printf.h',

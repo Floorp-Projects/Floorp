@@ -14,6 +14,7 @@
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 
+#include "js/Object.h"  // JS::GetPrivate, JS::SetPrivate
 #include "js/RootingAPI.h"
 
 class SandboxPrivate : public nsIGlobalObject,
@@ -35,13 +36,13 @@ class SandboxPrivate : public nsIGlobalObject,
     // The type used to cast to void needs to match the one in GetPrivate.
     nsIScriptObjectPrincipal* sop =
         static_cast<nsIScriptObjectPrincipal*>(sbp.forget().take());
-    JS_SetPrivate(global, sop);
+    JS::SetPrivate(global, sop);
   }
 
   static SandboxPrivate* GetPrivate(JSObject* obj) {
     // The type used to cast to void needs to match the one in Create.
     return static_cast<SandboxPrivate*>(
-        static_cast<nsIScriptObjectPrincipal*>(JS_GetPrivate(obj)));
+        static_cast<nsIScriptObjectPrincipal*>(JS::GetPrivate(obj)));
   }
 
   nsIPrincipal* GetPrincipal() override { return mPrincipal; }

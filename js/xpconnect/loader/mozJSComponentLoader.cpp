@@ -21,6 +21,7 @@
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
+#include "js/Object.h"  // JS::GetCompartment
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::SourceText
@@ -511,8 +512,7 @@ void mozJSComponentLoader::FindTargetObject(JSContext* aCx,
     aTargetObject.set(JS::GetScriptedCallerGlobal(aCx));
 
     // Return nullptr if the scripted caller is in a different compartment.
-    if (js::GetObjectCompartment(aTargetObject) !=
-        js::GetContextCompartment(aCx)) {
+    if (JS::GetCompartment(aTargetObject) != js::GetContextCompartment(aCx)) {
       aTargetObject.set(nullptr);
     }
   }

@@ -16,6 +16,7 @@
 #include <stddef.h>  // size_t
 
 #include "js/shadow/Shape.h"  // JS::shadow::Shape
+#include "js/Value.h"         // JS::Value
 
 class JS_PUBLIC_API JSObject;
 

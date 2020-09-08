@@ -33,6 +33,7 @@
 
 #include "jsfriendapi.h"
 #include "js/Exception.h"  // JS::ExceptionStack
+#include "js/Object.h"     // JS::GetCompartment
 #include "js/StructuredClone.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
@@ -474,9 +475,8 @@ void Promise::HandleException(JSContext* aCx) {
 already_AddRefed<Promise> Promise::CreateFromExisting(
     nsIGlobalObject* aGlobal, JS::Handle<JSObject*> aPromiseObj,
     PropagateUserInteraction aPropagateUserInteraction) {
-  MOZ_ASSERT(
-      js::GetObjectCompartment(aGlobal->GetGlobalJSObjectPreserveColor()) ==
-      js::GetObjectCompartment(aPromiseObj));
+  MOZ_ASSERT(JS::GetCompartment(aGlobal->GetGlobalJSObjectPreserveColor()) ==
+             JS::GetCompartment(aPromiseObj));
   RefPtr<Promise> p = new Promise(aGlobal);
   p->mPromiseObj = aPromiseObj;
   if (aPropagateUserInteraction == ePropagateUserInteraction &&

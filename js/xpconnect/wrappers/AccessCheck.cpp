@@ -14,6 +14,7 @@
 #include "FilteringWrapper.h"
 
 #include "jsfriendapi.h"
+#include "js/Object.h"  // JS::GetClass, JS::GetCompartment
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -38,8 +39,8 @@ nsIPrincipal* GetObjectPrincipal(JSObject* obj) {
 }
 
 bool AccessCheck::subsumes(JSObject* a, JSObject* b) {
-  return CompartmentOriginInfo::Subsumes(js::GetObjectCompartment(a),
-                                         js::GetObjectCompartment(b));
+  return CompartmentOriginInfo::Subsumes(JS::GetCompartment(a),
+                                         JS::GetCompartment(b));
 }
 
 // Same as above, but considering document.domain.
@@ -62,8 +63,8 @@ bool AccessCheck::subsumesConsideringDomainIgnoringFPD(JS::Realm* a,
 bool AccessCheck::wrapperSubsumes(JSObject* wrapper) {
   MOZ_ASSERT(js::IsWrapper(wrapper));
   JSObject* wrapped = js::UncheckedUnwrap(wrapper);
-  return CompartmentOriginInfo::Subsumes(js::GetObjectCompartment(wrapper),
-                                         js::GetObjectCompartment(wrapped));
+  return CompartmentOriginInfo::Subsumes(JS::GetCompartment(wrapper),
+                                         JS::GetCompartment(wrapped));
 }
 
 bool AccessCheck::isChrome(JS::Compartment* compartment) {
@@ -75,12 +76,12 @@ bool AccessCheck::isChrome(JS::Realm* realm) {
 }
 
 bool AccessCheck::isChrome(JSObject* obj) {
-  return isChrome(js::GetObjectCompartment(obj));
+  return isChrome(JS::GetCompartment(obj));
 }
 
 bool IsCrossOriginAccessibleObject(JSObject* obj) {
   obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
-  const JSClass* clasp = js::GetObjectClass(obj);
+  const JSClass* clasp = JS::GetClass(obj);
 
   return (clasp->name[0] == 'L' && !strcmp(clasp->name, "Location")) ||
          (clasp->name[0] == 'W' && !strcmp(clasp->name, "Window"));

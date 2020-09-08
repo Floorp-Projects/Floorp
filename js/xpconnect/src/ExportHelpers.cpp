@@ -20,6 +20,7 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
+#include "js/Object.h"  // JS::GetCompartment
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -239,7 +240,7 @@ static bool CheckSameOriginArg(JSContext* cx, FunctionForwarderOptions& options,
     return true;
   }
   RootedObject obj(cx, &v.toObject());
-  MOZ_ASSERT(js::GetObjectCompartment(obj) != js::GetContextCompartment(cx),
+  MOZ_ASSERT(JS::GetCompartment(obj) != js::GetContextCompartment(cx),
              "This should be invoked after entering the compartment but before "
              "wrapping the values");
 
@@ -249,7 +250,7 @@ static bool CheckSameOriginArg(JSContext* cx, FunctionForwarderOptions& options,
   }
 
   // Wrappers leading back to the scope of the exported function are fine.
-  if (js::GetObjectCompartment(js::UncheckedUnwrap(obj)) ==
+  if (JS::GetCompartment(js::UncheckedUnwrap(obj)) ==
       js::GetContextCompartment(cx)) {
     return true;
   }
@@ -351,8 +352,8 @@ static bool FunctionForwarder(JSContext* cx, unsigned argc, Value* vp) {
     // here, because certain function wrappers (notably content->nsEP) are
     // not callable.
     JSAutoRealm ar(cx, unwrappedFun);
-    bool crossCompartment = js::GetObjectCompartment(unwrappedFun) !=
-                            js::GetObjectCompartment(&args.callee());
+    bool crossCompartment =
+        JS::GetCompartment(unwrappedFun) != JS::GetCompartment(&args.callee());
     if (crossCompartment) {
       if (!CheckSameOriginArg(cx, options, thisVal) ||
           !JS_WrapValue(cx, &thisVal)) {

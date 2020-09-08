@@ -1605,7 +1605,7 @@ class RemoteLocationProxy
     auto location =
         static_cast<BrowsingContext::LocationProxy*>(GetNative(aProxy));
     CycleCollectionNoteChild(aCb, location->GetBrowsingContext(),
-                             "js::GetObjectPrivate(obj)->GetBrowsingContext()");
+                             "JS::GetPrivate(obj)->GetBrowsingContext()");
   }
 };
 

@@ -777,8 +777,6 @@ extern JS_PUBLIC_API JSObject* JS_InitClass(
 extern JS_PUBLIC_API bool JS_LinkConstructorAndPrototype(
     JSContext* cx, JS::Handle<JSObject*> ctor, JS::Handle<JSObject*> proto);
 
-extern JS_PUBLIC_API const JSClass* JS_GetClass(JSObject* obj);
-
 extern JS_PUBLIC_API bool JS_InstanceOf(JSContext* cx,
                                         JS::Handle<JSObject*> obj,
                                         const JSClass* clasp,
@@ -806,10 +804,6 @@ extern JS_PUBLIC_API bool InstanceofOperator(JSContext* cx, HandleObject obj,
                                              HandleValue v, bool* bp);
 
 }  // namespace JS
-
-extern JS_PUBLIC_API void* JS_GetPrivate(JSObject* obj);
-
-extern JS_PUBLIC_API void JS_SetPrivate(JSObject* obj, void* data);
 
 extern JS_PUBLIC_API void JS_InitPrivate(JSObject* obj, void* data,
                                          size_t nbytes, JS::MemoryUse use);
@@ -934,7 +928,7 @@ extern JS_PUBLIC_API bool JS_FreezeObject(JSContext* cx,
  */
 
 /**
- * Get the prototype of obj, storing it in result.
+ * Get the prototype of |obj|, storing it in |proto|.
  *
  * Implements: ES6 [[GetPrototypeOf]] internal method.
  */
@@ -1611,9 +1605,6 @@ extern JS_PUBLIC_API bool IsSetObject(JSContext* cx, JS::HandleObject obj,
  * done for all slots, regardless of the associated property descriptor.
  */
 JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JS::HandleObject obj);
-
-extern JS_PUBLIC_API JS::Value JS_GetReservedSlot(JSObject* obj,
-                                                  uint32_t index);
 
 extern JS_PUBLIC_API void JS_SetReservedSlot(JSObject* obj, uint32_t index,
                                              const JS::Value& v);

@@ -118,6 +118,7 @@
 #include "js/JSON.h"
 #include "js/MemoryFunctions.h"
 #include "js/Modules.h"  // JS::GetModulePrivate, JS::SetModule{DynamicImport,Metadata,Resolve}Hook, JS::SetModulePrivate
+#include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
 #include "js/Realm.h"
@@ -1923,19 +1924,19 @@ static bool CacheEntry(JSContext* cx, unsigned argc, JS::Value* vp) {
     return false;
   }
 
-  SetReservedSlot(obj, CacheEntry_SOURCE, args[0]);
-  SetReservedSlot(obj, CacheEntry_BYTECODE, UndefinedValue());
+  JS::SetReservedSlot(obj, CacheEntry_SOURCE, args[0]);
+  JS::SetReservedSlot(obj, CacheEntry_BYTECODE, UndefinedValue());
   args.rval().setObject(*obj);
   return true;
 }
 
 static bool CacheEntry_isCacheEntry(JSObject* cache) {
-  return JS_GetClass(cache) == &CacheEntry_class;
+  return cache->hasClass(&CacheEntry_class);
 }
 
 static JSString* CacheEntry_getSource(JSContext* cx, HandleObject cache) {
   MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
-  Value v = JS_GetReservedSlot(cache, CacheEntry_SOURCE);
+  Value v = JS::GetReservedSlot(cache, CacheEntry_SOURCE);
   if (!v.isString()) {
     JS_ReportErrorASCII(
         cx, "CacheEntry_getSource: Unexpected type of source reserved slot.");
@@ -1948,7 +1949,7 @@ static JSString* CacheEntry_getSource(JSContext* cx, HandleObject cache) {
 static uint8_t* CacheEntry_getBytecode(JSContext* cx, HandleObject cache,
                                        uint32_t* length) {
   MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
-  Value v = JS_GetReservedSlot(cache, CacheEntry_BYTECODE);
+  Value v = JS::GetReservedSlot(cache, CacheEntry_BYTECODE);
   if (!v.isObject() || !v.toObject().is<ArrayBufferObject>()) {
     JS_ReportErrorASCII(
         cx,
@@ -1974,7 +1975,7 @@ static bool CacheEntry_setBytecode(JSContext* cx, HandleObject cache,
     return false;
   }
 
-  SetReservedSlot(cache, CacheEntry_BYTECODE, ObjectValue(*arrayBuffer));
+  JS::SetReservedSlot(cache, CacheEntry_BYTECODE, ObjectValue(*arrayBuffer));
   return true;
 }
 
@@ -2111,7 +2112,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
           return false;
         }
       }
-      if (!global || !(JS_GetClass(global)->flags & JSCLASS_IS_GLOBAL)) {
+      if (!global || !(JS::GetClass(global)->flags & JSCLASS_IS_GLOBAL)) {
         JS_ReportErrorNumberASCII(
             cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
             "\"global\" passed to evaluate()", "not a global object");
@@ -2881,7 +2882,7 @@ static bool GetScriptAndPCArgs(JSContext* cx, CallArgs& args,
   if (!args.get(0).isUndefined()) {
     HandleValue v = args[0];
     unsigned intarg = 0;
-    if (v.isObject() && JS_GetClass(&v.toObject()) == &JSFunction::class_) {
+    if (v.isObject() && JS::GetClass(&v.toObject()) == &JSFunction::class_) {
       script = TestingFunctionArgumentToScript(cx, v);
       if (!script) {
         return false;
@@ -6536,12 +6537,12 @@ static bool RecomputeWrappers(JSContext* cx, unsigned argc, Value* vp) {
 
   JS::Compartment* sourceComp = nullptr;
   if (args.get(0).isObject()) {
-    sourceComp = GetObjectCompartment(UncheckedUnwrap(&args[0].toObject()));
+    sourceComp = JS::GetCompartment(UncheckedUnwrap(&args[0].toObject()));
   }
 
   JS::Compartment* targetComp = nullptr;
   if (args.get(1).isObject()) {
-    targetComp = GetObjectCompartment(UncheckedUnwrap(&args[1].toObject()));
+    targetComp = JS::GetCompartment(UncheckedUnwrap(&args[1].toObject()));
   }
 
   struct SingleOrAllCompartments final : public CompartmentFilter {
@@ -8308,7 +8309,7 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
   JSAutoRealm ar(cx, newGlobal);
 
   RootedObject proto(cx);
-  if (JS_GetClass(source) == GetDomClass()) {
+  if (JS::GetClass(source) == GetDomClass()) {
     proto = GetDOMPrototype(cx, newGlobal);
   } else {
     proto = JS::GetRealmObjectPrototype(cx);
@@ -8322,8 +8323,8 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (GetObjectCompartment(source) != GetObjectCompartment(target) &&
-      !AllowNewWrapper(GetObjectCompartment(source), target)) {
+  if (JS::GetCompartment(source) != JS::GetCompartment(target) &&
+      !AllowNewWrapper(JS::GetCompartment(source), target)) {
     JS_ReportErrorASCII(cx, "Cannot transplant into nuked compartment");
     return false;
   }
@@ -8339,9 +8340,9 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  SetReservedSlot(target, DOM_OBJECT_SLOT,
-                  GetReservedSlot(source, DOM_OBJECT_SLOT));
-  SetReservedSlot(source, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+  JS::SetReservedSlot(target, DOM_OBJECT_SLOT,
+                      JS::GetReservedSlot(source, DOM_OBJECT_SLOT));
+  JS::SetReservedSlot(source, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
 
   source = JS_TransplantObject(cx, source, target);
   if (!source) {
@@ -8400,7 +8401,7 @@ static bool TransplantableObject(JSContext* cx, unsigned argc, Value* vp) {
       }
 
       source = &value.toObject();
-      if (JS_GetClass(source) != GetDomClass()) {
+      if (JS::GetClass(source) != GetDomClass()) {
         ReportUsageErrorASCII(cx, callee, "Object not a FakeDOMObject");
         return false;
       }
@@ -8424,7 +8425,7 @@ static bool TransplantableObject(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
 
-      SetReservedSlot(source, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+      JS::SetReservedSlot(source, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
     } else {
       JSObject* expando = JS_NewPlainObject(cx);
       if (!expando) {
@@ -9580,7 +9581,7 @@ static bool dom_genericMethod(JSContext* cx, unsigned argc, JS::Value* vp);
 
 static bool dom_get_x(JSContext* cx, HandleObject obj, void* self,
                       JSJitGetterCallArgs args) {
-  MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+  MOZ_ASSERT(JS::GetClass(obj) == GetDomClass());
   MOZ_ASSERT(self == DOM_PRIVATE_VALUE);
   args.rval().set(JS_NumberValue(double(3.14)));
   return true;
@@ -9588,14 +9589,14 @@ static bool dom_get_x(JSContext* cx, HandleObject obj, void* self,
 
 static bool dom_set_x(JSContext* cx, HandleObject obj, void* self,
                       JSJitSetterCallArgs args) {
-  MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+  MOZ_ASSERT(JS::GetClass(obj) == GetDomClass());
   MOZ_ASSERT(self == DOM_PRIVATE_VALUE);
   return true;
 }
 
 static bool dom_get_global(JSContext* cx, HandleObject obj, void* self,
                            JSJitGetterCallArgs args) {
-  MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+  MOZ_ASSERT(JS::GetClass(obj) == GetDomClass());
   MOZ_ASSERT(self == DOM_PRIVATE_VALUE);
 
   // Return the current global (instead of obj->global()) to test cx->realm
@@ -9607,7 +9608,7 @@ static bool dom_get_global(JSContext* cx, HandleObject obj, void* self,
 
 static bool dom_set_global(JSContext* cx, HandleObject obj, void* self,
                            JSJitSetterCallArgs args) {
-  MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+  MOZ_ASSERT(JS::GetClass(obj) == GetDomClass());
   MOZ_ASSERT(self == DOM_PRIVATE_VALUE);
 
   // Throw an exception if our argument is not the current global. This lets
@@ -9623,7 +9624,7 @@ static bool dom_set_global(JSContext* cx, HandleObject obj, void* self,
 
 static bool dom_doFoo(JSContext* cx, HandleObject obj, void* self,
                       const JSJitMethodCallArgs& args) {
-  MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+  MOZ_ASSERT(JS::GetClass(obj) == GetDomClass());
   MOZ_ASSERT(self == DOM_PRIVATE_VALUE);
   MOZ_ASSERT(cx->realm() == args.callee().as<JSFunction>().realm());
 
@@ -9743,12 +9744,12 @@ static bool dom_genericGetter(JSContext* cx, unsigned argc, JS::Value* vp) {
   }
 
   RootedObject obj(cx, &args.thisv().toObject());
-  if (JS_GetClass(obj) != &dom_class) {
+  if (JS::GetClass(obj) != &dom_class) {
     args.rval().set(UndefinedValue());
     return true;
   }
 
-  JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
+  JS::Value val = JS::GetReservedSlot(obj, DOM_OBJECT_SLOT);
 
   const JSJitInfo* info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
   MOZ_ASSERT(info->type() == JSJitInfo::Getter);
@@ -9765,12 +9766,12 @@ static bool dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp) {
   }
 
   RootedObject obj(cx, &args.thisv().toObject());
-  if (JS_GetClass(obj) != &dom_class) {
+  if (JS::GetClass(obj) != &dom_class) {
     args.rval().set(UndefinedValue());
     return true;
   }
 
-  JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
+  JS::Value val = JS::GetReservedSlot(obj, DOM_OBJECT_SLOT);
 
   const JSJitInfo* info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
   MOZ_ASSERT(info->type() == JSJitInfo::Setter);
@@ -9791,12 +9792,12 @@ static bool dom_genericMethod(JSContext* cx, unsigned argc, JS::Value* vp) {
   }
 
   RootedObject obj(cx, &args.thisv().toObject());
-  if (JS_GetClass(obj) != &dom_class) {
+  if (JS::GetClass(obj) != &dom_class) {
     args.rval().set(UndefinedValue());
     return true;
   }
 
-  JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
+  JS::Value val = JS::GetReservedSlot(obj, DOM_OBJECT_SLOT);
 
   const JSJitInfo* info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
   MOZ_ASSERT(info->type() == JSJitInfo::Method);
@@ -9805,18 +9806,20 @@ static bool dom_genericMethod(JSContext* cx, unsigned argc, JS::Value* vp) {
 }
 
 static void InitDOMObject(HandleObject obj) {
-  SetReservedSlot(obj, DOM_OBJECT_SLOT,
-                  PrivateValue(const_cast<void*>(DOM_PRIVATE_VALUE)));
+  JS::SetReservedSlot(obj, DOM_OBJECT_SLOT,
+                      PrivateValue(const_cast<void*>(DOM_PRIVATE_VALUE)));
 }
 
 static JSObject* GetDOMPrototype(JSContext* cx, JSObject* global) {
   MOZ_ASSERT(JS_IsGlobalObject(global));
-  if (GetObjectClass(global) != &global_class) {
+  if (JS::GetClass(global) != &global_class) {
     JS_ReportErrorASCII(cx, "Can't get FakeDOMObject prototype in sandbox");
     return nullptr;
   }
-  MOZ_ASSERT(GetReservedSlot(global, DOM_PROTOTYPE_SLOT).isObject());
-  return &GetReservedSlot(global, DOM_PROTOTYPE_SLOT).toObject();
+
+  const JS::Value& slot = JS::GetReservedSlot(global, DOM_PROTOTYPE_SLOT);
+  MOZ_ASSERT(slot.isObject());
+  return &slot.toObject();
 }
 
 static bool dom_constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
@@ -9987,7 +9990,7 @@ static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
     // FakeDOMObject.prototype is the only DOM object which needs to retrieved
     // in the shell; store it directly instead of creating a separate layer
     // (ProtoAndIfaceCache) as done in the browser.
-    SetReservedSlot(glob, DOM_PROTOTYPE_SLOT, ObjectValue(*domProto));
+    JS::SetReservedSlot(glob, DOM_PROTOTYPE_SLOT, ObjectValue(*domProto));
 
     /* Initialize FakeDOMObject.prototype */
     InitDOMObject(domProto);

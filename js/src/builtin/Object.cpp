@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "builtin/Object.h"
+#include "js/Object.h"  // JS::GetBuiltinClass
 
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/Range.h"
@@ -506,7 +507,7 @@ static bool GetBuiltinTagSlow(JSContext* cx, HandleObject obj,
 
   // Steps 6-13.
   ESClass cls;
-  if (!GetBuiltinClass(cx, obj, &cls)) {
+  if (!JS::GetBuiltinClass(cx, obj, &cls)) {
     return false;
   }
 

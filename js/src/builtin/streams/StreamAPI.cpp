@@ -26,6 +26,7 @@
 #include "gc/Zone.h"                           // JS::Zone
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewData, JS_NewUint8Array
 #include "js/GCAPI.h"       // JS::AutoCheckCannotGC, JS::AutoSuppressGCAnalysis
+#include "js/Object.h"      // JS::SetPrivate
 #include "js/RootingAPI.h"  // JS::{,Mutable}Handle, JS::Rooted
 #include "js/Stream.h"      // JS::ReadableStreamUnderlyingSource
 #include "js/Value.h"       // JS::{,Object,Undefined}Value
@@ -398,7 +399,7 @@ JS_PUBLIC_API bool JS::ReadableStreamUpdateDataAvailableFromSource(
 
 JS_PUBLIC_API void JS::ReadableStreamReleaseCCObject(JSObject* streamObj) {
   MOZ_ASSERT(JS::IsReadableStream(streamObj));
-  JS_SetPrivate(streamObj, nullptr);
+  JS::SetPrivate(streamObj, nullptr);
 }
 
 JS_PUBLIC_API bool JS::ReadableStreamTee(JSContext* cx,

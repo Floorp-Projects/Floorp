@@ -11,6 +11,7 @@
 #include "js/BuildId.h"  // JS::BuildIdCharVector
 #include "js/HeapAPI.h"
 #include "js/GCAPI.h"
+#include "js/Object.h"  // JS::GetCompartment
 #include "js/Proxy.h"
 #include "js/String.h"  // JS::IsExternalString
 #include "js/Wrapper.h"
@@ -183,7 +184,7 @@ inline JSObject* xpc_FastGetCachedWrapper(JSContext* cx, nsWrapperCache* cache,
   if (cache) {
     JSObject* wrapper = cache->GetWrapper();
     if (wrapper &&
-        js::GetObjectCompartment(wrapper) == js::GetContextCompartment(cx)) {
+        JS::GetCompartment(wrapper) == js::GetContextCompartment(cx)) {
       vp.setObject(*wrapper);
       return wrapper;
     }

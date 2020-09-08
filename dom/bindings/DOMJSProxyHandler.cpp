@@ -13,6 +13,7 @@
 #include "mozilla/dom/BindingUtils.h"
 
 #include "jsapi.h"
+#include "js/Object.h"  // JS::GetCompartment
 
 using namespace JS;
 
@@ -72,7 +73,7 @@ static inline void CheckExpandoObject(JSObject* proxy,
 #ifdef DEBUG
   JSObject* obj = &expando.toObject();
   MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarriered(&obj));
-  MOZ_ASSERT(js::GetObjectCompartment(proxy) == js::GetObjectCompartment(obj));
+  MOZ_ASSERT(JS::GetCompartment(proxy) == JS::GetCompartment(obj));
 
   // When we create an expando object in EnsureExpandoObject below, we preserve
   // the wrapper. The wrapper is released when the object is unlinked, but we

@@ -15,6 +15,7 @@
 #include "js/experimental/JitInfo.h"  // JSJitGetterOp, JSJitInfo
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowProxyIfWindow
 #include "js/MemoryFunctions.h"
+#include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
 #include "js/String.h"  // JS::GetLatin1LinearStringChars, JS::GetTwoByteLinearStringChars, JS::GetLinearStringLength, JS::LinearStringHasLatin1Chars, JS::StringHasLatin1Chars
 #include "js/Wrapper.h"
 #include "mozilla/ArrayUtils.h"
@@ -95,10 +96,10 @@ static_assert(DOM_OBJECT_SLOT == 0,
               "Expect bad things");
 template <class T>
 inline T* UnwrapDOMObject(JSObject* obj) {
-  MOZ_ASSERT(IsDOMClass(js::GetObjectClass(obj)),
+  MOZ_ASSERT(IsDOMClass(JS::GetClass(obj)),
              "Don't pass non-DOM objects to this function");
 
-  JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
+  JS::Value val = JS::GetReservedSlot(obj, DOM_OBJECT_SLOT);
   return static_cast<T*>(val.toPrivate());
 }
 
@@ -108,10 +109,10 @@ inline T* UnwrapPossiblyNotInitializedDOMObject(JSObject* obj) {
   // JS_NewObject has returned and so before we have a chance to set
   // DOM_OBJECT_SLOT to anything useful.
 
-  MOZ_ASSERT(IsDOMClass(js::GetObjectClass(obj)),
+  MOZ_ASSERT(IsDOMClass(JS::GetClass(obj)),
              "Don't pass non-DOM objects to this function");
 
-  JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
+  JS::Value val = JS::GetReservedSlot(obj, DOM_OBJECT_SLOT);
   if (val.isUndefined()) {
     return nullptr;
   }
@@ -123,7 +124,7 @@ inline const DOMJSClass* GetDOMClass(const JSClass* clasp) {
 }
 
 inline const DOMJSClass* GetDOMClass(JSObject* obj) {
-  return GetDOMClass(js::GetObjectClass(obj));
+  return GetDOMClass(JS::GetClass(obj));
 }
 
 inline nsISupports* UnwrapDOMObjectToISupports(JSObject* aObject) {
@@ -135,9 +136,7 @@ inline nsISupports* UnwrapDOMObjectToISupports(JSObject* aObject) {
   return UnwrapPossiblyNotInitializedDOMObject<nsISupports>(aObject);
 }
 
-inline bool IsDOMObject(JSObject* obj) {
-  return IsDOMClass(js::GetObjectClass(obj));
-}
+inline bool IsDOMObject(JSObject* obj) { return IsDOMClass(JS::GetClass(obj)); }
 
 // There are two valid ways to use UNWRAP_OBJECT: Either obj needs to
 // be a MutableHandle<JSObject*>, or value needs to be a strong-reference
@@ -596,12 +595,12 @@ class ProtoAndIfaceCache {
 
 inline void AllocateProtoAndIfaceCache(JSObject* obj,
                                        ProtoAndIfaceCache::Kind aKind) {
-  MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
-  MOZ_ASSERT(js::GetReservedSlot(obj, DOM_PROTOTYPE_SLOT).isUndefined());
+  MOZ_ASSERT(JS::GetClass(obj)->flags & JSCLASS_DOM_GLOBAL);
+  MOZ_ASSERT(JS::GetReservedSlot(obj, DOM_PROTOTYPE_SLOT).isUndefined());
 
   ProtoAndIfaceCache* protoAndIfaceCache = new ProtoAndIfaceCache(aKind);
 
-  js::SetReservedSlot(obj, DOM_PROTOTYPE_SLOT,
+  JS::SetReservedSlot(obj, DOM_PROTOTYPE_SLOT,
                       JS::PrivateValue(protoAndIfaceCache));
 }
 
@@ -625,7 +624,7 @@ struct VerifyTraceProtoAndIfaceCacheCalledTracer : public JS::CallbackTracer {
 #endif
 
 inline void TraceProtoAndIfaceCache(JSTracer* trc, JSObject* obj) {
-  MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
+  MOZ_ASSERT(JS::GetClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
 #ifdef DEBUG
   if (trc->isCallbackTracer() &&
@@ -644,7 +643,7 @@ inline void TraceProtoAndIfaceCache(JSTracer* trc, JSObject* obj) {
 }
 
 inline void DestroyProtoAndIfaceCache(JSObject* obj) {
-  MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
+  MOZ_ASSERT(JS::GetClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
   if (!DOMGlobalHasProtoAndIFaceCache(obj)) {
     return;
@@ -885,7 +884,7 @@ bool MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval) {
 
   // Cross-compartment always requires wrapping.
   JSObject* obj = &rval.toObject();
-  if (js::GetObjectCompartment(obj) != js::GetContextCompartment(cx)) {
+  if (JS::GetCompartment(obj) != js::GetContextCompartment(cx)) {
     return JS_WrapValue(cx, rval);
   }
 
@@ -898,7 +897,7 @@ bool MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval) {
 // JS::MutableHandle<JSObject*> which must be non-null.
 MOZ_ALWAYS_INLINE
 bool MaybeWrapObject(JSContext* cx, JS::MutableHandle<JSObject*> obj) {
-  if (js::GetObjectCompartment(obj) != js::GetContextCompartment(cx)) {
+  if (JS::GetCompartment(obj) != js::GetContextCompartment(cx)) {
     return JS_WrapObject(cx, obj);
   }
 
@@ -930,7 +929,7 @@ bool MaybeWrapNonDOMObjectValue(JSContext* cx,
   MOZ_ASSERT(!GetDOMClass(&rval.toObject()));
 
   JSObject* obj = &rval.toObject();
-  if (js::GetObjectCompartment(obj) == js::GetContextCompartment(cx)) {
+  if (JS::GetCompartment(obj) == js::GetContextCompartment(cx)) {
     return true;
   }
   return JS_WrapValue(cx, rval);
@@ -1080,7 +1079,7 @@ MOZ_ALWAYS_INLINE bool DoGetOrCreateDOMReflector(
 
   rval.set(JS::ObjectValue(*obj));
 
-  if (js::GetObjectCompartment(obj) == js::GetContextCompartment(cx)) {
+  if (JS::GetCompartment(obj) == js::GetContextCompartment(cx)) {
     return TypeNeedsOuterization<T>::value ? TryToOuterize(rval) : true;
   }
 
@@ -2268,7 +2267,7 @@ inline bool XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
       MOZ_ASSERT(JS_IsNativeFunction(obj, Constructor));
       protop.set(JS::GetRealmFunctionPrototype(cx));
     } else {
-      const JSClass* clasp = js::GetObjectClass(obj);
+      const JSClass* clasp = JS::GetClass(obj);
       MOZ_ASSERT(IsDOMIfaceAndProtoClass(clasp));
       ProtoGetter protoGetter =
           DOMIfaceAndProtoJSClass::FromJSClass(clasp)->mGetParentProto;
@@ -2332,7 +2331,7 @@ extern const JSClassOps sBoringInterfaceObjectClassClassOps;
 extern const js::ObjectOps sInterfaceObjectClassObjectOps;
 
 inline bool UseDOMXray(JSObject* obj) {
-  const JSClass* clasp = js::GetObjectClass(obj);
+  const JSClass* clasp = JS::GetClass(obj);
   return IsDOMClass(clasp) || JS_IsNativeFunction(obj, Constructor) ||
          IsDOMIfaceAndProtoClass(clasp);
 }
@@ -2343,7 +2342,7 @@ inline bool IsDOMConstructor(JSObject* obj) {
     return true;
   }
 
-  const JSClass* clasp = js::GetObjectClass(obj);
+  const JSClass* clasp = JS::GetClass(obj);
   // Check for a DOM interface object.
   return dom::IsDOMIfaceAndProtoClass(clasp) &&
          dom::DOMIfaceAndProtoJSClass::FromJSClass(clasp)->mType ==
@@ -2353,7 +2352,7 @@ inline bool IsDOMConstructor(JSObject* obj) {
 #ifdef DEBUG
 inline bool HasConstructor(JSObject* obj) {
   return JS_IsNativeFunction(obj, Constructor) ||
-         js::GetObjectClass(obj)->getConstruct();
+         JS::GetClass(obj)->getConstruct();
 }
 #endif
 
@@ -2602,7 +2601,7 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
 
   ~BindingJSObjectCreator() {
     if (mReflector) {
-      js::SetReservedSlot(mReflector, DOM_OBJECT_SLOT, JS::UndefinedValue());
+      JS::SetReservedSlot(mReflector, DOM_OBJECT_SLOT, JS::UndefinedValue());
     }
   }
 
@@ -2635,7 +2634,7 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
                     JS::MutableHandle<JSObject*> aReflector) {
     aReflector.set(JS_NewObjectWithGivenProto(aCx, aClass, aProto));
     if (aReflector) {
-      js::SetReservedSlot(aReflector, DOM_OBJECT_SLOT,
+      JS::SetReservedSlot(aReflector, DOM_OBJECT_SLOT,
                           JS::PrivateValue(aNative));
       mNative = aNative;
       mReflector = aReflector;
@@ -2868,7 +2867,7 @@ bool CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
   JSAutoRealm ar(aCx, aGlobal);
 
   {
-    js::SetReservedSlot(aGlobal, DOM_OBJECT_SLOT, JS::PrivateValue(aNative));
+    JS::SetReservedSlot(aGlobal, DOM_OBJECT_SLOT, JS::PrivateValue(aNative));
     NS_ADDREF(aNative);
 
     aCache->SetWrapper(aGlobal);

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot
 #include "jsapi-tests/tests.h"
 
 using namespace JS;
@@ -12,12 +13,12 @@ static const JSClass CustomClass = {"CustomClass",
 static const uint32_t CUSTOM_SLOT = 0;
 
 static bool IsCustomClass(JS::Handle<JS::Value> v) {
-  return v.isObject() && JS_GetClass(&v.toObject()) == &CustomClass;
+  return v.isObject() && JS::GetClass(&v.toObject()) == &CustomClass;
 }
 
 static bool CustomMethodImpl(JSContext* cx, const CallArgs& args) {
   MOZ_RELEASE_ASSERT(IsCustomClass(args.thisv()));
-  args.rval().set(JS_GetReservedSlot(&args.thisv().toObject(), CUSTOM_SLOT));
+  args.rval().set(JS::GetReservedSlot(&args.thisv().toObject(), CUSTOM_SLOT));
   return true;
 }
 

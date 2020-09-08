@@ -18,9 +18,9 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // {,u}int8_t, {,u}int16_t, {,u}int32_t
 
-#include "jsfriendapi.h"  // js::GetObject{Class,Private}, js::GetReservedSlot
-#include "jstypes.h"      // JS_FRIEND_API
+#include "jstypes.h"  // JS_FRIEND_API
 
+#include "js/Object.h"      // JS::GetClass, JS::GetPrivate, JS::GetReservedSlot
 #include "js/RootingAPI.h"  // JS::Handle
 #include "js/ScalarType.h"  // js::Scalar::Type
 
@@ -212,12 +212,12 @@ const size_t TypedArrayLengthSlot = 1;
 #define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                      \
   inline void Get##Type##ArrayLengthAndData(                                \
       JSObject* obj, uint32_t* length, bool* isSharedMemory, type** data) { \
-    MOZ_ASSERT(GetObjectClass(obj) == detail::Type##ArrayClassPtr);         \
+    MOZ_ASSERT(JS::GetClass(obj) == detail::Type##ArrayClassPtr);           \
     const JS::Value& lenSlot =                                              \
-        GetReservedSlot(obj, detail::TypedArrayLengthSlot);                 \
+        JS::GetReservedSlot(obj, detail::TypedArrayLengthSlot);             \
     *length = mozilla::AssertedCast<uint32_t>(lenSlot.toInt32());           \
     *isSharedMemory = JS_GetTypedArraySharedness(obj);                      \
-    *data = static_cast<type*>(GetObjectPrivate(obj));                      \
+    *data = static_cast<type*>(JS::GetPrivate(obj));                        \
   }
 
 JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Int8, int8_t)

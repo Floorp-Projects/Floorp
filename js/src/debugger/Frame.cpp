@@ -44,6 +44,7 @@
 #include "gc/ZoneAllocator.h"          // for AddCellMemory
 #include "jit/JSJitFrameIter.h"        // for InlineFrameIterator
 #include "jit/RematerializedFrame.h"  // for RematerializedFrame
+#include "js/Object.h"                // for SetReservedSlot
 #include "js/Proxy.h"                 // for PrivateValue
 #include "js/SourceText.h"            // for SourceText, SourceOwnership
 #include "js/StableStringChars.h"     // for AutoStableStringChars
@@ -1641,7 +1642,7 @@ DebuggerArguments* DebuggerArguments::create(JSContext* cx, HandleObject proto,
     return nullptr;
   }
 
-  SetReservedSlot(obj, FRAME_SLOT, ObjectValue(*frame));
+  JS::SetReservedSlot(obj, FRAME_SLOT, ObjectValue(*frame));
 
   MOZ_ASSERT(referent.numActualArgs() <= 0x7fffffff);
   unsigned fargc = referent.numActualArgs();

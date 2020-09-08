@@ -503,8 +503,8 @@ class JSObject
    * triplet (along with any class YObject that derives XObject).
    *
    * Note that X represents a low-level representation and does not query the
-   * [[Class]] property of object defined by the spec (for this, see
-   * js::GetBuiltinClass).
+   * [[Class]] property of object defined by the spec: use |JS::GetBuiltinClass|
+   * for this.
    */
 
   template <class T>
