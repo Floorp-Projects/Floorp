@@ -26,15 +26,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebElement: "chrome://marionette/content/element.js",
 });
 
-const CC = Components.Constructor;
-
-const ServerSocket = CC(
-  "@mozilla.org/network/server-socket;1",
-  "nsIServerSocket",
-  "initSpecialConnection"
-);
-
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "ServerSocket", () => {
+  return Components.Constructor(
+    "@mozilla.org/network/server-socket;1",
+    "nsIServerSocket",
+    "initSpecialConnection"
+  );
+});
 
 const { KeepWhenOffline, LoopbackOnly } = Ci.nsIServerSocket;
 

@@ -22,12 +22,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIIOUtil"
 );
 
-const CC = Components.Constructor;
-const ScriptableInputStream = CC(
-  "@mozilla.org/scriptableinputstream;1",
-  "nsIScriptableInputStream",
-  "init"
-);
+XPCOMUtils.defineLazyGetter(this, "ScriptableInputStream", () => {
+  return Components.Constructor(
+    "@mozilla.org/scriptableinputstream;1",
+    "nsIScriptableInputStream",
+    "init"
+  );
+});
 
 const BUFFER_SIZE = 0x8000;
 
