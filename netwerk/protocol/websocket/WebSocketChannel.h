@@ -19,7 +19,6 @@
 #include "nsIProtocolProxyCallback.h"
 #include "nsIChannelEventSink.h"
 #include "nsIHttpChannelInternal.h"
-#include "nsIWebSocketConnection.h"
 #include "BaseWebSocketChannel.h"
 
 #include "nsCOMPtr.h"
@@ -64,14 +63,15 @@ enum wsConnectingState {
 class WebSocketChannel : public BaseWebSocketChannel,
                          public nsIHttpUpgradeListener,
                          public nsIStreamListener,
+                         public nsIInputStreamCallback,
+                         public nsIOutputStreamCallback,
                          public nsITimerCallback,
                          public nsIDNSListener,
                          public nsIObserver,
                          public nsIProtocolProxyCallback,
                          public nsIInterfaceRequestor,
                          public nsIChannelEventSink,
-                         public nsINamed,
-                         public nsIWebSocketConnectionListener {
+                         public nsINamed {
   friend class WebSocketFrame;
 
  public:
@@ -79,6 +79,8 @@ class WebSocketChannel : public BaseWebSocketChannel,
   NS_DECL_NSIHTTPUPGRADELISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIINPUTSTREAMCALLBACK
+  NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIDNSLISTENER
   NS_DECL_NSIPROTOCOLPROXYCALLBACK
@@ -86,7 +88,6 @@ class WebSocketChannel : public BaseWebSocketChannel,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIOBSERVER
   NS_DECL_NSINAMED
-  NS_DECL_NSIWEBSOCKETCONNECTIONLISTENER
 
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
@@ -141,7 +142,6 @@ class WebSocketChannel : public BaseWebSocketChannel,
 
   void EnqueueOutgoingMessage(nsDeque<OutboundMessage>& aQueue,
                               OutboundMessage* aMsg);
-  void DoEnqueueOutgoingMessage();
 
   void PrimeNewOutgoingMessage();
   void DeleteCurrentOutGoingMessage();
@@ -212,7 +212,9 @@ class WebSocketChannel : public BaseWebSocketChannel,
   nsCString mHost;
   nsString mEffectiveURL;
 
-  nsCOMPtr<nsIWebSocketConnection> mConnection;
+  nsCOMPtr<nsISocketTransport> mTransport;
+  nsCOMPtr<nsIAsyncInputStream> mSocketIn;
+  nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
 
   nsCOMPtr<nsITimer> mCloseTimer;
   uint32_t mCloseTimeout; /* milliseconds */
@@ -278,16 +280,17 @@ class WebSocketChannel : public BaseWebSocketChannel,
   uint32_t mBuffered;
   uint32_t mBufferSize;
 
+  // These are for the send buffers
+  const static int32_t kCopyBreak = 1000;
+
   OutboundMessage* mCurrentOut;
+  uint32_t mCurrentOutSent;
   nsDeque<OutboundMessage> mOutgoingMessages;
   nsDeque<OutboundMessage> mOutgoingPingMessages;
   nsDeque<OutboundMessage> mOutgoingPongMessages;
-  uint32_t mHdrOutSize;
+  uint32_t mHdrOutToSend;
   uint8_t* mHdrOut;
-  // This is used to store the frame header and the close reason.
-  // Since the length of close reason can not be larger than 123, 256 is
-  // enough here.
-  uint8_t mOutHeader[256];
+  uint8_t mOutHeader[kCopyBreak + 16];
   UniquePtr<PMCECompression> mPMCECompressor;
   uint32_t mDynamicOutputSize;
   uint8_t* mDynamicOutput;
