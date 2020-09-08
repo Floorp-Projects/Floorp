@@ -24,19 +24,17 @@ use xpcom::{
 /// This macro calls `PuntTask::for_<fn_name>(fxa, <..args>, callback)`
 /// if `fxa` has been initialized.
 macro_rules! punt {
-    ($fn_name:ident $(, $arg:ident : $ty:ty)*) => {
-        fn $fn_name(&self $(, $arg: $ty)*, callback: &mozIFirefoxAccountsBridgeCallback) -> Result<()> {
+    ($fn_name:ident $(, $arg:ident)*) => {
+        paste::expr! {
             if let Some(fxa) = self.fxa.get() {
-                let task = paste::expr! {
-                    PuntTask::[<for_ $fn_name>](fxa $(, $arg)*, callback)?
-                };
+                let task = PuntTask::[<for_ $fn_name>](fxa $(, $arg)* ,callback)?;
                 task.dispatch(&self.thread)?;
                 Ok(())
             } else {
                 Err(Error::Unavailable)
             }
         }
-    }
+    };
 }
 
 /// An XPCOM binding for the Rust Firefox Accounts crate.
@@ -110,8 +108,9 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(to_json);
+    fn to_json(&self, callback: &mozIFirefoxAccountsBridgeCallback) -> Result<()> {
+        punt!(to_json)
+    }
 
     xpcom_method!(
         begin_oauth_flow => BeginOAuthFlow(
@@ -119,8 +118,13 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(begin_oauth_flow, scopes: &ThinVec<nsCString>);
+    fn begin_oauth_flow(
+        &self,
+        scopes: &ThinVec<nsCString>,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(begin_oauth_flow, scopes)
+    }
 
     xpcom_method!(
         complete_oauth_flow => CompleteOAuthFlow(
@@ -129,15 +133,23 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(complete_oauth_flow, code: &nsACString, state: &nsACString);
+    fn complete_oauth_flow(
+        &self,
+        code: &nsACString,
+        state: &nsACString,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(complete_oauth_flow, code, state)
+    }
 
     xpcom_method!(
         disconnect => Disconnect(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(disconnect);
+    fn disconnect(&self, callback: &mozIFirefoxAccountsBridgeCallback) -> Result<()> {
+        punt!(disconnect)
+    }
 
     xpcom_method!(
         get_access_token => GetAccessToken(
@@ -146,36 +158,53 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(get_access_token, scope: &nsACString, ttl: u64);
+    fn get_access_token(
+        &self,
+        scope: &nsACString,
+        ttl: u64,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(get_access_token, scope, ttl)
+    }
 
     xpcom_method!(
         get_session_token => GetSessionToken(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(get_session_token);
+    fn get_session_token(&self, callback: &mozIFirefoxAccountsBridgeCallback) -> Result<()> {
+        punt!(get_session_token)
+    }
 
     xpcom_method!(
         get_attached_clients => GetAttachedClients(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(get_attached_clients);
+    fn get_attached_clients(&self, callback: &mozIFirefoxAccountsBridgeCallback) -> Result<()> {
+        punt!(get_attached_clients)
+    }
 
     xpcom_method!(
         check_authorization_status => CheckAuthorizationStatus(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(check_authorization_status);
+    fn check_authorization_status(
+        &self,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(check_authorization_status)
+    }
 
     xpcom_method!(
         clear_access_token_cache => ClearAccessTokenCache(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(clear_access_token_cache);
+    fn clear_access_token_cache(&self, callback: &mozIFirefoxAccountsBridgeCallback) -> Result<()> {
+        punt!(clear_access_token_cache)
+    }
 
     xpcom_method!(
         handle_session_token_change => HandleSessionTokenChange(
@@ -183,8 +212,13 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(handle_session_token_change, session_token: &nsACString);
+    fn handle_session_token_change(
+        &self,
+        session_token: &nsACString,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(handle_session_token_change, session_token)
+    }
 
     xpcom_method!(
         migrate_from_session_token => MigrateFromSessionToken(
@@ -195,29 +229,43 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(
-        migrate_from_session_token,
+    fn migrate_from_session_token(
+        &self,
         session_token: &nsACString,
         k_sync: &nsACString,
         k_xcs: &nsACString,
-        copy_session_token: bool
-    );
+        copy_session_token: bool,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(
+            migrate_from_session_token,
+            session_token,
+            k_sync,
+            k_xcs,
+            copy_session_token
+        )
+    }
 
     xpcom_method!(
         retry_migrate_from_session_token => RetryMigrateFromSessionToken(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(retry_migrate_from_session_token);
+    fn retry_migrate_from_session_token(
+        &self,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(retry_migrate_from_session_token)
+    }
 
     xpcom_method!(
         is_in_migration_state => IsInMigrationState(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(is_in_migration_state);
+    fn is_in_migration_state(&self, callback: &mozIFirefoxAccountsBridgeCallback) -> Result<()> {
+        punt!(is_in_migration_state)
+    }
 
     xpcom_method!(
         get_profile => GetProfile(
@@ -225,23 +273,37 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(get_profile, ignore_cache: bool);
+    fn get_profile(
+        &self,
+        ignore_cache: bool,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(get_profile, ignore_cache)
+    }
 
     xpcom_method!(
         get_token_server_endpoint_url => GetTokenServerEndpointURL(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(get_token_server_endpoint_url);
+    fn get_token_server_endpoint_url(
+        &self,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(get_token_server_endpoint_url)
+    }
 
     xpcom_method!(
         get_connection_success_url => GetConnectionSuccessURL(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(get_connection_success_url);
+    fn get_connection_success_url(
+        &self,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(get_connection_success_url)
+    }
 
     xpcom_method!(
         get_manage_account_url => GetManageAccountURL(
@@ -249,7 +311,13 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(get_manage_account_url, entrypoint: &nsACString);
+    fn get_manage_account_url(
+        &self,
+        entrypoint: &nsACString,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(get_manage_account_url, entrypoint)
+    }
 
     xpcom_method!(
         get_manage_devices_url => GetManageDevicesURL(
@@ -257,7 +325,13 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(get_manage_devices_url, entrypoint: &nsACString);
+    fn get_manage_devices_url(
+        &self,
+        entrypoint: &nsACString,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(get_manage_devices_url, entrypoint)
+    }
 
     xpcom_method!(
         fetch_devices => FetchDevices(
@@ -265,8 +339,13 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(fetch_devices, ignore_cache: bool);
+    fn fetch_devices(
+        &self,
+        ignore_cache: bool,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(fetch_devices, ignore_cache)
+    }
 
     xpcom_method!(
         set_device_display_name => SetDeviceDisplayName(
@@ -274,7 +353,13 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(set_device_display_name, name: &nsACString);
+    fn set_device_display_name(
+        &self,
+        name: &nsACString,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(set_device_display_name, name)
+    }
 
     xpcom_method!(
         handle_push_message => HandlePushMessage(
@@ -282,16 +367,22 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(handle_push_message, payload: &nsACString);
+    fn handle_push_message(
+        &self,
+        payload: &nsACString,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(handle_push_message, payload)
+    }
 
     xpcom_method!(
         poll_device_commands => PollDeviceCommands(
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(poll_device_commands);
+    fn poll_device_commands(&self, callback: &mozIFirefoxAccountsBridgeCallback) -> Result<()> {
+        punt!(poll_device_commands)
+    }
 
     xpcom_method!(
         send_single_tab => SendSingleTab(
@@ -301,7 +392,15 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(send_single_tab, target_id: &nsACString, title: &nsACString, url: &nsACString);
+    fn send_single_tab(
+        &self,
+        target_id: &nsACString,
+        title: &nsACString,
+        url: &nsACString,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(send_single_tab, target_id, title, url)
+    }
 
     xpcom_method!(
         set_device_push_subscription => SetDevicePushSubscription(
@@ -311,8 +410,15 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(set_device_push_subscription, endpoint: &nsACString, public_key: &nsACString, auth_key: &nsACString);
+    fn set_device_push_subscription(
+        &self,
+        endpoint: &nsACString,
+        public_key: &nsACString,
+        auth_key: &nsACString,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(set_device_push_subscription, endpoint, public_key, auth_key)
+    }
 
     xpcom_method!(
         initialize_device => InitializeDevice(
@@ -322,8 +428,15 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(initialize_device, name: &nsACString, device_type: &nsACString, supported_capabilities: &ThinVec<nsCString>);
+    fn initialize_device(
+        &self,
+        name: &nsACString,
+        device_type: &nsACString,
+        supported_capabilities: &ThinVec<nsCString>,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(initialize_device, name, device_type, supported_capabilities)
+    }
 
     xpcom_method!(
         ensure_capabilities => EnsureCapabilities(
@@ -331,6 +444,11 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-
-    punt!(ensure_capabilities, supported_capabilities: &ThinVec<nsCString>);
+    fn ensure_capabilities(
+        &self,
+        supported_capabilities: &ThinVec<nsCString>,
+        callback: &mozIFirefoxAccountsBridgeCallback,
+    ) -> Result<()> {
+        punt!(ensure_capabilities, supported_capabilities)
+    }
 }
