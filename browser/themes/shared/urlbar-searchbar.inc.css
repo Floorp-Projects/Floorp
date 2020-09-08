@@ -304,10 +304,10 @@
   height: 100%;
   margin-inline-start: -16px;
   -moz-context-properties: fill, fill-opacity, stroke-opacity;
-  fill: #0c0c0d; /* Grey 90 */
+  fill: currentColor;
   fill-opacity: 0;
   stroke-opacity: 0.6;
-  background-color: white;
+  background-color: var(--lwt-toolbar-field-background-color, white);
 }
 
 #urlbar-search-mode-indicator:hover  > #urlbar-search-mode-indicator-close {
@@ -320,6 +320,14 @@
   }
   #urlbar-search-mode-indicator-close:hover:active {
     background-color: #d7d7db; /* Grey 30 */
+  }
+
+  :root[lwt-toolbar-field-brighttext] #urlbar-search-mode-indicator-close:hover {
+    background-color: #737373; /* Grey 50 */
+  }
+
+  :root[lwt-toolbar-field-brighttext] #urlbar-search-mode-indicator-close:hover:active {
+    background-color: #b1b1b3; /* Grey 40 */
   }
 }
 
