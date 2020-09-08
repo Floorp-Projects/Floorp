@@ -39,6 +39,7 @@ const kContentDoc =
   "http://www.example.com/browser/dom/tests/browser/test_new_window_from_content_child.html";
 const kNewWindowPrefKey = "browser.link.open_newwindow";
 const kNewWindowRestrictionPrefKey = "browser.link.open_newwindow.restriction";
+const kSameTab = "same tab";
 const kNewWin = "new window";
 const kNewTab = "new tab";
 
@@ -52,23 +53,26 @@ requestLongerTimeout(3);
 // open a window with window.open with the default feature set. The key of
 // the kWinOpenDefault object represents the value of browser.link.open_newwindow.
 // The value for each key is an array that represents the result (either opening
-// the link in a new window or a new tab), where the index of each result maps
-// to the browser.link.open_newwindow.restriction pref. I've tried to
-// illustrate this more clearly in the kWinOpenDefault object.
+// the link in the same tab, a new window, or a new tab), where the index of each
+// result maps to the browser.link.open_newwindow.restriction pref. I've tried
+// to illustrate this more clearly in the kWinOpenDefault object.
 const kWinOpenDefault = {
   //                    open_newwindow.restriction
   //                    0         1        2
   // open_newwindow
+  1: [kSameTab, kNewWin, kSameTab],
   2: [kNewWin, kNewWin, kNewWin],
   3: [kNewTab, kNewWin, kNewTab],
 };
 
 const kWinOpenNonDefault = {
+  1: [kSameTab, kNewWin, kNewWin],
   2: [kNewWin, kNewWin, kNewWin],
   3: [kNewTab, kNewWin, kNewWin],
 };
 
 const kTargetBlank = {
+  1: [kSameTab, kSameTab, kSameTab],
   2: [kNewWin, kNewWin, kNewWin],
   3: [kNewTab, kNewTab, kNewTab],
 };
@@ -91,22 +95,30 @@ registerCleanupFunction(function() {
 /**
  * For some expectation when a link is clicked, creates and
  * returns a Promise that resolves when that expectation is
- * fulfilled. For example, aExpectation might be kNewTab, which
+ * fulfilled. For example, aExpectation might be kSameTab, which
  * will cause this function to return a Promise that resolves when
- * the new tab is created.
+ * the current tab attempts to browse to about:blank.
  *
  * This function also takes care of cleaning up once the result has
  * occurred - for example, if a new window was opened, this function
  * closes it before resolving.
  *
  * @param aBrowser the <xul:browser> with the test document
- * @param aExpectation either kNewWin or kNewTab.
+ * @param aExpectation one of kSameTab, kNewWin, or kNewTab.
  * @return a Promise that resolves when the expectation is fulfilled,
  *         and cleaned up after.
  */
 function prepareForResult(aBrowser, aExpectation) {
   let expectedSpec = kContentDoc.replace(/[^\/]*$/, "dummy.html");
   switch (aExpectation) {
+    case kSameTab:
+      return (async function() {
+        await BrowserTestUtils.browserLoaded(aBrowser);
+        is(aBrowser.currentURI.spec, expectedSpec, "Should be at dummy.html");
+        // Now put the browser back where it came from
+        await BrowserTestUtils.loadURI(aBrowser, kContentDoc);
+        await BrowserTestUtils.browserLoaded(aBrowser);
+      })();
     case kNewWin:
       return (async function() {
         let newWin = await BrowserTestUtils.waitForNewWindow({
@@ -158,7 +170,7 @@ function testLinkWithMatrix(aLinkSelector, aMatrix) {
       // 1) newWindowPref: a browser.link.open_newwindow pref to try
       // 2) newWindowRestPref: a browser.link.open_newwindow.restriction pref to try
       // 3) expectation: what we expect the click outcome on this link to be,
-      //                 which will either be kNewWin or kNewTab.
+      //                 which will either be kSameTab, kNewWin or kNewTab.
       for (let newWindowPref in aMatrix) {
         let expectations = aMatrix[newWindowPref];
         for (let i = 0; i < expectations.length; ++i) {

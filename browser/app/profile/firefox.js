@@ -461,12 +461,12 @@ pref("permissions.desktop-notification.notNow.enabled", false);
 pref("permissions.fullscreen.allowed", false);
 
 // handle links targeting new windows
-// 2=new window, 3=new tab in most recent window
+// 1=current window/tab, 2=new window, 3=new tab in most recent window
 pref("browser.link.open_newwindow", 3);
 
 // handle external links (i.e. links opened from a different application)
 // default: use browser.link.open_newwindow
-// 2-3: see browser.link.open_newwindow for interpretation
+// 1-3: see browser.link.open_newwindow for interpretation
 pref("browser.link.open_newwindow.override.external", -1);
 
 // 0: no restrictions - divert everything
