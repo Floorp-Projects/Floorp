@@ -21,19 +21,14 @@
 
 #include "jstypes.h"  // JS_FRIEND_API
 
-#include "js/HeapAPI.h"        // JS::shadow::String
-#include "js/RootingAPI.h"     // JS::Handle, JS::Rooted
-#include "js/shadow/String.h"  // JS::shadow::String
-#include "js/TypeDecls.h"      // JSContext, JS::Latin1Char, JSString
-#include "js/Vector.h"         // js::Vector
+#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/String.h"      // JS::GetStringLength
+#include "js/TypeDecls.h"   // JSContext, JS::Latin1Char, JSString
+#include "js/Vector.h"      // js::Vector
 
 class JSLinearString;
 
 namespace JS {
-
-MOZ_ALWAYS_INLINE size_t GetStringLength(JSString* s) {
-  return reinterpret_cast<shadow::String*>(s)->length();
-}
 
 /**
  * This class provides safe access to a string's chars across a GC. If we ever

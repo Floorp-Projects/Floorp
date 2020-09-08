@@ -12359,7 +12359,7 @@ class CGCountMaybeMissingProperty(CGAbstractMethod):
                 """)
 
         lengths = set(len(prop) for prop in instrumentedProps)
-        switchDesc = { 'condition': 'js::GetLinearStringLength(str)',
+        switchDesc = { 'condition': 'JS::GetLinearStringLength(str)',
                        'precondition': '' }
         switchDesc['cases'] = dict()
         for length in sorted(lengths):
@@ -12375,7 +12375,7 @@ class CGCountMaybeMissingProperty(CGAbstractMethod):
             {
               // Scope for our no-GC section, so we don't need to rely on SetUseCounter not GCing.
               JS::AutoCheckCannotGC nogc;
-              JSLinearString* str = js::AtomToLinearString(JSID_TO_ATOM(id));
+              JSLinearString* str = JS::AtomToLinearString(JSID_TO_ATOM(id));
               // Don't waste time fetching the chars until we've done the length switch.
               $*{switch}
             }
@@ -15502,6 +15502,10 @@ class CGBindingRoot(CGThing):
 
         bindingHeaders["mozilla/dom/DOMJSProxyHandler.h"] = any(
             d.concrete and d.proxy for d in descriptors)
+
+        bindingHeaders["js/String.h"] = any(
+            d.needsMissingPropUseCounters for d in descriptors)
+
         hasCrossOriginObjects = any(
             d.concrete and d.isMaybeCrossOriginObject() for d in descriptors)
         bindingHeaders["mozilla/dom/MaybeCrossOriginObject.h"] = hasCrossOriginObjects
@@ -18757,6 +18761,7 @@ class GlobalGenRoots():
         defineIncludes.append('mozilla/dom/WebIDLGlobalNameHash.h')
         defineIncludes.append('mozilla/dom/PrototypeList.h')
         defineIncludes.append('mozilla/PerfectHash.h')
+        defineIncludes.append('js/String.h')
         curr = CGHeaders([], [], [], [], [], defineIncludes, 'RegisterBindings',
                          curr)
 

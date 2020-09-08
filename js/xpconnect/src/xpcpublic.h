@@ -12,6 +12,7 @@
 #include "js/HeapAPI.h"
 #include "js/GCAPI.h"
 #include "js/Proxy.h"
+#include "js/String.h"  // JS::IsExternalString
 #include "js/Wrapper.h"
 
 #include "nsAtom.h"
@@ -268,7 +269,7 @@ class XPCStringConvert {
       JSString* str, const JSExternalStringCallbacks* desiredCallbacks,
       const char16_t** chars) {
     const JSExternalStringCallbacks* callbacks;
-    return js::IsExternalString(str, &callbacks, chars) &&
+    return JS::IsExternalString(str, &callbacks, chars) &&
            callbacks == desiredCallbacks;
   }
 

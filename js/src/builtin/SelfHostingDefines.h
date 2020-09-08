@@ -23,7 +23,7 @@
 // NB: keep this in sync with the copy in vm/ArgumentsObject.h.
 #define MAX_ARGS_LENGTH (500 * 1000)
 
-// NB: keep this in sync with js::MaxStringLength in jsfriendapi.h.
+// NB: keep this in sync with JS::MaxStringLength in js/public/String.h.
 #define MAX_STRING_LENGTH ((1 << 30) - 2)
 
 // Spread non-empty argument list of up to 15 elements.

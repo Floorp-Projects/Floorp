@@ -10,6 +10,7 @@
 #include "nsAppShell.h"
 #include "nsJSUtils.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
+#include "js/String.h"    // JS::StringHasLatin1Chars
 #include "js/Warnings.h"  // JS::WarnUTF8
 #include "xpcpublic.h"
 
@@ -46,7 +47,7 @@ nsresult BoxString(JSContext* aCx, JS::HandleValue aData,
 
   JS::RootedString str(aCx, aData.toString());
 
-  if (JS_StringHasLatin1Chars(str)) {
+  if (JS::StringHasLatin1Chars(str)) {
     nsAutoJSString autoStr;
     NS_ENSURE_TRUE(CheckJS(aCx, autoStr.init(aCx, str)), NS_ERROR_FAILURE);
 
