@@ -328,6 +328,37 @@ add_task(async function test_account_settings_state_signedin() {
   await closeTabAndMainPanel();
 });
 
+add_task(async function test_app_menu_fxa_disabled() {
+  const newWin = await BrowserTestUtils.openNewBrowserWindow();
+
+  Services.prefs.setBoolPref("identity.fxaccounts.enabled", true);
+  newWin.gSync.onFxaDisabled();
+
+  let menuButton = newWin.document.getElementById("PanelUI-menu-button");
+  menuButton.click();
+  await BrowserTestUtils.waitForEvent(newWin.PanelUI.mainView, "ViewShown");
+
+  ok(
+    BrowserTestUtils.is_hidden(
+      newWin.document.getElementById("appMenu-fxa-status")
+    ),
+    "Fxa status is hidden"
+  );
+
+  [...newWin.document.querySelectorAll(".sync-ui-item")].forEach(
+    e => (e.hidden = false)
+  );
+  let mainView = newWin.document.getElementById("appMenu-mainView");
+  let hidden = BrowserTestUtils.waitForEvent(
+    newWin.document,
+    "popuphidden",
+    true
+  );
+  mainView.closest("panel").hidePopup();
+  await hidden;
+  await BrowserTestUtils.closeWindow(newWin);
+});
+
 function checkPanelUIStatusBar({ label, fxastatus, syncing }) {
   let labelNode = document.getElementById("appMenu-fxa-label");
   is(labelNode.getAttribute("label"), label, "fxa label has the right value");
