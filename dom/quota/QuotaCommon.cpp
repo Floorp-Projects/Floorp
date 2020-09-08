@@ -155,11 +155,12 @@ nsDependentCSubstring GetLeafName(const nsACString& aPath) {
   return nsDependentCSubstring(start.get(), end.get());
 }
 
-void LogError(const nsLiteralCString& aModule, const nsLiteralCString& aExpr,
-              const nsLiteralCString& aSourceFile, int32_t aSourceLine) {
+void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
+              const nsACString& aSourceFile, int32_t aSourceLine) {
 #ifdef DEBUG
   NS_DebugBreak(NS_DEBUG_WARNING, nsAutoCString(aModule + " failure"_ns).get(),
-                aExpr.get(), nsAutoCString(GetLeafName(aSourceFile)).get(),
+                nsPromiseFlatCString(aExpr).get(),
+                nsPromiseFlatCString(GetLeafName(aSourceFile)).get(),
                 aSourceLine);
 #endif
 
@@ -224,9 +225,10 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
 }
 #endif
 
-void HandleError(const nsLiteralCString& aExpr,
-                 const nsLiteralCString& aSourceFile, int32_t aSourceLine) {
-  LogError(nsLiteralCString("QuotaManager"), aExpr, aSourceFile, aSourceLine);
+void HandleError(const char* const aExpr, const char* const aSourceFile,
+                 const int32_t aSourceLine) {
+  LogError(nsLiteralCString("QuotaManager"), nsDependentCString(aExpr),
+           nsDependentCString(aSourceFile), aSourceLine);
 
   // TODO: Report to telemetry
 }

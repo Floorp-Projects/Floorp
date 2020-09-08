@@ -282,8 +282,7 @@ LogModule* GetLocalStorageLogger();
 namespace localstorage {
 
 // See comment on mozilla::dom::quota::HandleError
-MOZ_NEVER_INLINE void HandleError(const nsLiteralCString& aExpr,
-                                  const nsLiteralCString& aSourceFile,
+MOZ_NEVER_INLINE void HandleError(const char* aExpr, const char* aSourceFile,
                                   int32_t aSourceLine);
 
 }  // namespace localstorage

@@ -8,10 +8,11 @@
 
 namespace mozilla::dom::indexedDB {
 
-void HandleError(const nsLiteralCString& aExpr,
-                 const nsLiteralCString& aSourceFile, int32_t aSourceLine) {
-  mozilla::dom::quota::LogError(nsLiteralCString("IndexedDB"), aExpr,
-                                aSourceFile, aSourceLine);
+void HandleError(const char* const aExpr, const char* const aSourceFile,
+                 const int32_t aSourceLine) {
+  mozilla::dom::quota::LogError(nsLiteralCString("IndexedDB"),
+                                nsDependentCString(aExpr),
+                                nsDependentCString(aSourceFile), aSourceLine);
 }
 
 }  // namespace mozilla::dom::indexedDB

@@ -142,10 +142,11 @@ LogModule* GetLocalStorageLogger() { return gLogger; }
 
 namespace localstorage {
 
-void HandleError(const nsLiteralCString& aExpr,
-                 const nsLiteralCString& aSourceFile, int32_t aSourceLine) {
-  mozilla::dom::quota::LogError(nsLiteralCString("LocalStorage"), aExpr,
-                                aSourceFile, aSourceLine);
+void HandleError(const char* const aExpr, const char* const aSourceFile,
+                 const int32_t aSourceLine) {
+  mozilla::dom::quota::LogError(nsLiteralCString("LocalStorage"),
+                                nsDependentCString(aExpr),
+                                nsDependentCString(aSourceFile), aSourceLine);
 }
 
 }  // namespace localstorage

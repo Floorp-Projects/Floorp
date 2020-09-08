@@ -397,12 +397,9 @@
   } while (0)
 
 #ifdef DEBUG
-#  define QM_HANDLE_ERROR(expr) \
-    HandleError(nsLiteralCString(#expr), nsLiteralCString(__FILE__), __LINE__)
+#  define QM_HANDLE_ERROR(expr) HandleError(#  expr, __FILE__, __LINE__)
 #else
-#  define QM_HANDLE_ERROR(expr)                                              \
-    HandleError(nsLiteralCString("Unavailable"), nsLiteralCString(__FILE__), \
-                __LINE__)
+#  define QM_HANDLE_ERROR(expr) HandleError("Unavailable", __FILE__, __LINE__)
 #endif
 
 // QM_TRY_PROPAGATE_ERR, QM_TRY_CUSTOM_RET_VAL,
@@ -834,8 +831,8 @@ nsAutoCString GetIntCString(const int64_t aInteger);
 
 nsDependentCSubstring GetLeafName(const nsACString& aPath);
 
-void LogError(const nsLiteralCString& aModule, const nsLiteralCString& aExpr,
-              const nsLiteralCString& aSourceFile, int32_t aSourceLine);
+void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
+              const nsACString& aSourceFile, int32_t aSourceLine);
 
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
@@ -844,11 +841,16 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
 #endif
 
 // As this is a function that will only be called in error cases, this is marked
-// with MOZ_NEVER_INLINE to avoid bloating the code of calling functions. The
-// corresponding functions in the quota clients should have exactly the same
-// signature incl. attributes.
-MOZ_NEVER_INLINE void HandleError(const nsLiteralCString& aExpr,
-                                  const nsLiteralCString& aSourceFile,
+// with MOZ_NEVER_INLINE to avoid bloating the code of calling functions.
+// For the same reason, the string-ish parameters are of type const char* rather
+// than any ns*String type, to minimize the code at each call site. This
+// deliberately de-optimizes runtime performance, which is uncritical during
+// error handling.
+//
+// The corresponding functions in the quota clients should have exactly the same
+// signature incl. attributes. These functions are not intended to be called
+// directly, they should only be called from the QM_* macros.
+MOZ_NEVER_INLINE void HandleError(const char* aExpr, const char* aSourceFile,
                                   int32_t aSourceLine);
 
 }  // namespace quota
