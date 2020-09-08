@@ -645,6 +645,47 @@
       }
     },
 
+    "ManagedBookmarks": {
+      "items": {
+        "properties": {
+          "children": {
+            "items": {
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "toplevel_name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "children": {
+                  "items": {
+                    "type": "JSON"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "toplevel_name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "type": ["array", "JSON"]
+    },
+
     "NetworkPrediction": {
       "type": "boolean"
     },

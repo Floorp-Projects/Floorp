@@ -276,7 +276,7 @@ var CustomizableUIInternal = {
       CustomizableUI.AREA_BOOKMARKS,
       {
         type: CustomizableUI.TYPE_TOOLBAR,
-        defaultPlacements: ["personal-bookmarks"],
+        defaultPlacements: ["managed-bookmarks", "personal-bookmarks"],
         defaultCollapsed: true,
       },
       true
