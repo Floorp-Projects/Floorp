@@ -44,6 +44,9 @@
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">Τέλος λειτουργίας πολλαπλής επιλογής</string>
 
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Σε λειτουργία πολλαπλών επιλογών, επιλέξτε καρτέλες για αποθήκευση σε συλλογή</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Το %1$s αναπτύσσεται από τη Mozilla.</string>
 
@@ -58,6 +61,9 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Διαγραφή συνεδρίας</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Προσθέστε συντόμευση για άνοιγμα ιδιωτικών καρτελών από την αρχική οθόνη.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Προσθήκη συντόμευσης</string>
     <!-- Text for the negative button -->
@@ -68,6 +74,9 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Όχι τώρα</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Μπορείτε να ρυθμίσετε το Firefox να ανοίγει αυτόματα συνδέσμους σε εφαρμογές.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Μετάβαση στις ρυθμίσεις</string>
     <!-- Text for the negative action button -->
@@ -259,6 +268,8 @@
     <string name="preferences_override_fxa_server">Προσαρμοσμένος διακομιστής λογαριασμού Firefox</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Προσαρμοσμένος διακομιστής Sync</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Ο διακομιστής λογαριασμού Firefox/Sync τροποποιήθηκε. Τερματισμός εφαρμογής για εφαρμογή αλλαγών…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Λογαριασμός</string>
     <!-- Preference shown on banner to sign into account -->
@@ -769,8 +780,10 @@
     <string name="collections_header">Συλλογές</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Μενού συλλογής</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Συλλέξτε αυτά που σας ενδιαφέρουν.\nΟμαδοποιήστε παρόμοιες αναζητήσεις, σελίδες και καρτέλες για γρήγορη πρόσβαση αργότερα.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_tabs">Επιλέξτε καρτέλες</string>
+    <string name="create_collection_select_tabs">Επιλογή καρτελών</string>
     <!-- Title for the "select collection" step of the collection creator -->
     <string name="create_collection_select_collection">Επιλογή συλλογής</string>
     <!-- Title for the "name collection" step of the collection creator -->
@@ -860,6 +873,8 @@
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Διαγραφή και άνοιγμα</string>
 
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Με την υποστήριξη του</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Η συλλογή διαγράφηκε</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -897,6 +912,8 @@
     <string name="qr_scanner_dialog_negative">ΑΡΝΗΣΗ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Θέλετε σίγουρα να διαγράψετε το %1$s;</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Η αφαίρεση της καρτέλας θα διαγράψει ολόκληρη τη συλλογή. Μπορείτε να δημιουργήσετε νέες συλλογές ανά πάσα στιγμή.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">Διαγραφή του %1$s;</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -1018,14 +1035,22 @@
     <string name="onboarding_whats_new_description">Έχετε ερωτήσεις σχετικά με το επανασχεδιασμένο %s; Θέλετε να μάθετε τι έχει αλλάξει;</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Λάβετε απαντήσεις εδώ</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Ξεκινήστε το συγχρονισμό σελιδοδεικτών, κωδικών πρόσβασης και άλλων δεδομένων με το λογαριασμό Firefox σας.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Μάθετε περισσότερα</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Έχετε συνδεθεί ως %s σε άλλο πρόγραμμα περιήγησης Firefox σε αυτό το τηλέφωνο. Θέλετε να συνδεθείτε με αυτό το λογαριασμό;</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ναι, σύνδεση</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Σύνδεση…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Σύνδεση στο Firefox</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Παραμονή εκτός σύνδεσης</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Το Sync είναι ενεργό</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -1042,12 +1067,28 @@
     <string name="onboarding_tracking_protection_strict_button">Αυστηρή (προτείνεται)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Αυστηρή</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Πάρτε θέση</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Δοκιμάστε την περιήγηση με ένα χέρι με την κάτω γραμμή εργαλείων ή μετακινήστε την στο πάνω μέρος.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Ιδιωτική περιήγηση</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Άνοιγμα ιδιωτικής καρτέλας μία φορά: Αγγίξτε το εικονίδιο %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Άνοιγμα ιδιωτικών καρτελών κάθε φορά: Ενημερώστε τις ρυθμίσεις ιδιωτικής περιήγησης.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Άνοιγμα ρυθμίσεων</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Το απόρρητό σας</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Έχουμε σχεδιάσει το %s ώστε να έχετε τον έλεγχο του τι θα κοινοποιείτε
+        στο διαδίκτυο και σε εμάς.
+    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Διαβάστε τη σημείωση απορρήτου μας</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -1166,6 +1207,8 @@
     <string name="etp_fingerprinters_title">Fingerprinters</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Περιεχόμενο καταγραφής</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Κάθε φορά που η ασπίδα είναι μωβ, το %s έχει αποκλείσει ιχνηλάτες σε μια σελίδα. Πατήστε για περισσότερες πληροφορίες.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Η προστασία είναι ΕΝΕΡΓΗ για αυτή τη σελίδα</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1232,6 +1275,9 @@
 
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Όνομα συντόμευσης</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Μπορείτε εύκολα να προσθέσετε αυτή την ιστοσελίδα στην αρχική οθόνη για άμεση πρόσβαση και ταχύτερη περιήγηση, σαν να ήταν εφαρμογή.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Συνδέσεις και κωδικοί πρόσβασης</string>
@@ -1476,6 +1522,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Έχετε φτάσει το ανώτατο όριο κορυφαίων ιστοσελίδων</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Για να προσθέσετε μια νέα κορυφαία σελίδα, αφαιρέστε μια υπάρχουσα. Πατήστε παρατεταμένα στη σελίδα και επιλέξτε &quot;Αφαίρεση&quot;.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, το κατάλαβα</string>
 
