@@ -610,7 +610,7 @@ add_task(
         ["browser.contentblocking.cfr-milestone.milestone-achieved", 1000],
         [
           "browser.newtabpage.activity-stream.asrouter.providers.cfr",
-          `{"id":"cfr","enabled":true,"type":"local","localProvider":"CFRMessageProvider","frequency":{"custom":[{"period":"daily","cap":10}]},"categories":["cfrAddons","cfrFeatures"],"updateCycleInMs":3600000}`,
+          `{"id":"cfr","enabled":true,"type":"local","localProvider":"CFRMessageProvider","updateCycleInMs":3600000}`,
         ],
       ],
     });
@@ -668,7 +668,7 @@ add_task(
         ["browser.contentblocking.cfr-milestone.milestone-achieved", 1000],
         [
           "browser.newtabpage.activity-stream.asrouter.providers.cfr",
-          `{"id":"cfr","enabled":true,"type":"local","localProvider":"CFRMessageProvider","frequency":{"custom":[{"period":"daily","cap":10}]},"categories":["cfrAddons","cfrFeatures"],"updateCycleInMs":3600000}`,
+          `{"id":"cfr","enabled":true,"type":"local","localProvider":"CFRMessageProvider","updateCycleInMs":3600000}`,
         ],
       ],
     });
