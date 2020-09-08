@@ -946,7 +946,7 @@ NS_IMETHODIMP
 SessionHistoryEntry::AddChild(nsISHEntry* aChild, int32_t aOffset,
                               bool aUseRemoteSubframes) {
   nsCOMPtr<SessionHistoryEntry> child = do_QueryInterface(aChild);
-  MOZ_ASSERT(child);
+  MOZ_ASSERT_IF(aChild, child);
   AddChild(child, aOffset, aUseRemoteSubframes);
 
   return NS_OK;
