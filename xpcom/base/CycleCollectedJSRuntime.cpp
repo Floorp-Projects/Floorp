@@ -63,6 +63,7 @@
 #include "js/friend/DumpFunctions.h"  // js::DumpHeap
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
+#include "js/Object.h"    // JS::GetClass, JS::GetCompartment, JS::GetPrivate
 #include "js/Warnings.h"  // JS::SetWarningReporter
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
@@ -775,8 +776,8 @@ void CycleCollectedJSRuntime::DescribeGCThing(
   uint64_t compartmentAddress = 0;
   if (aThing.is<JSObject>()) {
     JSObject* obj = &aThing.as<JSObject>();
-    compartmentAddress = (uint64_t)js::GetObjectCompartment(obj);
-    const JSClass* clasp = js::GetObjectClass(obj);
+    compartmentAddress = (uint64_t)JS::GetCompartment(obj);
+    const JSClass* clasp = JS::GetClass(obj);
 
     // Give the subclass a chance to do something
     if (DescribeCustomObjects(obj, clasp, name)) {
@@ -814,7 +815,7 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
     const JSClass* aClasp, JSObject* aObj,
     nsCycleCollectionTraversalCallback& aCb) const {
   MOZ_ASSERT(aClasp);
-  MOZ_ASSERT(aClasp == js::GetObjectClass(aObj));
+  MOZ_ASSERT(aClasp == JS::GetClass(aObj));
 
   JS::Rooted<JSObject*> obj(RootingCx(), aObj);
 
@@ -827,8 +828,8 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
   //     that do hold a strong reference, but that might not be possible.
   if (aClasp->flags & JSCLASS_HAS_PRIVATE &&
       aClasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "js::GetObjectPrivate(obj)");
-    aCb.NoteXPCOMChild(static_cast<nsISupports*>(js::GetObjectPrivate(obj)));
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "JS::GetPrivate(obj)");
+    aCb.NoteXPCOMChild(static_cast<nsISupports*>(JS::GetPrivate(obj)));
     return;
   }
 
@@ -885,7 +886,7 @@ void CycleCollectedJSRuntime::TraverseGCThing(
 
   if (aThing.is<JSObject>()) {
     JSObject* obj = &aThing.as<JSObject>();
-    NoteGCThingXPCOMChildren(js::GetObjectClass(obj), obj, aCb);
+    NoteGCThingXPCOMChildren(JS::GetClass(obj), obj, aCb);
   }
 }
 

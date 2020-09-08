@@ -33,6 +33,7 @@
 #include "nsIGlobalObject.h"
 #include "nsMixedContentBlocker.h"
 #include "nsURLParsers.h"
+#include "js/Object.h"  // JS::GetClass
 
 namespace mozilla {
 namespace dom {
@@ -242,7 +243,7 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnWorker(
 // static
 bool CacheStorage::DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
+  MOZ_DIAGNOSTIC_ASSERT(JS::GetClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
                         "Passed object is not a global object!");
   js::AssertSameCompartment(aCx, aGlobal);
 

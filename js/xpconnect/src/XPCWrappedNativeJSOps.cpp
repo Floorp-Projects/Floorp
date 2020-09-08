@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
+#include "js/Object.h"  // JS::GetClass
 #include "js/Printf.h"
 #include "js/Symbol.h"
 
@@ -566,7 +567,7 @@ enum WNHelperType { WN_NOHELPER, WN_HELPER };
 
 static void WrappedNativeFinalize(JSFreeOp* fop, JSObject* obj,
                                   WNHelperType helperType) {
-  const JSClass* clazz = js::GetObjectClass(obj);
+  const JSClass* clazz = JS::GetClass(obj);
   if (clazz->flags & JSCLASS_DOM_GLOBAL) {
     mozilla::dom::DestroyProtoAndIfaceCache(obj);
   }
@@ -607,7 +608,7 @@ void XPC_WN_NoHelper_Finalize(JSFreeOp* fop, JSObject* obj) {
 
 /* static */
 void XPCWrappedNative::Trace(JSTracer* trc, JSObject* obj) {
-  const JSClass* clazz = js::GetObjectClass(obj);
+  const JSClass* clazz = JS::GetClass(obj);
   if (clazz->flags & JSCLASS_DOM_GLOBAL) {
     mozilla::dom::TraceProtoAndIfaceCache(trc, obj);
   }
@@ -909,10 +910,10 @@ MOZ_ALWAYS_INLINE JSObject* FixUpThisIfBroken(JSObject* obj, JSObject* funobj) {
     JSObject* parentObj =
         &js::GetFunctionNativeReserved(funobj, XPC_FUNCTION_PARENT_OBJECT_SLOT)
              .toObject();
-    const JSClass* parentClass = js::GetObjectClass(parentObj);
+    const JSClass* parentClass = JS::GetClass(parentObj);
     if (MOZ_UNLIKELY(
             (IS_NOHELPER_CLASS(parentClass) || IS_CU_CLASS(parentClass)) &&
-            (js::GetObjectClass(obj) != parentClass))) {
+            (JS::GetClass(obj) != parentClass))) {
       return parentObj;
     }
   }
@@ -989,7 +990,7 @@ bool XPC_WN_GetterSetter(JSContext* cx, unsigned argc, Value* vp) {
 /***************************************************************************/
 
 static bool XPC_WN_Proto_Enumerate(JSContext* cx, HandleObject obj) {
-  MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_Proto_JSClass, "bad proto");
+  MOZ_ASSERT(JS::GetClass(obj) == &XPC_WN_Proto_JSClass, "bad proto");
   XPCWrappedNativeProto* self = (XPCWrappedNativeProto*)xpc_GetJSPrivate(obj);
   if (!self) {
     return false;
@@ -1047,7 +1048,7 @@ static bool XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext* cx,
                                                     HandleObject obj,
                                                     HandleId id,
                                                     HandleValue v) {
-  MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_Proto_JSClass, "bad proto");
+  MOZ_ASSERT(JS::GetClass(obj) == &XPC_WN_Proto_JSClass, "bad proto");
 
   XPCWrappedNativeProto* self = (XPCWrappedNativeProto*)xpc_GetJSPrivate(obj);
   if (!self) {
@@ -1069,7 +1070,7 @@ static bool XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext* cx,
 
 static bool XPC_WN_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id,
                                  bool* resolvedp) {
-  MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_Proto_JSClass, "bad proto");
+  MOZ_ASSERT(JS::GetClass(obj) == &XPC_WN_Proto_JSClass, "bad proto");
 
   XPCWrappedNativeProto* self = (XPCWrappedNativeProto*)xpc_GetJSPrivate(obj);
   if (!self) {

@@ -10,6 +10,7 @@
 
 #include "debugger/DebugAPI.h"
 #include "frontend/CompilationInfo.h"
+#include "js/Object.h"  // JS::GetReservedSlot
 #include "proxy/DeadObjectProxy.h"
 
 #include "vm/JSObject-inl.h"
@@ -31,7 +32,7 @@ enum InstrumentationHolderSlots {
 };
 
 static RealmInstrumentation* GetInstrumentation(JSObject* obj) {
-  Value v = JS_GetReservedSlot(obj, RealmInstrumentationSlot);
+  Value v = JS::GetReservedSlot(obj, RealmInstrumentationSlot);
   return static_cast<RealmInstrumentation*>(v.isUndefined() ? nullptr
                                                             : v.toPrivate());
 }

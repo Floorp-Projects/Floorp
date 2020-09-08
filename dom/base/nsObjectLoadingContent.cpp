@@ -68,6 +68,7 @@
 #include "nsPluginFrame.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMJSUtils.h"
+#include "js/Object.h"  // JS::GetClass
 
 #include "nsWidgetsCID.h"
 #include "nsContentCID.h"
@@ -3505,7 +3506,7 @@ void nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
     return;
   }
 
-  if (pi_proto && js::GetObjectClass(pi_proto) != js::ObjectClassPtr) {
+  if (pi_proto && JS::GetClass(pi_proto) != js::ObjectClassPtr) {
     // The plugin wrapper has a proto that's not Object.prototype, set
     // 'pi.__proto__.__proto__' to the original 'this.__proto__'
     if (pi_proto != my_proto && !::JS_SetPrototype(aCx, pi_proto, my_proto)) {

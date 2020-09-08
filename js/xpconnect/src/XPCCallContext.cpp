@@ -8,6 +8,7 @@
 
 #include "xpcprivate.h"
 #include "jsfriendapi.h"
+#include "js/Object.h"  // JS::GetClass, JS::GetPrivate, JS::GetReservedSlot
 #include "js/Wrapper.h"
 #include "nsContentUtils.h"
 
@@ -69,13 +70,13 @@ XPCCallContext::XPCCallContext(
     mState = INIT_FAILED;
     return;
   }
-  const JSClass* clasp = js::GetObjectClass(unwrapped);
+  const JSClass* clasp = JS::GetClass(unwrapped);
   if (IS_WN_CLASS(clasp)) {
     mWrapper = XPCWrappedNative::Get(unwrapped);
   } else if (IsTearoffClass(clasp)) {
-    mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
+    mTearOff = (XPCWrappedNativeTearOff*)JS::GetPrivate(unwrapped);
     mWrapper = XPCWrappedNative::Get(
-        &js::GetReservedSlot(unwrapped, XPC_WN_TEAROFF_FLAT_OBJECT_SLOT)
+        &JS::GetReservedSlot(unwrapped, XPC_WN_TEAROFF_FLAT_OBJECT_SLOT)
              .toObject());
   }
   if (mWrapper && !mTearOff) {

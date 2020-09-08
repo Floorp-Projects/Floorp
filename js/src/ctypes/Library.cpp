@@ -12,8 +12,10 @@
 #include "ctypes/CTypes.h"
 #include "js/CharacterEncoding.h"
 #include "js/MemoryFunctions.h"
+#include "js/Object.h"  // JS::GetReservedSlot
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
+#include "vm/JSObject.h"
 
 using JS::AutoStableStringChars;
 
@@ -199,14 +201,12 @@ JSObject* Library::Create(JSContext* cx, HandleValue path,
   return libraryObj;
 }
 
-bool Library::IsLibrary(JSObject* obj) {
-  return JS_GetClass(obj) == &sLibraryClass;
-}
+bool Library::IsLibrary(JSObject* obj) { return obj->hasClass(&sLibraryClass); }
 
 PRLibrary* Library::GetLibrary(JSObject* obj) {
   MOZ_ASSERT(IsLibrary(obj));
 
-  Value slot = JS_GetReservedSlot(obj, SLOT_LIBRARY);
+  Value slot = JS::GetReservedSlot(obj, SLOT_LIBRARY);
   return static_cast<PRLibrary*>(slot.toPrivate());
 }
 

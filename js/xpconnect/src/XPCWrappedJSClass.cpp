@@ -7,6 +7,7 @@
 /* Sharable code and data for wrapper around JSObjects. */
 
 #include "xpcprivate.h"
+#include "js/Object.h"  // JS::GetClass
 #include "js/Printf.h"
 #include "nsArrayEnumerator.h"
 #include "nsINamed.h"
@@ -1094,7 +1095,7 @@ pre_call_clean_up:
 static const JSClass XPCOutParamClass = {"XPCOutParam", 0, JS_NULL_CLASS_OPS};
 
 bool xpc::IsOutObject(JSContext* cx, JSObject* obj) {
-  return js::GetObjectClass(obj) == &XPCOutParamClass;
+  return JS::GetClass(obj) == &XPCOutParamClass;
 }
 
 JSObject* xpc::NewOutObject(JSContext* cx) {

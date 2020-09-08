@@ -12,6 +12,7 @@
 #include "mozilla/TextUtils.h"
 
 #include "jsapi.h"
+#include "js/Object.h"  // JS::GetClass
 #include "js/Proxy.h"
 #include "js/String.h"  // JS::AtomToLinearString, JS::GetLinearString{CharAt,Length}
 #include "nsString.h"
@@ -161,7 +162,7 @@ class ShadowingDOMProxyHandler : public DOMProxyHandler {
 };
 
 inline bool IsDOMProxy(JSObject* obj) {
-  const JSClass* clasp = js::GetObjectClass(obj);
+  const JSClass* clasp = JS::GetClass(obj);
   return clasp->isProxy() &&
          js::GetProxyHandler(obj)->family() == &DOMProxyHandler::family;
 }

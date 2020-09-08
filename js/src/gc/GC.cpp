@@ -229,6 +229,7 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitRealm.h"
 #include "jit/MacroAssembler.h"
+#include "js/Object.h"  // JS::GetClass
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
 #include "util/Poison.h"
@@ -8969,7 +8970,7 @@ JS_PUBLIC_API void js::gc::FinalizeDeadNurseryObject(JSContext* cx,
   MOZ_ASSERT(IsAboutToBeFinalizedUnbarriered(&prior));
   MOZ_ASSERT(obj == prior);
 
-  const JSClass* jsClass = js::GetObjectClass(obj);
+  const JSClass* jsClass = JS::GetClass(obj);
   jsClass->doFinalize(cx->defaultFreeOp(), obj);
 }
 

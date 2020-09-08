@@ -23,6 +23,7 @@
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
+#include "js/Object.h"                // JS::GetReservedSlot
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/CheckedArithmetic.h"
 #include "vm/ArgumentsObject.h"
@@ -10777,7 +10778,7 @@ AbortReasonOr<Ok> IonBuilder::getPropTryCommonGetter(bool* emitted,
         if (singleton && jitinfo->aliasSet() == JSJitInfo::AliasNone) {
           size_t slot = jitinfo->slotIndex;
           *emitted = true;
-          pushConstant(GetReservedSlot(singleton, slot));
+          pushConstant(JS::GetReservedSlot(singleton, slot));
           return Ok();
         }
 

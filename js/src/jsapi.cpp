@@ -61,6 +61,7 @@
 #include "js/JSON.h"
 #include "js/LocaleSensitive.h"
 #include "js/MemoryFunctions.h"
+#include "js/Object.h"  // JS::SetPrivate
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
@@ -1669,10 +1670,6 @@ JS_PUBLIC_API bool JS_LinkConstructorAndPrototype(JSContext* cx,
   return LinkConstructorAndPrototype(cx, ctor, proto);
 }
 
-JS_PUBLIC_API const JSClass* JS_GetClass(JSObject* obj) {
-  return obj->getClass();
-}
-
 JS_PUBLIC_API bool JS_InstanceOf(JSContext* cx, HandleObject obj,
                                  const JSClass* clasp, CallArgs* args) {
   AssertHeapIsIdle();
@@ -1699,12 +1696,7 @@ JS_PUBLIC_API bool JS_HasInstance(JSContext* cx, HandleObject obj,
   return HasInstance(cx, obj, value, bp);
 }
 
-JS_PUBLIC_API void* JS_GetPrivate(JSObject* obj) {
-  /* This function can be called by a finalizer. */
-  return obj->as<NativeObject>().getPrivate();
-}
-
-JS_PUBLIC_API void JS_SetPrivate(JSObject* obj, void* data) {
+void JS::SetPrivate(JSObject* obj, void* data) {
   /* This function can be called by a finalizer. */
   obj->as<NativeObject>().setPrivate(data);
 }
@@ -3158,10 +3150,6 @@ JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JS::HandleObject obj) {
   for (unsigned i = numReserved; i < numSlots; i++) {
     obj->as<NativeObject>().setSlot(i, UndefinedValue());
   }
-}
-
-JS_PUBLIC_API Value JS_GetReservedSlot(JSObject* obj, uint32_t index) {
-  return obj->as<NativeObject>().getReservedSlot(index);
 }
 
 JS_PUBLIC_API void JS_SetReservedSlot(JSObject* obj, uint32_t index,

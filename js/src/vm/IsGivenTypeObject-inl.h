@@ -8,6 +8,7 @@
 #define vm_IsGivenTypeObject_inl_h
 
 #include "js/Class.h"       // js::ESClass
+#include "js/Object.h"      // JS::GetBuiltinClass
 #include "js/RootingAPI.h"  // JS::Handle
 
 #include "vm/JSContext-inl.h"  // JSContext::check
@@ -19,7 +20,7 @@ inline bool IsGivenTypeObject(JSContext* cx, JS::Handle<JSObject*> obj,
   cx->check(obj);
 
   ESClass cls;
-  if (!GetBuiltinClass(cx, obj, &cls)) {
+  if (!JS::GetBuiltinClass(cx, obj, &cls)) {
     return false;
   }
 

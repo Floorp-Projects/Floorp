@@ -1,5 +1,6 @@
 #include "gdb-tests.h"
 #include "jsapi.h"
+#include "js/Object.h"  // JS::GetClass
 
 FRAGMENT(JSObject, simple) {
   AutoSuppressHazardsForTest noanalysis;
@@ -35,7 +36,7 @@ FRAGMENT(JSObject, simple) {
   use(funcPtr);
   use(&plainRef);
   use(&funcRef);
-  use(JS_GetClass((JSObject*)&funcRef));
+  use(JS::GetClass((JSObject*)&funcRef));
   use(plainRaw);
   use(funcRaw);
 }
