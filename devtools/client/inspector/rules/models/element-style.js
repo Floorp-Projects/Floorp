@@ -219,6 +219,10 @@ class ElementStyle {
   getUsedFontFamilies() {
     return new Promise((resolve, reject) => {
       this.ruleView.styleWindow.requestIdleCallback(async () => {
+        if (this.element.isDestroyed()) {
+          resolve([]);
+          return;
+        }
         try {
           const fonts = await this.pageStyle.getUsedFontFaces(this.element, {
             includePreviews: false,
