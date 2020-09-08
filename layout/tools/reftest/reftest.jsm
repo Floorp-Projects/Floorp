@@ -732,35 +732,48 @@ async function StartCurrentURI(aURLTargetType)
         var badPref = undefined;
         try {
             prefSettings.forEach(function(ps) {
-                var oldVal;
-                if (ps.type == PREF_BOOLEAN) {
-                    try {
-                        oldVal = prefs.getBoolPref(ps.name);
-                    } catch (e) {
-                        badPref = "boolean preference '" + ps.name + "'";
-                        throw "bad pref";
-                    }
-                } else if (ps.type == PREF_STRING) {
-                    try {
-                        oldVal = prefs.getStringPref(ps.name);
-                    } catch (e) {
-                        badPref = "string preference '" + ps.name + "'";
-                        throw "bad pref";
-                    }
-                } else if (ps.type == PREF_INTEGER) {
-                    try {
-                        oldVal = prefs.getIntPref(ps.name);
-                    } catch (e) {
-                        badPref = "integer preference '" + ps.name + "'";
-                        throw "bad pref";
-                    }
-                } else {
-                    throw "internal error - unknown preference type";
+                let prefExists = false;
+                try {
+                    let prefType = prefs.getPrefType(ps.name);
+                    prefExists = (prefType != prefs.PREF_INVALID);
+                } catch (e) {
                 }
-                if (oldVal != ps.value) {
+                if (!prefExists) {
+                    logger.info("Pref " + ps.name + " not found, will be added");
+                }
+
+                let oldVal = undefined;
+                if (prefExists) {
+                    if (ps.type == PREF_BOOLEAN) {
+                        try {
+                            oldVal = prefs.getBoolPref(ps.name);
+                        } catch (e) {
+                            badPref = "boolean preference '" + ps.name + "'";
+                            throw "bad pref";
+                        }
+                    } else if (ps.type == PREF_STRING) {
+                        try {
+                            oldVal = prefs.getStringPref(ps.name);
+                        } catch (e) {
+                            badPref = "string preference '" + ps.name + "'";
+                            throw "bad pref";
+                        }
+                    } else if (ps.type == PREF_INTEGER) {
+                        try {
+                            oldVal = prefs.getIntPref(ps.name);
+                        } catch (e) {
+                            badPref = "integer preference '" + ps.name + "'";
+                            throw "bad pref";
+                        }
+                    } else {
+                        throw "internal error - unknown preference type";
+                    }
+                }
+                if (!prefExists || oldVal != ps.value) {
                     g.prefsToRestore.push( { name: ps.name,
                                             type: ps.type,
-                                            value: oldVal } );
+                                            value: oldVal,
+                                            prefExisted: prefExists } );
                     var value = ps.value;
                     if (ps.type == PREF_BOOLEAN) {
                         prefs.setBoolPref(ps.name, value);
@@ -1470,16 +1483,21 @@ function RestoreChangedPreferences()
                     getService(Ci.nsIPrefBranch);
         g.prefsToRestore.reverse();
         g.prefsToRestore.forEach(function(ps) {
-            var value = ps.value;
-            if (ps.type == PREF_BOOLEAN) {
-                prefs.setBoolPref(ps.name, value);
-            } else if (ps.type == PREF_STRING) {
-                prefs.setStringPref(ps.name, value);
-                value = '"' + value + '"';
-            } else if (ps.type == PREF_INTEGER) {
-                prefs.setIntPref(ps.name, value);
+            if (ps.prefExisted) {
+                var value = ps.value;
+                if (ps.type == PREF_BOOLEAN) {
+                    prefs.setBoolPref(ps.name, value);
+                } else if (ps.type == PREF_STRING) {
+                    prefs.setStringPref(ps.name, value);
+                    value = '"' + value + '"';
+                } else if (ps.type == PREF_INTEGER) {
+                    prefs.setIntPref(ps.name, value);
+                }
+                logger.info("RESTORE PREFERENCE pref(" + ps.name + "," + value + ")");
+            } else {
+                prefs.clearUserPref(ps.name);
+                logger.info("RESTORE PREFERENCE pref(" + ps.name + ", <no value set>) (clearing user pref)");
             }
-            logger.info("RESTORE PREFERENCE pref(" + ps.name + "," + value + ")");
         });
         g.prefsToRestore = [];
     }
