@@ -591,7 +591,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     bool mWindowless = false;
     bool mUseRemoteTabs = false;
     bool mUseRemoteSubframes = false;
-    bool mHasSessionHistory = false;
+    int32_t mSessionHistoryIndex = -1;
+    int32_t mSessionHistoryCount = 0;
     OriginAttributes mOriginAttributes;
     uint64_t mRequestContextId = 0;
 
@@ -678,6 +679,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
                   uint64_t aBrowsingContextId, Type aType, FieldValues&& aInit);
+
+  void SetChildSHistory(ChildSHistory* aChildSHistory);
+  already_AddRefed<ChildSHistory> ForgetChildSHistory() {
+    // FIXME Do we need to unset mHasSessionHistory?
+    return mChildSessionHistory.forget();
+  }
 
  private:
   void Attach(bool aFromIPC, ContentParent* aOriginProcess);

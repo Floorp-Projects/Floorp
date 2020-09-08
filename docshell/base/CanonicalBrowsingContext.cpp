@@ -164,6 +164,8 @@ void CanonicalBrowsingContext::ReplacedBy(
   if (mSessionHistory) {
     mSessionHistory->SetBrowsingContext(aNewContext);
     mSessionHistory.swap(aNewContext->mSessionHistory);
+    RefPtr<ChildSHistory> childSHistory = ForgetChildSHistory();
+    aNewContext->SetChildSHistory(childSHistory);
   }
 
   MOZ_ASSERT(aNewContext->mLoadingEntries.IsEmpty());
