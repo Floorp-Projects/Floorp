@@ -17,6 +17,8 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
+import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -30,8 +32,10 @@ private val sessionFileLock = Any()
  */
 class SessionStorage(
     private val context: Context,
-    private val engine: Engine
+    private val engine: Engine,
+    private val crashReporting: CrashReporting?
 ) : AutoSave.Storage {
+    private val logger = Logger("SessionStorage")
     private val snapshotSerializer = SnapshotSerializer()
     private val stateSerializer = BrowserStateSerializer()
 
@@ -70,9 +74,14 @@ class SessionStorage(
             }
         }
 
-        synchronized(sessionFileLock) {
-            return getFileForEngine(context, engine)
-                .writeState(state, stateSerializer)
+        return synchronized(sessionFileLock) {
+            try {
+                getFileForEngine(context, engine).writeState(state, stateSerializer)
+            } catch (e: OutOfMemoryError) {
+                crashReporting?.submitCaughtException(e)
+                logger.error("Failed to save state to disk due to OutOfMemoryError", e)
+                false
+            }
         }
     }
 
