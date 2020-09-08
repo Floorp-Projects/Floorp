@@ -1,6 +1,5 @@
 package org.mozilla.geckoview;
 
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
@@ -16,16 +15,13 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.ImageDecoder;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Represents a WebExtension that may be used by GeckoView.
@@ -1005,118 +1001,6 @@ public class WebExtension {
     }
 
     /**
-     * Represents an icon, e.g. the browser action icon or the extension icon.
-     */
-    public static class Icon {
-        private Map<Integer, String> mIconUris;
-
-        /**
-         * Get the best version of this icon for size <code>pixelSize</code>.
-         *
-         * Embedders are encouraged to cache the result of this method keyed with this instance.
-         *
-         * @param pixelSize pixel size at which this icon will be displayed at.
-         *
-         * @return A {@link GeckoResult} that resolves to the bitmap when ready.
-         */
-        @AnyThread
-        @NonNull
-        public GeckoResult<Bitmap> get(final int pixelSize) {
-            int size;
-
-            if (mIconUris.containsKey(pixelSize)) {
-                // If this size matches exactly, return it
-                size = pixelSize;
-            } else {
-                // Otherwise, find the smallest larger image (or the largest image if they are all
-                // smaller)
-                List<Integer> sizes = new ArrayList<>();
-                sizes.addAll(mIconUris.keySet());
-                Collections.sort(sizes, (a, b) -> Integer.compare(b - pixelSize, a - pixelSize));
-                size = sizes.get(0);
-            }
-
-            final String uri = mIconUris.get(size);
-            return ImageDecoder.instance().decode(uri, pixelSize);
-        }
-
-        /* package */ Icon(final GeckoBundle bundle) {
-            mIconUris = new HashMap<>();
-
-            for (final String key: bundle.keys()) {
-                final Integer intKey = Integer.valueOf(key);
-                if (intKey == null) {
-                    Log.e(LOGTAG, "Non-integer icon key: " + intKey);
-                    if (BuildConfig.DEBUG) {
-                        throw new RuntimeException("Non-integer icon key: " + key);
-                    }
-                    continue;
-                }
-
-                final String value = getIconValue(bundle.get(key));
-                if (value != null) {
-                    mIconUris.put(intKey, value);
-                }
-            }
-        }
-
-        private String getIconValue(final Object value) {
-            // The icon value can either be an object containing icons for each theme...
-            if (value instanceof GeckoBundle) {
-                // We don't support theme_icons yet, so let's just return the default value.
-                final GeckoBundle themeIcons = (GeckoBundle) value;
-                final Object defaultIcon = themeIcons.get("default");
-
-                if (!(defaultIcon instanceof String)) {
-                    if (BuildConfig.DEBUG) {
-                        throw new RuntimeException("Unexpected themed_icon value.");
-                    }
-                    Log.e(LOGTAG, "Unexpected themed_icon value.");
-                    return null;
-                }
-
-                return (String) defaultIcon;
-            }
-
-            // ... or just a URL
-            if (value instanceof String) {
-                return (String) value;
-            }
-
-            // We never expect it to be something else, so let's error out here
-            if (BuildConfig.DEBUG) {
-                throw new RuntimeException("Unexpected icon value: " + value);
-            }
-
-            Log.e(LOGTAG, "Unexpected icon value.");
-            return null;
-        }
-
-        /** Override for tests. */
-        protected Icon() {
-            mIconUris = null;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (o == this) {
-                return true;
-            }
-
-            if (!(o instanceof Icon)) {
-                return false;
-            }
-
-            return mIconUris.equals(((Icon) o).mIconUris);
-        }
-
-        @Override
-        public int hashCode() {
-            return mIconUris.hashCode();
-        }
-    }
-
-    /**
      * Represents either a Browser Action or a Page Action from the
      * WebExtension API.
      *
@@ -1162,7 +1046,7 @@ public class WebExtension {
          * <a target=_blank href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/browserAction/setIcon">
          *     browserAction/setIcon</a>
          */
-        final public @Nullable Icon icon;
+        final public @Nullable Image icon;
         /**
          * URI of the Popup to display when the user taps on the icon for this
          * Action.
@@ -1246,7 +1130,7 @@ public class WebExtension {
                     bundle.getDoubleArray("badgeTextColor"));
 
             if (bundle.containsKey("icon")) {
-                icon = new Icon(bundle.getBundle("icon"));
+                icon = Image.fromSizeSrcBundle(bundle.getBundle("icon"));
             } else {
                 icon = null;
             }
@@ -1644,9 +1528,9 @@ public class WebExtension {
 
     /** Provides information about a {@link WebExtension}. */
     public class MetaData {
-        /** Main {@link Icon} branding for this {@link WebExtension}.
+        /** Main {@link Image} branding for this {@link WebExtension}.
           * Can be used when displaying prompts. */
-        public final @NonNull Icon icon;
+        public final @NonNull Image icon;
         /** API permissions requested or granted to this extension.
           *
           * Permission identifiers match entries in the manifest, see
@@ -1839,7 +1723,7 @@ public class WebExtension {
             this.disabledFlags = disabledFlags;
 
             if (bundle.containsKey("icons")) {
-                icon = new Icon(bundle.getBundle("icons"));
+                icon = Image.fromSizeSrcBundle(bundle.getBundle("icons"));
             } else {
                 icon = null;
             }
@@ -1912,7 +1796,7 @@ public class WebExtension {
         /**
          * Icon for this extension.
          */
-        final @Nullable Icon icon;
+        final @Nullable Image icon;
 
         /**
          * Title for the menu header.
@@ -1936,7 +1820,7 @@ public class WebExtension {
             }
 
             if (bundle.containsKey("icon")) {
-                icon = new Icon(bundle.getBundle("icon"));
+                icon = Image.fromSizeSrcBundle(bundle.getBundle("icon"));
             } else {
                 icon = null;
             }
@@ -2060,7 +1944,7 @@ public class WebExtension {
         /**
          * Icon for this menu item.
          */
-        final @Nullable Icon icon;
+        final @Nullable Image icon;
 
         final WebExtension mExtension;
 
@@ -2082,7 +1966,7 @@ public class WebExtension {
             children = new ArrayList<>();
 
             if (bundle.containsKey("icon")) {
-                icon = new Icon(bundle.getBundle("icon"));
+                icon = Image.fromSizeSrcBundle(bundle.getBundle("icon"));
             } else {
                 icon = null;
             }
