@@ -93,11 +93,7 @@ WebBrowserPersistRemoteDocument::GetContentDisposition(nsAString& aDisp) {
 
 NS_IMETHODIMP
 WebBrowserPersistRemoteDocument::GetCacheKey(uint32_t* aCacheKey) {
-  *aCacheKey = 0;
-  if (mAttrs.sessionHistoryEntryOrCacheKey().type() ==
-      SessionHistoryEntryOrCacheKey::Tuint32_t) {
-    *aCacheKey = mAttrs.sessionHistoryEntryOrCacheKey();
-  }
+  *aCacheKey = mAttrs.sessionHistoryCacheKey();
   return NS_OK;
 }
 
