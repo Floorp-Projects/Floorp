@@ -119,12 +119,30 @@
         sendAsyncMessage("prepareForNextTestDone");
       });
 
-      let dialogObserverTopic = "common-dialog-loaded";
+      let modalType = Services.prefs.getIntPref(
+        "prompts.modalType.httpAuth"
+      );
+      let authPromptIsCommonDialog =
+        modalType === Services.prompt.MODAL_TYPE_WINDOW
+          || (modalType === Services.prompt.MODAL_TYPE_TAB
+            && Services.prefs.getBoolPref(
+        "prompts.tabChromePromptSubDialog",
+        false
+      ));
+
+      let dialogObserverTopic = authPromptIsCommonDialog
+        ? "common-dialog-loaded" : "tabmodal-dialog-loaded";
 
       function dialogObserver(subj, topic, data) {
-        subj.Dialog.ui.prompt.document
+        if (authPromptIsCommonDialog) {
+          subj.Dialog.ui.prompt.document
           .getElementById("commonDialog")
           .acceptDialog();
+        } else {
+          let prompt = subj.ownerGlobal.gBrowser.selectedBrowser
+            .tabModalPromptBox.getPrompt(subj);
+          prompt.Dialog.ui.button0.click(); // Accept button
+        }
         sendAsyncMessage("promptAccepted");
       }
 
