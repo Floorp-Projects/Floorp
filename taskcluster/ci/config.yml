@@ -55,8 +55,6 @@ treeherder:
         'M-gli': 'Mochitests with WebGL over IPC'
         'M-spi': 'Mochitests with socket process'
         'M-spi-1proc': 'Mochitests with socket process without e10s'
-        'M-spi-nw': 'Mochitests with networking on socket process'
-        'M-spi-nw-1proc': 'Mochitests with networking on socket process without e10s'
         'M-V-1proc': 'Mochitests on Valgrind without e10s'
         'MSI': 'Repack installers into MSIs'
         'MSIs': 'Signing of Repacked installers of MSIs'
