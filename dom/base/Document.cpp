@@ -14321,14 +14321,16 @@ static const char* GetPointerLockError(Element* aElement, Element* aCurrentLock,
     return "PointerLockDeniedHidden";
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> top = ownerWindow->GetInProcessScriptableTop();
-  if (!top || !top->GetExtantDoc() || top->GetExtantDoc()->Hidden()) {
+  BrowsingContext* bc = ownerDoc->GetBrowsingContext();
+  BrowsingContext* topBC = bc ? bc->Top() : nullptr;
+  WindowContext* topWC = ownerDoc->GetTopLevelWindowContext();
+  if (!topBC || !topBC->GetIsActive() || !topWC ||
+      topWC != topBC->GetCurrentWindowContext()) {
     return "PointerLockDeniedHidden";
   }
 
   if (!aNoFocusCheck) {
-    mozilla::ErrorResult rv;
-    if (!top->GetExtantDoc()->HasFocus(rv)) {
+    if (!IsInActiveTab(ownerDoc)) {
       return "PointerLockDeniedNotFocused";
     }
   }

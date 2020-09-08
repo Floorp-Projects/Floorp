@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1646493 - test_pointerlock_target_not_in_active_document.html</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body style="width: 100vw; height: 100vh; margin: 0;">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1646493">Mozilla Bug 1646493</a><br>
+<iframe></iframe>
+<script>
+if (!opener) {
+  SimpleTest.waitForExplicitFinish();
+}
+
+var newwin = null;
+function finish() {
+  newwin.close()
+  setTimeout(function() {
+    SimpleTest.finish();
+  }, 0);
+}
+
+function testUnfocusedDocument() {
+  opener.document.addEventListener("pointerlockchange", function() {
+    opener.ok(false, "Check we have locked the pointer");
+    opener.document.exitPointerLock();
+    opener.testInactiveTopLevelDocument();
+  }, {once: true});
+
+  opener.document.addEventListener("pointerlockerror", function() {
+    opener.ok(true, "Fail to lock pointer");
+    opener.testInactiveTopLevelDocument();
+  }, {once: true});
+
+  SpecialPowers.wrap(opener.document).notifyUserGestureActivation();
+  opener.document.body.requestPointerLock();
+}
+
+function testInactiveTopLevelDocument() {
+  let iframeWin = newwin.frames[0];
+  let iframeDoc = iframeWin.document;
+
+  iframeDoc.addEventListener("pointerlockchange", function() {
+    ok(false, "Check we have locked the pointer");
+    iframeDoc.exitPointerLock();
+    finish();
+  }, {once: true});
+
+  iframeDoc.addEventListener("pointerlockerror", function() {
+    ok(true, "Fail to lock pointer");
+    finish();
+  }, {once: true});
+
+  SpecialPowers.wrap(iframeDoc).notifyUserGestureActivation();
+
+  newwin.addEventListener("pagehide", function() {
+    iframeDoc.body.requestPointerLock();
+  }, {once: true});
+  newwin.location = "iframe_differentDOM.html";
+}
+
+addLoadEvent(async function() {
+  await SimpleTest.promiseFocus();
+
+  if (!opener) {
+    newwin = window.open(location);
+    return;
+  }
+
+  testUnfocusedDocument();
+});
+</script>
+</body>
+</html>
