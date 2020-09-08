@@ -105,7 +105,6 @@ mod glyph_rasterizer;
 mod gpu_cache;
 mod gpu_types;
 mod hit_test;
-mod intern;
 mod internal_types;
 mod lru_cache;
 mod picture;
@@ -134,6 +133,8 @@ mod util;
 mod visibility;
 mod api_resources;
 mod image_tiling;
+///
+pub mod intern;
 ///
 pub mod render_api;
 
