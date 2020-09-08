@@ -7,12 +7,12 @@ package org.mozilla.fenix.settings.quicksettings
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.mockk.Runs
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -179,7 +179,7 @@ class DefaultQuickSettingsControllerTest {
         controller.handlePermissionsChange(testPermissions)
         advanceUntilIdle()
 
-        verifyOrder {
+        coVerifyOrder {
             permissionStorage.updateSitePermissions(testPermissions)
             reload(browserSession)
         }

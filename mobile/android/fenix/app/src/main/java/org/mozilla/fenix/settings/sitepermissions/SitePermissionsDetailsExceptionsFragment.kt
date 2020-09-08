@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
 import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.PhoneFeature.CAMERA
@@ -44,13 +45,10 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
         showToolbar(sitePermissions.origin)
-        viewLifecycleOwner.lifecycleScope.launch(IO) {
-            val context = requireContext()
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
             sitePermissions =
-                requireNotNull(context.components.core.permissionStorage.findSitePermissionsBy(sitePermissions.origin))
-            withContext(Main) {
-                bindCategoryPhoneFeatures()
-            }
+                requireNotNull(requireComponents.core.permissionStorage.findSitePermissionsBy(sitePermissions.origin))
+            bindCategoryPhoneFeatures()
         }
     }
 

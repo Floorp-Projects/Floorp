@@ -9,7 +9,6 @@ package org.mozilla.fenix.settings.deletebrowsingdata
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -72,7 +71,7 @@ class DeleteAndQuitTest {
             activity.finish()
         }
 
-        verify(exactly = 0) {
+        coVerify(exactly = 0) {
             engine.clearData(
                 Engine.BrowsingData.select(
                     Engine.BrowsingData.COOKIES
@@ -100,7 +99,7 @@ class DeleteAndQuitTest {
 
         deleteAndQuit(activity, this, snackbar)
 
-        verify(exactly = 1) {
+        coVerify(exactly = 1) {
             snackbar.show()
 
             engine.clearData(Engine.BrowsingData.allCaches())

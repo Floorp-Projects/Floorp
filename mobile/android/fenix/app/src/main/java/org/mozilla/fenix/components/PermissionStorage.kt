@@ -6,6 +6,8 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import androidx.paging.DataSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
@@ -38,11 +40,11 @@ class PermissionStorage(private val context: Context) {
         return sitePermissions
     }
 
-    fun findSitePermissionsBy(origin: String): SitePermissions? {
-        return permissionsStorage.findSitePermissionsBy(origin)
+    suspend fun findSitePermissionsBy(origin: String): SitePermissions? = withContext(Dispatchers.IO) {
+        permissionsStorage.findSitePermissionsBy(origin)
     }
 
-    fun updateSitePermissions(sitePermissions: SitePermissions) {
+    suspend fun updateSitePermissions(sitePermissions: SitePermissions) = withContext(Dispatchers.IO) {
         permissionsStorage.update(sitePermissions)
     }
 
@@ -50,11 +52,11 @@ class PermissionStorage(private val context: Context) {
         return permissionsStorage.getSitePermissionsPaged()
     }
 
-    fun deleteSitePermissions(sitePermissions: SitePermissions) {
+    suspend fun deleteSitePermissions(sitePermissions: SitePermissions) = withContext(Dispatchers.IO) {
         permissionsStorage.remove(sitePermissions)
     }
 
-    fun deleteAllSitePermissions() {
+    suspend fun deleteAllSitePermissions() = withContext(Dispatchers.IO) {
         permissionsStorage.removeAll()
     }
 }

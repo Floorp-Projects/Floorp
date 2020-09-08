@@ -240,7 +240,7 @@ class DefaultSessionControlController(
                 handleSwipedItemDeletionCancel
             )
         } else {
-            viewLifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleScope.launch {
                 tabCollectionStorage.removeTabFromCollection(collection, tab)
             }
         }

@@ -1,6 +1,7 @@
 package org.mozilla.fenix.collections
 
 import io.mockk.MockKAnnotations
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
@@ -69,7 +70,7 @@ class DefaultCollectionCreationControllerTest {
         controller.saveCollectionName(tabs, "name")
 
         verify { dismiss() }
-        verify { tabCollectionStorage.createCollection("name", listOf(session)) }
+        coVerify { tabCollectionStorage.createCollection("name", listOf(session)) }
         verify { metrics.track(Event.CollectionSaved(2, 1)) }
     }
 
@@ -117,9 +118,9 @@ class DefaultCollectionCreationControllerTest {
 
         verifyAll {
             dismiss()
-            tabCollectionStorage.renameCollection(collection, "name")
             metrics.track(Event.CollectionRenamed)
         }
+        coVerify { tabCollectionStorage.renameCollection(collection, "name") }
     }
 
     @Test
@@ -162,7 +163,7 @@ class DefaultCollectionCreationControllerTest {
         controller.selectCollection(collection, tabs)
 
         verify { dismiss() }
-        verify { tabCollectionStorage.addTabsToCollection(collection, listOf(session)) }
+        coVerify { tabCollectionStorage.addTabsToCollection(collection, listOf(session)) }
         verify { metrics.track(Event.CollectionTabsAdded(2, 1)) }
     }
 

@@ -69,7 +69,7 @@ fun List<Tab>.toSessionBundle(sessionManager: SessionManager): List<Session> {
  * @param metrics Controller that handles telemetry events.
  * @param tabCollectionStorage Storage used to save tab collections to disk.
  * @param sessionManager Used to query and serialize tabs.
- * @param ioScope Coroutine scope that launches on the IO thread.
+ * @param scope Coroutine scope to launch coroutines.
  */
 class DefaultCollectionCreationController(
     private val store: CollectionCreationStore,
@@ -77,7 +77,7 @@ class DefaultCollectionCreationController(
     private val metrics: MetricController,
     private val tabCollectionStorage: TabCollectionStorage,
     private val sessionManager: SessionManager,
-    private val ioScope: CoroutineScope
+    private val scope: CoroutineScope
 ) : CollectionCreationController {
 
     companion object {
@@ -89,7 +89,7 @@ class DefaultCollectionCreationController(
         dismiss()
 
         val sessionBundle = tabs.toSessionBundle(sessionManager)
-        ioScope.launch {
+        scope.launch {
             tabCollectionStorage.createCollection(name, sessionBundle)
         }
 
@@ -100,7 +100,7 @@ class DefaultCollectionCreationController(
 
     override fun renameCollection(collection: TabCollection, name: String) {
         dismiss()
-        ioScope.launch {
+        scope.launch {
             tabCollectionStorage.renameCollection(collection, name)
         }
         metrics.track(Event.CollectionRenamed)
@@ -130,7 +130,7 @@ class DefaultCollectionCreationController(
     override fun selectCollection(collection: TabCollection, tabs: List<Tab>) {
         dismiss()
         val sessionBundle = tabs.toList().toSessionBundle(sessionManager)
-        ioScope.launch {
+        scope.launch {
             tabCollectionStorage
                 .addTabsToCollection(collection, sessionBundle)
         }

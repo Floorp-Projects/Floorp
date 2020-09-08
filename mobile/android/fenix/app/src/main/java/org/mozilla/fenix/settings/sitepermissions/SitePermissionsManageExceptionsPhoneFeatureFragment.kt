@@ -18,7 +18,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
@@ -142,11 +141,9 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
 
     private fun updatedSitePermissions(status: SitePermissions.Status) {
         val updatedSitePermissions = args.sitePermissions.update(args.phoneFeature, status)
-        viewLifecycleOwner.lifecycleScope.launch(IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
             requireComponents.core.permissionStorage.updateSitePermissions(updatedSitePermissions)
-            launch(Main) {
-                requireComponents.tryReloadTabBy(updatedSitePermissions.origin)
-            }
+            requireComponents.tryReloadTabBy(updatedSitePermissions.origin)
         }
     }
 }

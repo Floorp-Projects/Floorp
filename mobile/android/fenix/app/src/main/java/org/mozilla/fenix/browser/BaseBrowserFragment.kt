@@ -962,11 +962,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private fun showQuickSettingsDialog() {
         val session = getSessionById() ?: return
         viewLifecycleOwner.lifecycleScope.launch(Main) {
-            val sitePermissions: SitePermissions? = withContext(IO) {
-                session.url.toUri().host?.let { host ->
-                    val storage = requireContext().components.core.permissionStorage
-                    storage.findSitePermissionsBy(host)
-                }
+            val sitePermissions: SitePermissions? = session.url.toUri().host?.let { host ->
+                val storage = requireComponents.core.permissionStorage
+                storage.findSitePermissionsBy(host)
             }
 
             view?.let {

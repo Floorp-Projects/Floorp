@@ -14,9 +14,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.plus
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
@@ -80,7 +78,7 @@ class CollectionCreationFragment : DialogFragment() {
                 requireComponents.analytics.metrics,
                 requireComponents.core.tabCollectionStorage,
                 requireComponents.core.sessionManager,
-                ioScope = lifecycleScope + Dispatchers.IO
+                scope = lifecycleScope
             )
         )
         collectionCreationView = CollectionCreationView(

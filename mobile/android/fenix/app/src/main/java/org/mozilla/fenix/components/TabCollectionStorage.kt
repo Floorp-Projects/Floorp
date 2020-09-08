@@ -9,6 +9,9 @@ import android.os.StrictMode
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
 import androidx.paging.DataSource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.tab.collections.Tab
@@ -49,6 +52,7 @@ class TabCollectionStorage(
         fun onCollectionRenamed(tabCollection: TabCollection, title: String) = Unit
     }
 
+    private val ioScope = CoroutineScope(Dispatchers.IO)
     var cachedTabCollections = listOf<TabCollection>()
 
     private val collectionStorage by lazy {
@@ -57,15 +61,15 @@ class TabCollectionStorage(
         }
     }
 
-    fun createCollection(title: String, sessions: List<Session>) {
+    suspend fun createCollection(title: String, sessions: List<Session>) = ioScope.launch {
         collectionStorage.createCollection(title, sessions)
         notifyObservers { onCollectionCreated(title, sessions) }
-    }
+    }.join()
 
-    fun addTabsToCollection(tabCollection: TabCollection, sessions: List<Session>) {
+    suspend fun addTabsToCollection(tabCollection: TabCollection, sessions: List<Session>) = ioScope.launch {
         collectionStorage.addTabsToCollection(tabCollection, sessions)
         notifyObservers { onTabsAdded(tabCollection, sessions) }
-    }
+    }.join()
 
     fun getTabCollectionsCount(): Int {
         return collectionStorage.getTabCollectionsCount()
@@ -79,18 +83,18 @@ class TabCollectionStorage(
         return collectionStorage.getCollectionsPaged()
     }
 
-    fun removeCollection(tabCollection: TabCollection) {
+    suspend fun removeCollection(tabCollection: TabCollection) = ioScope.launch {
         collectionStorage.removeCollection(tabCollection)
-    }
+    }.join()
 
-    fun removeTabFromCollection(tabCollection: TabCollection, tab: Tab) {
+    suspend fun removeTabFromCollection(tabCollection: TabCollection, tab: Tab) = ioScope.launch {
         collectionStorage.removeTabFromCollection(tabCollection, tab)
-    }
+    }.join()
 
-    fun renameCollection(tabCollection: TabCollection, title: String) {
+    suspend fun renameCollection(tabCollection: TabCollection, title: String) = ioScope.launch {
         collectionStorage.renameCollection(tabCollection, title)
         notifyObservers { onCollectionRenamed(tabCollection, title) }
-    }
+    }.join()
 }
 
 fun TabCollection.description(context: Context): String {

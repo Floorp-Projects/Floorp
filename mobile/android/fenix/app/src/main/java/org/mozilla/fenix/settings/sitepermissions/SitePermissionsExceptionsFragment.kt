@@ -24,7 +24,6 @@ import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
@@ -108,13 +107,12 @@ class SitePermissionsExceptionsFragment :
     }
 
     private fun deleteAllSitePermissions() {
-        viewLifecycleOwner.lifecycleScope.launch(IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
             requireContext().components.core.permissionStorage.deleteAllSitePermissions()
-            launch(Main) {
-                showEmptyListMessage()
-                // Reload the selected session.
-                requireContext().components.useCases.sessionUseCases.reload()
-            }
+
+            showEmptyListMessage()
+            // Reload the selected session.
+            requireContext().components.useCases.sessionUseCases.reload()
         }
     }
 

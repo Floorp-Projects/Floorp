@@ -97,7 +97,7 @@ class DefaultDeleteBrowsingDataControllerTest {
     fun deleteSitePermissions() = runBlockingTest {
         controller.deleteSitePermissions()
 
-        verify {
+        coVerify {
             engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.ALL_SITE_SETTINGS))
             permissionStorage.deleteAllSitePermissions()
         }
