@@ -17,6 +17,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy
+#include "js/Object.h"              // JS::GetPrivate, JS::GetCompartment
 #include "mozilla/Likely.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/MaybeCrossOriginObject.h"
@@ -116,8 +117,8 @@ bool WrapperFactory::AllowWaiver(JS::Compartment* target,
 /* static */
 bool WrapperFactory::AllowWaiver(JSObject* wrapper) {
   MOZ_ASSERT(js::IsCrossCompartmentWrapper(wrapper));
-  return AllowWaiver(js::GetObjectCompartment(wrapper),
-                     js::GetObjectCompartment(js::UncheckedUnwrap(wrapper)));
+  return AllowWaiver(JS::GetCompartment(wrapper),
+                     JS::GetCompartment(js::UncheckedUnwrap(wrapper)));
 }
 
 inline bool ShouldWaiveXray(JSContext* cx, JSObject* originalObj) {
@@ -140,7 +141,7 @@ inline bool ShouldWaiveXray(JSContext* cx, JSObject* originalObj) {
   // Otherwise, this is a case of explicitly passing a wrapper across a
   // compartment boundary. In that case, we only want to preserve waivers
   // in transactions between same-origin compartments.
-  JS::Compartment* oldCompartment = js::GetObjectCompartment(originalObj);
+  JS::Compartment* oldCompartment = JS::GetCompartment(originalObj);
   JS::Compartment* newCompartment = js::GetContextCompartment(cx);
   bool sameOrigin = false;
   if (OriginAttributes::IsRestrictOpenerAccessForFPI()) {
@@ -265,8 +266,7 @@ void WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
       // a separate compartment, then this object is explicitly requesting
       // that we don't create a second JS object for it: create a security
       // wrapper.
-      if (js::GetObjectCompartment(scope) !=
-          js::GetObjectCompartment(wrapScope)) {
+      if (JS::GetCompartment(scope) != JS::GetCompartment(wrapScope)) {
         retObj.set(waive ? WaiveXray(cx, obj) : obj);
         return;
       }
@@ -320,9 +320,9 @@ void WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
       // This doesn't actually pose a security issue, because we'll still
       // compute the correct (opaque) wrapper for the object below given the
       // security characteristics of the two compartments.
-      if (!AccessCheck::isChrome(js::GetObjectCompartment(wrapScope)) &&
-          CompartmentOriginInfo::Subsumes(js::GetObjectCompartment(wrapScope),
-                                          js::GetObjectCompartment(obj))) {
+      if (!AccessCheck::isChrome(JS::GetCompartment(wrapScope)) &&
+          CompartmentOriginInfo::Subsumes(JS::GetCompartment(wrapScope),
+                                          JS::GetCompartment(obj))) {
         retObj.set(waive ? WaiveXray(cx, obj) : obj);
         return;
       }
@@ -666,7 +666,7 @@ bool WrapperFactory::WaiveXrayAndWrap(JSContext* cx,
   // |cx|, we should check whether the caller has any business with waivers
   // to things in |obj|'s compartment.
   JS::Compartment* target = js::GetContextCompartment(cx);
-  JS::Compartment* origin = js::GetObjectCompartment(obj);
+  JS::Compartment* origin = JS::GetCompartment(obj);
   obj = AllowWaiver(target, origin) ? WaiveXray(cx, obj) : obj;
   if (!obj) {
     return false;
@@ -704,8 +704,8 @@ static bool FixWaiverAfterTransplant(JSContext* cx, HandleObject oldWaiver,
     // CCW1 -----------> oldWaiver --> CCW2 --+
     // newWaiver                              |
     // WindowProxy <--------------------------+
-    js::NukeCrossCompartmentWrapperIfExists(
-        cx, js::GetObjectCompartment(newobj), oldWaiver);
+    js::NukeCrossCompartmentWrapperIfExists(cx, JS::GetCompartment(newobj),
+                                            oldWaiver);
   } else {
     // We kept the same object identity, so the waiver should be a
     // waiver for our object, just in the wrong Realm.
@@ -831,13 +831,13 @@ nsIGlobalObject* NativeGlobal(JSObject* obj) {
 
   // Every global needs to hold a native as its private or be a
   // WebIDL object with an nsISupports DOM object.
-  MOZ_ASSERT((GetObjectClass(obj)->flags &
+  MOZ_ASSERT((JS::GetClass(obj)->flags &
               (JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE)) ||
              dom::UnwrapDOMObjectToISupports(obj));
 
   nsISupports* native = dom::UnwrapDOMObjectToISupports(obj);
   if (!native) {
-    native = static_cast<nsISupports*>(js::GetObjectPrivate(obj));
+    native = static_cast<nsISupports*>(JS::GetPrivate(obj));
     MOZ_ASSERT(native);
 
     // In some cases (like for windows) it is a wrapped native,

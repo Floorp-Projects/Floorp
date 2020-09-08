@@ -23,6 +23,7 @@
 #include "js/experimental/CodeCoverage.h"
 #include "js/friend/StackLimits.h"  // JS_STACK_GROWTH_DIRECTION
 #include "js/friend/WindowProxy.h"  // js::ToWindowIfWindowProxy
+#include "js/Object.h"              // JS::GetClass
 #include "js/Printf.h"
 #include "js/Proxy.h"
 #include "js/shadow/Object.h"  // JS::shadow::Object
@@ -270,8 +271,8 @@ JS_FRIEND_API bool JS_DefineFunctionsWithHelp(
   return true;
 }
 
-JS_FRIEND_API bool js::GetBuiltinClass(JSContext* cx, HandleObject obj,
-                                       ESClass* cls) {
+JS_FRIEND_API bool JS::GetBuiltinClass(JSContext* cx, HandleObject obj,
+                                       js::ESClass* cls) {
   if (MOZ_UNLIKELY(obj->is<ProxyObject>())) {
     return Proxy::getBuiltinClass(cx, obj, cls);
   }
@@ -321,11 +322,6 @@ JS_FRIEND_API bool js::GetBuiltinClass(JSContext* cx, HandleObject obj,
 
 JS_FRIEND_API bool js::IsArgumentsObject(HandleObject obj) {
   return obj->is<ArgumentsObject>();
-}
-
-JS_FRIEND_API const char* js::ObjectClassName(JSContext* cx, HandleObject obj) {
-  cx->check(obj);
-  return GetObjectClassName(cx, obj);
 }
 
 JS_FRIEND_API JS::Zone* js::GetRealmZone(JS::Realm* realm) {
@@ -388,10 +384,6 @@ JS_FRIEND_API void js::NotifyAnimationActivity(JSObject* obj) {
   auto timeNow = mozilla::TimeStamp::Now();
   obj->as<GlobalObject>().realm()->lastAnimationTime = timeNow;
   obj->runtimeFromMainThread()->lastAnimationTime = timeNow;
-}
-
-JS_FRIEND_API uint32_t js::GetObjectSlotSpan(JSObject* obj) {
-  return obj->as<NativeObject>().slotSpan();
 }
 
 JS_FRIEND_API bool js::IsObjectInContextCompartment(JSObject* obj,
@@ -477,8 +469,8 @@ JS_FRIEND_API bool js::FunctionHasNativeReserved(JSObject* fun) {
   return fun->as<JSFunction>().isExtended();
 }
 
-JS_FRIEND_API bool js::GetObjectProto(JSContext* cx, JS::Handle<JSObject*> obj,
-                                      JS::MutableHandle<JSObject*> proto) {
+bool js::GetObjectProto(JSContext* cx, JS::Handle<JSObject*> obj,
+                        JS::MutableHandle<JSObject*> proto) {
   cx->check(obj);
 
   if (IsProxy(obj)) {
@@ -500,8 +492,8 @@ JS_FRIEND_API bool js::GetRealmOriginalEval(JSContext* cx,
   return GlobalObject::getOrCreateEval(cx, cx->global(), eval);
 }
 
-JS_FRIEND_API void js::SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
-                                                  const js::Value& value) {
+void JS::detail::SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
+                                            const Value& value) {
   if (IsProxy(obj)) {
     obj->as<ProxyObject>().setReservedSlot(slot, value);
   } else {
@@ -825,7 +817,7 @@ JS_FRIEND_API bool js::ReportIsNotFunction(JSContext* cx, HandleValue v) {
 
 #ifdef DEBUG
 bool js::HasObjectMovedOp(JSObject* obj) {
-  return !!GetObjectClass(obj)->extObjectMovedOp();
+  return !!JS::GetClass(obj)->extObjectMovedOp();
 }
 #endif
 

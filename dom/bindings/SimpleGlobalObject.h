@@ -37,7 +37,7 @@ class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
   // side-effects is safe in this global.  Importantly, when you are first
   // handed this global it's guaranteed to have pristine built-ins.  The
   // corresponding nsIGlobalObject* for this global object will be a
-  // SimpleGlobalObject of the type provided; JS_GetPrivate on the returned
+  // SimpleGlobalObject of the type provided; JS::GetPrivate on the returned
   // JSObject* will return the SimpleGlobalObject*.
   //
   // If the provided prototype value is undefined, it is ignored.  If it's an

@@ -33,7 +33,9 @@
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/experimental/TypedData.h"  // JS_NewUint8Array
+#include "js/Object.h"                  // JS::GetReservedSlot
 #include "js/PropertySpec.h"
+#include "js/Value.h"  // JS::Value
 #include "js/Wrapper.h"
 #include "shell/jsshell.h"
 #include "shell/StringUtils.h"
@@ -561,7 +563,7 @@ class FileObject : public NativeObject {
 
   RCFile* rcFile() {
     return reinterpret_cast<RCFile*>(
-        js::GetReservedSlot(this, FILE_SLOT).toPrivate());
+        JS::GetReservedSlot(this, FILE_SLOT).toPrivate());
   }
 };
 

@@ -94,6 +94,7 @@
 #include "xpcpublic.h"
 #include "js/HashTable.h"
 #include "js/GCHashTable.h"
+#include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetPrivate
 #include "js/TracingAPI.h"
 #include "js/WeakMapPtr.h"
 #include "PLDHashTable.h"
@@ -186,7 +187,7 @@ static inline bool IS_WN_CLASS(const JSClass* clazz) {
 }
 
 static inline bool IS_WN_REFLECTOR(JSObject* obj) {
-  return IS_WN_CLASS(js::GetObjectClass(obj));
+  return IS_WN_CLASS(JS::GetClass(obj));
 }
 
 /***************************************************************************
@@ -1413,7 +1414,7 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 
   static XPCWrappedNative* Get(JSObject* obj) {
     MOZ_ASSERT(IS_WN_REFLECTOR(obj));
-    return (XPCWrappedNative*)js::GetObjectPrivate(obj);
+    return (XPCWrappedNative*)JS::GetPrivate(obj);
   }
 
  private:
@@ -1685,7 +1686,7 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
 
  private:
   JS::Compartment* Compartment() const {
-    return js::GetObjectCompartment(mJSObj.unbarrieredGet());
+    return JS::GetCompartment(mJSObj.unbarrieredGet());
   }
 
   // These methods are defined in XPCWrappedJSClass.cpp to preserve VCS blame.
@@ -2196,9 +2197,7 @@ class XPCTraceableVariant : public XPCVariant, public XPCRootSetElem {
 /***************************************************************************/
 // Utilities
 
-inline void* xpc_GetJSPrivate(JSObject* obj) {
-  return js::GetObjectPrivate(obj);
-}
+inline void* xpc_GetJSPrivate(JSObject* obj) { return JS::GetPrivate(obj); }
 
 inline JSContext* xpc_GetSafeJSContext() {
   return XPCJSContext::Get()->Context();
@@ -2603,7 +2602,7 @@ class CompartmentPrivate {
   }
 
   static CompartmentPrivate* Get(JSObject* object) {
-    JS::Compartment* compartment = js::GetObjectCompartment(object);
+    JS::Compartment* compartment = JS::GetCompartment(object);
     return Get(compartment);
   }
 

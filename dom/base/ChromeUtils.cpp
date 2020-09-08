@@ -7,6 +7,7 @@
 #include "ChromeUtils.h"
 
 #include "js/CharacterEncoding.h"
+#include "js/Object.h"  // JS::GetClass
 #include "js/SavedFrameAPI.h"
 #include "jsfriendapi.h"
 #include "WrapperFactory.h"
@@ -281,8 +282,7 @@ void ChromeUtils::GetClassName(GlobalObject& aGlobal, JS::HandleObject aObj,
     obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
   }
 
-  aRetval =
-      NS_ConvertUTF8toUTF16(nsDependentCString(js::GetObjectClass(obj)->name));
+  aRetval = NS_ConvertUTF8toUTF16(nsDependentCString(JS::GetClass(obj)->name));
 }
 
 /* static */

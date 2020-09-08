@@ -36,6 +36,7 @@
 #include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/LocaleSensitive.h"
+#include "js/Object.h"  // JS::GetBuiltinClass
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
@@ -68,6 +69,7 @@ using mozilla::Relaxed;
 using JS::AutoCheckCannotGC;
 using JS::ClippedTime;
 using JS::GenericNaN;
+using JS::GetBuiltinClass;
 using JS::TimeClip;
 using JS::ToInteger;
 

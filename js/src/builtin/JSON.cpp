@@ -19,6 +19,7 @@
 #include "builtin/Array.h"
 #include "builtin/BigInt.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
+#include "js/Object.h"              // JS::GetBuiltinClass
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "util/StringBuffer.h"
@@ -342,7 +343,7 @@ static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
     RootedObject obj(cx, &vp.get().toObject());
 
     ESClass cls;
-    if (!GetBuiltinClass(cx, obj, &cls)) {
+    if (!JS::GetBuiltinClass(cx, obj, &cls)) {
       return false;
     }
 
@@ -813,7 +814,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     RootedObject spaceObj(cx, &space.toObject());
 
     ESClass cls;
-    if (!GetBuiltinClass(cx, spaceObj, &cls)) {
+    if (!JS::GetBuiltinClass(cx, spaceObj, &cls)) {
       return false;
     }
 

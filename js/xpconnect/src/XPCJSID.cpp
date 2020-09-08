@@ -9,6 +9,7 @@
 #include "xpcprivate.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
+#include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot
 #include "js/Symbol.h"
 #include "nsContentUtils.h"
 
@@ -172,7 +173,7 @@ static JSObject* GetIDObject(HandleValue aVal, const JSClass* aClass) {
   if (aVal.isObject()) {
     // We care only about IID/CID objects here, so CheckedUnwrapStatic is fine.
     JSObject* obj = js::CheckedUnwrapStatic(&aVal.toObject());
-    if (obj && js::GetObjectClass(obj) == aClass) {
+    if (obj && JS::GetClass(obj) == aClass) {
       return obj;
     }
   }
@@ -180,9 +181,9 @@ static JSObject* GetIDObject(HandleValue aVal, const JSClass* aClass) {
 }
 
 static const nsXPTInterfaceInfo* GetInterfaceInfo(JSObject* obj) {
-  MOZ_ASSERT(js::GetObjectClass(obj) == &sIID_Class);
+  MOZ_ASSERT(JS::GetClass(obj) == &sIID_Class);
   return static_cast<const nsXPTInterfaceInfo*>(
-      js::GetReservedSlot(obj, kIID_InfoSlot).toPrivate());
+      JS::GetReservedSlot(obj, kIID_InfoSlot).toPrivate());
 }
 
 /**
@@ -205,24 +206,24 @@ Maybe<nsID> JSValue2ID(JSContext* aCx, HandleValue aVal) {
   }
 
   mozilla::Maybe<nsID> id;
-  if (js::GetObjectClass(obj) == &sID_Class) {
+  if (JS::GetClass(obj) == &sID_Class) {
     // Extract the raw bytes of the nsID from reserved slots.
-    uint32_t rawid[] = {js::GetReservedSlot(obj, kID_Slot0).toPrivateUint32(),
-                        js::GetReservedSlot(obj, kID_Slot1).toPrivateUint32(),
-                        js::GetReservedSlot(obj, kID_Slot2).toPrivateUint32(),
-                        js::GetReservedSlot(obj, kID_Slot3).toPrivateUint32()};
+    uint32_t rawid[] = {JS::GetReservedSlot(obj, kID_Slot0).toPrivateUint32(),
+                        JS::GetReservedSlot(obj, kID_Slot1).toPrivateUint32(),
+                        JS::GetReservedSlot(obj, kID_Slot2).toPrivateUint32(),
+                        JS::GetReservedSlot(obj, kID_Slot3).toPrivateUint32()};
 
     // Construct a nsID inside the Maybe, and copy the rawid into it.
     id.emplace();
     memcpy(id.ptr(), &rawid, sizeof(nsID));
-  } else if (js::GetObjectClass(obj) == &sIID_Class) {
+  } else if (JS::GetClass(obj) == &sIID_Class) {
     // IfaceID objects store a nsXPTInterfaceInfo* pointer.
     const nsXPTInterfaceInfo* info = GetInterfaceInfo(obj);
     id.emplace(info->IID());
-  } else if (js::GetObjectClass(obj) == &sCID_Class) {
+  } else if (JS::GetClass(obj) == &sCID_Class) {
     // ContractID objects store a ContractID string.
     JS::UniqueChars contractId = JS_EncodeStringToLatin1(
-        aCx, js::GetReservedSlot(obj, kCID_ContractSlot).toString());
+        aCx, JS::GetReservedSlot(obj, kCID_ContractSlot).toString());
 
     // NOTE(nika): If we directly access the nsComponentManager, we can do
     // this with a more-basic pointer lookup:
@@ -266,10 +267,10 @@ bool ID2JSValue(JSContext* aCx, const nsID& aId, MutableHandleValue aVal) {
   uint32_t rawid[4];
   memcpy(&rawid, &aId, sizeof(nsID));
   static_assert(sizeof(nsID) == sizeof(rawid), "Wrong size of nsID");
-  js::SetReservedSlot(obj, kID_Slot0, PrivateUint32Value(rawid[0]));
-  js::SetReservedSlot(obj, kID_Slot1, PrivateUint32Value(rawid[1]));
-  js::SetReservedSlot(obj, kID_Slot2, PrivateUint32Value(rawid[2]));
-  js::SetReservedSlot(obj, kID_Slot3, PrivateUint32Value(rawid[3]));
+  JS::SetReservedSlot(obj, kID_Slot0, PrivateUint32Value(rawid[0]));
+  JS::SetReservedSlot(obj, kID_Slot1, PrivateUint32Value(rawid[1]));
+  JS::SetReservedSlot(obj, kID_Slot2, PrivateUint32Value(rawid[2]));
+  JS::SetReservedSlot(obj, kID_Slot3, PrivateUint32Value(rawid[3]));
 
   aVal.setObject(*obj);
   return true;
@@ -283,7 +284,7 @@ bool IfaceID2JSValue(JSContext* aCx, const nsXPTInterfaceInfo& aInfo,
   }
 
   // The InterfaceInfo is stored in a reserved slot.
-  js::SetReservedSlot(obj, kIID_InfoSlot, PrivateValue((void*)&aInfo));
+  JS::SetReservedSlot(obj, kIID_InfoSlot, PrivateValue((void*)&aInfo));
   aVal.setObject(*obj);
   return true;
 }
@@ -315,7 +316,7 @@ bool ContractID2JSValue(JSContext* aCx, JSString* aContract,
   }
 
   // The Contract is stored in a reserved slot.
-  js::SetReservedSlot(obj, kCID_ContractSlot, StringValue(jsContract));
+  JS::SetReservedSlot(obj, kCID_ContractSlot, StringValue(jsContract));
   aVal.setObject(*obj);
   return true;
 }
@@ -568,7 +569,7 @@ static bool CIGSHelper(JSContext* aCx, unsigned aArgc, Value* aVp,
     return Throw(aCx, NS_ERROR_XPC_BAD_CONVERT_JS);
   }
   JS::UniqueChars contractID = JS_EncodeStringToLatin1(
-      aCx, js::GetReservedSlot(obj, kCID_ContractSlot).toString());
+      aCx, JS::GetReservedSlot(obj, kCID_ContractSlot).toString());
 
   // Extract the IID from the first argument, if passed. Default: nsISupports.
   Maybe<nsIID> iid = args.length() >= 1 ? JSValue2ID(aCx, args[0])
@@ -619,7 +620,7 @@ static bool CID_GetName(JSContext* aCx, unsigned aArgc, Value* aVp) {
   }
 
   // Return the string stored in our reserved ContractID slot.
-  args.rval().set(js::GetReservedSlot(obj, kCID_ContractSlot));
+  args.rval().set(JS::GetReservedSlot(obj, kCID_ContractSlot));
   return true;
 }
 

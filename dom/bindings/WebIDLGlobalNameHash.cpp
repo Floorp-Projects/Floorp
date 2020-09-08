@@ -8,6 +8,7 @@
 #include "js/Class.h"
 #include "js/GCAPI.h"
 #include "js/Id.h"
+#include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot
 #include "js/Wrapper.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -40,10 +41,9 @@ static JSObject* FindNamedConstructorForXray(
   // (instead of just having it defined on the global now).  Check for named
   // constructors with this id, in case that's what the caller is asking for.
   for (unsigned slot = DOM_INTERFACE_SLOTS_BASE;
-       slot < JSCLASS_RESERVED_SLOTS(js::GetObjectClass(interfaceObject));
-       ++slot) {
+       slot < JSCLASS_RESERVED_SLOTS(JS::GetClass(interfaceObject)); ++slot) {
     JSObject* constructor =
-        &js::GetReservedSlot(interfaceObject, slot).toObject();
+        &JS::GetReservedSlot(interfaceObject, slot).toObject();
     if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) ==
         JSID_TO_STRING(aId)) {
       return constructor;

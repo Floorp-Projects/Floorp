@@ -47,7 +47,7 @@ class RemoteOuterWindowProxy
                     nsCycleCollectionTraversalCallback& aCb) const override {
     CycleCollectionNoteChild(aCb,
                              static_cast<BrowsingContext*>(GetNative(aProxy)),
-                             "js::GetObjectPrivate(obj)");
+                             "JS::GetPrivate(obj)");
   }
 };
 

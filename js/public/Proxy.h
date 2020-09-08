@@ -14,6 +14,7 @@
 #include "js/Array.h"  // JS::IsArrayAnswer
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
+#include "js/Object.h"         // JS::GetClass
 #include "js/shadow/Object.h"  // JS::shadow::Object
 
 namespace js {
@@ -381,7 +382,7 @@ class JS_FRIEND_API BaseProxyHandler {
 extern JS_FRIEND_DATA const JSClass ProxyClass;
 
 inline bool IsProxy(const JSObject* obj) {
-  return GetObjectClass(obj)->isProxy();
+  return JS::GetClass(obj)->isProxy();
 }
 
 namespace detail {
@@ -401,8 +402,8 @@ namespace detail {
 // ProxyValueArray::fromReservedSlots or ProxyDataLayout::values.
 //
 // Storing a pointer to ProxyReservedSlots instead of ProxyValueArray has a
-// number of advantages. In particular, it means js::GetReservedSlot and
-// js::SetReservedSlot can be used with both proxies and native objects. This
+// number of advantages. In particular, it means JS::GetReservedSlot and
+// JS::SetReservedSlot can be used with both proxies and native objects. This
 // works because the ProxyReservedSlots* pointer is stored where native objects
 // store their dynamic slots pointer.
 
@@ -492,7 +493,7 @@ JS_FRIEND_API void SetValueInProxy(Value* slot, const Value& value);
 
 inline void SetProxyReservedSlotUnchecked(JSObject* obj, size_t n,
                                           const Value& extra) {
-  MOZ_ASSERT(n < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
+  MOZ_ASSERT(n < JSCLASS_RESERVED_SLOTS(JS::GetClass(obj)));
 
   Value* vp = &GetProxyDataLayout(obj)->reservedSlots->slots[n];
 
@@ -523,7 +524,7 @@ inline JSObject* GetProxyTargetObject(JSObject* obj) {
 }
 
 inline const Value& GetProxyReservedSlot(const JSObject* obj, size_t n) {
-  MOZ_ASSERT(n < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
+  MOZ_ASSERT(n < JSCLASS_RESERVED_SLOTS(JS::GetClass(obj)));
   return detail::GetProxyDataLayout(obj)->reservedSlots->slots[n];
 }
 

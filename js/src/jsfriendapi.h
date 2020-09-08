@@ -19,6 +19,7 @@
 #include "js/Exception.h"
 #include "js/friend/ErrorMessages.h"
 #include "js/HeapAPI.h"
+#include "js/Object.h"              // JS::GetClass
 #include "js/shadow/Function.h"     // JS::shadow::Function
 #include "js/shadow/Object.h"       // JS::shadow::Object
 #include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
@@ -147,9 +148,6 @@ extern JS_FRIEND_API bool JS_InitializePropertiesFromCompatibleNativeObject(
     JSContext* cx, JS::HandleObject dst, JS::HandleObject src);
 
 namespace js {
-
-JS_FRIEND_API bool GetBuiltinClass(JSContext* cx, JS::HandleObject obj,
-                                   ESClass* cls);
 
 JS_FRIEND_API bool IsArgumentsObject(JS::HandleObject obj);
 
@@ -364,10 +362,6 @@ extern JS_FRIEND_API bool IsSharableCompartment(JS::Compartment* comp);
 // to #include vm/JSObject.h.
 extern JS_FRIEND_DATA const JSClass* const ObjectClassPtr;
 
-inline const JSClass* GetObjectClass(const JSObject* obj) {
-  return reinterpret_cast<const JS::shadow::Object*>(obj)->group->clasp;
-}
-
 JS_FRIEND_API const JSClass* ProtoKeyToClass(JSProtoKey key);
 
 // Returns the key for the class inherited by a given standard class (that
@@ -398,11 +392,6 @@ JS_FRIEND_API bool ShouldIgnorePropertyDefinition(JSContext* cx, JSProtoKey key,
 JS_FRIEND_API bool IsFunctionObject(JSObject* obj);
 
 JS_FRIEND_API bool UninlinedIsCrossCompartmentWrapper(const JSObject* obj);
-
-static MOZ_ALWAYS_INLINE JS::Compartment* GetObjectCompartment(JSObject* obj) {
-  JS::Realm* realm = reinterpret_cast<JS::shadow::Object*>(obj)->group->realm;
-  return JS::GetCompartmentForRealm(realm);
-}
 
 // CrossCompartmentWrappers are shared by all realms within the compartment, so
 // getting a wrapper's realm usually doesn't make sense.
@@ -454,50 +443,6 @@ extern JS_FRIEND_API JSObject* GetStaticPrototype(JSObject* obj);
 
 JS_FRIEND_API bool GetRealmOriginalEval(JSContext* cx,
                                         JS::MutableHandleObject eval);
-
-inline void* GetObjectPrivate(JSObject* obj) {
-  MOZ_ASSERT(GetObjectClass(obj)->flags & JSCLASS_HAS_PRIVATE);
-  const auto* nobj = reinterpret_cast<const JS::shadow::Object*>(obj);
-  void** addr =
-      reinterpret_cast<void**>(&nobj->fixedSlots()[nobj->numFixedSlots()]);
-  return *addr;
-}
-
-/**
- * Get the value stored in an object's reserved slot. This can be used with
- * both native objects and proxies, but if |obj| is known to be a proxy
- * GetProxyReservedSlot is a bit more efficient.
- */
-inline const JS::Value& GetReservedSlot(JSObject* obj, size_t slot) {
-  MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
-  return reinterpret_cast<const JS::shadow::Object*>(obj)->slotRef(slot);
-}
-
-JS_FRIEND_API void SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
-                                              const JS::Value& value);
-
-/**
- * Store a value in an object's reserved slot. This can be used with
- * both native objects and proxies, but if |obj| is known to be a proxy
- * SetProxyReservedSlot is a bit more efficient.
- */
-inline void SetReservedSlot(JSObject* obj, size_t slot,
-                            const JS::Value& value) {
-  MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
-  auto* sobj = reinterpret_cast<JS::shadow::Object*>(obj);
-  if (sobj->slotRef(slot).isGCThing() || value.isGCThing()) {
-    SetReservedSlotWithBarrier(obj, slot, value);
-  } else {
-    sobj->slotRef(slot) = value;
-  }
-}
-
-JS_FRIEND_API uint32_t GetObjectSlotSpan(JSObject* obj);
-
-inline const JS::Value& GetObjectSlot(JSObject* obj, size_t slot) {
-  MOZ_ASSERT(slot < GetObjectSlotSpan(obj));
-  return reinterpret_cast<const JS::shadow::Object*>(obj)->slotRef(slot);
-}
 
 /**
  * Add some or all property keys of obj to the id vector *props.
@@ -748,7 +693,7 @@ namespace js {
 
 static MOZ_ALWAYS_INLINE JS::shadow::Function* FunctionObjectToShadowFunction(
     JSObject* fun) {
-  MOZ_ASSERT(GetObjectClass(fun) == FunctionClassPtr);
+  MOZ_ASSERT(JS::GetClass(fun) == FunctionClassPtr);
   return reinterpret_cast<JS::shadow::Function*>(fun);
 }
 
