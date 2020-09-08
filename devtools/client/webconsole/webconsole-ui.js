@@ -203,12 +203,22 @@ class WebConsoleUI {
       this._onTargetDestroy
     );
 
-    // TODO: Re-enable as part of Bug 1627167.
-    // const resourceWatcher = this.hud.resourceWatcher;
-    // resourceWatcher.unwatchResources(
-    //   [resourceWatcher.TYPES.CONSOLE_MESSAGE],
-    //   this._onResourceAvailable
-    // );
+    const resourceWatcher = this.hud.resourceWatcher;
+    resourceWatcher.unwatchResources(
+      [
+        resourceWatcher.TYPES.CONSOLE_MESSAGE,
+        resourceWatcher.TYPES.ERROR_MESSAGE,
+        resourceWatcher.TYPES.PLATFORM_MESSAGE,
+        resourceWatcher.TYPES.NETWORK_EVENT,
+      ],
+      {
+        onAvailable: this._onResourceAvailable,
+        onUpdated: this._onResourceUpdated,
+      }
+    );
+    resourceWatcher.unwatchResources([resourceWatcher.TYPES.CSS_MESSAGE], {
+      onAvailable: this._onResourceAvailable,
+    });
 
     for (const proxy of this.getAllProxies()) {
       proxy.disconnect();
