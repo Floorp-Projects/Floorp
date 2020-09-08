@@ -253,7 +253,7 @@ const uint32_t kConnectionIdleCloseMS = 10 * 1000;  // 10 seconds
 // The length of time that idle threads will stay alive before being shut down.
 const uint32_t kConnectionThreadIdleMS = 30 * 1000;  // 30 seconds
 
-#define SAVEPOINT_CLAUSE "SAVEPOINT sp;"
+#define SAVEPOINT_CLAUSE "SAVEPOINT sp;"_ns
 
 const uint32_t kFileCopyBufferSize = 32768;
 
@@ -912,57 +912,57 @@ nsresult CreateFileTables(mozIStorageConnection& aConnection) {
   AUTO_PROFILER_LABEL("CreateFileTables", DOM);
 
   // Table `file`
-  nsresult rv =
-      aConnection.ExecuteSimpleSQL(nsLiteralCString("CREATE TABLE file ("
-                                                    "id INTEGER PRIMARY KEY, "
-                                                    "refcount INTEGER NOT NULL"
-                                                    ");"));
+  nsresult rv = aConnection.ExecuteSimpleSQL(
+      "CREATE TABLE file ("
+      "id INTEGER PRIMARY KEY, "
+      "refcount INTEGER NOT NULL"
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TRIGGER object_data_insert_trigger "
-                       "AFTER INSERT ON object_data "
-                       "FOR EACH ROW "
-                       "WHEN NEW.file_ids IS NOT NULL "
-                       "BEGIN "
-                       "SELECT update_refcount(NULL, NEW.file_ids); "
-                       "END;"));
+      "CREATE TRIGGER object_data_insert_trigger "
+      "AFTER INSERT ON object_data "
+      "FOR EACH ROW "
+      "WHEN NEW.file_ids IS NOT NULL "
+      "BEGIN "
+      "SELECT update_refcount(NULL, NEW.file_ids); "
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TRIGGER object_data_update_trigger "
       "AFTER UPDATE OF file_ids ON object_data "
       "FOR EACH ROW "
       "WHEN OLD.file_ids IS NOT NULL OR NEW.file_ids IS NOT NULL "
       "BEGIN "
       "SELECT update_refcount(OLD.file_ids, NEW.file_ids); "
-      "END;"));
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TRIGGER object_data_delete_trigger "
-                       "AFTER DELETE ON object_data "
-                       "FOR EACH ROW WHEN OLD.file_ids IS NOT NULL "
-                       "BEGIN "
-                       "SELECT update_refcount(OLD.file_ids, NULL); "
-                       "END;"));
+      "CREATE TRIGGER object_data_delete_trigger "
+      "AFTER DELETE ON object_data "
+      "FOR EACH ROW WHEN OLD.file_ids IS NOT NULL "
+      "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NULL); "
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TRIGGER file_update_trigger "
-                       "AFTER UPDATE ON file "
-                       "FOR EACH ROW WHEN NEW.refcount = 0 "
-                       "BEGIN "
-                       "DELETE FROM file WHERE id = OLD.id; "
-                       "END;"));
+      "CREATE TRIGGER file_update_trigger "
+      "AFTER UPDATE ON file "
+      "FOR EACH ROW WHEN NEW.refcount = 0 "
+      "BEGIN "
+      "DELETE FROM file WHERE id = OLD.id; "
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -984,112 +984,112 @@ nsresult CreateTables(mozIStorageConnection& aConnection) {
   // directory can figure out the origin of every db without having to
   // reverse-engineer our hash scheme.
   nsresult rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE database"
-                       "( name TEXT PRIMARY KEY"
-                       ", origin TEXT NOT NULL"
-                       ", version INTEGER NOT NULL DEFAULT 0"
-                       ", last_vacuum_time INTEGER NOT NULL DEFAULT 0"
-                       ", last_analyze_time INTEGER NOT NULL DEFAULT 0"
-                       ", last_vacuum_size INTEGER NOT NULL DEFAULT 0"
-                       ") WITHOUT ROWID;"));
+      "CREATE TABLE database"
+      "( name TEXT PRIMARY KEY"
+      ", origin TEXT NOT NULL"
+      ", version INTEGER NOT NULL DEFAULT 0"
+      ", last_vacuum_time INTEGER NOT NULL DEFAULT 0"
+      ", last_analyze_time INTEGER NOT NULL DEFAULT 0"
+      ", last_vacuum_size INTEGER NOT NULL DEFAULT 0"
+      ") WITHOUT ROWID;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Table `object_store`
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE object_store"
-                       "( id INTEGER PRIMARY KEY"
-                       ", auto_increment INTEGER NOT NULL DEFAULT 0"
-                       ", name TEXT NOT NULL"
-                       ", key_path TEXT"
-                       ");"));
+      "CREATE TABLE object_store"
+      "( id INTEGER PRIMARY KEY"
+      ", auto_increment INTEGER NOT NULL DEFAULT 0"
+      ", name TEXT NOT NULL"
+      ", key_path TEXT"
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Table `object_store_index`
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE object_store_index"
-                       "( id INTEGER PRIMARY KEY"
-                       ", object_store_id INTEGER NOT NULL"
-                       ", name TEXT NOT NULL"
-                       ", key_path TEXT NOT NULL"
-                       ", unique_index INTEGER NOT NULL"
-                       ", multientry INTEGER NOT NULL"
-                       ", locale TEXT"
-                       ", is_auto_locale BOOLEAN NOT NULL"
-                       ", FOREIGN KEY (object_store_id) "
-                       "REFERENCES object_store(id) "
-                       ");"));
+      "CREATE TABLE object_store_index"
+      "( id INTEGER PRIMARY KEY"
+      ", object_store_id INTEGER NOT NULL"
+      ", name TEXT NOT NULL"
+      ", key_path TEXT NOT NULL"
+      ", unique_index INTEGER NOT NULL"
+      ", multientry INTEGER NOT NULL"
+      ", locale TEXT"
+      ", is_auto_locale BOOLEAN NOT NULL"
+      ", FOREIGN KEY (object_store_id) "
+      "REFERENCES object_store(id) "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Table `object_data`
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE object_data"
-                       "( object_store_id INTEGER NOT NULL"
-                       ", key BLOB NOT NULL"
-                       ", index_data_values BLOB DEFAULT NULL"
-                       ", file_ids TEXT"
-                       ", data BLOB NOT NULL"
-                       ", PRIMARY KEY (object_store_id, key)"
-                       ", FOREIGN KEY (object_store_id) "
-                       "REFERENCES object_store(id) "
-                       ") WITHOUT ROWID;"));
+      "CREATE TABLE object_data"
+      "( object_store_id INTEGER NOT NULL"
+      ", key BLOB NOT NULL"
+      ", index_data_values BLOB DEFAULT NULL"
+      ", file_ids TEXT"
+      ", data BLOB NOT NULL"
+      ", PRIMARY KEY (object_store_id, key)"
+      ", FOREIGN KEY (object_store_id) "
+      "REFERENCES object_store(id) "
+      ") WITHOUT ROWID;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Table `index_data`
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE index_data"
-                       "( index_id INTEGER NOT NULL"
-                       ", value BLOB NOT NULL"
-                       ", object_data_key BLOB NOT NULL"
-                       ", object_store_id INTEGER NOT NULL"
-                       ", value_locale BLOB"
-                       ", PRIMARY KEY (index_id, value, object_data_key)"
-                       ", FOREIGN KEY (index_id) "
-                       "REFERENCES object_store_index(id) "
-                       ", FOREIGN KEY (object_store_id, object_data_key) "
-                       "REFERENCES object_data(object_store_id, key) "
-                       ") WITHOUT ROWID;"));
+      "CREATE TABLE index_data"
+      "( index_id INTEGER NOT NULL"
+      ", value BLOB NOT NULL"
+      ", object_data_key BLOB NOT NULL"
+      ", object_store_id INTEGER NOT NULL"
+      ", value_locale BLOB"
+      ", PRIMARY KEY (index_id, value, object_data_key)"
+      ", FOREIGN KEY (index_id) "
+      "REFERENCES object_store_index(id) "
+      ", FOREIGN KEY (object_store_id, object_data_key) "
+      "REFERENCES object_data(object_store_id, key) "
+      ") WITHOUT ROWID;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE INDEX index_data_value_locale_index "
       "ON index_data (index_id, value_locale, object_data_key, value) "
-      "WHERE value_locale IS NOT NULL;"));
+      "WHERE value_locale IS NOT NULL;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Table `unique_index_data`
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE unique_index_data"
-                       "( index_id INTEGER NOT NULL"
-                       ", value BLOB NOT NULL"
-                       ", object_store_id INTEGER NOT NULL"
-                       ", object_data_key BLOB NOT NULL"
-                       ", value_locale BLOB"
-                       ", PRIMARY KEY (index_id, value)"
-                       ", FOREIGN KEY (index_id) "
-                       "REFERENCES object_store_index(id) "
-                       ", FOREIGN KEY (object_store_id, object_data_key) "
-                       "REFERENCES object_data(object_store_id, key) "
-                       ") WITHOUT ROWID;"));
+      "CREATE TABLE unique_index_data"
+      "( index_id INTEGER NOT NULL"
+      ", value BLOB NOT NULL"
+      ", object_store_id INTEGER NOT NULL"
+      ", object_data_key BLOB NOT NULL"
+      ", value_locale BLOB"
+      ", PRIMARY KEY (index_id, value)"
+      ", FOREIGN KEY (index_id) "
+      "REFERENCES object_store_index(id) "
+      ", FOREIGN KEY (object_store_id, object_data_key) "
+      "REFERENCES object_data(object_store_id, key) "
+      ") WITHOUT ROWID;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE INDEX unique_index_data_value_locale_index "
       "ON unique_index_data (index_id, value_locale, object_data_key, value) "
-      "WHERE value_locale IS NOT NULL;"));
+      "WHERE value_locale IS NOT NULL;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1118,8 +1118,8 @@ nsresult UpgradeSchemaFrom4To5(mozIStorageConnection& aConnection) {
   // convert that to an integer, and if we fail, set it to 0.
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = aConnection.CreateStatement(
-      nsLiteralCString("SELECT name, version, dataVersion "
-                       "FROM database"),
+      "SELECT name, version, dataVersion "
+      "FROM database"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1169,11 +1169,11 @@ nsresult UpgradeSchemaFrom4To5(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE database ("
-                       "name TEXT NOT NULL, "
-                       "version INTEGER NOT NULL DEFAULT 0, "
-                       "dataVersion INTEGER NOT NULL"
-                       ");"));
+      "CREATE TABLE database ("
+      "name TEXT NOT NULL, "
+      "version INTEGER NOT NULL DEFAULT 0, "
+      "dataVersion INTEGER NOT NULL"
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1181,8 +1181,8 @@ nsresult UpgradeSchemaFrom4To5(mozIStorageConnection& aConnection) {
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
   rv = aConnection.CreateStatement(
-      nsLiteralCString("INSERT INTO database (name, version, dataVersion) "
-                       "VALUES (:name, :version, :dataVersion)"),
+      "INSERT INTO database (name, version, dataVersion) "
+      "VALUES (:name, :version, :dataVersion)"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1250,20 +1250,20 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
   // this by copying into a temporary table, dropping the original, then copying
   // back into a newly created table.
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "id INTEGER PRIMARY KEY, "
-                       "object_store_id, "
-                       "key_value, "
-                       "data "
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id INTEGER PRIMARY KEY, "
+      "object_store_id, "
+      "key_value, "
+      "data "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO temp_upgrade "
-                       "SELECT id, object_store_id, key_value, data "
-                       "FROM object_data;"));
+      "INSERT INTO temp_upgrade "
+      "SELECT id, object_store_id, key_value, data "
+      "FROM object_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1273,7 +1273,7 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE object_data ("
       "id INTEGER PRIMARY KEY, "
       "object_store_id INTEGER NOT NULL, "
@@ -1282,15 +1282,15 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
       "UNIQUE (object_store_id, key_value), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO object_data "
-                       "SELECT id, object_store_id, key_value, data "
-                       "FROM temp_upgrade;"));
+      "INSERT INTO object_data "
+      "SELECT id, object_store_id, key_value, data "
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1303,19 +1303,19 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
   // We need to add a unique constraint to our ai_object_data table. Copy all
   // the data out of it using a temporary table as before.
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "id INTEGER PRIMARY KEY, "
-                       "object_store_id, "
-                       "data "
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id INTEGER PRIMARY KEY, "
+      "object_store_id, "
+      "data "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO temp_upgrade "
-                       "SELECT id, object_store_id, data "
-                       "FROM ai_object_data;"));
+      "INSERT INTO temp_upgrade "
+      "SELECT id, object_store_id, data "
+      "FROM ai_object_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1325,7 +1325,7 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE ai_object_data ("
       "id INTEGER PRIMARY KEY AUTOINCREMENT, "
       "object_store_id INTEGER NOT NULL, "
@@ -1333,15 +1333,15 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
       "UNIQUE (object_store_id, id), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO ai_object_data "
-                       "SELECT id, object_store_id, data "
-                       "FROM temp_upgrade;"));
+      "INSERT INTO ai_object_data "
+      "SELECT id, object_store_id, data "
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1354,20 +1354,20 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
   // Fix up the index_data table. We're reordering the columns as well as
   // changing the primary key from being a simple id to being a composite.
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "index_id, "
-                       "value, "
-                       "object_data_key, "
-                       "object_data_id "
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "object_data_key, "
+      "object_data_id "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO temp_upgrade "
       "SELECT index_id, value, object_data_key, object_data_id "
-      "FROM index_data;"));
+      "FROM index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1377,7 +1377,7 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE index_data ("
       "index_id INTEGER NOT NULL, "
       "value NOT NULL, "
@@ -1388,15 +1388,15 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
       "CASCADE, "
       "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT OR IGNORE INTO index_data "
       "SELECT index_id, value, object_data_key, object_data_id "
-      "FROM temp_upgrade;"));
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1407,8 +1407,8 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE INDEX index_data_object_data_id_index "
-                       "ON index_data (object_data_id);"));
+      "CREATE INDEX index_data_object_data_id_index "
+      "ON index_data (object_data_id);"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1416,20 +1416,20 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
   // Fix up the unique_index_data table. We're reordering the columns as well as
   // changing the primary key from being a simple id to being a composite.
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "index_id, "
-                       "value, "
-                       "object_data_key, "
-                       "object_data_id "
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "object_data_key, "
+      "object_data_id "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO temp_upgrade "
       "SELECT index_id, value, object_data_key, object_data_id "
-      "FROM unique_index_data;"));
+      "FROM unique_index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1439,7 +1439,7 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE unique_index_data ("
       "index_id INTEGER NOT NULL, "
       "value NOT NULL, "
@@ -1451,15 +1451,15 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
       "CASCADE "
       "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO unique_index_data "
       "SELECT index_id, value, object_data_key, object_data_id "
-      "FROM temp_upgrade;"));
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1470,8 +1470,8 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE INDEX unique_index_data_object_data_id_index "
-                       "ON unique_index_data (object_data_id);"));
+      "CREATE INDEX unique_index_data_object_data_id_index "
+      "ON unique_index_data (object_data_id);"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1479,19 +1479,19 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
   // Fix up the ai_index_data table. We're reordering the columns as well as
   // changing the primary key from being a simple id to being a composite.
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "index_id, "
-                       "value, "
-                       "ai_object_data_id "
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "ai_object_data_id "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO temp_upgrade "
-                       "SELECT index_id, value, ai_object_data_id "
-                       "FROM ai_index_data;"));
+      "INSERT INTO temp_upgrade "
+      "SELECT index_id, value, ai_object_data_id "
+      "FROM ai_index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1501,7 +1501,7 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE ai_index_data ("
       "index_id INTEGER NOT NULL, "
       "value NOT NULL, "
@@ -1511,15 +1511,15 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
       "CASCADE, "
       "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT OR IGNORE INTO ai_index_data "
-                       "SELECT index_id, value, ai_object_data_id "
-                       "FROM temp_upgrade;"));
+      "INSERT OR IGNORE INTO ai_index_data "
+      "SELECT index_id, value, ai_object_data_id "
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1530,8 +1530,8 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE INDEX ai_index_data_ai_object_data_id_index "
-                       "ON ai_index_data (ai_object_data_id);"));
+      "CREATE INDEX ai_index_data_ai_object_data_id_index "
+      "ON ai_index_data (ai_object_data_id);"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1539,19 +1539,19 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
   // Fix up the ai_unique_index_data table. We're reordering the columns as well
   // as changing the primary key from being a simple id to being a composite.
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "index_id, "
-                       "value, "
-                       "ai_object_data_id "
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "ai_object_data_id "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO temp_upgrade "
-                       "SELECT index_id, value, ai_object_data_id "
-                       "FROM ai_unique_index_data;"));
+      "INSERT INTO temp_upgrade "
+      "SELECT index_id, value, ai_object_data_id "
+      "FROM ai_unique_index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1561,7 +1561,7 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE ai_unique_index_data ("
       "index_id INTEGER NOT NULL, "
       "value NOT NULL, "
@@ -1572,15 +1572,15 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
       "CASCADE, "
       "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO ai_unique_index_data "
-                       "SELECT index_id, value, ai_object_data_id "
-                       "FROM temp_upgrade;"));
+      "INSERT INTO ai_unique_index_data "
+      "SELECT index_id, value, ai_object_data_id "
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1590,9 +1590,9 @@ nsresult UpgradeSchemaFrom5To6(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE INDEX ai_unique_index_data_ai_object_data_id_index "
-      "ON ai_unique_index_data (ai_object_data_id);"));
+      "ON ai_unique_index_data (ai_object_data_id);"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1611,20 +1611,20 @@ nsresult UpgradeSchemaFrom6To7(mozIStorageConnection& aConnection) {
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom6To7", DOM);
 
   nsresult rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "id, "
-                       "name, "
-                       "key_path, "
-                       "auto_increment"
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id, "
+      "name, "
+      "key_path, "
+      "auto_increment"
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO temp_upgrade "
-                       "SELECT id, name, key_path, auto_increment "
-                       "FROM object_store;"));
+      "INSERT INTO temp_upgrade "
+      "SELECT id, name, key_path, auto_increment "
+      "FROM object_store;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1635,21 +1635,21 @@ nsresult UpgradeSchemaFrom6To7(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TABLE object_store ("
-                       "id INTEGER PRIMARY KEY, "
-                       "auto_increment INTEGER NOT NULL DEFAULT 0, "
-                       "name TEXT NOT NULL, "
-                       "key_path TEXT, "
-                       "UNIQUE (name)"
-                       ");"));
+      "CREATE TABLE object_store ("
+      "id INTEGER PRIMARY KEY, "
+      "auto_increment INTEGER NOT NULL DEFAULT 0, "
+      "name TEXT NOT NULL, "
+      "key_path TEXT, "
+      "UNIQUE (name)"
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO object_store "
-                       "SELECT id, auto_increment, name, nullif(key_path, '') "
-                       "FROM temp_upgrade;"));
+      "INSERT INTO object_store "
+      "SELECT id, auto_increment, name, nullif(key_path, '') "
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1673,23 +1673,23 @@ nsresult UpgradeSchemaFrom7To8(mozIStorageConnection& aConnection) {
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom7To8", DOM);
 
   nsresult rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "id, "
-                       "object_store_id, "
-                       "name, "
-                       "key_path, "
-                       "unique_index, "
-                       "object_store_autoincrement"
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id, "
+      "object_store_id, "
+      "name, "
+      "key_path, "
+      "unique_index, "
+      "object_store_autoincrement"
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO temp_upgrade "
-                       "SELECT id, object_store_id, name, key_path, "
-                       "unique_index, object_store_autoincrement "
-                       "FROM object_store_index;"));
+      "INSERT INTO temp_upgrade "
+      "SELECT id, object_store_id, name, key_path, "
+      "unique_index, object_store_autoincrement "
+      "FROM object_store_index;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1699,7 +1699,7 @@ nsresult UpgradeSchemaFrom7To8(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE object_store_index ("
       "id INTEGER, "
       "object_store_id INTEGER NOT NULL, "
@@ -1712,16 +1712,16 @@ nsresult UpgradeSchemaFrom7To8(mozIStorageConnection& aConnection) {
       "UNIQUE (object_store_id, name), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO object_store_index "
-                       "SELECT id, object_store_id, name, key_path, "
-                       "unique_index, 0, object_store_autoincrement "
-                       "FROM temp_upgrade;"));
+      "INSERT INTO object_store_index "
+      "SELECT id, object_store_id, name, key_path, "
+      "unique_index, 0, object_store_autoincrement "
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1887,23 +1887,23 @@ nsresult UpgradeSchemaFrom10_0To11_0(mozIStorageConnection& aConnection) {
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom10_0To11_0", DOM);
 
   nsresult rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "id, "
-                       "object_store_id, "
-                       "name, "
-                       "key_path, "
-                       "unique_index, "
-                       "multientry"
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id, "
+      "object_store_id, "
+      "name, "
+      "key_path, "
+      "unique_index, "
+      "multientry"
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO temp_upgrade "
-                       "SELECT id, object_store_id, name, key_path, "
-                       "unique_index, multientry "
-                       "FROM object_store_index;"));
+      "INSERT INTO temp_upgrade "
+      "SELECT id, object_store_id, name, key_path, "
+      "unique_index, multientry "
+      "FROM object_store_index;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1913,7 +1913,7 @@ nsresult UpgradeSchemaFrom10_0To11_0(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE object_store_index ("
       "id INTEGER PRIMARY KEY, "
       "object_store_id INTEGER NOT NULL, "
@@ -1924,16 +1924,16 @@ nsresult UpgradeSchemaFrom10_0To11_0(mozIStorageConnection& aConnection) {
       "UNIQUE (object_store_id, name), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO object_store_index "
-                       "SELECT id, object_store_id, name, key_path, "
-                       "unique_index, multientry "
-                       "FROM temp_upgrade;"));
+      "INSERT INTO object_store_index "
+      "SELECT id, object_store_id, name, key_path, "
+      "unique_index, multientry "
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1949,27 +1949,27 @@ nsresult UpgradeSchemaFrom10_0To11_0(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO object_data (object_store_id, key_value, data, file_ids) "
       "SELECT object_store_id, id, data, file_ids "
-      "FROM ai_object_data;"));
+      "FROM ai_object_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TRIGGER object_data_insert_trigger "
-                       "AFTER INSERT ON object_data "
-                       "FOR EACH ROW "
-                       "WHEN NEW.file_ids IS NOT NULL "
-                       "BEGIN "
-                       "SELECT update_refcount(NULL, NEW.file_ids); "
-                       "END;"));
+      "CREATE TRIGGER object_data_insert_trigger "
+      "AFTER INSERT ON object_data "
+      "FOR EACH ROW "
+      "WHEN NEW.file_ids IS NOT NULL "
+      "BEGIN "
+      "SELECT update_refcount(NULL, NEW.file_ids); "
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO index_data (index_id, value, object_data_key, "
       "object_data_id) "
       "SELECT ai_index_data.index_id, ai_index_data.value, "
@@ -1979,12 +1979,12 @@ nsresult UpgradeSchemaFrom10_0To11_0(mozIStorageConnection& aConnection) {
       "object_store_index.id = ai_index_data.index_id "
       "INNER JOIN object_data ON "
       "object_data.object_store_id = object_store_index.object_store_id AND "
-      "object_data.key_value = ai_index_data.ai_object_data_id;"));
+      "object_data.key_value = ai_index_data.ai_object_data_id;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO unique_index_data (index_id, value, object_data_key, "
       "object_data_id) "
       "SELECT ai_unique_index_data.index_id, ai_unique_index_data.value, "
@@ -1994,15 +1994,15 @@ nsresult UpgradeSchemaFrom10_0To11_0(mozIStorageConnection& aConnection) {
       "object_store_index.id = ai_unique_index_data.index_id "
       "INNER JOIN object_data ON "
       "object_data.object_store_id = object_store_index.object_store_id AND "
-      "object_data.key_value = ai_unique_index_data.ai_object_data_id;"));
+      "object_data.key_value = ai_unique_index_data.ai_object_data_id;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "UPDATE object_store "
       "SET auto_increment = (SELECT max(id) FROM ai_object_data) + 1 "
-      "WHERE auto_increment;"));
+      "WHERE auto_increment;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2108,21 +2108,21 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "id INTEGER PRIMARY KEY, "
-                       "object_store_id, "
-                       "key_value, "
-                       "data, "
-                       "file_ids "
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id INTEGER PRIMARY KEY, "
+      "object_store_id, "
+      "key_value, "
+      "data, "
+      "file_ids "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO temp_upgrade "
       "SELECT id, object_store_id, encode(key_value), data, file_ids "
-      "FROM object_data;"));
+      "FROM object_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2132,7 +2132,7 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE object_data ("
       "id INTEGER PRIMARY KEY, "
       "object_store_id INTEGER NOT NULL, "
@@ -2142,15 +2142,15 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
       "UNIQUE (object_store_id, key_value), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO object_data "
-                       "SELECT id, object_store_id, key_value, file_ids, data "
-                       "FROM temp_upgrade;"));
+      "INSERT INTO object_data "
+      "SELECT id, object_store_id, key_value, file_ids, data "
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2161,55 +2161,55 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TRIGGER object_data_insert_trigger "
-                       "AFTER INSERT ON object_data "
-                       "FOR EACH ROW "
-                       "WHEN NEW.file_ids IS NOT NULL "
-                       "BEGIN "
-                       "SELECT update_refcount(NULL, NEW.file_ids); "
-                       "END;"));
+      "CREATE TRIGGER object_data_insert_trigger "
+      "AFTER INSERT ON object_data "
+      "FOR EACH ROW "
+      "WHEN NEW.file_ids IS NOT NULL "
+      "BEGIN "
+      "SELECT update_refcount(NULL, NEW.file_ids); "
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TRIGGER object_data_update_trigger "
       "AFTER UPDATE OF file_ids ON object_data "
       "FOR EACH ROW "
       "WHEN OLD.file_ids IS NOT NULL OR NEW.file_ids IS NOT NULL "
       "BEGIN "
       "SELECT update_refcount(OLD.file_ids, NEW.file_ids); "
-      "END;"));
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TRIGGER object_data_delete_trigger "
-                       "AFTER DELETE ON object_data "
-                       "FOR EACH ROW WHEN OLD.file_ids IS NOT NULL "
-                       "BEGIN "
-                       "SELECT update_refcount(OLD.file_ids, NULL); "
-                       "END;"));
+      "CREATE TRIGGER object_data_delete_trigger "
+      "AFTER DELETE ON object_data "
+      "FOR EACH ROW WHEN OLD.file_ids IS NOT NULL "
+      "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NULL); "
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "index_id, "
-                       "value, "
-                       "object_data_key, "
-                       "object_data_id "
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "object_data_key, "
+      "object_data_id "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO temp_upgrade "
       "SELECT index_id, encode(value), encode(object_data_key), object_data_id "
-      "FROM index_data;"));
+      "FROM index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2219,7 +2219,7 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE index_data ("
       "index_id INTEGER NOT NULL, "
       "value BLOB NOT NULL, "
@@ -2230,15 +2230,15 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
       "CASCADE, "
       "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO index_data "
       "SELECT index_id, value, object_data_key, object_data_id "
-      "FROM temp_upgrade;"));
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2249,27 +2249,27 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE INDEX index_data_object_data_id_index "
-                       "ON index_data (object_data_id);"));
+      "CREATE INDEX index_data_object_data_id_index "
+      "ON index_data (object_data_id);"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TEMPORARY TABLE temp_upgrade ("
-                       "index_id, "
-                       "value, "
-                       "object_data_key, "
-                       "object_data_id "
-                       ");"));
+      "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "object_data_key, "
+      "object_data_id "
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO temp_upgrade "
       "SELECT index_id, encode(value), encode(object_data_key), object_data_id "
-      "FROM unique_index_data;"));
+      "FROM unique_index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2279,7 +2279,7 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TABLE unique_index_data ("
       "index_id INTEGER NOT NULL, "
       "value BLOB NOT NULL, "
@@ -2291,15 +2291,15 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
       "CASCADE "
       "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
       "CASCADE"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "INSERT INTO unique_index_data "
       "SELECT index_id, value, object_data_key, object_data_id "
-      "FROM temp_upgrade;"));
+      "FROM temp_upgrade;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2310,8 +2310,8 @@ nsresult UpgradeSchemaFrom11_0To12_0(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE INDEX unique_index_data_object_data_id_index "
-                       "ON unique_index_data (object_data_id);"));
+      "CREATE INDEX unique_index_data_object_data_id_index "
+      "ON unique_index_data (object_data_id);"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2774,27 +2774,27 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
     mozIStorageConnection& aConnection, const nsACString& aOrigin) {
   MOZ_ASSERT(!aOrigin.IsEmpty());
 
-  nsresult rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  nsresult rv = aConnection.ExecuteSimpleSQL(
       // Drop these triggers to avoid unnecessary work during the upgrade
       // process.
       "DROP TRIGGER object_data_insert_trigger;"
       "DROP TRIGGER object_data_update_trigger;"
-      "DROP TRIGGER object_data_delete_trigger;"));
+      "DROP TRIGGER object_data_delete_trigger;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // Drop these indexes before we do anything else to free disk space.
       "DROP INDEX index_data_object_data_id_index;"
-      "DROP INDEX unique_index_data_object_data_id_index;"));
+      "DROP INDEX unique_index_data_object_data_id_index;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Create the new tables and triggers first.
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // This will eventually become the |database| table.
       "CREATE TABLE database_upgrade "
       "( name TEXT PRIMARY KEY"
@@ -2803,24 +2803,24 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       ", last_vacuum_time INTEGER NOT NULL DEFAULT 0"
       ", last_analyze_time INTEGER NOT NULL DEFAULT 0"
       ", last_vacuum_size INTEGER NOT NULL DEFAULT 0"
-      ") WITHOUT ROWID;"));
+      ") WITHOUT ROWID;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // This will eventually become the |object_store| table.
       "CREATE TABLE object_store_upgrade"
       "( id INTEGER PRIMARY KEY"
       ", auto_increment INTEGER NOT NULL DEFAULT 0"
       ", name TEXT NOT NULL"
       ", key_path TEXT"
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // This will eventually become the |object_store_index| table.
       "CREATE TABLE object_store_index_upgrade"
       "( id INTEGER PRIMARY KEY"
@@ -2831,12 +2831,12 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       ", multientry INTEGER NOT NULL"
       ", FOREIGN KEY (object_store_id) "
       "REFERENCES object_store(id) "
-      ");"));
+      ");"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // This will eventually become the |object_data| table.
       "CREATE TABLE object_data_upgrade"
       "( object_store_id INTEGER NOT NULL"
@@ -2847,12 +2847,12 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       ", PRIMARY KEY (object_store_id, key)"
       ", FOREIGN KEY (object_store_id) "
       "REFERENCES object_store(id) "
-      ") WITHOUT ROWID;"));
+      ") WITHOUT ROWID;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // This will eventually become the |index_data| table.
       "CREATE TABLE index_data_upgrade"
       "( index_id INTEGER NOT NULL"
@@ -2864,12 +2864,12 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       "REFERENCES object_store_index(id) "
       ", FOREIGN KEY (object_store_id, object_data_key) "
       "REFERENCES object_data(object_store_id, key) "
-      ") WITHOUT ROWID;"));
+      ") WITHOUT ROWID;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // This will eventually become the |unique_index_data| table.
       "CREATE TABLE unique_index_data_upgrade"
       "( index_id INTEGER NOT NULL"
@@ -2881,12 +2881,12 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       "REFERENCES object_store_index(id) "
       ", FOREIGN KEY (object_store_id, object_data_key) "
       "REFERENCES object_data(object_store_id, key) "
-      ") WITHOUT ROWID;"));
+      ") WITHOUT ROWID;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // Temporarily store |index_data_values| that we build during the upgrade
       // of the index tables. We will later move this to the |object_data|
       // table.
@@ -2895,12 +2895,12 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       ", key BLOB NOT NULL"
       ", index_data_values BLOB DEFAULT NULL"
       ", PRIMARY KEY (object_store_id, key)"
-      ") WITHOUT ROWID;"));
+      ") WITHOUT ROWID;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // These two triggers help build the |index_data_values| blobs. The nested
       // SELECT statements help us achieve an "INSERT OR UPDATE"-like behavior.
       "CREATE TEMPORARY TRIGGER unique_index_data_upgrade_insert_trigger "
@@ -2920,12 +2920,12 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       ", NEW.value"
       ")"
       ");"
-      "END;"));
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TEMPORARY TRIGGER index_data_upgrade_insert_trigger "
       "AFTER INSERT ON index_data_upgrade "
       "BEGIN "
@@ -2944,14 +2944,14 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       ", NEW.value"
       ")"
       ");"
-      "END;"));
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Update the |unique_index_data| table to change the column order, remove the
   // ON DELETE CASCADE clauses, and to apply the WITHOUT ROWID optimization.
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // Insert all the data.
       "INSERT INTO unique_index_data_upgrade "
       "SELECT "
@@ -2961,36 +2961,36 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       "upgrade_key(unique_index_data.object_data_key) "
       "FROM unique_index_data "
       "JOIN object_data "
-      "ON unique_index_data.object_data_id = object_data.id;"));
+      "ON unique_index_data.object_data_id = object_data.id;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // The trigger is no longer needed.
-      "DROP TRIGGER unique_index_data_upgrade_insert_trigger;"));
+      "DROP TRIGGER unique_index_data_upgrade_insert_trigger;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // The old table is no longer needed.
-      "DROP TABLE unique_index_data;"));
+      "DROP TABLE unique_index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // Rename the table.
       "ALTER TABLE unique_index_data_upgrade "
-      "RENAME TO unique_index_data;"));
+      "RENAME TO unique_index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Update the |index_data| table to change the column order, remove the ON
   // DELETE CASCADE clauses, and to apply the WITHOUT ROWID optimization.
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // Insert all the data.
       "INSERT INTO index_data_upgrade "
       "SELECT "
@@ -3000,29 +3000,29 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       "object_data.object_store_id "
       "FROM index_data "
       "JOIN object_data "
-      "ON index_data.object_data_id = object_data.id;"));
+      "ON index_data.object_data_id = object_data.id;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // The trigger is no longer needed.
-      "DROP TRIGGER index_data_upgrade_insert_trigger;"));
+      "DROP TRIGGER index_data_upgrade_insert_trigger;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // The old table is no longer needed.
-      "DROP TABLE index_data;"));
+      "DROP TABLE index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // Rename the table.
       "ALTER TABLE index_data_upgrade "
-      "RENAME TO index_data;"));
+      "RENAME TO index_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3030,7 +3030,7 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
   // Update the |object_data| table to add the |index_data_values| column,
   // remove the ON DELETE CASCADE clause, and apply the WITHOUT ROWID
   // optimization.
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // Insert all the data.
       "INSERT INTO object_data_upgrade "
       "SELECT "
@@ -3044,29 +3044,29 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
       "ON object_data.object_store_id = "
       "temp_index_data_values.object_store_id "
       "AND upgrade_key(object_data.key_value) = "
-      "temp_index_data_values.key;"));
+      "temp_index_data_values.key;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // The temporary table is no longer needed.
-      "DROP TABLE temp_index_data_values;"));
+      "DROP TABLE temp_index_data_values;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // The old table is no longer needed.
-      "DROP TABLE object_data;"));
+      "DROP TABLE object_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       // Rename the table.
       "ALTER TABLE object_data_upgrade "
-      "RENAME TO object_data;"));
+      "RENAME TO object_data;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3074,9 +3074,9 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
   // Update the |object_store_index| table to remove the UNIQUE constraint and
   // the ON DELETE CASCADE clause.
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO object_store_index_upgrade "
-                       "SELECT * "
-                       "FROM object_store_index;"));
+      "INSERT INTO object_store_index_upgrade "
+      "SELECT * "
+      "FROM object_store_index;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3087,17 +3087,17 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("ALTER TABLE object_store_index_upgrade "
-                       "RENAME TO object_store_index;"));
+      "ALTER TABLE object_store_index_upgrade "
+      "RENAME TO object_store_index;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Update the |object_store| table to remove the UNIQUE constraint.
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("INSERT INTO object_store_upgrade "
-                       "SELECT * "
-                       "FROM object_store;"));
+      "INSERT INTO object_store_upgrade "
+      "SELECT * "
+      "FROM object_store;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3108,8 +3108,8 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("ALTER TABLE object_store_upgrade "
-                       "RENAME TO object_store;"));
+      "ALTER TABLE object_store_upgrade "
+      "RENAME TO object_store;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3121,9 +3121,9 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
   rv = aConnection.CreateStatement(
-      nsLiteralCString("INSERT INTO database_upgrade "
-                       "SELECT name, :origin, version, 0, 0, 0 "
-                       "FROM database;"),
+      "INSERT INTO database_upgrade "
+      "SELECT name, :origin, version, 0, 0, 0 "
+      "FROM database;"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3145,8 +3145,8 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("ALTER TABLE database_upgrade "
-                       "RENAME TO database;"));
+      "ALTER TABLE database_upgrade "
+      "RENAME TO database;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3155,10 +3155,8 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
   {
     // Make sure there's only one entry in the |database| table.
     nsCOMPtr<mozIStorageStatement> stmt;
-    MOZ_ASSERT(NS_SUCCEEDED(
-        aConnection.CreateStatement(nsLiteralCString("SELECT COUNT(*) "
-                                                     "FROM database;"),
-                                    getter_AddRefs(stmt))));
+    MOZ_ASSERT(NS_SUCCEEDED(aConnection.CreateStatement(
+        "SELECT COUNT(*) FROM database;"_ns, getter_AddRefs(stmt))));
 
     bool hasResult;
     MOZ_ASSERT(NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)));
@@ -3172,34 +3170,34 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
 
   // Recreate file table triggers.
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TRIGGER object_data_insert_trigger "
-                       "AFTER INSERT ON object_data "
-                       "WHEN NEW.file_ids IS NOT NULL "
-                       "BEGIN "
-                       "SELECT update_refcount(NULL, NEW.file_ids);"
-                       "END;"));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
-      "CREATE TRIGGER object_data_update_trigger "
-      "AFTER UPDATE OF file_ids ON object_data "
-      "WHEN OLD.file_ids IS NOT NULL OR NEW.file_ids IS NOT NULL "
+      "CREATE TRIGGER object_data_insert_trigger "
+      "AFTER INSERT ON object_data "
+      "WHEN NEW.file_ids IS NOT NULL "
       "BEGIN "
-      "SELECT update_refcount(OLD.file_ids, NEW.file_ids);"
-      "END;"));
+      "SELECT update_refcount(NULL, NEW.file_ids);"
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("CREATE TRIGGER object_data_delete_trigger "
-                       "AFTER DELETE ON object_data "
-                       "WHEN OLD.file_ids IS NOT NULL "
-                       "BEGIN "
-                       "SELECT update_refcount(OLD.file_ids, NULL);"
-                       "END;"));
+      "CREATE TRIGGER object_data_update_trigger "
+      "AFTER UPDATE OF file_ids ON object_data "
+      "WHEN OLD.file_ids IS NOT NULL OR NEW.file_ids IS NOT NULL "
+      "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NEW.file_ids);"
+      "END;"_ns);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection.ExecuteSimpleSQL(
+      "CREATE TRIGGER object_data_delete_trigger "
+      "AFTER DELETE ON object_data "
+      "WHEN OLD.file_ids IS NOT NULL "
+      "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NULL);"
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3242,45 +3240,45 @@ nsresult UpgradeSchemaFrom18_0To19_0(mozIStorageConnection& aConnection) {
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom18_0To19_0", DOM);
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("ALTER TABLE object_store_index "
-                       "ADD COLUMN locale TEXT;"));
+      "ALTER TABLE object_store_index "
+      "ADD COLUMN locale TEXT;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("ALTER TABLE object_store_index "
-                       "ADD COLUMN is_auto_locale BOOLEAN;"));
+      "ALTER TABLE object_store_index "
+      "ADD COLUMN is_auto_locale BOOLEAN;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("ALTER TABLE index_data "
-                       "ADD COLUMN value_locale BLOB;"));
+      "ALTER TABLE index_data "
+      "ADD COLUMN value_locale BLOB;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("ALTER TABLE unique_index_data "
-                       "ADD COLUMN value_locale BLOB;"));
+      "ALTER TABLE unique_index_data "
+      "ADD COLUMN value_locale BLOB;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE INDEX index_data_value_locale_index "
       "ON index_data (index_id, value_locale, object_data_key, value) "
-      "WHERE value_locale IS NOT NULL;"));
+      "WHERE value_locale IS NOT NULL;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE INDEX unique_index_data_value_locale_index "
       "ON unique_index_data (index_id, value_locale, object_data_key, value) "
-      "WHERE value_locale IS NOT NULL;"));
+      "WHERE value_locale IS NOT NULL;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3325,9 +3323,9 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection.CreateStatement(
-      nsLiteralCString("SELECT count(*) "
-                       "FROM object_data "
-                       "WHERE file_ids IS NOT NULL"),
+      "SELECT count(*) "
+      "FROM object_data "
+      "WHERE file_ids IS NOT NULL"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3388,22 +3386,22 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("UPDATE object_data "
-                       "SET file_ids = upgrade(file_ids, data) "
-                       "WHERE file_ids IS NOT NULL;"));
+      "UPDATE object_data "
+      "SET file_ids = upgrade(file_ids, data) "
+      "WHERE file_ids IS NOT NULL;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Enable update trigger.
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE TRIGGER object_data_update_trigger "
       "AFTER UPDATE OF file_ids ON object_data "
       "FOR EACH ROW "
       "WHEN OLD.file_ids IS NOT NULL OR NEW.file_ids IS NOT NULL "
       "BEGIN "
       "SELECT update_refcount(OLD.file_ids, NEW.file_ids); "
-      "END;"));
+      "END;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3581,9 +3579,9 @@ nsresult UpgradeSchemaFrom20_0To21_0(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("UPDATE object_data "
-                       "SET index_data_values = upgrade_idv(index_data_values) "
-                       "WHERE index_data_values IS NOT NULL;"));
+      "UPDATE object_data "
+      "SET index_data_values = upgrade_idv(index_data_values) "
+      "WHERE index_data_values IS NOT NULL;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3623,10 +3621,8 @@ nsresult UpgradeSchemaFrom22_0To23_0(mozIStorageConnection& aConnection,
   nsCOMPtr<mozIStorageStatement> stmt;
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  nsresult rv =
-      aConnection.CreateStatement(nsLiteralCString("UPDATE database "
-                                                   "SET origin = :origin;"),
-                                  getter_AddRefs(stmt));
+  nsresult rv = aConnection.CreateStatement(
+      "UPDATE database SET origin = :origin;"_ns, getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3745,9 +3741,9 @@ nsresult UpgradeSchemaFrom25_0To26_0(mozIStorageConnection& aConnection) {
   }
 
   rv = aConnection.ExecuteSimpleSQL(
-      nsLiteralCString("UPDATE DATABASE "
-                       "SET origin = strip_obsolete_attributes(origin) "
-                       "WHERE origin LIKE '%^%';"));
+      "UPDATE DATABASE "
+      "SET origin = strip_obsolete_attributes(origin) "
+      "WHERE origin LIKE '%^%';"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4211,8 +4207,8 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
       nsresult rv = connection->CreateStatement(
-          nsLiteralCString("INSERT INTO database (name, origin) "
-                           "VALUES (:name, :origin)"),
+          "INSERT INTO database (name, origin) "
+          "VALUES (:name, :origin)"_ns,
           getter_AddRefs(stmt));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return Err(rv);
@@ -4453,9 +4449,9 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
       rv = connection->CreateStatement(
-          nsLiteralCString("UPDATE database "
-                           "SET last_vacuum_time = :time"
-                           ", last_vacuum_size = :size;"),
+          "UPDATE database "
+          "SET last_vacuum_time = :time"
+          ", last_vacuum_size = :size;"_ns,
           getter_AddRefs(vacuumTimeStmt));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return Err(rv);
@@ -10797,8 +10793,7 @@ nsresult DatabaseConnection::StartSavepoint() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::StartSavepoint", DOM);
 
-  const nsresult rv =
-      ExecuteCachedStatement(nsLiteralCString(SAVEPOINT_CLAUSE));
+  const nsresult rv = ExecuteCachedStatement(SAVEPOINT_CLAUSE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10821,8 +10816,7 @@ nsresult DatabaseConnection::ReleaseSavepoint() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::ReleaseSavepoint", DOM);
 
-  nsresult rv =
-      ExecuteCachedStatement(nsLiteralCString("RELEASE " SAVEPOINT_CLAUSE));
+  nsresult rv = ExecuteCachedStatement("RELEASE "_ns SAVEPOINT_CLAUSE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10853,8 +10847,7 @@ nsresult DatabaseConnection::RollbackSavepoint() {
   mUpdateRefcountFunction->RollbackSavepoint();
 
   CachedStatement stmt;
-  nsresult rv = GetCachedStatement(
-      nsLiteralCString("ROLLBACK TO " SAVEPOINT_CLAUSE), &stmt);
+  nsresult rv = GetCachedStatement("ROLLBACK TO "_ns SAVEPOINT_CLAUSE, &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -11699,9 +11692,9 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     rv = connection->GetCachedStatement(
-        nsLiteralCString("UPDATE file "
-                         "SET refcount = refcount + :delta "
-                         "WHERE id = :id"),
+        "UPDATE file "
+        "SET refcount = refcount + :delta "
+        "WHERE id = :id"_ns,
         &mUpdateStatement);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -11735,10 +11728,11 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
     if (!mSelectStatement) {
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      rv = connection->GetCachedStatement(nsLiteralCString("SELECT id "
-                                                           "FROM file "
-                                                           "WHERE id = :id"),
-                                          &mSelectStatement);
+      rv = connection->GetCachedStatement(
+          "SELECT id "
+          "FROM file "
+          "WHERE id = :id"_ns,
+          &mSelectStatement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -11770,8 +11764,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     rv = connection->GetCachedStatement(
-        nsLiteralCString("INSERT INTO file (id, refcount) "
-                         "VALUES(:id, :delta)"),
+        "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns,
         &mInsertStatement);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -18477,8 +18470,8 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
   // Check to see when we last vacuumed this database.
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = aConnection.CreateStatement(
-      nsLiteralCString("SELECT last_vacuum_time, last_vacuum_size "
-                       "FROM database;"),
+      "SELECT last_vacuum_time, last_vacuum_size "
+      "FROM database;"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -18526,9 +18519,9 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
 
   // Create a temporary copy of the dbstat table to speed up the queries that
   // come later.
-  rv = aConnection.ExecuteSimpleSQL(nsLiteralCString(
+  rv = aConnection.ExecuteSimpleSQL(
       "CREATE VIRTUAL TABLE __stats__ USING dbstat;"
-      "CREATE TEMP TABLE __temp_stats__ AS SELECT * FROM __stats__;"));
+      "CREATE TEMP TABLE __temp_stats__ AS SELECT * FROM __stats__;"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -18536,11 +18529,10 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
   // Calculate the percentage of the database pages that are not in contiguous
   // order.
   rv = aConnection.CreateStatement(
-      nsLiteralCString(
-          "SELECT SUM(__ts1__.pageno != __ts2__.pageno + 1) * 100.0 / COUNT(*) "
-          "FROM __temp_stats__ AS __ts1__, __temp_stats__ AS __ts2__ "
-          "WHERE __ts1__.name = __ts2__.name "
-          "AND __ts1__.rowid = __ts2__.rowid + 1;"),
+      "SELECT SUM(__ts1__.pageno != __ts2__.pageno + 1) * 100.0 / COUNT(*) "
+      "FROM __temp_stats__ AS __ts1__, __temp_stats__ AS __ts2__ "
+      "WHERE __ts1__.name = __ts2__.name "
+      "AND __ts1__.rowid = __ts2__.rowid + 1;"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -18612,8 +18604,7 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
 
   // Calculate the percentage of unused bytes on pages in the database.
   rv = aConnection.CreateStatement(
-      nsLiteralCString("SELECT SUM(unused) * 100.0 / SUM(pgsize) "
-                       "FROM __temp_stats__;"),
+      "SELECT SUM(unused) * 100.0 / SUM(pgsize) FROM __temp_stats__;"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -18688,9 +18679,9 @@ void DatabaseMaintenance::FullVacuum(mozIStorageConnection& aConnection,
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
   rv = aConnection.CreateStatement(
-      nsLiteralCString("UPDATE database "
-                       "SET last_vacuum_time = :time"
-                       ", last_vacuum_size = :size;"),
+      "UPDATE database "
+      "SET last_vacuum_time = :time"
+      ", last_vacuum_size = :size;"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -19276,10 +19267,10 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
       stmt.Reset();
     } else if (info.mUnique) {
       rv = aConnection->GetCachedStatement(
-          nsLiteralCString("INSERT INTO unique_index_data "
-                           "(index_id, value, object_store_id, "
-                           "object_data_key, value_locale) "
-                           "VALUES (:") +
+          "INSERT INTO unique_index_data "
+          "(index_id, value, object_store_id, "
+          "object_data_key, value_locale) "
+          "VALUES (:"_ns +
               kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue +
               ", :"_ns + kStmtParamNameObjectStoreId + ", :"_ns +
               kStmtParamNameObjectDataKey + ", :"_ns +
@@ -19290,10 +19281,10 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
       }
     } else {
       rv = aConnection->GetCachedStatement(
-          nsLiteralCString("INSERT OR IGNORE INTO index_data "
-                           "(index_id, value, object_data_key, "
-                           "object_store_id, value_locale) "
-                           "VALUES (:") +
+          "INSERT OR IGNORE INTO index_data "
+          "(index_id, value, object_data_key, "
+          "object_store_id, value_locale) "
+          "VALUES (:"_ns +
               kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue +
               ", :"_ns + kStmtParamNameObjectDataKey + ", :"_ns +
               kStmtParamNameObjectStoreId + ", :"_ns +
@@ -19385,8 +19376,7 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
       stmt.Reset();
     } else if (indexValue.mUnique) {
       rv = aConnection->GetCachedStatement(
-          nsLiteralCString("DELETE FROM unique_index_data "
-                           "WHERE index_id = :") +
+          "DELETE FROM unique_index_data WHERE index_id = :"_ns +
               kStmtParamNameIndexId + " AND value = :"_ns +
               kStmtParamNameValue + ";"_ns,
           &stmt);
@@ -19395,8 +19385,7 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
       }
     } else {
       rv = aConnection->GetCachedStatement(
-          nsLiteralCString("DELETE FROM index_data "
-                           "WHERE index_id = :") +
+          "DELETE FROM index_data WHERE index_id = :"_ns +
               kStmtParamNameIndexId + " AND value = :"_ns +
               kStmtParamNameValue + " AND object_data_key = :"_ns +
               kStmtParamNameObjectDataKey + ";"_ns,
@@ -19461,9 +19450,9 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
   if (singleRowOnly) {
     rv = aConnection->GetCachedStatement(
-        nsLiteralCString("SELECT index_data_values "
-                         "FROM object_data "
-                         "WHERE object_store_id = :") +
+        "SELECT index_data_values "
+        "FROM object_data "
+        "WHERE object_store_id = :"_ns +
             kStmtParamNameObjectStoreId + " AND key = :"_ns +
             kStmtParamNameKey + ";"_ns,
         &selectStmt);
@@ -19483,9 +19472,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
     rv = aConnection->GetCachedStatement(
         "SELECT index_data_values, "_ns + kColumnNameKey +
-            nsLiteralCString(" "
-                             "FROM object_data "
-                             "WHERE object_store_id = :") +
+            " FROM object_data WHERE object_store_id = :"_ns +
             kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns,
         &selectStmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -19535,8 +19522,8 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
       MOZ_ALWAYS_SUCCEEDS(deleteStmt->Reset());
     } else {
       rv = aConnection->GetCachedStatement(
-          nsLiteralCString("DELETE FROM object_data "
-                           "WHERE object_store_id = :") +
+          "DELETE FROM object_data "
+          "WHERE object_store_id = :"_ns +
               kStmtParamNameObjectStoreId + " AND key = :"_ns +
               kStmtParamNameKey + ";"_ns,
           &deleteStmt);
@@ -19594,8 +19581,7 @@ nsresult DatabaseOperationBase::UpdateIndexValues(
 
   DatabaseConnection::CachedStatement updateStmt;
   rv = aConnection->ExecuteCachedStatement(
-      nsLiteralCString("UPDATE object_data "
-                       "SET index_data_values = :") +
+      "UPDATE object_data SET index_data_values = :"_ns +
           kStmtParamNameIndexDataValues + " WHERE object_store_id = :"_ns +
           kStmtParamNameObjectStoreId + " AND key = :"_ns + kStmtParamNameKey +
           ";"_ns,
@@ -19643,9 +19629,9 @@ nsresult DatabaseOperationBase::ObjectStoreHasIndexes(
   DatabaseConnection::CachedStatement stmt;
 
   nsresult rv = aConnection->GetCachedStatement(
-      nsLiteralCString("SELECT id "
-                       "FROM object_store_index "
-                       "WHERE object_store_id = :") +
+      "SELECT id "
+      "FROM object_store_index "
+      "WHERE object_store_id = :"_ns +
           kStmtParamNameObjectStoreId + kOpenLimit + "1;"_ns,
       &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -20971,9 +20957,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
   // Load version information.
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection.CreateStatement(
-      nsLiteralCString("SELECT name, origin, version "
-                       "FROM database"),
-      getter_AddRefs(stmt));
+      "SELECT name, origin, version FROM database"_ns, getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21021,8 +21005,8 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
   // Load object store names and ids.
   rv = aConnection.CreateStatement(
-      nsLiteralCString("SELECT id, auto_increment, name, key_path "
-                       "FROM object_store"),
+      "SELECT id, auto_increment, name, key_path "
+      "FROM object_store"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -21126,11 +21110,10 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
   // Load index information
   rv = aConnection.CreateStatement(
-      nsLiteralCString(
-          "SELECT "
-          "id, object_store_id, name, key_path, unique_index, multientry, "
-          "locale, is_auto_locale "
-          "FROM object_store_index"),
+      "SELECT "
+      "id, object_store_id, name, key_path, unique_index, multientry, "
+      "locale, is_auto_locale "
+      "FROM object_store_index"_ns,
       getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -21381,9 +21364,9 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
-  nsCString metaQuery = nsLiteralCString(
+  static constexpr auto metaQuery =
       "UPDATE object_store_index SET "
-      "locale = :locale WHERE id = :id");
+      "locale = :locale WHERE id = :id"_ns;
   nsCOMPtr<mozIStorageStatement> metaStmt;
   rv = aConnection.CreateStatement(metaQuery, getter_AddRefs(metaStmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -21901,8 +21884,7 @@ nsresult OpenDatabaseOp::VersionChangeOp::DoDatabaseWork(
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
   rv = aConnection->ExecuteCachedStatement(
-      nsLiteralCString("UPDATE database "
-                       "SET version = :version;"),
+      "UPDATE database SET version = :version;"_ns,
       [this](mozIStorageStatement& updateStmt) {
         nsresult rv =
             updateStmt.BindInt64ByIndex(0, int64_t(mRequestedVersion));
@@ -21993,8 +21975,7 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
 #ifdef DEBUG
   {
     nsCOMPtr<mozIStorageStatement> stmt;
-    rv = connection->CreateStatement(nsLiteralCString("SELECT name "
-                                                      "FROM database"),
+    rv = connection->CreateStatement("SELECT name FROM database"_ns,
                                      getter_AddRefs(stmt));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
@@ -22017,8 +21998,7 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
 #endif
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  rv = connection->CreateStatement(nsLiteralCString("SELECT version "
-                                                    "FROM database"),
+  rv = connection->CreateStatement("SELECT version FROM database"_ns,
                                    getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -22701,9 +22681,9 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
         // The parameter names are not used, parameters are bound by index only
         // locally in the same function.
         rv = connection->GetCachedStatement(
-            nsLiteralCString("UPDATE object_store "
-                             "SET auto_increment = :auto_increment WHERE id "
-                             "= :object_store_id;"),
+            "UPDATE object_store "
+            "SET auto_increment = :auto_increment WHERE id "
+            "= :object_store_id;"_ns,
             &stmt);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -23164,9 +23144,9 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     MOZ_ALWAYS_SUCCEEDS(
-        aConnection->GetCachedStatement(nsLiteralCString("SELECT name "
-                                                         "FROM object_store "
-                                                         "WHERE name = :name;"),
+        aConnection->GetCachedStatement("SELECT name "
+                                        "FROM object_store "
+                                        "WHERE name = :name;"_ns,
                                         &stmt));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mMetadata.name()));
@@ -23191,9 +23171,8 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
   rv = aConnection->ExecuteCachedStatement(
-      nsLiteralCString(
-          "INSERT INTO object_store (id, auto_increment, name, key_path) "
-          "VALUES (:id, :auto_increment, :name, :key_path);"),
+      "INSERT INTO object_store (id, auto_increment, name, key_path) "
+      "VALUES (:id, :auto_increment, :name, :key_path);"_ns,
       [this](mozIStorageStatement& stmt) {
         nsresult rv = stmt.BindInt64ByIndex(0, mMetadata.id());
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -23256,10 +23235,8 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   {
     // Make sure |mIsLastObjectStore| is telling the truth.
     DatabaseConnection::CachedStatement stmt;
-    MOZ_ALWAYS_SUCCEEDS(
-        aConnection->GetCachedStatement(nsLiteralCString("SELECT id "
-                                                         "FROM object_store;"),
-                                        &stmt));
+    MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
+        "SELECT id FROM object_store;"_ns, &stmt));
 
     bool foundThisObjectStore = false;
     bool foundOtherObjectStore = false;
@@ -23347,8 +23324,8 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
       rv = aConnection->ExecuteCachedStatement(
-          nsLiteralCString("DELETE FROM object_store_index "
-                           "WHERE object_store_id = :object_store_id;"),
+          "DELETE FROM object_store_index "
+          "WHERE object_store_id = :object_store_id;"_ns,
           [this](mozIStorageStatement& stmt) {
             nsresult rv =
                 stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
@@ -23367,8 +23344,8 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
       rv = aConnection->ExecuteCachedStatement(
-          nsLiteralCString("DELETE FROM object_data "
-                           "WHERE object_store_id = :object_store_id;"),
+          "DELETE FROM object_data "
+          "WHERE object_store_id = :object_store_id;"_ns,
           [this](mozIStorageStatement& stmt) {
             nsresult rv =
                 stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
@@ -23386,8 +23363,8 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     rv = aConnection->ExecuteCachedStatement(
-        nsLiteralCString("DELETE FROM object_store "
-                         "WHERE id = :object_store_id;"),
+        "DELETE FROM object_store "
+        "WHERE id = :object_store_id;"_ns,
         [this](mozIStorageStatement& stmt) {
           nsresult rv =
               stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
@@ -23438,11 +23415,11 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     DatabaseConnection::CachedStatement stmt;
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
-        nsLiteralCString("SELECT name "
-                         "FROM object_store "
-                         "WHERE name = :name AND id != :id;"),
-        &stmt));
+    MOZ_ALWAYS_SUCCEEDS(
+        aConnection->GetCachedStatement("SELECT name "
+                                        "FROM object_store "
+                                        "WHERE name = :name AND id != :id;"_ns,
+                                        &stmt));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mNewName));
 
@@ -23468,9 +23445,9 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
   rv = aConnection->ExecuteCachedStatement(
-      nsLiteralCString("UPDATE object_store "
-                       "SET name = :name "
-                       "WHERE id = :id;"),
+      "UPDATE object_store "
+      "SET name = :name "
+      "WHERE id = :id;"_ns,
       [this](mozIStorageStatement& stmt) {
         nsresult rv = stmt.BindStringByIndex(0, mNewName);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -23553,10 +23530,10 @@ nsresult CreateIndexOp::InsertDataFromObjectStoreInternal(
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
   const nsresult rv = aConnection->ExecuteCachedStatement(
-      nsLiteralCString("UPDATE object_data "
-                       "SET index_data_values = update_index_data_values "
-                       "(key, index_data_values, file_ids, data) "
-                       "WHERE object_store_id = :object_store_id;"),
+      "UPDATE object_data "
+      "SET index_data_values = update_index_data_values "
+      "(key, index_data_values, file_ids, data) "
+      "WHERE object_store_id = :object_store_id;"_ns,
       [this](mozIStorageStatement& stmt) {
         nsresult rv = stmt.BindInt64ByIndex(0, mObjectStoreId);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -23623,10 +23600,9 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
-        nsLiteralCString(
-            "SELECT name "
-            "FROM object_store_index "
-            "WHERE object_store_id = :object_store_id AND name = :name;"),
+        "SELECT name "
+        "FROM object_store_index "
+        "WHERE object_store_id = :object_store_id AND name = :name;"_ns,
         &stmt));
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(1, mMetadata.name()));
@@ -23652,12 +23628,11 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
   rv = aConnection->ExecuteCachedStatement(
-      nsLiteralCString(
-          "INSERT INTO object_store_index (id, name, key_path, unique_index, "
-          "multientry, object_store_id, locale, "
-          "is_auto_locale) "
-          "VALUES (:id, :name, :key_path, :unique, :multientry, "
-          ":object_store_id, :locale, :is_auto_locale)"),
+      "INSERT INTO object_store_index (id, name, key_path, unique_index, "
+      "multientry, object_store_id, locale, "
+      "is_auto_locale) "
+      "VALUES (:id, :name, :key_path, :unique, :multientry, "
+      ":object_store_id, :locale, :is_auto_locale)"_ns,
       [this](mozIStorageStatement& stmt) {
         nsresult rv = stmt.BindInt64ByIndex(0, mMetadata.id());
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -23938,9 +23913,9 @@ nsresult DeleteIndexOp::RemoveReferencesToIndex(
     // column if this is the last index. Simply set it to NULL.
     DatabaseConnection::CachedStatement stmt;
     nsresult rv = aConnection->GetCachedStatement(
-        nsLiteralCString("UPDATE object_data "
-                         "SET index_data_values = NULL "
-                         "WHERE object_store_id = :") +
+        "UPDATE object_data "
+        "SET index_data_values = NULL "
+        "WHERE object_store_id = :"_ns +
             kStmtParamNameObjectStoreId + " AND key = :"_ns +
             kStmtParamNameKey + ";"_ns,
         &stmt);
@@ -24012,9 +23987,9 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
-        nsLiteralCString("SELECT id "
-                         "FROM object_store_index "
-                         "WHERE object_store_id = :object_store_id;"),
+        "SELECT id "
+        "FROM object_store_index "
+        "WHERE object_store_id = :object_store_id;"_ns,
         &stmt));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
@@ -24066,50 +24041,48 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   if (mUnique) {
     if (mIsLastIndex) {
       rv = aConnection->GetCachedStatement(
-          nsLiteralCString("/* do not warn (bug someone else) */ "
-                           "SELECT value, object_data_key "
-                           "FROM unique_index_data "
-                           "WHERE index_id = :") +
+          "/* do not warn (bug someone else) */ "
+          "SELECT value, object_data_key "
+          "FROM unique_index_data "
+          "WHERE index_id = :"_ns +
               kStmtParamNameIndexId + " ORDER BY object_data_key ASC;"_ns,
           &selectStmt);
     } else {
       rv = aConnection->GetCachedStatement(
-          nsLiteralCString(
-              "/* do not warn (bug out) */ "
-              "SELECT unique_index_data.value, "
-              "unique_index_data.object_data_key, "
-              "object_data.index_data_values "
-              "FROM unique_index_data "
-              "JOIN object_data "
-              "ON unique_index_data.object_data_key = object_data.key "
-              "WHERE unique_index_data.index_id = :") +
+          "/* do not warn (bug out) */ "
+          "SELECT unique_index_data.value, "
+          "unique_index_data.object_data_key, "
+          "object_data.index_data_values "
+          "FROM unique_index_data "
+          "JOIN object_data "
+          "ON unique_index_data.object_data_key = object_data.key "
+          "WHERE unique_index_data.index_id = :"_ns +
               kStmtParamNameIndexId +
               " AND object_data.object_store_id = :"_ns +
               kStmtParamNameObjectStoreId +
-              nsLiteralCString(
-                  " ORDER BY unique_index_data.object_data_key ASC;"),
+              " ORDER BY unique_index_data.object_data_key ASC;"_ns,
           &selectStmt);
     }
   } else {
     if (mIsLastIndex) {
       rv = aConnection->GetCachedStatement(
-          nsLiteralCString("/* do not warn (bug me not) */ "
-                           "SELECT value, object_data_key "
-                           "FROM index_data "
-                           "WHERE index_id = :") +
+          "/* do not warn (bug me not) */ "
+          "SELECT value, object_data_key "
+          "FROM index_data "
+          "WHERE index_id = :"_ns +
               kStmtParamNameIndexId + " AND object_store_id = :"_ns +
               kStmtParamNameObjectStoreId + " ORDER BY object_data_key ASC;"_ns,
           &selectStmt);
     } else {
       rv = aConnection->GetCachedStatement(
-          nsLiteralCString("/* do not warn (bug off) */ "
-                           "SELECT index_data.value, "
-                           "index_data.object_data_key, "
-                           "object_data.index_data_values "
-                           "FROM index_data "
-                           "JOIN object_data "
-                           "ON index_data.object_data_key = object_data.key "
-                           "WHERE index_data.index_id = :") +
+          "/* do not warn (bug off) */ "
+          "SELECT index_data.value, "
+          "index_data.object_data_key, "
+          "object_data.index_data_values "
+          "FROM index_data "
+          "JOIN object_data "
+          "ON index_data.object_data_key = object_data.key "
+          "WHERE index_data.index_id = :"_ns +
               kStmtParamNameIndexId +
               " AND object_data.object_store_id = :"_ns +
               kStmtParamNameObjectStoreId +
@@ -24208,15 +24181,15 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     } else {
       if (mUnique) {
         rv = aConnection->GetCachedStatement(
-            nsLiteralCString("DELETE FROM unique_index_data "
-                             "WHERE index_id = :") +
+            "DELETE FROM unique_index_data "
+            "WHERE index_id = :"_ns +
                 kStmtParamNameIndexId + " AND value = :"_ns +
                 kStmtParamNameValue + ";"_ns,
             &deleteIndexRowStmt);
       } else {
         rv = aConnection->GetCachedStatement(
-            nsLiteralCString("DELETE FROM index_data "
-                             "WHERE index_id = :") +
+            "DELETE FROM index_data "
+            "WHERE index_id = :"_ns +
                 kStmtParamNameIndexId + " AND value = :"_ns +
                 kStmtParamNameValue + " AND object_data_key = :"_ns +
                 kStmtParamNameObjectDataKey + ";"_ns,
@@ -24266,8 +24239,8 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   rv = aConnection->ExecuteCachedStatement(
-      nsLiteralCString("DELETE FROM object_store_index "
-                       "WHERE id = :index_id;"),
+      "DELETE FROM object_store_index "
+      "WHERE id = :index_id;"_ns,
       [this](mozIStorageStatement& deleteStmt) {
         nsresult rv = deleteStmt.BindInt64ByIndex(0, mIndexId);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -24312,11 +24285,11 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
     MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
-        nsLiteralCString("SELECT name "
-                         "FROM object_store_index "
-                         "WHERE object_store_id = :object_store_id "
-                         "AND name = :name "
-                         "AND id != :id;"),
+        "SELECT name "
+        "FROM object_store_index "
+        "WHERE object_store_id = :object_store_id "
+        "AND name = :name "
+        "AND id != :id;"_ns,
         &stmt));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
@@ -24347,9 +24320,9 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
   rv = aConnection->ExecuteCachedStatement(
-      nsLiteralCString("UPDATE object_store_index "
-                       "SET name = :name "
-                       "WHERE id = :id;"),
+      "UPDATE object_store_index "
+      "SET name = :name "
+      "WHERE id = :id;"_ns,
       [this](mozIStorageStatement& stmt) {
         nsresult rv = stmt.BindStringByIndex(0, mNewName);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -24591,9 +24564,9 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
 
   DatabaseConnection::CachedStatement indexValuesStmt;
   nsresult rv = aConnection->GetCachedStatement(
-      nsLiteralCString("SELECT index_data_values "
-                       "FROM object_data "
-                       "WHERE object_store_id = :") +
+      "SELECT index_data_values "
+      "FROM object_data "
+      "WHERE object_store_id = :"_ns +
           kStmtParamNameObjectStoreId + " AND key = :"_ns + kStmtParamNameKey +
           ";"_ns,
       &indexValuesStmt);
@@ -24782,9 +24755,9 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
       (!mOverwrite || keyUnset) ? ""_ns : "OR REPLACE "_ns;
   rv = aConnection->GetCachedStatement(
       "INSERT "_ns + optReplaceDirective +
-          nsLiteralCString("INTO object_data "
-                           "(object_store_id, key, file_ids, data) "
-                           "VALUES (:") +
+          "INTO object_data "
+          "(object_store_id, key, file_ids, data) "
+          "VALUES (:"_ns +
           kStmtParamNameObjectStoreId + ", :"_ns + kStmtParamNameKey +
           ", :"_ns + kStmtParamNameFileIds + ", :"_ns + kStmtParamNameData +
           ");"_ns,
@@ -25167,12 +25140,12 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
     limitClause.AppendInt(mLimit);
   }
 
-  nsCString query = nsLiteralCString(
-                        "SELECT file_ids, data "
-                        "FROM object_data "
-                        "WHERE object_store_id = :") +
-                    kStmtParamNameObjectStoreId + keyRangeClause +
-                    " ORDER BY key ASC"_ns + limitClause;
+  const nsCString query =
+      "SELECT file_ids, data "
+      "FROM object_data "
+      "WHERE object_store_id = :"_ns +
+      kStmtParamNameObjectStoreId + keyRangeClause + " ORDER BY key ASC"_ns +
+      limitClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -25330,12 +25303,12 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
     limitClause.AppendInt(mLimit);
   }
 
-  nsCString query = nsLiteralCString(
-                        "SELECT key "
-                        "FROM object_data "
-                        "WHERE object_store_id = :") +
-                    kStmtParamNameObjectStoreId + keyRangeClause +
-                    " ORDER BY key ASC"_ns + limitClause;
+  const nsCString query =
+      "SELECT key "
+      "FROM object_data "
+      "WHERE object_store_id = :"_ns +
+      kStmtParamNameObjectStoreId + keyRangeClause + " ORDER BY key ASC"_ns +
+      limitClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -25453,8 +25426,8 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
         GetBindingClauseForKeyRange(mParams.keyRange(), kColumnNameKey);
 
     rv = aConnection->ExecuteCachedStatement(
-        nsLiteralCString("DELETE FROM object_data "
-                         "WHERE object_store_id = :") +
+        "DELETE FROM object_data "
+        "WHERE object_store_id = :"_ns +
             kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns,
         [this](mozIStorageStatement& stmt) {
           nsresult rv = stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
@@ -25530,8 +25503,8 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
            ? DeleteObjectStoreDataTableRowsWithIndexes(
                  aConnection, mParams.objectStoreId(), Nothing())
            : aConnection->ExecuteCachedStatement(
-                 nsLiteralCString("DELETE FROM object_data "
-                                  "WHERE object_store_id = :object_store_id;"),
+                 "DELETE FROM object_data "
+                 "WHERE object_store_id = :object_store_id;"_ns,
                  [this](mozIStorageStatement& stmt) {
                    nsresult rv =
                        stmt.BindInt64ByIndex(0, mParams.objectStoreId());
@@ -25563,11 +25536,11 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
   const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
       mParams.optionalKeyRange(), kColumnNameKey);
 
-  nsCString query = nsLiteralCString(
-                        "SELECT count(*) "
-                        "FROM object_data "
-                        "WHERE object_store_id = :") +
-                    kStmtParamNameObjectStoreId + keyRangeClause;
+  const nsCString query =
+      "SELECT count(*) "
+      "FROM object_data "
+      "WHERE object_store_id = :"_ns +
+      kStmtParamNameObjectStoreId + keyRangeClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -25719,19 +25692,18 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     limitClause.AppendInt(mLimit);
   }
 
-  nsCString query = nsLiteralCString(
-                        "SELECT file_ids, data "
-                        "FROM object_data "
-                        "INNER JOIN ") +
-                    indexTable +
-                    nsLiteralCString(
-                        "AS index_table "
-                        "ON object_data.object_store_id = "
-                        "index_table.object_store_id "
-                        "AND object_data.key = "
-                        "index_table.object_data_key "
-                        "WHERE index_id = :") +
-                    kStmtParamNameIndexId + keyRangeClause + limitClause;
+  const nsCString query =
+      "SELECT file_ids, data "
+      "FROM object_data "
+      "INNER JOIN "_ns +
+      indexTable +
+      "AS index_table "
+      "ON object_data.object_store_id = "
+      "index_table.object_store_id "
+      "AND object_data.key = "
+      "index_table.object_data_key "
+      "WHERE index_id = :"_ns +
+      kStmtParamNameIndexId + keyRangeClause + limitClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -25871,11 +25843,11 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     limitClause.AppendInt(mLimit);
   }
 
-  nsCString query = nsLiteralCString(
-                        "SELECT object_data_key "
-                        "FROM ") +
-                    indexTable + "WHERE index_id = :"_ns +
-                    kStmtParamNameIndexId + keyRangeClause + limitClause;
+  const nsCString query =
+      "SELECT object_data_key "
+      "FROM "_ns +
+      indexTable + "WHERE index_id = :"_ns + kStmtParamNameIndexId +
+      keyRangeClause + limitClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -25961,11 +25933,11 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
       mParams.optionalKeyRange(), kColumnNameValue);
 
-  nsCString query = nsLiteralCString(
-                        "SELECT count(*) "
-                        "FROM ") +
-                    indexTable + "WHERE index_id = :"_ns +
-                    kStmtParamNameIndexId + keyRangeClause;
+  const nsCString query =
+      "SELECT count(*) "
+      "FROM "_ns +
+      indexTable + "WHERE index_id = :"_ns + kStmtParamNameIndexId +
+      keyRangeClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -26319,9 +26291,8 @@ void IndexOpenOpHelper<CursorType>::PrepareIndexKeyConditionClause(
 
       continuePrimaryKeyQuery =
           aQueryStart +
-          nsLiteralCString(
-              " AND ("
-              "(") +
+          " AND ("
+          "("_ns +
           GetSortKeyClause(ComparisonOperator::Equals,
                            kStmtParamNameCurrentKey) +
           " AND "_ns +
@@ -26405,12 +26376,11 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStore>::DoDatabaseWork(
 
   const bool usingKeyRange = GetOptionalKeyRange().isSome();
 
-  nsCString queryStart = "SELECT "_ns + kColumnNameKey +
-                         nsLiteralCString(
-                             ", file_ids, data "
-                             "FROM object_data "
-                             "WHERE object_store_id = :") +
-                         kStmtParamNameId;
+  const nsCString queryStart = "SELECT "_ns + kColumnNameKey +
+                               ", file_ids, data "
+                               "FROM object_data "
+                               "WHERE object_store_id = :"_ns +
+                               kStmtParamNameId;
 
   const auto keyRangeClause =
       DatabaseOperationBase::MaybeGetBindingClauseForKeyRange(
@@ -26459,11 +26429,10 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStoreKey>::DoDatabaseWork(
 
   const bool usingKeyRange = GetOptionalKeyRange().isSome();
 
-  nsCString queryStart = "SELECT "_ns + kColumnNameKey +
-                         nsLiteralCString(
-                             " FROM object_data "
-                             "WHERE object_store_id = :") +
-                         kStmtParamNameId;
+  const nsCString queryStart = "SELECT "_ns + kColumnNameKey +
+                               " FROM object_data "
+                               "WHERE object_store_id = :"_ns +
+                               kStmtParamNameId;
 
   const auto keyRangeClause =
       DatabaseOperationBase::MaybeGetBindingClauseForKeyRange(
@@ -26524,22 +26493,20 @@ nsresult OpenOpHelper<IDBCursorType::Index>::DoDatabaseWork(
   const nsCString sortColumnAlias =
       "SELECT "_ns + columnPairSelectionList + ", "_ns;
 
-  nsAutoCString queryStart = sortColumnAlias +
-                             nsLiteralCString(
-                                 "index_table.object_data_key, "
-                                 "object_data.file_ids, "
-                                 "object_data.data "
-                                 "FROM ") +
-                             indexTable +
-                             nsLiteralCString(
-                                 " AS index_table "
-                                 "JOIN object_data "
-                                 "ON index_table.object_store_id = "
-                                 "object_data.object_store_id "
-                                 "AND index_table.object_data_key = "
-                                 "object_data.key "
-                                 "WHERE index_table.index_id = :") +
-                             kStmtParamNameId;
+  const nsAutoCString queryStart = sortColumnAlias +
+                                   "index_table.object_data_key, "
+                                   "object_data.file_ids, "
+                                   "object_data.data "
+                                   "FROM "_ns +
+                                   indexTable +
+                                   " AS index_table "
+                                   "JOIN object_data "
+                                   "ON index_table.object_store_id = "
+                                   "object_data.object_store_id "
+                                   "AND index_table.object_data_key = "
+                                   "object_data.key "
+                                   "WHERE index_table.index_id = :"_ns +
+                                   kStmtParamNameId;
 
   const auto keyRangeClause =
       DatabaseOperationBase::MaybeGetBindingClauseForKeyRange(
