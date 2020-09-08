@@ -331,7 +331,10 @@ class Preprocessor:
         #  2: #else found
         self.ifStates = []
         self.checkLineNumbers = False
+
+        # A list of (filter_name, filter_function) pairs.
         self.filters = []
+
         self.cmds = {}
         for cmd, level in (
             ('define', 0),
@@ -769,10 +772,6 @@ class Preprocessor:
         if rest:
             aLine += '\n'
         return aLine
-
-    # spaces: Collapses sequences of spaces into a single space.
-    def filter_spaces(self, aLine):
-        return re.sub(' +', ' ', aLine).strip(' ')
 
     # substitution: variables wrapped in @ are replaced with their value.
     def filter_substitution(self, aLine, fatal=True):
