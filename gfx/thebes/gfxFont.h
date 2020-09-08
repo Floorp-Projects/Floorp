@@ -766,6 +766,10 @@ class gfxShapedText {
       GLYPH_COUNT_SHIFT = 8
     };
 
+    // Reset glyph info (but not the CAN_BREAK_BEFORE flags) in the record,
+    // so that the record represents a zero-width missing glyph.
+    void ClearGlyphInfo() { mValue &= ~FLAGS_CAN_BREAK_BEFORE; }
+
     // "Simple glyphs" have a simple glyph ID, simple advance and their
     // x and y offsets are zero. Also the glyph extents do not overflow
     // the font-box defined by the font ascent, descent and glyph advance width.
