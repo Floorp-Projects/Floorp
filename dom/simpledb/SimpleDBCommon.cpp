@@ -13,10 +13,11 @@ const char* kPrefSimpleDBEnabled = "dom.simpleDB.enabled";
 
 namespace simpledb {
 
-void HandleError(const nsLiteralCString& aExpr,
-                 const nsLiteralCString& aSourceFile, int32_t aSourceLine) {
-  mozilla::dom::quota::LogError(nsLiteralCString("SimpleDB"), aExpr,
-                                aSourceFile, aSourceLine);
+void HandleError(const char* const aExpr, const char* const aSourceFile,
+                 const int32_t aSourceLine) {
+  mozilla::dom::quota::LogError(nsLiteralCString("SimpleDB"),
+                                nsDependentCString(aExpr),
+                                nsDependentCString(aSourceFile), aSourceLine);
 }
 
 }  // namespace simpledb
