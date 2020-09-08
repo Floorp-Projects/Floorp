@@ -12,7 +12,6 @@ mod boilerplate;
 
 use crate::boilerplate::{Example, HandyDandyRectBuilder};
 use webrender::api::*;
-use webrender::render_api::*;
 use webrender::api::units::*;
 
 // This example uses the push_iframe API to nest a second pipeline's displaylist
