@@ -503,6 +503,9 @@ class nsDocShell final : public nsDocLoader,
   void SetLoadingSessionHistoryInfo(
       const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo);
 
+  already_AddRefed<nsIInputStream> GetPostDataFromCurrentEntry() const;
+  Maybe<uint32_t> GetCacheKeyFromCurrentEntry() const;
+
   static bool ShouldAddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel);
 
   bool IsOSHE(nsISHEntry* aEntry) const { return mOSHE == aEntry; }

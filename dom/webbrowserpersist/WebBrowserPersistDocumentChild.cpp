@@ -57,9 +57,7 @@ void WebBrowserPersistDocumentChild::Start(
   ENSURE(aDocument->GetTitle(attrs.title()));
   ENSURE(aDocument->GetContentDisposition(attrs.contentDisposition()));
 
-  if (!StaticPrefs::fission_sessionHistoryInParent()) {
-    attrs.sessionHistoryEntryOrCacheKey() = aDocument->GetCacheKey();
-  }
+  attrs.sessionHistoryCacheKey() = aDocument->GetCacheKey();
 
   ENSURE(aDocument->GetPersistFlags(&(attrs.persistFlags())));
 
