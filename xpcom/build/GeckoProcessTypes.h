@@ -39,3 +39,8 @@ GECKO_PROCESS_TYPE(Socket, "socket", Socket, Self)
 GECKO_PROCESS_TYPE(RemoteSandboxBroker, "sandboxbroker", RemoteSandboxBroker,
                    PluginContainer)
 GECKO_PROCESS_TYPE(ForkServer, "forkserver", ForkServer, Self)
+
+// NOTE: if you add new process types, please ensure that you update
+// widget/ProcInfo.h and any new sandbox environment variables are added
+// in build/pgo/profileserver.py to ensure your new process participates in
+// PGO profile generation.
