@@ -49,6 +49,7 @@
 
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
@@ -307,6 +308,9 @@ mozJSComponentLoader::~mozJSComponentLoader() {
 
 StaticRefPtr<mozJSComponentLoader> mozJSComponentLoader::sSelf;
 
+// True if ShutdownPhase::ShutdownFinal has been reached.
+static bool sShutdownFinal = false;
+
 nsresult mozJSComponentLoader::ReallyInit() {
   MOZ_ASSERT(!mInitialized);
 
@@ -516,6 +520,8 @@ void mozJSComponentLoader::FindTargetObject(JSContext* aCx,
 void mozJSComponentLoader::InitStatics() {
   MOZ_ASSERT(!sSelf);
   sSelf = new mozJSComponentLoader();
+
+  RunOnShutdown([&] { sShutdownFinal = true; });
 }
 
 void mozJSComponentLoader::Unload() {
@@ -1217,6 +1223,12 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
   UniquePtr<ModuleEntry> newEntry;
   if (!mImports.Get(info.Key(), &mod) &&
       !mInProgressImports.Get(info.Key(), &mod)) {
+    // We're trying to import a new JSM, but we're late in shutdown and this
+    // will likely not succeed and might even crash, so fail here.
+    if (sShutdownFinal) {
+      return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+    }
+
     newEntry = MakeUnique<ModuleEntry>(RootingContext::get(aCx));
 
     // Note: This implies EnsureURI().
