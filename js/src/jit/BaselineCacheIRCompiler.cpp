@@ -10,6 +10,7 @@
 #include "jit/Linker.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
+#include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
 #include "util/Unicode.h"

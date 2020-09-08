@@ -18,6 +18,7 @@
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"  // IsIonEnabled
 #include "jit/JitContext.h"
+#include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowIfWindowProxy
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo, JS::XrayJitInfo
 #include "js/ScalarType.h"  // js::Scalar::Type
