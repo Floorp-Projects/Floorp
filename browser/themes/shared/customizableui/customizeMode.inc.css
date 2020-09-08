@@ -169,7 +169,7 @@
 }
 
 #customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon {
-  background-image: url("resource://gre/modules/themes/default/icon.svg");
+  background-image: url("chrome://mozapps/content/extensions/default-theme/icon.svg");
 }
 
 #customization-uidensity-button > .box-inherit > .box-inherit > .button-icon {
