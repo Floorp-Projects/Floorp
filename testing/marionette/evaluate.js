@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebElement: "chrome://marionette/content/element.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 const ARGUMENTS = "__webDriverArguments";
 const CALLBACK = "__webDriverCallback";
@@ -312,7 +312,7 @@ evaluate.toJSON = function(obj, seenEls) {
       rv[prop] = evaluate.toJSON(obj[prop], seenEls);
     } catch (e) {
       if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
-        log.debug(`Skipping ${prop}: ${e.message}`);
+        logger.debug(`Skipping ${prop}: ${e.message}`);
       } else {
         throw e;
       }
