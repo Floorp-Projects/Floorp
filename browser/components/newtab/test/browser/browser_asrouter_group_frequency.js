@@ -36,7 +36,7 @@ add_task(async function setup() {
     set: [
       [
         "browser.newtabpage.activity-stream.asrouter.providers.cfr",
-        `{"id":"cfr","enabled":true,"type":"remote-settings","bucket":"cfr","categories":["cfrAddons","cfrFeatures"],"updateCycleInMs":0}`,
+        `{"id":"cfr","enabled":true,"type":"remote-settings","bucket":"cfr","updateCycleInMs":0}`,
       ],
     ],
   });
@@ -85,7 +85,6 @@ add_task(async function test_heartbeat_tactic_2() {
   const groupConfiguration = {
     id: "messaging-experiments",
     enabled: true,
-    userPreferences: [],
     frequency: { lifetime: 2 },
   };
   const client = RemoteSettings("message-groups");
@@ -175,8 +174,7 @@ add_task(async function test_heartbeat_tactic_2() {
   info("Cleanup");
   await client.db.clear();
   // Reset group impressions
-  await ASRouter.setGroupState({ id: "messaging-experiments", value: true });
-  await ASRouter.setGroupState({ id: "cfr", value: true });
+  await ASRouter.resetGroupsState();
   // Reload the providers
   await ASRouter._updateMessageProviders();
   await ASRouter.loadMessagesFromAllProviders();
