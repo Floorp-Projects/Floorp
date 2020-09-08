@@ -109,7 +109,6 @@ rawPackets.set(`GET request update`, {
     "responseStart",
     "securityInfo"
   ],
-  "updateType": "responseContent",
   "totalTime": 3,
   "securityState": "insecure"
 });
@@ -203,7 +202,6 @@ rawPackets.set(`XHR GET request update`, {
     "responseStart",
     "securityInfo"
   ],
-  "updateType": "responseContent",
   "totalTime": 1,
   "securityState": "insecure"
 });
@@ -297,7 +295,6 @@ rawPackets.set(`XHR POST request update`, {
     "responseStart",
     "securityInfo"
   ],
-  "updateType": "responseContent",
   "totalTime": 2,
   "securityState": "insecure"
 });
