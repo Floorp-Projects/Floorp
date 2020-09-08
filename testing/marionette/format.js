@@ -10,11 +10,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
-const { MarionettePrefs } = ChromeUtils.import(
-  "chrome://marionette/content/prefs.js",
-  null
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "chrome://marionette/content/log.js",
+  MarionettePrefs: "chrome://marionette/content/prefs.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 

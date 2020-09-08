@@ -6,10 +6,6 @@
 
 const EXPORTED_SYMBOLS = ["navigate"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
 /** @namespace */
 this.navigate = {};
 

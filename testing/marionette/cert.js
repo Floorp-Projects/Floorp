@@ -6,12 +6,13 @@
 
 const EXPORTED_SYMBOLS = ["allowAllCerts"];
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.jsm",
+});
 
 const sss = Cc["@mozilla.org/ssservice;1"].getService(
   Ci.nsISiteSecurityService

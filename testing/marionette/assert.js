@@ -6,20 +6,18 @@
 
 const EXPORTED_SYMBOLS = ["assert"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
-
 XPCOMUtils.defineLazyModuleGetters(this, {
-  evaluate: "chrome://marionette/content/evaluate.js",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+
   browser: "chrome://marionette/content/browser.js",
+  error: "chrome://marionette/content/error.js",
+  evaluate: "chrome://marionette/content/evaluate.js",
+  pprint: "chrome://marionette/content/format.js",
 });
 
 const isFennec = () => AppConstants.platform == "android";

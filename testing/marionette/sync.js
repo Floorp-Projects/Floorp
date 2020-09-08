@@ -17,19 +17,18 @@ const EXPORTED_SYMBOLS = [
   "waitForObserverTopic",
 ];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { truncate } = ChromeUtils.import(
-  "chrome://marionette/content/format.js"
-);
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+
+  error: "chrome://marionette/content/error.js",
+  Log: "chrome://marionette/content/log.js",
+  truncate: "chrome://marionette/content/format.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 

@@ -6,11 +6,14 @@
 
 const EXPORTED_SYMBOLS = ["Branch", "MarionettePrefs"];
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "resource://gre/modules/Log.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -202,6 +205,7 @@ class MarionetteBranch extends Branch {
         return Log.Level.Trace;
       case "info":
       default:
+        dump(`*** log: ${Log}\n\n`);
         return Log.Level.Info;
     }
   }

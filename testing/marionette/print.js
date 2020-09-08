@@ -6,17 +6,19 @@
 
 const EXPORTED_SYMBOLS = ["print"];
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { clearInterval, setInterval } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  clearInterval: "resource://gre/modules/Timer.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  setInterval: "resource://gre/modules/Timer.jsm",
+
+  assert: "chrome://marionette/content/assert.js",
+  Log: "chrome://marionette/content/log.js",
+  pprint: "chrome://marionette/content/format.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 

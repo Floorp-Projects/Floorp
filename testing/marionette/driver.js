@@ -7,71 +7,52 @@
 
 const EXPORTED_SYMBOLS = ["GeckoDriver"];
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { accessibility } = ChromeUtils.import(
-  "chrome://marionette/content/accessibility.js"
-);
-const { Addon } = ChromeUtils.import("chrome://marionette/content/addon.js");
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { atom } = ChromeUtils.import("chrome://marionette/content/atom.js");
-const { browser, Context, WindowState } = ChromeUtils.import(
-  "chrome://marionette/content/browser.js"
-);
-const { Capabilities, Timeouts, UnhandledPromptBehavior } = ChromeUtils.import(
-  "chrome://marionette/content/capabilities.js"
-);
-const { capture } = ChromeUtils.import(
-  "chrome://marionette/content/capture.js"
-);
-const { allowAllCerts } = ChromeUtils.import(
-  "chrome://marionette/content/cert.js"
-);
-const { cookie } = ChromeUtils.import("chrome://marionette/content/cookie.js");
-const { WebElementEventTarget } = ChromeUtils.import(
-  "chrome://marionette/content/dom.js"
-);
-const { ChromeWebElement, element, WebElement } = ChromeUtils.import(
-  "chrome://marionette/content/element.js"
-);
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { Sandboxes, evaluate } = ChromeUtils.import(
-  "chrome://marionette/content/evaluate.js"
-);
-const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
-const { interaction } = ChromeUtils.import(
-  "chrome://marionette/content/interaction.js"
-);
-const { l10n } = ChromeUtils.import("chrome://marionette/content/l10n.js");
-const { legacyaction } = ChromeUtils.import(
-  "chrome://marionette/content/legacyaction.js"
-);
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
-const { modal } = ChromeUtils.import("chrome://marionette/content/modal.js");
-const { navigate } = ChromeUtils.import(
-  "chrome://marionette/content/navigate.js"
-);
-const { MarionettePrefs } = ChromeUtils.import(
-  "chrome://marionette/content/prefs.js",
-  null
-);
-const { print } = ChromeUtils.import("chrome://marionette/content/print.js");
-const { proxy } = ChromeUtils.import("chrome://marionette/content/proxy.js");
-const { reftest } = ChromeUtils.import(
-  "chrome://marionette/content/reftest.js"
-);
-const {
-  DebounceCallback,
-  IdlePromise,
-  PollPromise,
-  TimedPromise,
-  waitForEvent,
-  waitForObserverTopic,
-} = ChromeUtils.import("chrome://marionette/content/sync.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  OS: "resource://gre/modules/osfile.jsm",
+
+  accessibility: "chrome://marionette/content/accessibility.js",
+  Addon: "chrome://marionette/content/addon.js",
+  allowAllCerts: "chrome://marionette/content/cert.js",
+  assert: "chrome://marionette/content/assert.js",
+  atom: "chrome://marionette/content/atom.js",
+  browser: "chrome://marionette/content/browser.js",
+  Capabilities: "chrome://marionette/content/capabilities.js",
+  capture: "chrome://marionette/content/capture.js",
+  ChromeWebElement: "chrome://marionette/content/element.js",
+  Context: "chrome://marionette/content/browser.js",
+  cookie: "chrome://marionette/content/cookie.js",
+  DebounceCallback: "chrome://marionette/content/sync.js",
+  element: "chrome://marionette/content/element.js",
+  error: "chrome://marionette/content/error.js",
+  evaluate: "chrome://marionette/content/evaluate.js",
+  IdlePromise: "chrome://marionette/content/sync.js",
+  interaction: "chrome://marionette/content/interaction.js",
+  l10n: "chrome://marionette/content/l10n.js",
+  legacyaction: "chrome://marionette/content/legacyaction.js",
+  Log: "chrome://marionette/content/log.js",
+  MarionettePrefs: "chrome://marionette/content/prefs.js",
+  modal: "chrome://marionette/content/modal.js",
+  navigate: "chrome://marionette/content/navigate.js",
+  PollPromise: "chrome://marionette/content/sync.js",
+  pprint: "chrome://marionette/content/format.js",
+  print: "chrome://marionette/content/print.js",
+  proxy: "chrome://marionette/content/proxy.js",
+  reftest: "chrome://marionette/content/reftest.js",
+  Sandboxes: "chrome://marionette/content/evaluate.js",
+  TimedPromise: "chrome://marionette/content/sync.js",
+  Timeouts: "chrome://marionette/content/capabilities.js",
+  UnhandledPromptBehavior: "chrome://marionette/content/capabilities.js",
+  waitForEvent: "chrome://marionette/content/sync.js",
+  waitForObserverTopic: "chrome://marionette/content/sync.js",
+  WebElement: "chrome://marionette/content/element.js",
+  WebElementEventTarget: "chrome://marionette/content/dom.js",
+  WindowState: "chrome://marionette/content/browser.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);

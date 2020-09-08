@@ -6,30 +6,24 @@
 
 const EXPORTED_SYMBOLS = ["reftest"];
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { capture } = ChromeUtils.import(
-  "chrome://marionette/content/capture.js"
-);
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
-const { print } = ChromeUtils.import("chrome://marionette/content/print.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+
+  assert: "chrome://marionette/content/assert.js",
+  capture: "chrome://marionette/content/capture.js",
+  error: "chrome://marionette/content/error.js",
+  Log: "chrome://marionette/content/log.js",
+  print: "chrome://marionette/content/print.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

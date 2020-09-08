@@ -2,23 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-disable no-restricted-globals */
+
+"use strict";
+
 const EXPORTED_SYMBOLS = ["legacyaction"];
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { element, WebElement } = ChromeUtils.import(
-  "chrome://marionette/content/element.js"
-);
-const { evaluate } = ChromeUtils.import(
-  "chrome://marionette/content/evaluate.js"
-);
-const { event } = ChromeUtils.import("chrome://marionette/content/event.js");
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.jsm",
+
+  element: "chrome://marionette/content/element.js",
+  error: "chrome://marionette/content/error.js",
+  evaluate: "chrome://marionette/content/evaluate.js",
+  event: "chrome://marionette/content/event.js",
+  Log: "chrome://marionette/content/log.js",
+  WebElement: "chrome://marionette/content/element.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 

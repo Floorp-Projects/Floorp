@@ -9,10 +9,13 @@
 const EXPORTED_SYMBOLS = ["event"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-const { element } = ChromeUtils.import(
-  "chrome://marionette/content/element.js"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  element: "chrome://marionette/content/element.js",
+});
 
 /** Provides functionality for creating and sending DOM events. */
 this.event = {};

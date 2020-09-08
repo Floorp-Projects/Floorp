@@ -6,12 +6,16 @@
 
 const EXPORTED_SYMBOLS = ["StreamUtils"];
 
-const CC = Components.Constructor;
-
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+});
+
+const CC = Components.Constructor;
 
 const IOUtil = Cc["@mozilla.org/io-util;1"].getService(Ci.nsIIOUtil);
 const ScriptableInputStream = CC(

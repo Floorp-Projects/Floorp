@@ -14,13 +14,17 @@ const EXPORTED_SYMBOLS = [
   "WebElement",
 ];
 
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { atom } = ChromeUtils.import("chrome://marionette/content/atom.js");
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
-const { PollPromise } = ChromeUtils.import(
-  "chrome://marionette/content/sync.js"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  assert: "chrome://marionette/content/assert.js",
+  atom: "chrome://marionette/content/atom.js",
+  error: "chrome://marionette/content/error.js",
+  PollPromise: "chrome://marionette/content/sync.js",
+  pprint: "chrome://marionette/content/format.js",
+});
 
 const ORDERED_NODE_ITERATOR_TYPE = 5;
 const FIRST_ORDERED_NODE_TYPE = 9;
