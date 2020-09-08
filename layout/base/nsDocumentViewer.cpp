@@ -1855,7 +1855,7 @@ nsDocumentViewer::SetDocumentInternal(Document* aDocument,
       aDocument->SetNavigationTiming(mDocument->GetNavigationTiming());
     }
 
-    if (mDocument->IsStaticDocument()) {
+    if (mDocument && mDocument->IsStaticDocument()) {
       mDocument->Destroy();
     }
 
