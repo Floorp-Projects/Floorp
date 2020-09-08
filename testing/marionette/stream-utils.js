@@ -15,9 +15,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
-const CC = Components.Constructor;
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "IOUtil",
+  "@mozilla.org/io-util;1",
+  "nsIIOUtil"
+);
 
-const IOUtil = Cc["@mozilla.org/io-util;1"].getService(Ci.nsIIOUtil);
+const CC = Components.Constructor;
 const ScriptableInputStream = CC(
   "@mozilla.org/scriptableinputstream;1",
   "nsIScriptableInputStream",
