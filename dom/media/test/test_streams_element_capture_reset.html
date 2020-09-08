@@ -48,6 +48,7 @@ function isGreaterThanOrEqualEps(a, b, msg) {
 
 async function startTest(test) {
   const seekTime = test.duration/2;
+  const contentDuration = test.contentDuration ?? test.duration;
 
   v.src = test.name;
   v.name = test.name;
@@ -85,7 +86,7 @@ async function startTest(test) {
     new Promise(r => vout_untilended.onended = r),
   ]);
 
-  isGreaterThanOrEqualEps(vout.currentTime, test.duration,
+  isGreaterThanOrEqualEps(vout.currentTime, contentDuration,
     "checking vout.currentTime at first 'ended' event");
   ok(vout.ended, "checking vout has actually ended");
   ok(vout_untilended.ended, "checking vout_untilended has actually ended");
@@ -111,7 +112,7 @@ async function startTest(test) {
 
   await new Promise(r => vout.onended = r);
   isGreaterThanOrEqualEps(vout.currentTime,
-    (test.duration - seekTime) + test.duration,
+    (test.duration - seekTime) + contentDuration,
     "checking vout.currentTime after seeking and playing through again");
 
   v.src = test.name + "?1";
@@ -148,7 +149,7 @@ async function startTest(test) {
 
   await new Promise(r => vout.onended = r);
   isGreaterThanOrEqualEps(vout.currentTime,
-    (test.duration - seekTime) + test.duration*2,
+    (test.duration - seekTime) + contentDuration*2,
     "checking vout.currentTime after seeking, playing through and reloading");
 }
 

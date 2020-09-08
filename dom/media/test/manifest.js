@@ -53,6 +53,7 @@ var gSmallTests = [
     width: 320,
     height: 240,
     duration: 0.266,
+    contentDuration: 0.133,
   },
   {
     name: "seek-short.webm",
