@@ -12,7 +12,7 @@ job-defaults:
             default: null
     variants:
         by-test-platform:
-            linux.*64/debug: ['fission', 'socketprocess_networking']
+            linux.*64/debug: ['fission']
             default: ['fission']
     run-on-projects: built-projects
     fission-run-on-projects:
