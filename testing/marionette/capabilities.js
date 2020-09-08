@@ -27,15 +27,19 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-// Enable testing this module, as Services.appinfo.* is not available
-// in xpcshell tests.
-const appinfo = { name: "<missing>", version: "<missing>" };
-try {
-  appinfo.name = Services.appinfo.name.toLowerCase();
-} catch (e) {}
-try {
-  appinfo.version = Services.appinfo.version;
-} catch (e) {}
+XPCOMUtils.defineLazyGetter(this, "appinfo", () => {
+  // Enable testing this module, as Services.appinfo.* is not available
+  // in xpcshell tests.
+  const appinfo = { name: "<missing>", version: "<missing>" };
+  try {
+    appinfo.name = Services.appinfo.name.toLowerCase();
+  } catch (e) {}
+  try {
+    appinfo.version = Services.appinfo.version;
+  } catch (e) {}
+
+  return appinfo;
+});
 
 /** Representation of WebDriver session timeouts. */
 class Timeouts {

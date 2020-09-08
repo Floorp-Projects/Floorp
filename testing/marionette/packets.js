@@ -14,6 +14,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   StreamUtils: "chrome://marionette/content/stream-utils.js",
 });
 
+XPCOMUtils.defineLazyGetter(this, "unicodeConverter", () => {
+  const unicodeConverter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
+  unicodeConverter.charset = "UTF-8";
+
+  return unicodeConverter;
+});
+
 /**
  * Packets contain read / write functionality for the different packet types
  * supported by the debugging protocol, so that a transport can focus on
@@ -33,11 +42,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  *   * destroy()
  *     Called to clean up at the end of use
  */
-
-const unicodeConverter = Cc[
-  "@mozilla.org/intl/scriptableunicodeconverter"
-].createInstance(Ci.nsIScriptableUnicodeConverter);
-unicodeConverter.charset = "UTF-8";
 
 const defer = function() {
   let deferred = {
