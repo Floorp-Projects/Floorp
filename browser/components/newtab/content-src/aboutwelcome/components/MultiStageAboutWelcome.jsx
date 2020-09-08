@@ -201,7 +201,9 @@ export class WelcomeScreen extends React.PureComponent {
 
   renderSecondaryCTA(className) {
     return (
-      <div className={`secondary-cta ${className}`}>
+      <div
+        className={className ? `secondary-cta ${className}` : `secondary-cta`}
+      >
         <Localized text={this.props.content.secondary_button.text}>
           <span />
         </Localized>
