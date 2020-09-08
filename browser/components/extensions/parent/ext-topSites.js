@@ -89,22 +89,26 @@ this.topSites = class extends ExtensionAPI {
             links = links.slice(0, options.limit);
           }
 
-          return links.map(link => ({
-            type: link.searchTopSite ? "search" : "url",
-            url: link.url,
-            // The newtab page allows the user to set custom site titles, which
-            // are stored in `label`, so prefer it.  Search top sites currently
-            // don't have titles but `hostname` instead.
-            title: link.label || link.title || link.hostname || "",
-            // Default top sites don't have a favicon property.  Instead they
-            // have tippyTopIcon, a 96x96pt image used on the newtab page.
-            // We'll use it as the favicon for now, but ideally default top
-            // sites would have real favicons.  Non-default top sites (i.e.,
-            // those from the user's history) will have favicons.
-            favicon: options.includeFavicon
-              ? link.favicon || link.tippyTopIcon || null
-              : null,
-          }));
+          const makeDataURI = url => url && ExtensionUtils.makeDataURI(url);
+
+          return Promise.all(
+            links.map(async link => ({
+              type: link.searchTopSite ? "search" : "url",
+              url: link.url,
+              // The newtab page allows the user to set custom site titles, which
+              // are stored in `label`, so prefer it.  Search top sites currently
+              // don't have titles but `hostname` instead.
+              title: link.label || link.title || link.hostname || "",
+              // Default top sites don't have a favicon property.  Instead they
+              // have tippyTopIcon, a 96x96pt image used on the newtab page.
+              // We'll use it as the favicon for now, but ideally default top
+              // sites would have real favicons.  Non-default top sites (i.e.,
+              // those from the user's history) will have favicons.
+              favicon: options.includeFavicon
+                ? link.favicon || (await makeDataURI(link.tippyTopIcon)) || null
+                : null,
+            }))
+          );
         },
       },
     };
