@@ -1,7 +1,7 @@
-#[macro_use]
-extern crate syn;
-
+use proc_macro2::{Delimiter, Group, Punct, Spacing, TokenStream, TokenTree};
+use std::iter::FromIterator;
 use syn::parse::{discouraged::Speculative, Parse, ParseStream, Parser, Result};
+use syn::{parenthesized, Token};
 
 #[test]
 #[should_panic(expected = "Fork was not derived from the advancing parse stream")]
@@ -52,4 +52,39 @@ fn smuggled_speculative_cursor_into_brackets() {
     }
 
     syn::parse_str::<BreakRules>("()").unwrap();
+}
+
+#[test]
+fn trailing_empty_none_group() {
+    fn parse(input: ParseStream) -> Result<()> {
+        input.parse::<Token![+]>()?;
+
+        let content;
+        parenthesized!(content in input);
+        content.parse::<Token![+]>()?;
+
+        Ok(())
+    }
+
+    // `+ ( + <Ø Ø> ) <Ø <Ø Ø> Ø>`
+    let tokens = TokenStream::from_iter(vec![
+        TokenTree::Punct(Punct::new('+', Spacing::Alone)),
+        TokenTree::Group(Group::new(
+            Delimiter::Parenthesis,
+            TokenStream::from_iter(vec![
+                TokenTree::Punct(Punct::new('+', Spacing::Alone)),
+                TokenTree::Group(Group::new(Delimiter::None, TokenStream::new())),
+            ]),
+        )),
+        TokenTree::Group(Group::new(Delimiter::None, TokenStream::new())),
+        TokenTree::Group(Group::new(
+            Delimiter::None,
+            TokenStream::from_iter(vec![TokenTree::Group(Group::new(
+                Delimiter::None,
+                TokenStream::new(),
+            ))]),
+        )),
+    ]);
+
+    parse.parse2(tokens).unwrap();
 }

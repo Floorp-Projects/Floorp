@@ -1,7 +1,7 @@
 //! A trait that can provide the `Span` of the complete contents of a syntax
 //! tree node.
 //!
-//! *This module is available if Syn is built with both the `"parsing"` and
+//! *This module is available only if Syn is built with both the `"parsing"` and
 //! `"printing"` features.*
 //!
 //! <br>
@@ -97,7 +97,7 @@ use quote::spanned::Spanned as ToTokens;
 ///
 /// [module documentation]: self
 ///
-/// *This trait is available if Syn is built with both the `"parsing"` and
+/// *This trait is available only if Syn is built with both the `"parsing"` and
 /// `"printing"` features.*
 pub trait Spanned {
     /// Returns a `Span` covering the complete contents of this syntax tree

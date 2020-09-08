@@ -1,20 +1,20 @@
-extern crate proc_macro2;
-extern crate syn;
-extern crate syntax;
-extern crate syntax_pos;
+extern crate rustc_ast;
+extern crate rustc_expand;
+extern crate rustc_parse as parse;
+extern crate rustc_session;
+extern crate rustc_span;
 
-use self::syntax::ast;
-use self::syntax::parse::{self, ParseSess};
-use self::syntax::ptr::P;
-use self::syntax::source_map::FilePathMapping;
-use self::syntax_pos::FileName;
+use rustc_ast::ast;
+use rustc_ast::ptr::P;
+use rustc_session::parse::ParseSess;
+use rustc_span::source_map::FilePathMapping;
+use rustc_span::FileName;
 
 use std::panic;
 
-pub fn libsyntax_expr(input: &str) -> Option<P<ast::Expr>> {
+pub fn librustc_expr(input: &str) -> Option<P<ast::Expr>> {
     match panic::catch_unwind(|| {
         let sess = ParseSess::new(FilePathMapping::empty());
-        sess.span_diagnostic.set_continue_after_error(false);
         let e = parse::new_parser_from_source_str(
             &sess,
             FileName::Custom("test_precedence".to_string()),
@@ -32,7 +32,7 @@ pub fn libsyntax_expr(input: &str) -> Option<P<ast::Expr>> {
         Ok(Some(e)) => Some(e),
         Ok(None) => None,
         Err(_) => {
-            errorf!("libsyntax panicked\n");
+            errorf!("librustc panicked\n");
             None
         }
     }

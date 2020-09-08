@@ -86,7 +86,7 @@
 ///     }
 /// }
 /// ```
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! custom_keyword {
     ($ident:ident) => {
         #[allow(non_camel_case_types)]
@@ -95,7 +95,7 @@ macro_rules! custom_keyword {
         }
 
         #[doc(hidden)]
-        #[allow(non_snake_case)]
+        #[allow(dead_code, non_snake_case)]
         pub fn $ident<__S: $crate::export::IntoSpans<[$crate::export::Span; 1]>>(
             span: __S,
         ) -> $ident {
@@ -112,10 +112,10 @@ macro_rules! custom_keyword {
             }
         }
 
-        impl_parse_for_custom_keyword!($ident);
-        impl_to_tokens_for_custom_keyword!($ident);
-        impl_clone_for_custom_keyword!($ident);
-        impl_extra_traits_for_custom_keyword!($ident);
+        $crate::impl_parse_for_custom_keyword!($ident);
+        $crate::impl_to_tokens_for_custom_keyword!($ident);
+        $crate::impl_clone_for_custom_keyword!($ident);
+        $crate::impl_extra_traits_for_custom_keyword!($ident);
     };
 }
 
