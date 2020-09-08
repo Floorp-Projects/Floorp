@@ -689,7 +689,6 @@ pref("gfx.webrender.debug.primitives", false);
 pref("gfx.webrender.debug.small-screen", false);
 pref("gfx.webrender.debug.obscure-images", false);
 pref("gfx.webrender.debug.glyph-flashing", false);
-pref("gfx.webrender.debug.disable-raster-root-scale", false);
 pref("gfx.webrender.debug.capture-profiler", false);
 
 
