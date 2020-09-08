@@ -11,13 +11,12 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.ext.readSnapshot
-import mozilla.components.browser.session.ext.writeState
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 import java.util.Locale
@@ -33,7 +32,7 @@ private val sessionFileLock = Any()
 class SessionStorage(
     private val context: Context,
     private val engine: Engine,
-    private val crashReporting: CrashReporting?
+    private val crashReporting: CrashReporting? = null
 ) : AutoSave.Storage {
     private val logger = Logger("SessionStorage")
     private val snapshotSerializer = SnapshotSerializer()
@@ -76,7 +75,8 @@ class SessionStorage(
 
         return synchronized(sessionFileLock) {
             try {
-                getFileForEngine(context, engine).writeState(state, stateSerializer)
+                val file = getFileForEngine(context, engine)
+                stateSerializer.write(state, file)
             } catch (e: OutOfMemoryError) {
                 crashReporting?.submitCaughtException(e)
                 logger.error("Failed to save state to disk due to OutOfMemoryError", e)

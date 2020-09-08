@@ -5,6 +5,7 @@
 package mozilla.components.browser.session.ext
 
 import android.util.AtomicFile
+import android.util.JsonWriter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -25,6 +26,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doThrow
@@ -83,6 +85,10 @@ class AtomicFileKtTest {
 
         val engineSessionState = object : EngineSessionState {
             override fun toJSON() = JSONObject()
+            override fun writeTo(writer: JsonWriter) {
+                writer.beginObject()
+                writer.endObject()
+            }
         }
 
         val engine = mock(Engine::class.java)
@@ -105,7 +111,7 @@ class AtomicFileKtTest {
             selectedTabId = session1.id
         )
 
-        file.writeState(state)
+        assertTrue(file.writeState(state))
 
         // Read it back
         val restoredSnapshot = file.readSnapshot(engine)
@@ -184,6 +190,10 @@ class AtomicFileKtTest {
     private fun writeSnapshotItem(engine: Engine, session: Session): AtomicFile {
         val engineSessionState = object : EngineSessionState {
             override fun toJSON() = JSONObject()
+            override fun writeTo(writer: JsonWriter) {
+                writer.beginObject()
+                writer.endObject()
+            }
         }
 
         `when`(engine.name()).thenReturn("gecko")

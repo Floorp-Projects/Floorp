@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.util.JsonWriter
 import mozilla.components.concept.engine.EngineSessionState
 import org.json.JSONException
 import org.json.JSONObject
@@ -20,6 +21,18 @@ class GeckoEngineSessionState internal constructor(
             // store this String using a single Map entry with key GECKO_STATE_KEY.
 
             put(GECKO_STATE_KEY, actualState.toString())
+        }
+    }
+
+    override fun writeTo(writer: JsonWriter) {
+        with(writer) {
+            beginObject()
+
+            name(GECKO_STATE_KEY)
+            value(actualState.toString())
+
+            endObject()
+            flush()
         }
     }
 

@@ -19,6 +19,7 @@ import org.mozilla.geckoview.GeckoSession
 class GeckoEngineSessionStateTest {
 
     @Test
+    @Suppress("DEPRECATION")
     fun toJSON() {
         val geckoState: GeckoSession.SessionState = mock()
         doReturn("<state>").`when`(geckoState).toString()

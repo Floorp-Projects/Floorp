@@ -48,6 +48,7 @@ class SnapshotSerializerTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
     fun `Serialize and deserialize with engine session state`() {
         val engineSessionState: EngineSessionState = mock()
         val engineSessionJson = JSONObject().apply { put("state", "test") }

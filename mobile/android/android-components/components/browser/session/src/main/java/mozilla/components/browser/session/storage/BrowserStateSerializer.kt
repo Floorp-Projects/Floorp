@@ -4,10 +4,12 @@
 
 package mozilla.components.browser.session.storage
 
+import android.util.AtomicFile
+import android.util.JsonWriter
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
-import org.json.JSONArray
-import org.json.JSONObject
+import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.support.ktx.util.streamJSON
 
 private const val VERSION = 2
 
@@ -15,57 +17,95 @@ private const val VERSION = 2
  * Helper to transform [BrowserState] instances to JSON and.
  */
 class BrowserStateSerializer {
-
     /**
-     * Serializes the provided [BrowserState] to JSON.
-     *
-     * @param state the state to serialize.
-     * @return the serialized state as JSON.
+     * Writes the [BrowserState] to [file] as JSON.
      */
-    fun toJSON(state: BrowserState): String {
-        val json = JSONObject()
-        json.put(Keys.VERSION_KEY, VERSION)
-        json.put(Keys.SELECTED_TAB_ID_KEY, state.selectedTabId)
+    fun write(
+        state: BrowserState,
+        file: AtomicFile
+    ): Boolean = file.streamJSON { state(state) }
+}
 
-        val sessions = JSONArray()
-        state.tabs.filter { !it.content.private }.forEachIndexed { index, tab ->
-            sessions.put(index, tabToJSON(tab))
-        }
+/**
+ * Writes [BrowserState] to [JsonWriter].
+ */
+private fun JsonWriter.state(
+    state: BrowserState
+) {
+    beginObject()
 
-        json.put(Keys.SESSION_STATE_TUPLES_KEY, sessions)
+    name(Keys.VERSION_KEY)
+    value(VERSION)
 
-        return json.toString()
+    name(Keys.SELECTED_TAB_ID_KEY)
+    value(state.selectedTabId)
+
+    name(Keys.SESSION_STATE_TUPLES_KEY)
+
+    beginArray()
+
+    state.tabs.filter { !it.content.private }.forEachIndexed { _, tab ->
+        tab(tab)
     }
 
-    /**
-     * Serializes the provided [TabSessionState] to JSON.
-     *
-     * @param tab the [TabSessionState] to serialize.
-     * @return the serialized state.
-     */
-    private fun tabToJSON(tab: TabSessionState): JSONObject {
-        val itemJson = JSONObject()
+    endArray()
 
-        val sessionJson = JSONObject().apply {
-            put(Keys.SESSION_URL_KEY, tab.content.url)
-            put(Keys.SESSION_UUID_KEY, tab.id)
-            put(Keys.SESSION_PARENT_UUID_KEY, tab.parentId ?: "")
-            put(Keys.SESSION_TITLE, tab.content.title)
-            put(Keys.SESSION_CONTEXT_ID_KEY, tab.contextId)
-        }
+    endObject()
+}
 
-        sessionJson.put(Keys.SESSION_READER_MODE_KEY, tab.readerState.active)
+/**
+ * Writes a [TabSessionState] to [JsonWriter].
+ */
+private fun JsonWriter.tab(
+    tab: TabSessionState
+) {
+    beginObject()
+
+    name(Keys.SESSION_KEY)
+    beginObject().apply {
+        name(Keys.SESSION_URL_KEY)
+        value(tab.content.url)
+
+        name(Keys.SESSION_UUID_KEY)
+        value(tab.id)
+
+        name(Keys.SESSION_PARENT_UUID_KEY)
+        value(tab.parentId ?: "")
+
+        name(Keys.SESSION_TITLE)
+        value(tab.content.title)
+
+        name(Keys.SESSION_CONTEXT_ID_KEY)
+        value(tab.contextId)
+
+        name(Keys.SESSION_READER_MODE_KEY)
+        value(tab.readerState.active)
+
+        name(Keys.SESSION_LAST_ACCESS)
+        value(tab.lastAccess)
+
         if (tab.readerState.active && tab.readerState.activeUrl != null) {
-            sessionJson.put(Keys.SESSION_READER_MODE_ACTIVE_URL_KEY, tab.readerState.activeUrl)
+            name(Keys.SESSION_READER_MODE_ACTIVE_URL_KEY)
+            value(tab.readerState.activeUrl)
         }
-        sessionJson.put(Keys.SESSION_LAST_ACCESS, tab.lastAccess)
 
-        itemJson.put(Keys.SESSION_KEY, sessionJson)
+        endObject()
+    }
 
-        val engineSessionState = tab.engineState.engineSessionState
-        val engineSessionStateJson = engineSessionState?.toJSON() ?: JSONObject()
-        itemJson.put(Keys.ENGINE_SESSION_KEY, engineSessionStateJson)
+    name(Keys.ENGINE_SESSION_KEY)
+    engineSession(tab.engineState.engineSessionState)
 
-        return itemJson
+    endObject()
+}
+
+/**
+ * Writes a (nullable) [EngineSessionState] to [JsonWriter].
+ */
+private fun JsonWriter.engineSession(engineSessionState: EngineSessionState?) {
+    if (engineSessionState == null) {
+        beginObject()
+        endObject()
+    } else {
+        engineSessionState.writeTo(this)
     }
 }

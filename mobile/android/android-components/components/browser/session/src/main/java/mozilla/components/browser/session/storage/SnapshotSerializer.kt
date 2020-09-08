@@ -48,6 +48,10 @@ class SnapshotSerializer(
         return json.toString()
     }
 
+    /**
+     * Turns a [SessionManager.Snapshot.Item] into a [JSONObject] for writing to disk.
+     */
+    @Suppress("DEPRECATION")
     fun itemToJSON(item: SessionManager.Snapshot.Item): JSONObject {
         val itemJson = JSONObject()
 
