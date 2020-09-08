@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_quota_quotacommon_h__
 #define mozilla_dom_quota_quotacommon_h__
 
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsPrintfCString.h"
@@ -728,6 +729,22 @@ auto CollectWhile(const Cond& aCond, const Body& aBody)
     -> Result<mozilla::Ok, typename std::result_of_t<Cond()>::err_type> {
   return CollectEach(aCond, [&aBody](bool) { return aBody(); });
 }
+
+template <>
+class MOZ_MUST_USE_TYPE GenericErrorResult<mozilla::ipc::IPCResult> {
+  mozilla::ipc::IPCResult mErrorValue;
+
+  template <typename V, typename E2>
+  friend class Result;
+
+ public:
+  explicit GenericErrorResult(mozilla::ipc::IPCResult aErrorValue)
+      : mErrorValue(aErrorValue) {
+    MOZ_ASSERT(!aErrorValue);
+  }
+
+  operator mozilla::ipc::IPCResult() const { return mErrorValue; }
+};
 
 namespace dom {
 namespace quota {
