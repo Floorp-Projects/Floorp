@@ -841,12 +841,6 @@ class ContentParent final
   bool ShouldKeepProcessAlive();
 
   /**
-   * Mark this ContentParent as "troubled". This means that it is still alive,
-   * but it won't be returned for new tabs in GetNewOrUsedBrowserProcess.
-   */
-  void MarkAsTroubled();
-
-  /**
    * Mark this ContentParent as dead for the purposes of Get*().
    * This method is idempotent.
    */
