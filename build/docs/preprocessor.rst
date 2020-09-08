@@ -185,9 +185,6 @@ emptyLines
 slashslash
    strips everything from the first two consecutive slash (``/``)
    characters until the end of the line
-spaces
-   collapses consecutive sequences of spaces into a single space,
-   and strips leading and trailing spaces
 substitution
    all variables wrapped in @ are replaced with their value. If the
    variable is not defined, it is a fatal error. Similar to ``#expand``
