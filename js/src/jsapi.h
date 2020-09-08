@@ -2131,14 +2131,14 @@ extern JS_PUBLIC_API size_t JS_PutEscapedString(JSContext* cx, char* buffer,
  *
  *   // In an infallible context, for the same 'str'.
  *   AutoCheckCannotGC nogc;
- *   const char16_t* chars = JS_GetTwoByteLinearStringChars(nogc, lstr)
+ *   const char16_t* chars = JS::GetTwoByteLinearStringChars(nogc, lstr)
  *   MOZ_ASSERT(chars);
  *
  * Note: JS strings (including linear strings and atoms) are not
  * null-terminated!
  *
  * Additionally, string characters are stored as either Latin1Char (8-bit)
- * or char16_t (16-bit). Clients can use JS_StringHasLatin1Chars and can then
+ * or char16_t (16-bit). Clients can use JS::StringHasLatin1Chars and can then
  * call either the Latin1* or TwoByte* functions. Some functions like
  * JS_CopyStringChars and JS_GetStringCharAt accept both Latin1 and TwoByte
  * strings.
@@ -2147,9 +2147,6 @@ extern JS_PUBLIC_API size_t JS_PutEscapedString(JSContext* cx, char* buffer,
 extern JS_PUBLIC_API size_t JS_GetStringLength(JSString* str);
 
 extern JS_PUBLIC_API bool JS_StringIsLinear(JSString* str);
-
-/** Returns true iff the string's characters are stored as Latin1. */
-extern JS_PUBLIC_API bool JS_StringHasLatin1Chars(JSString* str);
 
 extern JS_PUBLIC_API const JS::Latin1Char* JS_GetLatin1StringCharsAndLength(
     JSContext* cx, const JS::AutoRequireNoGC& nogc, JSString* str,
@@ -2161,9 +2158,6 @@ extern JS_PUBLIC_API const char16_t* JS_GetTwoByteStringCharsAndLength(
 
 extern JS_PUBLIC_API bool JS_GetStringCharAt(JSContext* cx, JSString* str,
                                              size_t index, char16_t* res);
-
-extern JS_PUBLIC_API char16_t JS_GetLinearStringCharAt(JSLinearString* str,
-                                                       size_t index);
 
 extern JS_PUBLIC_API const char16_t* JS_GetTwoByteExternalStringChars(
     JSString* str);
@@ -2182,12 +2176,6 @@ extern JS_PUBLIC_API JS::UniqueTwoByteChars JS_CopyStringCharsZ(JSContext* cx,
 
 extern JS_PUBLIC_API JSLinearString* JS_EnsureLinearString(JSContext* cx,
                                                            JSString* str);
-
-extern JS_PUBLIC_API const JS::Latin1Char* JS_GetLatin1LinearStringChars(
-    const JS::AutoRequireNoGC& nogc, JSLinearString* str);
-
-extern JS_PUBLIC_API const char16_t* JS_GetTwoByteLinearStringChars(
-    const JS::AutoRequireNoGC& nogc, JSLinearString* str);
 
 static MOZ_ALWAYS_INLINE JSLinearString* JSID_TO_LINEAR_STRING(jsid id) {
   MOZ_ASSERT(JSID_IS_STRING(id));
@@ -2285,7 +2273,7 @@ MOZ_MUST_USE JS_PUBLIC_API bool JS_EncodeStringToBuffer(JSContext* cx,
  * into the caller-provided buffer replacing unpaired surrogates
  * with the REPLACEMENT CHARACTER.
  *
- * If JS_StringHasLatin1Chars(str) returns true, the function
+ * If JS::StringHasLatin1Chars(str) returns true, the function
  * is guaranteed to convert the entire string if
  * buffer.Length() >= 2 * JS_GetStringLength(str). Otherwise,
  * the function is guaranteed to convert the entire string if

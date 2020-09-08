@@ -25,6 +25,7 @@
 #include "builtin/TypedObject.h"
 #include "jit/JitOptions.h"
 #include "js/Printf.h"
+#include "js/String.h"  // JS::MaxStringLength
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "wasm/WasmOpIter.h"
@@ -3114,7 +3115,8 @@ static bool DecodeFunctionNameSubsection(Decoder& d,
     }
 
     Name funcName;
-    if (!d.readVarU32(&funcName.length) || funcName.length > MaxStringLength) {
+    if (!d.readVarU32(&funcName.length) ||
+        funcName.length > JS::MaxStringLength) {
       return d.fail("unable to read function name length");
     }
 

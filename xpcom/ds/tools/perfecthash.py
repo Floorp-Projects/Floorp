@@ -313,18 +313,18 @@ class CGHelper(object):
             {
               %(basis_table)s
 
-              size_t length = js::GetLinearStringLength(aKey);
+              size_t length = JS::GetLinearStringLength(aKey);
 
               JS::AutoCheckCannotGC nogc;
-              if (js::LinearStringHasLatin1Chars(aKey)) {
+              if (JS::LinearStringHasLatin1Chars(aKey)) {
                 auto& entry = mozilla::perfecthash::Lookup(
-                  js::GetLatin1LinearStringChars(nogc, aKey),
+                  JS::GetLatin1LinearStringChars(nogc, aKey),
                   length, BASES, %(entries_name)s);
 
                 %(return_entry)s
               } else {
                 auto& entry = mozilla::perfecthash::Lookup(
-                  js::GetTwoByteLinearStringChars(nogc, aKey),
+                  JS::GetTwoByteLinearStringChars(nogc, aKey),
                   length, BASES, %(entries_name)s);
 
                 %(return_entry)s

@@ -13,6 +13,7 @@
 
 #include "jsapi.h"
 #include "js/Proxy.h"
+#include "js/String.h"  // JS::AtomToLinearString, JS::GetLinearString{CharAt,Length}
 #include "nsString.h"
 
 namespace mozilla {
@@ -190,12 +191,12 @@ inline uint32_t GetArrayIndexFromId(JS::Handle<jsid> id) {
     return UINT32_MAX;
   }
 
-  JSLinearString* str = js::AtomToLinearString(JSID_TO_ATOM(id));
-  if (MOZ_UNLIKELY(js::GetLinearStringLength(str) == 0)) {
+  JSLinearString* str = JS::AtomToLinearString(JSID_TO_ATOM(id));
+  if (MOZ_UNLIKELY(JS::GetLinearStringLength(str) == 0)) {
     return UINT32_MAX;
   }
 
-  char16_t firstChar = js::GetLinearStringCharAt(str, 0);
+  char16_t firstChar = JS::GetLinearStringCharAt(str, 0);
   if (MOZ_LIKELY(IsAsciiLowercaseAlpha(firstChar))) {
     return UINT32_MAX;
   }

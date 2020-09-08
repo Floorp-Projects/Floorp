@@ -11,11 +11,14 @@
 
 #include <stdint.h>  // uint32_t, uintptr_t
 
-#include "jstypes.h"  // js::Bit, JS_BITS_PER_WORD
+#include "jstypes.h"  // JS_PUBLIC_API, js::Bit, js::BitMask, JS_BITS_PER_WORD
 
 #include "js/TypeDecls.h"  // JS::Latin1Char
 
+class JS_PUBLIC_API JSAtom;
 struct JSExternalStringCallbacks;
+class JSLinearString;
+class JS_PUBLIC_API JSString;
 
 namespace js {
 namespace gc {
@@ -62,7 +65,53 @@ struct String {
     uint32_t flags = reinterpret_cast<const String*>(cell)->flags();
     return (flags & PERMANENT_ATOM_MASK) == PERMANENT_ATOM_MASK;
   }
+
+  bool isLinear() const { return flags() & LINEAR_BIT; }
+  bool hasLatin1Chars() const { return flags() & LATIN1_CHARS_BIT; }
+
+  // For hot code, prefer other type queries.
+  bool isExternal() const {
+    return (flags() & TYPE_FLAGS_MASK) == EXTERNAL_FLAGS;
+  }
+
+  const JS::Latin1Char* latin1LinearChars() const {
+    MOZ_ASSERT(isLinear());
+    MOZ_ASSERT(hasLatin1Chars());
+    return (flags() & String::INLINE_CHARS_BIT) ? inlineStorageLatin1
+                                                : nonInlineCharsLatin1;
+  }
+
+  const char16_t* twoByteLinearChars() const {
+    MOZ_ASSERT(isLinear());
+    MOZ_ASSERT(!hasLatin1Chars());
+    return (flags() & String::INLINE_CHARS_BIT) ? inlineStorageTwoByte
+                                                : nonInlineCharsTwoByte;
+  }
 };
+
+inline const String* AsShadowString(const JSString* str) {
+  return reinterpret_cast<const String*>(str);
+}
+
+inline String* AsShadowString(JSString* str) {
+  return reinterpret_cast<String*>(str);
+}
+
+inline const String* AsShadowString(const JSLinearString* str) {
+  return reinterpret_cast<const String*>(str);
+}
+
+inline String* AsShadowString(JSLinearString* str) {
+  return reinterpret_cast<String*>(str);
+}
+
+inline const String* AsShadowString(const JSAtom* str) {
+  return reinterpret_cast<const String*>(str);
+}
+
+inline String* AsShadowString(JSAtom* str) {
+  return reinterpret_cast<String*>(str);
+}
 
 }  // namespace shadow
 

@@ -7,6 +7,7 @@
 #include "xpcprivate.h"
 #include "StaticComponents.h"
 #include "mozilla/ErrorResult.h"
+#include "js/String.h"  // JS::LinearStringHasLatin1Chars
 #include "nsJSUtils.h"
 
 using namespace mozilla;
@@ -68,7 +69,7 @@ static bool Services_NewEnumerate(JSContext* cx, HandleObject obj,
 static JSLinearString* GetNameIfLatin1(jsid id) {
   if (JSID_IS_STRING(id)) {
     JSLinearString* name = JSID_TO_LINEAR_STRING(id);
-    if (js::LinearStringHasLatin1Chars(name)) {
+    if (JS::LinearStringHasLatin1Chars(name)) {
       return name;
     }
   }

@@ -11,6 +11,7 @@
 
 #include "js/RootingAPI.h"
 #include "js/StableStringChars.h"
+#include "js/String.h"  // JS::StringToLinearString
 
 #include "jsapi-tests/tests.h"
 
@@ -24,9 +25,9 @@ static bool SameChars(JSContext* cx, JSString* str1, JSString* str2,
   JS::AutoCheckCannotGC nogc(cx);
 
   const JS::Latin1Char* chars1 =
-      js::StringToLinearString(cx, str1)->latin1Chars(nogc);
+      JS::StringToLinearString(cx, str1)->latin1Chars(nogc);
   const JS::Latin1Char* chars2 =
-      js::StringToLinearString(cx, str2)->latin1Chars(nogc);
+      JS::StringToLinearString(cx, str2)->latin1Chars(nogc);
 
   return chars1 == chars2 + offset;
 }

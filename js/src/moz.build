@@ -184,6 +184,7 @@ EXPORTS.js += [
     '../public/SourceText.h',
     '../public/StableStringChars.h',
     '../public/Stream.h',
+    '../public/String.h',
     '../public/StructuredClone.h',
     '../public/SweepingAPI.h',
     '../public/Symbol.h',

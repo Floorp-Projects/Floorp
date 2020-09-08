@@ -310,7 +310,7 @@ JS_PUBLIC_API size_t GetDeflatedUTF8StringLength(JSLinearString* s);
  * linear.
  *
  * Given |JSString* str = JS_FORGET_STRING_LINEARNESS(src)|,
- * if |JS_StringHasLatin1Chars(str)|, then |src| is always fully converted
+ * if |JS::StringHasLatin1Chars(str)|, then |src| is always fully converted
  * if |dst.Length() >= JS_GetStringLength(str) * 2|. Otherwise |src| is
  * always fully converted if |dst.Length() >= JS_GetStringLength(str) * 3|.
  *

@@ -14,6 +14,7 @@
 #include "js/Conversions.h"
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowProxyIfWindow
 #include "js/MemoryFunctions.h"
+#include "js/String.h"  // JS::GetLatin1LinearStringChars, JS::GetTwoByteLinearStringChars, JS::GetLinearStringLength, JS::LinearStringHasLatin1Chars, JS::StringHasLatin1Chars
 #include "js/Wrapper.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Array.h"
@@ -1322,7 +1323,7 @@ inline bool FindEnumStringIndex(BindingCallContext& cx, JS::Handle<JS::Value> v,
   {
     size_t length;
     JS::AutoCheckCannotGC nogc;
-    if (js::StringHasLatin1Chars(str)) {
+    if (JS::StringHasLatin1Chars(str)) {
       const JS::Latin1Char* chars =
           JS_GetLatin1StringCharsAndLength(cx, nogc, str, &length);
       if (!chars) {
@@ -3143,14 +3144,14 @@ class StringIdChars {
   // Require a non-const ref to an AutoRequireNoGC to prevent callers
   // from passing temporaries.
   StringIdChars(JS::AutoRequireNoGC& nogc, JSLinearString* str) {
-    mIsLatin1 = js::LinearStringHasLatin1Chars(str);
+    mIsLatin1 = JS::LinearStringHasLatin1Chars(str);
     if (mIsLatin1) {
-      mLatin1Chars = js::GetLatin1LinearStringChars(nogc, str);
+      mLatin1Chars = JS::GetLatin1LinearStringChars(nogc, str);
     } else {
-      mTwoByteChars = js::GetTwoByteLinearStringChars(nogc, str);
+      mTwoByteChars = JS::GetTwoByteLinearStringChars(nogc, str);
     }
 #ifdef DEBUG
-    mLength = js::GetLinearStringLength(str);
+    mLength = JS::GetLinearStringLength(str);
 #endif  // DEBUG
   }
 
