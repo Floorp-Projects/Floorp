@@ -34,6 +34,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
@@ -2076,6 +2077,13 @@ mozilla::ipc::IPCResult ContentChild::RecvRegisterChromeItem(
       return IPC_FAIL_NO_REASON(this);
   }
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvClearStyleSheetCache(
+    const Maybe<RefPtr<nsIPrincipal>>& aForPrincipal) {
+  nsIPrincipal* prin = aForPrincipal ? aForPrincipal.value().get() : nullptr;
+  SharedStyleSheetCache::Clear(prin);
   return IPC_OK();
 }
 

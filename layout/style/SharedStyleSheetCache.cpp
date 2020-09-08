@@ -9,6 +9,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/css/SheetLoadData.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ServoBindings.h"
 #include "nsXULPrototypeCache.h"
 
@@ -25,9 +26,30 @@ using IsAlternate = css::Loader::IsAlternate;
 
 SharedStyleSheetCache* SharedStyleSheetCache::sInstance;
 
-void SharedStyleSheetCache::ClearForTest() {
-  if (sInstance) {
+void SharedStyleSheetCache::Clear(nsIPrincipal* aForPrincipal) {
+  using ContentParent = dom::ContentParent;
+
+  if (XRE_IsParentProcess()) {
+    auto forPrincipal = aForPrincipal ? Some(RefPtr(aForPrincipal)) : Nothing();
+    for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+      Unused << cp->SendClearStyleSheetCache(forPrincipal);
+    }
+  }
+
+  if (!sInstance) {
+    return;
+  }
+
+  if (!aForPrincipal) {
     sInstance->mCompleteSheets.Clear();
+    return;
+  }
+
+  for (auto iter = sInstance->mCompleteSheets.Iter(); !iter.Done();
+       iter.Next()) {
+    if (iter.Key().Principal()->Equals(aForPrincipal)) {
+      iter.Remove();
+    }
   }
 }
 

@@ -21,6 +21,7 @@
 #include "mozilla/ProcInfo.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
@@ -730,6 +731,11 @@ void ChromeUtils::ClearRecentJSDevError(GlobalObject&) {
   runtime->ClearRecentDevError();
 }
 #endif  // NIGHTLY_BUILD
+
+void ChromeUtils::ClearStyleSheetCache(GlobalObject&,
+                                       nsIPrincipal* aForPrincipal) {
+  SharedStyleSheetCache::Clear(aForPrincipal);
+}
 
 #define PROCTYPE_TO_WEBIDL_CASE(_procType, _webidl) \
   case mozilla::ProcType::_procType:                \
