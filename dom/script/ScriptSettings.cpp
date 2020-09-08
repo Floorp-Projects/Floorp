@@ -656,7 +656,8 @@ void AutoEntryScript::DocshellEntryMonitor::Entry(
     rootedScript = JS_GetFunctionScript(aCx, rootedFunction);
   }
   if (rootedScript) {
-    CopyUTF8toUTF16(MakeStringSpan(JS_GetScriptFilename(rootedScript)), filename);
+    CopyUTF8toUTF16(MakeStringSpan(JS_GetScriptFilename(rootedScript)),
+                    filename);
     lineNumber = JS_GetScriptBaseLineNumber(aCx, rootedScript);
   }
 

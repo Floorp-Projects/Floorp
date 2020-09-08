@@ -1171,8 +1171,7 @@ static void EmitAssertExtensibleElements(MacroAssembler& masm,
   Address elementsFlags(elementsReg, ObjectElements::offsetOfFlags());
   Label ok;
   masm.branchTest32(Assembler::Zero, elementsFlags,
-                    Imm32(ObjectElements::Flags::NOT_EXTENSIBLE),
-                    &ok);
+                    Imm32(ObjectElements::Flags::NOT_EXTENSIBLE), &ok);
   masm.assumeUnreachable("Unexpected non-extensible elements");
   masm.bind(&ok);
 #endif
