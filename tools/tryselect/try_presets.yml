@@ -9,6 +9,13 @@
 
 # yamllint disable rule:line-length
 
+builds:
+    selector: fuzzy
+    description: >-
+        Run builds without any of the extras.
+    query:
+        - "^build- !fuzzing !notarization !reproduced !rusttests !signing !upload-symbols"
+
 debugger-tests:
     selector: fuzzy
     description: >-
