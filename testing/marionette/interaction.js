@@ -8,26 +8,21 @@
 
 const EXPORTED_SYMBOLS = ["interaction"];
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { accessibility } = ChromeUtils.import(
-  "chrome://marionette/content/accessibility.js"
-);
-const { atom } = ChromeUtils.import("chrome://marionette/content/atom.js");
-const { element } = ChromeUtils.import(
-  "chrome://marionette/content/element.js"
-);
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { event } = ChromeUtils.import("chrome://marionette/content/event.js");
-const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
-const { TimedPromise } = ChromeUtils.import(
-  "chrome://marionette/content/sync.js"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.jsm",
+
+  accessibility: "chrome://marionette/content/accessibility.js",
+  atom: "chrome://marionette/content/atom.js",
+  element: "chrome://marionette/content/element.js",
+  error: "chrome://marionette/content/error.js",
+  event: "chrome://marionette/content/event.js",
+  pprint: "chrome://marionette/content/format.js",
+  TimedPromise: "chrome://marionette/content/sync.js",
+});
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
 

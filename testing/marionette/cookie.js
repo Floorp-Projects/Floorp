@@ -7,10 +7,15 @@
 const EXPORTED_SYMBOLS = ["cookie"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  assert: "chrome://marionette/content/assert.js",
+  error: "chrome://marionette/content/error.js",
+  pprint: "chrome://marionette/content/format.js",
+});
 
 const IPV4_PORT_EXPR = /:\d+$/;
 

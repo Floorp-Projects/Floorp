@@ -15,39 +15,30 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { accessibility } = ChromeUtils.import(
-  "chrome://marionette/content/accessibility.js"
-);
-const { action } = ChromeUtils.import("chrome://marionette/content/action.js");
-const { atom } = ChromeUtils.import("chrome://marionette/content/atom.js");
-const { Capabilities, PageLoadStrategy } = ChromeUtils.import(
-  "chrome://marionette/content/capabilities.js"
-);
-const { element, WebElement } = ChromeUtils.import(
-  "chrome://marionette/content/element.js"
-);
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { Sandboxes, evaluate, sandbox } = ChromeUtils.import(
-  "chrome://marionette/content/evaluate.js"
-);
-const { event } = ChromeUtils.import("chrome://marionette/content/event.js");
-const { ContentEventObserverService } = ChromeUtils.import(
-  "chrome://marionette/content/dom.js"
-);
-const { pprint, truncate } = ChromeUtils.import(
-  "chrome://marionette/content/format.js"
-);
-const { interaction } = ChromeUtils.import(
-  "chrome://marionette/content/interaction.js"
-);
-const { legacyaction } = ChromeUtils.import(
-  "chrome://marionette/content/legacyaction.js"
-);
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
-const { navigate } = ChromeUtils.import(
-  "chrome://marionette/content/navigate.js"
-);
-const { proxy } = ChromeUtils.import("chrome://marionette/content/proxy.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  OS: "resource://gre/modules/osfile.jsm",
+
+  accessibility: "chrome://marionette/content/accessibility.js",
+  action: "chrome://marionette/content/action.js",
+  atom: "chrome://marionette/content/atom.js",
+  Capabilities: "chrome://marionette/content/capabilities.js",
+  ContentEventObserverService: "chrome://marionette/content/dom.js",
+  element: "chrome://marionette/content/element.js",
+  error: "chrome://marionette/content/error.js",
+  evaluate: "chrome://marionette/content/evaluate.js",
+  event: "chrome://marionette/content/event.js",
+  interaction: "chrome://marionette/content/interaction.js",
+  legacyaction: "chrome://marionette/content/legacyaction.js",
+  Log: "chrome://marionette/content/log.js",
+  navigate: "chrome://marionette/content/navigate.js",
+  PageLoadStrategy: "chrome://marionette/content/capabilities.js",
+  pprint: "chrome://marionette/content/format.js",
+  proxy: "chrome://marionette/content/proxy.js",
+  sandbox: "chrome://marionette/content/evaluate.js",
+  Sandboxes: "chrome://marionette/content/evaluate.js",
+  truncate: "chrome://marionette/content/format.js",
+  WebElement: "chrome://marionette/content/element.js",
+});
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.getWithPrefix(contentId));
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);

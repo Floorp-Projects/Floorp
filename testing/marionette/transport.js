@@ -6,20 +6,21 @@
 
 const EXPORTED_SYMBOLS = ["DebuggerTransport"];
 
-const CC = Components.Constructor;
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
-);
-const { StreamUtils } = ChromeUtils.import(
-  "chrome://marionette/content/stream-utils.js"
-);
-const { BulkPacket, JSONPacket, Packet } = ChromeUtils.import(
-  "chrome://marionette/content/packets.js"
-);
-const { executeSoon } = ChromeUtils.import(
-  "chrome://marionette/content/sync.js"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+
+  BulkPacket: "chrome://marionette/content/packets.js",
+  executeSoon: "chrome://marionette/content/sync.js",
+  JSONPacket: "chrome://marionette/content/packets.js",
+  Packet: "chrome://marionette/content/packets.js",
+  StreamUtils: "chrome://marionette/content/stream-utils.js",
+});
+
+const CC = Components.Constructor;
 
 const flags = { wantVerbose: false, wantLogging: false };
 

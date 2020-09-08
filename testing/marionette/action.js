@@ -10,15 +10,18 @@
 const EXPORTED_SYMBOLS = ["action"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { element } = ChromeUtils.import(
-  "chrome://marionette/content/element.js"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { event } = ChromeUtils.import("chrome://marionette/content/event.js");
-const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
-const { Sleep } = ChromeUtils.import("chrome://marionette/content/sync.js");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  assert: "chrome://marionette/content/assert.js",
+  element: "chrome://marionette/content/element.js",
+  error: "chrome://marionette/content/error.js",
+  event: "chrome://marionette/content/event.js",
+  pprint: "chrome://marionette/content/format.js",
+  Sleep: "chrome://marionette/content/sync.js",
+});
 
 // TODO? With ES 2016 and Symbol you can make a safer approximation
 // to an enum e.g. https://gist.github.com/xmlking/e86e4f15ec32b12c4689

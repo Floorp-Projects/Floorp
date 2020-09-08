@@ -6,37 +6,32 @@
 
 const EXPORTED_SYMBOLS = ["TCPConnection", "TCPListener"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  OS: "resource://gre/modules/osfile.jsm",
+
+  assert: "chrome://marionette/content/assert.js",
+  Command: "chrome://marionette/content/message.js",
+  DebuggerTransport: "chrome://marionette/content/transport.js",
+  error: "chrome://marionette/content/error.js",
+  GeckoDriver: "chrome://marionette/content/driver.js",
+  Log: "chrome://marionette/content/log.js",
+  MarionettePrefs: "chrome://marionette/content/prefs.js",
+  Message: "chrome://marionette/content/message.js",
+  Response: "chrome://marionette/content/message.js",
+  WebElement: "chrome://marionette/content/element.js",
+});
+
 const CC = Components.Constructor;
 
 const ServerSocket = CC(
   "@mozilla.org/network/server-socket;1",
   "nsIServerSocket",
   "initSpecialConnection"
-);
-
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { GeckoDriver } = ChromeUtils.import(
-  "chrome://marionette/content/driver.js"
-);
-const { WebElement } = ChromeUtils.import(
-  "chrome://marionette/content/element.js"
-);
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { Command, Message, Response } = ChromeUtils.import(
-  "chrome://marionette/content/message.js"
-);
-const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
-const { MarionettePrefs } = ChromeUtils.import(
-  "chrome://marionette/content/prefs.js",
-  null
-);
-const { DebuggerTransport } = ChromeUtils.import(
-  "chrome://marionette/content/transport.js",
-  null
 );
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);

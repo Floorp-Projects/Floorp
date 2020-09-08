@@ -6,6 +6,14 @@
 
 const EXPORTED_SYMBOLS = ["RawPacket", "Packet", "JSONPacket", "BulkPacket"];
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  StreamUtils: "chrome://marionette/content/stream-utils.js",
+});
+
 /**
  * Packets contain read / write functionality for the different packet types
  * supported by the debugging protocol, so that a transport can focus on
@@ -25,10 +33,6 @@ const EXPORTED_SYMBOLS = ["RawPacket", "Packet", "JSONPacket", "BulkPacket"];
  *   * destroy()
  *     Called to clean up at the end of use
  */
-
-const { StreamUtils } = ChromeUtils.import(
-  "chrome://marionette/content/stream-utils.js"
-);
 
 const unicodeConverter = Cc[
   "@mozilla.org/intl/scriptableunicodeconverter"
