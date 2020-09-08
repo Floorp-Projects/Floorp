@@ -1951,10 +1951,13 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     // Same, but for the OMTA sampler.
     mOMTASampler->SetWebRenderWindowId(windowId);
   }
+
+  nsCString error;
   RefPtr<wr::WebRenderAPI> api =
-      wr::WebRenderAPI::Create(this, std::move(widget), windowId, aSize);
+      wr::WebRenderAPI::Create(this, std::move(widget), windowId, aSize, error);
   if (!api) {
-    mWrBridge = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
+    mWrBridge =
+        WebRenderBridgeParent::CreateDestroyed(aPipelineId, std::move(error));
     mWrBridge.get()->AddRef();  // IPDL reference
     return mWrBridge;
   }

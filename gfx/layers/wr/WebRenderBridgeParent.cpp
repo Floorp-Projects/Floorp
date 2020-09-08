@@ -365,13 +365,15 @@ WebRenderBridgeParent::WebRenderBridgeParent(
   UpdateQualitySettings();
 }
 
-WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
+WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId,
+                                             nsCString&& aError)
     : mCompositorBridge(nullptr),
       mPipelineId(aPipelineId),
       mChildLayersObserverEpoch{0},
       mParentLayersObserverEpoch{0},
       mWrEpoch{0},
       mIdNamespace{0},
+      mInitError(aError),
       mPaused(false),
       mDestroyed(true),
       mReceivedDisplayList(false),
@@ -384,17 +386,18 @@ WebRenderBridgeParent::~WebRenderBridgeParent() {}
 
 /* static */
 WebRenderBridgeParent* WebRenderBridgeParent::CreateDestroyed(
-    const wr::PipelineId& aPipelineId) {
-  return new WebRenderBridgeParent(aPipelineId);
+    const wr::PipelineId& aPipelineId, nsCString&& aError) {
+  return new WebRenderBridgeParent(aPipelineId, std::move(aError));
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEnsureConnected(
     TextureFactoryIdentifier* aTextureFactoryIdentifier,
-    MaybeIdNamespace* aMaybeIdNamespace) {
+    MaybeIdNamespace* aMaybeIdNamespace, nsCString* aError) {
   if (mDestroyed) {
     *aTextureFactoryIdentifier =
         TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
     *aMaybeIdNamespace = Nothing();
+    *aError = std::move(mInitError);
     return IPC_OK();
   }
 

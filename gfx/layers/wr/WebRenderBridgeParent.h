@@ -113,7 +113,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
                         TimeDuration aVsyncRate);
 
   static WebRenderBridgeParent* CreateDestroyed(
-      const wr::PipelineId& aPipelineId);
+      const wr::PipelineId& aPipelineId, nsCString&& aError);
 
   wr::PipelineId PipelineId() { return mPipelineId; }
   already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() {
@@ -134,7 +134,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   mozilla::ipc::IPCResult RecvEnsureConnected(
       TextureFactoryIdentifier* aTextureFactoryIdentifier,
-      MaybeIdNamespace* aMaybeIdNamespace) override;
+      MaybeIdNamespace* aMaybeIdNamespace, nsCString* aError) override;
 
   mozilla::ipc::IPCResult RecvNewCompositable(
       const CompositableHandle& aHandle, const TextureInfo& aInfo) override;
@@ -335,7 +335,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
  private:
   class ScheduleSharedSurfaceRelease;
 
-  explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
+  WebRenderBridgeParent(const wr::PipelineId& aPipelineId, nsCString&& aError);
   virtual ~WebRenderBridgeParent();
 
   bool ProcessEmptyTransactionUpdates(TransactionData& aData,
@@ -507,6 +507,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   wr::Epoch mWrEpoch;
   wr::IdNamespace mIdNamespace;
   CompositionOpportunityId mCompositionOpportunityId;
+  nsCString mInitError;
 
   VsyncId mSkippedCompositeId;
   TimeStamp mMostRecentComposite;

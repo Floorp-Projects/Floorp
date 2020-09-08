@@ -237,8 +237,9 @@ ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
         nsPrintfCString("Created child without a matching parent? root %p",
                         root.get())
             .get());
+    nsCString error("NO_PARENT");
     WebRenderBridgeParent* parent =
-        WebRenderBridgeParent::CreateDestroyed(aPipelineId);
+        WebRenderBridgeParent::CreateDestroyed(aPipelineId, std::move(error));
     parent->AddRef();  // IPDL reference
     return parent;
   }
