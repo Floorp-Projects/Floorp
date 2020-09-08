@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-const TEST_PAGE = "/browser/browser/base/content/test/general/dummy_page.html";
+const TEST_PAGE = "/browser/browser/base/content/test/zoom/zoom_test.html";
 var gTestTab, gBgTab, gTestZoom;
 
 function testBackgroundLoad() {

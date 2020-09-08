@@ -389,8 +389,8 @@ add_task(async function test_dragging_zoom_handling() {
   );
 
   win2.FullZoom.setZoom(ZOOM_FACTOR);
-  FullZoomHelper.zoomTest(
-    tab2,
+  is(
+    ZoomManager.getZoomForBrowser(tab2.linkedBrowser),
     ZOOM_FACTOR,
     "Original tab should have correct zoom factor"
   );
@@ -409,8 +409,8 @@ add_task(async function test_dragging_zoom_handling() {
   // chains in the zoom code.
   await new Promise(resolve => setTimeout(resolve, 0));
 
-  FullZoomHelper.zoomTest(
-    win1.gBrowser.selectedTab,
+  is(
+    ZoomManager.getZoomForBrowser(win1.gBrowser.selectedBrowser),
     ZOOM_FACTOR,
     "Dragged tab should have correct zoom factor"
   );

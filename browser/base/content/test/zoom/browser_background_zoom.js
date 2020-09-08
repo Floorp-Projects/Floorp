@@ -1,14 +1,19 @@
 var gTestPage =
-  "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+  "http://example.org/browser/browser/base/content/test/zoom/zoom_test.html";
 var gTestImage =
   "http://example.org/browser/browser/base/content/test/general/moz.png";
 var gTab1, gTab2, gTab3;
 var gLevel;
-const BACK = 0;
-const FORWARD = 1;
 
 function test() {
   waitForExplicitFinish();
+  registerCleanupFunction(async () => {
+    await new Promise(resolve => {
+      ContentPrefService2.removeByName(FullZoom.name, Cu.createLoadContext(), {
+        handleCompletion: resolve,
+      });
+    });
+  });
 
   (async function() {
     gTab1 = BrowserTestUtils.addTab(gBrowser, gTestPage);
@@ -78,8 +83,8 @@ function imageLoaded() {
 
 function imageZoomSwitch() {
   (async function() {
-    await FullZoomHelper.navigate(BACK);
-    await FullZoomHelper.navigate(FORWARD);
+    await FullZoomHelper.navigate(FullZoomHelper.BACK);
+    await FullZoomHelper.navigate(FullZoomHelper.FORWARD);
     FullZoomHelper.zoomTest(
       gTab1,
       1,
@@ -101,11 +106,8 @@ function finishTest() {
     ok(!finishTestStarted, "finishTest called more than once");
     finishTestStarted = true;
     await FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
-    await FullZoom.reset();
     await FullZoomHelper.removeTabAndWaitForLocationChange(gTab1);
-    await FullZoom.reset();
     await FullZoomHelper.removeTabAndWaitForLocationChange(gTab2);
-    await FullZoom.reset();
     await FullZoomHelper.removeTabAndWaitForLocationChange(gTab3);
   })().then(finish, FullZoomHelper.failAndContinue(finish));
 }
