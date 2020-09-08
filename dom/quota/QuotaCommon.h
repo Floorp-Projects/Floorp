@@ -443,11 +443,14 @@
 // read slightly better than plain numbers.
 // See also
 // https://stackoverflow.com/questions/3046889/optional-parameters-with-c-macros
-#define QM_TRY_META(...)                                                      \
-  MOZ_ARG_7(, ##__VA_ARGS__, QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__), \
-            QM_TRY_CUSTOM_RET_VAL(__VA_ARGS__),                               \
-            QM_TRY_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__),  \
-            QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))
+#define QM_TRY_META(...)                                                       \
+  {                                                                            \
+    MOZ_ARG_7(, ##__VA_ARGS__,                                                 \
+              QM_TRY_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__),                 \
+              QM_TRY_CUSTOM_RET_VAL(__VA_ARGS__),                              \
+              QM_TRY_PROPAGATE_ERR(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__), \
+              QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__))      \
+  }
 
 // Specifies the namespace and generates unique variable name. This extra
 // internal macro (along with __COUNTER__) allows nesting of the final macro.
