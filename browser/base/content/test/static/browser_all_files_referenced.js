@@ -391,9 +391,10 @@ function parseManifest(manifestUri) {
   });
 }
 
-// If the given URI is a webextension manifest, extract the scripts
-// for any embedded APIs.  Returns the passed in URI if the manifest
-// is not a webextension manifest, null otherwise.
+// If the given URI is a webextension manifest, extract files used by
+// any of its APIs (scripts, icons, style sheets, theme images).
+// Returns the passed in URI if the manifest is not a webextension
+// manifest, null otherwise.
 async function parseJsonManifest(uri) {
   uri = Services.io.newURI(convertToCodeURI(uri.spec));
 

@@ -2461,7 +2461,7 @@ var XPIProvider = {
       this.maybeInstallBuiltinAddon(
         "default-theme@mozilla.org",
         "1.0",
-        "resource://gre/modules/themes/default/"
+        "resource://default-theme/"
       );
 
       resolveProviderReady(Promise.all(this.startupPromises));
