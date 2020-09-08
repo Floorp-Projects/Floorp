@@ -4,9 +4,9 @@
 
 "use strict";
 
-const StdLog = ChromeUtils.import("resource://gre/modules/Log.jsm", {}).Log;
+const EXPORTED_SYMBOLS = ["Log"];
 
-this.EXPORTED_SYMBOLS = ["Log"];
+const StdLog = ChromeUtils.import("resource://gre/modules/Log.jsm", {}).Log;
 
 const PREF_LOG_LEVEL = "marionette.log.level";
 

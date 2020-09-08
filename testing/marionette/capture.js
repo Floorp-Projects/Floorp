@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["capture"];
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -12,8 +14,6 @@ const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
-
-this.EXPORTED_SYMBOLS = ["capture"];
 
 const CONTEXT_2D = "2d";
 const BG_COLOUR = "rgb(255,255,255)";

@@ -4,13 +4,13 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["cookie"];
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
 const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
-
-this.EXPORTED_SYMBOLS = ["cookie"];
 
 const IPV4_PORT_EXPR = /:\d+$/;
 

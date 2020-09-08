@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["print"];
+
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { clearInterval, setInterval } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
@@ -17,8 +19,6 @@ const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 const { Log } = ChromeUtils.import("chrome://marionette/content/log.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
-
-this.EXPORTED_SYMBOLS = ["print"];
 
 this.print = {
   maxScaleValue: 2.0,

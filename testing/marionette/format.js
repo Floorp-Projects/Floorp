@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["pprint", "truncate"];
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -15,8 +17,6 @@ const { MarionettePrefs } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
-
-this.EXPORTED_SYMBOLS = ["pprint", "truncate"];
 
 const ELEMENT_NODE = 1;
 const MAX_STRING_LENGTH = 250;

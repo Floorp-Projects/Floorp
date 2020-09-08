@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["error"];
+
 const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
 
 const ERRORS = new Set([
@@ -44,8 +46,6 @@ const BUILTIN_ERRORS = new Set([
   "TypeError",
   "URIError",
 ]);
-
-this.EXPORTED_SYMBOLS = ["error"];
 
 /** @namespace */
 this.error = {

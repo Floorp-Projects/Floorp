@@ -5,15 +5,7 @@
 "use strict";
 /* global XPCNativeWrapper */
 
-const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
-const { atom } = ChromeUtils.import("chrome://marionette/content/atom.js");
-const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
-const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
-const { PollPromise } = ChromeUtils.import(
-  "chrome://marionette/content/sync.js"
-);
-
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "ChromeWebElement",
   "ContentWebElement",
   "ContentWebFrame",
@@ -21,6 +13,14 @@ this.EXPORTED_SYMBOLS = [
   "element",
   "WebElement",
 ];
+
+const { assert } = ChromeUtils.import("chrome://marionette/content/assert.js");
+const { atom } = ChromeUtils.import("chrome://marionette/content/atom.js");
+const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
+const { pprint } = ChromeUtils.import("chrome://marionette/content/format.js");
+const { PollPromise } = ChromeUtils.import(
+  "chrome://marionette/content/sync.js"
+);
 
 const ORDERED_NODE_ITERATOR_TYPE = 5;
 const FIRST_ORDERED_NODE_TYPE = 9;
