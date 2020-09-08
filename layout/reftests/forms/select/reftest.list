@@ -12,7 +12,6 @@ needs-focus == focusring-3.html focusring-3-ref.html
 == dynamic-text-indent-1.html dynamic-text-indent-1-ref.html
 == dynamic-text-overflow-1.html dynamic-text-overflow-1-ref.html
 == listbox-zero-row-initial.html listbox-zero-row-initial-ref.html
-== 1246836.html 1246836-ref.html
 skip-if(Android) == select-option-display-none-inline-size.html select-option-display-none-inline-size-ref.html
 
 # Android and Windows actually use the anonymous select > button (rather than
