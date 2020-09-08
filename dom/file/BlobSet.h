@@ -19,11 +19,11 @@ class BlobImpl;
 
 class BlobSet final {
  public:
-  MOZ_MUST_USE nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
+  [[nodiscard]] nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
 
-  MOZ_MUST_USE nsresult AppendString(const nsAString& aString, bool nativeEOL);
+  [[nodiscard]] nsresult AppendString(const nsAString& aString, bool nativeEOL);
 
-  MOZ_MUST_USE nsresult AppendBlobImpl(BlobImpl* aBlobImpl);
+  [[nodiscard]] nsresult AppendBlobImpl(BlobImpl* aBlobImpl);
 
   FallibleTArray<RefPtr<BlobImpl>>& GetBlobImpls() { return mBlobImpls; }
 
