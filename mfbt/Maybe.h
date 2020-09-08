@@ -480,7 +480,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
    */
   T extract() {
     MOZ_DIAGNOSTIC_ASSERT(isSome());
-    auto v = std::move(mStorage.val);
+    T v = std::move(mStorage.val);
     reset();
     return v;
   }
