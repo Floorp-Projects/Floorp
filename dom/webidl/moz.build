@@ -277,6 +277,9 @@ with Files("RTC*"):
 with Files("SVG*"):
     BUG_COMPONENT = ("Core", "SVG")
 
+with Files("Sanitizer.webidl"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
 with Files("ScriptProcessorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
@@ -781,6 +784,7 @@ WEBIDL_FILES = [
     'Request.webidl',
     'ResizeObserver.webidl',
     'Response.webidl',
+    'Sanitizer.webidl',
     'Screen.webidl',
     'ScreenOrientation.webidl',
     'ScriptProcessorNode.webidl',
