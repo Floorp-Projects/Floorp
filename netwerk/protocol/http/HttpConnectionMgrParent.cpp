@@ -10,7 +10,6 @@
 #include "HttpConnectionMgrParent.h"
 #include "AltSvcTransactionParent.h"
 #include "mozilla/net/HttpTransactionParent.h"
-#include "mozilla/net/WebSocketConnectionParent.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISpeculativeConnect.h"
@@ -253,13 +252,8 @@ nsresult HttpConnectionMgrParent::ClearConnectionHistory() {
 
 nsresult HttpConnectionMgrParent::CompleteUpgrade(
     HttpTransactionShell* aTrans, nsIHttpUpgradeListener* aUpgradeListener) {
-  MOZ_ASSERT(aTrans->AsHttpTransactionParent());
-
-  RefPtr<WebSocketConnectionParent> wsConnParent =
-      new WebSocketConnectionParent(aUpgradeListener);
-  Unused << SendPWebSocketConnectionConstructor(
-      wsConnParent, aTrans->AsHttpTransactionParent());
-  return NS_OK;
+  // TODO: fix this in bug 1497249
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsHttpConnectionMgr* HttpConnectionMgrParent::AsHttpConnectionMgr() {

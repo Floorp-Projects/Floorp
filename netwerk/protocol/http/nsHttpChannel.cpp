@@ -8037,13 +8037,6 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
                         mResponseHead->Status() == 200;
 
   if (upgradeWebsocket || upgradeConnect) {
-    // TODO: Support connection upgrade for socket process in bug 1632809.
-    if (nsIOService::UseSocketProcess() && upgradeConnect) {
-      Unused << mUpgradeProtocolCallback->OnUpgradeFailed(
-          NS_ERROR_NOT_IMPLEMENTED);
-      return ContinueOnStopRequest(aStatus, aIsFromNet, aContentComplete);
-    }
-
     nsresult rv = gHttpHandler->CompleteUpgrade(aTransWithStickyConn,
                                                 mUpgradeProtocolCallback);
     if (NS_FAILED(rv)) {
