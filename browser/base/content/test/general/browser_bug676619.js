@@ -54,6 +54,7 @@ async function testLink(link, name) {
   await BrowserTestUtils.closeWindow(win);
 }
 
+// Cross-origin URL does not trigger a download
 async function testLocation(link, url) {
   let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
@@ -78,11 +79,12 @@ async function runTest(url) {
   await testLink("link4", "with-target.txt");
   await testLink("link5", "javascript.txt");
   await testLink("link6", "test.blob");
-  await testLocation("link7", "http://example.com/");
+  await testLink("link7", "test.file");
   await testLink("link8", "download_page_3.txt");
   await testLink("link9", "download_page_3.txt");
   await testLink("link10", "download_page_4.txt");
   await testLink("link11", "download_page_4.txt");
+  await testLocation("link12", "http://example.com/");
 
   BrowserTestUtils.removeTab(tab);
 }

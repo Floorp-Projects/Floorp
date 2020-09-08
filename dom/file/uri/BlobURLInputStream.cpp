@@ -469,7 +469,13 @@ nsresult BlobURLInputStream::StoreBlobImplStream(
   if (blobImpl->IsFile()) {
     nsAutoString filename;
     blobImpl->GetName(filename);
-    if (!filename.IsEmpty()) {
+
+    // Don't overwrite existing name.
+    nsString ignored;
+    bool hasName =
+        NS_SUCCEEDED(mChannel->GetContentDispositionFilename(ignored));
+
+    if (!filename.IsEmpty() && !hasName) {
       mChannel->SetContentDispositionFilename(filename);
     }
   }
