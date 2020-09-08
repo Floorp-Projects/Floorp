@@ -73,7 +73,10 @@ class FirefoxConnector {
     );
 
     await this.toolbox.resourceWatcher.watchResources(
-      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
+      [
+        this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT,
+        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+      ],
       { onAvailable: this.onResourceAvailable }
     );
   }
@@ -92,7 +95,10 @@ class FirefoxConnector {
     );
 
     this.toolbox.resourceWatcher.unwatchResources(
-      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
+      [
+        this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT,
+        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+      ],
       { onAvailable: this.onResourceAvailable }
     );
 
@@ -160,6 +166,11 @@ class FirefoxConnector {
 
       if (resource.resourceType === TYPES.NETWORK_EVENT) {
         this.dataProvider.onNetworkResourceAvailable(resource);
+        continue;
+      }
+
+      if (resource.resourceType === TYPES.NETWORK_EVENT_STACKTRACE) {
+        this.dataProvider.onStackTraceAvailable(resource);
         continue;
       }
 

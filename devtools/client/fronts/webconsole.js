@@ -40,6 +40,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     this.on("evaluationResult", this.onEvaluationResult);
     this.before("consoleAPICall", this.beforeConsoleAPICall);
     this.before("pageError", this.beforePageError);
+    this.before("serverNetworkEvent", this.beforeServerNetworkEvent);
 
     this._client.on("networkEventUpdate", this._onNetworkEventUpdate);
   }
@@ -58,6 +59,12 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
    */
   _onNetworkEventUpdate(packet) {
     this.emit("serverNetworkUpdateEvent", packet);
+  }
+
+  beforeServerNetworkEvent(packet) {
+    // The stacktrace info needs to be sent before
+    // the network event.
+    this.emit("serverNetworkStackTrace", packet);
   }
 
   /**
