@@ -120,6 +120,7 @@ EXPORTS += [
 ]
 
 EXPORTS.js += [
+    '../public/AllocationLogging.h',
     '../public/AllocationRecording.h',
     '../public/AllocPolicy.h',
     '../public/Array.h',
@@ -332,6 +333,7 @@ UNIFIED_SOURCES += [
     'threading/Mutex.cpp',
     'threading/ProtectedData.cpp',
     'threading/Thread.cpp',
+    'util/AllocationLogging.cpp',
     'util/AllocPolicy.cpp',
     'util/CompleteFile.cpp',
     'util/DumpFunctions.cpp',
