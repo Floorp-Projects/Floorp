@@ -1980,6 +1980,12 @@ bool ContentParent::TryToRecycle() {
     return false;
   }
 
+  // Don't bother recycling "web" processes if Fission is enabled, as they
+  // should be largely unused.
+  if (mozilla::FissionAutostart()) {
+    return false;
+  }
+
   // This life time check should be replaced by a memory health check (memory
   // usage + fragmentation).
 
