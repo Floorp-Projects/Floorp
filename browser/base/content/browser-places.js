@@ -1095,7 +1095,7 @@ var PlacesMenuDNDHandler = {
 
 /**
  * This object handles the initialization and uninitialization of the bookmarks
- * toolbar.
+ * toolbar. It also has helper functions for the managed bookmarks button.
  */
 var PlacesToolbarHelper = {
   get _viewElt() {
@@ -1222,6 +1222,202 @@ var PlacesToolbarHelper = {
       }
       this.init();
     }
+  },
+
+  async populateManagedBookmarks(popup) {
+    if (popup.hasChildNodes()) {
+      return;
+    }
+    // Show item's uri in the status bar when hovering, and clear on exit
+    popup.addEventListener("DOMMenuItemActive", function(event) {
+      XULBrowserWindow.setOverLink(event.target.link);
+    });
+    popup.addEventListener("DOMMenuItemInactive", function() {
+      XULBrowserWindow.setOverLink("");
+    });
+    let fragment = document.createDocumentFragment();
+    await this.addManagedBookmarks(
+      fragment,
+      Services.policies.getActivePolicies().ManagedBookmarks
+    );
+    popup.appendChild(fragment);
+  },
+
+  async addManagedBookmarks(menu, children) {
+    for (let i = 0; i < children.length; i++) {
+      let entry = children[i];
+      if (entry.children) {
+        // It's a folder.
+        let submenu = document.createXULElement("menu");
+        if (entry.name) {
+          submenu.setAttribute("label", entry.name);
+        } else {
+          submenu.setAttribute("data-l10n-id", "managed-bookmarks-subfolder");
+        }
+        submenu.setAttribute("container", "true");
+        submenu.setAttribute("class", "menu-iconic bookmark-item");
+        let submenupopup = document.createXULElement("menupopup");
+        submenu.appendChild(submenupopup);
+        menu.appendChild(submenu);
+        this.addManagedBookmarks(submenupopup, entry.children);
+      } else if (entry.name && entry.url) {
+        // It's bookmark.
+        let uri = Services.uriFixup.createFixupURI(
+          entry.url,
+          Ci.nsIURIFixup.FIXUP_FLAG_NONE
+        );
+        let menuitem = document.createXULElement("menuitem");
+        menuitem.setAttribute("label", entry.name);
+        menuitem.setAttribute("image", "page-icon:" + uri.spec);
+        menuitem.setAttribute(
+          "class",
+          "menuitem-iconic bookmark-item menuitem-with-favicon"
+        );
+        menuitem.link = uri.spec;
+        menu.appendChild(menuitem);
+      }
+    }
+  },
+
+  updateManagedBookmarksContextMenu(popup) {
+    let hiddenContainerItems = [
+      "placesContextManaged_openSeparator",
+      "placesContextManaged_open:newtab",
+      "placesContextManaged_open:newwindow",
+      "placesContextManaged_copy",
+    ];
+
+    if (
+      popup.triggerNode.id == "managed-bookmarks" &&
+      !popup.triggerNode.menupopup.hasAttribute("hasbeenopened")
+    ) {
+      this.populateManagedBookmarks(popup.triggerNode.menupopup);
+    }
+    let isContainer = popup.triggerNode.getAttribute("container") == "true";
+    document.getElementById(
+      "placesContextManaged_openContainer:tabs"
+    ).hidden = !isContainer;
+    let openContainerInTabs = false;
+    if (isContainer) {
+      let menuitems = popup.triggerNode.menupopup.children;
+      openContainerInTabs = Array.from(menuitems).some(
+        menuitem => menuitem.link
+      );
+    }
+    document.getElementById(
+      "placesContextManaged_openContainer:tabs"
+    ).disabled = !openContainerInTabs;
+    document.getElementById(
+      "placesContextManaged_open:newprivatewindow"
+    ).hidden = isContainer || PrivateBrowsingUtils.isWindowPrivate(window);
+
+    hiddenContainerItems.forEach(
+      id => (document.getElementById(id).hidden = isContainer)
+    );
+  },
+
+  openManagedBookmark(event, where, private = false) {
+    event = getRootEvent(event);
+    if (where) {
+      openUILinkIn(event.target.parentNode.triggerNode.link, where, {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        private,
+      });
+    } else {
+      openUILink(event.target.link, event, {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+    }
+  },
+
+  openManagedFolder(event) {
+    let menuitems = event.target.parentNode.triggerNode.menupopup.children;
+    let items = [];
+    for (let i = 0; i < menuitems.length; i++) {
+      if (menuitems[i].link) {
+        let item = {};
+        item.uri = menuitems[i].link;
+        item.isBookmark = true;
+        items.push(item);
+      }
+    }
+    PlacesUIUtils.openTabset(items, event, window);
+  },
+
+  copyManagedBookmark(event) {
+    // This is a little hacky, but there is a lot of code in Places that handles
+    // clipboard stuff, so it's easier to reuse.
+    let node = {};
+    node.type = 0;
+    node.title = event.target.parentNode.triggerNode.label;
+    node.uri = event.target.parentNode.triggerNode.link;
+    // Copied from _populateClipboard in controller.js
+
+    // This order is _important_! It controls how this and other applications
+    // select data to be inserted based on type.
+    let contents = [
+      { type: PlacesUtils.TYPE_X_MOZ_URL, entries: [] },
+      { type: PlacesUtils.TYPE_HTML, entries: [] },
+      { type: PlacesUtils.TYPE_UNICODE, entries: [] },
+    ];
+
+    contents.forEach(function(content) {
+      content.entries.push(PlacesUtils.wrapNode(node, content.type));
+    });
+
+    function addData(type, data) {
+      xferable.addDataFlavor(type);
+      xferable.setTransferData(
+        type,
+        PlacesUtils.toISupportsString(data),
+        data.length * 2
+      );
+    }
+
+    let xferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(
+      Ci.nsITransferable
+    );
+    xferable.init(null);
+    let hasData = false;
+    // This order matters here!  It controls how this and other applications
+    // select data to be inserted based on type.
+    contents.forEach(function(content) {
+      if (content.entries.length) {
+        hasData = true;
+        let glue = PlacesUtils.endl;
+        addData(content.type, content.entries.join(glue));
+      }
+    });
+
+    if (hasData) {
+      Services.clipboard.setData(
+        xferable,
+        null,
+        Ci.nsIClipboard.kGlobalClipboard
+      );
+    }
+  },
+
+  onDragStartManaged(event) {
+    if (!event.target.link) {
+      return;
+    }
+
+    let dt = event.dataTransfer;
+
+    let node = {};
+    node.type = 0;
+    node.title = event.target.label;
+    node.uri = event.target.link;
+
+    function addData(type, index) {
+      let wrapNode = PlacesUtils.wrapNode(node, type);
+      dt.mozSetDataAt(type, wrapNode, index);
+    }
+
+    addData(PlacesUtils.TYPE_X_MOZ_URL, 0);
+    addData(PlacesUtils.TYPE_UNICODE, 0);
+    addData(PlacesUtils.TYPE_HTML, 0);
   },
 };
 

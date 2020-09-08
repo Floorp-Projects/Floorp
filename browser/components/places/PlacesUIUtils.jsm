@@ -673,7 +673,7 @@ var PlacesUIUtils = {
   /** aItemsToOpen needs to be an array of objects of the form:
    * {uri: string, isBookmark: boolean}
    */
-  _openTabset: function PUIU__openTabset(aItemsToOpen, aEvent, aWindow) {
+  openTabset(aItemsToOpen, aEvent, aWindow) {
     if (!aItemsToOpen.length) {
       return;
     }
@@ -763,7 +763,7 @@ var PlacesUIUtils = {
       }
     }
     if (OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
-      this._openTabset(urlsToOpen, event, window);
+      this.openTabset(urlsToOpen, event, window);
     }
   },
 

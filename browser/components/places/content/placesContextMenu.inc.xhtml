@@ -116,3 +116,25 @@
             data-l10n-id="places-properties"
             selection="bookmark|folder|query"/>
 </menupopup>
+
+<menupopup id="placesContextManaged"
+           onpopupshowing="PlacesToolbarHelper.updateManagedBookmarksContextMenu(this)">
+  <menuitem id="placesContextManaged_open:newtab"
+            oncommand="PlacesToolbarHelper.openManagedBookmark(event, 'tab');"
+            data-l10n-id="places-open-tab"/>
+  <menuitem id="placesContextManaged_openContainer:tabs"
+            oncommand="PlacesToolbarHelper.openManagedFolder(event);"
+            onclick="checkForMiddleClick(this, event);"
+            data-l10n-id="places-open-all-in-tabs"/>
+  <menuitem id="placesContextManaged_open:newwindow"
+            oncommand="PlacesToolbarHelper.openManagedBookmark(event, 'window');"
+            data-l10n-id="places-open-window"/>
+  <menuitem id="placesContextManaged_open:newprivatewindow"
+            oncommand="PlacesToolbarHelper.openManagedBookmark(event, 'window', true);"
+            data-l10n-id="places-open-private-window"
+            hideifprivatebrowsing="true"/>
+  <menuseparator id="placesContextManaged_openSeparator"/>
+  <menuitem id="placesContextManaged_copy"
+            oncommand="PlacesToolbarHelper.copyManagedBookmark(event);"
+            data-l10n-id="text-action-copy"/>
+</menupopup>
