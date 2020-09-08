@@ -94,6 +94,16 @@
   border-inline-start: 1px solid var(--urlbar-separator-color);
 }
 
+#urlbar[searchmode]:not([breakout-extend]) > #urlbar-input-container > #urlbar-label-box {
+  border-inline-start-color: transparent;
+  border-image-width: 0 1px 0 0;
+  pointer-events: none;
+}
+
+#urlbar[searchmode]:not([breakout-extend]) > #urlbar-input-container > #urlbar-label-box:-moz-locale-dir(rtl) {
+  border-image-width: 0 0 0 1px;
+}
+
 .urlbar-label {
   margin: 0;
 }
