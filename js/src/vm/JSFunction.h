@@ -20,6 +20,8 @@
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 
+class JSJitInfo;
+
 namespace js {
 
 class FunctionExtended;

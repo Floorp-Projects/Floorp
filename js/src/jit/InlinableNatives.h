@@ -190,7 +190,7 @@
   _(IntrinsicTypedArrayByteOffset)                 \
   _(IntrinsicTypedArrayElementShift)
 
-struct JSJitInfo;
+class JSJitInfo;
 
 namespace js {
 namespace jit {

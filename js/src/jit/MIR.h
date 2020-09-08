@@ -29,6 +29,7 @@
 #include "jit/MOpcodesGenerated.h"
 #include "jit/TIOracle.h"
 #include "jit/TypePolicy.h"
+#include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter}Op, JSJitInfo
 #include "js/HeapAPI.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "vm/ArrayObject.h"

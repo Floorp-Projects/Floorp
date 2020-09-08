@@ -15493,6 +15493,11 @@ class CGBindingRoot(CGThing):
 
         bindingHeaders["js/shadow/Object.h"] = any(d.interface.hasMembersInSlots() for d in descriptors)
 
+        # The symbols supplied by this header are used so ubiquitously it's not
+        # worth the effort delineating the exact dependency, if it can't be done
+        # *at* the places where their definitions are required.
+        bindingHeaders["js/experimental/JitInfo.h"] = True
+
         def descriptorDeprecated(desc):
             iface = desc.interface
             return any(m.getExtendedAttribute("Deprecated") for m in iface.members + [iface])
@@ -18687,7 +18692,7 @@ class GlobalGenRoots():
 
         curr = CGList([CGGeneric(define="#include <stdint.h>\n"),
                        CGGeneric(define="#include <type_traits>\n\n"),
-                       CGGeneric(define='#include "jsfriendapi.h"\n\n'),
+                       CGGeneric(define='#include "js/experimental/JitInfo.h"\n\n'),
                        CGGeneric(define='#include "mozilla/dom/PrototypeList.h"\n\n'),
                        idEnum])
 

@@ -17,6 +17,7 @@
 #include "js/Proxy.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
+#include "js/experimental/JitInfo.h"
 #include "js/experimental/TypedData.h"
 #include "js/MemoryMetrics.h"
 #include "js/Principals.h"

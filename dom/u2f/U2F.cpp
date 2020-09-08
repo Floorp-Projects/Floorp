@@ -20,6 +20,8 @@
 
 using namespace mozilla::ipc;
 
+class JSJitInfo;
+
 // Forward decl because of nsHTMLDocument.h's complex dependency on
 // /layout/style
 class nsHTMLDocument {

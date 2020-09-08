@@ -40,6 +40,7 @@
 #include "vm/StringType.h"
 
 struct JSFunctionSpec;
+class JSJitInfo;
 struct JSPrincipals;
 struct JSPropertySpec;
 
