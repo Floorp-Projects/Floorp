@@ -73,6 +73,7 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.Image;
 import org.mozilla.geckoview.MediaElement;
 import org.mozilla.geckoview.MediaSession;
 import org.mozilla.geckoview.OverscrollEdgeEffect;
@@ -1399,9 +1400,10 @@ package org.mozilla.geckoview {
   }
 
   public static class MediaSession.Metadata {
-    ctor protected Metadata(@Nullable String, @Nullable String, @Nullable String);
+    ctor protected Metadata(@Nullable String, @Nullable String, @Nullable String, @Nullable Image);
     field @Nullable public final String album;
     field @Nullable public final String artist;
+    field @Nullable public final Image artwork;
     field @Nullable public final String title;
   }
 
@@ -1579,7 +1581,7 @@ package org.mozilla.geckoview {
     field @Nullable public final String badgeText;
     field @Nullable public final Integer badgeTextColor;
     field @Nullable public final Boolean enabled;
-    field @Nullable public final WebExtension.Icon icon;
+    field @Nullable public final Image icon;
     field @Nullable public final String title;
   }
 
@@ -1622,11 +1624,6 @@ package org.mozilla.geckoview {
     ctor protected Flags();
     field public static final long ALLOW_CONTENT_MESSAGING = 1L;
     field public static final long NONE = 0L;
-  }
-
-  public static class WebExtension.Icon {
-    ctor protected Icon();
-    method @AnyThread @NonNull public GeckoResult<Bitmap> get(int);
   }
 
   public static class WebExtension.InstallException extends Exception {
@@ -1674,7 +1671,7 @@ package org.mozilla.geckoview {
     field public final int disabledFlags;
     field public final boolean enabled;
     field @Nullable public final String homepageUrl;
-    field @NonNull public final WebExtension.Icon icon;
+    field @NonNull public final Image icon;
     field public final boolean isRecommended;
     field @Nullable public final String name;
     field public final boolean openOptionsPageInTab;
