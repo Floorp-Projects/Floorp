@@ -331,7 +331,8 @@ var PrintEventHandler = {
           this.originalSourceCurrentURI
         );
       } catch (e) {
-        // Don't care why just yet.
+        // If the user cancels saving, we should close the window for now.
+        window.close();
         return;
       }
     }
