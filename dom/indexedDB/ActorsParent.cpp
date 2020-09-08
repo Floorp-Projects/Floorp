@@ -3761,6 +3761,103 @@ nsresult UpgradeSchemaFrom25_0To26_0(mozIStorageConnection& aConnection) {
   return NS_OK;
 }
 
+Result<bool, nsresult> MaybeUpgradeSchema(mozIStorageConnection& aConnection,
+                                          const int32_t aSchemaVersion,
+                                          nsIFile& aFMDirectory,
+                                          const nsACString& aOrigin) {
+  bool vacuumNeeded = false;
+  int32_t schemaVersion = aSchemaVersion;
+
+  // This logic needs to change next time we change the schema!
+  static_assert(kSQLiteSchemaVersion == int32_t((26 << 4) + 0),
+                "Upgrade function needed due to schema version increase.");
+
+  while (schemaVersion != kSQLiteSchemaVersion) {
+    switch (schemaVersion) {
+      case 4:
+        IDB_TRY(UpgradeSchemaFrom4To5(aConnection));
+        break;
+      case 5:
+        IDB_TRY(UpgradeSchemaFrom5To6(aConnection));
+        break;
+      case 6:
+        IDB_TRY(UpgradeSchemaFrom6To7(aConnection));
+        break;
+      case 7:
+        IDB_TRY(UpgradeSchemaFrom7To8(aConnection));
+        break;
+      case 8:
+        IDB_TRY(UpgradeSchemaFrom8To9_0(aConnection));
+        vacuumNeeded = true;
+        break;
+      case MakeSchemaVersion(9, 0):
+        IDB_TRY(UpgradeSchemaFrom9_0To10_0(aConnection));
+        break;
+      case MakeSchemaVersion(10, 0):
+        IDB_TRY(UpgradeSchemaFrom10_0To11_0(aConnection));
+        break;
+      case MakeSchemaVersion(11, 0):
+        IDB_TRY(UpgradeSchemaFrom11_0To12_0(aConnection));
+        break;
+      case MakeSchemaVersion(12, 0):
+        IDB_TRY(UpgradeSchemaFrom12_0To13_0(aConnection, &vacuumNeeded));
+        break;
+      case MakeSchemaVersion(13, 0):
+        IDB_TRY(UpgradeSchemaFrom13_0To14_0(aConnection));
+        break;
+      case MakeSchemaVersion(14, 0):
+        IDB_TRY(UpgradeSchemaFrom14_0To15_0(aConnection));
+        break;
+      case MakeSchemaVersion(15, 0):
+        IDB_TRY(UpgradeSchemaFrom15_0To16_0(aConnection));
+        break;
+      case MakeSchemaVersion(16, 0):
+        IDB_TRY(UpgradeSchemaFrom16_0To17_0(aConnection));
+        break;
+      case MakeSchemaVersion(17, 0):
+        IDB_TRY(UpgradeSchemaFrom17_0To18_0(aConnection, aOrigin));
+        vacuumNeeded = true;
+        break;
+      case MakeSchemaVersion(18, 0):
+        IDB_TRY(UpgradeSchemaFrom18_0To19_0(aConnection));
+        break;
+      case MakeSchemaVersion(19, 0):
+        IDB_TRY(UpgradeSchemaFrom19_0To20_0(&aFMDirectory, aConnection));
+        break;
+      case MakeSchemaVersion(20, 0):
+        IDB_TRY(UpgradeSchemaFrom20_0To21_0(aConnection));
+        break;
+      case MakeSchemaVersion(21, 0):
+        IDB_TRY(UpgradeSchemaFrom21_0To22_0(aConnection));
+        break;
+      case MakeSchemaVersion(22, 0):
+        IDB_TRY(UpgradeSchemaFrom22_0To23_0(aConnection, aOrigin));
+        break;
+      case MakeSchemaVersion(23, 0):
+        IDB_TRY(UpgradeSchemaFrom23_0To24_0(aConnection));
+        break;
+      case MakeSchemaVersion(24, 0):
+        IDB_TRY(UpgradeSchemaFrom24_0To25_0(aConnection));
+        break;
+      case MakeSchemaVersion(25, 0):
+        IDB_TRY(UpgradeSchemaFrom25_0To26_0(aConnection));
+        break;
+      default:
+        IDB_WARNING(
+            "Unable to open IndexedDB database, no upgrade path is "
+            "available!");
+        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    }
+
+    IDB_TRY_VAR(schemaVersion,
+                MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
+  }
+
+  MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
+
+  return vacuumNeeded;
+}
+
 Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
     nsIFile& aDatabaseFile, const int64_t aDirectoryLockId) {
   MOZ_ASSERT(aDirectoryLockId >= -1);
@@ -4229,98 +4326,8 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
         return Err(rv);
       }
     } else {
-      // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((26 << 4) + 0),
-                    "Upgrade function needed due to schema version increase.");
-
-      while (schemaVersion != kSQLiteSchemaVersion) {
-        switch (schemaVersion) {
-          case 4:
-            rv = UpgradeSchemaFrom4To5(*connection);
-            break;
-          case 5:
-            rv = UpgradeSchemaFrom5To6(*connection);
-            break;
-          case 6:
-            rv = UpgradeSchemaFrom6To7(*connection);
-            break;
-          case 7:
-            rv = UpgradeSchemaFrom7To8(*connection);
-            break;
-          case 8:
-            rv = UpgradeSchemaFrom8To9_0(*connection);
-            vacuumNeeded = true;
-            break;
-          case MakeSchemaVersion(9, 0):
-            rv = UpgradeSchemaFrom9_0To10_0(*connection);
-            break;
-          case MakeSchemaVersion(10, 0):
-            rv = UpgradeSchemaFrom10_0To11_0(*connection);
-            break;
-          case MakeSchemaVersion(11, 0):
-            rv = UpgradeSchemaFrom11_0To12_0(*connection);
-            break;
-          case MakeSchemaVersion(12, 0):
-            rv = UpgradeSchemaFrom12_0To13_0(*connection, &vacuumNeeded);
-            break;
-          case MakeSchemaVersion(13, 0):
-            rv = UpgradeSchemaFrom13_0To14_0(*connection);
-            break;
-          case MakeSchemaVersion(14, 0):
-            rv = UpgradeSchemaFrom14_0To15_0(*connection);
-            break;
-          case MakeSchemaVersion(15, 0):
-            rv = UpgradeSchemaFrom15_0To16_0(*connection);
-            break;
-          case MakeSchemaVersion(16, 0):
-            rv = UpgradeSchemaFrom16_0To17_0(*connection);
-            break;
-          case MakeSchemaVersion(17, 0):
-            rv = UpgradeSchemaFrom17_0To18_0(*connection, aOrigin);
-            vacuumNeeded = true;
-            break;
-          case MakeSchemaVersion(18, 0):
-            rv = UpgradeSchemaFrom18_0To19_0(*connection);
-            break;
-          case MakeSchemaVersion(19, 0):
-            rv = UpgradeSchemaFrom19_0To20_0(&aFMDirectory, *connection);
-            break;
-          case MakeSchemaVersion(20, 0):
-            rv = UpgradeSchemaFrom20_0To21_0(*connection);
-            break;
-          case MakeSchemaVersion(21, 0):
-            rv = UpgradeSchemaFrom21_0To22_0(*connection);
-            break;
-          case MakeSchemaVersion(22, 0):
-            rv = UpgradeSchemaFrom22_0To23_0(*connection, aOrigin);
-            break;
-          case MakeSchemaVersion(23, 0):
-            rv = UpgradeSchemaFrom23_0To24_0(*connection);
-            break;
-          case MakeSchemaVersion(24, 0):
-            rv = UpgradeSchemaFrom24_0To25_0(*connection);
-            break;
-          case MakeSchemaVersion(25, 0):
-            rv = UpgradeSchemaFrom25_0To26_0(*connection);
-            break;
-          default:
-            IDB_WARNING(
-                "Unable to open IndexedDB database, no upgrade path is "
-                "available!");
-            return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-        }
-
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
-
-        rv = connection->GetSchemaVersion(&schemaVersion);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
-      }
-
-      MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
+      IDB_TRY_VAR(vacuumNeeded, MaybeUpgradeSchema(*connection, schemaVersion,
+                                                   aFMDirectory, aOrigin));
     }
 
     rv = transaction.Commit();
