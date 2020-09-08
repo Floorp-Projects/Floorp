@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TCPListener: "chrome://marionette/content/server.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -309,7 +309,7 @@ class MarionetteParentProcess {
     }
 
     if (this.enabled) {
-      log.trace(`Marionette enabled`);
+      logger.trace(`Marionette enabled`);
     }
 
     Services.ppmm.addMessageListener("Marionette:IsRunning", this);
@@ -338,14 +338,14 @@ class MarionetteParentProcess {
         return this.running;
 
       default:
-        log.warn("Unknown IPC message to parent process: " + name);
+        logger.warn("Unknown IPC message to parent process: " + name);
         return null;
     }
   }
 
   observe(subject, topic) {
     if (this.enabled) {
-      log.trace(`Received observer notification ${topic}`);
+      logger.trace(`Received observer notification ${topic}`);
     }
 
     switch (topic) {
@@ -361,7 +361,7 @@ class MarionetteParentProcess {
         Services.obs.removeObserver(this, topic);
 
         if (!this.enabled && subject.handleFlag("marionette", false)) {
-          log.trace(`Marionette enabled`);
+          logger.trace(`Marionette enabled`);
           this.enabled = true;
         }
 
@@ -409,7 +409,7 @@ class MarionetteParentProcess {
               Services.obs.removeObserver(this, topic);
 
               let parserError = ev.target.querySelector("parsererror");
-              log.fatal(parserError.textContent);
+              logger.fatal(parserError.textContent);
               this.uninit();
               Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
             }
@@ -435,7 +435,7 @@ class MarionetteParentProcess {
         }
 
         if (this.gfxWindow) {
-          log.trace(
+          logger.trace(
             "GFX sanity window detected, waiting until it has been closed..."
           );
           Services.obs.addObserver(this, "domwindowclosed");
@@ -464,7 +464,7 @@ class MarionetteParentProcess {
         let dialog = win.document.getElementById("safeModeDialog");
         if (dialog) {
           // accept the dialog to start in safe-mode
-          log.trace("Safe mode detected, supressing dialog");
+          logger.trace("Safe mode detected, supressing dialog");
           win.setTimeout(() => {
             dialog.getButton("accept").click();
           });
@@ -476,14 +476,14 @@ class MarionetteParentProcess {
 
   init(quit = true) {
     if (this.running || !this.enabled || !this.finalUIStartup) {
-      log.debug(
+      logger.debug(
         `Init aborted (running=${this.running}, ` +
           `enabled=${this.enabled}, finalUIStartup=${this.finalUIStartup})`
       );
       return;
     }
 
-    log.trace(
+    logger.trace(
       `Waiting until startup recorder finished recording startup scripts...`
     );
     Services.tm.idleDispatchToMainThread(async () => {
@@ -493,12 +493,12 @@ class MarionetteParentProcess {
           .wrappedJSObject.done;
       }
       await startupRecorder;
-      log.trace(`All scripts recorded.`);
+      logger.trace(`All scripts recorded.`);
 
       if (MarionettePrefs.recommendedPrefs) {
         for (let [k, v] of RECOMMENDED_PREFS) {
           if (!Preferences.isSet(k)) {
-            log.debug(`Setting recommended pref ${k} to ${v}`);
+            logger.debug(`Setting recommended pref ${k} to ${v}`);
             Preferences.set(k, v);
             this.alteredPrefs.add(k);
           }
@@ -509,7 +509,7 @@ class MarionetteParentProcess {
         this.server = new TCPListener(MarionettePrefs.port);
         this.server.start();
       } catch (e) {
-        log.fatal("Remote protocol server failed to start", e);
+        logger.fatal("Remote protocol server failed to start", e);
         this.uninit();
         if (quit) {
           Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
@@ -519,13 +519,13 @@ class MarionetteParentProcess {
 
       env.set(ENV_ENABLED, "1");
       Services.obs.notifyObservers(this, NOTIFY_LISTENING, true);
-      log.debug("Marionette is listening");
+      logger.debug("Marionette is listening");
     });
   }
 
   uninit() {
     for (let k of this.alteredPrefs) {
-      log.debug(`Resetting recommended pref ${k}`);
+      logger.debug(`Resetting recommended pref ${k}`);
       Preferences.reset(k);
     }
     this.alteredPrefs.clear();
@@ -533,7 +533,7 @@ class MarionetteParentProcess {
     if (this.running) {
       this.server.stop();
       Services.obs.notifyObservers(this, NOTIFY_LISTENING);
-      log.debug("Marionette stopped listening");
+      logger.debug("Marionette stopped listening");
     }
   }
 
@@ -550,7 +550,7 @@ class MarionetteContentProcess {
   get running() {
     let reply = Services.cpmm.sendSyncMessage("Marionette:IsRunning");
     if (reply.length == 0) {
-      log.warn("No reply from parent process");
+      logger.warn("No reply from parent process");
       return false;
     }
     return reply[0];
