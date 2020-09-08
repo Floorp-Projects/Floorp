@@ -52,7 +52,7 @@ function enableNetProvider(webConsoleUI) {
         if (message && !message.openedOnce && message.source == "network") {
           dataProvider.onNetworkResourceAvailable(message);
           message.updates.forEach(updateType => {
-            dataProvider.onNetworkResourceUpdated({ ...message, updateType });
+            dataProvider.onNetworkResourceUpdated(message, { updateType });
           });
         }
       }
@@ -69,7 +69,7 @@ function enableNetProvider(webConsoleUI) {
         if (open) {
           const message = getMessage(newState, actor);
           message.updates.forEach(updateType => {
-            dataProvider.onNetworkResourceUpdated({ ...message, updateType });
+            dataProvider.onNetworkResourceUpdated(message, { updateType });
           });
         }
       }

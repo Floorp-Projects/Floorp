@@ -185,7 +185,6 @@ function getOrderedResource(resource) {
     blockedReason: resource.blockedReason,
     channelId: resource.channelId,
     updates: resource.updates,
-    updateType: resource.updateType,
     totalTime: resource.totalTime,
     securityState: resource.securityState,
   };

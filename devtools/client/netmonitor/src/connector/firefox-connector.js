@@ -216,12 +216,12 @@ class FirefoxConnector {
   }
 
   async onResourceUpdated(updates) {
-    for (const { resource } of updates) {
+    for (const { resource, update } of updates) {
       if (
         resource.resourceType ===
         this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT
       ) {
-        this.dataProvider.onNetworkResourceUpdated(resource);
+        this.dataProvider.onNetworkResourceUpdated(resource, update);
       }
     }
   }
