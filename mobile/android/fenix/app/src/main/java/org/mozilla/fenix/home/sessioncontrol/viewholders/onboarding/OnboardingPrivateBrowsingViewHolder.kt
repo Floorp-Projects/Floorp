@@ -11,10 +11,12 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ImageSpan
 import android.view.View
+import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_private_browsing.view.*
+import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -33,7 +35,8 @@ class OnboardingPrivateBrowsingViewHolder(
         val inlineIcon = PrivateBrowsingImageSpan(
             view.context,
             R.drawable.ic_private_browsing,
-            view.description_text_once.lineHeight
+            tint = view.context.getColorFromAttr(R.attr.primaryText),
+            size = view.description_text_once.lineHeight
         )
 
         val text = SpannableString(view.context.getString(R.string.onboarding_private_browsing_description1)).apply {
@@ -57,9 +60,10 @@ class OnboardingPrivateBrowsingViewHolder(
     class PrivateBrowsingImageSpan(
         context: Context,
         @DrawableRes drawableId: Int,
+        @ColorInt tint: Int,
         size: Int
     ) : ImageSpan(
-        AppCompatResources.getDrawable(context, drawableId)!!.apply { setBounds(size) }
+        context.getDrawableWithTint(drawableId, tint)!!.apply { setBounds(size) }
     ) {
         override fun draw(
             canvas: Canvas,
