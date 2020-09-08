@@ -81,7 +81,7 @@ add_task(async function navigateFrameNotExpandedInMarkupView() {
   //
   // The iframe we are about to navigate is therefore hidden and we are not
   // watching it - ie, it is not in the list of known NodeFronts/Actors.
-  const { resource } = await navigateIframeTo(inspector, EXAMPLE_COM_URI);
+  const resource = await navigateIframeTo(inspector, EXAMPLE_COM_URI);
 
   is(
     resource.resourceType,
