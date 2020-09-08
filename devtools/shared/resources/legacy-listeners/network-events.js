@@ -85,7 +85,6 @@ module.exports = async function({
     const updateType = packet.updateType;
     const resourceUpdates = {};
     resourceUpdates.updates = [...resource.updates, updateType];
-    resourceUpdates.updateType = updateType;
 
     switch (updateType) {
       case "requestHeaders":
@@ -144,6 +143,7 @@ module.exports = async function({
         resourceType: resource.resourceType,
         resourceId: resource.resourceId,
         resourceUpdates,
+        updateType,
       },
     ]);
 

@@ -402,8 +402,8 @@ class FirefoxDataProvider {
    *
    * @param {object} resource The updated network event resource.
    */
-  async onNetworkResourceUpdated(resource) {
-    switch (resource.updateType) {
+  async onNetworkResourceUpdated(resource, update) {
+    switch (update.updateType) {
       case "securityInfo":
         this.pushRequestToQueue(resource.actor, {
           securityState: resource.securityState,
@@ -456,7 +456,7 @@ class FirefoxDataProvider {
     // This available field helps knowing when/if updateType property is arrived
     // and can be requested via `requestData`
     this.pushRequestToQueue(resource.actor, {
-      [`${resource.updateType}Available`]: true,
+      [`${update.updateType}Available`]: true,
     });
 
     await this.onPayloadDataReceived(resource);
