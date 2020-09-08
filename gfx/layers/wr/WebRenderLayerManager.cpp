@@ -58,7 +58,7 @@ KnowsCompositor* WebRenderLayerManager::AsKnowsCompositor() { return mWrChild; }
 
 bool WebRenderLayerManager::Initialize(
     PCompositorBridgeChild* aCBChild, wr::PipelineId aLayersId,
-    TextureFactoryIdentifier* aTextureFactoryIdentifier) {
+    TextureFactoryIdentifier* aTextureFactoryIdentifier, nsCString& aError) {
   MOZ_ASSERT(mWrChild == nullptr);
   MOZ_ASSERT(aTextureFactoryIdentifier);
 
@@ -71,13 +71,14 @@ bool WebRenderLayerManager::Initialize(
     // reinitialization. We can expect to be notified again to reinitialize
     // (which may or may not be using WebRender).
     gfxCriticalNote << "Failed to create WebRenderBridgeChild.";
+    aError.AssignLiteral("FEATURE_FAILURE_WEBRENDER_INITIALIZE_IPDL");
     return false;
   }
 
   TextureFactoryIdentifier textureFactoryIdentifier;
   wr::MaybeIdNamespace idNamespace;
   // Sync ipc
-  bridge->SendEnsureConnected(&textureFactoryIdentifier, &idNamespace);
+  bridge->SendEnsureConnected(&textureFactoryIdentifier, &idNamespace, &aError);
   if (textureFactoryIdentifier.mParentBackend == LayersBackend::LAYERS_NONE ||
       idNamespace.isNothing()) {
     gfxCriticalNote << "Failed to connect WebRenderBridgeChild.";

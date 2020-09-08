@@ -2700,9 +2700,10 @@ bool BrowserChild::CreateRemoteLayerManager(
     success = mPuppetWidget->CreateRemoteLayerManager(
         [&](LayerManager* aLayerManager) -> bool {
           MOZ_ASSERT(aLayerManager->AsWebRenderLayerManager());
+          nsCString error;
           return aLayerManager->AsWebRenderLayerManager()->Initialize(
               aCompositorChild, wr::AsPipelineId(mLayersId),
-              &mTextureFactoryIdentifier);
+              &mTextureFactoryIdentifier, error);
         });
   } else {
     nsTArray<LayersBackend> ignored;

@@ -1222,16 +1222,17 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
 
     if (lm->AsWebRenderLayerManager() && mCompositorSession) {
       TextureFactoryIdentifier textureFactoryIdentifier;
+      nsCString error;
       lm->AsWebRenderLayerManager()->Initialize(
           mCompositorSession->GetCompositorBridgeChild(),
           wr::AsPipelineId(mCompositorSession->RootLayerTreeId()),
-          &textureFactoryIdentifier);
+          &textureFactoryIdentifier, error);
       if (textureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_WR) {
         retry = true;
         DestroyCompositor();
         // gfxVars::UseDoubleBufferingWithCompositor() is also disabled.
         gfx::GPUProcessManager::Get()->DisableWebRender(
-            wr::WebRenderError::INITIALIZE);
+            wr::WebRenderError::INITIALIZE, error);
       }
     } else if (lm->AsClientLayerManager() && mCompositorSession) {
       bool shouldAccelerate = ComputeShouldAccelerate();

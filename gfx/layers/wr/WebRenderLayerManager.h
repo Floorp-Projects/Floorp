@@ -52,7 +52,8 @@ class WebRenderLayerManager final : public LayerManager {
  public:
   explicit WebRenderLayerManager(nsIWidget* aWidget);
   bool Initialize(PCompositorBridgeChild* aCBChild, wr::PipelineId aLayersId,
-                  TextureFactoryIdentifier* aTextureFactoryIdentifier);
+                  TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                  nsCString& aError);
 
   void Destroy() override;
 

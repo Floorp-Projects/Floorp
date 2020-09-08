@@ -63,7 +63,7 @@ class NewRenderer : public RendererEvent {
               bool* aUseANGLE, bool* aUseDComp, bool* aUseTripleBuffering,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask, LayoutDeviceIntSize aSize,
-              layers::SyncHandle* aHandle)
+              layers::SyncHandle* aHandle, nsACString* aError)
       : mDocHandle(aDocHandle),
         mMaxTextureSize(aMaxTextureSize),
         mUseANGLE(aUseANGLE),
@@ -73,7 +73,8 @@ class NewRenderer : public RendererEvent {
         mCompositorWidget(std::move(aWidget)),
         mTask(aTask),
         mSize(aSize),
-        mSyncHandle(aHandle) {
+        mSyncHandle(aHandle),
+        mError(aError) {
     MOZ_COUNT_CTOR(NewRenderer);
   }
 
@@ -110,6 +111,7 @@ class NewRenderer : public RendererEvent {
         StaticPrefs::gfx_webrender_enable_low_priority_pool();
     bool supportPictureCaching = isMainWindow;
     wr::Renderer* wrRenderer = nullptr;
+    char* errorMessage = nullptr;
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
             supportLowPriorityTransactions, supportLowPriorityThreadpool,
@@ -138,10 +140,13 @@ class NewRenderer : public RendererEvent {
             compositor->GetMaxUpdateRects(),
             compositor->GetMaxPartialPresentRects(),
             compositor->ShouldDrawPreviousPartialPresentRegions(), mDocHandle,
-            &wrRenderer, mMaxTextureSize,
+            &wrRenderer, mMaxTextureSize, &errorMessage,
             StaticPrefs::gfx_webrender_enable_gpu_markers_AtStartup(),
             panic_on_gl_error)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
+      MOZ_ASSERT(errorMessage);
+      mError->AssignASCII(errorMessage);
+      wr_api_free_error_msg(errorMessage);
       return;
     }
     MOZ_ASSERT(wrRenderer);
@@ -176,6 +181,7 @@ class NewRenderer : public RendererEvent {
   layers::SynchronousTask* mTask;
   LayoutDeviceIntSize mSize;
   layers::SyncHandle* mSyncHandle;
+  nsACString* mError;
 };
 
 class RemoveRenderer : public RendererEvent {
@@ -324,7 +330,7 @@ void TransactionWrapper::UpdateIsTransformAsyncZooming(uint64_t aAnimationId,
 already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
     layers::CompositorBridgeParent* aBridge,
     RefPtr<widget::CompositorWidget>&& aWidget, const wr::WrWindowId& aWindowId,
-    LayoutDeviceIntSize aSize) {
+    LayoutDeviceIntSize aSize, nsACString& aError) {
   MOZ_ASSERT(aBridge);
   MOZ_ASSERT(aWidget);
   static_assert(
@@ -342,9 +348,10 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
   // created on the render thread. If need be we could delay waiting on this
   // task until the next time we need to access the DocumentHandle object.
   layers::SynchronousTask task("Create Renderer");
-  auto event = MakeUnique<NewRenderer>(
-      &docHandle, aBridge, &maxTextureSize, &useANGLE, &useDComp,
-      &useTripleBuffering, std::move(aWidget), &task, aSize, &syncHandle);
+  auto event = MakeUnique<NewRenderer>(&docHandle, aBridge, &maxTextureSize,
+                                       &useANGLE, &useDComp,
+                                       &useTripleBuffering, std::move(aWidget),
+                                       &task, aSize, &syncHandle, &aError);
   RenderThread::Get()->RunEvent(aWindowId, std::move(event));
 
   task.Wait();
