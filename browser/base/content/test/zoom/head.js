@@ -142,6 +142,51 @@ var FullZoomHelper = {
       });
     });
   },
+
+  zoomTest: function zoomTest(tab, val, msg) {
+    is(ZoomManager.getZoomForBrowser(tab.linkedBrowser), val, msg);
+  },
+
+  BACK: 0,
+  FORWARD: 1,
+  navigate: function navigate(direction) {
+    return new Promise(resolve => {
+      let didPs = false;
+      let didZoom = false;
+
+      BrowserTestUtils.waitForContentEvent(
+        gBrowser.selectedBrowser,
+        "pageshow",
+        true
+      ).then(() => {
+        didPs = true;
+        if (didZoom) {
+          resolve();
+        }
+      });
+
+      if (direction == this.BACK) {
+        gBrowser.goBack();
+      } else if (direction == this.FORWARD) {
+        gBrowser.goForward();
+      }
+
+      this.waitForLocationChange().then(function() {
+        didZoom = true;
+        if (didPs) {
+          resolve();
+        }
+      });
+    });
+  },
+
+  failAndContinue: function failAndContinue(func) {
+    return function(err) {
+      Cu.reportError(err);
+      ok(false, err);
+      func();
+    };
+  },
 };
 
 /**
