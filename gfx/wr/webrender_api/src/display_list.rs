@@ -20,7 +20,7 @@ use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 // local imports
 use crate::display_item as di;
 use crate::display_item_cache::*;
-use crate::api::{PipelineId, PropertyBinding};
+use crate::{PipelineId, PropertyBinding};
 use crate::gradient_builder::GradientBuilder;
 use crate::color::ColorF;
 use crate::font::{FontInstanceKey, GlyphInstance, GlyphOptions};

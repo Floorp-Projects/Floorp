@@ -2,16 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::{BlobImageKey, ImageDescriptor, DirtyRect, TileSize, ResourceUpdate};
-use crate::{BlobImageHandler, AsyncBlobImageRasterizer, BlobImageData, BlobImageParams};
-use crate::{BlobImageRequest, BlobImageDescriptor, BlobImageResources, TransactionMsg};
-use crate::{FontKey, FontTemplate, FontInstanceData, FontInstanceKey, AddFont};
+use crate::api::{BlobImageKey, ImageDescriptor, DirtyRect, TileSize};
+use crate::api::{BlobImageHandler, AsyncBlobImageRasterizer, BlobImageData, BlobImageParams};
+use crate::api::{BlobImageRequest, BlobImageDescriptor, BlobImageResources};
+use crate::api::{FontKey, FontTemplate, FontInstanceData, FontInstanceKey};
+use crate::api::SharedFontInstanceMap;
+use crate::api::units::*;
+use crate::render_api::{ResourceUpdate, TransactionMsg, AddFont};
 use crate::image_tiling::*;
-use crate::units::*;
-use crate::font::SharedFontInstanceMap;
-use crate::euclid::{point2, size2};
-
-pub const DEFAULT_TILE_SIZE: TileSize = 512;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -287,44 +285,4 @@ impl ApiResources {
         handler.prepare_resources(&self.fonts, &blob_request_params);
         (Some(handler.create_blob_rasterizer()), blob_request_params)
     }
-}
-
-fn compute_valid_tiles_if_bounds_change(
-    prev_rect: &DeviceIntRect,
-    new_rect: &DeviceIntRect,
-    tile_size: u16,
-) -> Option<TileRange> {
-    let intersection = match prev_rect.intersection(new_rect) {
-        Some(rect) => rect,
-        None => {
-            return Some(TileRange::zero());
-        }
-    };
-
-    let left = prev_rect.min_x() != new_rect.min_x();
-    let right = prev_rect.max_x() != new_rect.max_x();
-    let top = prev_rect.min_y() != new_rect.min_y();
-    let bottom = prev_rect.max_y() != new_rect.max_y();
-
-    if !left && !right && !top && !bottom {
-        // Bounds have not changed.
-        return None;
-    }
-
-    let tw = 1.0 / (tile_size as f32);
-    let th = 1.0 / (tile_size as f32);
-
-    let tiles = intersection
-        .cast::<f32>()
-        .scale(tw, th);
-
-    let min_x = if left { f32::ceil(tiles.min_x()) } else { f32::floor(tiles.min_x()) };
-    let min_y = if top { f32::ceil(tiles.min_y()) } else { f32::floor(tiles.min_y()) };
-    let max_x = if right { f32::floor(tiles.max_x()) } else { f32::ceil(tiles.max_x()) };
-    let max_y = if bottom { f32::floor(tiles.max_y()) } else { f32::ceil(tiles.max_y()) };
-
-    Some(TileRange {
-        origin: point2(min_x as i32, min_y as i32),
-        size: size2((max_x - min_x) as i32, (max_y - min_y) as i32),
-    })
 }

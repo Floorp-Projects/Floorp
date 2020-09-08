@@ -7,7 +7,7 @@ use crate::gpu_cache::{GpuCacheHandle};
 use crate::frame_builder::FrameBuildingState;
 use crate::gpu_cache::GpuDataRequest;
 use crate::intern;
-use api::{FilterDataIntern, ComponentTransferFuncType};
+use api::{ComponentTransferFuncType};
 
 
 pub type FilterDataHandle = intern::Handle<FilterDataIntern>;
@@ -153,6 +153,10 @@ impl SFilterDataTemplate {
         }
     }
 }
+
+#[derive(Copy, Clone, Debug, MallocSizeOf)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
+pub enum FilterDataIntern {}
 
 impl intern::Internable for FilterDataIntern {
     type Key = SFilterDataKey;

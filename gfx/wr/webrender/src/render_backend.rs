@@ -8,18 +8,20 @@
 //! See the comment at the top of the `renderer` module for a description of
 //! how these two pieces interact.
 
-use api::{ApiMsg, ClearCache, DebugCommand, DebugFlags, BlobImageHandler};
-use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestResult};
-use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, ScrollClamping};
-use api::{TransactionMsg, ResourceUpdate};
+use api::{DebugFlags, BlobImageHandler};
+use api::{DocumentId, DocumentLayer, ExternalScrollId, HitTestResult};
+use api::{IdNamespace, PipelineId, RenderNotifier, ScrollClamping};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
-use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
+use api::{PrimitiveKeyKind};
 use api::units::*;
-#[cfg(any(feature = "capture", feature = "replay"))]
-use api::CaptureBits;
-#[cfg(feature = "replay")]
-use api::CapturedDocument;
 use api::channel::{single_msg_channel, Sender, Receiver};
+#[cfg(any(feature = "capture", feature = "replay"))]
+use crate::render_api::CaptureBits;
+#[cfg(feature = "replay")]
+use crate::render_api::CapturedDocument;
+use crate::render_api::{MemoryReport, TransactionMsg, ResourceUpdate, ApiMsg, FrameMsg, ClearCache, DebugCommand};
+use crate::clip::ClipIntern;
+use crate::filterdata::FilterDataIntern;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::CaptureConfig;
 use crate::composite::{CompositorKind, CompositeDescriptor};
@@ -286,7 +288,7 @@ macro_rules! declare_data_stores {
     }
 }
 
-enumerate_interners!(declare_data_stores);
+crate::enumerate_interners!(declare_data_stores);
 
 impl DataStores {
     /// Returns the local rect for a primitive. For most primitives, this is

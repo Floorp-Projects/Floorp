@@ -9,7 +9,7 @@ use peek_poke::PeekPoke;
 use std::ops::{Add, Sub};
 use std::sync::Arc;
 // local imports
-use crate::api::{IdNamespace, TileSize};
+use crate::{IdNamespace, TileSize};
 use crate::display_item::ImageRendering;
 use crate::font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
 use crate::units::*;

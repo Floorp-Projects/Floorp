@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DebugCommand, DocumentId, ExternalImageData, ExternalImageId, PrimitiveFlags};
+use api::{ColorF, DocumentId, ExternalImageData, ExternalImageId, PrimitiveFlags};
 use api::{ImageFormat, NotificationRequest, Shadow, FilterOp};
 use api::units::*;
 use api;
+use crate::render_api::DebugCommand;
 use crate::composite::NativeSurfaceOperation;
 use crate::device::TextureFilter;
 use crate::renderer::PipelineInfo;
