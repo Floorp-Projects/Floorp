@@ -306,7 +306,6 @@ windows-tests:
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
-    - mochitest-devtools-chrome
     - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu
@@ -322,6 +321,9 @@ windows-tests:
     - test-verify-gpu
     - test-verify-wpt
     - xpcshell
+
+windows-devtools:
+    - mochitest-devtools-chrome
 
 mingwclang-tests-debug:
     - cppunit
