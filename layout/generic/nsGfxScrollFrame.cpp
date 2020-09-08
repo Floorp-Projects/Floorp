@@ -4563,8 +4563,8 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
       return;
   }
 
-  // xxx need to handle scroll snapping
-  if (gfxPlatform::UseDesktopZoomingScrollbars() &&
+  if ((aSnap != nsIScrollableFrame::ENABLE_SNAP || !NeedsScrollSnap()) &&
+      gfxPlatform::UseDesktopZoomingScrollbars() &&
       nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
       !nsLayoutUtils::ShouldDisableApzForElement(mOuter->GetContent()) &&
       (WantAsyncScroll() || mZoomableByAPZ)) {
