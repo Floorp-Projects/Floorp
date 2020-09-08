@@ -238,7 +238,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
       Cu.reportError(e);
     }
 
-    if (experimentData && experimentData.slug) {
+    if (experimentData?.slug) {
       log.debug(
         `Loading about:welcome with experiment: ${experimentData.slug}`
       );
