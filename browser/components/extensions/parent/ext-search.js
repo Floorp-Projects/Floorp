@@ -23,25 +23,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.search.context.loadInBackground"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "btoa"]);
-
 var { ExtensionError } = ExtensionUtils;
-
-async function getDataURI(localIconUrl) {
-  let response;
-  try {
-    response = await fetch(localIconUrl);
-  } catch (e) {
-    // Failed to fetch, ignore engine's favicon.
-    Cu.reportError(e);
-    return;
-  }
-  let buffer = await response.arrayBuffer();
-  let contentType = response.headers.get("content-type");
-  let bytes = new Uint8Array(buffer);
-  let str = String.fromCharCode.apply(null, bytes);
-  return `data:${contentType};base64,${btoa(str)}`;
-}
 
 this.search = class extends ExtensionAPI {
   getAPI(context) {
@@ -63,7 +45,9 @@ this.search = class extends ExtensionAPI {
                   engine.iconURI.schemeIs("moz-extension") &&
                   engine.iconURI.host !== context.extension.uuid
                 ) {
-                  favIconUrl = await getDataURI(engine.iconURI.spec);
+                  favIconUrl = await ExtensionUtils.makeDataURI(
+                    engine.iconURI.spec
+                  );
                 } else {
                   favIconUrl = engine.iconURI.spec;
                 }

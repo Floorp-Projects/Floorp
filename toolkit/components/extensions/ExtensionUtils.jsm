@@ -18,6 +18,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Timer.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "btoa"]);
+
 // xpcshell doesn't handle idle callbacks well.
 XPCOMUtils.defineLazyGetter(this, "idleTimeout", () =>
   Services.appinfo.name === "XPCShell" ? 500 : undefined
@@ -299,12 +301,34 @@ function parseMatchPatterns(patterns, options) {
   }
 }
 
+/**
+ * Fetch icon content and convert it to a data: URI.
+ * @param {string} iconUrl Icon url to fetch.
+ * @returns {Promise<string>}
+ */
+async function makeDataURI(iconUrl) {
+  let response;
+  try {
+    response = await fetch(iconUrl);
+  } catch (e) {
+    // Failed to fetch, ignore engine's favicon.
+    Cu.reportError(e);
+    return;
+  }
+  let buffer = await response.arrayBuffer();
+  let contentType = response.headers.get("content-type");
+  let bytes = new Uint8Array(buffer);
+  let str = String.fromCharCode.apply(null, bytes);
+  return `data:${contentType};base64,${btoa(str)}`;
+}
+
 var ExtensionUtils = {
   flushJarCache,
   getInnerWindowID,
   getMessageManager,
   getUniqueId,
   filterStack,
+  makeDataURI,
   parseMatchPatterns,
   promiseDocumentIdle,
   promiseDocumentLoaded,

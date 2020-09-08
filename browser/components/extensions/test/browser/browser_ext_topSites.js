@@ -11,6 +11,9 @@ const { PlacesTestUtils } = ChromeUtils.import(
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
+const {
+  ExtensionUtils: { makeDataURI },
+} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 // A small 1x1 test png
 const IMAGE_1x1 =
@@ -297,13 +300,14 @@ add_task(async function test_topSites_newtab_visits_favicons() {
     return sites && sites[1] && sites[1].url == "http://example-1.com/";
   });
 
+  let base = "resource://activity-stream/data/content/tippytop/images/";
+
   let expectedResults = [
     {
       type: "search",
       url: "https://amazon.com",
       title: "@amazon",
-      favicon:
-        "resource://activity-stream/data/content/tippytop/images/amazon@2x.png",
+      favicon: await makeDataURI(`${base}amazon@2x.png`),
     },
     {
       type: "url",
@@ -321,36 +325,31 @@ add_task(async function test_topSites_newtab_visits_favicons() {
       type: "url",
       url: "https://www.youtube.com/",
       title: "youtube",
-      favicon:
-        "resource://activity-stream/data/content/tippytop/images/youtube-com@2x.png",
+      favicon: await makeDataURI(`${base}youtube-com@2x.png`),
     },
     {
       type: "url",
       url: "https://www.facebook.com/",
       title: "facebook",
-      favicon:
-        "resource://activity-stream/data/content/tippytop/images/facebook-com@2x.png",
+      favicon: await makeDataURI(`${base}facebook-com@2x.png`),
     },
     {
       type: "url",
       url: "https://www.reddit.com/",
       title: "reddit",
-      favicon:
-        "resource://activity-stream/data/content/tippytop/images/reddit-com@2x.png",
+      favicon: await makeDataURI(`${base}reddit-com@2x.png`),
     },
     {
       type: "url",
       url: "https://www.wikipedia.org/",
       title: "wikipedia",
-      favicon:
-        "resource://activity-stream/data/content/tippytop/images/wikipedia-org@2x.png",
+      favicon: await makeDataURI(`${base}wikipedia-org@2x.png`),
     },
     {
       type: "url",
       url: "https://twitter.com/",
       title: "twitter",
-      favicon:
-        "resource://activity-stream/data/content/tippytop/images/twitter-com@2x.png",
+      favicon: await makeDataURI(`${base}twitter-com@2x.png`),
     },
   ];
 
@@ -395,8 +394,9 @@ add_task(async function test_topSites_newtab_visits_favicons_limit() {
       type: "search",
       url: "https://amazon.com",
       title: "@amazon",
-      favicon:
-        "resource://activity-stream/data/content/tippytop/images/amazon@2x.png",
+      favicon: await makeDataURI(
+        "resource://activity-stream/data/content/tippytop/images/amazon@2x.png"
+      ),
     },
     {
       type: "url",
