@@ -238,6 +238,7 @@ EXPORTS.js.friend += [
     '../public/friend/StackLimits.h',
     '../public/friend/UsageStatistics.h',
     '../public/friend/WindowProxy.h',
+    '../public/friend/XrayJitInfo.h',
 ]
 
 # "Shadow" API defines the internal layout of public JSAPI types like |JSObject|

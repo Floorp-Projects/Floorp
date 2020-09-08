@@ -771,14 +771,6 @@ JS_FRIEND_API bool js::IsDOMRemoteProxyObject(JSObject* object) {
                                     js::GetDOMRemoteProxyHandlerFamily();
 }
 
-static XrayJitInfo* gXrayJitInfo = nullptr;
-
-JS_FRIEND_API void js::SetXrayJitInfo(XrayJitInfo* info) {
-  gXrayJitInfo = info;
-}
-
-XrayJitInfo* js::GetXrayJitInfo() { return gXrayJitInfo; }
-
 JS_FRIEND_API void js::PrepareScriptEnvironmentAndInvoke(
     JSContext* cx, HandleObject global,
     ScriptEnvironmentPreparer::Closure& closure) {
