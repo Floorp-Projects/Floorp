@@ -518,8 +518,13 @@ void nsDocShellLoadState::SetSHEntry(nsISHEntry* aSHEntry) {
 
 void nsDocShellLoadState::SetLoadingSessionHistoryInfo(
     const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo) {
-  mLoadingSessionHistoryInfo =
-      MakeUnique<LoadingSessionHistoryInfo>(aLoadingInfo);
+  SetLoadingSessionHistoryInfo(
+      MakeUnique<mozilla::dom::LoadingSessionHistoryInfo>(aLoadingInfo));
+}
+
+void nsDocShellLoadState::SetLoadingSessionHistoryInfo(
+    mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo> aLoadingInfo) {
+  mLoadingSessionHistoryInfo = std::move(aLoadingInfo);
 }
 
 const mozilla::dom::LoadingSessionHistoryInfo*

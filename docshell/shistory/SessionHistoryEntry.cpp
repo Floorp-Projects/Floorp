@@ -267,6 +267,13 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
   SessionHistoryEntry::sLoadIdToEntry->Put(mLoadId, aEntry);
 }
 
+LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
+    SessionHistoryEntry* aEntry, uint64_t aLoadId)
+    : mInfo(aEntry->Info()), mLoadId(aLoadId) {
+  MOZ_ASSERT(SessionHistoryEntry::sLoadIdToEntry &&
+             SessionHistoryEntry::sLoadIdToEntry->Get(aLoadId) == aEntry);
+}
+
 already_AddRefed<nsDocShellLoadState>
 LoadingSessionHistoryInfo::CreateLoadInfo() const {
   RefPtr<nsDocShellLoadState> loadState(
