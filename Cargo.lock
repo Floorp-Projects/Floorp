@@ -5622,7 +5622,6 @@ dependencies = [
  "core-graphics",
  "core-text",
  "cstr",
- "derive_more",
  "dwrote",
  "euclid",
  "freetype",

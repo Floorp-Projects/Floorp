@@ -14,7 +14,6 @@ use crate::boilerplate::{Example, HandyDandyRectBuilder};
 use gleam::gl;
 use std::mem;
 use webrender::api::*;
-use webrender::render_api::*;
 use webrender::api::units::*;
 
 
