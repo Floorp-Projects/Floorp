@@ -853,6 +853,20 @@ class ContentParent final
   void MarkAsDead();
 
   /**
+   * Check if this process is ready to be shut down, and if it is, begin the
+   * shutdown process. Should be called whenever a change occurs which could
+   * cause the decisions made by `ShouldKeepProcessAlive` to change.
+   *
+   * @param aExpectedBrowserCount The number of PBrowser actors which should
+   *                              not block shutdown. This should usually be 0.
+   * @param aSendShutDown If true, will send the shutdown message in addition
+   *                      to marking the process as dead and starting the force
+   *                      kill timer.
+   */
+  void MaybeBeginShutDown(uint32_t aExpectedBrowserCount = 0,
+                          bool aSendShutDown = true);
+
+  /**
    * How we will shut down this ContentParent and its subprocess.
    */
   enum ShutDownMethod {

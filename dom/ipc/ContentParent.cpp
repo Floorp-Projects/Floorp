@@ -1549,6 +1549,30 @@ void ContentParent::Init() {
   gmps->UpdateContentProcessGMPCapabilities();
 }
 
+void ContentParent::MaybeBeginShutDown(uint32_t aExpectedBrowserCount,
+                                       bool aSendShutDown) {
+  MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
+          ("MaybeBeginShutdown %p", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (ManagedPBrowserParent().Count() != aExpectedBrowserCount ||
+      ShouldKeepProcessAlive() || TryToRecycle()) {
+    return;
+  }
+
+  MOZ_LOG(
+      ContentParent::GetLog(), LogLevel::Debug,
+      ("Beginning ContentParent Shutdown %p (%s)", this, mRemoteType.get()));
+
+  // We're dying now, prevent anything from re-using this process.
+  MarkAsDead();
+  StartForceKillTimer();
+
+  if (aSendShutDown) {
+    MaybeAsyncSendShutDownMessage();
+  }
+}
+
 void ContentParent::MaybeAsyncSendShutDownMessage() {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
           ("MaybeAsyncSendShutDownMessage %p", this));
@@ -2101,25 +2125,8 @@ void ContentParent::NotifyTabDestroying() {
   // even if the PBrowsers themselves never finish destroying.
   ++mNumDestroyingTabs;
 
-  uint32_t tabCount = ManagedPBrowserParent().Count();
-  if (uint32_t(mNumDestroyingTabs) != tabCount) {
-    return;
-  }
-
-  if (ShouldKeepProcessAlive()) {
-    return;
-  }
-
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-          ("NotifyTabDestroying %p", this));
-  if (TryToRecycle()) {
-    return;
-  }
-
-  // We're dying now, so prevent this content process from being
-  // recycled during its shutdown procedure.
-  MarkAsDead();
-  StartForceKillTimer();
+  MaybeBeginShutDown(/* aExpectedBrowserCount */ mNumDestroyingTabs,
+                     /* aSendShutDown */ false);
 }
 
 void ContentParent::AddKeepAlive() {
@@ -2131,11 +2138,7 @@ void ContentParent::RemoveKeepAlive() {
   MOZ_DIAGNOSTIC_ASSERT(mNumKeepaliveCalls > 0);
   --mNumKeepaliveCalls;
 
-  if (ManagedPBrowserParent().Count() == 0 && !ShouldKeepProcessAlive() &&
-      !TryToRecycle()) {
-    MarkAsDead();
-    MaybeAsyncSendShutDownMessage();
-  }
+  MaybeBeginShutDown();
 }
 
 void ContentParent::StartForceKillTimer() {
@@ -2176,11 +2179,8 @@ void ContentParent::NotifyTabDestroyed(const TabId& aTabId,
   // us down.
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
           ("NotifyTabDestroyed %p", this));
-  if (ManagedPBrowserParent().Count() == 1 && !ShouldKeepProcessAlive() &&
-      !TryToRecycle()) {
-    MarkAsDead();
-    MaybeAsyncSendShutDownMessage();
-  }
+
+  MaybeBeginShutDown(/* aExpectedBrowserCount */ 1);
 }
 
 TestShellParent* ContentParent::CreateTestShell() {
@@ -6519,14 +6519,9 @@ void ContentParent::UnregisterRemoveWorkerActor() {
     }
   }
 
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
           ("UnregisterRemoveWorkerActor %p", this));
-  if (!cpm->GetBrowserParentCountByProcessId(ChildID()) &&
-      !ShouldKeepProcessAlive() && !TryToRecycle()) {
-    MarkAsDead();
-    MaybeAsyncSendShutDownMessage();
-  }
+  MaybeBeginShutDown();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowClose(
