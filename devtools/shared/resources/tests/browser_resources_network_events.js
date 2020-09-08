@@ -321,19 +321,3 @@ const EXISTING_REQUESTS_COMMANDS = [
 const LIVE_REQUESTS_COMMANDS = [
   `await fetch("/live_get.html", { method: "GET" });`,
 ];
-
-async function triggerNetworkRequests(browser, commands) {
-  for (let i = 0; i < commands.length; i++) {
-    await SpecialPowers.spawn(browser, [commands[i]], async function(code) {
-      const script = content.document.createElement("script");
-      script.append(
-        content.document.createTextNode(
-          `async function triggerRequest() {${code}}`
-        )
-      );
-      content.document.body.append(script);
-      await content.wrappedJSObject.triggerRequest();
-      script.remove();
-    });
-  }
-}
