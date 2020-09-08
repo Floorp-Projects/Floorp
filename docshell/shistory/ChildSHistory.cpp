@@ -137,21 +137,20 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
         index.value() <= 0) {
       break;
     }
-    if (mHistory->HasUserInteractionAtIndex(index.value())) {
+    if (mHistory && mHistory->HasUserInteractionAtIndex(index.value())) {
       break;
     }
   }
 
   if (StaticPrefs::fission_sessionHistoryInParent()) {
     nsCOMPtr<nsISHistory> shistory = mHistory;
-    ContentChild::GetSingleton()->SendHistoryGo(
-        mBrowsingContext, index.value(),
-        [shistory](int32_t&& aRequestedIndex) {
+    mBrowsingContext->HistoryGo(
+        index.value(), [shistory](int32_t&& aRequestedIndex) {
           // FIXME Should probably only do this for non-fission.
-          shistory->InternalSetRequestedIndex(aRequestedIndex);
-        },
-        [](mozilla::ipc::
-               ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
+          if (shistory) {
+            shistory->InternalSetRequestedIndex(aRequestedIndex);
+          }
+        });
   } else {
     aRv = mHistory->GotoIndex(index.value());
   }

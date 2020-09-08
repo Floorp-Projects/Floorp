@@ -672,6 +672,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   Tuple<nsCOMPtr<nsIPrincipal>, nsCOMPtr<nsIPrincipal>>
   GetTriggeringAndInheritPrincipalsForCurrentLoad();
 
+  void HistoryGo(int32_t aIndex, std::function<void(int32_t&&)>&& aResolver);
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,

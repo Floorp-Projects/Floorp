@@ -2714,6 +2714,18 @@ void BrowsingContext::RemoveFromSessionHistory() {
   }
 }
 
+void BrowsingContext::HistoryGo(int32_t aIndex,
+                                std::function<void(int32_t&&)>&& aResolver) {
+  if (XRE_IsContentProcess()) {
+    ContentChild::GetSingleton()->SendHistoryGo(
+        this, aIndex, std::move(aResolver),
+        [](mozilla::ipc::
+               ResponseRejectReason) { /* FIXME Is ignoring this fine? */ });
+  } else {
+    Canonical()->HistoryGo(aIndex, std::move(aResolver));
+  }
+}
+
 }  // namespace dom
 
 namespace ipc {

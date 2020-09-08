@@ -126,6 +126,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void RemoveFromSessionHistory();
 
+  void HistoryGo(int32_t aIndex, std::function<void(int32_t&&)>&& aResolver);
+
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
