@@ -265,6 +265,9 @@ class RenderThread final {
   void SimulateDeviceReset();
 
   /// Can only be called from the render thread.
+  void NotifyWebRenderError(WebRenderError aError);
+
+  /// Can only be called from the render thread.
   void HandleWebRenderError(WebRenderError aError);
   /// Can only be called from the render thread.
   bool IsHandlingWebRenderError();

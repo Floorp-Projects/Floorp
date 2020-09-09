@@ -64,5 +64,14 @@ RenderTextureHostWrapper::AsRenderMacIOSurfaceTextureHostOGL() {
   return mTextureHost->AsRenderMacIOSurfaceTextureHostOGL();
 }
 
+RenderDXGITextureHostOGL*
+RenderTextureHostWrapper::AsRenderDXGITextureHostOGL() {
+  EnsureTextureHost();
+  if (!mTextureHost) {
+    return nullptr;
+  }
+  return mTextureHost->AsRenderDXGITextureHostOGL();
+}
+
 }  // namespace wr
 }  // namespace mozilla

@@ -99,6 +99,8 @@ class DeviceManagerDx final {
   void CreateDirectCompositionDevice();
   bool CreateCanvasDevice();
 
+  static HANDLE CreateDCompSurfaceHandle();
+
   void GetCompositorDevices(
       RefPtr<ID3D11Device>* aOutDevice,
       RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments);

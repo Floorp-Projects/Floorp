@@ -51,6 +51,10 @@ decltype(D3D11CreateDevice)* sD3D11CreateDeviceFn = nullptr;
 // It should only be used within CreateDirectCompositionDevice.
 decltype(DCompositionCreateDevice2)* sDcompCreateDevice2Fn = nullptr;
 
+// It should only be used within CreateDCompSurfaceHandle
+decltype(DCompositionCreateSurfaceHandle)* sDcompCreateSurfaceHandleFn =
+    nullptr;
+
 // We don't have access to the DirectDrawCreateEx type in gfxWindowsPlatform.h,
 // since it doesn't include ddraw.h, so we use a static here. It should only
 // be used within InitializeDirectDrawConfig.
@@ -121,6 +125,14 @@ bool DeviceManagerDx::LoadDcomp() {
 
   sDcompCreateDevice2Fn = (decltype(DCompositionCreateDevice2)*)GetProcAddress(
       module, "DCompositionCreateDevice2");
+  if (!sDcompCreateDevice2Fn) {
+    return false;
+  }
+
+  // Load optional API for external compositing
+  sDcompCreateSurfaceHandleFn =
+      (decltype(DCompositionCreateSurfaceHandle)*)::GetProcAddress(
+          module, "DCompositionCreateSurfaceHandle");
   if (!sDcompCreateDevice2Fn) {
     return false;
   }
@@ -411,6 +423,22 @@ void DeviceManagerDx::CreateDirectCompositionDevice() {
   }
 
   mDirectCompositionDevice = compositionDevice;
+}
+
+/* static */
+HANDLE DeviceManagerDx::CreateDCompSurfaceHandle() {
+  if (!sDcompCreateSurfaceHandleFn) {
+    return 0;
+  }
+
+  HANDLE handle = 0;
+  HRESULT hr = sDcompCreateSurfaceHandleFn(COMPOSITIONOBJECT_ALL_ACCESS,
+                                           nullptr, &handle);
+  if (FAILED(hr)) {
+    return 0;
+  }
+
+  return handle;
 }
 
 void DeviceManagerDx::ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus) {

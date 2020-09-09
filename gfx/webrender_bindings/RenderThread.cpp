@@ -835,13 +835,20 @@ static void DoNotifyWebRenderError(WebRenderError aError) {
   layers::CompositorManagerParent::NotifyWebRenderError(aError);
 }
 
+void RenderThread::NotifyWebRenderError(WebRenderError aError) {
+  MOZ_ASSERT(IsInRenderThread());
+
+  layers::CompositorThread()->Dispatch(NewRunnableFunction(
+      "DoNotifyWebRenderErrorRunnable", &DoNotifyWebRenderError, aError));
+}
+
 void RenderThread::HandleWebRenderError(WebRenderError aError) {
   if (mHandlingWebRenderError) {
     return;
   }
 
-  layers::CompositorThread()->Dispatch(NewRunnableFunction(
-      "DoNotifyWebRenderErrorRunnable", &DoNotifyWebRenderError, aError));
+  NotifyWebRenderError(aError);
+
   {
     MutexAutoLock lock(mRenderTextureMapLock);
     mRenderTexturesDeferred.clear();

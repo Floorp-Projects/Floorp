@@ -475,6 +475,7 @@ void GPUProcessManager::DisableWebRender(wr::WebRenderError aError,
     MOZ_ASSERT_UNREACHABLE("Invalid value");
   }
   gfx::gfxVars::SetUseWebRender(false);
+  gfx::gfxVars::SetUseWebRenderDCompVideoOverlayWin(false);
 
 #if defined(MOZ_WIDGET_ANDROID)
   // If aError is not wr::WebRenderError::INITIALIZE, nsWindow does not
@@ -493,6 +494,14 @@ void GPUProcessManager::DisableWebRender(wr::WebRenderError aError,
 }
 
 void GPUProcessManager::NotifyWebRenderError(wr::WebRenderError aError) {
+  if (aError == wr::WebRenderError::VIDEO_OVERLAY) {
+#ifdef XP_WIN
+    gfxVars::SetUseWebRenderDCompVideoOverlayWin(false);
+#else
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+#endif
+    return;
+  }
   DisableWebRender(aError, nsCString());
 }
 
