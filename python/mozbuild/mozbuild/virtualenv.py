@@ -95,7 +95,7 @@ class VirtualenvManager(VirtualenvHelper):
 
     def __init__(
             self, topsrcdir, virtualenv_path, log_handle, manifest_path,
-            parent_site_dir=None, populate_local_paths=True):
+            populate_local_paths=True):
         """Create a new manager.
 
         Each manager is associated with a source directory, a path where you
@@ -115,10 +115,6 @@ class VirtualenvManager(VirtualenvHelper):
 
         self.log_handle = log_handle
         self.manifest_path = manifest_path
-        self.parent_site_dir = parent_site_dir
-        if not self.parent_site_dir:
-            import distutils.sysconfig
-            self.parent_site_dir = distutils.sysconfig.get_python_lib()
         self.populate_local_paths = populate_local_paths
 
     @property
@@ -321,13 +317,6 @@ class VirtualenvManager(VirtualenvHelper):
         python2 -- This denotes that the action should only be taken when run
             on python 2.
 
-        inherit-from-parent-environment -- This denotes that we should add the
-            configured site directory of the "parent" to the virtualenv's list
-            of site directories. This can be specified on the command line as
-            --parent-site-dir or passed in the constructor of this class. This
-            defaults to the site-packages directory of the current Python
-            interpreter if not provided.
-
         set-variable -- Set the given environment variable; e.g.
             `set-variable FOO=1`.
 
@@ -346,13 +335,6 @@ class VirtualenvManager(VirtualenvHelper):
             mode='w')
 
         def handle_package(package):
-            if package[0] == 'inherit-from-parent-environment':
-                assert len(package) == 1
-                sitecustomize.write(
-                    'import site\n'
-                    "site.addsitedir(%s)\n" % repr(self.parent_site_dir))
-                return True
-
             if package[0].startswith('set-variable '):
                 assert len(package) == 1
                 assignment = package[0][len('set-variable '):].strip()
@@ -389,7 +371,6 @@ class VirtualenvManager(VirtualenvHelper):
                 assert os.path.isfile(src), "'%s' does not exist" % src
                 submanager = VirtualenvManager(
                     self.topsrcdir, self.virtualenv_root, self.log_handle, src,
-                    parent_site_dir=self.parent_site_dir,
                     populate_local_paths=self.populate_local_paths)
                 submanager.populate(sitecustomize=sitecustomize)
 
@@ -516,8 +497,6 @@ class VirtualenvManager(VirtualenvHelper):
 
         This returns the path of the created virtualenv.
         """
-        import distutils
-
         self.create(python)
 
         # We need to populate the virtualenv using the Python executable in
@@ -536,8 +515,7 @@ class VirtualenvManager(VirtualenvHelper):
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1635481
         os.environ.pop('__PYVENV_LAUNCHER__', None)
         args = [self.python_path, thismodule, 'populate', self.topsrcdir,
-                self.virtualenv_root, self.manifest_path, '--parent-site-dir',
-                distutils.sysconfig.get_python_lib()]
+                self.virtualenv_root, self.manifest_path]
         if self.populate_local_paths:
             args.append('--populate-local-paths')
 
@@ -722,7 +700,6 @@ if __name__ == '__main__':
     parser.add_argument('topsrcdir')
     parser.add_argument('virtualenv_path')
     parser.add_argument('manifest_path')
-    parser.add_argument('--parent-site-dir', default=None)
     parser.add_argument('--populate-local-paths', action='store_true')
 
     if sys.argv[1] == 'populate':
@@ -735,7 +712,6 @@ if __name__ == '__main__':
 
     manager = VirtualenvManager(
         opts.topsrcdir, opts.virtualenv_path, sys.stdout, opts.manifest_path,
-        parent_site_dir=opts.parent_site_dir,
         populate_local_paths=opts.populate_local_paths)
 
     if populate:
