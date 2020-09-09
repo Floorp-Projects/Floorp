@@ -277,14 +277,7 @@ function Sleep(timeout) {
   if (typeof timeout != "number") {
     throw new TypeError();
   }
-  if (!Number.isInteger(timeout) || timeout < 0) {
-    throw new RangeError();
-  }
-
-  return new Promise(resolve => {
-    const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.init(resolve, timeout, TYPE_ONE_SHOT);
-  });
+  return new TimedPromise(() => {}, { timeout, throws: null });
 }
 
 /**
