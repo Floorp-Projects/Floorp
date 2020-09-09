@@ -103,6 +103,7 @@ impl ApiResources {
                     blobs_to_rasterize.push(img.key);
                 }
                 ResourceUpdate::DeleteBlobImage(key) => {
+                    transaction.use_scene_builder_thread = true;
                     self.blob_image_templates.remove(&key);
                     if let Some(ref mut handler) = self.blob_image_handler {
                         handler.delete(key);
@@ -140,12 +141,14 @@ impl ApiResources {
                     );
                 }
                 ResourceUpdate::DeleteFont(key) => {
+                    transaction.use_scene_builder_thread = true;
                     self.fonts.templates.remove(&key);
                     if let Some(ref mut handler) = self.blob_image_handler {
                         handler.delete_font(key);
                     }
                 }
                 ResourceUpdate::DeleteFontInstance(key) => {
+                    transaction.use_scene_builder_thread = true;
                     // We will delete from the shared font instance map in the resource cache
                     // after scene swap.
 
@@ -153,11 +156,16 @@ impl ApiResources {
                         r.delete_font_instance(key);
                     }
                 }
+                ResourceUpdate::DeleteImage(..) => {
+                    transaction.use_scene_builder_thread = true;
+                }
                 _ => {}
             }
         }
 
         let (rasterizer, requests) = self.create_blob_scene_builder_requests(&blobs_to_rasterize);
+        transaction.use_scene_builder_thread |= !requests.is_empty();
+        transaction.use_scene_builder_thread |= !transaction.scene_ops.is_empty();
         transaction.blob_rasterizer = rasterizer;
         transaction.blob_requests = requests;
     }

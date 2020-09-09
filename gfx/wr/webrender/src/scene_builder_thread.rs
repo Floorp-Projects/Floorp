@@ -100,20 +100,20 @@ pub struct LoadScene {
     pub interners: Interners,
 }
 
-// Message to the scene builder thread.
+/// Message to the scene builder thread.
 pub enum SceneBuilderRequest {
     Transactions(Vec<Box<TransactionMsg>>),
-    ExternalEvent(ExternalEvent),
     AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
     DeleteDocument(DocumentId),
     GetGlyphDimensions(GlyphDimensionRequest),
     GetGlyphIndices(GlyphIndexRequest),
-    WakeUp,
-    Stop,
-    Flush(Sender<()>),
     ClearNamespace(IdNamespace),
     SimulateLongSceneBuild(u32),
     SimulateLongLowPrioritySceneBuild(u32),
+    ExternalEvent(ExternalEvent),
+    WakeUp,
+    ShutDown(Option<Sender<()>>),
+    Flush(Sender<()>),
     SetFrameBuilderConfig(FrameBuilderConfig),
     ReportMemory(Box<MemoryReport>, Sender<Box<MemoryReport>>),
     #[cfg(feature = "capture")]
@@ -134,10 +134,11 @@ pub enum SceneBuilderResult {
     CapturedTransactions(Vec<Box<BuiltTransaction>>, CaptureConfig, Option<Sender<SceneSwapResult>>),
     ExternalEvent(ExternalEvent),
     FlushComplete(Sender<()>),
+    DeleteDocument(DocumentId),
     ClearNamespace(IdNamespace),
     GetGlyphDimensions(GlyphDimensionRequest),
     GetGlyphIndices(GlyphIndexRequest),
-    Stopped,
+    ShutDown(Option<Sender<()>>),
     DocumentsForDebugger(String)
 }
 
@@ -338,6 +339,7 @@ impl SceneBuilderThread {
                 }
                 Ok(SceneBuilderRequest::DeleteDocument(document_id)) => {
                     self.documents.remove(&document_id);
+                    self.send(SceneBuilderResult::DeleteDocument(document_id));
                 }
                 Ok(SceneBuilderRequest::ClearNamespace(id)) => {
                     self.documents.retain(|doc_id, _doc| doc_id.namespace_id != id);
@@ -347,13 +349,13 @@ impl SceneBuilderThread {
                     self.send(SceneBuilderResult::ExternalEvent(evt));
                 }
                 Ok(SceneBuilderRequest::GetGlyphDimensions(request)) => {
-                    self.send(SceneBuilderResult::GetGlyphDimensions(request))
+                    self.send(SceneBuilderResult::GetGlyphDimensions(request));
                 }
                 Ok(SceneBuilderRequest::GetGlyphIndices(request)) => {
-                    self.send(SceneBuilderResult::GetGlyphIndices(request))
+                    self.send(SceneBuilderResult::GetGlyphIndices(request));
                 }
-                Ok(SceneBuilderRequest::Stop) => {
-                    self.send(SceneBuilderResult::Stopped);
+                Ok(SceneBuilderRequest::ShutDown(sync)) => {
+                    self.send(SceneBuilderResult::ShutDown(sync));
                     break;
                 }
                 Ok(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)) => {
@@ -834,14 +836,8 @@ impl LowPrioritySceneBuilderThread {
                         .collect();
                     self.tx.send(SceneBuilderRequest::Transactions(txns)).unwrap();
                 }
-                Ok(SceneBuilderRequest::AddDocument(id, size, layer)) => {
-                    self.tx.send(SceneBuilderRequest::AddDocument(id, size, layer)).unwrap();
-                }
-                Ok(SceneBuilderRequest::DeleteDocument(document_id)) => {
-                    self.tx.send(SceneBuilderRequest::DeleteDocument(document_id)).unwrap();
-                }
-                Ok(SceneBuilderRequest::Stop) => {
-                    self.tx.send(SceneBuilderRequest::Stop).unwrap();
+                Ok(SceneBuilderRequest::ShutDown(sync)) => {
+                    self.tx.send(SceneBuilderRequest::ShutDown(sync)).unwrap();
                     break;
                 }
                 Ok(SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(time_ms)) => {

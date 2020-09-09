@@ -25,7 +25,7 @@ use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation
 use crate::api::DEFAULT_TILE_SIZE;
 use crate::api::units::*;
 use crate::api_resources::ApiResources;
-use crate::scene_builder_thread::SceneBuilderResult;
+use crate::scene_builder_thread::{SceneBuilderRequest, SceneBuilderResult};
 use crate::intern::InterningMemoryReport;
 
 #[repr(C)]
@@ -126,6 +126,7 @@ pub struct Transaction {
     /// it will be applied directly on the render backend.
     use_scene_builder_thread: bool,
 
+    ///
     generate_frame: bool,
 
     /// Set to true in order to force re-rendering even if WebRender can't internally
@@ -474,7 +475,7 @@ impl Transaction {
 
     /// See `ResourceUpdate::SetBlobImageVisibleArea`.
     pub fn set_blob_image_visible_area(&mut self, key: BlobImageKey, area: DeviceIntRect) {
-        self.resource_updates.push(ResourceUpdate::SetBlobImageVisibleArea(key, area))
+        self.resource_updates.push(ResourceUpdate::SetBlobImageVisibleArea(key, area));
     }
 
     /// See `ResourceUpdate::AddFont`.
@@ -909,10 +910,6 @@ pub enum DebugCommand {
 
 /// Message sent by the `RenderApi` to the render backend thread.
 pub enum ApiMsg {
-    /// Gets the glyph dimensions
-    GetGlyphDimensions(GlyphDimensionRequest),
-    /// Gets the glyph indices from a string
-    GetGlyphIndices(GlyphIndexRequest),
     /// Adds a new document namespace.
     CloneApi(Sender<IdNamespace>),
     /// Adds a new document namespace.
@@ -921,14 +918,6 @@ pub enum ApiMsg {
     AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
     /// A message targeted at a particular document.
     UpdateDocuments(Vec<Box<TransactionMsg>>),
-    /// Deletes an existing document.
-    DeleteDocument(DocumentId),
-    /// An opaque handle that must be passed to the render notifier. It is used by Gecko
-    /// to forward gecko-specific messages to the render thread preserving the ordering
-    /// within the other messages.
-    ExternalEvent(ExternalEvent),
-    /// Removes all resources associated with a namespace.
-    ClearNamespace(IdNamespace),
     /// Flush from the caches anything that isn't necessary, to free some memory.
     MemoryPressure,
     /// Collects a memory report.
@@ -938,14 +927,6 @@ pub enum ApiMsg {
     /// Wakes the render backend's event loop up. Needed when an event is communicated
     /// through another channel.
     WakeUp,
-    /// See `RenderApi::wake_scene_builder`.
-    WakeSceneBuilder,
-    /// Block until a round-trip to the scene builder thread has completed. This
-    /// ensures that any transactions (including ones deferred to the scene
-    /// builder thread) have been processed.
-    FlushSceneBuilder(Sender<()>),
-    /// Shut the WebRender instance down.
-    ShutDown(Option<Sender<()>>),
     /// Message from the scene builder thread.
     SceneBuilderResult(SceneBuilderResult),
 }
@@ -953,22 +934,14 @@ pub enum ApiMsg {
 impl fmt::Debug for ApiMsg {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(match *self {
-            ApiMsg::GetGlyphDimensions(..) => "ApiMsg::GetGlyphDimensions",
-            ApiMsg::GetGlyphIndices(..) => "ApiMsg::GetGlyphIndices",
             ApiMsg::CloneApi(..) => "ApiMsg::CloneApi",
             ApiMsg::CloneApiByClient(..) => "ApiMsg::CloneApiByClient",
             ApiMsg::AddDocument(..) => "ApiMsg::AddDocument",
             ApiMsg::UpdateDocuments(..) => "ApiMsg::UpdateDocuments",
-            ApiMsg::DeleteDocument(..) => "ApiMsg::DeleteDocument",
-            ApiMsg::ExternalEvent(..) => "ApiMsg::ExternalEvent",
-            ApiMsg::ClearNamespace(..) => "ApiMsg::ClearNamespace",
             ApiMsg::MemoryPressure => "ApiMsg::MemoryPressure",
             ApiMsg::ReportMemory(..) => "ApiMsg::ReportMemory",
             ApiMsg::DebugCommand(..) => "ApiMsg::DebugCommand",
-            ApiMsg::ShutDown(..) => "ApiMsg::ShutDown",
             ApiMsg::WakeUp => "ApiMsg::WakeUp",
-            ApiMsg::WakeSceneBuilder => "ApiMsg::WakeSceneBuilder",
-            ApiMsg::FlushSceneBuilder(..) => "ApiMsg::FlushSceneBuilder",
             ApiMsg::SceneBuilderResult(..) => "ApiMsg::SceneBuilderResult",
         })
     }
@@ -980,6 +953,8 @@ impl fmt::Debug for ApiMsg {
 /// user perspective is to create one or several `RenderApi` objects.
 pub struct RenderApiSender {
     api_sender: Sender<ApiMsg>,
+    scene_sender: Sender<SceneBuilderRequest>,
+    low_priority_scene_sender: Sender<SceneBuilderRequest>,
     blob_image_handler: Option<Box<dyn BlobImageHandler>>,
     shared_font_instances: SharedFontInstanceMap,
 }
@@ -988,11 +963,15 @@ impl RenderApiSender {
     /// Used internally by the `Renderer`.
     pub fn new(
         api_sender: Sender<ApiMsg>,
+        scene_sender: Sender<SceneBuilderRequest>,
+        low_priority_scene_sender: Sender<SceneBuilderRequest>,
         blob_image_handler: Option<Box<dyn BlobImageHandler>>,
         shared_font_instances: SharedFontInstanceMap,
     ) -> Self {
         RenderApiSender {
             api_sender,
+            scene_sender,
+            low_priority_scene_sender,
             blob_image_handler,
             shared_font_instances,
         }
@@ -1017,6 +996,8 @@ impl RenderApiSender {
         };
         RenderApi {
             api_sender: self.api_sender.clone(),
+            scene_sender: self.scene_sender.clone(),
+            low_priority_scene_sender: self.low_priority_scene_sender.clone(),
             namespace_id,
             next_id: Cell::new(ResourceId(0)),
             resources: ApiResources::new(
@@ -1036,6 +1017,8 @@ impl RenderApiSender {
         self.api_sender.send(msg).expect("Failed to send CloneApiByClient message");
         RenderApi {
             api_sender: self.api_sender.clone(),
+            scene_sender: self.scene_sender.clone(),
+            low_priority_scene_sender: self.low_priority_scene_sender.clone(),
             namespace_id,
             next_id: Cell::new(ResourceId(0)),
             resources: ApiResources::new(
@@ -1049,6 +1032,8 @@ impl RenderApiSender {
 /// The main entry point to interact with WebRender.
 pub struct RenderApi {
     api_sender: Sender<ApiMsg>,
+    scene_sender: Sender<SceneBuilderRequest>,
+    low_priority_scene_sender: Sender<SceneBuilderRequest>,
     namespace_id: IdNamespace,
     next_id: Cell<ResourceId>,
     resources: ApiResources,
@@ -1064,6 +1049,8 @@ impl RenderApi {
     pub fn create_sender(&self) -> RenderApiSender {
         RenderApiSender::new(
             self.api_sender.clone(),
+            self.scene_sender.clone(),
+            self.low_priority_scene_sender.clone(),
             self.resources.blob_image_handler.as_ref().map(|handler| handler.create_similar()),
             self.resources.get_shared_font_instances(),
         )
@@ -1088,16 +1075,26 @@ impl RenderApi {
 
         let document_id = DocumentId::new(self.namespace_id, id);
 
-        let msg = ApiMsg::AddDocument(document_id, initial_size, layer);
-        self.api_sender.send(msg).unwrap();
+        // We send this message to both the render backend and the scene builder instead of having
+        // the scene builder thread forward it to the render backend as we do elswhere. This is because
+        // some transactions can skip the scene builder thread and we want to avoid them arriving before
+        // the render backend knows about the existence of the corresponding document id.
+        // It may not be necessary, though.
+        self.api_sender.send(
+            ApiMsg::AddDocument(document_id, initial_size, layer)
+        ).unwrap();
+        self.scene_sender.send(
+            SceneBuilderRequest::AddDocument(document_id, initial_size, layer)
+        ).unwrap();
 
         document_id
     }
 
     /// Delete a document.
     pub fn delete_document(&self, document_id: DocumentId) {
-        let msg = ApiMsg::DeleteDocument(document_id);
-        self.api_sender.send(msg).unwrap();
+        self.low_priority_scene_sender.send(
+            SceneBuilderRequest::DeleteDocument(document_id)
+        ).unwrap();
     }
 
     /// Generate a new font key
@@ -1123,12 +1120,12 @@ impl RenderApi {
         glyph_indices: Vec<GlyphIndex>,
     ) -> Vec<Option<GlyphDimensions>> {
         let (sender, rx) = single_msg_channel();
-        let msg = ApiMsg::GetGlyphDimensions(GlyphDimensionRequest {
+        let msg = SceneBuilderRequest::GetGlyphDimensions(GlyphDimensionRequest {
             key,
             glyph_indices,
             sender
         });
-        self.api_sender.send(msg).unwrap();
+        self.low_priority_scene_sender.send(msg).unwrap();
         rx.recv().unwrap()
     }
 
@@ -1136,12 +1133,12 @@ impl RenderApi {
     /// can be used to construct GlyphKeys.
     pub fn get_glyph_indices(&self, key: FontKey, text: &str) -> Vec<Option<u32>> {
         let (sender, rx) = single_msg_channel();
-        let msg = ApiMsg::GetGlyphIndices(GlyphIndexRequest {
+        let msg = SceneBuilderRequest::GetGlyphIndices(GlyphIndexRequest {
             key,
             text: text.to_string(),
             sender,
         });
-        self.api_sender.send(msg).unwrap();
+        self.low_priority_scene_sender.send(msg).unwrap();
         rx.recv().unwrap()
     }
 
@@ -1160,8 +1157,8 @@ impl RenderApi {
     /// `Renderer`'s thread, mostly replaced by `NotificationHandler`. You should
     /// probably use the latter instead.
     pub fn send_external_event(&self, evt: ExternalEvent) {
-        let msg = ApiMsg::ExternalEvent(evt);
-        self.api_sender.send(msg).unwrap();
+        let msg = SceneBuilderRequest::ExternalEvent(evt);
+        self.low_priority_scene_sender.send(msg).unwrap();
     }
 
     /// Notify WebRender that now is a good time to flush caches and release
@@ -1187,10 +1184,10 @@ impl RenderApi {
     pub fn shut_down(&self, synchronously: bool) {
         if synchronously {
             let (tx, rx) = single_msg_channel();
-            self.api_sender.send(ApiMsg::ShutDown(Some(tx))).unwrap();
+            self.low_priority_scene_sender.send(SceneBuilderRequest::ShutDown(Some(tx))).unwrap();
             rx.recv().unwrap();
         } else {
-            self.api_sender.send(ApiMsg::ShutDown(None)).unwrap();
+            self.low_priority_scene_sender.send(SceneBuilderRequest::ShutDown(None)).unwrap();
         }
     }
 
@@ -1282,13 +1279,25 @@ impl RenderApi {
 
         self.resources.update(&mut transaction);
 
-        self.api_sender.send(ApiMsg::UpdateDocuments(vec![transaction])).unwrap();
+        transaction.use_scene_builder_thread |= !transaction.scene_ops.is_empty();
+
+        if transaction.use_scene_builder_thread {
+            let sender = if transaction.low_priority {
+                &mut self.low_priority_scene_sender
+            } else {
+                &mut self.scene_sender
+            };
+
+            sender.send(SceneBuilderRequest::Transactions(vec![transaction])).unwrap();
+        } else {
+            self.api_sender.send(ApiMsg::UpdateDocuments(vec![transaction])).unwrap();
+        }
     }
 
     /// Send multiple transactions.
     pub fn send_transactions(&mut self, document_ids: Vec<DocumentId>, mut transactions: Vec<Transaction>) {
         debug_assert!(document_ids.len() == transactions.len());
-        let msgs = transactions.drain(..).zip(document_ids)
+        let msgs: Vec<Box<TransactionMsg>> = transactions.drain(..).zip(document_ids)
             .map(|(txn, id)| {
                 let mut txn = txn.finalize(id);
                 self.resources.update(&mut txn);
@@ -1297,7 +1306,25 @@ impl RenderApi {
             })
             .collect();
 
-        self.api_sender.send(ApiMsg::UpdateDocuments(msgs)).unwrap();
+        let use_scene_builder = msgs.iter().any(
+            |msg| msg.use_scene_builder_thread
+        );
+
+        let high_priority = msgs.iter().any(
+            |msg| !msg.low_priority
+        );
+
+        if use_scene_builder {
+            let sender = if high_priority {
+                &mut self.scene_sender
+            } else {
+                &mut self.low_priority_scene_sender
+            };
+
+            sender.send(SceneBuilderRequest::Transactions(msgs)).unwrap();
+        } else {
+            self.api_sender.send(ApiMsg::UpdateDocuments(msgs)).unwrap();
+        }
     }
 
     /// Does a hit test on display items in the specified document, at the given
@@ -1356,7 +1383,7 @@ impl RenderApi {
     // Buckle up and see APZUpdater.cpp for more info about what this is about.
     #[doc(hidden)]
     pub fn wake_scene_builder(&self) {
-        self.send_message(ApiMsg::WakeSceneBuilder);
+        self.scene_sender.send(SceneBuilderRequest::WakeUp).unwrap();
     }
 
     /// Block until a round-trip to the scene builder thread has completed. This
@@ -1364,8 +1391,8 @@ impl RenderApi {
     /// builder thread) have been processed.
     pub fn flush_scene_builder(&self) {
         let (tx, rx) = single_msg_channel();
-        self.send_message(ApiMsg::FlushSceneBuilder(tx));
-        rx.recv().unwrap(); // block until done
+        self.low_priority_scene_sender.send(SceneBuilderRequest::Flush(tx)).unwrap();
+        rx.recv().unwrap(); // Block until done.
     }
 
     /// Save a capture of the current frame state for debugging.
@@ -1416,8 +1443,8 @@ impl RenderApi {
 
 impl Drop for RenderApi {
     fn drop(&mut self) {
-        let msg = ApiMsg::ClearNamespace(self.namespace_id);
-        let _ = self.api_sender.send(msg);
+        let msg = SceneBuilderRequest::ClearNamespace(self.namespace_id);
+        let _ = self.low_priority_scene_sender.send(msg);
     }
 }
 

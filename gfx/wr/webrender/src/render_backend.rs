@@ -167,7 +167,6 @@ impl ::std::ops::Sub<usize> for FrameId {
         FrameId(self.0 - other)
     }
 }
-
 enum RenderBackendStatus {
     Continue,
     ShutDown(Option<Sender<()>>),
@@ -893,10 +892,9 @@ impl RenderBackend {
             };
         }
 
-        let _ = self.low_priority_scene_tx.send(SceneBuilderRequest::Stop);
         // Ensure we read everything the scene builder is sending us from
         // inflight messages, otherwise the scene builder might panic.
-        while let Ok(msg) = self.api_rx.recv() {
+        while let Ok(msg) = self.api_rx.try_recv() {
             match msg {
                 ApiMsg::SceneBuilderResult(SceneBuilderResult::FlushComplete(tx)) => {
                     // If somebody's blocked waiting for a flush, how did they
@@ -905,8 +903,7 @@ impl RenderBackend {
                     debug_assert!(false);
                     tx.send(()).ok();
                 }
-                ApiMsg::SceneBuilderResult(SceneBuilderResult::Stopped) => break,
-                _ => continue,
+                _ => {},
             }
         }
 
@@ -1042,18 +1039,6 @@ impl RenderBackend {
     ) -> RenderBackendStatus {
         match msg {
             ApiMsg::WakeUp => {}
-            ApiMsg::WakeSceneBuilder => {
-                self.scene_tx.send(SceneBuilderRequest::WakeUp).unwrap();
-            }
-            ApiMsg::FlushSceneBuilder(tx) => {
-                self.low_priority_scene_tx.send(SceneBuilderRequest::Flush(tx)).unwrap();
-            }
-            ApiMsg::GetGlyphDimensions(request) => {
-                self.scene_tx.send(SceneBuilderRequest::GetGlyphDimensions(request)).unwrap();
-            }
-            ApiMsg::GetGlyphIndices(request) => {
-                self.scene_tx.send(SceneBuilderRequest::GetGlyphIndices(request)).unwrap();
-            }
             ApiMsg::CloneApi(sender) => {
                 assert!(!self.namespace_alloc_by_client);
                 sender.send(self.next_namespace_id()).unwrap();
@@ -1071,23 +1056,6 @@ impl RenderBackend {
                 );
                 let old = self.documents.insert(document_id, document);
                 debug_assert!(old.is_none());
-
-                self.scene_tx.send(
-                    SceneBuilderRequest::AddDocument(document_id, initial_size, layer)
-                ).unwrap();
-
-            }
-            ApiMsg::DeleteDocument(document_id) => {
-                self.documents.remove(&document_id);
-                self.low_priority_scene_tx.send(
-                    SceneBuilderRequest::DeleteDocument(document_id)
-                ).unwrap();
-            }
-            ApiMsg::ExternalEvent(evt) => {
-                self.low_priority_scene_tx.send(SceneBuilderRequest::ExternalEvent(evt)).unwrap();
-            }
-            ApiMsg::ClearNamespace(id) => {
-                self.low_priority_scene_tx.send(SceneBuilderRequest::ClearNamespace(id)).unwrap();
             }
             ApiMsg::MemoryPressure => {
                 // This is drastic. It will basically flush everything out of the cache,
@@ -1223,13 +1191,13 @@ impl RenderBackend {
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::SimulateLongSceneBuild(time_ms) => {
-                        self.scene_tx.send(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)).unwrap();
+                        let _ = self.scene_tx.send(SceneBuilderRequest::SimulateLongSceneBuild(time_ms));
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::SimulateLongLowPrioritySceneBuild(time_ms) => {
-                        self.low_priority_scene_tx.send(
+                        let _ = self.low_priority_scene_tx.send(
                             SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(time_ms)
-                        ).unwrap();
+                        );
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::SetFlags(flags) => {
@@ -1258,10 +1226,6 @@ impl RenderBackend {
                 self.result_tx.send(msg).unwrap();
                 self.notifier.wake_up();
             }
-            ApiMsg::ShutDown(sender) => {
-                info!("Recycling stats: {:?}", self.recycler);
-                return RenderBackendStatus::ShutDown(sender);
-            }
             ApiMsg::UpdateDocuments(transaction_msgs) => {
                 self.prepare_transactions(
                     transaction_msgs,
@@ -1270,7 +1234,7 @@ impl RenderBackend {
                 );
             }
             ApiMsg::SceneBuilderResult(msg) => {
-                self.process_scene_builder_result(msg, profile_counters, frame_counter);
+                return self.process_scene_builder_result(msg, profile_counters, frame_counter);
             }
         }
 
@@ -1282,7 +1246,7 @@ impl RenderBackend {
         msg: SceneBuilderResult,
         profile_counters: &mut BackendProfileCounters,
         frame_counter: &mut u32,
-    ) {
+    ) -> RenderBackendStatus {
         profile_scope!("sb_msg");
 
         match msg {
@@ -1352,8 +1316,12 @@ impl RenderBackend {
                     handler.clear_namespace(id);
                 }
             }
-            SceneBuilderResult::Stopped => {
-                panic!("We haven't sent a Stop yet, how did we get a Stopped back?");
+            SceneBuilderResult::DeleteDocument(document_id) => {
+                self.documents.remove(&document_id);
+            }
+            SceneBuilderResult::ShutDown(sender) => {
+                info!("Recycling stats: {:?}", self.recycler);
+                return RenderBackendStatus::ShutDown(sender);
             }
             SceneBuilderResult::DocumentsForDebugger(json) => {
                 let msg = ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json));
@@ -1361,6 +1329,8 @@ impl RenderBackend {
                 self.notifier.wake_up();
             }
         }
+
+        RenderBackendStatus::Continue
     }
 
     fn update_frame_builder_config(&self) {
@@ -1389,53 +1359,31 @@ impl RenderBackend {
         frame_counter: &mut u32,
         profile_counters: &mut BackendProfileCounters,
     ) {
-        let mut use_scene_builder = txns.iter()
-            .any(|transaction_msg| transaction_msg.use_scene_builder_thread);
-        let use_high_priority = txns.iter()
-            .any(|transaction_msg| !transaction_msg.low_priority);
+        self.prepare_for_frames();
+        self.maybe_force_nop_documents(
+            frame_counter,
+            profile_counters,
+            |document_id| txns.iter().any(|txn| txn.document_id == document_id));
 
-        use_scene_builder = use_scene_builder || txns.iter().any(|txn| {
-            !txn.scene_ops.is_empty()
-                || !txn.blob_requests.is_empty()
-                || txn.blob_rasterizer.is_some()
-        });
-
-        if !use_scene_builder {
-            self.prepare_for_frames();
-            self.maybe_force_nop_documents(
+        let mut built_frame = false;
+        for mut txn in txns {
+            built_frame |= self.update_document(
+                txn.document_id,
+                txn.resource_updates.take(),
+                txn.frame_ops.take(),
+                txn.notifications.take(),
+                txn.generate_frame,
+                txn.invalidate_rendered_frame,
                 frame_counter,
                 profile_counters,
-                |document_id| txns.iter().any(|txn| txn.document_id == document_id));
-
-            let mut built_frame = false;
-            for mut txn in txns {
-                built_frame |= self.update_document(
-                    txn.document_id,
-                    txn.resource_updates.take(),
-                    txn.frame_ops.take(),
-                    txn.notifications.take(),
-                    txn.generate_frame,
-                    txn.invalidate_rendered_frame,
-                    frame_counter,
-                    profile_counters,
-                    false
-                );
-            }
-            if built_frame {
-                #[cfg(feature = "capture")]
-                self.save_capture_sequence();
-            }
-            self.bookkeep_after_frames();
-            return;
+                false
+            );
         }
-
-        let tx = if use_high_priority {
-            &self.scene_tx
-        } else {
-            &self.low_priority_scene_tx
-        };
-
-        tx.send(SceneBuilderRequest::Transactions(txns)).unwrap();
+        if built_frame {
+            #[cfg(feature = "capture")]
+            self.save_capture_sequence();
+        }
+        self.bookkeep_after_frames();
     }
 
     /// In certain cases, resources shared by multiple documents have to run
