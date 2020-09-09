@@ -183,6 +183,16 @@ MobileViewportManager::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
+void MobileViewportManager::EnsureInitialViewportSet() {
+  if (!mPainted) {
+    mIsFirstPaint = true;
+    // Do not set mPainted=true because we may not have a frame
+    // tree yet and we want to make sure SetInitialViewport()
+    // gets called once we have a frame tree.
+    RefreshViewportSize(false);
+  }
+}
+
 void MobileViewportManager::SetInitialViewport() {
   MVM_LOG("%p: setting initial viewport\n", this);
   mIsFirstPaint = true;
