@@ -106,12 +106,6 @@ ifdef XPI_NAME
 ACDEFINES += -DXPI_NAME=$(XPI_NAME)
 endif
 
-# The VERSION_NUMBER is suffixed onto the end of the DLLs we ship.
-VERSION_NUMBER		= 50
-
-CONFIG_TOOLS	= $(MOZ_BUILD_ROOT)/config
-AUTOCONF_TOOLS	= $(MOZILLA_DIR)/build/autoconf
-
 CC := $(CC_WRAPPER) $(CC)
 CXX := $(CXX_WRAPPER) $(CXX)
 MKDIR ?= mkdir
