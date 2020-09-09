@@ -38,6 +38,8 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             sys.path.append(build_path)
 
     def kwargs_common(self, kwargs):
+        """Setup kwargs relevant for all browser products"""
+
         tests_src_path = os.path.join(self._here, "tests")
         if kwargs["product"] == "firefox_android":
             # package_name may be different in the future
@@ -58,12 +60,6 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(self.topobjdir, '_tests', 'web-platform', 'wptrunner.local.ini')
-
-        if kwargs["prefs_root"] is None:
-            kwargs["prefs_root"] = os.path.join(self.topsrcdir, 'testing', 'profiles')
-
-        if kwargs["stackfix_dir"] is None:
-            kwargs["stackfix_dir"] = self.bindir
 
         if kwargs["exclude"] is None and kwargs["include"] is None and not sys.platform.startswith("linux"):
             kwargs["exclude"] = ["css"]
@@ -87,6 +83,8 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         return kwargs
 
     def kwargs_firefox(self, kwargs):
+        """Setup kwargs specific to running Firefox and other gecko browsers"""
+
         import mozinfo
         from wptrunner import wptcommandline
         kwargs = self.kwargs_common(kwargs)
@@ -111,27 +109,24 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         if kwargs["preload_browser"] is None:
             kwargs["preload_browser"] = False
 
+        if kwargs["prefs_root"] is None:
+            kwargs["prefs_root"] = os.path.join(self.topsrcdir, 'testing', 'profiles')
+
+        if kwargs["stackfix_dir"] is None:
+            kwargs["stackfix_dir"] = self.bindir
+
         kwargs = wptcommandline.check_args(kwargs)
 
         return kwargs
 
     def kwargs_wptrun(self, kwargs):
+        """Setup kwargs for wpt-run which is only used for non-gecko browser products"""
+
         from wptrunner import wptcommandline
 
-        if kwargs["metadata_root"] is None:
-            metadir = os.path.join(self._here, "products", kwargs["product"])
-            if not os.path.exists(metadir):
-                os.makedirs(metadir)
-            kwargs["metadata_root"] = metadir
-
-        src_manifest = os.path.join(self._here, "meta", "MANIFEST.json")
-        dest_manifest = os.path.join(kwargs["metadata_root"], "MANIFEST.json")
-
-        if not os.path.exists(dest_manifest) and os.path.exists(src_manifest):
-            with open(src_manifest) as src, open(dest_manifest, "w") as dest:
-                dest.write(src.read())
-
         from tools.wpt import run
+
+        kwargs = self.kwargs_common(kwargs)
 
         # Add additional kwargs consumed by the run frontend. Currently we don't
         # have a way to set these through mach
@@ -163,6 +158,15 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             print(e.message, file=sys.stderr)
             sys.exit(1)
 
+        # This is kind of a hack; override the metadata paths so we don't use
+        # gecko metadata for non-gecko products
+        for key, value in list(iteritems(kwargs["test_paths"])):
+            meta_suffix = key.strip("/")
+            meta_dir = os.path.join(self._here, "products", kwargs["product"],
+                                    meta_suffix)
+            value["metadata_path"] = meta_dir
+            if not os.path.exists(meta_dir):
+                os.makedirs(meta_dir)
         return kwargs
 
     def setup_fonts_firefox(self):
