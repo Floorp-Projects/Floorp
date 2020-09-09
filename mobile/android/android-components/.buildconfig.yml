@@ -296,14 +296,16 @@ projects:
     path: components/service/glean
     description: 'A client-side telemetry SDK for collecting metrics and sending them to the Mozilla telemetry service'
     publish: true
-  service-pocket:
-    path: components/service/pocket
-    description: 'A library to communicate with the Pocket API'
-    publish: true
-  service-telemetry:
-    path: components/service/telemetry
-    description: 'A generic library for generating and sending telemetry pings from Android applications to the Mozilla telemetry service.'
-    publish: true
+# Temporarily disabled to work around automation limit:
+# https://github.com/mozilla-mobile/android-components/issues/8365
+#  service-pocket:
+#    path: components/service/pocket
+#    description: 'A library to communicate with the Pocket API'
+#    publish: true
+#  service-telemetry:
+#    path: components/service/telemetry
+#    description: 'A generic library for generating and sending telemetry pings from Android applications to the Mozilla telemetry service.'
+#    publish: true
   support-base:
     path: components/support/base
     description: 'Base component containing building blocks for components.'
@@ -376,10 +378,12 @@ projects:
     path: components/lib/fetch-okhttp
     description: 'An implementation of lib-fetch based on OkHttp.'
     publish: true
-  lib-jexl:
-    path: components/lib/jexl
-    description: 'Javascript Expression Language: Powerful context-based expression parser and evaluator.'
-    publish: true
+# Temporarily disabled to work around automation limit:
+# https://github.com/mozilla-mobile/android-components/issues/8365
+#  lib-jexl:
+#    path: components/lib/jexl
+#    description: 'Javascript Expression Language: Powerful context-based expression parser and evaluator.'
+#    publish: true
   lib-nearby:
     path: components/lib/nearby
     description: 'A library for communication with nearby devices Android devices.'
