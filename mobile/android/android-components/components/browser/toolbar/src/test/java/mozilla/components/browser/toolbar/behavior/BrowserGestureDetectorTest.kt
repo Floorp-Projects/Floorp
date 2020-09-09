@@ -9,6 +9,7 @@ import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_CANCEL
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
+import android.view.MotionEvent.ACTION_UP
 import android.view.ScaleGestureDetector
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.any
@@ -20,7 +21,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -52,7 +52,7 @@ class BrowserGestureDetectorTest {
     fun `Detector should not attempt to detect zoom if MotionEvent's action is ACTION_CANCEL`() {
         val detector = spy(BrowserGestureDetector(testContext, mock()))
         val scaleDetector: ScaleGestureDetector = mock()
-        doReturn(scaleDetector).`when`(detector).scaleGestureDetector
+        detector.scaleGestureDetector = scaleDetector
 
         val downEvent = TestUtils.getMotionEvent(ACTION_DOWN)
         val cancelEvent = TestUtils.getMotionEvent(ACTION_CANCEL, previousEvent = downEvent)
@@ -70,13 +70,18 @@ class BrowserGestureDetectorTest {
         val detector = spy(BrowserGestureDetector(testContext, mock()))
         val scrollDetector: GestureDetector = mock()
         val scaleDetector: ScaleGestureDetector = mock()
-        doReturn(scrollDetector).`when`(detector).gestureDetector
-        doReturn(scaleDetector).`when`(detector).scaleGestureDetector
+        detector.gestureDetector = scrollDetector
+        detector.scaleGestureDetector = scaleDetector
         `when`(scaleDetector.isInProgress).thenReturn(true)
+        val downEvent = TestUtils.getMotionEvent(ACTION_DOWN)
+        val moveEvent = TestUtils.getMotionEvent(ACTION_MOVE, previousEvent = downEvent)
 
-        detector.handleTouchEvent(TestUtils.getMotionEvent(ACTION_DOWN))
+        detector.handleTouchEvent(downEvent)
+        detector.handleTouchEvent(moveEvent)
 
-        verify(scrollDetector, never()).onTouchEvent(any<MotionEvent>())
+        // In this case we let ACTION_DOWN, ACTION_UP, ACTION_CANCEL be handled but not others.
+        verify(scrollDetector, times(1)).onTouchEvent(downEvent)
+        verify(scrollDetector, never()).onTouchEvent(moveEvent)
     }
 
     @Test
@@ -168,5 +173,31 @@ class BrowserGestureDetectorTest {
         verify(scaleBeginListener, never()).invoke(anyFloat())
         verify(scaleInProgressListener, never()).invoke(anyFloat())
         verify(scaleEndListener, never()).invoke(anyFloat())
+    }
+
+    @Test
+    fun `Detector should always pass the ACTION_DOWN, ACTION_UP, ACTION_CANCEL events to the scroll detector`() {
+        val detector = spy(BrowserGestureDetector(testContext, mock()))
+        val scrollDetector: GestureDetector = mock()
+        val scaleDetector: ScaleGestureDetector = mock()
+        detector.gestureDetector = scrollDetector
+        detector.scaleGestureDetector = scaleDetector
+        // The aforementioned events should always be passed to the scroll detector,
+        // even if scaling is in progress.
+        `when`(scaleDetector.isInProgress).thenReturn(true)
+        val downEvent = TestUtils.getMotionEvent(ACTION_DOWN)
+        val moveEvent = TestUtils.getMotionEvent(ACTION_MOVE, previousEvent = downEvent)
+        val upEvent = TestUtils.getMotionEvent(ACTION_UP, previousEvent = moveEvent)
+        val cancelEvent = TestUtils.getMotionEvent(ACTION_CANCEL, previousEvent = upEvent)
+
+        listOf(downEvent, moveEvent, upEvent, cancelEvent).forEach {
+            detector.handleTouchEvent(it)
+        }
+
+        // With scaling in progress we let ACTION_DOWN, ACTION_UP, ACTION_CANCEL be handled but not others.
+        verify(scrollDetector, times(1)).onTouchEvent(downEvent)
+        verify(scrollDetector, times(1)).onTouchEvent(upEvent)
+        verify(scrollDetector, times(1)).onTouchEvent(cancelEvent)
+        verify(scrollDetector, never()).onTouchEvent(moveEvent)
     }
 }
