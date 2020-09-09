@@ -2909,11 +2909,6 @@ void MessageChannel::CancelTransaction(int transaction) {
   AssertMaybeDeferredCountCorrect();
 }
 
-bool MessageChannel::IsInTransaction() const {
-  MonitorAutoLock lock(*mMonitor);
-  return !!mTransactionStack;
-}
-
 void MessageChannel::CancelCurrentTransaction() {
   MonitorAutoLock lock(*mMonitor);
   if (DispatchingSyncMessageNestedLevel() >= IPC::Message::NESTED_INSIDE_SYNC) {

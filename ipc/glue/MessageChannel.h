@@ -279,7 +279,6 @@ class MessageChannel : HasResultCodes {
 
   bool IsOnCxxStack() const { return !mCxxStackFrames.empty(); }
 
-  bool IsInTransaction() const;
   void CancelCurrentTransaction();
 
   // Force all calls to Send to defer actually sending messages. This will
