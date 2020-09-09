@@ -594,8 +594,13 @@ class FunctionCompiler {
     if (inDeadCode()) {
       return nullptr;
     }
+#if defined(JS_CODEGEN_ARM)
+    auto* ins = MBuiltinInt64ToFloatingPoint::New(
+        alloc(), op, tlsPointer_, type, bytecodeOffset(), isUnsigned);
+#else
     auto* ins = MInt64ToFloatingPoint::New(alloc(), op, type, bytecodeOffset(),
                                            isUnsigned);
+#endif
     curBlock_->add(ins);
     return ins;
   }
@@ -616,6 +621,16 @@ class FunctionCompiler {
       return nullptr;
     }
     auto* ins = T::New(alloc(), op, flags, bytecodeOffset());
+    curBlock_->add(ins);
+    return ins;
+  }
+
+  MDefinition* truncateWithTls(MDefinition* op, TruncFlags flags) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+    auto* ins = MWasmBuiltinTruncateToInt64::New(alloc(), op, tlsPointer_,
+                                                 flags, bytecodeOffset());
     curBlock_->add(ins);
     return ins;
   }
@@ -2761,7 +2776,11 @@ static bool EmitTruncate(FunctionCompiler& f, ValType operandType,
   } else {
     MOZ_ASSERT(resultType == ValType::I64);
     MOZ_ASSERT(!f.env().isAsmJS());
+#if defined(JS_CODEGEN_ARM)
+    f.iter().setResult(f.truncateWithTls(input, flags));
+#else
     f.iter().setResult(f.truncate<MWasmTruncateToInt64>(input, flags));
+#endif
   }
   return true;
 }

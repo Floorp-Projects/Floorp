@@ -29,6 +29,8 @@ class LIRGeneratorMIPS64 : public LIRGeneratorMIPSShared {
   void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block,
                             size_t lirIndex);
 
+  void lowerBuiltinInt64ToFloatingPoint(MBuiltinInt64ToFloatingPoint* ins);
+  void lowerWasmBuiltinTruncateToInt64(MWasmBuiltinTruncateToInt64* ins);
   void lowerTruncateDToInt32(MTruncateToInt32* ins);
   void lowerTruncateFToInt32(MTruncateToInt32* ins);
 
