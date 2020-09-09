@@ -30,6 +30,10 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 <script class="testbody" type="text/javascript">
 let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
 
+let origin = window.location.origin;
+let otherOrigin = "https://foobar." + window.location.host;
+let oldOrigin = "https://old." + window.location.host;
+
 function checkIframeLoginForm(expectedUsername, expectedPassword) {
   let iframeDoc = iframe.contentDocument;
   let uname = iframeDoc.getElementById("form-basic-username");
@@ -53,8 +57,8 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
 }
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_wildcard_formActionOrigin() {
-  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
-    new nsLoginInfo("https://foobar.example.com", "", null,
+  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+    new nsLoginInfo(otherOrigin, "", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 
@@ -62,8 +66,8 @@ add_task(async function test_login_with_different_subdomain_shouldnt_autofill_wi
 });
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_same_domain_formActionOrigin() {
-  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
-    new nsLoginInfo("https://foobar.example.com", "https://example.com", null,
+  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+    new nsLoginInfo(otherOrigin, origin, null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 
@@ -71,10 +75,10 @@ add_task(async function test_login_with_different_subdomain_shouldnt_autofill_sa
 });
 
 add_task(async function test_matching_logins_with_different_subdomain_and_matching_domain_should_autofill() {
-  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
-    new nsLoginInfo("https://example.com", "https://example.com", null,
+  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+    new nsLoginInfo(origin, origin, null,
                     "name2", "pass2", "uname", "pword"),
-    new nsLoginInfo("https://old.example.com", "https://example.com", null,
+    new nsLoginInfo(oldOrigin, origin, null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 
@@ -82,8 +86,8 @@ add_task(async function test_matching_logins_with_different_subdomain_and_matchi
 });
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_different_subdomain_formActionOrigin() {
-  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
-    new nsLoginInfo("https://foobar.example.com", "https://foobar.example.com", null,
+  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+    new nsLoginInfo(otherOrigin, otherOrigin, null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 
@@ -91,8 +95,8 @@ add_task(async function test_login_with_different_subdomain_shouldnt_autofill_di
 });
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_different_domain_formActionOrigin() {
-  await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
-    new nsLoginInfo("https://foobar.example.com", "https://example.org", null,
+  await prepareLoginsAndProcessForm(origin + MISSING_ACTION_PATH, [
+    new nsLoginInfo(otherOrigin, "https://example.net", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 

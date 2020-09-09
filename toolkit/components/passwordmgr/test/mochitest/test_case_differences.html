@@ -15,30 +15,11 @@ Login Manager test: autocomplete due to multiple matching logins
 <script>
 runChecksAfterCommonInit(false);
 
-SpecialPowers.loadChromeScript(function addLogins() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-  // Create some logins just for this form, since we'll be deleting them.
-  var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                           Ci.nsILoginInfo, "init");
-
-  var login0 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "name", "pass", "uname", "pword");
-
-  var login1 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "Name", "Pass", "uname", "pword");
-
-  var login2 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "USER", "PASS", "uname", "pword");
-
-  try {
-    Services.logins.addLogin(login0);
-    Services.logins.addLogin(login1);
-    Services.logins.addLogin(login2);
-  } catch (e) {
-    assert.ok(false, "addLogin threw: " + e);
-  }
-});
+let origin = window.location.origin;
+addLoginsInParent(
+  [origin, "https://autocomplete:8888", null, "name", "pass", "uname", "pword"],
+  [origin, "https://autocomplete:8888", null, "Name", "Pass", "uname", "pword"],
+  [origin, "https://autocomplete:8888", null, "USER", "PASS", "uname", "pword"]);
 </script>
 <p id="display"></p>
 

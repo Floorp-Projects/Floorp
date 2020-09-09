@@ -43,12 +43,14 @@ async function prepareLogins(logins = []) {
   is(count, logins.length, "All logins were added");
 }
 
+let origin = window.location.origin;
 const availableLogins = {
-  "exampleUser1": new nsLoginInfo("https://example.com", "https://autofill", null,
+  "exampleUser1": new nsLoginInfo(origin, "https://autofill", null,
                               "user1", "pass1", "uname", "pword"),
-  "subdomainUser1": new nsLoginInfo("https://sub.example.com", "https://autofill", null,
+  "subdomainUser1": new nsLoginInfo("https://sub." + window.location.host,
+                              "https://autofill", null,
                               "user1", "pass1", "uname", "pword"),
-  "emptyUsername": new nsLoginInfo("https://example.com", "https://autofill", null,
+  "emptyUsername": new nsLoginInfo(origin, "https://autofill", null,
                               "", "pass2", "uname", "pword"),
 }
 
@@ -152,7 +154,8 @@ async function testResultOfTabInteractions(testData) {
   info("waiting for AC results");
   let results = await shownPromise;
   info("checking results");
-  checkAutoCompleteResults(results, testData.expectedACLabels, "example.com", "Check all rows are correct");
+  checkAutoCompleteResults(results, testData.expectedACLabels,
+                           window.location.host, "Check all rows are correct");
 
   if (testData.typeUsername) {
     await sendString(testData.typeUsername);

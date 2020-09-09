@@ -13,14 +13,9 @@ Test autofilling with autocomplete types (username, off, cc-type, etc.)
 <script>
 let readyPromise = registerRunTests(9);
 
-runInParent(function setup() {
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-  let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
-               createInstance(Ci.nsILoginInfo);
-  login1.init("https://example.com", "https://autocomplete", null,
-              "testuser@example.com", "testpass1", "", "");
-  Services.logins.addLogin(login1);
-});
+addLoginsInParent(
+  [window.location.origin, "https://autocomplete", null,
+   "testuser@example.com", "testpass1", "", ""]);
 </script>
 
 <p id="display"></p>

@@ -25,13 +25,8 @@ let win;
 add_task(async function setup() {
   let loginAddedPromise = promiseStorageChanged(["addLogin"]);
 
-  runInParent(function initLogins() {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-    let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-    login1.init("https://example.com", "", null, "autofilled", "pass1", "", "");
-    Services.logins.addLogin(login1);
-  });
+  let origin = window.location.origin;
+  addLoginsInParent([origin, "", null, "autofilled", "pass1", "", ""]);
 
   await loginAddedPromise;
 });

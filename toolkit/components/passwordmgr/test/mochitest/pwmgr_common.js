@@ -536,6 +536,38 @@ function runInParent(aFunctionOrURL) {
   return chromeScript;
 }
 
+/** Initialize with a list of logins. The logins are added within the parent chrome process.
+ * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
+ *                          that would be passed to nsLoginInfo.init().
+ */
+function addLoginsInParent(...aLogins) {
+  let script = runInParent(function addLoginsInParentInner() {
+    addMessageListener("addLogins", logins => {
+      // eslint-disable-next-line no-shadow
+      const { Services } = ChromeUtils.import(
+        "resource://gre/modules/Services.jsm"
+      );
+
+      let nsLoginInfo = Components.Constructor(
+        "@mozilla.org/login-manager/loginInfo;1",
+        Ci.nsILoginInfo,
+        "init"
+      );
+
+      for (let login of logins) {
+        let loginInfo = new nsLoginInfo(...login);
+        try {
+          Services.logins.addLogin(loginInfo);
+        } catch (e) {
+          assert.ok(false, "addLogin threw: " + e);
+        }
+      }
+    });
+  });
+  script.sendQuery("addLogins", aLogins);
+  return script;
+}
+
 /*
  * gTestDependsOnDeprecatedLogin Set this global to true if your test relies
  * on the testuser/testpass login that is created in pwmgr_common.js. New tests

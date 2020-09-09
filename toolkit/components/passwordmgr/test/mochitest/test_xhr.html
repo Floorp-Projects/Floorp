@@ -154,7 +154,7 @@ add_task(async function test2() {
     // Check that the right tab is focused:
     let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
     let spec = browserWin.gBrowser.selectedBrowser.currentURI.spec;
-    assert.ok(spec.startsWith("http://mochi.test:8888"),
+    assert.ok(spec.startsWith(window.location.origin),
               `Tab with remote URI (rather than about:blank)
                should be focused (${spec})`);
   });

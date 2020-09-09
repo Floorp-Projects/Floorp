@@ -13,37 +13,17 @@
 <script>
 const chromeScript = runChecksAfterCommonInit(false);
 
-runInParent(function addLogins() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+let origin = "http://" + window.location.host;
+let secureOrigin = "https://" + window.location.host;
 
-  // Create some logins just for this form, since we'll be deleting them.
-  let nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                           Ci.nsILoginInfo, "init");
-
+addLoginsInParent(
   // We have two actual HTTPS to avoid autofill before the schemeUpgrades pref flips to true.
-  let login0 = new nsLoginInfo("https://example.com", "https://example.com", null,
-                               "name", "pass", "uname", "pword");
-
-  let login1 = new nsLoginInfo("https://example.com", "https://example.com", null,
-                               "name1", "pass1", "uname", "pword");
-
+  [secureOrigin, secureOrigin, null, "name", "pass", "uname", "pword"],
+  [secureOrigin, secureOrigin, null, "name1", "pass1", "uname", "pword"],
   // Same as above but HTTP instead of HTTPS (to test de-duping)
-  let login2 = new nsLoginInfo("http://example.com", "http://example.com", null,
-                               "name1", "pass1", "uname", "pword");
-
+  [origin, origin, null, "name1", "pass1", "uname", "pword"],
   // Different HTTP login to upgrade with secure formActionOrigin
-  let login3 = new nsLoginInfo("http://example.com", "https://example.com", null,
-                               "name2", "passHTTPtoHTTPS", "uname", "pword");
-
-  try {
-    Services.logins.addLogin(login0);
-    Services.logins.addLogin(login1);
-    Services.logins.addLogin(login2);
-    Services.logins.addLogin(login3);
-  } catch (e) {
-    assert.ok(false, "addLogin threw: " + e);
-  }
-});
+  [origin, secureOrigin, null, "name2", "passHTTPtoHTTPS", "uname", "pword"]);
 </script>
 <p id="display"></p>
 
@@ -69,7 +49,7 @@ function restoreForm() {
   });
 }
 
-const HTTP_FORM_URL = "http://example.com/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
+const HTTP_FORM_URL = origin + "/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
 
 async function setup(formUrl) {
   await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});

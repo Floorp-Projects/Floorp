@@ -15,18 +15,8 @@ Login Manager test: autofilling when autocomplete=off
 <script>
 let readyPromise = registerRunTests(5);
 
-runInParent(function setup() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-  // Create some logins just for this form, since we'll be deleting them.
-  const nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                             Ci.nsILoginInfo, "init");
-  assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
-
-  const login = new nsLoginInfo("https://example.com", "https://autocomplete2", null,
-                                "singleuser", "singlepass", "uname", "pword");
-  Services.logins.addLogin(login);
-});
+addLoginsInParent(
+  [window.location.origin, "https://autocomplete2", null, "singleuser", "singlepass", "uname", "pword"]);
 </script>
 <p id="display"></p>
 

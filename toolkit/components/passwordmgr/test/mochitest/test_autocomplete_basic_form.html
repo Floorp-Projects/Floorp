@@ -18,82 +18,95 @@ var chromeScript = runChecksAfterCommonInit();
 // Temporarily allow use of eval() in this test.
 SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
 
-var setupScript = runInParent(function setup() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+function addLoginsInParent(...aLogins) {
+  let script = runInParent(function addLoginsInParentInner() {
+    let loginsMap = {};
 
-  // Create some logins just for this form, since we'll be deleting them.
-  var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                           Ci.nsILoginInfo, "init");
-  assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
+    let initialCount = 5;
 
+    addMessageListener("initLogins", logins => {
+      // eslint-disable-next-line no-shadow
+      const { Services } = ChromeUtils.import(
+        "resource://gre/modules/Services.jsm"
+      );
+
+      let nsLoginInfo = Components.Constructor(
+        "@mozilla.org/login-manager/loginInfo;1",
+        Ci.nsILoginInfo,
+        "init"
+      );
+
+      for (let login of logins) {
+        let loginInfo = new nsLoginInfo(...login[1]);
+
+        // Only add the first 'initialCount' number of logins.
+        if (initialCount-- > 0) {
+          try {
+            Services.logins.addLogin(loginInfo);
+          } catch (e) {
+            assert.ok(false, "addLogin threw: " + e);
+          }
+        }
+        loginsMap[login[0]] = loginInfo;
+      }
+    });
+
+    addMessageListener("addLogin", loginVariableName => {
+      let login = loginsMap[loginVariableName];
+      assert.ok(!!login, "Login to add is defined: " + loginVariableName);
+      Services.logins.addLogin(login);
+    });
+    addMessageListener("removeLogin", loginVariableName => {
+      let login = loginsMap[loginVariableName];
+      assert.ok(!!login, "Login to delete is defined: " + loginVariableName);
+      Services.logins.removeLogin(login);
+    });
+  });
+  script.sendQuery("initLogins", aLogins);
+  return script;
+}
+
+
+let origin = window.location.origin;
+let setupScript = addLoginsInParent(
   // login0 has no username, so should be filtered out from the autocomplete list.
-  var login0 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "", "user0pass", "", "pword");
+  ["login0", [origin, "https://autocomplete:8888", null,
+              "", "user0pass", "", "pword"]],
 
-  var login1 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "tempuser1", "temppass1", "uname", "pword");
+  ["login1", [origin, "https://autocomplete:8888", null,
+              "tempuser1", "temppass1", "uname", "pword"]],
 
-  var login2 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "testuser2", "testpass2", "uname", "pword");
+  ["login2", [origin, "https://autocomplete:8888", null,
+              "testuser2", "testpass2", "uname", "pword"]],
 
-  var login3 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "testuser3", "testpass3", "uname", "pword");
+  ["login3", [origin, "https://autocomplete:8888", null,
+              "testuser3", "testpass3", "uname", "pword"]],
 
-  var login4 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "zzzuser4", "zzzpass4", "uname", "pword");
+  ["login4", [origin, "https://autocomplete:8888", null,
+              "zzzuser4", "zzzpass4", "uname", "pword"]],
 
-  // The following unused variables are referenced by `eval` in the message listeners below.
-  // login 5 only used in the single-user forms
-  /* eslint-disable no-unused-vars */
-  var login5 = new nsLoginInfo("https://example.com", "https://autocomplete2", null,
-                               "singleuser5", "singlepass5", "uname", "pword");
+  ["login5", [origin, "https://autocomplete2", null,
+              "singleuser5", "singlepass5", "uname", "pword"]],
 
-  var login6A = new nsLoginInfo("https://example.com", "https://autocomplete3", null,
-                                "form7user1", "form7pass1", "uname", "pword");
-  var login6B = new nsLoginInfo("https://example.com", "https://autocomplete3", null,
-                                "form7user2", "form7pass2", "uname", "pword");
+  ["login6A", [origin, "https://autocomplete3", null,
+               "form7user1", "form7pass1", "uname", "pword"]],
+  ["login6B", [origin, "https://autocomplete3", null,
+               "form7user2", "form7pass2", "uname", "pword"]],
 
-  var login7  = new nsLoginInfo("https://example.com", "https://autocomplete4", null,
-                                "form8user", "form8pass", "uname", "pword");
+  ["login7", [origin, "https://autocomplete4", null,
+              "form8user", "form8pass", "uname", "pword"]],
 
-  var login8A = new nsLoginInfo("https://example.com", "https://autocomplete5", null,
-                                "form9userAB", "form9pass", "uname", "pword");
-  var login8B = new nsLoginInfo("https://example.com", "https://autocomplete5", null,
-                                "form9userAAB", "form9pass", "uname", "pword");
-  var login8C = new nsLoginInfo("https://example.com", "https://autocomplete5", null,
-                                "form9userAABzz", "form9pass", "uname", "pword");
+  ["login8A", [origin, "https://autocomplete5", null,
+               "form9userAB", "form9pass", "uname", "pword"]],
+  ["login8B", [origin, "https://autocomplete5", null,
+               "form9userAAB", "form9pass", "uname", "pword"]],
+  ["login8C", [origin, "https://autocomplete5", null,
+               "form9userAABzz", "form9pass", "uname", "pword"]],
 
-  var login10 = new nsLoginInfo("https://example.com", "https://autocomplete7", null,
-                                "testuser10", "testpass10", "uname", "pword");
+  ["login10", [origin, "https://autocomplete7", null,
+               "testuser10", "testpass10", "uname", "pword"]],
 
-  var login11 = new nsLoginInfo("https://example.com", "https://example.com", null,
-                                "testuser11", "testpass11", "uname", "pword");
-  /* eslint-enable no-unused-vars */
-
-  // try/catch in case someone runs the tests manually, twice.
-  try {
-    Services.logins.addLogin(login0);
-    Services.logins.addLogin(login1);
-    Services.logins.addLogin(login2);
-    Services.logins.addLogin(login3);
-    Services.logins.addLogin(login4);
-  } catch (e) {
-    assert.ok(false, "addLogin threw: " + e);
-  }
-
-  addMessageListener("addLogin", loginVariableName => {
-    // eslint-disable-next-line no-eval
-    let login = eval(loginVariableName);
-    assert.ok(!!login, "Login to add is defined: " + loginVariableName);
-    Services.logins.addLogin(login);
-  });
-  addMessageListener("removeLogin", loginVariableName => {
-    // eslint-disable-next-line no-eval
-    let login = eval(loginVariableName);
-    assert.ok(!!login, "Login to delete is defined: " + loginVariableName);
-    Services.logins.removeLogin(login);
-  });
-});
+  ["login11", [origin, origin, null, "testuser11", "testpass11", "uname", "pword"]]);
 </script>
 <p id="display"></p>
 
@@ -170,7 +183,8 @@ add_task(async function test_form1_menuitems() {
                            "testuser2",
                            "testuser3",
                            "zzzuser4"];
-  checkAutoCompleteResults(results, expectedMenuItems, "example.com", "Check all menuitems are displayed correctly.");
+  checkAutoCompleteResults(results, expectedMenuItems,
+                           window.location.host, "Check all menuitems are displayed correctly.");
 
   let acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
   is(acEvents.length, 1, "One autocomplete event");
@@ -412,7 +426,7 @@ add_task(async function test_form1_delete() {
 
   // Delete the first entry (of 4), "tempuser1"
   synthesizeKey("KEY_ArrowDown");
-  let numLogins = await LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
+  let numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
   is(numLogins, 5, "Correct number of logins before deleting one");
 
   let countChangedPromise = notifyMenuChanged(4);
@@ -423,7 +437,7 @@ add_task(async function test_form1_delete() {
   await deletionPromise;
 
   checkLoginForm(uname, "", pword, "");
-  numLogins = await LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
+  numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
   is(numLogins, 4, "Correct number of logins after deleting one");
   await countChangedPromise;
   synthesizeKey("KEY_Enter");
@@ -457,7 +471,7 @@ add_task(async function test_form1_delete_second() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkLoginForm(uname, "", pword, "");
-  let numLogins = await LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
+  let numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
   is(numLogins, 3, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -491,7 +505,7 @@ add_task(async function test_form1_delete_last() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkLoginForm(uname, "", pword, "");
-  let numLogins = await LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
+  let numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
@@ -526,7 +540,7 @@ add_task(async function test_form1_check_only_entry_remaining() {
   let storageChanged = promiseStorageChanged(["removeLogin", "removeLogin", "addLogin"]);
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkLoginForm(uname, "", pword, "");
-  let numLogins = await LoginManager.countLogins("https://example.com", "https://autocomplete:8888", null);
+  let numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
   is(numLogins, 1, "Correct number of logins after deleting one");
 
   // remove the logins for the previous tests
@@ -715,7 +729,7 @@ add_task(async function test_form7_2() {
   let results = await shownPromise;
   checkAutoCompleteResults(results,
                            ["form7user1"],
-                           "example.com",
+                           window.location.host,
                            "Check dropdown is showing all logins while field is blank");
 
 
@@ -799,7 +813,7 @@ add_task(async function test_form9_filtering() {
   let results = await shownPromise;
   checkAutoCompleteResults(results,
                            ["form9userAAB", "form9userAB"],
-                           "example.com",
+                           window.location.host,
                            "Check dropdown is showing all logins while field is blank");
   synthesizeKey("KEY_Escape"); // Need to close the popup so we can get another popupshown after sending the string below.
 
@@ -808,7 +822,7 @@ add_task(async function test_form9_filtering() {
   results = await shownPromise;
   checkAutoCompleteResults(results,
                            ["form9userAB"],
-                           "example.com",
+                           window.location.host,
                            "Check dropdown is showing login with only one 'A'");
 
   checkLoginForm(uname, "form9userAB", pword, "");
@@ -819,7 +833,8 @@ add_task(async function test_form9_filtering() {
   results = await shownPromise;
 
   checkLoginForm(uname, "form9userAAB", pword, "");
-  checkAutoCompleteResults(results, ["form9userAAB"], "example.com", "Check dropdown is updated after inserting 'A'");
+  checkAutoCompleteResults(results, ["form9userAAB"],
+                           window.location.host, "Check dropdown is updated after inserting 'A'");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -838,13 +853,15 @@ add_task(async function test_form9_autocomplete_cache() {
   let promise1 = notifyMenuChanged(1);
   sendString("z");
   let results = await promise1;
-  checkAutoCompleteResults(results, [], "example.com", "Check popup does not have any login items");
+  checkAutoCompleteResults(results, [], window.location.host,
+                           "Check popup does not have any login items");
 
   // check that empty results are cached - bug 496466
   promise1 = notifyMenuChanged(1);
   sendString("z");
   results = await promise1;
-  checkAutoCompleteResults(results, [], "example.com", "Check popup only has the footer when it opens");
+  checkAutoCompleteResults(results, [], window.location.host,
+                           "Check popup only has the footer when it opens");
 });
 
 add_task(async function test_form11_formless() {
@@ -926,7 +943,7 @@ add_task(async function test_form12_recipes() {
 
   await loadRecipes({
     siteRecipes: [{
-      "hosts": ["example.com"],
+      "hosts": [window.location.host],
       "usernameSelector": "input[name='1']",
       "passwordSelector": "input[name='2']",
     }],
