@@ -141,7 +141,7 @@ const CFR_MESSAGES = [
         id: "954390",
         title: "Facebook Container",
         icon:
-          "resource://activity-stream/data/content/assets/cfr_fb_container.png",
+          "chrome://activity-stream/content/data/content/assets/cfr_fb_container.png",
         rating: 4.6,
         users: 299019,
         author: "Mozilla",
@@ -212,7 +212,7 @@ const CFR_MESSAGES = [
         id: "445852",
         title: "To Google Translate",
         icon:
-          "resource://activity-stream/data/content/assets/cfr_google_translate.png",
+          "chrome://activity-stream/content/data/content/assets/cfr_google_translate.png",
         rating: 4.1,
         users: 313474,
         author: "Juan Escobar",
@@ -284,7 +284,7 @@ const CFR_MESSAGES = [
         id: "700308",
         title: "Enhancer for YouTube\u2122",
         icon:
-          "resource://activity-stream/data/content/assets/cfr_enhancer_youtube.png",
+          "chrome://activity-stream/content/data/content/assets/cfr_enhancer_youtube.png",
         rating: 4.8,
         users: 357328,
         author: "Maxime RF",
@@ -357,7 +357,7 @@ const CFR_MESSAGES = [
         id: "659026",
         title: "Wikipedia Context Menu Search",
         icon:
-          "resource://activity-stream/data/content/assets/cfr_wiki_search.png",
+          "chrome://activity-stream/content/data/content/assets/cfr_wiki_search.png",
         rating: 4.9,
         users: 3095,
         author: "Nick Diedrich",
@@ -433,7 +433,7 @@ const CFR_MESSAGES = [
         id: "387429",
         title: "Reddit Enhancement Suite",
         icon:
-          "resource://activity-stream/data/content/assets/cfr_reddit_enhancement.png",
+          "chrome://activity-stream/content/data/content/assets/cfr_reddit_enhancement.png",
         rating: 4.6,
         users: 258129,
         author: "honestbleeps",

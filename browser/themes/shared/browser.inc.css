@@ -269,7 +269,7 @@ menupopup::part(drop-indicator) {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
-  list-style-image: url(resource://activity-stream/data/content/assets/glyph-help-24.svg);
+  list-style-image: url(chrome://activity-stream/content/data/content/assets/glyph-help-24.svg);
 }
 
 #cfr-notification-header-image:hover {
@@ -487,7 +487,7 @@ menupopup::part(drop-indicator) {
 #cfr-notification-footer-filled-stars,
 #cfr-notification-footer-empty-stars {
   -moz-context-properties: fill, fill-opacity;
-  background-image: url(resource://activity-stream/data/content/assets/glyph-star-17.svg);
+  background-image: url(chrome://activity-stream/content/data/content/assets/glyph-star-17.svg);
   background-size: 17px;
   fill: currentColor;
   fill-opacity: 0.7;
@@ -526,7 +526,7 @@ menupopup::part(drop-indicator) {
 
 #cfr-notification-footer-pintab-animation-container:before {
   content: "";
-  background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated.png");
+  background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_animated.png");
   background-position: top center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -543,7 +543,7 @@ menupopup::part(drop-indicator) {
 
 @media (min-resolution: 2dppx) {
   #cfr-notification-footer-pintab-animation-container:before {
-    background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated@2x.png");
+    background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_animated@2x.png");
   }
 }
 
@@ -555,7 +555,7 @@ menupopup::part(drop-indicator) {
 #cfr-notification-footer-pintab-animation-container[paused]:before,
 :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]):before,
 :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused]:before {
-  background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_static.png");
+  background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_static.png");
 }
 
 @media (min-resolution: 2dppx) {
@@ -563,17 +563,17 @@ menupopup::part(drop-indicator) {
   #cfr-notification-footer-pintab-animation-container[paused]:before,
   :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]):before,
   :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused]:before {
-    background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_static@2x.png");
+    background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_static@2x.png");
   }
 }
 
 :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:before {
-  background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated_darktheme.png");
+  background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_animated_darktheme.png");
 }
 
 @media (min-resolution: 2dppx) {
   :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:before {
-    background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated_darktheme@2x.png");
+    background-image: url("chrome://activity-stream/content/data/content/assets/cfr_pinnedtab_animated_darktheme@2x.png");
   }
 }
 
@@ -593,7 +593,7 @@ menupopup::part(drop-indicator) {
 }
 
 #cfr-notification-footer-animation-button {
-  background-image: url("resource://activity-stream/data/content/assets/glyph-pause-12.svg");
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pause-12.svg");
   background-position: right center;
   background-repeat: no-repeat;
   background-size: 12px 10px;
@@ -603,7 +603,7 @@ menupopup::part(drop-indicator) {
 }
 
 #cfr-notification-footer-pintab-animation-container[paused] #cfr-notification-footer-animation-button {
-  background-image: url("resource://activity-stream/data/content/assets/glyph-play-12.svg");
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-play-12.svg");
 }
 
 #cfr-notification-footer-animation-button:-moz-locale-dir(rtl) {

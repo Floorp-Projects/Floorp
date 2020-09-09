@@ -53,7 +53,7 @@
       top: 50%;
       left: 50%;
       margin: -10px 0 0 -10px;
-      mask-image: url('../data/content/assets/spinner.svg');
+      mask-image: url('chrome://activity-stream/content/data/content/assets/spinner.svg');
       mask-size: 20px;
       background: var(--newtab-feed-button-spinner);
     }

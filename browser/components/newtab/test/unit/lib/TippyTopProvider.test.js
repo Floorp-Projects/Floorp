@@ -38,11 +38,11 @@ describe("TippyTopProvider", () => {
     const site = instance.processSite({ url: "https://facebook.com" });
     assert.equal(
       site.tippyTopIcon,
-      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/facebook-com.png"
     );
     assert.equal(
       site.smallFavicon,
-      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/facebook-com.png"
     );
     assert.equal(site.backgroundColor, "#3b5998");
   });
@@ -50,11 +50,11 @@ describe("TippyTopProvider", () => {
     const site = instance.processSite({ url: "https://www.facebook.com" });
     assert.equal(
       site.tippyTopIcon,
-      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/facebook-com.png"
     );
     assert.equal(
       site.smallFavicon,
-      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/facebook-com.png"
     );
     assert.equal(site.backgroundColor, "#3b5998");
   });
@@ -69,18 +69,18 @@ describe("TippyTopProvider", () => {
     );
     assert.equal(
       site.tippyTopIcon,
-      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/facebook-com.png"
     );
   });
   it("should provide an icon for facebook.com/foobar", () => {
     const site = instance.processSite({ url: "https://facebook.com/foobar" });
     assert.equal(
       site.tippyTopIcon,
-      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/facebook-com.png"
     );
     assert.equal(
       site.smallFavicon,
-      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/facebook-com.png"
     );
     assert.equal(site.backgroundColor, "#3b5998");
   });
@@ -88,11 +88,11 @@ describe("TippyTopProvider", () => {
     const site = instance.processSite({ url: "https://gmail.com" });
     assert.equal(
       site.tippyTopIcon,
-      "resource://activity-stream/data/content/tippytop/images/gmail-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/gmail-com.png"
     );
     assert.equal(
       site.smallFavicon,
-      "resource://activity-stream/data/content/tippytop/images/gmail-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/gmail-com.png"
     );
     assert.equal(site.backgroundColor, "#000000");
   });
@@ -100,11 +100,11 @@ describe("TippyTopProvider", () => {
     const site = instance.processSite({ url: "https://mail.google.com" });
     assert.equal(
       site.tippyTopIcon,
-      "resource://activity-stream/data/content/tippytop/images/gmail-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/gmail-com.png"
     );
     assert.equal(
       site.smallFavicon,
-      "resource://activity-stream/data/content/tippytop/images/gmail-com.png"
+      "chrome://activity-stream/content/data/content/tippytop/images/gmail-com.png"
     );
     assert.equal(site.backgroundColor, "#000000");
   });

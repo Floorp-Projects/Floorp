@@ -165,7 +165,7 @@ this.AboutPreferences = class AboutPreferences {
       // Use full icon spec for certain protocols or fall back to packaged icon
       const iconUrl = !icon.search(/^(chrome|moz-extension|resource):/)
         ? icon
-        : `resource://activity-stream/data/content/assets/glyph-${icon}-16.svg`;
+        : `chrome://activity-stream/content/data/content/assets/glyph-${icon}-16.svg`;
 
       // Add the main preference for turning on/off a section
       const sectionVbox = createAppend("vbox", contentsGroup);

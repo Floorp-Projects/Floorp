@@ -640,9 +640,9 @@
 
 :root {
   --cfr-animation-duration: 0.35s;
-  --cfr-button-addons-icon: url(resource://activity-stream/data/content/assets/glyph-webextension-16.svg);
-  --cfr-button-features-icon: url(resource://activity-stream/data/content/assets/glyph-cfr-feature-16.svg);
-  --cfr-button-highlights-icon: url(resource://activity-stream/data/content/assets/glyph-highlights-16.svg);
+  --cfr-button-addons-icon: url(chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg);
+  --cfr-button-features-icon: url(chrome://activity-stream/content/data/content/assets/glyph-cfr-feature-16.svg);
+  --cfr-button-highlights-icon: url(chrome://activity-stream/content/data/content/assets/glyph-highlights-16.svg);
   --cfr-active-color: #0060df;
 }
 

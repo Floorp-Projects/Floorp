@@ -266,7 +266,7 @@ const MESSAGES = () => [
       scene1_button_color: "#712b00",
       scene1_button_background_color: "#ff9400",
       scene1_section_title_icon:
-        "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
+        "chrome://activity-stream/content/data/content/assets/glyph-pocket-16.svg",
       scene1_section_title_text:
         "All the Firefox news that's fit to Firefox print!",
       scene2_title: "Let's do this!",
@@ -330,7 +330,7 @@ const MESSAGES = () => [
       scene1_title_icon_dark_theme: TEST_ICON_BW,
 
       scene1_section_title_icon:
-        "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
+        "chrome://activity-stream/content/data/content/assets/glyph-pocket-16.svg",
       scene1_section_title_text: "Firefox Accounts: Receivable benefits",
 
       scene2_text:
@@ -476,7 +476,7 @@ const MESSAGES = () => [
       scene1_title_icon: TEST_ICON_16,
       scene1_title_icon_dark_theme: TEST_ICON_BW,
       scene1_section_title_icon:
-        "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
+        "chrome://activity-stream/content/data/content/assets/glyph-pocket-16.svg",
       scene1_section_title_text: "Send Firefox to your mobile device!",
 
       scene2_button_label: "Send",
@@ -579,7 +579,7 @@ const MESSAGES = () => [
       },
       block_button_text: "Block",
       section_title_icon:
-        "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
+        "chrome://activity-stream/content/data/content/assets/glyph-pocket-16.svg",
       section_title_text: "Messages from Mozilla",
     },
   },
@@ -594,7 +594,7 @@ const MESSAGES = () => [
         "Sync it, link it, take it with you. All this and more with a Firefox Account.",
       block_button_text: "Block",
       section_title_icon:
-        "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
+        "chrome://activity-stream/content/data/content/assets/glyph-pocket-16.svg",
       section_title_text: "Messages from Mozilla (click for info)",
       section_title_url: "https://www.mozilla.org/about",
     },
