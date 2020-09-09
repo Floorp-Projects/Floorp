@@ -287,6 +287,7 @@ STATIC_ATOMS = [
     Atom("cycler", "cycler"),
     Atom("dashed", "dashed"),
     Atom("data", "data"),
+    Atom("dataAtShortcutkeys", "data-at-shortcutkeys"),
     Atom("datalist", "datalist"),
     Atom("datal10nid", "data-l10n-id"),
     Atom("datal10nargs", "data-l10n-args"),
