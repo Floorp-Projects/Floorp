@@ -27,9 +27,10 @@ static PaperInfo MakePaperInfo(const char* aName, const cups_size_t& aMedia) {
 }
 
 nsPrinterCUPS::~nsPrinterCUPS() {
-  if (mPrinterInfo) {
-    mShim.cupsFreeDestInfo(mPrinterInfo);
-    mPrinterInfo = nullptr;
+  auto printerInfoLock = mPrinterInfoMutex.Lock();
+  if (cups_dinfo_t*& printerInfo = *printerInfoLock) {
+    mShim.cupsFreeDestInfo(printerInfo);
+    printerInfo = nullptr;
   }
   if (mPrinter) {
     mShim.cupsFreeDests(1, mPrinter);
@@ -40,11 +41,13 @@ nsPrinterCUPS::~nsPrinterCUPS() {
 PrintSettingsInitializer nsPrinterCUPS::DefaultSettings() const {
   nsString printerName;
   GetPrinterName(printerName);
+  auto printerInfoLock = mPrinterInfoMutex.Lock();
+  cups_dinfo_t* const printerInfo = *printerInfoLock;
 
   cups_size_t media;
 
   bool hasDefaultMedia =
-      mShim.cupsGetDestMediaDefault(CUPS_HTTP_DEFAULT, mPrinter, mPrinterInfo,
+      mShim.cupsGetDestMediaDefault(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
                                     CUPS_MEDIA_FLAGS_DEFAULT, &media);
 
   if (!hasDefaultMedia) {
@@ -100,7 +103,9 @@ const char* nsPrinterCUPS::LocalizeMediaName(http_t& aConnection,
 #ifdef XP_MACOSX
   // The returned string is owned by mPrinterInfo.
   // https://www.cups.org/doc/cupspm.html#cupsLocalizeDestMedia
-  return mShim.cupsLocalizeDestMedia(&aConnection, mPrinter, mPrinterInfo,
+  auto printerInfoLock = mPrinterInfoMutex.Lock();
+  cups_dinfo_t* const printerInfo = *printerInfoLock;
+  return mShim.cupsLocalizeDestMedia(&aConnection, mPrinter, printerInfo,
                                      CUPS_MEDIA_FLAGS_DEFAULT, &aMedia);
 #else
   return nullptr;
@@ -147,8 +152,10 @@ bool nsPrinterCUPS::SupportsCollation() const {
 }
 
 bool nsPrinterCUPS::Supports(const char* aOption, const char* aValue) const {
-  MOZ_ASSERT(mPrinterInfo);
-  return mShim.cupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter, mPrinterInfo,
+  auto printerInfoLock = mPrinterInfoMutex.Lock();
+  cups_dinfo_t* const printerInfo = *printerInfoLock;
+  MOZ_ASSERT(printerInfo);
+  return mShim.cupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
                                       aOption, aValue);
 }
 
@@ -176,12 +183,14 @@ bool nsPrinterCUPS::IsCUPSVersionAtLeast(uint64_t aCUPSMajor,
 }
 
 nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
-  if (!mPrinterInfo) {
+  auto printerInfoLock = mPrinterInfoMutex.Lock();
+  cups_dinfo_t* const printerInfo = *printerInfoLock;
+  if (!printerInfo) {
     return {};
   }
 
   const int paperCount = mShim.cupsGetDestMediaCount(
-      CUPS_HTTP_DEFAULT, mPrinter, mPrinterInfo, CUPS_MEDIA_FLAGS_DEFAULT);
+      CUPS_HTTP_DEFAULT, mPrinter, printerInfo, CUPS_MEDIA_FLAGS_DEFAULT);
 
   // blocking call
   http_t* connection = mShim.cupsConnectDest(mPrinter, CUPS_DEST_FLAGS_NONE,
@@ -200,7 +209,7 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
   for (int i = 0; i < paperCount; ++i) {
     cups_size_t media;
     int getInfoSucceded =
-        mShim.cupsGetDestMediaByIndex(CUPS_HTTP_DEFAULT, mPrinter, mPrinterInfo,
+        mShim.cupsGetDestMediaByIndex(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
                                       i, CUPS_MEDIA_FLAGS_DEFAULT, &media);
 
     if (!getInfoSucceded) {

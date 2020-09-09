@@ -11,6 +11,9 @@
 #include "nsCUPSShim.h"
 #include "nsString.h"
 
+#include "mozilla/DataMutex.h"
+#include "mozilla/RecursiveMutex.h"
+
 /**
  * @brief Interface to help implementing nsIPrinter using a CUPS printer.
  */
@@ -38,12 +41,16 @@ class nsPrinterCUPS final : public nsPrinterBase {
       : mShim(aShim),
         mDisplayName(std::move(aDisplayName)),
         mPrinter(aPrinter),
-        mPrinterInfo(aPrinterInfo),
+        mPrinterInfoMutex(std::move(aPrinterInfo),
+                          "nsPrinterCUPS::mPrinterInfoMutex"),
         mCUPSMajor(aCUPSMajor),
         mCUPSMinor(aCUPSMinor),
         mCUPSPatch(aCUPSPatch) {}
 
  private:
+  using PrinterInfoMutex =
+      mozilla::DataMutexBase<cups_dinfo_t*, mozilla::RecursiveMutex>;
+
   ~nsPrinterCUPS();
 
   /**
@@ -65,7 +72,7 @@ class nsPrinterCUPS final : public nsPrinterBase {
   const nsCUPSShim& mShim;
   nsString mDisplayName;
   cups_dest_t* mPrinter;
-  cups_dinfo_t* mPrinterInfo;
+  mutable PrinterInfoMutex mPrinterInfoMutex;
   uint64_t mCUPSMajor;
   uint64_t mCUPSMinor;
   uint64_t mCUPSPatch;
