@@ -2912,7 +2912,7 @@ exports.NullL10n = NullL10n;
 
 function getOutputScale(ctx) {
   const devicePixelRatio = window.devicePixelRatio || 1;
-  const backingStoreRatio = ctx.webkitBackingStorePixelRatio || ctx.mozBackingStorePixelRatio || ctx.oBackingStorePixelRatio || ctx.backingStorePixelRatio || 1;
+  const backingStoreRatio = ctx.webkitBackingStorePixelRatio || ctx.mozBackingStorePixelRatio || ctx.backingStorePixelRatio || 1;
   const pixelRatio = devicePixelRatio / backingStoreRatio;
   return {
     sx: pixelRatio,
@@ -4103,7 +4103,7 @@ GrabToPan.prototype = {
   }
 };
 let matchesSelector;
-["webkitM", "mozM", "oM", "m"].some(function (prefix) {
+["webkitM", "mozM", "m"].some(function (prefix) {
   let name = prefix + "atches";
 
   if (name in document.documentElement) {
