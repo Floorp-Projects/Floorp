@@ -102,7 +102,7 @@ class AltSvcMapping {
                           const nsACString& originHost, int32_t originPort,
                           bool privateBrowsing, bool isolated,
                           const nsACString& topWindowOrigin,
-                          const OriginAttributes& originAttributes);
+                          const OriginAttributes& originAttributes, bool aIsHttp3);
 
   bool IsHttp3() { return mIsHttp3; }
   const nsCString& NPNToken() const { return mNPNToken; }
@@ -198,7 +198,8 @@ class AltSvcCache {
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
       const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
       bool isolated, const nsACString& topWindowOrigin,
-      const OriginAttributes& originAttributes, bool aHttp3Allowed);
+      const OriginAttributes& originAttributes, bool aHttp2Allowed,
+      bool aHttp3Allowed);
   void ClearAltServiceMappings();
   void ClearHostMapping(const nsACString& host, int32_t port,
                         const OriginAttributes& originAttributes,

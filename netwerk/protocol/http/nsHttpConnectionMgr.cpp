@@ -2060,7 +2060,7 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
     trans->SetConnection(nullptr);
     rv = DispatchTransaction(ent, trans, conn);
   } else {
-    if (!ent->AllowSpdy()) {
+    if (!ent->AllowHttp2()) {
       trans->DisableSpdy();
     }
     pendingTransInfo = new PendingTransactionInfo(trans);
@@ -5263,7 +5263,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport* trans,
 
   if (status == NS_NET_STATUS_CONNECTING_TO && gHttpHandler->IsSpdyEnabled() &&
       gHttpHandler->CoalesceSpdy() && mEnt && mEnt->mConnInfo &&
-      mEnt->mConnInfo->EndToEndSSL() && mEnt->AllowSpdy() &&
+      mEnt->mConnInfo->EndToEndSSL() && mEnt->AllowHttp2() &&
       !mEnt->mConnInfo->UsingProxy() && mEnt->mCoalescingKeys.IsEmpty()) {
     nsCOMPtr<nsIDNSAddrRecord> dnsRecord(do_GetInterface(mSocketTransport));
     nsTArray<NetAddr> addressSet;
@@ -5544,19 +5544,31 @@ void nsHttpConnectionMgr::nsConnectionEntry::RemoveHalfOpen(
   }
 }
 
-void nsHttpConnectionMgr::BlacklistSpdy(const nsHttpConnectionInfo* ci) {
-  LOG(("nsHttpConnectionMgr::BlacklistSpdy blacklisting ci %s",
+void nsHttpConnectionMgr::ExcludeHttp2(const nsHttpConnectionInfo* ci) {
+  LOG(("nsHttpConnectionMgr::ExcludeHttp2 excluding ci %s",
        ci->HashKey().BeginReading()));
   nsConnectionEntry* ent = mCT.GetWeak(ci->HashKey());
   if (!ent) {
-    LOG(("nsHttpConnectionMgr::BlacklistSpdy no entry found?!"));
+    LOG(("nsHttpConnectionMgr::ExcludeHttp2 no entry found?!"));
     return;
   }
 
-  ent->DisallowSpdy();
+  ent->DisallowHttp2();
 }
 
-void nsHttpConnectionMgr::nsConnectionEntry::DisallowSpdy() {
+void nsHttpConnectionMgr::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
+  LOG(("nsHttpConnectionMgr::ExcludeHttp3 exclude ci %s",
+       ci->HashKey().BeginReading()));
+  nsConnectionEntry* ent = mCT.GetWeak(ci->HashKey());
+  if (!ent) {
+    LOG(("nsHttpConnectionMgr::ExcludeHttp3 no entry found?!"));
+    return;
+  }
+
+  ent->DontReuseHttp3Conn();
+}
+
+void nsHttpConnectionMgr::nsConnectionEntry::DisallowHttp2() {
   mCanUseSpdy = false;
 
   // If we have any spdy connections, we want to go ahead and close them when
@@ -5573,6 +5585,19 @@ void nsHttpConnectionMgr::nsConnectionEntry::DisallowSpdy() {
   }
 
   // Can't coalesce if we're not using spdy
+  mCoalescingKeys.Clear();
+}
+
+void nsHttpConnectionMgr::nsConnectionEntry::DontReuseHttp3Conn() {
+  MOZ_ASSERT(mConnInfo->IsHttp3());
+
+  // If we have any spdy connections, we want to go ahead and close them when
+  // they're done so we can free up some connections.
+  for (uint32_t i = 0; i < mActiveConns.Length(); ++i) {
+    mActiveConns[i]->DontReuse();
+  }
+
+  // Can't coalesce if we're not using http3
   mCoalescingKeys.Clear();
 }
 

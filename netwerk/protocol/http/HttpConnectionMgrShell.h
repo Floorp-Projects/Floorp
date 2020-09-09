@@ -153,7 +153,8 @@ class HttpConnectionMgrShell : public nsISupports {
   // that connection.
   [[nodiscard]] virtual nsresult VerifyTraffic() = 0;
 
-  virtual void BlacklistSpdy(const nsHttpConnectionInfo* ci) = 0;
+  virtual void ExcludeHttp2(const nsHttpConnectionInfo* ci) = 0;
+  virtual void ExcludeHttp3(const nsHttpConnectionInfo* ci) = 0;
 
   // clears the connection history mCT
   [[nodiscard]] virtual nsresult ClearConnectionHistory() = 0;
@@ -216,7 +217,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionMgrShell,
       nsHttpConnectionInfo*, nsIInterfaceRequestor*, uint32_t caps = 0,      \
       NullHttpTransaction* = nullptr) override;                              \
   virtual nsresult VerifyTraffic() override;                                 \
-  virtual void BlacklistSpdy(const nsHttpConnectionInfo* ci) override;       \
+  virtual void ExcludeHttp2(const nsHttpConnectionInfo* ci) override;        \
+  virtual void ExcludeHttp3(const nsHttpConnectionInfo* ci) override;        \
   virtual nsresult ClearConnectionHistory() override;                        \
   virtual nsresult CompleteUpgrade(HttpTransactionShell* aTrans,             \
                                    nsIHttpUpgradeListener* aUpgradeListener) \
