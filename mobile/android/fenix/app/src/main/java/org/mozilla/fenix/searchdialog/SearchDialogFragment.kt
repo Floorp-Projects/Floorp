@@ -55,6 +55,7 @@ import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.isKeyboardVisible
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentAction
@@ -82,12 +83,17 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
     private val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
+    private var keyboardVisible: Boolean = false
+
     override fun onStart() {
         super.onStart()
         // https://github.com/mozilla-mobile/fenix/issues/14279
         // To prevent GeckoView from resizing we're going to change the softInputMode to not adjust
         // the size of the window.
         requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        if (keyboardVisible) {
+            toolbarView.view.edit.focus()
+        }
     }
 
     override fun onStop() {
@@ -95,6 +101,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         // https://github.com/mozilla-mobile/fenix/issues/14279
         // Let's reset back to the default behavior after we're done searching
         requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        keyboardVisible = toolbarView.view.isKeyboardVisible()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -142,7 +149,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 metrics = requireComponents.analytics.metrics,
                 dismissDialog = { dismissAllowingStateLoss() },
                 clearToolbarFocus = {
-                    toolbarView.view.hideKeyboard()
+                    toolbarView.view.hideKeyboardAndSave()
                     toolbarView.view.clearFocus()
                 }
             )
@@ -167,7 +174,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         setShortcutsChangedListener(FenixSearchEngineProvider.PREF_FILE_SEARCH_ENGINES)
 
         view.awesome_bar.setOnTouchListener { _, _ ->
-            view.hideKeyboard()
+            view.hideKeyboardAndSave()
             false
         }
 
@@ -190,7 +197,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         setupConstraints(view)
 
         search_wrapper.setOnClickListener {
-            it.hideKeyboard()
+            it.hideKeyboardAndSave()
             dismissAllowingStateLoss()
         }
 
@@ -324,7 +331,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 true
             }
             else -> {
-                view?.hideKeyboard()
+                view?.hideKeyboardAndSave()
                 dismissAllowingStateLoss()
                 true
             }
@@ -451,6 +458,15 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 listener = ::launchVoiceSearch
             )
         )
+    }
+
+    /**
+     * Used to save keyboard status on stop/sleep, to be restored later.
+     * See #14559
+     * */
+    private fun View.hideKeyboardAndSave() {
+        keyboardVisible = false
+        this.hideKeyboard()
     }
 
     private fun launchVoiceSearch() {
