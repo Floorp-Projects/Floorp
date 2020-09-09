@@ -778,24 +778,26 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
   return nullptr;
 }
 
-void APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
+nsTArray<TouchBehaviorFlags>
+APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
     nsIWidget* aWidget, dom::Document* aDocument,
     const WidgetTouchEvent& aEvent, uint64_t aInputBlockId,
     const SetAllowedTouchBehaviorCallback& aCallback) {
+  nsTArray<TouchBehaviorFlags> flags;
   if (!aWidget || !aDocument) {
-    return;
+    return flags;
   }
   if (PresShell* presShell = aDocument->GetPresShell()) {
     if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
-      nsTArray<TouchBehaviorFlags> flags;
       for (uint32_t i = 0; i < aEvent.mTouches.Length(); i++) {
         flags.AppendElement(TouchActionHelper::GetAllowedTouchBehavior(
             aWidget, RelativeTo{rootFrame, ViewportType::Visual},
             aEvent.mTouches[i]->mRefPoint));
       }
-      aCallback(aInputBlockId, std::move(flags));
+      aCallback(aInputBlockId, flags);
     }
   }
+  return flags;
 }
 
 void APZCCallbackHelper::NotifyMozMouseScrollEvent(

@@ -148,8 +148,9 @@ class APZCCallbackHelper {
       uint64_t aInputBlockId);
 
   /* Figure out the allowed touch behaviors of each touch point in |aEvent|
-   * and send that information to the provided callback. */
-  static void SendSetAllowedTouchBehaviorNotification(
+   * and send that information to the provided callback. Also returns the
+   * allowed touch behaviors. */
+  static nsTArray<TouchBehaviorFlags> SendSetAllowedTouchBehaviorNotification(
       nsIWidget* aWidget, mozilla::dom::Document* aDocument,
       const WidgetTouchEvent& aEvent, uint64_t aInputBlockId,
       const SetAllowedTouchBehaviorCallback& aCallback);
