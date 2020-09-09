@@ -280,7 +280,22 @@ function Sleep(timeout) {
   if (typeof timeout != "number") {
     throw new TypeError();
   }
-  return new TimedPromise(() => {}, { timeout, throws: null });
+  if (!Number.isInteger(timeout) || timeout < 0) {
+    throw new RangeError();
+  }
+
+  return new Promise(resolve => {
+    const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.init(
+      () => {
+        // Bug 1663880 - Explicitely cancel the timer for now to prevent a hang
+        timer.cancel();
+        resolve();
+      },
+      timeout,
+      TYPE_ONE_SHOT
+    );
+  });
 }
 
 /**
