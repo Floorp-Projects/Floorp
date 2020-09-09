@@ -42,6 +42,9 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     // Those events will be emitted if watchRootNode was called on the
     // corresponding WalkerActor, which should be handled by the ResourceWatcher
     // as long as a consumer is watching for root-node resources.
+    // This should be fixed by using watchResources directly from the walker
+    // front, either with the ROOT_NODE resource, or with the DOCUMENT_EVENT
+    // resource. See Bug 1663973.
     this.on("root-available", this._onRootNodeAvailable);
     this.on("root-destroyed", this._onRootNodeDestroyed);
   }
