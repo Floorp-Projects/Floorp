@@ -9,12 +9,10 @@ function onLoad() {
     let tag = document.getElementById("tag-pings").value;
     let log = document.getElementById("log-pings").checked;
     let send = document.getElementById("send-pings").value;
-    let AboutGlean = Cc["@mozilla.org/toolkit/glean;1"].createInstance(
-      Ci.nsIAboutGlean
-    );
-    AboutGlean.setLogPings(log);
-    AboutGlean.setTagPings(tag);
-    AboutGlean.sendPing(send);
+    let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+    FOG.setLogPings(log);
+    FOG.setTagPings(tag);
+    FOG.sendPing(send);
   });
 }
 
