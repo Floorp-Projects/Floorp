@@ -273,6 +273,11 @@ class DebuggerPanel {
   }
 
   destroy() {
+    const resourceWatcher = this.toolbox.resourceWatcher;
+    resourceWatcher.unwatchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
+      onAvailable: this._actions.addExceptionFromResources,
+    });
+
     this.panelWin.Debugger.destroy();
     this.emit("destroyed");
   }
