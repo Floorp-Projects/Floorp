@@ -322,6 +322,13 @@ SessionHistoryEntry::SessionHistoryEntry(const SessionHistoryEntry& aEntry)
       mID(aEntry.mID) {}
 
 SessionHistoryEntry::~SessionHistoryEntry() {
+  // Null out the mParent pointers on all our kids.
+  for (nsISHEntry* entry : mChildren) {
+    if (entry) {
+      entry->SetParent(nullptr);
+    }
+  }
+
   if (sLoadIdToEntry) {
     sLoadIdToEntry->RemoveIf(
         [this](auto& aIter) { return aIter.Data() == this; });
