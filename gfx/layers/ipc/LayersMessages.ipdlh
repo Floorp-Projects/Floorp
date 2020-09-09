@@ -442,7 +442,7 @@ struct OpDeliverAcquireFence {
 };
 
 struct OpDeliverReleaseFence {
-  FileDescriptor fenceFd;
+  FileDescriptor? fenceFd;
   uint64_t bufferId;
   uint64_t fwdTransactionId;
   bool usesImageBridge;
