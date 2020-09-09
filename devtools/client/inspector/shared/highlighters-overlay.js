@@ -103,7 +103,7 @@ class HighlightersOverlay {
     this.onClick = this.onClick.bind(this);
     this.onDisplayChange = this.onDisplayChange.bind(this);
     this.onMarkupMutation = this.onMarkupMutation.bind(this);
-    this._onFrameRootAvailable = this._onFrameRootAvailable.bind(this);
+    this._onResourceAvailable = this._onResourceAvailable.bind(this);
 
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseOut = this.onMouseOut.bind(this);
@@ -120,7 +120,13 @@ class HighlightersOverlay {
 
     // Add inspector events, not specific to a given view.
     this.inspector.on("markupmutation", this.onMarkupMutation);
-    this.inspector.on("frame-root-available", this._onFrameRootAvailable);
+
+    this.resourceWatcher = this.inspector.toolbox.resourceWatcher;
+    this.resourceWatcher.watchResources(
+      [this.resourceWatcher.TYPES.ROOT_NODE],
+      { onAvailable: this._onResourceAvailable }
+    );
+
     this.target.on("will-navigate", this.onWillNavigate);
     this.walker.on("display-change", this.onDisplayChange);
 
@@ -1339,8 +1345,24 @@ class HighlightersOverlay {
    * inspector. Nodes may have been added / removed and highlighters should
    * be updated.
    */
-  async _onFrameRootAvailable() {
-    await this._updateHighlightersOnMutationOrNavigation();
+  async _onResourceAvailable(resources) {
+    for (const resource of resources) {
+      if (resource.resourceType !== this.resourceWatcher.TYPES.ROOT_NODE) {
+        // Only handle root-node resources.
+        // Note that we could replace this with DOCUMENT_EVENT resources, since
+        // the actual root-node resource is not used here.
+        continue;
+      }
+
+      if (resource.targetFront.isTopLevel && resource.isTopLevelDocument) {
+        // The topmost root node will lead to the destruction and recreation of
+        // the MarkupView, and highlighters will be refreshed afterwards. This is
+        // handled by the inspector.
+        continue;
+      }
+
+      await this._updateHighlighters();
+    }
   }
 
   /**
@@ -1357,10 +1379,10 @@ class HighlightersOverlay {
       return;
     }
 
-    await this._updateHighlightersOnMutationOrNavigation();
+    await this._updateHighlighters();
   }
 
-  async _updateHighlightersOnMutationOrNavigation() {
+  async _updateHighlighters() {
     for (const node of this.gridHighlighters.keys()) {
       await this._hideHighlighterIfDeadNode(node, this.hideGridHighlighter);
     }
@@ -1464,7 +1486,10 @@ class HighlightersOverlay {
    */
   destroy() {
     this.inspector.off("markupmutation", this.onMarkupMutation);
-    this.inspector.off("frame-root-available", this._onFrameRootAvailable);
+    this.resourceWatcher.unwatchResources(
+      [this.resourceWatcher.TYPES.ROOT_NODE],
+      { onAvailable: this._onResourceAvailable }
+    );
 
     this.target.off("will-navigate", this.onWillNavigate);
     this.walker.off("display-change", this.onDisplayChange);

@@ -1289,8 +1289,6 @@ Inspector.prototype = {
         const isTopLevelTarget = !!resource.targetFront.isTopLevel;
         if (rootNodeFront.isTopLevelDocument && isTopLevelTarget) {
           this.onRootNodeAvailable(rootNodeFront);
-        } else {
-          this.emit("frame-root-available", rootNodeFront);
         }
       }
     }

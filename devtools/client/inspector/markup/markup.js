@@ -294,7 +294,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   );
   this._onWalkerNodeStatesChanged = this._onWalkerNodeStatesChanged.bind(this);
   this._onFocus = this._onFocus.bind(this);
-  this._onFrameRootAvailable = this._onFrameRootAvailable.bind(this);
+  this._onResourceAvailable = this._onResourceAvailable.bind(this);
   this._onMouseClick = this._onMouseClick.bind(this);
   this._onMouseMove = this._onMouseMove.bind(this);
   this._onMouseOut = this._onMouseOut.bind(this);
@@ -311,7 +311,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._elt.addEventListener("mouseout", this._onMouseOut);
   this._frame.addEventListener("focus", this._onFocus);
   this.inspector.selection.on("new-node-front", this._onNewSelection);
-  this.inspector.on("frame-root-available", this._onFrameRootAvailable);
+
   this.win.addEventListener("copy", this._onCopy);
   this.win.addEventListener("mouseup", this._onMouseUp);
   this.inspector.toolbox.nodePicker.on(
@@ -358,6 +358,11 @@ function MarkupView(inspector, frame, controllerWindow) {
     "scrollable-change": this._onWalkerNodeStatesChanged,
     "overflow-change": this._onWalkerNodeStatesChanged,
     mutations: this._onWalkerMutations,
+  });
+
+  this.resourceWatcher = this.inspector.toolbox.resourceWatcher;
+  this.resourceWatcher.watchResources([this.resourceWatcher.TYPES.ROOT_NODE], {
+    onAvailable: this._onResourceAvailable,
   });
 }
 
@@ -1406,18 +1411,29 @@ MarkupView.prototype = {
     return container;
   },
 
-  /**
-   * Called when receiving the "frame-root-available" event from the inspector.
-   * "frame-root-available" will be emitted by the inspector when a root-node
-   * resource becomes available for a non-top-level target.
-   */
-  _onFrameRootAvailable: async function(nodeFront) {
-    const parentNodeFront = nodeFront.parentNode();
-    const container = this.getContainer(parentNodeFront);
-    if (container) {
-      // If there is no container for the parentNodeFront, the markup view is
-      // currently not watching this part of the tree.
-      this._forceUpdateChildren(container, { flash: true, updateLevel: true });
+  _onResourceAvailable: async function(resources) {
+    for (const resource of resources) {
+      if (resource.resourceType !== this.resourceWatcher.TYPES.ROOT_NODE) {
+        // Only handle root-node resources
+        continue;
+      }
+
+      if (resource.targetFront.isTopLevel && resource.isTopLevelDocument) {
+        // The topmost root node will lead to the destruction and recreation of
+        // the MarkupView. This is handled by the inspector.
+        continue;
+      }
+
+      const parentNodeFront = resource.parentNode();
+      const container = this.getContainer(parentNodeFront);
+      if (container) {
+        // If there is no container for the parentNodeFront, the markup view is
+        // currently not watching this part of the tree.
+        this._forceUpdateChildren(container, {
+          flash: true,
+          updateLevel: true,
+        });
+      }
     }
   },
 
@@ -2347,7 +2363,10 @@ MarkupView.prototype = {
     this._elt.removeEventListener("mouseout", this._onMouseOut);
     this._frame.removeEventListener("focus", this._onFocus);
     this.inspector.selection.off("new-node-front", this._onNewSelection);
-    this.inspector.off("frame-root-available", this._onFrameRootAvailable);
+    this.resourceWatcher.unwatchResources(
+      [this.resourceWatcher.TYPES.ROOT_NODE],
+      { onAvailable: this._onResourceAvailable }
+    );
     this.inspector.toolbox.nodePicker.off(
       "picker-node-hovered",
       this._onToolboxPickerHover
