@@ -66,7 +66,8 @@ class APZEventState final {
   void ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId, nsEventStatus aApzResponse,
-                         nsEventStatus aContentResponse);
+                         nsEventStatus aContentResponse,
+                         nsTArray<TouchBehaviorFlags>&& aAllowedTouchBehaviors);
   void ProcessWheelEvent(const WidgetWheelEvent& aEvent,
                          uint64_t aInputBlockId);
   void ProcessMouseEvent(const WidgetMouseEvent& aEvent,
@@ -84,6 +85,7 @@ class APZEventState final {
                              const nsCOMPtr<nsIWidget>& aWidget);
   already_AddRefed<nsIWidget> GetWidget() const;
   already_AddRefed<nsIContent> GetTouchRollup() const;
+  bool MainThreadAgreesEventsAreConsumableByAPZ() const;
 
  private:
   nsWeakPtr mWidget;
@@ -97,6 +99,7 @@ class APZEventState final {
   bool mFirstTouchCancelled;
   bool mTouchEndCancelled;
   int32_t mLastTouchIdentifier;
+  nsTArray<TouchBehaviorFlags> mTouchBlockAllowedBehaviors;
 
   // Because touch-triggered mouse events (e.g. mouse events from a tap
   // gesture) happen asynchronously from the touch events themselves, we

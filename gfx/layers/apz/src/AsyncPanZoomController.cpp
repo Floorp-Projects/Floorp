@@ -970,6 +970,12 @@ bool AsyncPanZoomController::ArePointerEventsConsumable(
   // pointercancel event to web content, which can break certain features
   // that are using touch-action and handling the pointermove events.
   //
+  // Note that in particular this function can return true if APZ is waiting on
+  // the main thread for touch-action information. In this scenario, the
+  // APZEventState::MainThreadAgreesEventsAreConsumableByAPZ() function tries
+  // to use the main-thread touch-action information to filter out false
+  // positives.
+  //
   // We could probably enhance this logic to determine things like "we're
   // not pannable, so we can only zoom in, and the zoom is already maxed
   // out, so we're not zoomable either" but no need for that at this point.
