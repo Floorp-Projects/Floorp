@@ -1,7 +1,8 @@
 /* exported attachURL, promiseDone,
    promiseOnce,
    addTest, addAsyncTest,
-   runNextTest, _documentWalker */
+   runNextTest, _documentWalker,
+   createResourceWatcher */
 "use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
@@ -13,6 +14,11 @@ const {
 const {
   DocumentWalker: _documentWalker,
 } = require("devtools/server/actors/inspector/document-walker");
+
+const { TargetList } = require("devtools/shared/resources/target-list");
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
 
 const Services = require("Services");
 
@@ -132,4 +138,9 @@ function runNextTest() {
         ex
     );
   }
+}
+
+function createResourceWatcher(target) {
+  const targetList = new TargetList(target.client.mainRoot, target);
+  return new ResourceWatcher(targetList);
 }
