@@ -149,6 +149,7 @@ bool WebrtcMediaDataEncoder::CreateEncoder(
 
 bool WebrtcMediaDataEncoder::InitEncoder() {
   LOG("Wait until encoder successfully initialize");
+  MutexAutoLock lock(mCallbackMutex);
   media::Await(
       do_AddRef(mThreadPool), mEncoder->Init(),
       [&](TrackInfo::TrackType) { mError = NS_OK; },
@@ -168,12 +169,12 @@ int32_t WebrtcMediaDataEncoder::Shutdown() {
   {
     MutexAutoLock lock(mCallbackMutex);
     mCallback = nullptr;
+    mError = NS_OK;
   }
   mThreadPool->Dispatch(NS_NewRunnableFunction(
       "WebrtcMediaDataEncoder::Shutdown",
       [self = RefPtr<WebrtcMediaDataEncoder>(this),
        encoder = RefPtr<MediaDataEncoder>(std::move(mEncoder))]() {
-        self->mError = NS_OK;
         encoder->Shutdown();
       }));
   return WEBRTC_VIDEO_CODEC_OK;
@@ -222,8 +223,11 @@ int32_t WebrtcMediaDataEncoder::Encode(
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
-  if (NS_FAILED(mError)) {
-    return WEBRTC_VIDEO_CODEC_ERROR;
+  {
+    MutexAutoLock lock(mCallbackMutex);
+    if (NS_FAILED(mError)) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
   }
 
   LOG_V("Encode frame, type %d size %u", (*aFrameTypes)[0], aInputFrame.size());
@@ -308,7 +312,10 @@ void WebrtcMediaDataEncoder::ProcessEncode(
             }
           },
           [self = RefPtr<WebrtcMediaDataEncoder>(this)](
-              const MediaResult& aError) { self->mError = aError; });
+              const MediaResult& aError) {
+            MutexAutoLock lock(self->mCallbackMutex);
+            self->mError = aError;
+          });
 }
 
 int32_t WebrtcMediaDataEncoder::SetChannelParameters(uint32_t aPacketLoss,
@@ -326,8 +333,11 @@ int32_t WebrtcMediaDataEncoder::SetRates(uint32_t aNewBitrateKbps,
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
-  if (NS_FAILED(mError)) {
-    return WEBRTC_VIDEO_CODEC_ERROR;
+  {
+    MutexAutoLock lock(mCallbackMutex);
+    if (NS_FAILED(mError)) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
   }
 
   const uint32_t newBitrateBps = aNewBitrateKbps * 1000;
