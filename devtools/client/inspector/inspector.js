@@ -420,8 +420,11 @@ Inspector.prototype = {
 
   /**
    * Return a promise that will resolve to the default node for selection.
+   *
+   * @param {NodeFront} rootNodeFront
+   *        The current root node front for the top walker.
    */
-  _getDefaultNodeForSelection: async function() {
+  _getDefaultNodeForSelection: async function(rootNodeFront) {
     if (this._defaultNode) {
       return this._defaultNode;
     }
@@ -430,8 +433,6 @@ Inspector.prototype = {
     const pendingSelectionUnique = Symbol("pending-selection");
     this._pendingSelectionUnique = pendingSelectionUnique;
 
-    // Update the rootNode for walker queries.
-    const rootNode = await this.walker.getRootNode();
     if (this._pendingSelectionUnique !== pendingSelectionUnique) {
       // If this method was called again while waiting, bail out.
       return null;
@@ -444,7 +445,7 @@ Inspector.prototype = {
       // - first try to match css selectors for the selection
       () => (cssSelectors.length ? walker.findNodeFront(cssSelectors) : null),
       // - otherwise try to get the "body" element
-      () => walker.querySelector(rootNode, "body"),
+      () => walker.querySelector(rootNodeFront, "body"),
       // - finally get the documentElement element if nothing else worked.
       () => walker.documentElement(),
     ];
@@ -1284,15 +1285,12 @@ Inspector.prototype = {
       if (
         resource.resourceType === this.toolbox.resourceWatcher.TYPES.ROOT_NODE
       ) {
+        const rootNodeFront = resource;
         const isTopLevelTarget = !!resource.targetFront.isTopLevel;
-        if (resource.isTopLevelDocument && isTopLevelTarget) {
-          // Note: the resource (ie the root node here) will be fetched from the
-          // walker later on in _getDefaultNodeForSelection.
-          // We should update the inspector to directly use the node front
-          // provided here. Bug 1635461.
-          this.onRootNodeAvailable();
+        if (rootNodeFront.isTopLevelDocument && isTopLevelTarget) {
+          this.onRootNodeAvailable(rootNodeFront);
         } else {
-          this.emit("frame-root-available", resource);
+          this.emit("frame-root-available", rootNodeFront);
         }
       }
     }
@@ -1301,7 +1299,7 @@ Inspector.prototype = {
   /**
    * Reset the inspector on new root mutation.
    */
-  onRootNodeAvailable: async function() {
+  onRootNodeAvailable: async function(rootNodeFront) {
     // Record new-root timing for telemetry
     this._newRootStart = this.panelWin.performance.now();
 
@@ -1310,7 +1308,7 @@ Inspector.prototype = {
     this._destroyMarkup();
 
     try {
-      const defaultNode = await this._getDefaultNodeForSelection();
+      const defaultNode = await this._getDefaultNodeForSelection(rootNodeFront);
       if (!defaultNode) {
         return;
       }
