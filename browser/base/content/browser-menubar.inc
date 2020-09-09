@@ -283,7 +283,18 @@
                              placespopup="true"
                              is="places-popup"
 #endif
-                             onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoWindowSubmenu();"/>
+                             onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoWindowSubmenu();">
+#ifdef HIDDEN_WINDOW
+# This entry is never visible. It's here to make the cmd-shift-n
+# shortcut work in the hidden window when the last window is closed.
+# If the menu is actually opened, we'll clear this out and replace
+# it with a "real" entry.
+# See bug 492320 for the nasty details.
+                    <menuitem key="key_undoCloseWindow"
+                              oncommand="undoCloseWindow(0)"
+                              />
+#endif
+                  </menupopup>
                 </menu>
                 <menuseparator id="startHistorySeparator"
                                class="hide-if-empty-places-result"/>
