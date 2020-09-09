@@ -380,10 +380,6 @@ const walkerSpec = generateActorSpec({
       request: {},
       response: {},
     },
-    unwatchRootNode: {
-      request: {},
-      oneway: true,
-    },
     getOverflowCausingElements: {
       request: {
         node: Arg(0, "domnode"),
