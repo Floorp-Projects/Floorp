@@ -167,7 +167,7 @@ bool RenderCompositorANGLE::Initialize() {
     HWND compositorHwnd = GetCompositorHwnd();
     if (compositorHwnd) {
       mDCLayerTree =
-          DCLayerTree::Create(gl, mEGLConfig, mDevice, compositorHwnd);
+          DCLayerTree::Create(gl, mEGLConfig, mDevice, mCtx, compositorHwnd);
       if (!mDCLayerTree) {
         gfxCriticalNote << "Failed to create DCLayerTree";
         return false;
@@ -851,6 +851,11 @@ void RenderCompositorANGLE::CreateSurface(wr::NativeSurfaceId aId,
   mDCLayerTree->CreateSurface(aId, aVirtualOffset, aTileSize, aIsOpaque);
 }
 
+void RenderCompositorANGLE::CreateExternalSurface(wr::NativeSurfaceId aId,
+                                                  bool aIsOpaque) {
+  mDCLayerTree->CreateExternalSurface(aId, aIsOpaque);
+}
+
 void RenderCompositorANGLE::DestroySurface(NativeSurfaceId aId) {
   mDCLayerTree->DestroySurface(aId);
 }
@@ -863,6 +868,11 @@ void RenderCompositorANGLE::CreateTile(wr::NativeSurfaceId aId, int aX,
 void RenderCompositorANGLE::DestroyTile(wr::NativeSurfaceId aId, int aX,
                                         int aY) {
   mDCLayerTree->DestroyTile(aId, aX, aY);
+}
+
+void RenderCompositorANGLE::AttachExternalImage(
+    wr::NativeSurfaceId aId, wr::ExternalImageId aExternalImage) {
+  mDCLayerTree->AttachExternalImage(aId, aExternalImage);
 }
 
 void RenderCompositorANGLE::AddSurface(

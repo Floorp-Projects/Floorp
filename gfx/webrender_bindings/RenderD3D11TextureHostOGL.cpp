@@ -17,14 +17,17 @@
 namespace mozilla {
 namespace wr {
 
-RenderDXGITextureHostOGL::RenderDXGITextureHostOGL(WindowsHandle aHandle,
-                                                   gfx::SurfaceFormat aFormat,
-                                                   gfx::IntSize aSize)
+RenderDXGITextureHostOGL::RenderDXGITextureHostOGL(
+    WindowsHandle aHandle, gfx::SurfaceFormat aFormat,
+    gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange,
+    gfx::IntSize aSize)
     : mHandle(aHandle),
       mSurface(0),
       mStream(0),
       mTextureHandle{0},
       mFormat(aFormat),
+      mYUVColorSpace(aYUVColorSpace),
+      mColorRange(aColorRange),
       mSize(aSize),
       mLocked(false) {
   MOZ_COUNT_CTOR_INHERITED(RenderDXGITextureHostOGL, RenderTextureHostOGL);

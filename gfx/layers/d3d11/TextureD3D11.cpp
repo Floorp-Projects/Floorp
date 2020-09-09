@@ -981,8 +981,8 @@ bool DXGITextureHostD3D11::AcquireTextureSource(
 
 void DXGITextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  RefPtr<wr::RenderTextureHost> texture =
-      new wr::RenderDXGITextureHostOGL(mHandle, mFormat, mSize);
+  RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGITextureHostOGL(
+      mHandle, mFormat, mYUVColorSpace, mColorRange, mSize);
 
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
                                                  texture.forget());
@@ -1097,12 +1097,19 @@ void DXGITextureHostD3D11::PushDisplayItems(
     case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
+      bool supportsExternalCompositing = false;
+      // XXX Add P010 and P016 support.
+      if (GetFormat() == gfx::SurfaceFormat::NV12 &&
+          gfx::gfxVars::UseWebRenderDCompVideoOverlayWin()) {
+        supportsExternalCompositing = true;
+      }
       aBuilder.PushNV12Image(
           aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
           GetFormat() == gfx::SurfaceFormat::NV12 ? wr::ColorDepth::Color8
                                                   : wr::ColorDepth::Color16,
           wr::ToWrYuvColorSpace(mYUVColorSpace),
-          wr::ToWrColorRange(mColorRange), aFilter, aPreferCompositorSurface);
+          wr::ToWrColorRange(mColorRange), aFilter, aPreferCompositorSurface,
+          supportsExternalCompositing);
       break;
     }
     default: {

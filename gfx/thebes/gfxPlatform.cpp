@@ -2767,6 +2767,13 @@ void gfxPlatform::InitWebRenderConfig() {
   if (gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT)) {
     gfxVars::SetUseWebRenderDCompWin(true);
   }
+  if (Preferences::GetBool("gfx.webrender.dcomp-video-overlay-win", false)) {
+    if (IsWin10AnniversaryUpdateOrLater() &&
+        gfxConfig::IsEnabled(Feature::WEBRENDER_COMPOSITOR)) {
+      MOZ_ASSERT(gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT));
+      gfxVars::SetUseWebRenderDCompVideoOverlayWin(true);
+    }
+  }
   if (Preferences::GetBool("gfx.webrender.flip-sequential", false)) {
     // XXX relax win version to windows 8.
     if (IsWin10OrLater() && UseWebRender() && gfxVars::UseWebRenderANGLE()) {
