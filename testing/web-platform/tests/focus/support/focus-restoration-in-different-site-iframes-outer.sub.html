@@ -12,11 +12,11 @@ window.onmessage = function(e) {
         other = window.open("focus-restoration-in-different-site-iframes-other.html", "otherwindow", "resizable=yes");
     } else if (e.data == "other") {
         other.close();
-        opener.step_timeout(function() {
+        setTimeout(function() {
             document.getElementsByTagName("iframe")[0].contentWindow.postMessage("getlog", "*");
         }, 2000);
     } else {
-        opener.step_timeout(function() {
+        setTimeout(function() {
             opener.postMessage(getLog() + e.data, "*");
         }, 1500);
     }
