@@ -38,23 +38,30 @@ class GeckoViewContentParent extends JSWindowActorParent {
       return;
     }
 
-    const self = this;
     const progressFilter = Cc[
       "@mozilla.org/appshell/component/browser-status-filter;1"
     ].createInstance(Ci.nsIWebProgress);
 
+    const { browser } = this;
     const progressListener = {
       QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener"]),
 
       onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
-        self.sendAsyncMessage("RestoreSessionState", { formdata, scrolldata });
+        if (!aWebProgress.isTopLevel) {
+          return;
+        }
+        // The actor might get recreated between navigations so we need to
+        // query it again for the up-to-date instance.
+        browser.browsingContext.currentWindowGlobal
+          .getActor("GeckoViewContent")
+          .sendAsyncMessage("RestoreSessionState", { formdata, scrolldata });
         progressFilter.removeProgressListener(this);
-        self.browser.removeProgressListener(progressFilter);
+        browser.removeProgressListener(progressFilter);
       },
     };
 
     const flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
     progressFilter.addProgressListener(progressListener, flags);
-    this.browser.addProgressListener(progressFilter, flags);
+    browser.addProgressListener(progressFilter, flags);
   }
 }
