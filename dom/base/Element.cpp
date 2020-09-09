@@ -162,7 +162,7 @@
 
 #include "DOMMatrix.h"
 
-#if defined(ACCESSIBILITY) && defined(DEBUG)
+#ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
 #endif
 
