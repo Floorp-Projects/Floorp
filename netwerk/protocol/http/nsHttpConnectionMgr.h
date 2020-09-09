@@ -235,8 +235,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
     bool mDoNotDestroy : 1;
 
-    bool AllowSpdy() const { return mCanUseSpdy; }
-    void DisallowSpdy();
+    bool AllowHttp2() const { return mCanUseSpdy; }
+    void DisallowHttp2();
+    void DontReuseHttp3Conn();
 
     // Set the IP family preference flags according the connected family
     void RecordIPFamilyPreference(uint16_t family);
