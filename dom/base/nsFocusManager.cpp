@@ -1985,6 +1985,25 @@ Element* nsFocusManager::FlushAndCheckIfFocusable(Element* aElement,
                : nullptr;
   }
 
+  // If this is an iframe that doesn't have an in-process subdocument, it is
+  // either an OOP iframe or an in-process iframe without lazy about:blank
+  // creation having taken place. In the OOP case, treat the frame as
+  // focusable for consistency with Chrome. In the in-process case, create
+  // the initial about:blank for in-process BrowsingContexts in order to
+  // have the `GetSubDocumentFor` call after this block return something.
+  if (RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(aElement)) {
+    // Only look at pre-existing browsing contexts. If this function is
+    // called during reflow, calling GetBrowsingContext() could cause frame
+    // loader initialization at a time when it isn't safe.
+    if (BrowsingContext* bc = flo->GetExtantBrowsingContext()) {
+      // This call may create a contentViewer-created about:blank.
+      // That's intentional, so we can move focus there.
+      if (!bc->GetDocument()) {
+        return aElement;
+      }
+    }
+  }
+
   // if this is a child frame content node, check if it is visible and
   // call the content node's IsFocusable method instead of the frame's
   // IsFocusable method. This skips checking the style system and ensures that
