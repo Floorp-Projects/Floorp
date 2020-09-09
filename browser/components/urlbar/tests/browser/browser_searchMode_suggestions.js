@@ -32,8 +32,12 @@ add_task(async function setup() {
   await Services.search.setDefault(defaultEngine);
   await Services.search.moveEngine(suggestionsEngine, 0);
 
-  await PlacesUtils.history.clear();
-  await PlacesUtils.bookmarks.eraseEverything();
+  async function cleanup() {
+    await PlacesUtils.history.clear();
+    await PlacesUtils.bookmarks.eraseEverything();
+  }
+  await cleanup();
+  registerCleanupFunction(cleanup);
 
   // Add some form history for our test engine.  Add more than
   // maxHistoricalSearchSuggestions so we can verify that excess form history is
@@ -89,6 +93,50 @@ add_task(async function emptySearch() {
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
     await UrlbarTestUtils.promisePopupClose(window);
   });
+});
+
+add_task(async function emptySearch_withHistory() {
+  // URLs with the same host as the search engine.
+  await PlacesTestUtils.addVisits([
+    `http://mochi.test/`,
+    // Should not be returned because it's a redirect source.
+    `http://mochi.test/redirect`,
+    {
+      uri: `http://mochi.test/target`,
+      transition: PlacesUtils.history.TRANSITIONS.REDIRECT_TEMPORARY,
+      referrer: `http://mochi.test/redirect`,
+    },
+  ]);
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+    await UrlbarTestUtils.enterSearchMode(window);
+    Assert.equal(gURLBar.value, "", "Urlbar value should be cleared.");
+    // For the empty search case, we expect to get the form history relative to
+    // the picked engine, history without redirects, and no heuristic.
+    await checkResults([
+      ...expectedFormHistoryResults,
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/target`,
+      },
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/`,
+      },
+    ]);
+
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function nonEmptySearch() {
@@ -194,6 +242,9 @@ add_task(async function nonEmptySearch_withHistory() {
   await PlacesTestUtils.addVisits([
     `http://mochi.test/${query}`,
     `http://mochi.test/${query}1`,
+    // Should not be returned because it has a different host, even if it
+    // matches the host in the path.
+    `http://example.com/mochi.test/${query}`,
   ]);
 
   await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
