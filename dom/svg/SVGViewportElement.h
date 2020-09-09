@@ -128,7 +128,7 @@ class SVGViewportElement : public SVGGraphicsElement {
   /**
    * Returns true if either this is an SVG <svg> element that is the child of
    * another non-foreignObject SVG element, or this is a SVG <symbol> element
-   * this is the root of a use-element shadow tree.
+   * that is the root of a use-element shadow tree.
    */
   bool IsInner() const {
     const nsIContent* parent = GetFlattenedTreeParent();
@@ -144,11 +144,11 @@ class SVGViewportElement : public SVGGraphicsElement {
  protected:
   // implementation helpers:
 
-  bool IsRoot() const {
+  bool IsRootSVGSVGElement() const {
     NS_ASSERTION((IsInUncomposedDoc() && !GetParent()) ==
                      (OwnerDoc()->GetRootElement() == this),
                  "Can't determine if we're root");
-    return IsInUncomposedDoc() && !GetParent();
+    return !GetParent() && IsInUncomposedDoc() && IsSVGElement(nsGkAtoms::svg);
   }
 
   /**

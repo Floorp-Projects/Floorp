@@ -133,7 +133,8 @@ inline float ComputeSynthesizedViewBoxDimension(
 void SVGViewportElement::UpdateHasChildrenOnlyTransform() {
   bool hasChildrenOnlyTransform =
       HasViewBoxOrSyntheticViewBox() ||
-      (IsRoot() && static_cast<SVGSVGElement*>(this)->IsScaledOrTranslated());
+      (IsRootSVGSVGElement() &&
+       static_cast<SVGSVGElement*>(this)->IsScaledOrTranslated());
   mHasChildrenOnlyTransform = hasChildrenOnlyTransform;
 }
 
@@ -274,7 +275,7 @@ gfxMatrix SVGViewportElement::PrependLocalTransformsTo(
     const_cast<SVGViewportElement*>(this)->GetAnimatedLengthValues(&x, &y,
                                                                    nullptr);
     childToUser = ThebesMatrix(GetViewBoxTransform().PostTranslate(x, y));
-  } else if (IsRoot()) {
+  } else if (IsRootSVGSVGElement()) {
     const SVGSVGElement* svg = static_cast<const SVGSVGElement*>(this);
     const SVGPoint& translate = svg->GetCurrentTranslate();
     float scale = svg->CurrentScale();
@@ -324,7 +325,7 @@ SVGViewportElement::GetAnimatedPreserveAspectRatio() {
 bool SVGViewportElement::ShouldSynthesizeViewBox() const {
   MOZ_ASSERT(!HasViewBox(), "Should only be called if we lack a viewBox");
 
-  return IsRoot() && OwnerDoc()->IsBeingUsedAsImage();
+  return IsRootSVGSVGElement() && OwnerDoc()->IsBeingUsedAsImage();
 }
 
 //----------------------------------------------------------------------

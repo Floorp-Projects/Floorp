@@ -138,7 +138,7 @@ void SVGSVGElement::SetCurrentScale(float aCurrentScale) {
   }
   mCurrentScale = aCurrentScale;
 
-  if (IsRoot()) {
+  if (IsRootSVGSVGElement()) {
     InvalidateTransformNotifyFrame();
   }
 }
@@ -258,7 +258,7 @@ void SVGSVGElement::DidChangeTranslate() {
   if (Document* doc = GetUncomposedDoc()) {
     RefPtr<PresShell> presShell = doc->GetPresShell();
     // now dispatch the appropriate event if we are the root element
-    if (presShell && IsRoot()) {
+    if (presShell && IsRootSVGSVGElement()) {
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetEvent svgScrollEvent(true, eSVGScroll);
       presShell->HandleDOMEventWithTarget(this, &svgScrollEvent, &status);
