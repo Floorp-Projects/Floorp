@@ -16,7 +16,7 @@ static HINSTANCE gHInst;
 
 // ***** Section: ScopeExit
 // Derived from mfbt mozilla::ScopeExit, I have removed the use of
-// GuardObjectNotifier and annotations MOZ_STACK_CLASS and MOZ_MUST_USE.
+// GuardObjectNotifier and the MOZ_* annotations.
 template <typename ExitFunction>
 class ScopeExit {
   ExitFunction mExitFunction;
