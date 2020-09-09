@@ -12,8 +12,8 @@ use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSen
 use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDisplayItem, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::{ReferenceTransformBinding, Rotation};
-use api::image_tiling::simplify_repeated_primitive;
 use api::units::*;
+use crate::image_tiling::simplify_repeated_primitive;
 use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind};
 use crate::clip::{ClipInternData, ClipNodeKind, ClipInstance};
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};

@@ -92,10 +92,10 @@
 //! [segment.rs]: ../segment/index.html
 //!
 
-use api::{BorderRadius, ClipIntern, ClipMode, ComplexClipRegion, ImageMask};
+use api::{BorderRadius, ClipMode, ComplexClipRegion, ImageMask};
 use api::{BoxShadowClipMode, ClipId, ImageKey, ImageRendering, PipelineId};
 use api::units::*;
-use api::image_tiling::{self, Repetition};
+use crate::image_tiling::{self, Repetition};
 use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
 use crate::box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex, CoordinateSystemId};
@@ -115,6 +115,10 @@ use std::{iter, ops, u32};
 use smallvec::SmallVec;
 
 // Type definitions for interning clip nodes.
+
+#[derive(Copy, Clone, Debug, MallocSizeOf)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
+pub enum ClipIntern {}
 
 pub type ClipDataStore = intern::DataStore<ClipIntern>;
 pub type ClipDataHandle = intern::Handle<ClipIntern>;

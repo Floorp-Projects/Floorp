@@ -16,9 +16,10 @@ use rayon::{ThreadPool, ThreadPoolBuilder};
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
-use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, PrimitiveFlags, RenderApi, Transaction};
+use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, PrimitiveFlags};
 use webrender::api::{ColorF, CommonItemProperties, SpaceAndClipInfo, ImageDescriptorFlags};
 use webrender::api::units::*;
+use webrender::render_api::*;
 use webrender::euclid::size2;
 
 // This example shows how to implement a very basic BlobImageHandler that can only render

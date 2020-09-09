@@ -7,6 +7,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::mpsc::Receiver;
 use webrender::api::*;
+use webrender::render_api::*;
 use webrender::api::units::*;
 use crate::{WindowWrapper, NotifierEvent};
 use crate::blob;

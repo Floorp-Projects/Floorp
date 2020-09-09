@@ -5,7 +5,7 @@
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
-use api::{CaptureBits, ExternalImageData, ImageDescriptor};
+use api::{ExternalImageData, ImageDescriptor};
 #[cfg(feature = "png")]
 use api::ImageFormat;
 use api::units::TexelRect;
@@ -13,6 +13,7 @@ use api::units::TexelRect;
 use api::units::DeviceIntSize;
 #[cfg(feature = "capture")]
 use crate::print_tree::{PrintableTree, PrintTree};
+use crate::render_api::CaptureBits;
 use ron;
 use serde;
 

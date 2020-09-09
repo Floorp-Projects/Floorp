@@ -2,17 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageResult};
-use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, SceneMsg, ResourceUpdate, ExternalEvent};
-use api::{NotificationRequest, Checkpoint, IdNamespace, QualitySettings, TransactionMsg};
-use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind, SharedFontInstanceMap};
+use api::{AsyncBlobImageRasterizer, BlobImageResult};
+use api::{DocumentId, PipelineId, ExternalEvent, BlobImageRequest};
+use api::{NotificationRequest, Checkpoint, IdNamespace, QualitySettings};
+use api::{PrimitiveKeyKind, SharedFontInstanceMap};
 use api::{DocumentLayer, GlyphDimensionRequest, GlyphIndexRequest};
 use api::channel::{unbounded_channel, single_msg_channel, Receiver, Sender};
 use api::units::*;
+use crate::render_api::{ApiMsg, FrameMsg, SceneMsg, ResourceUpdate, TransactionMsg, MemoryReport};
 #[cfg(feature = "capture")]
 use crate::capture::CaptureConfig;
 use crate::frame_builder::FrameBuilderConfig;
 use crate::scene_building::SceneBuilder;
+use crate::clip::ClipIntern;
+use crate::filterdata::FilterDataIntern;
 use crate::intern::{Internable, Interner, UpdateList};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -207,7 +210,7 @@ macro_rules! declare_interners {
     }
 }
 
-enumerate_interners!(declare_interners);
+crate::enumerate_interners!(declare_interners);
 
 // A document in the scene builder contains the current scene,
 // as well as a persistent clip interner. This allows clips
@@ -436,7 +439,8 @@ impl SceneBuilderThread {
             let interners_name = format!("interners-{}-{}", id.namespace_id.0, id.id);
             config.serialize_for_scene(&doc.interners, interners_name);
 
-            if config.bits.contains(api::CaptureBits::SCENE) {
+            use crate::render_api::CaptureBits;
+            if config.bits.contains(CaptureBits::SCENE) {
                 let file_name = format!("scene-{}-{}", id.namespace_id.0, id.id);
                 config.serialize_for_scene(&doc.scene, file_name);
             }
@@ -511,7 +515,8 @@ impl SceneBuilderThread {
                 let interners_name = format!("interners-{}-{}", id.namespace_id.0, id.id);
                 config.serialize_for_scene(&doc.interners, interners_name);
 
-                if config.bits.contains(api::CaptureBits::SCENE) {
+                use crate::render_api::CaptureBits;
+                if config.bits.contains(CaptureBits::SCENE) {
                     let file_name = format!("scene-{}-{}", id.namespace_id.0, id.id);
                     config.serialize_for_scene(&doc.scene, file_name);
                 }

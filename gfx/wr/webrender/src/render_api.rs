@@ -4,60 +4,39 @@
 
 #![deny(missing_docs)]
 
-extern crate serde_bytes;
-
-use peek_poke::PeekPoke;
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
-use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::u32;
 use time::precise_time_ns;
-// local imports
-use crate::{display_item as di, font};
-use crate::channel::{Sender, Receiver, single_msg_channel, unbounded_channel};
-use crate::color::{ColorU, ColorF};
-use crate::display_list::BuiltDisplayList;
-use crate::font::SharedFontInstanceMap;
-use crate::image::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey};
-use crate::image::{BlobImageParams, BlobImageRequest, BlobImageResult, AsyncBlobImageRasterizer, BlobImageHandler};
-use crate::image::DEFAULT_TILE_SIZE;
-use crate::resources::ApiResources;
-use crate::units::*;
+//use crate::api::peek_poke::PeekPoke;
+use crate::api::channel::{Sender, single_msg_channel, unbounded_channel};
+use crate::api::{ColorF, BuiltDisplayList, IdNamespace, ExternalScrollId};
+use crate::api::{SharedFontInstanceMap, FontKey, FontInstanceKey, NativeFontHandle, ZoomFactor};
+use crate::api::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey, Epoch, QualitySettings};
+use crate::api::{BlobImageParams, BlobImageRequest, BlobImageResult, AsyncBlobImageRasterizer, BlobImageHandler};
+use crate::api::{DocumentId, PipelineId, PropertyBindingId, PropertyBindingKey, ExternalEvent, DocumentLayer};
+use crate::api::{HitTestResult, HitTesterRequest, ApiHitTester, PropertyValue, DynamicProperties};
+use crate::api::{ScrollClamping, TileSize, NotificationRequest, DebugFlags, ScrollNodeState};
+use crate::api::{GlyphDimensionRequest, GlyphIndexRequest, GlyphIndex, GlyphDimensions};
+use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
+use crate::api::DEFAULT_TILE_SIZE;
+use crate::api::units::*;
+use crate::api_resources::ApiResources;
+use crate::intern::InterningMemoryReport;
 
-/// Width and height in device pixels of image tiles.
-pub type TileSize = u16;
-
-/// Documents are rendered in the ascending order of their associated layer values.
-pub type DocumentLayer = i8;
-
-/// Various settings that the caller can select based on desired tradeoffs
-/// between rendering quality and performance / power usage.
-#[derive(Copy, Clone, Deserialize, Serialize)]
-pub struct QualitySettings {
-    /// If true, disable creating separate picture cache slices when the
-    /// scroll root changes. This gives maximum opportunity to find an
-    /// opaque background, which enables subpixel AA. However, it is
-    /// usually significantly more expensive to render when scrolling.
-    pub force_subpixel_aa_where_possible: bool,
-}
-
-impl Default for QualitySettings {
-    fn default() -> Self {
-        QualitySettings {
-            // Prefer performance over maximum subpixel AA quality, since WR
-            // already enables subpixel AA in more situations than other browsers.
-            force_subpixel_aa_where_possible: false,
-        }
-    }
-}
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
+struct ResourceId(pub u32);
 
 /// Update of a persistent resource in WebRender.
 ///
 /// ResourceUpdate changes keep theirs effect across display list changes.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
 pub enum ResourceUpdate {
     /// See `AddImage`.
     AddImage(AddImage),
@@ -84,7 +63,7 @@ pub enum ResourceUpdate {
     /// It is invalid to continue referring to the font key in any display list
     /// in the transaction that contains the `DeleteImage` message and subsequent
     /// transactions.
-    DeleteFont(font::FontKey),
+    DeleteFont(FontKey),
     /// See `AddFontInstance`.
     AddFontInstance(AddFontInstance),
     /// Deletes an already existing font instance resource.
@@ -92,7 +71,7 @@ pub enum ResourceUpdate {
     /// It is invalid to continue referring to the font instance in any display
     /// list in the transaction that contains the `DeleteImage` message and
     /// subsequent transactions.
-    DeleteFontInstance(font::FontInstanceKey),
+    DeleteFontInstance(FontInstanceKey),
 }
 
 impl fmt::Debug for ResourceUpdate {
@@ -215,8 +194,9 @@ impl Transaction {
     /// # Examples
     ///
     /// ```
-    /// # use webrender_api::{PipelineId, RenderApiSender, Transaction};
-    /// # use webrender_api::units::{DeviceIntSize};
+    /// # use webrender::api::{PipelineId};
+    /// # use webrender::api::units::{DeviceIntSize};
+    /// # use webrender::render_api::{RenderApiSender, Transaction};
     /// # fn example() {
     /// let pipeline_id = PipelineId(0, 0);
     /// let mut txn = Transaction::new();
@@ -321,7 +301,7 @@ impl Transaction {
     pub fn scroll_node_with_id(
         &mut self,
         origin: LayoutPoint,
-        id: di::ExternalScrollId,
+        id: ExternalScrollId,
         clamp: ScrollClamping,
     ) {
         self.frame_ops.push(FrameMsg::ScrollNodeWithId(origin, id, clamp));
@@ -497,31 +477,31 @@ impl Transaction {
     }
 
     /// See `ResourceUpdate::AddFont`.
-    pub fn add_raw_font(&mut self, key: font::FontKey, bytes: Vec<u8>, index: u32) {
+    pub fn add_raw_font(&mut self, key: FontKey, bytes: Vec<u8>, index: u32) {
         self.resource_updates
             .push(ResourceUpdate::AddFont(AddFont::Raw(key, Arc::new(bytes), index)));
     }
 
     /// See `ResourceUpdate::AddFont`.
-    pub fn add_native_font(&mut self, key: font::FontKey, native_handle: font::NativeFontHandle) {
+    pub fn add_native_font(&mut self, key: FontKey, native_handle: NativeFontHandle) {
         self.resource_updates
             .push(ResourceUpdate::AddFont(AddFont::Native(key, native_handle)));
     }
 
     /// See `ResourceUpdate::DeleteFont`.
-    pub fn delete_font(&mut self, key: font::FontKey) {
+    pub fn delete_font(&mut self, key: FontKey) {
         self.resource_updates.push(ResourceUpdate::DeleteFont(key));
     }
 
     /// See `ResourceUpdate::AddFontInstance`.
     pub fn add_font_instance(
         &mut self,
-        key: font::FontInstanceKey,
-        font_key: font::FontKey,
+        key: FontInstanceKey,
+        font_key: FontKey,
         glyph_size: f32,
-        options: Option<font::FontInstanceOptions>,
-        platform_options: Option<font::FontInstancePlatformOptions>,
-        variations: Vec<font::FontVariation>,
+        options: Option<FontInstanceOptions>,
+        platform_options: Option<FontInstancePlatformOptions>,
+        variations: Vec<FontVariation>,
     ) {
         self.resource_updates
             .push(ResourceUpdate::AddFontInstance(AddFontInstance {
@@ -535,7 +515,7 @@ impl Transaction {
     }
 
     /// See `ResourceUpdate::DeleteFontInstance`.
-    pub fn delete_font_instance(&mut self, key: font::FontInstanceKey) {
+    pub fn delete_font_instance(&mut self, key: FontInstanceKey) {
         self.resource_updates.push(ResourceUpdate::DeleteFontInstance(key));
     }
 
@@ -629,7 +609,8 @@ impl TransactionMsg {
 /// Creates an image resource with provided parameters.
 ///
 /// Must be matched with a `DeleteImage` at some point to prevent memory leaks.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
 pub struct AddImage {
     /// A key to identify the image resource.
     pub key: ImageKey,
@@ -646,7 +627,8 @@ pub struct AddImage {
 }
 
 /// Updates an already existing image resource.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
 pub struct UpdateImage {
     /// The key identfying the image resource to update.
     pub key: ImageKey,
@@ -664,7 +646,8 @@ pub struct UpdateImage {
 /// Creates a blob-image resource with provided parameters.
 ///
 /// Must be matched with a `DeleteImage` at some point to prevent memory leaks.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
 pub struct AddBlobImage {
     /// A key to identify the blob-image resource.
     pub key: BlobImageKey,
@@ -690,7 +673,8 @@ pub struct AddBlobImage {
 }
 
 /// Updates an already existing blob-image resource.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
 pub struct UpdateBlobImage {
     /// The key identfying the blob-image resource to update.
     pub key: BlobImageKey,
@@ -709,58 +693,34 @@ pub struct UpdateBlobImage {
 ///
 /// Must be matched with a corresponding `ResourceUpdate::DeleteFont` at some point to prevent
 /// memory leaks.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
 pub enum AddFont {
     ///
-    Raw(font::FontKey, Arc<Vec<u8>>, u32),
+    Raw(FontKey, Arc<Vec<u8>>, u32),
     ///
-    Native(font::FontKey, font::NativeFontHandle),
-}
-
-/// Describe an item that matched a hit-test query.
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-pub struct HitTestItem {
-    /// The pipeline that the display item that was hit belongs to.
-    pub pipeline: PipelineId,
-
-    /// The tag of the hit display item.
-    pub tag: di::ItemTag,
-
-    /// The hit point in the coordinate space of the "viewport" of the display item. The
-    /// viewport is the scroll node formed by the root reference frame of the display item's
-    /// pipeline.
-    pub point_in_viewport: LayoutPoint,
-
-    /// The coordinates of the original hit test point relative to the origin of this item.
-    /// This is useful for calculating things like text offsets in the client.
-    pub point_relative_to_item: LayoutPoint,
-}
-
-/// Returned by `RenderApi::hit_test`.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct HitTestResult {
-    /// List of items that are match the hit-test query.
-    pub items: Vec<HitTestItem>,
+    Native(FontKey, NativeFontHandle),
 }
 
 /// Creates a font instance resource.
 ///
 /// Must be matched with a corresponding `DeleteFontInstance` at some point
 /// to prevent memory leaks.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone)]
+#[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
 pub struct AddFontInstance {
     /// A key to identify the font instance.
-    pub key: font::FontInstanceKey,
+    pub key: FontInstanceKey,
     /// The font resource's key.
-    pub font_key: font::FontKey,
+    pub font_key: FontKey,
     /// Glyph size in app units.
     pub glyph_size: f32,
     ///
-    pub options: Option<font::FontInstanceOptions>,
+    pub options: Option<FontInstanceOptions>,
     ///
-    pub platform_options: Option<font::FontInstancePlatformOptions>,
+    pub platform_options: Option<FontInstancePlatformOptions>,
     ///
-    pub variations: Vec<font::FontVariation>,
+    pub variations: Vec<FontVariation>,
 }
 
 /// Frame messages affect building the scene.
@@ -813,7 +773,7 @@ pub enum FrameMsg {
     ///
     SetPan(DeviceIntPoint),
     ///
-    ScrollNodeWithId(LayoutPoint, di::ExternalScrollId, ScrollClamping),
+    ScrollNodeWithId(LayoutPoint, ExternalScrollId, ScrollClamping),
     ///
     GetScrollNodeState(Sender<Vec<ScrollNodeState>>),
     ///
@@ -949,9 +909,9 @@ pub enum DebugCommand {
 /// Message sent by the `RenderApi` to the render backend thread.
 pub enum ApiMsg {
     /// Gets the glyph dimensions
-    GetGlyphDimensions(font::GlyphDimensionRequest),
+    GetGlyphDimensions(GlyphDimensionRequest),
     /// Gets the glyph indices from a string
-    GetGlyphIndices(font::GlyphIndexRequest),
+    GetGlyphIndices(GlyphIndexRequest),
     /// Adds a new document namespace.
     CloneApi(Sender<IdNamespace>),
     /// Adds a new document namespace.
@@ -1008,235 +968,6 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::FlushSceneBuilder(..) => "ApiMsg::FlushSceneBuilder",
         })
     }
-}
-
-/// An epoch identifies the state of a pipeline in time.
-///
-/// This is mostly used as a synchronization mechanism to observe how/when particular pipeline
-/// updates propagate through WebRender and are applied at various stages.
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
-pub struct Epoch(pub u32);
-
-impl Epoch {
-    /// Magic invalid epoch value.
-    pub fn invalid() -> Epoch {
-        Epoch(u32::MAX)
-    }
-}
-
-/// ID namespaces uniquely identify different users of WebRender's API.
-///
-/// For example in Gecko each content process uses a separate id namespace.
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default, Eq, MallocSizeOf, PartialEq, Hash, Ord, PartialOrd, PeekPoke)]
-#[derive(Deserialize, Serialize)]
-pub struct IdNamespace(pub u32);
-
-/// A key uniquely identifying a WebRender document.
-///
-/// Instances can manage one or several documents (using the same render backend thread).
-/// Each document will internally correspond to a single scene, and scenes are made of
-/// one or several pipelines.
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
-pub struct DocumentId {
-    ///
-    pub namespace_id: IdNamespace,
-    ///
-    pub id: u32,
-}
-
-impl DocumentId {
-    ///
-    pub fn new(namespace_id: IdNamespace, id: u32) -> Self {
-        DocumentId {
-            namespace_id,
-            id,
-        }
-    }
-
-    ///
-    pub const INVALID: DocumentId = DocumentId { namespace_id: IdNamespace(0), id: 0 };
-}
-
-/// This type carries no valuable semantics for WR. However, it reflects the fact that
-/// clients (Servo) may generate pipelines by different semi-independent sources.
-/// These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.
-/// Having this extra Id field enables them to generate `PipelineId` without collision.
-pub type PipelineSourceId = u32;
-
-/// From the point of view of WR, `PipelineId` is completely opaque and generic as long as
-/// it's clonable, serializable, comparable, and hashable.
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
-pub struct PipelineId(pub PipelineSourceId, pub u32);
-
-impl Default for PipelineId {
-    fn default() -> Self {
-        PipelineId::dummy()
-    }
-}
-
-impl PipelineId {
-    ///
-    pub fn dummy() -> Self {
-        PipelineId(0, 0)
-    }
-}
-
-///
-#[derive(Copy, Clone, Debug, MallocSizeOf, Serialize, Deserialize)]
-pub enum ClipIntern {}
-
-///
-#[derive(Copy, Clone, Debug, MallocSizeOf, Serialize, Deserialize)]
-pub enum FilterDataIntern {}
-
-/// Information specific to a primitive type that
-/// uniquely identifies a primitive template by key.
-#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash, Serialize, Deserialize)]
-pub enum PrimitiveKeyKind {
-    /// Clear an existing rect, used for special effects on some platforms.
-    Clear,
-    ///
-    Rectangle {
-        ///
-        color: PropertyBinding<ColorU>,
-    },
-}
-
-/// Meta-macro to enumerate the various interner identifiers and types.
-///
-/// IMPORTANT: Keep this synchronized with the list in mozilla-central located at
-/// gfx/webrender_bindings/webrender_ffi.h
-///
-/// Note that this could be a lot less verbose if concat_idents! were stable. :-(
-#[macro_export]
-macro_rules! enumerate_interners {
-    ($macro_name: ident) => {
-        $macro_name! {
-            clip: ClipIntern,
-            prim: PrimitiveKeyKind,
-            normal_border: NormalBorderPrim,
-            image_border: ImageBorder,
-            image: Image,
-            yuv_image: YuvImage,
-            line_decoration: LineDecoration,
-            linear_grad: LinearGradient,
-            radial_grad: RadialGradient,
-            conic_grad: ConicGradient,
-            picture: Picture,
-            text_run: TextRun,
-            filter_data: FilterDataIntern,
-            backdrop: Backdrop,
-        }
-    }
-}
-
-macro_rules! declare_interning_memory_report {
-    ( $( $name:ident: $ty:ident, )+ ) => {
-        ///
-        #[repr(C)]
-        #[derive(AddAssign, Clone, Debug, Default)]
-        pub struct InternerSubReport {
-            $(
-                ///
-                pub $name: usize,
-            )+
-        }
-    }
-}
-
-enumerate_interners!(declare_interning_memory_report);
-
-/// Memory report for interning-related data structures.
-/// cbindgen:derive-eq=false
-#[repr(C)]
-#[derive(Clone, Debug, Default)]
-pub struct InterningMemoryReport {
-    ///
-    pub interners: InternerSubReport,
-    ///
-    pub data_stores: InternerSubReport,
-}
-
-impl ::std::ops::AddAssign for InterningMemoryReport {
-    fn add_assign(&mut self, other: InterningMemoryReport) {
-        self.interners += other.interners;
-        self.data_stores += other.data_stores;
-    }
-}
-
-/// Collection of heap sizes, in bytes.
-/// cbindgen:derive-eq=false
-#[repr(C)]
-#[allow(missing_docs)]
-#[derive(AddAssign, Clone, Debug, Default)]
-pub struct MemoryReport {
-    //
-    // CPU Memory.
-    //
-    pub clip_stores: usize,
-    pub gpu_cache_metadata: usize,
-    pub gpu_cache_cpu_mirror: usize,
-    pub render_tasks: usize,
-    pub hit_testers: usize,
-    pub fonts: usize,
-    pub images: usize,
-    pub rasterized_blobs: usize,
-    pub shader_cache: usize,
-    pub interning: InterningMemoryReport,
-    pub display_list: usize,
-
-    //
-    // GPU memory.
-    //
-    pub gpu_cache_textures: usize,
-    pub vertex_data_textures: usize,
-    pub render_target_textures: usize,
-    pub texture_cache_textures: usize,
-    pub depth_target_textures: usize,
-    pub swap_chain: usize,
-}
-
-/// A C function that takes a pointer to a heap allocation and returns its size.
-///
-/// This is borrowed from the malloc_size_of crate, upon which we want to avoid
-/// a dependency from WebRender.
-pub type VoidPtrToSizeFn = unsafe extern "C" fn(ptr: *const c_void) -> usize;
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-struct ResourceId(pub u32);
-
-/// An opaque pointer-sized value.
-#[repr(C)]
-#[derive(Clone)]
-pub struct ExternalEvent {
-    raw: usize,
-}
-
-unsafe impl Send for ExternalEvent {}
-
-impl ExternalEvent {
-    /// Creates the event from an opaque pointer-sized value.
-    pub fn from_raw(raw: usize) -> Self {
-        ExternalEvent { raw }
-    }
-    /// Consumes self to make it obvious that the event should be forwarded only once.
-    pub fn unwrap(self) -> usize {
-        self.raw
-    }
-}
-
-/// Describe whether or not scrolling should be clamped by the content bounds.
-#[derive(Clone, Deserialize, Serialize)]
-pub enum ScrollClamping {
-    ///
-    ToContentBounds,
-    ///
-    NoClamping,
 }
 
 /// Allows the API to communicate with WebRender.
@@ -1311,86 +1042,6 @@ impl RenderApiSender {
     }
 }
 
-bitflags! {
-    /// Flags to enable/disable various builtin debugging tools.
-    #[repr(C)]
-    #[derive(Default, Deserialize, MallocSizeOf, Serialize)]
-    pub struct DebugFlags: u32 {
-        /// Display the frame profiler on screen.
-        const PROFILER_DBG          = 1 << 0;
-        /// Display intermediate render targets on screen.
-        const RENDER_TARGET_DBG     = 1 << 1;
-        /// Display all texture cache pages on screen.
-        const TEXTURE_CACHE_DBG     = 1 << 2;
-        /// Display GPU timing results.
-        const GPU_TIME_QUERIES      = 1 << 3;
-        /// Query the number of pixels that pass the depth test divided and show it
-        /// in the profiler as a percentage of the number of pixels in the screen
-        /// (window width times height).
-        const GPU_SAMPLE_QUERIES    = 1 << 4;
-        /// Render each quad with their own draw call.
-        ///
-        /// Terrible for performance but can help with understanding the drawing
-        /// order when inspecting renderdoc or apitrace recordings.
-        const DISABLE_BATCHING      = 1 << 5;
-        /// Display the pipeline epochs.
-        const EPOCHS                = 1 << 6;
-        /// Reduce the amount of information displayed by the profiler so that
-        /// it occupies less screen real-estate.
-        const COMPACT_PROFILER      = 1 << 7;
-        /// Print driver messages to stdout.
-        const ECHO_DRIVER_MESSAGES  = 1 << 8;
-        /// Show an indicator that moves every time a frame is rendered.
-        const NEW_FRAME_INDICATOR   = 1 << 9;
-        /// Show an indicator that moves every time a scene is built.
-        const NEW_SCENE_INDICATOR   = 1 << 10;
-        /// Show an overlay displaying overdraw amount.
-        const SHOW_OVERDRAW         = 1 << 11;
-        /// Display the contents of GPU cache.
-        const GPU_CACHE_DBG         = 1 << 12;
-        /// Show a red bar that moves each time a slow frame is detected.
-        const SLOW_FRAME_INDICATOR  = 1 << 13;
-        /// Clear evicted parts of the texture cache for debugging purposes.
-        const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 14;
-        /// Show picture caching debug overlay
-        const PICTURE_CACHING_DBG   = 1 << 15;
-        /// Highlight all primitives with colors based on kind.
-        const PRIMITIVE_DBG = 1 << 16;
-        /// Draw a zoom widget showing part of the framebuffer zoomed in.
-        const ZOOM_DBG = 1 << 17;
-        /// Scale the debug renderer down for a smaller screen. This will disrupt
-        /// any mapping between debug display items and page content, so shouldn't
-        /// be used with overlays like the picture caching or primitive display.
-        const SMALL_SCREEN = 1 << 18;
-        /// Disable various bits of the WebRender pipeline, to help narrow
-        /// down where slowness might be coming from.
-        const DISABLE_OPAQUE_PASS = 1 << 19;
-        ///
-        const DISABLE_ALPHA_PASS = 1 << 20;
-        ///
-        const DISABLE_CLIP_MASKS = 1 << 21;
-        ///
-        const DISABLE_TEXT_PRIMS = 1 << 22;
-        ///
-        const DISABLE_GRADIENT_PRIMS = 1 << 23;
-        ///
-        const OBSCURE_IMAGES = 1 << 24;
-        /// Taint the transparent area of the glyphs with a random opacity to easily
-        /// see when glyphs are re-rasterized.
-        const GLYPH_FLASHING = 1 << 25;
-        /// The profiler only displays information that is out of the ordinary.
-        const SMART_PROFILER        = 1 << 26;
-        /// Dynamically control whether picture caching is enabled.
-        const DISABLE_PICTURE_CACHING = 1 << 27;
-        /// If set, dump picture cache invalidation debug to console.
-        const INVALIDATION_DBG = 1 << 28;
-        /// Log tile cache to memory for later saving as part of wr-capture
-        const TILE_CACHE_LOGGING_DBG   = 1 << 29;
-        /// Collect and dump profiler statistics to captures.
-        const PROFILER_CAPTURE = (1 as u32) << 31; // need "as u32" until we have cbindgen#556
-    }
-}
-
 /// The main entry point to interact with WebRender.
 pub struct RenderApi {
     api_sender: Sender<ApiMsg>,
@@ -1446,15 +1097,15 @@ impl RenderApi {
     }
 
     /// Generate a new font key
-    pub fn generate_font_key(&self) -> font::FontKey {
+    pub fn generate_font_key(&self) -> FontKey {
         let new_id = self.next_unique_id();
-        font::FontKey::new(self.namespace_id, new_id)
+        FontKey::new(self.namespace_id, new_id)
     }
 
     /// Generate a new font instance key
-    pub fn generate_font_instance_key(&self) -> font::FontInstanceKey {
+    pub fn generate_font_instance_key(&self) -> FontInstanceKey {
         let new_id = self.next_unique_id();
-        font::FontInstanceKey::new(self.namespace_id, new_id)
+        FontInstanceKey::new(self.namespace_id, new_id)
     }
 
     /// Gets the dimensions for the supplied glyph keys
@@ -1464,11 +1115,11 @@ impl RenderApi {
     /// This means that glyph dimensions e.g. for spaces (' ') will mostly be None.
     pub fn get_glyph_dimensions(
         &self,
-        key: font::FontInstanceKey,
-        glyph_indices: Vec<font::GlyphIndex>,
-    ) -> Vec<Option<font::GlyphDimensions>> {
+        key: FontInstanceKey,
+        glyph_indices: Vec<GlyphIndex>,
+    ) -> Vec<Option<GlyphDimensions>> {
         let (sender, rx) = single_msg_channel();
-        let msg = ApiMsg::GetGlyphDimensions(font::GlyphDimensionRequest {
+        let msg = ApiMsg::GetGlyphDimensions(GlyphDimensionRequest {
             key,
             glyph_indices,
             sender
@@ -1479,9 +1130,9 @@ impl RenderApi {
 
     /// Gets the glyph indices for the supplied string. These
     /// can be used to construct GlyphKeys.
-    pub fn get_glyph_indices(&self, key: font::FontKey, text: &str) -> Vec<Option<u32>> {
+    pub fn get_glyph_indices(&self, key: FontKey, text: &str) -> Vec<Option<u32>> {
         let (sender, rx) = single_msg_channel();
-        let msg = ApiMsg::GetGlyphIndices(font::GlyphIndexRequest {
+        let msg = ApiMsg::GetGlyphIndices(GlyphIndexRequest {
             key,
             text: text.to_string(),
             sender,
@@ -1766,322 +1417,6 @@ impl Drop for RenderApi {
     }
 }
 
-/// A hit tester requested to the render backend thread but not necessarily ready yet.
-///
-/// The request should be resolved as late as possible to reduce the likelihood of blocking.
-pub struct HitTesterRequest {
-    rx: Receiver<Arc<dyn ApiHitTester>>,
-}
-
-impl HitTesterRequest {
-    /// Block until the hit tester is available and return it, consuming teh request.
-    pub fn resolve(self) -> Arc<dyn ApiHitTester> {
-        self.rx.recv().unwrap()
-    }
-}
-
-///
-#[derive(Clone)]
-pub struct ScrollNodeState {
-    ///
-    pub id: di::ExternalScrollId,
-    ///
-    pub scroll_offset: LayoutVector2D,
-}
-
-///
-#[derive(Clone, Copy, Debug)]
-pub enum ScrollLocation {
-    /// Scroll by a certain amount.
-    Delta(LayoutVector2D),
-    /// Scroll to very top of element.
-    Start,
-    /// Scroll to very bottom of element.
-    End,
-}
-
-/// Represents a zoom factor.
-#[derive(Clone, Copy, Debug)]
-pub struct ZoomFactor(f32);
-
-impl ZoomFactor {
-    /// Construct a new zoom factor.
-    pub fn new(scale: f32) -> Self {
-        ZoomFactor(scale)
-    }
-
-    /// Get the zoom factor as an untyped float.
-    pub fn get(self) -> f32 {
-        self.0
-    }
-}
-
-/// A key to identify an animated property binding.
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default, Deserialize, MallocSizeOf, PartialEq, Serialize, Eq, Hash, PeekPoke)]
-pub struct PropertyBindingId {
-    namespace: IdNamespace,
-    uid: u32,
-}
-
-impl PropertyBindingId {
-    /// Constructor.
-    pub fn new(value: u64) -> Self {
-        PropertyBindingId {
-            namespace: IdNamespace((value >> 32) as u32),
-            uid: value as u32,
-        }
-    }
-}
-
-/// A unique key that is used for connecting animated property
-/// values to bindings in the display list.
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
-pub struct PropertyBindingKey<T> {
-    ///
-    pub id: PropertyBindingId,
-    _phantom: PhantomData<T>,
-}
-
-/// Construct a property value from a given key and value.
-impl<T: Copy> PropertyBindingKey<T> {
-    ///
-    pub fn with(self, value: T) -> PropertyValue<T> {
-        PropertyValue { key: self, value }
-    }
-}
-
-impl<T> PropertyBindingKey<T> {
-    /// Constructor.
-    pub fn new(value: u64) -> Self {
-        PropertyBindingKey {
-            id: PropertyBindingId::new(value),
-            _phantom: PhantomData,
-        }
-    }
-}
-
-/// A binding property can either be a specific value
-/// (the normal, non-animated case) or point to a binding location
-/// to fetch the current value from.
-/// Note that Binding has also a non-animated value, the value is
-/// used for the case where the animation is still in-delay phase
-/// (i.e. the animation doesn't produce any animation values).
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
-pub enum PropertyBinding<T> {
-    /// Non-animated value.
-    Value(T),
-    /// Animated binding.
-    Binding(PropertyBindingKey<T>, T),
-}
-
-impl<T: Default> Default for PropertyBinding<T> {
-    fn default() -> Self {
-        PropertyBinding::Value(Default::default())
-    }
-}
-
-impl<T> From<T> for PropertyBinding<T> {
-    fn from(value: T) -> PropertyBinding<T> {
-        PropertyBinding::Value(value)
-    }
-}
-
-impl From<PropertyBindingKey<ColorF>> for PropertyBindingKey<ColorU> {
-    fn from(key: PropertyBindingKey<ColorF>) -> PropertyBindingKey<ColorU> {
-        PropertyBindingKey {
-            id: key.id.clone(),
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl From<PropertyBindingKey<ColorU>> for PropertyBindingKey<ColorF> {
-    fn from(key: PropertyBindingKey<ColorU>) -> PropertyBindingKey<ColorF> {
-        PropertyBindingKey {
-            id: key.id.clone(),
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl From<PropertyBinding<ColorF>> for PropertyBinding<ColorU> {
-    fn from(value: PropertyBinding<ColorF>) -> PropertyBinding<ColorU> {
-        match value {
-            PropertyBinding::Value(value) => PropertyBinding::Value(value.into()),
-            PropertyBinding::Binding(k, v) => {
-                PropertyBinding::Binding(k.into(), v.into())
-            }
-        }
-    }
-}
-
-impl From<PropertyBinding<ColorU>> for PropertyBinding<ColorF> {
-    fn from(value: PropertyBinding<ColorU>) -> PropertyBinding<ColorF> {
-        match value {
-            PropertyBinding::Value(value) => PropertyBinding::Value(value.into()),
-            PropertyBinding::Binding(k, v) => {
-                PropertyBinding::Binding(k.into(), v.into())
-            }
-        }
-    }
-}
-
-/// The current value of an animated property. This is
-/// supplied by the calling code.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
-pub struct PropertyValue<T> {
-    ///
-    pub key: PropertyBindingKey<T>,
-    ///
-    pub value: T,
-}
-
-/// When using `generate_frame()`, a list of `PropertyValue` structures
-/// can optionally be supplied to provide the current value of any
-/// animated properties.
-#[derive(Clone, Deserialize, Serialize, Debug, PartialEq, Default)]
-pub struct DynamicProperties {
-    ///
-    pub transforms: Vec<PropertyValue<LayoutTransform>>,
-    /// opacity
-    pub floats: Vec<PropertyValue<f32>>,
-    /// background color
-    pub colors: Vec<PropertyValue<ColorF>>,
-}
-
-/// A handler to integrate WebRender with the thread that contains the `Renderer`.
-pub trait RenderNotifier: Send {
-    ///
-    fn clone(&self) -> Box<dyn RenderNotifier>;
-    /// Wake the thread containing the `Renderer` up (after updates have been put
-    /// in the renderer's queue).
-    fn wake_up(&self);
-    /// Notify the thread containing the `Renderer` that a new frame is ready.
-    fn new_frame_ready(&self, _: DocumentId, scrolled: bool, composite_needed: bool, render_time_ns: Option<u64>);
-    /// A Gecko-specific notification mechanism to get some code executed on the
-    /// `Renderer`'s thread, mostly replaced by `NotificationHandler`. You should
-    /// probably use the latter instead.
-    fn external_event(&self, _evt: ExternalEvent) {
-        unimplemented!()
-    }
-    /// Notify the thread containing the `Renderer` that the render backend has been
-    /// shut down.
-    fn shut_down(&self) {}
-}
-
-/// A stage of the rendering pipeline.
-#[repr(u32)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Checkpoint {
-    ///
-    SceneBuilt,
-    ///
-    FrameBuilt,
-    ///
-    FrameTexturesUpdated,
-    ///
-    FrameRendered,
-    /// NotificationRequests get notified with this if they get dropped without having been
-    /// notified. This provides the guarantee that if a request is created it will get notified.
-    TransactionDropped,
-}
-
-/// A handler to notify when a transaction reaches certain stages of the rendering
-/// pipeline.
-pub trait NotificationHandler : Send + Sync {
-    /// Entry point of the handler to implement. Invoked by WebRender.
-    fn notify(&self, when: Checkpoint);
-}
-
-/// A request to notify a handler when the transaction reaches certain stages of the
-/// rendering pipeline.
-///
-/// The request is guaranteed to be notified once and only once, even if the transaction
-/// is dropped before the requested check-point.
-pub struct NotificationRequest {
-    handler: Option<Box<dyn NotificationHandler>>,
-    when: Checkpoint,
-}
-
-impl NotificationRequest {
-    /// Constructor.
-    pub fn new(when: Checkpoint, handler: Box<dyn NotificationHandler>) -> Self {
-        NotificationRequest {
-            handler: Some(handler),
-            when,
-        }
-    }
-
-    /// The specified stage at which point the handler should be notified.
-    pub fn when(&self) -> Checkpoint { self.when }
-
-    /// Called by WebRender at specified stages to notify the registered handler.
-    pub fn notify(mut self) {
-        if let Some(handler) = self.handler.take() {
-            handler.notify(self.when);
-        }
-    }
-}
-
-/// An object that can perform hit-testing without doing synchronous queries to
-/// the RenderBackendThread.
-pub trait ApiHitTester: Send + Sync {
-    /// Does a hit test on display items in the specified document, at the given
-    /// point. If a pipeline_id is specified, it is used to further restrict the
-    /// hit results so that only items inside that pipeline are matched. The vector
-    /// of hit results will contain all display items that match, ordered from
-    /// front to back.
-    fn hit_test(&self, pipeline_id: Option<PipelineId>, point: WorldPoint) -> HitTestResult;
-}
-
-impl Drop for NotificationRequest {
-    fn drop(&mut self) {
-        if let Some(ref mut handler) = self.handler {
-            handler.notify(Checkpoint::TransactionDropped);
-        }
-    }
-}
-
-// This Clone impl yields an "empty" request because we don't want the requests
-// to be notified twice so the request is owned by only one of the API messages
-// (the original one) after the clone.
-// This works in practice because the notifications requests are used for
-// synchronization so we don't need to include them in the recording mechanism
-// in wrench that clones the messages.
-impl Clone for NotificationRequest {
-    fn clone(&self) -> Self {
-        NotificationRequest {
-            when: self.when,
-            handler: None,
-        }
-    }
-}
-
-
-bitflags! {
-    /// Each bit of the edge AA mask is:
-    /// 0, when the edge of the primitive needs to be considered for AA
-    /// 1, when the edge of the segment needs to be considered for AA
-    ///
-    /// *Note*: the bit values have to match the shader logic in
-    /// `write_transform_vertex()` function.
-    #[cfg_attr(feature = "serialize", derive(Serialize))]
-    #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-    #[derive(MallocSizeOf)]
-    pub struct EdgeAaSegmentMask: u8 {
-        ///
-        const LEFT = 0x1;
-        ///
-        const TOP = 0x2;
-        ///
-        const RIGHT = 0x4;
-        ///
-        const BOTTOM = 0x8;
-    }
-}
 
 fn window_size_sanity_check(size: DeviceIntSize) {
     // Anything bigger than this will crash later when attempting to create
@@ -2090,4 +1425,36 @@ fn window_size_sanity_check(size: DeviceIntSize) {
     if size.width > MAX_SIZE || size.height > MAX_SIZE {
         panic!("Attempting to create a {}x{} window/document", size.width, size.height);
     }
+}
+
+/// Collection of heap sizes, in bytes.
+/// cbindgen:derive-eq=false
+#[repr(C)]
+#[allow(missing_docs)]
+#[derive(AddAssign, Clone, Debug, Default)]
+pub struct MemoryReport {
+    //
+    // CPU Memory.
+    //
+    pub clip_stores: usize,
+    pub gpu_cache_metadata: usize,
+    pub gpu_cache_cpu_mirror: usize,
+    pub render_tasks: usize,
+    pub hit_testers: usize,
+    pub fonts: usize,
+    pub images: usize,
+    pub rasterized_blobs: usize,
+    pub shader_cache: usize,
+    pub interning: InterningMemoryReport,
+    pub display_list: usize,
+
+    //
+    // GPU memory.
+    //
+    pub gpu_cache_textures: usize,
+    pub vertex_data_textures: usize,
+    pub render_target_textures: usize,
+    pub texture_cache_textures: usize,
+    pub depth_target_textures: usize,
+    pub swap_chain: usize,
 }

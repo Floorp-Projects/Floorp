@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AddFont, BlobImageResources, ResourceUpdate};
-use api::{BlobImageRequest, RasterizedBlobImage};
-use api::{ClearCache, DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
+use api::{BlobImageResources, BlobImageRequest, RasterizedBlobImage};
+use api::{DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType, ExternalImageId, BlobImageResult, FontInstanceData};
 use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
-use api::{BlobImageKey, MemoryReport, VoidPtrToSizeFn};
+use api::{BlobImageKey, VoidPtrToSizeFn};
 use api::{SharedFontInstanceMap, BaseFontInstance};
-use api::image_tiling::{compute_tile_size, compute_tile_range};
 use api::units::*;
+use crate::render_api::{ClearCache, AddFont, ResourceUpdate, MemoryReport}; 
+use crate::image_tiling::{compute_tile_size, compute_tile_range};
 #[cfg(feature = "capture")]
 use crate::capture::ExternalCaptureImage;
 #[cfg(feature = "replay")]
