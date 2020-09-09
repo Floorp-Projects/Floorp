@@ -135,6 +135,20 @@ parent:
   // Send the ClientInfo associated with a top-level document load.
   async SetClientInfo(IPCClientInfo aClientInfo);
 
+  /**
+   * Inform the parent that the document will preload a resource if the
+   * network.preload pref is enabled.
+   */
+  async UpdateDocumentWouldPreloadResources();
+
+  /**
+   * Submit load event telemetry affiliated with whether or not the document
+   * tree preloaded any resources.
+   */
+  async SubmitLoadEventPreloadTelemetry(TimeStamp aNavigationStart,
+                                        TimeStamp aLoadStart,
+                                        TimeStamp aLoadEnd);
+
   async Destroy();
 };
 

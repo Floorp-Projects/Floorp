@@ -14999,13 +14999,7 @@ void Document::ReportUseCounters() {
   PropagateUseCountersToPage();
 
   if (Telemetry::HistogramUseCounterCount > 0 &&
-      (IsContentDocument() || IsResourceDoc())) {
-    if (NodePrincipal()->SchemeIs("about") ||
-        NodePrincipal()->SchemeIs("chrome") ||
-        NodePrincipal()->SchemeIs("resource")) {
-      return;
-    }
-
+      ShouldIncludeInTelemetry(/* aAllowExtensionURIs = */ true)) {
     if (kDebugUseCounters) {
       nsCString spec;
       NodePrincipal()->GetAsciiSpec(spec);
@@ -16826,6 +16820,21 @@ bool Document::HasThirdPartyChannel() {
   }
 
   return false;
+}
+
+bool Document::ShouldIncludeInTelemetry(bool aAllowExtensionURIs) {
+  if (!(IsContentDocument() || IsResourceDoc())) {
+    return false;
+  }
+
+  if (!aAllowExtensionURIs &&
+      NodePrincipal()->GetIsAddonOrExpandedAddonPrincipal()) {
+    return false;
+  }
+
+  return !NodePrincipal()->SchemeIs("about") &&
+         !NodePrincipal()->SchemeIs("chrome") &&
+         !NodePrincipal()->SchemeIs("resource");
 }
 
 void Document::GetConnectedShadowRoots(

@@ -608,6 +608,37 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvShare(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+WindowGlobalParent::RecvUpdateDocumentWouldPreloadResources() {
+  TopWindowContext()->mDocumentTreeWouldPreloadResources = true;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvSubmitLoadEventPreloadTelemetry(
+    TimeStamp aNavigationStart, TimeStamp aLoadEventStart,
+    TimeStamp aLoadEventEnd) {
+  if (!IsTop()) {
+    return IPC_FAIL(this, "submit preload telemetry on non-toplevel document");
+  }
+
+  if (mDocumentTreeWouldPreloadResources) {
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::TIME_TO_LOAD_EVENT_START_PRELOAD_MS, aNavigationStart,
+        aLoadEventStart);
+    Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_PRELOAD_MS,
+                                   aNavigationStart, aLoadEventEnd);
+  } else {
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::TIME_TO_LOAD_EVENT_START_NO_PRELOAD_MS, aNavigationStart,
+        aLoadEventStart);
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::TIME_TO_LOAD_EVENT_END_NO_PRELOAD_MS, aNavigationStart,
+        aLoadEventEnd);
+  }
+
+  return IPC_OK();
+}
+
 already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
     const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,
     mozilla::ErrorResult& aRv) {

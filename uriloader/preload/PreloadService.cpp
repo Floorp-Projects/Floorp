@@ -7,6 +7,7 @@
 
 #include "FetchPreloader.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/FontPreloader.h"
@@ -59,16 +60,26 @@ already_AddRefed<nsIURI> PreloadService::GetPreloadURI(const nsAString& aURL) {
 already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     dom::HTMLLinkElement* aLinkElement, nsContentPolicyType aPolicyType,
     nsIReferrerInfo* aReferrerInfo) {
-  if (!StaticPrefs::network_preload()) {
-    return nullptr;
-  }
+  // Even if the pref is disabled, we still want to collect telemetry about
+  // attempted preloads.
+  const bool preloadEnabled = StaticPrefs::network_preload();
 
   if (!CheckReferrerURIScheme(aReferrerInfo)) {
     return nullptr;
   }
 
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
-    NotifyNodeEvent(aLinkElement, false);
+    if (preloadEnabled) {
+      NotifyNodeEvent(aLinkElement, false);
+    }
+    return nullptr;
+  }
+
+  if (auto* wgc = mDocument->GetWindowGlobalChild()) {
+    wgc->MaybeSendUpdateDocumentWouldPreloadResources();
+  }
+
+  if (!preloadEnabled) {
     return nullptr;
   }
 
@@ -104,15 +115,23 @@ void PreloadService::PreloadLinkHeader(
     const nsAString& aAs, const nsAString& aType, const nsAString& aIntegrity,
     const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aCORS,
     const nsAString& aReferrerPolicy, nsIReferrerInfo* aReferrerInfo) {
-  if (!StaticPrefs::network_preload()) {
-    return;
-  }
+  // Even if the pref is disabled, we still want to collect telemetry about
+  // attempted preloads.
+  const bool preloadEnabled = StaticPrefs::network_preload();
 
   if (!CheckReferrerURIScheme(aReferrerInfo)) {
     return;
   }
 
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
+    return;
+  }
+
+  if (auto* wgc = mDocument->GetWindowGlobalChild()) {
+    wgc->MaybeSendUpdateDocumentWouldPreloadResources();
+  }
+
+  if (!preloadEnabled) {
     return;
   }
 
