@@ -8,6 +8,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import androidx.core.view.isVisible
+import kotlinx.android.synthetic.main.checkbox_item.view.*
 import kotlinx.android.synthetic.main.tab_tray_item.view.*
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.TabsAdapter
@@ -104,7 +105,6 @@ class FenixTabsAdapter(
     private fun showCheckedIfSelected(tab: Tab, view: View) {
         val shouldBeChecked =
             mode is TabTrayDialogFragmentState.Mode.MultiSelect && selectedItems.contains(tab)
-        view.checkmark.isVisible = shouldBeChecked
         view.selected_mask.isVisible = shouldBeChecked
         view.mozac_browser_tabstray_close.isVisible = mode is TabTrayDialogFragmentState.Mode.Normal
     }

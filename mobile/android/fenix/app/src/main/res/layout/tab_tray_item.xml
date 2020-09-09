@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/tab_item"
     android:layout_width="match_parent"
     android:layout_height="88dp"
@@ -51,25 +52,7 @@
             android:layout_height="match_parent"
             android:contentDescription="@string/mozac_browser_tabstray_open_tab" />
 
-        <View
-            android:id="@+id/selected_mask"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/tab_tray_selected_mask_normal_theme"
-            android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/checkmark"
-            android:contentDescription="@string/tab_tray_multiselect_selected_content_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|center_vertical"
-            android:background="@drawable/favicon_background"
-            android:backgroundTint="@color/accent_normal_theme"
-            android:elevation="1dp"
-            android:padding="10dp"
-            android:visibility="gone"
-            app:srcCompat="@drawable/mozac_ic_check" />
+        <include layout="@layout/checkbox_item" />
 
     </androidx.cardview.widget.CardView>
 
@@ -84,6 +67,7 @@
         android:paddingTop="22dp"
         android:textColor="@color/tab_tray_item_text_normal_theme"
         android:textSize="16sp"
+        tools:text="Firefox"
         app:layout_constraintEnd_toStartOf="@id/mozac_browser_tabstray_close"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@id/mozac_browser_tabstray_card"
@@ -99,6 +83,7 @@
         android:paddingStart="16dp"
         android:textColor="@color/tab_tray_item_url_normal_theme"
         android:textSize="14sp"
+        tools:text="firefox.com"
         app:layout_constraintEnd_toStartOf="@id/mozac_browser_tabstray_close"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@id/mozac_browser_tabstray_card"
