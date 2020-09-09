@@ -30,8 +30,22 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Tijalwachïx</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Tijaq ximonel pa jun chik chokoy</string>
+    <!-- Text for context menu item to share the email with another app. -->
+    <string name="mozac_feature_contextmenu_share_email_address">Tikomonïx rochochib\'al taqoya\'l</string>
+    <!-- Text for context menu item to copy the email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_email_address">Tiwachib\'ëx rochochib\'al taqoya\'l</string>
+    <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Taqoya\'l wachib\'en pa molwuj</string>
+    <!-- Text for context menu item to add to a contact. -->
+    <string name="mozac_feature_contextmenu_add_to_contact">Titz\'aqatisäx pa rub\'i\' achib\'il</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
     <string name="mozac_selection_context_menu_search_2">Tikanöx</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
+    <string name="mozac_selection_context_menu_search_privately_2">Ichinan Kanoxïk</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">Tikomonïx</string>
-    </resources>
+    <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->
+    <string name="mozac_selection_context_menu_email">Taqoya\'l</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new call from the selected text. -->
+    <string name="mozac_selection_context_menu_call">Toyon</string>
+</resources>

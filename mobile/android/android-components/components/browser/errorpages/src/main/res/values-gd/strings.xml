@@ -45,7 +45,7 @@
     <string name="mozac_browser_errorpages_net_interrupt_title">Bhris rudeigin a-steach air a’ cheangal</string>
 
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Rinn am brabhsair ceangal ach bhris an ceangal nuair a bha fiosrachadh ’ga chur. Feuch ris a-rithist</p>
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Rinn am brabhsair ceangal ach bhris an ceangal nuair a bha fiosrachadh ga chur. Feuch ris a-rithist</p>
       <ul>
         <li>Dh’fhaoidte nach eil an làrach ri fhaighinn an-dràsta fhèin no gu bheil e trang. Feuch ris a-rithist ann an tiotag.</li>
         <li>Mur urrainn dhut duilleag sam bith a luchdadh, thoir sùil air a’ cheangal dàta no WiFi aig an uidheam agad.</li>
@@ -59,7 +59,7 @@
       <ul>
         <li>Saoil a bheil fèill mhòr air an fhrithealaiche an-dràsta fhèin no gu bheil e sìos rè seal?  Feuch ris a-rithist an ceann greis.</li>
         <li>Mura faic thu làraichean eile, cuir sùil air ceangal a’ choimpiutair agad ris an lìonra.</li>
-        <li>A bheil an coimpiutair agad ’ga dhìon le cachaileith-theine no progsaidh?  Faodadh roghainnean cearra cur a-steach air seòladh an lìn.</li>
+        <li>A bheil an coimpiutair agad ga dhìon le cachaileith-theine no progsaidh?  Faodadh roghainnean cearra cur a-steach air seòladh an lìn.</li>
         <li>A bheil duilgheadas agad fhathast? Bruidhinn ri rianaire an lìonraidh agad no ris an fhrithealaiche-lìn airson cobhair.</li>
       </ul>]]></string>
 
@@ -81,7 +81,7 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">Chan eil an duilleag ag ath-stiùireadh mar bu chòir</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Sguir am brabhsair dhen a bhith a’ feuchainn an rud a dh’iarr thu fhaighinn. Tha an làrach ag ath-stiùireadh an iarrtais air dòigh nach dèid a choileanadh gu bràth.</p>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Sguir am brabhsair dhen a bhith a’ feuchainn an rud a dh’iarr thu fhaighinn. Tha an làrach ag ath-stiùireadh an iarrtais air dòigh nach tèid a choileanadh gu bràth.</p>
       <ul>
         <li>An do chuir briosgaidean à comas o chionn ghoirid a dh’fheumas an làrach seo no an do bhac thu iad?</li>
         <li>Mura dèid a’ chùis a rèiteachadh ’s tu a’ gabhail ri briosgaidean na làraich seo, tha coltas gur e adhbhar rèiteachadh an fhrithealaiche a tha ag adhbharachadh seo ’s chan e an t-uidheam agad.</li>
@@ -101,7 +101,7 @@
     <string name="mozac_browser_errorpages_port_blocked_title">Tha am port seo cuingichte air sgàth adhbharan tèarainteachd</string>
 
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
-    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Shònraich an seòladh a chaidh iarraidh port (m.e. <q>mozilla.org:80</q> airson port 80 air mozilla.org) a bhios ’ga chleachdadh a chum adhbharan eile <em>seach</em> seòladh an lìn. Chuir am brabhsair casg air an iarrtas airson do dhìon is do thèarainteachd.</p>]]></string>
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Shònraich an seòladh a chaidh iarraidh port (m.e. <q>mozilla.org:80</q> airson port 80 air mozilla.org) a bhios ga chleachdadh a chum adhbharan eile <em>seach</em> seòladh an lìn. Chuir am brabhsair casg air an iarrtas airson do dhìon is do thèarainteachd.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Chaidh an ceangal ath-shuidheachadh</string>

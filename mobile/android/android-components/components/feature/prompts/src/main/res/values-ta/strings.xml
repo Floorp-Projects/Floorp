@@ -18,6 +18,8 @@
     <string name="mozac_feature_prompt_password_hint">கடவுச்சொல்</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
     <string name="mozac_feature_prompt_dont_save">சேமிக்காதே</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">ஒருபோதும் சேமிக்காதே</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">சேமி</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -77,4 +79,12 @@
     <string name="mozac_feature_prompts_nov">நவ</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">டிச</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">உள்நுழைவுகளை நிர்வகி</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">பரிந்துரைத்த உள்நுழைவுகளை விரிவாக்குங்கள்</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">பரிந்துரைத்த உள்நுழைவுகளை விரிவாக்கு</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">பரிந்துரைத்த உள்நுழைவுகள்</string>
 </resources>

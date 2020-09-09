@@ -4,7 +4,7 @@
     <string name="mozac_feature_downloads_notification_channel">Luchdaidhean a-nuas</string>
 
     <!-- Text shown on the second row of a paused download notification. -->
-    <string name="mozac_feature_downloads_paused_notification_text">Tha an luchdadh a-nuas ’na stad</string>
+    <string name="mozac_feature_downloads_paused_notification_text">Tha an luchdadh a-nuas na stad</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_completed_notification_text2">Chaidh a luchdadh a-nuas</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
@@ -22,8 +22,11 @@
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">Cha b’ urrainn dhuinn am faidhle fhosgladh</string>
 
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">Cha deach aplacaid a lorg a dh‘fhosgladh faidhlichean %1$s</string>
+
     <!-- Button that pauses the download when pressed -->
-    <string name="mozac_feature_downloads_button_pause">Cuir ’na stad</string>
+    <string name="mozac_feature_downloads_button_pause">Cuir na stad</string>
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">Lean air</string>
     <!-- Button that cancels the download when pressed -->
@@ -35,4 +38,8 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">Dùin</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Coilean seo le</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">Cha ghabh %1$s fhosgladh</string>
 </resources>

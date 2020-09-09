@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_title">புதுப்பிப்பு செயலிலுள்ளது</string>
+    <!-- Text of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_text">பயர்பாக்சு ஒரு கணத்தில் தயாராக இருக்கும்…</string>
+    <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_title">புதுப்பிப்பு முடிந்தது</string>
+    <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_text">பயர்பாக்சு புதுப்பிக்கப்பட்டது - மேலும் மேம்படுத்தப்பட்டது!</string>
+</resources>
