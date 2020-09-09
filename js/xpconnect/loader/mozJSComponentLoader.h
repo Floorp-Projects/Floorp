@@ -89,6 +89,7 @@ class mozJSComponentLoader final {
  private:
   static mozilla::StaticRefPtr<mozJSComponentLoader> sSelf;
 
+  nsresult ReallyInit();
   void UnloadModules();
 
   void CreateLoaderGlobal(JSContext* aCx, const nsACString& aLocation,
