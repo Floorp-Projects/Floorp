@@ -343,12 +343,14 @@ float nsDeviceContextSpecWin::GetPrintingScale() {
   MOZ_ASSERT(mPrintSettings);
 #ifdef MOZ_ENABLE_SKIA_PDF
   if (mPrintViaSkPDF) {
-    return 1.0f;  // PDF is vector based, so we don't need a scale
+    return 72.0f / GetDPI();
   }
 #endif
-  // To match the previous printing code there is no scaling for PDF.
+  // For PDF output, nominal resolution is 72dpi, but our "device DPI" is
+  // higher to avoid low-res glyph spacing artifacts, so we need to return
+  // the appropriate scale here.
   if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
-    return 1.0f;
+    return 72.0f / GetDPI();
   }
 
   // The print settings will have the resolution stored from the real device.
