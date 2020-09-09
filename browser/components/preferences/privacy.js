@@ -2413,12 +2413,7 @@ var gPrivacyPane = {
     let telemetryContainer = document.getElementById("telemetry-container");
 
     Services.prefs.setBoolPref(PREF_UPLOAD_ENABLED, checkbox.checked);
-
-    if (!checkbox.checked) {
-      telemetryContainer.hidden = checkbox.checked;
-    } else {
-      telemetryContainer.hidden = checkbox.checked;
-    }
+    telemetryContainer.hidden = checkbox.checked;
   },
 
   /**
