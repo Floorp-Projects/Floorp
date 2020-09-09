@@ -322,21 +322,14 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
 }
 
 float nsDeviceContextSpecWin::GetDPI() {
-  // To match the previous printing code we need to return 144 when printing to
-  // a Windows surface.
-  // For PDF-based output, DPI should ideally be irrelevant, but in fact it is
-  // not because of layout/rendering code that tries to respect device pixels
-  // (e.g. for snapping glyph positions and baselines, and especially for the
-  // "GDI Classic" rendering-mode threshold for certain fonts). Therefore,
-  // using a high DPI is preferable. For now, we use 144dpi to match physical-
-  // printer output, but higher (e.g. 300dpi) might be better if it does not
-  // lead to issues such as excessive memory use.
+  // To match the previous printing code we need to return 72 when printing to
+  // PDF and 144 when printing to a Windows surface.
 #ifdef MOZ_ENABLE_SKIA_PDF
   if (mPrintViaSkPDF) {
-    return 72.0f;  // XXX should we use a higher value here, too?
+    return 72.0f;
   }
 #endif
-  return 144.0f;
+  return mOutputFormat == nsIPrintSettings::kOutputFormatPDF ? 72.0f : 144.0f;
 }
 
 float nsDeviceContextSpecWin::GetPrintingScale() {
