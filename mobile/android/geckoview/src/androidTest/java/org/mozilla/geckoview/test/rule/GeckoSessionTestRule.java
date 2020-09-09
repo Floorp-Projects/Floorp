@@ -118,6 +118,34 @@ public class GeckoSessionTestRule implements TestRule {
         }
     }
 
+    public void addDisplay(final GeckoSession session, final int x, final int y) {
+        final GeckoDisplay display = session.acquireDisplay();
+
+        final SurfaceTexture displayTexture = new SurfaceTexture(0);
+        displayTexture.setDefaultBufferSize(x, y);
+
+        final Surface displaySurface = new Surface(displayTexture);
+        display.surfaceChanged(displaySurface, x, y);
+
+        mDisplays.put(session, display);
+        mDisplayTextures.put(session, displayTexture);
+        mDisplaySurfaces.put(session, displaySurface);
+    }
+
+    public void releaseDisplay(final GeckoSession session) {
+        if (!mDisplays.containsKey(session)) {
+            // No display to release
+            return;
+        }
+        final GeckoDisplay display = mDisplays.remove(session);
+        display.surfaceDestroyed();
+        session.releaseDisplay(display);
+        final Surface displaySurface = mDisplaySurfaces.remove(session);
+        displaySurface.release();
+        final SurfaceTexture displayTexture = mDisplayTextures.remove(session);
+        displayTexture.release();
+    }
+
     /**
      * Specify the timeout for any of the wait methods, in milliseconds, relative to
      * {@link Environment#DEFAULT_TIMEOUT_MILLIS}. When the default timeout scales to account
@@ -752,9 +780,9 @@ public class GeckoSessionTestRule implements TestRule {
     protected MethodCall mCurrentMethodCall;
     protected long mTimeoutMillis;
     protected Point mDisplaySize;
-    protected SurfaceTexture mDisplayTexture;
-    protected Surface mDisplaySurface;
-    protected GeckoDisplay mDisplay;
+    protected Map<GeckoSession, SurfaceTexture> mDisplayTextures = new HashMap<>();
+    protected Map<GeckoSession, Surface> mDisplaySurfaces = new HashMap<>();
+    protected Map<GeckoSession, GeckoDisplay> mDisplays = new HashMap<>();
     protected boolean mClosedSession;
     protected boolean mIgnoreCrash;
 
@@ -861,7 +889,7 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     public @Nullable GeckoDisplay getDisplay() {
-        return mDisplay;
+        return mDisplays.get(mMainSession);
     }
 
     protected static Object setDelegate(final @NonNull Class<?> cls,
@@ -1088,11 +1116,7 @@ public class GeckoSessionTestRule implements TestRule {
         prepareSession(mMainSession);
 
         if (mDisplaySize != null) {
-            mDisplay = mMainSession.acquireDisplay();
-            mDisplayTexture = new SurfaceTexture(0);
-            mDisplayTexture.setDefaultBufferSize(mDisplaySize.x, mDisplaySize.y);
-            mDisplaySurface = new Surface(mDisplayTexture);
-            mDisplay.surfaceChanged(mDisplaySurface, mDisplaySize.x, mDisplaySize.y);
+            addDisplay(mMainSession, mDisplaySize.x, mDisplaySize.y);
         }
 
         if (!mClosedSession) {
@@ -1197,6 +1221,7 @@ public class GeckoSessionTestRule implements TestRule {
         if (session.isOpen()) {
             session.close();
         }
+        releaseDisplay(session);
     }
 
     protected boolean isUsingSession(final GeckoSession session) {
@@ -1243,16 +1268,6 @@ public class GeckoSessionTestRule implements TestRule {
 
         if (mIgnoreCrash) {
             deleteCrashDumps();
-        }
-
-        if (mDisplay != null) {
-            mDisplay.surfaceDestroyed();
-            mMainSession.releaseDisplay(mDisplay);
-            mDisplay = null;
-            mDisplaySurface.release();
-            mDisplaySurface = null;
-            mDisplayTexture.release();
-            mDisplayTexture = null;
         }
 
         mMainSession = null;
