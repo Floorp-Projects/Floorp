@@ -36,7 +36,7 @@ const EXPERIMENT_PAYLOAD = {
               addon: {
                 id: "954390",
                 icon:
-                  "resource://activity-stream/data/content/assets/cfr_fb_container.png",
+                  "chrome://activity-stream/content/data/content/assets/cfr_fb_container.png",
                 title: "Facebook Container",
                 users: 1455872,
                 author: "Mozilla",

@@ -20,11 +20,11 @@ describe("<isAllowedCSS>", () => {
     assert.isTrue(isAllowedCSS("color", "red"));
   });
 
-  it("should allow resource urls", () => {
+  it("should allow chrome urls", () => {
     assert.isTrue(
       isAllowedCSS(
         "background-image",
-        `url("resource://activity-stream/data/content/assets/glyph-info-16.svg")`
+        `url("chrome://activity-stream/content/data/content/assets/glyph-info-16.svg")`
       )
     );
   });

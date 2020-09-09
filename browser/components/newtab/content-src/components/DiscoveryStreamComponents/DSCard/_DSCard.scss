@@ -10,7 +10,7 @@ $excerpt-line-height: 20;
   position: relative;
 
   .playhead {
-    background: $blue-60 url('../data/content/assets/glyph-playhead.svg') no-repeat 12px center;
+    background: $blue-60 url('chrome://activity-stream/content/data/content/assets/glyph-playhead.svg') no-repeat 12px center;
     border-radius: 20px;
     bottom: -16px;
     color: $white-0;

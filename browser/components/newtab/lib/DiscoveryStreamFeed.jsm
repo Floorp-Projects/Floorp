@@ -1969,7 +1969,7 @@ getHardcodedLayout = isBasicLayout => ({
             },
             link_url: "https://getpocket.com/firefox/new_tab_learn_more",
             icon:
-              "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
+              "chrome://activity-stream/content/data/content/assets/glyph-pocket-16.svg",
           },
           properties: {},
           styles: {
