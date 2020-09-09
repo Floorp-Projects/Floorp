@@ -6454,6 +6454,7 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
   bool hadTiming = mTiming;
   bool toBeReset = MaybeInitTiming();
   if (mContentViewer) {
+    MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     if (aCheckPermitUnload) {
       // We've got a content viewer already. Make sure the user
       // permits us to discard the current document and replace it
