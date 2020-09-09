@@ -8,13 +8,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-add_task(async function test() {
-  // window.print() only shows print preview when print.tab_modal.enabled is
-  // true.
-  await SpecialPowers.pushPrefEnv({
-    set: [["print.tab_modal.enabled", true]],
-  });
-
+async function runTest() {
   is(
     document.querySelector(".printPreviewBrowser"),
     null,
@@ -38,4 +32,29 @@ add_task(async function test() {
   });
   ok(contentFound, "We should find the preview content.");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+}
+
+add_task(async function test_in_container() {
+  // window.print() only shows print preview when print.tab_modal.enabled is
+  // true.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["print.tab_modal.enabled", true],
+      ["privacy.firstparty.isolate", false],
+    ],
+  });
+
+  await runTest();
+});
+
+add_task(async function test_with_fpi() {
+  // window.print() only shows print preview when print.tab_modal.enabled is
+  // true.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["print.tab_modal.enabled", true],
+      ["privacy.firstparty.isolate", true],
+    ],
+  });
+  await runTest();
 });
