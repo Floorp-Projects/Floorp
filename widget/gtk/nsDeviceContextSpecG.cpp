@@ -58,6 +58,10 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK() {
   if (mGtkPrintSettings) {
     g_object_unref(mGtkPrintSettings);
   }
+
+  if (mSpoolFile) {
+    mSpoolFile->Remove(false);
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecGTK, nsIDeviceContextSpec)
@@ -179,11 +183,6 @@ static void print_callback(GtkPrintJob* aJob, gpointer aData,
   ((nsIFile*)aData)->Remove(false);
 }
 
-static void ns_release_macro(gpointer aData) {
-  nsIFile* spoolFile = (nsIFile*)aData;
-  NS_RELEASE(spoolFile);
-}
-
 /* static */
 gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter* aPrinter,
                                                    gpointer aData) {
@@ -221,8 +220,12 @@ void nsDeviceContextSpecGTK::StartPrintJob() {
 
   if (!gtk_print_job_set_source_file(job, mSpoolName.get(), nullptr)) return;
 
-  NS_ADDREF(mSpoolFile.get());
-  gtk_print_job_send(job, print_callback, mSpoolFile, ns_release_macro);
+  // Now gtk owns the print job, and will be released via our callback.
+  gtk_print_job_send(job, print_callback, mSpoolFile.forget().take(),
+                     [](gpointer aData) {
+                       auto* spoolFile = static_cast<nsIFile*>(aData);
+                       NS_RELEASE(spoolFile);
+                     });
 }
 
 void nsDeviceContextSpecGTK::EnumeratePrinters() {
@@ -256,8 +259,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
     // content process side. In that case, we need to enumerate the printers
     // on the content side, and find a printer with a matching name.
 
-    GtkPrinter* printer = mPrintSettings->GetGtkPrinter();
-    if (printer) {
+    if (GtkPrinter* printer = mPrintSettings->GetGtkPrinter()) {
       // We have a printer, so we can print right away.
       StartPrintJob();
     } else {
@@ -286,6 +288,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
 
     rv = mSpoolFile->MoveTo(destDir, destLeafName);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    mSpoolFile = nullptr;
 
     // This is the standard way to get the UNIX umask. Ugh.
     mode_t mask = umask(0);
