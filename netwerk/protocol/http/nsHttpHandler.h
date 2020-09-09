@@ -359,11 +359,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
       const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
       bool isolated, const nsACString& topWindowOrigin,
-      const OriginAttributes& originAttributes, bool aHttp2Allowed,
-      bool aHttp3Allowed) {
+      const OriginAttributes& originAttributes, bool aHttp3Allowed) {
     return mAltSvcCache->GetAltServiceMapping(scheme, host, port, pb, isolated,
                                               topWindowOrigin, originAttributes,
-                                              aHttp2Allowed, aHttp3Allowed);
+                                              aHttp3Allowed);
   }
 
   //
@@ -834,7 +833,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   Mutex mLastActiveTabLoadOptimizationLock;
   TimeStamp mLastActiveTabLoadOptimizationHit;
 
-  Mutex mHttpExclusionLock;
+  Mutex mSpdyBlacklistLock;
 
  public:
   [[nodiscard]] nsresult NewChannelId(uint64_t& channelId);
@@ -842,14 +841,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   void RemoveHttpChannel(uint64_t aId);
   nsWeakPtr GetWeakHttpChannel(uint64_t aId);
 
-  void ExcludeHttp2(const nsHttpConnectionInfo* ci);
-  [[nodiscard]] bool IsHttp2Excluded(const nsHttpConnectionInfo* ci);
-  void ExcludeHttp3(const nsHttpConnectionInfo* ci);
-  [[nodiscard]] bool IsHttp3Excluded(const nsHttpConnectionInfo* ci);
+  void BlacklistSpdy(const nsHttpConnectionInfo* ci);
+  [[nodiscard]] bool IsSpdyBlacklisted(const nsHttpConnectionInfo* ci);
 
  private:
-  nsTHashtable<nsCStringHashKey> mExcludedHttp2Origins;
-  nsTHashtable<nsCStringHashKey> mExcludedHttp3Origins;
+  nsTHashtable<nsCStringHashKey> mBlacklistedSpdyOrigins;
 
   bool mThroughCaptivePortal;
 
