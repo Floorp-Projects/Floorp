@@ -3,11 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::super::shader_source::{OPTIMIZED_SHADERS, UNOPTIMIZED_SHADERS};
-use api::{ColorF, ImageDescriptor, ImageFormat, MemoryReport};
+use api::{ColorF, ImageDescriptor, ImageFormat};
 use api::{MixBlendMode, TextureTarget, VoidPtrToSizeFn};
 use api::units::*;
 use euclid::default::Transform3D;
 use gleam::gl;
+use crate::render_api::MemoryReport;
 use crate::internal_types::{FastHashMap, LayerIndex, RenderTargetInfo, Swizzle, SwizzleSettings};
 use crate::util::round_up_to_multiple;
 use crate::profiler;

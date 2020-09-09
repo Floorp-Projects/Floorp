@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, PremultipliedColorF, YuvFormat, YuvColorSpace};
-use api::EdgeAaSegmentMask;
 use api::units::*;
+use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use crate::gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use crate::internal_types::FastHashMap;

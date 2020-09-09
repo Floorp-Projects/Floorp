@@ -14,6 +14,7 @@ mod boilerplate;
 use crate::boilerplate::{Example, HandyDandyRectBuilder};
 use euclid::SideOffsets2D;
 use webrender::api::*;
+use webrender::render_api::*;
 use webrender::api::units::*;
 use winit::dpi::LogicalPosition;
 
