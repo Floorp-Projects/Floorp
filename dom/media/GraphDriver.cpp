@@ -637,12 +637,10 @@ void AudioCallbackDriver::Init() {
 
   output.layout = static_cast<uint32_t>(channelMap);
   output.prefs = CubebUtils::GetDefaultStreamPrefs();
-#if !defined(XP_WIN)
   if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE &&
       CubebUtils::RouteOutputAsVoice()) {
     output.prefs |= static_cast<cubeb_stream_prefs>(CUBEB_STREAM_PREF_VOICE);
   }
-#endif
 
   uint32_t latencyFrames = CubebUtils::GetCubebMTGLatencyInFrames(&output);
 
