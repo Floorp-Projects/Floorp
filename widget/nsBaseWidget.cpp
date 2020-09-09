@@ -976,18 +976,21 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
 
     UniquePtr<DisplayportSetListener> postLayerization;
     if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
+      nsTArray<TouchBehaviorFlags> allowedTouchBehaviors;
       if (touchEvent->mMessage == eTouchStart) {
         if (StaticPrefs::layout_css_touch_action_enabled()) {
-          APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
-              this, GetDocument(), *(original->AsTouchEvent()), inputBlockId,
-              mSetAllowedTouchBehaviorCallback);
+          allowedTouchBehaviors =
+              APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
+                  this, GetDocument(), *(original->AsTouchEvent()),
+                  inputBlockId, mSetAllowedTouchBehaviorCallback);
         }
         postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
             this, GetDocument(), *(original->AsTouchEvent()), rootLayersId,
             inputBlockId);
       }
       mAPZEventState->ProcessTouchEvent(*touchEvent, targetGuid, inputBlockId,
-                                        aApzResult.mStatus, status);
+                                        aApzResult.mStatus, status,
+                                        std::move(allowedTouchBehaviors));
     } else if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
       MOZ_ASSERT(wheelEvent->mFlags.mHandledByAPZ);
       postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
