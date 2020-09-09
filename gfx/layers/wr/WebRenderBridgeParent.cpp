@@ -397,7 +397,12 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEnsureConnected(
     *aTextureFactoryIdentifier =
         TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
     *aMaybeIdNamespace = Nothing();
-    *aError = std::move(mInitError);
+    if (mInitError.IsEmpty()) {
+      // Got destroyed after we initialized but before the handshake finished?
+      aError->AssignLiteral("FEATURE_FAILURE_WEBRENDER_INITIALIZE_RACE");
+    } else {
+      *aError = std::move(mInitError);
+    }
     return IPC_OK();
   }
 
