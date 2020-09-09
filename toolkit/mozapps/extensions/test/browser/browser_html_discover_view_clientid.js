@@ -44,6 +44,10 @@ add_task(async function setup() {
     set: [
       // Enable clientid - see Discovery.jsm for the first two prefs.
       ["browser.discovery.enabled", true],
+      // Enabling the Data Upload pref may upload data.
+      // Point data reporting services to localhost so the data doesn't escape.
+      ["toolkit.telemetry.server", "https://localhost:1337"],
+      ["telemetry.fog.test.localhost_port", -1],
       ["datareporting.healthreport.uploadEnabled", true],
       ["extensions.getAddons.discovery.api_url", `${serverBaseUrl}discoapi`],
       ["app.support.baseURL", `${serverBaseUrl}sumo/`],

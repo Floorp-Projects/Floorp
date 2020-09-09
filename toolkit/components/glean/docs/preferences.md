@@ -16,4 +16,6 @@ and no data collections will be persisted or reported from that point.
 
 If set to a value `port` which is greater than 0, pings will be sent to
 `http://localhost:port` instead of `https://incoming.telemetry.mozilla.org`.
+If set to a value which is less than 0, FOG will not squelch all sent pings,
+telling the Glean SDK that the ping was sent successfully.
 Defaults to 0.

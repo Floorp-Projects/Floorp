@@ -32,6 +32,7 @@ class TelemetryTestRunner(BaseMarionetteTestRunner):
                 # Disable smart sizing because it changes prefs at startup. (bug 1547750)
                 "browser.cache.disk.smart_size.enabled": False,
                 "toolkit.telemetry.server": "{}/pings".format(SERVER_URL),
+                "telemetry.fog.test.localhost_port": -1,
                 "toolkit.telemetry.initDelay": 1,
                 "toolkit.telemetry.minSubsessionLength": 0,
                 "datareporting.healthreport.uploadEnabled": True,

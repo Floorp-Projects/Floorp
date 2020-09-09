@@ -9,3 +9,4 @@ user_pref("browser.cache.disk.smart_size.enabled", true);
 user_pref("extensions.webextensions.warnings-as-errors", false);
 // disable telemetry bug 1639148
 user_pref("toolkit.telemetry.server", "");
+user_pref("telemetry.fog.test.localhost_port", -1);
