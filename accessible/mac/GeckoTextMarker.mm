@@ -106,17 +106,22 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
   if (mContainer == aPoint.mContainer) return mOffset < aPoint.mOffset;
 
   // Build the chain of parents
-  AccessibleOrProxy p1 = mContainer;
-  AccessibleOrProxy p2 = aPoint.mContainer;
   AutoTArray<AccessibleOrProxy, 30> parents1, parents2;
-  do {
+  AccessibleOrProxy p1 = mContainer;
+  while (!p1.IsNull()) {
     parents1.AppendElement(p1);
     p1 = p1.Parent();
-  } while (!p1.IsNull());
-  do {
+  }
+
+  AccessibleOrProxy p2 = aPoint.mContainer;
+  while (!p2.IsNull()) {
     parents2.AppendElement(p2);
     p2 = p2.Parent();
-  } while (!p2.IsNull());
+  }
+
+  // An empty chain of parents means one of the containers was null.
+  MOZ_ASSERT(parents1.Length() != 0 && parents2.Length() != 0,
+             "have empty chain of parents!");
 
   // Find where the parent chain differs
   uint32_t pos1 = parents1.Length(), pos2 = parents2.Length();
