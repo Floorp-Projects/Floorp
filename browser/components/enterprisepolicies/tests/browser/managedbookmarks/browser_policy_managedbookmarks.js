@@ -19,13 +19,18 @@ add_task(async function test_policy_managedbookmarks() {
     "Managed bookmarks buttons should have correct label"
   );
 
-  let promise = BrowserTestUtils.waitForEvent(
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
     managedBookmarksMenu.menupopup,
     "popupshown",
     false
   );
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    managedBookmarksMenu.menupopup,
+    "popuphidden",
+    false
+  );
   managedBookmarksMenu.open = true;
-  await promise;
+  await popupShownPromise;
 
   is(
     managedBookmarksMenu.menupopup.children[0].label,
@@ -95,13 +100,8 @@ add_task(async function test_policy_managedbookmarks() {
     "Bookmark should have correct label"
   );
 
-  promise = BrowserTestUtils.waitForEvent(
-    managedBookmarksMenu.menupopup,
-    "popuphidden",
-    false
-  );
   managedBookmarksMenu.open = false;
-  await promise;
+  await popupHiddenPromise;
 });
 
 add_task(async function test_open_managedbookmark() {
