@@ -51,7 +51,7 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.WorkManagerSyncManager
 import mozilla.components.service.fxa.sync.clearSyncState
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry

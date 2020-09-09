@@ -5,7 +5,7 @@
 package mozilla.components.support.migration
 
 import android.content.Context
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 import java.io.IOException

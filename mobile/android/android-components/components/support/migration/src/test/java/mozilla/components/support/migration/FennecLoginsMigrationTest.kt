@@ -6,7 +6,7 @@ package mozilla.components.support.migration
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.sync.logins.ServerPassword
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

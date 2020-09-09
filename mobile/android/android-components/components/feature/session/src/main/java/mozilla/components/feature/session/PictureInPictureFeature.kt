@@ -13,7 +13,7 @@ import androidx.annotation.RequiresApi
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 
 /**

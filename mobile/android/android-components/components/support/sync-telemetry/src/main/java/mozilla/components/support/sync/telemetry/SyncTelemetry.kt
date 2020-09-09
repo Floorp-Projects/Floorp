@@ -4,22 +4,22 @@
 
 package mozilla.components.support.sync.telemetry
 
-import org.json.JSONException
-import org.json.JSONObject
 import mozilla.appservices.sync15.EngineInfo
 import mozilla.appservices.sync15.FailureName
 import mozilla.appservices.sync15.FailureReason
 import mozilla.appservices.sync15.SyncTelemetryPing
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.service.glean.private.LabeledMetricType
 import mozilla.components.service.glean.private.StringMetricType
-import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.FxaTab
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
 import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync
-import mozilla.components.support.sync.telemetry.GleanMetrics.Sync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
+import mozilla.components.support.sync.telemetry.GleanMetrics.Sync
+import org.json.JSONException
+import org.json.JSONObject
 
 const val MAX_FAILURE_REASON_LENGTH = 100
 

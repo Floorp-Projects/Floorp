@@ -8,7 +8,7 @@ import androidx.annotation.VisibleForTesting
 import mozilla.appservices.rustlog.LogLevelFilter
 import mozilla.appservices.rustlog.OnLog
 import mozilla.appservices.rustlog.RustLogAdapter
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.Log
 
 internal class RustErrorException(tag: String?, msg: String) : Exception("$tag - $msg")

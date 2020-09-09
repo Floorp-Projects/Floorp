@@ -5,7 +5,7 @@
 package mozilla.components.lib.crash
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.support.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -41,7 +41,13 @@ class BreadcrumbTest {
         ).install(testContext))
 
         reporter.recordCrashBreadcrumb(
-            Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+            Breadcrumb(
+                testMessage,
+                testData,
+                testCategory,
+                testLevel,
+                testType
+            )
         )
 
         assertEquals(reporter.crashBreadcrumbs.elementAt(0).message, testMessage)
@@ -67,17 +73,35 @@ class BreadcrumbTest {
         ).install(testContext))
 
         reporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+            Breadcrumb(
+                testMessage,
+                testData,
+                testCategory,
+                testLevel,
+                testType
+            )
         )
         assertEquals(reporter.crashBreadcrumbs.size, 1)
 
         reporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+            Breadcrumb(
+                testMessage,
+                testData,
+                testCategory,
+                testLevel,
+                testType
+            )
         )
         assertEquals(reporter.crashBreadcrumbs.size, 2)
 
         reporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+            Breadcrumb(
+                testMessage,
+                testData,
+                testCategory,
+                testLevel,
+                testType
+            )
         )
         assertEquals(reporter.crashBreadcrumbs.size, 3)
     }
@@ -99,7 +123,13 @@ class BreadcrumbTest {
         val beginDate = Date()
         sleep(100) /* make sure time elapsed */
         reporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+            Breadcrumb(
+                testMessage,
+                testData,
+                testCategory,
+                testLevel,
+                testType
+            )
         )
         sleep(100) /* make sure time elapsed */
         val afterDate = Date()
@@ -109,7 +139,14 @@ class BreadcrumbTest {
 
         val date = Date()
         reporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, testLevel, testType, date)
+            Breadcrumb(
+                testMessage,
+                testData,
+                testCategory,
+                testLevel,
+                testType,
+                date
+            )
         )
         assertEquals(reporter.crashBreadcrumbs.elementAt(1).date.compareTo(date), 0)
     }
@@ -126,7 +163,14 @@ class BreadcrumbTest {
             "\"category\":\"testing_category\",\"level\":\"Critical\",\"type\":\"User\"," +
             "\"data\":{\"1\":\"one\",\"2\":\"two\"}}"
 
-        val breadcrumb = Breadcrumb(testMessage, testData, testCategory, testLevel, testType, testDate)
+        val breadcrumb = Breadcrumb(
+            testMessage,
+            testData,
+            testCategory,
+            testLevel,
+            testType,
+            testDate
+        )
         assertEquals(breadcrumb.toJson().toString(), testString)
     }
 }

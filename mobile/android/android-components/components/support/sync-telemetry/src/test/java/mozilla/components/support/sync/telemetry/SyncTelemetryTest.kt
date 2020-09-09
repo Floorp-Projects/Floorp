@@ -15,7 +15,7 @@ import mozilla.appservices.sync15.SyncInfo
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.appservices.sync15.ValidationInfo
 import mozilla.components.service.glean.testing.GleanTestRule
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.FxaTab
 import mozilla.components.support.sync.telemetry.GleanMetrics.LoginsSync

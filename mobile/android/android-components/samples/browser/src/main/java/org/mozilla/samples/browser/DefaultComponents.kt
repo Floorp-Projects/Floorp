@@ -72,7 +72,7 @@ import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.lib.nearby.NearbyConnection
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
-import mozilla.components.support.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb
 import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components

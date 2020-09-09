@@ -21,7 +21,7 @@ import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.push.PushService
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.feature.push.ext.launchAndTry
 import mozilla.components.feature.push.ext.ifInitialized
 import mozilla.components.support.base.log.logger.Logger

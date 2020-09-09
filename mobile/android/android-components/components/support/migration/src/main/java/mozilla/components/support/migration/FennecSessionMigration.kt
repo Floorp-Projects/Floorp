@@ -6,7 +6,7 @@ package mozilla.components.support.migration
 
 import android.net.Uri
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.session.StreamingSessionStoreParser
 import org.json.JSONException

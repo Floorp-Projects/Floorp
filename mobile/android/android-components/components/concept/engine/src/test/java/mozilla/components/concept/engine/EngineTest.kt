@@ -7,7 +7,7 @@ package mozilla.components.concept.engine
 import android.content.Context
 import android.util.AttributeSet
 import mozilla.components.concept.engine.Engine.BrowsingData
-import mozilla.components.concept.engine.profiler.Profiler
+import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
 import org.json.JSONObject
 import org.junit.Assert.assertEquals

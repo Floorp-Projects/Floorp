@@ -19,7 +19,7 @@ import io.sentry.event.interfaces.ExceptionInterface
 import mozilla.components.Build
 import mozilla.components.lib.crash.Crash
 import java.util.Date
-import mozilla.components.support.base.crash.Breadcrumb as CrashBreadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb as CrashBreadcrumb
 
 /**
  * A [CrashReporterService] implementation that uploads crash reports to a Sentry server.

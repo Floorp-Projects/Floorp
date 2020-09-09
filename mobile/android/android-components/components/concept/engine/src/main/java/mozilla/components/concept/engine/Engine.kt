@@ -9,7 +9,7 @@ import android.util.AttributeSet
 import androidx.annotation.MainThread
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
-import mozilla.components.concept.engine.profiler.Profiler
+import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate

@@ -13,7 +13,7 @@ import io.sentry.event.Event
 import io.sentry.event.EventBuilder
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
-import mozilla.components.support.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.isLazyInitialized
@@ -347,7 +347,13 @@ class SentryServiceTest {
         `when`(client.context).thenReturn(clientContext)
 
         reporter.recordCrashBreadcrumb(
-                Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+            Breadcrumb(
+                testMessage,
+                testData,
+                testCategory,
+                testLevel,
+                testType
+            )
         )
         val crashBreadCrumbs = arrayListOf<Breadcrumb>()
         crashBreadCrumbs.addAll(reporter.crashBreadcrumbs)
@@ -395,7 +401,13 @@ class SentryServiceTest {
         `when`(client.context).thenReturn(clientContext)
 
         reporter.recordCrashBreadcrumb(
-            Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+            Breadcrumb(
+                testMessage,
+                testData,
+                testCategory,
+                testLevel,
+                testType
+            )
         )
         val throwable = RuntimeException("Test")
         val crashBreadCrumbs = arrayListOf<Breadcrumb>()
@@ -428,7 +440,14 @@ class SentryServiceTest {
                 sendEventForNativeCrashes = true
         )
 
-        val breadcrumb = Breadcrumb(testMessage, testData, testCategory, testLevel, testType, testDate)
+        val breadcrumb = Breadcrumb(
+            testMessage,
+            testData,
+            testCategory,
+            testLevel,
+            testType,
+            testDate
+        )
         service.apply {
             val sentryBreadCrumb = breadcrumb.toSentryBreadcrumb()
             assertTrue(sentryBreadCrumb.message == testMessage)

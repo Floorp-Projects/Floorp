@@ -38,7 +38,7 @@ import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncDispatcher
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
-import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.test.any

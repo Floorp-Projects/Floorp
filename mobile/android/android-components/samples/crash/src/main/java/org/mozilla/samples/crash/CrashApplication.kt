@@ -21,7 +21,7 @@ import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.Glean
-import mozilla.components.support.base.crash.Breadcrumb
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import java.util.UUID
