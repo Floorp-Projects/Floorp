@@ -272,16 +272,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // managed.
     this.rootNode = this.document();
 
-    // By default the walker will not notify about new root nodes and waits for
-    // a consumer to explicitly ask to be notified about root nodes to start
-    // emitting related events.
-    this._isWatchingRootNode = false;
-    // XXX: Ideally the walker would also use a watch API on the target actor to
-    // know if "window-ready" has already been fired. Without such an API there
-    // is a risk that the walker will fire several new-root-available for the
-    // same node.
-    this._emittedRootNode = null;
-
     this.layoutChangeObserver = getLayoutChangesObserver(this.targetActor);
     this._onReflows = this._onReflows.bind(this);
     this.layoutChangeObserver.on("reflows", this._onReflows);
@@ -301,32 +291,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   watchRootNode() {
-    if (this._isWatchingRootNode) {
-      throw new Error("WalkerActor::watchRootNode should only be called once");
-    }
-
-    this._isWatchingRootNode = true;
     if (this.rootNode && isDocumentReady(this.rootDoc)) {
-      this._emitNewRoot(this.rootNode, { isTopLevelDocument: true });
+      this.emit("root-available", this.rootNode);
     }
-  },
-
-  unwatchRootNode() {
-    this._isWatchingRootNode = false;
-    this._emittedRootNode = null;
-  },
-
-  _emitNewRoot(rootNode, { isTopLevelDocument }) {
-    const alreadyEmittedTopRootNode = this._emittedRootNode === rootNode;
-    if (!this._isWatchingRootNode || alreadyEmittedTopRootNode) {
-      return;
-    }
-
-    if (isTopLevelDocument) {
-      this._emittedRootNode = this.rootNode;
-    }
-
-    this.emit("root-available", rootNode);
   },
 
   /**
@@ -2546,7 +2513,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this.rootWin = window;
       this.rootDoc = window.document;
       this.rootNode = this.document();
-      this._emitNewRoot(this.rootNode, { isTopLevelDocument: true });
+      this.emit("root-available", this.rootNode);
     } else {
       const frame = getFrameElement(window);
       const frameActor = this.getNode(frame);
@@ -2554,7 +2521,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         // If the parent frame is in the map of known node actors, create the
         // actor for the new document and emit a root-available event.
         const documentActor = this._getOrCreateNodeActor(window.document);
-        this._emitNewRoot(documentActor, { isTopLevelDocument: false });
+        this.emit("root-available", documentActor);
       }
     }
   },
@@ -2610,9 +2577,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this._updateMutationBreakpointState("unload", node, null);
     }
 
-    if (this._isWatchingRootNode) {
-      this.emit("root-destroyed", documentActor);
-    }
+    this.emit("root-destroyed", documentActor);
 
     // Cleanup root doc references if we just unloaded the top level root
     // document.
