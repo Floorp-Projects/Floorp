@@ -867,7 +867,9 @@ already_AddRefed<InternalResponse> FetchDriver::BeginAndGetFilteredResponse(
   MOZ_ASSERT(filteredResponse);
   MOZ_ASSERT(mObserver);
   if (!ShouldCheckSRI(*mRequest, *filteredResponse)) {
-    mObserver->OnResponseAvailable(filteredResponse);
+    // Need to keep mObserver alive.
+    RefPtr<FetchDriverObserver> observer = mObserver;
+    observer->OnResponseAvailable(filteredResponse);
 #ifdef DEBUG
     mResponseAvailableCalled = true;
 #endif
@@ -880,7 +882,9 @@ void FetchDriver::FailWithNetworkError(nsresult rv) {
   AssertIsOnMainThread();
   RefPtr<InternalResponse> error = InternalResponse::NetworkError(rv);
   if (mObserver) {
-    mObserver->OnResponseAvailable(error);
+    // Need to keep mObserver alive.
+    RefPtr<FetchDriverObserver> observer = mObserver;
+    observer->OnResponseAvailable(error);
 #ifdef DEBUG
     mResponseAvailableCalled = true;
 #endif
@@ -1263,10 +1267,12 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
   if (mNeedToObserveOnDataAvailable) {
     mNeedToObserveOnDataAvailable = false;
     if (mObserver) {
+      // Need to keep mObserver alive.
+      RefPtr<FetchDriverObserver> observer = mObserver;
       if (NS_IsMainThread()) {
-        mObserver->OnDataAvailable();
+        observer->OnDataAvailable();
       } else {
-        RefPtr<Runnable> runnable = new DataAvailableRunnable(mObserver);
+        RefPtr<Runnable> runnable = new DataAvailableRunnable(observer);
         nsresult rv = mMainThreadEventTarget->Dispatch(runnable.forget(),
                                                        NS_DISPATCH_NORMAL);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1401,7 +1407,9 @@ void FetchDriver::FinishOnStopRequest(
     // From "Main Fetch" step 19.1, 19.2: Process response.
     if (ShouldCheckSRI(*mRequest, *mResponse)) {
       MOZ_ASSERT(mResponse);
-      mObserver->OnResponseAvailable(mResponse);
+      // Need to keep mObserver alive.
+      RefPtr<FetchDriverObserver> observer = mObserver;
+      observer->OnResponseAvailable(mResponse);
 #ifdef DEBUG
       mResponseAvailableCalled = true;
 #endif
