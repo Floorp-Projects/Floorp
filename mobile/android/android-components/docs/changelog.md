@@ -61,6 +61,7 @@ permalink: /changelog/
   * 🌟 Added support for persisting/restoring downloads see issue [#7762](https://github.com/mozilla-mobile/android-components/issues/7762).
   * 🌟 Added `DownloadStorage` for querying stored download metadata.
   * 🚒 Bug [issue #8190](https://github.com/mozilla-mobile/android-components/issues/8190) ArithmeticException: divide by zero in Download notification.
+  * 🚒 Bug [issue #8363](https://github.com/mozilla-mobile/android-components/issues/8363) IllegalStateException: Not allowed to start service Intent.
 
 
 * **ui-widgets**

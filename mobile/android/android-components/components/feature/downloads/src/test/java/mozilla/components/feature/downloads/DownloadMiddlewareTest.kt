@@ -37,6 +37,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.times
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 
 @RunWith(AndroidJUnit4::class)
 class DownloadMiddlewareTest {
@@ -63,12 +64,12 @@ class DownloadMiddlewareTest {
     @Test
     fun `service is started when download is queued`() = runBlockingTest {
         val applicationContext: Context = mock()
-        val downloadMiddleware = DownloadMiddleware(
+        val downloadMiddleware = spy(DownloadMiddleware(
             applicationContext,
             AbstractFetchDownloadService::class.java,
             coroutineContext = dispatcher,
             downloadStorage = mock()
-        )
+        ))
         val store = BrowserStore(
             initialState = BrowserState(),
             middleware = listOf(downloadMiddleware)
@@ -78,7 +79,7 @@ class DownloadMiddlewareTest {
         store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
 
         val intentCaptor = argumentCaptor<Intent>()
-        verify(applicationContext).startService(intentCaptor.capture())
+        verify(downloadMiddleware).startForegroundService(intentCaptor.capture())
         assertEquals(download.id, intentCaptor.value.getStringExtra(EXTRA_DOWNLOAD_ID))
     }
 

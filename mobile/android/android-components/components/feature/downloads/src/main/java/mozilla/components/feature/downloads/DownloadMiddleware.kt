@@ -8,6 +8,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -113,8 +114,13 @@ class DownloadMiddleware(
         if (download.status !in arrayOf(COMPLETED, CANCELLED)) {
             val intent = Intent(applicationContext, downloadServiceClass)
             intent.putExtra(DownloadManager.EXTRA_DOWNLOAD_ID, download.id)
-            applicationContext.startService(intent)
+            startForegroundService(intent)
             logger.debug("Sending download intent ${download.fileName}")
         }
+    }
+
+    @VisibleForTesting
+    internal fun startForegroundService(intent: Intent) {
+        ContextCompat.startForegroundService(applicationContext, intent)
     }
 }
