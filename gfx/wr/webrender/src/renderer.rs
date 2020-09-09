@@ -2725,6 +2725,8 @@ impl Renderer {
             .as_ref()
             .map(|handler| handler.create_similar());
 
+        let rb_scene_tx = scene_tx.clone();
+        let rb_low_priority_scene_tx = scene_tx.clone();
         let rb_font_instances = font_instances.clone();
         let enable_multithreading = options.enable_multithreading;
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
@@ -2760,8 +2762,8 @@ impl Renderer {
             let mut backend = RenderBackend::new(
                 api_rx,
                 result_tx,
-                scene_tx,
-                low_priority_scene_tx,
+                rb_scene_tx,
+                rb_low_priority_scene_tx,
                 device_pixel_ratio,
                 resource_cache,
                 backend_notifier,
@@ -2882,7 +2884,13 @@ impl Renderer {
         // to ensure any potential transition when enabling a flag is run.
         renderer.set_debug_flags(debug_flags);
 
-        let sender = RenderApiSender::new(api_tx, blob_image_handler, font_instances);
+        let sender = RenderApiSender::new(
+            api_tx,
+            scene_tx,
+            low_priority_scene_tx,
+            blob_image_handler,
+            font_instances,
+        );
         Ok((renderer, sender))
     }
 
