@@ -23,6 +23,7 @@
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h"      // JS::{,Mutable}Handle, JS::Rooted
 #include "js/SourceText.h"      // JS::SourceText
+#include "js/UniquePtr.h"       // js::UniquePtr
 #include "vm/JSScript.h"  // js::{FunctionAsync,Generator}Kind, js::BaseScript, JSScript, js::ScriptSource, js::ScriptSourceObject
 #include "vm/Scope.h"     // js::ScopeKind
 
@@ -56,6 +57,14 @@ extern bool CompileGlobalScriptToStencil(JSContext* cx,
 
 extern bool CompileGlobalScriptToStencil(
     JSContext* cx, CompilationInfo& compilationInfo,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
+
+extern UniquePtr<CompilationInfo> CompileGlobalScriptToStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind);
+
+extern UniquePtr<CompilationInfo> CompileGlobalScriptToStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
 extern bool InstantiateStencils(JSContext* cx, CompilationInfo& compilationInfo,
