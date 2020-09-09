@@ -1249,6 +1249,59 @@ async function runTests() {
     checkTargetRanges(beforeInputEvent, selectionRanges);
     ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
 
+    // Deleting atomic content
+    editTarget.innerHTML =
+      '<img src=""data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEElEQVR42mNgaGD4D8YwBgAw9AX9Y9zBwwAAAABJRU5ErkJggg==">';
+    editTarget.focus();
+    selection.collapse(editTarget, 0);
+    reset();
+    cancelBeforeInput = false;
+    action = 'typing "Delete" to delete the <img> element';
+    synthesizeKey("KEY_Delete", {}, aWindow);
+    is(editTarget.innerHTML, `<br>`,
+       `${aDescription}the <img> should be deleted and padding <br> element should've been inserted instead at ${action}`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event should be "deleteContentForward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    checkTargetRanges(beforeInputEvent, [{startContainer: editTarget,
+                                          startOffset: 0,
+                                          endContainer: editTarget,
+                                          endOffset: 1}]);
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
+    is(inputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "input" event should be "deleteContentForward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+    checkTargetRanges(inputEvent, []);
+
+    editTarget.innerHTML =
+      '<img src=""data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEElEQVR42mNgaGD4D8YwBgAw9AX9Y9zBwwAAAABJRU5ErkJggg==">';
+    editTarget.focus();
+    selection.collapse(editTarget, 1);
+    reset();
+    cancelBeforeInput = false;
+    action = 'typing "Backspace" to delete the <img> element';
+    synthesizeKey("KEY_Backspace", {}, aWindow);
+    is(editTarget.innerHTML, `<br>`,
+       `${aDescription}the <img> should be deleted and padding <br> element should've been inserted instead at ${action}`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "beforeinput" event should be "deleteContentBackward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    checkTargetRanges(beforeInputEvent, [{startContainer: editTarget,
+                                          startOffset: 0,
+                                          endContainer: editTarget,
+                                          endOffset: 1}]);
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
+    is(inputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "input" event should be "deleteContentBackward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+    checkTargetRanges(inputEvent, []);
+
     aWindow.removeEventListener("beforeinput", beforeInputHandler, true);
     aWindow.removeEventListener("input", inputHandler, true);
   }
