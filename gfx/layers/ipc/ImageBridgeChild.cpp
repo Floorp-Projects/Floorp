@@ -829,7 +829,10 @@ mozilla::ipc::IPCResult ImageBridgeChild::RecvParentAsyncMessages(
       case AsyncParentMessageData::TOpDeliverReleaseFence: {
 #ifdef MOZ_WIDGET_ANDROID
         const OpDeliverReleaseFence& op = message.get_OpDeliverReleaseFence();
-        ipc::FileDescriptor fenceFd = op.fenceFd();
+        ipc::FileDescriptor fenceFd;
+        if (op.fenceFd().isSome()) {
+          fenceFd = *op.fenceFd();
+        }
         AndroidHardwareBufferManager::Get()->NotifyNotUsed(
             std::move(fenceFd), op.bufferId(), op.fwdTransactionId(),
             op.usesImageBridge());
