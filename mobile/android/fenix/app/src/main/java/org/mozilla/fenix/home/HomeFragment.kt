@@ -85,7 +85,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.FenixTipManager
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.providers.MasterPasswordTipProvider
-import org.mozilla.fenix.components.tips.providers.MigrationTipProvider
 import org.mozilla.fenix.components.toolbar.TabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
@@ -208,8 +207,7 @@ class HomeFragment : Fragment() {
                                     requireContext(),
                                     ::navToSavedLogins,
                                     ::dismissTip
-                                ),
-                                MigrationTipProvider(requireContext())
+                                )
                             )
                         ).getTip()
                     },
@@ -562,8 +560,7 @@ class HomeFragment : Fragment() {
                                 requireContext(),
                                 ::navToSavedLogins,
                                 ::dismissTip
-                            ),
-                            MigrationTipProvider(requireContext())
+                            )
                         )
                     ).getTip()
                 },
