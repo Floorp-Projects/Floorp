@@ -70,6 +70,8 @@
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
 #include "debugger/DebugAPI.h"
+#include "frontend/BytecodeCompilation.h"
+#include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/CompilationInfo.h"
 #ifdef JS_ENABLE_SMOOSH
@@ -5140,27 +5142,16 @@ enum class DumpType {
 };
 
 template <typename Unit>
-static bool FrontendTest(JSContext* cx,
-                         const JS::ReadOnlyCompileOptions& options,
-                         const Unit* units, size_t length,
-                         js::frontend::CompilationInfo& compilationInfo,
-                         js::frontend::CompilationState& compilationState,
-                         js::frontend::ParseGoal goal, DumpType dumpType) {
+static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+                    const Unit* units, size_t length,
+                    js::frontend::CompilationInfo& compilationInfo,
+                    js::frontend::CompilationState& compilationState,
+                    js::frontend::ParseGoal goal) {
   using namespace js::frontend;
 
-  bool foldConstants = dumpType == DumpType::Stencil;
-
-  Parser<SyntaxParseHandler, Unit> syntaxParser(
-      cx, options, units, length, foldConstants, compilationInfo,
-      compilationState, nullptr, nullptr);
-  if (!syntaxParser.checkOptions()) {
-    return false;
-  }
-
-  Parser<FullParseHandler, Unit> parser(
-      cx, options, units, length, foldConstants, compilationInfo,
-      compilationState, dumpType == DumpType::Stencil ? &syntaxParser : nullptr,
-      nullptr);
+  Parser<FullParseHandler, Unit> parser(cx, options, units, length, false,
+                                        compilationInfo, compilationState,
+                                        nullptr, nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -5173,47 +5164,9 @@ static bool FrontendTest(JSContext* cx,
     return false;
   }
 
+  js::frontend::ParseNode* pn;
   if (goal == frontend::ParseGoal::Script) {
-    js::frontend::ParseNode* pn;
-    switch (dumpType) {
-      case DumpType::ParseNode: {
-        pn = parser.parse();
-        if (!pn) {
-          return false;
-        }
-
-#if defined(DEBUG)
-        js::Fprinter out(stderr);
-        DumpParseTree(pn, out);
-#endif
-        break;
-      }
-      case DumpType::Stencil: {
-        SourceExtent extent = SourceExtent::makeGlobalExtent(
-            length, options.lineno, options.column);
-        Directives directives(options.forceStrictMode());
-        GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
-                                     directives, extent);
-        pn = parser.globalBody(&globalsc);
-        if (!pn) {
-          return false;
-        }
-
-        BytecodeEmitter bce(/* parent = */ nullptr, &parser, &globalsc,
-                            compilationInfo, compilationState);
-        if (!bce.init()) {
-          return false;
-        }
-        if (!bce.emitScript(pn)) {
-          return false;
-        }
-
-#if defined(DEBUG) || defined(JS_JITSPEW)
-        compilationInfo.stencil.dump();
-#endif
-        break;
-      }
-    }
+    pn = parser.parse();
   } else {
     if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global())) {
       return false;
@@ -5223,38 +5176,47 @@ static bool FrontendTest(JSContext* cx,
 
     SourceExtent extent = SourceExtent::makeGlobalExtent(length);
     ModuleSharedContext modulesc(cx, compilationInfo, builder, extent);
-    js::frontend::ParseNode* pn = parser.moduleBody(&modulesc);
-    if (!pn) {
-      return false;
-    }
+    pn = parser.moduleBody(&modulesc);
+  }
 
-    switch (dumpType) {
-      case DumpType::ParseNode: {
+  if (!pn) {
+    return false;
+  }
+
 #if defined(DEBUG)
-        js::Fprinter out(stderr);
-        DumpParseTree(pn, out);
+  js::Fprinter out(stderr);
+  DumpParseTree(pn, out);
 #endif
-        break;
-      }
-      case DumpType::Stencil: {
-        BytecodeEmitter bce(/* parent = */ nullptr, &parser, &modulesc,
-                            compilationInfo, compilationState);
-        if (!bce.init()) {
-          return false;
-        }
-        if (!bce.emitScript(pn->as<ModuleNode>().body())) {
-          return false;
-        }
 
-        builder.finishFunctionDecls(compilationInfo.stencil.moduleMetadata);
+  return true;
+}
+
+template <typename Unit>
+static bool DumpStencil(JSContext* cx,
+                        const JS::ReadOnlyCompileOptions& options,
+                        const Unit* units, size_t length,
+                        js::frontend::ParseGoal goal) {
+  Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(cx);
+
+  JS::SourceText<Unit> srcBuf;
+  if (!srcBuf.init(cx, units, length, JS::SourceOwnership::Borrowed)) {
+    return false;
+  }
+
+  if (goal == frontend::ParseGoal::Script) {
+    compilationInfo = frontend::CompileGlobalScriptToStencil(
+        cx, options, srcBuf, ScopeKind::Global);
+  } else {
+    compilationInfo = frontend::ParseModuleToStencil(cx, options, srcBuf);
+  }
+
+  if (!compilationInfo) {
+    return false;
+  }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-        compilationInfo.stencil.dump();
+  compilationInfo->stencil.dump();
 #endif
-        break;
-      }
-    }
-  }
 
   return true;
 }
@@ -5394,20 +5356,8 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     options.allowHTMLComments = false;
   }
 
-  js::Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, js::frontend::CompilationInfo(cx, options));
-  if (goal == frontend::ParseGoal::Script) {
-    if (!compilationInfo.get().input.initForGlobal(cx)) {
-      return false;
-    }
-  } else {
-    if (!compilationInfo.get().input.initForModule(cx)) {
-      return false;
-    }
-  }
-
-#ifdef JS_ENABLE_SMOOSH
   if (dumpType == DumpType::Stencil) {
+#ifdef JS_ENABLE_SMOOSH
     if (smoosh) {
       if (isAscii) {
         if (goal == frontend::ParseGoal::Script) {
@@ -5419,13 +5369,15 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
           }
 
           bool unimplemented;
-          if (!Smoosh::compileGlobalScriptToStencil(cx, compilationInfo.get(),
-                                                    srcBuf, &unimplemented)) {
+          Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(
+              cx, Smoosh::compileGlobalScriptToStencil(cx, options, srcBuf,
+                                                       &unimplemented));
+          if (!compilationInfo) {
             return false;
           }
 
 #  ifdef DEBUG
-          compilationInfo.get().stencil.dump();
+          compilationInfo->stencil.dump();
 #  endif
         } else {
           JS_ReportErrorASCII(cx,
@@ -5439,8 +5391,36 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
                           "SmooshMonkey does not support non-ASCII chars yet");
       return false;
     }
-  }
 #endif  // JS_ENABLE_SMOOSH
+
+    if (isAscii) {
+      const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
+      auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
+      if (!DumpStencil<mozilla::Utf8Unit>(cx, options, utf8, length, goal)) {
+        return false;
+      }
+    } else {
+      MOZ_ASSERT(stableChars.isTwoByte());
+      const char16_t* chars = stableChars.twoByteRange().begin().get();
+      if (!DumpStencil<char16_t>(cx, options, chars, length, goal)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  js::Rooted<frontend::CompilationInfo> compilationInfo(
+      cx, js::frontend::CompilationInfo(cx, options));
+  if (goal == frontend::ParseGoal::Script) {
+    if (!compilationInfo.get().input.initForGlobal(cx)) {
+      return false;
+    }
+  } else {
+    if (!compilationInfo.get().input.initForModule(cx)) {
+      return false;
+    }
+  }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, options);
@@ -5448,17 +5428,16 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
   if (isAscii) {
     const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
     auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
-    if (!FrontendTest<mozilla::Utf8Unit>(cx, options, utf8, length,
-                                         compilationInfo.get(),
-                                         compilationState, goal, dumpType)) {
+    if (!DumpAST<mozilla::Utf8Unit>(cx, options, utf8, length,
+                                    compilationInfo.get(), compilationState,
+                                    goal)) {
       return false;
     }
   } else {
     MOZ_ASSERT(stableChars.isTwoByte());
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    if (!FrontendTest<char16_t>(cx, options, chars, length,
-                                compilationInfo.get(), compilationState, goal,
-                                dumpType)) {
+    if (!DumpAST<char16_t>(cx, options, chars, length, compilationInfo.get(),
+                           compilationState, goal)) {
       return false;
     }
   }
