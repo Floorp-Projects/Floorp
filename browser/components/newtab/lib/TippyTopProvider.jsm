@@ -12,9 +12,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "URL"]);
 
-const TIPPYTOP_PATH = "resource://activity-stream/data/content/tippytop/";
+const TIPPYTOP_PATH = "chrome://activity-stream/content/data/content/tippytop/";
 const TIPPYTOP_JSON_PATH =
-  "resource://activity-stream/data/content/tippytop/top_sites.json";
+  "chrome://activity-stream/content/data/content/tippytop/top_sites.json";
 
 /*
  * Get a domain from a url optionally stripping subdomains.

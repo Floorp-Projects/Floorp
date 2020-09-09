@@ -291,11 +291,11 @@ body {
       }
 
       &.short::after {
-        background-image:  url('../data/content/assets/short-zap.svg');
+        background-image:  url('chrome://activity-stream/content/data/content/assets/short-zap.svg');
       }
 
       &.long::after {
-        background-image:  url('../data/content/assets/long-zap.svg');
+        background-image:  url('chrome://activity-stream/content/data/content/assets/long-zap.svg');
       }
     }
 
@@ -543,7 +543,7 @@ body {
       margin: 0;
 
       &.privacy {
-        background: top no-repeat url('../data/content/assets/firefox-protections.svg');
+        background: top no-repeat url('chrome://activity-stream/content/data/content/assets/firefox-protections.svg');
       }
 
       .media {

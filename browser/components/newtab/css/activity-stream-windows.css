@@ -161,25 +161,25 @@ body {
   .icon.icon-bookmark-hollow {
     background-image: url("chrome://browser/skin/bookmark-hollow.svg"); }
   .icon.icon-clear-input {
-    background-image: url("../data/content/assets/glyph-cancel-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-cancel-16.svg"); }
   .icon.icon-delete {
-    background-image: url("../data/content/assets/glyph-delete-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-delete-16.svg"); }
   .icon.icon-search {
     background-image: url("chrome://browser/skin/search-glass.svg"); }
   .icon.icon-modal-delete {
     flex-shrink: 0;
-    background-image: url("../data/content/assets/glyph-modal-delete-32.svg");
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-modal-delete-32.svg");
     background-size: 32px;
     height: 32px;
     width: 32px; }
   .icon.icon-mail {
-    background-image: url("../data/content/assets/glyph-mail-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-mail-16.svg"); }
   .icon.icon-dismiss {
-    background-image: url("../data/content/assets/glyph-dismiss-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-dismiss-16.svg"); }
   .icon.icon-info {
-    background-image: url("../data/content/assets/glyph-info-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-info-16.svg"); }
   .icon.icon-new-window {
-    background-image: url("../data/content/assets/glyph-newWindow-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-newWindow-16.svg"); }
     .icon.icon-new-window:dir(rtl) {
       transform: scaleX(-1); }
   .icon.icon-new-window-private {
@@ -187,34 +187,34 @@ body {
   .icon.icon-settings {
     background-image: url("chrome://global/skin/icons/settings.svg"); }
   .icon.icon-pin {
-    background-image: url("../data/content/assets/glyph-pin-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pin-16.svg"); }
     .icon.icon-pin:dir(rtl) {
       transform: scaleX(-1); }
   .icon.icon-unpin {
-    background-image: url("../data/content/assets/glyph-unpin-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-unpin-16.svg"); }
     .icon.icon-unpin:dir(rtl) {
       transform: scaleX(-1); }
   .icon.icon-edit {
-    background-image: url("../data/content/assets/glyph-edit-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg"); }
   .icon.icon-pocket {
-    background-image: url("../data/content/assets/glyph-pocket-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-16.svg"); }
   .icon.icon-pocket-save {
-    background-image: url("../data/content/assets/glyph-pocket-save-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-save-16.svg"); }
   .icon.icon-pocket-delete {
-    background-image: url("../data/content/assets/glyph-pocket-delete-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-delete-16.svg"); }
   .icon.icon-pocket-archive {
-    background-image: url("../data/content/assets/glyph-pocket-archive-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-archive-16.svg"); }
   .icon.icon-history-item {
     background-image: url("chrome://browser/skin/history.svg"); }
   .icon.icon-trending {
-    background-image: url("../data/content/assets/glyph-trending-16.svg");
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-trending-16.svg");
     transform: translateY(2px); }
   .icon.icon-now {
     background-image: url("chrome://browser/skin/history.svg"); }
   .icon.icon-topsites {
-    background-image: url("../data/content/assets/glyph-topsites-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-topsites-16.svg"); }
   .icon.icon-pin-small {
-    background-image: url("../data/content/assets/glyph-pin-12.svg");
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pin-12.svg");
     background-size: 12px;
     height: 12px;
     width: 12px; }
@@ -227,20 +227,20 @@ body {
   .icon.icon-copy {
     background-image: url("chrome://browser/skin/edit-copy.svg"); }
   .icon.icon-open-file {
-    background-image: url("../data/content/assets/glyph-open-file-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-open-file-16.svg"); }
   .icon.icon-webextension {
-    background-image: url("../data/content/assets/glyph-webextension-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg"); }
   .icon.icon-highlights {
-    background-image: url("../data/content/assets/glyph-highlights-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-highlights-16.svg"); }
   .icon.icon-arrowhead-down {
-    background-image: url("../data/content/assets/glyph-arrowhead-down-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-16.svg"); }
   .icon.icon-arrowhead-down-small {
-    background-image: url("../data/content/assets/glyph-arrowhead-down-12.svg");
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg");
     background-size: 12px;
     height: 12px;
     width: 12px; }
   .icon.icon-arrowhead-forward-small {
-    background-image: url("../data/content/assets/glyph-arrowhead-down-12.svg");
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg");
     background-size: 12px;
     height: 12px;
     transform: rotate(-90deg);
@@ -248,16 +248,16 @@ body {
     .icon.icon-arrowhead-forward-small:dir(rtl) {
       transform: rotate(90deg); }
   .icon.icon-arrowhead-up {
-    background-image: url("../data/content/assets/glyph-arrowhead-down-16.svg");
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-16.svg");
     transform: rotate(180deg); }
   .icon.icon-add {
-    background-image: url("../data/content/assets/glyph-add-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-add-16.svg"); }
   .icon.icon-minimize {
-    background-image: url("../data/content/assets/glyph-minimize-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-minimize-16.svg"); }
   .icon.icon-maximize {
-    background-image: url("../data/content/assets/glyph-maximize-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-maximize-16.svg"); }
   .icon.icon-arrow {
-    background-image: url("../data/content/assets/glyph-arrow.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrow.svg"); }
 
 html {
   height: 100%; }
@@ -639,7 +639,7 @@ main {
     .top-site-outer .search-topsite[data-fallback]::before {
       content: attr(data-fallback); }
   .top-site-outer .search-topsite {
-    background-image: url("../data/content/assets/glyph-search-16.svg");
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-search-16.svg");
     background-size: 26px;
     background-color: #0060DF;
     border-radius: 42px;
@@ -679,7 +679,7 @@ main {
     .top-site-outer .title.pinned span {
       padding: 0 13px; }
   .top-site-outer .edit-button {
-    background-image: url("../data/content/assets/glyph-edit-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg"); }
   .top-site-outer.placeholder .tile {
     box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color); }
   .top-site-outer.placeholder .screenshot {
@@ -1874,7 +1874,7 @@ main {
   white-space: nowrap;
   line-height: 1.230769231; }
   .more-recommendations::after {
-    background: url("../data/content/assets/topic-show-more-12.svg") no-repeat center center;
+    background: url("chrome://activity-stream/content/data/content/assets/topic-show-more-12.svg") no-repeat center center;
     content: '';
     -moz-context-properties: fill;
     display: inline-block;
@@ -2803,7 +2803,7 @@ main {
   flex-direction: column;
   position: relative; }
   .ds-card .playhead {
-    background: #0060DF url("../data/content/assets/glyph-playhead.svg") no-repeat 12px center;
+    background: #0060DF url("chrome://activity-stream/content/data/content/assets/glyph-playhead.svg") no-repeat 12px center;
     border-radius: 20px;
     bottom: -16px;
     color: rgba(255, 255, 255, 0);
@@ -3011,7 +3011,7 @@ main {
       [lwt-newtab-brighttext] .story-footer .status-message .story-badge-icon {
         fill: #B1B1B3; }
       .story-footer .status-message .story-badge-icon.icon-bookmark-removed {
-        background-image: url("../data/content/assets/icon-removed-bookmark.svg"); }
+        background-image: url("chrome://activity-stream/content/data/content/assets/icon-removed-bookmark.svg"); }
     .story-footer .status-message .story-context-label {
       color: #737373;
       flex-grow: 1;
@@ -3210,7 +3210,7 @@ main {
       top: 50%;
       left: 50%;
       margin: -10px 0 0 -10px;
-      mask-image: url("../data/content/assets/spinner.svg");
+      mask-image: url("chrome://activity-stream/content/data/content/assets/spinner.svg");
       mask-size: 20px;
       background: var(--newtab-feed-button-spinner); }
     .section-empty-state .try-again-button.waiting {
@@ -3299,7 +3299,7 @@ main {
       box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5); }
   .ds-chevron-link::after {
     content: ' ';
-    mask: url("../data/content/assets/glyph-caret-right.svg") 0 -8px no-repeat;
+    mask: url("chrome://activity-stream/content/data/content/assets/glyph-caret-right.svg") 0 -8px no-repeat;
     background-color: #0060DF;
     margin: 0 0 0 4px;
     width: 5px;
@@ -3372,7 +3372,7 @@ main {
     background-repeat: no-repeat;
     background-size: 16px; }
   .ds-privacy-modal .modal-link.modal-link-privacy::before {
-    background-image: url("../data/content/assets/glyph-info-16.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-info-16.svg"); }
   .ds-privacy-modal .modal-link.modal-link-manage::before {
     background-image: url("chrome://global/skin/icons/settings.svg"); }
 
@@ -3480,7 +3480,7 @@ main {
     inset-inline-end: 12px;
     height: 16px;
     width: 16px;
-    background-image: url("resource://activity-stream/data/content/assets/glyph-dismiss-16.svg");
+    background-image: url("chrome://activity-stream/content/data/content/assets/glyph-dismiss-16.svg");
     -moz-context-properties: fill;
     color: inherit;
     fill: currentColor;
@@ -3707,7 +3707,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     background-size: 292px 254px;
     background-position: center center;
     background-repeat: no-repeat;
-    background-image: url("resource://activity-stream/data/content/assets/gift-extension.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/gift-extension.svg"); }
   .ReturnToAMOOverlay .icon-add,
   .amo + body.hide-main .icon-add {
     fill: #FFF;
@@ -4047,55 +4047,55 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     font-size: 20px; }
 
 .onboardingMessageImage.addons {
-  background-image: url("../data/content/assets/illustration-addons@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-addons@2x.png"); }
 
 .onboardingMessageImage.privatebrowsing {
-  background-image: url("../data/content/assets/illustration-privatebrowsing@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-privatebrowsing@2x.png"); }
 
 .onboardingMessageImage.screenshots {
-  background-image: url("../data/content/assets/illustration-screenshots@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-screenshots@2x.png"); }
 
 .onboardingMessageImage.gift {
-  background-image: url("../data/content/assets/illustration-gift@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-gift@2x.png"); }
 
 .onboardingMessageImage.sync {
-  background-image: url("../data/content/assets/illustration-sync@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-sync@2x.png"); }
 
 .onboardingMessageImage.devices {
-  background-image: url("../data/content/assets/trailhead/card-illo-devices.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-devices.svg"); }
 
 .onboardingMessageImage.fbcont {
-  background-image: url("../data/content/assets/trailhead/card-illo-fbcont.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-fbcont.svg"); }
 
 .onboardingMessageImage.import {
-  background-image: url("../data/content/assets/trailhead/card-illo-import.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-import.svg"); }
 
 .onboardingMessageImage.ffmonitor {
-  background-image: url("../data/content/assets/trailhead/card-illo-ffmonitor.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-ffmonitor.svg"); }
 
 .onboardingMessageImage.ffsend {
-  background-image: url("../data/content/assets/trailhead/card-illo-ffsend.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-ffsend.svg"); }
 
 .onboardingMessageImage.lockwise {
-  background-image: url("../data/content/assets/trailhead/card-illo-lockwise.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-lockwise.svg"); }
 
 .onboardingMessageImage.mobile {
-  background-image: url("../data/content/assets/trailhead/card-illo-mobile.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-mobile.svg"); }
 
 .onboardingMessageImage.pledge {
-  background-image: url("../data/content/assets/trailhead/card-illo-pledge.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-pledge.svg"); }
 
 .onboardingMessageImage.pocket {
-  background-image: url("../data/content/assets/trailhead/card-illo-pocket.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-pocket.svg"); }
 
 .onboardingMessageImage.private {
-  background-image: url("../data/content/assets/trailhead/card-illo-private.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-private.svg"); }
 
 .onboardingMessageImage.sendtab {
-  background-image: url("../data/content/assets/trailhead/card-illo-sendtab.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-sendtab.svg"); }
 
 .onboardingMessageImage.tracking {
-  background-image: url("../data/content/assets/trailhead/card-illo-tracking.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-tracking.svg"); }
 
 .onboardingMessage {
   height: 340px;
@@ -4305,7 +4305,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       background-color: #054096; }
 
 .trailhead {
-  background: url("../data/content/assets/trailhead/accounts-form-bg.jpg") bottom/cover;
+  background: url("chrome://activity-stream/content/data/content/assets/trailhead/accounts-form-bg.jpg") bottom/cover;
   color: #FFF;
   height: auto; }
   .trailhead a {
@@ -4332,7 +4332,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       .trailhead .trailheadContent .trailheadLearn {
         margin-inline-start: 74px; } }
   .trailhead .trailhead-join-form {
-    background: url("../data/content/assets/trailhead/firefox-logo.png") top center/100px no-repeat;
+    background: url("chrome://activity-stream/content/data/content/assets/trailhead/firefox-logo.png") top center/100px no-repeat;
     color: #FFF;
     min-width: 260px;
     padding-top: 100px; }
@@ -4346,7 +4346,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     .trailhead.syncCohort .trailheadInner {
       grid-template-columns: 4fr 3fr; }
     .trailhead.syncCohort .trailheadContent .trailheadBenefits {
-      background: url("../data/content/assets/sync-devices-trailhead.svg");
+      background: url("chrome://activity-stream/content/data/content/assets/sync-devices-trailhead.svg");
       background-position: center center;
       background-repeat: no-repeat;
       background-size: contain;
@@ -4373,13 +4373,13 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       .trailhead .trailheadBenefits li:dir(rtl) {
         background-position-x: right; }
       .trailhead .trailheadBenefits li.knowledge, .trailhead .trailheadBenefits li.monitor {
-        background-image: url("../data/content/assets/trailhead/benefit-knowledge.png"); }
+        background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/benefit-knowledge.png"); }
       .trailhead .trailheadBenefits li.lockwise, .trailhead .trailheadBenefits li.privacy {
-        background-image: url("../data/content/assets/trailhead/benefit-privacy.png"); }
+        background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/benefit-privacy.png"); }
       .trailhead .trailheadBenefits li.products {
-        background-image: url("../data/content/assets/trailhead/benefit-products.png"); }
+        background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/benefit-products.png"); }
       .trailhead .trailheadBenefits li.sync {
-        background-image: url("../data/content/assets/trailhead/benefit-sync.png"); }
+        background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/benefit-sync.png"); }
     .trailhead .trailheadBenefits h2 {
       text-align: start;
       line-height: inherit;
@@ -4659,7 +4659,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     .fullpage-wrapper .fullpage-left-section .fx-systems-icons {
       height: 33px;
       display: block;
-      background-image: url("../data/content/assets/trailhead/firefox-systems.png");
+      background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/firefox-systems.png");
       margin-bottom: 20px; }
   .fullpage-wrapper .fullpage-form {
     position: relative;

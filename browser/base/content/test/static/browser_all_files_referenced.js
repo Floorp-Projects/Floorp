@@ -34,10 +34,10 @@ var gExceptionPaths = [
   "resource://payments/",
 
   // https://github.com/mozilla/activity-stream/issues/3053
-  "resource://activity-stream/data/content/tippytop/images/",
-  "resource://activity-stream/data/content/tippytop/favicons/",
+  "chrome://activity-stream/content/data/content/tippytop/images/",
+  "chrome://activity-stream/content/data/content/tippytop/favicons/",
   // These resources are referenced by messages delivered through Remote Settings
-  "resource://activity-stream/data/content/assets/remote/",
+  "chrome://activity-stream/content/data/content/assets/remote/",
 
   // browser/extensions/pdfjs/content/build/pdf.js#1999
   "resource://pdf.js/web/images/",

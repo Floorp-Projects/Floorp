@@ -108,7 +108,7 @@
     }
 
     content: ' ';
-    mask: url('#{$image-path}glyph-caret-right.svg') 0 -8px no-repeat;
+    mask: url('chrome://activity-stream/content/data/content/assets/glyph-caret-right.svg') 0 -8px no-repeat;
     background-color: $blue-60;
     margin: 0 0 0 4px;
     width: 5px;

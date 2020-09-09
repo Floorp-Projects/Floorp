@@ -300,7 +300,7 @@ add_task(async function test_topSites_newtab_visits_favicons() {
     return sites && sites[1] && sites[1].url == "http://example-1.com/";
   });
 
-  let base = "resource://activity-stream/data/content/tippytop/images/";
+  let base = "chrome://activity-stream/content/data/content/tippytop/images/";
 
   let expectedResults = [
     {
@@ -395,7 +395,7 @@ add_task(async function test_topSites_newtab_visits_favicons_limit() {
       url: "https://amazon.com",
       title: "@amazon",
       favicon: await makeDataURI(
-        "resource://activity-stream/data/content/tippytop/images/amazon@2x.png"
+        "chrome://activity-stream/content/data/content/tippytop/images/amazon@2x.png"
       ),
     },
     {

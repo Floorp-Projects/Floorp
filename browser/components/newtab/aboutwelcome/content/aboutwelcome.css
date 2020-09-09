@@ -26,55 +26,55 @@ input {
   display: none !important; }
 
 .onboardingMessageImage.addons {
-  background-image: url("../data/content/assets/illustration-addons@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-addons@2x.png"); }
 
 .onboardingMessageImage.privatebrowsing {
-  background-image: url("../data/content/assets/illustration-privatebrowsing@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-privatebrowsing@2x.png"); }
 
 .onboardingMessageImage.screenshots {
-  background-image: url("../data/content/assets/illustration-screenshots@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-screenshots@2x.png"); }
 
 .onboardingMessageImage.gift {
-  background-image: url("../data/content/assets/illustration-gift@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-gift@2x.png"); }
 
 .onboardingMessageImage.sync {
-  background-image: url("../data/content/assets/illustration-sync@2x.png"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/illustration-sync@2x.png"); }
 
 .onboardingMessageImage.devices {
-  background-image: url("../data/content/assets/trailhead/card-illo-devices.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-devices.svg"); }
 
 .onboardingMessageImage.fbcont {
-  background-image: url("../data/content/assets/trailhead/card-illo-fbcont.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-fbcont.svg"); }
 
 .onboardingMessageImage.import {
-  background-image: url("../data/content/assets/trailhead/card-illo-import.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-import.svg"); }
 
 .onboardingMessageImage.ffmonitor {
-  background-image: url("../data/content/assets/trailhead/card-illo-ffmonitor.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-ffmonitor.svg"); }
 
 .onboardingMessageImage.ffsend {
-  background-image: url("../data/content/assets/trailhead/card-illo-ffsend.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-ffsend.svg"); }
 
 .onboardingMessageImage.lockwise {
-  background-image: url("../data/content/assets/trailhead/card-illo-lockwise.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-lockwise.svg"); }
 
 .onboardingMessageImage.mobile {
-  background-image: url("../data/content/assets/trailhead/card-illo-mobile.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-mobile.svg"); }
 
 .onboardingMessageImage.pledge {
-  background-image: url("../data/content/assets/trailhead/card-illo-pledge.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-pledge.svg"); }
 
 .onboardingMessageImage.pocket {
-  background-image: url("../data/content/assets/trailhead/card-illo-pocket.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-pocket.svg"); }
 
 .onboardingMessageImage.private {
-  background-image: url("../data/content/assets/trailhead/card-illo-private.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-private.svg"); }
 
 .onboardingMessageImage.sendtab {
-  background-image: url("../data/content/assets/trailhead/card-illo-sendtab.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-sendtab.svg"); }
 
 .onboardingMessageImage.tracking {
-  background-image: url("../data/content/assets/trailhead/card-illo-tracking.svg"); }
+  background-image: url("chrome://activity-stream/content/data/content/assets/trailhead/card-illo-tracking.svg"); }
 
 html {
   height: 100%; }
@@ -294,9 +294,9 @@ body {
     left: 0;
     z-index: -1; }
   .multistageContainer .welcomeZap .zap.short::after {
-    background-image: url("../data/content/assets/short-zap.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/short-zap.svg"); }
   .multistageContainer .welcomeZap .zap.long::after {
-    background-image: url("../data/content/assets/long-zap.svg"); }
+    background-image: url("chrome://activity-stream/content/data/content/assets/long-zap.svg"); }
   .multistageContainer .welcome-text {
     display: flex;
     flex-direction: column;
@@ -460,7 +460,7 @@ body {
         width: 800px;
         margin: 0; }
         .multistageContainer .tiles-media-section.privacy {
-          background: top no-repeat url("../data/content/assets/firefox-protections.svg"); }
+          background: top no-repeat url("chrome://activity-stream/content/data/content/assets/firefox-protections.svg"); }
         .multistageContainer .tiles-media-section .media {
           opacity: 0; } }
   .multistageContainer button {
