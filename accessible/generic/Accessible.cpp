@@ -1083,6 +1083,15 @@ already_AddRefed<nsIPersistentProperties> Accessible::NativeAttributes() {
   styleInfo.MarginBottom(value);
   nsAccUtils::SetAccAttr(attributes, nsGkAtoms::marginBottom, value);
 
+  // Expose data-at-shortcutkeys attribute for web applications and virtual
+  // cursors. Currently mostly used by JAWS.
+  nsAutoString atShortcutKeys;
+  if (mContent->AsElement()->GetAttr(
+          kNameSpaceID_None, nsGkAtoms::dataAtShortcutkeys, atShortcutKeys)) {
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::dataAtShortcutkeys,
+                           atShortcutKeys);
+  }
+
   return attributes.forget();
 }
 
