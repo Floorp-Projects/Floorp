@@ -108,7 +108,7 @@ class MozillaSocorroService(
         packageInfo?.let {
             if (versionName == DEFAULT_VERSION_NAME) {
                 try {
-                    versionName = packageInfo.versionName
+                    versionName = packageInfo.versionName ?: DEFAULT_VERSION_NAME
                 } catch (e: IllegalStateException) {
                     logger.error("failed to get application version")
                 }

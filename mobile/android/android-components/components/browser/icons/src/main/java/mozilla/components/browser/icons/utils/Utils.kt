@@ -15,7 +15,7 @@ internal fun List<Pair<Int, Int>>.findBestSize(targetSize: Int, maxSize: Int, ma
         x >= targetSize && y >= targetSize && x <= maxSize && y <= maxSize
     }.filter { (x, y) ->
         x == y
-    }.minBy { (x, _) ->
+    }.minByOrNull { (x, _) ->
         x
     }
 
@@ -33,7 +33,7 @@ internal fun List<Pair<Int, Int>>.findBestSize(targetSize: Int, maxSize: Int, ma
             downScaledY >= targetSize &&
             downScaledX <= maxSize &&
             downScaledY <= maxSize
-    }.minBy { (x, _) ->
+    }.minByOrNull { (x, _) ->
         x
     }
 
@@ -51,7 +51,7 @@ internal fun List<Pair<Int, Int>>.findBestSize(targetSize: Int, maxSize: Int, ma
             upscaledY >= targetSize &&
             upscaledX <= maxSize &&
             upscaledY <= maxSize
-    }.maxBy { (x, _) ->
+    }.maxByOrNull { (x, _) ->
         x
     }
 

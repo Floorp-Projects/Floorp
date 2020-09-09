@@ -14,7 +14,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
-import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -53,7 +52,7 @@ class CrashApplication : Application() {
         ).install(this)
 
         // Initialize Glean for recording by the GleanCrashReporterService
-        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() as Client })
+        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
         val config = Configuration(httpClient = httpClient)
         Glean.initialize(applicationContext, uploadEnabled = true, configuration = config)
     }

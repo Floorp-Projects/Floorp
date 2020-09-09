@@ -766,24 +766,6 @@ class ExperimentEvaluatorTest {
         assertEquals("3", e.selectBranchByWeight(6, branches).name)
     }
 
-    @Test(expected = AssertionError::class)
-    fun `test selectBranchByWeight() asserts upper out-of-bounds`() {
-        val branches = listOf(
-            Experiment.Branch("1", 2)
-        )
-        val evaluator = ExperimentEvaluator()
-        evaluator.selectBranchByWeight(2, branches)
-    }
-
-    @Test(expected = AssertionError::class)
-    fun `test selectBranchByWeight() asserts lower out-of-bounds`() {
-        val branches = listOf(
-            Experiment.Branch("1", 2)
-        )
-        val evaluator = ExperimentEvaluator()
-        evaluator.selectBranchByWeight(2, branches)
-    }
-
     @Test
     fun `test pickActiveBranch()`() {
         val e = ExperimentEvaluator()

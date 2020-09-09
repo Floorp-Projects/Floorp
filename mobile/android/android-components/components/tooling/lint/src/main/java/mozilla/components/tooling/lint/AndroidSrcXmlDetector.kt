@@ -9,7 +9,6 @@ import com.android.SdkConstants.FQCN_IMAGE_BUTTON
 import com.android.SdkConstants.FQCN_IMAGE_VIEW
 import com.android.SdkConstants.IMAGE_BUTTON
 import com.android.SdkConstants.IMAGE_VIEW
-import com.android.annotations.VisibleForTesting
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
@@ -18,6 +17,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
+import com.google.common.annotations.VisibleForTesting
 import org.w3c.dom.Element
 
 /**

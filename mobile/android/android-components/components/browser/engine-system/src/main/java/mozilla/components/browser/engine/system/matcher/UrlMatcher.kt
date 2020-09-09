@@ -215,7 +215,7 @@ class UrlMatcher {
                 jsonReader -> loadCategories(jsonReader, categoryMap)
             }
 
-            var whiteList: WhiteList? = null
+            var whiteList: WhiteList?
             JsonReader(white).use { jsonReader -> whiteList = WhiteList.fromJson(jsonReader) }
             return UrlMatcher(enabledCategories, supportedCategories, categoryMap, whiteList)
         }
