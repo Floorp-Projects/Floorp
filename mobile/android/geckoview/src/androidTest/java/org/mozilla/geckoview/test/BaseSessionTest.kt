@@ -156,6 +156,12 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun GeckoSession.waitUntilCalled(callback: Any) =
             sessionRule.waitUntilCalled(this, callback)
 
+    fun GeckoSession.addDisplay(x: Int, y: Int) =
+            sessionRule.addDisplay(this, x, y)
+
+    fun GeckoSession.releaseDisplay() =
+            sessionRule.releaseDisplay(this)
+
     fun GeckoSession.forCallbacksDuringWait(callback: Any) =
             sessionRule.forCallbacksDuringWait(this, callback)
 
