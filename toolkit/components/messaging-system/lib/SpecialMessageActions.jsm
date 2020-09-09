@@ -80,6 +80,77 @@ const SpecialMessageActions = {
   },
 
   /**
+   * Reset browser homepage and newtab to default with a certain section configuration
+   *
+   * @param {"default"|null} home Value to set for browser homepage
+   * @param {"default"|null} newtab Value to set for browser newtab
+   * @param {obj} layout Configuration options for newtab sections
+   * @returns {undefined}
+   */
+  configureHomepage({ homePage = null, newtab = null, layout = null }) {
+    // Homepage can be default, blank or a custom url
+    if (homePage === "default") {
+      Services.prefs.clearUserPref("browser.startup.homepage");
+    }
+    // Newtab page can only be default or blank
+    if (newtab === "default") {
+      Services.prefs.clearUserPref("browser.newtabpage.enabled");
+    }
+    if (layout) {
+      // Existing prefs that interact with the newtab page layout, we default to true
+      // or payload configuration
+      let newtabConfigurations = [
+        [
+          // controls the search bar
+          "browser.newtabpage.activity-stream.showSearch",
+          layout.search,
+        ],
+        [
+          // controls the topsites
+          "browser.newtabpage.activity-stream.feeds.topsites",
+          layout.topsites,
+          // User can control number of topsite rows
+          ["browser.newtabpage.activity-stream.topSitesRows"],
+        ],
+        [
+          // controls the highlights section
+          "browser.newtabpage.activity-stream.feeds.section.highlights",
+          layout.highlights,
+          // User can control number of rows and highlight sources
+          [
+            "browser.newtabpage.activity-stream.section.highlights.rows",
+            "browser.newtabpage.activity-stream.section.highlights.includeVisited",
+            "browser.newtabpage.activity-stream.section.highlights.includePocket",
+            "browser.newtabpage.activity-stream.section.highlights.includeDownloads",
+            "browser.newtabpage.activity-stream.section.highlights.includeBookmarks",
+          ],
+        ],
+        [
+          // controls the snippets section
+          "browser.newtabpage.activity-stream.feeds.snippets",
+          layout.snippets,
+        ],
+        [
+          // controls the topstories section
+          "browser.newtabpage.activity-stream.feeds.system.topstories",
+          layout.topstories,
+        ],
+      ].filter(
+        // If a section has configs that the user changed we will skip that section
+        ([, , sectionConfigs]) =>
+          !sectionConfigs ||
+          sectionConfigs.every(
+            prefName => !Services.prefs.prefHasUserValue(prefName)
+          )
+      );
+
+      for (let [prefName, prefValue] of newtabConfigurations) {
+        Services.prefs.setBoolPref(prefName, prefValue);
+      }
+    }
+  },
+
+  /**
    * Processes "Special Message Actions", which are definitions of behaviors such as opening tabs
    * installing add-ons, or focusing the awesome bar that are allowed to can be triggered from
    * Messaging System interactions.
@@ -200,6 +271,9 @@ const SpecialMessageActions = {
       case "CANCEL":
         // A no-op used by CFRs that minimizes the notification but does not
         // trigger a dismiss or block (it keeps the notification around)
+        break;
+      case "CONFIGURE_HOMEPAGE":
+        this.configureHomepage(action.data);
         break;
       default:
         throw new Error(

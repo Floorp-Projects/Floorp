@@ -9,14 +9,10 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "DISABLE_STP_DOORHANGERS"
-              ]
+              "enum": ["DISABLE_STP_DOORHANGERS"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Disables all STP doorhangers."
         },
@@ -31,22 +27,15 @@
                   "description": "The element to highlight"
                 }
               },
-              "required": [
-                "args"
-              ],
+              "required": ["args"],
               "additionalProperties": false
             },
             "type": {
               "type": "string",
-              "enum": [
-                "HIGHLIGHT_FEATURE"
-              ]
+              "enum": ["HIGHLIGHT_FEATURE"]
             }
           },
-          "required": [
-            "data",
-            "type"
-          ],
+          "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Highlights an element, such as a menu item"
         },
@@ -63,23 +52,15 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "telemetrySource",
-                "url"
-              ],
+              "required": ["telemetrySource", "url"],
               "additionalProperties": false
             },
             "type": {
               "type": "string",
-              "enum": [
-                "INSTALL_ADDON_FROM_URL"
-              ]
+              "enum": ["INSTALL_ADDON_FROM_URL"]
             }
           },
-          "required": [
-            "data",
-            "type"
-          ],
+          "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Install an add-on from AMO"
         },
@@ -95,13 +76,7 @@
                 },
                 "where": {
                   "type": "string",
-                  "enum": [
-                    "current",
-                    "save",
-                    "tab",
-                    "tabshifted",
-                    "window"
-                  ],
+                  "enum": ["current", "save", "tab", "tabshifted", "window"],
                   "description": "Where the URL is opened",
                   "default": "tab"
                 },
@@ -110,24 +85,15 @@
                   "description": "Any optional entrypoint value that will be added to the search. E.g. \"foo=bar\" would result in about:welcome?foo=bar'"
                 }
               },
-              "required": [
-                "args",
-                "where",
-                "entrypoint"
-              ],
+              "required": ["args", "where", "entrypoint"],
               "additionalProperties": false
             },
             "type": {
               "type": "string",
-              "enum": [
-                "OPEN_ABOUT_PAGE"
-              ]
+              "enum": ["OPEN_ABOUT_PAGE"]
             }
           },
-          "required": [
-            "data",
-            "type"
-          ],
+          "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Opens an about: page in Firefox"
         },
@@ -142,22 +108,15 @@
                   "description": "The menu name, e.g. \"appMenu\""
                 }
               },
-              "required": [
-                "args"
-              ],
+              "required": ["args"],
               "additionalProperties": false
             },
             "type": {
               "type": "string",
-              "enum": [
-                "OPEN_APPLICATIONS_MENU"
-              ]
+              "enum": ["OPEN_APPLICATIONS_MENU"]
             }
           },
-          "required": [
-            "data",
-            "type"
-          ],
+          "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Opens an application menu"
         },
@@ -166,14 +125,10 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "OPEN_AWESOME_BAR"
-              ]
+              "enum": ["OPEN_AWESOME_BAR"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Focuses and expands the awesome bar"
         },
@@ -192,22 +147,15 @@
                   "description": "Add a queryparam for metrics"
                 }
               },
-              "required": [
-                "category"
-              ],
+              "required": ["category"],
               "additionalProperties": false
             },
             "type": {
               "type": "string",
-              "enum": [
-                "OPEN_PREFERENCES_PAGE"
-              ]
+              "enum": ["OPEN_PREFERENCES_PAGE"]
             }
           },
-          "required": [
-            "data",
-            "type"
-          ],
+          "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Opens a preference page"
         },
@@ -216,14 +164,10 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "OPEN_PRIVATE_BROWSER_WINDOW"
-              ]
+              "enum": ["OPEN_PRIVATE_BROWSER_WINDOW"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Opens a private browsing window."
         },
@@ -232,14 +176,10 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "OPEN_PROTECTION_PANEL"
-              ]
+              "enum": ["OPEN_PROTECTION_PANEL"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Opens the protections panel"
         },
@@ -248,14 +188,10 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "OPEN_PROTECTION_REPORT"
-              ]
+              "enum": ["OPEN_PROTECTION_REPORT"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Opens the protections panel report"
         },
@@ -271,34 +207,20 @@
                 },
                 "where": {
                   "type": "string",
-                  "enum": [
-                    "current",
-                    "save",
-                    "tab",
-                    "tabshifted",
-                    "window"
-                  ],
+                  "enum": ["current", "save", "tab", "tabshifted", "window"],
                   "description": "Where the URL is opened",
                   "default": "tab"
                 }
               },
-              "required": [
-                "args",
-                "where"
-              ],
+              "required": ["args", "where"],
               "additionalProperties": false
             },
             "type": {
               "type": "string",
-              "enum": [
-                "OPEN_URL"
-              ]
+              "enum": ["OPEN_URL"]
             }
           },
-          "required": [
-            "data",
-            "type"
-          ],
+          "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Opens given URL"
         },
@@ -307,14 +229,10 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "PIN_CURRENT_TAB"
-              ]
+              "enum": ["PIN_CURRENT_TAB"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Pin the current tab"
         },
@@ -323,9 +241,7 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "SHOW_FIREFOX_ACCOUNTS"
-              ]
+              "enum": ["SHOW_FIREFOX_ACCOUNTS"]
             },
             "data": {
               "type": "object",
@@ -339,16 +255,11 @@
                   "description": "Any extra parameter that will be added to the FXA URL. E.g. {foo: bar} would result in <FXA_url>?foo=bar'"
                 }
               },
-              "required": [
-                "entrypoint"
-              ],
+              "required": ["entrypoint"],
               "additionalProperties": false
             }
           },
-          "required": [
-            "type",
-            "data"
-          ],
+          "required": ["type", "data"],
           "additionalProperties": false,
           "description": "Show Firefox Accounts"
         },
@@ -357,14 +268,10 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "SHOW_MIGRATION_WIZARD"
-              ]
+              "enum": ["SHOW_MIGRATION_WIZARD"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Shows the Migration Wizard to import data from another Browser. See https://support.mozilla.org/en-US/kb/import-data-another-browser\""
         },
@@ -373,14 +280,10 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "CANCEL"
-              ]
+              "enum": ["CANCEL"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Minimize the CFR doorhanger back into the URLbar"
         },
@@ -389,14 +292,10 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "ACCEPT_DOH"
-              ]
+              "enum": ["ACCEPT_DOH"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Accept DOH doorhanger notification"
         },
@@ -405,16 +304,69 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": [
-                "DISABLE_DOH"
-              ]
+              "enum": ["DISABLE_DOH"]
             }
           },
-          "required": [
-            "type"
-          ],
+          "required": ["type"],
           "additionalProperties": false,
           "description": "Dismiss DOH doorhanger notification"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "homePage": {
+                  "type": "string",
+                  "description": "Should reset homepage pref",
+                  "enum": ["default"]
+                },
+                "newtab": {
+                  "type": "string",
+                  "enum": ["default"],
+                  "description": "Should reset newtab pref"
+                },
+                "layout": {
+                  "type": "object",
+                  "description": "Section name and boolean value that specifies if the section should be on or off.",
+                  "properties": {
+                    "search": {
+                      "type": "boolean"
+                    },
+                    "topsites": {
+                      "type": "boolean"
+                    },
+                    "highlights": {
+                      "type": "boolean"
+                    },
+                    "snippets": {
+                      "type": "boolean"
+                    },
+                    "topstories": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "search",
+                    "topsites",
+                    "highlights",
+                    "snippets",
+                    "topstories"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": ["CONFIGURE_HOMEPAGE"]
+            }
+          },
+          "required": ["data", "type"],
+          "additionalProperties": false,
+          "description": "Resets homepage pref and sections layout"
         }
       ]
     }
