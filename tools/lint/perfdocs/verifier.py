@@ -210,7 +210,7 @@ class Verifier(object):
             Recompute the description in case it's a file.
             """
             desc_path = os.path.join(self.workspace_dir, desc)
-            if os.path.exists(desc_path):
+            if os.path.exists(desc_path) and os.path.isfile(desc_path):
                 with open(desc_path, "r") as f:
                     desc = f.readlines()
             return desc

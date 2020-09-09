@@ -58,19 +58,6 @@ class Generator(object):
             }
         """
 
-        def _append_rst_section(title, content, documentation, type=None):
-            """
-            Adds a section to the documentation with the title as the type mentioned
-            and paragraph as content mentioned.
-            :param title: title of the section
-            :param content: content of section paragraph
-            :param documentation: documentation object to add section to
-            :param type: type of the title heading
-            """
-            heading_map = {"H4": "-", "H5": "^"}
-            heading_symbol = heading_map.get(type, "-")
-            documentation.extend([title, heading_symbol * len(title), content, ""])
-
         # Using the verified `perfdocs_tree`, build up the documentation.
         frameworks_info = {}
         for framework in self._perfdocs_tree:
@@ -86,13 +73,13 @@ class Generator(object):
             for suite_name in sorted(suites.keys()):
                 suite_info = suites[suite_name]
 
-                # Add the suite with an H4 heading
-                _append_rst_section(
-                    suite_name.capitalize(),
-                    suite_info["description"],
-                    documentation,
-                    type="H4",
+                # Add the suite section
+                documentation.extend(
+                    self._verifier._gatherer.framework_gatherers[
+                        yaml_content["name"]
+                    ].build_suite_section(suite_name, suite_info["description"])
                 )
+
                 tests = suite_info.get("tests", {})
                 for test_name in sorted(tests.keys()):
                     documentation.extend(

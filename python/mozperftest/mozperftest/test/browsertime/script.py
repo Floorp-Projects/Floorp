@@ -95,7 +95,7 @@ class ScriptInfo(defaultdict):
 
     def __str__(self):
         """Used to generate docs."""
-        d = {}
+        d = defaultdict(lambda: "N/A")
         for field, value in self.items():
             if field == "filename":
                 d[field] = self.script.name
@@ -108,7 +108,7 @@ class ScriptInfo(defaultdict):
                 value = ", ".join(value)
             d[field] = value
 
-        d["filename_underline"] = "-" * len(d["filename"])
+        d["filename_underline"] = "=" * len(d["filename"])
         return _INFO % d
 
     def __missing__(self, key):

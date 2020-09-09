@@ -4,5 +4,31 @@
 ---
 name: mozperftest
 manifest: None
-static-only: True
-suites: {}
+static-only: False
+suites:
+    netwerk/test/perf:
+        description: "Performance tests from the 'network/test/perf' folder."
+        tests:
+            youtube-scroll: ""
+            facebook-scroll: ""
+            cloudflare: ""
+            g-search: ""
+            g-image: ""
+            lq-fetch: ""
+            youtube-noscroll: ""
+    testing/performance:
+        description: "Performance tests from the 'testing/performance' folder."
+        tests:
+            Politico Link: ""
+            BBC Link: ""
+            JSConf (cold): ""
+            VIEW: ""
+            main: ""
+            Facebook: ""
+            YouTube Link: ""
+            pageload: ""
+            JSConf (warm): ""
+    browser/base/content/test:
+        description: "Performance tests from the 'browser/base/content/test' folder."
+        tests:
+            Dom-size: ""
