@@ -42,10 +42,13 @@ async function* runTests() {
   yield;
 
   function testScrollCommand(cmd, expectTop) {
-    // http://dev.w3.org/csswg/cssom-view/#dom-element-getboundingclientrect
-    // doesn't explicitly rule out -0 here, but for now assume that only
-    // positive zeroes are permitted.
-    is(root.getBoundingClientRect().top, -expectTop + 0, cmd);
+    const { top } = root.getBoundingClientRect();
+
+    // XXX(krosylight): Android scrolls slightly more inside
+    // geckoview-test-verify-e10s CI job
+    const isAndroid = SpecialPowers.Services.appinfo.widgetToolkit == "android";
+    const delta = isAndroid ? .134 : 0;
+    isfuzzy(top, -expectTop, delta, cmd);
   }
 
   function testMoveCommand(cmd, expectNode, expectOffset) {
