@@ -241,12 +241,8 @@ nsresult HttpConnectionMgrParent::VerifyTraffic() {
   return NS_OK;
 }
 
-void HttpConnectionMgrParent::ExcludeHttp2(const nsHttpConnectionInfo* ci) {
-  MOZ_ASSERT_UNREACHABLE("ExcludeHttp2 should not be called");
-}
-
-void HttpConnectionMgrParent::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
-  MOZ_ASSERT_UNREACHABLE("ExcludeHttp3 should not be called");
+void HttpConnectionMgrParent::BlacklistSpdy(const nsHttpConnectionInfo* ci) {
+  MOZ_ASSERT_UNREACHABLE("BlacklistSpdy should not be called");
 }
 
 nsresult HttpConnectionMgrParent::ClearConnectionHistory() {

@@ -316,7 +316,7 @@ nsHttpHandler::nsHttpHandler()
       mNextChannelId(1),
       mLastActiveTabLoadOptimizationLock(
           "nsHttpConnectionMgr::LastActiveTabLoadOptimization"),
-      mHttpExclusionLock("nsHttpHandler::HttpExclusion"),
+      mSpdyBlacklistLock("nsHttpHandler::SpdyBlacklist"),
       mThroughCaptivePortal(false) {
   LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
@@ -2796,34 +2796,19 @@ bool nsHttpHandler::IsBeforeLastActiveTabLoadOptimization(
          when <= mLastActiveTabLoadOptimizationHit;
 }
 
-void nsHttpHandler::ExcludeHttp2(const nsHttpConnectionInfo* ci) {
+void nsHttpHandler::BlacklistSpdy(const nsHttpConnectionInfo* ci) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  mConnMgr->ExcludeHttp2(ci);
-  if (!mExcludedHttp2Origins.Contains(ci->GetOrigin())) {
-    MutexAutoLock lock(mHttpExclusionLock);
-    mExcludedHttp2Origins.PutEntry(ci->GetOrigin());
+  mConnMgr->BlacklistSpdy(ci);
+  if (!mBlacklistedSpdyOrigins.Contains(ci->GetOrigin())) {
+    MutexAutoLock lock(mSpdyBlacklistLock);
+    mBlacklistedSpdyOrigins.PutEntry(ci->GetOrigin());
   }
 }
 
-bool nsHttpHandler::IsHttp2Excluded(const nsHttpConnectionInfo* ci) {
-  MutexAutoLock lock(mHttpExclusionLock);
-  return mExcludedHttp2Origins.Contains(ci->GetOrigin());
-}
-
-void nsHttpHandler::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  mConnMgr->ExcludeHttp3(ci);
-  if (!mExcludedHttp3Origins.Contains(ci->GetOrigin())) {
-    MutexAutoLock lock(mHttpExclusionLock);
-    mExcludedHttp3Origins.PutEntry(ci->GetOrigin());
-  }
-}
-
-bool nsHttpHandler::IsHttp3Excluded(const nsHttpConnectionInfo* ci) {
-  MutexAutoLock lock(mHttpExclusionLock);
-  return mExcludedHttp3Origins.Contains(ci->GetOrigin());
+bool nsHttpHandler::IsSpdyBlacklisted(const nsHttpConnectionInfo* ci) {
+  MutexAutoLock lock(mSpdyBlacklistLock);
+  return mBlacklistedSpdyOrigins.Contains(ci->GetOrigin());
 }
 
 HttpTrafficAnalyzer* nsHttpHandler::GetHttpTrafficAnalyzer() {

@@ -3118,7 +3118,7 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
       // Don't allow any more h2 connections to this host
       RefPtr<nsHttpConnectionInfo> ci = ConnectionInfo();
       if (ci) {
-        gHttpHandler->ExcludeHttp2(ci);
+        gHttpHandler->BlacklistSpdy(ci);
       }
 
       // Go through and re-start all of our transactions with h2 disabled.
