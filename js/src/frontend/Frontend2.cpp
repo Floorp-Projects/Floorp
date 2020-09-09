@@ -580,6 +580,29 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
 }
 
 /* static */
+UniquePtr<CompilationInfo> Smoosh::compileGlobalScriptToStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<Utf8Unit>& srcBuf, bool* unimplemented) {
+  Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(
+      cx, js_new<frontend::CompilationInfo>(cx, options));
+  if (!compilationInfo) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  if (!compilationInfo.get()->input.initForGlobal(cx)) {
+    return nullptr;
+  }
+
+  if (!compileGlobalScriptToStencil(cx, *compilationInfo.get().get(), srcBuf,
+                                    unimplemented)) {
+    return nullptr;
+  }
+
+  return std::move(compilationInfo.get());
+}
+
+/* static */
 bool Smoosh::compileGlobalScript(JSContext* cx,
                                  CompilationInfo& compilationInfo,
                                  JS::SourceText<Utf8Unit>& srcBuf,
