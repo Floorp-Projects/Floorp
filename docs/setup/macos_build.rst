@@ -198,21 +198,6 @@ Once you have Homebrew installed, you'll need to run the following:
 
     brew install yasm mercurial gawk ccache python
 
-You will also need Autoconf 2.13, but the core Homebrew repository will
-install a newer version by default, so you need to specify the version
-when installing it:
-
-.. code-block:: shell
-
-    brew install autoconf@2.13
-
-If you get errors trying to build, it means you have another version of
-Autoconf installed and used as default. To use Autoconf 2.13, run:
-
-.. code-block:: shell
-
-    brew link --overwrite autoconf@2.13
-
 Python 2 is never necessary solely to build Firefox, but it is still required
 for some development tasks (including testing and pushing to ``try``). If your
 system does not already have a Python 2 installed, you can use ``brew`` to
@@ -251,7 +236,7 @@ Use MacPorts to install the packages needed for building Firefox:
 
 .. code::
 
-    sudo port install libidl autoconf213 yasm python27 py27-gnureadline
+    sudo port install libidl yasm python27 py27-gnureadline
 
 You'll then see lots of output as MacPorts builds and installs these
 packages and their dependencies -- it takes a while, so go grab a cup of
@@ -370,13 +355,6 @@ installed Clang 9 via Homebrew, then you need to have this in your
 
     CC=clang-9
     CXX=clang++-9
-
-If you installed Autoconf 2.13 with the Homebrew recipe linked above,
-you may need to add the following to your ``mozconfig``:
-
-.. code::
-
-    mk_add_options AUTOCONF=/usr/local/Cellar/autoconf@2.13/2.13/bin/autoconf213
 
 5. Build
 ~~~~~~~~

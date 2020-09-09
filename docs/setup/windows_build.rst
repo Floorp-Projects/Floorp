@@ -218,7 +218,7 @@ Overview
 The Mozilla build process requires many tools that are not pre-installed
 on most Windows systems. In addition to Visual Studio, install
 MozillaBuild - a software bundle that includes the required versions of
-bash, GNU make, autoconf, Mercurial, and much more.
+bash, GNU make, Mercurial, and much more.
 
 Firefox 61+ require Visual Studio 2017 Update 6 or newer to build.
 
@@ -306,9 +306,8 @@ MozillaBuild
 
 The MozillaBuild package contains other software prerequisites necessary
 for building Mozilla, including the MSYS build environment,
-`Mercurial <https://www.mercurial-scm.org/>`_, autoconf-2.13, CVS,
-Python, YASM, NSIS, and UPX, as well as optional but useful tools such
-as wget and emacs.
+`Mercurial <https://www.mercurial-scm.org/>`_, CVS, Python, YASM, NSIS, and UPX,
+as well as optional but useful tools such as wget and emacs.
 
 `Download the current MozillaBuild
 package. <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`_
