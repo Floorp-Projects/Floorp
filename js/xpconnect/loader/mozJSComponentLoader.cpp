@@ -261,7 +261,6 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
   }
 
   const nsACString& Key() { return mLocation; }
-  nsresult EnsureKey() { return NS_OK; }
 
   MOZ_MUST_USE nsresult GetLocation(nsCString& aLocation) {
     nsresult rv = EnsureURI();
@@ -978,9 +977,6 @@ nsresult mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
   }
 
   ComponentLoaderInfo info(aLocation);
-  rv = info.EnsureKey();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   *retval = !!mImports.Get(info.Key());
   return NS_OK;
 }
@@ -1008,8 +1004,6 @@ nsresult mozJSComponentLoader::GetModuleImportStack(const nsACString& aLocation,
   MOZ_ASSERT(mInitialized);
 
   ComponentLoaderInfo info(aLocation);
-  nsresult rv = info.EnsureKey();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   ModuleEntry* mod;
   if (!mImports.Get(info.Key(), &mod)) {
@@ -1230,9 +1224,6 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
 
   ComponentLoaderInfo info(aLocation);
 
-  rv = info.EnsureKey();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   ModuleEntry* mod;
   UniquePtr<ModuleEntry> newEntry;
   if (!mImports.Get(info.Key(), &mod) &&
@@ -1337,15 +1328,12 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
 }
 
 nsresult mozJSComponentLoader::Unload(const nsACString& aLocation) {
-  nsresult rv;
-
   if (!mInitialized) {
     return NS_OK;
   }
 
   ComponentLoaderInfo info(aLocation);
-  rv = info.EnsureKey();
-  NS_ENSURE_SUCCESS(rv, rv);
+
   ModuleEntry* mod;
   if (mImports.Get(info.Key(), &mod)) {
     mLocations.Remove(mod->resolvedURL);
