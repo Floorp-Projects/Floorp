@@ -1095,7 +1095,7 @@ pref("javascript.options.wasm_baselinejit",       true);
 // compilation, and Ion is not available.
 // On every other tier-1 platform, Ion is the default, and Cranelift is
 // disabled.
-#ifdef _ARM64_
+#ifdef MOZ_AARCH64
   #ifdef ENABLE_WASM_CRANELIFT
     pref("javascript.options.wasm_cranelift",     true);
   #endif
