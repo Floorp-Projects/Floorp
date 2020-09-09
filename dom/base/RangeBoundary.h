@@ -124,6 +124,16 @@ class RangeBoundaryBase {
     if (NS_WARN_IF(!mParent) || NS_WARN_IF(!mParent->IsContainerNode())) {
       return nullptr;
     }
+    if (!mRef) {
+      MOZ_ASSERT(*Offset(OffsetFilter::kValidOffsets) == 0,
+                 "invalid RangeBoundary");
+      nsIContent* firstChild = mParent->GetFirstChild();
+      if (NS_WARN_IF(!firstChild)) {
+        // Already referring the end of the container.
+        return nullptr;
+      }
+      return firstChild->GetNextSibling();
+    }
     if (NS_WARN_IF(!mRef->GetNextSibling())) {
       // Already referring the end of the container.
       return nullptr;
