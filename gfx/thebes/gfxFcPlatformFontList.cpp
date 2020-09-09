@@ -1576,7 +1576,13 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
   using FaceInitArray = nsTArray<fontlist::Face::InitData>;
   nsClassHashtable<nsCStringHashKey, FaceInitArray> faces;
 
-  auto addPattern = [this, &families, &faces](
+  // Do we need to work around the fontconfig FcNameParse/FcNameUnparse bug
+  // (present in versions between 2.10.94 and 2.11.1 inclusive)? See comment
+  // in InitFontListForPlatform for details.
+  int fcVersion = FcGetVersion();
+  bool fcCharsetParseBug = fcVersion >= 21094 && fcVersion <= 21101;
+
+  auto addPattern = [this, fcCharsetParseBug, &families, &faces](
                         FcPattern* aPattern, FcChar8*& aLastFamilyName,
                         nsCString& aFamilyName, bool aAppFont) -> void {
     // get canonical name
@@ -1617,6 +1623,15 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
     char* s = (char*)FcNameUnparse(aPattern);
     nsAutoCString descriptor(s);
     free(s);
+
+    if (fcCharsetParseBug) {
+      // Escape any leading space in charset to work around FcNameParse bug.
+      int32_t index = descriptor.Find(":charset= ");
+      if (index != kNotFound) {
+        // insert backslash after the =, before the space
+        descriptor.Insert('\\', index + 9);
+      }
+    }
 
     WeightRange weight(FontWeight::Normal());
     StretchRange stretch(FontStretch::Normal());
