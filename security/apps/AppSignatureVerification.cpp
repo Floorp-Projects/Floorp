@@ -36,7 +36,9 @@
 #include "nsTHashtable.h"
 #include "mozpkix/pkix.h"
 #include "mozpkix/pkixnss.h"
+#include "mozpkix/pkixutil.h"
 #include "plstr.h"
+#include "secerr.h"
 #include "secmime.h"
 
 using namespace mozilla::pkix;
@@ -616,21 +618,17 @@ nsresult ParseMF(const char* filebuf, nsIZipReader* zip,
   return NS_OK;
 }
 
-nsresult VerifyCertificate(CERTCertificate* signerCert,
+nsresult VerifyCertificate(Span<const uint8_t> signerCert,
                            AppTrustedRoot trustedRoot,
-                           /*out*/ UniqueCERTCertList& builtChain) {
-  if (NS_WARN_IF(!signerCert)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  // TODO: pinArg is null.
-  AppTrustDomain trustDomain(builtChain, nullptr);
+                           nsTArray<Span<const uint8_t>>&& collectedCerts) {
+  AppTrustDomain trustDomain(std::move(collectedCerts));
   nsresult rv = trustDomain.SetTrustedRoot(trustedRoot);
   if (NS_FAILED(rv)) {
     return rv;
   }
   Input certDER;
   mozilla::pkix::Result result =
-      certDER.Init(signerCert->derCert.data, signerCert->derCert.len);
+      certDER.Init(signerCert.Elements(), signerCert.Length());
   if (result != Success) {
     return mozilla::psm::GetXPCOMFromNSSError(MapResultToPRErrorCode(result));
   }
@@ -701,11 +699,60 @@ NSSCMSSignerInfo* GetSignerInfoForDigestAlgorithm(NSSCMSSignedData* signedData,
   return nullptr;
 }
 
+Span<const uint8_t> GetPKCS7SignerCert(
+    NSSCMSSignerInfo* signerInfo,
+    nsTArray<Span<const uint8_t>>& collectedCerts) {
+  if (!signerInfo) {
+    return {};
+  }
+  // The NSS APIs use the term "CMS", but since these are all signed by Mozilla
+  // infrastructure, we know they are actually PKCS7. This means that this only
+  // needs to handle issuer/serial number signer identifiers.
+  if (signerInfo->signerIdentifier.identifierType != NSSCMSSignerID_IssuerSN) {
+    return {};
+  }
+  CERTIssuerAndSN* issuerAndSN = signerInfo->signerIdentifier.id.issuerAndSN;
+  if (!issuerAndSN) {
+    return {};
+  }
+  Input issuer;
+  mozilla::pkix::Result result =
+      issuer.Init(issuerAndSN->derIssuer.data, issuerAndSN->derIssuer.len);
+  if (result != Success) {
+    return {};
+  }
+  Input serialNumber;
+  result = serialNumber.Init(issuerAndSN->serialNumber.data,
+                             issuerAndSN->serialNumber.len);
+  if (result != Success) {
+    return {};
+  }
+  for (const auto& certDER : collectedCerts) {
+    Input certInput;
+    result = certInput.Init(certDER.Elements(), certDER.Length());
+    if (result != Success) {
+      continue;  // probably too big
+    }
+    // Since this only decodes the certificate and doesn't attempt to build a
+    // verified chain with it, the EndEntityOrCA parameter doesn't matter.
+    BackCert cert(certInput, EndEntityOrCA::MustBeEndEntity, nullptr);
+    result = cert.Init();
+    if (result != Success) {
+      continue;
+    }
+    if (InputsAreEqual(issuer, cert.GetIssuer()) &&
+        InputsAreEqual(serialNumber, cert.GetSerialNumber())) {
+      return certDER;
+    }
+  }
+  return {};
+}
+
 nsresult VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
                          const SECItem& detachedSHA1Digest,
                          const SECItem& detachedSHA256Digest,
                          /*out*/ SECOidTag& digestAlgorithm,
-                         /*out*/ UniqueCERTCertList& builtChain) {
+                         /*out*/ nsTArray<uint8_t>& signerCert) {
   if (NS_WARN_IF(!buffer.data || buffer.len == 0 || !detachedSHA1Digest.data ||
                  detachedSHA1Digest.len == 0 || !detachedSHA256Digest.data ||
                  detachedSHA256Digest.len == 0)) {
@@ -741,27 +788,12 @@ nsresult VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
     return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
   }
 
-  // Parse the certificates into CERTCertificate objects held in memory so
-  // verifyCertificate will be able to find them during path building.
-  UniqueCERTCertList certs(CERT_NewCertList());
-  if (!certs) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsTArray<Span<const uint8_t>> collectedCerts;
   if (signedData->rawCerts) {
     for (size_t i = 0; signedData->rawCerts[i]; ++i) {
-      UniqueCERTCertificate cert(CERT_NewTempCertificate(
-          CERT_GetDefaultCertDB(), signedData->rawCerts[i], nullptr, false,
-          true));
-      // Skip certificates that fail to parse
-      if (!cert) {
-        continue;
-      }
-
-      if (CERT_AddCertToListTail(certs.get(), cert.get()) != SECSuccess) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      Unused << cert.release();  // Ownership transferred to the cert list.
+      Span<const uint8_t> cert(signedData->rawCerts[i]->data,
+                               signedData->rawCerts[i]->len);
+      collectedCerts.AppendElement(std::move(cert));
     }
   }
 
@@ -778,17 +810,20 @@ nsresult VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
     digestAlgorithm = SEC_OID_SHA1;
   }
 
-  // Get the end-entity certificate.
-  CERTCertificate* signerCert = NSS_CMSSignerInfo_GetSigningCertificate(
-      signerInfo, CERT_GetDefaultCertDB());
-  if (!signerCert) {
+  // Get the certificate that issued the PKCS7 signature.
+  Span<const uint8_t> signerCertSpan =
+      GetPKCS7SignerCert(signerInfo, collectedCerts);
+  if (signerCertSpan.IsEmpty()) {
     return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
   }
 
-  nsresult rv = VerifyCertificate(signerCert, trustedRoot, builtChain);
+  nsresult rv =
+      VerifyCertificate(signerCertSpan, trustedRoot, std::move(collectedCerts));
   if (NS_FAILED(rv)) {
     return rv;
   }
+  signerCert.Clear();
+  signerCert.AppendElements(signerCertSpan);
 
   // Ensure that the PKCS#7 data OID is present as the PKCS#9 contentType.
   const char* pkcs7DataOidString = "1.2.840.113549.1.7.1";
@@ -798,6 +833,25 @@ nsresult VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
     return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
   }
 
+  // NSS_CMSSignerInfo_Verify relies on NSS_CMSSignerInfo_GetSigningCertificate
+  // having been called already. This relies on the signing certificate being
+  // decoded as a CERTCertificate.
+  // This assertion should never fail, as this certificate has been
+  // successfully verified, which means it fits in the size of an unsigned int.
+  SECItem signingCertificateItem = {
+      siBuffer, const_cast<unsigned char*>(signerCertSpan.Elements()),
+      AssertedCast<unsigned int>(signerCertSpan.Length())};
+  UniqueCERTCertificate signingCertificateHandle(CERT_NewTempCertificate(
+      CERT_GetDefaultCertDB(), &signingCertificateItem, nullptr, false, true));
+  if (!signingCertificateHandle) {
+    return mozilla::psm::GetXPCOMFromNSSError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
+  }
+  // NB: This function does not return an owning reference, unlike with many
+  // other NSS APIs.
+  if (!NSS_CMSSignerInfo_GetSigningCertificate(signerInfo,
+                                               CERT_GetDefaultCertDB())) {
+    return mozilla::psm::GetXPCOMFromNSSError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
+  }
   return MapSECStatus(NSS_CMSSignerInfo_Verify(
       signerInfo, const_cast<SECItem*>(detachedDigest), &pkcs7DataOid));
 }
@@ -805,26 +859,20 @@ nsresult VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
 class CoseVerificationContext {
  public:
   explicit CoseVerificationContext(AppTrustedRoot aTrustedRoot)
-      : mTrustedRoot(aTrustedRoot), mCertDER(nullptr), mCertDERLen(0) {}
+      : mTrustedRoot(aTrustedRoot) {}
   ~CoseVerificationContext() = default;
 
   AppTrustedRoot GetTrustedRoot() { return mTrustedRoot; }
-  nsresult SetCert(SECItem* aCertDER) {
-    mCertDERLen = aCertDER->len;
-    mCertDER = MakeUnique<uint8_t[]>(mCertDERLen);
-    if (!mCertDER) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    memcpy(mCertDER.get(), aCertDER->data, mCertDERLen);
-    return NS_OK;
+  void SetCert(Span<const uint8_t> certDER) {
+    mCertDER.Clear();
+    mCertDER.AppendElements(certDER);
   }
-  uint8_t* GetCert() { return mCertDER.get(); }
-  unsigned int GetCertLen() { return mCertDERLen; }
+
+  nsTArray<uint8_t> TakeCert() { return std::move(mCertDER); }
 
  private:
   AppTrustedRoot mTrustedRoot;
-  UniquePtr<uint8_t[]> mCertDER;
-  unsigned int mCertDERLen;
+  nsTArray<uint8_t> mCertDER;
 };
 
 // Verification function called from cose-rust.
@@ -873,21 +921,25 @@ bool CoseVerificationCallback(const uint8_t* aPayload, size_t aPayloadLen,
     return false;
   }
   SECItem hashItem = {siBuffer, hashBuf, hash_length};
-  CERTCertDBHandle* dbHandle = CERT_GetDefaultCertDB();
-  if (!dbHandle) {
+  Input certInput;
+  if (certInput.Init(aEECert, aEECertLen) != Success) {
     return false;
   }
-  SECItem derCert = {siBuffer, const_cast<uint8_t*>(aEECert),
-                     static_cast<unsigned int>(aEECertLen)};
-  UniqueCERTCertificate cert(
-      CERT_NewTempCertificate(dbHandle, &derCert, nullptr, false, true));
-  if (!cert) {
+  // Since this only decodes the certificate and doesn't attempt to build a
+  // verified chain with it, the EndEntityOrCA parameter doesn't matter.
+  BackCert backCert(certInput, EndEntityOrCA::MustBeEndEntity, nullptr);
+  if (backCert.Init() != Success) {
     return false;
   }
-  UniqueSECKEYPublicKey key(CERT_ExtractPublicKey(cert.get()));
-  if (!key) {
+  Input spkiInput = backCert.GetSubjectPublicKeyInfo();
+  SECItem spkiItem = {siBuffer, const_cast<uint8_t*>(spkiInput.UnsafeGetData()),
+                      spkiInput.GetLength()};
+  UniqueCERTSubjectPublicKeyInfo spki(
+      SECKEY_DecodeDERSubjectPublicKeyInfo(&spkiItem));
+  if (!spki) {
     return false;
   }
+  UniqueSECKEYPublicKey key(SECKEY_ExtractPublicKey(spki.get()));
   SECItem signatureItem = {siBuffer, const_cast<uint8_t*>(aSignature),
                            static_cast<unsigned int>(aSignatureLen)};
   rv = PK11_VerifyWithMechanism(key.get(), mechanism, &param, &signatureItem,
@@ -896,33 +948,22 @@ bool CoseVerificationCallback(const uint8_t* aPayload, size_t aPayloadLen,
     return false;
   }
 
-  // Load intermediate certs into NSS so we can verify the cert chain.
-  UniqueCERTCertList tempCerts(CERT_NewCertList());
+  nsTArray<Span<const uint8_t>> collectedCerts;
   for (size_t i = 0; i < aCertChainLen; ++i) {
-    SECItem derCert = {siBuffer, const_cast<uint8_t*>(aCertChain[i]),
-                       static_cast<unsigned int>(aCertsLen[i])};
-    UniqueCERTCertificate tempCert(
-        CERT_NewTempCertificate(dbHandle, &derCert, nullptr, false, true));
-    // Skip certs that we can't parse. If it was one we needed, the verification
-    // will fail later.
-    if (!tempCert) {
-      continue;
-    }
-    if (CERT_AddCertToListTail(tempCerts.get(), tempCert.get()) != SECSuccess) {
-      return false;
-    }
-    Unused << tempCert.release();
+    Span<const uint8_t> cert(aCertChain[i], aCertsLen[i]);
+    collectedCerts.AppendElement(std::move(cert));
   }
 
-  UniqueCERTCertList builtChain;
-  nsresult nrv = VerifyCertificate(cert.get(), aTrustedRoot, builtChain);
+  Span<const uint8_t> certSpan = {aEECert, aEECertLen};
+  nsresult nrv =
+      VerifyCertificate(certSpan, aTrustedRoot, std::move(collectedCerts));
   bool result = true;
   if (NS_FAILED(nrv)) {
     result = false;
   }
 
   // Passing back the signing certificate in form of the DER cert.
-  nrv = context->SetCert(&cert->derCert);
+  context->SetCert(certSpan);
   if (NS_FAILED(nrv)) {
     result = false;
   }
@@ -1069,9 +1110,8 @@ nsresult VerifyCOSESignature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
                              SignaturePolicy& aPolicy,
                              nsTHashtable<nsCStringHashKey>& aIgnoredFiles,
                              /* out */ bool& aVerified,
-                             /* out */ UniqueSECItem* aCoseCertItem) {
+                             /* out */ nsTArray<uint8_t>& aCoseCertDER) {
   NS_ENSURE_ARG_POINTER(aZip);
-  NS_ENSURE_ARG_POINTER(aCoseCertItem);
   bool required = aPolicy.COSERequired();
   aVerified = false;
 
@@ -1103,11 +1143,7 @@ nsresult VerifyCOSESignature(AppTrustedRoot aTrustedRoot, nsIZipReader* aZip,
   }
   // CoseVerificationCallback sets the context certificate to the first cert
   // it encounters.
-  const SECItem derCert = {siBuffer, context.GetCert(), context.GetCertLen()};
-  aCoseCertItem->reset(SECITEM_DupItem(&derCert));
-  if (!aCoseCertItem) {
-    return NS_ERROR_FAILURE;
-  }
+  aCoseCertDER = context.TakeCert();
 
   // aIgnoredFiles contains the PKCS#7 manifest and signature files iff the
   // PKCS#7 verification was successful.
@@ -1126,7 +1162,7 @@ nsresult VerifyPK7Signature(
     AppTrustedRoot aTrustedRoot, nsIZipReader* aZip, SignaturePolicy& aPolicy,
     /* out */ nsTHashtable<nsCStringHashKey>& aIgnoredFiles,
     /* out */ bool& aVerified,
-    /* out */ UniqueCERTCertList& aBuiltChain) {
+    /* out */ nsTArray<uint8_t>& aSignerCert) {
   NS_ENSURE_ARG_POINTER(aZip);
   bool required = aPolicy.PK7Required();
   aVerified = false;
@@ -1170,7 +1206,7 @@ nsresult VerifyPK7Signature(
   SECOidTag digestToUse;
   rv =
       VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedSHA1Digest.get(),
-                      sfCalculatedSHA256Digest.get(), digestToUse, aBuiltChain);
+                      sfCalculatedSHA256Digest.get(), digestToUse, aSignerCert);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1244,8 +1280,8 @@ nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   bool pk7Verified = false;
   bool coseVerified = false;
   nsTHashtable<nsCStringHashKey> ignoredFiles;
-  UniqueCERTCertList pk7BuiltChain;
-  UniqueSECItem coseCertItem;
+  nsTArray<uint8_t> pkcs7CertDER;
+  nsTArray<uint8_t> coseCertDER;
 
   // First we have to verify the PKCS#7 signature if there is one.
   // This signature covers all files (except for the signature files itself),
@@ -1254,7 +1290,7 @@ nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   // signature verification.
   if (aPolicy.ProcessPK7()) {
     rv = VerifyPK7Signature(aTrustedRoot, zip, aPolicy, ignoredFiles,
-                            pk7Verified, pk7BuiltChain);
+                            pk7Verified, pkcs7CertDER);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1262,7 +1298,7 @@ nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
 
   if (aPolicy.ProcessCOSE()) {
     rv = VerifyCOSESignature(aTrustedRoot, zip, aPolicy, ignoredFiles,
-                             coseVerified, &coseCertItem);
+                             coseVerified, coseCertDER);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1281,33 +1317,29 @@ nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   // Return the signer's certificate to the reader if they want it.
   if (aSignerCert) {
     // The COSE certificate is authoritative.
-    if (aPolicy.COSERequired() || (coseCertItem && coseCertItem->len != 0)) {
-      if (!coseCertItem || coseCertItem->len == 0) {
+    if (aPolicy.COSERequired() || !coseCertDER.IsEmpty()) {
+      if (coseCertDER.IsEmpty() ||
+          coseCertDER.Length() > std::numeric_limits<int>::max()) {
         return NS_ERROR_FAILURE;
       }
-      CERTCertDBHandle* dbHandle = CERT_GetDefaultCertDB();
-      if (!dbHandle) {
-        return NS_ERROR_FAILURE;
-      }
-      UniqueCERTCertificate cert(CERT_NewTempCertificate(
-          dbHandle, coseCertItem.get(), nullptr, false, true));
-      if (!cert) {
-        return NS_ERROR_FAILURE;
-      }
-      nsCOMPtr<nsIX509Cert> signerCert = nsNSSCertificate::Create(cert.get());
+      nsCOMPtr<nsIX509Cert> signerCert(nsNSSCertificate::ConstructFromDER(
+          reinterpret_cast<char*>(coseCertDER.Elements()),
+          coseCertDER.Length()));
       if (!signerCert) {
-        return NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_FAILURE;
       }
       signerCert.forget(aSignerCert);
     } else {
-      CERTCertListNode* signerCertNode = CERT_LIST_HEAD(pk7BuiltChain);
-      if (!signerCertNode || CERT_LIST_END(signerCertNode, pk7BuiltChain) ||
-          !signerCertNode->cert) {
+      if (pkcs7CertDER.IsEmpty() ||
+          pkcs7CertDER.Length() > std::numeric_limits<int>::max()) {
         return NS_ERROR_FAILURE;
       }
-      nsCOMPtr<nsIX509Cert> signerCert =
-          nsNSSCertificate::Create(signerCertNode->cert);
-      NS_ENSURE_TRUE(signerCert, NS_ERROR_OUT_OF_MEMORY);
+      nsCOMPtr<nsIX509Cert> signerCert(nsNSSCertificate::ConstructFromDER(
+          reinterpret_cast<char*>(pkcs7CertDER.Elements()),
+          pkcs7CertDER.Length()));
+      if (!signerCert) {
+        return NS_ERROR_FAILURE;
+      }
       signerCert.forget(aSignerCert);
     }
   }

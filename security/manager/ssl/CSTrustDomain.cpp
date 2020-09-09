@@ -11,9 +11,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
-#ifdef MOZ_NEW_CERT_STORAGE
-#  include "nsDirectoryServiceUtils.h"
-#endif
+#include "nsDirectoryServiceUtils.h"
 #include "nsNSSComponent.h"
 #include "NSSCertDBTrustDomain.h"
 #include "nsServiceManagerUtils.h"
