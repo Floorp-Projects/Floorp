@@ -57,6 +57,7 @@ EXPORTS.mozilla.dom.indexedDB += [
 
 UNIFIED_SOURCES += [
     'ActorsChild.cpp',
+    'ActorsParentCommon.cpp',
     'FileInfo.cpp',
     'IDBCursor.cpp',
     'IDBCursorType.cpp',
@@ -78,11 +79,13 @@ UNIFIED_SOURCES += [
     'PermissionRequestBase.cpp',
     'ProfilerHelpers.cpp',
     'ReportInternalError.cpp',
+    'SchemaUpgrades.cpp',
     'ScriptErrorHelper.cpp',
 ]
 
 SOURCES += [
     'ActorsParent.cpp', # This file is huge.
+    'DBSchema.cpp',
     'Key.cpp', # We disable a warning on this file only
 ]
 
