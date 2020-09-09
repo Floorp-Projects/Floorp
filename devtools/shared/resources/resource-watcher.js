@@ -551,11 +551,12 @@ class ResourceWatcher {
   }
 
   async _forwardCachedResources(resourceTypes, onAvailable) {
-    await onAvailable(
-      this._cache.filter(resource =>
-        resourceTypes.includes(resource.resourceType)
-      )
+    const cachedResources = this._cache.filter(resource =>
+      resourceTypes.includes(resource.resourceType)
     );
+    if (cachedResources.length > 0) {
+      await onAvailable(cachedResources);
+    }
   }
 
   /**
