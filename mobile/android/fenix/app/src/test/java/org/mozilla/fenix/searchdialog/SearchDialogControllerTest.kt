@@ -44,6 +44,7 @@ class SearchDialogControllerTest {
     @MockK(relaxed = true) private lateinit var settings: Settings
     @MockK private lateinit var sessionManager: SessionManager
     @MockK(relaxed = true) private lateinit var clearToolbarFocus: () -> Unit
+    @MockK(relaxed = true) private lateinit var dismissDialog: () -> Unit
 
     private lateinit var controller: SearchDialogController
 
@@ -67,6 +68,7 @@ class SearchDialogControllerTest {
             navController = navController,
             settings = settings,
             metrics = metrics,
+            dismissDialog = dismissDialog,
             clearToolbarFocus = clearToolbarFocus
         )
     }
@@ -91,6 +93,17 @@ class SearchDialogControllerTest {
             )
         }
         verify { metrics.track(Event.EnteredUrl(false)) }
+    }
+
+    @Test
+    fun handleBlankUrlCommitted() {
+        val url = ""
+
+        controller.handleUrlCommitted(url)
+
+        verify {
+            dismissDialog()
+        }
     }
 
     @Test

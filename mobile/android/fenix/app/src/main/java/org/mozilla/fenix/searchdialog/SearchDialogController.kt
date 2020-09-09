@@ -33,6 +33,7 @@ class SearchDialogController(
     private val navController: NavController,
     private val settings: Settings,
     private val metrics: MetricController,
+    private val dismissDialog: () -> Unit,
     private val clearToolbarFocus: () -> Unit
 ) : SearchController {
 
@@ -45,12 +46,15 @@ class SearchDialogController(
                 activity.startActivity(Intent(activity, CrashListActivity::class.java))
             }
             "about:addons" -> {
-                val directions = SearchDialogFragmentDirections.actionGlobalAddonsManagementFragment()
+                val directions =
+                    SearchDialogFragmentDirections.actionGlobalAddonsManagementFragment()
                 navController.navigateSafe(R.id.searchDialogFragment, directions)
             }
             "moz://a" -> openSearchOrUrl(SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO))
             else -> if (url.isNotBlank()) {
                 openSearchOrUrl(url)
+            } else {
+                dismissDialog()
             }
         }
     }
