@@ -22,6 +22,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "jit/MacroAssembler.h"
+#include "threading/ProtectedData.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmValidate.h"
@@ -108,31 +109,35 @@ struct CompiledCode {
 // 'numFailed'.
 
 struct CompileTaskState {
-  CompileTaskPtrVector finished;
-  uint32_t numFailed;
-  UniqueChars errorMessage;
+  HelperThreadLockData<CompileTaskPtrVector> finished_;
+  HelperThreadLockData<uint32_t> numFailed_;
+  HelperThreadLockData<UniqueChars> errorMessage_;
+  HelperThreadLockData<ConditionVariable> condVar_;
 
-  CompileTaskState() : numFailed(0) {}
+  CompileTaskState() : numFailed_(0) {}
   ~CompileTaskState() {
-    MOZ_ASSERT(finished.empty());
-    MOZ_ASSERT(!numFailed);
+    MOZ_ASSERT(finished_.refNoCheck().empty());
+    MOZ_ASSERT(!numFailed_.refNoCheck());
   }
-};
 
-using ExclusiveCompileTaskState = ExclusiveWaitableData<CompileTaskState>;
+  CompileTaskPtrVector& finished() { return finished_.ref(); }
+  uint32_t& numFailed() { return numFailed_.ref(); }
+  UniqueChars& errorMessage() { return errorMessage_.ref(); }
+  ConditionVariable& condVar() { return condVar_.ref(); }
+};
 
 // A CompileTask holds a batch of input functions that are to be compiled on a
 // helper thread as well as, eventually, the results of compilation.
 
-struct CompileTask : public RunnableTask {
+struct CompileTask : public HelperThreadTask {
   const ModuleEnvironment& env;
-  ExclusiveCompileTaskState& state;
+  CompileTaskState& state;
   LifoAlloc lifo;
   FuncCompileInputVector inputs;
   CompiledCode output;
   JSTelemetrySender telemetrySender;
 
-  CompileTask(const ModuleEnvironment& env, ExclusiveCompileTaskState& state,
+  CompileTask(const ModuleEnvironment& env, CompileTaskState& state,
               size_t defaultChunkSize, JSTelemetrySender telemetrySender)
       : env(env),
         state(state),
@@ -143,7 +148,7 @@ struct CompileTask : public RunnableTask {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  void runTask() override;
+  void runTaskLocked(AutoLockHelperThreadState& lock) override;
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_WASM; }
 };
 
@@ -176,7 +181,7 @@ class MOZ_STACK_CLASS ModuleGenerator {
   MutableMetadata metadata_;
 
   // Data scoped to the ModuleGenerator's lifetime
-  ExclusiveCompileTaskState taskState_;
+  CompileTaskState taskState_;
   LifoAlloc lifo_;
   jit::JitContext jcx_;
   jit::TempAllocator masmAlloc_;

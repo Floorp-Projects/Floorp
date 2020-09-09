@@ -2136,10 +2136,7 @@ void HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked,
       HelperThreadState().wasmWorklist(locked, mode).popCopyFront());
 
   wasm::CompileTask* task = wasmTask();
-  {
-    AutoUnlockHelperThreadState unlock(locked);
-    task->runTask();
-  }
+  task->runTaskLocked(locked);
 
   currentTask.reset();
 
