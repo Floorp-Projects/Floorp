@@ -10,9 +10,6 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 /**
- * This first test is a simplified version of
- * devtools/server/tests/browser/browser_inspector_walker_watch_root_node.js
- *
  * The original test still asserts some scenarios using several watchRootNode
  * call sites, which is not something we intend to support at the moment in the
  * resource watcher.
