@@ -261,6 +261,7 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
   }
 
   const nsACString& Key() { return mLocation; }
+  nsresult EnsureKey() { return NS_OK; }
 
   MOZ_MUST_USE nsresult GetLocation(nsCString& aLocation) {
     nsresult rv = EnsureURI();
@@ -312,6 +313,14 @@ StaticRefPtr<mozJSComponentLoader> mozJSComponentLoader::sSelf;
 
 // True if ShutdownPhase::ShutdownFinal has been reached.
 static bool sShutdownFinal = false;
+
+nsresult mozJSComponentLoader::ReallyInit() {
+  MOZ_ASSERT(!mInitialized);
+
+  mInitialized = true;
+
+  return NS_OK;
+}
 
 // For terrible compatibility reasons, we need to consider both the global
 // lexical environment and the global of modules when searching for exported
@@ -379,7 +388,12 @@ const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
   nsresult rv = info.EnsureURI();
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  mInitialized = true;
+  if (!mInitialized) {
+    rv = ReallyInit();
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+  }
 
   AUTO_PROFILER_TEXT_MARKER_CAUSE("JS XPCOM", spec, JS, Nothing(),
                                   profiler_get_backtrace());
@@ -957,8 +971,16 @@ nsresult mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
                                               bool* retval) {
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  mInitialized = true;
+  nsresult rv;
+  if (!mInitialized) {
+    rv = ReallyInit();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   ComponentLoaderInfo info(aLocation);
+  rv = info.EnsureKey();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   *retval = !!mImports.Get(info.Key());
   return NS_OK;
 }
@@ -986,6 +1008,8 @@ nsresult mozJSComponentLoader::GetModuleImportStack(const nsACString& aLocation,
   MOZ_ASSERT(mInitialized);
 
   ComponentLoaderInfo info(aLocation);
+  nsresult rv = info.EnsureKey();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   ModuleEntry* mod;
   if (!mImports.Get(info.Key(), &mod)) {
@@ -1195,14 +1219,20 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
                                       JS::MutableHandleObject aModuleGlobal,
                                       JS::MutableHandleObject aModuleExports,
                                       bool aIgnoreExports) {
-  mInitialized = true;
+  nsresult rv;
+  if (!mInitialized) {
+    rv = ReallyInit();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   AUTO_PROFILER_TEXT_MARKER_CAUSE("ChromeUtils.import", aLocation, JS,
                                   Nothing(), profiler_get_backtrace());
 
   ComponentLoaderInfo info(aLocation);
 
-  nsresult rv;
+  rv = info.EnsureKey();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   ModuleEntry* mod;
   UniquePtr<ModuleEntry> newEntry;
   if (!mImports.Get(info.Key(), &mod) &&
@@ -1314,7 +1344,8 @@ nsresult mozJSComponentLoader::Unload(const nsACString& aLocation) {
   }
 
   ComponentLoaderInfo info(aLocation);
-
+  rv = info.EnsureKey();
+  NS_ENSURE_SUCCESS(rv, rv);
   ModuleEntry* mod;
   if (mImports.Get(info.Key(), &mod)) {
     mLocations.Remove(mod->resolvedURL);
