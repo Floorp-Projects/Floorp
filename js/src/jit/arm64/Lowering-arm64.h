@@ -72,6 +72,7 @@ class LIRGeneratorARM64 : public LIRGeneratorShared {
   void lowerWasmBuiltinTruncateToInt64(MWasmBuiltinTruncateToInt64* ins);
   void lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction* mir,
                                MDefinition* lhs, MDefinition* rhs);
+  void lowerWasmBuiltinTruncateToInt32(MWasmBuiltinTruncateToInt32* ins);
   void lowerTruncateDToInt32(MTruncateToInt32* ins);
   void lowerTruncateFToInt32(MTruncateToInt32* ins);
   void lowerDivI(MDiv* div);

@@ -508,27 +508,55 @@ namespace js {
 namespace jit {
 
 class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86> {
-  LTruncateDToInt32* ins_;
+  LInstruction* ins_;
 
  public:
-  explicit OutOfLineTruncate(LTruncateDToInt32* ins) : ins_(ins) {}
+  explicit OutOfLineTruncate(LInstruction* ins) : ins_(ins) {
+    MOZ_ASSERT(ins_->isTruncateDToInt32() ||
+               ins_->isWasmBuiltinTruncateDToInt32());
+  }
 
   void accept(CodeGeneratorX86* codegen) override {
     codegen->visitOutOfLineTruncate(this);
   }
-  LTruncateDToInt32* ins() const { return ins_; }
+
+  LAllocation* input() { return ins_->getOperand(0); }
+  LDefinition* output() { return ins_->getDef(0); }
+  LDefinition* tempFloat() { return ins_->getTemp(0); }
+
+  wasm::BytecodeOffset bytecodeOffset() const {
+    if (ins_->isTruncateDToInt32()) {
+      return ins_->toTruncateDToInt32()->mir()->bytecodeOffset();
+    }
+
+    return ins_->toWasmBuiltinTruncateDToInt32()->mir()->bytecodeOffset();
+  }
 };
 
 class OutOfLineTruncateFloat32 : public OutOfLineCodeBase<CodeGeneratorX86> {
-  LTruncateFToInt32* ins_;
+  LInstruction* ins_;
 
  public:
-  explicit OutOfLineTruncateFloat32(LTruncateFToInt32* ins) : ins_(ins) {}
+  explicit OutOfLineTruncateFloat32(LInstruction* ins) : ins_(ins) {
+    MOZ_ASSERT(ins_->isTruncateFToInt32() ||
+               ins_->isWasmBuiltinTruncateFToInt32());
+  }
 
   void accept(CodeGeneratorX86* codegen) override {
     codegen->visitOutOfLineTruncateFloat32(this);
   }
-  LTruncateFToInt32* ins() const { return ins_; }
+
+  LAllocation* input() { return ins_->getOperand(0); }
+  LDefinition* output() { return ins_->getDef(0); }
+  LDefinition* tempFloat() { return ins_->getTemp(0); }
+
+  wasm::BytecodeOffset bytecodeOffset() const {
+    if (ins_->isTruncateFToInt32()) {
+      return ins_->toTruncateDToInt32()->mir()->bytecodeOffset();
+    }
+
+    return ins_->toWasmBuiltinTruncateFToInt32()->mir()->bytecodeOffset();
+  }
 };
 
 }  // namespace jit
@@ -545,6 +573,18 @@ void CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitWasmBuiltinTruncateDToInt32(
+    LWasmBuiltinTruncateDToInt32* lir) {
+  FloatRegister input = ToFloatRegister(lir->getOperand(0));
+  Register output = ToRegister(lir->getDef(0));
+
+  OutOfLineTruncate* ool = new (alloc()) OutOfLineTruncate(lir);
+  addOutOfLineCode(ool, lir->mir());
+
+  masm.branchTruncateDoubleMaybeModUint32(input, output, ool->entry());
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitTruncateFToInt32(LTruncateFToInt32* ins) {
   FloatRegister input = ToFloatRegister(ins->input());
   Register output = ToRegister(ins->output());
@@ -556,10 +596,21 @@ void CodeGenerator::visitTruncateFToInt32(LTruncateFToInt32* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitWasmBuiltinTruncateFToInt32(
+    LWasmBuiltinTruncateFToInt32* lir) {
+  FloatRegister input = ToFloatRegister(lir->getOperand(0));
+  Register output = ToRegister(lir->getDef(0));
+
+  OutOfLineTruncateFloat32* ool = new (alloc()) OutOfLineTruncateFloat32(lir);
+  addOutOfLineCode(ool, lir->mir());
+
+  masm.branchTruncateFloat32MaybeModUint32(input, output, ool->entry());
+  masm.bind(ool->rejoin());
+}
+
 void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
-  LTruncateDToInt32* ins = ool->ins();
-  FloatRegister input = ToFloatRegister(ins->input());
-  Register output = ToRegister(ins->output());
+  FloatRegister input = ToFloatRegister(ool->input());
+  Register output = ToRegister(ool->output());
 
   Label fail;
 
@@ -584,7 +635,7 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
     masm.addl(Imm32(sizeof(double)), esp);
     masm.jump(&fail);
   } else {
-    FloatRegister temp = ToFloatRegister(ins->tempFloat());
+    FloatRegister temp = ToFloatRegister(ool->tempFloat());
 
     // Try to convert doubles representing integers within 2^32 of a signed
     // integer, by adding/subtracting 2^32 and then trying to convert to int32.
@@ -622,13 +673,20 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
 
   masm.bind(&fail);
   {
+    if (gen->compilingWasm()) {
+      masm.Push(WasmTlsReg);
+    }
+    int32_t framePushedAfterTls = masm.framePushed();
+
     saveVolatile(output);
 
     if (gen->compilingWasm()) {
       masm.setupWasmABICall();
       masm.passABIArg(input, MoveOp::DOUBLE);
-      masm.callWithABI(ins->mir()->bytecodeOffset(),
-                       wasm::SymbolicAddress::ToInt32, mozilla::Nothing());
+
+      int32_t tlsOffset = masm.framePushed() - framePushedAfterTls;
+      masm.callWithABI(ool->bytecodeOffset(), wasm::SymbolicAddress::ToInt32,
+                       mozilla::Some(tlsOffset));
     } else {
       masm.setupUnalignedABICall(output);
       masm.passABIArg(input, MoveOp::DOUBLE);
@@ -638,6 +696,10 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
     masm.storeCallInt32Result(output);
 
     restoreVolatile(output);
+
+    if (gen->compilingWasm()) {
+      masm.Pop(WasmTlsReg);
+    }
   }
 
   masm.jump(ool->rejoin());
@@ -645,9 +707,8 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
 
 void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
     OutOfLineTruncateFloat32* ool) {
-  LTruncateFToInt32* ins = ool->ins();
-  FloatRegister input = ToFloatRegister(ins->input());
-  Register output = ToRegister(ins->output());
+  FloatRegister input = ToFloatRegister(ool->input());
+  Register output = ToRegister(ool->output());
 
   Label fail;
 
@@ -674,7 +735,7 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
     masm.addl(Imm32(sizeof(uint64_t)), esp);
     masm.jump(&fail);
   } else {
-    FloatRegister temp = ToFloatRegister(ins->tempFloat());
+    FloatRegister temp = ToFloatRegister(ool->tempFloat());
 
     // Try to convert float32 representing integers within 2^32 of a signed
     // integer, by adding/subtracting 2^32 and then trying to convert to int32.
@@ -712,6 +773,11 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
 
   masm.bind(&fail);
   {
+    if (gen->compilingWasm()) {
+      masm.Push(WasmTlsReg);
+    }
+    int32_t framePushedAfterTls = masm.framePushed();
+
     saveVolatile(output);
 
     masm.Push(input);
@@ -726,8 +792,9 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
     masm.passABIArg(input.asDouble(), MoveOp::DOUBLE);
 
     if (gen->compilingWasm()) {
-      masm.callWithABI(ins->mir()->bytecodeOffset(),
-                       wasm::SymbolicAddress::ToInt32, mozilla::Nothing());
+      int32_t tlsOffset = masm.framePushed() - framePushedAfterTls;
+      masm.callWithABI(ool->bytecodeOffset(), wasm::SymbolicAddress::ToInt32,
+                       mozilla::Some(tlsOffset));
     } else {
       masm.callWithABI(BitwiseCast<void*, int32_t (*)(double)>(JS::ToInt32),
                        MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
@@ -737,6 +804,10 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
     masm.Pop(input);
 
     restoreVolatile(output);
+
+    if (gen->compilingWasm()) {
+      masm.Pop(WasmTlsReg);
+    }
   }
 
   masm.jump(ool->rejoin());
