@@ -143,6 +143,7 @@ enum class OperatingSystem : uint8_t {
   OSX10_13,
   OSX10_14,
   OSX10_15,
+  OSX10_16,
   Android,
   Ios
 };

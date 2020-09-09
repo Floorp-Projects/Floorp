@@ -54,6 +54,8 @@ static OperatingSystem OSXVersionToOperatingSystem(uint32_t aOSXVersion) {
         return OperatingSystem::OSX10_14;
       case 15:
         return OperatingSystem::OSX10_15;
+      case 16:
+        return OperatingSystem::OSX10_16;
     }
   }
 
@@ -383,7 +385,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::OSX, DeviceFamily::All, nsIGfxInfo::FEATURE_GL_SWIZZLE,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_MAC_GPU_SWITCHING_NO_SWIZZLE");
 
-#ifdef EARLY_BETA_OR_EARLIER
+    // FEATURE_WEBRENDER - ALLOWLIST
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::IntelRolloutWebRender,
                                    nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
                                    "FEATURE_ROLLOUT_INTEL_MAC");
@@ -397,7 +399,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::NvidiaRolloutWebRender,
                                    nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
                                    "FEATURE_ROLLOUT_NVIDIA_MAC");
-#endif
   }
   return *sDriverInfo;
 }
@@ -435,7 +436,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
       return NS_OK;
     }
 #ifndef EARLY_BETA_OR_EARLIER
-    else if (aFeature == nsIGfxInfo::FEATURE_WEBRENDER) {
+    else if (aFeature == nsIGfxInfo::FEATURE_WEBRENDER && os == OperatingSystem::OSX10_16) {
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
       aFailureId = "FEATURE_UNQUALIFIED_WEBRENDER_MAC";
       return NS_OK;

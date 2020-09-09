@@ -327,6 +327,8 @@ static OperatingSystem BlocklistOSToOperatingSystem(const nsAString& os) {
     return OperatingSystem::OSX10_14;
   else if (os.EqualsLiteral("Darwin 19"))
     return OperatingSystem::OSX10_15;
+  else if (os.EqualsLiteral("Darwin 20"))
+    return OperatingSystem::OSX10_16;
   else if (os.EqualsLiteral("Android"))
     return OperatingSystem::Android;
   // For historical reasons, "All" in blocklist means "All Windows"
