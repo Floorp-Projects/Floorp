@@ -274,6 +274,12 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   uint64_t GetLoadIdentifier() const { return mLoadIdentifier; }
   uint32_t GetLoadType() const { return mLoadStateLoadType; }
 
+  mozilla::dom::LoadingSessionHistoryInfo* GetLoadingSessionHistoryInfo() {
+    return mLoadingSessionHistoryInfo.get();
+  }
+
+  bool IsDocumentLoad() const { return mIsDocumentLoad; }
+
  protected:
   virtual ~DocumentLoadListener();
 
