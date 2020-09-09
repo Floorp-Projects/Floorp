@@ -2070,7 +2070,7 @@ void nsPresContext::NotifyDidPaintForSubtree(
     if (aTransactionId >= *mFirstContentfulPaintTransactionId) {
       mHadContentfulPaintComposite = true;
       RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
-      if (timing) {
+      if (timing && !IsPrintingOrPrintPreview()) {
         timing->NotifyContentfulPaintForRootContentDocument(aTimeStamp);
       }
     }
@@ -2359,7 +2359,7 @@ void nsPresContext::NotifyNonBlankPaint() {
   mHadNonBlankPaint = true;
   if (IsRootContentDocument()) {
     RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
-    if (timing) {
+    if (timing && !IsPrintingOrPrintPreview()) {
       timing->NotifyNonBlankPaintForRootContentDocument();
     }
 
