@@ -275,6 +275,7 @@ let JSWINDOWACTORS = {
       },
     },
     matches: ["about:welcome"],
+    remoteTypes: ["privilegedabout"],
 
     // See Bug 1618306
     // Remove this preference check when we turn on separate about:welcome for all users.
