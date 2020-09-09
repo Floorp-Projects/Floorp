@@ -360,6 +360,12 @@ class ResourceWatcher {
    *          - resourceUpdates {Object}:
    *            If resourceUpdates is in the element, a cached resource specified by resourceType
    *            and resourceId is updated by Object.assign(cachedResource, resourceUpdates).
+   *          - nestedResourceUpdates {Object}:
+   *            If `nestedResourceUpdates` is passed, update one nested attribute with a new value
+   *            This allows updating one attribute of an object stored in a resource's attribute,
+   *            as well as adding new elements to arrays.
+   *            `path` is an array mentioning all nested attribute to walk through.
+   *            `value` is the new nested attribute value to set.
    *
    *        And also, the element is passed to the listener as it is as “update” object.
    *        So if we don't want to update a cached resource but have information want to
@@ -377,7 +383,12 @@ class ResourceWatcher {
     let currentType = null;
     let resourceBuffer = [];
     for (const update of updates) {
-      const { resourceType, resourceId, resourceUpdates } = update;
+      const {
+        resourceType,
+        resourceId,
+        resourceUpdates,
+        nestedResourceUpdates,
+      } = update;
 
       const existingResource = this._cache.find(
         cachedResource =>
@@ -398,6 +409,18 @@ class ResourceWatcher {
 
       if (resourceUpdates) {
         Object.assign(existingResource, resourceUpdates);
+      }
+
+      if (nestedResourceUpdates) {
+        for (const { path, value } of nestedResourceUpdates) {
+          let target = existingResource;
+
+          for (let i = 0; i < path.length - 1; i++) {
+            target = target[path[i]];
+          }
+
+          target[path[path.length - 1]] = value;
+        }
       }
 
       if (!currentType) {

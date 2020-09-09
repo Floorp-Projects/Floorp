@@ -422,15 +422,8 @@ StyleSheetEditor.prototype = {
     if (!rules.length && !this.mediaRules.length) {
       return;
     }
-    for (const rule of this.mediaRules) {
-      rule.off("matches-change", this.emitMediaRulesChanged);
-      rule.destroy();
-    }
-    this.mediaRules = rules;
 
-    for (const rule of rules) {
-      rule.on("matches-change", this.emitMediaRulesChanged);
-    }
+    this.mediaRules = rules;
     this.emitMediaRulesChanged();
   },
 

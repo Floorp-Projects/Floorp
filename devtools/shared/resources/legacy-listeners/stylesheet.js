@@ -17,6 +17,36 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
     const onMediaRules = styleSheet.getMediaRules();
     const resource = toResource(styleSheet, isNew, fileName);
 
+    let previousMediaRules = [];
+
+    function updateMediaRule(index, rule) {
+      onUpdated([
+        {
+          resourceType: resource.resourceType,
+          resourceId: resource.resourceId,
+          updateType: "matches-change",
+          nestedResourceUpdates: [
+            {
+              path: ["mediaRules", index],
+              value: rule,
+            },
+          ],
+        },
+      ]);
+    }
+
+    function addMatchesChangeListener(mediaRules) {
+      for (const rule of previousMediaRules) {
+        rule.destroy();
+      }
+
+      mediaRules.forEach((rule, index) => {
+        rule.on("matches-change", matches => updateMediaRule(index, rule));
+      });
+
+      previousMediaRules = mediaRules;
+    }
+
     styleSheet.on("style-applied", () => {
       onUpdated([
         {
@@ -39,6 +69,7 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
     });
 
     styleSheet.on("media-rules-changed", mediaRules => {
+      addMatchesChangeListener(mediaRules);
       onUpdated([
         {
           resourceType: resource.resourceType,
@@ -51,6 +82,7 @@ module.exports = async function({ targetFront, onAvailable, onUpdated }) {
 
     try {
       resource.mediaRules = await onMediaRules;
+      addMatchesChangeListener(resource.mediaRules);
     } catch (e) {
       // There are cases that the stylesheet front was destroyed already when/while calling
       // methods of stylesheet.
