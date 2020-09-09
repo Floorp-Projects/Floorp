@@ -79,4 +79,12 @@
     <string name="mozac_feature_prompts_nov">Nën</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">Dhj</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">Administroni kredenciale hyrjesh</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">Zgjeroji kredencialet e sugjeruara të hyrjeve</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Tkurri kredencialet e sugjeruara të hyrjeve</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">Kredenciale të sugjeruara hyrjesh</string>
 </resources>

@@ -42,8 +42,21 @@
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Αδυναμία σύνδεσης</string>
 
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Η σελίδα ενδέχεται να είναι προσωρινά μη διαθέσιμη ή πολύ απασχολημένη. Δοκιμάστε ξανά σε λίγο.</li>
+        <li>Αν δεν μπορείτε να φορτώσετε καμία σελίδα, ελέγξτε τη σύνδεση δεδομένων ή Wi-Fi σας.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Απρόσμενη απάντηση από το διακομιστή</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Η ιστοσελίδα απάντησε στο αίτημα δικτύου με απρόσμενο τρόπο και το πρόγραμμα περιήγησης δεν μπορεί να συνεχίσει.</p>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Η σελίδα δεν ανακατευθύνει σωστά</string>
@@ -83,8 +96,23 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Σφάλμα κατεστραμμένου περιεχομένου</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Η σελίδα που προσπαθείτε να δείτε δεν μπορείτε να εμφανιστεί λόγω σφάλματος κατά τη μεταγωγή δεδομένων.</p>
+      <ul>
+        <li>Παρακαλούμε ενημερώστε τους ιδιοκτήτες της ιστοσελίδας για αυτό το πρόβλημα.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Το περιεχόμενο καταστράφηκε</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Η σελίδα που προσπαθείτε να δείτε δεν μπορείτε να εμφανιστεί λόγω σφάλματος κατά τη μεταγωγή δεδομένων.</p>
+      <ul>
+        <li>Παρακαλούμε ενημερώστε τους ιδιοκτήτες της ιστοσελίδας για αυτό το πρόβλημα.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Σφάλμα κωδικοποίησης περιεχομένου</string>
@@ -114,8 +142,24 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Άγνωστο πρωτόκολλο</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Η διεύθυνση καθορίζει πρωτόκολλο (π.χ., <q>wxyz://</q>) που δεν αναγνωρίζεται από το πρόγραμμα περιήγησης, επομένως δεν μπορεί να συνδεθεί σωστά στην ιστοσελίδα.</p>
+      <ul>
+        <li>Προσπαθείτε να προσπελάσετε πολυμέσα ή άλλες υπηρεσίες χωρίς κείμενο; Ελέγξτε τη σελίδα για επιπλέον απαιτήσεις.</li>
+        <li>Μερικά πρωτόκολλα ίσως απαιτούν λογισμικό τρίτων ή αρθρώματα, πριν αναγνωριστούν από το πρόγραμμα περιήγησης.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Το αρχείο δεν βρέθηκε</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Μήπως το στοιχείο έχει μετονομαστεί, αφαιρεθεί, ή μετακινηθεί;</li>
+        <li>Υπάρχουν σφάλματα ορθογραφίας, κεφαλαίων, ή άλλα τυπογραφικά λάθη στη διεύθυνση;</li>
+        <li>Έχετε επαρκή δικαιώματα για πρόσβαση στο ζητούμενο στοιχείο;</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Άρνηση πρόσβασης στο αρχείο</string>

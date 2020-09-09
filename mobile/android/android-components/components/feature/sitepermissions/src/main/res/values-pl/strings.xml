@@ -3,22 +3,22 @@
     <!-- Title of a dialog for a notification permission request. -->
     <string name="mozac_feature_sitepermissions_notification_title">Czy odbierać powiadomienia od witryny „%1$s”?</string>
     <!-- Title of a dialog for a camera permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_title">Czy udostępnić obraz z kamery witrynie „%1$s”?</string>
+    <string name="mozac_feature_sitepermissions_camera_title">Czy udostępnić obraz z aparatu witrynie „%1$s”?</string>
     <!-- Title of a dialog for a microphone permission request. -->
     <string name="mozac_feature_sitepermissions_microfone_title">Czy udostępnić dźwięk z mikrofonu witrynie „%1$s”?</string>
     <!-- Title of a dialog for a location permission request. -->
     <string name="mozac_feature_sitepermissions_location_title">Czy udostępnić witrynie „%1$s” informacje o położeniu?</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_and_microphone">Czy udostępnić obraz z kamery i dźwięk z mikrofonu witrynie „%1$s”?</string>
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">Czy udostępnić obraz z aparatu i dźwięk z mikrofonu witrynie „%1$s”?</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to
          the first microphone-->
     <string name="mozac_feature_sitepermissions_option_microphone_one">1. mikrofon</string>
     <!-- Option in a dialog for requesting a camera permission, this option will give access to
          back facing camera-->
-    <string name="mozac_feature_sitepermissions_back_facing_camera2">Tylna kamera</string>
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">Tylny aparat</string>
     <!-- Option in a dialog for requesting a camera permission, this option will give access to
      front facing camera-->
-    <string name="mozac_feature_sitepermissions_selfie_camera2">Przednia kamera</string>
+    <string name="mozac_feature_sitepermissions_selfie_camera2">Przedni aparat</string>
     <!-- Text for a positive button in a permission request dialog, this button will give
         access to this permission-->
     <string name="mozac_feature_sitepermissions_allow">Zezwól</string>

@@ -24,7 +24,7 @@
     <string name="mozac_feature_downloads_could_not_open_file">Немагчыма адкрыць файл</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported">Не знойдзена праграма, каб адкрыць файлы %1$s</string>
+    <string name="mozac_feature_downloads_open_not_supported1">Не знойдзена праграма, каб адкрыць файлы %1$s</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Прыпыніць</string>
@@ -40,4 +40,8 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">Закрыць</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Завяршыць дзеянне з дапамогаю</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">Не ўдалося адкрыць %1$s</string>
 </resources>

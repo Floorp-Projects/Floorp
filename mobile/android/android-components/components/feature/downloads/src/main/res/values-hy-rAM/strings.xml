@@ -6,7 +6,7 @@
     <!-- Text shown on the second row of a paused download notification. -->
     <string name="mozac_feature_downloads_paused_notification_text">Ներբեռնումը դադարեցված է</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_completed_notification_text2">Ներբեռնումն ավարտված է</string>
+    <string name="mozac_feature_downloads_completed_notification_text2">Ներբեռնվեց</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_failed_notification_text2">Ներբեռնումը ձախողվեց</string>
 

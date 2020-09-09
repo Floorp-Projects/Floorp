@@ -36,6 +36,12 @@
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">અદ્યતન…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>કોઈક સાઇટની નકલ કરવાની કોશિશ કરી શકે છે અને તમારે ચાલુ રાખવું જોઈએ નહીં.</label>
+        <br><br>
+        <label>વેબસાઇટ્સ પ્રમાણપત્રો દ્વારા તેમની ઓળખ સાબિત કરે છે. %1$s <b>%2$s</b>પર વિશ્વાસ કરતો નથી કારણ કે તેનું પ્રમાણપત્ર આપનાર અજ્ઞાત છે, પ્રમાણપત્ર સ્વ-સહી થયેલ છે, અથવા સર્વર યોગ્ય મધ્યવર્તી પ્રમાણપત્રો મોકલી રહ્યું નથી.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">પાછા જાઓ (ભલામણ કરેલ)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->

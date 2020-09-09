@@ -79,4 +79,12 @@
     <string name="mozac_feature_prompts_nov">Julajik\'</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">Kab\'lajik\'</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">Tinuk\'samajïx rutikirib\'al molojri\'ïl</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">Kerik\' ri chilab\'en tikirib\'äl taq molojri\'ïl</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Kek\'ol ri chilab\'en tikirib\'äl taq molojri\'ïl</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">Chilab\'en taq molojri\'ïl</string>
 </resources>
