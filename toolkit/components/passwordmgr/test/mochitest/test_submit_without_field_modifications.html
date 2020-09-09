@@ -22,7 +22,7 @@
 const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
 SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected popup to show");
 
-const EXAMPLE_COM = "https://example.com/tests/toolkit/components/passwordmgr/test/mochitest/";
+const EXAMPLE_COM = window.location.origin + "/tests/toolkit/components/passwordmgr/test/mochitest/";
 const PREFILLED_FORM_URL = EXAMPLE_COM + "subtst_prefilled_form.html"
 
 let iframe = document.getElementById("loginFrame");
@@ -38,18 +38,15 @@ function waitForLoad() {
 }
 
 async function setupWithOneLogin(pageUrl) {
-  let chromeScript = runInParent(function testSetup() {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-    let login = Cc["@mozilla.org/login-manager/loginInfo;1"]
-                        .createInstance(Ci.nsILoginInfo);
-    login.init("https://example.com", "https://example.com", null,
-               "user1", "pass1");
+  let origin = window.location.origin;
+  addLoginsInParent([origin, origin, null, "user1", "pass1"]);
 
-    Services.logins.addLogin(login);
+  let chromeScript = runInParent(function testSetup() {
     for (let l of Services.logins.getAllLogins()) {
       info("Got login: " + l.username + ", " + l.password);
     }
   });
+
   await setup(pageUrl);
   return chromeScript;
 }

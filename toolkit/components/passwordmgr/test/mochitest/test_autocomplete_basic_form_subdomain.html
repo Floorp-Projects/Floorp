@@ -14,34 +14,27 @@
 Login Manager test: logins with non-exact match origin appear in autocomplete dropdown
 
 <script>
+let origin = window.location.origin;
+let lastDot = origin.lastIndexOf(".");
+let suffix = origin.slice(lastDot);
+
+let baseHost = "http://example" + suffix;
+let baseSecureHost = "https://example" + suffix;
+let oldHost = "http://old.example" + suffix;
+let oldSecureHost = "https://old.example" + suffix;
+let newHost = "https://new.example" + suffix;
+
+addLoginsInParent(
+  // The first two logins should never be visible on https: versions of
+  // *.example.com since the login is for http: and an https: login exists for this username.
+  [oldHost, oldSecureHost, null, "dsdu1", "dsdp1new", "uname", "pword"],
+  [baseHost, baseSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
+  [oldSecureHost, oldSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
+  [baseSecureHost, baseSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
+  [newHost, newHost, null, "dsdu1", "dsdp1prime", "uname", "pword"]);
+
 var setupScript = runInParent(function setup() {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-  // Create some logins just for this form, since we'll be deleting them.
-  let nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                           Ci.nsILoginInfo, "init");
-  assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
-
-  let login1 = new nsLoginInfo("https://old.example.com", "https://old.example.com", null,
-                               "dsdu1", "dsdp1", "uname", "pword");
-  let login1httpDiffPass = new nsLoginInfo("http://old.example.com", "https://old.example.com", null,
-                                           "dsdu1", "dsdp1new", "uname", "pword");
-  let login2 = new nsLoginInfo("https://example.com", "https://example.com", null,
-                               "dsdu1", "dsdp1", "uname", "pword");
-  let login2httpSamePass = new nsLoginInfo("http://example.com", "https://example.com", null,
-                                           "dsdu1", "dsdp1", "uname", "pword");
-  let login3 = new nsLoginInfo("https://new.example.com", "https://new.example.com", null,
-                               "dsdu1", "dsdp1prime", "uname", "pword");
-
-  // `login1httpDiffPass` and `login2httpSamePass` should never be visible on https: versions of
-  // *.example.com since the login is for http: and an https: login exists for this username.
-  Services.logins.addLogin(login1httpDiffPass);
-  Services.logins.addLogin(login2httpSamePass);
-
-  Services.logins.addLogin(login1);
-  Services.logins.addLogin(login2);
-  Services.logins.addLogin(login3);
-
   addMessageListener("getDateString", () => {
     let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
     return dateAndTimeFormatter.format(new Date());
@@ -116,7 +109,7 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
   let dateString = await setupScript.sendQuery("getDateString");
   let username = `dsdu1 (${dateString})`;
 
-  checkAutoCompleteResults(results, [username, username], "example.com", "Check all menuitems are displayed correctly.");
+  checkAutoCompleteResults(results, [username, username], window.location.host, "Check all menuitems are displayed correctly.");
 
   synthesizeKey("KEY_ArrowDown"); // first item
   checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting

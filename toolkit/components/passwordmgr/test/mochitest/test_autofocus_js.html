@@ -17,26 +17,10 @@ SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
 
 const chromeScript = runChecksAfterCommonInit(false);
 
-runInParent(function addLogins() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-  // Create some logins just for this form, since we'll be deleting them.
-  let nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                           Ci.nsILoginInfo, "init");
-
-  let login0 = new nsLoginInfo("https://example.com", "https://example.com", null,
-                               "name", "pass");
-
-  let login1 = new nsLoginInfo("https://example.com", "https://example.com", null,
-                               "name1", "pass1");
-
-  try {
-    Services.logins.addLogin(login0);
-    Services.logins.addLogin(login1);
-  } catch (e) {
-    assert.ok(false, "addLogin threw: " + e);
-  }
-});
+let origin = window.location.origin;
+addLoginsInParent(
+  [origin, origin, null, "name", "pass"],
+  [origin, origin, null, "name1", "pass1"]);
 </script>
 <p id="display"></p>
 
