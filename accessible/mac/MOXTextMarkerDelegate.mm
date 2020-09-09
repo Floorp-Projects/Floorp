@@ -135,11 +135,6 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   GeckoTextMarker p1(mGeckoDocAccessible, textMarkers[0]);
   GeckoTextMarker p2(mGeckoDocAccessible, textMarkers[1]);
 
-  if (!p1.IsValid() || p2.IsValid()) {
-    // If either marker is invalid, return nil.
-    return nil;
-  }
-
   bool ordered = p1 < p2;
   GeckoTextMarkerRange range(ordered ? p1 : p2, ordered ? p2 : p1);
 
