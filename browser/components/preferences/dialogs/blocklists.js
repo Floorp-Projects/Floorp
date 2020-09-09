@@ -69,11 +69,10 @@ var gBlocklistManager = {
   },
 
   onLoad() {
-    let params = window.arguments[0];
-    this.init(params);
+    this.init();
   },
 
-  init(params) {
+  init() {
     if (this._type) {
       // reusing an open dialog, clear the old observer
       this.uninit();
