@@ -39,6 +39,7 @@ fi
 : NEED_WINDOW_MANAGER           ${NEED_WINDOW_MANAGER:=false}
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
 : NEED_COMPIZ                   ${NEED_COPMPIZ:=false}
+: NEED_WAYLAND                  ${MOZ_ENABLE_WAYLAND:=false}
 : START_VNC                     ${START_VNC:=false}
 : TASKCLUSTER_INTERACTIVE       ${TASKCLUSTER_INTERACTIVE:=false}
 : mozharness args               "${@}"
@@ -73,10 +74,24 @@ fi
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
+if $NEED_WAYLAND; then
+  NEED_XVFB=1
+fi
+
 # make sure artifact directories exist
 mkdir -p "$WORKSPACE/logs"
 mkdir -p "$WORKING_DIR/artifacts/public"
 mkdir -p "$WORKSPACE/build/blobber_upload_dir"
+
+cleanup_mutter() {
+    local mutter_pids=`ps aux | grep 'mutter --wayland --nested' | grep -v grep | awk '{print $2}'`
+    if [ "$mutter_pids" != "" ]; then
+        echo "Killing the following Mutter processes: $mutter_pids"
+        sudo kill $mutter_pids
+    else
+        echo "No Mutter processes to kill"
+    fi
+}
 
 cleanup() {
     local rv=$?
@@ -86,6 +101,9 @@ cleanup() {
     fi
     if $NEED_XVFB; then
         cleanup_xvfb
+    fi
+    if $NEED_WAYLAND; then
+        cleanup_mutter
     fi
     exit $rv
 }
@@ -138,6 +156,10 @@ if $NEED_XVFB; then
     # note that this file is not available when run under native-worker
     . $HOME/scripts/xvfb.sh
     start_xvfb '1600x1200x24' 0
+    if $NEED_WAYLAND; then
+        mutter --wayland --nested &
+        export WAYLAND_DISPLAY=wayland-0
+    fi
 fi
 
 if $START_VNC; then
