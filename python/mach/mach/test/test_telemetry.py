@@ -37,17 +37,24 @@ def run_mach(tmpdir):
         update_or_create_build_telemetry_config(text_type(tmpdir.join('machrc')))
     env = dict(os.environ)
     env['MOZBUILD_STATE_PATH'] = str(tmpdir)
-    env['MACH_TELEMETRY_NO_SUBMIT'] = '1'
-    # Let whatever mach command we invoke from tests believe it's the main command.
-    del env['MACH_MAIN_PID']
+    env['TEST_MACH_TELEMETRY_NO_SUBMIT'] = '1'
     mach = os.path.join(buildconfig.topsrcdir, 'mach')
 
     def run(*args, **kwargs):
+        # Let whatever mach command we invoke from tests believe it's the main command.
+        mach_main_pid = env.pop('MACH_MAIN_PID')
+        moz_automation = env.pop('MOZ_AUTOMATION', None)
+        task_id = env.pop('TASK_ID', None)
+
         # Run mach with the provided arguments
         out = subprocess.check_output([sys.executable, mach] + list(args),
                                       stderr=subprocess.STDOUT,
                                       env=env,
                                       **kwargs)
+
+        env['MACH_MAIN_PID'] = mach_main_pid
+        env['MOZ_AUTOMATION'] = moz_automation
+        env['TASK_ID'] = task_id
         # Load any telemetry data that was written
         path = tmpdir.join('telemetry', 'outgoing')
         try:

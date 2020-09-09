@@ -110,7 +110,7 @@ class MachRegistrar(object):
         if not debug_command:
             postrun = getattr(context, 'post_dispatch_handler', None)
             if postrun:
-                postrun(context, handler, instance, result,
+                postrun(context, handler, instance, not result,
                         start_time, end_time, self.command_depth, args=kwargs)
         self.command_depth -= 1
 

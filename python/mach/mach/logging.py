@@ -296,6 +296,10 @@ class LoggingManager(object):
         ``terminal`` and ``json`` determine which log handlers to operate
         on. By default, all known handlers are operated on.
         """
+
+        # Glean makes logs that we're not interested in, so we squelch them.
+        logging.getLogger('glean').setLevel(logging.CRITICAL)
+
         # Remove current handlers from all loggers so we don't double
         # register handlers.
         for logger in self.root_logger.manager.loggerDict.values():
