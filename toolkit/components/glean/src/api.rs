@@ -151,6 +151,9 @@ fn register_uploader() {
             let localhost_port = static_prefs::pref!("telemetry.fog.test.localhost_port");
             if localhost_port > 0 {
                 server = format!("http://localhost:{}", localhost_port);
+            } else if localhost_port < 0 {
+                log::info!("FOG Ping uploader faking success");
+                return Ok(UploadResult::HttpStatus(200));
             }
             let url = Url::parse(&server)?.join(&ping_request.path)?;
             log::info!("FOG Ping uploader uploading to {:?}", url);

@@ -9297,7 +9297,7 @@
   mirror: always
 
 - name: telemetry.fog.test.localhost_port
-  type: RelaxedAtomicUint32
+  type: RelaxedAtomicInt32
   value: 0
   mirror: always
   rust: true
