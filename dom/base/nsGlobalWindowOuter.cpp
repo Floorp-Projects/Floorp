@@ -246,6 +246,7 @@
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/Worklet.h"
 #include "AccessCheck.h"
+#include "MobileViewportManager.h"
 
 #ifdef HAVE_SIDEBAR
 #  include "mozilla/dom/ExternalBinding.h"
@@ -3549,7 +3550,7 @@ nsresult nsGlobalWindowOuter::GetInnerSize(CSSIntSize& aSize) {
   NS_ENSURE_STATE(mDocShell);
 
   RefPtr<nsPresContext> presContext = mDocShell->GetPresContext();
-  PresShell* presShell = mDocShell->GetPresShell();
+  RefPtr<PresShell> presShell = mDocShell->GetPresShell();
 
   if (!presContext || !presShell) {
     aSize = CSSIntSize(0, 0);
@@ -3561,6 +3562,14 @@ nsresult nsGlobalWindowOuter::GetInnerSize(CSSIntSize& aSize) {
   RefPtr<nsViewManager> viewManager = presShell->GetViewManager();
   if (viewManager) {
     viewManager->FlushDelayedResize(false);
+  }
+
+  // If this is called before the usual triggers for MVM to compute
+  // an initial viewport (load, DOMMetaAdded, first paint), compute
+  // one now.
+  if (RefPtr<MobileViewportManager> mvm =
+          presShell->GetMobileViewportManager()) {
+    mvm->EnsureInitialViewportSet();
   }
 
   // FIXME: Bug 1598487 - Return the layout viewport instead of the ICB.
