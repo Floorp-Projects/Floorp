@@ -783,9 +783,10 @@ Toolbox.prototype = {
       // there is always at least one listener existing for network events across
       // the lifetime of the various panels, so stopping the resource watcher from
       // clearing out its cache of network event resources.
+      this.noopNetworkEventListener = () => {};
       await this.resourceWatcher.watchResources(
         [this.resourceWatcher.TYPES.NETWORK_EVENT],
-        { onAvailable: () => {}, onUpdated: () => {} }
+        { onAvailable: this.noopNetworkEventListener }
       );
 
       await domReady;
@@ -3641,6 +3642,10 @@ Toolbox.prototype = {
       TargetList.ALL_TYPES,
       this._onTargetAvailable,
       this._onTargetDestroyed
+    );
+    this.resourceWatcher.unwatchResources(
+      [this.resourceWatcher.TYPES.NETWORK_EVENT],
+      { onAvailable: this.noopNetworkEventListener }
     );
 
     this.targetList.destroy();
