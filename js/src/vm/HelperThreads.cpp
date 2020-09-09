@@ -2172,10 +2172,7 @@ void HelperThread::handlePromiseHelperTaskWorkload(
       HelperThreadState().promiseHelperTasks(locked).popCopy();
   currentTask.emplace(task);
 
-  {
-    AutoUnlockHelperThreadState unlock(locked);
-    task->runTask();
-  }
+  task->runTaskLocked(locked);
 
   currentTask.reset();
 
@@ -2387,9 +2384,17 @@ void PromiseHelperTask::executeAndResolveAndDestroy(JSContext* cx) {
   run(cx, JS::Dispatchable::NotShuttingDown);
 }
 
-void PromiseHelperTask::runTask() {
-  execute();
-  dispatchResolveAndDestroy();
+void PromiseHelperTask::runTaskLocked(AutoLockHelperThreadState& lock) {
+  {
+    AutoUnlockHelperThreadState unlock(lock);
+    execute();
+  }
+
+  // Don't release the lock between dispatching the resolve and destroy
+  // operation (which may start immediately on another thread) and returning
+  // from this method.
+
+  dispatchResolveAndDestroy(lock);
 }
 
 bool js::StartOffThreadPromiseHelperTask(JSContext* cx,

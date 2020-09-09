@@ -17,7 +17,6 @@
 #include "js/Promise.h"  // JS::Dispatchable, JS::Dispatchable::MaybeShuttingDown, JS::DispatchToEventLoopCallback
 #include "js/RootingAPI.h"                // JS::Handle, JS::PersistentRooted
 #include "threading/ConditionVariable.h"  // js::ConditionVariable
-#include "threading/Mutex.h"              // js::Mutex
 #include "vm/PromiseObject.h"             // js::PromiseObject
 
 struct JS_PUBLIC_API JSContext;
@@ -136,6 +135,7 @@ class OffThreadPromiseTask : public JS::Dispatchable {
   // However, if shutdown interrupts, resolve() may not be called, though the
   // OffThreadPromiseTask will be destroyed on a JSContext thread.
   void dispatchResolveAndDestroy();
+  void dispatchResolveAndDestroy(const AutoLockHelperThreadState& lock);
 };
 
 using OffThreadPromiseTaskSet =
@@ -152,26 +152,33 @@ class OffThreadPromiseRuntimeState {
   JS::DispatchToEventLoopCallback dispatchToEventLoopCallback_;
   void* dispatchToEventLoopClosure_;
 
-  // All following fields are mutated by any thread and are guarded by mutex_.
-  Mutex mutex_;
-
   // A set of all OffThreadPromiseTasks that have successfully called 'init'.
   // OffThreadPromiseTask's destructor removes them from the set.
-  OffThreadPromiseTaskSet live_;
+  HelperThreadLockData<OffThreadPromiseTaskSet> live_;
 
-  // The allCancelled_ condition is waited on and notified during engine
+  // The allCanceled_ condition is waited on and notified during engine
   // shutdown, communicating when all off-thread tasks in live_ are safe to be
   // destroyed from the (shutting down) main thread. This condition is met when
   // live_.count() == numCanceled_ where "canceled" means "the
   // DispatchToEventLoopCallback failed after this task finished execution".
-  ConditionVariable allCanceled_;
-  size_t numCanceled_;
+  HelperThreadLockData<ConditionVariable> allCanceled_;
+  HelperThreadLockData<size_t> numCanceled_;
 
   // The queue of JS::Dispatchables used by the DispatchToEventLoopCallback that
   // calling js::UseInternalJobQueues installs.
-  DispatchableFifo internalDispatchQueue_;
-  ConditionVariable internalDispatchQueueAppended_;
-  bool internalDispatchQueueClosed_;
+  HelperThreadLockData<DispatchableFifo> internalDispatchQueue_;
+  HelperThreadLockData<ConditionVariable> internalDispatchQueueAppended_;
+  HelperThreadLockData<bool> internalDispatchQueueClosed_;
+
+  OffThreadPromiseTaskSet& live() { return live_.ref(); }
+  ConditionVariable& allCanceled() { return allCanceled_.ref(); }
+
+  DispatchableFifo& internalDispatchQueue() {
+    return internalDispatchQueue_.ref();
+  }
+  ConditionVariable& internalDispatchQueueAppended() {
+    return internalDispatchQueueAppended_.ref();
+  }
 
   static bool internalDispatchToEventLoop(void*, JS::Dispatchable*);
   bool usingInternalDispatchQueue() const;
