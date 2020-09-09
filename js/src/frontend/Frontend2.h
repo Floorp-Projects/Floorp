@@ -12,9 +12,11 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t
 
-#include "js/RootingAPI.h"  // JS::Handle
-#include "js/SourceText.h"  // JS::SourceText
-#include "vm/JSScript.h"    // JSScript
+#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
+#include "js/RootingAPI.h"      // JS::Handle
+#include "js/SourceText.h"      // JS::SourceText
+#include "js/UniquePtr.h"       // js::UniquePtr
+#include "vm/JSScript.h"        // JSScript
 
 struct JSContext;
 
@@ -42,6 +44,10 @@ class Smoosh {
 
   static bool compileGlobalScriptToStencil(
       JSContext* cx, CompilationInfo& compilationInfo,
+      JS::SourceText<mozilla::Utf8Unit>& srcBuf, bool* unimplemented);
+
+  static UniquePtr<CompilationInfo> compileGlobalScriptToStencil(
+      JSContext* cx, const JS::ReadOnlyCompileOptions& options,
       JS::SourceText<mozilla::Utf8Unit>& srcBuf, bool* unimplemented);
 };
 
