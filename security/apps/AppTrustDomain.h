@@ -7,9 +7,15 @@
 #ifndef AppTrustDomain_h
 #define AppTrustDomain_h
 
+#include "mozilla/Span.h"
 #include "mozpkix/pkixtypes.h"
 #include "nsDebug.h"
-#include "ScopedNSSTypes.h"
+#ifdef MOZ_NEW_CERT_STORAGE
+#  include "nsICertStorage.h"
+#else
+#  include "nsICertBlocklist.h"
+#endif
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace psm {
@@ -18,7 +24,7 @@ class AppTrustDomain final : public mozilla::pkix::TrustDomain {
  public:
   typedef mozilla::pkix::Result Result;
 
-  AppTrustDomain(UniqueCERTCertList& certChain, void* pinArg);
+  explicit AppTrustDomain(nsTArray<Span<const uint8_t>>&& collectedCerts);
 
   nsresult SetTrustedRoot(AppTrustedRoot trustedRoot);
 
@@ -72,10 +78,14 @@ class AppTrustDomain final : public mozilla::pkix::TrustDomain {
                            size_t digestBufLen) override;
 
  private:
-  /*out*/ UniqueCERTCertList& mCertChain;
-  void* mPinArg;  // non-owning!
-  UniqueCERTCertificate mTrustedRoot;
-  UniqueCERTCertificate mAddonsIntermediate;
+  Span<const uint8_t> mTrustedRoot;
+  Span<const uint8_t> mAddonsIntermediate;
+  nsTArray<Span<const uint8_t>> mIntermediates;
+#ifdef MOZ_NEW_CERT_STORAGE
+  nsCOMPtr<nsICertStorage> mCertBlocklist;
+#else
+  nsCOMPtr<nsICertBlocklist> mCertBlocklist;
+#endif
 };
 
 }  // namespace psm
