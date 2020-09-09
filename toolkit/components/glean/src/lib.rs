@@ -111,9 +111,11 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
     }
 
     if configuration.data_path.len() > 0 {
-        if let Err(e) = api::initialize(configuration, client_info) {
-            log::error!("Failed to init FOG due to {:?}", e);
-        }
+        std::thread::spawn(move || {
+            if let Err(e) = api::initialize(configuration, client_info) {
+                log::error!("Failed to init FOG due to {:?}", e);
+            }
+        });
     }
 
     NS_OK
