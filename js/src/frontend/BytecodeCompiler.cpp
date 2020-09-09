@@ -188,11 +188,62 @@ static void tellDebuggerAboutCompiledScript(JSContext* cx, bool hideScript,
   }
 }
 
+#ifdef JS_ENABLE_SMOOSH
+bool TrySmoosh(JSContext* cx, CompilationInfo& compilationInfo,
+               JS::SourceText<Utf8Unit>& srcBuf, bool* fallback) {
+  if (!cx->options().trySmoosh()) {
+    *fallback = true;
+    return true;
+  }
+
+  bool unimplemented = false;
+  JSRuntime* rt = cx->runtime();
+  bool result = Smoosh::compileGlobalScriptToStencil(cx, compilationInfo,
+                                                     srcBuf, &unimplemented);
+  if (!unimplemented) {
+    *fallback = false;
+
+    if (!compilationInfo.input.assignSource(cx, srcBuf)) {
+      return false;
+    }
+
+    if (cx->options().trackNotImplemented()) {
+      rt->parserWatcherFile.put("1");
+    }
+    return result;
+  }
+  *fallback = true;
+
+  if (cx->options().trackNotImplemented()) {
+    rt->parserWatcherFile.put("0");
+  }
+  fprintf(stderr, "Falling back!\n");
+
+  return true;
+}
+
+bool TrySmoosh(JSContext* cx, CompilationInfo& compilationInfo,
+               JS::SourceText<char16_t>& srcBuf, bool* fallback) {
+  *fallback = true;
+  return true;
+}
+#endif  // JS_ENABLE_SMOOSH
+
 template <typename Unit>
 static bool CompileGlobalScriptToStencilImpl(JSContext* cx,
                                              CompilationInfo& compilationInfo,
                                              JS::SourceText<Unit>& srcBuf,
                                              ScopeKind scopeKind) {
+#ifdef JS_ENABLE_SMOOSH
+  bool fallback = false;
+  if (!TrySmoosh(cx, compilationInfo, srcBuf, &fallback)) {
+    return false;
+  }
+  if (!fallback) {
+    return true;
+  }
+#endif  // JS_ENABLE_SMOOSH
+
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
@@ -230,32 +281,42 @@ bool frontend::CompileGlobalScriptToStencil(JSContext* cx,
                                             CompilationInfo& compilationInfo,
                                             JS::SourceText<Utf8Unit>& srcBuf,
                                             ScopeKind scopeKind) {
-#ifdef JS_ENABLE_SMOOSH
-  if (cx->options().trySmoosh()) {
-    bool unimplemented = false;
-    JSRuntime* rt = cx->runtime();
-    bool result = Smoosh::compileGlobalScriptToStencil(cx, compilationInfo,
-                                                       srcBuf, &unimplemented);
-    if (!unimplemented) {
-      if (!compilationInfo.input.assignSource(cx, srcBuf)) {
-        return false;
-      }
-
-      if (cx->options().trackNotImplemented()) {
-        rt->parserWatcherFile.put("1");
-      }
-      return result;
-    }
-
-    if (cx->options().trackNotImplemented()) {
-      rt->parserWatcherFile.put("0");
-    }
-    fprintf(stderr, "Falling back!\n");
-  }
-#endif  // JS_ENABLE_SMOOSH
-
   return CompileGlobalScriptToStencilImpl(cx, compilationInfo, srcBuf,
                                           scopeKind);
+}
+
+template <typename Unit>
+static UniquePtr<CompilationInfo> CompileGlobalScriptToStencilImpl(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
+  Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(
+      cx, js_new<frontend::CompilationInfo>(cx, options));
+  if (!compilationInfo) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  if (!compilationInfo.get()->input.initForGlobal(cx)) {
+    return nullptr;
+  }
+
+  if (!CompileGlobalScriptToStencil(cx, *compilationInfo, srcBuf, scopeKind)) {
+    return nullptr;
+  }
+
+  return std::move(compilationInfo.get());
+}
+
+UniquePtr<CompilationInfo> frontend::CompileGlobalScriptToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind) {
+  return CompileGlobalScriptToStencilImpl(cx, options, srcBuf, scopeKind);
+}
+
+UniquePtr<CompilationInfo> frontend::CompileGlobalScriptToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Utf8Unit>& srcBuf, ScopeKind scopeKind) {
+  return CompileGlobalScriptToStencilImpl(cx, options, srcBuf, scopeKind);
 }
 
 bool frontend::InstantiateStencils(JSContext* cx,
@@ -800,6 +861,40 @@ bool frontend::ParseModuleToStencil(JSContext* cx,
                                     CompilationInfo& compilationInfo,
                                     SourceText<Utf8Unit>& srcBuf) {
   return ParseModuleToStencilImpl(cx, compilationInfo, srcBuf);
+}
+
+template <typename Unit>
+static UniquePtr<CompilationInfo> ParseModuleToStencilImpl(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<Unit>& srcBuf) {
+  Rooted<UniquePtr<frontend::CompilationInfo>> compilationInfo(
+      cx, js_new<frontend::CompilationInfo>(cx, options));
+  if (!compilationInfo) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  if (!compilationInfo.get()->input.initForModule(cx)) {
+    return nullptr;
+  }
+
+  if (!ParseModuleToStencilImpl(cx, *compilationInfo, srcBuf)) {
+    return nullptr;
+  }
+
+  return std::move(compilationInfo.get());
+}
+
+UniquePtr<CompilationInfo> frontend::ParseModuleToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf) {
+  return ParseModuleToStencilImpl(cx, options, srcBuf);
+}
+
+UniquePtr<CompilationInfo> frontend::ParseModuleToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<Utf8Unit>& srcBuf) {
+  return ParseModuleToStencilImpl(cx, options, srcBuf);
 }
 
 template <typename Unit>
