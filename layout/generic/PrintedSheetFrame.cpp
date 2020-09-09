@@ -178,6 +178,28 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   // subsequent sheets because we should only create an additional sheet when
   // we discover a displayable (i.e. non-skipped) page that we need to push
   // to that new sheet.
+
+  // XXXdholbert In certain edge cases (e.g. after a page-orientation-flip that
+  // reduces the page count), it's possible for us to be given a page range
+  // that is *entirely out-of-bounds* (with "from" & "to" both being larger
+  // than our actual page-number count).  This scenario produces a single
+  // PrintedSheetFrame with zero displayable pages on it, which is a weird
+  // state to be in. This is hopefully a scenario that the frontend code can
+  // detect and recover from (e.g. by clamping the range to our reported
+  // `rawNumPages`), but it can't do that until *after* we've completed this
+  // problematic reflow and can reported an up-to-date `rawNumPages` to the
+  // frontend.  So: to give the frontend a chance to intervene and apply some
+  // correction/clamping to its print-range parameters, we soften this
+  // assertion *specifically for the first printed sheet*.
+  if (!GetPrevContinuation()) {
+    NS_WARNING_ASSERTION(numPagesOnThisSheet > 0,
+                         "Shouldn't create a sheet with no displayable pages "
+                         "on it");
+  } else {
+    MOZ_ASSERT(numPagesOnThisSheet > 0,
+               "Shouldn't create a sheet with no displayable pages on it");
+  }
+
   MOZ_ASSERT(numPagesOnThisSheet <= kDesiredPagesPerSheet,
              "Shouldn't have more than desired number of displayable pages "
              "on this sheet");
