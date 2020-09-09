@@ -594,10 +594,8 @@ body {
       margin-top: 14px;
 
       &:hover,
-      &:focus,
       &:active {
         background-color: initial;
-        box-shadow: 0 0 0 4px var(--welcome-button-box-shadow-color);
       }
     }
   }
