@@ -40,8 +40,8 @@ function xhrLoad(xmlDoc) {
   return {username, password, authok};
 }
 
-// Let prompt_common know what kind of modal type is enabled for auth prompts.
-modalType = authPromptModalType;
+// Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
+modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
 
 let prompterParent = runInParent(() => {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -131,19 +131,15 @@ add_task(async function test2() {
     checked: false,
     focused: "textField",
     defButton: "button0",
+    // Check that the dialog is modal, chrome and dependent;
+    // We can't just check window.opener because that'll be
+    // a content window, which therefore isn't exposed (it'll lie and
+    // be null).
+    chrome: true,
+    dialog: true,
+    chromeDependent: true,
+    isWindowModal: true,
   };
-
-  // For window prompts check that the dialog is modal, chrome and dependent;
-  // We can't just check window.opener because that'll be
-  // a content window, which therefore isn't exposed (it'll lie and
-  // be null).
-  if (authPromptModalType === SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW) {
-    state.chrome = true;
-    state.dialog = true;
-    state.chromeDependent = true;
-    state.isWindowModal = true;
-  }
-
   let action = {
     buttonClick: "ok",
   };
