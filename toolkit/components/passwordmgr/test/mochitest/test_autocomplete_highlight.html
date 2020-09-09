@@ -10,7 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <script>
-let readyPromise = registerRunTests();
+let readyPromise = registerRunTests(1);
 
 runInParent(function initLogins() {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");

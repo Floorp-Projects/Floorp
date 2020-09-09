@@ -11,7 +11,7 @@
 </head>
 <script>
 SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected field highlight to occur");
-let readyPromise = registerRunTests();
+let readyPromise = registerRunTests(1);
 
 runInParent(function initLogins() {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
