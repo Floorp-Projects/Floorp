@@ -8,7 +8,7 @@ const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
 
-module.exports = async function({ targetList, targetFront, onAvailable }) {
+module.exports = async function({ targetFront, onAvailable, onDestroyed }) {
   // XXX: When watching root node for a non top-level target, this will also
   // ensure the inspector & walker fronts for the target are initialized.
   // This also implies that we call reparentRemoteFrame on the new walker, which
@@ -49,8 +49,15 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
   }
 
   const inspectorFront = await targetFront.getFront("inspector");
-  await inspectorFront.walker.watchRootNode(node => {
+  inspectorFront.walker.on("root-available", node => {
     node.resourceType = ResourceWatcher.TYPES.ROOT_NODE;
     return onAvailable([node]);
   });
+
+  inspectorFront.walker.on("root-destroyed", node => {
+    node.resourceType = ResourceWatcher.TYPES.ROOT_NODE;
+    return onDestroyed([node]);
+  });
+
+  await inspectorFront.walker.watchRootNode();
 };

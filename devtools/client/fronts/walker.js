@@ -30,14 +30,18 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     // Set to true if cleanup should be requested after every mutation list.
     this.autoCleanup = true;
 
-    this._rootNodeWatchers = 0;
+    this._rootNodePromise = new Promise(
+      r => (this._rootNodePromiseResolve = r)
+    );
+
     this._onRootNodeAvailable = this._onRootNodeAvailable.bind(this);
     this._onRootNodeDestroyed = this._onRootNodeDestroyed.bind(this);
 
     this.before("new-mutations", this.onMutations.bind(this));
 
-    // Those events will only be emitted if we are watching root nodes on the
-    // actor. See `watchRootNode`.
+    // Those events will be emitted if watchRootNode was called on the
+    // corresponding WalkerActor, which should be handled by the ResourceWatcher
+    // as long as a consumer is watching for root-node resources.
     this.on("root-available", this._onRootNodeAvailable);
     this.on("root-destroyed", this._onRootNodeDestroyed);
   }
@@ -62,23 +66,9 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
    * set.
    */
   async getRootNode() {
-    // We automatically start and stop watching when getRootNode is called so
-    // that consumers using getRootNode without watchRootNode can still get a
-    // correct rootNode. Otherwise they might receive an outdated node.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1633348.
-    this._rootNodeWatchers++;
-    if (this._rootNodeWatchers === 1) {
-      await super.watchRootNode();
-    }
-
     let rootNode = this.rootNode;
     if (!rootNode) {
-      rootNode = await this.once("root-available");
-    }
-
-    this._rootNodeWatchers--;
-    if (this._rootNodeWatchers === 0) {
-      super.unwatchRootNode();
+      rootNode = await this._rootNodePromise;
     }
 
     return rootNode;
@@ -554,37 +544,27 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   _onRootNodeAvailable(rootNode) {
     if (this._isTopLevelRootNode(rootNode)) {
       this.rootNode = rootNode;
+      this._rootNodePromiseResolve(this.rootNode);
     }
   }
 
   _onRootNodeDestroyed(rootNode) {
-    this._releaseFront(rootNode, true);
     if (this._isTopLevelRootNode(rootNode)) {
+      this._rootNodePromise = new Promise(
+        r => (this._rootNodePromiseResolve = r)
+      );
       this.rootNode = null;
     }
   }
 
   _isTopLevelRootNode(rootNode) {
-    // When `supportsIsTopLevelDocument` is false, a root-node resource is
-    // necessarily top level, so we can fallback to true.
-    const { supportsIsTopLevelDocument } = rootNode.traits;
-    return supportsIsTopLevelDocument ? rootNode.isTopLevelDocument : true;
-  }
-
-  async watchRootNode(onRootNodeAvailable) {
-    this.on("root-available", onRootNodeAvailable);
-
-    this._rootNodeWatchers++;
-    if (this._rootNodeWatchers === 1) {
-      await super.watchRootNode();
-    } else if (this.rootNode) {
-      // This else branch is here for subsequent calls to `watchRootNode`:
-      //   If we skip `super.watchRootNode`, we should call
-      //   `onRootNodeAvailable` immediately, because the actor will not emit
-      //   "root-available". And we should not emit it from the Front, because
-      //   it would notify other consumers unnecessarily.
-      await onRootNodeAvailable(this.rootNode);
+    if (!rootNode.traits.supportsIsTopLevelDocument) {
+      // When `supportsIsTopLevelDocument` is false, a root-node resource is
+      // necessarily top level, so we can fallback to true.
+      return true;
     }
+
+    return rootNode.isTopLevelDocument;
   }
 
   /**
@@ -625,15 +605,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     }
 
     return super.cancelPick();
-  }
-
-  unwatchRootNode(onRootNodeAvailable) {
-    this.off("root-available", onRootNodeAvailable);
-
-    this._rootNodeWatchers--;
-    if (this._rootNodeWatchers === 0) {
-      super.unwatchRootNode();
-    }
   }
 }
 
