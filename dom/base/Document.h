@@ -1247,8 +1247,6 @@ class Document : public nsINode,
   // Returns a ViewportMetaData for this document.
   ViewportMetaData GetViewportMetaData() const;
 
-  void UpdateForScrollAnchorAdjustment(nscoord aLength);
-
   /**
    * True iff this doc will ignore manual character encoding overrides.
    */
@@ -4914,9 +4912,6 @@ class Document : public nsINode,
   nsWeakPtr mAutoFocusElement;
 
   nsCString mScrollToRef;
-
-  nscoord mScrollAnchorAdjustmentLength;
-  int32_t mScrollAnchorAdjustmentCount;
 
   // Weak reference to the scope object (aka the script global object)
   // that, unlike mScriptGlobalObject, is never unset once set. This
