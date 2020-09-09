@@ -404,6 +404,7 @@ class Bootstrapper(object):
                               self.instance.which('git-cinnabar'),
                               state_dir, checkout_root)
 
+        self.check_telemetry_opt_in(state_dir)
         self.maybe_install_private_packages_or_exit(state_dir, checkout_root)
 
         print(FINISHED % name)
