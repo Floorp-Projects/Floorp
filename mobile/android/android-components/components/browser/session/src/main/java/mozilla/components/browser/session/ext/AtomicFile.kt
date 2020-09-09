@@ -33,7 +33,7 @@ fun AtomicFile.readSnapshot(
 }
 
 /**
- * Saves the given [SessionManager.Snapshot] to this [AtomicFile].
+ * Saves the given [BrowserState] to this [AtomicFile].
  */
 fun AtomicFile.writeState(
     state: BrowserState,

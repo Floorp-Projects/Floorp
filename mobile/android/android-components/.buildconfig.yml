@@ -108,6 +108,10 @@ projects:
     path: components/feature/tab-collections
     description: 'Feature implementation for saving, restoring and organizing collections of tabs.'
     publish: true
+  feature-recentlyclosed:
+    path: components/feature/recentlyclosed
+    description: 'Feature implementation for saving and restoring recently closed tabs'
+    publish: true
   feature-toolbar:
     path: components/feature/toolbar
     description: 'Feature implementation connecting a toolbar implementation with the session module.'

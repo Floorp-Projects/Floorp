@@ -8,6 +8,8 @@ import android.content.ComponentCallbacks2
 import android.graphics.Bitmap
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ClosedTab
+import mozilla.components.browser.state.state.ClosedTabSessionState
 import mozilla.components.browser.state.state.ContainerState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
@@ -59,6 +61,45 @@ sealed class SystemAction : BrowserAction() {
 }
 
 /**
+ * [BrowserAction] implementations related to updating the list of [ClosedTabSessionState] inside [BrowserState].
+ */
+sealed class RecentlyClosedAction : BrowserAction() {
+    /**
+     * Initializes the [BrowserState.closedTabs] state.
+     */
+    object InitializeRecentlyClosedState : RecentlyClosedAction()
+
+    /**
+     * Adds a list of [ClosedTab] to the [BrowserState.closedTabs] list.
+     *
+     * @property tabs the [ClosedTab]s to add
+     */
+    data class AddClosedTabsAction(val tabs: List<ClosedTab>) : RecentlyClosedAction()
+
+    /**
+     * Removes a [ClosedTab] from the [BrowserState.closedTabs] list.
+     *
+     * @property tab the [ClosedTab] to remove
+     */
+    data class RemoveClosedTabAction(val tab: ClosedTab) : RecentlyClosedAction()
+
+    /**
+     * Removes all [ClosedTab]s from the [BrowserState.closedTabs] list.
+     */
+    object RemoveAllClosedTabAction : RecentlyClosedAction()
+
+    /**
+     * Prunes [ClosedTab]s from the [BrowserState.closedTabs] list to keep only [maxTabs].
+     */
+    data class PruneClosedTabsAction(val maxTabs: Int) : RecentlyClosedAction()
+
+    /**
+     * Updates [BrowserState.closedTabs] to register the given list of [ClosedTab].
+     */
+    data class ReplaceTabsAction(val tabs: List<ClosedTab>) : RecentlyClosedAction()
+}
+
+/**
  * [BrowserAction] implementations related to updating the list of [TabSessionState] inside [BrowserState].
  */
 sealed class TabListAction : BrowserAction() {
@@ -89,7 +130,8 @@ sealed class TabListAction : BrowserAction() {
      * @property selectParentIfExists whether or not a parent tab should be
      * selected if one exists, defaults to true.
      */
-    data class RemoveTabAction(val tabId: String, val selectParentIfExists: Boolean = true) : TabListAction()
+    data class RemoveTabAction(val tabId: String, val selectParentIfExists: Boolean = true) :
+        TabListAction()
 
     /**
      * Restores state from a (partial) previous state.
@@ -97,7 +139,8 @@ sealed class TabListAction : BrowserAction() {
      * @property tabs the [TabSessionState]s to restore.
      * @property selectedTabId the ID of the tab to select.
      */
-    data class RestoreAction(val tabs: List<TabSessionState>, val selectedTabId: String? = null) : TabListAction()
+    data class RestoreAction(val tabs: List<TabSessionState>, val selectedTabId: String? = null) :
+        TabListAction()
 
     /**
      * Removes both private and normal [TabSessionState]s.
@@ -193,22 +236,28 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the loading state of the [ContentState] with the given [sessionId].
      */
-    data class UpdateLoadingStateAction(val sessionId: String, val loading: Boolean) : ContentAction()
+    data class UpdateLoadingStateAction(val sessionId: String, val loading: Boolean) :
+        ContentAction()
 
     /**
      * Updates the search terms of the [ContentState] with the given [sessionId].
      */
-    data class UpdateSearchTermsAction(val sessionId: String, val searchTerms: String) : ContentAction()
+    data class UpdateSearchTermsAction(val sessionId: String, val searchTerms: String) :
+        ContentAction()
 
     /**
      * Updates the [SecurityInfoState] of the [ContentState] with the given [sessionId].
      */
-    data class UpdateSecurityInfoAction(val sessionId: String, val securityInfo: SecurityInfoState) : ContentAction()
+    data class UpdateSecurityInfoAction(
+        val sessionId: String,
+        val securityInfo: SecurityInfoState
+    ) : ContentAction()
 
     /**
      * Updates the icon of the [ContentState] with the given [sessionId].
      */
-    data class UpdateIconAction(val sessionId: String, val pageUrl: String, val icon: Bitmap) : ContentAction()
+    data class UpdateIconAction(val sessionId: String, val pageUrl: String, val icon: Bitmap) :
+        ContentAction()
 
     /**
      * Updates the thumbnail of the [ContentState] with the given [sessionId].
@@ -218,17 +267,20 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the [DownloadState] of the [ContentState] with the given [sessionId].
      */
-    data class UpdateDownloadAction(val sessionId: String, val download: DownloadState) : ContentAction()
+    data class UpdateDownloadAction(val sessionId: String, val download: DownloadState) :
+        ContentAction()
 
     /**
      * Removes the [DownloadState] of the [ContentState] with the given [sessionId].
      */
-    data class ConsumeDownloadAction(val sessionId: String, val downloadId: String) : ContentAction()
+    data class ConsumeDownloadAction(val sessionId: String, val downloadId: String) :
+        ContentAction()
 
     /**
      * Updates the [HitResult] of the [ContentState] with the given [sessionId].
      */
-    data class UpdateHitResultAction(val sessionId: String, val hitResult: HitResult) : ContentAction()
+    data class UpdateHitResultAction(val sessionId: String, val hitResult: HitResult) :
+        ContentAction()
 
     /**
      * Removes the [HitResult] of the [ContentState] with the given [sessionId].
@@ -238,7 +290,8 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the [PromptRequest] of the [ContentState] with the given [sessionId].
      */
-    data class UpdatePromptRequestAction(val sessionId: String, val promptRequest: PromptRequest) : ContentAction()
+    data class UpdatePromptRequestAction(val sessionId: String, val promptRequest: PromptRequest) :
+        ContentAction()
 
     /**
      * Removes the [PromptRequest] of the [ContentState] with the given [sessionId].
@@ -248,7 +301,8 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Adds a [FindResultState] to the [ContentState] with the given [sessionId].
      */
-    data class AddFindResultAction(val sessionId: String, val findResult: FindResultState) : ContentAction()
+    data class AddFindResultAction(val sessionId: String, val findResult: FindResultState) :
+        ContentAction()
 
     /**
      * Removes all [FindResultState]s of the [ContentState] with the given [sessionId].
@@ -258,7 +312,8 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the [WindowRequest] of the [ContentState] with the given [sessionId].
      */
-    data class UpdateWindowRequestAction(val sessionId: String, val windowRequest: WindowRequest) : ContentAction()
+    data class UpdateWindowRequestAction(val sessionId: String, val windowRequest: WindowRequest) :
+        ContentAction()
 
     /**
      * Removes the [WindowRequest] of the [ContentState] with the given [sessionId].
@@ -268,7 +323,8 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the [SearchRequest] of the [ContentState] with the given [sessionId].
      */
-    data class UpdateSearchRequestAction(val sessionId: String, val searchRequest: SearchRequest) : ContentAction()
+    data class UpdateSearchRequestAction(val sessionId: String, val searchRequest: SearchRequest) :
+        ContentAction()
 
     /**
      * Removes the [SearchRequest] of the [ContentState] with the given [sessionId].
@@ -278,12 +334,14 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates [fullScreenEnabled] with the given [sessionId].
      */
-    data class FullScreenChangedAction(val sessionId: String, val fullScreenEnabled: Boolean) : ContentAction()
+    data class FullScreenChangedAction(val sessionId: String, val fullScreenEnabled: Boolean) :
+        ContentAction()
 
     /**
      * Updates [pipEnabled] with the given [sessionId].
      */
-    data class PictureInPictureChangedAction(val sessionId: String, val pipEnabled: Boolean) : ContentAction()
+    data class PictureInPictureChangedAction(val sessionId: String, val pipEnabled: Boolean) :
+        ContentAction()
 
     /**
      * Updates the [layoutInDisplayCutoutMode] with the given [sessionId].
@@ -291,12 +349,14 @@ sealed class ContentAction : BrowserAction() {
      * @property sessionId the ID of the session
      * @property layoutInDisplayCutoutMode value of defined in https://developer.android.com/reference/android/view/WindowManager.LayoutParams#layoutInDisplayCutoutMode
      */
-    data class ViewportFitChangedAction(val sessionId: String, val layoutInDisplayCutoutMode: Int) : ContentAction()
+    data class ViewportFitChangedAction(val sessionId: String, val layoutInDisplayCutoutMode: Int) :
+        ContentAction()
 
     /**
      * Updates the [ContentState] of the given [sessionId] to indicate whether or not a back navigation is possible.
      */
-    data class UpdateBackNavigationStateAction(val sessionId: String, val canGoBack: Boolean) : ContentAction()
+    data class UpdateBackNavigationStateAction(val sessionId: String, val canGoBack: Boolean) :
+        ContentAction()
 
     /**
      * Updates the [ContentState] of the given [sessionId] to indicate whether the first contentful paint has happened.
@@ -309,12 +369,18 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the [ContentState] of the given [sessionId] to indicate whether or not a forward navigation is possible.
      */
-    data class UpdateForwardNavigationStateAction(val sessionId: String, val canGoForward: Boolean) : ContentAction()
+    data class UpdateForwardNavigationStateAction(
+        val sessionId: String,
+        val canGoForward: Boolean
+    ) : ContentAction()
 
     /**
      * Updates the [WebAppManifest] of the [ContentState] with the given [sessionId].
      */
-    data class UpdateWebAppManifestAction(val sessionId: String, val webAppManifest: WebAppManifest) : ContentAction()
+    data class UpdateWebAppManifestAction(
+        val sessionId: String,
+        val webAppManifest: WebAppManifest
+    ) : ContentAction()
 
     /**
      * Removes the [WebAppManifest] of the [ContentState] with the given [sessionId].
@@ -344,17 +410,20 @@ sealed class TrackingProtectionAction : BrowserAction() {
     /**
      * Updates the [TrackingProtectionState.ignoredOnTrackingProtection] flag.
      */
-    data class ToggleExclusionListAction(val tabId: String, val excluded: Boolean) : TrackingProtectionAction()
+    data class ToggleExclusionListAction(val tabId: String, val excluded: Boolean) :
+        TrackingProtectionAction()
 
     /**
      * Adds a [Tracker] to the [TrackingProtectionState.blockedTrackers] list.
      */
-    data class TrackerBlockedAction(val tabId: String, val tracker: Tracker) : TrackingProtectionAction()
+    data class TrackerBlockedAction(val tabId: String, val tracker: Tracker) :
+        TrackingProtectionAction()
 
     /**
      * Adds a [Tracker] to the [TrackingProtectionState.loadedTrackers] list.
      */
-    data class TrackerLoadedAction(val tabId: String, val tracker: Tracker) : TrackingProtectionAction()
+    data class TrackerLoadedAction(val tabId: String, val tracker: Tracker) :
+        TrackingProtectionAction()
 
     /**
      * Clears the [TrackingProtectionState.blockedTrackers] and [TrackingProtectionState.blockedTrackers] lists.
@@ -393,13 +462,17 @@ sealed class WebExtensionAction : BrowserAction() {
     /**
      * Updates the [WebExtensionState.enabled] flag.
      */
-    data class UpdateWebExtensionAllowedInPrivateBrowsingAction(val extensionId: String, val allowed: Boolean) :
+    data class UpdateWebExtensionAllowedInPrivateBrowsingAction(
+        val extensionId: String,
+        val allowed: Boolean
+    ) :
         WebExtensionAction()
 
     /**
      * Updates the given [updatedExtension] in the [BrowserState.extensions].
      */
-    data class UpdateWebExtensionAction(val updatedExtension: WebExtensionState) : WebExtensionAction()
+    data class UpdateWebExtensionAction(val updatedExtension: WebExtensionState) :
+        WebExtensionAction()
 
     /**
      * Updates a browser action of a given [extensionId].
@@ -604,22 +677,25 @@ sealed class ReaderAction : BrowserAction() {
     /**
      * Updates the [ReaderState.checkRequired] flag.
      */
-    data class UpdateReaderableCheckRequiredAction(val tabId: String, val checkRequired: Boolean) : ReaderAction()
+    data class UpdateReaderableCheckRequiredAction(val tabId: String, val checkRequired: Boolean) :
+        ReaderAction()
 
     /**
      * Updates the [ReaderState.connectRequired] flag.
      */
-    data class UpdateReaderConnectRequiredAction(val tabId: String, val connectRequired: Boolean) : ReaderAction()
+    data class UpdateReaderConnectRequiredAction(val tabId: String, val connectRequired: Boolean) :
+        ReaderAction()
 
     /**
-    * Updates the [ReaderState.readerBaseUrl].
-    */
+     * Updates the [ReaderState.readerBaseUrl].
+     */
     data class UpdateReaderBaseUrlAction(val tabId: String, val baseUrl: String) : ReaderAction()
 
     /**
      * Updates the [ReaderState.activeUrl].
      */
-    data class UpdateReaderActiveUrlAction(val tabId: String, val activeUrl: String) : ReaderAction()
+    data class UpdateReaderActiveUrlAction(val tabId: String, val activeUrl: String) :
+        ReaderAction()
 
     /**
      * Clears the [ReaderState.activeUrl].

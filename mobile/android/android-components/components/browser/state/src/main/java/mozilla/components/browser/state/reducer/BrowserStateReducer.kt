@@ -17,6 +17,7 @@ import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.LastAccessAction
+import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
@@ -36,6 +37,7 @@ internal object BrowserStateReducer {
     fun reduce(state: BrowserState, action: BrowserAction): BrowserState {
         return when (action) {
             is ContainerAction -> ContainerReducer.reduce(state, action)
+            is RecentlyClosedAction -> RecentlyClosedReducer.reduce(state, action)
             is ContentAction -> ContentStateReducer.reduce(state, action)
             is CustomTabListAction -> CustomTabListReducer.reduce(state, action)
             is EngineAction -> EngineStateReducer.reduce(state, action)
