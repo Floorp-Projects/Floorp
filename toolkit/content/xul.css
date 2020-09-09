@@ -123,6 +123,13 @@ html|label.toolbarbutton-badge:empty {
   display: none;
 }
 
+/********** button **********/
+
+button {
+  -moz-default-appearance: button;
+  appearance: auto;
+}
+
 /******** browser, editor, iframe ********/
 
 browser,
