@@ -411,7 +411,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "58d0932ca58f1aaecd28127f46c2b676d0e8e588"
+        "revision": "770c67e4727cbc975df26400ae7bf015f39c2689"
     },
     "es-AR": {
         "pin": false,
