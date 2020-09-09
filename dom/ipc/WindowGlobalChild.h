@@ -111,6 +111,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  void MaybeSendUpdateDocumentWouldPreloadResources();
+
  protected:
   const nsACString& GetRemoteType() override;
 
@@ -163,6 +165,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   int64_t mBeforeUnloadListeners = 0;
+  bool mDocumentWouldPreloadResources = false;
 };
 
 }  // namespace dom

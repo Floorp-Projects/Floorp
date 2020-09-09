@@ -1463,6 +1463,8 @@ class Document : public nsINode,
 
   bool HasThirdPartyChannel();
 
+  bool ShouldIncludeInTelemetry(bool aAllowExtensionURIs);
+
  protected:
   friend class nsUnblockOnloadEvent;
 

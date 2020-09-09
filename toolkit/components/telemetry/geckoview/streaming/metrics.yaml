@@ -1036,6 +1036,82 @@ performance.time:
       - sphilp@mozilla.com
     expires: never
 
+  load_event_start_preload:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_LOAD_EVENT_START_PRELOAD_MS
+    description: >
+      Time from navigationStart to [`loadEventStart`](https://www.w3.org/TR/
+      navigation-timing/#dom-performancetiming-loadstart) as per the W3C
+      Performance Timing API. This is only submitted on when the document
+      would preload a resource (i.e., if it encounters a `<link>` element or
+      a `Link` header with `rel="preload"`), even if the `network.preload`
+      pref is disabled.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1657188
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1657188#c5
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - barret@mozilla.com
+    expires: 2021-02-24
+
+  load_event_end_preload:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_LOAD_EVENT_END_PRELOAD_MS
+    description: >
+      Time from navigationStart to [`loadEventEnd`](https://www.w3.org/TR/
+      navigation-timing/#dom-performancetiming-loadend) as per the W3C
+      Performance Timing API. This is only submitted on when the document
+      would preload a resource (i.e., if it encounters a `<link>` element or
+      a `Link` header with `rel="preload"`), even if the `network.preload`
+      pref is disabled.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1657188
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1657188#c5
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - barret@mozilla.com
+    expires: 2021-02-24
+
+  load_event_start_no_preload:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_LOAD_EVENT_END_NO_PRELOAD_MS
+    description: >
+      Time from navigationStart to [`loadEventStart`](https://www.w3.org/TR/
+      navigation-timing/#dom-performancetiming-loadstart) as per the W3C
+      Performance Timing API. This is only submitted on when the document
+      would not preload a resource.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1657188
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1657188#c5
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - barret@mozilla.com
+    expires: 2021-02-24
+
+  load_event_end_no_preload:
+    type: timing_distribution
+    time_unit: millisecond
+    gecko_datapoint: TIME_TO_LOAD_EVENT_END_NO_PRELOAD_MS
+    description: >
+      Time from navigationStart to [`loadEventEnd`](https://www.w3.org/TR/
+      navigation-timing/#dom-performancetiming-loadend) as per the W3C
+      Performance Timing API. This is only submitted on when the document
+      would not preload a resource.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1657188
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1657188#c5
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - barret@mozilla.com
+    expires: 2021-02-24
+
 performance.page:
   non_blank_paint:
     type: timing_distribution
