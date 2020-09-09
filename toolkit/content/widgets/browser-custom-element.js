@@ -1171,9 +1171,13 @@
     }
 
     updateWebNavigationForLocationChange(aCanGoBack, aCanGoForward) {
-      if (this.isRemoteBrowser && this.messageManager) {
-        this._remoteWebNavigation.canGoBack = aCanGoBack;
-        this._remoteWebNavigation.canGoForward = aCanGoForward;
+      if (
+        this.isRemoteBrowser &&
+        this.messageManager &&
+        !lazyPrefs.sessionHistoryInParent
+      ) {
+        this._remoteWebNavigation._canGoBack = aCanGoBack;
+        this._remoteWebNavigation._canGoForward = aCanGoForward;
       }
     }
 
@@ -1218,9 +1222,9 @@
     }
 
     purgeSessionHistory() {
-      if (this.isRemoteBrowser) {
-        this._remoteWebNavigation.canGoBack = false;
-        this._remoteWebNavigation.canGoForward = false;
+      if (this.isRemoteBrowser && !lazyPrefs.sessionHistoryInParent) {
+        this._remoteWebNavigation._canGoBack = false;
+        this._remoteWebNavigation._canGoForward = false;
       }
       try {
         this.sendMessageToActor(

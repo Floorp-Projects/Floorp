@@ -13,14 +13,24 @@ ChromeUtils.defineModuleGetter(
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "SESSION_HISTORY_IN_PARENT",
+  "fission.sessionHistoryInParent",
+  false
+);
 
 class RemoteWebNavigation {
   constructor(aBrowser) {
     this._browser = aBrowser;
     this._cancelContentJSEpoch = 1;
     this._currentURI = null;
-    this.canGoBack = false;
-    this.canGoForward = false;
+    this._canGoBack = false;
+    this._canGoForward = false;
     this.referringURI = null;
     this.wrappedJSObject = this;
   }
@@ -36,6 +46,21 @@ class RemoteWebNavigation {
       { ...aOptions, epoch }
     );
     return epoch;
+  }
+
+  get canGoBack() {
+    if (SESSION_HISTORY_IN_PARENT) {
+      return this._browser.browsingContext.sessionHistory?.index > 0;
+    }
+    return this._canGoBack;
+  }
+
+  get canGoForward() {
+    if (SESSION_HISTORY_IN_PARENT) {
+      let sessionHistory = this._browser.browsingContext.sessionHistory;
+      return sessionHistory?.index < sessionHistory?.count - 1;
+    }
+    return this._canGoForward;
   }
 
   goBack(requireUserInteraction = false) {
