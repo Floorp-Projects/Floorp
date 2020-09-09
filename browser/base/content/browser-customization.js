@@ -12,25 +12,6 @@
  * events.
  */
 var CustomizationHandler = {
-  // These are the commands we continue to leave enabled while in customize mode.
-  // All other commands are disabled, and we remove the disabled attribute when
-  // leaving customize mode.
-  enabledCommands: new Set([
-    "cmd_newNavigator",
-    "cmd_newNavigatorTab",
-    "cmd_newNavigatorTabNoEvent",
-    "cmd_close",
-    "cmd_closeWindow",
-    "cmd_quitApplication",
-    "View:FullScreen",
-    "Browser:NextTab",
-    "Browser:PrevTab",
-    "Browser:NewUserContextTab",
-    "Tools:PrivateBrowsing",
-    "minimizeWindow",
-    "zoomWindow",
-  ]),
-
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "customizationstarting":
@@ -53,16 +34,6 @@ var CustomizationHandler = {
       childNode.setAttribute("disabled", true);
     }
 
-    for (let command of document.querySelectorAll("command")) {
-      if (!command.id || !this.enabledCommands.has(command.id)) {
-        if (command.getAttribute("disabled") != "true") {
-          command.setAttribute("disabled", true);
-        } else {
-          command.setAttribute("wasdisabled", true);
-        }
-      }
-    }
-
     let cmd = document.getElementById("cmd_CustomizeToolbars");
     cmd.setAttribute("disabled", "true");
 
@@ -79,17 +50,8 @@ var CustomizationHandler = {
 
     PlacesToolbarHelper.customizeDone();
 
-    for (let command of document.querySelectorAll("command")) {
-      if (!command.id || !this.enabledCommands.has(command.id)) {
-        if (command.getAttribute("wasdisabled") != "true") {
-          command.removeAttribute("disabled");
-        } else {
-          command.removeAttribute("wasdisabled");
-        }
-      }
-    }
-
     XULBrowserWindow.asyncUpdateUI();
+
     // Re-enable parts of the UI we disabled during the dialog
     let menubar = document.getElementById("main-menubar");
     for (let childNode of menubar.children) {
