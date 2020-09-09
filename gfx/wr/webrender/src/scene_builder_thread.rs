@@ -114,13 +114,6 @@ pub enum SceneBuilderRequest {
     ClearNamespace(IdNamespace),
     SimulateLongSceneBuild(u32),
     SimulateLongLowPrioritySceneBuild(u32),
-    /// Enqueue this to inform the scene builder to pick one message from
-    /// backend_rx.
-    BackendMessage,
-}
-
-/// Message from render backend to scene builder.
-pub enum BackendSceneBuilderRequest {
     SetFrameBuilderConfig(FrameBuilderConfig),
     ReportMemory(Box<MemoryReport>, Sender<Box<MemoryReport>>),
     #[cfg(feature = "capture")]
@@ -243,7 +236,6 @@ impl Document {
 pub struct SceneBuilderThread {
     documents: FastHashMap<DocumentId, Document>,
     rx: Receiver<SceneBuilderRequest>,
-    backend_rx: Receiver<BackendSceneBuilderRequest>,
     tx: Sender<ApiMsg>,
     config: FrameBuilderConfig,
     default_device_pixel_ratio: f32,
@@ -258,24 +250,20 @@ pub struct SceneBuilderThread {
 
 pub struct SceneBuilderThreadChannels {
     rx: Receiver<SceneBuilderRequest>,
-    backend_rx: Receiver<BackendSceneBuilderRequest>,
     tx: Sender<ApiMsg>,
 }
 
 impl SceneBuilderThreadChannels {
     pub fn new(
         tx: Sender<ApiMsg>
-    ) -> (Self, Sender<SceneBuilderRequest>, Sender<BackendSceneBuilderRequest>) {
+    ) -> (Self, Sender<SceneBuilderRequest>) {
         let (in_tx, in_rx) = unbounded_channel();
-        let (backend_tx, backend_rx) = unbounded_channel();
         (
             Self {
                 rx: in_rx,
-                backend_rx,
                 tx,
             },
             in_tx,
-            backend_tx,
         )
     }
 }
@@ -289,12 +277,11 @@ impl SceneBuilderThread {
         hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
         channels: SceneBuilderThreadChannels,
     ) -> Self {
-        let SceneBuilderThreadChannels { rx, backend_rx, tx } = channels;
+        let SceneBuilderThreadChannels { rx, tx } = channels;
 
         Self {
             documents: Default::default(),
             rx,
-            backend_rx,
             tx,
             config,
             default_device_pixel_ratio,
@@ -373,39 +360,34 @@ impl SceneBuilderThread {
                     self.simulate_slow_ms = time_ms
                 }
                 Ok(SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(_)) => {}
-                Ok(SceneBuilderRequest::BackendMessage) => {
-                    let msg = self.backend_rx.try_recv().unwrap();
-                    match msg {
-                        BackendSceneBuilderRequest::ReportMemory(mut report, tx) => {
-                            (*report) += self.report_memory();
-                            tx.send(report).unwrap();
-                        }
-                        BackendSceneBuilderRequest::SetFrameBuilderConfig(cfg) => {
-                            self.config = cfg;
-                        }
-                        #[cfg(feature = "replay")]
-                        BackendSceneBuilderRequest::LoadScenes(msg) => {
-                            self.load_scenes(msg);
-                        }
-                        #[cfg(feature = "capture")]
-                        BackendSceneBuilderRequest::SaveScene(config) => {
-                            self.save_scene(config);
-                        }
-                        #[cfg(feature = "capture")]
-                        BackendSceneBuilderRequest::StartCaptureSequence(config) => {
-                            self.start_capture_sequence(config);
-                        }
-                        #[cfg(feature = "capture")]
-                        BackendSceneBuilderRequest::StopCaptureSequence => {
-                            // FIXME(aosmond): clear config for frames and resource cache without scene
-                            // rebuild?
-                            self.capture_config = None;
-                        }
-                        BackendSceneBuilderRequest::DocumentsForDebugger => {
-                            let json = self.get_docs_for_debugger();
-                            self.send(SceneBuilderResult::DocumentsForDebugger(json));
-                        }
-                    }
+                Ok(SceneBuilderRequest::ReportMemory(mut report, tx)) => {
+                    (*report) += self.report_memory();
+                    tx.send(report).unwrap();
+                }
+                Ok(SceneBuilderRequest::SetFrameBuilderConfig(cfg)) => {
+                    self.config = cfg;
+                }
+                #[cfg(feature = "replay")]
+                Ok(SceneBuilderRequest::LoadScenes(msg)) => {
+                    self.load_scenes(msg);
+                }
+                #[cfg(feature = "capture")]
+                Ok(SceneBuilderRequest::SaveScene(config)) => {
+                    self.save_scene(config);
+                }
+                #[cfg(feature = "capture")]
+                Ok(SceneBuilderRequest::StartCaptureSequence(config)) => {
+                    self.start_capture_sequence(config);
+                }
+                #[cfg(feature = "capture")]
+                Ok(SceneBuilderRequest::StopCaptureSequence) => {
+                    // FIXME(aosmond): clear config for frames and resource cache without scene
+                    // rebuild?
+                    self.capture_config = None;
+                }
+                Ok(SceneBuilderRequest::DocumentsForDebugger) => {
+                    let json = self.get_docs_for_debugger();
+                    self.send(SceneBuilderResult::DocumentsForDebugger(json));
                 }
                 Err(_) => {
                     break;
