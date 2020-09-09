@@ -116,9 +116,12 @@ async function navigateIframeTo(inspector, url) {
   const { resourceWatcher, targetList } = inspector.toolbox;
   const onTargetProcessed = waitForTargetProcessed(targetList, url);
 
-  const onNewRoot = waitForResourceOnce(
+  const onNewRoot = waitForNextResource(
     resourceWatcher,
-    resourceWatcher.TYPES.ROOT_NODE
+    resourceWatcher.TYPES.ROOT_NODE,
+    {
+      ignoreExistingResources: true,
+    }
   );
 
   info("Update the src attribute of the iframe tag");
