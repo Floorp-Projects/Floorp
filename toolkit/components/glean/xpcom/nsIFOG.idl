@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(98d0e975-9cad-4ce3-ae2f-f878b8be6307)]
-interface nsIAboutGlean : nsISupports
+interface nsIFOG : nsISupports
 {
 
   /**
