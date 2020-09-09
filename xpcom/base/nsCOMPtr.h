@@ -11,7 +11,7 @@
  * Having problems?
  *
  * See the User Manual at:
- *   http://www.mozilla.org/projects/xpcom/nsCOMPtr.html
+ *   https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Using_nsCOMPtr
  *
  *
  * nsCOMPtr
