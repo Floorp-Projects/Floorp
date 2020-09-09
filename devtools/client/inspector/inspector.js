@@ -1671,10 +1671,15 @@ Inspector.prototype = {
     this.styleChangeTracker.destroy();
     this.searchboxShortcuts.destroy();
 
-    this.toolbox.targetList.unwatchTargets(
-      [this.toolbox.targetList.TYPES.FRAME],
+    const { targetList, resourceWatcher } = this.toolbox;
+    targetList.unwatchTargets(
+      [targetList.TYPES.FRAME],
       this._onTargetAvailable,
       this._onTargetDestroyed
+    );
+    resourceWatcher.unwatchResources(
+      [resourceWatcher.TYPES.ROOT_NODE, resourceWatcher.TYPES.CSS_CHANGE],
+      { onAvailable: this.onResourceAvailable }
     );
 
     this._is3PaneModeChromeEnabled = null;
