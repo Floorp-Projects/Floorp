@@ -494,9 +494,8 @@ body {
       width: auto;
       color: var(--newtab-button-secondary-color);
       margin-top: 14px; }
-      .multistageContainer button.secondary:hover, .multistageContainer button.secondary:focus, .multistageContainer button.secondary:active {
-        background-color: initial;
-        box-shadow: 0 0 0 4px var(--welcome-button-box-shadow-color); }
+      .multistageContainer button.secondary:hover, .multistageContainer button.secondary:active {
+        background-color: initial; }
   .multistageContainer .secondary-cta {
     display: flex;
     flex-direction: row;
