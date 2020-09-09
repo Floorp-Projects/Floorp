@@ -36,7 +36,8 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::ffi::OsString;
 use std::collections::HashMap;
-use webrender::api::{enumerate_interners, ColorF};
+use webrender::enumerate_interners;
+use webrender::api::ColorF;
 use euclid::{Rect, Transform3D};
 use webrender_api::units::{PicturePoint, PictureSize, PicturePixel, WorldPixel};
 

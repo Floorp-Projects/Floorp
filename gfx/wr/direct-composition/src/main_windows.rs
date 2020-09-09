@@ -12,6 +12,7 @@ use euclid::size2;
 use direct_composition::DirectComposition;
 use std::sync::mpsc;
 use webrender::api;
+use webrender::render_api::*;
 use winit::os::windows::{WindowExt, WindowBuilderExt};
 use winit::dpi::LogicalSize;
 
@@ -93,7 +94,7 @@ fn direct_composition_from_window(window: &winit::Window) -> DirectComposition {
 struct Rectangle {
     visual: direct_composition::AngleVisual,
     renderer: Option<webrender::Renderer>,
-    api: api::RenderApi,
+    api: RenderApi,
     document_id: api::DocumentId,
     size: api::units::DeviceIntSize,
     color: api::ColorF,
@@ -160,7 +161,7 @@ impl Rectangle {
             self.color,
         );
 
-        let mut transaction = api::Transaction::new();
+        let mut transaction = Transaction::new();
         transaction.set_display_list(
             api::Epoch(0),
             None,

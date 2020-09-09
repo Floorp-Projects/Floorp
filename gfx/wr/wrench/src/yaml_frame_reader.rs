@@ -15,6 +15,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::usize;
 use webrender::api::*;
+use webrender::render_api::*;
 use webrender::api::units::*;
 use crate::wrench::{FontDescriptor, Wrench, WrenchThing};
 use crate::yaml_helper::{StringEnum, YamlHelper, make_perspective};

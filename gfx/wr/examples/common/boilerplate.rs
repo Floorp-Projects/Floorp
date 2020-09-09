@@ -10,6 +10,7 @@ use webrender;
 use winit;
 use webrender::{DebugFlags, ShaderPrecacheFlags};
 use webrender::api::*;
+use webrender::render_api::*;
 use webrender::api::units::*;
 
 struct Notifier {
