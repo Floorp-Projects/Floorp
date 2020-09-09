@@ -181,12 +181,12 @@ class ResourceWatcher {
     return this._watchTargetsPromise;
   }
 
-  async _unwatchAllTargets() {
+  _unwatchAllTargets() {
     if (!this._watchTargetsPromise) {
       return;
     }
     this._watchTargetsPromise = null;
-    await this.targetList.unwatchTargets(
+    this.targetList.unwatchTargets(
       this.targetList.ALL_TYPES,
       this._onTargetAvailable,
       this._onTargetDestroyed

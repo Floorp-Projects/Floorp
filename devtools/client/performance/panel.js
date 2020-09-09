@@ -90,7 +90,7 @@ PerformancePanel.prototype = {
       this._checkRecordingStatus
     );
 
-    await this.toolbox.targetList.unwatchTargets(
+    this.toolbox.targetList.unwatchTargets(
       [this.toolbox.targetList.TYPES.FRAME],
       this._onTargetAvailable
     );
