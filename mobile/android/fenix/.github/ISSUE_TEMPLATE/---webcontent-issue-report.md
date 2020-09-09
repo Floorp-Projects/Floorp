@@ -13,9 +13,7 @@ assignees: ''
 
 ### Actual behavior
 
-### Does toggling Tracking Protection fix the issue? (Press the lock icon in the toolbar while on the site to see toggle)
-
-### Can you reproduce in [Firefox for Android](https://play.google.com/store/apps/details?id=org.mozilla.firefox)?
+### Does toggling Tracking Protection fix the issue? (Press the shield icon in the toolbar while on the site to see toggle)
 
 ### Can you reproduce in Chrome (or other non-Mozilla browser)?
 <!--- Note: If you can reproduce the same issue in Firefox for Android AND Chrome, this issue is very unlikely to be fixed by our teams. -->
