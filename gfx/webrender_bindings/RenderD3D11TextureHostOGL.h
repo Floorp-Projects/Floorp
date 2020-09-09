@@ -21,6 +21,8 @@ class RenderDXGITextureHostOGL final : public RenderTextureHostOGL {
  public:
   explicit RenderDXGITextureHostOGL(WindowsHandle aHandle,
                                     gfx::SurfaceFormat aFormat,
+                                    gfx::YUVColorSpace aYUVColorSpace,
+                                    gfx::ColorRange aColorRange,
                                     gfx::IntSize aSize);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
@@ -36,6 +38,12 @@ class RenderDXGITextureHostOGL final : public RenderTextureHostOGL {
   RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() override {
     return this;
   }
+
+  gfx::SurfaceFormat GetFormat() const { return mFormat; }
+
+  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
+
+  gfx::ColorRange GetColorRange() const { return mColorRange; }
 
   ID3D11Texture2D* GetD3D11Texture2D();
 
@@ -60,8 +68,10 @@ class RenderDXGITextureHostOGL final : public RenderTextureHostOGL {
   // handles for Y and CbCr data.
   GLuint mTextureHandle[2];
 
-  gfx::SurfaceFormat mFormat;
-  gfx::IntSize mSize;
+  const gfx::SurfaceFormat mFormat;
+  const gfx::YUVColorSpace mYUVColorSpace;
+  const gfx::ColorRange mColorRange;
+  const gfx::IntSize mSize;
 
   bool mLocked;
 };

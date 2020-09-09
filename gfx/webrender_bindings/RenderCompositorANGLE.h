@@ -78,9 +78,12 @@ class RenderCompositorANGLE : public RenderCompositor {
   void Unbind() override;
   void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aVirtualOffset,
                      wr::DeviceIntSize aTileSize, bool aIsOpaque) override;
+  void CreateExternalSurface(wr::NativeSurfaceId aId, bool aIsOpaque) override;
   void DestroySurface(NativeSurfaceId aId) override;
   void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
   void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
+  void AttachExternalImage(wr::NativeSurfaceId aId,
+                           wr::ExternalImageId aExternalImage) override;
   void AddSurface(wr::NativeSurfaceId aId,
                   const wr::CompositorSurfaceTransform& aTransform,
                   wr::DeviceIntRect aClipRect,

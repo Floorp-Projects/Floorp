@@ -36,6 +36,8 @@ class RenderTextureHostWrapper final : public RenderTextureHost {
   RenderMacIOSurfaceTextureHostOGL* AsRenderMacIOSurfaceTextureHostOGL()
       override;
 
+  virtual RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() override;
+
  private:
   ~RenderTextureHostWrapper() override;
 
