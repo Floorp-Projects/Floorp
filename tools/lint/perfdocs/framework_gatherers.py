@@ -5,10 +5,12 @@ from __future__ import absolute_import
 
 import collections
 import os
+import pathlib
 import re
 
 from perfdocs.utils import read_yaml
 from manifestparser import TestManifest
+from mozperftest.test.browsertime.script import ScriptInfo
 
 """
 This file is for framework specific gatherers since manifests
@@ -33,6 +35,7 @@ class FrameworkGatherer(object):
         self._urls = {}
         self._manifest_path = ""
         self._manifest = None
+        self.script_infos = {}
 
     def get_manifest_path(self):
         """
@@ -71,11 +74,10 @@ class FrameworkGatherer(object):
         and paragraph as content mentioned.
         :param title: title of the section
         :param content: content of section paragraph
-        :param documentation: documentation object to add section to
-        :param type: type of the title heading
+        :param header_type: type of the title heading
         """
-        heading_map = {"H4": "-", "H5": "^"}
-        return [title, heading_map.get(type, "^") * len(title), content, ""]
+        heading_map = {"H3": "=", "H4": "-", "H5": "^"}
+        return [title, heading_map.get(header_type, "^") * len(title), content, ""]
 
 
 class RaptorGatherer(FrameworkGatherer):
@@ -147,10 +149,10 @@ class RaptorGatherer(FrameworkGatherer):
         Returns a dictionary containing the tests in every suite ini file.
 
         :return dict: A dictionary with the following structure: {
-                "suite_name": [
+                "suite_name": {
                     'raptor_test1',
                     'raptor_test2'
-                ]
+                },
             }
         """
         if self._test_list:
@@ -193,10 +195,62 @@ class RaptorGatherer(FrameworkGatherer):
             + ">`__"
         ]
 
+    def build_suite_section(self, title, content):
+        return self._build_section_with_header(
+            title.capitalize(), content, header_type="H4"
+        )
+
 
 class MozperftestGatherer(FrameworkGatherer):
     """
     Gatherer for the Mozperftest framework.
     """
 
-    pass
+    def get_test_list(self):
+        """
+        Returns a dictionary containing the tests that start with perftest_*.
+
+        :return dict: A dictionary with the following structure: {
+                "suite_name": {
+                    'perftest_test1',
+                    'perftest_test2',
+                },
+            }
+        """
+        exclude_dir = [".hg", "mozperftest/tests/data"]
+        for path in pathlib.Path(self.workspace_dir).rglob("perftest_*"):
+            if any(re.search(d, str(path)) for d in exclude_dir):
+                continue
+
+            suite_name = re.sub(self.workspace_dir, "", os.path.dirname(path))
+            si = ScriptInfo(path)
+            self.script_infos[si["name"]] = si
+            self._test_list.setdefault(suite_name, {}).update({si["name"]: ""})
+
+        return self._test_list
+
+    def build_test_description(self, title, test_description="", suite_name=""):
+        result, tab_flag = "", False
+        desc = str(self.script_infos[title])
+        category = ("Owner: ", "Test Name: ", "Usage:", "Description:")
+
+        for s in desc.split("\n"):
+            if s.startswith(category):
+                result += "| " + s + "\n"
+                if s in category[2:]:
+                    result += "\n"
+                    tab_flag = False
+            else:
+                if tab_flag and s:
+                    result += "  " + s + "\n"
+                else:
+                    result += s + "\n"
+
+            if s == category[2]:
+                result += "::\n\n"
+                tab_flag = True
+
+        return [result]
+
+    def build_suite_section(self, title, content):
+        return self._build_section_with_header(title, content, header_type="H4")

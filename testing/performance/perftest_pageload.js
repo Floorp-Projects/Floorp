@@ -19,4 +19,7 @@ module.exports = {   // eslint-disable-line
   setUp,
   tearDown,
   test,
+  owner: "Performance Team",
+  name: "pageload",
+  description: "Measures time to load mozilla page",
 };
