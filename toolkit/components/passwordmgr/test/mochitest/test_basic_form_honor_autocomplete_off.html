@@ -13,7 +13,7 @@
 Login Manager test: autofilling when autocomplete=off
 
 <script>
-let readyPromise = registerRunTests();
+let readyPromise = registerRunTests(5);
 
 runInParent(function setup() {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
