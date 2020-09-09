@@ -889,7 +889,7 @@ class SourceCompressionTask : public RunnableTask {
 // The helper thread will call execute() to do the main work. Then, the thread
 // of the JSContext used to create the PromiseHelperTask will call resolve() to
 // resolve promise according to those results.
-struct PromiseHelperTask : OffThreadPromiseTask, public RunnableTask {
+struct PromiseHelperTask : OffThreadPromiseTask, public HelperThreadTask {
   PromiseHelperTask(JSContext* cx, Handle<PromiseObject*> promise)
       : OffThreadPromiseTask(cx, promise) {}
 
@@ -902,7 +902,8 @@ struct PromiseHelperTask : OffThreadPromiseTask, public RunnableTask {
   // Warning: After this function returns, 'this' can be deleted at any time, so
   // the caller must immediately return from the stream callback.
   void executeAndResolveAndDestroy(JSContext* cx);
-  void runTask() override;
+
+  void runTaskLocked(AutoLockHelperThreadState& lock) override;
   ThreadType threadType() override { return THREAD_TYPE_PROMISE_TASK; }
 };
 
