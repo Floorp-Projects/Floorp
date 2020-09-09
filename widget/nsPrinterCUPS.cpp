@@ -4,13 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPrinterCUPS.h"
+
+#include "mozilla/GkRustUtils.h"
 #include "nsPaper.h"
 #include "nsPrinterBase.h"
 #include "nsPrintSettingsImpl.h"
-
 #include "plstr.h"
 
 using namespace mozilla;
+
+// Requested attributes for IPP requests, just the CUPS version now.
+static constexpr Array<const char* const, 1> requestedAttributes{
+    "cups-version"};
 
 static PaperInfo MakePaperInfo(const char* aName, const cups_size_t& aMedia) {
   // XXX Do we actually have the guarantee that this is utf-8?
@@ -26,11 +31,54 @@ static PaperInfo MakePaperInfo(const char* aName, const cups_size_t& aMedia) {
                              aMedia.left * kPointsPerHundredthMillimeter}));
 }
 
+// Fetches the CUPS version for the print server controlling the printer. This
+// will only modify the output arguments if the fetch succeeds.
+static void FetchCUPSVersionForPrinter(const nsCUPSShim& aShim,
+                                       const cups_dest_t* const aDest,
+                                       uint64_t& aOutMajor, uint64_t& aOutMinor,
+                                       uint64_t& aOutPatch) {
+  // Make an IPP request to the server for the printer.
+  const char* const uri = aShim.cupsGetOption(
+      "printer-uri-supported", aDest->num_options, aDest->options);
+  if (!uri) {
+    return;
+  }
+
+  ipp_t* const ippRequest = aShim.ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+
+  // Set the URI we want to use.
+  aShim.ippAddString(ippRequest, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri",
+                     nullptr, uri);
+
+  // Set the attributes to request.
+  aShim.ippAddStrings(ippRequest, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
+                      "requested-attributes", requestedAttributes.Length,
+                      nullptr, &(requestedAttributes[0]));
+
+  // Use the default HTTP connection to query the CUPS server itself to get
+  // the CUPS version.
+  // Note that cupsDoRequest will delete the request whether it succeeds or
+  // fails, so we should not use ippDelete on it.
+  if (ipp_t* const ippResponse =
+          aShim.cupsDoRequest(CUPS_HTTP_DEFAULT, ippRequest, "/")) {
+    ipp_attribute_t* const versionAttrib =
+        aShim.ippFindAttribute(ippResponse, "cups-version", IPP_TAG_TEXT);
+    if (versionAttrib && aShim.ippGetCount(versionAttrib) == 1) {
+      const char* versionString = aShim.ippGetString(versionAttrib, 0, nullptr);
+      MOZ_ASSERT(versionString);
+      // On error, GkRustUtils::ParseSemVer will not modify its arguments.
+      GkRustUtils::ParseSemVer(
+          nsDependentCSubstring{MakeStringSpan(versionString)}, aOutMajor,
+          aOutMinor, aOutPatch);
+    }
+    aShim.ippDelete(ippResponse);
+  }
+}
+
 nsPrinterCUPS::~nsPrinterCUPS() {
   auto printerInfoLock = mPrinterInfoMutex.Lock();
-  if (cups_dinfo_t*& printerInfo = *printerInfoLock) {
-    mShim.cupsFreeDestInfo(printerInfo);
-    printerInfo = nullptr;
+  if (printerInfoLock->mPrinterInfo) {
+    mShim.cupsFreeDestInfo(printerInfoLock->mPrinterInfo);
   }
   if (mPrinter) {
     mShim.cupsFreeDests(1, mPrinter);
@@ -42,7 +90,8 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings() const {
   nsString printerName;
   GetPrinterName(printerName);
   auto printerInfoLock = mPrinterInfoMutex.Lock();
-  cups_dinfo_t* const printerInfo = *printerInfoLock;
+  EnsurePrinterInfo(*printerInfoLock);
+  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
 
   cups_size_t media;
 
@@ -104,7 +153,8 @@ const char* nsPrinterCUPS::LocalizeMediaName(http_t& aConnection,
   // The returned string is owned by mPrinterInfo.
   // https://www.cups.org/doc/cupspm.html#cupsLocalizeDestMedia
   auto printerInfoLock = mPrinterInfoMutex.Lock();
-  cups_dinfo_t* const printerInfo = *printerInfoLock;
+  EnsurePrinterInfo(*printerInfoLock);
+  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
   return mShim.cupsLocalizeDestMedia(&aConnection, mPrinter, printerInfo,
                                      CUPS_MEDIA_FLAGS_DEFAULT, &aMedia);
 #else
@@ -153,8 +203,8 @@ bool nsPrinterCUPS::SupportsCollation() const {
 
 bool nsPrinterCUPS::Supports(const char* aOption, const char* aValue) const {
   auto printerInfoLock = mPrinterInfoMutex.Lock();
-  cups_dinfo_t* const printerInfo = *printerInfoLock;
-  MOZ_ASSERT(printerInfo);
+  EnsurePrinterInfo(*printerInfoLock);
+  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
   return mShim.cupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
                                       aOption, aValue);
 }
@@ -162,29 +212,32 @@ bool nsPrinterCUPS::Supports(const char* aOption, const char* aValue) const {
 bool nsPrinterCUPS::IsCUPSVersionAtLeast(uint64_t aCUPSMajor,
                                          uint64_t aCUPSMinor,
                                          uint64_t aCUPSPatch) const {
+  auto printerInfoLock = mPrinterInfoMutex.Lock();
+  EnsurePrinterInfo(*printerInfoLock);
   // Compare major version.
-  if (mCUPSMajor > aCUPSMajor) {
+  if (printerInfoLock->mCUPSMajor > aCUPSMajor) {
     return true;
   }
-  if (mCUPSMajor < aCUPSMajor) {
+  if (printerInfoLock->mCUPSMajor < aCUPSMajor) {
     return false;
   }
 
   // Compare minor version.
-  if (mCUPSMinor > aCUPSMinor) {
+  if (printerInfoLock->mCUPSMinor > aCUPSMinor) {
     return true;
   }
-  if (mCUPSMinor < aCUPSMinor) {
+  if (printerInfoLock->mCUPSMinor < aCUPSMinor) {
     return false;
   }
 
   // Compare patch.
-  return aCUPSPatch <= mCUPSPatch;
+  return aCUPSPatch <= printerInfoLock->mCUPSPatch;
 }
 
 nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
   auto printerInfoLock = mPrinterInfoMutex.Lock();
-  cups_dinfo_t* const printerInfo = *printerInfoLock;
+  EnsurePrinterInfo(*printerInfoLock);
+  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
   if (!printerInfo) {
     return {};
   }
@@ -222,4 +275,18 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
 
   mShim.httpClose(connection);
   return paperList;
+}
+
+void nsPrinterCUPS::EnsurePrinterInfo(
+    CUPSPrinterInfo& aInOutPrinterInfo) const {
+  if (aInOutPrinterInfo.mPrinterInfo) {
+    return;
+  }
+
+  aInOutPrinterInfo.mPrinterInfo =
+      mShim.cupsCopyDestInfo(CUPS_HTTP_DEFAULT, mPrinter);
+  MOZ_RELEASE_ASSERT(aInOutPrinterInfo.mPrinterInfo);
+  FetchCUPSVersionForPrinter(mShim, mPrinter, aInOutPrinterInfo.mCUPSMajor,
+                             aInOutPrinterInfo.mCUPSMinor,
+                             aInOutPrinterInfo.mCUPSPatch);
 }

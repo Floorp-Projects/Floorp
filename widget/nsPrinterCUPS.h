@@ -36,20 +36,25 @@ class nsPrinterCUPS final : public nsPrinterBase {
   nsPrinterCUPS() = delete;
 
   nsPrinterCUPS(const nsCUPSShim& aShim, nsString aDisplayName,
-                cups_dest_t* aPrinter, cups_dinfo_t* aPrinterInfo,
-                uint64_t aCUPSMajor, uint64_t aCUPSMinor, uint64_t aCUPSPatch)
+                cups_dest_t* aPrinter)
       : mShim(aShim),
         mDisplayName(std::move(aDisplayName)),
         mPrinter(aPrinter),
-        mPrinterInfoMutex(std::move(aPrinterInfo),
-                          "nsPrinterCUPS::mPrinterInfoMutex"),
-        mCUPSMajor(aCUPSMajor),
-        mCUPSMinor(aCUPSMinor),
-        mCUPSPatch(aCUPSPatch) {}
+        mPrinterInfoMutex("nsPrinterCUPS::mPrinterInfoMutex") {}
 
  private:
+  struct CUPSPrinterInfo {
+    cups_dinfo_t* mPrinterInfo = nullptr;
+    uint64_t mCUPSMajor = 0;
+    uint64_t mCUPSMinor = 0;
+    uint64_t mCUPSPatch = 0;
+    CUPSPrinterInfo() = default;
+    CUPSPrinterInfo(const CUPSPrinterInfo&) = delete;
+    CUPSPrinterInfo(CUPSPrinterInfo&&) = delete;
+  };
+
   using PrinterInfoMutex =
-      mozilla::DataMutexBase<cups_dinfo_t*, mozilla::RecursiveMutex>;
+      mozilla::DataMutexBase<CUPSPrinterInfo, mozilla::RecursiveMutex>;
 
   ~nsPrinterCUPS();
 
@@ -69,13 +74,12 @@ class nsPrinterCUPS final : public nsPrinterBase {
   bool IsCUPSVersionAtLeast(uint64_t aCUPSMajor, uint64_t aCUPSMinor,
                             uint64_t aCUPSPatch) const;
 
+  void EnsurePrinterInfo(CUPSPrinterInfo& aInOutPrinterInfo) const;
+
   const nsCUPSShim& mShim;
   nsString mDisplayName;
   cups_dest_t* mPrinter;
   mutable PrinterInfoMutex mPrinterInfoMutex;
-  uint64_t mCUPSMajor;
-  uint64_t mCUPSMinor;
-  uint64_t mCUPSPatch;
 };
 
 #endif /* nsPrinterCUPS_h___ */
