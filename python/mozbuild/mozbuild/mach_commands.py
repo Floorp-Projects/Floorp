@@ -1551,7 +1551,7 @@ class CreateMachEnvironment(MachCommandBase):
             # This can fail on some platforms. See
             # https://bugzilla.mozilla.org/show_bug.cgi?id=1660120
             try:
-                manager.install_pip_package('glean_sdk~=32.3.0')
+                manager.install_pip_package('glean_sdk~=32.3.1')
             except subprocess.CalledProcessError:
                 print('Could not install glean_sdk, so telemetry will not be '
                       'collected. Continuing.')
