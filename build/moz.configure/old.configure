@@ -5,63 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
-
-
-@depends(mozconfig, 'AUTOCONF')
-@checking('for autoconf')
-@imports(_from='os.path', _import='exists')
-@imports('re')
-def autoconf(mozconfig, autoconf):
-    mozconfig_autoconf = None
-    if mozconfig['path']:
-        make_extra = mozconfig['make_extra']
-        if make_extra:
-            for assignment in make_extra:
-                m = re.match(r'(?:export\s+)?AUTOCONF\s*:?=\s*(.+)$',
-                             assignment)
-                if m:
-                    mozconfig_autoconf = m.group(1)
-                # Check whether we've exported any known-broken variables.
-                m = re.match(r'(?:export\s+)?(?:CC|CXX)\s*:?=\s*(?:.+)$',
-                             assignment)
-                if m:
-                    die('Setting the value of CC or CXX with "mk_add_options" '
-                        'can cause the build to fail unexpectedly. Please '
-                        'change your mozconfig to instead use '
-                        '"ac_add_options", e.g. ac_add_options '
-                        'CC=my-custom-cc".')
-
-    autoconf = autoconf[0] if autoconf else None
-
-    for ac in (mozconfig_autoconf, autoconf, 'autoconf-2.13', 'autoconf2.13',
-               'autoconf213'):
-        if ac:
-            autoconf = find_program(ac)
-            if autoconf:
-                break
-    else:
-        fink = find_program('fink')
-        if fink:
-            autoconf = os.path.normpath(os.path.join(
-                fink, '..', '..', 'lib', 'autoconf2.13', 'bin', 'autoconf'))
-        else:
-            brew = find_program('brew')
-            if brew:
-                autoconf = os.path.normpath(os.path.join(
-                    brew, '..', '..', 'Cellar', 'autoconf213', '2.13', 'bin',
-                    'autoconf213'))
-
-    if not autoconf:
-        die('Could not find autoconf 2.13')
-
-    if not exists(autoconf):
-        die('Could not find autoconf 2.13 at %s', autoconf)
-
-    return autoconf
-
-
-set_config('AUTOCONF', autoconf)
+m4 = check_prog('M4', ('m4',))
 
 
 @depends(mozconfig)
@@ -78,7 +22,7 @@ def prepare_mozconfig(mozconfig):
         return items
 
 
-@depends('OLD_CONFIGURE', 'MOZILLABUILD', prepare_mozconfig, autoconf, check_build_environment,
+@depends('OLD_CONFIGURE', 'MOZILLABUILD', prepare_mozconfig, awk, m4, check_build_environment,
          shell, old_configure_assignments, build_project)
 @imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='print')
@@ -96,7 +40,7 @@ def prepare_mozconfig(mozconfig):
 @imports(_from='os', _import='rename')
 @imports(_from='subprocess', _import='CalledProcessError')
 @imports(_from='__builtin__', _import='OSError')
-def prepare_configure(old_configure, mozillabuild, mozconfig, autoconf, build_env, shell,
+def prepare_configure(old_configure, mozillabuild, mozconfig, awk, m4, build_env, shell,
                       old_configure_assignments, build_project):
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally
@@ -125,13 +69,18 @@ def prepare_configure(old_configure, mozillabuild, mozconfig, autoconf, build_en
             refresh = False
 
     if refresh:
+        autoconf = os.path.join(build_env.topsrcdir, 'build', 'autoconf', 'autoconf.sh')
         log.info('Refreshing %s with %s', old_configure, autoconf)
+        env = dict(environ)
+        env['M4'] = m4
+        env['AWK'] = awk
+        env['AC_MACRODIR'] = os.path.join(build_env.topsrcdir, 'build', 'autoconf')
 
         try:
             script = subprocess.check_output([
                 shell, autoconf,
                 '--localdir=%s' % os.path.dirname(old_configure),
-                old_configure + '.in'])
+                old_configure + '.in'], env=env)
         except CalledProcessError as exc:
             # Autoconf on win32 may break due to a bad $PATH.  Let the user know
             # their $PATH is suspect.
@@ -184,10 +133,6 @@ def prepare_configure(old_configure, mozillabuild, mozconfig, autoconf, build_en
                     inject("%s=%s # %s" % (key, quote(value), action))
 
             inject('# end of mozconfig values')
-
-        # Autoconf is special, because it might be passed from
-        # mozconfig['make_extra'], which we don't pass automatically above.
-        inject('export AUTOCONF=%s' % quote(autoconf))
 
         for k, v in old_configure_assignments:
             inject('%s=%s' % (k, quote(v)))
