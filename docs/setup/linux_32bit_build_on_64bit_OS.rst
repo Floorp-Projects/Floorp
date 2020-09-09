@@ -12,7 +12,6 @@ are installed.
    sudo yum install \
      ccache cmake gcc gcc-c++ glibc-devel.i686 \
      libstdc++-devel libstdc++-devel.i686 \
-     autoconf213 \
      gtk2-devel.i686 gtk+-devel.i686 gtk+extra-devel.i686 \
      glib-devel.i686 glib2-devel.i686 \
      dbus-devel.i686 dbus-glib-devel.i686 \
