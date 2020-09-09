@@ -216,3 +216,22 @@ User action for turning off the DoH feature
 User action for continuing to use the DoH feature
 
 * args: (none)
+
+### `CONFIGURE_HOMEPAGE`
+
+Action for configuring the user homepage and restoring defaults.
+
+* args:
+```ts
+{
+  homePage: "default" | null;
+  newtab: "default" | null;
+  layout: {
+    search: boolean;
+    topsites: boolean;
+    highlights: boolean;
+    topstories: boolean;
+    snippets: boolean;
+  }
+}
+```
