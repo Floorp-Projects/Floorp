@@ -10,7 +10,7 @@ from os.path import expanduser
 
 import sentry_sdk
 from mozboot.util import get_state_dir
-from mozbuild.telemetry import is_telemetry_enabled
+from mach.telemetry import is_telemetry_enabled
 from mozversioncontrol import get_repository_object, InvalidRepoPath
 from six import string_types
 
