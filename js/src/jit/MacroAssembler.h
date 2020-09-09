@@ -3959,7 +3959,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void outOfLineTruncateSlow(FloatRegister src, Register dest,
                              bool widenFloatToDouble, bool compilingWasm,
-                             wasm::BytecodeOffset callOffset);
+                             wasm::BytecodeOffset callOffset,
+                             mozilla::Maybe<int32_t> tlsOffset);
 
   void convertInt32ValueToDouble(const Address& address, Register scratch,
                                  Label* done);
