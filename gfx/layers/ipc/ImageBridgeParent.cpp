@@ -429,20 +429,25 @@ void ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture,
   if (auto hardwareBuffer = texture->GetAndroidHardwareBuffer()) {
     MOZ_ASSERT(texture->GetFlags() & TextureFlags::RECYCLE);
 
-    ipc::FileDescriptor fenceFd;
+    Maybe<FileDescriptor> fenceFd = Some(FileDescriptor());
     auto* compositor = texture->GetProvider()
                            ? texture->GetProvider()->AsCompositorOGL()
                            : nullptr;
     if (compositor) {
-      fenceFd = compositor->GetReleaseFence();
+      fenceFd = Some(compositor->GetReleaseFence());
     }
 
     auto* wrTexture = texture->AsWebRenderTextureHost();
     if (wrTexture) {
-      MOZ_ASSERT(!fenceFd.IsValid());
-      fenceFd = texture->GetAndResetReleaseFence();
+      MOZ_ASSERT(!fenceFd->IsValid());
+      fenceFd = Some(texture->GetAndResetReleaseFence());
     }
 
+    // Invalid file descriptor could not be sent via IPC, but
+    // OpDeliverReleaseFence message needs to be sent to child side.
+    if (!fenceFd->IsValid()) {
+      fenceFd = Nothing();
+    }
     mPendingAsyncMessage.push_back(OpDeliverReleaseFence(
         std::move(fenceFd), hardwareBuffer->mId, aTransactionId,
         /* usesImageBridge */ true));
@@ -482,17 +487,22 @@ void ImageBridgeParent::NotifyBufferNotUsedOfCompositorBridge(
   auto* compositor = aTexture->GetProvider()
                          ? aTexture->GetProvider()->AsCompositorOGL()
                          : nullptr;
-  ipc::FileDescriptor fenceFd;
+  Maybe<FileDescriptor> fenceFd = Some(FileDescriptor());
   if (compositor) {
-    fenceFd = compositor->GetReleaseFence();
+    fenceFd = Some(compositor->GetReleaseFence());
   }
 
   auto* wrTexture = aTexture->AsWebRenderTextureHost();
   if (wrTexture) {
-    MOZ_ASSERT(!fenceFd.IsValid());
-    fenceFd = aTexture->GetAndResetReleaseFence();
+    MOZ_ASSERT(!fenceFd->IsValid());
+    fenceFd = Some(aTexture->GetAndResetReleaseFence());
   }
 
+  // Invalid file descriptor could not be sent via IPC, but
+  // OpDeliverReleaseFence message needs to be sent to child side.
+  if (!fenceFd->IsValid()) {
+    fenceFd = Nothing();
+  }
   mPendingAsyncMessage.push_back(
       OpDeliverReleaseFence(fenceFd, aTexture->GetAndroidHardwareBuffer()->mId,
                             aTransactionId, /* usesImageBridge */ false));
