@@ -1207,6 +1207,17 @@ void Element::UnattachShadow() {
   if (Document* doc = GetComposedDoc()) {
     if (PresShell* presShell = doc->GetPresShell()) {
       presShell->DestroyFramesForAndRestyle(this);
+#ifdef ACCESSIBILITY
+      // We need to notify the accessibility service here explicitly because,
+      // even though we're going to reconstruct the _host_, the shadow root and
+      // its children are never really going to come back. We could plumb that
+      // further down to DestroyFramesForAndRestyle and add a new flag to
+      // nsCSSFrameConstructor::ContentRemoved or such, but this seems simpler
+      // instead.
+      if (nsAccessibilityService* accService = GetAccService()) {
+        accService->ContentRemoved(presShell, shadowRoot);
+      }
+#endif
     }
   }
   MOZ_ASSERT(!GetPrimaryFrame());
