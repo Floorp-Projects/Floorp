@@ -48,14 +48,7 @@ mod core_metrics;
 /// This assembles client information and the Glean configuration and then initializes the global
 /// Glean instance.
 #[no_mangle]
-pub unsafe extern "C" fn fog_init(
-    _data_path: &nsACString,
-    _app_build: &nsACString,
-    _app_display_version: &nsACString,
-    _channel: *const c_char,
-    _os_version: &nsACString,
-    _architecture: &nsACString,
-) -> nsresult {
+pub unsafe extern "C" fn fog_init() -> nsresult {
     log::debug!("Initializing FOG.");
 
     let data_path = match get_data_path() {
