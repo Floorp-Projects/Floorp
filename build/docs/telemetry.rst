@@ -353,6 +353,15 @@ Time at which this event happened
 :format: ``date-time``
 
 
+Glean Telemetry
+===============
+
+In addition to the existing build-specific telemetry, Mozbuild is also reporting data using
+`Glean <https://mozilla.github.io/glean/>`_ via :ref:`mach_telemetry`.
+The metrics collected are documented :ref:`here<metrics>`.
+As Python 2 is phased out, the old telemetry will be replaced by the new Glean implementation.
+
+
 Error Reporting
 ===============
 

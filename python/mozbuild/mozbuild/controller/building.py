@@ -1067,6 +1067,7 @@ class BuildDriver(MozbuildObject):
             monitor.start_resource_recording()
 
             self.mach_context.command_attrs['clobber'] = False
+            self.mach_context.telemetry.metrics.mozbuild.clobber.set(False)
             config = None
             try:
                 config = self.config_environment
@@ -1075,6 +1076,8 @@ class BuildDriver(MozbuildObject):
                 # a fresh objdir or $OBJDIR/config.status has been removed for
                 # some reason, which indicates a clobber of sorts.
                 self.mach_context.command_attrs['clobber'] = True
+                mozbuild_telemetry = self.mach_context.telemetry.metrics.mozbuild
+                mozbuild_telemetry.clobber.set(True)
 
             # Record whether a clobber was requested so we can print
             # a special message later if the build fails.
@@ -1109,6 +1112,21 @@ class BuildDriver(MozbuildObject):
                     return config_rc
 
                 config = self.reload_config_environment()
+
+            # Collect glean metrics
+            substs = config.substs
+            mozbuild_metrics = self.mach_context.telemetry.metrics.mozbuild
+            mozbuild_metrics.compiler.set(substs.get('CC_TYPE', None))
+
+            def get_substs_flag(name):
+                return bool(substs.get(name, None))
+
+            mozbuild_metrics.artifact.set(get_substs_flag('MOZ_ARTIFACT_BUILDS'))
+            mozbuild_metrics.debug.set(get_substs_flag('MOZ_DEBUG'))
+            mozbuild_metrics.opt.set(get_substs_flag('MOZ_OPTIMIZE'))
+            mozbuild_metrics.ccache.set(get_substs_flag('CCACHE'))
+            mozbuild_metrics.sccache.set(get_substs_flag('MOZ_USING_SCCACHE'))
+            mozbuild_metrics.icecream.set(get_substs_flag('CXX_IS_ICECREAM'))
 
             all_backends = config.substs.get('BUILD_BACKENDS', [None])
             active_backend = all_backends[0]
@@ -1581,6 +1599,7 @@ class BuildDriver(MozbuildObject):
         clobber_required, clobber_performed, clobber_message = res
         if self.mach_context is not None and clobber_performed:
             self.mach_context.command_attrs['clobber'] = True
+            self.mach_context.telemetry.metrics.mozbuild.clobber.set(True)
         if not clobber_required or clobber_performed:
             if clobber_performed and env.get('TINDERBOX_OUTPUT'):
                 self.log(logging.WARNING, 'clobber',

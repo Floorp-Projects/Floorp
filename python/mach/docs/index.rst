@@ -84,3 +84,4 @@ best fit for you.
    driver
    logging
    settings
+   telemetry
