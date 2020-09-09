@@ -52,7 +52,6 @@
   _(RuntimeScriptData, 500)           \
   _(WasmFuncTypeIdSet, 500)           \
   _(WasmCodeProfilingLabels, 500)     \
-  _(WasmCompileTaskState, 500)        \
   _(WasmCodeBytesEnd, 500)            \
   _(WasmStreamEnd, 500)               \
   _(WasmStreamStatus, 500)            \

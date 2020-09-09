@@ -537,13 +537,6 @@ bool SetFakeCPUCount(size_t count);
 // Enqueues a wasm compilation task.
 bool StartOffThreadWasmCompile(wasm::CompileTask* task, wasm::CompileMode mode);
 
-namespace wasm {
-
-// Called on a helper thread after StartOffThreadWasmCompile.
-void ExecuteCompileTaskFromHelperThread(CompileTask* task);
-
-}  // namespace wasm
-
 // Enqueues a wasm compilation task.
 void StartOffThreadWasmTier2Generator(wasm::UniqueTier2GeneratorTask task);
 
