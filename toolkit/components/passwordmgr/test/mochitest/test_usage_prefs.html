@@ -13,15 +13,8 @@ Login Manager test: usage prefs collection
 <script>
 
 function addLogin() {
-  runInParent(() => {
-    const { Services } =
-      ChromeUtils.import("resource://gre/modules/Services.jsm");
-    let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-              createInstance(Ci.nsILoginInfo);
-    login.init("https://example.com", "https://example.com", null,
-               "testuser", "testpass", "uname", "pword");
-    Services.logins.addLogin(login);
-  });
+  let origin = window.location.origin;
+  addLoginsInParent([origin, origin, null, "testuser", "testpass", "uname", "pword"]);
 }
 
 async function checkUsagePrefs(hasEntry, lastUsed) {
