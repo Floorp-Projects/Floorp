@@ -4,9 +4,9 @@ Building SpiderMonkey
 **Before you begin, make sure you have the right build tools for your
 computer:**
 
-* :ref:`linux-build-documentation`
-* `Windows <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites>`__
-* `Mac <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Mac_OS_X_Prerequisites>`__
+* :ref:`Building Firefox On Linux`
+* :ref:`Building Firefox On Windows`
+* :ref:`Building Firefox On MacOS`
 * `Others <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions>`__
 
 This guide shows you how to build SpiderMonkey using ``mach``, which is Mozilla's multipurpose build tool.
