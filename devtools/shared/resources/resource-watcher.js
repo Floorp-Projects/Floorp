@@ -171,22 +171,21 @@ class ResourceWatcher {
    * It will only listen for types which are defined by `TargetList.startListening`.
    */
   async _watchAllTargets() {
-    if (this._isWatchingTargets) {
-      return;
+    if (!this._watchTargetsPromise) {
+      this._watchTargetsPromise = this.targetList.watchTargets(
+        this.targetList.ALL_TYPES,
+        this._onTargetAvailable,
+        this._onTargetDestroyed
+      );
     }
-    this._isWatchingTargets = true;
-    await this.targetList.watchTargets(
-      this.targetList.ALL_TYPES,
-      this._onTargetAvailable,
-      this._onTargetDestroyed
-    );
+    return this._watchTargetsPromise;
   }
 
   async _unwatchAllTargets() {
-    if (!this._isWatchingTargets) {
+    if (!this._watchTargetsPromise) {
       return;
     }
-    this._isWatchingTargets = false;
+    this._watchTargetsPromise = null;
     await this.targetList.unwatchTargets(
       this.targetList.ALL_TYPES,
       this._onTargetAvailable,
