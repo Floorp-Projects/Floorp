@@ -1391,9 +1391,9 @@
     <string name="logins_biometric_prompt_message_pin">Shkyçni pajisjen tuaj</string>
 
     <!-- Title for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom">&lt;em&gt;Zoom&lt;/em&gt; në krejt sajtet</string>
+    <string name="preference_accessibility_force_enable_zoom">Zoom në krejt sajtet</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Aktivizojeni që të lejoni pickim dhe &lt;em&gt;zoom&lt;/em&gt;, edhe në sajte që e pengojnë këtë gjest.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Aktivizojeni që të lejoni pickim dhe zoom, edhe në sajte që e pengojnë këtë gjest.</string>
 
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Emrash (A-Z)</string>

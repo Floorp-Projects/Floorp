@@ -315,11 +315,11 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB 経由でリモートデバッグする</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">検索エンジンを表示</string>
+    <string name="preferences_show_search_engines">検索エンジンを表示する</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">検索語句の候補を表示する</string>
     <!-- Preference title for switch preference to show voice search button -->
-    <string name="preferences_show_voice_search">音声検索を表示</string>
+    <string name="preferences_show_voice_search">音声検索を表示する</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">プライベートセッションで表示する</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -969,7 +969,7 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">フォントサイズを自動調整</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">フォントサイズは Android の設定に従います。このフォントサイズの管理は無効化されます。</string>
+    <string name="preference_accessibility_auto_size_summary">フォントサイズは Android の設定に従います。ここでフォントサイズを管理するには無効化してください。</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">ブラウジングデータを削除</string>

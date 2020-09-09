@@ -518,7 +518,7 @@
 
     <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
-    <string name="preferences_close_tabs">多久後自動關閉分頁</string>
+    <string name="preferences_close_tabs">自動關閉分頁</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
     <string name="close_tabs_manually">手動</string>
     <!-- Option for auto closing tabs that will auto close tabs after one day -->
