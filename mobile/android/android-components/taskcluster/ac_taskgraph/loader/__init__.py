@@ -54,6 +54,9 @@ def component_grouping(config, tasks):
     tasks_for_all_components = [
         task for task in tasks
         if task.attributes.get('component') == 'all'
+        # We just want to depend on the task that waits on all chunks. This way
+        # we have a single dependency for that kind
+        and task.attributes.get("is_final_chunked_task", True)
     ]
     for (_, build_type), tasks in groups.iteritems():
         tasks.extend([
@@ -70,6 +73,12 @@ def build_type_grouping(config, tasks):
     for task in tasks:
         if task.kind not in config.get('kind-dependencies', []):
             continue
+
+        # We just want to depend on the task that waits on all chunks. This way
+        # we have a single dependency for that kind
+        if not task.attributes.get("is_final_chunked_task", True):
+            continue
+
         build_type = task.attributes.get('build-type')
 
         groups.setdefault(build_type, []).append(task)
