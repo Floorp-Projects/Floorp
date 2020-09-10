@@ -281,8 +281,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Bitmap of atoms marked by this zone.
   js::ZoneOrGCTaskData<js::SparseBitmap> markedAtoms_;
 
-  // Set of atoms recently used by this Zone. Purged on GC unless
-  // keepAtomsCount is non-zero.
+  // Set of atoms recently used by this Zone. Purged on GC.
   js::ZoneOrGCTaskData<js::AtomSet> atomCache_;
 
   // Cache storing allocated external strings. Purged on GC.
@@ -290,21 +289,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   // Cache for Function.prototype.toString. Purged on GC.
   js::ZoneOrGCTaskData<js::FunctionToStringCache> functionToStringCache_;
-
-  // Count of AutoKeepAtoms instances for this zone. When any instances exist,
-  // atoms in the runtime will be marked from this zone's atom mark bitmap,
-  // rather than when traced in the normal way. Threads parsing off the main
-  // thread do not increment this value, but the presence of any such threads
-  // also inhibits collection of atoms. We don't scan the stacks of exclusive
-  // threads, so we need to avoid collecting their objects in another way. The
-  // only GC thing pointers they have are to their exclusive compartment
-  // (which is not collected) or to the atoms compartment. Therefore, we avoid
-  // collecting the atoms zone when exclusive threads are running.
-  js::ZoneOrGCTaskData<unsigned> keepAtomsCount;
-
-  // Whether purging atoms was deferred due to keepAtoms being set. If this
-  // happen then the cache will be purged when keepAtoms drops to zero.
-  js::ZoneOrGCTaskData<bool> purgeAtomsDeferred;
 
   // Shared Shape property tree.
   js::ZoneData<js::PropertyTree> propertyTree_;
@@ -448,8 +432,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void setPreservingCode(bool preserving) { gcPreserveCode_ = preserving; }
   bool isPreservingCode() const { return gcPreserveCode_; }
 
-  // Whether this zone can currently be collected. This doesn't take account
-  // of AutoKeepAtoms for the atoms zone.
+  // Whether this zone can currently be collected.
   bool canCollect();
 
   void changeGCState(GCState prev, GCState next) {
@@ -603,16 +586,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   bool addTypeDescrObject(JSContext* cx, HandleObject obj);
 
-  void keepAtoms() { keepAtomsCount++; }
-  void releaseAtoms();
-  bool hasKeptAtoms() const { return keepAtomsCount; }
-
   js::SparseBitmap& markedAtoms() { return markedAtoms_.ref(); }
 
   js::AtomSet& atomCache() { return atomCache_.ref(); }
 
-  void traceAtomCache(JSTracer* trc);
-  void purgeAtomCacheOrDefer();
   void purgeAtomCache();
 
   js::ExternalStringCache& externalStringCache() {

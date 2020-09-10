@@ -69,7 +69,6 @@ struct JSClass;
 namespace js {
 
 class AutoAssertNoContentJS;
-class AutoKeepAtoms;
 class EnterDebuggeeNoExecute;
 #ifdef JS_TRACE_LOGGING
 class TraceLoggerThread;

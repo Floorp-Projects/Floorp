@@ -1171,14 +1171,6 @@ class MOZ_STACK_CLASS AutoAccessAtomsZone {
       const gc::AutoCheckCanAccessAtomsDuringGC& canAccess) {}
 };
 
-class MOZ_RAII AutoKeepAtoms {
-  JSContext* cx;
-
- public:
-  explicit AutoKeepAtoms(JSContext* cx);
-  ~AutoKeepAtoms();
-};
-
 class MOZ_RAII AutoNoteDebuggerEvaluationWithOnNativeCallHook {
   JSContext* cx;
   Debugger* oldValue;

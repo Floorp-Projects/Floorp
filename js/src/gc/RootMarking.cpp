@@ -268,7 +268,6 @@ void js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc,
   if (atomsZone->isCollecting()) {
     traceRuntimeAtoms(trc, session.checkAtomsAccess());
   }
-  traceKeptAtoms(trc);
 
   {
     // Trace incoming cross compartment edges from uncollected compartments,
@@ -333,17 +332,6 @@ void js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc,
   TraceAtoms(trc, access);
   TraceWellKnownSymbols(trc);
   jit::JitRuntime::Trace(trc, access);
-}
-
-void js::gc::GCRuntime::traceKeptAtoms(JSTracer* trc) {
-  // We don't have exact rooting information for atoms while parsing. When
-  // this is happeninng we set a flag on the zone and trace all atoms in the
-  // zone's cache.
-  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    if (zone->hasKeptAtoms()) {
-      zone->traceAtomCache(trc);
-    }
-  }
 }
 
 void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
