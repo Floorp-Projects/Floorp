@@ -482,9 +482,10 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   }
 };
 
-BaselineStackBuilder::BaselineStackBuilder(
-    JSContext* cx, const JSJitFrameIter& frameIter, SnapshotIterator& iter,
-    const ExceptionBailoutInfo* excInfo)
+BaselineStackBuilder::BaselineStackBuilder(JSContext* cx,
+                                           const JSJitFrameIter& frameIter,
+                                           SnapshotIterator& iter,
+                                           const ExceptionBailoutInfo* excInfo)
     : cx_(cx),
       frame_(static_cast<JitFrameLayout*>(frameIter.current())),
       iter_(iter),
@@ -797,9 +798,9 @@ bool BaselineStackBuilder::fixUpCallerArgs(
   // All calls pass |callee| and |this|.
   uint32_t inlinedArgs = 2;
   if (op_ == JSOp::FunCall) {
-    // The first argument to an inlined FunCall becomes |this|.
-    // The rest are passed normally.
-    inlinedArgs += GET_ARGC(pc_) - 1;
+    // The first argument to an inlined FunCall becomes |this|,
+    // if it exists. The rest are passed normally.
+    inlinedArgs += GET_ARGC(pc_) > 0 ? GET_ARGC(pc_) - 1 : 0;
   } else if (op_ == JSOp::FunApply) {
     // We currently only support FunApplyArgs. The number of arguments
     // passed to the inlined function is the number of arguments to the
@@ -842,13 +843,26 @@ bool BaselineStackBuilder::fixUpCallerArgs(
     if (!writeValue(UndefinedValue(), "StackValue")) {
       return false;
     }
-    JitSpew(JitSpew_BaselineBailouts, "      pushing %u expression stack slots",
-            inlinedArgs);
-    for (uint32_t i = 0; i < inlinedArgs; i++) {
-      Value arg = iter_.read();
-      if (!writeValue(arg, "StackValue")) {
+    if (GET_ARGC(pc_) > 0) {
+      JitSpew(JitSpew_BaselineBailouts,
+              "      pushing %u expression stack slots", inlinedArgs);
+      for (uint32_t i = 0; i < inlinedArgs; i++) {
+        Value arg = iter_.read();
+        if (!writeValue(arg, "StackValue")) {
+          return false;
+        }
+      }
+    } else {
+      // When we inline FunCall with no arguments, we push an extra
+      // |undefined| value for |this|. That value should not appear
+      // in the rebuilt baseline frame.
+      JitSpew(JitSpew_BaselineBailouts, "      pushing target of funcall");
+      Value target = iter_.read();
+      if (!writeValue(target, "StackValue")) {
         return false;
       }
+      // Skip |this|.
+      iter_.skip();
     }
   } else if (op_ == JSOp::FunApply) {
     // We currently only support FunApplyArgs. We must transform the
@@ -1048,23 +1062,45 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
         return false;
       }
     }
+  } else if (op_ == JSOp::FunCall && GET_ARGC(pc_) == 0) {
+    // When calling FunCall with 0 arguments, we push |undefined|
+    // for this. See BaselineCacheIRCompiler::pushFunCallArguments.
+    MOZ_ASSERT(!pushedNewTarget);
+    actualArgc = 0;
+    // Align the stack based on pushing |this| and 0 arguments.
+    size_t afterFrameSize = sizeof(Value) + JitFrameLayout::Size();
+    if (!maybeWritePadding(JitStackAlignment, afterFrameSize, "Padding")) {
+      return false;
+    }
+    // Push an undefined value for |this|.
+    if (!writeValue(UndefinedValue(), "ThisValue")) {
+      return false;
+    }
+    size_t calleeSlot = blFrame()->numValueSlots(frameSize) - 1;
+    callee = *blFrame()->valueSlot(calleeSlot);
+
   } else {
     actualArgc = GET_ARGC(pc_);
     if (op_ == JSOp::FunCall) {
+      // See BaselineCacheIRCompiler::pushFunCallArguments.
       MOZ_ASSERT(actualArgc > 0);
       actualArgc--;
     }
 
+    // In addition to the formal arguments, we must also push |this|.
+    // When calling a constructor, we must also push |newTarget|.
+    uint32_t numArguments = actualArgc + 1 + pushedNewTarget;
+
     // Align the stack based on the number of arguments.
-    size_t afterFrameSize = (actualArgc + 1 + pushedNewTarget) * sizeof(Value) +
-                            JitFrameLayout::Size();
+    size_t afterFrameSize =
+        numArguments * sizeof(Value) + JitFrameLayout::Size();
     if (!maybeWritePadding(JitStackAlignment, afterFrameSize, "Padding")) {
       return false;
     }
 
     // Copy the arguments and |this| from the BaselineFrame, in reverse order.
     size_t valueSlot = blFrame()->numValueSlots(frameSize) - 1;
-    size_t calleeSlot = valueSlot - actualArgc - 1 - pushedNewTarget;
+    size_t calleeSlot = valueSlot - numArguments;
 
     for (size_t i = valueSlot; i > calleeSlot; i--) {
       Value v = *blFrame()->valueSlot(i);
