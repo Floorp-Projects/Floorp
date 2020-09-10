@@ -271,6 +271,7 @@ void ICScript::trace(JSTracer* trc) {
 
 bool ICScript::addInlinedChild(JSContext* cx, UniquePtr<ICScript> child,
                                uint32_t pcOffset) {
+  MOZ_ASSERT(!hasInlinedChild(pcOffset));
   if (!inlinedChildren_) {
     inlinedChildren_ = js::MakeUnique<Vector<CallSite>>(cx);
     if (!inlinedChildren_) {
@@ -302,6 +303,18 @@ void ICScript::removeInlinedChild(uint32_t pcOffset) {
 
   // The ICScript is owned by the inlining root. Remove it.
   inliningRoot()->removeInlinedScript(icScript);
+}
+
+bool ICScript::hasInlinedChild(uint32_t pcOffset) {
+  if (!inlinedChildren_) {
+    return false;
+  }
+  for (auto& callsite : *inlinedChildren_) {
+    if (callsite.pcOffset_ == pcOffset) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void JitScript::ensureProfileString(JSContext* cx, JSScript* script) {
