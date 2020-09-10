@@ -460,6 +460,19 @@ class FunctionCompiler {
       curBlock_->add(rhs2);
       rhs = rhs2;
     }
+
+    // For x86 we implement i64 div via c++ runtime.
+    // A call to c++ runtime requires tls pointer.
+#ifdef JS_CODEGEN_X86
+    if (type == MIRType::Int64) {
+      auto* ins =
+          MWasmBuiltinDivI64::New(alloc(), lhs, rhs, tlsPointer_, unsignd,
+                                  trapOnError, bytecodeOffset());
+      curBlock_->add(ins);
+      return ins;
+    }
+#endif
+
     auto* ins = MDiv::New(alloc(), lhs, rhs, type, unsignd, trapOnError,
                           bytecodeOffset(), mustPreserveNaN(type));
     curBlock_->add(ins);
@@ -481,6 +494,19 @@ class FunctionCompiler {
       curBlock_->add(rhs2);
       rhs = rhs2;
     }
+
+    // This is because x86 codegen calls runtime via BuiltinThunk and so it
+    // needs WasmTlsReg to be live.
+#ifdef JS_CODEGEN_X86
+    if (type == MIRType::Int64) {
+      auto* ins =
+          MWasmBuiltinModI64::New(alloc(), lhs, rhs, tlsPointer_, unsignd,
+                                  trapOnError, bytecodeOffset());
+      curBlock_->add(ins);
+      return ins;
+    }
+#endif
+
     auto* ins = MMod::New(alloc(), lhs, rhs, type, unsignd, trapOnError,
                           bytecodeOffset());
     curBlock_->add(ins);
