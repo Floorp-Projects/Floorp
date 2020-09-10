@@ -586,69 +586,41 @@ void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
 }
 
 void LIRGeneratorX86::lowerDivI64(MDiv* div) {
-  MOZ_CRASH("We use MWasmBuiltinModI64 instead.");
-}
-
-void LIRGeneratorX86::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
-  MDefinition* lhs = div->lhs();
-  MDefinition* rhs = div->rhs();
-  MOZ_ASSERT(lhs->type() == rhs->type());
-  MOZ_ASSERT(IsNumberType(div->type()));
-
-  MOZ_ASSERT(div->type() == MIRType::Int64);
-  MOZ_ASSERT(div->type() == MIRType::Int64);
-
   if (div->isUnsigned()) {
-    LUDivOrModI64* lir = new (alloc())
-        LUDivOrModI64(useInt64FixedAtStart(div->lhs(), Register64(eax, ebx)),
-                      useInt64FixedAtStart(div->rhs(), Register64(ecx, edx)),
-                      useFixedAtStart(div->tls(), WasmTlsReg));
-    defineReturn(lir, div);
+    lowerUDivI64(div);
     return;
   }
 
-  LDivOrModI64* lir = new (alloc())
-      LDivOrModI64(useInt64FixedAtStart(div->lhs(), Register64(eax, ebx)),
-                   useInt64FixedAtStart(div->rhs(), Register64(ecx, edx)),
-                   useFixedAtStart(div->tls(), WasmTlsReg));
+  LDivOrModI64* lir = new (alloc()) LDivOrModI64(
+      useInt64FixedAtStart(div->lhs(), Register64(eax, ebx)),
+      useInt64FixedAtStart(div->rhs(), Register64(ecx, edx)), tempFixed(esi));
   defineReturn(lir, div);
 }
 
 void LIRGeneratorX86::lowerModI64(MMod* mod) {
-  MOZ_CRASH("We use MWasmBuiltinModI64 instead.");
-}
-
-void LIRGeneratorX86::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
-  MDefinition* lhs = mod->lhs();
-  MDefinition* rhs = mod->rhs();
-  MOZ_ASSERT(lhs->type() == rhs->type());
-  MOZ_ASSERT(IsNumberType(mod->type()));
-
-  MOZ_ASSERT(mod->type() == MIRType::Int64);
-  MOZ_ASSERT(mod->type() == MIRType::Int64);
-
   if (mod->isUnsigned()) {
-    LUDivOrModI64* lir = new (alloc())
-        LUDivOrModI64(useInt64FixedAtStart(mod->lhs(), Register64(eax, ebx)),
-                      useInt64FixedAtStart(mod->rhs(), Register64(ecx, edx)),
-                      useFixedAtStart(mod->tls(), WasmTlsReg));
-    defineReturn(lir, mod);
+    lowerUModI64(mod);
     return;
   }
 
-  LDivOrModI64* lir = new (alloc())
-      LDivOrModI64(useInt64FixedAtStart(mod->lhs(), Register64(eax, ebx)),
-                   useInt64FixedAtStart(mod->rhs(), Register64(ecx, edx)),
-                   useFixedAtStart(mod->tls(), WasmTlsReg));
+  LDivOrModI64* lir = new (alloc()) LDivOrModI64(
+      useInt64FixedAtStart(mod->lhs(), Register64(eax, ebx)),
+      useInt64FixedAtStart(mod->rhs(), Register64(ecx, edx)), tempFixed(esi));
   defineReturn(lir, mod);
 }
 
 void LIRGeneratorX86::lowerUDivI64(MDiv* div) {
-  MOZ_CRASH("We use MWasmBuiltinDivI64 instead.");
+  LUDivOrModI64* lir = new (alloc()) LUDivOrModI64(
+      useInt64FixedAtStart(div->lhs(), Register64(eax, ebx)),
+      useInt64FixedAtStart(div->rhs(), Register64(ecx, edx)), tempFixed(esi));
+  defineReturn(lir, div);
 }
 
 void LIRGeneratorX86::lowerUModI64(MMod* mod) {
-  MOZ_CRASH("We use MWasmBuiltinModI64 instead.");
+  LUDivOrModI64* lir = new (alloc()) LUDivOrModI64(
+      useInt64FixedAtStart(mod->lhs(), Register64(eax, ebx)),
+      useInt64FixedAtStart(mod->rhs(), Register64(ecx, edx)), tempFixed(esi));
+  defineReturn(lir, mod);
 }
 
 void LIRGenerator::visitSubstr(MSubstr* ins) {

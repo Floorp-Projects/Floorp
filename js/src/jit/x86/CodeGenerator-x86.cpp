@@ -803,14 +803,9 @@ void CodeGenerator::visitCompareI64AndBranch(LCompareI64AndBranch* lir) {
 }
 
 void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
-  MOZ_ASSERT(gen->compilingWasm());
-  MOZ_ASSERT(ToRegister(lir->getOperand(LDivOrModI64::Tls)) == WasmTlsReg);
-
-  masm.Push(WasmTlsReg);
-  int32_t framePushedAfterTls = masm.framePushed();
-
   Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
   Register64 rhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Rhs));
+  Register temp = ToRegister(lir->temp());
   Register64 output = ToOutRegister64(lir);
 
   MOZ_ASSERT(output == ReturnReg64);
@@ -820,8 +815,7 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
   // Handle divide by zero.
   if (lir->canBeDivideByZero()) {
     Label nonZero;
-    // We can use WasmTlsReg as temp register because we preserved it before.
-    masm.branchTest64(Assembler::NonZero, rhs, rhs, WasmTlsReg, &nonZero);
+    masm.branchTest64(Assembler::NonZero, rhs, rhs, temp, &nonZero);
     masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
     masm.bind(&nonZero);
   }
@@ -833,7 +827,7 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
     Label notOverflow;
     masm.branch64(Assembler::NotEqual, lhs, Imm64(INT64_MIN), &notOverflow);
     masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notOverflow);
-    if (mir->isWasmBuiltinModI64()) {
+    if (mir->isMod()) {
       masm.xor64(output, output);
     } else {
       masm.wasmTrap(wasm::Trap::IntegerOverflow, lir->bytecodeOffset());
@@ -848,13 +842,13 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
   masm.passABIArg(rhs.high);
   masm.passABIArg(rhs.low);
 
-  int32_t tlsOffset = masm.framePushed() - framePushedAfterTls;
-  if (mir->isWasmBuiltinModI64()) {
+  MOZ_ASSERT(gen->compilingWasm());
+  if (mir->isMod()) {
     masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::ModI64,
-                     mozilla::Some(tlsOffset));
+                     mozilla::Nothing());
   } else {
     masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::DivI64,
-                     mozilla::Some(tlsOffset));
+                     mozilla::Nothing());
   }
 
   // output in edx:eax, move to output register.
@@ -862,18 +856,12 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
   MOZ_ASSERT(eax == output.low);
 
   masm.bind(&done);
-  masm.Pop(WasmTlsReg);
 }
 
 void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
-  MOZ_ASSERT(gen->compilingWasm());
-  MOZ_ASSERT(ToRegister(lir->getOperand(LDivOrModI64::Tls)) == WasmTlsReg);
-
-  masm.Push(WasmTlsReg);
-  int32_t framePushedAfterTls = masm.framePushed();
-
   Register64 lhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Lhs));
   Register64 rhs = ToRegister64(lir->getInt64Operand(LDivOrModI64::Rhs));
+  Register temp = ToRegister(lir->temp());
   Register64 output = ToOutRegister64(lir);
 
   MOZ_ASSERT(output == ReturnReg64);
@@ -881,8 +869,7 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   // Prevent divide by zero.
   if (lir->canBeDivideByZero()) {
     Label nonZero;
-    // We can use WasmTlsReg as temp register because we preserved it before.
-    masm.branchTest64(Assembler::NonZero, rhs, rhs, WasmTlsReg, &nonZero);
+    masm.branchTest64(Assembler::NonZero, rhs, rhs, temp, &nonZero);
     masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->bytecodeOffset());
     masm.bind(&nonZero);
   }
@@ -893,21 +880,19 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   masm.passABIArg(rhs.high);
   masm.passABIArg(rhs.low);
 
+  MOZ_ASSERT(gen->compilingWasm());
   MDefinition* mir = lir->mir();
-  int32_t tlsOffset = masm.framePushed() - framePushedAfterTls;
-  if (mir->isWasmBuiltinModI64()) {
+  if (mir->isMod()) {
     masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UModI64,
-                     mozilla::Some(tlsOffset));
+                     mozilla::Nothing());
   } else {
     masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UDivI64,
-                     mozilla::Some(tlsOffset));
+                     mozilla::Nothing());
   }
 
   // output in edx:eax, move to output register.
   masm.movl(edx, output.high);
   MOZ_ASSERT(eax == output.low);
-
-  masm.Pop(WasmTlsReg);
 }
 
 void CodeGenerator::visitWasmSelectI64(LWasmSelectI64* lir) {
