@@ -8,6 +8,7 @@
 
 #include "nsAHttpTransaction.h"
 #include "ARefBase.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 namespace net {
@@ -16,6 +17,7 @@ class Http3Session;
 
 class Http3Stream final : public nsAHttpSegmentReader,
                           public nsAHttpSegmentWriter,
+                          public SupportsWeakPtr,
                           public ARefBase {
  public:
   NS_DECL_NSAHTTPSEGMENTREADER
@@ -59,6 +61,10 @@ class Http3Stream final : public nsAHttpSegmentReader,
   void StopSending();
 
   void SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders, bool fin);
+
+  // Mirrors nsAHttpTransaction
+  bool Do0RTT();
+  nsresult Finish0RTT(bool aRestart);
 
  private:
   ~Http3Stream() = default;
@@ -142,6 +148,8 @@ class Http3Stream final : public nsAHttpSegmentReader,
   uint64_t mTotalRead;
 
   bool mFin;
+
+  bool mAttempting0RTT = false;
 };
 
 }  // namespace net

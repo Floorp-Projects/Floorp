@@ -690,3 +690,8 @@ pub extern "C" fn neqo_http3conn_resumption_token(conn: &mut NeqoHttp3Conn, toke
 pub extern "C" fn neqo_http3conn_set_resumption_token(conn: &mut NeqoHttp3Conn, token: &mut ThinVec<u8>,) {
     let _ = conn.conn.set_resumption_token(Instant::now(), token);
 }
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_is_zero_rtt(conn: &mut NeqoHttp3Conn) -> bool {
+    conn.conn.state() == Http3State::ZeroRtt
+}

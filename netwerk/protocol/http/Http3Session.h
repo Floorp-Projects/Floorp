@@ -51,6 +51,7 @@ class Http3Session final : public nsAHttpTransaction,
                 HttpConnectionUDP* readerWriter);
 
   bool IsConnected() const { return mState == CONNECTED; }
+  bool CanSandData() const { return (mState == CONNECTED) || (mState == ZERORTT); }
   bool IsClosing() const { return (mState == CLOSING || mState == CLOSED); }
   bool IsClosed() const { return mState == CLOSED; }
 
@@ -100,6 +101,8 @@ class Http3Session final : public nsAHttpTransaction,
 
   const nsCString& GetAlpnToken() { return mAlpnToken; }
 
+  void ReportHttp3Connection();
+
  private:
   ~Http3Session();
 
@@ -137,6 +140,7 @@ class Http3Session final : public nsAHttpTransaction,
   void MaybeResumeSend();
 
   void CloseConnectionTelemetry(CloseError& aError, bool aClosing);
+  void Finish0Rtt(bool aRestart);
 
   RefPtr<NeqoHttp3Conn> mHttp3Connection;
   RefPtr<nsAHttpConnection> mConnection;
@@ -149,13 +153,14 @@ class Http3Session final : public nsAHttpTransaction,
   nsTArray<RefPtr<Http3Stream>> mSlowConsumersReadyForRead;
   nsDeque<Http3Stream> mQueuedStreams;
 
-  enum State { INITIALIZING, CONNECTED, CLOSING, CLOSED } mState;
+  enum State { INITIALIZING, ZERORTT, CONNECTED, CLOSING, CLOSED } mState;
 
   bool mAuthenticationStarted;
   bool mCleanShutdown;
   bool mGoawayReceived;
   bool mShouldClose;
   bool mIsClosedByNeqo;
+  bool mHttp3ConnectionReported = false;
   // mError is neqo error (a protocol error) and that may mean that we will
   // send some packets after that.
   nsresult mError;
@@ -180,6 +185,12 @@ class Http3Session final : public nsAHttpTransaction,
   nsCString mAlpnToken;
 
   uint64_t mTransactionCount = 0;
+
+  // The stream(s) that we are getting 0RTT data from.
+  nsTArray<WeakPtr<Http3Stream>> m0RTTStreams;
+  // The stream(s) that are not able to send 0RTT data. We need to
+  // remember them put them into mReadyForWrite queue when 0RTT finishes.
+  nsTArray<WeakPtr<Http3Stream>> mCannotDo0RTTStreams;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);
