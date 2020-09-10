@@ -37,21 +37,21 @@ const TEST_URL =
   </script>`);
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   info("Waiting for element picker to become active.");
   await startPicker(toolbox);
 
   info("Move mouse over the padding of the test-component");
-  await hoverElement(inspector, testActor, "test-component", 10, 10);
+  await hoverElement(inspector, "test-component", 10, 10);
 
   info("Move mouse over the pick-target");
   // Note we can't reach pick-target with a selector because this element lives in the
   // shadow-dom of test-component. We aim for PADDING + 5 pixels
-  await hoverElement(inspector, testActor, "test-component", 10, 25);
+  await hoverElement(inspector, "test-component", 10, 25);
 
   info("Click and pick the pick-target");
-  await pickElement(inspector, testActor, "test-component", 10, 25);
+  await pickElement(inspector, "test-component", 10, 25);
 
   info(
     "Check that the markup view has the expected content after using the picker"

@@ -11,20 +11,13 @@ const TEST_URI =
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
 add_task(async function() {
-  const { toolbox, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
 
   info("Starting element picker.");
   await startPicker(toolbox);
 
-  info("Waiting for body to be hovered.");
-  const onHovered = toolbox.nodePicker.once("picker-node-hovered");
-  testActor.synthesizeMouse({
-    selector: "body",
-    options: { type: "mousemove" },
-    x: 1,
-    y: 1,
-  });
-  await onHovered;
+  info("Mouse over for body element.");
+  await hoverElement(inspector, "body");
 
   let isVisible = await testActor.isHighlighting();
   ok(isVisible, "Inspector is highlighting.");

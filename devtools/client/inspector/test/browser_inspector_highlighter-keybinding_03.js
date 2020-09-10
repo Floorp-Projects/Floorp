@@ -13,7 +13,7 @@ add_task(async function() {
   const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
-  await moveMouseOver("#another");
+  await hoverElement(inspector, "#another");
 
   info("Testing enter/return key as pick-node command");
   await doKeyPick({ key: "VK_RETURN", options: {} });
@@ -25,7 +25,7 @@ add_task(async function() {
 
   info("Testing escape key as cancel-picker command");
   await startPicker(toolbox);
-  await moveMouseOver("#ahoy");
+  await hoverElement(inspector, "#ahoy");
   await doKeyStop({ key: "VK_ESCAPE", options: {} });
   is(
     inspector.selection.nodeFront.id,
@@ -35,7 +35,7 @@ add_task(async function() {
 
   info("Testing Ctrl+Shift+C shortcut as cancel-picker command");
   await startPicker(toolbox);
-  await moveMouseOver("#ahoy");
+  await hoverElement(inspector, "#ahoy");
   const shortcutOpts = { key: "VK_C", options: {} };
   if (IS_OSX) {
     shortcutOpts.options.metaKey = true;
@@ -65,16 +65,5 @@ add_task(async function() {
     info("Key pressed. Waiting for picker to be canceled");
     testActor.synthesizeKey(args);
     return toolbox.nodePicker.once("picker-stopped");
-  }
-
-  function moveMouseOver(selector) {
-    info("Waiting for element " + selector + " to be highlighted");
-    const onPickerNodeHovered = toolbox.nodePicker.once("picker-node-hovered");
-    testActor.synthesizeMouse({
-      options: { type: "mousemove" },
-      center: true,
-      selector: selector,
-    });
-    return onPickerNodeHovered;
   }
 });

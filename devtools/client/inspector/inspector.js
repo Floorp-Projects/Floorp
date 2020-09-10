@@ -7,6 +7,7 @@
 const Services = require("Services");
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
+const flags = require("devtools/shared/flags");
 const { executeSoon } = require("devtools/shared/DevToolsUtils");
 const { Toolbox } = require("devtools/client/framework/toolbox");
 const createStore = require("devtools/client/inspector/store");
@@ -172,6 +173,9 @@ function Inspector(toolbox) {
   this.onResourceAvailable = this.onResourceAvailable.bind(this);
   this.onRootNodeAvailable = this.onRootNodeAvailable.bind(this);
   this.onPanelWindowResize = this.onPanelWindowResize.bind(this);
+  this.onPickerCanceled = this.onPickerCanceled.bind(this);
+  this.onPickerHovered = this.onPickerHovered.bind(this);
+  this.onPickerPicked = this.onPickerPicked.bind(this);
   this.onShowBoxModelHighlighterForNode = this.onShowBoxModelHighlighterForNode.bind(
     this
   );
@@ -349,6 +353,13 @@ Inspector.prototype = {
     return this._fluentL10n;
   },
 
+  // Duration in milliseconds after which to hide the highlighter for the picked node.
+  // While testing, disable auto hiding to prevent intermittent test failures.
+  // Some tests are very slow. If the highlighter is hidden after a delay, the test may
+  // find itself midway through without a highlighter to test.
+  // This value is exposed on Inspector so individual tests can restore it when needed.
+  HIGHLIGHTER_AUTOHIDE_TIMER: flags.testing ? 0 : 1000,
+
   /**
    * Handle promise rejections for various asynchronous actions, and only log errors if
    * the inspector panel still exists.
@@ -386,6 +397,9 @@ Inspector.prototype = {
     this.onNewSelection();
 
     this.toolbox.on("host-changed", this.onHostChanged);
+    this.toolbox.nodePicker.on("picker-node-hovered", this.onPickerHovered);
+    this.toolbox.nodePicker.on("picker-node-canceled", this.onPickerCanceled);
+    this.toolbox.nodePicker.on("picker-node-picked", this.onPickerPicked);
     this.selection.on("new-node-front", this.onNewSelection);
     this.selection.on("detached-front", this.onDetached);
 
@@ -1636,6 +1650,9 @@ Inspector.prototype = {
     this.sidebar.off("show", this.onSidebarShown);
     this.sidebar.off("hide", this.onSidebarHidden);
     this.sidebar.off("destroy", this.onSidebarHidden);
+    this.toolbox.nodePicker.off("picker-node-canceled", this.onPickerCanceled);
+    this.toolbox.nodePicker.off("picker-node-hovered", this.onPickerHovered);
+    this.toolbox.nodePicker.off("picker-node-picked", this.onPickerPicked);
     this.currentTarget.off("will-navigate", this._onBeforeNavigate);
 
     for (const [, panel] of this._panels) {
@@ -1910,6 +1927,25 @@ Inspector.prototype = {
    */
   onShowBoxModelHighlighterForNode(nodeFront, options) {
     nodeFront.highlighterFront.highlight(nodeFront, options);
+  },
+
+  onPickerCanceled() {
+    this.highlighters.hideHighlighterType(this.highlighters.TYPES.BOXMODEL);
+  },
+
+  onPickerHovered(nodeFront) {
+    this.highlighters.showHighlighterTypeForNode(
+      this.highlighters.TYPES.BOXMODEL,
+      nodeFront
+    );
+  },
+
+  onPickerPicked(nodeFront) {
+    this.highlighters.showHighlighterTypeForNode(
+      this.highlighters.TYPES.BOXMODEL,
+      nodeFront,
+      { duration: this.HIGHLIGHTER_AUTOHIDE_TIMER }
+    );
   },
 
   async inspectNodeActor(nodeActor, inspectFromAnnotation) {
