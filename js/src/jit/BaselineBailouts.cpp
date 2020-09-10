@@ -155,6 +155,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   MOZ_MUST_USE bool fixUpCallerArgs(MutableHandleValueVector savedCallerArgs,
                                     bool* fixedUp);
   MOZ_MUST_USE bool buildExpressionStack();
+  MOZ_MUST_USE bool finishLastFrame();
 
 #ifdef DEBUG
   MOZ_MUST_USE bool validateFrame();
@@ -174,6 +175,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 #endif
 
   bool hasLiveStackValueAtDepth(uint32_t stackSlotIndex);
+  bool isPrologueBailout();
+  jsbytecode* getResumePC();
 
  public:
   MutableHandleValueVector outermostFrameFormals() {
@@ -889,6 +892,64 @@ bool BaselineStackBuilder::buildExpressionStack() {
   return true;
 }
 
+bool BaselineStackBuilder::finishLastFrame() {
+  const BaselineInterpreter& baselineInterp =
+      cx_->runtime()->jitRuntime()->baselineInterpreter();
+
+  setResumeFramePtr(prevFramePtr());
+  setFrameSizeOfInnerMostFrame(framePushed());
+
+  // Compute the native address (within the Baseline Interpreter) that we will
+  // resume at and initialize the frame's interpreter fields.
+  uint8_t* resumeAddr;
+  if (isPrologueBailout()) {
+    JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
+    MOZ_ASSERT(pc_ == script()->code());
+    blFrame()->setInterpreterFieldsForPrologue(script());
+    resumeAddr = baselineInterp.bailoutPrologueEntryAddr();
+  } else if (propagatingIonExceptionForDebugMode()) {
+    // When propagating an exception for debug mode, set the
+    // resume pc to the throwing pc, so that Debugger hooks report
+    // the correct pc offset of the throwing op instead of its
+    // successor.
+    jsbytecode* throwPC = script()->offsetToPC(iter_.pcOffset());
+    blFrame()->setInterpreterFields(script(), throwPC);
+    resumeAddr = baselineInterp.interpretOpAddr().value;
+  } else {
+    // If the opcode is monitored we should monitor the top stack value when
+    // we finish the bailout in FinishBailoutToBaseline.
+    if (resumeAfter() && BytecodeOpHasTypeSet(op_)) {
+      setMonitorPC(pc_);
+    }
+    jsbytecode* resumePC = getResumePC();
+    blFrame()->setInterpreterFields(script(), resumePC);
+    resumeAddr = baselineInterp.interpretOpAddr().value;
+  }
+  setResumeAddr(resumeAddr);
+  JitSpew(JitSpew_BaselineBailouts, "      Set resumeAddr=%p", resumeAddr);
+
+  if (cx_->runtime()->geckoProfiler().enabled()) {
+    // Register bailout with profiler.
+    const char* filename = script()->filename();
+    if (filename == nullptr) {
+      filename = "<unknown>";
+    }
+    unsigned len = strlen(filename) + 200;
+    UniqueChars buf(js_pod_malloc<char>(len));
+    if (buf == nullptr) {
+      ReportOutOfMemory(cx_);
+      return false;
+    }
+    snprintf(buf.get(), len, "%s %s %s on line %u of %s:%u",
+             BailoutKindString(iter_.bailoutKind()),
+             resumeAfter() ? "after" : "at", CodeName(op_),
+             PCToLineNumber(script(), pc_), filename, script()->lineno());
+    cx_->runtime()->geckoProfiler().markEvent(buf.get());
+  }
+
+  return true;
+}
+
 #ifdef DEBUG
 // The |envChain| slot must not be optimized out if the currently
 // active scope requires any EnvironmentObjects beyond what is
@@ -1005,10 +1066,9 @@ static inline jsbytecode* GetNextNonLoopHeadPc(jsbytecode* pc,
 }
 
 // Returns the pc to resume execution at in Baseline after a bailout.
-static jsbytecode* GetResumePC(JSScript* script, jsbytecode* pc,
-                               bool resumeAfter) {
-  if (resumeAfter) {
-    return GetNextPc(pc);
+jsbytecode* BaselineStackBuilder::getResumePC() {
+  if (resumeAfter()) {
+    return GetNextPc(pc_);
   }
 
   // If we are resuming at a LoopHead op, resume at the next op to avoid
@@ -1017,17 +1077,18 @@ static jsbytecode* GetResumePC(JSScript* script, jsbytecode* pc,
   // The algorithm below is the "tortoise and the hare" algorithm. See bug
   // 994444 for more explanation.
   jsbytecode* skippedLoopHead = nullptr;
-  jsbytecode* fasterPc = pc;
+  jsbytecode* slowerPc = pc_;
+  jsbytecode* fasterPc = pc_;
   while (true) {
-    pc = GetNextNonLoopHeadPc(pc, &skippedLoopHead);
+    slowerPc = GetNextNonLoopHeadPc(slowerPc, &skippedLoopHead);
     fasterPc = GetNextNonLoopHeadPc(fasterPc, &skippedLoopHead);
     fasterPc = GetNextNonLoopHeadPc(fasterPc, &skippedLoopHead);
-    if (fasterPc == pc) {
+    if (fasterPc == slowerPc) {
       break;
     }
   }
 
-  return pc;
+  return slowerPc;
 }
 
 bool BaselineStackBuilder::hasLiveStackValueAtDepth(uint32_t stackSlotIndex) {
@@ -1057,13 +1118,12 @@ bool BaselineStackBuilder::hasLiveStackValueAtDepth(uint32_t stackSlotIndex) {
   return false;
 }
 
-static bool IsPrologueBailout(const SnapshotIterator& iter,
-                              const ExceptionBailoutInfo* excInfo) {
+bool BaselineStackBuilder::isPrologueBailout() {
   // If we are propagating an exception for debug mode, we will not resume
   // into baseline code, but instead into HandleExceptionBaseline (i.e.,
   // never before the prologue).
-  return iter.pcOffset() == 0 && !iter.resumeAfter() &&
-         (!excInfo || !excInfo->propagatingIonExceptionForDebugMode());
+  return iter_.pcOffset() == 0 && !iter_.resumeAfter() &&
+         !propagatingIonExceptionForDebugMode();
 }
 
 /* clang-format off */
@@ -1228,67 +1288,16 @@ static bool InitFromBailout(JSContext* cx, HandleFunction fun,
           BailoutKindString(iter.bailoutKind()));
 #endif
 
-  const BaselineInterpreter& baselineInterp =
-      cx->runtime()->jitRuntime()->baselineInterpreter();
-
   // If this was the last inline frame, or we are bailing out to a catch or
   // finally block in this frame, then unpacking is almost done.
   if (!iter.moreFrames() || catchingException) {
-    builder.setResumeFramePtr(prevFramePtr);
-    builder.setFrameSizeOfInnerMostFrame(frameSize);
-
-    // Compute the native address (within the Baseline Interpreter) that we will
-    // resume at and initialize the frame's interpreter fields.
-    uint8_t* resumeAddr;
-    if (IsPrologueBailout(iter, excInfo)) {
-      JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
-      MOZ_ASSERT(pc == script->code());
-      builder.blFrame()->setInterpreterFieldsForPrologue(script);
-      resumeAddr = baselineInterp.bailoutPrologueEntryAddr();
-    } else if (excInfo && excInfo->propagatingIonExceptionForDebugMode()) {
-      // When propagating an exception for debug mode, set the
-      // resume pc to the throwing pc, so that Debugger hooks report
-      // the correct pc offset of the throwing op instead of its
-      // successor.
-      jsbytecode* throwPC = script->offsetToPC(iter.pcOffset());
-      builder.blFrame()->setInterpreterFields(script, throwPC);
-      resumeAddr = baselineInterp.interpretOpAddr().value;
-    } else {
-      // If the opcode is monitored we should monitor the top stack value when
-      // we finish the bailout in FinishBailoutToBaseline.
-      if (resumeAfter && BytecodeOpHasTypeSet(op)) {
-        builder.setMonitorPC(pc);
-      }
-      jsbytecode* resumePC = GetResumePC(script, pc, resumeAfter);
-      builder.blFrame()->setInterpreterFields(script, resumePC);
-      resumeAddr = baselineInterp.interpretOpAddr().value;
-    }
-    builder.setResumeAddr(resumeAddr);
-    JitSpew(JitSpew_BaselineBailouts, "      Set resumeAddr=%p", resumeAddr);
-
-    if (cx->runtime()->geckoProfiler().enabled()) {
-      // Register bailout with profiler.
-      const char* filename = script->filename();
-      if (filename == nullptr) {
-        filename = "<unknown>";
-      }
-      unsigned len = strlen(filename) + 200;
-      UniqueChars buf(js_pod_malloc<char>(len));
-      if (buf == nullptr) {
-        ReportOutOfMemory(cx);
-        return false;
-      }
-      snprintf(buf.get(), len, "%s %s %s on line %u of %s:%u",
-               BailoutKindString(iter.bailoutKind()),
-               resumeAfter ? "after" : "at", CodeName(op),
-               PCToLineNumber(script, pc), filename, script->lineno());
-      cx->runtime()->geckoProfiler().markEvent(buf.get());
-    }
-
-    return true;
+    return builder.finishLastFrame();
   }
 
   // This is an outer frame for an inlined getter/setter/call.
+
+  const BaselineInterpreter& baselineInterp =
+      cx->runtime()->jitRuntime()->baselineInterpreter();
 
   builder.blFrame()->setInterpreterFields(script, pc);
 
