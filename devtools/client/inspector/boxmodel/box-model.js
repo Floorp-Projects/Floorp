@@ -233,8 +233,9 @@ BoxModel.prototype = {
    * Hides the box-model highlighter on the currently selected element.
    */
   onHideBoxModelHighlighter() {
-    const { highlighter } = this.getCurrentInspectorFront();
-    highlighter.unhighlight();
+    this.inspector.highlighters.hideHighlighterType(
+      this.inspector.highlighters.TYPES.BOXMODEL
+    );
   },
 
   /**
@@ -399,9 +400,12 @@ BoxModel.prototype = {
       return;
     }
 
-    const { highlighter } = this.getCurrentInspectorFront();
     const { nodeFront } = this.inspector.selection;
-    highlighter.highlight(nodeFront, options);
+    this.inspector.highlighters.showHighlighterTypeForNode(
+      this.inspector.highlighters.TYPES.BOXMODEL,
+      nodeFront,
+      options
+    );
   },
 
   /**

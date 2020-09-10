@@ -17,25 +17,6 @@ registerCleanupFunction(() => {
 });
 
 /**
- * Highlight a node and set the inspector's current selection to the node or
- * the first match of the given css selector.
- *
- * @param  {String|NodeFront} selectorOrNodeFront
- *         The selector for the node to be set, or the nodeFront.
- * @param  {InspectorPanel} inspector
- *         The instance of InspectorPanel currently loaded in the toolbox.
- * @return {Promise} a promise that resolves when the inspector is updated with the new
- *         node.
- */
-async function selectAndHighlightNode(selectorOrNodeFront, inspector) {
-  info("Highlighting and selecting the node " + selectorOrNodeFront);
-  const nodeFront = await getNodeFront(selectorOrNodeFront, inspector);
-  const onHovered = inspector.toolbox.nodePicker.once("picker-node-hovered");
-  inspector.selection.setNodeFront(nodeFront, { reason: "test-highlight" });
-  await onHovered;
-}
-
-/**
  * Is the given node visible in the page (rendered in the frame tree).
  * @param {DOMNode}
  * @return {Boolean}
@@ -53,7 +34,17 @@ function isNodeVisible(node) {
  *         Should the boxmodel-view-updated event come from a new selection.
  * @return {Promise} a promise
  */
-function waitForUpdate(inspector, waitForSelectionUpdate) {
+async function waitForUpdate(inspector, waitForSelectionUpdate) {
+  /**
+   * While the highlighter is visible (mouse over the fields of the box model editor),
+   * reflow events are prevented; see ReflowActor -> setIgnoreLayoutChanges()
+   * The box model view updates in response to reflow events.
+   * To ensure reflow events are fired, hide the highlighter.
+   */
+  await inspector.highlighters.hideHighlighterType(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
+
   return new Promise(resolve => {
     inspector.on("boxmodel-view-updated", function onUpdate(reasons) {
       // Wait for another update event if we are waiting for a selection related event.
