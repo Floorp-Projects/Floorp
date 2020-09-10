@@ -45,6 +45,8 @@ class GeckoTextMarker final {
   // Return a word range right of the given offset.
   GeckoTextMarkerRange RightWordRange();
 
+  AccessibleOrProxy Leaf();
+
   bool IsValid() const { return !mContainer.IsNull(); };
 
   bool operator<(const GeckoTextMarker& aPoint) const;
