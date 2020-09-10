@@ -432,10 +432,6 @@ class FunctionBox : public SharedContext {
 
   ScriptStencil& functionStencil() const;
 
-#ifdef DEBUG
-  bool atomsAreKept();
-#endif
-
   ParserLexicalScopeData* namedLambdaBindings() { return namedLambdaBindings_; }
   void setNamedLambdaBindings(ParserLexicalScopeData* bindings) {
     namedLambdaBindings_ = bindings;

@@ -695,7 +695,6 @@ class GCRuntime {
   void purgeSourceURLsForShrinkingGC();
   void traceRuntimeForMajorGC(JSTracer* trc, AutoGCSession& session);
   void traceRuntimeAtoms(JSTracer* trc, const AutoAccessAtomsZone& atomsAccess);
-  void traceKeptAtoms(JSTracer* trc);
   void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark);
   void traceEmbeddingBlackRoots(JSTracer* trc);
   void traceEmbeddingGrayRoots(JSTracer* trc);
@@ -942,7 +941,7 @@ class GCRuntime {
   mozilla::Atomic<JS::GCReason, mozilla::ReleaseAcquire> majorGCTriggerReason;
 
  private:
-  /* Perform full GC if rt->keepAtoms() becomes false. */
+  /* Perform full GC when we are able to collect the atoms zone. */
   MainThreadData<bool> fullGCForAtomsRequested_;
 
   /* Incremented at the start of every minor GC. */

@@ -1205,12 +1205,6 @@ void AutoEnterOOMUnsafeRegion::crash(size_t size, const char* reason) {
   crash(reason);
 }
 
-AutoKeepAtoms::AutoKeepAtoms(JSContext* cx) : cx(cx) {
-  cx->zone()->keepAtoms();
-}
-
-AutoKeepAtoms::~AutoKeepAtoms() { cx->zone()->releaseAtoms(); };
-
 void ExternalValueArray::trace(JSTracer* trc) {
   if (Value* vp = begin()) {
     TraceRootRange(trc, length(), vp, "js::ExternalValueArray");
