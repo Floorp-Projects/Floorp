@@ -73,6 +73,17 @@ async function waitForPreloaded(browser) {
 }
 
 /**
+ * Helper function to navigate and wait for page to load
+ * https://searchfox.org/mozilla-central/rev/b2716c233e9b4398fc5923cbe150e7f83c7c6c5b/testing/mochitest/BrowserTestUtils/BrowserTestUtils.jsm#383
+ */
+// eslint-disable-next-line no-unused-vars
+async function waitForUrlLoad(url) {
+  let browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, url);
+  await BrowserTestUtils.browserLoaded(browser, false, url);
+}
+
+/**
  * Helper to force the HighlightsFeed to update.
  */
 function refreshHighlightsFeed() {

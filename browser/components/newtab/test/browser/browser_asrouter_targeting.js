@@ -1110,3 +1110,26 @@ add_task(async function check_newTabSettings_webExtension() {
 
   AboutNewTab.resetNewTabURL();
 });
+
+add_task(async function check_openUrlTrigger_context() {
+  const message = {
+    ...CFRMessageProvider.getMessages().find(m => m.id === "YOUTUBE_ENHANCE_3"),
+    targeting: "visitsCount == 3",
+  };
+  const trigger = {
+    id: "openURL",
+    context: { visitsCount: 3 },
+    param: { host: "youtube.com", url: "https://www.youtube.com" },
+  };
+
+  is(
+    (
+      await ASRouterTargeting.findMatchingMessage({
+        messages: [message],
+        trigger,
+      })
+    ).id,
+    message.id,
+    `should select ${message.id} mesage`
+  );
+});
