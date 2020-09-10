@@ -41,7 +41,7 @@
           <li data-l10n-id="pioneer-your-data-bullet-leave"></li>
         </ul>
         <p data-l10n-id="pioneer-your-data-learn-more">
-          <a data-l10n-name="privacy-policy" id="privacy-policy" href="https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/pioneer-managing-account-data" target="_blank"></a>
+          <a data-l10n-name="privacy-policy" class="privacy-policy" href="https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/pioneer-managing-account-data" target="_blank"></a>
         </p>
       </div>
       <h2 id="header-available-studies"></h2>
@@ -49,7 +49,41 @@
       <dialog id="join-pioneer-consent-dialog" class="modal" is="trapped-dialog">
         <h3 data-l10n-id="pioneer-consent-notice"></h3>
         <p data-l10n-id="pioneer-program-consent-intro"></p>
-        <ul id="join-pioneer-consent" class="consent-list"></ul>
+        <ul id="join-pioneer-consent" class="consent-list">
+          <p data-l10n-id="pioneer-enroll-effective-date"></p>
+          <p data-l10n-id="pioneer-enroll-summary"></p>
+          <p data-l10n-id="pioneer-enroll-demographic"></p>
+          <p data-l10n-id="pioneer-enroll-privacy-notice">
+            <a data-l10n-name="privacy-notice" class="privacy-notice" href="https://www.mozilla.org/%LOCALE%/privacy/" target="_blank"></a>
+          </p>
+          <h2 data-l10n-id="pioneer-enroll-what-we-collect"></h2>
+          <p data-l10n-id="pioneer-enroll-collect-demographic"></p>
+          <p data-l10n-id="pioneer-enroll-technical-data"></p>
+          <p data-l10n-id="pioneer-enroll-interaction-data"></p>
+          <p data-l10n-id="pioneer-enroll-location-data"></p>
+          <p data-l10n-id="pioneer-enroll-data-disclosure">
+            <a data-l10n-name="privacy-policy" class="privacy-policy" href="https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/pioneer-managing-account-data" target="_blank"></a>
+          </p>
+          <h2 data-l10n-id="pioneer-enroll-how-we-use"></h2>
+          <p data-l10n-id="pioneer-enroll-r-and-d"></p>
+          <ul>
+            <li data-l10n-id="pioneer-enroll-bullet-criteria"></li>
+            <li data-l10n-id="pioneer-enroll-bullet-representative"></li>
+            <li data-l10n-id="pioneer-enroll-bullet-improve-existing"></li>
+            <li data-l10n-id="pioneer-enroll-bullet-create"></li>
+          </ul>
+          <h2 data-l10n-id="pioneer-enroll-who-we-disclose-to"></h2>
+          <p data-l10n-id="pioneer-enroll-who-we-disclose-bullet-gcp"></p>
+          <p data-l10n-id="pioneer-enroll-who-we-disclose-bullet-third-party"></p>
+          <p data-l10n-id="pioneer-enroll-who-we-disclose-bullet-public">
+            <a data-l10n-name="mozilla-manifesto" href="https://www.mozilla.org/about/manifesto/" target="_blank"></a>
+          </p>
+          <h2 data-l10n-id="pioneer-enroll-data-management"></h2>
+          <p data-l10n-id="pioneer-enroll-data-management-learn-more">
+            <a data-l10n-name="privacy-policy" class="privacy-policy" href="https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/pioneer-managing-account-data" target="_blank"></a>
+            <a data-l10n-name="compliance-email" href="mailto:compliance@mozilla.com"></a>
+          </p>
+        </ul>
         <footer>
           <button id="join-pioneer-accept-dialog-button" class="primary" data-l10n-id="pioneer-accept-participate" ></button>
           <button id="join-pioneer-cancel-dialog-button" data-l10n-id="pioneer-cancel" ></button>
@@ -80,5 +114,6 @@
           <button id="leave-study-accept-dialog-button" data-l10n-id="pioneer-consent-study-leave"></button>
         </footer>
       </dialog>
+    </div>
   </body>
 </html>
