@@ -233,30 +233,29 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
 
   // XXX Is this check still necessary with a Span? Or should it rather be moved
   // to the caller?
-  if (uintptr_t(aBlobData.Elements()) > UINTPTR_MAX - aBlobData.LengthBytes()) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_FILE_CORRUPTED;
-  }
+  IDB_TRY(OkIf(uintptr_t(aBlobData.Elements()) <=
+               UINTPTR_MAX - aBlobData.LengthBytes()),
+          NS_ERROR_FILE_CORRUPTED, IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   for (auto remainder = aBlobData; !remainder.IsEmpty();) {
     IDB_TRY_VAR((const auto [indexId, unique, remainderAfterIndexId]),
                 ReadCompressedIndexId(remainder));
 
-    if (NS_WARN_IF(remainderAfterIndexId.IsEmpty())) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+    IDB_TRY(OkIf(!remainderAfterIndexId.IsEmpty()), NS_ERROR_FILE_CORRUPTED,
+            IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
     // Read key buffer length.
     IDB_TRY_VAR((const auto [keyBufferLength, remainderAfterKeyBufferLength]),
                 ReadCompressedNumber(remainderAfterIndexId));
 
-    if (NS_WARN_IF(remainderAfterKeyBufferLength.IsEmpty()) ||
-        NS_WARN_IF(keyBufferLength > uint64_t(UINT32_MAX)) ||
-        NS_WARN_IF(keyBufferLength > remainderAfterKeyBufferLength.Length())) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+    IDB_TRY(OkIf(!remainderAfterKeyBufferLength.IsEmpty()),
+            NS_ERROR_FILE_CORRUPTED, IDB_REPORT_INTERNAL_ERR_LAMBDA);
+
+    IDB_TRY(OkIf(keyBufferLength <= uint64_t(UINT32_MAX)),
+            NS_ERROR_FILE_CORRUPTED, IDB_REPORT_INTERNAL_ERR_LAMBDA);
+
+    IDB_TRY(OkIf(keyBufferLength <= remainderAfterKeyBufferLength.Length()),
+            NS_ERROR_FILE_CORRUPTED, IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
     const auto [keyBuffer, remainderAfterKeyBuffer] =
         remainderAfterKeyBufferLength.SplitAt(keyBufferLength);
@@ -270,12 +269,14 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
 
     remainder = remainderAfterSortKeyBufferLength;
     if (sortKeyBufferLength > 0) {
-      if (NS_WARN_IF(remainder.IsEmpty()) ||
-          NS_WARN_IF(sortKeyBufferLength > uint64_t(UINT32_MAX)) ||
-          NS_WARN_IF(sortKeyBufferLength > remainder.Length())) {
-        IDB_REPORT_INTERNAL_ERR();
-        return NS_ERROR_FILE_CORRUPTED;
-      }
+      IDB_TRY(OkIf(!remainder.IsEmpty()), NS_ERROR_FILE_CORRUPTED,
+              IDB_REPORT_INTERNAL_ERR_LAMBDA);
+
+      IDB_TRY(OkIf(sortKeyBufferLength <= uint64_t(UINT32_MAX)),
+              NS_ERROR_FILE_CORRUPTED, IDB_REPORT_INTERNAL_ERR_LAMBDA);
+
+      IDB_TRY(OkIf(sortKeyBufferLength <= remainder.Length()),
+              NS_ERROR_FILE_CORRUPTED, IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
       const auto [sortKeyBuffer, remainderAfterSortKeyBuffer] =
           remainder.SplitAt(sortKeyBufferLength);
@@ -283,10 +284,8 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
       remainder = remainderAfterSortKeyBuffer;
     }
 
-    if (NS_WARN_IF(!aOutIndexValues.AppendElement(std::move(idv), fallible))) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    IDB_TRY(OkIf(aOutIndexValues.AppendElement(std::move(idv), fallible)),
+            NS_ERROR_OUT_OF_MEMORY, IDB_REPORT_INTERNAL_ERR_LAMBDA);
   }
   aOutIndexValues.Sort();
 
