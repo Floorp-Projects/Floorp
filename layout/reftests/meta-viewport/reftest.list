@@ -27,7 +27,7 @@ skip-if(!Android) == position-fixed-on-minimum-scale-size.html position-fixed-on
 
 == overflow-region.html overflow-region-ref.html
 == overflow-hidden-region.html overflow-region-ref.html
-pref(ui.useOverlayScrollbars,1) == overflow-hidden-region-with-negative-left-positioned-element.html overflow-region-ref.html
+== overflow-hidden-region-with-negative-left-positioned-element.html overflow-region-ref.html
 == horizontal-overflow-hidden-region.html horizontal-overflow-hidden-region-ref.html
 == vertical-overflow-hidden-region.html about:blank
 == scroll-to-unreachable-area.html scroll-to-unreachable-area-ref.html
