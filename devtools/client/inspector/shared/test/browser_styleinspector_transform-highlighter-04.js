@@ -57,7 +57,7 @@ add_task(async function() {
 
   info("Faking a mousemove on the now unoverriden property");
   ({ valueSpan } = getRuleViewProperty(view, "div", "transform"));
-  const onHighlighterShown = hs.once("highlighter-shown");
+  const onHighlighterShown = hs.once("css-transform-highlighter-shown");
   hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
 });
