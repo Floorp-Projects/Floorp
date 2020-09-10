@@ -86,7 +86,6 @@ input {
   display: inline-block;
   appearance: auto;
   -moz-default-appearance: textfield;
-  -moz-button-appearance: disallow;
   /* The sum of border and padding on block-start and block-end
      must be the same here, for buttons, and for <select> (including its
      internal padding magic) */
@@ -110,7 +109,6 @@ input::placeholder {
 textarea {
   appearance: auto;
   -moz-default-appearance: textarea;
-  -moz-button-appearance: disallow;
   margin-block: 1px;
   border: 2px inset ThreeDLightShadow;
   /* The 1px inline padding is for parity with Win/IE */
@@ -242,7 +240,6 @@ select {
   padding-block: 0;
   appearance: auto;
   -moz-default-appearance: menulist;
-  -moz-button-appearance: allow;
 }
 
 select:-moz-select-list-box {
@@ -253,7 +250,6 @@ select:-moz-select-list-box {
   padding-block: 1px;
   appearance: auto;
   -moz-default-appearance: listbox;
-  -moz-button-appearance: disallow;
 }
 
 select > button {
@@ -754,7 +750,6 @@ output:-moz-ui-invalid {
 progress {
   appearance: auto;
   -moz-default-appearance: progress-bar;
-  -moz-button-appearance: disallow;
   display: inline-block;
   vertical-align: -0.2em;
 
@@ -783,7 +778,6 @@ progress {
 meter {
   appearance: auto;
   -moz-default-appearance: meter;
-  -moz-button-appearance: disallow;
   display: inline-block;
   vertical-align: -0.2em;
   background: linear-gradient(#e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
