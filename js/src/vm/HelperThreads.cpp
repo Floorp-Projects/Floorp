@@ -1945,7 +1945,8 @@ bool GlobalHelperThreadState::generateLCovSources(JSContext* cx,
 }
 
 JSScript* GlobalHelperThreadState::finishSingleParseTask(
-    JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token) {
+    JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
+    StartEncoding startEncoding /* = StartEncoding::No */) {
   Rooted<UniquePtr<ParseTask>> parseTask(
       cx, finishParseTaskCommon(cx, kind, token));
   if (!parseTask) {
@@ -1982,6 +1983,12 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
   // compiled.
   if (!parseTask->options.hideScriptFromDebugger) {
     DebugAPI::onNewScript(cx, script);
+  }
+
+  if (startEncoding == StartEncoding::Yes) {
+    if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
+      return nullptr;
+    }
   }
 
   return script;
@@ -2033,8 +2040,10 @@ bool GlobalHelperThreadState::finishMultiParseTask(
 }
 
 JSScript* GlobalHelperThreadState::finishScriptParseTask(
-    JSContext* cx, JS::OffThreadToken* token) {
-  JSScript* script = finishSingleParseTask(cx, ParseTaskKind::Script, token);
+    JSContext* cx, JS::OffThreadToken* token,
+    StartEncoding startEncoding /* = StartEncoding::No */) {
+  JSScript* script =
+      finishSingleParseTask(cx, ParseTaskKind::Script, token, startEncoding);
   MOZ_ASSERT_IF(script, script->isGlobalCode());
   return script;
 }
