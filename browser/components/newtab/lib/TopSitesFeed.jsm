@@ -501,21 +501,25 @@ this.TopSitesFeed = class TopSitesFeed {
     let yyyymmddhh = yyyymmdd + pad(date.getHours());
     let notBlockedDefaultSites = [];
     for (let link of DEFAULT_TOP_SITES) {
-      if (this._useRemoteSetting) {
-        link = {
-          ...link,
-          url: link.url.replace("%YYYYMMDDHH%", yyyymmddhh),
-        };
-        if (link.url_urlbar) {
-          link.url_urlbar = link.url_urlbar.replace("%YYYYMMDDHH%", yyyymmddhh);
-        }
+      if (this.shouldFilterSearchTile(link.hostname)) {
+        continue;
       }
       // Remove any defaults that have been blocked.
       if (NewTabUtils.blockedLinks.isBlocked({ url: link.url })) {
         continue;
       }
-      if (this.shouldFilterSearchTile(link.hostname)) {
-        continue;
+      // Process %YYYYMMDDHH% tag in the URL.
+      if (this._useRemoteSetting) {
+        link = {
+          ...link,
+          // Save original URL without %YYYYMMDDHH% replaced so it can be
+          // blocked properly.
+          original_url: link.url,
+          url: link.url.replace("%YYYYMMDDHH%", yyyymmddhh),
+        };
+        if (link.url_urlbar) {
+          link.url_urlbar = link.url_urlbar.replace("%YYYYMMDDHH%", yyyymmddhh);
+        }
       }
       // If we've previously blocked a search shortcut, remove the default top site
       // that matches the hostname
