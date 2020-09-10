@@ -126,10 +126,11 @@ function pickElement(inspector, selector, x, y) {
  *                   "highlighter-shown" events are emitted.
  */
 async function hoverElement(inspector, selector, x, y) {
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
   info("Waiting for element " + selector + " to be hovered");
   const onHovered = inspector.toolbox.nodePicker.once("picker-node-hovered");
-  const onHighlighterShown = inspector.highlighters.once(
-    "box-model-highlighter-shown"
+  const onHighlighterShown = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.BOXMODEL
   );
 
   // Default to the top-level target browsing context
@@ -726,6 +727,48 @@ const getHighlighterHelperFor = type =>
       },
     };
   };
+
+/**
+ * Inspector-scoped wrapper for highlighter helpers to be used in tests.
+ *
+ * @param  {Inspector} inspector
+ *         Inspector client object instance.
+ * @return {Object} Object with helper methods
+ */
+function getHighlighterTestHelpers(inspector) {
+  /**
+   * Return a promise which resolves when a highlighter triggers the given event.
+   *
+   * @param  {String} type
+   *         Highlighter type.
+   * @param  {String} eventName
+   *         Name of the event to listen to.
+   * @return {Promise}
+   *         Promise which resolves when the highlighter event occurs.
+   *         Resolves with the data payload attached to the event.
+   */
+  function _waitForHighlighterTypeEvent(type, eventName) {
+    return new Promise(resolve => {
+      function _handler(data) {
+        if (type === data.type) {
+          inspector.highlighters.off(eventName, _handler);
+          resolve(data);
+        }
+      }
+
+      inspector.highlighters.on(eventName, _handler);
+    });
+  }
+
+  return {
+    waitForHighlighterTypeShown(type) {
+      return _waitForHighlighterTypeEvent(type, "highlighter-shown");
+    },
+    waitForHighlighterTypeHidden(type) {
+      return _waitForHighlighterTypeEvent(type, "highlighter-hidden");
+    },
+  };
+}
 
 // The expand all operation of the markup-view calls itself recursively and
 // there's not one event we can wait for to know when it's done so use this
