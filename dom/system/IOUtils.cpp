@@ -13,16 +13,16 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/TextUtils.h"
-#include "nspr/prerror.h"
-#include "nspr/prio.h"
-#include "nspr/private/pprio.h"
-#include "nspr/prtypes.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsThreadManager.h"
+#include "prerror.h"
+#include "prio.h"
+#include "private/pprio.h"
+#include "prtypes.h"
 
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 #  include <fcntl.h>
