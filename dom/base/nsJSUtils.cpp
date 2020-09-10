@@ -215,10 +215,12 @@ nsresult nsJSUtils::ExecutionContext::InternalCompile(
 #endif
 
   MOZ_ASSERT(!mScript);
-  mScript =
-      mScopeChain.length() == 0
-          ? JS::Compile(mCx, aCompileOptions, aSrcBuf)
-          : JS::CompileForNonSyntacticScope(mCx, aCompileOptions, aSrcBuf);
+
+  if (mScopeChain.length() != 0) {
+    aCompileOptions.setNonSyntacticScope(true);
+  }
+
+  mScript = JS::Compile(mCx, aCompileOptions, aSrcBuf);
   if (!mScript) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);

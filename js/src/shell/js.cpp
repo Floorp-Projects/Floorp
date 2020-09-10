@@ -2251,11 +2251,10 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
           return false;
         }
 
-        if (envChain.length() == 0) {
-          script = JS::Compile(cx, options, srcBuf);
-        } else {
-          script = JS::CompileForNonSyntacticScope(cx, options, srcBuf);
+        if (envChain.length() != 0) {
+          options.setNonSyntacticScope(true);
         }
+        script = JS::Compile(cx, options, srcBuf);
       }
 
       if (!script) {
