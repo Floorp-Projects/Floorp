@@ -350,6 +350,11 @@ void WarpCacheIR::traceData(JSTracer* trc) {
           TraceWarpStubPtr<JSString>(trc, word, "warp-cacheir-string");
           break;
         }
+        case StubField::Type::BaseScript: {
+          uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);
+          TraceWarpStubPtr<BaseScript>(trc, word, "warp-cacheir-script");
+          break;
+        }
         case StubField::Type::Id: {
           uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);
           jsid id = jsid::fromRawBits(word);

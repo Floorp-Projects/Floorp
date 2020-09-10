@@ -220,6 +220,7 @@ class StubField {
     JSObject,
     Symbol,
     String,
+    BaseScript,
     Id,
 
     // These fields take up 64 bits on all platforms.
@@ -587,6 +588,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void writeSymbolField(JS::Symbol* sym) {
     MOZ_ASSERT(sym);
     addStubField(uintptr_t(sym), StubField::Type::Symbol);
+  }
+  void writeBaseScriptField(BaseScript* script) {
+    MOZ_ASSERT(script);
+    addStubField(uintptr_t(script), StubField::Type::BaseScript);
   }
   void writeRawWordField(uintptr_t word) {
     addStubField(word, StubField::Type::RawWord);
@@ -1125,6 +1130,7 @@ class MOZ_RAII CacheIRCloner {
   JSAtom* getAtomField(uint32_t stubOffset);
   PropertyName* getPropertyNameField(uint32_t stubOffset);
   JS::Symbol* getSymbolField(uint32_t stubOffset);
+  BaseScript* getBaseScriptField(uint32_t stubOffset);
   uintptr_t getRawWordField(uint32_t stubOffset);
   const void* getRawPointerField(uint32_t stubOffset);
   jsid getIdField(uint32_t stubOffset);
