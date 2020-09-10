@@ -5176,6 +5176,16 @@ void CodeGenerator::visitGuardFunctionKind(LGuardFunctionKind* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitGuardFunctionScript(LGuardFunctionScript* lir) {
+  Register function = ToRegister(lir->function());
+
+  Label bail;
+  Address scriptAddr(function, JSFunction::offsetOfBaseScript());
+  masm.branchPtr(Assembler::NotEqual, scriptAddr,
+                 ImmGCPtr(lir->mir()->expected()), &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 // Out-of-line path to update the store buffer.
 class OutOfLineCallPostWriteBarrier : public OutOfLineCodeBase<CodeGenerator> {
   LInstruction* lir_;
