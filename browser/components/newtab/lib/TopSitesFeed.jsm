@@ -284,6 +284,9 @@ this.TopSitesFeed = class TopSitesFeed {
   async _getRemoteConfig(firstTime = true) {
     if (!this._remoteConfig) {
       this._remoteConfig = await RemoteSettings("top-sites");
+      this._remoteConfig.on("sync", () => {
+        this._readDefaults();
+      });
     }
 
     let result = [];
