@@ -78,7 +78,7 @@ class EvaluationContextSelector extends Component {
 
   getIcon(target) {
     if (target.targetType === TARGET_TYPES.FRAME) {
-      return "resource://devtools/client/debugger/images/globe-small.svg";
+      return "chrome://devtools/content/debugger/images/globe-small.svg";
     }
 
     if (
@@ -86,11 +86,11 @@ class EvaluationContextSelector extends Component {
       target.targetType === TARGET_TYPES.SHARED_WORKER ||
       target.targetType === TARGET_TYPES.SERVICE_WORKER
     ) {
-      return "resource://devtools/client/debugger/images/worker.svg";
+      return "chrome://devtools/content/debugger/images/worker.svg";
     }
 
     if (target.targetType === TARGET_TYPES.PROCESS) {
-      return "resource://devtools/client/debugger/images/window.svg";
+      return "chrome://devtools/content/debugger/images/window.svg";
     }
 
     return null;
