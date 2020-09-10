@@ -156,6 +156,10 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
                                     bool* fixedUp);
   MOZ_MUST_USE bool buildExpressionStack();
 
+#ifdef DEBUG
+  MOZ_MUST_USE bool validateFrame();
+#endif
+
  private:
   JSScript* script() const {
     MOZ_ASSERT(cx_->suppressGC);
@@ -903,6 +907,56 @@ bool BaselineStackBuilder::envChainSlotCanBeOptimized() {
   return true;
 }
 
+bool BaselineStackBuilder::validateFrame() {
+  const uint32_t frameSize = framePushed();
+  blFrame()->setDebugFrameSize(frameSize);
+  JitSpew(JitSpew_BaselineBailouts, "      FrameSize=%u", frameSize);
+
+  // debugNumValueSlots() is based on the frame size, do some sanity checks.
+  MOZ_ASSERT(blFrame()->debugNumValueSlots() >= script()->nfixed());
+  MOZ_ASSERT(blFrame()->debugNumValueSlots() <= script()->nslots());
+
+  uint32_t expectedDepth;
+  bool reachablePC;
+  jsbytecode* pcForStackDepth = resumeAfter() ? GetNextPc(pc_) : pc_;
+  if (!ReconstructStackDepth(cx_, script(), pcForStackDepth, &expectedDepth,
+                             &reachablePC)) {
+    return false;
+  }
+  if (!reachablePC) {
+    return true;
+  }
+
+  // For FunApplyArgs, the reconstructed stack depth will be 4, but we
+  // may have inlined the funapply. In that case, exprStackSlots will
+  // have the real arguments in the slots, and the stack depth may not
+  // be 4. Don't assert.
+  if (op_ == JSOp::FunApply && iter_.moreFrames() && !resumeAfter()) {
+    return true;
+  }
+  if (op_ == JSOp::FunCall) {
+    // For fun.call(this, ...); the reconstructed stack depth will
+    // include the this. When inlining that is not included.
+    // So the exprStackSlots will be one less.
+    MOZ_ASSERT(expectedDepth - exprStackSlots() <= 1);
+  } else if (iter_.moreFrames() && IsIonInlinableGetterOrSetterOp(op_)) {
+    // Accessors coming out of ion are inlined via a complete
+    // lie perpetrated by the compiler internally. Ion just rearranges
+    // the stack, and pretends that it looked like a call all along.
+    // This means that the depth is actually one *more* than expected
+    // by the interpreter, as there is now a JSFunction, |this| and [arg],
+    // rather than the expected |this| and [arg].
+    // If the inlined accessor is a getelem operation, the numbers do match,
+    // but that's just because getelem expects one more item on the stack.
+    // Note that none of that was pushed, but it's still reflected
+    // in exprStackSlots.
+    MOZ_ASSERT(exprStackSlots() - expectedDepth == (IsGetElemOp(op_) ? 0 : 1));
+  } else {
+    MOZ_ASSERT(exprStackSlots() == expectedDepth);
+  }
+  return true;
+}
+
 static inline bool IsInlinableFallback(ICFallbackStub* icEntry) {
   return icEntry->isCall_Fallback() || icEntry->isGetProp_Fallback() ||
          icEntry->isSetProp_Fallback() || icEntry->isGetElem_Fallback();
@@ -1154,58 +1208,15 @@ static bool InitFromBailout(JSContext* cx, HandleFunction fun,
     return false;
   }
 
-  // BaselineFrame::frameSize is the size of everything pushed since
-  // the builder.resetFramePushed() call.
-  const uint32_t frameSize = builder.framePushed();
 #ifdef DEBUG
-  builder.blFrame()->setDebugFrameSize(frameSize);
-#endif
-  JitSpew(JitSpew_BaselineBailouts, "      FrameSize=%u", frameSize);
-
-  // debugNumValueSlots() is based on the frame size, do some sanity checks.
-  MOZ_ASSERT(builder.blFrame()->debugNumValueSlots() >= script->nfixed());
-  MOZ_ASSERT(builder.blFrame()->debugNumValueSlots() <= script->nslots());
-
-  const uint32_t pcOff = script->pcToOffset(pc);
-  JitScript* jitScript = script->jitScript();
-
-#ifdef DEBUG
-  uint32_t expectedDepth;
-  bool reachablePC;
-  if (!ReconstructStackDepth(cx, script, resumeAfter ? GetNextPc(pc) : pc,
-                             &expectedDepth, &reachablePC)) {
+  if (!builder.validateFrame()) {
     return false;
   }
-
-  if (reachablePC) {
-    if (op != JSOp::FunApply || !iter.moreFrames() || resumeAfter) {
-      if (op == JSOp::FunCall) {
-        // For fun.call(this, ...); the reconstructStackDepth will
-        // include the this. When inlining that is not included.
-        // So the exprStackSlots will be one less.
-        MOZ_ASSERT(expectedDepth - exprStackSlots <= 1);
-      } else if (iter.moreFrames() && IsIonInlinableGetterOrSetterOp(op)) {
-        // Accessors coming out of ion are inlined via a complete
-        // lie perpetrated by the compiler internally. Ion just rearranges
-        // the stack, and pretends that it looked like a call all along.
-        // This means that the depth is actually one *more* than expected
-        // by the interpreter, as there is now a JSFunction, |this| and [arg],
-        // rather than the expected |this| and [arg].
-        // If the inlined accessor is a getelem operation, the numbers do match,
-        // but that's just because getelem expects one more item on the stack.
-        // Note that none of that was pushed, but it's still reflected
-        // in exprStackSlots.
-        MOZ_ASSERT(exprStackSlots - expectedDepth == (IsGetElemOp(op) ? 0 : 1));
-      } else {
-        // For fun.apply({}, arguments) the reconstructStackDepth will
-        // have stackdepth 4, but it could be that we inlined the
-        // funapply. In that case exprStackSlots, will have the real
-        // arguments in the slots and not be 4.
-        MOZ_ASSERT(exprStackSlots == expectedDepth);
-      }
-    }
-  }
 #endif
+
+  const uint32_t frameSize = builder.framePushed();
+  const uint32_t pcOff = script->pcToOffset(pc);
+  JitScript* jitScript = script->jitScript();
 
 #ifdef JS_JITSPEW
   JitSpew(JitSpew_BaselineBailouts,
