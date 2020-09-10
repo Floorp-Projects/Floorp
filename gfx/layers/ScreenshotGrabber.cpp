@@ -93,8 +93,8 @@ void ScreenshotGrabber::MaybeProcessQueue() {
 
 void ScreenshotGrabber::NotifyEmptyFrame() {
 #ifdef MOZ_GECKO_PROFILER
-  PROFILER_ADD_MARKER("NoCompositorScreenshot because nothing changed",
-                      GRAPHICS);
+  PROFILER_MARKER_UNTYPED("NoCompositorScreenshot because nothing changed",
+                          GRAPHICS);
 #endif
 }
 
@@ -147,7 +147,7 @@ void ScreenshotGrabberImpl::GrabScreenshot(Window& aWindow) {
   RefPtr<RenderSource> windowRenderSource = aWindow.GetWindowContents();
 
   if (!windowRenderSource) {
-    PROFILER_ADD_MARKER(
+    PROFILER_MARKER_UNTYPED(
         "NoCompositorScreenshot because of unsupported compositor "
         "configuration",
         GRAPHICS);
@@ -162,7 +162,7 @@ void ScreenshotGrabberImpl::GrabScreenshot(Window& aWindow) {
       aWindow, scaledSize, windowRenderSource, 0);
 
   if (!scaledTarget) {
-    PROFILER_ADD_MARKER(
+    PROFILER_MARKER_UNTYPED(
         "NoCompositorScreenshot because ScaleDownWindowRenderSourceToSize "
         "failed",
         GRAPHICS);
@@ -171,7 +171,7 @@ void ScreenshotGrabberImpl::GrabScreenshot(Window& aWindow) {
 
   RefPtr<AsyncReadbackBuffer> buffer = TakeNextBuffer(aWindow);
   if (!buffer) {
-    PROFILER_ADD_MARKER(
+    PROFILER_MARKER_UNTYPED(
         "NoCompositorScreenshot because AsyncReadbackBuffer creation failed",
         GRAPHICS);
     return;

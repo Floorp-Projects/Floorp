@@ -13,7 +13,7 @@
 #include "mozilla/layers/ProfilerScreenshots.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Swizzle.h"
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "SharedBufferMLGPU.h"
 #include "ShaderDefinitionsMLGPU.h"
 #include "nsTArray.h"
@@ -104,8 +104,8 @@ void MLGPUScreenshotGrabber::MaybeProcessQueue() {
 
 void MLGPUScreenshotGrabber::NotifyEmptyFrame() {
 #ifdef MOZ_GECKO_PROFILER
-  PROFILER_ADD_MARKER("NoCompositorScreenshot because nothing changed",
-                      GRAPHICS);
+  PROFILER_MARKER_UNTYPED("NoCompositorScreenshot because nothing changed",
+                          GRAPHICS);
 #endif
 }
 
@@ -251,7 +251,7 @@ void MLGPUScreenshotGrabberImpl::GrabScreenshot(MLGDevice* aDevice,
       ScaleDownWindowTargetToSize(aDevice, scaledSize, windowTexture, 0);
 
   if (!scaledTarget) {
-    PROFILER_ADD_MARKER(
+    PROFILER_MARKER_UNTYPED(
         "NoCompositorScreenshot because ScaleDownWindowTargetToSize failed",
         GRAPHICS);
     return;
@@ -259,7 +259,7 @@ void MLGPUScreenshotGrabberImpl::GrabScreenshot(MLGDevice* aDevice,
 
   RefPtr<MLGTexture> readbackTexture = TakeNextReadbackTexture(aDevice);
   if (!readbackTexture) {
-    PROFILER_ADD_MARKER(
+    PROFILER_MARKER_UNTYPED(
         "NoCompositorScreenshot because AsyncReadbackReadbackTexture creation "
         "failed",
         GRAPHICS);

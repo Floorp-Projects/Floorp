@@ -63,7 +63,7 @@ class nsHtml5ExecutorReflusher : public Runnable {
       nsCOMPtr<nsIRunnable> flusher = this;
       if (NS_SUCCEEDED(
               doc->Dispatch(TaskCategory::Network, flusher.forget()))) {
-        PROFILER_ADD_MARKER("HighPrio blocking parser flushing(2)", DOM);
+        PROFILER_MARKER_UNTYPED("HighPrio blocking parser flushing(2)", DOM);
         return NS_OK;
       }
     }
