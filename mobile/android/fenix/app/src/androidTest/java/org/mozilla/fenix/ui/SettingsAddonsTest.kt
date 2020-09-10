@@ -11,6 +11,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.Rule
 import org.junit.Before
 import org.junit.After
+import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -88,6 +89,7 @@ class SettingsAddonsTest {
         }
     }
 
+    @Ignore("Failing intermittently on Firebase: https://github.com/mozilla-mobile/fenix/issues/13829")
     // Opens the addons settings menu, installs an addon, then uninstalls
     @Test
     fun verifyAddonsCanBeUninstalled() {
