@@ -8,18 +8,24 @@
 // those nodes
 add_task(async function() {
   info("Loading the test document and opening the inspector");
-  const { toolbox, inspector, testActor } = await openInspectorForURL(
+  const { inspector, testActor } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
   );
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
-  let isVisible = await testActor.isHighlighting(toolbox);
+  let isVisible = !!inspector.highlighters.getActiveHighlighter(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
   ok(!isVisible, "The highlighter is hidden by default");
 
   info("Selecting the test node");
   await selectNode("span", inspector);
   const container = await getContainerForSelector("h1", inspector);
 
-  const onHighlight = inspector.highlighter.once("node-highlight");
+  const onHighlight = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
+
   EventUtils.synthesizeMouseAtCenter(
     container.tagLine,
     { type: "mousemove" },

@@ -10,6 +10,7 @@ const TEST_PAGE = URL_ROOT + "doc_inspector_highlighter-comments.html";
 
 add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_PAGE);
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
   const markupView = inspector.markup;
   await selectNode("p", inspector);
 
@@ -46,7 +47,9 @@ add_task(async function() {
   await assertHighlighterShownOnTextNode("body", 14);
 
   function hoverContainer(container) {
-    const promise = inspector.highlighter.once("node-highlight");
+    const onHighlighterShown = waitForHighlighterTypeShown(
+      inspector.highlighters.TYPES.BOXMODEL
+    );
 
     container.tagLine.scrollIntoView();
     EventUtils.synthesizeMouse(
@@ -57,7 +60,7 @@ add_task(async function() {
       markupView.doc.defaultView
     );
 
-    return promise;
+    return onHighlighterShown;
   }
 
   async function hoverElement(selector) {

@@ -592,7 +592,9 @@ HTMLBreadcrumbs.prototype = {
    * @param {DOMEvent} event.
    */
   handleMouseOut: function(event) {
-    this.inspector.highlighter.unhighlight();
+    this.inspector.highlighters.hideHighlighterType(
+      this.inspector.highlighters.TYPES.BOXMODEL
+    );
   },
 
   /**
@@ -741,7 +743,10 @@ HTMLBreadcrumbs.prototype = {
     };
 
     button.onBreadcrumbsHover = () => {
-      this.inspector.highlighter.highlight(node);
+      this.inspector.highlighters.showHighlighterTypeForNode(
+        this.inspector.highlighters.TYPES.BOXMODEL,
+        node
+      );
     };
 
     return button;

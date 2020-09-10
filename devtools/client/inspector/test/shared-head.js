@@ -151,18 +151,6 @@ function openChangesView() {
  */
 function openLayoutView() {
   return openInspectorSidebarTab("layoutview").then(data => {
-    // The actual highligher show/hide methods are mocked in box model tests.
-    // The highlighter is tested in devtools/inspector/test.
-    function mockHighlighter({ highlighter }) {
-      highlighter.showBoxModel = function() {
-        return promise.resolve();
-      };
-      highlighter.hideBoxModel = function() {
-        return promise.resolve();
-      };
-    }
-    mockHighlighter(data.inspector);
-
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,

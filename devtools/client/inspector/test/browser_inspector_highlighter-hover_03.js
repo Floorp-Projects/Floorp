@@ -12,43 +12,49 @@ const TEST_PAGE =
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(TEST_PAGE);
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   info("Making sure the markup-view frame is focused");
   inspector.markup._frame.focus();
 
-  // Mock the highlighter to easily track which node gets highlighted.
-  // We don't need to test here that the highlighter is actually visible, we
-  // just care about whether the markup-view asks it to be shown
   let highlightedNode = null;
-  inspector.highlighter.showBoxModel = function(nodeFront) {
-    highlightedNode = nodeFront;
-    return promise.resolve();
-  };
-  inspector.highlighter.hideBoxModel = function() {
-    return promise.resolve();
-  };
 
   async function isHighlighting(selector, desc) {
     const nodeFront = await getNodeFront(selector, inspector);
     is(highlightedNode, nodeFront, desc);
   }
 
+  async function waitForHighlighterShown() {
+    const onShownData = await waitForHighlighterTypeShown(
+      inspector.highlighters.TYPES.BOXMODEL
+    );
+    highlightedNode = onShownData.nodeFront;
+  }
+
+  async function waitForInspectorUpdated() {
+    await inspector.once("inspector-updated");
+  }
+
   info("Hover over <p#one> line in the markup-view");
+  let onShown = waitForHighlighterShown();
   await hoverContainer("#one", inspector);
+  await onShown;
   await isHighlighting("#one", "<p#one> is highlighted");
 
   info("Navigate to <p#two> with the keyboard");
-  let onUpdated = inspector.once("inspector-updated");
+  let onUpdated = waitForInspectorUpdated();
   EventUtils.synthesizeKey("VK_DOWN", {}, inspector.panelWin);
   await onUpdated;
-  onUpdated = inspector.once("inspector-updated");
+  onUpdated = waitForInspectorUpdated();
+  onShown = waitForHighlighterShown();
   EventUtils.synthesizeKey("VK_DOWN", {}, inspector.panelWin);
-  await onUpdated;
+  await Promise.all([onShown, onUpdated]);
   await isHighlighting("#two", "<p#two> is highlighted");
 
   info("Navigate back to <p#one> with the keyboard");
-  onUpdated = inspector.once("inspector-updated");
+  onUpdated = waitForInspectorUpdated();
+  onShown = waitForHighlighterShown();
   EventUtils.synthesizeKey("VK_UP", {}, inspector.panelWin);
-  await onUpdated;
+  await Promise.all([onShown, onUpdated]);
   await isHighlighting("#one", "<p#one> is highlighted again");
 });
