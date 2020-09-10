@@ -18,12 +18,12 @@
 #include "mozilla/Result.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
-#include "nspr/prio.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
 #include "nsLocalFile.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
+#include "prio.h"
 
 namespace mozilla {
 
