@@ -466,7 +466,7 @@ class TargetList extends EventEmitter {
    * Stop listening for the creation and/or destruction of a given type of target fronts.
    * See `watchTargets()` for documentation of the arguments.
    */
-  async unwatchTargets(types, onAvailable, onDestroy) {
+  unwatchTargets(types, onAvailable, onDestroy) {
     if (typeof onAvailable != "function") {
       throw new Error(
         "TargetList.unwatchTargets expects a function as second argument"

@@ -183,14 +183,6 @@ class ConfigEnvironment(object):
 
         self.substs = ReadOnlyDict(self.substs)
 
-        self.external_source_dir = None
-        external = self.substs.get('EXTERNAL_SOURCE_DIR', '')
-        if external:
-            external = mozpath.normpath(external)
-            if not os.path.isabs(external):
-                external = mozpath.join(self.topsrcdir, external)
-            self.external_source_dir = mozpath.normpath(external)
-
     @property
     def is_artifact_build(self):
         return self.substs.get('MOZ_ARTIFACT_BUILDS', False)

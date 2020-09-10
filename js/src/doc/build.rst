@@ -4,9 +4,9 @@ Building SpiderMonkey
 **Before you begin, make sure you have the right build tools for your
 computer:**
 
-* :ref:`linux-build-documentation`
-* `Windows <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites>`__
-* `Mac <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Mac_OS_X_Prerequisites>`__
+* :ref:`Building Firefox On Linux`
+* :ref:`Building Firefox On Windows`
+* :ref:`Building Firefox On MacOS`
 * `Others <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions>`__
 
 This guide shows you how to build SpiderMonkey using ``mach``, which is Mozilla's multipurpose build tool.
@@ -117,6 +117,118 @@ looks like this:
     # Use a separate objdir for optimized builds to allow easy
     # switching between optimized and debug builds while developing.
     mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-opt-@CONFIG_GUESS@
+
+SpiderMonkey on Android aarch64
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Building SpiderMonkey on Android
+--------------------------------
+
+- First, run `mach bootstrap` and answer `GeckoView/Firefox for Android` when
+  asked which project you want to build. This will download a recent Android
+  NDK, make sure all the build dependencies required to compile on Android are
+  present, etc.
+- Make sure that `$MOZBUILD_DIR/android-sdk-linux/platform-tools` is present in
+  your `PATH` environment. You can do this by running the following line in a
+  shell, or adding it to a shell profile init file:
+
+.. code::
+
+    $ export PATH="$PATH:~/.mozbuild/android-sdk-linux/platform-tools"
+
+- Create a typical `mozconfig` file for compiling SpiderMonkey, as outlined in
+  the :ref:`Setting up a MOZCONFIG` documentation, and include the following
+  line:
+
+.. code::
+
+    ac_add_options --target=aarch64-linux-android
+
+- Then compile as usual with `mach compile` with this `MOZCONFIG` file.
+
+Running jit-tests on Android
+----------------------------
+
+- Plug your Android device to the machine which compiled the shell for aarch64
+  as described above, or make sure it is on the same subnetwork as the host. It
+  should appear in the list of devices seen by `adb`:
+
+.. code::
+
+    adb devices
+
+This command should show you a device ID with the name of the device. If it
+doesn't, make sure that you have enabled Developer options on your device, as
+well as `enabled USB debugging on the device <https://developer.android.com/studio/debug/dev-options>`_.
+
+- Run `mach jit-test --remote {JIT_TEST_ARGS}` with the android-aarch64
+  `MOZCONFIG` file. This will upload the JS shell and its dependencies to the
+  Android device, in a temporary directory (`/data/local/tmp/test_root/bin` as
+  of 2020-09-02). Then it will start running the jit-test suite.
+
+Debugging jit-tests on Android
+------------------------------
+
+Debugging on Android uses the GDB remote debugging protocol, so we'll set up a
+GDB server on the Android device, that is going to be controlled remotely by
+the host machine.
+
+- Upload the `gdbserver` precompiled binary from the NDK from the host machine
+  to the Android device, using this command on the host:
+
+.. code::
+
+    adb push \
+        ~/.mozbuild/android-ndk-r20/prebuilt/android-arm64/gdbserver/gdbserver \
+        /data/local/tmp/test_root/bin
+
+- Make sure that the `ncurses5` library is installed on the host. On
+  Debian-like distros, this can be done with `sudo apt install -y libncurses5`.
+
+- Set up port forwarding for the GDB port, from the Android device to the host,
+  so we can connect to a local port from the host, without needing to find what
+  the IP address of the Android device is:
+
+.. code::
+
+    adb forward tcp:5039 tcp:5039
+
+- Start `gdbserver` on the phone, passing the JS shell command line arguments
+  to gdbserver:
+
+.. code::
+
+    adb shell export LD_LIBRARY_PATH=/data/local/tmp/test_root/bin '&&' /data/local/tmp/test_root/bin/gdbserver :5039 /data/local/tmp/test_root/bin/js /path/to/test.js
+
+.. note::
+
+    Note this will make the gdbserver listen on the 5039 port on all the
+    network interfaces. In particular, the gdbserver will be reachable from
+    every other devices on the same networks as your phone. Since the gdbserver
+    protocol is unsafe, it is strongly recommended to double-check that the
+    gdbserver process has properly terminated when exiting the shell, and to
+    not run it more than needed.
+
+.. note::
+
+    You can find the full command line that the `jit_test.py` script is
+    using by giving it the `-s` parameter, and copy/paste it as the final
+    argument to the gdbserver invocation above.
+
+- On the host, start the precompiled NDK version of GDB that matches your host
+  architecture, passing it the path to the shell compiled with `mach` above:
+
+.. code::
+
+    ~/.mozbuild/android-ndk-r20/prebuilt/linux-x86_64/bin/gdb /path/to/objdir-aarch64-linux-android/dist/bin/js
+
+- Then connect remotely to the GDB server that's listening on the Android
+  device:
+
+.. code::
+
+    (gdb) target remote :5039
+    (gdb) continue
 
 Cross-Compiling
 ~~~~~~~~~~~~~~~

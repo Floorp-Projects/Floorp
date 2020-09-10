@@ -210,6 +210,7 @@ class WebConsoleUI {
         resourceWatcher.TYPES.ERROR_MESSAGE,
         resourceWatcher.TYPES.PLATFORM_MESSAGE,
         resourceWatcher.TYPES.NETWORK_EVENT,
+        resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
       ],
       {
         onAvailable: this._onResourceAvailable,
