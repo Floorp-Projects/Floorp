@@ -134,7 +134,6 @@ void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   }
 
   setFinished(lock);
-  HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, lock);
 }
 
 void GCParallelTask::runTask() {
