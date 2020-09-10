@@ -852,7 +852,7 @@ void LogHeaders(const char* lineStart) {
     if (StaticPrefs::network_http_sanitize_headers_in_logs() &&
         (PL_strcasestr(buf.get(), "authorization: ") ||
          PL_strcasestr(buf.get(), "proxy-authorization: "))) {
-      char* p = strchr(buf.get(), ' ');
+      char* p = PL_strchr(buf.get(), ' ');
       while (p && *++p) {
         *p = '*';
       }
