@@ -323,6 +323,7 @@ this.ASRouterTriggerListeners = new Map([
       _triggerHandler: null,
       _hosts: null,
       _matchPatternSet: null,
+      _visits: null,
 
       /*
        * If the listener is already initialised, `init` will replace the trigger
@@ -347,6 +348,7 @@ this.ASRouterTriggerListeners = new Map([
             }
           );
 
+          this._visits = new Map();
           this._initialized = true;
         }
         this._triggerHandler = triggerHandler;
@@ -371,6 +373,7 @@ this.ASRouterTriggerListeners = new Map([
           this._triggerHandler = null;
           this._hosts = null;
           this._matchPatternSet = null;
+          this._visits = null;
         }
       },
 
@@ -388,7 +391,13 @@ this.ASRouterTriggerListeners = new Map([
             aRequest
           );
           if (match) {
-            this._triggerHandler(aBrowser, { id: this.id, param: match });
+            let visitsCount = (this._visits.get(match.url) || 0) + 1;
+            this._visits.set(match.url, visitsCount);
+            this._triggerHandler(aBrowser, {
+              id: this.id,
+              param: match,
+              context: { visitsCount },
+            });
           }
         }
       },
