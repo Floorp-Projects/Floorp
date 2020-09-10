@@ -1162,6 +1162,10 @@ static JSString* FuncTypeToString(JSContext* cx, const FuncType& funcType) {
     }
 
     UniqueChars argStr = ToString(arg);
+    if (!argStr) {
+      return nullptr;
+    }
+
     if (!buf.append(argStr.get(), strlen(argStr.get()))) {
       return nullptr;
     }
@@ -1180,6 +1184,10 @@ static JSString* FuncTypeToString(JSContext* cx, const FuncType& funcType) {
     }
 
     UniqueChars resultStr = ToString(result);
+    if (!resultStr) {
+      return nullptr;
+    }
+
     if (!buf.append(resultStr.get(), strlen(resultStr.get()))) {
       return nullptr;
     }
