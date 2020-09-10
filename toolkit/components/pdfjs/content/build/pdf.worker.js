@@ -2847,6 +2847,7 @@ exports.ChunkedStreamManager = ChunkedStreamManager;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.escapePDFName = escapePDFName;
 exports.getLookupTableFactory = getLookupTableFactory;
 exports.getInheritableProperty = getInheritableProperty;
 exports.toRomanNumerals = toRomanNumerals;
@@ -2972,6 +2973,34 @@ function readUint32(data, offset) {
 
 function isWhiteSpace(ch) {
   return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
+}
+
+function escapePDFName(str) {
+  const buffer = [];
+  let start = 0;
+
+  for (let i = 0, ii = str.length; i < ii; i++) {
+    const char = str.charCodeAt(i);
+
+    if (char < 0x21 || char > 0x7e || char === 0x23) {
+      if (start < i) {
+        buffer.push(str.substring(start, i));
+      }
+
+      buffer.push(`#${char.toString(16)}`);
+      start = i + 1;
+    }
+  }
+
+  if (buffer.length === 0) {
+    return str;
+  }
+
+  if (start < str.length) {
+    buffer.push(str.substring(start, str.length));
+  }
+
+  return buffer.join("");
 }
 
 /***/ }),
@@ -21182,6 +21211,8 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
+var _core_utils = __w_pdfjs_require__(8);
+
 var _xml_parser = __w_pdfjs_require__(28);
 
 var _crypto = __w_pdfjs_require__(22);
@@ -21190,7 +21221,7 @@ function writeDict(dict, buffer, transform) {
   buffer.push("<<");
 
   for (const key of dict.getKeys()) {
-    buffer.push(` /${key} `);
+    buffer.push(` /${(0, _core_utils.escapePDFName)(key)} `);
     writeValue(dict.getRaw(key), buffer, transform);
   }
 
@@ -21247,7 +21278,7 @@ function numberToString(value) {
 
 function writeValue(value, buffer, transform) {
   if ((0, _primitives.isName)(value)) {
-    buffer.push(`/${value.name}`);
+    buffer.push(`/${(0, _core_utils.escapePDFName)(value.name)}`);
   } else if ((0, _primitives.isRef)(value)) {
     buffer.push(`${value.num} ${value.gen} R`);
   } else if (Array.isArray(value)) {
