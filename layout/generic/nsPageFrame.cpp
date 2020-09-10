@@ -675,12 +675,8 @@ void nsPageFrame::PaintHeaderFooter(gfxContext& aRenderingContext, nsPoint aPt,
   RefPtr<nsFontMetrics> fontMet =
       pc->DeviceContext()->GetMetricsFor(mPD->mHeadFootFont, params);
 
-  nscoord ascent = 0;
-  nscoord visibleHeight = 0;
-  if (fontMet) {
-    visibleHeight = fontMet->MaxHeight();
-    ascent = fontMet->MaxAscent();
-  }
+  nscoord ascent = fontMet->MaxAscent();
+  nscoord visibleHeight = fontMet->MaxHeight();
 
   // print document headers and footers
   nsString headerLeft, headerCenter, headerRight;
