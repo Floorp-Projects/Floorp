@@ -316,7 +316,7 @@ macosx64-gcp/debug:
             - linux64-sccache
             - wasi-sysroot
     optimization:
-        push-interval-20: null
+        skip-unless-backstop: null
 
 macosx64-gcp/opt:
     description: "MacOS X x64 Cross-compile - built on GCP"
