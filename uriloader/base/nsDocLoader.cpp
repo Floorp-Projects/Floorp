@@ -778,8 +778,11 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout,
           // like the normal navigation case we should not fire a load event.
           if (NS_SUCCEEDED(loadGroupStatus) ||
               loadGroupStatus == NS_ERROR_PARSED_DATA_CACHED) {
+            // The readyState change is required to pass
+            // dom/html/test/test_bug347174_write.html
             doc->SetReadyStateInternal(Document::READYSTATE_COMPLETE,
                                        /* updateTimingInformation = */ false);
+            doc->StopDocumentLoad();
 
             nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
             if (window && !doc->SkipLoadEventAfterClose()) {

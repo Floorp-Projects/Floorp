@@ -1,0 +1,15 @@
+<html class="reftest-wait">
+<script>
+let alreadyRun = sessionStorage.getItem("ran1606499");
+if (alreadyRun) {
+  document.documentElement.removeAttribute("class");
+} else {
+  sessionStorage.setItem("ran1606499", "ran1606499");
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => { document.close() }, 146)
+    setTimeout(() => { location.reload() }, 145)
+    self.stop()
+    document.write('<body></body>')
+  })
+}
+</script>
