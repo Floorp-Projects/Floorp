@@ -726,14 +726,14 @@
 :-moz-native-anonymous button.paused-dbg-step-button {
   margin-left: 6px;
   margin-right: 6px;
-  mask-image: url(resource://devtools/client/debugger/images/stepOver.svg);
+  mask-image: url(chrome://devtools/content/debugger/images/stepOver.svg);
   padding: 0;
 }
 
 :-moz-native-anonymous button.paused-dbg-resume-button {
   margin-right: 6px;
   margin-right: 6px;
-  mask-image: url(resource://devtools/client/debugger/images/resume.svg);
+  mask-image: url(chrome://devtools/content/debugger/images/resume.svg);
   padding: 0;
 }
 

@@ -199,7 +199,7 @@ ul.children + .tag-line::before {
   margin-left: -8px;
   height: 12px;
   width: 12px;
-  background-image: url(resource://devtools/client/debugger/images/markup-breakpoint.svg);
+  background-image: url(chrome://devtools/content/debugger/images/markup-breakpoint.svg);
   background-repeat: no-repeat;
   background-size: 12px 12px;
   background-position: right center;
