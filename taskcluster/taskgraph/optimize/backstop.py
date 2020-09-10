@@ -16,8 +16,6 @@ class SkipUnlessBackstop(OptimizationStrategy):
         return not params["backstop"]
 
 
-@register_strategy("push-interval-10", args=(10,))
-@register_strategy("push-interval-20", args=(20,))
 class SkipUnlessPushInterval(OptimizationStrategy):
     """Always removes tasks except every N pushes.
 

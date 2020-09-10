@@ -54,7 +54,7 @@ linux64-base-toolchains/debug:
         platform: linux64/debug
         symbol: Bb
     optimization:
-        push-interval-10: null
+        skip-unless-expanded: null
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian8-amd64-build-base}
@@ -136,7 +136,7 @@ linux64-base-toolchains-clang/debug:
         platform: linux64/debug
         symbol: Bbc
     optimization:
-        push-interval-10: null
+        skip-unless-expanded: null
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian8-amd64-build-base}

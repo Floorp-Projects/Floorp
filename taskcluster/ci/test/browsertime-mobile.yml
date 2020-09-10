@@ -68,7 +68,7 @@ job-defaults:
             # Bug 1635749, disable window recorder temporarily
             - --browsertime-no-ffwindowrecorder
     optimization:
-        push-interval-20: null
+        skip-unless-backstop: null
     variants:
         by-app:
             chrome-m: []
