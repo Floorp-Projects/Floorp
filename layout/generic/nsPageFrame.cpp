@@ -365,7 +365,7 @@ void nsPageFrame::DrawHeaderFooter(gfxContext& aRenderingContext,
       PresContext()->SetBidiEnabled();
     }
 
-    // cacl the x and y positions of the text
+    // calc the x and y positions of the text
     nscoord x =
         GetXPosition(aRenderingContext, aFontMetrics, aRect, aJust, str);
     nscoord y;
