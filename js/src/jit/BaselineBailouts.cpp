@@ -91,6 +91,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   JSContext* cx_;
   JitFrameLayout* frame_ = nullptr;
   SnapshotIterator& iter_;
+  RootedValueVector outermostFrameFormals_;
 
   size_t bufferTotal_ = 0;
   size_t bufferAvail_ = 0;
@@ -112,8 +113,13 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 
  public:
   BaselineStackBuilder(JSContext* cx, JitFrameLayout* frame,
-                       SnapshotIterator& iter, size_t initialSize)
-      : cx_(cx), frame_(frame), iter_(iter), bufferTotal_(initialSize) {
+                       SnapshotIterator& iter,
+                       size_t initialSize)
+      : cx_(cx),
+        frame_(frame),
+        iter_(iter),
+        outermostFrameFormals_(cx),
+        bufferTotal_(initialSize) {
     MOZ_ASSERT(bufferTotal_ >= sizeof(BaselineBailoutInfo));
   }
 
@@ -143,6 +149,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   }
 
   MOZ_MUST_USE bool buildBaselineFrame();
+  MOZ_MUST_USE bool buildArguments();
 
  private:
   JSScript* script() const {
@@ -158,6 +165,9 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 #endif
 
  public:
+  MutableHandleValueVector outermostFrameFormals() {
+    return &outermostFrameFormals_;
+  }
   uint32_t exprStackSlots() const { return exprStackSlots_; }
   bool catchingException() const {
     return excInfo_ && excInfo_->catchingException();
@@ -622,6 +632,58 @@ bool BaselineStackBuilder::buildBaselineFrame() {
   return true;
 }
 
+// Overwrite the pushed args present in the calling frame with
+// the unpacked |thisv| and argument values.
+bool BaselineStackBuilder::buildArguments() {
+  Value thisv = iter_.read();
+  JitSpew(JitSpew_BaselineBailouts, "      Is function!");
+  JitSpew(JitSpew_BaselineBailouts, "      thisv=%016" PRIx64,
+          *((uint64_t*)&thisv));
+
+  size_t thisvOffset = framePushed() + JitFrameLayout::offsetOfThis();
+  valuePointerAtStackOffset(thisvOffset).set(thisv);
+
+  MOZ_ASSERT(iter_.numAllocations() >= CountArgSlots(script(), fun()));
+  JitSpew(JitSpew_BaselineBailouts,
+          "      frame slots %u, nargs %zu, nfixed %zu", iter_.numAllocations(),
+          fun()->nargs(), script()->nfixed());
+
+  bool shouldStoreOutermostFormals =
+      isOutermostFrame() && !script()->argsObjAliasesFormals();
+  if (shouldStoreOutermostFormals) {
+    // This is the first (outermost) frame and we don't have an
+    // arguments object aliasing the formals. Due to UCE and phi
+    // elimination, we could store an UndefinedValue() here for
+    // formals we think are unused, but locals may still reference the
+    // original argument slot (MParameter/LArgument) and expect the
+    // original Value. To avoid this problem, store the formals in a
+    // Vector until we are done.
+    MOZ_ASSERT(outermostFrameFormals().empty());
+    if (!outermostFrameFormals().resize(fun_->nargs())) {
+      return false;
+    }
+  }
+
+  for (uint32_t i = 0; i < fun()->nargs(); i++) {
+    Value arg = iter_.read();
+    JitSpew(JitSpew_BaselineBailouts, "      arg %d = %016" PRIx64, (int)i,
+            *((uint64_t*)&arg));
+    if (!isOutermostFrame()) {
+      size_t argOffset = framePushed() + JitFrameLayout::offsetOfActualArg(i);
+      valuePointerAtStackOffset(argOffset).set(arg);
+    } else if (shouldStoreOutermostFormals) {
+      outermostFrameFormals()[i].set(arg);
+    } else {
+      // When the arguments object aliases the formal arguments, then
+      // JSOp::SetArg mutates the argument object. In such cases, the
+      // list of arguments reported by the snapshot are only aliases
+      // of argument object slots which are optimized to only store
+      // differences compared to arguments which are on the stack.
+    }
+  }
+  return true;
+}
+
 #ifdef DEBUG
 // The |envChain| slot must not be optimized out if the currently
 // active scope requires any EnvironmentObjects beyond what is
@@ -831,7 +893,6 @@ static bool IsPrologueBailout(const SnapshotIterator& iter,
 static bool InitFromBailout(JSContext* cx, HandleFunction fun,
                             HandleScript script, SnapshotIterator& iter,
                             bool invalidate, BaselineStackBuilder& builder,
-                            MutableHandleValueVector startFrameFormals,
                             MutableHandleFunction nextCallee,
                             ICScript** icScriptPtr,
                             const ExceptionBailoutInfo* excInfo) {
@@ -871,54 +932,8 @@ static bool InitFromBailout(JSContext* cx, HandleFunction fun,
     return false;
   }
 
-  if (fun) {
-    // The unpacked thisv and arguments should overwrite the pushed args present
-    // in the calling frame.
-    Value thisv = iter.read();
-    JitSpew(JitSpew_BaselineBailouts, "      Is function!");
-    JitSpew(JitSpew_BaselineBailouts, "      thisv=%016" PRIx64,
-            *((uint64_t*)&thisv));
-
-    size_t thisvOffset = builder.framePushed() + JitFrameLayout::offsetOfThis();
-    builder.valuePointerAtStackOffset(thisvOffset).set(thisv);
-
-    MOZ_ASSERT(iter.numAllocations() >= CountArgSlots(script, fun));
-    JitSpew(JitSpew_BaselineBailouts,
-            "      frame slots %u, nargs %zu, nfixed %zu",
-            iter.numAllocations(), fun->nargs(), script->nfixed());
-
-    bool argsObjAliasesFormals = script->argsObjAliasesFormals();
-    if (builder.isOutermostFrame() && !argsObjAliasesFormals) {
-      // This is the first (outermost) frame and we don't have an
-      // arguments object aliasing the formals. Store the formals in a
-      // Vector until we are done. Due to UCE and phi elimination, we
-      // could store an UndefinedValue() here for formals we think are
-      // unused, but locals may still reference the original argument slot
-      // (MParameter/LArgument) and expect the original Value.
-      MOZ_ASSERT(startFrameFormals.empty());
-      if (!startFrameFormals.resize(fun->nargs())) {
-        return false;
-      }
-    }
-
-    for (uint32_t i = 0; i < fun->nargs(); i++) {
-      Value arg = iter.read();
-      JitSpew(JitSpew_BaselineBailouts, "      arg %d = %016" PRIx64, (int)i,
-              *((uint64_t*)&arg));
-      if (!builder.isOutermostFrame()) {
-        size_t argOffset =
-            builder.framePushed() + JitFrameLayout::offsetOfActualArg(i);
-        builder.valuePointerAtStackOffset(argOffset).set(arg);
-      } else if (argsObjAliasesFormals) {
-        // When the arguments object aliases the formal arguments, then
-        // JSOp::SetArg mutates the argument object. In such cases, the
-        // list of arguments reported by the snapshot are only aliases
-        // of argument object slots which are optimized to only store
-        // differences compared to arguments which are on the stack.
-      } else {
-        startFrameFormals[i].set(arg);
-      }
-    }
+  if (fun && !builder.buildArguments()) {
+    return false;
   }
 
   for (uint32_t i = 0; i < script->nfixed(); i++) {
@@ -1655,7 +1670,6 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 
   // Reconstruct baseline frames using the builder.
   RootedFunction fun(cx, callee);
-  RootedValueVector startFrameFormals(cx);
 
   // The icScript for the outermost frame is always the default icScript.
   // The icScript for inner frames is found using the caller's icScript.
@@ -1690,7 +1704,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 
     RootedFunction nextCallee(cx, nullptr);
     if (!InitFromBailout(cx, fun, scr, snapIter, invalidate, builder,
-                         &startFrameFormals, &nextCallee, &icScript,
+                         &nextCallee, &icScript,
                          passExcInfo ? excInfo : nullptr)) {
       MOZ_ASSERT(cx->isExceptionPending());
       return false;
@@ -1715,11 +1729,11 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 
   BailoutKind bailoutKind = snapIter.bailoutKind();
 
-  if (!startFrameFormals.empty()) {
+  if (!builder.outermostFrameFormals().empty()) {
     // Set the first frame's formals, see the comment in InitFromBailout.
     Value* argv = builder.startFrame()->argv() + 1;  // +1 to skip |this|.
-    mozilla::PodCopy(argv, startFrameFormals.begin(),
-                     startFrameFormals.length());
+    mozilla::PodCopy(argv, builder.outermostFrameFormals().begin(),
+                     builder.outermostFrameFormals().length());
   }
 
   // Do stack check.
