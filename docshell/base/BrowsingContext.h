@@ -946,6 +946,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // principal instances if the document is loaded in the same process as the
   // process that initiated the load. When the load starts we save the
   // principals along with the current load id.
+  // These principals correspond to the most recent load that took place within
+  // the process of this browsing context.
   Maybe<PrincipalWithLoadIdentifierTuple> mTriggeringPrincipal;
   Maybe<PrincipalWithLoadIdentifierTuple> mPrincipalToInherit;
 
