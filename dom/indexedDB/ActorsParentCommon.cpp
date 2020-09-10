@@ -576,21 +576,16 @@ JSObject* GetSandbox(JSContext* aCx) {
   return holder->GetSandboxInternal(aCx);
 }
 
-nsresult MakeCompressedIndexDataValues(
-    const nsTArray<IndexDataValue>& aIndexValues,
-    UniqueFreePtr<uint8_t>& aCompressedIndexDataValues,
-    uint32_t* aCompressedIndexDataValuesLength) {
+Result<std::pair<UniqueFreePtr<uint8_t>, uint32_t>, nsresult>
+MakeCompressedIndexDataValues(const nsTArray<IndexDataValue>& aIndexValues) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(!aCompressedIndexDataValues);
-  MOZ_ASSERT(aCompressedIndexDataValuesLength);
 
   AUTO_PROFILER_LABEL("MakeCompressedIndexDataValues", DOM);
 
   const uint32_t arrayLength = aIndexValues.Length();
   if (!arrayLength) {
-    *aCompressedIndexDataValuesLength = 0;
-    return NS_OK;
+    return std::pair{UniqueFreePtr<uint8_t>{}, 0u};
   }
 
   // First calculate the size of the final buffer.
@@ -612,13 +607,13 @@ nsresult MakeCompressedIndexDataValues(
     // Don't let |infoLength| overflow.
     if (NS_WARN_IF(!infoLength.isValid())) {
       IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
 
     // Don't let |blobDataLength| overflow.
     if (NS_WARN_IF(UINT32_MAX - infoLength.value() < blobDataLength)) {
       IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
 
     blobDataLength += infoLength.value();
@@ -628,7 +623,7 @@ nsresult MakeCompressedIndexDataValues(
       static_cast<uint8_t*>(malloc(blobDataLength)));
   if (NS_WARN_IF(!blobData)) {
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_OUT_OF_MEMORY;
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
   uint8_t* blobDataIter = blobData.get();
@@ -653,10 +648,7 @@ nsresult MakeCompressedIndexDataValues(
 
   MOZ_ASSERT(blobDataIter == blobData.get() + blobDataLength);
 
-  aCompressedIndexDataValues = std::move(blobData);
-  *aCompressedIndexDataValuesLength = uint32_t(blobDataLength);
-
-  return NS_OK;
+  return std::pair{std::move(blobData), uint32_t(blobDataLength)};
 }
 
 nsresult ReadCompressedIndexDataValues(
