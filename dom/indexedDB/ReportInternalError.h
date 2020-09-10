@@ -21,6 +21,9 @@
 #define IDB_REPORT_INTERNAL_ERR() \
   mozilla::dom::indexedDB::ReportInternalError(__FILE__, __LINE__, "UnknownErr")
 
+#define IDB_REPORT_INTERNAL_ERR_LAMBDA \
+  [](const auto&) { IDB_REPORT_INTERNAL_ERR(); }
+
 // Based on NS_ENSURE_TRUE
 #define IDB_ENSURE_TRUE(x, ret)                     \
   do {                                              \
