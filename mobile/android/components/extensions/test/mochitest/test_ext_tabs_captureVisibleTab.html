@@ -70,11 +70,11 @@ function* runTest(options) {
 
         // WGP.drawSnapshot() deals in int coordinates, and rounds down.
         browser.test.assertTrue(
-          Math.abs(tab.width - img.width) <= 1,
+          Math.abs(tab.width * devicePixelRatio - img.width) <= 1,
           `${format} ok image width: ${img.width}, from a tab: ${tab.width}`
         );
         browser.test.assertTrue(
-          Math.abs(tab.height - img.height) <= 1,
+          Math.abs(tab.height * devicePixelRatio - img.height) <= 1,
           `${format} ok image height ${img.height}, from a tab: ${tab.height}`
         );
 
