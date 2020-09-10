@@ -14053,50 +14053,6 @@
     "bug_numbers": [1344893, 1489524, 1580077],
     "description": "Time in milliseconds from navigationStart to loadEventEnd."
   },
-  "TIME_TO_LOAD_EVENT_START_PRELOAD_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "barret@mozilla.com"],
-    "expires_in_version": "88",
-    "kind": "exponential",
-    "high": 50000,
-    "n_buckets": 100,
-    "bug_numbers": [1657188],
-    "description": "Time from navigationStart to loadEventStart as per the W3C Performance Timing API. This is submitted only when the document would preload a resource (i.e., if it encounters a <link> element or a Link header with rel=\"preload\"), even if the network.preload pref is disabled."
-  },
-  "TIME_TO_LOAD_EVENT_END_PRELOAD_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "barret@mozilla.com"],
-    "expires_in_version": "88",
-    "kind": "exponential",
-    "high": 50000,
-    "n_buckets": 100,
-    "bug_numbers": [1657188],
-    "description": "Time from navigationStart to loadEventEnd as per the W3C Performance Timing API. This is submitted only when the document would preload a resource (i.e., if it encounters a <link> element or a Link with rel=\"preload\"), even if the network.preload pref is disabled."
-  },
-  "TIME_TO_LOAD_EVENT_START_NO_PRELOAD_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "barret@mozilla.com"],
-    "expires_in_version": "88",
-    "kind": "exponential",
-    "high": 50000,
-    "n_buckets": 100,
-    "bug_numbers": [1657188],
-    "description": "Time from navigationStart to loadEventStart as per the W3C Performance Timing API. This is only submitted on when the document would not preload a resource."
-  },
-  "TIME_TO_LOAD_EVENT_END_NO_PRELOAD_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "barret@mozilla.com"],
-    "expires_in_version": "88",
-    "kind": "exponential",
-    "high": 50000,
-    "n_buckets": 100,
-    "bug_numbers": [1657188],
-    "description": "Time from navigationStart to loadEventEnd as per the W3C Performance Timing API. This is only submitted on when the document would not preload a resource."
-   },
   "TIME_TO_RESPONSE_START_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
@@ -14998,6 +14954,34 @@
     "n_buckets": 50,
     "bug_numbers": [1499418],
     "description": "GeckoView: Time taken to initialize all GeckoView modules in ms."
+  },
+  "SCROLL_ANCHOR_ADJUSTMENT_LENGTH": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": [
+      "rhunt@mozilla.com"
+    ],
+    "expires_in_version": "70",
+    "kind": "exponential",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1518624],
+    "description": "The absolute length in CSS pixels of all scroll adjustments performed by scroll anchoring in a top-level document."
+  },
+  "SCROLL_ANCHOR_ADJUSTMENT_COUNT": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": [
+      "rhunt@mozilla.com"
+    ],
+    "expires_in_version": "70",
+    "kind": "exponential",
+    "low": 1,
+    "high": 500,
+    "n_buckets": 50,
+    "bug_numbers": [1518624],
+    "description": "The amount of scroll adjustments performed by scroll anchoring in a top-level document."
   },
   "QM_INIT_TELEMETRY_ERROR": {
       "record_in_processes": ["main"],
