@@ -10,7 +10,7 @@ import re
 
 from perfdocs.utils import read_yaml
 from manifestparser import TestManifest
-from mozperftest.test.browsertime.script import ScriptInfo
+from mozperftest.script import ScriptInfo
 
 """
 This file is for framework specific gatherers since manifests
