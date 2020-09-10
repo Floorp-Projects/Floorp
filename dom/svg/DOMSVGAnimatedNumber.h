@@ -7,7 +7,6 @@
 #ifndef DOM_SVG_DOMSVGANIMATEDNUMBER_H_
 #define DOM_SVG_DOMSVGANIMATEDNUMBER_H_
 
-#include "nsISupports.h"
 #include "nsWrapperCache.h"
 
 #include "SVGElement.h"

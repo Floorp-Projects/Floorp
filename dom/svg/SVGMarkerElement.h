@@ -7,8 +7,6 @@
 #ifndef DOM_SVG_SVGMARKERELEMENT_H_
 #define DOM_SVG_SVGMARKERELEMENT_H_
 
-#include "DOMSVGAnimatedAngle.h"
-#include "DOMSVGAnimatedEnumeration.h"
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedLength.h"
 #include "SVGAnimatedOrient.h"
@@ -28,6 +26,9 @@ struct SVGMark;
 class SVGMarkerFrame;
 
 namespace dom {
+
+class DOMSVGAnimatedAngle;
+class DOMSVGAnimatedEnumeration;
 
 // Non-Exposed Marker Orientation Types
 static const uint16_t SVG_MARKER_ORIENT_AUTO_START_REVERSE = 3;

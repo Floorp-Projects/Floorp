@@ -7,7 +7,6 @@
 #ifndef DOM_SVG_SVGANIMATEDSTRING_H_
 #define DOM_SVG_SVGANIMATEDSTRING_H_
 
-#include "DOMSVGAnimatedString.h"
 #include "nsError.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SVGAnimatedClassOrString.h"
