@@ -139,6 +139,7 @@
             app:layout_constraintBottom_toBottomOf="@id/tab_layout"
             app:layout_constraintEnd_toStartOf="@id/tab_tray_overflow"
             app:layout_constraintTop_toTopOf="@id/tab_layout"
+            app:tint="@color/primary_text_normal_theme"
             app:srcCompat="@drawable/ic_new" />
 
         <ImageButton
