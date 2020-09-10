@@ -3004,10 +3004,11 @@ Result<bool, nsresult> MaybeUpgradeSchema(mozIStorageConnection& aConnection,
         IDB_TRY(UpgradeSchemaFrom25_0To26_0(aConnection));
         break;
       default:
-        IDB_WARNING(
-            "Unable to open IndexedDB database, no upgrade path is "
-            "available!");
-        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        IDB_FAIL(Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR), []() {
+          IDB_WARNING(
+              "Unable to open IndexedDB database, no upgrade path is "
+              "available!");
+        });
     }
 
     IDB_TRY_VAR(schemaVersion,
