@@ -20,6 +20,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const { debug, warn } = GeckoViewUtils.initLogging("PromptCollection");
 
 class PromptCollection {
+  confirmRepost(browsingContext) {
+    const msg = {
+      type: "repost",
+    };
+    const prompter = new GeckoViewPrompter(browsingContext);
+    const result = prompter.showPrompt(msg);
+    return !!result?.allow;
+  }
+
   beforeUnloadCheck(browsingContext) {
     const msg = {
       type: "beforeUnload",

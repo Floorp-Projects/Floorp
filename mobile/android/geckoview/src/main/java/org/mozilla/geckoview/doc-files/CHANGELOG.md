@@ -27,10 +27,14 @@ exclude: true
   ([bug 1658456]({{bugzilla}}1658456))
 - ⚠️ Use [`Image`][82.3] for [`MediaSession`][81.6] artwork and [`WebExtension`][69.5] icon support.
   ([bug 1662508]({{bugzilla}}1662508))
+- Added [`RepostConfirmPrompt`][82.4] to prompt the user for cofirmation before
+  resending POST requests.
+  ([bug 1659073]({{bugzilla}}1659073))
   
 [82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.WebResponseInfo-
 [82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-
 [82.3]: {{javadoc_uri}}/Image.html
+[82.4]: {{javadoc_uri}}/GeckoSession.PromptDelegate.RepostConfirmPrompt.html
 
 ## v81
 - Added `cookiePurging` to [`ContentBlocking.Settings.Builder`][81.1] and `getCookiePurging` and `setCookiePurging`
@@ -789,4 +793,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 802b991116bf1a90050c412c32bc8ac3e7343fed
+[api-version]: b2f304bfc18a9b3ce4bbe4cc12bc31be42f6fde8
