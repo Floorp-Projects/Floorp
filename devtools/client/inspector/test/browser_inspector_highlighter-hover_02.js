@@ -11,6 +11,7 @@ const TEST_URL = "data:text/html;charset=utf-8,<p>Select me!</p>";
 
 add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { waitForHighlighterTypeHidden } = getHighlighterTestHelpers(inspector);
 
   info(
     "hover over the <p> line in the markup-view so that it's the " +
@@ -23,14 +24,14 @@ add_task(async function() {
   let isVisible = await testActor.isHighlighting();
   ok(isVisible, "the highlighter is shown");
 
-  info("listen to the highlighter's hidden event");
-  const onHidden = testActor.waitForHighlighterEvent(
-    "hidden",
-    inspector.highlighter
+  const onHidden = waitForHighlighterTypeHidden(
+    inspector.highlighters.TYPES.BOXMODEL
   );
   info("mouse-leave the markup-view");
   await mouseLeaveMarkupView(inspector);
+  info("listen to the highlighter's hidden event");
   await onHidden;
+  info("check that the highlighter is no longer visible");
   isVisible = await testActor.isHighlighting();
   ok(!isVisible, "the highlighter is hidden after mouseleave");
 

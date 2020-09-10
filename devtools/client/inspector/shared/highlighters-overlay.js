@@ -34,6 +34,12 @@ loader.lazyRequireGetter(
   "flexboxReducer",
   "devtools/client/inspector/flexbox/reducers/flexbox"
 );
+loader.lazyRequireGetter(
+  this,
+  "deepEqual",
+  "devtools/shared/DevToolsUtils",
+  true
+);
 
 const DEFAULT_HIGHLIGHTER_COLOR = "#9400FF";
 const SUBGRID_PARENT_ALPHA = 0.5;
@@ -253,10 +259,10 @@ class HighlightersOverlay {
   /**
    * Highlight a given node front with a given type of highlighter.
    *
-   * If a highligther of the same type is already active for any node, hide the existing
-   * highlighter before showing the requested one.
-   *
-   * If called multiple times with the same type and node front, skip duplication.
+   * Highlighters are shown for one node at a time. Before showing the same highlighter
+   * type on another node, it will first be hidden from the previously highlighted node.
+   * In pages with frames running in different processes, this ensures highlighters from
+   * other frames do not stay visible.
    *
    * @param  {String} type
    *          Highlighter type to show.
@@ -269,24 +275,38 @@ class HighlightersOverlay {
   async showHighlighterTypeForNode(type, nodeFront, options) {
     if (this._activeHighlighters.has(type)) {
       const {
-        highlighter: activeHighlighter,
         nodeFront: activeNodeFront,
+        options: activeOptions,
+        timer: activeTimer,
       } = this._activeHighlighters.get(type);
 
-      if (activeHighlighter) {
-        if (nodeFront == activeNodeFront) {
-          console.log(`Duplicate call to show ${type}`);
-          return;
-        }
-
-        // Hide the existing highlighter of type, regardless of which process it is in.
+      // Hide the existing highlighter before showing it for a different node.
+      // Else, if the node is the same and options are the same, skip duplicate call.
+      // Duplicate calls to show the highlighter for the same node are allowed
+      // if the options are different (for example, when scheduling autohide).
+      if (nodeFront !== activeNodeFront) {
         await this.hideHighlighterType(type);
+      } else if (deepEqual(options, activeOptions)) {
+        return;
       }
+
+      // Clear any autohide timer associated with this highlighter type.
+      // This clears any existing timer for duplicate calls to show() if:
+      // - called with different options.duration
+      // - called once with options.duration, then without (see deepEqual() above)
+      clearTimeout(activeTimer);
     }
 
     const highlighter = await this._getHighlighterTypeForNode(type, nodeFront);
+    // Set a timer to automatically hide the highlighter if a duration is provided.
+    const timer = this.scheduleAutoHideHighlighterType(type, options?.duration);
     // TODO: support case for multiple highlighter instances (ex: multiple grids)
-    this._activeHighlighters.set(type, { nodeFront, highlighter });
+    this._activeHighlighters.set(type, {
+      nodeFront,
+      highlighter,
+      options,
+      timer,
+    });
     await highlighter.show(nodeFront, options);
 
     // Emit any type-specific highlighter shown event for tests
@@ -298,7 +318,31 @@ class HighlightersOverlay {
   }
 
   /**
-   * Hide all instances of a givn highlighter type.
+   * Set a timer to automatically hide all highlighters of a given type after a delay.
+   *
+   * @param  {String} type
+   *         Highlighter type to hide.
+   * @param  {Number|undefined} duration
+   *         Delay in milliseconds after which to hide the highlighter.
+   *         If a duration is not provided, return early without scheduling a task.
+   * @return {Number|undefined}
+   *         Index of the scheduled task returned by setTimeout().
+   */
+  scheduleAutoHideHighlighterType(type, duration) {
+    if (!duration) {
+      return undefined;
+    }
+
+    const timer = setTimeout(async () => {
+      await this.hideHighlighterType(type);
+      clearTimeout(timer);
+    }, duration);
+
+    return timer;
+  }
+
+  /**
+   * Hide all instances of a given highlighter type.
    *
    * @param  {String} type
    *         Highlighter type to hide.
@@ -309,8 +353,11 @@ class HighlightersOverlay {
       return;
     }
 
-    const { highlighter, nodeFront } = this._activeHighlighters.get(type);
-    // TODO: support case for multiple highlighter instances (ex: multiple grids)
+    const { highlighter, nodeFront, timer } = this._activeHighlighters.get(
+      type
+    );
+    // Clear any autohide timer associated with this highlighter type.
+    clearTimeout(timer);
     this._activeHighlighters.delete(type);
     await highlighter.hide();
 
@@ -1612,9 +1659,10 @@ class HighlightersOverlay {
       this.extraGridHighlighterPool.push(highlighter);
     }
 
-    // Destroy all highligthers. TODO: accomodate restoring highlighters on refresh.
-    for (const { highlighter } of this._activeHighlighters.values()) {
+    // Destroy all highlighters and clear any timers set to autohide highlighters.
+    for (const { highlighter, timer } of this._activeHighlighters.values()) {
       highlighter.finalize();
+      clearTimeout(timer);
     }
 
     this._activeHighlighters.clear();
@@ -1671,8 +1719,10 @@ class HighlightersOverlay {
    * Destroy and clean-up all instances of highlighters.
    */
   destroyHighlighters() {
-    for (const { highlighter } of this._activeHighlighters.values()) {
+    // Destroy all highlighters and clear any timers set to autohide highlighters.
+    for (const { highlighter, timer } of this._activeHighlighters.values()) {
       highlighter.finalize();
+      clearTimeout(timer);
     }
 
     this._activeHighlighters.clear();

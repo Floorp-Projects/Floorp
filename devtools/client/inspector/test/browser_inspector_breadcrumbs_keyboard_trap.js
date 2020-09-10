@@ -49,6 +49,7 @@ add_task(async function() {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const doc = inspector.panelDoc;
   const { breadcrumbs } = inspector;
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   await selectNode("#i2", inspector);
 
@@ -56,7 +57,9 @@ add_task(async function() {
   const container = doc.getElementById("inspector-breadcrumbs");
 
   const button = container.querySelector("button[checked]");
-  const onHighlight = inspector.highlighter.once("node-highlight");
+  const onHighlight = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
   button.click();
   await onHighlight;
 

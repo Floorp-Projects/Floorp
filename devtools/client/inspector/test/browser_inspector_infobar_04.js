@@ -24,7 +24,10 @@ add_task(async function() {
 
 async function testInfobar(test, inspector, testActor) {
   info(`Testing ${test.selector}`);
-
+  // First, hide any existing box model highlighter. Duplicate calls to show are ignored.
+  await inspector.highlighters.hideHighlighterType(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
   await selectAndHighlightNode(test.selector, inspector);
 
   // Ensure the node is the correct one.
