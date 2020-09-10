@@ -2147,10 +2147,9 @@ class DatabaseOperationBase : public Runnable,
                                           mozIStorageStatement* aStatement,
                                           const nsCString& aLocale);
 
-  static nsresult IndexDataValuesFromUpdateInfos(
-      const nsTArray<IndexUpdateInfo>& aUpdateInfos,
-      const UniqueIndexTable& aUniqueIndexTable,
-      nsTArray<IndexDataValue>& aIndexValues);
+  static Result<IndexDataValuesAutoArray, nsresult>
+  IndexDataValuesFromUpdateInfos(const nsTArray<IndexUpdateInfo>& aUpdateInfos,
+                                 const UniqueIndexTable& aUniqueIndexTable);
 
   static nsresult InsertIndexTableRows(
       DatabaseConnection* aConnection, IndexOrObjectStoreId aObjectStoreId,
@@ -15513,39 +15512,38 @@ void CommonOpenOpHelperBase::AppendConditionClause(
 }
 
 // static
-nsresult DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
+Result<IndexDataValuesAutoArray, nsresult>
+DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
     const nsTArray<IndexUpdateInfo>& aUpdateInfos,
-    const UniqueIndexTable& aUniqueIndexTable,
-    nsTArray<IndexDataValue>& aIndexValues) {
-  MOZ_ASSERT(aIndexValues.IsEmpty());
+    const UniqueIndexTable& aUniqueIndexTable) {
   MOZ_ASSERT_IF(!aUpdateInfos.IsEmpty(), aUniqueIndexTable.Count());
 
   AUTO_PROFILER_LABEL("DatabaseOperationBase::IndexDataValuesFromUpdateInfos",
                       DOM);
 
-  const uint32_t count = aUpdateInfos.Length();
+  // XXX We could use TransformIntoNewArray here if it allowed to specify that
+  // an AutoArray should be created.
+  IndexDataValuesAutoArray indexValues;
 
-  if (!count) {
-    return NS_OK;
-  }
-
-  if (NS_WARN_IF(!aIndexValues.SetCapacity(count, fallible))) {
+  if (NS_WARN_IF(!indexValues.SetCapacity(aUpdateInfos.Length(), fallible))) {
     IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_OUT_OF_MEMORY;
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
-  for (const IndexUpdateInfo& updateInfo : aUpdateInfos) {
-    const IndexOrObjectStoreId& indexId = updateInfo.indexId();
+  std::transform(aUpdateInfos.cbegin(), aUpdateInfos.cend(),
+                 MakeBackInserter(indexValues),
+                 [&aUniqueIndexTable](const IndexUpdateInfo& updateInfo) {
+                   const IndexOrObjectStoreId& indexId = updateInfo.indexId();
 
-    bool unique = false;
-    MOZ_ALWAYS_TRUE(aUniqueIndexTable.Get(indexId, &unique));
+                   bool unique = false;
+                   MOZ_ALWAYS_TRUE(aUniqueIndexTable.Get(indexId, &unique));
 
-    aIndexValues.EmplaceBack(indexId, unique, updateInfo.value(),
-                             updateInfo.localizedValue());
-  }
-  aIndexValues.Sort();
+                   return IndexDataValue{indexId, unique, updateInfo.value(),
+                                         updateInfo.localizedValue()};
+                 });
+  indexValues.Sort();
 
-  return NS_OK;
+  return indexValues;
 }
 
 // static
@@ -21269,12 +21267,9 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     MOZ_ASSERT(mUniqueIndexTable.isSome());
 
     // Write the index_data_values column.
-    IndexDataValuesAutoArray indexValues;
-    rv = IndexDataValuesFromUpdateInfos(mParams.indexUpdateInfos(),
-                                        mUniqueIndexTable.ref(), indexValues);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY_VAR(const auto indexValues,
+                IndexDataValuesFromUpdateInfos(mParams.indexUpdateInfos(),
+                                               mUniqueIndexTable.ref()));
 
     rv = UpdateIndexValues(aConnection, osid, key, indexValues);
     if (NS_WARN_IF(NS_FAILED(rv))) {
