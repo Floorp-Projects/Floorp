@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **feature-downloads**
+  * 🚒 Bug fixed [issue #8354](https://github.com/mozilla-mobile/android-components/issues/8354) Do not restart FAILED downloads.
+
 * **browser-tabstray**
  * Removed the `BrowserTabsTray` that was deprecated in previous releases.
 * **service-telemetry**
@@ -91,7 +94,6 @@ permalink: /changelog/
   * 🌟 Added `DownloadStorage` for querying stored download metadata.
   * 🚒 Bug [issue #8190](https://github.com/mozilla-mobile/android-components/issues/8190) ArithmeticException: divide by zero in Download notification.
   * 🚒 Bug [issue #8363](https://github.com/mozilla-mobile/android-components/issues/8363) IllegalStateException: Not allowed to start service Intent.
-
 
 * **ui-widgets**
   * 🆕 New VerticalSwipeRefreshLayout that comes to resolve many of the issues of the platform SwipeRefreshLayout and filters out other gestures than swipe down/up.

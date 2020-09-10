@@ -21,6 +21,8 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
 import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
+import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
+import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -38,6 +40,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.times
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.reset
 
 @RunWith(AndroidJUnit4::class)
 class DownloadMiddlewareTest {
@@ -221,5 +224,31 @@ class DownloadMiddlewareTest {
         store.waitUntilIdle()
 
         assertEquals(download, store.state.downloads.values.first())
+    }
+
+    @Test
+    fun `sendDownloadIntent MUST call startForegroundService WHEN downloads are NOT COMPLETED, CANCELLED and FAILED`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java
+        ))
+
+        val ignoredStatus = listOf(COMPLETED, CANCELLED, FAILED)
+        ignoredStatus.forEach { status ->
+            val download = DownloadState("https://mozilla.org/download", status = status)
+            downloadMiddleware.sendDownloadIntent(download)
+            verify(downloadMiddleware, times(0)).startForegroundService(any())
+        }
+
+        reset(downloadMiddleware)
+
+        val allowedStatus = DownloadState.Status.values().filter { it !in ignoredStatus }
+
+        allowedStatus.forEachIndexed { index, status ->
+            val download = DownloadState("https://mozilla.org/download", status = status)
+            downloadMiddleware.sendDownloadIntent(download)
+            verify(downloadMiddleware, times(index + 1)).startForegroundService(any())
+        }
     }
 }

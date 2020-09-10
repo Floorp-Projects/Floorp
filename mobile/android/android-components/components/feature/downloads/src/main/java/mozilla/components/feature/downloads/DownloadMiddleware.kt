@@ -20,6 +20,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
 import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
+import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
@@ -110,8 +111,9 @@ class DownloadMiddleware(
         }
     }
 
-    private fun sendDownloadIntent(download: DownloadState) {
-        if (download.status !in arrayOf(COMPLETED, CANCELLED)) {
+    @VisibleForTesting
+    internal fun sendDownloadIntent(download: DownloadState) {
+        if (download.status !in arrayOf(COMPLETED, CANCELLED, FAILED)) {
             val intent = Intent(applicationContext, downloadServiceClass)
             intent.putExtra(DownloadManager.EXTRA_DOWNLOAD_ID, download.id)
             startForegroundService(intent)
