@@ -171,8 +171,12 @@ void jit::FreeIonCompileTask(IonCompileTask* task) {
 }
 
 void IonFreeTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
-  AutoUnlockHelperThreadState unlock(locked);
-  jit::FreeIonCompileTask(task_);
+  {
+    AutoUnlockHelperThreadState unlock(locked);
+    jit::FreeIonCompileTask(task_);
+  }
+
+  js_delete(this);
 }
 
 void jit::FinishOffThreadTask(JSRuntime* runtime, IonCompileTask* task,
