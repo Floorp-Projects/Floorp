@@ -785,6 +785,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Normandy: "resource://normandy/Normandy.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  OsEnvironment: "resource://gre/modules/OsEnvironment.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PdfJs: "resource://pdf.js/PdfJs.jsm",
@@ -2716,6 +2717,8 @@ BrowserGlue.prototype = {
       },
 
       () => BrowserUsageTelemetry.reportProfileCount(),
+
+      () => OsEnvironment.reportAllowedAppSources(),
     ];
 
     for (let task of idleTasks) {
