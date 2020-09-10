@@ -4848,6 +4848,29 @@ void HTMLMediaElement::ReportTelemetry() {
     LOG(LogLevel::Debug,
         ("%p VIDEO_HIDDEN_PLAY_TIME_MS = %f", this, hiddenPlayTime));
 
+    if (this->IsEncrypted()) {
+      Telemetry::Accumulate(Telemetry::VIDEO_ENCRYPTED_PLAY_TIME_MS,
+                            SECONDS_TO_MS(playTime));
+      LOG(LogLevel::Debug,
+          ("%p VIDEO_ENCRYPTED_PLAY_TIME_MS = %f", this, playTime));
+    }
+
+    if (mMediaKeys) {
+      nsAutoString keySystem;
+      mMediaKeys->GetKeySystem(keySystem);
+      if (IsClearkeyKeySystem(keySystem)) {
+        Telemetry::Accumulate(Telemetry::VIDEO_CLEARKEY_PLAY_TIME_MS,
+                              SECONDS_TO_MS(playTime));
+        LOG(LogLevel::Debug,
+            ("%p VIDEO_CLEARKEY_PLAY_TIME_MS = %f", this, playTime));
+      } else if (IsWidevineKeySystem(keySystem)) {
+        Telemetry::Accumulate(Telemetry::VIDEO_WIDEVINE_PLAY_TIME_MS,
+                              SECONDS_TO_MS(playTime));
+        LOG(LogLevel::Debug,
+            ("%p VIDEO_WIDEVINE_PLAY_TIME_MS = %f", this, playTime));
+      }
+    }
+
     if (playTime > 0.0) {
       // We have actually played something -> Report some valid-video telemetry.
 

@@ -12409,6 +12409,42 @@
     "n_buckets": 50,
     "bug_numbers": [1287987, 1570634]
   },
+  "VIDEO_ENCRYPTED_PLAY_TIME_MS" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["bvandyk@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "never",
+    "description": "Total time spent playing encrypted video in milliseconds. This reports the total play time for an HTML Media Element playing encrypted content whenever it is suspended, such as when the page is unloaded.",
+    "kind": "exponential",
+    "high": 7200000,
+    "n_buckets": 100,
+    "bug_numbers": [1662212],
+    "releaseChannelCollection": "opt-out"
+  },
+  "VIDEO_CLEARKEY_PLAY_TIME_MS" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["bvandyk@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "never",
+    "description": "Total time spent playing Clearkey encrypted video in milliseconds. This reports the total play time for an HTML Media Element playing Clearkey encrypted content whenever it is suspended, such as when the page is unloaded.",
+    "kind": "exponential",
+    "high": 7200000,
+    "n_buckets": 100,
+    "bug_numbers": [1662212],
+    "releaseChannelCollection": "opt-out"
+  },
+  "VIDEO_WIDEVINE_PLAY_TIME_MS" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["bvandyk@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "never",
+    "description": "Total time spent playing Widevine encrypted video in milliseconds. This reports the total play time for an HTML Media Element playing Widevine encrypted content whenever it is suspended, such as when the page is unloaded.",
+    "kind": "exponential",
+    "high": 7200000,
+    "n_buckets": 100,
+    "bug_numbers": [1662212],
+    "releaseChannelCollection": "opt-out"
+  },
   "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
