@@ -730,7 +730,9 @@ async function sendDeletionPing(studyAddonId) {
     },
     schemaName: "deletion-request",
     schemaVersion: 1,
-    schemaNamespace: "pioneer-debug",
+    // The schema namespace needs to be the study addon id, as we
+    // want to route the ping to the specific study table.
+    schemaNamespace: studyAddonId,
   };
 
   const payload = {
@@ -777,9 +779,9 @@ async function sendEnrollmentPing(studyAddonId) {
   // the work on the ingestion pipeline.
   if (typeof studyAddonId != "undefined") {
     options.studyName = studyAddonId;
-    // This is the same namespace used for 'deletion-request' pings. This works because
-    // the pipeline has a specific exception for it.
-    options.schemaNamespace = "pioneer-debug";
+    // The schema namespace needs to be the study addon id, as we
+    // want to route the ping to the specific study table.
+    options.schemaNamespace = studyAddonId;
   }
 
   await TelemetryController.submitExternalPing("pioneer-study", {}, options);
