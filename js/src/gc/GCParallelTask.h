@@ -15,6 +15,7 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "threading/ProtectedData.h"
+#include "vm/HelperThreadTask.h"
 
 #define JS_MEMBER_FN_PTR_TYPE(ClassT, ReturnT, /* ArgTs */...) \
   ReturnT (ClassT::*)(__VA_ARGS__)
@@ -34,7 +35,7 @@ class HelperThread;
 // A generic task used to dispatch work to the helper thread system.
 // Users override the pure-virtual run() method.
 class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
-                       public RunnableTask {
+                       public HelperThreadTask {
  public:
   gc::GCRuntime* const gc;
 
@@ -183,10 +184,9 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
     state_ = State::Idle;
   }
 
-  void runTask() override;
-
+  void runTask();
   friend class HelperThread;
-  void runFromHelperThread(AutoLockHelperThreadState& locked);
+  void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
 };
 
 } /* namespace js */

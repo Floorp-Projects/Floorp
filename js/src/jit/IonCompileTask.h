@@ -12,6 +12,7 @@
 #include "jit/MIRGenerator.h"
 
 #include "js/Utility.h"
+#include "vm/HelperThreadTask.h"
 
 namespace js {
 
@@ -65,10 +66,9 @@ class IonCompileTask final : public HelperThreadTask,
     backgroundCodegen_ = codegen;
   }
 
-  void runTaskLocked(AutoLockHelperThreadState& locked) override;
-
   ThreadType threadType() override { return THREAD_TYPE_ION; }
   void runTask();
+  void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
 };
 
 class IonFreeTask : public HelperThreadTask {
@@ -77,7 +77,7 @@ class IonFreeTask : public HelperThreadTask {
   IonCompileTask* compileTask() { return task_; }
 
   ThreadType threadType() override { return THREAD_TYPE_ION_FREE; }
-  void runTaskLocked(AutoLockHelperThreadState& locked) override;
+  void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
 
  private:
   IonCompileTask* task_;
