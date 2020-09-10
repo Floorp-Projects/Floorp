@@ -503,7 +503,7 @@ import_sibling_modules()
 
 # Register composite strategies.
 register_strategy('build', args=('skip-unless-schedules',))(Alias)
-register_strategy('build-fuzzing', args=('push-interval-10', 'skip-unless-backstop'))(All)
+register_strategy('build-fuzzing', args=('skip-unless-expanded',))(Alias)
 register_strategy('test', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-verify', args=('skip-unless-schedules',))(Alias)
@@ -569,7 +569,7 @@ class project(object):
             ),
         ),
         'build': All(
-            'push-interval-10',
+            'skip-unless-expanded',
             Any(
                 'skip-unless-schedules',
                 'bugbug-reduced-fallback',

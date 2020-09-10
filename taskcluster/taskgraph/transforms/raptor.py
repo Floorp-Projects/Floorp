@@ -355,7 +355,7 @@ def apply_tier_optimization(config, tests):
             yield test
             continue
 
-        test['optimization'] = {'push-interval-10': None}
+        test['optimization'] = {'skip-unless-expanded': None}
         if test['tier'] > 1:
-            test['optimization'] = {'push-interval-20': None}
+            test['optimization'] = {'skip-unless-backstop': None}
         yield test
