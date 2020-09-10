@@ -355,7 +355,7 @@ var pktApi = (function() {
       sendData.title = options.title;
     }
 
-    return this.apiRequest({
+    return apiRequest({
       path: "/firefox/save",
       data: sendData,
       success(data) {
@@ -402,7 +402,7 @@ var pktApi = (function() {
    * @return {Boolean} Returns Boolean whether the api call started sucessfully
    */
   function getRecsForItem(itemId, options) {
-    return this.apiRequest({
+    return apiRequest({
       path: "/discover/recIt",
       data: {
         item_id: itemId,
@@ -425,7 +425,7 @@ var pktApi = (function() {
    * @return {Boolean} Returns Boolean whether the api call started sucessfully
    */
   function getArticleInfo(url, options) {
-    return this.apiRequest({
+    return apiRequest({
       path: "/getItemPreview",
       data: {
         access_token: getAccessToken(),
@@ -446,7 +446,7 @@ var pktApi = (function() {
    * @return {Boolean} Returns Boolean whether the api call started sucessfully
    */
   function getMobileDownload(options) {
-    return this.apiRequest({
+    return apiRequest({
       path: "/firefox/get-app",
       data: {
         access_token: getAccessToken(),
@@ -519,7 +519,7 @@ var pktApi = (function() {
    * @return {Boolean} Returns Boolean whether the api call started sucessfully
    */
   function sendActions(actions, options) {
-    return this.apiRequest({
+    return apiRequest({
       path: "/send",
       data: {
         access_token: getAccessToken(),
@@ -696,7 +696,7 @@ var pktApi = (function() {
 
     data.access_token = getAccessToken();
 
-    return this.apiRequest({
+    return apiRequest({
       path: "/getSuggestedTags",
       data,
       success: options.success,
@@ -712,7 +712,7 @@ var pktApi = (function() {
     const requestData = Object.assign({}, data, {
       access_token: getAccessToken(),
     });
-    return this.apiRequest({
+    return apiRequest({
       path: "/firefox/get",
       data: requestData,
       success: options.success,
@@ -770,6 +770,5 @@ var pktApi = (function() {
     retrieve,
     getArticleInfo,
     getMobileDownload,
-    apiRequest,
   };
 })();
