@@ -6,6 +6,7 @@
 
 #include "ActorsParent.h"
 
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/PBackgroundSDBConnectionParent.h"
 #include "mozilla/dom/PBackgroundSDBRequestParent.h"
@@ -1652,16 +1653,13 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv = quotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                                                    getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  SDB_TRY_VAR(auto directory,
+              quotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin));
 
   MOZ_ASSERT(directory);
 
-  rv = directory->Append(NS_LITERAL_STRING_FROM_CSTRING(SDB_DIRECTORY_NAME));
+  nsresult rv =
+      directory->Append(NS_LITERAL_STRING_FROM_CSTRING(SDB_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
   }

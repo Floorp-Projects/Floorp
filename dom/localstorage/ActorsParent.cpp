@@ -14,6 +14,7 @@
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -4257,12 +4258,8 @@ nsresult Connection::EnsureStorageConnection() {
   MOZ_ASSERT(quotaManager);
 
   if (!mDatabaseWasNotAvailable || mHasCreatedDatabase) {
-    nsCOMPtr<nsIFile> directoryEntry;
-    rv = quotaManager->GetDirectoryForOrigin(PERSISTENCE_TYPE_DEFAULT, mOrigin,
-                                             getter_AddRefs(directoryEntry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    LS_TRY_VAR(auto directoryEntry, quotaManager->GetDirectoryForOrigin(
+                                        PERSISTENCE_TYPE_DEFAULT, mOrigin));
 
     rv = directoryEntry->Append(
         NS_LITERAL_STRING_FROM_CSTRING(LS_DIRECTORY_NAME));
@@ -7350,11 +7347,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
       return rv;
     }
   } else {
-    rv = quotaManager->GetDirectoryForOrigin(PERSISTENCE_TYPE_DEFAULT, mOrigin,
-                                             getter_AddRefs(directoryEntry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    LS_TRY_VAR(directoryEntry, quotaManager->GetDirectoryForOrigin(
+                                   PERSISTENCE_TYPE_DEFAULT, mOrigin));
 
     quotaManager->EnsureQuotaForOrigin(PERSISTENCE_TYPE_DEFAULT, mGroup,
                                        mOrigin);
@@ -8804,17 +8798,13 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv = quotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                                                    getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_GetDirForOrigin);
-    return Err(rv);
-  }
+  LS_TRY_VAR(auto directory,
+             quotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin));
 
   MOZ_ASSERT(directory);
 
-  rv = directory->Append(NS_LITERAL_STRING_FROM_CSTRING(LS_DIRECTORY_NAME));
+  nsresult rv =
+      directory->Append(NS_LITERAL_STRING_FROM_CSTRING(LS_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, LS_Append);
     return Err(rv);

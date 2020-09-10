@@ -388,16 +388,10 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
   QuotaManager* qm = QuotaManager::Get();
   MOZ_DIAGNOSTIC_ASSERT(qm);
 
-  nsCOMPtr<nsIFile> dir;
-  nsresult rv =
-      qm->GetDirectoryForOrigin(aPersistenceType, aOrigin, getter_AddRefs(dir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
-                                 Cache_GetDirForOri);
-    return Err(rv);
-  }
+  CACHE_TRY_VAR(auto dir, qm->GetDirectoryForOrigin(aPersistenceType, aOrigin));
 
-  rv = dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME));
+  nsresult rv =
+      dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                  Cache_Append);

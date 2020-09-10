@@ -4367,7 +4367,7 @@ nsresult QuotaManager::LoadQuota() {
       MakeRefPtr<RecordQuotaInfoLoadTimeHelper>();
   recordQuotaInfoLoadTimeHelper->Start();
 
-  auto LoadQuotaFromCache = [&]() {
+  auto LoadQuotaFromCache = [&]() -> nsresult {
     nsCOMPtr<mozIStorageStatement> stmt;
     nsresult rv = mStorageConnection->CreateStatement(
         nsLiteralCString(
@@ -4460,12 +4460,8 @@ nsresult QuotaManager::LoadQuota() {
       }
 
       if (accessed) {
-        nsCOMPtr<nsIFile> directory;
-        rv = GetDirectoryForOrigin(persistenceType, origin,
-                                   getter_AddRefs(directory));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        QM_TRY_VAR(auto directory,
+                   GetDirectoryForOrigin(persistenceType, origin));
 
         bool exists;
         rv = directory->Exists(&exists);
@@ -4747,12 +4743,8 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
   QM_TRY(aFile->GetPath(path), nullptr);
 
 #ifdef DEBUG
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                                      getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  QM_TRY_VAR(auto directory, GetDirectoryForOrigin(aPersistenceType, aOrigin),
+             nullptr);
 
   nsAutoString clientType;
   bool ok = Client::TypeToText(aClientType, clientType, fallible);
@@ -4760,7 +4752,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     return nullptr;
   }
 
-  rv = directory->Append(clientType);
+  nsresult rv = directory->Append(clientType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -4922,23 +4914,16 @@ void QuotaManager::AbortOperationsForProcess(ContentParentId aContentParentId) {
   }
 }
 
-nsresult QuotaManager::GetDirectoryForOrigin(PersistenceType aPersistenceType,
-                                             const nsACString& aASCIIOrigin,
-                                             nsIFile** aDirectory) const {
-  auto directoryOrErr = QM_NewLocalFile(GetStoragePath(aPersistenceType));
-  if (NS_WARN_IF(directoryOrErr.isErr())) {
-    return directoryOrErr.unwrapErr();
-  }
-
-  nsCOMPtr<nsIFile> directory = directoryOrErr.unwrap();
+Result<nsCOMPtr<nsIFile>, nsresult> QuotaManager::GetDirectoryForOrigin(
+    PersistenceType aPersistenceType, const nsACString& aASCIIOrigin) const {
+  QM_TRY_VAR(auto directory, QM_NewLocalFile(GetStoragePath(aPersistenceType)));
 
   nsAutoCString originSanitized(aASCIIOrigin);
   SanitizeOriginString(originSanitized);
 
   QM_TRY(directory->Append(NS_ConvertASCIItoUTF16(originSanitized)));
 
-  directory.forget(aDirectory);
-  return NS_OK;
+  return directory;
 }
 
 nsresult QuotaManager::RestoreDirectoryMetadata2(nsIFile* aDirectory,
@@ -6935,12 +6920,8 @@ nsresult QuotaManager::EnsurePersistentOriginIsInitialized(
     info.mPersistentOriginAttempted = true;
   }
 
-  nsCOMPtr<nsIFile> directory;
-  rv = GetDirectoryForOrigin(PERSISTENCE_TYPE_PERSISTENT, aOrigin,
-                             getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(auto directory,
+             GetDirectoryForOrigin(PERSISTENCE_TYPE_PERSISTENT, aOrigin));
 
   if (mInitializedOrigins.Contains(aOrigin)) {
     directory.forget(aDirectory);
@@ -7016,12 +6997,7 @@ nsresult QuotaManager::EnsureTemporaryOriginIsInitialized(
   }
 
   // Get directory for this origin and persistence type.
-  nsCOMPtr<nsIFile> directory;
-  rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                             getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(auto directory, GetDirectoryForOrigin(aPersistenceType, aOrigin));
 
   bool created;
   rv = EnsureOriginDirectory(directory, &created);
@@ -7813,10 +7789,8 @@ void QuotaManager::CheckTemporaryStorageLimits() {
 
 void QuotaManager::DeleteFilesForOrigin(PersistenceType aPersistenceType,
                                         const nsACString& aOrigin) {
-  nsCOMPtr<nsIFile> directory;
-  QM_TRY(GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                               getter_AddRefs(directory)),
-         QM_VOID);
+  QM_TRY_VAR(auto directory, GetDirectoryForOrigin(aPersistenceType, aOrigin),
+             QM_VOID);
 
   nsresult rv = directory->Remove(true);
   if (rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
@@ -8528,14 +8502,11 @@ nsresult SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("SaveOriginAccessTimeOp::DoDirectoryWork", OTHER);
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aQuotaManager.GetDirectoryForOrigin(
-      mPersistenceType.Value(), mOriginScope.GetOrigin(), getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(auto file,
+             aQuotaManager.GetDirectoryForOrigin(mPersistenceType.Value(),
+                                                 mOriginScope.GetOrigin()));
 
-  rv = file->Append(nsLiteralString(METADATA_V2_FILE_NAME));
+  nsresult rv = file->Append(nsLiteralString(METADATA_V2_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9114,15 +9085,11 @@ Result<UsageInfo, nsresult> QuotaUsageRequestBase::GetUsageForOrigin(
     const nsACString& aGroup, const nsACString& aOrigin) {
   AssertIsOnIOThread();
 
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv = aQuotaManager.GetDirectoryForOrigin(aPersistenceType, aOrigin,
-                                                    getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  QM_TRY_VAR(auto directory,
+             aQuotaManager.GetDirectoryForOrigin(aPersistenceType, aOrigin));
 
   bool exists;
-  rv = directory->Exists(&exists);
+  nsresult rv = directory->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Err(rv);
   }
@@ -10184,16 +10151,12 @@ nsresult PersistedOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   // If we get here, it means the origin hasn't been initialized yet.
   // Try to get the persisted flag from directory metadata on disk.
 
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv = aQuotaManager.GetDirectoryForOrigin(mPersistenceType.Value(),
-                                                    mOriginScope.GetOrigin(),
-                                                    getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(auto directory,
+             aQuotaManager.GetDirectoryForOrigin(mPersistenceType.Value(),
+                                                 mOriginScope.GetOrigin()));
 
   bool exists;
-  rv = directory->Exists(&exists);
+  nsresult rv = directory->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10243,16 +10206,12 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   // Update directory metadata on disk first. Then, create/update the originInfo
   // if needed.
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv = aQuotaManager.GetDirectoryForOrigin(mPersistenceType.Value(),
-                                                    mOriginScope.GetOrigin(),
-                                                    getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(auto directory,
+             aQuotaManager.GetDirectoryForOrigin(mPersistenceType.Value(),
+                                                 mOriginScope.GetOrigin()));
 
   bool created;
-  rv = aQuotaManager.EnsureOriginDirectory(directory, &created);
+  nsresult rv = aQuotaManager.EnsureOriginDirectory(directory, &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
