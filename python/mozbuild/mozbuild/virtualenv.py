@@ -298,9 +298,6 @@ class VirtualenvManager(VirtualenvHelper):
             processed like normal. e.g.
             "optional:setup.py:python/foo:built_ext:-i"
 
-        copy -- Copies the given file in the virtualenv site packages
-            directory.
-
         packages.txt -- Denotes that the specified path is a child manifest. It
             will be read and processed as if its contents were concatenated
             into the manifest being read.
@@ -351,16 +348,6 @@ class VirtualenvManager(VirtualenvHelper):
 
                 self.call_setup(os.path.join(self.topsrcdir, package[1]),
                                 package[2:])
-
-                return True
-
-            if package[0] == 'copy':
-                assert len(package) == 2
-
-                src = os.path.join(self.topsrcdir, package[1])
-                dst = os.path.join(python_lib, os.path.basename(package[1]))
-
-                shutil.copy(src, dst)
 
                 return True
 
