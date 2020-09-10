@@ -17,8 +17,9 @@
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/CompilationInfo.h"  // frontend::CompilationInfo, frontend::CompilationGCOutput
 #include "jit/IonCompileTask.h"
-#include "js/ContextOptions.h"      // JS::ContextOptions
-#include "js/friend/StackLimits.h"  // js::ReportOverRecursed
+#include "js/ContextOptions.h"              // JS::ContextOptions
+#include "js/friend/StackLimits.h"          // js::ReportOverRecursed
+#include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
 #include "js/SourceText.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -2072,7 +2073,9 @@ JSObject* GlobalHelperThreadState::finishModuleParseTask(
 
   MOZ_ASSERT(script->isModule());
 
-  if (!cx->options().useOffThreadParseGlobal()) {
+  // NOTE: StartOffThreadParseTask alters CompileOption only for decode task.
+  // UseOffThreadParseGlobal() should match CompileOption here.
+  if (!UseOffThreadParseGlobal()) {
     return script->module();
   }
 
