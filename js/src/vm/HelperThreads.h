@@ -55,6 +55,7 @@ struct HelperThreadTask {
 
 namespace jit {
 class IonCompileTask;
+class IonFreeTask;
 }  // namespace jit
 namespace wasm {
 struct Tier2GeneratorTask;
@@ -97,6 +98,8 @@ class GlobalHelperThreadState {
 
   typedef Vector<jit::IonCompileTask*, 0, SystemAllocPolicy>
       IonCompileTaskVector;
+  using IonFreeTaskVector =
+      Vector<js::UniquePtr<jit::IonFreeTask>, 0, SystemAllocPolicy>;
   typedef Vector<UniquePtr<ParseTask>, 0, SystemAllocPolicy> ParseTaskVector;
   using ParseTaskList = mozilla::LinkedList<ParseTask>;
   typedef Vector<UniquePtr<SourceCompressionTask>, 0, SystemAllocPolicy>
@@ -118,7 +121,8 @@ class GlobalHelperThreadState {
   HelperThreadVector threads_;
 
   // Ion compilation worklist and finished jobs.
-  IonCompileTaskVector ionWorklist_, ionFinishedList_, ionFreeList_;
+  IonCompileTaskVector ionWorklist_, ionFinishedList_;
+  IonFreeTaskVector ionFreeList_;
 
   // wasm worklists.
   wasm::CompileTaskPtrFifo wasmWorklist_tier1_;
@@ -228,7 +232,7 @@ class GlobalHelperThreadState {
   IonCompileTaskVector& ionFinishedList(const AutoLockHelperThreadState&) {
     return ionFinishedList_;
   }
-  IonCompileTaskVector& ionFreeList(const AutoLockHelperThreadState&) {
+  IonFreeTaskVector& ionFreeList(const AutoLockHelperThreadState&) {
     return ionFreeList_;
   }
 

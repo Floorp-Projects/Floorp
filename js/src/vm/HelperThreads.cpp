@@ -227,7 +227,10 @@ bool js::StartOffThreadIonFree(jit::IonCompileTask* task,
                                const AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(CanUseExtraThreads());
 
-  if (!HelperThreadState().ionFreeList(lock).append(task)) {
+  js::UniquePtr<jit::IonFreeTask> freeTask =
+      js::MakeUnique<jit::IonFreeTask>(task);
+  if (!freeTask ||
+      !HelperThreadState().ionFreeList(lock).append(std::move(freeTask))) {
     return false;
   }
 
@@ -1195,7 +1198,9 @@ void GlobalHelperThreadState::finish() {
   AutoLockHelperThreadState lock;
   auto& freeList = ionFreeList(lock);
   while (!freeList.empty()) {
-    jit::FreeIonCompileTask(freeList.popCopy());
+    UniquePtr<jit::IonFreeTask> task = std::move(freeList.back());
+    freeList.popBack();
+    jit::FreeIonCompileTask(task->compileTask());
   }
   destroyHelperContexts(lock);
 }
@@ -1443,8 +1448,9 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
   for (auto task : ionFinishedList_) {
     htStats.ionCompileTask += task->sizeOfExcludingThis(mallocSizeOf);
   }
-  for (auto task : ionFreeList_) {
-    htStats.ionCompileTask += task->sizeOfExcludingThis(mallocSizeOf);
+  for (const auto& task : ionFreeList_) {
+    htStats.ionCompileTask +=
+        task->compileTask()->sizeOfExcludingThis(mallocSizeOf);
   }
 
   // Report wasm::CompileTasks on wait lists
@@ -2173,11 +2179,9 @@ void HelperThread::handleIonFreeWorkload(AutoLockHelperThreadState& locked) {
 
   auto& freeList = HelperThreadState().ionFreeList(locked);
 
-  jit::IonCompileTask* task = freeList.popCopy();
-  {
-    AutoUnlockHelperThreadState unlock(locked);
-    FreeIonCompileTask(task);
-  }
+  UniquePtr<jit::IonFreeTask> task = std::move(freeList.back());
+  freeList.popBack();
+  task->runTaskLocked(locked);
 }
 
 bool JSContext::addPendingCompileError(js::CompileError** error) {
