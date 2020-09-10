@@ -7,3 +7,10 @@ with Files("*cppunittest*"):
 
 with Files("remote*"):
     BUG_COMPONENT = ("GeckoView", "General")
+
+DIRS += ['mozbase']
+
+PERFTESTS_MANIFESTS += [
+  'performance/perftest.ini',
+]
+
