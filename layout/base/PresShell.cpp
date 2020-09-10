@@ -665,7 +665,7 @@ bool PresShell::GetVerifyReflowEnable() {
       bool error = false;
 
       for (;;) {
-        char* comma = strchr(flags, ',');
+        char* comma = PL_strchr(flags, ',');
         if (comma) *comma = '\0';
 
         bool found = false;

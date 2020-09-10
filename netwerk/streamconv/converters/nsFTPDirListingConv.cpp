@@ -5,6 +5,7 @@
 
 #include "nsFTPDirListingConv.h"
 #include "nsMemory.h"
+#include "plstr.h"
 #include "mozilla/Logging.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
@@ -228,7 +229,7 @@ char* nsFTPDirListingConv::DigestBufferLines(char* aBuffer,
   list_state state;
 
   // while we have new lines, parse 'em into application/http-index-format.
-  while (line && (eol = strchr(line, nsCRT::LF))) {
+  while (line && (eol = PL_strchr(line, nsCRT::LF))) {
     // yank any carriage returns too.
     if (eol > line && *(eol - 1) == nsCRT::CR) {
       eol--;

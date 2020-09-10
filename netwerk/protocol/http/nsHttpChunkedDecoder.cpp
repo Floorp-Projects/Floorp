@@ -9,6 +9,7 @@
 #include <errno.h>
 #include "nsHttpChunkedDecoder.h"
 #include <algorithm>
+#include "plstr.h"
 
 #include "mozilla/Unused.h"
 
@@ -134,9 +135,7 @@ nsresult nsHttpChunkedDecoder::ParseChunkRemaining(char* buf, uint32_t count,
       unsigned long parsedval;  // could be 64 bit, could be 32
 
       // ignore any chunk-extensions
-      if ((p = strchr(buf, ';')) != nullptr) {
-        *p = 0;
-      }
+      if ((p = PL_strchr(buf, ';')) != nullptr) *p = 0;
 
       // mChunkRemaining is an uint32_t!
       parsedval = strtoul(buf, &endptr, 16);
