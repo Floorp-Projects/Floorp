@@ -34,17 +34,6 @@
     }                                               \
   } while (0)
 
-// Based on NS_ENSURE_SUCCESS
-#define IDB_ENSURE_SUCCESS(res, ret)                               \
-  do {                                                             \
-    nsresult __rv = res; /* Don't evaluate |res| more than once */ \
-    if (NS_FAILED(__rv)) {                                         \
-      IDB_REPORT_INTERNAL_ERR();                                   \
-      NS_ENSURE_SUCCESS_BODY(res, ret)                             \
-      return ret;                                                  \
-    }                                                              \
-  } while (0)
-
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
