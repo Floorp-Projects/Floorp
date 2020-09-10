@@ -301,6 +301,29 @@ const clearLocale = async () => {
   Services.locale.requestedLocales = ORIG_REQUESTED_LOCALES;
 };
 
+/**
+ * Wait for DOM attribute change on target.
+ *
+ * @param {Object} target
+ *        The Node on which to observe DOM mutations.
+ * @return A promise that resolves when a change on the target DOM is detected.
+ */
+function waitForDOMAttributeChange(target) {
+  return new Promise(resolve => {
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        resolve();
+      });
+    });
+
+    observer.observe(target, {
+      attributes: true,
+      childList: false,
+      subtree: false,
+    });
+  });
+}
+
 add_task(async function testMockSchema() {
   for (const [schemaName, values] of [
     ["PioneerContentSchema", CACHED_CONTENT],
@@ -374,6 +397,7 @@ add_task(async function testBadDefaultAddon() {
       const acceptDialogButton = content.document.getElementById(
         "join-pioneer-accept-dialog-button"
       );
+      let promiseDialogAccepted = waitForDOMAttributeChange(enrollmentButton);
       acceptDialogButton.click();
 
       const pioneerEnrolled = Services.prefs.getStringPref(
@@ -382,7 +406,7 @@ add_task(async function testBadDefaultAddon() {
       );
       ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
 
-      await waitForAnimationFrame();
+      await promiseDialogAccepted;
       ok(
         document.l10n.getAttributes(enrollmentButton).id ==
           "pioneer-unenrollment-button",
@@ -475,6 +499,7 @@ add_task(async function testAboutPage() {
       const acceptDialogButton = content.document.getElementById(
         "join-pioneer-accept-dialog-button"
       );
+      let promiseDialogAccepted = waitForDOMAttributeChange(enrollmentButton);
       acceptDialogButton.click();
 
       const pioneerEnrolled = Services.prefs.getStringPref(
@@ -483,7 +508,7 @@ add_task(async function testAboutPage() {
       );
       ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
 
-      await waitForAnimationFrame();
+      await promiseDialogAccepted;
       ok(
         document.l10n.getAttributes(enrollmentButton).id ==
           "pioneer-unenrollment-button",
@@ -617,8 +642,9 @@ add_task(async function testAboutPage() {
           "leave-study-accept-dialog-button"
         );
 
+        let promiseJoinButtonDisabled = waitForDOMAttributeChange(joinButton);
         acceptStudyCancelButton.click();
-        await waitForAnimationFrame();
+        await promiseJoinButtonDisabled;
 
         ok(
           joinButton.disabled,
@@ -731,6 +757,130 @@ add_task(async function testAboutPage() {
           );
         }
       }
+    }
+  );
+});
+
+add_task(async function testEnrollmentPings() {
+  const CACHED_TEST_ADDON = CACHED_ADDONS[2];
+  const cachedContent = JSON.stringify(CACHED_CONTENT);
+  const cachedAddons = JSON.stringify([CACHED_TEST_ADDON]);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_TEST_CACHED_ADDONS, cachedAddons],
+      [PREF_TEST_CACHED_CONTENT, cachedContent],
+      [PREF_TEST_ADDONS, "[]"],
+    ],
+    clear: [
+      [PREF_PIONEER_ID, ""],
+      [PREF_PIONEER_COMPLETED_STUDIES, "[]"],
+    ],
+  });
+
+  // Clear any pending pings.
+  await TelemetryStorage.testClearPendingPings();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:pioneer",
+      gBrowser,
+    },
+    async function taskFn(browser) {
+      const beforePref = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+      ok(beforePref === null, "before enrollment, Pioneer pref is null.");
+
+      // Enroll in pioneer.
+      const enrollmentButton = content.document.getElementById(
+        "enrollment-button"
+      );
+      enrollmentButton.click();
+
+      const acceptDialogButton = content.document.getElementById(
+        "join-pioneer-accept-dialog-button"
+      );
+      let promiseDialogAccepted = waitForDOMAttributeChange(enrollmentButton);
+      acceptDialogButton.click();
+
+      const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+      ok(pioneerId, "after enrollment, Pioneer pref is set.");
+
+      await promiseDialogAccepted;
+
+      // Enroll in the CACHED_TEST_ADDON study.
+      const joinButton = content.document.getElementById(
+        `${CACHED_TEST_ADDON.addon_id}-join-button`
+      );
+
+      const joinDialogOpen = new Promise(resolve => {
+        content.document
+          .getElementById("join-study-consent-dialog")
+          .addEventListener("open", () => {
+            resolve();
+          });
+      });
+
+      await waitForAnimationFrame();
+
+      joinButton.click();
+      await waitForAnimationFrame();
+
+      await joinDialogOpen;
+      await waitForAnimationFrame();
+
+      // Accept consent for the study.
+      const studyAcceptButton = content.document.getElementById(
+        "join-study-accept-dialog-button"
+      );
+
+      studyAcceptButton.click();
+      await waitForAnimationFrame();
+
+      // Verify that the proper pings were generated.
+      let pings;
+      await TestUtils.waitForCondition(async function() {
+        pings = await TelemetryArchive.promiseArchivedPingList();
+        return pings.length >= 2;
+      }, "Wait until we have at least 2 pings in the telemetry archive");
+
+      let pingDetails = [];
+      for (const ping of pings) {
+        ok(
+          ping.type == "pioneer-study",
+          "ping is of expected type pioneer-study"
+        );
+        const details = await TelemetryArchive.promiseArchivedPingById(ping.id);
+        pingDetails.push({
+          schemaName: details.payload.schemaName,
+          schemaNamespace: details.payload.schemaNamespace,
+          studyName: details.payload.studyName,
+          pioneerId: details.payload.pioneerId,
+        });
+      }
+
+      // We expect 1 ping with just the pioneer id (pioneer consent) and another
+      // with both the pioneer id and the study id (study consent).
+      ok(
+        pingDetails.find(
+          p =>
+            p.schemaName == "pioneer-enrollment" &&
+            p.schemaNamespace == "pioneer-meta" &&
+            p.pioneerId == pioneerId &&
+            !p.studyName
+        ),
+        "We expect the Pioneer program consent to be present"
+      );
+
+      ok(
+        pingDetails.find(
+          p =>
+            p.schemaName == "pioneer-enrollment" &&
+            p.schemaNamespace == "pioneer-debug" &&
+            p.pioneerId == pioneerId &&
+            p.studyName == CACHED_TEST_ADDON.addon_id
+        ),
+        "We expect the study consent to be present"
+      );
     }
   );
 });
