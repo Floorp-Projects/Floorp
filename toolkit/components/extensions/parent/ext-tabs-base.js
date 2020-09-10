@@ -119,18 +119,24 @@ class TabBase {
    * @param {integer} [options.quality = 92]
    *        The quality at which to encode the captured image data, ranging from
    *        0 to 100. Has no effect for the "png" format.
-   *
+   * @param {DOMRectInit} [options.rect]
+   *        Area of the document to render, in CSS pixels, relative to the page.
+   *        If null, the currently visible viewport is rendered.
+   * @param {number} [options.scale]
+   *        The scale to render at, defaults to devicePixelRatio.
    * @returns {Promise<string>}
    */
-  async capture(context, options = null) {
-    let { ZoomManager, devicePixelRatio } = this.nativeTab.ownerGlobal;
-    let scale = ZoomManager.getZoomForBrowser(this.browser) * devicePixelRatio;
+  async capture(context, options) {
+    let win = this.nativeTab.ownerGlobal;
+    let scale = options?.scale || win.devicePixelRatio;
+    let zoom = win.ZoomManager.getZoomForBrowser(this.browser);
+    let rect = options?.rect && win.DOMRect.fromRect(options.rect);
 
     let wgp = this.browsingContext.currentWindowGlobal;
-    let image = await wgp.drawSnapshot(null, scale, "white");
+    let image = await wgp.drawSnapshot(rect, scale * zoom, "white");
 
-    let win = Services.appShell.hiddenDOMWindow;
-    let canvas = win.document.createElement("canvas");
+    let doc = Services.appShell.hiddenDOMWindow.document;
+    let canvas = doc.createElement("canvas");
     canvas.width = image.width;
     canvas.height = image.height;
 

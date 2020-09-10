@@ -2,24 +2,26 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-async function runTest({ html, fullZoom = 1, coords }) {
+async function runTest({ html, fullZoom, coords, rect, scale }) {
   let url = `data:text/html,${encodeURIComponent(html)}#scroll`;
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);
 
-  tab.linkedBrowser.fullZoom = fullZoom;
+  tab.linkedBrowser.fullZoom = fullZoom ?? 1;
 
-  async function background(coords) {
+  async function background({ coords, rect, scale, method }) {
     try {
       let [tab] = await browser.tabs.query({
         currentWindow: true,
         active: true,
       });
 
+      let id = method === "captureVisibleTab" ? tab.windowId : tab.id;
+
       let [jpeg, png, ...pngs] = await Promise.all([
-        browser.tabs.captureTab(tab.id, { format: "jpeg", quality: 95 }),
-        browser.tabs.captureTab(tab.id, { format: "png", quality: 95 }),
-        browser.tabs.captureTab(tab.id, { quality: 95 }),
-        browser.tabs.captureTab(tab.id),
+        browser.tabs[method](id, { format: "jpeg", quality: 95, rect, scale }),
+        browser.tabs[method](id, { format: "png", quality: 95, rect, scale }),
+        browser.tabs[method](id, { quality: 95, rect, scale }),
+        browser.tabs[method](id, { rect, scale }),
       ]);
 
       browser.test.assertTrue(
@@ -45,6 +47,9 @@ async function runTest({ html, fullZoom = 1, coords }) {
           })
       );
 
+      let width = (rect?.width ?? tab.width) * (scale ?? devicePixelRatio);
+      let height = (rect?.height ?? tab.height) * (scale ?? devicePixelRatio);
+
       [jpeg, png] = await Promise.all(promises);
       let images = { jpeg, png };
       for (let format of Object.keys(images)) {
@@ -52,12 +57,12 @@ async function runTest({ html, fullZoom = 1, coords }) {
 
         // WGP.drawSnapshot() deals in int coordinates, and rounds down.
         browser.test.assertTrue(
-          Math.abs(tab.width - img.width) <= 1,
-          `${format} ok image width: ${img.width}, from a tab: ${tab.width}`
+          Math.abs(width - img.width) <= 1,
+          `${format} ok image width: ${img.width}, expected: ${width}`
         );
         browser.test.assertTrue(
-          Math.abs(tab.height - img.height) <= 1,
-          `${format} ok image height ${img.height}, from a tab: ${tab.height}`
+          Math.abs(height - img.height) <= 1,
+          `${format} ok image height ${img.height}, expected: ${height}`
         );
 
         let canvas = document.createElement("canvas");
@@ -117,24 +122,27 @@ async function runTest({ html, fullZoom = 1, coords }) {
     }
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["<all_urls>"],
-    },
+  for (let method of ["captureTab", "captureVisibleTab"]) {
+    let options = { coords, rect, scale, method };
+    info(`Testing configuration: ${JSON.stringify(options)}`);
 
-    background: `(${background})(${JSON.stringify(coords)})`,
-  });
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        permissions: ["<all_urls>"],
+      },
 
-  await extension.startup();
+      background: `(${background})(${JSON.stringify(options)})`,
+    });
 
-  await extension.awaitFinish("captureTab");
-
-  await extension.unload();
+    await extension.startup();
+    await extension.awaitFinish("captureTab");
+    await extension.unload();
+  }
 
   BrowserTestUtils.removeTab(tab);
 }
 
-function testEdgeToEdge({ color, fullZoom }) {
+async function testEdgeToEdge({ color, fullZoom }) {
   let neutral = [0xaa, 0xaa, 0xaa];
 
   let html = `
@@ -162,32 +170,46 @@ function testEdgeToEdge({ color, fullZoom }) {
   ];
 
   info(`Test edge to edge color ${color} at fullZoom=${fullZoom}`);
-  return runTest({ html, fullZoom, coords });
+  await runTest({ html, fullZoom, coords });
 }
 
 add_task(async function testCaptureEdgeToEdge() {
   await testEdgeToEdge({ color: [0, 0, 0], fullZoom: 1 });
-
   await testEdgeToEdge({ color: [0, 0, 0], fullZoom: 2 });
-
   await testEdgeToEdge({ color: [0, 0, 0], fullZoom: 0.5 });
-
   await testEdgeToEdge({ color: [255, 255, 255], fullZoom: 1 });
 });
+
+const tallDoc = `<!DOCTYPE html>
+  <meta charset=utf-8>
+  <div style="background: yellow; width: 50%; height: 500px;"></div>
+  <div id=scroll style="background: red; width: 25%; height: 5000px;"></div>
+  Opened with the #scroll fragment, scrolls the div ^ into view.
+`;
 
 // Test currently visible viewport is captured if scrolling is involved.
 add_task(async function testScrolledViewport() {
   await runTest({
-    html: `<!DOCTYPE html>
-      <meta charset=utf-8>
-      <div style="background: yellow; width: 50%; height: 500px;"></div>
-      <div id=scroll style="background: red; width: 25%; height: 5000px;"></div>
-      Opened with the #scroll fragment, scrolls the div ^ into view.
-    `,
+    html: tallDoc,
     coords: [
       { x: 50, y: 50, color: [255, 0, 0] },
       { x: 50, y: -50, color: [255, 0, 0] },
       { x: -50, y: -50, color: [255, 255, 255] },
+    ],
+  });
+});
+
+// Test rect and scale options.
+add_task(async function testRectAndScale() {
+  await runTest({
+    html: tallDoc,
+    rect: { x: 50, y: 50, width: 10, height: 1000 },
+    scale: 4,
+    coords: [
+      { x: 0, y: 0, color: [255, 255, 0] },
+      { x: -1, y: 0, color: [255, 255, 0] },
+      { x: 0, y: -1, color: [255, 0, 0] },
+      { x: -1, y: -1, color: [255, 0, 0] },
     ],
   });
 });
@@ -224,8 +246,27 @@ add_task(async function testCaptureTabPermissions() {
   });
 
   await extension.startup();
-
   await extension.awaitFinish("captureTabPermissions");
+  await extension.unload();
+});
 
+add_task(async function testCaptureVisibleTabPermissions() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
+    },
+
+    background() {
+      browser.test.assertEq(
+        undefined,
+        browser.tabs.captureVisibleTab,
+        'Extension without "<all_urls>" permission should not have access to captureVisibleTab'
+      );
+      browser.test.notifyPass("captureVisibleTabPermissions");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("captureVisibleTabPermissions");
   await extension.unload();
 });
