@@ -1657,6 +1657,7 @@ enum class StringChar { CodeAt, At };
 class MOZ_RAII CallIRGenerator : public IRGenerator {
  private:
   JSOp op_;
+  bool isFirstStub_;
   uint32_t argc_;
   HandleValue callee_;
   HandleValue thisval_;
@@ -1672,6 +1673,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                   MutableHandleObject result);
 
   void emitNativeCalleeGuard(HandleFunction callee);
+  void emitCalleeGuard(ObjOperandId calleeId, HandleFunction callee);
 
   bool canAttachAtomicsReadWriteModify();
 
@@ -1794,9 +1796,9 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
 
  public:
   CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, JSOp op,
-                  ICState::Mode mode, uint32_t argc, HandleValue callee,
-                  HandleValue thisval, HandleValue newTarget,
-                  HandleValueArray args);
+                  ICState::Mode mode, bool isFirstStub, uint32_t argc,
+                  HandleValue callee, HandleValue thisval,
+                  HandleValue newTarget, HandleValueArray args);
 
   AttachDecision tryAttachStub();
 
