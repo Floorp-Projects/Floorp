@@ -115,8 +115,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 
  public:
   BaselineStackBuilder(JSContext* cx, JitFrameLayout* frame,
-                       SnapshotIterator& iter,
-                       size_t initialSize)
+                       SnapshotIterator& iter, size_t initialSize)
       : cx_(cx),
         frame_(frame),
         iter_(iter),
@@ -155,6 +154,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   MOZ_MUST_USE bool buildFixedSlots();
   MOZ_MUST_USE bool fixUpCallerArgs(MutableHandleValueVector savedCallerArgs,
                                     bool* fixedUp);
+  MOZ_MUST_USE bool buildExpressionStack();
 
  private:
   JSScript* script() const {
@@ -169,6 +169,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   bool envChainSlotCanBeOptimized();
 #endif
 
+  bool hasLiveStackValueAtDepth(uint32_t stackSlotIndex);
+
  public:
   MutableHandleValueVector outermostFrameFormals() {
     return &outermostFrameFormals_;
@@ -176,6 +178,9 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   uint32_t exprStackSlots() const { return exprStackSlots_; }
   bool catchingException() const {
     return excInfo_ && excInfo_->catchingException();
+  }
+  bool propagatingIonExceptionForDebugMode() const {
+    return excInfo_ && excInfo_->propagatingIonExceptionForDebugMode();
   }
   void* prevFramePtr() const { return prevFramePtr_; }
   BufferPointer<BaselineFrame>& blFrame() { return blFrame_.ref(); }
@@ -836,6 +841,50 @@ bool BaselineStackBuilder::fixUpCallerArgs(
   return true;
 }
 
+bool BaselineStackBuilder::buildExpressionStack() {
+  JitSpew(JitSpew_BaselineBailouts, "      pushing %u expression stack slots",
+          exprStackSlots());
+  for (uint32_t i = 0; i < exprStackSlots(); i++) {
+    Value v;
+
+    if (!iter_.moreFrames() && i == exprStackSlots() - 1 &&
+        cx_->hasIonReturnOverride()) {
+      // If coming from an invalidation bailout, and this is the topmost
+      // value, and a value override has been specified, don't read from the
+      // iterator. Otherwise, we risk using a garbage value.
+      // TODO(post-Warp): Remove value overrides and AutoDetectInvalidation.
+      iter_.skip();
+      JitSpew(JitSpew_BaselineBailouts, "      [Return Override]");
+      v = cx_->takeIonReturnOverride();
+    } else if (propagatingIonExceptionForDebugMode()) {
+      // If we are in the middle of propagating an exception from Ion by
+      // bailing to baseline due to debug mode, we might not have all
+      // the stack if we are at the newest frame.
+      //
+      // For instance, if calling |f()| pushed an Ion frame which threw,
+      // the snapshot expects the return value to be pushed, but it's
+      // possible nothing was pushed before we threw. We can't drop
+      // iterators, however, so read them out. They will be closed by
+      // HandleExceptionBaseline.
+      MOZ_ASSERT(cx_->realm()->isDebuggee() ||
+                 cx_->isPropagatingForcedReturn());
+      if (iter_.moreFrames() || hasLiveStackValueAtDepth(i)) {
+        v = iter_.read();
+      } else {
+        iter_.skip();
+        v = MagicValue(JS_OPTIMIZED_OUT);
+      }
+    } else {
+      v = iter_.read();
+    }
+    if (!writeValue(v, "StackValue")) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 #ifdef DEBUG
 // The |envChain| slot must not be optimized out if the currently
 // active scope requires any EnvironmentObjects beyond what is
@@ -927,22 +976,20 @@ static jsbytecode* GetResumePC(JSScript* script, jsbytecode* pc,
   return pc;
 }
 
-static bool HasLiveStackValueAtDepth(HandleScript script, jsbytecode* pc,
-                                     uint32_t stackSlotIndex,
-                                     uint32_t stackDepth) {
+bool BaselineStackBuilder::hasLiveStackValueAtDepth(uint32_t stackSlotIndex) {
   // Return true iff stackSlotIndex is a stack value that's part of an active
   // iterator loop instead of a normal expression stack slot.
 
-  MOZ_ASSERT(stackSlotIndex < stackDepth);
+  MOZ_ASSERT(stackSlotIndex < exprStackSlots());
 
-  for (TryNoteIterAllNoGC tni(script, pc); !tni.done(); ++tni) {
+  for (TryNoteIterAllNoGC tni(script(), pc_); !tni.done(); ++tni) {
     const TryNote& tn = **tni;
 
     switch (tn.kind()) {
       case TryNoteKind::ForIn:
       case TryNoteKind::ForOf:
       case TryNoteKind::Destructuring:
-        MOZ_ASSERT(tn.stackDepth <= stackDepth);
+        MOZ_ASSERT(tn.stackDepth <= exprStackSlots());
         if (stackSlotIndex < tn.stackDepth) {
           return true;
         }
@@ -1044,7 +1091,7 @@ static bool IsPrologueBailout(const SnapshotIterator& iter,
 /* clang-format on */
 static bool InitFromBailout(JSContext* cx, HandleFunction fun,
                             HandleScript script, SnapshotIterator& iter,
-                            bool invalidate, BaselineStackBuilder& builder,
+                            BaselineStackBuilder& builder,
                             MutableHandleFunction nextCallee,
                             ICScript** icScriptPtr,
                             const ExceptionBailoutInfo* excInfo) {
@@ -1103,46 +1150,8 @@ static bool InitFromBailout(JSContext* cx, HandleFunction fun,
     return false;
   }
 
-  uint32_t pushedSlots = fixedUp ? exprStackSlots : 0;
-
-  JitSpew(JitSpew_BaselineBailouts, "      pushing %u expression stack slots",
-          exprStackSlots - pushedSlots);
-  for (uint32_t i = pushedSlots; i < exprStackSlots; i++) {
-    Value v;
-
-    if (!iter.moreFrames() && i == exprStackSlots - 1 &&
-        cx->hasIonReturnOverride()) {
-      // If coming from an invalidation bailout, and this is the topmost
-      // value, and a value override has been specified, don't read from the
-      // iterator. Otherwise, we risk using a garbage value.
-      MOZ_ASSERT(invalidate);
-      iter.skip();
-      JitSpew(JitSpew_BaselineBailouts, "      [Return Override]");
-      v = cx->takeIonReturnOverride();
-    } else if (excInfo && excInfo->propagatingIonExceptionForDebugMode()) {
-      // If we are in the middle of propagating an exception from Ion by
-      // bailing to baseline due to debug mode, we might not have all
-      // the stack if we are at the newest frame.
-      //
-      // For instance, if calling |f()| pushed an Ion frame which threw,
-      // the snapshot expects the return value to be pushed, but it's
-      // possible nothing was pushed before we threw. We can't drop
-      // iterators, however, so read them out. They will be closed by
-      // HandleExceptionBaseline.
-      MOZ_ASSERT(cx->realm()->isDebuggee() || cx->isPropagatingForcedReturn());
-      if (iter.moreFrames() ||
-          HasLiveStackValueAtDepth(script, pc, i, exprStackSlots)) {
-        v = iter.read();
-      } else {
-        iter.skip();
-        v = MagicValue(JS_OPTIMIZED_OUT);
-      }
-    } else {
-      v = iter.read();
-    }
-    if (!builder.writeValue(v, "StackValue")) {
-      return false;
-    }
+  if (!fixedUp && !builder.buildExpressionStack()) {
+    return false;
   }
 
   // BaselineFrame::frameSize is the size of everything pushed since
@@ -1571,7 +1580,7 @@ static bool InitFromBailout(JSContext* cx, HandleFunction fun,
 }
 
 bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
-                               const JSJitFrameIter& iter, bool invalidate,
+                               const JSJitFrameIter& iter,
                                BaselineBailoutInfo** bailoutInfo,
                                const ExceptionBailoutInfo* excInfo) {
   MOZ_ASSERT(bailoutInfo != nullptr);
@@ -1745,9 +1754,8 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     bool passExcInfo = handleException || propagatingExceptionForDebugMode;
 
     RootedFunction nextCallee(cx, nullptr);
-    if (!InitFromBailout(cx, fun, scr, snapIter, invalidate, builder,
-                         &nextCallee, &icScript,
-                         passExcInfo ? excInfo : nullptr)) {
+    if (!InitFromBailout(cx, fun, scr, snapIter, builder, &nextCallee,
+                         &icScript, passExcInfo ? excInfo : nullptr)) {
       MOZ_ASSERT(cx->isExceptionPending());
       return false;
     }
