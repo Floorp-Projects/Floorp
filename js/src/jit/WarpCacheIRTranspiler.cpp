@@ -3148,13 +3148,27 @@ WrappedFunction* WarpCacheIRTranspiler::maybeCallTarget(MDefinition* callee,
   // CacheIR emits the following for specialized calls:
   //     GuardSpecificFunction <callee> <func> ..
   //     Call(Native|Scripted)Function <callee> ..
-  // We can use the <func> JSFunction object to specialize this call.
-  if (!callee->isGuardSpecificFunction()) {
-    return nullptr;
+  // or:
+  //     GuardClass <callee> ..
+  //     GuardFunctionScript <callee> <script> ..
+  //     CallScriptedFunction <callee> ..
+  //
+  // We can use the <func> JSFunction or <script> BaseScript to specialize this
+  // call.
+  if (callee->isGuardSpecificFunction()) {
+    auto* guard = callee->toGuardSpecificFunction();
+    return maybeWrappedFunction(guard->expected(), kind, guard->nargs(),
+                                guard->flags());
   }
-  auto* guard = callee->toGuardSpecificFunction();
-  return maybeWrappedFunction(guard->expected(), kind, guard->nargs(),
-                              guard->flags());
+  if (callee->isGuardFunctionScript()) {
+    MOZ_ASSERT(kind == CallKind::Scripted);
+    auto* guard = callee->toGuardFunctionScript();
+    WrappedFunction* wrappedTarget = new (alloc()) WrappedFunction(
+        /* nativeFun = */ nullptr, guard->nargs(), guard->flags());
+    MOZ_ASSERT(wrappedTarget->hasJitEntry());
+    return wrappedTarget;
+  }
+  return nullptr;
 }
 
 // If it is possible to use MCall for this call, update callInfo_ to use
