@@ -624,9 +624,8 @@ nsresult LoadInfoArgsToLoadInfo(
       }
       if (originalPrincipalToInherit &&
           (loadInfoArgs.securityFlags() &
-           nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL)) {
-        MOZ_ASSERT(
-            originalPrincipalToInherit->Equals(flattenedPrincipalToInherit));
+           nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL) &&
+          originalPrincipalToInherit->Equals(flattenedPrincipalToInherit)) {
         principalToInherit = originalPrincipalToInherit;
       }
     }
