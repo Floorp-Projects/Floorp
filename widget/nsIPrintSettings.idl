@@ -149,8 +149,9 @@ interface nsIPrintSettings : nsISupports
 
   /**
    * The edge measurements define the positioning of the headers
-   * and footers on the page. They're measured as an offset from
-   * the "unwriteable margin" (described below).
+   * and footers on the page. They're treated as an offset from the edges of
+   * the page, but are forced to be at least the "unwriteable margin"
+   * (described below).
    */
   attribute double  edgeTop;     /*  these are in inches */
   attribute double  edgeLeft;
@@ -159,7 +160,8 @@ interface nsIPrintSettings : nsISupports
 
   /**
    * The margins define the positioning of the content on the page.
-   * They're treated as an offset from the "unwriteable margin"
+   * and footers on the page. They're treated as an offset from the edges of
+   * the page, but are forced to be at least the "unwriteable margin"
    * (described below).
    */
   attribute double  marginTop;     /*  these are in inches */
@@ -167,8 +169,7 @@ interface nsIPrintSettings : nsISupports
   attribute double  marginBottom;
   attribute double  marginRight;
   /**
-   * The unwriteable margin defines the printable region of the paper, creating
-   * an invisible border from which the edge and margin attributes are measured.
+   * The unwriteable margin defines the printable region of the paper.
    */
   attribute double  unwriteableMarginTop;     /*  these are in inches */
   attribute double  unwriteableMarginLeft;

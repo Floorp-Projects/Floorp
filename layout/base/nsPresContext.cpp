@@ -1633,8 +1633,8 @@ void nsPresContext::SetPrintSettings(nsIPrintSettings* aPrintSettings) {
                "Unwriteable twips should be non-negative");
 
   nsIntMargin marginTwips = mPrintSettings->GetMarginInTwips();
-  mDefaultPageMargin =
-      nsPresContext::CSSTwipsToAppUnits(marginTwips + unwriteableTwips);
+  marginTwips.EnsureAtLeast(unwriteableTwips);
+  mDefaultPageMargin = nsPresContext::CSSTwipsToAppUnits(marginTwips);
 }
 
 bool nsPresContext::EnsureVisible() {
