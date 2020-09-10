@@ -133,7 +133,7 @@ def run_tests(mach_cmd, **kwargs):
                 # XXX this doc is specific to browsertime scripts
                 # maybe we want to move it
                 if flavor == "doc":
-                    from mozperftest.test.browsertime.script import ScriptInfo
+                    from mozperftest.script import ScriptInfo
 
                     for test in kwargs["tests"]:
                         print(ScriptInfo(test))

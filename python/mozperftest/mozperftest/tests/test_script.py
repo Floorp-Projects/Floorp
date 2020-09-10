@@ -5,16 +5,32 @@
 import mozunit
 import pytest
 
-from mozperftest.test.browsertime.script import ScriptInfo, MissingFieldError
-from mozperftest.tests.support import EXAMPLE_TEST, HERE
+from mozperftest.script import ScriptInfo, MissingFieldError, ScriptType
+from mozperftest.tests.support import (
+    EXAMPLE_TEST,
+    HERE,
+    EXAMPLE_XPCSHELL_TEST,
+    EXAMPLE_XPCSHELL_TEST2,
+)
 
 
-def test_scriptinfo():
+def test_scriptinfo_bt():
     info = ScriptInfo(EXAMPLE_TEST)
     assert info["author"] == "N/A"
 
     display = str(info)
     assert "The description of the example test." in display
+    assert info.script_type == ScriptType.BROWSERTIME
+
+
+@pytest.mark.parametrize("script", [EXAMPLE_XPCSHELL_TEST, EXAMPLE_XPCSHELL_TEST2])
+def test_scriptinfo_xpcshell(script):
+    info = ScriptInfo(script)
+    assert info["author"] == "N/A"
+
+    display = str(info)
+    assert "The description of the example test." in display
+    assert info.script_type == ScriptType.XPCSHELL
 
 
 def test_scriptinfo_failure():
