@@ -140,9 +140,31 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return true;
   }
 
-  MOZ_MUST_USE bool initFrame();
+  MOZ_MUST_USE bool buildOneFrame();
+  bool done();
   void nextFrame();
 
+  JSScript* script() const { return script_; }
+  size_t frameNo() const { return frameNo_; }
+  bool isOutermostFrame() const { return frameNo_ == 0; }
+  MutableHandleValueVector outermostFrameFormals() {
+    return &outermostFrameFormals_;
+  }
+
+  inline JitFrameLayout* startFrame() { return frame_; }
+
+  BaselineBailoutInfo* info() {
+    MOZ_ASSERT(header_);
+    return header_.get();
+  }
+
+  BaselineBailoutInfo* takeBuffer() {
+    MOZ_ASSERT(header_);
+    return header_.release();
+  }
+
+ private:
+  MOZ_MUST_USE bool initFrame();
   MOZ_MUST_USE bool buildBaselineFrame();
   MOZ_MUST_USE bool buildArguments();
   MOZ_MUST_USE bool buildFixedSlots();
@@ -162,7 +184,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   MOZ_MUST_USE bool validateFrame();
 #endif
 
- private:
 #ifdef DEBUG
   bool envChainSlotCanBeOptimized();
 #endif
@@ -172,13 +193,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   jsbytecode* getResumePC();
   void* getStubReturnAddress();
 
- public:
-  JSScript* script() const { return script_; }
-  JSFunction* fun() const { return fun_; }
-
-  MutableHandleValueVector outermostFrameFormals() {
-    return &outermostFrameFormals_;
-  }
   uint32_t exprStackSlots() const { return exprStackSlots_; }
 
   // Returns true if we're bailing out to a catch or finally block in this frame
@@ -195,14 +209,10 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   void* prevFramePtr() const { return prevFramePtr_; }
   BufferPointer<BaselineFrame>& blFrame() { return blFrame_.ref(); }
 
-  size_t frameNo() const { return frameNo_; }
-  bool isOutermostFrame() const { return frameNo_ == 0; }
-
   void setNextCallee(JSFunction* nextCallee);
   JSFunction* nextCallee() const { return nextCallee_; }
 
   jsbytecode* pc() const { return pc_; }
-  JSOp op() const { return op_; }
   bool resumeAfter() const {
     return !catchingException() && iter_.resumeAfter();
   }
@@ -250,16 +260,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     bufferAvail_ = newSize - (sizeof(BaselineBailoutInfo) + bufferUsed_);
     header_ = std::move(newHeader);
     return true;
-  }
-
-  BaselineBailoutInfo* info() {
-    MOZ_ASSERT(header_);
-    return header_.get();
-  }
-
-  BaselineBailoutInfo* takeBuffer() {
-    MOZ_ASSERT(header_);
-    return header_.release();
   }
 
   void resetFramePushed() { framePushed_ = 0; }
@@ -390,8 +390,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     }
     return reinterpret_cast<uint8_t*>(frame_) + (offset - bufferUsed_);
   }
-
-  inline JitFrameLayout* startFrame() { return frame_; }
 
   BufferPointer<JitFrameLayout> topFrameAddress() {
     return pointerAtStackOffset<JitFrameLayout>(0);
@@ -565,6 +563,14 @@ void BaselineStackBuilder::setNextCallee(JSFunction* nextCallee) {
     const uint32_t pcOff = script_->pcToOffset(pc_);
     icScript_ = icScript_->findInlinedChild(pcOff);
   }
+}
+
+bool BaselineStackBuilder::done() {
+  if (!iter_.moreFrames()) {
+    MOZ_ASSERT(!nextCallee_);
+    return true;
+  }
+  return catchingException();
 }
 
 void BaselineStackBuilder::nextFrame() {
@@ -1544,14 +1550,12 @@ bool BaselineStackBuilder::isPrologueBailout() {
 //                      |  ReturnAddr   | <-- return into ArgumentsRectifier after call
 //                      +===============+
 /* clang-format on */
-static bool InitFromBailout(JSContext* cx, JSFunction* fun, JSScript* script,
-                            SnapshotIterator& iter,
-                            BaselineStackBuilder& builder) {
-  if (!builder.initFrame()) {
+bool BaselineStackBuilder::buildOneFrame() {
+  if (!initFrame()) {
     return false;
   }
 
-  // Build first baseline frame:
+  // Build a baseline frame:
   // +===============+
   // | PrevFramePtr  |
   // +---------------+
@@ -1575,60 +1579,55 @@ static bool InitFromBailout(JSContext* cx, JSFunction* fun, JSScript* script,
   // |  ReturnAddr   | <-- return into main jitcode after IC
   // +===============+
 
-  if (!builder.buildBaselineFrame()) {
+  if (!buildBaselineFrame()) {
     return false;
   }
 
-  if (fun && !builder.buildArguments()) {
+  if (fun_ && !buildArguments()) {
     return false;
   }
 
-  if (!builder.buildFixedSlots()) {
+  if (!buildFixedSlots()) {
     return false;
   }
-
-  jsbytecode* const pc = builder.pc();
-  const bool resumeAfter = builder.resumeAfter();
-  const JSOp op = builder.op();
 
   bool fixedUp = false;
-  RootedValueVector savedCallerArgs(cx);
-  if (iter.moreFrames() &&
-      !builder.fixUpCallerArgs(&savedCallerArgs, &fixedUp)) {
+  RootedValueVector savedCallerArgs(cx_);
+  if (iter_.moreFrames() && !fixUpCallerArgs(&savedCallerArgs, &fixedUp)) {
     return false;
   }
 
-  if (!fixedUp && !builder.buildExpressionStack()) {
+  if (!fixedUp && !buildExpressionStack()) {
     return false;
   }
 
 #ifdef DEBUG
-  if (!builder.validateFrame()) {
+  if (!validateFrame()) {
     return false;
   }
 #endif
 
 #ifdef JS_JITSPEW
-  const uint32_t pcOff = script->pcToOffset(pc);
+  const uint32_t pcOff = script_->pcToOffset(pc());
   JitSpew(JitSpew_BaselineBailouts,
           "      Resuming %s pc offset %d (op %s) (line %u) of %s:%u:%u",
-          resumeAfter ? "after" : "at", (int)pcOff, CodeName(op),
-          PCToLineNumber(script, pc), script->filename(), script->lineno(),
-          script->column());
+          resumeAfter() ? "after" : "at", (int)pcOff, CodeName(op_),
+          PCToLineNumber(script_, pc()), script_->filename(), script_->lineno(),
+          script_->column());
   JitSpew(JitSpew_BaselineBailouts, "      Bailout kind: %s",
-          BailoutKindString(iter.bailoutKind()));
+          BailoutKindString(iter_.bailoutKind()));
 #endif
 
   // If this was the last inline frame, or we are bailing out to a catch or
   // finally block in this frame, then unpacking is almost done.
-  if (!iter.moreFrames() || builder.catchingException()) {
-    return builder.finishLastFrame();
+  if (done()) {
+    return finishLastFrame();
   }
 
   // Otherwise, this is an outer frame for an inlined call or
   // accessor. We will be building an inner frame. Before that,
   // we must create a stub frame, and potentially a rectifier frame.
-  return builder.prepareForNextFrame(savedCallerArgs);
+  return prepareForNextFrame(savedCallerArgs);
 }
 
 bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
@@ -1775,18 +1774,12 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 
     JitSpew(JitSpew_BaselineBailouts, "    FrameNo %zu", builder.frameNo());
 
-    if (!InitFromBailout(cx, builder.fun(), builder.script(), snapIter,
-                         builder)) {
+    if (!builder.buildOneFrame()) {
       MOZ_ASSERT(cx->isExceptionPending());
       return false;
     }
 
-    if (!snapIter.moreFrames()) {
-      MOZ_ASSERT(!builder.nextCallee());
-      break;
-    }
-
-    if (builder.catchingException()) {
+    if (builder.done()) {
       break;
     }
 

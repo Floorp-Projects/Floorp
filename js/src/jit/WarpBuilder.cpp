@@ -427,7 +427,7 @@ bool WarpBuilder::buildEnvironmentChain() {
 
   // Update the environment slot from UndefinedValue only after the initial
   // environment is created so that bailout doesn't see a partial environment.
-  // See: |InitFromBailout|
+  // See: |BaselineStackBuilder::buildBaselineFrame|
   current->setEnvironmentChain(envDef);
   return true;
 }
