@@ -2,30 +2,57 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/top_site_item"
     android:layout_width="match_parent"
     android:layout_height="@dimen/top_sites_item_size"
-    android:layout_marginBottom="@dimen/top_sites_item_margin_top"
+    android:layout_marginTop="@dimen/top_sites_item_margin_top"
+    android:layout_marginBottom="@dimen/top_sites_item_margin_bottom"
     android:orientation="vertical">
-
 
     <ImageView
         android:id="@+id/favicon_image"
         style="@style/TopSite.Favicon"
         android:layout_gravity="center"
-        android:importantForAccessibility="no" />
+        android:importantForAccessibility="no"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/top_site_title"
         android:layout_width="64dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/top_sites_text_margin_top"
         android:gravity="center"
         android:singleLine="true"
-        android:layout_gravity="center_horizontal"
         android:textColor="@color/top_site_title_text"
         android:textSize="10sp"
-        android:layout_marginTop="@dimen/top_sites_text_margin_top" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/favicon_image"
+        tools:ignore="SmallSp" />
 
-</LinearLayout>
+    <FrameLayout
+        android:id="@+id/pin_indicator"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:elevation="5dp"
+        android:translationX="8dp"
+        android:translationY="-8dp"
+        android:visibility="gone"
+        app:layout_constraintRight_toLeftOf="@id/favicon_image"
+        app:layout_constraintTop_toTopOf="@id/favicon_image">
+
+        <View
+            android:id="@+id/pin_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="center"
+            android:background="@drawable/ic_pin" />
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
