@@ -77,6 +77,9 @@ extern JS_PUBLIC_API bool CompileOffThread(
 extern JS_PUBLIC_API JSScript* FinishOffThreadScript(JSContext* cx,
                                                      OffThreadToken* token);
 
+extern JS_PUBLIC_API JSScript* FinishOffThreadScriptAndStartIncrementalEncoding(
+    JSContext* cx, OffThreadToken* token);
+
 extern JS_PUBLIC_API void CancelOffThreadScript(JSContext* cx,
                                                 OffThreadToken* token);
 
