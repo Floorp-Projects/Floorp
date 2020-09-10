@@ -62,7 +62,6 @@
 #  define AUTO_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, categoryPair, \
                                            ctx, flags)
 
-#  define PROFILER_ADD_MARKER(markerName, categoryPair)
 #  define PROFILER_ADD_MARKER_WITH_PAYLOAD(markerName, categoryPair, \
                                            PayloadType, payloadArgs)
 #  define PROFILER_ADD_TEXT_MARKER(markerName, text, categoryPair, startTime, \
@@ -888,23 +887,6 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
     mozilla::AutoProfilerLabel PROFILER_RAII(                                  \
         ctx, label, dynamicString, JS::ProfilingCategoryPair::categoryPair,    \
         flags)
-
-// Insert a marker in the profile timeline. This is useful to delimit something
-// important happening such as the first paint. Unlike labels, which are only
-// recorded in the profile buffer if a sample is collected while the label is
-// on the label stack, markers will always be recorded in the profile buffer.
-// aMarkerName is copied, so the caller does not need to ensure it lives for a
-// certain length of time. A no-op if the profiler is inactive.
-
-#  define PROFILER_ADD_MARKER(markerName, categoryPair)                 \
-    do {                                                                \
-      AUTO_PROFILER_STATS(add_marker);                                  \
-      ::profiler_add_marker(markerName,                                 \
-                            ::JS::ProfilingCategoryPair::categoryPair); \
-    } while (false)
-
-void profiler_add_marker(const char* aMarkerName,
-                         JS::ProfilingCategoryPair aCategoryPair);
 
 // `PayloadType` is a sub-class of MarkerPayload, `parenthesizedPayloadArgs` is
 // the argument list used to construct that `PayloadType`. E.g.:

@@ -777,7 +777,7 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
     nsAutoCString strMarker;
     strMarker.AppendLiteral("A11y Event - ");
     strMarker.Append(strEventType);
-    PROFILER_ADD_MARKER(strMarker.get(), OTHER);
+    PROFILER_MARKER_UNTYPED(strMarker, OTHER);
   }
 #endif
 

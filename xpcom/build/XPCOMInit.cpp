@@ -728,7 +728,7 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
 
   mozilla::scache::StartupCache::DeleteSingleton();
 
-  PROFILER_ADD_MARKER("Shutdown xpcom", OTHER);
+  PROFILER_MARKER_UNTYPED("Shutdown xpcom", OTHER);
 
   // Shutdown xpcom. This will release all loaders and cause others holding
   // a refcount to the component manager to release it.

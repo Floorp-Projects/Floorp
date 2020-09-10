@@ -392,7 +392,7 @@ class MediaDecoderStateMachine::DormantState
   explicit DormantState(Master* aPtr) : StateObject(aPtr) {}
 
   void Enter() {
-    PROFILER_ADD_MARKER("MDSM::EnterDormantState", MEDIA_PLAYBACK);
+    PROFILER_MARKER_UNTYPED("MDSM::EnterDormantState", MEDIA_PLAYBACK);
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
     }
@@ -1401,7 +1401,7 @@ class MediaDecoderStateMachine::AccurateSeekingState
            "] target=%" PRId64,
            aVideo->mTime.ToMicroseconds(),
            aVideo->GetEndTime().ToMicroseconds(), target.ToMicroseconds());
-      PROFILER_ADD_MARKER("MDSM::DropVideoUpToSeekTarget", MEDIA_PLAYBACK);
+      PROFILER_MARKER_UNTYPED("MDSM::DropVideoUpToSeekTarget", MEDIA_PLAYBACK);
       mFirstVideoFrameAfterSeek = aVideo;
     } else {
       if (target >= aVideo->mTime && aVideo->GetEndTime() >= target) {
@@ -1880,7 +1880,7 @@ class MediaDecoderStateMachine::BufferingState
   explicit BufferingState(Master* aPtr) : StateObject(aPtr) {}
 
   void Enter() {
-    PROFILER_ADD_MARKER("MDSM::EnterBufferingState", MEDIA_PLAYBACK);
+    PROFILER_MARKER_UNTYPED("MDSM::EnterBufferingState", MEDIA_PLAYBACK);
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
     }
@@ -2629,7 +2629,7 @@ void MediaDecoderStateMachine::BufferingState::HandleEndOfVideo() {
 }
 
 RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
-  PROFILER_ADD_MARKER("MDSM::EnterShutdownState", MEDIA_PLAYBACK);
+  PROFILER_MARKER_UNTYPED("MDSM::EnterShutdownState", MEDIA_PLAYBACK);
   auto master = mMaster;
 
   master->mDelayedScheduler.Reset();
@@ -3158,7 +3158,7 @@ void MediaDecoderStateMachine::BufferedRangeUpdated() {
 RefPtr<MediaDecoder::SeekPromise> MediaDecoderStateMachine::Seek(
     const SeekTarget& aTarget) {
   AUTO_PROFILER_LABEL("MediaDecoderStateMachine::Seek", MEDIA_PLAYBACK);
-  PROFILER_ADD_MARKER("MDSM::Seek", MEDIA_PLAYBACK);
+  PROFILER_MARKER_UNTYPED("MDSM::Seek", MEDIA_PLAYBACK);
   MOZ_ASSERT(OnTaskQueue());
 
   // We need to be able to seek in some way

@@ -85,7 +85,7 @@ void nsDOMNavigationTiming::NotifyNavigationStart(
   mNavigationStart = TimeStamp::Now();
   mDocShellHasBeenActiveSinceNavigationStart =
       (aDocShellState == DocShellState::eActive);
-  PROFILER_ADD_MARKER("Navigation::Start", DOM);
+  PROFILER_MARKER_UNTYPED("Navigation::Start", DOM);
 }
 
 void nsDOMNavigationTiming::NotifyFetchStart(nsIURI* aURI,
@@ -200,7 +200,7 @@ void nsDOMNavigationTiming::NotifyDOMLoading(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMLoading = TimeStamp::Now();
 
-  PROFILER_ADD_MARKER("Navigation::DOMLoading", DOM);
+  PROFILER_MARKER_UNTYPED("Navigation::DOMLoading", DOM);
 }
 
 void nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI) {
@@ -210,7 +210,7 @@ void nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMInteractive = TimeStamp::Now();
 
-  PROFILER_ADD_MARKER("Navigation::DOMInteractive", DOM);
+  PROFILER_MARKER_UNTYPED("Navigation::DOMInteractive", DOM);
 }
 
 void nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI) {
@@ -220,7 +220,7 @@ void nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMComplete = TimeStamp::Now();
 
-  PROFILER_ADD_MARKER("Navigation::DOMComplete", DOM);
+  PROFILER_MARKER_UNTYPED("Navigation::DOMComplete", DOM);
 }
 
 void nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI) {

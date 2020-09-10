@@ -48,7 +48,7 @@ void ProfilerScreenshots::SubmitScreenshot(
   bool succeeded = aPopulateSurface(backingSurface);
 
   if (!succeeded) {
-    PROFILER_ADD_MARKER(
+    PROFILER_MARKER_UNTYPED(
         "NoCompositorScreenshot because aPopulateSurface callback failed",
         GRAPHICS);
     ReturnSurface(backingSurface);
