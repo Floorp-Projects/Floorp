@@ -680,6 +680,11 @@ class ICFallbackStub : public ICStub {
 
   inline size_t numOptimizedStubs() const { return state_.numOptimizedStubs(); }
 
+  bool newStubIsFirstStub() const {
+    return (state_.mode() == ICState::Mode::Specialized &&
+            numOptimizedStubs() == 0);
+  }
+
   ICState& state() { return state_; }
 
   // The icEntry_ field can't be initialized when the stub is created since we
