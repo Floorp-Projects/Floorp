@@ -722,9 +722,6 @@ add_task(async function testAboutPage() {
         if (cachedAddon.isDefault) {
           ok(!joinButton, "There is no join button for default study.");
         } else {
-          if (!joinButton.disabled) {
-            Services.tm.spinEventLoopUntil(() => {});
-          }
           ok(
             joinButton.disabled,
             "After unenrollment, join button is disabled."
