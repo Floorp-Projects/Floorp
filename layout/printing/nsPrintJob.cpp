@@ -651,26 +651,23 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // The dialog is not shown, but this means we don't need to access the printer
   // driver from the child, which causes sandboxing issues.
   if (!mIsCreatingPrintPreview || printingViaParent) {
-    bool printSilentOnSettings = false;
-    printData->mPrintSettings->GetPrintSilent(&printSilentOnSettings);
-
-    bool printSilently =
-        printSilentOnSettings || StaticPrefs::print_always_print_silent();
+    bool printSilently = false;
+    printData->mPrintSettings->GetPrintSilent(&printSilently);
+    if (StaticPrefs::print_always_print_silent()) {
+      printSilently = true;
+    }
 
     // The new print UI does not need to enter ShowPrintDialog below to spin
     // the event loop and fetch real printer settings from the parent process,
     // since it always passes complete print settings. (In fact, trying to
     // fetch them from the parent can cause crashes.) Here we check for that
     // case so that we can avoid calling ShowPrintDialog below. To err on the
-    // safe side, we exclude the old UI and non-frontend callers
-    // (Extensions.tabs.saveAsPDF()) which set `printSilent` on the settings
-    // object.
-    // We should remove the exception for tabx.saveAsPDF soon:
-    //   https://bugzilla.mozilla.org/show_bug.cgi?id=1662222
-    // Slightly longer term we'll remove the old print UI, and even change the
-    // check for `isInitializedFromPrinter` to a MOZ_DIAGNOSTIC_ASSERT.
+    // safe side, we exclude the old UI.
+    //
+    // TODO: We should MOZ_DIAGNOSTIC_ASSERT that GetIsInitializedFromPrinter
+    // returns true.
     bool settingsAreComplete = false;
-    if (StaticPrefs::print_tab_modal_enabled() && !printSilentOnSettings) {
+    if (StaticPrefs::print_tab_modal_enabled()) {
       printData->mPrintSettings->GetIsInitializedFromPrinter(
           &settingsAreComplete);
     }
