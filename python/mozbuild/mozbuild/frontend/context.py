@@ -1998,10 +1998,6 @@ VARIABLES = {
                                   """List of manifest files defining python unit tests.
         """),
 
-    'PERFTESTS_MANIFESTS': (ManifestparserManifestList, list,
-                            """List of manifest files defining MozPerftest performance tests.
-        """),
-
     'CRAMTEST_MANIFESTS': (ManifestparserManifestList, list,
                            """List of manifest files defining cram unit tests.
         """),

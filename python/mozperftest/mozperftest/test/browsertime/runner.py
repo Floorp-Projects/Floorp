@@ -12,7 +12,7 @@ from pathlib import Path
 
 from mozperftest.utils import install_package
 from mozperftest.test.noderunner import NodeRunner
-from mozperftest.script import ScriptInfo
+from mozperftest.test.browsertime.script import ScriptInfo
 
 
 BROWSERTIME_SRC_ROOT = Path(__file__).parent
