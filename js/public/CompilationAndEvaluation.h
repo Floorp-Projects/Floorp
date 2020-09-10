@@ -164,6 +164,14 @@ extern JS_PUBLIC_API JSScript* Compile(JSContext* cx,
                                        const ReadOnlyCompileOptions& options,
                                        SourceText<mozilla::Utf8Unit>& srcBuf);
 
+extern JS_PUBLIC_API JSScript* CompileAndStartIncrementalEncoding(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf);
+
+extern JS_PUBLIC_API JSScript* CompileAndStartIncrementalEncoding(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<mozilla::Utf8Unit>& srcBuf);
+
 /**
  * Compile the UTF-8 contents of the given file into a script.  It is an error
  * if the file contains invalid UTF-8.  Return the script on success, or return

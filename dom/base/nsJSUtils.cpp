@@ -220,14 +220,14 @@ nsresult nsJSUtils::ExecutionContext::InternalCompile(
     aCompileOptions.setNonSyntacticScope(true);
   }
 
-  mScript = JS::Compile(mCx, aCompileOptions, aSrcBuf);
-  if (!mScript) {
-    mSkip = true;
-    mRv = EvaluationExceptionToNSResult(mCx);
-    return mRv;
+  if (mEncodeBytecode) {
+    mScript =
+        JS::CompileAndStartIncrementalEncoding(mCx, aCompileOptions, aSrcBuf);
+  } else {
+    mScript = JS::Compile(mCx, aCompileOptions, aSrcBuf);
   }
 
-  if (mEncodeBytecode && !StartIncrementalEncoding(mCx, mScript)) {
+  if (!mScript) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;
