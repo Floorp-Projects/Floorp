@@ -170,14 +170,6 @@ add_task(async function test_replace_temporary() {
         continue;
       }
 
-      // Unpacked extensions don't support signing, which means that
-      // our mock signing service is not able to give them a
-      // privileged signed state, and we can't install them on release
-      // builds.
-      if (!packed && !AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-        continue;
-      }
-
       let files = ExtensionTestCommon.generateFiles({
         manifest: {
           name: "Test",
