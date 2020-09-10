@@ -74,6 +74,9 @@
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Agora non</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Pues afitar que Firefox abra automáticamente enllaces nes aplicaciones.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Dir a Axustes</string>
     <!-- Text for the negative action button -->
