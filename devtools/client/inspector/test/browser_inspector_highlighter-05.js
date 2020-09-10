@@ -56,8 +56,11 @@ add_task(async function() {
   await navigateTo(TEST_URL);
 
   info("Shows the box model highligher for the <p> node.");
-  const divFront = await getNodeFront("p", inspector);
-  await inspector.highlighter.showBoxModel(divFront);
+  const nodeFront = await getNodeFront("p", inspector);
+  await inspector.highlighters.showHighlighterTypeForNode(
+    inspector.highlighters.TYPES.BOXMODEL,
+    nodeFront
+  );
 
   info("Check the node is highlighted.");
   is(

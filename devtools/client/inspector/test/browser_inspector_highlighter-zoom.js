@@ -21,7 +21,6 @@ const expectedStyle = (w, h, z) =>
 
 add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_URL);
-  const highlighter = inspector.highlighter;
 
   const div = await getNodeFront("div", inspector);
 
@@ -30,7 +29,10 @@ add_task(async function() {
     await testActor.zoomPageTo(level, false);
 
     info("Highlight the test node");
-    await highlighter.highlight(div);
+    await inspector.highlighters.showHighlighterTypeForNode(
+      inspector.highlighters.TYPES.BOXMODEL,
+      div
+    );
 
     const isVisible = await testActor.isHighlighting();
     ok(isVisible, `The highlighter is visible at zoom level ${level}`);
@@ -48,7 +50,9 @@ add_task(async function() {
     );
 
     info("Unhighlight the node");
-    await highlighter.unhighlight();
+    await inspector.highlighters.hideHighlighterType(
+      inspector.highlighters.TYPES.BOXMODEL
+    );
   }
 });
 

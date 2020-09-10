@@ -81,8 +81,6 @@ var startEyeDropper = async function(toolbox) {
  *
  * @param {Inspector} inspector
  *        Inspector instance
- * @param {TestActor} testActor
- *        TestActor instance
  * @param {String} selector
  *        CSS selector to identify the click target
  * @param {Number} x
@@ -92,12 +90,18 @@ var startEyeDropper = async function(toolbox) {
  * @return {Promise} promise that resolves when the selection is updated with the picked
  *         node.
  */
-function pickElement(inspector, testActor, selector, x, y) {
+function pickElement(inspector, selector, x, y) {
   info("Waiting for element " + selector + " to be picked");
   // Use an empty options argument in order trigger the default synthesizeMouse behavior
   // which will trigger mousedown, then mouseup.
   const onNewNodeFront = inspector.selection.once("new-node-front");
-  testActor.synthesizeMouse({ selector, x, y, options: {} });
+  BrowserTestUtils.synthesizeMouse(
+    selector,
+    x,
+    y,
+    {},
+    gBrowser.selectedTab.linkedBrowser
+  );
   return onNewNodeFront;
 }
 
@@ -106,22 +110,94 @@ function pickElement(inspector, testActor, selector, x, y) {
  *
  * @param {Inspector} inspector
  *        Inspector instance
- * @param {TestActor} testActor
- *        TestActor instance
- * @param {String} selector
- *        CSS selector to identify the hover target
+ * @param {String|Array} selector
+ *        CSS selector to identify the hover target.
+ *        Example: ".target"
+ *        If the element is at the bottom of a nested iframe stack, the selector should
+ *        be an array with each item identifying the iframe within its host document.
+ *        The last item of the array should be the element selector within the deepest
+ *        nested iframe.
+          Example: ["iframe#top", "iframe#nested", ".target"]
  * @param {Number} x
  *        X-offset from the top-left corner of the element matching the provided selector
  * @param {Number} y
  *        Y-offset from the top-left corner of the element matching the provided selector
- * @return {Promise} promise that resolves when the "picker-node-hovered" event is
- *         emitted.
+ * @return {Promise} promise that resolves when both the "picker-node-hovered" and
+ *                   "highlighter-shown" events are emitted.
  */
-function hoverElement(inspector, testActor, selector, x, y) {
+async function hoverElement(inspector, selector, x, y) {
   info("Waiting for element " + selector + " to be hovered");
   const onHovered = inspector.toolbox.nodePicker.once("picker-node-hovered");
-  testActor.synthesizeMouse({ selector, x, y, options: { type: "mousemove" } });
-  return onHovered;
+  const onHighlighterShown = inspector.highlighters.once(
+    "box-model-highlighter-shown"
+  );
+
+  // Default to the top-level target browsing context
+  let browsingContext = gBrowser.selectedTab.linkedBrowser;
+
+  if (Array.isArray(selector)) {
+    // Get the browsing context for the deepest nested frame; exclude the last array item.
+    // Cloning the array so it can be safely mutated.
+    browsingContext = await getBrowsingContextForNestedFrame(
+      selector.slice(0, selector.length - 1)
+    );
+    // Assume the last item in the selector array is the actual element selector.
+    // DO NOT mutate the selector array with .pop(), it might still be used by a test.
+    selector = selector[selector.length - 1];
+  }
+
+  if (isNaN(x) || isNaN(y)) {
+    BrowserTestUtils.synthesizeMouseAtCenter(
+      selector,
+      { type: "mousemove" },
+      browsingContext
+    );
+  } else {
+    BrowserTestUtils.synthesizeMouse(
+      selector,
+      x,
+      y,
+      { type: "mousemove" },
+      browsingContext
+    );
+  }
+
+  return Promise.all([onHighlighterShown, onHovered]);
+}
+
+/**
+ * Get the browsing context for the deepest nested iframe
+ * as identified by an array of selectors.
+ *
+ * @param  {Array} selectorArray
+ *         Each item in the array is a selector that identifies the iframe
+ *         within its host document.
+ *         Example: ["iframe#top", "iframe#nested"]
+ * @return {BrowsingContext}
+ *         BrowsingContext for the deepest nested iframe.
+ */
+async function getBrowsingContextForNestedFrame(selectorArray = []) {
+  // Default to the top-level target browsing context
+  let browsingContext = gBrowser.selectedTab.linkedBrowser;
+
+  // Return the top-level target browsing context if the selector is not an array.
+  if (!Array.isArray(selectorArray)) {
+    return browsingContext;
+  }
+
+  // Recursively get the browsing context for each nested iframe.
+  while (selectorArray.length) {
+    browsingContext = await SpecialPowers.spawn(
+      browsingContext,
+      [selectorArray.shift()],
+      function(selector) {
+        const iframe = content.document.querySelector(selector);
+        return iframe.browsingContext;
+      }
+    );
+  }
+
+  return browsingContext;
 }
 
 /**

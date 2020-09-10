@@ -109,11 +109,6 @@ async function testNavigate(inspector, testActor, ruleview) {
   await selectNode("#div-1", inspector);
 }
 
-async function showPickerOn(selector, inspector) {
-  const nodeFront = await getNodeFront(selector, inspector);
-  await inspector.highlighter.showBoxModel(nodeFront);
-}
-
 async function assertPseudoAddedToNode(
   inspector,
   testActor,
@@ -147,14 +142,20 @@ async function assertPseudoAddedToNode(
   );
 
   info("Show the highlighter on " + selector);
-  await showPickerOn(selector, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
+  await inspector.highlighters.showHighlighterTypeForNode(
+    inspector.highlighters.TYPES.BOXMODEL,
+    nodeFront
+  );
 
   info("Check that the infobar selector contains the pseudo-class");
   const value = await testActor.getHighlighterNodeTextContent(
     "box-model-infobar-pseudo-classes"
   );
   is(value, PSEUDO, "pseudo-class in infobar selector");
-  await inspector.highlighter.hideBoxModel();
+  await inspector.highlighters.hideHighlighterType(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
 }
 
 async function assertPseudoRemovedFromNode(testActor, selector) {
@@ -181,11 +182,17 @@ async function assertPseudoRemovedFromView(
   const rules = ruleview.element.querySelectorAll(".ruleview-rule");
   is(rules.length, 2, "rule view is showing 2 rules after removing lock");
 
-  await showPickerOn(selector, inspector);
+  const nodeFront = await getNodeFront(selector, inspector);
+  await inspector.highlighters.showHighlighterTypeForNode(
+    inspector.highlighters.TYPES.BOXMODEL,
+    nodeFront
+  );
 
   const value = await testActor.getHighlighterNodeTextContent(
     "box-model-infobar-pseudo-classes"
   );
   is(value, "", "pseudo-class removed from infobar selector");
-  await inspector.highlighter.hideBoxModel();
+  await inspector.highlighters.hideHighlighterType(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
 }

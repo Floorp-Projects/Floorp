@@ -37,13 +37,16 @@ add_task(async function() {
 
   info("Waiting for box mode to show.");
   const body = await getNodeFront("body", inspector);
-  await inspector.highlighter.showBoxModel(body);
+  await inspector.highlighters.showHighlighterTypeForNode(
+    inspector.highlighters.TYPES.BOXMODEL,
+    body
+  );
 
   info("Waiting for element picker to become active.");
   await startPicker(toolbox);
 
   info("Moving mouse over iframe padding.");
-  await moveMouseOver("iframe", 1, 1);
+  await hoverElement(inspector, "iframe", 1, 1);
 
   info("Performing checks");
   await testActor.isNodeCorrectlyHighlighted("iframe", is);
@@ -56,7 +59,7 @@ add_task(async function() {
   const iframeBodySelector = ["iframe", "body"];
 
   info("Moving mouse over iframe body");
-  await moveMouseOver("iframe", 40, 40);
+  await hoverElement(inspector, "iframe", 40, 40);
 
   ok(
     await testActor.assertHighlightedNode(iframeBodySelector),
@@ -66,15 +69,4 @@ add_task(async function() {
 
   info("Waiting for the element picker to deactivate.");
   await toolbox.nodePicker.stop();
-
-  function moveMouseOver(selector, x, y) {
-    info("Waiting for element " + selector + " to be highlighted");
-    testActor.synthesizeMouse({
-      selector,
-      x,
-      y,
-      options: { type: "mousemove" },
-    });
-    return toolbox.nodePicker.once("picker-node-hovered");
-  }
 });

@@ -33,7 +33,10 @@ add_task(async function() {
 
   info("Show the box-model highlighter");
   const divFront = await getNodeFront("div", inspector);
-  await inspector.highlighter.showBoxModel(divFront);
+  await inspector.highlighters.showHighlighterTypeForNode(
+    inspector.highlighters.TYPES.BOXMODEL,
+    divFront
+  );
 
   for (const id of ELEMENTS) {
     const foundId = await testActor.getHighlighterNodeAttribute(id, "id");
@@ -41,5 +44,7 @@ add_task(async function() {
   }
 
   info("Hide the box-model highlighter");
-  await inspector.highlighter.hideBoxModel();
+  await inspector.highlighters.hideHighlighterType(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
 });

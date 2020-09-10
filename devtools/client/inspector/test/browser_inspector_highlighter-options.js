@@ -241,11 +241,17 @@ add_task(async function() {
     info("Running test: " + desc);
 
     info("Show the box-model highlighter with options " + options);
-    await inspector.highlighter.showBoxModel(divFront, options);
+    await inspector.highlighters.showHighlighterTypeForNode(
+      inspector.highlighters.TYPES.BOXMODEL,
+      divFront,
+      options
+    );
 
     await checkHighlighter(testActor);
 
     info("Hide the box-model highlighter");
-    await inspector.highlighter.hideBoxModel();
+    await inspector.highlighters.hideHighlighterType(
+      inspector.highlighters.TYPES.BOXMODEL
+    );
   }
 });

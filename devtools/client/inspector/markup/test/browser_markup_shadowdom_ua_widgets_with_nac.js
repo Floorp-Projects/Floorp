@@ -31,14 +31,14 @@ add_task(async function testMarkupView() {
 });
 
 add_task(async function testElementPicker() {
-  const { inspector, markup, toolbox, testActor } = await setup();
+  const { inspector, markup, toolbox } = await setup();
 
   info("Waiting for element picker to become active.");
   await startPicker(toolbox);
 
   info("Move mouse over the video element and pick");
-  await hoverElement(inspector, testActor, TEST_ID, 50, 50);
-  await pickElement(inspector, testActor, TEST_ID, 50, 50);
+  await hoverElement(inspector, TEST_ID, 50, 50);
+  await pickElement(inspector, TEST_ID, 50, 50);
 
   info(
     "Check that the markup view has the expected content after using the picker"

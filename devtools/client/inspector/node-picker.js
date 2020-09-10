@@ -122,12 +122,6 @@ class NodePicker extends EventEmitter {
    * Stop the picker, but also emit an event that the picker was canceled.
    */
   async cancel() {
-    // TODO: Remove once migrated to process-agnostic box model highlighter (Bug 1646028)
-    Promise.all(
-      this._currentInspectorFronts.map(({ highlighter }) =>
-        highlighter.hideBoxModel()
-      )
-    ).catch(e => console.error);
     await this.stop();
     this.emit("picker-node-canceled");
   }
@@ -138,24 +132,8 @@ class NodePicker extends EventEmitter {
    * @param {Object} data
    *        Information about the node being hovered
    */
-  async _onHovered(data) {
+  _onHovered(data) {
     this.emit("picker-node-hovered", data.node);
-
-    // TODO: Remove once migrated to process-agnostic box model highlighter (Bug 1646028)
-    await data.node.highlighterFront.showBoxModel(data.node);
-
-    // One of the HighlighterActor instances, in one of the current targets, is hovering
-    // over a node. Because we may be connected to several targets, we have several
-    // HighlighterActor instances running at the same time. Tell the ones that don't match
-    // the hovered node to hide themselves to avoid having several highlighters visible at
-    // the same time.
-    const unmatchedInspectors = this._currentInspectorFronts.filter(
-      ({ highlighter }) => highlighter !== data.node.highlighterFront
-    );
-
-    Promise.all(
-      unmatchedInspectors.map(({ highlighter }) => highlighter.hideBoxModel())
-    ).catch(e => console.error);
   }
 
   /**
@@ -176,11 +154,8 @@ class NodePicker extends EventEmitter {
    * @param {Object} data
    *        Information about the picked node
    */
-  async _onPreviewed(data) {
+  _onPreviewed(data) {
     this.emit("picker-node-previewed", data.node);
-
-    // TODO: Remove once migrated to process-agnostic box model highlighter (Bug 1646028)
-    await data.node.highlighterFront.showBoxModel(data.node);
   }
 
   /**

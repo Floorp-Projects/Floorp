@@ -32,14 +32,14 @@ add_task(async function() {
   await startPicker(inspector.toolbox);
 
   info("Moving mouse over outerFrameDiv");
-  await moveMouseOver(outerFrameDiv);
+  await hoverElement(inspector, outerFrameDiv);
   ok(
     await testActor.assertHighlightedNode(outerFrameDiv),
     "outerFrameDiv is highlighted."
   );
 
   info("Moving mouse over innerFrameDiv");
-  await moveMouseOver(innerFrameDiv);
+  await hoverElement(inspector, innerFrameDiv);
   ok(
     await testActor.assertHighlightedNode(innerFrameDiv),
     "innerFrameDiv is highlighted."
@@ -69,15 +69,4 @@ add_task(async function() {
 
   info("Waiting for element picker to deactivate.");
   await toolbox.nodePicker.stop();
-
-  function moveMouseOver(selector) {
-    info("Waiting for element " + selector + " to be highlighted");
-    testActor
-      .synthesizeMouse({
-        selector: selector,
-        options: { type: "mousemove" },
-        center: true,
-      })
-      .then(() => toolbox.nodePicker.once("picker-node-hovered"));
-  }
 });
