@@ -246,6 +246,7 @@ class MarkerCategory {
 };
 
 namespace baseprofiler::category {
+
 // Each category-pair (aka subcategory) name constructs a MarkerCategory.
 // E.g.: mozilla::baseprofiler::category::OTHER_Profiling
 // Profiler macros will take the category name alone.
@@ -261,6 +262,13 @@ MOZ_PROFILING_CATEGORY_LIST(CATEGORY_ENUM_BEGIN_CATEGORY,
 #  undef CATEGORY_ENUM_BEGIN_CATEGORY
 #  undef CATEGORY_ENUM_SUBCATEGORY
 #  undef CATEGORY_ENUM_END_CATEGORY
+
+// Import `MarkerCategory` into this namespace. This will allow using this type
+// dynamically in macros that prepend `::mozilla::baseprofiler::category::` to
+// the given category, e.g.: E.g.:
+// `PROFILER_MARKER_UNTYPED("name", MarkerCategory(...))`
+using MarkerCategory = ::mozilla::MarkerCategory;
+
 }  // namespace baseprofiler::category
 
 // This marker option captures a given thread id.
@@ -630,6 +638,16 @@ template <typename... Options>
 MarkerOptions MarkerCategory::WithOptions(Options&&... aOptions) const {
   return MarkerOptions(*this, std::forward<Options>(aOptions)...);
 }
+
+namespace baseprofiler::category {
+
+// Import `MarkerOptions` into this namespace. This will allow using this type
+// dynamically in macros that prepend `::mozilla::baseprofiler::category::` to
+// the given category, e.g.: E.g.:
+// `PROFILER_MARKER_UNTYPED("name", MarkerOptions(...))`
+using MarkerOptions = ::mozilla::MarkerOptions;
+
+}  // namespace baseprofiler::category
 
 }  // namespace mozilla
 
