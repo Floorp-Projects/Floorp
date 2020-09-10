@@ -8,7 +8,6 @@
 #define DOM_SVG_SVGTEXTCONTENTELEMENT_H_
 
 #include "mozilla/dom/SVGGraphicsElement.h"
-#include "DOMSVGAnimatedEnumeration.h"
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedLength.h"
 
@@ -19,6 +18,7 @@ class SVGTextFrame;
 namespace dom {
 
 struct DOMPointInit;
+class DOMSVGAnimatedEnumeration;
 class DOMSVGPoint;
 class SVGRect;
 
