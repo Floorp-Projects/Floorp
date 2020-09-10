@@ -92,6 +92,14 @@ JS_PUBLIC_API JSScript* JS::FinishOffThreadScript(JSContext* cx,
   return HelperThreadState().finishScriptParseTask(cx, token);
 }
 
+JS_PUBLIC_API JSScript* JS::FinishOffThreadScriptAndStartIncrementalEncoding(
+    JSContext* cx, JS::OffThreadToken* token) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+  return HelperThreadState().finishScriptParseTask(cx, token,
+                                                   StartEncoding::Yes);
+}
+
 JS_PUBLIC_API void JS::CancelOffThreadScript(JSContext* cx,
                                              JS::OffThreadToken* token) {
   MOZ_ASSERT(cx);
