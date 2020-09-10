@@ -911,8 +911,7 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
   }
 
   uint32_t initial = 0;
-  if (!initialVal.isUndefined() &&
-      !EnforceRangeU32(cx, initialVal, kind, "initial size", &initial)) {
+  if (!EnforceRangeU32(cx, initialVal, kind, "initial size", &initial)) {
     return false;
   }
   limits->initial = initial;
@@ -923,30 +922,6 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
     return false;
   }
 
-#ifdef ENABLE_WASM_TYPE_REFLECTIONS
-  // Get minimum parameter.
-  JSAtom* minimumAtom = Atomize(cx, "minimum", strlen("minimum"));
-  if (!minimumAtom) {
-    return false;
-  }
-  RootedId minimumId(cx, AtomToId(minimumAtom));
-
-  RootedValue minimumVal(cx);
-  if (!GetProperty(cx, obj, obj, minimumId, &minimumVal)) {
-    return false;
-  }
-
-  uint32_t minimum = 0;
-  if (!minimumVal.isUndefined() &&
-      !EnforceRangeU32(cx, minimumVal, kind, "initial size", &minimum)) {
-    return false;
-  }
-  if (!minimumVal.isUndefined()) {
-    limits->initial = minimum;
-  }
-#endif
-
-  // Get maximum parameter.
   JSAtom* maximumAtom = Atomize(cx, "maximum", strlen("maximum"));
   if (!maximumAtom) {
     return false;
@@ -1009,21 +984,6 @@ static bool GetLimits(JSContext* cx, HandleObject obj, uint32_t maximumField,
       }
     }
   }
-
-#ifdef ENABLE_WASM_TYPE_REFLECTIONS
-  // Check both minimum and initial are not supplied.
-  if (minimumVal.isUndefined() == initialVal.isUndefined()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_SUPPLY_ONLY_ONE, "minimum", "initial");
-    return false;
-  }
-#else
-  if (initialVal.isUndefined()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_MISSING_REQUIRED, "initial");
-    return false;
-  }
-#endif
 
   return true;
 }
@@ -2158,6 +2118,7 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
                              JSMSG_WASM_MEM_IMP_LIMIT);
     return false;
   }
+
   ConvertMemoryPagesToBytes(&limits);
 
   RootedArrayBufferObjectMaybeShared buffer(cx);
