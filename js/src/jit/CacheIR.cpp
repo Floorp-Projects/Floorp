@@ -182,6 +182,9 @@ PropertyName* CacheIRCloner::getPropertyNameField(uint32_t stubOffset) {
 JS::Symbol* CacheIRCloner::getSymbolField(uint32_t stubOffset) {
   return reinterpret_cast<JS::Symbol*>(readStubWord(stubOffset));
 }
+BaseScript* CacheIRCloner::getBaseScriptField(uint32_t stubOffset) {
+  return reinterpret_cast<BaseScript*>(readStubWord(stubOffset));
+}
 uintptr_t CacheIRCloner::getRawWordField(uint32_t stubOffset) {
   return reinterpret_cast<uintptr_t>(readStubWord(stubOffset));
 }

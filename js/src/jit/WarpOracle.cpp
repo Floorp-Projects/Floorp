@@ -1067,6 +1067,10 @@ bool WarpScriptOracle::replaceNurseryPointers(ICStub* stub,
         static_assert(std::is_convertible_v<JS::Symbol*, gc::TenuredCell*>,
                       "Code assumes symbols are tenured");
         break;
+      case StubField::Type::BaseScript:
+        static_assert(std::is_convertible_v<BaseScript*, gc::TenuredCell*>,
+                      "Code assumes scripts are tenured");
+        break;
       case StubField::Type::JSObject: {
         JSObject* obj = stubInfo->getStubField<ICStub, JSObject*>(stub, offset);
         if (IsInsideNursery(obj)) {
