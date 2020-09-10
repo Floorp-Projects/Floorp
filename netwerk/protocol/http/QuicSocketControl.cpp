@@ -8,6 +8,7 @@
 
 #include "Http3Session.h"
 #include "SharedCertVerifier.h"
+#include "nsISocketProvider.h"
 #include "nsIWebProgressListener.h"
 #include "nsNSSComponent.h"
 #include "nsWeakReference.h"
@@ -101,6 +102,34 @@ void QuicSocketControl::SetInfo(uint16_t aCipherSuite,
     mKeaGroup = getKeaGroupName(aKeaGroup);
     mSignatureSchemeName = getSignatureName(aSignatureScheme);
   }
+}
+
+NS_IMETHODIMP QuicSocketControl::GetPeerId(nsACString& aResult) {
+  if (!mPeerId.IsEmpty()) {
+    aResult.Assign(mPeerId);
+    return NS_OK;
+  }
+
+  if (mProviderFlags &
+      nsISocketProvider::ANONYMOUS_CONNECT) {  // See bug 466080
+    mPeerId.AppendLiteral("anon:");
+  }
+  if (mProviderFlags & nsISocketProvider::NO_PERMANENT_STORAGE) {
+    mPeerId.AppendLiteral("private:");
+  }
+  if (mProviderFlags & nsISocketProvider::BE_CONSERVATIVE) {
+    mPeerId.AppendLiteral("beConservative:");
+  }
+
+  mPeerId.Append(GetHostName());
+  mPeerId.Append(':');
+  mPeerId.AppendInt(GetPort());
+  nsAutoCString suffix;
+  GetOriginAttributes().CreateSuffix(suffix);
+  mPeerId.Append(suffix);
+
+  aResult.Assign(mPeerId);
+  return NS_OK;
 }
 
 }  // namespace net

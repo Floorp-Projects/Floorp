@@ -41,6 +41,9 @@ class SSLTokensCache : public nsIMemoryReporter {
 
   static nsresult Put(const nsACString& aKey, const uint8_t* aToken,
                       uint32_t aTokenLen, nsITransportSecurityInfo* aSecInfo);
+  static nsresult Put(const nsACString& aKey, const uint8_t* aToken,
+                      uint32_t aTokenLen, nsITransportSecurityInfo* aSecInfo,
+                      PRUint32 aExpirationTime);
   static nsresult Get(const nsACString& aKey, nsTArray<uint8_t>& aToken);
   static bool GetSessionCacheInfo(const nsACString& aKey,
                                   SessionCacheInfo& aResult);
