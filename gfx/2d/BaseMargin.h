@@ -104,6 +104,22 @@ struct BaseMargin {
     return *static_cast<Sub*>(this);
   }
 
+  // Ensures that all our sides are at least as big as the argument.
+  void EnsureAtLeast(const BaseMargin& aMargin) {
+    top = std::max(top, aMargin.top);
+    right = std::max(right, aMargin.right);
+    bottom = std::max(bottom, aMargin.bottom);
+    left = std::max(left, aMargin.left);
+  }
+
+  // Ensures that all our sides are at most as big as the argument.
+  void EnsureAtMost(const BaseMargin& aMargin) {
+    top = std::min(top, aMargin.top);
+    right = std::min(right, aMargin.right);
+    bottom = std::min(bottom, aMargin.bottom);
+    left = std::min(left, aMargin.left);
+  }
+
   // Overloaded operators. Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
   bool operator==(const Sub& aMargin) const {
