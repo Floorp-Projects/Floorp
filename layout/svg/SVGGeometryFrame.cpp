@@ -198,11 +198,25 @@ bool SVGGeometryFrame::IsSVGTransformed(
 
 void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists) {
-  if (!static_cast<const SVGElement*>(GetContent())->HasValidDimensions() ||
-      ((!IsVisibleForPainting() || StyleEffects()->mOpacity == 0.0f) &&
-       aBuilder->IsForPainting())) {
+  if (!static_cast<const SVGElement*>(GetContent())->HasValidDimensions()) {
     return;
   }
+
+  if (aBuilder->IsForPainting()) {
+    if (!IsVisibleForPainting()) {
+      return;
+    }
+    if (StyleEffects()->mOpacity == 0.0f) {
+      return;
+    }
+    const auto* styleSVG = StyleSVG();
+    if (Type() != LayoutFrameType::SVGImage && styleSVG->mFill.kind.IsNone() &&
+        styleSVG->mStroke.kind.IsNone() && styleSVG->mMarkerEnd.IsNone() &&
+        styleSVG->mMarkerMid.IsNone() && styleSVG->mMarkerStart.IsNone()) {
+      return;
+    }
+  }
+
   DisplayOutline(aBuilder, aLists);
   aLists.Content()->AppendNewToTop<DisplaySVGGeometry>(aBuilder, this);
 }
