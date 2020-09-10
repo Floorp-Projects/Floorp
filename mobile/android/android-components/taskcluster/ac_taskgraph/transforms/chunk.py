@@ -24,6 +24,7 @@ def build_task_definition(orig_task, deps, count):
         task['treeherder']['symbol'] = add_suffix(
             task['treeherder']['symbol'], "-{}".format(count))
 
+    task["attributes"]["is_final_chunked_task"] = False
     return task
 
 
@@ -39,7 +40,9 @@ def add_dependencies(config, tasks):
         chunked_labels = {}
 
         # sort for deterministic chunking
-        dep_labels = sorted(task.pop('soft-dependencies', []))
+        dep_labels = task.pop('soft-dependencies', [])
+        dep_labels.extend(task.get('dependencies', {}).keys())
+        dep_labels = sorted(dep_labels)
 
         for dep_label in dep_labels:
             deps[dep_label] = dep_label
@@ -58,4 +61,9 @@ def add_dependencies(config, tasks):
             count += 1
 
         task['dependencies'] = chunked_labels
+        # Chunk yields a last task that doesn't have a number appended to it.
+        # It helps configuring Github which waits on a single label.
+        # Setting this attribute also enables multi_dep to select the right
+        # task to depend on.
+        task["attributes"]["is_final_chunked_task"] = True
         yield task
