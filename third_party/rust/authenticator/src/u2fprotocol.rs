@@ -11,9 +11,9 @@ use std::ffi::CString;
 use std::io;
 use std::io::{Read, Write};
 
-use consts::*;
-use u2ftypes::*;
-use util::io_err;
+use crate::consts::*;
+use crate::u2ftypes::*;
+use crate::util::io_err;
 
 ////////////////////////////////////////////////////////////////////////
 // Device Commands
@@ -128,7 +128,25 @@ where
 {
     assert_eq!(nonce.len(), INIT_NONCE_SIZE);
     let raw = sendrecv(dev, U2FHID_INIT, nonce)?;
-    dev.set_cid(U2FHIDInitResp::read(&raw, nonce)?);
+    let rsp = U2FHIDInitResp::read(&raw, nonce)?;
+    dev.set_cid(rsp.cid);
+
+    let vendor = dev
+        .get_property("Manufacturer")
+        .unwrap_or_else(|_| String::from("Unknown Vendor"));
+    let product = dev
+        .get_property("Product")
+        .unwrap_or_else(|_| String::from("Unknown Device"));
+
+    dev.set_device_info(U2FDeviceInfo {
+        vendor_name: vendor.as_bytes().to_vec(),
+        device_name: product.as_bytes().to_vec(),
+        version_interface: rsp.version_interface,
+        version_major: rsp.version_major,
+        version_minor: rsp.version_minor,
+        version_build: rsp.version_build,
+        cap_flags: rsp.cap_flags,
+    });
 
     Ok(())
 }
@@ -217,19 +235,23 @@ mod tests {
     use rand::{thread_rng, RngCore};
 
     use super::{init_device, send_apdu, sendrecv, U2FDevice};
-    use consts::{CID_BROADCAST, SW_NO_ERROR, U2FHID_INIT, U2FHID_MSG, U2FHID_PING};
+    use crate::consts::{CID_BROADCAST, SW_NO_ERROR, U2FHID_INIT, U2FHID_MSG, U2FHID_PING};
 
     mod platform {
         use std::io;
         use std::io::{Read, Write};
 
-        use consts::{CID_BROADCAST, HID_RPT_SIZE};
-        use u2ftypes::U2FDevice;
+        use crate::consts::CID_BROADCAST;
+        use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
+
+        const IN_HID_RPT_SIZE: usize = 64;
+        const OUT_HID_RPT_SIZE: usize = 64;
 
         pub struct TestDevice {
             cid: [u8; 4],
-            reads: Vec<[u8; HID_RPT_SIZE]>,
-            writes: Vec<[u8; HID_RPT_SIZE + 1]>,
+            reads: Vec<[u8; IN_HID_RPT_SIZE]>,
+            writes: Vec<[u8; OUT_HID_RPT_SIZE + 1]>,
+            dev_info: Option<U2FDeviceInfo>,
         }
 
         impl TestDevice {
@@ -238,12 +260,13 @@ mod tests {
                     cid: CID_BROADCAST,
                     reads: vec![],
                     writes: vec![],
+                    dev_info: None,
                 }
             }
 
             pub fn add_write(&mut self, packet: &[u8], fill_value: u8) {
                 // Add one to deal with record index check
-                let mut write = [fill_value; HID_RPT_SIZE + 1];
+                let mut write = [fill_value; OUT_HID_RPT_SIZE + 1];
                 // Make sure we start with a 0, for HID record index
                 write[0] = 0;
                 // Clone packet data in at 1, since front is padded with HID record index
@@ -252,7 +275,7 @@ mod tests {
             }
 
             pub fn add_read(&mut self, packet: &[u8], fill_value: u8) {
-                let mut read = [fill_value; HID_RPT_SIZE];
+                let mut read = [fill_value; IN_HID_RPT_SIZE];
                 read[..packet.len()].clone_from_slice(packet);
                 self.reads.push(read);
             }
@@ -300,6 +323,25 @@ mod tests {
             fn set_cid(&mut self, cid: [u8; 4]) {
                 self.cid = cid;
             }
+
+            fn in_rpt_size(&self) -> usize {
+                IN_HID_RPT_SIZE
+            }
+
+            fn out_rpt_size(&self) -> usize {
+                OUT_HID_RPT_SIZE
+            }
+
+            fn get_property(&self, prop_name: &str) -> io::Result<String> {
+                Ok(format!("{} not implemented", prop_name))
+            }
+            fn get_device_info(&self) -> U2FDeviceInfo {
+                self.dev_info.clone().unwrap()
+            }
+
+            fn set_device_info(&mut self, dev_info: U2FDeviceInfo) {
+                self.dev_info = Some(dev_info);
+            }
         }
     }
 
@@ -328,6 +370,13 @@ mod tests {
 
         init_device(&mut device, &nonce).unwrap();
         assert_eq!(device.get_cid(), &cid);
+
+        let dev_info = device.get_device_info();
+        assert_eq!(dev_info.version_interface, 0x02);
+        assert_eq!(dev_info.version_major, 0x04);
+        assert_eq!(dev_info.version_minor, 0x01);
+        assert_eq!(dev_info.version_build, 0x08);
+        assert_eq!(dev_info.cap_flags, 0x01);
     }
 
     #[test]
@@ -397,5 +446,12 @@ mod tests {
         let (result, status) = send_apdu(&mut device, U2FHID_PING, 0xaa, &data).unwrap();
         assert_eq!(result, &data);
         assert_eq!(status, SW_NO_ERROR);
+    }
+
+    #[test]
+    fn test_get_property() {
+        let device = platform::TestDevice::new();
+
+        assert_eq!(device.get_property("a").unwrap(), "a not implemented");
     }
 }

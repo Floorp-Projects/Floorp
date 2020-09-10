@@ -2,27 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-extern crate authenticator;
-extern crate base64;
-extern crate sha2;
-use authenticator::{AuthenticatorTransports, KeyHandle, RegisterFlags, SignFlags, U2FManager};
+use authenticator::{
+    authenticatorservice::AuthenticatorService, statecallback::StateCallback,
+    AuthenticatorTransports, KeyHandle, RegisterFlags, SignFlags, StatusUpdate,
+};
+use getopts::Options;
 use sha2::{Digest, Sha256};
-use std::io;
-use std::sync::mpsc::channel;
-
-extern crate env_logger;
-extern crate log;
-
-macro_rules! try_or {
-    ($val:expr, $or:expr) => {
-        match $val {
-            Ok(v) => v,
-            Err(e) => {
-                return $or(e);
-            }
-        }
-    };
-}
+use std::sync::mpsc::{channel, RecvError};
+use std::{env, io, thread};
 
 fn u2f_get_key_handle_from_register_response(register_response: &[u8]) -> io::Result<Vec<u8>> {
     if register_response[0] != 0x05 {
@@ -40,8 +27,36 @@ fn u2f_get_key_handle_from_register_response(register_response: &[u8]) -> io::Re
     Ok(key_handle)
 }
 
+fn print_usage(program: &str, opts: Options) {
+    let brief = format!("Usage: {} [options]", program);
+    print!("{}", opts.usage(&brief));
+}
+
 fn main() {
     env_logger::init();
+
+    let args: Vec<String> = env::args().collect();
+    let program = args[0].clone();
+
+    let mut opts = Options::new();
+    opts.optflag("x", "no-u2f-usb-hid", "do not enable u2f-usb-hid platforms");
+
+    opts.optflag("h", "help", "print this help menu");
+    let matches = match opts.parse(&args[1..]) {
+        Ok(m) => m,
+        Err(f) => panic!(f.to_string()),
+    };
+    if matches.opt_present("help") {
+        print_usage(&program, opts);
+        return;
+    }
+
+    let mut manager =
+        AuthenticatorService::new().expect("The auth service should initialize safely");
+
+    if !matches.opt_present("no-u2f-usb-hid") {
+        manager.add_u2f_usb_hid_platform_transports();
+    }
 
     println!("Asking a security key to register now...");
     let challenge_str = format!(
@@ -57,27 +72,51 @@ fn main() {
     application.input(b"http://demo.yubico.com");
     let app_bytes = application.result().to_vec();
 
-    let manager = U2FManager::new().unwrap();
     let flags = RegisterFlags::empty();
 
-    let (tx, rx) = channel();
+    let (status_tx, status_rx) = channel::<StatusUpdate>();
+    thread::spawn(move || loop {
+        match status_rx.recv() {
+            Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
+                println!("STATUS: device available: {}", dev_info)
+            }
+            Ok(StatusUpdate::DeviceUnavailable { dev_info }) => {
+                println!("STATUS: device unavailable: {}", dev_info)
+            }
+            Ok(StatusUpdate::Success { dev_info }) => {
+                println!("STATUS: success using device: {}", dev_info);
+            }
+            Err(RecvError) => {
+                println!("STATUS: end");
+                return;
+            }
+        }
+    });
+
+    let (register_tx, register_rx) = channel();
+    let callback = StateCallback::new(Box::new(move |rv| {
+        register_tx.send(rv).unwrap();
+    }));
+
     manager
         .register(
             flags,
-            15_000,
+            60_000 * 5,
             chall_bytes.clone(),
             app_bytes.clone(),
             vec![],
-            move |rv| {
-                tx.send(rv.unwrap()).unwrap();
-            },
+            status_tx.clone(),
+            callback,
         )
-        .unwrap();
+        .expect("Couldn't register");
 
-    let register_data = try_or!(rx.recv(), |_| {
-        panic!("Problem receiving, unable to continue");
-    });
+    let register_result = register_rx
+        .recv()
+        .expect("Problem receiving, unable to continue");
+    let (register_data, device_info) = register_result.expect("Registration failed");
+
     println!("Register result: {}", base64::encode(&register_data));
+    println!("Device info: {}", &device_info);
     println!("Asking a security key to sign now, with the data from the register...");
     let credential = u2f_get_key_handle_from_register_response(&register_data).unwrap();
     let key_handle = KeyHandle {
@@ -86,24 +125,31 @@ fn main() {
     };
 
     let flags = SignFlags::empty();
-    let (tx, rx) = channel();
-    manager
-        .sign(
-            flags,
-            15_000,
-            chall_bytes,
-            vec![app_bytes],
-            vec![key_handle],
-            move |rv| {
-                tx.send(rv.unwrap()).unwrap();
-            },
-        )
-        .unwrap();
+    let (sign_tx, sign_rx) = channel();
 
-    let (_, handle_used, sign_data) = try_or!(rx.recv(), |_| {
-        println!("Problem receiving");
-    });
+    let callback = StateCallback::new(Box::new(move |rv| {
+        sign_tx.send(rv).unwrap();
+    }));
+
+    if let Err(e) = manager.sign(
+        flags,
+        15_000,
+        chall_bytes,
+        vec![app_bytes],
+        vec![key_handle],
+        status_tx,
+        callback,
+    ) {
+        panic!("Couldn't register: {:?}", e);
+    }
+
+    let sign_result = sign_rx
+        .recv()
+        .expect("Problem receiving, unable to continue");
+    let (_, handle_used, sign_data, device_info) = sign_result.expect("Sign failed");
+
     println!("Sign result: {}", base64::encode(&sign_data));
     println!("Key handle used: {}", base64::encode(&handle_used));
+    println!("Device info: {}", &device_info);
     println!("Done.");
 }

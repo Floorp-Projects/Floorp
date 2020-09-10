@@ -5,15 +5,15 @@
 extern crate libc;
 extern crate log;
 
+use crate::platform::iokit::*;
+use crate::util::io_err;
 use core_foundation::base::*;
 use core_foundation::runloop::*;
-use platform::iokit::*;
 use runloop::RunLoop;
 use std::collections::HashMap;
 use std::os::raw::c_void;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::{io, slice};
-use util::io_err;
 
 struct DeviceData {
     tx: Sender<Vec<u8>>,
