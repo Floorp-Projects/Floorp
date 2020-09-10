@@ -109,10 +109,10 @@
 #include "js/Exception.h"                  // JS::StealPendingExceptionStack
 #include "js/experimental/CodeCoverage.h"  // js::EnableCodeCoverage
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJitGetterInfo, JSJit{Getter,Setter}Op, JSJitInfo
-#include "js/experimental/SourceHook.h"    // js::{Set,Forget,}SourceHook
-#include "js/experimental/TypedData.h"     // JS_NewUint8Array
-#include "js/friend/DumpFunctions.h"       // JS::FormatStackDump
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimitConservative
+#include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
+#include "js/experimental/TypedData.h"   // JS_NewUint8Array
+#include "js/friend/DumpFunctions.h"     // JS::FormatStackDump
+#include "js/friend/StackLimits.h"       // js::CheckRecursionLimitConservative
 #include "js/friend/WindowProxy.h"  // js::IsWindowProxy, js::SetWindowProxyClass, js::ToWindowProxyIfWindow, js::ToWindowIfWindowProxy
 #include "js/GCAPI.h"               // JS::AutoCheckCannotGC
 #include "js/GCVector.h"
@@ -121,6 +121,7 @@
 #include "js/MemoryFunctions.h"
 #include "js/Modules.h"  // JS::GetModulePrivate, JS::SetModule{DynamicImport,Metadata,Resolve}Hook, JS::SetModulePrivate
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
+#include "js/OffThreadScriptCompilation.h"  // JS::SetUseOffThreadParseGlobal
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
 #include "js/Realm.h"
@@ -10270,8 +10271,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
       .setPrivateClassFields(enablePrivateClassFields)
-      .setPrivateClassMethods(enablePrivateClassMethods)
-      .setUseOffThreadParseGlobal(useOffThreadParseGlobal);
+      .setPrivateClassMethods(enablePrivateClassMethods);
+
+  JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);
 
   if (op.getBoolOption("no-ion-for-main-context")) {
     JS::ContextOptionsRef(cx).setDisableIon();

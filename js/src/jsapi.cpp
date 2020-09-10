@@ -61,7 +61,8 @@
 #include "js/JSON.h"
 #include "js/LocaleSensitive.h"
 #include "js/MemoryFunctions.h"
-#include "js/Object.h"  // JS::SetPrivate
+#include "js/Object.h"                      // JS::SetPrivate
+#include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
@@ -3545,7 +3546,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       cx->options().throwOnAsmJSValidationFailure();
   privateClassFields = cx->options().privateClassFields();
   privateClassMethods = cx->options().privateClassMethods();
-  useOffThreadParseGlobal = cx->options().useOffThreadParseGlobal();
+  useOffThreadParseGlobal = UseOffThreadParseGlobal();
 
   sourcePragmas_ = cx->options().sourcePragmas();
 

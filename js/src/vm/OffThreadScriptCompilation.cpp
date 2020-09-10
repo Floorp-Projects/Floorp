@@ -207,3 +207,13 @@ JS_PUBLIC_API void JS::CancelMultiOffThreadScriptsDecoder(
   HelperThreadState().cancelParseTask(cx->runtime(),
                                       ParseTaskKind::MultiScriptsDecode, token);
 }
+
+namespace js {
+bool gUseOffThreadParseGlobal = true;
+}  // namespace js
+
+JS_PUBLIC_API void JS::SetUseOffThreadParseGlobal(bool value) {
+  gUseOffThreadParseGlobal = value;
+}
+
+bool js::UseOffThreadParseGlobal() { return gUseOffThreadParseGlobal; }
