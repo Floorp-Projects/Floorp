@@ -90,7 +90,6 @@ const char* gInaccessibleProperties[] = {
     "-x-lang",
     "-x-span",
     "-x-text-zoom",
-    "-moz-button-appearance",
     "-moz-context-properties",
     "-moz-control-character-visibility",
     "-moz-default-appearance",
