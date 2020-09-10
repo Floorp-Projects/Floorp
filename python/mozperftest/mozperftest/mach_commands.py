@@ -5,6 +5,7 @@ import os
 import sys
 from functools import partial
 import subprocess
+import shlex
 
 from mach.decorators import CommandProvider, Command, CommandArgument
 from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
@@ -75,16 +76,20 @@ class Perftest(MachCommandBase):
 
 @CommandProvider
 class PerftestTests(MachCommandBase):
-    def _run_python_script(self, module, *args, **kw):
-        """Used to run the scripts in isolation.
-
-        Coverage needs to run in isolation so it's not
-        reimporting modules and produce wrong coverage info.
-        """
+    def _run_script(self, cmd, *args, **kw):
+        """Used to run a command in a subprocess."""
         display = kw.pop("display", False)
         verbose = kw.pop("verbose", False)
-        args = [self.virtualenv_manager.python_path, "-m", module] + list(args)
-        sys.stdout.write("=> %s " % kw.pop("label", module))
+        if isinstance(cmd, str):
+            cmd = shlex.split(cmd)
+        try:
+            joiner = shlex.join
+        except AttributeError:
+            # Python < 3.8
+            joiner = subprocess.list2cmdline
+
+        sys.stdout.write("=> %s " % kw.pop("label", joiner(cmd)))
+        args = cmd + list(args)
         sys.stdout.flush()
         try:
             if verbose:
@@ -104,6 +109,17 @@ class PerftestTests(MachCommandBase):
             sys.stdout.write("[FAILED]\n")
             sys.stdout.flush()
             return False
+
+    def _run_python_script(self, module, *args, **kw):
+        """Used to run a Python script in isolation.
+
+        Coverage needs to run in isolation so it's not
+        reimporting modules and produce wrong coverage info.
+        """
+        cmd = [self.virtualenv_manager.python_path, "-m", module]
+        if "label" not in kw:
+            kw["label"] = module
+        return self._run_script(cmd, *args, **kw)
 
     @Command(
         "perftest-test",
@@ -155,30 +171,20 @@ class PerftestTests(MachCommandBase):
             vendors = ["coverage"]
             if not ON_TRY:
                 vendors.append("attrs")
-            if skip_linters:
-                pypis = []
-            else:
-                pypis = ["flake8"]
-
-            # if we're not on try we want to install black
-            if not ON_TRY and not skip_linters:
-                pypis.append("black==19.10b0")
-
-            # these are the deps we are getting from pypi
-            for dep in pypis:
-                install_package(self.virtualenv_manager, dep)
 
             # pip-installing dependencies that require compilation or special setup
             for dep in vendors:
                 install_package(self.virtualenv_manager, str(Path(pydeps, dep)))
 
         if not ON_TRY and not skip_linters:
-            # formatting the code with black
-            assert self._run_python_script("black", str(HERE))
-
-        # checking flake8 correctness
-        if not (ON_TRY and sys.platform == "darwin") and not skip_linters:
-            assert self._run_python_script("flake8", str(HERE))
+            cmd = "./mach lint "
+            if verbose:
+                cmd += " -v"
+            cmd += " " + str(HERE)
+            if not self._run_script(
+                cmd, label="linters", display=verbose, verbose=verbose
+            ):
+                raise AssertionError("Please fix your code.")
 
         # running pytest with coverage
         # coverage is done in three steps:

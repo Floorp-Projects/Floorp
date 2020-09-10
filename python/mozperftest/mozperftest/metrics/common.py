@@ -195,7 +195,6 @@ class MetricsStorage(object):
         simplify_names=False,
         simplify_exclude=["statistics"],
     ):
-
         """Filters the metrics to only those that were requested by `metrics`.
 
         If metrics is Falsey (None, empty list, etc.) then no metrics
