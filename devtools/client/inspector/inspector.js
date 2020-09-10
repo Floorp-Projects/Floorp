@@ -1888,9 +1888,10 @@ Inspector.prototype = {
   async screenshotNode() {
     // Bug 1332936 - it's possible to call `screenshotNode` while the BoxModel highlighter
     // is still visible, therefore showing it in the picture.
-    // To avoid that, we have to hide it before taking the screenshot. The `hideBoxModel`
-    // will do that, calling `hide` for the highlighter only if previously shown.
-    await this.highlighter.hideBoxModel();
+    // Note that other highlighters will still be visible. See Bug 1663881
+    await this.highlighters.hideHighlighterType(
+      this.highlighters.TYPES.BOXMODEL
+    );
 
     const clipboardEnabled = Services.prefs.getBoolPref(
       "devtools.screenshot.clipboard.enabled"
