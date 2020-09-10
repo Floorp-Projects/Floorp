@@ -168,8 +168,6 @@ JS::Zone::Zone(JSRuntime* rt)
       atomCache_(this),
       externalStringCache_(this),
       functionToStringCache_(this),
-      keepAtomsCount(this, 0),
-      purgeAtomsDeferred(this, 0),
       propertyTree_(this, this),
       baseShapes_(this, this),
       initialShapes_(this, this),
@@ -629,45 +627,13 @@ bool Zone::ownedByCurrentHelperThread() {
   return helperThreadOwnerContext_ == TlsContext.get();
 }
 
-void Zone::releaseAtoms() {
-  MOZ_ASSERT(hasKeptAtoms());
-
-  keepAtomsCount--;
-
-  if (!hasKeptAtoms() && purgeAtomsDeferred) {
-    purgeAtomsDeferred = false;
-    purgeAtomCache();
-  }
-}
-
-void Zone::purgeAtomCacheOrDefer() {
-  if (hasKeptAtoms()) {
-    purgeAtomsDeferred = true;
-    return;
-  }
-
-  purgeAtomCache();
-}
-
 void Zone::purgeAtomCache() {
-  MOZ_ASSERT(!hasKeptAtoms());
-  MOZ_ASSERT(!purgeAtomsDeferred);
-
   atomCache().clearAndCompact();
 
   // Also purge the dtoa caches so that subsequent lookups populate atom
   // cache too.
   for (RealmsInZoneIter r(this); !r.done(); r.next()) {
     r->dtoaCache.purge();
-  }
-}
-
-void Zone::traceAtomCache(JSTracer* trc) {
-  MOZ_ASSERT(hasKeptAtoms());
-  for (auto r = atomCache().all(); !r.empty(); r.popFront()) {
-    JSAtom* atom = r.front().asPtrUnbarriered();
-    TraceRoot(trc, &atom, "kept atom");
-    MOZ_ASSERT(r.front().asPtrUnbarriered() == atom);
   }
 }
 

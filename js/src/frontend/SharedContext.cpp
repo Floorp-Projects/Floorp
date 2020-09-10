@@ -225,10 +225,6 @@ EvalSharedContext::EvalSharedContext(JSContext* cx,
   inWith_ = compilationState.scopeContext.inWith;
 }
 
-#ifdef DEBUG
-bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
-#endif
-
 FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
                          CompilationInfo& compilationInfo,
                          CompilationState& compilationState,
