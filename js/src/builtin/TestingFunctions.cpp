@@ -62,6 +62,7 @@
 #include "js/friend/WindowProxy.h"    // js::ToWindowProxyIfWindow
 #include "js/HashTable.h"
 #include "js/LocaleSensitive.h"
+#include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
 #include "js/PropertySpec.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/SourceText.h"
@@ -177,7 +178,7 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  bool offThreadParseGlobal = cx->options().useOffThreadParseGlobal();
+  bool offThreadParseGlobal = js::UseOffThreadParseGlobal();
   if (!JS_SetProperty(
           cx, info, "offThreadParseGlobal",
           offThreadParseGlobal ? TrueHandleValue : FalseHandleValue)) {

@@ -40,6 +40,7 @@
 #include "jsapi.h"
 #include "js/ContextOptions.h"
 #include "js/MemoryMetrics.h"
+#include "js/OffThreadScriptCompilation.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
@@ -866,6 +867,9 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   bool disableWasmHugeMemory =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_disable_huge_memory");
 
+  bool useOffThreadParseGlobal =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "off_thread_parse_global");
+
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
     bool safeMode = false;
@@ -927,6 +931,8 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
     bool disabledHugeMemory = JS::DisableWasmHugeMemory();
     MOZ_RELEASE_ASSERT(disabledHugeMemory);
   }
+
+  JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);
 }
 
 static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
@@ -1001,9 +1007,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_methods");
 #endif
 
-  bool useOffThreadParseGlobal =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "off_thread_parse_global");
-
 #ifdef JS_GC_ZEAL
   int32_t zeal = Preferences::GetInt(JS_OPTIONS_DOT_STR "gczeal", -1);
   int32_t zeal_frequency = Preferences::GetInt(
@@ -1047,8 +1050,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setThrowOnDebuggeeWouldRun(throwOnDebuggeeWouldRun)
       .setDumpStackOnDebuggeeWouldRun(dumpStackOnDebuggeeWouldRun)
       .setPrivateClassFields(privateFieldsEnabled)
-      .setPrivateClassMethods(privateMethodsEnabled)
-      .setUseOffThreadParseGlobal(useOffThreadParseGlobal);
+      .setPrivateClassMethods(privateMethodsEnabled);
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {

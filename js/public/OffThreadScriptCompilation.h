@@ -134,6 +134,17 @@ extern JS_PUBLIC_API bool FinishMultiOffThreadScriptsDecoder(
 extern JS_PUBLIC_API void CancelMultiOffThreadScriptsDecoder(
     JSContext* cx, OffThreadToken* token);
 
+// Tell off-thread compilation to/not to use the parse global.
+// The default value is true.
+//
+// If set to false, off-thread compilation will compile to stencil, and
+// instantiate the stencil on main-thread.
+extern JS_PUBLIC_API void SetUseOffThreadParseGlobal(bool value);
+
 }  // namespace JS
+
+namespace js {
+extern bool UseOffThreadParseGlobal();
+}  // namespace js
 
 #endif /* js_OffThreadScriptCompilation_h */
