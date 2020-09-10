@@ -1,6 +1,16 @@
 // META: global=window,dedicatedworker,jsshell
 // META: script=/wasm/jsapi/assertions.js
-// META: script=/wasm/jsapi/table/assertions.js
+
+function assert_Table(actual, expected) {
+  assert_equals(Object.getPrototypeOf(actual), WebAssembly.Table.prototype,
+                "prototype");
+  assert_true(Object.isExtensible(actual), "extensible");
+
+  assert_equals(actual.length, expected.length, "length");
+  for (let i = 0; i < expected.length; ++i) {
+    assert_equals(actual.get(i), null, `actual.get(${i})`);
+  }
+}
 
 test(() => {
   assert_function_name(WebAssembly.Table, "Table", "WebAssembly.Table");

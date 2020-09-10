@@ -72,16 +72,7 @@ test(() => {
       assert_unreached(`Should not call [[HasProperty]] with ${x}`);
     },
     get(o, x) {
-      // Due to the requirement not to supply both minimum and initial, we need to ignore one of them.
-      switch (x) {
-        case "shared":
-          return false;
-        case "minimum":
-        case "maximum":
-          return 0;
-        default:
-          return undefined;
-      }
+      return 0;
     },
   });
   new WebAssembly.Memory(proxy);
