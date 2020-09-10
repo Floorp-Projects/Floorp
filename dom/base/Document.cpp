@@ -1376,6 +1376,8 @@ Document::Document(const char* aContentType)
       mSubDocuments(nullptr),
       mHeaderData(nullptr),
       mFlashClassification(FlashClassification::Unknown),
+      mScrollAnchorAdjustmentLength(0),
+      mScrollAnchorAdjustmentCount(0),
       mServoRestyleRootDirtyBits(0),
       mThrowOnDynamicMarkupInsertionCounter(0),
       mIgnoreOpensDuringUnloadCounter(0),
@@ -9966,6 +9968,11 @@ void Document::RemoveMetaViewportElement(HTMLMetaElement* aElement) {
   }
 }
 
+void Document::UpdateForScrollAnchorAdjustment(nscoord aLength) {
+  mScrollAnchorAdjustmentLength += abs(aLength);
+  mScrollAnchorAdjustmentCount += 1;
+}
+
 EventListenerManager* Document::GetOrCreateListenerManager() {
   if (!mListenerManager) {
     mListenerManager =
@@ -14999,7 +15006,13 @@ void Document::ReportUseCounters() {
   PropagateUseCountersToPage();
 
   if (Telemetry::HistogramUseCounterCount > 0 &&
-      ShouldIncludeInTelemetry(/* aAllowExtensionURIs = */ true)) {
+      (IsContentDocument() || IsResourceDoc())) {
+    if (NodePrincipal()->SchemeIs("about") ||
+        NodePrincipal()->SchemeIs("chrome") ||
+        NodePrincipal()->SchemeIs("resource")) {
+      return;
+    }
+
     if (kDebugUseCounters) {
       nsCString spec;
       NodePrincipal()->GetAsciiSpec(spec);
@@ -15080,6 +15093,15 @@ void Document::ReportUseCounters() {
         }
       }
     }
+  }
+
+  if (IsTopLevelContentDocument()) {
+    CSSIntCoord adjustmentLength =
+        CSSPixel::FromAppUnits(mScrollAnchorAdjustmentLength).Rounded();
+    Telemetry::Accumulate(Telemetry::SCROLL_ANCHOR_ADJUSTMENT_LENGTH,
+                          adjustmentLength);
+    Telemetry::Accumulate(Telemetry::SCROLL_ANCHOR_ADJUSTMENT_COUNT,
+                          mScrollAnchorAdjustmentCount);
   }
 }
 
@@ -16820,21 +16842,6 @@ bool Document::HasThirdPartyChannel() {
   }
 
   return false;
-}
-
-bool Document::ShouldIncludeInTelemetry(bool aAllowExtensionURIs) {
-  if (!(IsContentDocument() || IsResourceDoc())) {
-    return false;
-  }
-
-  if (!aAllowExtensionURIs &&
-      NodePrincipal()->GetIsAddonOrExpandedAddonPrincipal()) {
-    return false;
-  }
-
-  return !NodePrincipal()->SchemeIs("about") &&
-         !NodePrincipal()->SchemeIs("chrome") &&
-         !NodePrincipal()->SchemeIs("resource");
 }
 
 void Document::GetConnectedShadowRoots(
