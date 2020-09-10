@@ -289,7 +289,7 @@ void nsBlockFrame::InitDebugFlags() {
     if (flags) {
       bool error = false;
       for (;;) {
-        char* cm = strchr(flags, ',');
+        char* cm = PL_strchr(flags, ',');
         if (cm) *cm = '\0';
 
         bool found = false;
