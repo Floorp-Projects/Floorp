@@ -595,62 +595,54 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
                                             uint32_t aFlags) {
   NS_ENSURE_ARG_POINTER(aPS);
 
-  nsIntMargin margin;
   if (aFlags & nsIPrintSettings::kInitSaveMargins) {
-    if (NS_SUCCEEDED(aPS->GetMarginInTwips(margin))) {
-      WriteInchesFromTwipsPref(GetPrefName(kMarginTop, aPrinterName),
-                               margin.top);
-      DUMP_INT(kWriteStr, kMarginTop, margin.top);
-      WriteInchesFromTwipsPref(GetPrefName(kMarginLeft, aPrinterName),
-                               margin.left);
-      DUMP_INT(kWriteStr, kMarginLeft, margin.top);
-      WriteInchesFromTwipsPref(GetPrefName(kMarginBottom, aPrinterName),
-                               margin.bottom);
-      DUMP_INT(kWriteStr, kMarginBottom, margin.top);
-      WriteInchesFromTwipsPref(GetPrefName(kMarginRight, aPrinterName),
-                               margin.right);
-      DUMP_INT(kWriteStr, kMarginRight, margin.top);
-    }
+    nsIntMargin margin = aPS->GetMarginInTwips();
+    WriteInchesFromTwipsPref(GetPrefName(kMarginTop, aPrinterName), margin.top);
+    DUMP_INT(kWriteStr, kMarginTop, margin.top);
+    WriteInchesFromTwipsPref(GetPrefName(kMarginLeft, aPrinterName),
+                             margin.left);
+    DUMP_INT(kWriteStr, kMarginLeft, margin.top);
+    WriteInchesFromTwipsPref(GetPrefName(kMarginBottom, aPrinterName),
+                             margin.bottom);
+    DUMP_INT(kWriteStr, kMarginBottom, margin.top);
+    WriteInchesFromTwipsPref(GetPrefName(kMarginRight, aPrinterName),
+                             margin.right);
+    DUMP_INT(kWriteStr, kMarginRight, margin.top);
   }
 
-  nsIntMargin edge;
   if (aFlags & nsIPrintSettings::kInitSaveEdges) {
-    if (NS_SUCCEEDED(aPS->GetEdgeInTwips(edge))) {
-      WriteInchesIntFromTwipsPref(GetPrefName(kEdgeTop, aPrinterName),
-                                  edge.top);
-      DUMP_INT(kWriteStr, kEdgeTop, edge.top);
-      WriteInchesIntFromTwipsPref(GetPrefName(kEdgeLeft, aPrinterName),
-                                  edge.left);
-      DUMP_INT(kWriteStr, kEdgeLeft, edge.top);
-      WriteInchesIntFromTwipsPref(GetPrefName(kEdgeBottom, aPrinterName),
-                                  edge.bottom);
-      DUMP_INT(kWriteStr, kEdgeBottom, edge.top);
-      WriteInchesIntFromTwipsPref(GetPrefName(kEdgeRight, aPrinterName),
-                                  edge.right);
-      DUMP_INT(kWriteStr, kEdgeRight, edge.top);
-    }
+    nsIntMargin edge = aPS->GetEdgeInTwips();
+    WriteInchesIntFromTwipsPref(GetPrefName(kEdgeTop, aPrinterName), edge.top);
+    DUMP_INT(kWriteStr, kEdgeTop, edge.top);
+    WriteInchesIntFromTwipsPref(GetPrefName(kEdgeLeft, aPrinterName),
+                                edge.left);
+    DUMP_INT(kWriteStr, kEdgeLeft, edge.top);
+    WriteInchesIntFromTwipsPref(GetPrefName(kEdgeBottom, aPrinterName),
+                                edge.bottom);
+    DUMP_INT(kWriteStr, kEdgeBottom, edge.top);
+    WriteInchesIntFromTwipsPref(GetPrefName(kEdgeRight, aPrinterName),
+                                edge.right);
+    DUMP_INT(kWriteStr, kEdgeRight, edge.top);
   }
 
-  nsIntMargin unwriteableMargin;
   if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
-    if (NS_SUCCEEDED(aPS->GetUnwriteableMarginInTwips(unwriteableMargin))) {
-      WriteInchesIntFromTwipsPref(
-          GetPrefName(kUnwriteableMarginTop, aPrinterName),
-          unwriteableMargin.top);
-      DUMP_INT(kWriteStr, kUnwriteableMarginTop, unwriteableMargin.top);
-      WriteInchesIntFromTwipsPref(
-          GetPrefName(kUnwriteableMarginLeft, aPrinterName),
-          unwriteableMargin.left);
-      DUMP_INT(kWriteStr, kUnwriteableMarginLeft, unwriteableMargin.top);
-      WriteInchesIntFromTwipsPref(
-          GetPrefName(kUnwriteableMarginBottom, aPrinterName),
-          unwriteableMargin.bottom);
-      DUMP_INT(kWriteStr, kUnwriteableMarginBottom, unwriteableMargin.top);
-      WriteInchesIntFromTwipsPref(
-          GetPrefName(kUnwriteableMarginRight, aPrinterName),
-          unwriteableMargin.right);
-      DUMP_INT(kWriteStr, kUnwriteableMarginRight, unwriteableMargin.top);
-    }
+    nsIntMargin unwriteableMargin = aPS->GetUnwriteableMarginInTwips();
+    WriteInchesIntFromTwipsPref(
+        GetPrefName(kUnwriteableMarginTop, aPrinterName),
+        unwriteableMargin.top);
+    DUMP_INT(kWriteStr, kUnwriteableMarginTop, unwriteableMargin.top);
+    WriteInchesIntFromTwipsPref(
+        GetPrefName(kUnwriteableMarginLeft, aPrinterName),
+        unwriteableMargin.left);
+    DUMP_INT(kWriteStr, kUnwriteableMarginLeft, unwriteableMargin.top);
+    WriteInchesIntFromTwipsPref(
+        GetPrefName(kUnwriteableMarginBottom, aPrinterName),
+        unwriteableMargin.bottom);
+    DUMP_INT(kWriteStr, kUnwriteableMarginBottom, unwriteableMargin.top);
+    WriteInchesIntFromTwipsPref(
+        GetPrefName(kUnwriteableMarginRight, aPrinterName),
+        unwriteableMargin.right);
+    DUMP_INT(kWriteStr, kUnwriteableMarginRight, unwriteableMargin.top);
   }
 
   // Paper size prefs are saved as a group

@@ -14,6 +14,7 @@
 /**
  * Native types
  */
+native nsNativeIntMargin(nsIntMargin);
 [ref] native nsNativeIntMarginRef(nsIntMargin);
 [ref] native IntegerArray(nsTArray<int32_t>);
 
@@ -22,7 +23,7 @@ interface nsIPrintSession;
 /**
  * Simplified graphics interface for JS rendering.
  */
-[scriptable, uuid(ecc5cbad-57fc-4731-b0bd-09e865bd62ad)]
+[scriptable, builtinclass, uuid(ecc5cbad-57fc-4731-b0bd-09e865bd62ad)]
 interface nsIPrintSettings : nsISupports
 {
   /**
@@ -243,9 +244,8 @@ interface nsIPrintSettings : nsISupports
   /* C++ Helper Functions */
   [noscript] void SetMarginInTwips(in nsNativeIntMarginRef aMargin);
   [noscript] void SetEdgeInTwips(in nsNativeIntMarginRef aEdge);
-  /* Purposely made this an "in" arg */
-  [noscript] void GetMarginInTwips(in nsNativeIntMarginRef aMargin);
-  [noscript] void GetEdgeInTwips(in nsNativeIntMarginRef aEdge);
+  [noscript, notxpcom, nostdcall] nsNativeIntMargin GetMarginInTwips();
+  [noscript, notxpcom, nostdcall] nsNativeIntMargin GetEdgeInTwips();
 
   /**
    * We call this function so that anything that requires a run of the event loop
@@ -267,7 +267,7 @@ interface nsIPrintSettings : nsISupports
    * that margin.
    */
   [noscript] void SetUnwriteableMarginInTwips(in nsNativeIntMarginRef aEdge);
-  [noscript] void GetUnwriteableMarginInTwips(in nsNativeIntMarginRef aEdge);
+  [noscript, notxpcom, nostdcall] nsNativeIntMargin GetUnwriteableMarginInTwips();
 
   /**
    * Get more accurate print ranges from the superior interval
