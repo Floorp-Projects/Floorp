@@ -570,7 +570,15 @@ inline bool OpIter<Policy>::checkIsSubtypeOf(ValType actual, ValType expected) {
   }
 
   UniqueChars actualText = ToString(actual);
+  if (!actualText) {
+    return false;
+  }
+
   UniqueChars expectedText = ToString(expected);
+  if (!expectedText) {
+    return false;
+  }
+
   UniqueChars error(
       JS_smprintf("type mismatch: expression has type %s but expected %s",
                   actualText.get(), expectedText.get()));
@@ -691,6 +699,10 @@ inline bool OpIter<Policy>::popWithRefType(Value* value) {
   }
 
   UniqueChars actualText = ToString(stackType.valType());
+  if (!actualText) {
+    return false;
+  }
+
   UniqueChars error(JS_smprintf(
       "type mismatch: expression has type %s but expected a reference type",
       actualText.get()));
