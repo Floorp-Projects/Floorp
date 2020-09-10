@@ -24,16 +24,6 @@
 #define IDB_REPORT_INTERNAL_ERR_LAMBDA \
   [](const auto&) { IDB_REPORT_INTERNAL_ERR(); }
 
-// Based on NS_ENSURE_TRUE
-#define IDB_ENSURE_TRUE(x, ret)                     \
-  do {                                              \
-    if (MOZ_UNLIKELY(!(x))) {                       \
-      IDB_REPORT_INTERNAL_ERR();                    \
-      NS_WARNING("IDB_ENSURE_TRUE(" #x ") failed"); \
-      return ret;                                   \
-    }                                               \
-  } while (0)
-
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
