@@ -104,7 +104,9 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   JSFunction* fun_ = nullptr;
   const ExceptionBailoutInfo* excInfo_ = nullptr;
   ICScript* icScript_ = nullptr;
+  jsbytecode* pc_ = nullptr;
 
+  JSOp op_ = JSOp::Nop;
   uint32_t exprStackSlots_ = 0;
   void* prevFramePtr_ = nullptr;
   Maybe<BufferPointer<BaselineFrame>> blFrame_;
@@ -151,6 +153,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   MOZ_MUST_USE bool buildBaselineFrame();
   MOZ_MUST_USE bool buildArguments();
   MOZ_MUST_USE bool buildFixedSlots();
+  MOZ_MUST_USE bool fixUpCallerArgs(MutableHandleValueVector savedCallerArgs,
+                                    bool* fixedUp);
 
  private:
   JSScript* script() const {
@@ -178,6 +182,16 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 
   size_t frameNo() const { return frameNo_; }
   bool isOutermostFrame() const { return frameNo_ == 0; }
+
+  jsbytecode* pc() const { return pc_; }
+  JSOp op() const { return op_; }
+  bool resumeAfter() const {
+    return !catchingException() && iter_.resumeAfter();
+  }
+
+  bool needToSaveCallerArgs() const {
+    return op_ == JSOp::FunApply || IsIonInlinableGetterOrSetterOp(op_);
+  }
 
   MOZ_MUST_USE bool enlarge() {
     MOZ_ASSERT(header_ != nullptr);
@@ -497,6 +511,23 @@ bool BaselineStackBuilder::initFrame(JSScript* frameScript,
   }
   prevFramePtr_ = virtualPointerAtStackOffset(0);
 
+  // Get the pc. If we are handling an exception, resume at the pc of the
+  // catch or finally block.
+  pc_ = catchingException() ? excInfo_->resumePC()
+                            : script()->offsetToPC(iter_.pcOffset());
+  op_ = JSOp(*pc_);
+
+  // When pgo is enabled, increment the counter of the block in which we
+  // resume, as Ion does not keep track of the code coverage.
+  //
+  // We need to do that when pgo is enabled, as after a specific number of
+  // FirstExecution bailouts, we invalidate and recompile the script with
+  // IonMonkey. Failing to increment the counter of the current basic block
+  // might lead to repeated bailouts and invalidations.
+  if (!JitOptions.disablePgo && script()->hasScriptCounts()) {
+    script()->incHitCount(pc_);
+  }
+
   return true;
 }
 
@@ -692,6 +723,116 @@ bool BaselineStackBuilder::buildFixedSlots() {
       return false;
     }
   }
+  return true;
+}
+
+// The caller side of inlined JSOp::FunCall, JSOp::FunApply, and
+// accessors must look like the function wasn't inlined.
+bool BaselineStackBuilder::fixUpCallerArgs(
+    MutableHandleValueVector savedCallerArgs, bool* fixedUp) {
+  MOZ_ASSERT(!*fixedUp);
+
+  // Inlining of SpreadCall-like frames not currently supported.
+  MOZ_ASSERT(!IsSpreadOp(op_));
+
+  if (op_ != JSOp::FunCall && !needToSaveCallerArgs()) {
+    return true;
+  }
+
+  // Calculate how many arguments are consumed by the inlined call.
+  // All calls pass |callee| and |this|.
+  uint32_t inlinedArgs = 2;
+  if (op_ == JSOp::FunCall) {
+    // The first argument to an inlined FunCall becomes |this|.
+    // The rest are passed normally.
+    inlinedArgs += GET_ARGC(pc_) - 1;
+  } else if (op_ == JSOp::FunApply) {
+    // We currently only support FunApplyArgs. The number of arguments
+    // passed to the inlined function is the number of arguments to the
+    // current frame.
+    inlinedArgs += blFrame()->numActualArgs();
+  } else {
+    MOZ_ASSERT(IsIonInlinableGetterOrSetterOp(op_));
+    // Setters are passed one argument. Getters are passed none.
+    if (IsSetPropOp(op_)) {
+      inlinedArgs++;
+    }
+  }
+
+  // Calculate how many values are live on the stack across the call,
+  // and push them.
+  MOZ_ASSERT(inlinedArgs <= exprStackSlots());
+  uint32_t liveStackSlots = exprStackSlots() - inlinedArgs;
+
+  JitSpew(JitSpew_BaselineBailouts,
+          "      pushing %u expression stack slots before fixup",
+          liveStackSlots);
+  for (uint32_t i = 0; i < liveStackSlots; i++) {
+    Value v = iter_.read();
+    if (!writeValue(v, "StackValue")) {
+      return false;
+    }
+  }
+
+  // When we inline JSOp::FunCall or JSOp::FunApply, we bypass the
+  // native and inline the target directly. When rebuilding the stack,
+  // we need to fill in the right number of slots to make it look like
+  // the js_native was actually called.
+  if (op_ == JSOp::FunCall) {
+    // We must transform the stack from |target, this, args| to
+    // |js_fun_call, target, this, args|. The value of |js_fun_call|
+    // will never be observed, so we push |undefined| for it, followed
+    // by the remaining arguments.
+    JitSpew(JitSpew_BaselineBailouts,
+            "      pushing undefined to fixup funcall");
+    if (!writeValue(UndefinedValue(), "StackValue")) {
+      return false;
+    }
+    JitSpew(JitSpew_BaselineBailouts, "      pushing %u expression stack slots",
+            inlinedArgs);
+    for (uint32_t i = 0; i < inlinedArgs; i++) {
+      Value arg = iter_.read();
+      if (!writeValue(arg, "StackValue")) {
+        return false;
+      }
+    }
+  } else if (op_ == JSOp::FunApply) {
+    // We currently only support FunApplyArgs. We must transform the
+    // stack from |target, this, arg1, ...| to |js_fun_apply, target,
+    // this, argObject|. These values will never be observed, so we
+    // can just push |undefined|.
+    JitSpew(JitSpew_BaselineBailouts,
+            "      pushing 4x undefined to fixup funapply");
+    if (!writeValue(UndefinedValue(), "StackValue") ||
+        !writeValue(UndefinedValue(), "StackValue") ||
+        !writeValue(UndefinedValue(), "StackValue") ||
+        !writeValue(UndefinedValue(), "StackValue")) {
+      return false;
+    }
+  }
+
+  if (needToSaveCallerArgs()) {
+    // Save the actual arguments. They are needed to rebuild the callee frame.
+    if (!savedCallerArgs.resize(inlinedArgs)) {
+      return false;
+    }
+    for (uint32_t i = 0; i < inlinedArgs; i++) {
+      savedCallerArgs[i].set(iter_.read());
+    }
+
+    if (IsSetPropOp(op_)) {
+      // The RHS argument to SetProp remains on the stack after the
+      // operation and is observable, so we have to fill it in.
+      Value initialArg = savedCallerArgs[inlinedArgs - 1];
+      JitSpew(JitSpew_BaselineBailouts,
+              "     pushing setter's initial argument");
+      if (!writeValue(initialArg, "StackValue")) {
+        return false;
+      }
+    }
+  }
+
+  *fixedUp = true;
   return true;
 }
 
@@ -951,125 +1092,18 @@ static bool InitFromBailout(JSContext* cx, HandleFunction fun,
     return false;
   }
 
-  // Get the pc. If we are handling an exception, resume at the pc of the
-  // catch or finally block.
-  jsbytecode* const pc = catchingException
-                             ? excInfo->resumePC()
-                             : script->offsetToPC(iter.pcOffset());
-  const bool resumeAfter = catchingException ? false : iter.resumeAfter();
+  jsbytecode* const pc = builder.pc();
+  const bool resumeAfter = builder.resumeAfter();
+  const JSOp op = builder.op();
 
-  // When pgo is enabled, increment the counter of the block in which we
-  // resume, as Ion does not keep track of the code coverage.
-  //
-  // We need to do that when pgo is enabled, as after a specific number of
-  // FirstExecution bailouts, we invalidate and recompile the script with
-  // IonMonkey. Failing to increment the counter of the current basic block
-  // might lead to repeated bailouts and invalidations.
-  if (!JitOptions.disablePgo && script->hasScriptCounts()) {
-    script->incHitCount(pc);
-  }
-
-  const JSOp op = JSOp(*pc);
-
-  // Inlining of SpreadCall-like frames not currently supported.
-  MOZ_ASSERT_IF(IsSpreadOp(op), !iter.moreFrames());
-
-  // Fixup inlined JSOp::FunCall, JSOp::FunApply, and accessors on the caller
-  // side. On the caller side this must represent like the function wasn't
-  // inlined.
-  uint32_t pushedSlots = 0;
+  bool fixedUp = false;
   RootedValueVector savedCallerArgs(cx);
-  bool needToSaveArgs =
-      op == JSOp::FunApply || IsIonInlinableGetterOrSetterOp(op);
-  if (iter.moreFrames() && (op == JSOp::FunCall || needToSaveArgs)) {
-    uint32_t inlined_args = 0;
-    if (op == JSOp::FunCall) {
-      inlined_args = 2 + GET_ARGC(pc) - 1;
-    } else if (op == JSOp::FunApply) {
-      inlined_args = 2 + builder.blFrame()->numActualArgs();
-    } else {
-      MOZ_ASSERT(IsIonInlinableGetterOrSetterOp(op));
-      inlined_args = 2 + IsSetPropOp(op);
-    }
-
-    MOZ_ASSERT(exprStackSlots >= inlined_args);
-    pushedSlots = exprStackSlots - inlined_args;
-
-    JitSpew(JitSpew_BaselineBailouts,
-            "      pushing %u expression stack slots before fixup",
-            pushedSlots);
-    for (uint32_t i = 0; i < pushedSlots; i++) {
-      Value v = iter.read();
-      if (!builder.writeValue(v, "StackValue")) {
-        return false;
-      }
-    }
-
-    if (op == JSOp::FunCall) {
-      // When funcall got inlined and the native js_fun_call was bypassed,
-      // the stack state is incorrect. To restore correctly it must look like
-      // js_fun_call was actually called. This means transforming the stack
-      // from |target, this, args| to |js_fun_call, target, this, args|
-      // The js_fun_call is never read, so just pushing undefined now.
-      JitSpew(JitSpew_BaselineBailouts,
-              "      pushing undefined to fixup funcall");
-      if (!builder.writeValue(UndefinedValue(), "StackValue")) {
-        return false;
-      }
-    }
-
-    if (needToSaveArgs) {
-      // When an accessor is inlined, the whole thing is a lie. There
-      // should never have been a call there. Fix the caller's stack to
-      // forget it ever happened.
-
-      // When funapply gets inlined we take all arguments out of the
-      // arguments array. So the stack state is incorrect. To restore
-      // correctly it must look like js_fun_apply was actually called.
-      // This means transforming the stack from |target, this, arg1, ...|
-      // to |js_fun_apply, target, this, argObject|.
-      // Since the information is never read, we can just push undefined
-      // for all values.
-      if (op == JSOp::FunApply) {
-        JitSpew(JitSpew_BaselineBailouts,
-                "      pushing 4x undefined to fixup funapply");
-        if (!builder.writeValue(UndefinedValue(), "StackValue")) {
-          return false;
-        }
-        if (!builder.writeValue(UndefinedValue(), "StackValue")) {
-          return false;
-        }
-        if (!builder.writeValue(UndefinedValue(), "StackValue")) {
-          return false;
-        }
-        if (!builder.writeValue(UndefinedValue(), "StackValue")) {
-          return false;
-        }
-      }
-      // Save the actual arguments. They are needed on the callee side
-      // as the arguments. Else we can't recover them.
-      if (!savedCallerArgs.resize(inlined_args)) {
-        return false;
-      }
-      for (uint32_t i = 0; i < inlined_args; i++) {
-        savedCallerArgs[i].set(iter.read());
-      }
-
-      if (IsSetPropOp(op)) {
-        // We would love to just save all the arguments and leave them
-        // in the stub frame pushed below, but we will lose the inital
-        // argument which the function was called with, which we must
-        // leave on the stack. It's pushed as the result of the SetProp.
-        Value initialArg = savedCallerArgs[inlined_args - 1];
-        JitSpew(JitSpew_BaselineBailouts,
-                "     pushing setter's initial argument");
-        if (!builder.writeValue(initialArg, "StackValue")) {
-          return false;
-        }
-      }
-      pushedSlots = exprStackSlots;
-    }
+  if (iter.moreFrames() &&
+      !builder.fixUpCallerArgs(&savedCallerArgs, &fixedUp)) {
+    return false;
   }
+
+  uint32_t pushedSlots = fixedUp ? exprStackSlots : 0;
 
   JitSpew(JitSpew_BaselineBailouts, "      pushing %u expression stack slots",
           exprStackSlots - pushedSlots);
@@ -1304,7 +1338,7 @@ static bool InitFromBailout(JSContext* cx, HandleFunction fun,
   bool pushedNewTarget = IsConstructPC(pc);
   unsigned actualArgc;
   Value callee;
-  if (needToSaveArgs) {
+  if (builder.needToSaveCallerArgs()) {
     // For FunApply or an accessor, the arguments are not on the stack anymore,
     // but they are copied in a vector and are written here.
     if (op == JSOp::FunApply) {
