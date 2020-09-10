@@ -122,6 +122,14 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     pageListenerTarget.addEventListener("pagehide", this.onPageHide);
   }
 
+  /**
+   * Static getter that indicates that BoxModelHighlighter supports
+   * highlighting in XUL windows.
+   */
+  static get XULSupported() {
+    return true;
+  }
+
   _buildMarkup() {
     const highlighterContainer = this.markup.anonymousContentDocument.createElement(
       "div"
