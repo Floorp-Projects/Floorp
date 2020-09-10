@@ -43,11 +43,14 @@ class QuicSocketControl final : public CommonSocketControl {
   void HandshakeCompleted();
   void SetCertVerificationResult(PRErrorCode errorCode) override;
 
+  NS_IMETHOD GetPeerId(nsACString& aResult) override;
  private:
   ~QuicSocketControl() = default;
 
   // For Authentication done callback.
   nsWeakPtr mHttp3Session;
+
+  nsCString mPeerId;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(QuicSocketControl, NS_QUICSOCKETCONTROL_IID)

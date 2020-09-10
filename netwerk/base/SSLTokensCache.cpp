@@ -119,6 +119,26 @@ SSLTokensCache::~SSLTokensCache() { LOG(("SSLTokensCache::~SSLTokensCache")); }
 nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
                              uint32_t aTokenLen,
                              nsITransportSecurityInfo* aSecInfo) {
+  PRUint32 expirationTime;
+  SSLResumptionTokenInfo tokenInfo;
+  if (SSL_GetResumptionTokenInfo(aToken, aTokenLen, &tokenInfo,
+                                 sizeof(tokenInfo)) != SECSuccess) {
+    LOG(("  cannot get expiration time from the token, NSS error %d",
+         PORT_GetError()));
+    return NS_ERROR_FAILURE;
+  }
+
+  expirationTime = tokenInfo.expirationTime;
+  SSL_DestroyResumptionTokenInfo(&tokenInfo);
+
+  return Put(aKey, aToken, aTokenLen, aSecInfo, expirationTime);
+}
+
+// static
+nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
+                             uint32_t aTokenLen,
+                             nsITransportSecurityInfo* aSecInfo,
+                             PRUint32 aExpirationTime) {
   StaticMutexAutoLock lock(sLock);
 
   LOG(("SSLTokensCache::Put [key=%s, tokenLen=%u]",
@@ -132,17 +152,6 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
   if (!aSecInfo) {
     return NS_ERROR_FAILURE;
   }
-
-  PRUint32 expirationTime;
-  SSLResumptionTokenInfo tokenInfo;
-  if (SSL_GetResumptionTokenInfo(aToken, aTokenLen, &tokenInfo,
-                                 sizeof(tokenInfo)) != SECSuccess) {
-    LOG(("  cannot get expiration time from the token, NSS error %d",
-         PORT_GetError()));
-    return NS_ERROR_FAILURE;
-  }
-  expirationTime = tokenInfo.expirationTime;
-  SSL_DestroyResumptionTokenInfo(&tokenInfo);
 
   nsCOMPtr<nsIX509Cert> cert;
   aSecInfo->GetServerCert(getter_AddRefs(cert));
@@ -208,7 +217,7 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     rec->Reset();
   }
 
-  rec->mExpirationTime = expirationTime;
+  rec->mExpirationTime = aExpirationTime;
   MOZ_ASSERT(rec->mToken.IsEmpty());
   rec->mToken.AppendElements(aToken, aTokenLen);
 

@@ -20,6 +20,7 @@
 #include "nsThreadUtils.h"
 #include "QuicSocketControl.h"
 #include "SSLServerCertVerification.h"
+#include "SSLTokensCache.h"
 #include "HttpConnectionUDP.h"
 #include "sslerr.h"
 
@@ -141,10 +142,22 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
        gHttpHandler->DefaultQpackTableSize(),
        gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
 
-  return NeqoHttp3Conn::Init(aOrigin, aAlpnToken, selfAddrStr, peerAddrStr,
-                             gHttpHandler->DefaultQpackTableSize(),
-                             gHttpHandler->DefaultHttp3MaxBlockedStreams(),
-                             getter_AddRefs(mHttp3Connection));
+  nsresult rv = NeqoHttp3Conn::Init(aOrigin, aAlpnToken, selfAddrStr, peerAddrStr,
+                                    gHttpHandler->DefaultQpackTableSize(),
+                                    gHttpHandler->DefaultHttp3MaxBlockedStreams(),
+                                    getter_AddRefs(mHttp3Connection));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsAutoCString peerId;
+  mSocketControl->GetPeerId(peerId);
+  nsTArray<uint8_t> token;
+  if (NS_SUCCEEDED(SSLTokensCache::Get(peerId, token))) {
+    LOG(("Found a resumption token in the cache."));
+    mHttp3Connection->SetResumptionToken(token);
+  }
+  return NS_OK;
 }
 
 // Shutdown the http3session and close all transactions.
@@ -405,12 +418,27 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
         }
         break;
       case Http3Event::Tag::ConnectionConnected:
-        LOG(("Http3Session::ProcessEvents - ConnectionConnected"));
-        mState = CONNECTED;
-        SetSecInfo();
-        mSocketControl->HandshakeCompleted();
-        gHttpHandler->ConnMgr()->ReportHttp3Connection(mSegmentReaderWriter);
-        MaybeResumeSend();
+        {
+          LOG(("Http3Session::ProcessEvents - ConnectionConnected"));
+          mState = CONNECTED;
+          SetSecInfo();
+          mSocketControl->HandshakeCompleted();
+          nsTArray<uint8_t> token;
+          mHttp3Connection->GetResumptionToken(token);
+          if (!token.IsEmpty()) {
+            LOG(("Got a resumption token"));
+            nsAutoCString peerId;
+            mSocketControl->GetPeerId(peerId);
+            if (NS_FAILED(
+                // Bug 1660080 tto get the proper expiration time for a token.
+                SSLTokensCache::Put(peerId, token.Elements(), token.Length(), mSocketControl, 1))) {
+              LOG(("Adding resumption token failed"));
+            }
+          }
+
+          gHttpHandler->ConnMgr()->ReportHttp3Connection(mSegmentReaderWriter);
+          MaybeResumeSend();
+        }
         break;
       case Http3Event::Tag::GoawayReceived:
         LOG(("Http3Session::ProcessEvents - GoawayReceived"));
