@@ -140,6 +140,7 @@ use std::ptr;
 
 use crate::bindings::{CompiledFunc, FuncCompileInput, ModuleEnvironment, StaticEnvironment};
 use crate::compile::BatchCompiler;
+use cranelift_codegen::CodegenError;
 
 /// Initializes all the process-wide Cranelift state. It must be called at least once, before any
 /// other use of this crate. It is not an issue if it is called more than once; subsequent calls
@@ -218,9 +219,21 @@ pub unsafe extern "C" fn cranelift_compile_function(
     };
 
     if let Err(e) = compiler.compile(data.stackmaps()) {
-        error!("Cranelift compilation error: {}\n", e);
-        info!("Compiled function: {}", compiler);
-        return false;
+        // Make sure to panic on verifier errors, so that fuzzers see those. Other errors are about
+        // unsupported features or implementation limits, so just report them as a user-facing
+        // error.
+        match e {
+            CodegenError::Verifier(verifier_error) => {
+                panic!("Cranelift verifier error: {}", verifier_error);
+            }
+            CodegenError::ImplLimitExceeded
+            | CodegenError::CodeTooLarge
+            | CodegenError::Unsupported(_) => {
+                error!("Cranelift compilation error: {}\n", e);
+                info!("Compiled function: {}", compiler);
+                return false;
+            }
+        }
     };
 
     // TODO(bbouvier) if destroy is called while one of these objects is alive, you're going to

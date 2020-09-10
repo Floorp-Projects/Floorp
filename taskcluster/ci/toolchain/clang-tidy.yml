@@ -21,8 +21,6 @@ job-defaults:
             - 'build/clang-plugin/moz.build'
             - 'build/clang-plugin/Makefile.in'
             - 'build/build-clang/build-clang.py'
-    run-on-projects:
-        - trunk
     fetches:
         fetch:
             - clang-10
@@ -38,6 +36,8 @@ linux64-clang-tidy:
             - 'build/build-clang/clang-tidy-linux64.json'
         resources:
             - 'build/build-clang/clang-tidy-linux64.json'
+    run-on-projects:
+        - trunk
     fetches:
         toolchain:
             - linux64-binutils
@@ -61,6 +61,8 @@ macosx64-clang-tidy:
         resources:
             - 'build/build-clang/clang-tidy-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+    run-on-projects:
+        - trunk
     fetches:
         toolchain:
             - linux64-binutils
@@ -88,12 +90,16 @@ win64-clang-tidy:
         resources:
             - 'build/build-clang/clang-tidy-win64.json'
         tooltool-downloads: internal
+    run-on-projects:
+        - trunk
     fetches:
         fetch:
             - cmake
             - ninja
 
 linux64-civet-tidy:
+    attributes:
+        local-toolchain: false
     index:
         job-name: linux64-civet-tidy
     treeherder:
@@ -110,6 +116,7 @@ linux64-civet-tidy:
             - 'build/build-clang/civet-tidy-linux64.json'
         resources:
             - 'build/build-clang/civet-tidy-linux64.json'
+    run-on-projects: []
     fetches:
         fetch:
             - civet-source

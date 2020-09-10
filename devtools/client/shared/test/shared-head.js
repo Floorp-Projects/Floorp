@@ -1181,18 +1181,34 @@ function getCurrentTestFilePath() {
  *        The ResourceWatcher instance that should emit the expected resource.
  * @param {String} resourceType
  *        One of ResourceWatcher.TYPES, type of the expected resource.
+ * @param {Object} additional options
+ *        - {Boolean} ignoreExistingResources: ignore existing resources or not.
+ *        - {Function} predicate: if provided, will wait until a resource makes
+ *          predicate(resource) return true.
  * @return {Object}
  *         - resource {Object} the resource itself
  *         - targetFront {TargetFront} the target which owns the resource
  */
-function waitForResourceOnce(resourceWatcher, resourceType) {
+function waitForNextResource(
+  resourceWatcher,
+  resourceType,
+  { ignoreExistingResources = false, predicate } = {}
+) {
+  // If no predicate was provided, convert to boolean to avoid resolving for
+  // empty `resources` arrays.
+  predicate = predicate || (resource => !!resource);
+
   return new Promise(resolve => {
     const onAvailable = resources => {
-      resolve(resources[0]);
-      resourceWatcher.unwatchResources([resourceType], { onAvailable });
+      const matchingResource = resources.find(resource => predicate(resource));
+      if (matchingResource) {
+        resolve(matchingResource);
+        resourceWatcher.unwatchResources([resourceType], { onAvailable });
+      }
     };
+
     resourceWatcher.watchResources([resourceType], {
-      ignoreExistingResources: true,
+      ignoreExistingResources,
       onAvailable,
     });
   });
