@@ -389,7 +389,7 @@ class CompositeStrategy(OptimizationStrategy):
 
         self.split_args = kwargs.pop('split_args', None)
         if not self.split_args:
-            self.split_args = lambda arg: [arg] * len(substrategies)
+            self.split_args = lambda arg, substrategies: [arg] * len(substrategies)
         if kwargs:
             raise TypeError("unexpected keyword args")
 
@@ -405,7 +405,7 @@ class CompositeStrategy(OptimizationStrategy):
         pass
 
     def _generate_results(self, fname, task, params, arg):
-        for sub, arg in zip(self.substrategies, self.split_args(arg)):
+        for sub, arg in zip(self.substrategies, self.split_args(arg, self.substrategies)):
             yield getattr(sub, fname)(task, params, arg)
 
     def should_remove_task(self, *args):
@@ -473,15 +473,15 @@ class Alias(CompositeStrategy):
         return next(results)
 
 
-def split_bugbug_arg(arg):
+def split_bugbug_arg(arg, substrategies):
     """Split args for bugbug based strategies.
 
     Many bugbug based optimizations require passing an empty dict by reference
     to communicate to downstream strategies. This function passes the provided
-    arg to the first strategy and an empty dict to second (bugbug based)
+    arg to the first strategies and an empty dict to last (bugbug based)
     strategy.
     """
-    return (arg, {})
+    return [arg] * (len(substrategies) - 1) + [{}]
 
 
 # Trigger registration in sibling modules.
