@@ -616,7 +616,16 @@ function updateContents(contents) {
     }
   }
   if ("privacyPolicy" in contents) {
-    document.getElementById("privacy-policy").href = contents.privacyPolicy;
+    const privacyPolicyLinks = document.getElementsByClassName(
+      "privacy-policy"
+    );
+
+    for (const privacyPolicyLink of privacyPolicyLinks) {
+      const privacyPolicyFormattedLink = Services.urlFormatter.formatURL(
+        contents.privacyPolicy
+      );
+      privacyPolicyLink.href = privacyPolicyFormattedLink;
+    }
   }
 }
 
@@ -628,11 +637,15 @@ document.addEventListener("DOMContentLoaded", async domEvent => {
   document.addEventListener("focus", removeBadge);
   removeBadge();
 
-  const privacyPolicyLink = document.getElementById("privacy-policy");
-  const privacyPolicyFormattedLink = Services.urlFormatter.formatURL(
-    privacyPolicyLink.href
+  const privacyPolicyLinks = document.querySelectorAll(
+    ".privacy-policy,.privacy-notice"
   );
-  privacyPolicyLink.href = privacyPolicyFormattedLink;
+  for (const privacyPolicyLink of privacyPolicyLinks) {
+    const privacyPolicyFormattedLink = Services.urlFormatter.formatURL(
+      privacyPolicyLink.href
+    );
+    privacyPolicyLink.href = privacyPolicyFormattedLink;
+  }
 
   let cachedContent;
   let cachedAddons;
