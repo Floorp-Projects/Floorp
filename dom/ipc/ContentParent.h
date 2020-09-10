@@ -824,6 +824,14 @@ class ContentParent final
   bool TryToRecycle();
 
   /**
+   * If this process is currently being recycled, unmark it as the recycled
+   * content process.
+   * If `aForeground` is true, will also restore the process' foreground
+   * priority if it was previously the recycled content process.
+   */
+  void StopRecycling(bool aForeground = true);
+
+  /**
    * Removing it from the static array so it won't be returned for new tabs in
    * GetNewOrUsedBrowserProcess.
    */
