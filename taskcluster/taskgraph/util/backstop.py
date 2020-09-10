@@ -34,8 +34,10 @@ def is_backstop(
     pushid = int(params["pushlog_id"])
     pushdate = int(params["pushdate"])
 
-    if project != "autoland":
+    if project == "try":
         return False
+    elif project != "autoland":
+        return True
 
     # On every Nth push, want to run all tasks.
     if pushid % push_interval == 0:
