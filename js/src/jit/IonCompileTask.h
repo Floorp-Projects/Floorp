@@ -71,6 +71,18 @@ class IonCompileTask final : public HelperThreadTask,
   void runTask();
 };
 
+class IonFreeTask : public HelperThreadTask {
+ public:
+  explicit IonFreeTask(IonCompileTask* task) : task_(task) {}
+  IonCompileTask* compileTask() { return task_; }
+
+  ThreadType threadType() override { return THREAD_TYPE_ION_FREE; }
+  void runTaskLocked(AutoLockHelperThreadState& locked) override;
+
+ private:
+  IonCompileTask* task_;
+};
+
 void AttachFinishedCompilations(JSContext* cx);
 void FinishOffThreadTask(JSRuntime* runtime, IonCompileTask* task,
                          const AutoLockHelperThreadState& lock);

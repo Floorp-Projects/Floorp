@@ -170,6 +170,11 @@ void jit::FreeIonCompileTask(IonCompileTask* task) {
   js_delete(task->alloc().lifoAlloc());
 }
 
+void IonFreeTask::runTaskLocked(AutoLockHelperThreadState& locked) {
+  AutoUnlockHelperThreadState unlock(locked);
+  jit::FreeIonCompileTask(task_);
+}
+
 void jit::FinishOffThreadTask(JSRuntime* runtime, IonCompileTask* task,
                               const AutoLockHelperThreadState& locked) {
   MOZ_ASSERT(runtime);
