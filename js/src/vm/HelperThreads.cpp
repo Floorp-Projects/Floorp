@@ -568,7 +568,7 @@ size_t ParseTask::sizeOfExcludingThis(
          errors.sizeOfExcludingThis(mallocSizeOf);
 }
 
-void ParseTask::runTaskLocked(AutoLockHelperThreadState& locked) {
+void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
 #ifdef DEBUG
   if (parseGlobal) {
     runtime->incOffThreadParsesRunning();
@@ -1766,11 +1766,8 @@ void HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(HelperThreadState().canStartGCParallelTask(lock));
   MOZ_ASSERT(idle());
 
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-  AutoTraceLog logCompile(logger, TraceLogger_GC);
-
   currentTask.emplace(HelperThreadState().gcParallelWorklist(lock).popFirst());
-  gcParallelTask()->runFromHelperThread(lock);
+  HelperThreadState().runTaskLocked(gcParallelTask(), lock);
   currentTask.reset();
 }
 
@@ -2154,7 +2151,7 @@ void HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked,
       HelperThreadState().wasmWorklist(locked, mode).popCopyFront());
 
   wasm::CompileTask* task = wasmTask();
-  task->runTaskLocked(locked);
+  HelperThreadState().runTaskLocked(task, locked);
 
   currentTask.reset();
 
@@ -2174,7 +2171,7 @@ void HelperThread::handleWasmTier2GeneratorWorkload(
   wasm::Tier2GeneratorTask* task = wasmTier2GeneratorTask();
 
   // 'task' will be released inside runTaskLocked().
-  task->runTaskLocked(locked);
+  HelperThreadState().runTaskLocked(task, locked);
 
   currentTask.reset();
 
@@ -2190,7 +2187,7 @@ void HelperThread::handlePromiseHelperTaskWorkload(
       HelperThreadState().promiseHelperTasks(locked).popCopy();
   currentTask.emplace(task);
 
-  task->runTaskLocked(locked);
+  HelperThreadState().runTaskLocked(task, locked);
 
   currentTask.reset();
 
@@ -2209,7 +2206,7 @@ void HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked) {
 
   currentTask.emplace(task);
 
-  task->runTaskLocked(locked);
+  HelperThreadState().runTaskLocked(task, locked);
 
   currentTask.reset();
 
@@ -2225,7 +2222,7 @@ void HelperThread::handleIonFreeWorkload(AutoLockHelperThreadState& locked) {
 
   UniquePtr<jit::IonFreeTask> task = std::move(freeList.back());
   freeList.popBack();
-  task->runTaskLocked(locked);
+  HelperThreadState().runTaskLocked(task.get(), locked);
 }
 
 bool JSContext::addPendingCompileError(js::CompileError** error) {
@@ -2271,7 +2268,7 @@ void HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked) {
   }
 
   ParseTask* task = parseTask();
-  task->runTaskLocked(locked);
+  HelperThreadState().runTaskLocked(task, locked);
 
   currentTask.reset();
 
@@ -2294,7 +2291,7 @@ void HelperThread::handleCompressionWorkload(
 
   // Release the pointer, inside runTaskLocked the SourceCompressTask pointer
   // will be stored in compressionFinishedList.
-  task.release()->runTaskLocked(locked);
+  HelperThreadState().runTaskLocked(task.release(), locked);
 
   currentTask.reset();
 
@@ -2400,7 +2397,7 @@ void PromiseHelperTask::executeAndResolveAndDestroy(JSContext* cx) {
   run(cx, JS::Dispatchable::NotShuttingDown);
 }
 
-void PromiseHelperTask::runTaskLocked(AutoLockHelperThreadState& lock) {
+void PromiseHelperTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   {
     AutoUnlockHelperThreadState unlock(lock);
     execute();
@@ -2563,4 +2560,9 @@ const HelperThread::TaskSpec* HelperThread::findHighestPriorityTask(
   }
 
   return nullptr;
+}
+
+void GlobalHelperThreadState::runTaskLocked(HelperThreadTask* task,
+                                            AutoLockHelperThreadState& locked) {
+  task->runHelperThreadTask(locked);
 }

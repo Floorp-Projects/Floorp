@@ -16,7 +16,7 @@
 using namespace js;
 using namespace js::jit;
 
-void IonCompileTask::runTaskLocked(AutoLockHelperThreadState& locked) {
+void IonCompileTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
   // The build is taken by this thread. Unfreeze the LifoAlloc to allow
   // mutations.
   alloc().lifoAlloc()->setReadWrite();
@@ -170,7 +170,7 @@ void jit::FreeIonCompileTask(IonCompileTask* task) {
   js_delete(task->alloc().lifoAlloc());
 }
 
-void IonFreeTask::runTaskLocked(AutoLockHelperThreadState& locked) {
+void IonFreeTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
   AutoUnlockHelperThreadState unlock(locked);
   jit::FreeIonCompileTask(task_);
 }

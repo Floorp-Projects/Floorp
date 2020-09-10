@@ -788,7 +788,7 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
   return true;
 }
 
-void CompileTask::runTaskLocked(AutoLockHelperThreadState& lock) {
+void CompileTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread();
   AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
 

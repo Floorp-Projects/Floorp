@@ -2545,7 +2545,8 @@ void SourceCompressionTask::runTask() {
   source->performTaskWork(this);
 }
 
-void SourceCompressionTask::runTaskLocked(AutoLockHelperThreadState& locked) {
+void SourceCompressionTask::runHelperThreadTask(
+    AutoLockHelperThreadState& locked) {
   {
     AutoUnlockHelperThreadState unlock(locked);
     this->runTask();
@@ -2554,7 +2555,7 @@ void SourceCompressionTask::runTaskLocked(AutoLockHelperThreadState& locked) {
   {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!HelperThreadState().compressionFinishedList(locked).append(this)) {
-      oomUnsafe.crash("SourceCompressionTask::runTaskLocked");
+      oomUnsafe.crash("SourceCompressionTask::runHelperThreadTask");
     }
   }
 }

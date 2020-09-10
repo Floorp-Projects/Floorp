@@ -23,6 +23,7 @@
 
 #include "jit/MacroAssembler.h"
 #include "threading/ProtectedData.h"
+#include "vm/HelperThreadTask.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmValidate.h"
@@ -148,7 +149,7 @@ struct CompileTask : public HelperThreadTask {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  void runTaskLocked(AutoLockHelperThreadState& lock) override;
+  void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_WASM; }
 };
 

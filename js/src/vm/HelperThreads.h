@@ -30,6 +30,7 @@
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
 #include "threading/Thread.h"
+#include "vm/HelperThreadTask.h"
 #include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
 #include "vm/OffThreadPromiseRuntimeState.h"  // js::OffThreadPromiseTask
@@ -46,12 +47,6 @@ class AutoUnlockHelperThreadState;
 class CompileError;
 struct ParseTask;
 struct PromiseHelperTask;
-
-struct HelperThreadTask {
-  virtual void runTaskLocked(AutoLockHelperThreadState& locked) = 0;
-  virtual ThreadType threadType() = 0;
-  virtual ~HelperThreadTask() = default;
-};
 
 namespace jit {
 class IonCompileTask;
@@ -411,6 +406,7 @@ class GlobalHelperThreadState {
   bool submitTask(PromiseHelperTask* task);
   bool submitTask(GCParallelTask* task,
                   const AutoLockHelperThreadState& locked);
+  void runTaskLocked(HelperThreadTask* task, AutoLockHelperThreadState& lock);
 };
 
 static inline GlobalHelperThreadState& HelperThreadState() {
@@ -810,7 +806,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
 
-  void runTaskLocked(AutoLockHelperThreadState& locked) override;
+  void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
   void runTask();
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_PARSE; }
 };
@@ -847,7 +843,7 @@ extern bool OffThreadParsingMustWaitForGC(JSRuntime* rt);
 // GCs after being enqueued. Completed tasks are handled during the sweeping
 // phase by AttachCompressedSourcesTask, which runs in parallel with other GC
 // sweeping tasks.
-class SourceCompressionTask : public RunnableTask {
+class SourceCompressionTask : public HelperThreadTask {
   friend class HelperThread;
   friend class ScriptSource;
 
@@ -888,8 +884,8 @@ class SourceCompressionTask : public RunnableTask {
     return sourceHolder_.get()->refs == 1;
   }
 
-  void runTask() override;
-  void runTaskLocked(AutoLockHelperThreadState& locked);
+  void runTask();
+  void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
   void complete();
 
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_COMPRESS; }
@@ -927,7 +923,7 @@ struct PromiseHelperTask : OffThreadPromiseTask, public HelperThreadTask {
   // the caller must immediately return from the stream callback.
   void executeAndResolveAndDestroy(JSContext* cx);
 
-  void runTaskLocked(AutoLockHelperThreadState& lock) override;
+  void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
   ThreadType threadType() override { return THREAD_TYPE_PROMISE_TASK; }
 };
 
