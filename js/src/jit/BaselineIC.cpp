@@ -2038,8 +2038,8 @@ bool FallbackICCodeCompiler::emitGetElem(bool hasReceiver) {
   // When we get here, ICStubReg contains the ICGetElem_Fallback stub,
   // which we can't use to enter the TypeMonitor IC, because it's a
   // MonitoredFallbackStub instead of a MonitoredStub. So, we cheat. Note that
-  // we must have a non-null fallbackMonitorStub here because InitFromBailout
-  // delazifies.
+  // we must have a non-null fallbackMonitorStub here because
+  // BaselineStackBuilder::buildStubFrame delazifies the stub when bailing out.
   masm.loadPtr(Address(ICStubReg,
                        ICMonitoredFallbackStub::offsetOfFallbackMonitorStub()),
                ICStubReg);
@@ -2692,8 +2692,8 @@ bool FallbackICCodeCompiler::emitGetProp(bool hasReceiver) {
   // When we get here, ICStubReg contains the ICGetProp_Fallback stub,
   // which we can't use to enter the TypeMonitor IC, because it's a
   // MonitoredFallbackStub instead of a MonitoredStub. So, we cheat. Note that
-  // we must have a non-null fallbackMonitorStub here because InitFromBailout
-  // delazifies.
+  // we must have a non-null fallbackMonitorStub here because
+  // BaselineStackBuilder::buildStubFrame delazifies the stub when bailing out.
   masm.loadPtr(Address(ICStubReg,
                        ICMonitoredFallbackStub::offsetOfFallbackMonitorStub()),
                ICStubReg);
@@ -3309,7 +3309,7 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
   // EmitEnterTypeMonitorIC, first load the ICTypeMonitor_Fallback stub into
   // ICStubReg.  Then, use EmitEnterTypeMonitorIC with a custom struct offset.
   // Note that we must have a non-null fallbackMonitorStub here because
-  // InitFromBailout delazifies.
+  // BaselineStackBuilder::buildStubFrame delazifies the stub when bailing out.
   masm.loadPtr(Address(ICStubReg,
                        ICMonitoredFallbackStub::offsetOfFallbackMonitorStub()),
                ICStubReg);

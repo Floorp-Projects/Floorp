@@ -1128,7 +1128,7 @@ inline bool IsFrameInitialEnvironment(AbstractFramePtr frame,
   // start of execution in the frame.
   //
   // This logic must be in sync with the HAS_INITIAL_ENV logic in
-  // InitFromBailout.
+  // BaselineStackBuilder::buildBaselineFrame.
 
   // A function frame's CallObject, if present, is always the initial
   // environment.

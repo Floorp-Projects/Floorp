@@ -1269,7 +1269,7 @@ AbortReasonOr<Ok> IonBuilder::initEnvironmentChain(MDefinition* callee) {
 
   // Update the environment slot from UndefinedValue only after initial
   // environment is created so that bailout doesn't see a partial env.
-  // See: |InitFromBailout|
+  // See: |BaselineStackBuilder::buildBaselineFrame|
   current->setEnvironmentChain(env);
   return Ok();
 }
