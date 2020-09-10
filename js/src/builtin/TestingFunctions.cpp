@@ -4576,13 +4576,14 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(filename.get(), lineno);
   options.setNoScriptRval(true);
+  options.setNonSyntacticScope(true);
 
   JS::SourceText<char16_t> srcBuf;
   if (!srcBuf.init(cx, src, srclen, SourceOwnership::Borrowed)) {
     return false;
   }
 
-  RootedScript script(cx, JS::CompileForNonSyntacticScope(cx, options, srcBuf));
+  RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   if (!script) {
     return false;
   }

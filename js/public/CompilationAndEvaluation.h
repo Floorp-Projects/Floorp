@@ -181,19 +181,6 @@ extern JS_PUBLIC_API JSScript* CompileUtf8File(
 extern JS_PUBLIC_API JSScript* CompileUtf8Path(
     JSContext* cx, const ReadOnlyCompileOptions& options, const char* filename);
 
-extern JS_PUBLIC_API JSScript* CompileForNonSyntacticScope(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<char16_t>& srcBuf);
-
-/**
- * Compile the provided UTF-8 data into a script in a non-syntactic scope.  It
- * is an error if the data contains invalid UTF-8.  Return the script on
- * success, or return null on failure (usually with an error reported).
- */
-extern JS_PUBLIC_API JSScript* CompileForNonSyntacticScope(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<mozilla::Utf8Unit>& srcBuf);
-
 /**
  * Compile a function with envChain plus the global as its scope chain.
  * envChain must contain objects in the current compartment of cx.  The actual
