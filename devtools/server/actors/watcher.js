@@ -213,15 +213,26 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
    */
   notifyResourceAvailable(resources) {
-    this.emit("resource-available-form", resources);
+    this._emitResourcesForm("resource-available-form", resources);
   },
 
   notifyResourceDestroyed(resources) {
-    this.emit("resource-destroyed-form", resources);
+    this._emitResourcesForm("resource-destroyed-form", resources);
   },
 
   notifyResourceUpdated(resources) {
-    this.emit("resource-updated-form", resources);
+    this._emitResourcesForm("resource-updated-form", resources);
+  },
+
+  /**
+   * Wrapper around emit for resource forms.
+   */
+  _emitResourcesForm(name, resources) {
+    if (resources.length === 0) {
+      // Don't try to emit if the resources array is empty.
+      return;
+    }
+    this.emit(name, resources);
   },
 
   /**
