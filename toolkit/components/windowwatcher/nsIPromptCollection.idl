@@ -22,4 +22,14 @@ interface nsIPromptCollection : nsISupports
    * @return true if the page should be allowed to navigate away
    */
   boolean beforeUnloadCheck(in BrowsingContext aBrowsingContext);
+
+  /**
+   * Puts up a dialog for the confirm repost prompt.
+   *
+   * @param aBrowsingContext
+   *        The browsing context the prompt should be opened for.
+   *
+   * @return true if the page should be allowed to repost data.
+   */
+  boolean confirmRepost(in BrowsingContext aBrowsingContext);
 };
