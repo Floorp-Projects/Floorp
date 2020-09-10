@@ -52,6 +52,16 @@ static int membarrier(int cmd, int flags) {
     return syscall(__NR_membarrier, cmd, flags);
 }
 
+// These definitions come from the Linux kernel source, for kernels before 4.16
+// which didn't have access to these membarrier commands.
+#  ifndef MEMBARRIER_CMD_PRIVATE_EXPEDITED_SYNC_CORE
+#  define MEMBARRIER_CMD_PRIVATE_EXPEDITED_SYNC_CORE (1 << 5)
+#  endif
+
+#  ifndef MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE
+#  define MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE (1 << 6)
+#  endif
+
 #endif // __aarch64__
 
 namespace vixl {
