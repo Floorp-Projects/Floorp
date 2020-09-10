@@ -19,6 +19,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentState
 
 /**
@@ -110,12 +111,15 @@ class ToolbarView(
         }
 
         val engineForSpeculativeConnects = if (!isPrivate) engine else null
-        ToolbarAutocompleteFeature(
-            view,
-            engineForSpeculativeConnects
-        ).apply {
-            addDomainProvider(ShippedDomainsProvider().also { it.initialize(view.context) })
-            historyStorage?.also(::addHistoryStorageProvider)
+
+        if (context.settings().shouldAutocompleteInAwesomebar) {
+            ToolbarAutocompleteFeature(
+                view,
+                engineForSpeculativeConnects
+            ).apply {
+                addDomainProvider(ShippedDomainsProvider().also { it.initialize(view.context) })
+                historyStorage?.also(::addHistoryStorageProvider)
+            }
         }
     }
 

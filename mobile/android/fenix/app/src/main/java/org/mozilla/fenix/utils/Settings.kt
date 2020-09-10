@@ -615,6 +615,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
+    val shouldAutocompleteInAwesomebar by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_enable_autocomplete_urls),
+        default = true
+    )
+
     var defaultTopSitesAdded by booleanPreference(
         appContext.getPreferenceKey(R.string.default_top_sites_added),
         default = false

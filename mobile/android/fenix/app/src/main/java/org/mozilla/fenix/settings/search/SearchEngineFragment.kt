@@ -32,6 +32,11 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
                 isChecked = context.settings().shouldShowSearchSuggestions
             }
 
+        val autocompleteURLsPreference =
+            requirePreference<SwitchPreference>(R.string.pref_key_enable_autocomplete_urls).apply {
+                isChecked = context.settings().shouldAutocompleteInAwesomebar
+            }
+
         val searchSuggestionsInPrivatePreference =
             requirePreference<CheckBoxPreference>(R.string.pref_key_show_search_suggestions_in_private).apply {
                 isChecked = context.settings().shouldShowSearchSuggestionsInPrivate
@@ -73,6 +78,7 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         showClipboardSuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
         searchSuggestionsInPrivatePreference.onPreferenceChangeListener = SharedPreferenceUpdater()
         showVoiceSearchPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
+        autocompleteURLsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
 
         searchSuggestionsPreference.setOnPreferenceClickListener {
             if (!searchSuggestionsPreference.isChecked) {

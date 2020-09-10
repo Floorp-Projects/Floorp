@@ -30,6 +30,10 @@
             android:title="@string/preferences_show_search_engines" />
         <SwitchPreference
             android:defaultValue="true"
+            android:key="@string/pref_key_enable_autocomplete_urls"
+            android:title="@string/preferences_enable_autocomplete_urls" />
+        <SwitchPreference
+            android:defaultValue="true"
             android:key="@string/pref_key_show_clipboard_suggestions"
             android:title="@string/preferences_show_clipboard_suggestions" />
         <SwitchPreference
