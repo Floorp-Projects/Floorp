@@ -151,6 +151,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   MOZ_MUST_USE bool buildExpressionStack();
   MOZ_MUST_USE bool finishLastFrame();
 
+  MOZ_MUST_USE bool prepareForNextFrame(HandleValueVector savedCallerArgs);
+
 #ifdef DEBUG
   MOZ_MUST_USE bool validateFrame();
 #endif
@@ -163,6 +165,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   bool hasLiveStackValueAtDepth(uint32_t stackSlotIndex);
   bool isPrologueBailout();
   jsbytecode* getResumePC();
+  void* getStubReturnAddress();
 
  public:
   JSScript* script() const { return script_; }
@@ -491,6 +494,13 @@ BaselineStackBuilder::BaselineStackBuilder(
       suppress_(cx) {
   MOZ_ASSERT(bufferTotal_ >= sizeof(BaselineBailoutInfo));
 }
+
+#ifdef DEBUG
+static inline bool IsInlinableFallback(ICFallbackStub* icEntry) {
+  return icEntry->isCall_Fallback() || icEntry->isGetProp_Fallback() ||
+         icEntry->isSetProp_Fallback() || icEntry->isGetElem_Fallback();
+}
+#endif
 
 bool BaselineStackBuilder::initFrame() {
   // If we are catching an exception, we are bailing out to a catch or
@@ -914,6 +924,302 @@ bool BaselineStackBuilder::buildExpressionStack() {
   return true;
 }
 
+bool BaselineStackBuilder::prepareForNextFrame(
+    HandleValueVector savedCallerArgs) {
+  const uint32_t frameSize = framePushed();
+
+  const BaselineInterpreter& baselineInterp =
+      cx_->runtime()->jitRuntime()->baselineInterpreter();
+
+  blFrame()->setInterpreterFields(script_, pc_);
+
+  // Write out descriptor of BaselineJS frame.
+  size_t baselineFrameDescr = MakeFrameDescriptor(
+      frameSize, FrameType::BaselineJS, BaselineStubFrameLayout::Size());
+  if (!writeWord(baselineFrameDescr, "Descriptor")) {
+    return false;
+  }
+
+  // Calculate and write out return address.
+  // The icEntry in question MUST have an inlinable fallback stub.
+  uint32_t pcOff = script_->pcToOffset(pc_);
+  ICEntry& icEntry = script_->jitScript()->icEntryFromPCOffset(pcOff);
+  MOZ_ASSERT(IsInlinableFallback(icEntry.fallbackStub()));
+
+  uint8_t* retAddr = baselineInterp.retAddrForIC(op_);
+  if (!writePtr(retAddr, "ReturnAddr")) {
+    return false;
+  }
+
+  // Build baseline stub frame:
+  // +===============+
+  // |    StubPtr    |
+  // +---------------+
+  // |   FramePtr    |
+  // +---------------+
+  // |   Padding?    |
+  // +---------------+
+  // |     ArgA      |
+  // +---------------+
+  // |     ...       |
+  // +---------------+
+  // |     Arg0      |
+  // +---------------+
+  // |     ThisV     |
+  // +---------------+
+  // |  ActualArgC   |
+  // +---------------+
+  // |  CalleeToken  |
+  // +---------------+
+  // | Descr(BLStub) |
+  // +---------------+
+  // |  ReturnAddr   |
+  // +===============+
+
+  JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-STUB FRAME]");
+
+  size_t startOfBaselineStubFrame = framePushed();
+
+  // Write stub pointer.
+  MOZ_ASSERT(IsInlinableFallback(icEntry.fallbackStub()));
+  if (!writePtr(icEntry.fallbackStub(), "StubPtr")) {
+    return false;
+  }
+
+  // Write previous frame pointer (saved earlier).
+  if (!writePtr(prevFramePtr(), "PrevFramePtr")) {
+    return false;
+  }
+  prevFramePtr_ = virtualPointerAtStackOffset(0);
+
+  // Write out actual arguments (and thisv), copied from unpacked stack of
+  // BaselineJS frame. Arguments are reversed on the BaselineJS frame's stack
+  // values.
+  MOZ_ASSERT(IsIonInlinableOp(op_));
+  bool pushedNewTarget = IsConstructPC(pc_);
+  unsigned actualArgc;
+  Value callee;
+  if (needToSaveCallerArgs()) {
+    // For FunApply or an accessor, the arguments are not on the stack anymore,
+    // but they are copied in a vector and are written here.
+    if (op_ == JSOp::FunApply) {
+      actualArgc = blFrame()->numActualArgs();
+    } else {
+      actualArgc = IsSetPropOp(op_);
+    }
+    callee = savedCallerArgs[0];
+
+    // Align the stack based on the number of arguments.
+    size_t afterFrameSize =
+        (actualArgc + 1) * sizeof(Value) + JitFrameLayout::Size();
+    if (!maybeWritePadding(JitStackAlignment, afterFrameSize, "Padding")) {
+      return false;
+    }
+
+    // Push arguments.
+    MOZ_ASSERT(actualArgc + 2 <= exprStackSlots());
+    MOZ_ASSERT(savedCallerArgs.length() == actualArgc + 2);
+    for (unsigned i = 0; i < actualArgc + 1; i++) {
+      size_t arg = savedCallerArgs.length() - (i + 1);
+      if (!writeValue(savedCallerArgs[arg], "ArgVal")) {
+        return false;
+      }
+    }
+  } else {
+    actualArgc = GET_ARGC(pc_);
+    if (op_ == JSOp::FunCall) {
+      MOZ_ASSERT(actualArgc > 0);
+      actualArgc--;
+    }
+
+    // Align the stack based on the number of arguments.
+    size_t afterFrameSize = (actualArgc + 1 + pushedNewTarget) * sizeof(Value) +
+                            JitFrameLayout::Size();
+    if (!maybeWritePadding(JitStackAlignment, afterFrameSize, "Padding")) {
+      return false;
+    }
+
+    // Copy the arguments and |this| from the BaselineFrame, in reverse order.
+    size_t valueSlot = blFrame()->numValueSlots(frameSize) - 1;
+    size_t calleeSlot = valueSlot - actualArgc - 1 - pushedNewTarget;
+
+    for (size_t i = valueSlot; i > calleeSlot; i--) {
+      Value v = *blFrame()->valueSlot(i);
+      if (!writeValue(v, "ArgVal")) {
+        return false;
+      }
+    }
+
+    callee = *blFrame()->valueSlot(calleeSlot);
+  }
+
+  // In case these arguments need to be copied on the stack again for a
+  // rectifier frame, save the framePushed values here for later use.
+  size_t endOfBaselineStubArgs = framePushed();
+
+  // Calculate frame size for descriptor.
+  size_t baselineStubFrameSize =
+      endOfBaselineStubArgs - startOfBaselineStubFrame;
+  size_t baselineStubFrameDescr =
+      MakeFrameDescriptor((uint32_t)baselineStubFrameSize,
+                          FrameType::BaselineStub, JitFrameLayout::Size());
+
+  // Push actual argc
+  if (!writeWord(actualArgc, "ActualArgc")) {
+    return false;
+  }
+
+  // Push callee token (must be a JS Function)
+  JitSpew(JitSpew_BaselineBailouts, "      Callee = %016" PRIx64,
+          callee.asRawBits());
+
+  JSFunction* calleeFun = &callee.toObject().as<JSFunction>();
+  if (!writePtr(CalleeToToken(calleeFun, pushedNewTarget), "CalleeToken")) {
+    return false;
+  }
+  setNextCallee(calleeFun);
+
+  // Push BaselineStub frame descriptor
+  if (!writeWord(baselineStubFrameDescr, "Descriptor")) {
+    return false;
+  }
+
+  // Ensure we have a TypeMonitor fallback stub so we don't crash in JIT code
+  // when we try to enter it. See callers of offsetOfFallbackMonitorStub.
+  if (BytecodeOpHasTypeSet(op_) && IsTypeInferenceEnabled()) {
+    ICFallbackStub* fallbackStub = icEntry.fallbackStub();
+    if (!fallbackStub->toMonitoredFallbackStub()->getFallbackMonitorStub(
+            cx_, script_)) {
+      return false;
+    }
+  }
+
+  // Push return address into ICCall_Scripted stub, immediately after the call.
+  void* baselineCallReturnAddr = getStubReturnAddress();
+  MOZ_ASSERT(baselineCallReturnAddr);
+  if (!writePtr(baselineCallReturnAddr, "ReturnAddr")) {
+    return false;
+  }
+  MOZ_ASSERT(framePushed() % JitStackAlignment == 0);
+
+  // If actualArgc >= fun->nargs, then we are done.  Otherwise, we need to push
+  // on a reconstructed rectifier frame.
+  if (actualArgc >= calleeFun->nargs()) {
+    return true;
+  }
+
+  // Push a reconstructed rectifier frame.
+  // +===============+
+  // |   Padding?    |
+  // +---------------+
+  // |  UndefinedU   |
+  // +---------------+
+  // |     ...       |
+  // +---------------+
+  // |  Undefined0   |
+  // +---------------+
+  // |     ArgA      |
+  // +---------------+
+  // |     ...       |
+  // +---------------+
+  // |     Arg0      |
+  // +---------------+
+  // |     ThisV     |
+  // +---------------+
+  // |  ActualArgC   |
+  // +---------------+
+  // |  CalleeToken  |
+  // +---------------+
+  // |  Descr(Rect)  |
+  // +---------------+
+  // |  ReturnAddr   |
+  // +===============+
+
+  JitSpew(JitSpew_BaselineBailouts, "      [RECTIFIER FRAME]");
+
+  size_t startOfRectifierFrame = framePushed();
+
+  // On x86-only, the frame pointer is saved again in the rectifier frame.
+#if defined(JS_CODEGEN_X86)
+  if (!writePtr(prevFramePtr, "PrevFramePtr-X86Only")) {
+    return false;
+  }
+  // Follow the same logic as in JitRuntime::generateArgumentsRectifier.
+  prevFramePtr = virtualPointerAtStackOffset(0);
+  if (!writePtr(prevFramePtr, "Padding-X86Only")) {
+    return false;
+  }
+#endif
+
+  // Align the stack based on the number of arguments.
+  size_t afterFrameSize =
+      (calleeFun->nargs() + 1 + pushedNewTarget) * sizeof(Value) +
+      RectifierFrameLayout::Size();
+  if (!maybeWritePadding(JitStackAlignment, afterFrameSize, "Padding")) {
+    return false;
+  }
+
+  // Copy new.target, if necessary.
+  if (pushedNewTarget) {
+    size_t newTargetOffset = (framePushed() - endOfBaselineStubArgs) +
+                             (actualArgc + 1) * sizeof(Value);
+    Value newTargetValue = *valuePointerAtStackOffset(newTargetOffset);
+    if (!writeValue(newTargetValue, "CopiedNewTarget")) {
+      return false;
+    }
+  }
+
+  // Push undefined for missing arguments.
+  for (unsigned i = 0; i < (calleeFun->nargs() - actualArgc); i++) {
+    if (!writeValue(UndefinedValue(), "FillerVal")) {
+      return false;
+    }
+  }
+
+  // Copy arguments + thisv from BaselineStub frame.
+  if (!subtract((actualArgc + 1) * sizeof(Value), "CopiedArgs")) {
+    return false;
+  }
+  BufferPointer<uint8_t> stubArgsEnd =
+      pointerAtStackOffset<uint8_t>(framePushed() - endOfBaselineStubArgs);
+  JitSpew(JitSpew_BaselineBailouts, "      MemCpy from %p", stubArgsEnd.get());
+  memcpy(pointerAtStackOffset<uint8_t>(0).get(), stubArgsEnd.get(),
+         (actualArgc + 1) * sizeof(Value));
+
+  // Calculate frame size for descriptor.
+  size_t rectifierFrameSize = framePushed() - startOfRectifierFrame;
+  size_t rectifierFrameDescr =
+      MakeFrameDescriptor((uint32_t)rectifierFrameSize, FrameType::Rectifier,
+                          JitFrameLayout::Size());
+
+  // Push actualArgc
+  if (!writeWord(actualArgc, "ActualArgc")) {
+    return false;
+  }
+
+  // Push calleeToken again.
+  if (!writePtr(CalleeToToken(calleeFun, pushedNewTarget), "CalleeToken")) {
+    return false;
+  }
+
+  // Push rectifier frame descriptor
+  if (!writeWord(rectifierFrameDescr, "Descriptor")) {
+    return false;
+  }
+
+  // Push return address into the ArgumentsRectifier code, immediately after the
+  // ioncode call.
+  void* rectReturnAddr =
+      cx_->runtime()->jitRuntime()->getArgumentsRectifierReturnAddr().value;
+  MOZ_ASSERT(rectReturnAddr);
+  if (!writePtr(rectReturnAddr, "ReturnAddr")) {
+    return false;
+  }
+  MOZ_ASSERT(framePushed() % JitStackAlignment == 0);
+
+  return true;
+}
+
 bool BaselineStackBuilder::finishLastFrame() {
   const BaselineInterpreter& baselineInterp =
       cx_->runtime()->jitRuntime()->baselineInterpreter();
@@ -1039,30 +1345,25 @@ bool BaselineStackBuilder::validateFrame() {
   }
   return true;
 }
-
-static inline bool IsInlinableFallback(ICFallbackStub* icEntry) {
-  return icEntry->isCall_Fallback() || icEntry->isGetProp_Fallback() ||
-         icEntry->isSetProp_Fallback() || icEntry->isGetElem_Fallback();
-}
 #endif
 
-static inline void* GetStubReturnAddress(JSContext* cx, JSOp op) {
+void* BaselineStackBuilder::getStubReturnAddress() {
   const BaselineICFallbackCode& code =
-      cx->runtime()->jitRuntime()->baselineICFallbackCode();
+      cx_->runtime()->jitRuntime()->baselineICFallbackCode();
 
-  if (IsGetPropOp(op)) {
+  if (IsGetPropOp(op_)) {
     return code.bailoutReturnAddr(BailoutReturnKind::GetProp);
   }
-  if (IsSetPropOp(op)) {
+  if (IsSetPropOp(op_)) {
     return code.bailoutReturnAddr(BailoutReturnKind::SetProp);
   }
-  if (IsGetElemOp(op)) {
+  if (IsGetElemOp(op_)) {
     return code.bailoutReturnAddr(BailoutReturnKind::GetElem);
   }
 
   // This should be a call op of some kind, now.
-  MOZ_ASSERT(IsInvokeOp(op) && !IsSpreadOp(op));
-  if (IsConstructOp(op)) {
+  MOZ_ASSERT(IsInvokeOp(op_) && !IsSpreadOp(op_));
+  if (IsConstructOp(op_)) {
     return code.bailoutReturnAddr(BailoutReturnKind::New);
   }
   return code.bailoutReturnAddr(BailoutReturnKind::Call);
@@ -1232,10 +1533,6 @@ static bool InitFromBailout(JSContext* cx, JSFunction* fun, JSScript* script,
     return false;
   }
 
-  uint32_t exprStackSlots = builder.exprStackSlots();
-  bool catchingException = builder.catchingException();
-  void* prevFramePtr = builder.prevFramePtr();
-
   // Build first baseline frame:
   // +===============+
   // | PrevFramePtr  |
@@ -1293,11 +1590,8 @@ static bool InitFromBailout(JSContext* cx, JSFunction* fun, JSScript* script,
   }
 #endif
 
-  const uint32_t frameSize = builder.framePushed();
-  const uint32_t pcOff = script->pcToOffset(pc);
-  JitScript* jitScript = script->jitScript();
-
 #ifdef JS_JITSPEW
+  const uint32_t pcOff = script->pcToOffset(pc);
   JitSpew(JitSpew_BaselineBailouts,
           "      Resuming %s pc offset %d (op %s) (line %u) of %s:%u:%u",
           resumeAfter ? "after" : "at", (int)pcOff, CodeName(op),
@@ -1309,307 +1603,14 @@ static bool InitFromBailout(JSContext* cx, JSFunction* fun, JSScript* script,
 
   // If this was the last inline frame, or we are bailing out to a catch or
   // finally block in this frame, then unpacking is almost done.
-  if (!iter.moreFrames() || catchingException) {
+  if (!iter.moreFrames() || builder.catchingException()) {
     return builder.finishLastFrame();
   }
 
-  // This is an outer frame for an inlined getter/setter/call.
-
-  const BaselineInterpreter& baselineInterp =
-      cx->runtime()->jitRuntime()->baselineInterpreter();
-
-  builder.blFrame()->setInterpreterFields(script, pc);
-
-  // Write out descriptor of BaselineJS frame.
-  size_t baselineFrameDescr = MakeFrameDescriptor(
-      (uint32_t)builder.framePushed(), FrameType::BaselineJS,
-      BaselineStubFrameLayout::Size());
-  if (!builder.writeWord(baselineFrameDescr, "Descriptor")) {
-    return false;
-  }
-
-  // Calculate and write out return address.
-  // The icEntry in question MUST have an inlinable fallback stub.
-  ICEntry& icEntry = jitScript->icEntryFromPCOffset(pcOff);
-  MOZ_ASSERT(IsInlinableFallback(icEntry.fallbackStub()));
-
-  uint8_t* retAddr = baselineInterp.retAddrForIC(JSOp(*pc));
-  if (!builder.writePtr(retAddr, "ReturnAddr")) {
-    return false;
-  }
-
-  // Build baseline stub frame:
-  // +===============+
-  // |    StubPtr    |
-  // +---------------+
-  // |   FramePtr    |
-  // +---------------+
-  // |   Padding?    |
-  // +---------------+
-  // |     ArgA      |
-  // +---------------+
-  // |     ...       |
-  // +---------------+
-  // |     Arg0      |
-  // +---------------+
-  // |     ThisV     |
-  // +---------------+
-  // |  ActualArgC   |
-  // +---------------+
-  // |  CalleeToken  |
-  // +---------------+
-  // | Descr(BLStub) |
-  // +---------------+
-  // |  ReturnAddr   |
-  // +===============+
-
-  JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-STUB FRAME]");
-
-  size_t startOfBaselineStubFrame = builder.framePushed();
-
-  // Write stub pointer.
-  MOZ_ASSERT(IsInlinableFallback(icEntry.fallbackStub()));
-  if (!builder.writePtr(icEntry.fallbackStub(), "StubPtr")) {
-    return false;
-  }
-
-  // Write previous frame pointer (saved earlier).
-  if (!builder.writePtr(prevFramePtr, "PrevFramePtr")) {
-    return false;
-  }
-  prevFramePtr = builder.virtualPointerAtStackOffset(0);
-
-  // Write out actual arguments (and thisv), copied from unpacked stack of
-  // BaselineJS frame. Arguments are reversed on the BaselineJS frame's stack
-  // values.
-  MOZ_ASSERT(IsIonInlinableOp(op));
-  bool pushedNewTarget = IsConstructPC(pc);
-  unsigned actualArgc;
-  Value callee;
-  if (builder.needToSaveCallerArgs()) {
-    // For FunApply or an accessor, the arguments are not on the stack anymore,
-    // but they are copied in a vector and are written here.
-    if (op == JSOp::FunApply) {
-      actualArgc = builder.blFrame()->numActualArgs();
-    } else {
-      actualArgc = IsSetPropOp(op);
-    }
-    callee = savedCallerArgs[0];
-
-    // Align the stack based on the number of arguments.
-    size_t afterFrameSize =
-        (actualArgc + 1) * sizeof(Value) + JitFrameLayout::Size();
-    if (!builder.maybeWritePadding(JitStackAlignment, afterFrameSize,
-                                   "Padding")) {
-      return false;
-    }
-
-    // Push arguments.
-    MOZ_ASSERT(actualArgc + 2 <= exprStackSlots);
-    MOZ_ASSERT(savedCallerArgs.length() == actualArgc + 2);
-    for (unsigned i = 0; i < actualArgc + 1; i++) {
-      size_t arg = savedCallerArgs.length() - (i + 1);
-      if (!builder.writeValue(savedCallerArgs[arg], "ArgVal")) {
-        return false;
-      }
-    }
-  } else {
-    actualArgc = GET_ARGC(pc);
-    if (op == JSOp::FunCall) {
-      MOZ_ASSERT(actualArgc > 0);
-      actualArgc--;
-    }
-
-    // Align the stack based on the number of arguments.
-    size_t afterFrameSize = (actualArgc + 1 + pushedNewTarget) * sizeof(Value) +
-                            JitFrameLayout::Size();
-    if (!builder.maybeWritePadding(JitStackAlignment, afterFrameSize,
-                                   "Padding")) {
-      return false;
-    }
-
-    // Copy the arguments and |this| from the BaselineFrame, in reverse order.
-    size_t valueSlot = builder.blFrame()->numValueSlots(frameSize) - 1;
-    size_t calleeSlot = valueSlot - actualArgc - 1 - pushedNewTarget;
-
-    for (size_t i = valueSlot; i > calleeSlot; i--) {
-      Value v = *builder.blFrame()->valueSlot(i);
-      if (!builder.writeValue(v, "ArgVal")) {
-        return false;
-      }
-    }
-
-    callee = *builder.blFrame()->valueSlot(calleeSlot);
-  }
-
-  // In case these arguments need to be copied on the stack again for a
-  // rectifier frame, save the framePushed values here for later use.
-  size_t endOfBaselineStubArgs = builder.framePushed();
-
-  // Calculate frame size for descriptor.
-  size_t baselineStubFrameSize =
-      builder.framePushed() - startOfBaselineStubFrame;
-  size_t baselineStubFrameDescr =
-      MakeFrameDescriptor((uint32_t)baselineStubFrameSize,
-                          FrameType::BaselineStub, JitFrameLayout::Size());
-
-  // Push actual argc
-  if (!builder.writeWord(actualArgc, "ActualArgc")) {
-    return false;
-  }
-
-  // Push callee token (must be a JS Function)
-  JitSpew(JitSpew_BaselineBailouts, "      Callee = %016" PRIx64,
-          callee.asRawBits());
-
-  JSFunction* calleeFun = &callee.toObject().as<JSFunction>();
-  if (!builder.writePtr(CalleeToToken(calleeFun, pushedNewTarget),
-                        "CalleeToken")) {
-    return false;
-  }
-  builder.setNextCallee(calleeFun);
-
-  // Push BaselineStub frame descriptor
-  if (!builder.writeWord(baselineStubFrameDescr, "Descriptor")) {
-    return false;
-  }
-
-  // Ensure we have a TypeMonitor fallback stub so we don't crash in JIT code
-  // when we try to enter it. See callers of offsetOfFallbackMonitorStub.
-  if (BytecodeOpHasTypeSet(JSOp(*pc)) && IsTypeInferenceEnabled()) {
-    ICFallbackStub* fallbackStub = icEntry.fallbackStub();
-    if (!fallbackStub->toMonitoredFallbackStub()->getFallbackMonitorStub(
-            cx, script)) {
-      return false;
-    }
-  }
-
-  // Push return address into ICCall_Scripted stub, immediately after the call.
-  void* baselineCallReturnAddr = GetStubReturnAddress(cx, op);
-  MOZ_ASSERT(baselineCallReturnAddr);
-  if (!builder.writePtr(baselineCallReturnAddr, "ReturnAddr")) {
-    return false;
-  }
-  MOZ_ASSERT(builder.framePushed() % JitStackAlignment == 0);
-
-  // If actualArgc >= fun->nargs, then we are done.  Otherwise, we need to push
-  // on a reconstructed rectifier frame.
-  if (actualArgc >= calleeFun->nargs()) {
-    return true;
-  }
-
-  // Push a reconstructed rectifier frame.
-  // +===============+
-  // |   Padding?    |
-  // +---------------+
-  // |  UndefinedU   |
-  // +---------------+
-  // |     ...       |
-  // +---------------+
-  // |  Undefined0   |
-  // +---------------+
-  // |     ArgA      |
-  // +---------------+
-  // |     ...       |
-  // +---------------+
-  // |     Arg0      |
-  // +---------------+
-  // |     ThisV     |
-  // +---------------+
-  // |  ActualArgC   |
-  // +---------------+
-  // |  CalleeToken  |
-  // +---------------+
-  // |  Descr(Rect)  |
-  // +---------------+
-  // |  ReturnAddr   |
-  // +===============+
-
-  JitSpew(JitSpew_BaselineBailouts, "      [RECTIFIER FRAME]");
-
-  size_t startOfRectifierFrame = builder.framePushed();
-
-  // On x86-only, the frame pointer is saved again in the rectifier frame.
-#if defined(JS_CODEGEN_X86)
-  if (!builder.writePtr(prevFramePtr, "PrevFramePtr-X86Only")) {
-    return false;
-  }
-  // Follow the same logic as in JitRuntime::generateArgumentsRectifier.
-  prevFramePtr = builder.virtualPointerAtStackOffset(0);
-  if (!builder.writePtr(prevFramePtr, "Padding-X86Only")) {
-    return false;
-  }
-#endif
-
-  // Align the stack based on the number of arguments.
-  size_t afterFrameSize =
-      (calleeFun->nargs() + 1 + pushedNewTarget) * sizeof(Value) +
-      RectifierFrameLayout::Size();
-  if (!builder.maybeWritePadding(JitStackAlignment, afterFrameSize,
-                                 "Padding")) {
-    return false;
-  }
-
-  // Copy new.target, if necessary.
-  if (pushedNewTarget) {
-    size_t newTargetOffset = (builder.framePushed() - endOfBaselineStubArgs) +
-                             (actualArgc + 1) * sizeof(Value);
-    Value newTargetValue = *builder.valuePointerAtStackOffset(newTargetOffset);
-    if (!builder.writeValue(newTargetValue, "CopiedNewTarget")) {
-      return false;
-    }
-  }
-
-  // Push undefined for missing arguments.
-  for (unsigned i = 0; i < (calleeFun->nargs() - actualArgc); i++) {
-    if (!builder.writeValue(UndefinedValue(), "FillerVal")) {
-      return false;
-    }
-  }
-
-  // Copy arguments + thisv from BaselineStub frame.
-  if (!builder.subtract((actualArgc + 1) * sizeof(Value), "CopiedArgs")) {
-    return false;
-  }
-  BufferPointer<uint8_t> stubArgsEnd = builder.pointerAtStackOffset<uint8_t>(
-      builder.framePushed() - endOfBaselineStubArgs);
-  JitSpew(JitSpew_BaselineBailouts, "      MemCpy from %p", stubArgsEnd.get());
-  memcpy(builder.pointerAtStackOffset<uint8_t>(0).get(), stubArgsEnd.get(),
-         (actualArgc + 1) * sizeof(Value));
-
-  // Calculate frame size for descriptor.
-  size_t rectifierFrameSize = builder.framePushed() - startOfRectifierFrame;
-  size_t rectifierFrameDescr =
-      MakeFrameDescriptor((uint32_t)rectifierFrameSize, FrameType::Rectifier,
-                          JitFrameLayout::Size());
-
-  // Push actualArgc
-  if (!builder.writeWord(actualArgc, "ActualArgc")) {
-    return false;
-  }
-
-  // Push calleeToken again.
-  if (!builder.writePtr(CalleeToToken(calleeFun, pushedNewTarget),
-                        "CalleeToken")) {
-    return false;
-  }
-
-  // Push rectifier frame descriptor
-  if (!builder.writeWord(rectifierFrameDescr, "Descriptor")) {
-    return false;
-  }
-
-  // Push return address into the ArgumentsRectifier code, immediately after the
-  // ioncode call.
-  void* rectReturnAddr =
-      cx->runtime()->jitRuntime()->getArgumentsRectifierReturnAddr().value;
-  MOZ_ASSERT(rectReturnAddr);
-  if (!builder.writePtr(rectReturnAddr, "ReturnAddr")) {
-    return false;
-  }
-  MOZ_ASSERT(builder.framePushed() % JitStackAlignment == 0);
-
-  return true;
+  // Otherwise, this is an outer frame for an inlined call or
+  // accessor. We will be building an inner frame. Before that,
+  // we must create a stub frame, and potentially a rectifier frame.
+  return builder.prepareForNextFrame(savedCallerArgs);
 }
 
 bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
