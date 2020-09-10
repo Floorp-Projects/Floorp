@@ -65,46 +65,43 @@ using mozilla::ipc::IsOnBackgroundThread;
 namespace {
 bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
 
+constexpr StructuredCloneFileBase::FileType ToStructuredCloneFileType(
+    const char16_t aTag) {
+  switch (aTag) {
+    case char16_t('-'):
+      return StructuredCloneFileBase::eMutableFile;
+
+    case char16_t('.'):
+      return StructuredCloneFileBase::eStructuredClone;
+
+    case char16_t('/'):
+      return StructuredCloneFileBase::eWasmBytecode;
+
+    case char16_t('\\'):
+      return StructuredCloneFileBase::eWasmCompiled;
+
+    default:
+      return StructuredCloneFileBase::eBlob;
+  }
+}
+
+int32_t ToInteger(const nsAString& aStr, nsresult* const aRv) {
+  return aStr.ToInteger(aRv);
+}
+
 Result<StructuredCloneFileParent, nsresult> DeserializeStructuredCloneFile(
     const FileManager& aFileManager, const nsDependentSubstring& aText) {
   MOZ_ASSERT(!aText.IsEmpty());
 
-  StructuredCloneFileBase::FileType type;
+  const StructuredCloneFileBase::FileType type =
+      ToStructuredCloneFileType(aText.First());
 
-  switch (aText.First()) {
-    case char16_t('-'):
-      type = StructuredCloneFileBase::eMutableFile;
-      break;
-
-    case char16_t('.'):
-      type = StructuredCloneFileBase::eStructuredClone;
-      break;
-
-    case char16_t('/'):
-      type = StructuredCloneFileBase::eWasmBytecode;
-      break;
-
-    case char16_t('\\'):
-      type = StructuredCloneFileBase::eWasmCompiled;
-      break;
-
-    default:
-      type = StructuredCloneFileBase::eBlob;
-  }
-
-  nsresult rv;
-  int32_t id;
-
-  if (type == StructuredCloneFileBase::eBlob) {
-    id = aText.ToInteger(&rv);
-  } else {
-    nsString text(Substring(aText, 1));
-
-    id = text.ToInteger(&rv);
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(
+      const auto id,
+      ToResultGet<int32_t>(
+          ToInteger, type == StructuredCloneFileBase::eBlob
+                         ? aText
+                         : static_cast<const nsAString&>(Substring(aText, 1))));
 
   SafeRefPtr<FileInfo> fileInfo = aFileManager.GetFileInfo(id);
   MOZ_ASSERT(fileInfo);
