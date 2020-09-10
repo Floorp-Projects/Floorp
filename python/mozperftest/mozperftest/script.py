@@ -47,12 +47,22 @@ XPCSHELL_FUNCS = "add_task", "run_test", "run_next_test"
 
 
 class MissingFieldError(Exception):
-    pass
+    def __init__(self, script, field):
+        super().__init__(f"Missing metadata {field}")
+        self.script = script
+        self.field = field
+
+
+class ParseError(Exception):
+    def __init__(self, script, exception):
+        super().__init__(f"Cannot parse {script}")
+        self.script = script
+        self.exception = exception
 
 
 class ScriptType(Enum):
-    XPCSHELL = 1
-    BROWSERTIME = 2
+    xpcshell = 1
+    browsertime = 2
 
 
 class ScriptInfo(defaultdict):
@@ -60,10 +70,22 @@ class ScriptInfo(defaultdict):
 
     def __init__(self, path):
         super(ScriptInfo, self).__init__()
+        try:
+            self._parse_file(path)
+        except Exception as e:
+            raise ParseError(path, e)
+
+        # If the fields found, don't match our known ones, then an error is raised
+        for field, required in METADATA:
+            if not required:
+                continue
+            if field not in self:
+                raise MissingFieldError(path, field)
+
+    def _parse_file(self, path):
         self.script = Path(path)
         self["filename"] = str(self.script)
-        self.script_type = ScriptType.BROWSERTIME
-
+        self.script_type = ScriptType.browsertime
         with self.script.open() as f:
             self.parsed = esprima.parseScript(f.read())
 
@@ -78,13 +100,13 @@ class ScriptInfo(defaultdict):
                 and stmt.expression.callee.name in XPCSHELL_FUNCS
             ):
                 self["test"] = "xpcshell"
-                self.script_type = ScriptType.XPCSHELL
+                self.script_type = ScriptType.xpcshell
                 continue
 
             # plain xpcshell tests functions markers
             if stmt.type == "FunctionDeclaration" and stmt.id.name in XPCSHELL_FUNCS:
                 self["test"] = "xpcshell"
-                self.script_type = ScriptType.XPCSHELL
+                self.script_type = ScriptType.xpcshell
                 continue
 
             # is this the perfMetdatata plain var ?
@@ -113,13 +135,6 @@ class ScriptInfo(defaultdict):
 
             # now scanning the properties
             self.scan_properties(stmt.expression.right.properties)
-
-        # If the fields found, don't match our known ones, then an error is raised
-        for field, required in METADATA:
-            if not required:
-                continue
-            if field not in self:
-                raise MissingFieldError(field)
 
     def scan_properties(self, properties):
         for prop in properties:
@@ -158,3 +173,7 @@ class ScriptInfo(defaultdict):
 
     def __missing__(self, key):
         return "N/A"
+
+    @classmethod
+    def detect_type(cls, path):
+        return cls(path).script_type
