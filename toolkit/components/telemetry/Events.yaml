@@ -2475,43 +2475,6 @@ webrtc.ui:
       - 1639283
     expiry_version: "82"
     release_channel_collection: opt-out
-  tab_switch_warning:
-    objects: ["tab_switch_warning"]
-    description: >
-      Recorded when the tab switch warning is displayed. The value for this
-      event is a unique ID that differentiates different sharing sessions. A
-      new sharing session is created when the user transitions from not
-      sharing a display to sharing at least one display.
-    notification_emails:
-      - mconley@mozilla.com
-      - vchin@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1639283
-    expiry_version: "82"
-    release_channel_collection: opt-out
-  allow_all_tabs:
-    objects: ["allow_all_tabs"]
-    description: >
-      Recorded when the user chooses to allow all tab switches and suppress the
-      warning for a sharing session. The value for this event is a unique ID
-      that differentiates different sharing sessions. A new sharing session is
-      created when the user transitions from not sharing a display to sharing
-      at least one display.
-    notification_emails:
-      - mconley@mozilla.com
-      - vchin@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1639283
-    expiry_version: "82"
-    release_channel_collection: opt-out
 
 ysod:
   shown:
