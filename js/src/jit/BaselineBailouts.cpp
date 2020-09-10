@@ -2041,6 +2041,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::TagNotEqualGuard:
     case BailoutKind::FunctionFlagsGuard:
     case BailoutKind::FunctionKindGuard:
+    case BailoutKind::FunctionScriptGuard:
     case BailoutKind::PackedArrayGuard:
       // Do nothing.
       break;

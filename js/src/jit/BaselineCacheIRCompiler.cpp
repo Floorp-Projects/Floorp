@@ -363,6 +363,24 @@ bool BaselineCacheIRCompiler::emitGuardSpecificFunction(
   return emitGuardSpecificObject(objId, expectedOffset);
 }
 
+bool BaselineCacheIRCompiler::emitGuardFunctionScript(
+    ObjOperandId funId, uint32_t expectedOffset, uint32_t nargsAndFlagsOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register fun = allocator.useRegister(masm, funId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  Address addr(stubAddress(expectedOffset));
+  masm.loadPtr(Address(fun, JSFunction::offsetOfBaseScript()), scratch);
+  masm.branchPtr(Assembler::NotEqual, addr, scratch, failure->label());
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
                                                     uint32_t expectedOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
