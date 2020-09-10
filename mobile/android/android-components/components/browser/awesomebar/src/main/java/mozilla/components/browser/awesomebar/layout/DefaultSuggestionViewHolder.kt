@@ -75,8 +75,13 @@ internal sealed class DefaultSuggestionViewHolder {
                 selectionListener.invoke()
             }
 
-            editView.setOnClickListener {
-                awesomeBar.editSuggestionListener?.invoke(title.toString())
+            if (suggestion.editSuggestion.isNullOrEmpty()) {
+                editView.visibility = View.GONE
+            } else {
+                editView.visibility = View.VISIBLE
+                editView.setOnClickListener {
+                    awesomeBar.editSuggestionListener?.invoke(suggestion.editSuggestion!!)
+                }
             }
         }
 

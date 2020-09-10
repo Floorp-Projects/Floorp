@@ -113,13 +113,17 @@ class DefaultSuggestionViewHolderTest {
 
         val viewHolder = DefaultSuggestionViewHolder.Default(
                 BrowserAwesomeBar(testContext).apply {
-                    setOnEditSuggestionListener { callbackExecuted = true }
+                    setOnEditSuggestionListener {
+                        assertEquals("Hello World", it)
+                        callbackExecuted = true
+                    }
                 },
                 view
         )
 
         val suggestion = AwesomeBar.Suggestion(
-            mock()
+            mock(),
+            editSuggestion = "Hello World"
         )
 
         viewHolder.bind(suggestion) {
@@ -128,6 +132,29 @@ class DefaultSuggestionViewHolderTest {
 
         view.findViewById<View>(R.id.mozac_browser_awesomebar_edit_suggestion).performClick()
         assertTrue(callbackExecuted)
+    }
+
+    @Test
+    fun `Edit suggestion button is hidden when editSuggestion is empty`() {
+        val view = LayoutInflater.from(testContext).inflate(
+            R.layout.mozac_browser_awesomebar_item_generic, null, false)
+
+        val viewHolder = DefaultSuggestionViewHolder.Default(
+            BrowserAwesomeBar(testContext),
+            view
+        )
+
+        val suggestion = AwesomeBar.Suggestion(
+            mock(),
+            editSuggestion = ""
+        )
+
+        viewHolder.bind(suggestion) {
+            // Do nothing
+        }
+
+        val editSuggestionView = view.findViewById<View>(R.id.mozac_browser_awesomebar_edit_suggestion)
+        assertEquals(View.GONE, editSuggestionView.visibility)
     }
 
     @Test

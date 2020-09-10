@@ -69,6 +69,7 @@ class BookmarksStorageSuggestionProvider(
                 flags = setOf(AwesomeBar.Suggestion.Flag.BOOKMARK),
                 title = result.title,
                 description = result.url,
+                editSuggestion = result.url,
                 onSuggestionClicked = { loadUrlUseCase.invoke(result.url!!) }
             )
         }

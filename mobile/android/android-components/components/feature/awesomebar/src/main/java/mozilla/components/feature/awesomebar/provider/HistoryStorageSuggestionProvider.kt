@@ -66,6 +66,7 @@ class HistoryStorageSuggestionProvider(
                 icon = icon?.await()?.bitmap,
                 title = result.title,
                 description = result.url,
+                editSuggestion = result.url,
                 score = result.score,
                 onSuggestionClicked = { loadUrlUseCase.invoke(result.url) }
             )
