@@ -259,7 +259,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
     // content process side. In that case, we need to enumerate the printers
     // on the content side, and find a printer with a matching name.
 
-    if (GtkPrinter* printer = mPrintSettings->GetGtkPrinter()) {
+    if (mPrintSettings->GetGtkPrinter()) {
       // We have a printer, so we can print right away.
       StartPrintJob();
     } else {
