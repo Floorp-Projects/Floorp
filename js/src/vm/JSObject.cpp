@@ -1487,23 +1487,30 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
     MOZ_ASSERT(!priv);
   }
 
+  uint32_t oldDictionarySlotSpan =
+      obj->inDictionaryMode() ? obj->dictionaryModeSlotSpan() : 0;
+
   Zone* zone = obj->zone();
   if (obj->hasDynamicSlots()) {
     ObjectSlots* slotsHeader = obj->getSlotsHeader();
-    uint32_t oldDictionarySlotSpan = slotsHeader->dictionarySlotSpan();
     size_t size = ObjectSlots::allocSize(slotsHeader->capacity());
     zone->removeCellMemory(old, size, MemoryUse::ObjectSlots);
     js_free(slotsHeader);
-    obj->setEmptyDynamicSlots(oldDictionarySlotSpan);
+    obj->setEmptyDynamicSlots(0);
   }
 
   size_t ndynamic =
       calculateDynamicSlots(nfixed, values.length(), obj->getClass());
-  MOZ_ASSERT(ndynamic >= obj->numDynamicSlots());
-  if (ndynamic > obj->numDynamicSlots()) {
-    if (!obj->growSlots(cx, obj->numDynamicSlots(), ndynamic)) {
+  size_t currentSlots = obj->getSlotsHeader()->capacity();
+  MOZ_ASSERT(ndynamic >= currentSlots);
+  if (ndynamic > currentSlots) {
+    if (!obj->growSlots(cx, currentSlots, ndynamic)) {
       return false;
     }
+  }
+
+  if (obj->inDictionaryMode()) {
+    obj->setDictionaryModeSlotSpan(oldDictionarySlotSpan);
   }
 
   obj->initSlotRange(0, values.begin(), values.length());
