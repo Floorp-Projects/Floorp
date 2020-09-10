@@ -58,7 +58,6 @@ TEST_MANIFESTS = dict(
     MOCHITEST_CHROME=('chrome', 'testing/mochitest', 'chrome', True),
     WEBRTC_SIGNALLING_TEST=('steeplechase', 'steeplechase', '.', True),
     XPCSHELL_TESTS=('xpcshell', 'xpcshell', '.', True),
-    PERFTESTS=('perftest', 'testing/perf', 'perf', True)
 )
 
 # reftests, wpt, and puppeteer all have their own manifest formats

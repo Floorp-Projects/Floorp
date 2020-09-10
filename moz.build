@@ -149,7 +149,7 @@ DIRS += [
     'build',
     'config',
     'python',
-    'testing',
+    'testing/mozbase',
     'third_party/python',
 ]
 
