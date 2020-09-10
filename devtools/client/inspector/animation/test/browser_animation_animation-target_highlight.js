@@ -22,26 +22,34 @@ add_task(async function() {
     inspector,
     panel,
   } = await openAnimationInspector();
+  const {
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
 
   info("Check highlighting when mouse over on a target node");
-  const onHighlight = inspector.highlighter.once("node-highlight");
+  const onHighlight = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
   mouseOverOnTargetNode(animationInspector, panel, 0);
-  let nodeFront = await onHighlight;
-  assertNodeFront(nodeFront, "DIV", "ball animated");
+  let data = await onHighlight;
+  assertNodeFront(data.nodeFront, "DIV", "ball animated");
 
   info("Check unhighlighting when mouse out on a target node");
-  const onUnhighlight = inspector.highlighter.once("node-unhighlight");
+  const onUnhighlight = waitForHighlighterTypeHidden(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
   mouseOutOnTargetNode(animationInspector, panel, 0);
   await onUnhighlight;
   ok(true, "Unhighlighted the targe node");
 
   info("Check node is highlighted when the inspect icon is clicked");
-  let onHighlighterShown = inspector.highlighters.once(
-    "box-model-highlighter-shown"
+  const onHighlighterShown = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.BOXMODEL
   );
   await clickOnInspectIcon(animationInspector, panel, 0);
-  nodeFront = await onHighlighterShown;
-  assertNodeFront(nodeFront, "DIV", "ball animated");
+  data = await onHighlighterShown;
+  assertNodeFront(data.nodeFront, "DIV", "ball animated");
   ok(
     panel
       .querySelectorAll(".animation-target")[0]
@@ -61,22 +69,24 @@ add_task(async function() {
 
   info("Check no highlight event occur by mouse over locked target");
   let highlightEventCount = 0;
-  const highlightEventCounter = () => {
-    highlightEventCount += 1;
-  };
-  inspector.highlighter.on("node-highlight", highlightEventCounter);
+  function onHighlighterHidden({ type }) {
+    if (type === inspector.highlighters.TYPES.BOXMODEL) {
+      highlightEventCount += 1;
+    }
+  }
+  inspector.highlighters.on("highlighter-hidden", onHighlighterHidden);
   mouseOverOnTargetNode(animationInspector, panel, 0);
   await wait(500);
   is(highlightEventCount, 0, "Highlight event should not occur");
-  inspector.highlighter.off("node-highlight", highlightEventCounter);
+  inspector.highlighters.off("highlighter-hidden", onHighlighterHidden);
 
-  info("Highlighting another animation target");
-  onHighlighterShown = inspector.highlighters.once(
-    "box-model-highlighter-shown"
+  info("Show persistent highlighter on an animation target");
+  const onPersistentHighlighterShown = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.SELECTOR
   );
   await clickOnInspectIcon(animationInspector, panel, 1);
-  nodeFront = await onHighlighterShown;
-  assertNodeFront(nodeFront, "DIV", "ball multi");
+  data = await onPersistentHighlighterShown;
+  assertNodeFront(data.nodeFront, "DIV", "ball multi");
 
   info("Check the highlighted state of the animation targets");
   const animationTargetEls = panel.querySelectorAll(".animation-target");
@@ -93,12 +103,12 @@ add_task(async function() {
     "The animation target[2] should have 'highlighting' class"
   );
 
-  info("Hide highlighter");
-  const onHighlighterHidden = inspector.highlighters.once(
-    "box-model-highlighter-hidden"
+  info("Hide persistent highlighter");
+  const onPersistentHighlighterHidden = waitForHighlighterTypeHidden(
+    inspector.highlighters.TYPES.SELECTOR
   );
   await clickOnInspectIcon(animationInspector, panel, 1);
-  await onHighlighterHidden;
+  await onPersistentHighlighterHidden;
 
   info("Check the highlighted state of the animation targets");
   ok(

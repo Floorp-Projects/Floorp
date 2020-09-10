@@ -50,6 +50,7 @@ const TYPES = {
   GEOMETRY: "GeometryEditorHighlighter",
   GRID: "CssGridHighlighter",
   SHAPES: "ShapesHighlighter",
+  SELECTOR: "SelectorHighlighter",
   TRANSFORM: "CssTransformHighlighter",
 };
 
@@ -945,46 +946,6 @@ class HighlightersOverlay {
   }
 
   /**
-   * Show the box model highlighter for the given node.
-   *
-   * @param  {NodeFront} node
-   *         The NodeFront of the element to highlight.
-   * @param  {Object} options
-   *         Object used for passing options to the box model highlighter.
-   */
-  async showBoxModelHighlighter(node, options) {
-    const highlighter = await this._getHighlighter("BoxModelHighlighter");
-    if (!highlighter) {
-      return;
-    }
-
-    const isShown = await highlighter.show(node, options);
-    if (!isShown) {
-      return;
-    }
-
-    this.boxModelHighlighterShown = node;
-    this.emit("box-model-highlighter-shown", node);
-  }
-
-  /**
-   * Hide the box model highlighter.
-   */
-  async hideBoxModelHighlighter() {
-    if (
-      !this.boxModelHighlighterShown ||
-      !this.highlighters.BoxModelHighlighter
-    ) {
-      return;
-    }
-
-    await this.highlighters.BoxModelHighlighter.hide();
-    const node = this.boxModelHighlighterShown;
-    this.boxModelHighlighterShown = null;
-    this.emit("box-model-highlighter-hidden", node);
-  }
-
-  /**
    * Toggle the geometry editor highlighter for the given element.
    *
    * @param {NodeFront} node
@@ -1670,7 +1631,6 @@ class HighlightersOverlay {
     this.parentGridHighlighters.clear();
     this.subgridToParentMap.clear();
 
-    this.boxModelHighlighterShown = null;
     this.flexboxHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.hoveredHighlighterShown = null;
@@ -1769,7 +1729,6 @@ class HighlightersOverlay {
     this.telemetry = null;
     this.walker = null;
 
-    this.boxModelHighlighterShown = null;
     this.flexboxHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.hoveredHighlighterShown = null;
