@@ -54,11 +54,11 @@ add_task(async function() {
   let { valueSpan } = getRuleViewProperty(view, "body", "transform");
 
   info("Checking that the HighlighterFront's show/hide methods are called");
-  let onHighlighterShown = hs.once("highlighter-shown");
+  let onHighlighterShown = hs.once("css-transform-highlighter-shown");
   hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
   ok(HighlighterFront.isShown, "The highlighter is shown");
-  let onHighlighterHidden = hs.once("highlighter-hidden");
+  let onHighlighterHidden = hs.once("css-transform-highlighter-hidden");
   hs.onMouseOut();
   await onHighlighterHidden;
   ok(!HighlighterFront.isShown, "The highlighter is hidden");
@@ -68,7 +68,7 @@ add_task(async function() {
       " show the highlighter several times"
   );
   const nb = HighlighterFront.nbOfTimesShown;
-  onHighlighterShown = hs.once("highlighter-shown");
+  onHighlighterShown = hs.once("css-transform-highlighter-shown");
   hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
   is(HighlighterFront.nbOfTimesShown, nb + 1, "The highlighter was shown once");
@@ -83,7 +83,7 @@ add_task(async function() {
   info("Checking that the right NodeFront reference is passed");
   await selectNode("html", inspector);
   ({ valueSpan } = getRuleViewProperty(view, "html", "transform"));
-  onHighlighterShown = hs.once("highlighter-shown");
+  onHighlighterShown = hs.once("css-transform-highlighter-shown");
   hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
   is(
@@ -94,7 +94,7 @@ add_task(async function() {
 
   await selectNode("body", inspector);
   ({ valueSpan } = getRuleViewProperty(view, "body", "transform"));
-  onHighlighterShown = hs.once("highlighter-shown");
+  onHighlighterShown = hs.once("css-transform-highlighter-shown");
   hs.onMouseMove({ target: valueSpan });
   await onHighlighterShown;
   is(
@@ -108,7 +108,7 @@ add_task(async function() {
       "non-transform property"
   );
   ({ valueSpan } = getRuleViewProperty(view, "body", "color"));
-  onHighlighterHidden = hs.once("highlighter-hidden");
+  onHighlighterHidden = hs.once("css-transform-highlighter-hidden");
   hs.onMouseMove({ target: valueSpan });
   await onHighlighterHidden;
   ok(!HighlighterFront.isShown, "The highlighter is hidden");

@@ -89,8 +89,8 @@ const HIGHLIGHTER_EVENTS = {
     hidden: "shapes-highlighter-hidden",
   },
   [TYPES.TRANSFORM]: {
-    shown: "highlighter-shown",
-    hidden: "highlighter-hidden",
+    shown: "css-transform-highlighter-shown",
+    hidden: "css-transform-highlighter-hidden",
   },
 };
 
@@ -1272,7 +1272,7 @@ class HighlightersOverlay {
     }
 
     this.hoveredHighlighterShown = null;
-    this.emit("highlighter-hidden");
+    this.emit("css-transform-highlighter-hidden");
   }
 
   /**
@@ -1513,7 +1513,7 @@ class HighlightersOverlay {
         .then(highlighter => highlighter.show(node))
         .then(shown => {
           if (shown) {
-            this.emit("highlighter-shown");
+            this.emit("css-transform-highlighter-shown");
           }
         });
     }
