@@ -144,9 +144,8 @@ var allResources = {
 };
 
 window.onload = function() {
-  let entries = performance.getEntries();
-  // The entries.slice() to drop first 'document' item.
-  for (let entry of entries.slice(1)) {
+  let entries = performance.getEntriesByType('resource');
+  for (let entry of entries) {
     //dump(entry.name + " || "+ entry.initiatorType+ "\n");
     if (!(entry.name in allResources)) {
       if (entry.name.substr(-4) == ".ttf") {
