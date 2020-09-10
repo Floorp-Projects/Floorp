@@ -24,9 +24,9 @@
 #include "nsString.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
-#include "GeckoProfiler.h"
 
 #include "prprf.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -363,7 +363,7 @@ nsAppStartup::Quit(uint32_t aMode, bool* aUserAllowedQuit) {
       }
     }
 
-    PROFILER_ADD_MARKER("Shutdown start", OTHER);
+    PROFILER_MARKER_UNTYPED("Shutdown start", OTHER);
     mozilla::RecordShutdownStartTimeStamp();
 
     *aUserAllowedQuit = true;

@@ -36,6 +36,7 @@
 #include "nsJSEnvironment.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DebuggerUtilsBinding.h"
+#include "mozilla/ProfilerMarkers.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -120,7 +121,7 @@ class nsHtml5ExecutorFlusher : public Runnable {
         nsCOMPtr<nsIRunnable> flusher = this;
         if (NS_SUCCEEDED(
                 doc->Dispatch(TaskCategory::Network, flusher.forget()))) {
-          PROFILER_ADD_MARKER("HighPrio blocking parser flushing(1)", DOM);
+          PROFILER_MARKER_UNTYPED("HighPrio blocking parser flushing(1)", DOM);
           return NS_OK;
         }
       }

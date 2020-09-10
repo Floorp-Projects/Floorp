@@ -3336,7 +3336,7 @@ MOZ_NEVER_INLINE unsigned long long Fibonacci(unsigned long long n) {
   static constexpr size_t MAX_MARKER_DEPTH = 10;
   unsigned long long f2 = Fibonacci<NextDepth(DEPTH)>(n - 2);
   if (DEPTH == 0) {
-    BASE_PROFILER_ADD_MARKER("Half-way through Fibonacci", OTHER);
+    BASE_PROFILER_MARKER_UNTYPED("Half-way through Fibonacci", OTHER);
   }
   unsigned long long f1 = Fibonacci<NextDepth(DEPTH)>(n - 1);
   if (DEPTH < MAX_MARKER_DEPTH) {

@@ -53,7 +53,6 @@
 #  define AUTO_BASE_PROFILER_LABEL_DYNAMIC_FAST(label, dynamicString, \
                                                 categoryPair, ctx, flags)
 
-#  define BASE_PROFILER_ADD_MARKER(markerName, categoryPair)
 #  define BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD( \
       markerName, categoryPair, PayloadType, parenthesizedPayloadArgs)
 
@@ -807,24 +806,6 @@ namespace baseprofiler {
     ::mozilla::baseprofiler::AutoProfilerLabel BASE_PROFILER_RAII(        \
         ctx, label, dynamicString,                                        \
         ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair, flags)
-
-// Insert a marker in the profile timeline. This is useful to delimit something
-// important happening such as the first paint. Unlike labels, which are only
-// recorded in the profile buffer if a sample is collected while the label is
-// on the label stack, markers will always be recorded in the profile buffer.
-// aMarkerName is copied, so the caller does not need to ensure it lives for a
-// certain length of time. A no-op if the profiler is inactive.
-
-#  define BASE_PROFILER_ADD_MARKER(markerName, categoryPair)             \
-    do {                                                                 \
-      AUTO_PROFILER_STATS(base_add_marker);                              \
-      ::mozilla::baseprofiler::profiler_add_marker(                      \
-          markerName,                                                    \
-          ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair); \
-    } while (false)
-
-MFBT_API void profiler_add_marker(const char* aMarkerName,
-                                  ProfilingCategoryPair aCategoryPair);
 
 // `PayloadType` is a sub-class of BaseMarkerPayload, `parenthesizedPayloadArgs`
 // is the argument list used to construct that `PayloadType`. E.g.:

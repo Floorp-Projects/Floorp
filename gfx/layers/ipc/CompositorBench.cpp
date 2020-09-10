@@ -10,10 +10,10 @@
 #  include "mozilla/gfx/2D.h"
 #  include "mozilla/layers/Compositor.h"
 #  include "mozilla/layers/Effects.h"
+#  include "mozilla/ProfilerMarkers.h"
 #  include "mozilla/StaticPrefs_layers.h"
 #  include "mozilla/TimeStamp.h"
 #  include <math.h>
-#  include "GeckoProfiler.h"
 
 #  define TEST_STEPS 1000
 #  define DURATION_THRESHOLD 30
@@ -294,7 +294,9 @@ static void RunCompositorBench(Compositor* aCompositor,
     BenchTest* test = tests[i];
     std::vector<TimeDuration> results;
     int testsOverThreshold = 0;
-    PROFILER_ADD_MARKER(test->ToString(), GRAPHICS);
+    PROFILER_MARKER_UNTYPED(
+        ProfilerString8View::WrapNullTerminatedString(test->ToString()),
+        GRAPHICS);
     for (size_t j = 0; j < TEST_STEPS; j++) {
       test->Setup(aCompositor, j);
 

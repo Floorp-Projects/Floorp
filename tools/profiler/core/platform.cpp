@@ -5428,16 +5428,11 @@ void profiler_add_marker(const char* aMarkerName,
   racy_profiler_add_marker(aMarkerName, aCategoryPair, &aPayload);
 }
 
-void profiler_add_marker(const char* aMarkerName,
-                         JS::ProfilingCategoryPair aCategoryPair) {
-  racy_profiler_add_marker(aMarkerName, aCategoryPair, nullptr);
-}
-
 // This is a simplified version of profiler_add_marker that can be easily passed
 // into the JS engine.
 void profiler_add_js_marker(const char* aMarkerName) {
-  AUTO_PROFILER_STATS(add_marker);
-  profiler_add_marker(aMarkerName, JS::ProfilingCategoryPair::JS);
+  PROFILER_MARKER_UNTYPED(
+      ProfilerString8View::WrapNullTerminatedString(aMarkerName), JS);
 }
 
 void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
