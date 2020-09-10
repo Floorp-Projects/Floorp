@@ -472,7 +472,7 @@ struct alignas(uintptr_t) BaselineBailoutInfo {
 
 MOZ_MUST_USE bool BailoutIonToBaseline(
     JSContext* cx, JitActivation* activation, const JSJitFrameIter& iter,
-    bool invalidate, BaselineBailoutInfo** bailoutInfo,
+    BaselineBailoutInfo** bailoutInfo,
     const ExceptionBailoutInfo* exceptionInfo);
 
 MethodStatus BaselineCompile(JSContext* cx, JSScript* script,
