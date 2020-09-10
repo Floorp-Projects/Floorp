@@ -108,6 +108,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   void* prevFramePtr_ = nullptr;
   Maybe<BufferPointer<BaselineFrame>> blFrame_;
 
+  size_t frameNo_ = 0;
+
  public:
   BaselineStackBuilder(JSContext* cx, JitFrameLayout* frame,
                        SnapshotIterator& iter, size_t initialSize)
@@ -135,6 +137,11 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   MOZ_MUST_USE bool initFrame(JSScript* script, JSFunction* fun,
                               const ExceptionBailoutInfo* excInfo,
                               ICScript* icScript);
+  void nextFrame() {
+    frameNo_++;
+    iter_.nextInstruction();
+  }
+
   MOZ_MUST_USE bool buildBaselineFrame();
 
  private:
@@ -157,6 +164,9 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   }
   void* prevFramePtr() const { return prevFramePtr_; }
   BufferPointer<BaselineFrame>& blFrame() { return blFrame_.ref(); }
+
+  size_t frameNo() const { return frameNo_; }
+  bool isOutermostFrame() const { return frameNo_ == 0; }
 
   MOZ_MUST_USE bool enlarge() {
     MOZ_ASSERT(header_ != nullptr);
@@ -818,7 +828,7 @@ static bool IsPrologueBailout(const SnapshotIterator& iter,
 //                      |  ReturnAddr   | <-- return into ArgumentsRectifier after call
 //                      +===============+
 /* clang-format on */
-static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
+static bool InitFromBailout(JSContext* cx, HandleFunction fun,
                             HandleScript script, SnapshotIterator& iter,
                             bool invalidate, BaselineStackBuilder& builder,
                             MutableHandleValueVector startFrameFormals,
@@ -878,7 +888,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
             iter.numAllocations(), fun->nargs(), script->nfixed());
 
     bool argsObjAliasesFormals = script->argsObjAliasesFormals();
-    if (frameNo == 0 && !argsObjAliasesFormals) {
+    if (builder.isOutermostFrame() && !argsObjAliasesFormals) {
       // This is the first (outermost) frame and we don't have an
       // arguments object aliasing the formals. Store the formals in a
       // Vector until we are done. Due to UCE and phi elimination, we
@@ -895,7 +905,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       Value arg = iter.read();
       JitSpew(JitSpew_BaselineBailouts, "      arg %d = %016" PRIx64, (int)i,
               *((uint64_t*)&arg));
-      if (frameNo > 0) {
+      if (!builder.isOutermostFrame()) {
         size_t argOffset =
             builder.framePushed() + JitFrameLayout::offsetOfActualArg(i);
         builder.valuePointerAtStackOffset(argOffset).set(arg);
@@ -1642,7 +1652,6 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   }
 
   JitSpew(JitSpew_BaselineBailouts, "  Restoring frames:");
-  size_t frameNo = 0;
 
   // Reconstruct baseline frames using the builder.
   RootedFunction fun(cx, callee);
@@ -1659,7 +1668,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     // |initInstructionResults|.
     snapIter.settleOnFrame();
 
-    if (frameNo > 0) {
+    if (!builder.isOutermostFrame()) {
       // TraceLogger doesn't create entries for inlined frames. But we
       // see them in Baseline. Here we create the start events of those
       // entries. So they correspond to what we will see in Baseline.
@@ -1668,18 +1677,19 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
       TraceLogStartEvent(logger, TraceLogger_Baseline);
     }
 
-    JitSpew(JitSpew_BaselineBailouts, "    FrameNo %zu", frameNo);
+    JitSpew(JitSpew_BaselineBailouts, "    FrameNo %zu", builder.frameNo());
 
     // If we are bailing out to a catch or finally block in this frame,
     // pass excInfo to InitFromBailout and don't unpack any other frames.
-    bool handleException = (catchingException && excInfo->frameNo() == frameNo);
+    bool handleException =
+        catchingException && excInfo->frameNo() == builder.frameNo();
 
     // We also need to pass excInfo if we're bailing out in place for
     // debug mode.
     bool passExcInfo = handleException || propagatingExceptionForDebugMode;
 
     RootedFunction nextCallee(cx, nullptr);
-    if (!InitFromBailout(cx, frameNo, fun, scr, snapIter, invalidate, builder,
+    if (!InitFromBailout(cx, fun, scr, snapIter, invalidate, builder,
                          &startFrameFormals, &nextCallee, &icScript,
                          passExcInfo ? excInfo : nullptr)) {
       MOZ_ASSERT(cx->isExceptionPending());
@@ -1699,9 +1709,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     fun = nextCallee;
     scr = fun->nonLazyScript();
 
-    frameNo++;
-
-    snapIter.nextInstruction();
+    builder.nextFrame();
   }
   JitSpew(JitSpew_BaselineBailouts, "  Done restoring frames");
 
@@ -1737,7 +1745,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   // Take the reconstructed baseline stack so it doesn't get freed when builder
   // destructs.
   info = builder.takeBuffer();
-  info->numFrames = frameNo + 1;
+  info->numFrames = builder.frameNo() + 1;
   info->bailoutKind.emplace(bailoutKind);
   *bailoutInfo = info;
   guardRemoveRematerializedFramesFromDebugger.release();
