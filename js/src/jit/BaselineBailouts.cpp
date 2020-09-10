@@ -395,7 +395,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     return pointerAtStackOffset<JitFrameLayout>(0);
   }
 
-  //
   // This method should only be called when the builder is in a state where it
   // is starting to construct the stack frame for the next callee.  This means
   // that the lowest value on the constructed stack is the return address for
@@ -949,6 +948,12 @@ bool BaselineStackBuilder::prepareForNextFrame(
 }
 
 bool BaselineStackBuilder::finishOuterFrame(uint32_t frameSize) {
+  // .               .
+  // |  Descr(BLJS)  |
+  // +---------------+
+  // |  ReturnAddr   |
+  // +===============+
+
   const BaselineInterpreter& baselineInterp =
       cx_->runtime()->jitRuntime()->baselineInterpreter();
 
@@ -1473,111 +1478,38 @@ bool BaselineStackBuilder::isPrologueBailout() {
          !propagatingIonExceptionForDebugMode();
 }
 
-/* clang-format off */
-// For every inline frame, we write out the following data:
-//
-//                      |      ...      |
-//                      +---------------+
-//                      |  Descr(???)   |  --- Descr size here is (PREV_FRAME_SIZE)
-//                      +---------------+
-//                      |  ReturnAddr   |
-//             --       +===============+  --- OVERWRITE STARTS HERE  (START_STACK_ADDR)
-//             |        | PrevFramePtr  |
-//             |    +-> +---------------+
-//             |    |   |   Baseline    |
-//             |    |   |    Frame      |
-//             |    |   +---------------+
-//             |    |   |    Fixed0     |
-//             |    |   +---------------+
-//         +--<     |   |     ...       |
-//         |   |    |   +---------------+
-//         |   |    |   |    FixedF     |
-//         |   |    |   +---------------+
-//         |   |    |   |    Stack0     |
-//         |   |    |   +---------------+
-//         |   |    |   |     ...       |
-//         |   |    |   +---------------+
-//         |   |    |   |    StackS     |
-//         |   --   |   +---------------+  --- IF NOT LAST INLINE FRAME,
-//         +------------|  Descr(BLJS)  |  --- CALLING INFO STARTS HERE
-//                  |   +---------------+
-//                  |   |  ReturnAddr   | <-- return into main jitcode after IC
-//             --   |   +===============+
-//             |    |   |    StubPtr    |
-//             |    |   +---------------+
-//             |    +---|   FramePtr    |
-//             |        +---------------+  --- The inlined frame might OSR in Ion
-//             |        |   Padding?    |  --- Thus the return address should be aligned.
-//             |        +---------------+
-//         +--<         |     ArgA      |
-//         |   |        +---------------+
-//         |   |        |     ...       |
-//         |   |        +---------------+
-//         |   |        |     Arg0      |
-//         |   |        +---------------+
-//         |   |        |     ThisV     |
-//         |   --       +---------------+
-//         |            |  ActualArgC   |
-//         |            +---------------+
-//         |            |  CalleeToken  |
-//         |            +---------------+
-//         +------------| Descr(BLStub) |
-//                      +---------------+
-//                      |  ReturnAddr   | <-- return into ICCall_Scripted IC
-//             --       +===============+ --- IF CALLEE FORMAL ARGS > ActualArgC
-//             |        |   Padding?    |
-//             |        +---------------+
-//             |        |  UndefinedU   |
-//             |        +---------------+
-//             |        |     ...       |
-//             |        +---------------+
-//             |        |  Undefined0   |
-//         +--<         +---------------+
-//         |   |        |     ArgA      |
-//         |   |        +---------------+
-//         |   |        |     ...       |
-//         |   |        +---------------+
-//         |   |        |     Arg0      |
-//         |   |        +---------------+
-//         |   |        |     ThisV     |
-//         |   --       +---------------+
-//         |            |  ActualArgC   |
-//         |            +---------------+
-//         |            |  CalleeToken  |
-//         |            +---------------+
-//         +------------|  Descr(Rect)  |
-//                      +---------------+
-//                      |  ReturnAddr   | <-- return into ArgumentsRectifier after call
-//                      +===============+
-/* clang-format on */
+// Build a baseline stack frame.
 bool BaselineStackBuilder::buildOneFrame() {
-  if (!initFrame()) {
-    return false;
-  }
-
   // Build a baseline frame:
   // +===============+
-  // | PrevFramePtr  |
+  // | PrevFramePtr  | <-- initFrame()
   // +---------------+
-  // |   Baseline    |
+  // |   Baseline    | <-- buildBaselineFrame()
   // |    Frame      |
   // +---------------+
-  // |    Fixed0     |
+  // |    Fixed0     | <-- buildFixedSlots()
   // +---------------+
   // |     ...       |
   // +---------------+
   // |    FixedF     |
   // +---------------+
-  // |    Stack0     |
+  // |    Stack0     | <-- buildExpressionStack() -or- fixupCallerArgs()
   // +---------------+
   // |     ...       |
-  // +---------------+
-  // |    StackS     |
-  // +---------------+  --- IF NOT LAST INLINE FRAME,
-  // |  Descr(BLJS)  |  --- CALLING INFO STARTS HERE
-  // +---------------+
-  // |  ReturnAddr   | <-- return into main jitcode after IC
-  // +===============+
+  // +---------------+     If we are building the frame in which we will
+  // |    StackS     | <-- resume, we stop here.
+  // +---------------+     finishLastFrame() sets up the interpreter fields.
+  // .               .
+  // .               .
+  // .               . <-- If there are additional frames inlined into this
+  // |  Descr(BLJS)  |     one, we finish this frame. We generate a stub
+  // +---------------+     frame (and maybe also a rectifier frame) between
+  // |  ReturnAddr   |     this frame and the inlined frame.
+  // +===============+     See: prepareForNextFrame()
+
+  if (!initFrame()) {
+    return false;
+  }
 
   if (!buildBaselineFrame()) {
     return false;

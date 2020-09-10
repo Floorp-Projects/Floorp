@@ -26,17 +26,17 @@ namespace jit {
 
 // [SMDOC] IonMonkey Bailouts
 //
-// A "bailout" is the process of recovering a baseline frame from an IonFrame.
-// Bailouts are implemented in js::jit::BailoutIonToBaseline, which has the
-// following callers:
+// A "bailout" is the process of recovering a baseline interpreter frame from an
+// IonFrame.  Bailouts are implemented in js::jit::BailoutIonToBaseline, which
+// has the following callers:
 //
 // *   js::jit::Bailout - This is used when a guard fails in the Ion code
 //     itself; for example, an LGuardShape fails or an LAddI overflows. See
 //     callers of CodeGenerator::bailoutFrom() for more examples.
 //
-// *   js::jit::ExceptionHandlerBailout - Something called from Ion code
-//     failed. Ion doesn't implement `catch`; it handles all exceptions by
-//     bailing out.
+// * js::jit::ExceptionHandlerBailout - Ion doesn't implement `catch` or
+//     `finally`. If an exception is thrown and would be caught by an Ion frame,
+//     we bail out instead.
 //
 // *   js::jit::InvalidationBailout - We returned to Ion code that was
 //     invalidated while it was on the stack. See "OSI" below. Ion code can be
@@ -51,13 +51,13 @@ namespace jit {
 // Ion. There's no IC fallback case coming to save us; we've got a broken
 // assumption baked into the code we're running. So we jump to an out-of-line
 // code path that's responsible for abandoning Ion execution and resuming in
-// baseline: the bailout path.
+// the baseline interpreter: the bailout path.
 //
 // We were in the midst of optimized Ion code, so bits of program state may be
 // in registers or spilled to the native stack; values may be unboxed; some
 // objects may have been optimized away; thanks to inlining, whole call frames
 // may be missing. The bailout path must put all these pieces back together
-// into the structure the baseline code expects.
+// into the structure the baseline interpreter expects.
 //
 // The data structure that makes this possible is called a *snapshot*.
 // Snapshots are created during Ion codegen and associated with the IonScript;
@@ -72,10 +72,7 @@ namespace jit {
 // 2.  Spill all registers.
 // 3.  Call js::jit::Bailout to reconstruct the baseline frame(s).
 // 4.  memmove() those to the right place on the native stack.
-// 5.  Jump to baseline code.
-//
-// (This last step requires baseline JIT code to have an entry point at each pc
-// where an eventual Ion guard may be inserted.)
+// 5.  Jump into the baseline interpreter.
 //
 // When C++ code invalidates Ion code, we do on-stack invalidation, or OSI, to
 // arrange for every affected Ion frame on the stack to bail out as soon as
