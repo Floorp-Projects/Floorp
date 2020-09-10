@@ -286,7 +286,6 @@ class TestPaths(unittest.TestCase):
         cls.config = config = Config()
         config.topsrcdir = mozpath.abspath(os.curdir)
         config.topobjdir = mozpath.abspath('obj')
-        config.external_source_dir = None
 
     def test_path(self):
         config = self.config
