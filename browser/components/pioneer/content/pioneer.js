@@ -150,44 +150,34 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
 }
 
 async function showAvailableStudies(cachedAddons) {
+  const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
   const defaultAddons = cachedAddons.filter(a => a.isDefault);
-  for (const defaultAddon of defaultAddons) {
-    let addon;
-    let install;
-    if (Cu.isInAutomation) {
-      console.debug(defaultAddon);
-      install = {
-        install: async () => {
-          if (
-            defaultAddon.addon_id ==
-            "pioneer-v2-bad-default-example@mozilla.org"
-          ) {
-            throw new Error("Bad test default add-on");
-          }
-        },
-      };
-    } else {
-      addon = await AddonManager.getAddonByID(defaultAddon.addon_id);
-      install = await AddonManager.getInstallForURL(
-        defaultAddon.sourceURI.spec
-      );
-    }
+  if (pioneerId) {
+    for (const defaultAddon of defaultAddons) {
+      let addon;
+      let install;
+      if (Cu.isInAutomation) {
+        console.debug(defaultAddon);
+        install = {
+          install: async () => {
+            if (
+              defaultAddon.addon_id ==
+              "pioneer-v2-bad-default-example@mozilla.org"
+            ) {
+              throw new Error("Bad test default add-on");
+            }
+          },
+        };
+      } else {
+        addon = await AddonManager.getAddonByID(defaultAddon.addon_id);
+        install = await AddonManager.getInstallForURL(
+          defaultAddon.sourceURI.spec
+        );
+      }
 
-    if (!addon) {
-      // Any default add-ons are required, try to reinstall.
-      try {
-        console.debug("calling install for", defaultAddons.addon_id);
+      if (!addon) {
+        // Any default add-ons are required, try to reinstall.
         await install.install();
-      } catch (ex) {
-        console.debug("catching");
-        const availableStudies = document.getElementById("available-studies");
-        document.l10n.setAttributes(
-          availableStudies,
-          "pioneer-no-current-studies"
-        );
-        throw new Error(
-          `Default add-on not installed: ${defaultAddon.addon_id}, ${ex}`
-        );
       }
     }
   }
@@ -460,6 +450,13 @@ async function setup(cachedAddons) {
               // No need to throw here, we'll try again before letting users enroll in any studies.
               console.error(
                 `Could not install default add-on ${cachedAddon.addon_id}`
+              );
+              const availableStudies = document.getElementById(
+                "available-studies"
+              );
+              document.l10n.setAttributes(
+                availableStudies,
+                "pioneer-no-current-studies"
               );
             }
           }
