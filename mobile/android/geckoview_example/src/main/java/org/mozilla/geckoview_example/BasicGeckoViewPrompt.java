@@ -124,6 +124,37 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
 
     @Nullable
     @Override
+    public GeckoResult<PromptResponse> onRepostConfirmPrompt(final GeckoSession session,
+                                                             final RepostConfirmPrompt prompt) {
+        final Activity activity = mActivity;
+        if (activity == null) {
+            return GeckoResult.fromValue(prompt.dismiss());
+        }
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity)
+                .setTitle(R.string.repost_confirm_title)
+                .setMessage(R.string.repost_confirm_message);
+
+        GeckoResult<PromptResponse> res = new GeckoResult<>();
+
+        final DialogInterface.OnClickListener listener = (dialog, which) -> {
+            if (which == DialogInterface.BUTTON_POSITIVE) {
+                res.complete(prompt.confirm(AllowOrDeny.ALLOW));
+            } else if (which == DialogInterface.BUTTON_NEGATIVE) {
+                res.complete(prompt.confirm(AllowOrDeny.DENY));
+            } else {
+                res.complete(prompt.dismiss());
+            }
+        };
+
+        builder.setPositiveButton(R.string.repost_confirm_resend, listener);
+        builder.setNegativeButton(R.string.repost_confirm_cancel, listener);
+
+        createStandardDialog(builder, prompt, res).show();
+        return res;
+    }
+
+    @Nullable
+    @Override
     public GeckoResult<PromptResponse> onBeforeUnloadPrompt(final GeckoSession session,
                                                             final BeforeUnloadPrompt prompt) {
         final Activity activity = mActivity;
