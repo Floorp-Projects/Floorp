@@ -2051,8 +2051,9 @@ void InlineFrameIterator::findNextFrame() {
       numActualArgs_ = GET_ARGC(pc_);
     }
     if (JSOp(*pc_) == JSOp::FunCall) {
-      MOZ_ASSERT(GET_ARGC(pc_) > 0);
-      numActualArgs_ = GET_ARGC(pc_) - 1;
+      if (numActualArgs_ > 0) {
+        numActualArgs_--;
+      }
     } else if (IsGetPropPC(pc_) || IsGetElemPC(pc_)) {
       numActualArgs_ = 0;
     } else if (IsSetPropPC(pc_)) {
