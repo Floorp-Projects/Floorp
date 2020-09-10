@@ -212,8 +212,11 @@ class GlobalHelperThreadState {
   void wait(AutoLockHelperThreadState& locked, CondVar which,
             mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
   void notifyAll(CondVar which, const AutoLockHelperThreadState&);
+
+ private:
   void notifyOne(CondVar which, const AutoLockHelperThreadState&);
 
+ public:
   // Helper method for removing items from the vectors below while iterating
   // over them.
   template <typename T>
@@ -391,6 +394,23 @@ class GlobalHelperThreadState {
         MOZ_CRASH("Invalid CondVar in |whichWakeup|");
     }
   }
+
+  void dispatch(const AutoLockHelperThreadState& locked);
+
+ public:
+  bool submitTask(wasm::UniqueTier2GeneratorTask task);
+  bool submitTask(wasm::CompileTask* task, wasm::CompileMode mode);
+  bool submitTask(UniquePtr<jit::IonFreeTask> task,
+                  const AutoLockHelperThreadState& lock);
+  bool submitTask(jit::IonCompileTask* task,
+                  const AutoLockHelperThreadState& locked);
+  bool submitTask(UniquePtr<SourceCompressionTask> task,
+                  const AutoLockHelperThreadState& locked);
+  bool submitTask(JSRuntime* rt, UniquePtr<ParseTask> task,
+                  const AutoLockHelperThreadState& locked);
+  bool submitTask(PromiseHelperTask* task);
+  bool submitTask(GCParallelTask* task,
+                  const AutoLockHelperThreadState& locked);
 };
 
 static inline GlobalHelperThreadState& HelperThreadState() {
