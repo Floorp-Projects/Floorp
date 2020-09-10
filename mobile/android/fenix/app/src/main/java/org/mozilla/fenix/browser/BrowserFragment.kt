@@ -54,6 +54,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
 
     private var readerModeAvailable = false
+    private var openInAppOnboardingObserver: OpenInAppOnboardingObserver? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -159,15 +160,16 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
         session?.register(toolbarSessionObserver, viewLifecycleOwner, autoPause = true)
 
-        if (settings.shouldShowOpenInAppBanner) {
-            session?.register(
-                OpenInAppOnboardingObserver(
-                    context = context,
-                    navController = findNavController(),
-                    settings = settings,
-                    appLinksUseCases = context.components.useCases.appLinksUseCases,
-                    container = browserToolbarView.view.parent as ViewGroup
-                ),
+        if (settings.shouldShowOpenInAppBanner && session != null) {
+            openInAppOnboardingObserver = OpenInAppOnboardingObserver(
+                context = context,
+                navController = findNavController(),
+                settings = settings,
+                appLinksUseCases = context.components.useCases.appLinksUseCases,
+                container = browserToolbarView.view.parent as ViewGroup
+            )
+            session.register(
+                openInAppOnboardingObserver!!,
                 owner = this,
                 autoPause = true
             )
@@ -186,6 +188,16 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
 
         subscribeToTabCollections()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // This observer initialized in onStart has a reference to fragment's view.
+        // Prevent it leaking the view after the latter onDestroyView.
+        if (openInAppOnboardingObserver != null) {
+            getSessionById()?.unregister(openInAppOnboardingObserver!!)
+            openInAppOnboardingObserver = null
+        }
     }
 
     private fun subscribeToTabCollections() {
