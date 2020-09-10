@@ -65,7 +65,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsDebug.h"
@@ -904,8 +903,6 @@ bool CreateConfig(EglDisplay& egl, EGLConfig* aConfig, int32_t depth,
     return false;
   }
 
-  Maybe<EGLConfig> fallbackConfig;
-
   for (int j = 0; j < ncfg; ++j) {
     EGLConfig config = configs[j];
     EGLint r, g, b, a;
@@ -923,29 +920,19 @@ bool CreateConfig(EglDisplay& egl, EGLConfig* aConfig, int32_t depth,
           continue;
         }
       }
-      if (kIsX11 && aVisual) {
+#if defined(MOZ_X11)
+      if (aVisual) {
         int vis;
         if (!egl.fGetConfigAttrib(config, LOCAL_EGL_NATIVE_VISUAL_ID, &vis) ||
             aVisual != vis) {
-          if (!fallbackConfig) {
-            fallbackConfig = Some(config);
-          }
           continue;
         }
       }
+#endif
       *aConfig = config;
       return true;
     }
   }
-
-  // We don't have a frame buffer X11 visual which matches the EGL visual
-  // from GLContextEGL::FindVisual(). Let's try to use the fallback one and hope
-  // we're not on NVIDIA (Bug 1478454) as it causes X11 BadMatch error there.
-  if (kIsX11 && fallbackConfig) {
-    *aConfig = fallbackConfig.value();
-    return true;
-  }
-
   return false;
 }
 
