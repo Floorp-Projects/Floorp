@@ -69,6 +69,15 @@ def test_is_backstop(responses, params):
     params['pushdate'] += BACKSTOP_TIME_INTERVAL * 60
     assert is_backstop(params)
 
+    # Try is never considered a backstop.
+    params['project'] = 'try'
+    assert not is_backstop(params)
+
+    # Non autoland branches are always considered a backstop.
+    params['project'] = 'mozilla-central'
+    params['pushdate'] -= BACKSTOP_TIME_INTERVAL * 60
+    assert is_backstop(params)
+
 
 if __name__ == '__main__':
     main()
