@@ -379,7 +379,10 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
       case kNameSpaceID_SVG:
         if (nsGkAtoms::image == aName) {
           nsHtml5String url =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
+          if (!url) {
+            url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
+          }
           if (url) {
             mSpeculativeLoadQueue.AppendElement()->InitImage(
                 url, nullptr, nullptr, nullptr, nullptr, false);
@@ -397,7 +400,10 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
           treeOp->Init(mozilla::AsVariant(operation));
 
           nsHtml5String url =
-              aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
+          if (!url) {
+            url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
+          }
           if (url) {
             nsHtml5String type =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
