@@ -69,10 +69,12 @@ struct IndexDataValue final {
 
 JSObject* GetSandbox(JSContext* aCx);
 
-nsresult MakeCompressedIndexDataValues(
-    const nsTArray<IndexDataValue>& aIndexValues,
-    UniqueFreePtr<uint8_t>& aCompressedIndexDataValues,
-    uint32_t* aCompressedIndexDataValuesLength);
+// The success value of the Result is a a pair of a pointer to the compressed
+// index data values buffer and its size. The function does not return a
+// nsTArray because the result is typically passed to a function that acquires
+// ownership of the pointer.
+Result<std::pair<UniqueFreePtr<uint8_t>, uint32_t>, nsresult>
+MakeCompressedIndexDataValues(const nsTArray<IndexDataValue>& aIndexValues);
 
 // aOutIndexValues is an output parameter, since its storage is reused.
 nsresult ReadCompressedIndexDataValues(

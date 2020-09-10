@@ -15884,23 +15884,19 @@ nsresult DatabaseOperationBase::UpdateIndexValues(
 
   AUTO_PROFILER_LABEL("DatabaseOperationBase::UpdateIndexValues", DOM);
 
-  UniqueFreePtr<uint8_t> indexDataValues;
-  uint32_t indexDataValuesLength;
-  nsresult rv = MakeCompressedIndexDataValues(aIndexValues, indexDataValues,
-                                              &indexDataValuesLength);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR((auto [indexDataValues, indexDataValuesLength]),
+              MakeCompressedIndexDataValues(aIndexValues));
 
   MOZ_ASSERT(!indexDataValuesLength == !(indexDataValues.get()));
 
   DatabaseConnection::CachedStatement updateStmt;
-  rv = aConnection->ExecuteCachedStatement(
+  nsresult rv = aConnection->ExecuteCachedStatement(
       "UPDATE object_data SET index_data_values = :"_ns +
           kStmtParamNameIndexDataValues + " WHERE object_store_id = :"_ns +
           kStmtParamNameObjectStoreId + " AND key = :"_ns + kStmtParamNameKey +
           ";"_ns,
-      [&indexDataValues, indexDataValuesLength, aObjectStoreId,
+      [&indexDataValues = indexDataValues,
+       indexDataValuesLength = indexDataValuesLength, aObjectStoreId,
        &aObjectStoreKey](mozIStorageStatement& updateStmt) {
         nsresult rv =
             indexDataValues
@@ -20151,13 +20147,8 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
         fallible));
   }
 
-  UniqueFreePtr<uint8_t> indexValuesBlob;
-  uint32_t indexValuesBlobLength;
-  rv = MakeCompressedIndexDataValues(indexValues, indexValuesBlob,
-                                     &indexValuesBlobLength);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR((auto [indexValuesBlob, indexValuesBlobLength]),
+              MakeCompressedIndexDataValues(indexValues));
 
   MOZ_ASSERT(!indexValuesBlobLength == !(indexValuesBlob.get()));
 
@@ -20190,10 +20181,8 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
     return rv;
   }
 
-  std::pair<uint8_t*, int> copiedBlobDataPair(indexValuesBlob.release(),
-                                              indexValuesBlobLength);
-
-  value = new storage::AdoptedBlobVariant(copiedBlobDataPair);
+  value = new storage::AdoptedBlobVariant(
+      std::pair(indexValuesBlob.release(), indexValuesBlobLength));
 
   value.forget(_retval);
   return NS_OK;
