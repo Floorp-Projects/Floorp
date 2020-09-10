@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.7.26';
-const pdfjsBuild = 'e51e9d1f3';
+const pdfjsVersion = '2.7.37';
+const pdfjsBuild = '865de9ab9';
 ;
 
 /***/ }),
@@ -864,7 +864,6 @@ exports.isNum = isNum;
 exports.isString = isString;
 exports.isSameOrigin = isSameOrigin;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
-exports.parseXFAPath = parseXFAPath;
 exports.removeNullCharacters = removeNullCharacters;
 exports.setVerbosityLevel = setVerbosityLevel;
 exports.shadow = shadow;
@@ -1613,8 +1612,8 @@ function isArrayEqual(arr1, arr2) {
   });
 }
 
-function getModificationDate(date = new Date(Date.now())) {
-  const buffer = [date.getUTCFullYear().toString(), (date.getUTCMonth() + 1).toString().padStart(2, "0"), (date.getUTCDate() + 1).toString().padStart(2, "0"), date.getUTCHours().toString().padStart(2, "0"), date.getUTCMinutes().toString().padStart(2, "0"), date.getUTCSeconds().toString().padStart(2, "0")];
+function getModificationDate(date = new Date()) {
+  const buffer = [date.getUTCFullYear().toString(), (date.getUTCMonth() + 1).toString().padStart(2, "0"), date.getUTCDate().toString().padStart(2, "0"), date.getUTCHours().toString().padStart(2, "0"), date.getUTCMinutes().toString().padStart(2, "0"), date.getUTCSeconds().toString().padStart(2, "0")];
   return buffer.join("");
 }
 
@@ -1669,26 +1668,6 @@ const createObjectURL = function createObjectURLClosure() {
 }();
 
 exports.createObjectURL = createObjectURL;
-
-function parseXFAPath(path) {
-  const positionPattern = /(.+)\[([0-9]+)\]$/;
-  return path.split(".").map(component => {
-    const m = component.match(positionPattern);
-
-    if (m) {
-      return {
-        name: m[1],
-        pos: parseInt(m[2], 10)
-      };
-    }
-
-    return {
-      name: component,
-      pos: 0
-    };
-  });
-}
-
 const XMLEntities = {
   0x3c: "&lt;",
   0x3e: "&gt;",
@@ -1985,7 +1964,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.7.26',
+    apiVersion: '2.7.37',
     source: {
       data: source.data,
       url: source.url,
@@ -3910,9 +3889,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.7.26';
+const version = '2.7.37';
 exports.version = version;
-const build = 'e51e9d1f3';
+const build = '865de9ab9';
 exports.build = build;
 
 /***/ }),

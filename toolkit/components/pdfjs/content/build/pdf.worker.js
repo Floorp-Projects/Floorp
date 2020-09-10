@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.7.26';
-const pdfjsBuild = 'e51e9d1f3';
+const pdfjsVersion = '2.7.37';
+const pdfjsBuild = '865de9ab9';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.7.26';
+    const workerVersion = '2.7.37';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -615,7 +615,13 @@ class WorkerMessageHandler {
         }
 
         xref.resetNewRef();
-        return (0, _writer.incrementalUpdate)(stream.bytes, newXrefInfo, newRefs, xref, xfaDatasets);
+        return (0, _writer.incrementalUpdate)({
+          originalData: stream.bytes,
+          xrefInfo: newXrefInfo,
+          newRefs,
+          xref,
+          datasetsRef: xfaDatasets
+        });
       });
     });
     handler.on("GetOperatorList", function wphSetupRenderPage(data, sink) {
@@ -773,7 +779,6 @@ exports.isNum = isNum;
 exports.isString = isString;
 exports.isSameOrigin = isSameOrigin;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
-exports.parseXFAPath = parseXFAPath;
 exports.removeNullCharacters = removeNullCharacters;
 exports.setVerbosityLevel = setVerbosityLevel;
 exports.shadow = shadow;
@@ -1522,8 +1527,8 @@ function isArrayEqual(arr1, arr2) {
   });
 }
 
-function getModificationDate(date = new Date(Date.now())) {
-  const buffer = [date.getUTCFullYear().toString(), (date.getUTCMonth() + 1).toString().padStart(2, "0"), (date.getUTCDate() + 1).toString().padStart(2, "0"), date.getUTCHours().toString().padStart(2, "0"), date.getUTCMinutes().toString().padStart(2, "0"), date.getUTCSeconds().toString().padStart(2, "0")];
+function getModificationDate(date = new Date()) {
+  const buffer = [date.getUTCFullYear().toString(), (date.getUTCMonth() + 1).toString().padStart(2, "0"), date.getUTCDate().toString().padStart(2, "0"), date.getUTCHours().toString().padStart(2, "0"), date.getUTCMinutes().toString().padStart(2, "0"), date.getUTCSeconds().toString().padStart(2, "0")];
   return buffer.join("");
 }
 
@@ -1578,26 +1583,6 @@ const createObjectURL = function createObjectURLClosure() {
 }();
 
 exports.createObjectURL = createObjectURL;
-
-function parseXFAPath(path) {
-  const positionPattern = /(.+)\[([0-9]+)\]$/;
-  return path.split(".").map(component => {
-    const m = component.match(positionPattern);
-
-    if (m) {
-      return {
-        name: m[1],
-        pos: parseInt(m[2], 10)
-      };
-    }
-
-    return {
-      name: component,
-      pos: 0
-    };
-  });
-}
-
 const XMLEntities = {
   0x3c: "&lt;",
   0x3e: "&gt;",
@@ -2896,10 +2881,12 @@ exports.ChunkedStreamManager = ChunkedStreamManager;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.escapePDFName = escapePDFName;
 exports.getLookupTableFactory = getLookupTableFactory;
 exports.getInheritableProperty = getInheritableProperty;
 exports.toRomanNumerals = toRomanNumerals;
 exports.log2 = log2;
+exports.parseXFAPath = parseXFAPath;
 exports.readInt8 = readInt8;
 exports.readUint16 = readUint16;
 exports.readUint32 = readUint32;
@@ -3021,6 +3008,53 @@ function readUint32(data, offset) {
 
 function isWhiteSpace(ch) {
   return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
+}
+
+function parseXFAPath(path) {
+  const positionPattern = /(.+)\[([0-9]+)\]$/;
+  return path.split(".").map(component => {
+    const m = component.match(positionPattern);
+
+    if (m) {
+      return {
+        name: m[1],
+        pos: parseInt(m[2], 10)
+      };
+    }
+
+    return {
+      name: component,
+      pos: 0
+    };
+  });
+}
+
+function escapePDFName(str) {
+  const buffer = [];
+  let start = 0;
+
+  for (let i = 0, ii = str.length; i < ii; i++) {
+    const char = str.charCodeAt(i);
+
+    if (char < 0x21 || char > 0x7e || char === 0x23) {
+      if (start < i) {
+        buffer.push(str.substring(start, i));
+      }
+
+      buffer.push(`#${char.toString(16)}`);
+      start = i + 1;
+    }
+  }
+
+  if (buffer.length === 0) {
+    return str;
+  }
+
+  if (start < str.length) {
+    buffer.push(str.substring(start, str.length));
+  }
+
+  return buffer.join("");
 }
 
 /***/ }),
@@ -21451,6 +21485,8 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
+var _core_utils = __w_pdfjs_require__(8);
+
 var _xml_parser = __w_pdfjs_require__(28);
 
 var _crypto = __w_pdfjs_require__(22);
@@ -21516,7 +21552,7 @@ function numberToString(value) {
 
 function writeValue(value, buffer, transform) {
   if ((0, _primitives.isName)(value)) {
-    buffer.push(`/${value.name}`);
+    buffer.push(`/${(0, _core_utils.escapePDFName)(value.name)}`);
   } else if ((0, _primitives.isRef)(value)) {
     buffer.push(`${value.num} ${value.gen} R`);
   } else if (Array.isArray(value)) {
@@ -21598,7 +21634,7 @@ function updateXFA(datasetsRef, newRefs, xref) {
       continue;
     }
 
-    const node = xml.documentElement.searchNode((0, _util.parseXFAPath)(path), 0);
+    const node = xml.documentElement.searchNode((0, _core_utils.parseXFAPath)(path), 0);
 
     if (node) {
       node.childNodes = [new _xml_parser.SimpleDOMNode("#text", value)];
@@ -21624,7 +21660,13 @@ function updateXFA(datasetsRef, newRefs, xref) {
   });
 }
 
-function incrementalUpdate(originalData, xrefInfo, newRefs, xref, datasetsRef) {
+function incrementalUpdate({
+  originalData,
+  xrefInfo,
+  newRefs,
+  xref = null,
+  datasetsRef = null
+}) {
   updateXFA(datasetsRef, newRefs, xref);
   const newXref = new _primitives.Dict(null);
   const refForXrefTable = xrefInfo.newRef;
