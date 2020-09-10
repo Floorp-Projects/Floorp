@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use platform::winapi::DeviceInfoSet;
+use crate::platform::winapi::DeviceInfoSet;
 use runloop::RunLoop;
 use std::collections::{HashMap, HashSet};
 use std::io;
@@ -13,7 +13,7 @@ use std::time::Duration;
 
 pub struct Monitor<F>
 where
-    F: Fn(String, &Fn() -> bool) + Sync,
+    F: Fn(String, &dyn Fn() -> bool) + Sync,
 {
     runloops: HashMap<String, RunLoop>,
     new_device_cb: Arc<F>,
@@ -21,7 +21,7 @@ where
 
 impl<F> Monitor<F>
 where
-    F: Fn(String, &Fn() -> bool) + Send + Sync + 'static,
+    F: Fn(String, &dyn Fn() -> bool) + Send + Sync + 'static,
 {
     pub fn new(new_device_cb: F) -> Self {
         Self {
@@ -30,7 +30,7 @@ where
         }
     }
 
-    pub fn run(&mut self, alive: &Fn() -> bool) -> io::Result<()> {
+    pub fn run(&mut self, alive: &dyn Fn() -> bool) -> io::Result<()> {
         let mut stored = HashSet::new();
 
         while alive() {

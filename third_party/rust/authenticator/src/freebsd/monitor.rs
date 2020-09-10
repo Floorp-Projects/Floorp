@@ -41,7 +41,7 @@ fn convert_error(e: devd_rs::Error) -> io::Error {
 
 pub struct Monitor<F>
 where
-    F: Fn(OsString, &Fn() -> bool) + Sync,
+    F: Fn(OsString, &dyn Fn() -> bool) + Sync,
 {
     runloops: HashMap<OsString, RunLoop>,
     new_device_cb: Arc<F>,
@@ -49,7 +49,7 @@ where
 
 impl<F> Monitor<F>
 where
-    F: Fn(OsString, &Fn() -> bool) + Send + Sync + 'static,
+    F: Fn(OsString, &dyn Fn() -> bool) + Send + Sync + 'static,
 {
     pub fn new(new_device_cb: F) -> Self {
         Self {
@@ -58,7 +58,7 @@ where
         }
     }
 
-    pub fn run(&mut self, alive: &Fn() -> bool) -> io::Result<()> {
+    pub fn run(&mut self, alive: &dyn Fn() -> bool) -> io::Result<()> {
         let mut ctx = devd_rs::Context::new().map_err(convert_error)?;
 
         // Iterate all existing devices.

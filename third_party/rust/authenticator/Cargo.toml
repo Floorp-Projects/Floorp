@@ -11,17 +11,17 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "authenticator"
-version = "0.2.15"
+version = "0.3.0"
 authors = ["J.C. Jones <jc@mozilla.com>", "Tim Taubert <ttaubert@mozilla.com>", "Kyle Machulis <kyle@nonpolynomial.com>"]
 description = "Library for interacting with CTAP1/2 security keys for Web Authentication. Used by Firefox."
+keywords = ["ctap2", "u2f", "fido", "webauthn"]
+categories = ["cryptography", "hardware-support", "os"]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/authenticator-rs/"
 [dependencies.bitflags]
 version = "1.0"
-
-[dependencies.boxfnonce]
-version = "0.0.3"
 
 [dependencies.libc]
 version = "0.2"
@@ -34,11 +34,17 @@ version = "0.7"
 
 [dependencies.runloop]
 version = "0.1.0"
+[dev-dependencies.assert_matches]
+version = "1.2"
+
 [dev-dependencies.base64]
 version = "^0.10"
 
 [dev-dependencies.env_logger]
 version = "^0.6"
+
+[dev-dependencies.getopts]
+version = "^0.2"
 
 [dev-dependencies.sha2]
 version = "^0.8.2"
@@ -55,5 +61,11 @@ version = "^0.2"
 [target."cfg(target_os = \"macos\")".dependencies.core-foundation]
 version = "0.9"
 [target."cfg(target_os = \"windows\")".dependencies.winapi]
-version = "0.3"
+version = "^0.3"
 features = ["handleapi", "hidclass", "hidpi", "hidusage", "setupapi"]
+[badges.maintenance]
+status = "actively-developed"
+
+[badges.travis-ci]
+branch = "master"
+repository = "mozilla/authenticator-rs"

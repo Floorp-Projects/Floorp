@@ -43,7 +43,7 @@ To fuzz, you will need cargo-fuzz (the latest version from GitHub) as well as Ru
 
 ```
 rustup install nightly
-cargo install --git https://github.com/rust-fuzz/cargo-fuzz/
+cargo install cargo-fuzz
 
 cargo +nightly fuzz run u2f_read -- -max_len=512
 cargo +nightly fuzz run u2f_read_write -- -max_len=512

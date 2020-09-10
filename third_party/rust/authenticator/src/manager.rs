@@ -6,27 +6,31 @@ use std::io;
 use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
 use std::time::Duration;
 
-use consts::PARAMETER_SIZE;
+use crate::authenticatorservice::AuthenticatorTransport;
+use crate::consts::PARAMETER_SIZE;
+use crate::errors::*;
+use crate::statecallback::StateCallback;
+use crate::statemachine::StateMachine;
 use runloop::RunLoop;
-use statemachine::StateMachine;
-use util::OnceCallback;
 
 enum QueueAction {
     Register {
-        flags: ::RegisterFlags,
+        flags: crate::RegisterFlags,
         timeout: u64,
         challenge: Vec<u8>,
-        application: ::AppId,
-        key_handles: Vec<::KeyHandle>,
-        callback: OnceCallback<::RegisterResult>,
+        application: crate::AppId,
+        key_handles: Vec<crate::KeyHandle>,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::RegisterResult>>,
     },
     Sign {
-        flags: ::SignFlags,
+        flags: crate::SignFlags,
         timeout: u64,
         challenge: Vec<u8>,
-        app_ids: Vec<::AppId>,
-        key_handles: Vec<::KeyHandle>,
-        callback: OnceCallback<::SignResult>,
+        app_ids: Vec<crate::AppId>,
+        key_handles: Vec<crate::KeyHandle>,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::SignResult>>,
     },
     Cancel,
 }
@@ -52,6 +56,7 @@ impl U2FManager {
                         challenge,
                         application,
                         key_handles,
+                        status,
                         callback,
                     }) => {
                         // This must not block, otherwise we can't cancel.
@@ -61,6 +66,7 @@ impl U2FManager {
                             challenge,
                             application,
                             key_handles,
+                            status,
                             callback,
                         );
                     }
@@ -70,10 +76,19 @@ impl U2FManager {
                         challenge,
                         app_ids,
                         key_handles,
+                        status,
                         callback,
                     }) => {
                         // This must not block, otherwise we can't cancel.
-                        sm.sign(flags, timeout, challenge, app_ids, key_handles, callback);
+                        sm.sign(
+                            flags,
+                            timeout,
+                            challenge,
+                            app_ids,
+                            key_handles,
+                            status,
+                            callback,
+                        );
                     }
                     Ok(QueueAction::Cancel) => {
                         // Cancelling must block so that we don't start a new
@@ -93,91 +108,87 @@ impl U2FManager {
 
         Ok(Self { queue, tx })
     }
+}
 
-    pub fn register<F>(
-        &self,
-        flags: ::RegisterFlags,
+impl AuthenticatorTransport for U2FManager {
+    fn register(
+        &mut self,
+        flags: crate::RegisterFlags,
         timeout: u64,
         challenge: Vec<u8>,
-        application: ::AppId,
-        key_handles: Vec<::KeyHandle>,
-        callback: F,
-    ) -> Result<(), ::Error>
-    where
-        F: FnOnce(Result<::RegisterResult, ::Error>),
-        F: Send + 'static,
-    {
+        application: crate::AppId,
+        key_handles: Vec<crate::KeyHandle>,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::RegisterResult>>,
+    ) -> crate::Result<()> {
         if challenge.len() != PARAMETER_SIZE || application.len() != PARAMETER_SIZE {
-            return Err(::Error::Unknown);
+            return Err(AuthenticatorError::InvalidRelyingPartyInput);
         }
 
         for key_handle in &key_handles {
             if key_handle.credential.len() > 256 {
-                return Err(::Error::Unknown);
+                return Err(AuthenticatorError::InvalidRelyingPartyInput);
             }
         }
 
-        let callback = OnceCallback::new(callback);
         let action = QueueAction::Register {
             flags,
             timeout,
             challenge,
             application,
             key_handles,
+            status,
             callback,
         };
-        self.tx.send(action).map_err(|_| ::Error::Unknown)
+        self.tx
+            .send(action)
+            .map_err(|e| AuthenticatorError::from(e))
     }
 
-    pub fn sign<F>(
-        &self,
-        flags: ::SignFlags,
+    fn sign(
+        &mut self,
+        flags: crate::SignFlags,
         timeout: u64,
         challenge: Vec<u8>,
-        app_ids: Vec<::AppId>,
-        key_handles: Vec<::KeyHandle>,
-        callback: F,
-    ) -> Result<(), ::Error>
-    where
-        F: FnOnce(Result<::SignResult, ::Error>),
-        F: Send + 'static,
-    {
+        app_ids: Vec<crate::AppId>,
+        key_handles: Vec<crate::KeyHandle>,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::SignResult>>,
+    ) -> crate::Result<()> {
         if challenge.len() != PARAMETER_SIZE {
-            return Err(::Error::Unknown);
+            return Err(AuthenticatorError::InvalidRelyingPartyInput);
         }
 
         if app_ids.is_empty() {
-            return Err(::Error::Unknown);
+            return Err(AuthenticatorError::InvalidRelyingPartyInput);
         }
 
         for app_id in &app_ids {
             if app_id.len() != PARAMETER_SIZE {
-                return Err(::Error::Unknown);
+                return Err(AuthenticatorError::InvalidRelyingPartyInput);
             }
         }
 
         for key_handle in &key_handles {
             if key_handle.credential.len() > 256 {
-                return Err(::Error::Unknown);
+                return Err(AuthenticatorError::InvalidRelyingPartyInput);
             }
         }
 
-        let callback = OnceCallback::new(callback);
         let action = QueueAction::Sign {
             flags,
             timeout,
             challenge,
             app_ids,
             key_handles,
+            status,
             callback,
         };
-        self.tx.send(action).map_err(|_| ::Error::Unknown)
+        Ok(self.tx.send(action)?)
     }
 
-    pub fn cancel(&self) -> Result<(), ::Error> {
-        self.tx
-            .send(QueueAction::Cancel)
-            .map_err(|_| ::Error::Unknown)
+    fn cancel(&mut self) -> crate::Result<()> {
+        Ok(self.tx.send(QueueAction::Cancel)?)
     }
 }
 

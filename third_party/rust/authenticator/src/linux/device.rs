@@ -9,16 +9,19 @@ use std::io;
 use std::io::{Read, Write};
 use std::os::unix::prelude::*;
 
-use consts::CID_BROADCAST;
-use platform::hidraw;
-use u2ftypes::U2FDevice;
-use util::from_unix_result;
+use crate::consts::CID_BROADCAST;
+use crate::platform::{hidraw, monitor};
+use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
+use crate::util::from_unix_result;
 
 #[derive(Debug)]
 pub struct Device {
     path: OsString,
     fd: libc::c_int,
+    in_rpt_size: usize,
+    out_rpt_size: usize,
     cid: [u8; 4],
+    dev_info: Option<U2FDeviceInfo>,
 }
 
 impl Device {
@@ -26,10 +29,14 @@ impl Device {
         let cstr = CString::new(path.as_bytes())?;
         let fd = unsafe { libc::open(cstr.as_ptr(), libc::O_RDWR) };
         let fd = from_unix_result(fd)?;
+        let (in_rpt_size, out_rpt_size) = hidraw::read_hid_rpt_sizes_or_defaults(fd);
         Ok(Self {
             path,
             fd,
+            in_rpt_size,
+            out_rpt_size,
             cid: CID_BROADCAST,
+            dev_info: None,
         })
     }
 
@@ -79,5 +86,27 @@ impl U2FDevice for Device {
 
     fn set_cid(&mut self, cid: [u8; 4]) {
         self.cid = cid;
+    }
+
+    fn in_rpt_size(&self) -> usize {
+        self.in_rpt_size
+    }
+
+    fn out_rpt_size(&self) -> usize {
+        self.out_rpt_size
+    }
+
+    fn get_property(&self, prop_name: &str) -> io::Result<String> {
+        monitor::get_property_linux(&self.path, prop_name)
+    }
+
+    fn get_device_info(&self) -> U2FDeviceInfo {
+        // unwrap is okay, as dev_info must have already been set, else
+        // a programmer error
+        self.dev_info.clone().unwrap()
+    }
+
+    fn set_device_info(&mut self, dev_info: U2FDeviceInfo) {
+        self.dev_info = Some(dev_info);
     }
 }

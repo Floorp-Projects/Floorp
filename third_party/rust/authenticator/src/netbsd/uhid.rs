@@ -9,10 +9,10 @@ use std::mem;
 use std::os::raw::c_int;
 use std::os::raw::c_uchar;
 
-use hidproto::has_fido_usage;
-use hidproto::ReportDescriptor;
-use platform::fd::Fd;
-use util::io_err;
+use crate::hidproto::has_fido_usage;
+use crate::hidproto::ReportDescriptor;
+use crate::platform::fd::Fd;
+use crate::util::io_err;
 
 /* sys/ioccom.h */
 
