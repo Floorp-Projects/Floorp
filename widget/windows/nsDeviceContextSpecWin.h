@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 
+class nsIFile;
 class nsIWidget;
 
 class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
@@ -70,6 +71,10 @@ class nsDeviceContextSpecWin : public nsIDeviceContextSpec {
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   int16_t mOutputFormat = nsIPrintSettings::kOutputFormatNative;
+
+  // A temporary file to create an "anonymous" print target. See bug 1664253,
+  // this should ideally not be needed.
+  nsCOMPtr<nsIFile> mTempFile;
 
 #ifdef MOZ_ENABLE_SKIA_PDF
 

@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
+#include "nsAnonymousTemporaryFile.h"
 
 #include <wchar.h>
 #include <windef.h>
@@ -73,6 +74,10 @@ NS_IMPL_ISUPPORTS(nsDeviceContextSpecWin, nsIDeviceContextSpec)
 
 nsDeviceContextSpecWin::~nsDeviceContextSpecWin() {
   SetDevMode(nullptr);
+
+  if (mTempFile) {
+    mTempFile->Remove(/* recursive = */ false);
+  }
 
   if (nsCOMPtr<nsIPrintSettingsWin> ps = do_QueryInterface(mPrintSettings)) {
     ps->SetDeviceName(EmptyString());
@@ -287,9 +292,17 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
     width /= TWIPS_PER_POINT_FLOAT;
     height /= TWIPS_PER_POINT_FLOAT;
 
-    nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
-    nsresult rv = file->InitWithPath(filename);
-    if (NS_FAILED(rv)) {
+    nsCOMPtr<nsIFile> file;
+    nsresult rv;
+    if (!filename.IsEmpty()) {
+      file = do_CreateInstance("@mozilla.org/file/local;1");
+      rv = file->InitWithPath(filename);
+    } else {
+      rv = NS_OpenAnonymousTemporaryNsIFile(getter_AddRefs(mTempFile));
+      file = mTempFile;
+    }
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
 
