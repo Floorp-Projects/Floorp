@@ -5452,14 +5452,18 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX What if SetupNewViewer fails?
+  if (StaticPrefs::fission_sessionHistoryInParent() ? !!mLoadingEntry
+                                                    : !!mLSHE) {
+    // Set history.state
+    SetDocCurrentStateObj(mLSHE,
+                          mLoadingEntry ? &mLoadingEntry->mInfo : nullptr);
+  }
+
   if (mLSHE) {
     // Restore the editing state, if it's stored in session history.
     if (mLSHE->HasDetachedEditor()) {
       ReattachEditorToWindow(mLSHE);
     }
-    // Set history.state
-    SetDocCurrentStateObj(mLSHE,
-                          mLoadingEntry ? &mLoadingEntry->mInfo : nullptr);
 
     SetHistoryEntryAndUpdateBC(Nothing(), Some<nsISHEntry*>(mLSHE));
   }
