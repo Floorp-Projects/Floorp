@@ -57,7 +57,7 @@
 }
 
 button.remove-set-watchpoint {
-  mask: url("resource://devtools/client/debugger/images/webconsole-logpoint.svg")
+  mask: url("chrome://devtools/content/debugger/images/webconsole-logpoint.svg")
     no-repeat;
   display: inline-block;
   vertical-align: top;
@@ -71,7 +71,7 @@ button.remove-set-watchpoint {
 }
 
 button.remove-get-watchpoint {
-  mask: url("resource://devtools/client/debugger/images/webconsole-logpoint.svg")
+  mask: url("chrome://devtools/content/debugger/images/webconsole-logpoint.svg")
     no-repeat;
   display: inline-block;
   vertical-align: top;
@@ -85,7 +85,7 @@ button.remove-get-watchpoint {
 }
 
 button.remove-getorset-watchpoint {
-  mask: url("resource://devtools/client/debugger/images/webconsole-logpoint.svg")
+  mask: url("chrome://devtools/content/debugger/images/webconsole-logpoint.svg")
     no-repeat;
   display: inline-block;
   vertical-align: top;

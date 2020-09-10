@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const mapUrl = require("postcss-url-mapper");
-const MC_PATH = "resource://devtools/client/debugger/images/";
+const MC_PATH = "chrome://devtools/content/debugger/images/";
 const EXPRESS_PATH = "/devtools-components/images/";
 
 function mapUrlProduction(url, type) {
