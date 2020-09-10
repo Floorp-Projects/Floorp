@@ -2473,7 +2473,7 @@ webrtc.ui:
       - main
     bug_numbers:
       - 1639283
-    expiry_version: "82"
+    expiry_version: "88"
     release_channel_collection: opt-out
 
 ysod:
