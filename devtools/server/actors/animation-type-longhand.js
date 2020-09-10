@@ -36,6 +36,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "-moz-box-orient",
       "-moz-box-pack",
       "box-sizing",
+      "-moz-button-appearance",
       "caption-side",
       "clear",
       "clip-rule",
