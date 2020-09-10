@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
+#include <numeric>
 #include <type_traits>
 #include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
@@ -589,38 +590,29 @@ MakeCompressedIndexDataValues(const nsTArray<IndexDataValue>& aIndexValues) {
   }
 
   // First calculate the size of the final buffer.
-  uint32_t blobDataLength = 0;
+  const auto blobDataLength = std::accumulate(
+      aIndexValues.cbegin(), aIndexValues.cend(), CheckedUint32(0),
+      [](CheckedUint32 sum, const IndexDataValue& info) {
+        const nsCString& keyBuffer = info.mPosition.GetBuffer();
+        const nsCString& sortKeyBuffer = info.mLocaleAwarePosition.GetBuffer();
+        const uint32_t keyBufferLength = keyBuffer.Length();
+        const uint32_t sortKeyBufferLength = sortKeyBuffer.Length();
 
-  for (const IndexDataValue& info : aIndexValues) {
-    const nsCString& keyBuffer = info.mPosition.GetBuffer();
-    const nsCString& sortKeyBuffer = info.mLocaleAwarePosition.GetBuffer();
-    const uint32_t keyBufferLength = keyBuffer.Length();
-    const uint32_t sortKeyBufferLength = sortKeyBuffer.Length();
+        MOZ_ASSERT(!keyBuffer.IsEmpty());
 
-    MOZ_ASSERT(!keyBuffer.IsEmpty());
+        return sum + CompressedByteCountForIndexId(info.mIndexId) +
+               CompressedByteCountForNumber(keyBufferLength) +
+               CompressedByteCountForNumber(sortKeyBufferLength) +
+               keyBufferLength + sortKeyBufferLength;
+      });
 
-    const CheckedUint32 infoLength =
-        CheckedUint32(CompressedByteCountForIndexId(info.mIndexId)) +
-        CompressedByteCountForNumber(keyBufferLength) +
-        CompressedByteCountForNumber(sortKeyBufferLength) + keyBufferLength +
-        sortKeyBufferLength;
-    // Don't let |infoLength| overflow.
-    if (NS_WARN_IF(!infoLength.isValid())) {
-      IDB_REPORT_INTERNAL_ERR();
-      return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    }
-
-    // Don't let |blobDataLength| overflow.
-    if (NS_WARN_IF(UINT32_MAX - infoLength.value() < blobDataLength)) {
-      IDB_REPORT_INTERNAL_ERR();
-      return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    }
-
-    blobDataLength += infoLength.value();
+  if (NS_WARN_IF(!blobDataLength.isValid())) {
+    IDB_REPORT_INTERNAL_ERR();
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   UniqueFreePtr<uint8_t> blobData(
-      static_cast<uint8_t*>(malloc(blobDataLength)));
+      static_cast<uint8_t*>(malloc(blobDataLength.value())));
   if (NS_WARN_IF(!blobData)) {
     IDB_REPORT_INTERNAL_ERR();
     return Err(NS_ERROR_OUT_OF_MEMORY);
@@ -646,9 +638,9 @@ MakeCompressedIndexDataValues(const nsTArray<IndexDataValue>& aIndexValues) {
     blobDataIter += sortKeyBufferLength;
   }
 
-  MOZ_ASSERT(blobDataIter == blobData.get() + blobDataLength);
+  MOZ_ASSERT(blobDataIter == blobData.get() + blobDataLength.value());
 
-  return std::pair{std::move(blobData), uint32_t(blobDataLength)};
+  return std::pair{std::move(blobData), blobDataLength.value()};
 }
 
 nsresult ReadCompressedIndexDataValues(
