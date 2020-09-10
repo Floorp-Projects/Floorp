@@ -148,6 +148,66 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @Test
+    fun onFormResubmissionPrompt() {
+        sessionRule.session.loadTestPath(RESUBMIT_CONFIRM)
+        sessionRule.waitForPageStop()
+
+        sessionRule.session.evaluateJS(
+            "document.querySelector('#text').value = 'Some text';" +
+            "document.querySelector('#submit').click();"
+        )
+
+        // Submitting the form causes a navigation
+        sessionRule.waitForPageStop()
+
+        val result = GeckoResult<Void>()
+        sessionRule.delegateUntilTestEnd(object: Callbacks.ProgressDelegate {
+            override fun onPageStart(session: GeckoSession, url: String) {
+                assertThat("Only HELLO_HTML_PATH should load", url, endsWith(HELLO_HTML_PATH))
+                result.complete(null)
+            }
+        })
+
+        val promptResult = GeckoResult<PromptDelegate.PromptResponse>()
+        val promptResult2 = GeckoResult<PromptDelegate.PromptResponse>()
+
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 2)
+            override fun onRepostConfirmPrompt(session: GeckoSession, prompt: PromptDelegate.RepostConfirmPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                // We have to return something here because otherwise the delegate will be invoked
+                // before we have a chance to override it in the waitUntilCalled call below
+                return forEachCall(promptResult, promptResult2)
+            }
+        })
+
+        // This should trigger a confirm resubmit prompt
+        sessionRule.session.reload();
+
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onRepostConfirmPrompt(session: GeckoSession, prompt: PromptDelegate.RepostConfirmPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                promptResult.complete(prompt.confirm(AllowOrDeny.DENY))
+                return promptResult
+            }
+        })
+
+        sessionRule.waitForResult(promptResult)
+
+        // Trigger it again, this time the load should go through
+        sessionRule.session.reload();
+        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onRepostConfirmPrompt(session: GeckoSession, prompt: PromptDelegate.RepostConfirmPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                promptResult2.complete(prompt.confirm(AllowOrDeny.ALLOW))
+                return promptResult2
+            }
+        })
+
+        sessionRule.waitForResult(promptResult2)
+        sessionRule.waitForResult(result)
+    }
+
+    @Test
     fun onBeforeUnloadTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false

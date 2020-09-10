@@ -58,10 +58,16 @@
     <string name="key_allow_extensions_in_private_browsing">allow_extensions_in_private_browsing</string>
     <string name="key_preferred_color_scheme">preferred_color_scheme</string>
     <string name="key_user_agent_override">user_agent_override</string>
+
     <string name="before_unload_message">This page is asking you to confirm that you want to leave - data you have entered may not be saved</string>
     <string name="before_unload_title">Are you sure?</string>
     <string name="before_unload_leave_page">Leave Page</string>
     <string name="before_unload_stay">Stay on Page</string>
+
+    <string name="repost_confirm_message">To display this page, GeckoViewExample must send information that will repeat any action (such as a search or order confirmation) that was performed earlier.</string>
+    <string name="repost_confirm_title">Are you sure?</string>
+    <string name="repost_confirm_resend">Resend</string>
+    <string name="repost_confirm_cancel">Cancel</string>
 
     <string-array name="pref_preferred_color_scheme_display_names">
         <item>Follow System Preference</item>

@@ -2775,6 +2775,12 @@ public class GeckoSession implements Parcelable {
                 res = delegate.onBeforeUnloadPrompt(session, prompt);
                 break;
             }
+            case "repost": {
+                final PromptDelegate.RepostConfirmPrompt prompt =
+                    new PromptDelegate.RepostConfirmPrompt();
+                res = delegate.onRepostConfirmPrompt(session, prompt);
+                break;
+            }
             case "button": {
                 final PromptDelegate.ButtonPrompt prompt =
                     new PromptDelegate.ButtonPrompt(title, msg);
@@ -4088,6 +4094,31 @@ public class GeckoSession implements Parcelable {
         }
 
         /**
+         * RepostConfirmPrompt represents a prompt shown whenever the browser
+         * needs to resubmit POST data (e.g. due to page refresh).
+         */
+        class RepostConfirmPrompt extends BasePrompt {
+            protected RepostConfirmPrompt() {
+                super(null);
+            }
+
+            /**
+             * Confirms the prompt.
+             *
+             * @param allowOrDeny whether the browser should allow resubmitting
+             *                    data.
+             *
+             * @return A {@link PromptResponse} which can be used to complete
+             *         the {@link GeckoResult} associated with this prompt.
+             */
+            @UiThread
+            public @NonNull PromptResponse confirm(final @Nullable AllowOrDeny allowOrDeny) {
+                ensureResult().putBoolean("allow", allowOrDeny != AllowOrDeny.DENY);
+                return super.confirm();
+            }
+        }
+
+        /**
          * AlertPrompt contains the information necessary to represent a JavaScript
          * alert() call from content; it can only be dismissed, not confirmed.
          */
@@ -5016,6 +5047,27 @@ public class GeckoSession implements Parcelable {
         default @Nullable GeckoResult<PromptResponse> onBeforeUnloadPrompt(
                 @NonNull final GeckoSession session,
                 @NonNull final BeforeUnloadPrompt prompt
+        ) {
+            return null;
+        }
+
+        /**
+         * Display a POST resubmission confirmation prompt.
+         *
+         * This prompt will trigger whenever refreshing or navigating to a page needs resubmitting
+         * POST data that has been submitted already.
+         *
+         * @param session GeckoSession that triggered the prompt
+         * @param prompt the {@link RepostConfirmPrompt} that describes the
+         *               prompt.
+         * @return A {@link GeckoResult} resolving to {@link AllowOrDeny#ALLOW}
+         *         if the page is allowed to continue with the navigation and resubmit the POST
+         *         data or {@link AllowOrDeny#DENY} otherwise.
+         */
+        @UiThread
+        default @Nullable GeckoResult<PromptResponse> onRepostConfirmPrompt(
+                @NonNull final GeckoSession session,
+                @NonNull final RepostConfirmPrompt prompt
         ) {
             return null;
         }
