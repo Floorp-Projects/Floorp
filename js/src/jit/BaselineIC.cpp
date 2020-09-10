@@ -2966,8 +2966,9 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   // allowed to attach stubs.
   if (canAttachStub) {
     HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);
-    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), argc, callee,
-                        callArgs.thisv(), newTarget, args);
+    bool isFirstStub = stub->newStubIsFirstStub();
+    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), isFirstStub,
+                        argc, callee, callArgs.thisv(), newTarget, args);
     switch (gen.tryAttachStub()) {
       case AttachDecision::NoAction:
         break;
@@ -3034,8 +3035,9 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
 
   if (deferred && canAttachStub) {
     HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);
-    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), argc, callee,
-                        callArgs.thisv(), newTarget, args);
+    bool isFirstStub = stub->newStubIsFirstStub();
+    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), isFirstStub,
+                        argc, callee, callArgs.thisv(), newTarget, args);
     switch (gen.tryAttachDeferredStub(res)) {
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
@@ -3101,8 +3103,9 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
 
     HandleValueArray args = HandleValueArray::fromMarkedLocation(
         aobj->length(), aobj->getDenseElements());
-    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), 1, callee,
-                        thisv, newTarget, args);
+    bool isFirstStub = stub->newStubIsFirstStub();
+    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), isFirstStub,
+                        1, callee, thisv, newTarget, args);
     switch (gen.tryAttachStub()) {
       case AttachDecision::NoAction:
         break;

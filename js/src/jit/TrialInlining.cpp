@@ -78,9 +78,23 @@ void TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
 }
 
 ICStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
+  // Look for a single non-fallback stub followed by stubs with entered-count 0.
+  // Allow one optimized stub before the fallback stub to support the
+  // CallIRGenerator::emitCalleeGuard optimization where we first try a
+  // GuardSpecificFunction guard before falling back to GuardFunctionHasScript.
   ICStub* stub = entry.firstStub();
-  if (stub->isFallback() || !stub->next()->isFallback()) {
+  if (stub->isFallback()) {
     return nullptr;
+  }
+  ICStub* next = stub->next();
+  if (next->getEnteredCount() != 0) {
+    return nullptr;
+  }
+  if (!next->isFallback()) {
+    ICStub* nextNext = next->next();
+    if (!nextNext->isFallback() || nextNext->getEnteredCount() != 0) {
+      return nullptr;
+    }
   }
   return stub;
 }
