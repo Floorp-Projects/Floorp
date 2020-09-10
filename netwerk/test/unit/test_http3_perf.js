@@ -1,12 +1,5 @@
 "use strict";
 
-var perfMetadata = {
-  owner: "Network Team",
-  name: "http3 raw",
-  description:
-    "XPCShell tests that verifies the lib integration against a local server",
-};
-
 var performance = performance || {};
 performance.now = (function() {
   return (
