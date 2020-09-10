@@ -100,6 +100,12 @@ class Actor extends Pool {
       console.error(error.stack);
     }
 
+    // Do not try to send the error if the actor is destroyed
+    // as the connection is probably also destroyed and may throw.
+    if (this.isDestroyed()) {
+      return;
+    }
+
     this.conn.send({
       from: this.actorID,
       // error.error -> errors created using the throwError() helper
@@ -168,6 +174,13 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
         const sendReturn = retToSend => {
           if (spec.oneway) {
             // No need to send a response.
+            return;
+          }
+          if (this.isDestroyed()) {
+            console.error(
+              `Tried to send a '${spec.name}' method reply on an already destroyed actor` +
+                ` '${this.typeName}'`
+            );
             return;
           }
 

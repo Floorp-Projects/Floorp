@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Test sanitizer api</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+    <div id="div"></div>
+    <script type="text/javascript">
+            "use strict";
+            /* global Sanitizer */
+            // we're not done after "onload"
+            SimpleTest.waitForExplicitFinish();
+            var oldVal = SpecialPowers.getBoolPref("dom.security.sanitizer.enabled");
+            SpecialPowers.setBoolPref("dom.security.sanitizer.enabled", true);
+
+
+            function* possibleInputTypes(inputStr) {
+                /* This generator function, given a string, yields all possible input objects
+                   for our sanitizer API (string, docfragment, document).
+                */
+
+                // 1) as string
+                yield ({testInput: inputStr, testType: "String" });
+                // 2) as DocumentFragment
+                let temp = document.createElement('template');
+                // asking eslint to skip this: innerHTML is safe for template elements.
+                // eslint-disable-next-line no-unsanitized/property
+                temp.innerHTML = inputStr;
+                yield ({testInput: temp.content, testType: "DocumentFragment" });
+                // 3) as HTMLDocument
+                const parser = new DOMParser;
+                yield ({testInput: parser.parseFromString(inputStr, "text/html"), testType: "Document" });
+            }
+            // basic interface smoke test
+            ok(Sanitizer, "Sanitizer is truthy");
+            const mySanitizer = new Sanitizer();
+            ok(mySanitizer, "Sanitizer constructor works");
+            ok(mySanitizer.sanitize, "sanitize function exists");
+
+            // testing sanitizer results
+            const testCases = [
+                {testString: "<p>hello</p>", testExpected: "<p>hello</p>" },
+                // script element encoded to not confuse the HTML parser and end execution here
+                { testString: "<p>second test</p><script>alert(1)\x3C/script>", testExpected: "<p>second test</p>"},
+            ];
+
+
+            const div = document.getElementById("div");
+            for (let test of testCases) {
+                const {testString, testExpected} = test;
+
+                for (let testInputAndType of possibleInputTypes(testString)) {
+                    const {testInput, testType} = testInputAndType;
+
+                    // test documentfragment API
+                    div.innerHTML = "";
+                    const docFragment = mySanitizer.sanitize(testInput);
+                    div.append(docFragment);
+                    is(div.innerHTML, testExpected, `Sanitizer.sanitize() should turn (${testType}) '${testInput}' into '${testExpected}'`);
+
+                    // test string api, doesnt work yet
+                    /*is(mySanitizer.sanitizeToString(testInput), testExpected,
+                      `Sanitizer.sanitizeToString() should turn (${testType}) '${testInput}' into '${testExpected}'`);*/
+                }
+            }
+
+            SpecialPowers.setBoolPref("dom.security.sanitizer.enabled", oldVal);
+            SimpleTest.finish();
+    </script>
+</body>
+</html>

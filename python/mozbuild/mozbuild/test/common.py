@@ -61,7 +61,6 @@ class MockConfig(object):
 
         self.defines = self.substs
 
-        self.external_source_dir = None
         self.lib_prefix = 'lib'
         self.rust_lib_prefix = 'lib'
         self.lib_suffix = '.a'

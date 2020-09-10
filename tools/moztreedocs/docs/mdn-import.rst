@@ -20,3 +20,9 @@ to the firefox source docs.
 4. Verify the rst syntax using `./mach lint -l rst`_
 
 .. _./mach lint -l rst: /tools/lint/linters/rstlinter.html
+
+5. If relevant, remove unbreakable spaces (rendered with a "!" on Phabricator)
+
+.. code-block:: shell
+
+   $ sed -i -e 's/\xc2\xa0/ /g' doc.rst

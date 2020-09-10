@@ -118,7 +118,6 @@ class EmptyConfig(object):
 
         self.substs = self.PopulateOnGetDict(EmptyValue, substs or self.default_substs)
         self.defines = self.substs
-        self.external_source_dir = None
         self.error_is_fatal = False
 
 
@@ -140,12 +139,6 @@ def is_read_allowed(path, config):
 
     if mozpath.basedir(path, [topsrcdir]):
         return True
-
-    if config.external_source_dir:
-        external_dir = os.path.normcase(config.external_source_dir)
-        norm_path = os.path.normcase(path)
-        if mozpath.basedir(norm_path, [external_dir]):
-            return True
 
     return False
 
@@ -1098,14 +1091,6 @@ class BuildReader(object):
 
         topobjdir = config.topobjdir
 
-        if not mozpath.basedir(path, [config.topsrcdir]):
-            external = config.external_source_dir
-            if external and mozpath.basedir(path, [external]):
-                config = ConfigEnvironment.from_config_status(
-                    mozpath.join(topobjdir, 'config.status'))
-                config.topsrcdir = external
-                config.external_source_dir = None
-
         relpath = mozpath.relpath(path, config.topsrcdir)
         reldir = mozpath.dirname(relpath)
 
@@ -1114,7 +1099,6 @@ class BuildReader(object):
             config = ConfigEnvironment.from_config_status(
                 mozpath.join(topobjdir, reldir, 'config.status'))
             config.topobjdir = topobjdir
-            config.external_source_dir = None
 
         context = Context(VARIABLES, config, self.finder)
         sandbox = MozbuildSandbox(context, metadata=metadata,

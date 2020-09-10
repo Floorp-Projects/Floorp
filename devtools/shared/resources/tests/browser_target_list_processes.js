@@ -179,7 +179,7 @@ async function testProcesses(targetList, target) {
     "The destroyed target is the one that has been reported as created"
   );
 
-  await targetList.unwatchTargets(
+  targetList.unwatchTargets(
     [TargetList.TYPES.PROCESS],
     onAvailable,
     onDestroyed

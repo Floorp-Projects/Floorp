@@ -86,7 +86,6 @@ input {
   display: inline-block;
   appearance: auto;
   -moz-default-appearance: textfield;
-  -moz-button-appearance: disallow;
   /* The sum of border and padding on block-start and block-end
      must be the same here, for buttons, and for <select> (including its
      internal padding magic) */
@@ -110,7 +109,6 @@ input::placeholder {
 textarea {
   appearance: auto;
   -moz-default-appearance: textarea;
-  -moz-button-appearance: disallow;
   margin-block: 1px;
   border: 2px inset ThreeDLightShadow;
   /* The 1px inline padding is for parity with Win/IE */
@@ -242,7 +240,6 @@ select {
   padding-block: 0;
   appearance: auto;
   -moz-default-appearance: menulist;
-  -moz-button-appearance: allow;
 }
 
 select:-moz-select-list-box {
@@ -253,7 +250,6 @@ select:-moz-select-list-box {
   padding-block: 1px;
   appearance: auto;
   -moz-default-appearance: listbox;
-  -moz-button-appearance: disallow;
 }
 
 select > button {
@@ -754,7 +750,6 @@ output:-moz-ui-invalid {
 progress {
   appearance: auto;
   -moz-default-appearance: progress-bar;
-  -moz-button-appearance: disallow;
   display: inline-block;
   vertical-align: -0.2em;
 
@@ -767,8 +762,11 @@ progress {
 }
 
 ::-moz-progress-bar {
-  display: inline-block;
-
+  /* Prevent styling that would change the type of frame we construct. */
+  display: inline-block !important;
+  float: none !important;
+  position: static !important;
+  overflow: visible !important;
   box-sizing: border-box !important;
 
   appearance: auto;
@@ -783,14 +781,17 @@ progress {
 meter {
   appearance: auto;
   -moz-default-appearance: meter;
-  -moz-button-appearance: disallow;
   display: inline-block;
   vertical-align: -0.2em;
   background: linear-gradient(#e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
 }
 
 ::-moz-meter-bar {
-  display: inline-block;
+  /* Block styles that would change the type of frame we construct. */
+  display: inline-block !important;
+  float: none !important;
+  position: static !important;
+  overflow: visible !important;
 
   appearance: auto;
   -moz-default-appearance: meterchunk;
@@ -833,7 +834,12 @@ input[type=range] {
  * set the width/height of this pseudo-element.
  */
 input[type=range]::-moz-range-track {
-  display: block;
+  /* Prevent styling that would change the type of frame we construct. */
+  display: block !important;
+  float: none !important;
+  position: static !important;
+  writing-mode: unset !important;
+  direction: unset !important;
   block-size: 0.2em; /* same as inline-size below */
   /* Prevent nsIFrame::HandlePress setting mouse capture to this element. */
   user-select: none !important;
@@ -853,7 +859,12 @@ input[type=range][orient=vertical]::-moz-range-track {
  * is ignored.
  */
 input[type=range]::-moz-range-progress {
-  display: block;
+  /* Prevent styling that would change the type of frame we construct. */
+  display: block !important;
+  float: none !important;
+  position: static !important;
+  writing-mode: unset !important;
+  direction: unset !important;
   /* Since one of width/height will be ignored, this just sets the "other"
      dimension.
    */
@@ -875,7 +886,12 @@ input[type=range]::-moz-range-thumb {
    */
   appearance: auto !important;
   -moz-default-appearance: range-thumb !important;
-  display: block;
+  /* Prevent styling that would change the type of frame we construct. */
+  display: block !important;
+  float: none !important;
+  position: static !important;
+  writing-mode: unset !important;
+  direction: unset !important;
 
   width: 1em;
   height: 1em;
@@ -892,7 +908,10 @@ input[type="number"] {
 }
 
 input:is([type=number], [type=search])::-moz-complex-control-wrapper {
+  /* Prevent styling that would change the type of frame we construct. */
   display: flex;
+  float: none !important;
+  position: static !important;
   block-size: 100%;
   /* The align-self: center bit below allows the editor to be potentially
    * bigger than us. Clip it to match other text fields. */

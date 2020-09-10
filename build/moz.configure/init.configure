@@ -135,18 +135,6 @@ option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
 
 option(env='MOZCONFIG', nargs=1, help='Mozconfig location')
 
-option('--with-external-source-dir', env='EXTERNAL_SOURCE_DIR', nargs=1,
-       help='External directory containing additional build files')
-
-
-@depends('--with-external-source-dir')
-def external_source_dir(value):
-    if value:
-        return value[0]
-
-
-set_config('EXTERNAL_SOURCE_DIR', external_source_dir)
-add_old_configure_assignment('EXTERNAL_SOURCE_DIR', external_source_dir)
 
 # Read user mozconfig
 # ==============================================================
@@ -155,13 +143,11 @@ add_old_configure_assignment('EXTERNAL_SOURCE_DIR', external_source_dir)
 # be called when --help is passed, and the mozconfig wouldn't be read.
 
 
-@depends('MOZCONFIG', 'OLD_CONFIGURE',
-         check_build_environment, '--with-external-source-dir',
+@depends('MOZCONFIG', 'OLD_CONFIGURE', check_build_environment,
          '--help')
 @imports(_from='mozbuild.mozconfig', _import='MozconfigLoader')
 @imports(_from='mozboot.mozconfig', _import='find_mozconfig')
-def mozconfig(mozconfig, old_configure, build_env,
-              external_source_dir, help):
+def mozconfig(mozconfig, old_configure, build_env, help):
     if not old_configure and not help:
         die('The OLD_CONFIGURE environment variable must be set')
 
@@ -185,8 +171,6 @@ def mozconfig(mozconfig, old_configure, build_env,
         return {'path': None}
 
     topsrcdir = build_env.topsrcdir
-    if external_source_dir:
-        topsrcdir = external_source_dir[0]
     loader = MozconfigLoader(topsrcdir)
     mozconfig = mozconfig[0] if mozconfig else None
     mozconfig = find_mozconfig(topsrcdir, env={'MOZCONFIG': mozconfig})
@@ -1100,17 +1084,13 @@ def target_is_sparc(target):
 set_define('SPARC64', target_is_sparc)
 
 
-@depends('--enable-project', '--with-external-source-dir',
-         check_build_environment, '--help')
+@depends('--enable-project', check_build_environment, '--help')
 @imports(_from='os.path', _import='exists')
-def include_project_configure(project, external_source_dir, build_env, help):
+def include_project_configure(project, build_env, help):
     if not project:
         die('--enable-project is required.')
 
     base_dir = build_env.topsrcdir
-    if external_source_dir:
-        base_dir = os.path.join(base_dir, external_source_dir[0])
-
     path = os.path.join(base_dir, project[0], 'moz.configure')
     if not exists(path):
         die('Cannot find project %s', project[0])

@@ -2649,6 +2649,12 @@
   value: true
   mirror: always
 
+# pref controls `Sanitizer` API being exposed
+- name: dom.security.sanitizer.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Is support for selection event APIs enabled?
 - name: dom.select_events.enabled
   type: bool
