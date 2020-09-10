@@ -27,6 +27,7 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -312,12 +313,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         val leakKey = getPreferenceKey(R.string.pref_key_leakcanary)
         val debuggingKey = getPreferenceKey(R.string.pref_key_remote_debugging)
+        val preferencePrivateBrowsing =
+            requirePreference<Preference>(R.string.pref_key_private_browsing)
         val preferenceExternalDownloadManager =
             requirePreference<Preference>(R.string.pref_key_external_download_manager)
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
         val preferenceMakeDefaultBrowser =
             requirePreference<Preference>(R.string.pref_key_make_default_browser)
+
+        preferencePrivateBrowsing.icon.mutate().apply {
+            setTint(requireContext().getColorFromAttr(R.attr.primaryText))
+        }
 
         if (!Config.channel.isReleased) {
             preferenceLeakCanary?.setOnPreferenceChangeListener { _, newValue ->
