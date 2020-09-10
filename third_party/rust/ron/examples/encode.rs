@@ -39,12 +39,10 @@ fn main() {
         array: vec![(); 3],
     };
 
-    let pretty = PrettyConfig {
-        depth_limit: 2,
-        separate_tuple_members: true,
-        enumerate_arrays: true,
-        ..PrettyConfig::default()
-    };
+    let pretty = PrettyConfig::new()
+        .with_depth_limit(2)
+        .with_separate_tuple_members(true)
+        .with_enumerate_arrays(true);
     let s = to_string_pretty(&data, pretty).expect("Serialization failed");
 
     println!("{}", s);

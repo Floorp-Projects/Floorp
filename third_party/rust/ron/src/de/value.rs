@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, fmt};
+use std::fmt;
 
 use serde::{
     de::{Error, MapAccess, SeqAccess, Visitor},
@@ -7,12 +7,14 @@ use serde::{
 
 use crate::{
     de,
-    value::{Number, Value},
+    value::{Map, Number, Value},
 };
 
-impl Value {
+impl std::str::FromStr for Value {
+    type Err = de::Error;
+
     /// Creates a value from a string reference.
-    pub fn from_str(s: &str) -> de::Result<Self> {
+    fn from_str(s: &str) -> de::Result<Self> {
         let mut de = super::Deserializer::from_str(s)?;
 
         let val = Value::deserialize(&mut de)?;
@@ -51,10 +53,24 @@ impl<'de> Visitor<'de> for ValueVisitor {
     where
         E: Error,
     {
+        Ok(Value::Number(Number::new(v)))
+    }
+
+    fn visit_i128<E>(self, v: i128) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         self.visit_f64(v as f64)
     }
 
     fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
+        Ok(Value::Number(Number::new(v)))
+    }
+
+    fn visit_u128<E>(self, v: u128) -> Result<Self::Value, E>
     where
         E: Error,
     {
@@ -153,7 +169,7 @@ impl<'de> Visitor<'de> for ValueVisitor {
     where
         A: MapAccess<'de>,
     {
-        let mut res: BTreeMap<Value, Value> = BTreeMap::new();
+        let mut res: Map = Map::new();
 
         while let Some(entry) = map.next_entry()? {
             res.insert(entry.0, entry.1);
@@ -166,9 +182,10 @@ impl<'de> Visitor<'de> for ValueVisitor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
 
     fn eval(s: &str) -> Value {
-        Value::from_str(s).expect("Failed to parse")
+        s.parse().expect("Failed to parse")
     }
 
     #[test]
@@ -188,9 +205,9 @@ mod tests {
     #[test]
     fn test_tuples_basic() {
         assert_eq!(
-            eval("(3, 4, 5)"),
+            eval("(3, 4.0, 5.0)"),
             Value::Seq(vec![
-                Value::Number(Number::new(3.0)),
+                Value::Number(Number::new(3)),
                 Value::Number(Number::new(4.0)),
                 Value::Number(Number::new(5.0)),
             ],),
@@ -200,11 +217,11 @@ mod tests {
     #[test]
     fn test_tuples_ident() {
         assert_eq!(
-            eval("(true, 3, 4, 5)"),
+            eval("(true, 3, 4, 5.0)"),
             Value::Seq(vec![
                 Value::Bool(true),
-                Value::Number(Number::new(3.0)),
-                Value::Number(Number::new(4.0)),
+                Value::Number(Number::new(3)),
+                Value::Number(Number::new(4)),
                 Value::Number(Number::new(5.0)),
             ]),
         );
@@ -212,11 +229,26 @@ mod tests {
 
     #[test]
     fn test_tuples_error() {
-        use crate::de::{Error, ParseError, Position};
+        use crate::de::{Error, ErrorCode, Position};
 
         assert_eq!(
             Value::from_str("Foo:").unwrap_err(),
-            Error::Parser(ParseError::TrailingCharacters, Position { col: 4, line: 1 }),
+            Error {
+                code: ErrorCode::TrailingCharacters,
+                position: Position { col: 4, line: 1 }
+            },
+        );
+    }
+
+    #[test]
+    fn test_floats() {
+        assert_eq!(
+            eval("(inf, -inf, NaN)"),
+            Value::Seq(vec![
+                Value::Number(Number::new(std::f64::INFINITY)),
+                Value::Number(Number::new(std::f64::NEG_INFINITY)),
+                Value::Number(Number::new(std::f64::NAN)),
+            ]),
         );
     }
 
@@ -228,8 +260,8 @@ mod tests {
     Room ( width: 20, height: 5, name: \"The Room\" ),
 
     (
-        width: 10,
-        height: 10,
+        width: 10.0,
+        height: 10.0,
         name: \"Another room\",
         enemy_levels: {
             \"Enemy1\": 3,
@@ -244,11 +276,11 @@ mod tests {
                     vec![
                         (
                             Value::String("width".to_owned()),
-                            Value::Number(Number::new(20.0)),
+                            Value::Number(Number::new(20)),
                         ),
                         (
                             Value::String("height".to_owned()),
-                            Value::Number(Number::new(5.0)),
+                            Value::Number(Number::new(5)),
                         ),
                         (
                             Value::String("name".to_owned()),
@@ -278,15 +310,15 @@ mod tests {
                                 vec![
                                     (
                                         Value::String("Enemy1".to_owned()),
-                                        Value::Number(Number::new(3.0)),
+                                        Value::Number(Number::new(3)),
                                     ),
                                     (
                                         Value::String("Enemy2".to_owned()),
-                                        Value::Number(Number::new(5.0)),
+                                        Value::Number(Number::new(5)),
                                     ),
                                     (
                                         Value::String("Enemy3".to_owned()),
-                                        Value::Number(Number::new(7.0)),
+                                        Value::Number(Number::new(7)),
                                     ),
                                 ]
                                 .into_iter()
