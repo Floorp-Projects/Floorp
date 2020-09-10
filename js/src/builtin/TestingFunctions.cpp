@@ -45,6 +45,7 @@
 #include "gc/Allocator.h"
 #include "gc/Zone.h"
 #include "jit/BaselineJIT.h"
+#include "jit/Disassemble.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "jit/JitRealm.h"
@@ -1061,6 +1062,144 @@ static void captureDisasmText(const char* text) {
   if (!buf->builder.append(text, strlen(text)) || !buf->builder.append('\n')) {
     buf->oom = true;
   }
+}
+
+static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
+  if (args.length() < 1) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_MORE_ARGS_NEEDED, "disnative", "1", "",
+                              "0");
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+    JS_ReportErrorASCII(cx, "The first argument must be a function.");
+    return false;
+  }
+
+  Sprinter sprinter(cx);
+  if (!sprinter.init()) {
+    return false;
+  }
+
+  RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
+
+  uint8_t* jit_begin = nullptr;
+  uint8_t* jit_end = nullptr;
+
+  if (fun->isAsmJSNative() || fun->isWasmWithJitEntry()) {
+    if (fun->isAsmJSNative() && !sprinter.jsprintf("; backend=asmjs\n")) {
+      return false;
+    }
+    if (!sprinter.jsprintf("; backend=wasm\n")) {
+      return false;
+    }
+
+    const Value& v2 =
+        fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
+
+    WasmInstanceObject* instobj = &v2.toObject().as<WasmInstanceObject>();
+    js::wasm::Instance& inst = instobj->instance();
+    const js::wasm::Code& code = inst.code();
+    js::wasm::Tier tier = code.bestTier();
+
+    const js::wasm::MetadataTier& meta = inst.metadata(tier);
+
+    const js::wasm::CodeSegment& segment = code.segment(tier);
+    const uint32_t funcIndex = code.getFuncIndex(&*fun);
+    const js::wasm::FuncExport& func = meta.lookupFuncExport(funcIndex);
+    const js::wasm::CodeRange& codeRange = meta.codeRange(func);
+
+    jit_begin = segment.base() + codeRange.begin();
+    jit_end = segment.base() + codeRange.end();
+  } else if (fun->hasJitScript()) {
+    JSScript* script = fun->nonLazyScript();
+    if (script == nullptr) {
+      return false;
+    }
+
+    js::jit::IonScript* ion =
+        script->hasIonScript() ? script->ionScript() : nullptr;
+    js::jit::BaselineScript* baseline =
+        script->hasBaselineScript() ? script->baselineScript() : nullptr;
+    if (ion && ion->method()) {
+      if (!sprinter.jsprintf("; backend=ion\n")) {
+        return false;
+      }
+
+      jit_begin = ion->method()->raw();
+      jit_end = ion->method()->rawEnd();
+    } else if (baseline) {
+      if (!sprinter.jsprintf("; backend=baseline\n")) {
+        return false;
+      }
+
+      jit_begin = baseline->method()->raw();
+      jit_end = baseline->method()->rawEnd();
+    }
+  } else {
+    return false;
+  }
+
+  if (jit_begin == nullptr || jit_end == nullptr) {
+    return false;
+  }
+
+  DisasmBuffer buf(cx);
+  disasmBuf.set(&buf);
+  auto onFinish = mozilla::MakeScopeExit([&] { disasmBuf.set(nullptr); });
+
+  jit::Disassemble(jit_begin, jit_end - jit_begin, &captureDisasmText);
+
+  if (buf.oom) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  JSString* sresult = buf.builder.finishString();
+  if (!sresult) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  sprinter.putString(sresult);
+
+  if (args.length() > 1 && args[1].isString()) {
+    RootedString str(cx, args[1].toString());
+    JS::UniqueChars fileNameBytes = JS_EncodeStringToUTF8(cx, str);
+
+    const char* fileName = fileNameBytes.get();
+    if (!fileName) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+
+    FILE* f = fopen(fileName, "w");
+    if (!f) {
+      JS_ReportErrorASCII(cx, "Could not open file for writing.");
+      return false;
+    }
+
+    uintptr_t expected_length = reinterpret_cast<uintptr_t>(jit_end) -
+                                reinterpret_cast<uintptr_t>(jit_begin);
+    if (expected_length != fwrite(jit_begin, jit_end - jit_begin, 1, f)) {
+      JS_ReportErrorASCII(cx, "Did not write all function bytes to the file.");
+      fclose(f);
+      return false;
+    }
+    fclose(f);
+  }
+
+  JSString* str = JS_NewStringCopyZ(cx, sprinter.string());
+  if (!str) {
+    return false;
+  }
+
+  args[0].setUndefined();
+  args.rval().setString(str);
+
+  return true;
 }
 
 static bool WasmDisassemble(JSContext* cx, unsigned argc, Value* vp) {
@@ -6119,6 +6258,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gcparam", GCParameter, 2, 0,
 "gcparam(name [, value])",
 "  Wrapper for JS_[GS]etGCParameter. The name is one of:" GC_PARAMETER_ARGS_LIST),
+
+    JS_FN_HELP("disnative", DisassembleNative, 2, 0,
+"disnative(fun,[path])",
+"  Disassemble a function into its native code. Optionally write the native code bytes to a file on disk.\n"),
 
     JS_FN_HELP("relazifyFunctions", RelazifyFunctions, 0, 0,
 "relazifyFunctions(...)",
