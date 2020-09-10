@@ -7109,7 +7109,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-08-07T17:16:50Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-09-09T17:29:56Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -9015,9 +9015,6 @@ menu
 
 // merckmsd : 2016-07-14 MSD Registry Holdings, Inc.
 merckmsd
-
-// metlife : 2015-05-07 MetLife Services and Solutions, LLC
-metlife
 
 // miami : 2013-12-19 Minds + Machines Group Limited
 miami
@@ -11039,7 +11036,8 @@ cloudcontrolapp.com
 cloudera.site
 
 // Cloudflare, Inc. : https://www.cloudflare.com/
-// Submitted by Jake Riesterer <publicsuffixlist@cloudflare.com>
+// Submitted by Cloudflare Team <publicsuffixlist@cloudflare.com>
+pages.dev
 trycloudflare.com
 workers.dev
 
