@@ -12,6 +12,7 @@ add_task(async function() {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   const onFlexContainerRepRendered = waitForDOM(
     doc,
@@ -23,7 +24,9 @@ add_task(async function() {
   ok(flexContainerRep, "The flex container element rep is rendered.");
 
   info("Listen to node-highlight event and mouse over the rep");
-  const onHighlight = inspector.highlighter.once("node-highlight");
+  const onHighlight = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
   EventUtils.synthesizeMouse(
     flexContainerRep,
     10,
@@ -31,7 +34,7 @@ add_task(async function() {
     { type: "mouseover" },
     doc.defaultView
   );
-  const nodeFront = await onHighlight;
+  const { nodeFront } = await onHighlight;
 
   ok(nodeFront, "nodeFront was returned from highlighting the node.");
   is(nodeFront.tagName, "DIV", "The highlighted node has the correct tagName.");

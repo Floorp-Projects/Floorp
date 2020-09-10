@@ -23,6 +23,7 @@ add_task(async function() {
   const { inspector, gridInspector } = await openLayoutView();
   const { document: doc } = gridInspector;
   const { store } = inspector;
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   const gridList = doc.querySelector("#grid-list");
   const elementRep = gridList.children[0].querySelector(".open-inspector");
@@ -30,7 +31,9 @@ add_task(async function() {
   elementRep.scrollIntoView();
 
   info("Listen to node-highlight event and mouse over the widget");
-  const onHighlight = inspector.highlighter.once("node-highlight");
+  const onHighlight = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
   EventUtils.synthesizeMouse(
     elementRep,
     10,
@@ -38,7 +41,7 @@ add_task(async function() {
     { type: "mouseover" },
     doc.defaultView
   );
-  const nodeFront = await onHighlight;
+  const { nodeFront } = await onHighlight;
 
   ok(nodeFront, "nodeFront was returned from highlighting the node.");
   is(nodeFront.tagName, "DIV", "The highlighted node has the correct tagName.");
