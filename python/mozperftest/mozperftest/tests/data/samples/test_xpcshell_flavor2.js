@@ -4,18 +4,6 @@
 
 "use strict";
 
-
-add_task(async function dummy_test() {
-  /*
-   * Do some test here, get some metrics
-   */
-  var metrics = {"metrics1": 1, "metrics2": 2};
-  info("perfMetrics", metrics);
-  info("perfMetrics", {"metrics3": 3});
-  await true;
-});
-
-
 var perfMetadata = {
   owner: "Performance Testing Team",
   name: "Example",
@@ -24,8 +12,18 @@ var perfMetadata = {
   This is a longer description of the test perhaps including information
   about how it should be run locally or links to relevant information.
   `,
-  usage: "explains how to use it",
+  usage: `
+  ./mach perftest
+    python/mozperftest/mozperftest/tests/data/samples/test_xpcshell_flavor2.js
+  `,
   supportedBrowsers: ["Firefox"],
   supportedPlatforms: ["Desktop"],
 };
 
+function run_next_test() {
+  // do something
+}
+
+function run_test() {
+  // do something
+}
