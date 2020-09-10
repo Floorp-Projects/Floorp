@@ -9953,12 +9953,10 @@ void WaitForTransactionsHelper::MaybeWaitForTransactions() {
 
   RefPtr<ConnectionPool> connectionPool = gConnectionPool.get();
   if (connectionPool) {
-    nsTArray<nsCString> ids(1);
-    ids.AppendElement(mDatabaseId);
-
     mState = State::WaitingForTransactions;
 
-    connectionPool->WaitForDatabasesToComplete(std::move(ids), this);
+    connectionPool->WaitForDatabasesToComplete(nsTArray<nsCString>{mDatabaseId},
+                                               this);
     return;
   }
 
@@ -9973,12 +9971,10 @@ void WaitForTransactionsHelper::MaybeWaitForFileHandles() {
   RefPtr<FileHandleThreadPool> fileHandleThreadPool =
       gFileHandleThreadPool.get();
   if (fileHandleThreadPool) {
-    nsTArray<nsCString> ids(1);
-    ids.AppendElement(mDatabaseId);
-
     mState = State::WaitingForFileHandles;
 
-    fileHandleThreadPool->WaitForDirectoriesToComplete(std::move(ids), this);
+    fileHandleThreadPool->WaitForDirectoriesToComplete(
+        nsTArray<nsCString>{mDatabaseId}, this);
     return;
   }
 
