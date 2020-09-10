@@ -154,6 +154,12 @@ class GlobalHelperThreadState {
   // Global list of JSContext for GlobalHelperThreadState to use.
   ContextVector helperContexts_;
 
+  using HelperThreadTaskVector =
+      Vector<HelperThreadTask*, 0, SystemAllocPolicy>;
+  // Vector of running HelperThreadTask.
+  // This is used to get the HelperThreadTask that are currently running.
+  HelperThreadTaskVector helperTasks_;
+
   ParseTask* removeFinishedParseTask(ParseTaskKind kind,
                                      JS::OffThreadToken* token);
 
@@ -299,6 +305,10 @@ class GlobalHelperThreadState {
     MOZ_ASSERT(count >= 1);
     MOZ_ASSERT(count <= threadCount);
     gcParallelThreadCount = count;
+  }
+
+  HelperThreadTaskVector& helperTasks(const AutoLockHelperThreadState&) {
+    return helperTasks_;
   }
 
   bool canStartWasmCompile(const AutoLockHelperThreadState& lock,
