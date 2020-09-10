@@ -221,11 +221,10 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   // FIXME: This should probably be an assert of sorts, can we really get here
   // without any print settings?
   if (mPageData->mPrintSettings) {
-    nsIntMargin unwriteableTwips;
-    mPageData->mPrintSettings->GetUnwriteableMarginInTwips(unwriteableTwips);
+    nsIntMargin unwriteableTwips =
+        mPageData->mPrintSettings->GetUnwriteableMarginInTwips();
 
-    nsIntMargin edgeTwips;
-    mPageData->mPrintSettings->GetEdgeInTwips(edgeTwips);
+    nsIntMargin edgeTwips = mPageData->mPrintSettings->GetEdgeInTwips();
 
     // sanity check the values. three inches are sometimes needed
     int32_t inchInTwips = NS_INCHES_TO_INT_TWIPS(3.0);

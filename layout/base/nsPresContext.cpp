@@ -1627,14 +1627,12 @@ void nsPresContext::SetPrintSettings(nsIPrintSettings* aPrintSettings) {
     return;
   }
 
-  nsIntMargin unwriteableTwips;
-  mPrintSettings->GetUnwriteableMarginInTwips(unwriteableTwips);
+  nsIntMargin unwriteableTwips = mPrintSettings->GetUnwriteableMarginInTwips();
   NS_ASSERTION(unwriteableTwips.top >= 0 && unwriteableTwips.right >= 0 &&
                    unwriteableTwips.bottom >= 0 && unwriteableTwips.left >= 0,
                "Unwriteable twips should be non-negative");
 
-  nsIntMargin marginTwips;
-  mPrintSettings->GetMarginInTwips(marginTwips);
+  nsIntMargin marginTwips = mPrintSettings->GetMarginInTwips();
   mDefaultPageMargin =
       nsPresContext::CSSTwipsToAppUnits(marginTwips + unwriteableTwips);
 }
