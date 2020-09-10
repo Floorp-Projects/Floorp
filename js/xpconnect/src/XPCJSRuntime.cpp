@@ -3230,8 +3230,7 @@ JSObject* XPCJSRuntime::GetUAWidgetScope(JSContext* cx,
 
     // Use an ExpandedPrincipal to create asymmetric security.
     MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(principal));
-    nsTArray<nsCOMPtr<nsIPrincipal>> principalAsArray(1);
-    principalAsArray.AppendElement(principal);
+    nsTArray<nsCOMPtr<nsIPrincipal>> principalAsArray{principal};
     RefPtr<ExpandedPrincipal> ep = ExpandedPrincipal::Create(
         principalAsArray, principal->OriginAttributesRef());
 
