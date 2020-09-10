@@ -14,6 +14,7 @@
 #define vm_HelperThreads_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
@@ -105,6 +106,11 @@ class GlobalHelperThreadState {
   typedef Vector<JSContext*, 0, SystemAllocPolicy> ContextVector;
   using HelperThreadVector =
       Vector<UniquePtr<HelperThread>, 0, SystemAllocPolicy>;
+
+  // Count of running task by each threadType.
+  mozilla::EnumeratedArray<ThreadType, ThreadType::THREAD_TYPE_MAX, size_t>
+      runningTaskCount;
+  size_t totalCountRunningTasks;
 
   WriteOnceData<JS::RegisterThreadCallback> registerThread;
   WriteOnceData<JS::UnregisterThreadCallback> unregisterThread;
@@ -367,13 +373,13 @@ class GlobalHelperThreadState {
   void waitForAllThreads();
   void waitForAllThreadsLocked(AutoLockHelperThreadState&);
 
-  template <typename T>
-  bool checkTaskThreadLimit(size_t maxThreads, bool isMaster,
+  bool checkTaskThreadLimit(ThreadType threadType, size_t maxThreads,
+                            bool isMaster,
                             const AutoLockHelperThreadState& lock) const;
-  template <typename T>
-  bool checkTaskThreadLimit(size_t maxThreads,
+  bool checkTaskThreadLimit(ThreadType threadType, size_t maxThreads,
                             const AutoLockHelperThreadState& lock) const {
-    return checkTaskThreadLimit<T>(maxThreads, /* isMaster */ false, lock);
+    return checkTaskThreadLimit(threadType, maxThreads, /* isMaster */ false,
+                                lock);
   }
 
   void triggerFreeUnusedMemory();
