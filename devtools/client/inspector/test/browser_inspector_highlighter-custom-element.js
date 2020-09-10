@@ -13,7 +13,7 @@ add_task(async function() {
   await startPicker(toolbox);
 
   info("Selecting the custom element");
-  await moveMouseOver("#custom-element");
+  await hoverElement(inspector, "#custom-element");
   await doKeyPick({ key: "VK_RETURN", options: {} });
   is(
     inspector.selection.nodeFront.className,
@@ -28,15 +28,5 @@ add_task(async function() {
       inspector.selection.once("new-node-front"),
       inspector.once("inspector-updated"),
     ]);
-  }
-
-  function moveMouseOver(selector) {
-    info("Waiting for element " + selector + " to be highlighted");
-    testActor.synthesizeMouse({
-      options: { type: "mousemove" },
-      center: true,
-      selector: selector,
-    });
-    return toolbox.nodePicker.once("picker-node-hovered");
   }
 });

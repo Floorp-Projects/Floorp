@@ -47,14 +47,12 @@ const TEST_URL =
   </script>`);
 
 add_task(async function() {
-  const { inspector, toolbox, tab, testActor } = await openInspectorForURL(
-    TEST_URL
-  );
+  const { inspector, toolbox, tab } = await openInspectorForURL(TEST_URL);
 
   info("Waiting for element picker to become active");
   await startPicker(toolbox);
   info("Click and pick the pick-target");
-  await pickElement(inspector, testActor, "test-outer", 10, 10);
+  await pickElement(inspector, "test-outer", 10, 10);
   info("Check that the markup view is displayed as expected");
   await assertMarkupView(inspector);
 

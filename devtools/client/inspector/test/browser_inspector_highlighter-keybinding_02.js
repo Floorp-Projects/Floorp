@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function() {
-  const { toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
 
@@ -17,7 +17,7 @@ add_task(async function() {
   info("Testing whether previously chosen child is remembered");
 
   info("Selecting the ahoy paragraph DIV");
-  await moveMouseOver("#ahoy");
+  await hoverElement(inspector, "#ahoy");
 
   await doKeyHover({ key: "VK_LEFT", options: {} });
   ok(
@@ -52,19 +52,11 @@ add_task(async function() {
 
   function doKeyHover(args) {
     info("Key pressed. Waiting for element to be highlighted/hovered");
-    const onPickerNodeHovered = toolbox.nodePicker.once("picker-node-hovered");
+    const onPickerHovered = toolbox.nodePicker.once("picker-node-hovered");
+    const onHighlighterShown = inspector.highlighters.once(
+      "box-model-highlighter-shown"
+    );
     testActor.synthesizeKey(args);
-    return onPickerNodeHovered;
-  }
-
-  function moveMouseOver(selector) {
-    info("Waiting for element " + selector + " to be highlighted");
-    const onPickerNodeHovered = toolbox.nodePicker.once("picker-node-hovered");
-    testActor.synthesizeMouse({
-      options: { type: "mousemove" },
-      center: true,
-      selector: selector,
-    });
-    return onPickerNodeHovered;
+    return Promise.all([onPickerHovered, onHighlighterShown]);
   }
 });
