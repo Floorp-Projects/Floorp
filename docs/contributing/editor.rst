@@ -14,49 +14,14 @@ them.
 Visual Studio Code
 ------------------
 
-For general information on using VS Code, see their
-`home page <https://code.visualstudio.com/>`__,
-`repo <https://github.com/Microsoft/vscode/>`__.
+.. toctree::
+   :hidden:
+   :maxdepth: 1
 
-For C++ support we offer an out of the box configuration based on
-`clangd <https://clangd.llvm.org>`__. This covers code completion, compile errors,
-go-to-definition and more.
-
-In order to build the configuration for `VS Code` simply run from
-the terminal:
-
-`./mach ide vscode`
-
-If `VS Code` is already open with a previous configuration generated, please make sure to
-restart `VS Code` otherwise the new configuration will not be used, and the `compile_commands.json`
-needed by `clangd` server will not be refreshed. This is a known `bug <https://github.com/clangd/vscode-clangd/issues/42>`__
-in `clangd-vscode` extension
-
-VS Code provides number of extensions for JavaScript, Rust, etc.
-
-Useful preferences
-~~~~~~~~~~~~~~~~~~
-
-When setting the preference
-
-.. code::
-
-  "editor.formatOnSave": true
-
-you might find that this isn't working on large source code files, but triggering formatting manually works. This is due to the default timeout for formatOnSave, which is quite short (750ms). You might want to increase this timeout, e.g.
-
-.. code::
-
-   "editor.formatOnSaveTimeout": 5000
+   vscode
 
 
-Recommended extensions
-~~~~~~~~~~~~~~~~~~~~~~
-
-By default, Firefox source tree comes with its own set of recommendations of Visual Studio Code extensions. They are listed in `.vscode/extensions.json <https://searchfox.org/mozilla-central/source/.vscode/extensions.json>`__.
-
-For Rust development, the `rust-analyzer <https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer>`__ extension is recommended.
-`See the manual <https://rust-analyzer.github.io/manual.html>`__ for more information.
+Go to :doc:`Visual Studio Code <vscode>` dedicated page.
 
 VIM
 ---
