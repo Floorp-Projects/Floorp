@@ -10,14 +10,14 @@ use std::slice;
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 
-use util::io_err;
+use crate::util::io_err;
 
 extern crate libc;
 extern crate winapi;
 
-use platform::winapi::winapi::shared::{guiddef, minwindef, ntdef, windef};
-use platform::winapi::winapi::shared::{hidclass, hidpi, hidusage};
-use platform::winapi::winapi::um::{handleapi, setupapi};
+use crate::platform::winapi::winapi::shared::{guiddef, minwindef, ntdef, windef};
+use crate::platform::winapi::winapi::shared::{hidclass, hidpi, hidusage};
+use crate::platform::winapi::winapi::um::{handleapi, setupapi};
 
 #[link(name = "setupapi")]
 extern "system" {
@@ -128,9 +128,11 @@ impl<'a> Iterator for DeviceInfoSetIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut device_interface_data =
-            unsafe { mem::uninitialized::<setupapi::SP_DEVICE_INTERFACE_DATA>() };
-        device_interface_data.cbSize =
-            mem::size_of::<setupapi::SP_DEVICE_INTERFACE_DATA>() as minwindef::UINT;
+            mem::MaybeUninit::<setupapi::SP_DEVICE_INTERFACE_DATA>::zeroed();
+        unsafe {
+            (*device_interface_data.as_mut_ptr()).cbSize =
+                mem::size_of::<setupapi::SP_DEVICE_INTERFACE_DATA>() as minwindef::UINT;
+        }
 
         let rv = unsafe {
             SetupDiEnumDeviceInterfaces(
@@ -138,7 +140,7 @@ impl<'a> Iterator for DeviceInfoSetIter<'a> {
                 ptr::null_mut(),
                 &hidclass::GUID_DEVINTERFACE_HID,
                 self.index,
-                &mut device_interface_data,
+                device_interface_data.as_mut_ptr(),
             )
         };
         if rv == 0 {
@@ -150,7 +152,7 @@ impl<'a> Iterator for DeviceInfoSetIter<'a> {
         unsafe {
             SetupDiGetDeviceInterfaceDetailW(
                 self.set.get(),
-                &mut device_interface_data,
+                device_interface_data.as_mut_ptr(),
                 ptr::null_mut(),
                 required_size,
                 &mut required_size,
@@ -170,7 +172,7 @@ impl<'a> Iterator for DeviceInfoSetIter<'a> {
         let rv = unsafe {
             SetupDiGetDeviceInterfaceDetailW(
                 self.set.get(),
-                &mut device_interface_data,
+                device_interface_data.as_mut_ptr(),
                 detail.get(),
                 required_size,
                 ptr::null_mut(),
@@ -247,18 +249,19 @@ impl DeviceCapabilities {
             return Err(io_err("HidD_GetPreparsedData failed!"));
         }
 
-        let mut caps: hidpi::HIDP_CAPS = unsafe { mem::uninitialized() };
-
+        let mut caps = mem::MaybeUninit::<hidpi::HIDP_CAPS>::uninit();
         unsafe {
-            let rv = HidP_GetCaps(preparsed_data, &mut caps);
+            let rv = HidP_GetCaps(preparsed_data, caps.as_mut_ptr());
             HidD_FreePreparsedData(preparsed_data);
 
             if rv != hidpi::HIDP_STATUS_SUCCESS {
                 return Err(io_err("HidP_GetCaps failed!"));
             }
-        }
 
-        Ok(Self { caps })
+            Ok(Self {
+                caps: caps.assume_init(),
+            })
+        }
     }
 
     pub fn usage(&self) -> hidusage::USAGE {

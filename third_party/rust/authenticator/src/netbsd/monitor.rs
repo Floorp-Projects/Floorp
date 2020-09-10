@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use runloop::RunLoop;
 
-use platform::fd::Fd;
+use crate::platform::fd::Fd;
 
 // XXX Should use drvctl, but it doesn't do pubsub properly yet so
 // DRVGETEVENT requires write access to /dev/drvctl.  Instead, for now,

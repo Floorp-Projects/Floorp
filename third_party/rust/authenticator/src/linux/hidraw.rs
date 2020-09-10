@@ -9,8 +9,9 @@ use std::io;
 use std::os::unix::io::RawFd;
 
 use super::hidwrapper::{_HIDIOCGRDESC, _HIDIOCGRDESCSIZE};
-use hidproto::*;
-use util::{from_unix_result, io_err};
+use crate::consts::MAX_HID_RPT_SIZE;
+use crate::hidproto::*;
+use crate::util::{from_unix_result, io_err};
 
 #[allow(non_camel_case_types)]
 #[repr(C)]
@@ -44,6 +45,20 @@ pub fn is_u2f_device(fd: RawFd) -> bool {
     match read_report_descriptor(fd) {
         Ok(desc) => has_fido_usage(desc),
         Err(_) => false, // Upon failure, just say it's not a U2F device.
+    }
+}
+
+pub fn read_hid_rpt_sizes_or_defaults(fd: RawFd) -> (usize, usize) {
+    let default_rpt_sizes = (MAX_HID_RPT_SIZE, MAX_HID_RPT_SIZE);
+    let desc = read_report_descriptor(fd);
+    if let Ok(desc) = desc {
+        if let Ok(rpt_sizes) = read_hid_rpt_sizes(desc) {
+            rpt_sizes
+        } else {
+            default_rpt_sizes
+        }
+    } else {
+        default_rpt_sizes
     }
 }
 

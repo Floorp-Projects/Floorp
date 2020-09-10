@@ -12,8 +12,8 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
+use crate::util::from_unix_result;
 use runloop::RunLoop;
-use util::from_unix_result;
 
 const POLL_TIMEOUT: u64 = 500;
 

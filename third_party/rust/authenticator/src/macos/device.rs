@@ -4,15 +4,16 @@
 
 extern crate log;
 
-use consts::{CID_BROADCAST, HID_RPT_SIZE};
+use crate::consts::{CID_BROADCAST, MAX_HID_RPT_SIZE};
+use crate::platform::iokit::*;
+use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
 use core_foundation::base::*;
-use platform::iokit::*;
+use core_foundation::string::*;
 use std::convert::TryInto;
 use std::io;
 use std::io::{Read, Write};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::Duration;
-use u2ftypes::U2FDevice;
 
 const READ_TIMEOUT: u64 = 15;
 
@@ -20,20 +21,50 @@ pub struct Device {
     device_ref: IOHIDDeviceRef,
     cid: [u8; 4],
     report_rx: Receiver<Vec<u8>>,
+    dev_info: Option<U2FDeviceInfo>,
 }
 
 impl Device {
-    pub fn new(dev_info: (IOHIDDeviceRef, Receiver<Vec<u8>>)) -> io::Result<Self> {
-        let (device_ref, report_rx) = dev_info;
+    pub fn new(dev_ids: (IOHIDDeviceRef, Receiver<Vec<u8>>)) -> io::Result<Self> {
+        let (device_ref, report_rx) = dev_ids;
         Ok(Self {
             device_ref,
             cid: CID_BROADCAST,
             report_rx,
+            dev_info: None,
         })
     }
 
     pub fn is_u2f(&self) -> bool {
         true
+    }
+
+    unsafe fn get_property_macos(&self, prop_name: &str) -> io::Result<String> {
+        let prop_ref = IOHIDDeviceGetProperty(
+            self.device_ref,
+            CFString::new(prop_name).as_concrete_TypeRef(),
+        );
+        if prop_ref.is_null() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!(
+                    "IOHIDDeviceGetProperty received nullptr for property {}",
+                    prop_name
+                ),
+            ));
+        }
+
+        if CFGetTypeID(prop_ref) != CFStringGetTypeID() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!(
+                    "IOHIDDeviceGetProperty returned non-string type for property {}",
+                    prop_name
+                ),
+            ));
+        }
+
+        Ok(CFString::from_void(prop_ref).to_string())
     }
 }
 
@@ -61,7 +92,7 @@ impl Read for Device {
 
 impl Write for Device {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        assert_eq!(bytes.len(), HID_RPT_SIZE + 1);
+        assert_eq!(bytes.len(), self.out_rpt_size() + 1);
 
         let report_id = i64::from(bytes[0]);
         // Skip report number when not using numbered reports.
@@ -99,5 +130,27 @@ impl U2FDevice for Device {
 
     fn set_cid(&mut self, cid: [u8; 4]) {
         self.cid = cid;
+    }
+
+    fn in_rpt_size(&self) -> usize {
+        MAX_HID_RPT_SIZE
+    }
+
+    fn out_rpt_size(&self) -> usize {
+        MAX_HID_RPT_SIZE
+    }
+
+    fn get_property(&self, prop_name: &str) -> io::Result<String> {
+        unsafe { self.get_property_macos(prop_name) }
+    }
+
+    fn get_device_info(&self) -> U2FDeviceInfo {
+        // unwrap is okay, as dev_info must have already been set, else
+        // a programmer error
+        self.dev_info.clone().unwrap()
+    }
+
+    fn set_device_info(&mut self, dev_info: U2FDeviceInfo) {
+        self.dev_info = Some(dev_info);
     }
 }

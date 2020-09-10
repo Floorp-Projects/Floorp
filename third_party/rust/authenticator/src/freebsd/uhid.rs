@@ -8,8 +8,8 @@ use std::io;
 use std::os::unix::io::RawFd;
 use std::ptr;
 
-use hidproto::*;
-use util::from_unix_result;
+use crate::hidproto::*;
+use crate::util::from_unix_result;
 
 #[allow(non_camel_case_types)]
 #[repr(C)]
@@ -51,7 +51,7 @@ impl Default for GenDescriptor {
 const IOWR: u32 = 0x40000000 | 0x80000000;
 
 const IOCPARM_SHIFT: u32 = 13;
-const IOCPARM_MASK: u32 = ((1 << IOCPARM_SHIFT) - 1);
+const IOCPARM_MASK: u32 = (1 << IOCPARM_SHIFT) - 1;
 
 const TYPESHIFT: u32 = 8;
 const SIZESHIFT: u32 = 16;

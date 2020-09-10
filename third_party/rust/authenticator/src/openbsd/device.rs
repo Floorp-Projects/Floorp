@@ -8,10 +8,10 @@ use std::ffi::OsString;
 use std::io::{Read, Result, Write};
 use std::mem;
 
-use consts::CID_BROADCAST;
-use platform::monitor::FidoDev;
-use u2ftypes::U2FDevice;
-use util::{from_unix_result, io_err};
+use crate::consts::{CID_BROADCAST, MAX_HID_RPT_SIZE};
+use crate::platform::monitor::FidoDev;
+use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
+use crate::util::{from_unix_result, io_err};
 
 #[derive(Debug)]
 pub struct Device {
@@ -19,6 +19,7 @@ pub struct Device {
     fd: libc::c_int,
     cid: [u8; 4],
     out_len: usize,
+    dev_info: Option<U2FDeviceInfo>,
 }
 
 impl Device {
@@ -29,6 +30,7 @@ impl Device {
             fd: fido.fd,
             cid: CID_BROADCAST,
             out_len: 64,
+            dev_info: None,
         })
     }
 
@@ -119,5 +121,27 @@ impl U2FDevice for Device {
 
     fn set_cid(&mut self, cid: [u8; 4]) {
         self.cid = cid;
+    }
+
+    fn in_rpt_size(&self) -> usize {
+        MAX_HID_RPT_SIZE
+    }
+
+    fn out_rpt_size(&self) -> usize {
+        MAX_HID_RPT_SIZE
+    }
+
+    fn get_property(&self, _prop_name: &str) -> io::Result<String> {
+        Err(io::Error::new(io::ErrorKind::Other, "Not implemented"))
+    }
+
+    fn get_device_info(&self) -> U2FDeviceInfo {
+        // unwrap is okay, as dev_info must have already been set, else
+        // a programmer error
+        self.dev_info.clone().unwrap()
+    }
+
+    fn set_device_info(&mut self, dev_info: U2FDeviceInfo) {
+        self.dev_info = Some(dev_info);
     }
 }
