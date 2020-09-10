@@ -1954,36 +1954,37 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
     return nullptr;
   }
 
-  if (parseTask->compilationInfo_.get()) {
-    if (!parseTask->options.useOffThreadParseGlobal) {
-      if (!parseTask->instantiateStencils(cx)) {
-        return nullptr;
-      }
-
-      MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
-      return parseTask->scripts[0];
-    }
-  }
-
-  MOZ_RELEASE_ASSERT(parseTask->scripts.length() <= 1);
-
   JS::RootedScript script(cx);
-  if (parseTask->scripts.length() > 0) {
+
+  if (parseTask->compilationInfo_.get() &&
+      !parseTask->options.useOffThreadParseGlobal) {
+    if (!parseTask->instantiateStencils(cx)) {
+      return nullptr;
+    }
+
+    MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
+
     script = parseTask->scripts[0];
-  }
+  } else {
+    MOZ_RELEASE_ASSERT(parseTask->scripts.length() <= 1);
 
-  if (!script) {
-    // No error was reported, but no script produced. Assume we hit out of
-    // memory.
-    MOZ_ASSERT(false, "Expected script");
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
+    if (parseTask->scripts.length() > 0) {
+      script = parseTask->scripts[0];
+    }
 
-  // The Debugger only needs to be told about the topmost script that was
-  // compiled.
-  if (!parseTask->options.hideScriptFromDebugger) {
-    DebugAPI::onNewScript(cx, script);
+    if (!script) {
+      // No error was reported, but no script produced. Assume we hit out of
+      // memory.
+      MOZ_ASSERT(false, "Expected script");
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
+
+    // The Debugger only needs to be told about the topmost script that was
+    // compiled.
+    if (!parseTask->options.hideScriptFromDebugger) {
+      DebugAPI::onNewScript(cx, script);
+    }
   }
 
   if (startEncoding == StartEncoding::Yes) {
