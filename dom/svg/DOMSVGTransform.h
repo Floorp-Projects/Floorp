@@ -50,9 +50,9 @@ class DOMSVGTransform final : public nsWrapperCache {
    *   SVGTransformList.createSVGTransformFromMatrix(in DOMMatrix2DInit  matrix)
    * which do not initially belong to an attribute.
    */
-  explicit DOMSVGTransform();
+  DOMSVGTransform();
   explicit DOMSVGTransform(const gfxMatrix& aMatrix);
-  explicit DOMSVGTransform(const DOMMatrix2DInit& aMatrix, ErrorResult& rv);
+  DOMSVGTransform(const DOMMatrix2DInit& aMatrix, ErrorResult& rv);
 
   /**
    * Ctor for creating an unowned copy. Used with Clone().

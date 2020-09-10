@@ -7,7 +7,6 @@
 #ifndef DOM_SVG_SVGFECONVOLVEMATRIXELEMENT_H_
 #define DOM_SVG_SVGFECONVOLVEMATRIXELEMENT_H_
 
-#include "DOMSVGAnimatedNumberList.h"
 #include "SVGAnimatedBoolean.h"
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedInteger.h"
