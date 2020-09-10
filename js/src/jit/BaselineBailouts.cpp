@@ -88,6 +88,7 @@ class BufferPointer {
 class MOZ_STACK_CLASS BaselineStackBuilder {
   JSContext* cx_;
   JitFrameLayout* frame_ = nullptr;
+  SnapshotIterator& iter_;
 
   size_t bufferTotal_ = 0;
   size_t bufferAvail_ = 0;
@@ -96,9 +97,17 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 
   UniquePtr<BaselineBailoutInfo> header_;
 
+  JSScript* script_ = nullptr;
+  JSFunction* fun_ = nullptr;
+  const ExceptionBailoutInfo* excInfo_ = nullptr;
+
+  uint32_t exprStackSlots_ = 0;
+  void* prevFramePtr_ = nullptr;
+
  public:
-  BaselineStackBuilder(JSContext* cx, JitFrameLayout* frame, size_t initialSize)
-      : cx_(cx), frame_(frame), bufferTotal_(initialSize) {
+  BaselineStackBuilder(JSContext* cx, JitFrameLayout* frame,
+                       SnapshotIterator& iter, size_t initialSize)
+      : cx_(cx), frame_(frame), iter_(iter), bufferTotal_(initialSize) {
     MOZ_ASSERT(bufferTotal_ >= sizeof(BaselineBailoutInfo));
   }
 
@@ -118,6 +127,26 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     header_->copyStackBottom = header_->copyStackTop;
     return true;
   }
+
+  MOZ_MUST_USE bool initFrame(JSScript* script, JSFunction* fun,
+                              const ExceptionBailoutInfo* excInfo);
+
+ private:
+  JSScript* script() const {
+    MOZ_ASSERT(cx_->suppressGC);
+    return script_;
+  }
+  JSFunction* fun() const {
+    MOZ_ASSERT(cx_->suppressGC);
+    return fun_;
+  }
+
+ public:
+  uint32_t exprStackSlots() const { return exprStackSlots_; }
+  bool catchingException() const {
+    return excInfo_ && excInfo_->catchingException();
+  }
+  void* prevFramePtr() const { return prevFramePtr_; }
 
   MOZ_MUST_USE bool enlarge() {
     MOZ_ASSERT(header_ != nullptr);
@@ -393,6 +422,51 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   }
 };
 
+bool BaselineStackBuilder::initFrame(JSScript* frameScript,
+                                     JSFunction* frameFun,
+                                     const ExceptionBailoutInfo* excInfo) {
+  // The baseline frames we will reconstruct on the heap are not
+  // rooted, so GC must be suppressed.
+  MOZ_ASSERT(cx_->suppressGC);
+
+  // Scripts with an IonScript must also have a BaselineScript.
+  MOZ_ASSERT(script_->hasBaselineScript());
+  script_ = frameScript;
+  fun_ = frameFun;
+  excInfo_ = excInfo;
+
+  // If we are catching an exception, we are bailing out to a catch or
+  // finally block and this is the frame where we will resume. Usually the
+  // expression stack should be empty in this case but there can be
+  // iterators on the stack.
+  if (catchingException()) {
+    exprStackSlots_ = excInfo->numExprSlots();
+  } else {
+    uint32_t totalFrameSlots = iter_.numAllocations();
+    uint32_t fixedSlots = script()->nfixed();
+    uint32_t argSlots = CountArgSlots(script(), fun());
+    exprStackSlots_ = totalFrameSlots - fixedSlots - argSlots;
+  }
+
+  resetFramePushed();
+
+  JitSpew(JitSpew_BaselineBailouts, "      Unpacking %s:%u:%u",
+          script()->filename(), script()->lineno(), script()->column());
+  JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-JS FRAME]");
+
+  // Calculate and write the previous frame pointer value.
+  // Record the virtual stack offset at this location.  Later on, if we end up
+  // writing out a BaselineStub frame for the next callee, we'll need to save
+  // the address.
+  void* prevFramePtr = calculatePrevFramePtr();
+  if (!writePtr(prevFramePtr, "PrevFramePtr")) {
+    return false;
+  }
+  prevFramePtr_ = virtualPointerAtStackOffset(0);
+
+  return true;
+}
+
 #ifdef DEBUG
 static inline bool IsInlinableFallback(ICFallbackStub* icEntry) {
   return icEntry->isCall_Fallback() || icEntry->isGetProp_Fallback() ||
@@ -589,28 +663,13 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
                             MutableHandleFunction nextCallee,
                             ICScript** icScriptPtr,
                             const ExceptionBailoutInfo* excInfo) {
-  // The Baseline frames we will reconstruct on the heap are not rooted, so GC
-  // must be suppressed here.
-  MOZ_ASSERT(cx->suppressGC);
-
-  MOZ_ASSERT(script->hasBaselineScript());
-
-  // Are we catching an exception?
-  bool catchingException = excInfo && excInfo->catchingException();
-
-  // If we are catching an exception, we are bailing out to a catch or
-  // finally block and this is the frame where we will resume. Usually the
-  // expression stack should be empty in this case but there can be
-  // iterators on the stack.
-  uint32_t exprStackSlots;
-  if (catchingException) {
-    exprStackSlots = excInfo->numExprSlots();
-  } else {
-    exprStackSlots =
-        iter.numAllocations() - (script->nfixed() + CountArgSlots(script, fun));
+  if (!builder.initFrame(script, fun, excInfo)) {
+    return false;
   }
 
-  builder.resetFramePushed();
+  uint32_t exprStackSlots = builder.exprStackSlots();
+  bool catchingException = builder.catchingException();
+  void* prevFramePtr = builder.prevFramePtr();
 
   // Build first baseline frame:
   // +===============+
@@ -635,20 +694,6 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   // +---------------+
   // |  ReturnAddr   | <-- return into main jitcode after IC
   // +===============+
-
-  JitSpew(JitSpew_BaselineBailouts, "      Unpacking %s:%u:%u",
-          script->filename(), script->lineno(), script->column());
-  JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-JS FRAME]");
-
-  // Calculate and write the previous frame pointer value.
-  // Record the virtual stack offset at this location.  Later on, if we end up
-  // writing out a BaselineStub frame for the next callee, we'll need to save
-  // the address.
-  void* prevFramePtr = builder.calculatePrevFramePtr();
-  if (!builder.writePtr(prevFramePtr, "PrevFramePtr")) {
-    return false;
-  }
-  prevFramePtr = builder.virtualPointerAtStackOffset(0);
 
   // Write struct BaselineFrame.
   if (!builder.subtract(BaselineFrame::Size(), "BaselineFrame")) {
@@ -1522,15 +1567,6 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   }
   iter.script()->updateJitCodeRaw(cx->runtime());
 
-  // Allocate buffer to hold stack replacement data.
-  JitFrameLayout* frame = static_cast<JitFrameLayout*>(iter.current());
-  BaselineStackBuilder builder(cx, frame, 1024);
-  if (!builder.init()) {
-    return false;
-  }
-  JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p",
-          builder.startFrame());
-
   // Under a bailout, there is no need to invalidate the frame after
   // evaluating the recover instruction, as the invalidation is only needed in
   // cases where the frame is introspected ahead of the bailout.
@@ -1549,6 +1585,14 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 #ifdef TRACK_SNAPSHOTS
   snapIter.spewBailingFrom();
 #endif
+
+  JitFrameLayout* frame = static_cast<JitFrameLayout*>(iter.current());
+  BaselineStackBuilder builder(cx, frame, snapIter, 1024);
+  if (!builder.init()) {
+    return false;
+  }
+  JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p",
+          builder.startFrame());
 
   RootedFunction callee(cx, iter.maybeCallee());
   RootedScript scr(cx, iter.script());
