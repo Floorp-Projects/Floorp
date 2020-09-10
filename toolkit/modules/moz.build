@@ -196,6 +196,7 @@ EXTRA_JS_MODULES += [
     'NLP.jsm',
     'ObjectUtils.jsm',
     'offlineAppCache.jsm',
+    'OsEnvironment.jsm',
     'OSKeyStore.jsm',
     'PageMenu.jsm',
     'PermissionsUtils.jsm',
