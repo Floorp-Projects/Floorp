@@ -826,30 +826,19 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
   commonParams.indexUpdateInfos() = std::move(updateInfos);
 
   // Convert any blobs or mutable files into FileAddInfo.
-  nsTArray<StructuredCloneFileChild>& files = cloneWriteInfo.mFiles;
-
-  if (!files.IsEmpty()) {
-    const uint32_t count = files.Length();
-
-    auto& fileAddInfos = commonParams.fileAddInfos();
-    if (NS_WARN_IF(!fileAddInfos.SetCapacity(count, fallible))) {
-      aRv = NS_ERROR_OUT_OF_MEMORY;
-      return nullptr;
-    }
-
-    IDBDatabase* const database = mTransaction->Database();
-
-    for (auto& file : files) {
-      IDB_TRY_VAR(
-          auto fileAddInfo,
-          ([&file, database]() -> Result<FileAddInfo, nsresult> {
+  IDB_TRY_VAR(
+      commonParams.fileAddInfos(),
+      TransformIntoNewArrayAbortOnErr(
+          cloneWriteInfo.mFiles,
+          [&database = *mTransaction->Database()](
+              auto& file) -> Result<FileAddInfo, nsresult> {
             switch (file.Type()) {
               case StructuredCloneFileBase::eBlob: {
                 MOZ_ASSERT(file.HasBlob());
                 MOZ_ASSERT(!file.HasMutableFile());
 
                 PBackgroundIDBDatabaseFileChild* const fileActor =
-                    database->GetOrCreateFileActorForBlob(file.MutableBlob());
+                    database.GetOrCreateFileActorForBlob(file.MutableBlob());
                 if (NS_WARN_IF(!fileActor)) {
                   IDB_REPORT_INTERNAL_ERR();
                   return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -879,7 +868,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
                 MOZ_ASSERT(!file.HasMutableFile());
 
                 PBackgroundIDBDatabaseFileChild* const fileActor =
-                    database->GetOrCreateFileActorForBlob(file.MutableBlob());
+                    database.GetOrCreateFileActorForBlob(file.MutableBlob());
                 if (NS_WARN_IF(!fileActor)) {
                   IDB_REPORT_INTERNAL_ERR();
                   return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -891,12 +880,9 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
               default:
                 MOZ_CRASH("Should never get here!");
             }
-          }()),
-          nullptr, [&aRv](auto& result) { aRv = result.unwrapErr(); });
-
-      fileAddInfos.AppendElement(std::move(fileAddInfo));
-    }
-  }
+          },
+          fallible),
+      nullptr, [&aRv](auto& result) { aRv = result.unwrapErr(); });
 
   const auto& params =
       aOverwrite ? RequestParams{ObjectStorePutParams(std::move(commonParams))}
