@@ -62,6 +62,8 @@ nsPageSequenceFrame::nsPageSequenceFrame(ComputedStyle* aStyle,
            ->GetDefaultFont(StyleGenericFontFamily::Serif);
   mPageData->mHeadFootFont.size =
       Length::FromPixels(CSSPixel::FromPoints(10.0f));
+  mPageData->mPrintSettings = aPresContext->GetPrintSettings();
+  MOZ_RELEASE_ASSERT(mPageData->mPrintSettings, "How?");
 
   // Doing this here so we only have to go get these formats once
   SetPageNumberFormat("pagenumber", "%1$d", true);
@@ -213,39 +215,28 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     return;
   }
 
-  // See if we can get a Print Settings from the Context
-  if (!mPageData->mPrintSettings) {
-    mPageData->mPrintSettings = aPresContext->GetPrintSettings();
-  }
+  nsIntMargin unwriteableTwips =
+      mPageData->mPrintSettings->GetUnwriteableMarginInTwips();
 
-  // FIXME: This should probably be an assert of sorts, can we really get here
-  // without any print settings?
-  if (mPageData->mPrintSettings) {
-    nsIntMargin unwriteableTwips =
-        mPageData->mPrintSettings->GetUnwriteableMarginInTwips();
+  nsIntMargin edgeTwips = mPageData->mPrintSettings->GetEdgeInTwips();
 
-    nsIntMargin edgeTwips = mPageData->mPrintSettings->GetEdgeInTwips();
+  // sanity check the values. three inches are sometimes needed
+  int32_t threeInches = NS_INCHES_TO_INT_TWIPS(3.0);
+  edgeTwips.EnsureAtMost(
+      nsIntMargin(threeInches, threeInches, threeInches, threeInches));
 
-    // sanity check the values. three inches are sometimes needed
-    int32_t inchInTwips = NS_INCHES_TO_INT_TWIPS(3.0);
-    edgeTwips.top = clamped(edgeTwips.top, 0, inchInTwips);
-    edgeTwips.bottom = clamped(edgeTwips.bottom, 0, inchInTwips);
-    edgeTwips.left = clamped(edgeTwips.left, 0, inchInTwips);
-    edgeTwips.right = clamped(edgeTwips.right, 0, inchInTwips);
+  mPageData->mEdgePaperMargin =
+      nsPresContext::CSSTwipsToAppUnits(edgeTwips + unwriteableTwips);
 
-    mPageData->mEdgePaperMargin =
-        nsPresContext::CSSTwipsToAppUnits(edgeTwips + unwriteableTwips);
+  // Get the custom page-range state:
+  mPageData->mPrintSettings->GetStartPageRange(&mPageData->mFromPageNum);
+  mPageData->mPrintSettings->GetEndPageRange(&mPageData->mToPageNum);
+  mPageData->mPrintSettings->GetPageRanges(mPageData->mPageRanges);
 
-    // Get the custom page-range state:
-    mPageData->mPrintSettings->GetStartPageRange(&mPageData->mFromPageNum);
-    mPageData->mPrintSettings->GetEndPageRange(&mPageData->mToPageNum);
-    mPageData->mPrintSettings->GetPageRanges(mPageData->mPageRanges);
-
-    int16_t printType;
-    mPageData->mPrintSettings->GetPrintRange(&printType);
-    mPageData->mDoingPageRange =
-        nsIPrintSettings::kRangeSpecifiedPageRange == printType;
-  }
+  int16_t printType;
+  mPageData->mPrintSettings->GetPrintRange(&printType);
+  mPageData->mDoingPageRange =
+      nsIPrintSettings::kRangeSpecifiedPageRange == printType;
 
   // We use the CSS "margin" property on the -moz-printed-sheet pseudoelement
   // to determine the space between each printed sheet in print preview.
