@@ -365,6 +365,29 @@ void HyperTextAccessibleWrap::RangeOfChild(Accessible* aChild,
   }
 }
 
+Accessible* HyperTextAccessibleWrap::LeafAtOffset(int32_t aOffset) {
+  HyperTextAccessible* text = this;
+  Accessible* child = nullptr;
+  int32_t innerOffset = aOffset;
+  do {
+    int32_t childIdx = text->GetChildIndexAtOffset(innerOffset);
+    if (childIdx == -1) {
+      return text;
+    }
+
+    child = text->GetChildAt(childIdx);
+    if (!child || nsAccUtils::MustPrune(child)) {
+      return text;
+    }
+
+    innerOffset -= text->GetChildOffset(childIdx);
+
+    text = child->AsHyperText();
+  } while (text);
+
+  return child;
+}
+
 TextPoint HyperTextAccessibleWrap::FindTextPoint(
     int32_t aOffset, nsDirection aDirection, nsSelectionAmount aAmount,
     EWordMovementType aWordMovementType) {
