@@ -1006,7 +1006,7 @@ class CompilerGCPointer {
 using CompilerObject = CompilerGCPointer<JSObject*>;
 using CompilerNativeObject = CompilerGCPointer<NativeObject*>;
 using CompilerFunction = CompilerGCPointer<JSFunction*>;
-using CompilerScript = CompilerGCPointer<JSScript*>;
+using CompilerBaseScript = CompilerGCPointer<BaseScript*>;
 using CompilerPropertyName = CompilerGCPointer<PropertyName*>;
 using CompilerShape = CompilerGCPointer<Shape*>;
 using CompilerObjectGroup = CompilerGCPointer<ObjectGroup*>;
@@ -9722,6 +9722,56 @@ class MGuardFunctionKind : public MUnaryInstruction,
   }
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
+  }
+};
+
+class MGuardFunctionScript : public MUnaryInstruction,
+                             public SingleObjectPolicy::Data {
+  CompilerBaseScript expected_;
+  uint16_t nargs_;
+  FunctionFlags flags_;
+
+  MGuardFunctionScript(MDefinition* fun, BaseScript* expected, uint16_t nargs,
+                       FunctionFlags flags)
+      : MUnaryInstruction(classOpcode, fun),
+        expected_(expected),
+        nargs_(nargs),
+        flags_(flags) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+    setResultTypeSet(fun->resultTypeSet());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardFunctionScript)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, function))
+
+  BaseScript* expected() const { return expected_; }
+  uint16_t nargs() const { return nargs_; }
+  FunctionFlags flags() const { return flags_; }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardFunctionScript()) {
+      return false;
+    }
+    if (expected() != ins->toGuardFunctionScript()->expected()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    // A JSFunction's BaseScript pointer is immutable. Relazification of
+    // self-hosted functions is an exception to this, but we don't use this
+    // guard for self-hosted functions.
+    MOZ_ASSERT(!flags_.isSelfHostedOrIntrinsic());
+    return AliasSet::None();
+  }
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(expected_);
   }
 };
 

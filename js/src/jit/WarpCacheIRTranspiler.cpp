@@ -109,6 +109,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   ObjectGroup* groupStubField(uint32_t offset) {
     return reinterpret_cast<ObjectGroup*>(readStubWord(offset));
   }
+  BaseScript* baseScriptStubField(uint32_t offset) {
+    return reinterpret_cast<BaseScript*>(readStubWord(offset));
+  }
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
   }
@@ -601,6 +604,22 @@ bool WarpCacheIRTranspiler::emitGuardSpecificFunction(
   add(ins);
 
   setOperand(objId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardFunctionScript(
+    ObjOperandId funId, uint32_t expectedOffset, uint32_t nargsAndFlagsOffset) {
+  MDefinition* fun = getOperand(funId);
+  BaseScript* expected = baseScriptStubField(expectedOffset);
+  uint32_t nargsAndFlags = uint32StubField(nargsAndFlagsOffset);
+
+  uint16_t nargs = nargsAndFlags >> 16;
+  FunctionFlags flags = FunctionFlags(uint16_t(nargsAndFlags));
+
+  auto* ins = MGuardFunctionScript::New(alloc(), fun, expected, nargs, flags);
+  add(ins);
+
+  setOperand(funId, ins);
   return true;
 }
 

@@ -2444,6 +2444,12 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult(ValOperandId lhsId,
   return true;
 }
 
+bool IonCacheIRCompiler::emitGuardFunctionScript(ObjOperandId funId,
+                                                 uint32_t expectedOffset,
+                                                 uint32_t nargsAndFlagsOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
                                                   Int32OperandId argcId,
                                                   CallFlags flags) {

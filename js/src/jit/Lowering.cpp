@@ -4433,6 +4433,15 @@ void LIRGenerator::visitGuardFunctionKind(MGuardFunctionKind* ins) {
   redefine(ins, ins->function());
 }
 
+void LIRGenerator::visitGuardFunctionScript(MGuardFunctionScript* ins) {
+  MOZ_ASSERT(ins->function()->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LGuardFunctionScript(useRegister(ins->function()));
+  assignSnapshot(lir, BailoutKind::FunctionScriptGuard);
+  add(lir, ins);
+  redefine(ins, ins->function());
+}
+
 void LIRGenerator::visitAssertRange(MAssertRange* ins) {
   MDefinition* input = ins->input();
   LInstruction* lir = nullptr;

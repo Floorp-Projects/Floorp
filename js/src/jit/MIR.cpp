@@ -5295,6 +5295,18 @@ void MStoreDynamicSlot::printOpcode(GenericPrinter& out) const {
 }
 #endif
 
+MDefinition* MGuardFunctionScript::foldsTo(TempAllocator& alloc) {
+  if (input()->isLambda() &&
+      input()->toLambda()->info().baseScript == expected()) {
+    return input();
+  }
+  if (input()->isLambdaArrow() &&
+      input()->toLambdaArrow()->info().baseScript == expected()) {
+    return input();
+  }
+  return this;
+}
+
 MDefinition* MFunctionEnvironment::foldsTo(TempAllocator& alloc) {
   if (input()->isLambda()) {
     return input()->toLambda()->environmentChain();

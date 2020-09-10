@@ -7823,6 +7823,20 @@ class LGuardFunctionKind : public LInstructionHelper<0, 1, 1> {
   MGuardFunctionKind* mir() { return mir_->toGuardFunctionKind(); }
 };
 
+class LGuardFunctionScript : public LInstructionHelper<0, 1, 0> {
+ public:
+  LIR_HEADER(GuardFunctionScript)
+
+  explicit LGuardFunctionScript(const LAllocation& fun)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, fun);
+  }
+
+  const LAllocation* function() { return getOperand(0); }
+
+  MGuardFunctionScript* mir() { return mir_->toGuardFunctionScript(); }
+};
+
 class LRecompileCheck : public LInstructionHelper<0, 0, 1> {
  public:
   LIR_HEADER(RecompileCheck)
