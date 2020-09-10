@@ -1859,7 +1859,7 @@ static bool DecodeLimits(Decoder& d, Limits* limits,
 
     if (limits->initial > maximum) {
       return d.failf(
-          "memory size minimum must not be greater than maximum; "
+          "memory size initial must not be greater than maximum; "
           "maximum length %" PRIu32 " is less than initial length %" PRIu64,
           maximum, limits->initial);
     }
