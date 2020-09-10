@@ -11,6 +11,7 @@
 #include "gc/ParallelWork.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
+#include "vm/TraceLogging.h"
 
 using namespace js;
 using namespace js::gc;
@@ -118,7 +119,10 @@ void js::GCParallelTask::runFromMainThread() {
   runTask();
 }
 
-void js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock) {
+void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
+  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
+  AutoTraceLog logCompile(logger, TraceLogger_GC);
+
   setRunning(lock);
 
   {
