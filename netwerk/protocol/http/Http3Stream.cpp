@@ -375,5 +375,36 @@ nsresult Http3Stream::WriteSegments(nsAHttpSegmentWriter* writer,
   return rv;
 }
 
+bool Http3Stream::Do0RTT() {
+  MOZ_ASSERT(mTransaction);
+  mAttempting0RTT = mTransaction->Do0RTT();
+  return mAttempting0RTT;
+}
+
+nsresult Http3Stream::Finish0RTT(bool aRestart) {
+  MOZ_ASSERT(mTransaction);
+  mAttempting0RTT = false;
+  nsresult rv = mTransaction->Finish0RTT(aRestart, false);
+  if (aRestart) {
+    nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
+    if (trans) {
+      trans->Refused0RTT();
+    }
+  }
+  mSendState = PREPARING_HEADERS;
+  mRecvState = READING_HEADERS;
+  mStreamId = UINT64_MAX;
+  mQueued = false;
+  mRequestBlockedOnRead = false;
+  mDataReceived = false;
+  mResetRecv = false;
+  mRequestBodyLenRemaining = 0;
+  mTotalSent = 0;
+  mTotalRead = 0;
+  mFin = false;
+
+  return rv;
+}
+
 }  // namespace net
 }  // namespace mozilla
