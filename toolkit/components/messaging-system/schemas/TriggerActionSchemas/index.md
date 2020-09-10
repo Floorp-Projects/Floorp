@@ -75,6 +75,12 @@ let recentVisits: visit[];
 ### `openURL`
 
 Happens every time the user loads a new URL that matches the provided `hosts` or `patterns`.
+During a browsing session it keeps track of visits to unique urls that can be used inside targeting expression.
+
+```javascript
+// True on the third visit for the URL which the trigger matched on
+visitsCount >= 3
+```
 
 ### `newSavedLogin`
 
