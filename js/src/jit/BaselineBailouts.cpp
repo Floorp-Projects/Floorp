@@ -150,6 +150,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 
   MOZ_MUST_USE bool buildBaselineFrame();
   MOZ_MUST_USE bool buildArguments();
+  MOZ_MUST_USE bool buildFixedSlots();
 
  private:
   JSScript* script() const {
@@ -684,6 +685,16 @@ bool BaselineStackBuilder::buildArguments() {
   return true;
 }
 
+bool BaselineStackBuilder::buildFixedSlots() {
+  for (uint32_t i = 0; i < script()->nfixed(); i++) {
+    Value slot = iter_.read();
+    if (!writeValue(slot, "FixedValue")) {
+      return false;
+    }
+  }
+  return true;
+}
+
 #ifdef DEBUG
 // The |envChain| slot must not be optimized out if the currently
 // active scope requires any EnvironmentObjects beyond what is
@@ -936,11 +947,8 @@ static bool InitFromBailout(JSContext* cx, HandleFunction fun,
     return false;
   }
 
-  for (uint32_t i = 0; i < script->nfixed(); i++) {
-    Value slot = iter.read();
-    if (!builder.writeValue(slot, "FixedValue")) {
-      return false;
-    }
+  if (!builder.buildFixedSlots()) {
+    return false;
   }
 
   // Get the pc. If we are handling an exception, resume at the pc of the
