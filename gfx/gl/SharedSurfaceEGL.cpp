@@ -207,6 +207,14 @@ void SharedSurface_SurfaceTexture::UnlockProdImpl() {
 }
 
 void SharedSurface_SurfaceTexture::ProducerReadReleaseImpl() {
+  // This GeckoSurfaceTexture is not SurfaceTexture of this class's GeckoSurface
+  // when current process is content process. In this case, SurfaceTexture of
+  // this class's GeckoSurface does not exist in this process. It exists in
+  // compositor's process. Then GeckoSurfaceTexture in this process is a sync
+  // surface that copies back the SurfaceTextrure from compositor's process. It
+  // was added by Bug 1486659. Then SurfaceTexture::UpdateTexImage() becomes
+  // very heavy weight, since it does copy back the SurfaceTextrure from
+  // compositor's process.
   java::GeckoSurfaceTexture::LocalRef surfaceTexture =
       java::GeckoSurfaceTexture::Lookup(mSurface->GetHandle());
   if (!surfaceTexture) {
@@ -214,7 +222,11 @@ void SharedSurface_SurfaceTexture::ProducerReadReleaseImpl() {
     return;
   }
   surfaceTexture->UpdateTexImage();
-  surfaceTexture->ReleaseTexImage();
+  // Non single buffer mode Surface does not need ReleaseTexImage() call.
+  // When SurfaceTexture is sync Surface, it might not be single buffer mode.
+  if (surfaceTexture->IsSingleBuffer()) {
+    surfaceTexture->ReleaseTexImage();
+  }
 }
 
 void SharedSurface_SurfaceTexture::Commit() {
