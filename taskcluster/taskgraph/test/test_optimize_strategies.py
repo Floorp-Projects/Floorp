@@ -338,15 +338,6 @@ def test_push_interval(params):
     scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
     assert scheduled == all_labels
 
-    # On non-autoland projects the 'remove_on_projects' value is used.
-    params['project'] = 'mozilla-central'
-    scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
-    assert scheduled == all_labels
-
-    params['project'] = 'try'
-    scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
-    assert scheduled == set()
-
 
 def test_expanded(params):
     all_labels = {t.label for t in default_tasks}
