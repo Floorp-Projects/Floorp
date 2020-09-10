@@ -4,7 +4,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "js/CompilationAndEvaluation.h"  // JS::Compile{,ForNonSyntacticScope}
+#include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 #include "vm/HelperThreads.h"
@@ -67,29 +67,10 @@ bool testCompile(bool nonSyntactic) {
   JS::SourceText<char16_t> buf16;
   CHECK(buf16.init(cx, src_16, length, JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx);
-
-  // Check explicit non-syntactic compilation first to make sure it doesn't
-  // modify our options object.
-  script = CompileForNonSyntacticScope(cx, options, buf16);
-  CHECK(script);
-  CHECK_EQUAL(script->hasNonSyntacticScope(), true);
-
   JS::SourceText<mozilla::Utf8Unit> buf8;
   CHECK(buf8.init(cx, src, length, JS::SourceOwnership::Borrowed));
 
-  script = CompileForNonSyntacticScope(cx, options, buf8);
-  CHECK(script);
-  CHECK_EQUAL(script->hasNonSyntacticScope(), true);
-
-  {
-    JS::SourceText<char16_t> srcBuf;
-    CHECK(srcBuf.init(cx, src_16, length, JS::SourceOwnership::Borrowed));
-
-    script = CompileForNonSyntacticScope(cx, options, srcBuf);
-    CHECK(script);
-    CHECK_EQUAL(script->hasNonSyntacticScope(), true);
-  }
+  JS::RootedScript script(cx);
 
   script = Compile(cx, options, buf16);
   CHECK(script);
