@@ -840,10 +840,6 @@ var webrtcUI = {
       !this.allowTabSwitchesForSession &&
       !this.allowedSharedBrowsers.has(browser.permanentKey);
 
-    if (shouldShow) {
-      this.recordEvent("tab_switch_warning", "tab_switch_warning");
-    }
-
     return shouldShow;
   },
 
@@ -853,10 +849,6 @@ var webrtcUI = {
     this.allowedSharedBrowsers.add(browser.permanentKey);
     gBrowser.selectedTab = tab;
     this.allowTabSwitchesForSession = allowForSession;
-
-    if (allowForSession) {
-      this.recordEvent("allow_all_tabs", "allow_all_tabs");
-    }
   },
 
   recordEvent(type, object, args = {}) {
