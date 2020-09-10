@@ -625,12 +625,8 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
     // For print-preview, show margin guides if requested in the settings.
     if (pc->Type() == nsPresContext::eContext_PrintPreview) {
-      if (!mPD->mPrintSettings) {
-        mPD->mPrintSettings = pc->GetPrintSettings();
-      }
       bool showGuides;
-      if (mPD->mPrintSettings &&
-          NS_SUCCEEDED(mPD->mPrintSettings->GetShowMarginGuides(&showGuides)) &&
+      if (NS_SUCCEEDED(mPD->mPrintSettings->GetShowMarginGuides(&showGuides)) &&
           showGuides) {
         set.Content()->AppendNewToTop<nsDisplayGeneric>(
             aBuilder, this, PaintMarginGuides, "MarginGuides",
@@ -653,12 +649,6 @@ void nsPageFrame::DeterminePageNum() {
 void nsPageFrame::PaintHeaderFooter(gfxContext& aRenderingContext, nsPoint aPt,
                                     bool aDisableSubpixelAA) {
   nsPresContext* pc = PresContext();
-
-  if (!mPD->mPrintSettings) {
-    if (pc->Type() == nsPresContext::eContext_PrintPreview || pc->IsDynamic())
-      mPD->mPrintSettings = pc->GetPrintSettings();
-    if (!mPD->mPrintSettings) return;
-  }
 
   nsRect rect(aPt, mRect.Size());
   aRenderingContext.SetColor(sRGBColor::OpaqueBlack());
