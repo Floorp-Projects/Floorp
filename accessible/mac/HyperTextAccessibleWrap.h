@@ -46,6 +46,9 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
   void PreviousClusterAt(int32_t aOffset, HyperTextAccessible** aPrevContainer,
                          int32_t* aPrevOffset);
 
+  void RangeOfChild(Accessible* aChild, int32_t* aStartOffset,
+                    int32_t* aEndOffset);
+
  protected:
   ~HyperTextAccessibleWrap() {}
 

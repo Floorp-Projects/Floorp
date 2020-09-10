@@ -398,4 +398,7 @@
 // AXTextMarkerForIndex
 - (id _Nullable)moxTextMarkerForIndex:(NSNumber* _Nonnull)index;
 
+// AXTextMarkerRangeForUIElement
+- (id _Nullable)moxTextMarkerRangeForUIElement:(id _Nonnull)element;
+
 @end

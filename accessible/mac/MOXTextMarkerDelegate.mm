@@ -243,4 +243,13 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   return geckoTextMarker.CreateAXTextMarker();
 }
 
+- (id)moxTextMarkerRangeForUIElement:(id)element {
+  if (![element isKindOfClass:[mozAccessible class]]) {
+    return nil;
+  }
+
+  GeckoTextMarkerRange range([element geckoAccessible]);
+  return range.CreateAXTextMarkerRange();
+}
+
 @end
