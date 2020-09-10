@@ -85,9 +85,8 @@ class BufferPointer {
  * The lowest region of the allocated memory contains a BaselineBailoutInfo
  * structure that points to the start and end of the written data.
  */
-struct BaselineStackBuilder {
+class MOZ_STACK_CLASS BaselineStackBuilder {
   JSContext* cx_;
-  const JSJitFrameIter& iter_;
   JitFrameLayout* frame_ = nullptr;
 
   size_t bufferTotal_ = 0;
@@ -97,14 +96,10 @@ struct BaselineStackBuilder {
 
   UniquePtr<BaselineBailoutInfo> header_;
 
-  BaselineStackBuilder(JSContext* cx, const JSJitFrameIter& iter,
-                       size_t initialSize)
-      : cx_(cx),
-        iter_(iter),
-        frame_(static_cast<JitFrameLayout*>(iter.current())),
-        bufferTotal_(initialSize) {
+ public:
+  BaselineStackBuilder(JSContext* cx, JitFrameLayout* frame, size_t initialSize)
+      : cx_(cx), frame_(frame), bufferTotal_(initialSize) {
     MOZ_ASSERT(bufferTotal_ >= sizeof(BaselineBailoutInfo));
-    MOZ_ASSERT(iter.isBailoutJS());
   }
 
   MOZ_MUST_USE bool init() {
@@ -268,17 +263,6 @@ struct BaselineStackBuilder {
     }
 
     return true;
-  }
-
-  Value popValue() {
-    MOZ_ASSERT(bufferUsed_ >= sizeof(Value));
-    MOZ_ASSERT(framePushed_ >= sizeof(Value));
-    bufferAvail_ += sizeof(Value);
-    bufferUsed_ -= sizeof(Value);
-    framePushed_ -= sizeof(Value);
-    Value result = *((Value*)header_->copyStackBottom);
-    header_->copyStackBottom += sizeof(Value);
-    return result;
   }
 
   void setResumeFramePtr(void* resumeFramePtr) {
@@ -1539,7 +1523,8 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   iter.script()->updateJitCodeRaw(cx->runtime());
 
   // Allocate buffer to hold stack replacement data.
-  BaselineStackBuilder builder(cx, iter, 1024);
+  JitFrameLayout* frame = static_cast<JitFrameLayout*>(iter.current());
+  BaselineStackBuilder builder(cx, frame, 1024);
   if (!builder.init()) {
     return false;
   }
