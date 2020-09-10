@@ -86,7 +86,6 @@ const INSPECTOR_L10N = new LocalizationHelper(
 // Page size for pageup/pagedown
 const PAGE_SIZE = 10;
 const DEFAULT_MAX_CHILDREN = 100;
-const NEW_SELECTION_HIGHLIGHTER_TIMER = 1000;
 const DRAG_DROP_AUTOSCROLL_EDGE_MAX_DISTANCE = 50;
 const DRAG_DROP_AUTOSCROLL_EDGE_RATIO = 0.1;
 const DRAG_DROP_MIN_AUTOSCROLL_SPEED = 2;
@@ -669,12 +668,9 @@ MarkupView.prototype = {
 
     container.hovered = true;
     this._hoveredContainer = container;
-    // Emit an event that the container view is actually hovered now, as this function
-    // can be called by an asynchronous caller.
-    this.emit("showcontainerhovered");
   },
 
-  _onMouseOut: function(event) {
+  _onMouseOut: async function(event) {
     // Emulate mouseleave by skipping any relatedTarget inside the markup-view.
     if (this._elt.contains(event.relatedTarget)) {
       return;
@@ -687,7 +683,7 @@ MarkupView.prototype = {
       return;
     }
 
-    this._hideBoxModel(true);
+    await this._hideBoxModel();
     if (this._hoveredContainer) {
       this._hoveredContainer.hovered = false;
     }
@@ -697,67 +693,31 @@ MarkupView.prototype = {
   },
 
   /**
-   * Show the box model highlighter on a given node front
+   * Show the Box Model Highlighter on a given node front
    *
    * @param  {NodeFront} nodeFront
-   *         The node to show the highlighter for
-   * @return {Promise} Resolves when the highlighter for this nodeFront is
-   *         shown, taking into account that there could already be highlighter
-   *         requests queued up
+   *         The node for which to show the highlighter.
+   * @param  {Object} options
+   *         Configuration object with options for the Box Model Highlighter.
+   * @return {Promise} Resolves after the highlighter for this nodeFront is shown.
    */
-  _showBoxModel: function(nodeFront) {
-    // Hold onto a reference to the highlighted NodeFront so that we can get the correct
-    // HighlighterFront when calling _hideBoxModel.
-    this._highlightedNodeFront = nodeFront;
-    return nodeFront.highlighterFront
-      .highlight(nodeFront)
-      .catch(this._handleRejectionIfNotDestroyed);
+  _showBoxModel: function(nodeFront, options) {
+    return this.inspector.highlighters.showHighlighterTypeForNode(
+      this.inspector.highlighters.TYPES.BOXMODEL,
+      nodeFront,
+      options
+    );
   },
 
   /**
-   * Hide the box model highlighter on a given node front
+   * Hide the Box Model Highlighter for any node that may be highlighted.
    *
-   * @param  {Boolean} forceHide
-   *         See highlighterFront method `unhighlight`
-   * @return {Promise} Resolves when the highlighter for this nodeFront is
-   *         hidden, taking into account that there could already be highlighter
-   *         requests queued up
+   * @return {Promise} Resolves when the highlighter is hidden.
    */
-  _hideBoxModel: function(forceHide) {
-    if (!this._highlightedNodeFront) {
-      return Promise.resolve();
-    }
-
-    return this._highlightedNodeFront.highlighterFront
-      .unhighlight(forceHide)
-      .catch(this._handleRejectionIfNotDestroyed);
-  },
-
-  _briefBoxModelTimer: null,
-
-  _clearBriefBoxModelTimer: function() {
-    if (this._briefBoxModelTimer) {
-      clearTimeout(this._briefBoxModelTimer);
-      this._briefBoxModelPromise.resolve();
-      this._briefBoxModelPromise = null;
-      this._briefBoxModelTimer = null;
-    }
-  },
-
-  _brieflyShowBoxModel: function(nodeFront) {
-    this._clearBriefBoxModelTimer();
-    const onShown = this._showBoxModel(nodeFront);
-
-    let _resolve;
-    this._briefBoxModelPromise = new Promise(resolve => {
-      _resolve = resolve;
-      this._briefBoxModelTimer = setTimeout(() => {
-        this._hideBoxModel().then(resolve, resolve);
-      }, NEW_SELECTION_HIGHLIGHTER_TIMER);
-    });
-    this._briefBoxModelPromise.resolve = _resolve;
-
-    return promise.all([onShown, this._briefBoxModelPromise]);
+  _hideBoxModel: function() {
+    return this.inspector.highlighters.hideHighlighterType(
+      this.inspector.highlighters.TYPES.BOXMODEL
+    );
   },
 
   /**
@@ -955,7 +915,9 @@ MarkupView.prototype = {
 
     // Highlight the element briefly if needed.
     if (this._shouldNewSelectionBeHighlighted()) {
-      onShowBoxModel = this._brieflyShowBoxModel(selection.nodeFront);
+      onShowBoxModel = this._showBoxModel(nodeFront, {
+        duration: this.inspector.HIGHLIGHTER_AUTOHIDE_TIMER,
+      });
     }
 
     const slotted = selection.isSlotted();
@@ -2318,9 +2280,6 @@ MarkupView.prototype = {
 
     this._destroyed = true;
 
-    this._clearBriefBoxModelTimer();
-
-    this._highlightedNodeFront = null;
     this._hoveredContainer = null;
 
     if (this._contextMenu) {

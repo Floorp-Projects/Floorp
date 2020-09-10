@@ -27,6 +27,7 @@ add_task(async function() {
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURI(TEST_URL)
   );
+  const { waitForHighlighterTypeHidden } = getHighlighterTestHelpers(inspector);
 
   await inspector.markup.expandAll();
 
@@ -78,7 +79,9 @@ add_task(async function() {
   await onShown;
 
   info("Click on the computed view tab");
-  const onHighlighterHidden = inspector.highlighter.once("node-unhighlight");
+  const onHighlighterHidden = waitForHighlighterTypeHidden(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
   const onTabComputedViewSelected = inspector.sidebar.once(
     "computedview-selected"
   );
