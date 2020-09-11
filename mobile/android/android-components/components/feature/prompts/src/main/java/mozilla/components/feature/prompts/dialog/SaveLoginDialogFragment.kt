@@ -304,7 +304,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
         try {
             validateStateUpdate?.cancelAndJoin()
         } catch (cancellationException: CancellationException) {
-            Logger.error("Failed to cancel save login dialog", cancellationException)
+            Logger.error("Failed to cancel job", cancellationException)
         }
 
         var validateDeferred: Deferred<Result>?
