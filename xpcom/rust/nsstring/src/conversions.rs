@@ -2,19 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-extern crate encoding_rs;
-
+use crate::{
+    nsACString, nsAString, nsCStringLike, BulkWriteOk, Gecko_FallibleAssignCString,
+    Latin1StringLike,
+};
+use encoding_rs::mem::*;
+use encoding_rs::Encoding;
 use std::slice;
-
-use super::nsACString;
-use super::nsAString;
-use super::nsCStringLike;
-use super::BulkWriteOk;
-use super::Gecko_FallibleAssignCString;
-use super::Latin1StringLike;
-
-use conversions::encoding_rs::mem::*;
-use conversions::encoding_rs::Encoding;
 
 /// Required math stated in the docs of
 /// `convert_utf16_to_utf8()`.
