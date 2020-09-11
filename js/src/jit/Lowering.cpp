@@ -1861,6 +1861,16 @@ void LIRGenerator::visitWasmBuiltinModD(MWasmBuiltinModD* ins) {
   defineReturn(lir, ins);
 }
 
+void LIRGenerator::visitBuiltinInt64ToFloatingPoint(
+    MBuiltinInt64ToFloatingPoint* ins) {
+  lowerBuiltinInt64ToFloatingPoint(ins);
+}
+
+void LIRGenerator::visitWasmBuiltinTruncateToInt64(
+    MWasmBuiltinTruncateToInt64* ins) {
+  lowerWasmBuiltinTruncateToInt64(ins);
+}
+
 void LIRGenerator::visitMod(MMod* ins) {
   MOZ_ASSERT(ins->lhs()->type() == ins->rhs()->type());
   MOZ_ASSERT(IsNumberType(ins->type()));
