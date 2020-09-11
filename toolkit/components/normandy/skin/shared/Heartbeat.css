@@ -4,11 +4,6 @@
 
 /* Notification overrides for Heartbeat UI */
 
-notification.heartbeat {
-  border-bottom: 1px solid #C1C1C1 !important;
-  height: 40px;
-}
-
 @keyframes pulse-onshow {
   0% {
     opacity: 0;
@@ -47,16 +42,9 @@ notification.heartbeat {
   }
 }
 
-.messageText.heartbeat {
-  margin-inline-end: 12px !important; /* The !important is required to override OSX default style. */
-  margin-inline-start: 0;
-}
-
 .messageImage.heartbeat {
-  height: 24px !important;
-  margin-inline-end: 8px !important;
-  margin-inline-start: 8px !important;
-  width: 24px !important;
+  /* Needed for the animation to not get clipped when pulsing. */
+  margin-inline: 8px;
 }
 
 .messageImage.heartbeat.pulse-onshow {
