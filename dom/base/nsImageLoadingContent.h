@@ -120,9 +120,10 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
 
   /**
    * ImageState is called by subclasses that are computing their content state.
-   * The return value will have the NS_EVENT_STATE_BROKEN,
-   * NS_EVENT_STATE_USERDISABLED, and NS_EVENT_STATE_SUPPRESSED bits set as
-   * needed.  Note that this state assumes that this node is "trying" to be an
+   * The return value will have the NS_EVENT_STATE_BROKEN, and
+   * NS_EVENT_STATE_SUPPRESSED bits set as needed.
+   *
+   * Note that this state assumes that this node is "trying" to be an
    * image (so for example complete lack of attempt to load an image will lead
    * to NS_EVENT_STATE_BROKEN being set).  Subclasses that are not "trying" to
    * be an image (eg an HTML <input> of type other than "image") should just
@@ -575,7 +576,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    */
   bool mLoading : 1;
   bool mBroken : 1;
-  bool mUserDisabled : 1;
   bool mSuppressed : 1;
 
  protected:

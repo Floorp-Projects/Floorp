@@ -469,8 +469,7 @@ static bool StateChangeMayAffectFrame(const Element& aElement,
   }
 
   const bool brokenChanged = aStates.HasAtLeastOneOfStates(
-      NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-      NS_EVENT_STATE_SUPPRESSED);
+      NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_SUPPRESSED);
   const bool loadingChanged =
       aStates.HasAtLeastOneOfStates(NS_EVENT_STATE_LOADING);
 

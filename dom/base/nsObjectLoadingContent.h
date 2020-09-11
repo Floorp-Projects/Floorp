@@ -91,8 +91,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
     eFallbackCrashed = nsIObjectLoadingContent::PLUGIN_CRASHED,
     // Suppressed by security policy
     eFallbackSuppressed = nsIObjectLoadingContent::PLUGIN_SUPPRESSED,
-    // Blocked by content policy
-    eFallbackUserDisabled = nsIObjectLoadingContent::PLUGIN_USER_DISABLED,
     /// ** All values >= eFallbackClickToPlay are plugin placeholder types
     ///    that would be replaced by a real plugin if activated (PlayPlugin())
     /// ** Furthermore, values >= eFallbackClickToPlay and
