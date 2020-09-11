@@ -150,7 +150,8 @@ class WindowProxyHolder;
    * the value from the top BC! */                                           \
   FIELD(HasSessionHistory, bool)                                             \
   FIELD(UseErrorPages, bool)                                                 \
-  FIELD(PlatformOverride, nsString)
+  FIELD(PlatformOverride, nsString)                                          \
+  FIELD(HasLoadedNonInitialDocument, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
