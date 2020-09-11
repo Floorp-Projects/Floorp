@@ -44,7 +44,8 @@ class nsLeafFrame : public nsIFrame {
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
-      const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
+      const mozilla::LogicalSize& aPadding,
+      mozilla::ComputeSizeFlags aFlags) override;
 
   /**
    * Each of our subclasses should provide its own Reflow impl:
