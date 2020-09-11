@@ -3,21 +3,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['SIP_OS_WINDOWS'] = True
-    SOURCES += [
-        'sipcc/sdp_services_win32.c',
-    ]
 elif CONFIG['OS_TARGET'] == 'Darwin':
     DEFINES['SIP_OS_OSX'] = True
-    SOURCES += [
-        'sipcc/sdp_services_unix.c',
-    ]
 else:
     DEFINES['SIP_OS_LINUX'] = True
-    SOURCES += [
-        'sipcc/sdp_services_unix.c',
-    ]
 
 # Add libFuzzer configuration directives
 include('/tools/fuzzing/libfuzzer-config.mozbuild')
@@ -27,6 +19,7 @@ LOCAL_INCLUDES += [
     '/media/webrtc',
     '/media/webrtc/signaling/src/common/browser_logging',
     '/media/webrtc/trunk',
+    '/third_party/sipcc',
 ]
 
 UNIFIED_SOURCES += [
@@ -52,16 +45,6 @@ SOURCES += [
     'RsdparsaSdpGlue.cpp',
     'RsdparsaSdpMediaSection.cpp',
     'RsdparsaSdpParser.cpp',
-    # Multiple definitions of "logTag" mean we can't use unified build here.
-    'sipcc/cpr_string.c',
-    'sipcc/sdp_access.c',
-    'sipcc/sdp_attr.c',
-    'sipcc/sdp_attr_access.c',
-    'sipcc/sdp_base64.c',
-    'sipcc/sdp_config.c',
-    'sipcc/sdp_main.c',
-    'sipcc/sdp_token.c',
-    'sipcc/sdp_utils.c',
 ]
 
 FINAL_LIBRARY = 'xul'

@@ -18,6 +18,7 @@ if not CONFIG['MOZ_SYSTEM_JPEG']:
 DIRS += [
     '/third_party/prio',
     '/third_party/msgpack',
+    '/third_party/sipcc',
 ]
 
 # There's no "native" brotli or woff2 yet, but probably in the future...

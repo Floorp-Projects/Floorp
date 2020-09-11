@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "sdp_os_defs.h"
-#include "sdp.h"
+#include "sipcc_sdp.h"
 #include "sdp_private.h"
 
-#include "CSFLog.h"
+#include "sdp_log.h"
 
 static const char* logTag = "sdp_attr_access";
 
@@ -182,7 +182,7 @@ sdp_result_e sdp_add_new_attr (sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
          (attr_type == SDP_ATTR_X_SQN) || (attr_type == SDP_ATTR_CDSC) ||
          (attr_type == SDP_ATTR_CPAR) || (attr_type == SDP_ATTR_SQN))) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            CSFLogDebug(logTag, "%s Warning: Invalid attribute type for X-cpar/cdsc "
+            SDPLogDebug(logTag, "%s Warning: Invalid attribute type for X-cpar/cdsc "
                      "parameter.", sdp_p->debug_str);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -455,7 +455,7 @@ sdp_result_e sdp_find_attr_list (sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
         cap_attr_p = sdp_find_capability(sdp_p, level, cap_num);
         if (cap_attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s %s, invalid capability %u at "
+                SDPLogError(logTag, "%s %s, invalid capability %u at "
                           "level %u specified.", sdp_p->debug_str, fname,
                           (unsigned)cap_num, (unsigned)level);
             }
@@ -619,7 +619,7 @@ sdp_attr_t *sdp_find_capability (sdp_t *sdp_p, uint16_t level, uint8_t cap_num)
 
     /* We didn't find the specified capability. */
     if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-        CSFLogError(logTag, "%s Unable to find specified capability (level %u, "
+        SDPLogError(logTag, "%s Unable to find specified capability (level %u, "
                   "cap_num %u).", sdp_p->debug_str, (unsigned)level, (unsigned)cap_num);
     }
     sdp_p->conf_p->num_invalid_param++;
@@ -718,7 +718,7 @@ const char *sdp_attr_get_simple_string (sdp_t *sdp_p, sdp_attr_e attr_type,
 
     if (!sdp_attr_is_simple_string(attr_type)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Attribute type is not a simple string (%s)",
+            SDPLogError(logTag, "%s Attribute type is not a simple string (%s)",
                       sdp_p->debug_str, sdp_get_attr_name(attr_type));
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -728,7 +728,7 @@ const char *sdp_attr_get_simple_string (sdp_t *sdp_p, sdp_attr_e attr_type,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, attr_type, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
+            SDPLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
                       sdp_p->debug_str, sdp_get_attr_name(attr_type),
                       (unsigned)level, (unsigned)inst_num);
         }
@@ -751,7 +751,7 @@ const char *sdp_attr_get_long_string (sdp_t *sdp_p, sdp_attr_e attr_type,
 
     if (!sdp_attr_is_long_string(attr_type)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Attribute type is not a long string (%s)",
+            SDPLogError(logTag, "%s Attribute type is not a long string (%s)",
                       sdp_p->debug_str, sdp_get_attr_name(attr_type));
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -761,7 +761,7 @@ const char *sdp_attr_get_long_string (sdp_t *sdp_p, sdp_attr_e attr_type,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, attr_type, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
+            SDPLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
                       sdp_p->debug_str, sdp_get_attr_name(attr_type),
                       (unsigned)level, (unsigned)inst_num);
         }
@@ -821,7 +821,7 @@ uint32_t sdp_attr_get_simple_u32 (sdp_t *sdp_p, sdp_attr_e attr_type, uint16_t l
 
     if (!sdp_attr_is_simple_u32(attr_type)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Attribute type is not a simple uint32_t (%s)",
+            SDPLogError(logTag, "%s Attribute type is not a simple uint32_t (%s)",
                       sdp_p->debug_str, sdp_get_attr_name(attr_type));
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -831,7 +831,7 @@ uint32_t sdp_attr_get_simple_u32 (sdp_t *sdp_p, sdp_attr_e attr_type, uint16_t l
     attr_p = sdp_find_attr(sdp_p, level, cap_num, attr_type, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
+            SDPLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
                       sdp_p->debug_str, sdp_get_attr_name(attr_type),
                       (unsigned)level, (unsigned)inst_num);
         }
@@ -871,7 +871,7 @@ tinybool sdp_attr_get_simple_boolean (sdp_t *sdp_p, sdp_attr_e attr_type,
         (attr_type != SDP_ATTR_T38_TRANSCODINGJBIG) &&
         (attr_type != SDP_ATTR_TMRGWXID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Attribute type is not a simple boolean (%s)",
+            SDPLogError(logTag, "%s Attribute type is not a simple boolean (%s)",
                       sdp_p->debug_str, sdp_get_attr_name(attr_type));
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -881,7 +881,7 @@ tinybool sdp_attr_get_simple_boolean (sdp_t *sdp_p, sdp_attr_e attr_type,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, attr_type, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
+            SDPLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
                       sdp_p->debug_str, sdp_get_attr_name(attr_type),
                       (unsigned)level, (unsigned)inst_num);
         }
@@ -913,7 +913,7 @@ sdp_attr_get_maxprate (sdp_t *sdp_p, uint16_t level, uint16_t inst_num)
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_MAXPRATE, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
+            SDPLogError(logTag, "%s Attribute %s, level %u instance %u not found.",
                       sdp_p->debug_str, sdp_get_attr_name(SDP_ATTR_MAXPRATE),
                       (unsigned)level, (unsigned)inst_num);
         }
@@ -944,7 +944,7 @@ sdp_t38_ratemgmt_e sdp_attr_get_t38ratemgmt (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_T38_RATEMGMT, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s t38ratemgmt attribute, level %u instance %u "
+            SDPLogError(logTag, "%s t38ratemgmt attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -974,7 +974,7 @@ sdp_t38_udpec_e sdp_attr_get_t38udpec (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_T38_UDPEC, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s t38udpec attribute, level %u instance %u "
+            SDPLogError(logTag, "%s t38udpec attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1029,7 +1029,7 @@ sdp_direction_e sdp_get_media_direction (sdp_t *sdp_p, uint16_t level,
         }
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            CSFLogDebug(logTag, "%s Warning: Invalid cap_num for media direction.",
+            SDPLogDebug(logTag, "%s Warning: Invalid cap_num for media direction.",
                      sdp_p->debug_str);
         }
     }
@@ -1079,7 +1079,7 @@ sdp_qos_strength_e sdp_attr_get_qos_strength (sdp_t *sdp_p, uint16_t level,
 
     if (sdp_validate_qos_attr(qos_attr) == FALSE) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            CSFLogDebug(logTag, "%s Warning: Invalid QOS attribute specified for"
+            SDPLogDebug(logTag, "%s Warning: Invalid QOS attribute specified for"
                      "get qos strength.", sdp_p->debug_str);
         }
         return (SDP_QOS_STRENGTH_UNKNOWN);
@@ -1087,7 +1087,7 @@ sdp_qos_strength_e sdp_attr_get_qos_strength (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, qos_attr, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s %s attribute, level %u instance %u "
+            SDPLogError(logTag, "%s %s attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), (unsigned)level, (unsigned)inst_num);
         }
@@ -1127,7 +1127,7 @@ sdp_qos_dir_e sdp_attr_get_qos_direction (sdp_t *sdp_p, uint16_t level,
 
     if (sdp_validate_qos_attr(qos_attr) == FALSE) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            CSFLogDebug(logTag, "%s Warning: Invalid QOS attribute specified "
+            SDPLogDebug(logTag, "%s Warning: Invalid QOS attribute specified "
                      "for get qos direction.", sdp_p->debug_str);
         }
         return (SDP_QOS_DIR_UNKNOWN);
@@ -1135,7 +1135,7 @@ sdp_qos_dir_e sdp_attr_get_qos_direction (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, qos_attr, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s %s attribute, level %u instance %u "
+            SDPLogError(logTag, "%s %s attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), (unsigned)level, (unsigned)inst_num);
         }
@@ -1179,7 +1179,7 @@ sdp_qos_status_types_e sdp_attr_get_qos_status_type (sdp_t *sdp_p, uint16_t leve
 
     if (sdp_validate_qos_attr(qos_attr) == FALSE) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            CSFLogDebug(logTag, "%s Warning: Invalid QOS attribute specified "
+            SDPLogDebug(logTag, "%s Warning: Invalid QOS attribute specified "
                      "for get qos status_type.", sdp_p->debug_str);
         }
         return (SDP_QOS_STATUS_TYPE_UNKNOWN);
@@ -1187,7 +1187,7 @@ sdp_qos_status_types_e sdp_attr_get_qos_status_type (sdp_t *sdp_p, uint16_t leve
     attr_p = sdp_find_attr(sdp_p, level, cap_num, qos_attr, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s %s attribute, level %u instance %u "
+            SDPLogError(logTag, "%s %s attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), (unsigned)level, (unsigned)inst_num);
         }
@@ -1228,7 +1228,7 @@ tinybool sdp_attr_get_qos_confirm (sdp_t *sdp_p, uint16_t level,
 
     if (sdp_validate_qos_attr(qos_attr) == FALSE) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            CSFLogDebug(logTag, "%s Warning: Invalid QOS attribute specified "
+            SDPLogDebug(logTag, "%s Warning: Invalid QOS attribute specified "
                      "for get qos confirm.", sdp_p->debug_str);
         }
         return (FALSE);
@@ -1236,7 +1236,7 @@ tinybool sdp_attr_get_qos_confirm (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, qos_attr, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s %s attribute, level %u instance %u "
+            SDPLogError(logTag, "%s %s attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), (unsigned)level, (unsigned)inst_num);
         }
@@ -1269,7 +1269,7 @@ sdp_curr_type_e sdp_attr_get_curr_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, qos_attr, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s %s attribute, level %u instance %u "
+            SDPLogError(logTag, "%s %s attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), (unsigned)level, (unsigned)inst_num);
         }
@@ -1302,7 +1302,7 @@ sdp_des_type_e sdp_attr_get_des_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, qos_attr, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s %s attribute, level %u instance %u "
+            SDPLogError(logTag, "%s %s attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), (unsigned)level, (unsigned)inst_num);
         }
@@ -1335,7 +1335,7 @@ sdp_conf_type_e sdp_attr_get_conf_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, qos_attr, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s %s attribute, level %u instance %u "
+            SDPLogError(logTag, "%s %s attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), (unsigned)level, (unsigned)inst_num);
         }
@@ -1366,7 +1366,7 @@ sdp_nettype_e sdp_attr_get_subnet_nettype (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Subnet attribute, level %u instance %u "
+            SDPLogError(logTag, "%s Subnet attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1396,7 +1396,7 @@ sdp_addrtype_e sdp_attr_get_subnet_addrtype (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Subnet attribute, level %u instance %u "
+            SDPLogError(logTag, "%s Subnet attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1428,7 +1428,7 @@ const char *sdp_attr_get_subnet_addr (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Subnet attribute, level %u instance %u "
+            SDPLogError(logTag, "%s Subnet attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1460,7 +1460,7 @@ int32_t sdp_attr_get_subnet_prefix (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Subnet attribute, level %u instance %u "
+            SDPLogError(logTag, "%s Subnet attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1528,7 +1528,7 @@ uint16_t sdp_attr_get_rtpmap_payload_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_RTPMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtpmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s rtpmap attribute, level %u instance %u "
                                 "not found.",
                                 sdp_p->debug_str,
                                 (unsigned)level,
@@ -1562,7 +1562,7 @@ const char *sdp_attr_get_rtpmap_encname (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_RTPMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtpmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s rtpmap attribute, level %u instance %u "
                                 "not found.",
                                 sdp_p->debug_str,
                                 (unsigned)level,
@@ -1594,7 +1594,7 @@ uint32_t sdp_attr_get_rtpmap_clockrate (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_RTPMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtpmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s rtpmap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1623,7 +1623,7 @@ uint16_t sdp_attr_get_rtpmap_num_chan (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_RTPMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtpmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s rtpmap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1660,7 +1660,7 @@ sdp_result_e sdp_attr_get_ice_attribute (sdp_t *sdp_p, uint16_t level,
         return (SDP_SUCCESS);
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s ice attribute, level %u instance %u "
+                SDPLogError(logTag, "%s ice attribute, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1691,7 +1691,7 @@ tinybool sdp_attr_is_present (sdp_t *sdp_p, sdp_attr_e attr_type, uint16_t level
         return (TRUE);
     }
     if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-        CSFLogDebug(logTag, "%s Attribute %s, level %u not found.",
+        SDPLogDebug(logTag, "%s Attribute %s, level %u not found.",
                     sdp_p->debug_str, sdp_get_attr_name(attr_type), level);
     }
 
@@ -1726,7 +1726,7 @@ sdp_result_e sdp_attr_get_rtcp_mux_attribute (sdp_t *sdp_p, uint16_t level,
         return (SDP_SUCCESS);
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s rtcp-mux attribute, level %u instance %u "
+                SDPLogError(logTag, "%s rtcp-mux attribute, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1756,7 +1756,7 @@ sdp_result_e sdp_attr_get_setup_attribute (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_SETUP, inst_num);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag,
+            SDPLogError(logTag,
                 "%s setup attribute, level %u instance %u not found.",
                 sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
@@ -1791,7 +1791,7 @@ sdp_result_e sdp_attr_get_connection_attribute (sdp_t *sdp_p, uint16_t level,
         inst_num);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag,
+            SDPLogError(logTag,
                 "%s setup attribute, level %u instance %u not found.",
                 sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
@@ -1829,7 +1829,7 @@ sdp_result_e sdp_attr_get_dtls_fingerprint_attribute (sdp_t *sdp_p, uint16_t lev
         return (SDP_SUCCESS);
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s dtls fingerprint attribute, level %u instance %u "
+                SDPLogError(logTag, "%s dtls fingerprint attribute, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1895,7 +1895,7 @@ uint16_t sdp_attr_get_sprtmap_payload_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_SPRTMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s sprtmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s sprtmap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1926,7 +1926,7 @@ const char *sdp_attr_get_sprtmap_encname (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_SPRTMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s sprtmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s sprtmap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1955,7 +1955,7 @@ uint32_t sdp_attr_get_sprtmap_clockrate (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_SPRTMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s sprtmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s sprtmap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1984,7 +1984,7 @@ uint16_t sdp_attr_get_sprtmap_num_chan (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_SPRTMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s sprtmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s sprtmap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2058,7 +2058,7 @@ uint16_t sdp_attr_get_fmtp_payload_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2100,7 +2100,7 @@ sdp_ne_res_e sdp_attr_fmtp_is_range_set (sdp_t *sdp_p, uint16_t level, uint8_t c
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2156,7 +2156,7 @@ sdp_attr_fmtp_valid(sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2203,7 +2203,7 @@ sdp_result_e sdp_attr_set_fmtp_payload_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2233,7 +2233,7 @@ sdp_result_e sdp_attr_get_fmtp_range (sdp_t *sdp_p, uint16_t level, uint8_t cap_
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2270,7 +2270,7 @@ sdp_result_e sdp_attr_clear_fmtp_range (sdp_t *sdp_p, uint16_t level, uint8_t ca
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2324,7 +2324,7 @@ sdp_ne_res_e sdp_attr_compare_fmtp_ranges (sdp_t *src_sdp_p,sdp_t *dst_sdp_p,
                                SDP_ATTR_FMTP, dst_inst_num);
     if ((src_attr_p == NULL) || (dst_attr_p == NULL)) {
         if (src_sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s source or destination fmtp attribute for "
+            SDPLogError(logTag, "%s source or destination fmtp attribute for "
                       "compare not found.", src_sdp_p->debug_str);
         }
         src_sdp_p->conf_p->num_invalid_param++;
@@ -2387,7 +2387,7 @@ sdp_result_e sdp_attr_copy_fmtp_ranges (sdp_t *src_sdp_p, sdp_t *dst_sdp_p,
                                SDP_ATTR_FMTP, dst_inst_num);
     if ((src_attr_p == NULL) || (dst_attr_p == NULL)) {
         if (src_sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s source or destination fmtp attribute for "
+            SDPLogError(logTag, "%s source or destination fmtp attribute for "
                       "copy not found.", src_sdp_p->debug_str);
         }
         src_sdp_p->conf_p->num_invalid_param++;
@@ -2447,7 +2447,7 @@ sdp_result_e sdp_attr_set_fmtp_max_fs (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2475,7 +2475,7 @@ sdp_result_e sdp_attr_set_fmtp_max_fr (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2511,7 +2511,7 @@ sdp_result_e sdp_attr_get_fmtp_max_average_bitrate (sdp_t *sdp_p, uint16_t level
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 1);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2542,7 +2542,7 @@ sdp_result_e sdp_attr_get_fmtp_usedtx (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2572,7 +2572,7 @@ sdp_result_e sdp_attr_get_fmtp_stereo (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2602,7 +2602,7 @@ sdp_result_e sdp_attr_get_fmtp_useinbandfec (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2632,7 +2632,7 @@ char* sdp_attr_get_fmtp_maxcodedaudiobandwidth (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2661,7 +2661,7 @@ sdp_result_e sdp_attr_get_fmtp_cbr (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2680,7 +2680,7 @@ uint16_t sdp_attr_get_sctpmap_port(sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_SCTPMAP, inst_num);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s sctpmap port, level %u instance %u "
+            SDPLogError(logTag, "%s sctpmap port, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2698,7 +2698,7 @@ sdp_result_e sdp_attr_get_sctpmap_streams (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_SCTPMAP, inst_num);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s sctpmap streams, level %u instance %u "
+            SDPLogError(logTag, "%s sctpmap streams, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2720,7 +2720,7 @@ sdp_result_e sdp_attr_get_sctpmap_protocol (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s sctpmap, level %u instance %u "
+            SDPLogError(logTag, "%s sctpmap, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2753,7 +2753,7 @@ tinybool sdp_attr_fmtp_is_annexb_set (sdp_t *sdp_p, uint16_t level, uint8_t cap_
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2784,7 +2784,7 @@ tinybool sdp_attr_fmtp_is_annexa_set (sdp_t *sdp_p, uint16_t level, uint8_t cap_
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2814,7 +2814,7 @@ int32_t sdp_attr_get_fmtp_bitrate_type (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2844,7 +2844,7 @@ int32_t sdp_attr_get_fmtp_qcif (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2873,7 +2873,7 @@ int32_t sdp_attr_get_fmtp_cif (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2904,7 +2904,7 @@ int32_t sdp_attr_get_fmtp_sqcif (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2934,7 +2934,7 @@ int32_t sdp_attr_get_fmtp_cif4 (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2965,7 +2965,7 @@ int32_t sdp_attr_get_fmtp_cif16 (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2996,7 +2996,7 @@ int32_t sdp_attr_get_fmtp_maxbr (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3027,7 +3027,7 @@ int32_t sdp_attr_get_fmtp_custom_x (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3057,7 +3057,7 @@ int32_t sdp_attr_get_fmtp_custom_y (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3088,7 +3088,7 @@ int32_t sdp_attr_get_fmtp_custom_mpi (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3117,7 +3117,7 @@ int32_t sdp_attr_get_fmtp_par_width (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3146,7 +3146,7 @@ int32_t sdp_attr_get_fmtp_par_height (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3175,7 +3175,7 @@ int32_t sdp_attr_get_fmtp_cpcf (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3204,7 +3204,7 @@ int32_t sdp_attr_get_fmtp_bpp (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3233,7 +3233,7 @@ int32_t sdp_attr_get_fmtp_hrd (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3262,7 +3262,7 @@ int32_t sdp_attr_get_fmtp_profile (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3291,7 +3291,7 @@ int32_t sdp_attr_get_fmtp_level (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3320,7 +3320,7 @@ tinybool sdp_attr_get_fmtp_interlace (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3350,7 +3350,7 @@ sdp_result_e sdp_attr_get_fmtp_pack_mode (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3386,7 +3386,7 @@ sdp_result_e sdp_attr_get_fmtp_level_asymmetry_allowed (sdp_t *sdp_p, uint16_t l
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3416,7 +3416,7 @@ const char* sdp_attr_get_fmtp_profile_id (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3445,7 +3445,7 @@ const char* sdp_attr_get_fmtp_param_sets (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3474,7 +3474,7 @@ sdp_result_e sdp_attr_get_fmtp_interleaving_depth (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3505,7 +3505,7 @@ sdp_result_e sdp_attr_get_fmtp_deint_buf_req (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3539,7 +3539,7 @@ sdp_result_e sdp_attr_get_fmtp_max_don_diff (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3569,7 +3569,7 @@ sdp_result_e sdp_attr_get_fmtp_init_buf_time (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3604,7 +3604,7 @@ sdp_result_e sdp_attr_get_fmtp_max_mbps (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3634,7 +3634,7 @@ sdp_result_e sdp_attr_get_fmtp_max_fs (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3664,7 +3664,7 @@ sdp_result_e sdp_attr_get_fmtp_max_fr (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3694,7 +3694,7 @@ sdp_result_e sdp_attr_get_fmtp_max_cpb (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3724,7 +3724,7 @@ sdp_result_e sdp_attr_get_fmtp_max_dpb (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3755,7 +3755,7 @@ sdp_result_e sdp_attr_get_fmtp_max_br (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3785,7 +3785,7 @@ tinybool sdp_attr_fmtp_is_redundant_pic_cap (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3816,7 +3816,7 @@ sdp_result_e sdp_attr_get_fmtp_deint_buf_cap (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3851,7 +3851,7 @@ sdp_result_e sdp_attr_get_fmtp_max_rcmd_nalu_size (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3885,7 +3885,7 @@ tinybool sdp_attr_fmtp_is_parameter_add (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3920,7 +3920,7 @@ tinybool sdp_attr_get_fmtp_annex_d (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3940,7 +3940,7 @@ tinybool sdp_attr_get_fmtp_annex_f (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3960,7 +3960,7 @@ tinybool sdp_attr_get_fmtp_annex_i (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3980,7 +3980,7 @@ tinybool sdp_attr_get_fmtp_annex_j (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4000,7 +4000,7 @@ tinybool sdp_attr_get_fmtp_annex_t (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4020,7 +4020,7 @@ int32_t sdp_attr_get_fmtp_annex_k_val (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4040,7 +4040,7 @@ int32_t sdp_attr_get_fmtp_annex_n_val (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4061,7 +4061,7 @@ int32_t sdp_attr_get_fmtp_annex_p_picture_resize (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4081,7 +4081,7 @@ int32_t sdp_attr_get_fmtp_annex_p_warp (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4114,7 +4114,7 @@ sdp_fmtp_format_type_e  sdp_attr_fmtp_get_fmtp_format (sdp_t *sdp_p,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s fmtp attribute, level %u instance %u "
+            SDPLogError(logTag, "%s fmtp attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4144,7 +4144,7 @@ uint16_t sdp_attr_get_pccodec_num_payload_types (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-pc-codec attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-pc-codec attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4176,7 +4176,7 @@ uint16_t sdp_attr_get_pccodec_payload_type (sdp_t *sdp_p, uint16_t level, uint8_
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-pc-codec attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-pc-codec attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4185,7 +4185,7 @@ uint16_t sdp_attr_get_pccodec_payload_type (sdp_t *sdp_p, uint16_t level, uint8_
         if ((payload_num < 1) ||
             (payload_num > attr_p->attr.pccodec.num_payloads)) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s X-pc-codec attribute, level %u instance %u, "
+                SDPLogError(logTag, "%s X-pc-codec attribute, level %u instance %u, "
                           "invalid payload number %u requested.",
                           sdp_p->debug_str, (unsigned)level, (unsigned)inst_num, (unsigned)payload_num);
             }
@@ -4222,7 +4222,7 @@ sdp_result_e sdp_attr_add_pccodec_payload_type (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-pc-codec attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-pc-codec attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4283,7 +4283,7 @@ uint16_t sdp_attr_get_xcap_first_cap_num (sdp_t *sdp_p, uint16_t level, uint16_t
     }  /* Attr is at a media level */
 
     if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-        CSFLogError(logTag, "%s X-cap attribute, level %u instance %u "
+        SDPLogError(logTag, "%s X-cap attribute, level %u instance %u "
                   "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
     }
     sdp_p->conf_p->num_invalid_param++;
@@ -4309,7 +4309,7 @@ sdp_media_e sdp_attr_get_xcap_media_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_X_CAP, inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-cap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-cap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4340,7 +4340,7 @@ sdp_transport_e sdp_attr_get_xcap_transport_type (sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-cap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-cap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4373,7 +4373,7 @@ uint16_t sdp_attr_get_xcap_num_payload_types (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_X_CAP, inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-cap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-cap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4407,7 +4407,7 @@ uint16_t sdp_attr_get_xcap_payload_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_X_CAP, inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-cap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-cap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4417,7 +4417,7 @@ uint16_t sdp_attr_get_xcap_payload_type (sdp_t *sdp_p, uint16_t level,
         if ((payload_num < 1) ||
             (payload_num > cap_p->num_payloads)) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s X-cap attribute, level %u instance %u, "
+                SDPLogError(logTag, "%s X-cap attribute, level %u instance %u, "
                           "payload num %u invalid.", sdp_p->debug_str,
                           (unsigned)level, (unsigned)inst_num, (unsigned)payload_num);
             }
@@ -4452,7 +4452,7 @@ sdp_result_e sdp_attr_add_xcap_payload_type(sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_X_CAP, inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-cap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-cap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4514,7 +4514,7 @@ uint16_t sdp_attr_get_cdsc_first_cap_num(sdp_t *sdp_p, uint16_t level, uint16_t 
     }  /* Attr is at a media level */
 
     if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-        CSFLogError(logTag, "%s CDSC attribute, level %u instance %u "
+        SDPLogError(logTag, "%s CDSC attribute, level %u instance %u "
                   "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
     }
     sdp_p->conf_p->num_invalid_param++;
@@ -4540,7 +4540,7 @@ sdp_media_e sdp_attr_get_cdsc_media_type(sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_CDSC, inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s CDSC attribute, level %u instance %u "
+            SDPLogError(logTag, "%s CDSC attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4571,7 +4571,7 @@ sdp_transport_e sdp_attr_get_cdsc_transport_type(sdp_t *sdp_p, uint16_t level,
                            inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s CDSC attribute, level %u instance %u "
+            SDPLogError(logTag, "%s CDSC attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4604,7 +4604,7 @@ uint16_t sdp_attr_get_cdsc_num_payload_types (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_CDSC, inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s CDSC attribute, level %u instance %u "
+            SDPLogError(logTag, "%s CDSC attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4638,7 +4638,7 @@ uint16_t sdp_attr_get_cdsc_payload_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_CDSC, inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s CDSC attribute, level %u instance %u "
+            SDPLogError(logTag, "%s CDSC attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4648,7 +4648,7 @@ uint16_t sdp_attr_get_cdsc_payload_type (sdp_t *sdp_p, uint16_t level,
         if ((payload_num < 1) ||
             (payload_num > cdsc_p->num_payloads)) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s CDSC attribute, level %u instance %u, "
+                SDPLogError(logTag, "%s CDSC attribute, level %u instance %u, "
                           "payload num %u invalid.", sdp_p->debug_str,
                           (unsigned)level, (unsigned)inst_num, (unsigned)payload_num);
             }
@@ -4682,7 +4682,7 @@ sdp_result_e sdp_attr_add_cdsc_payload_type (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_CDSC, inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s CDSC attribute, level %u instance %u "
+            SDPLogError(logTag, "%s CDSC attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4760,7 +4760,7 @@ tinybool sdp_attr_get_rtr_confirm (sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_RTR, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s %s attribute, level %u instance %u "
+            SDPLogError(logTag, "%s %s attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(SDP_ATTR_RTR), (unsigned)level, (unsigned)inst_num);
         }
@@ -4782,7 +4782,7 @@ sdp_mediadir_role_e sdp_attr_get_comediadir_role (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_DIRECTION, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Comediadir role attribute, level %u instance %u "
+            SDPLogError(logTag, "%s Comediadir role attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4812,7 +4812,7 @@ tinybool sdp_attr_get_silencesupp_enabled (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s silenceSuppEnable attribute, level %u instance %u "
+            SDPLogError(logTag, "%s silenceSuppEnable attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4845,7 +4845,7 @@ uint16_t sdp_attr_get_silencesupp_timer (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s silenceTimer attribute, level %u instance %u "
+            SDPLogError(logTag, "%s silenceTimer attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4879,7 +4879,7 @@ sdp_silencesupp_pref_e sdp_attr_get_silencesupp_pref (sdp_t *sdp_p,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s silence suppPref attribute, level %u instance %u "
+            SDPLogError(logTag, "%s silence suppPref attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4912,7 +4912,7 @@ sdp_silencesupp_siduse_e sdp_attr_get_silencesupp_siduse (sdp_t *sdp_p,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s silence sidUse attribute, level %u instance %u "
+            SDPLogError(logTag, "%s silence sidUse attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4945,7 +4945,7 @@ uint8_t sdp_attr_get_silencesupp_fxnslevel (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s silence fxnslevel attribute, level %u instance %u "
+            SDPLogError(logTag, "%s silence fxnslevel attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -4981,7 +4981,7 @@ uint16_t sdp_attr_get_mptime_num_intervals (
     }
 
     if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-        CSFLogError(logTag, "%s mptime attribute, level %u instance %u not found.",
+        SDPLogError(logTag, "%s mptime attribute, level %u instance %u not found.",
                   sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
     }
     sdp_p->conf_p->num_invalid_param++;
@@ -5013,7 +5013,7 @@ uint16_t sdp_attr_get_mptime_interval (
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_MPTIME, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s mptime attribute, level %u instance %u "
+            SDPLogError(logTag, "%s mptime attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5022,7 +5022,7 @@ uint16_t sdp_attr_get_mptime_interval (
 
     if ((interval_num<1) || (interval_num>attr_p->attr.mptime.num_intervals)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s mptime attribute, level %u instance %u, "
+            SDPLogError(logTag, "%s mptime attribute, level %u instance %u, "
                       "invalid interval number %u requested.",
                       sdp_p->debug_str, (unsigned)level, (unsigned)inst_num, (unsigned)interval_num);
         }
@@ -5061,7 +5061,7 @@ sdp_result_e sdp_attr_add_mptime_interval (
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_MPTIME, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s mptime attribute, level %u instance %u "
+            SDPLogError(logTag, "%s mptime attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5071,7 +5071,7 @@ sdp_result_e sdp_attr_add_mptime_interval (
     interval_num = attr_p->attr.mptime.num_intervals;
     if (interval_num>=SDP_MAX_PAYLOAD_TYPES) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s mptime attribute, level %u instance %u "
+            SDPLogError(logTag, "%s mptime attribute, level %u instance %u "
                       "exceeds maximum length.",
                       sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
@@ -5103,7 +5103,7 @@ sdp_group_attr_e sdp_get_group_attr (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_GROUP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Group (a= group line) attribute, level %u instance %u "
+            SDPLogError(logTag, "%s Group (a= group line) attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5133,7 +5133,7 @@ uint16_t sdp_get_group_num_id (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_GROUP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s a=group level attribute, level %u instance %u "
+            SDPLogError(logTag, "%s a=group level attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5166,7 +5166,7 @@ const char* sdp_get_group_id (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_GROUP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s a=group level attribute, level %u instance %u "
+            SDPLogError(logTag, "%s a=group level attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5203,7 +5203,7 @@ const char* sdp_attr_get_x_sidin (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_X_SIDIN, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-sidin attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-sidin attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5237,7 +5237,7 @@ const char* sdp_attr_get_x_sidout (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_X_SIDOUT, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-sidout attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-sidout attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5271,7 +5271,7 @@ const char* sdp_attr_get_x_confid (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_X_CONFID, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s X-confid attribute, level %u instance %u "
+            SDPLogError(logTag, "%s X-confid attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5303,7 +5303,7 @@ sdp_get_source_filter_mode (sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
                            SDP_ATTR_SOURCE_FILTER, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Source filter attribute, level %u, "
+            SDPLogError(logTag, "%s Source filter attribute, level %u, "
                       "instance %u not found", sdp_p->debug_str,
                       (unsigned)level, (unsigned)inst_num);
         }
@@ -5332,7 +5332,7 @@ sdp_get_filter_destination_attributes (sdp_t *sdp_p, uint16_t level, uint8_t cap
                            SDP_ATTR_SOURCE_FILTER, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Source filter attribute, level %u instance %u "
+            SDPLogError(logTag, "%s Source filter attribute, level %u instance %u "
                       "not found", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5368,7 +5368,7 @@ sdp_get_filter_source_address_count (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_SOURCE_FILTER, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Source filter attribute, level %u instance %u "
+            SDPLogError(logTag, "%s Source filter attribute, level %u instance %u "
                       "not found", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5404,7 +5404,7 @@ sdp_get_filter_source_address (sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
                            SDP_ATTR_SOURCE_FILTER, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Source filter attribute, level %u instance %u "
+            SDPLogError(logTag, "%s Source filter attribute, level %u instance %u "
                       "not found", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5429,7 +5429,7 @@ sdp_get_rtcp_unicast_mode(sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
                            SDP_ATTR_RTCP_UNICAST, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s RTCP Unicast attribute, level %u, "
+            SDPLogError(logTag, "%s RTCP Unicast attribute, level %u, "
                       "instance %u not found", sdp_p->debug_str,
                       (unsigned)level, (unsigned)inst_num);
         }
@@ -5462,7 +5462,7 @@ sdp_attr_get_sdescriptions_tag (sdp_t *sdp_p, uint16_t level,
 
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s srtp attribute tag, level %u instance %u "
+            SDPLogError(logTag, "%s srtp attribute tag, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -5508,7 +5508,7 @@ sdp_attr_get_sdescriptions_crypto_suite (sdp_t *sdp_p, uint16_t level,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s srtp attribute suite, level %u instance %u "
+                SDPLogError(logTag, "%s srtp attribute suite, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -5555,7 +5555,7 @@ sdp_attr_get_sdescriptions_key (sdp_t *sdp_p, uint16_t level,
 
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s srtp attribute key, level %u instance %u "
+                SDPLogError(logTag, "%s srtp attribute key, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -5602,7 +5602,7 @@ sdp_attr_get_sdescriptions_salt (sdp_t *sdp_p, uint16_t level,
 
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s srtp attribute salt, level %u instance %u "
+                SDPLogError(logTag, "%s srtp attribute salt, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -5651,7 +5651,7 @@ sdp_attr_get_sdescriptions_lifetime (sdp_t *sdp_p, uint16_t level,
 
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s srtp attribute lifetime, level %u instance %u "
+                SDPLogError(logTag, "%s srtp attribute lifetime, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -5707,7 +5707,7 @@ sdp_attr_get_sdescriptions_mki (sdp_t *sdp_p, uint16_t level,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s srtp attribute MKI, level %u instance %u "
+                SDPLogError(logTag, "%s srtp attribute MKI, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -5758,7 +5758,7 @@ sdp_attr_get_sdescriptions_session_params (sdp_t *sdp_p, uint16_t level,
                            SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s srtp attribute session params, level %u instance %u "
+                SDPLogError(logTag, "%s srtp attribute session params, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -5807,7 +5807,7 @@ sdp_attr_get_sdescriptions_key_size (sdp_t *sdp_p,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s srtp attribute MKI, level %u instance %u "
+                SDPLogError(logTag, "%s srtp attribute MKI, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -5857,7 +5857,7 @@ sdp_attr_get_sdescriptions_salt_size (sdp_t *sdp_p,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s srtp attribute MKI, level %u instance %u "
+                SDPLogError(logTag, "%s srtp attribute MKI, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -5909,7 +5909,7 @@ sdp_attr_get_srtp_crypto_selection_flags (sdp_t *sdp_p,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s srtp attribute MKI, level %u instance %u "
+                SDPLogError(logTag, "%s srtp attribute MKI, level %u instance %u "
                           "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -5980,7 +5980,7 @@ sdp_attr_get_rtcp_fb_ack(sdp_t *sdp_p, uint16_t level, uint16_t payload_type, ui
                                    SDP_RTCP_FB_ACK, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp-fb attribute, level %u, pt %u, "
+            SDPLogError(logTag, "%s rtcp-fb attribute, level %u, pt %u, "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)payload_type, (unsigned)inst);
         }
@@ -6007,7 +6007,7 @@ sdp_attr_get_rtcp_fb_nack(sdp_t *sdp_p, uint16_t level, uint16_t payload_type, u
                                    SDP_RTCP_FB_NACK, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp-fb attribute, level %u, pt %u, "
+            SDPLogError(logTag, "%s rtcp-fb attribute, level %u, pt %u, "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)payload_type, (unsigned)inst);
         }
@@ -6035,7 +6035,7 @@ sdp_attr_get_rtcp_fb_trr_int(sdp_t *sdp_p, uint16_t level,
                                    SDP_RTCP_FB_TRR_INT, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp-fb attribute, level %u, pt %u, "
+            SDPLogError(logTag, "%s rtcp-fb attribute, level %u, pt %u, "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)payload_type, (unsigned)inst);
         }
@@ -6102,7 +6102,7 @@ sdp_attr_get_rtcp_fb_ccm(sdp_t *sdp_p, uint16_t level, uint16_t payload_type, ui
                                    SDP_RTCP_FB_CCM, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp-fb attribute, level %u, pt %u, "
+            SDPLogError(logTag, "%s rtcp-fb attribute, level %u, pt %u, "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)payload_type, (unsigned)inst);
         }
@@ -6132,7 +6132,7 @@ sdp_attr_set_rtcp_fb_ack(sdp_t *sdp_p, uint16_t level, uint16_t payload_type, ui
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp_fb ack attribute, level %u "
+            SDPLogError(logTag, "%s rtcp_fb ack attribute, level %u "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)inst);
         }
@@ -6168,7 +6168,7 @@ sdp_attr_set_rtcp_fb_nack(sdp_t *sdp_p, uint16_t level, uint16_t payload_type, u
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp_fb nack attribute, level %u "
+            SDPLogError(logTag, "%s rtcp_fb nack attribute, level %u "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)inst);
         }
@@ -6203,7 +6203,7 @@ sdp_attr_set_rtcp_fb_trr_int(sdp_t *sdp_p, uint16_t level, uint16_t payload_type
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp_fb trr-int attribute, level %u "
+            SDPLogError(logTag, "%s rtcp_fb trr-int attribute, level %u "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)inst);
         }
@@ -6237,7 +6237,7 @@ sdp_attr_set_rtcp_fb_remb(sdp_t *sdp_p, uint16_t level, uint16_t payload_type,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp_fb goog-remb attribute, level %u "
+            SDPLogError(logTag, "%s rtcp_fb goog-remb attribute, level %u "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)inst);
         }
@@ -6269,7 +6269,7 @@ sdp_attr_set_rtcp_fb_transport_cc(sdp_t *sdp_p, uint16_t level, uint16_t payload
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp_fb transport-cc attribute, level %u "
+            SDPLogError(logTag, "%s rtcp_fb transport-cc attribute, level %u "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)inst);
         }
@@ -6302,7 +6302,7 @@ sdp_attr_set_rtcp_fb_ccm(sdp_t *sdp_p, uint16_t level, uint16_t payload_type, ui
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_RTCP_FB, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s rtcp_fb ccm attribute, level %u "
+            SDPLogError(logTag, "%s rtcp_fb ccm attribute, level %u "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)inst);
         }
@@ -6335,7 +6335,7 @@ const char *sdp_attr_get_extmap_uri(sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_EXTMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s extmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s extmap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -6362,7 +6362,7 @@ uint16_t sdp_attr_get_extmap_id(sdp_t *sdp_p, uint16_t level,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_EXTMAP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s extmap attribute, level %u instance %u "
+            SDPLogError(logTag, "%s extmap attribute, level %u instance %u "
                       "not found.", sdp_p->debug_str, (unsigned)level, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -6390,7 +6390,7 @@ sdp_attr_set_extmap(sdp_t *sdp_p, uint16_t level, uint16_t id, const char* uri, 
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_EXTMAP, inst);
     if (!attr_p) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s extmap attribute, level %u "
+            SDPLogError(logTag, "%s extmap attribute, level %u "
                       "instance %u not found.", sdp_p->debug_str, (unsigned)level,
                       (unsigned)inst);
         }

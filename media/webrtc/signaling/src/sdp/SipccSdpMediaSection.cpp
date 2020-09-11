@@ -9,6 +9,10 @@
 #include <ostream>
 #include "signaling/src/sdp/SdpParser.h"
 
+extern "C" {
+#include "sipcc_sdp.h"
+}
+
 #ifdef CRLF
 #  undef CRLF
 #endif

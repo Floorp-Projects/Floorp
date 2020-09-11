@@ -25,8 +25,8 @@
 #include "signaling/src/sdp/ParsingResultComparer.h"
 
 extern "C" {
-#include "signaling/src/sdp/sipcc/sdp.h"
-#include "signaling/src/sdp/sipcc/sdp_private.h"
+#include "sipcc_sdp.h"
+#include "sdp_private.h"
 }
 
 #ifdef CRLF

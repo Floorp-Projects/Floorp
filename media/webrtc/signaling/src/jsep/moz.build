@@ -10,6 +10,7 @@ LOCAL_INCLUDES += [
     '/media/webrtc',
     '/media/webrtc/trunk',
     '/media/webrtc/trunk/webrtc',
+    '/third_party/sipcc',
 ]
 
 UNIFIED_SOURCES += [

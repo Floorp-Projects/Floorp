@@ -5,10 +5,10 @@
 #include <errno.h>
 
 #include "sdp_os_defs.h"
-#include "sdp.h"
+#include "sipcc_sdp.h"
 #include "sdp_private.h"
 
-#include "CSFLog.h"
+#include "sdp_log.h"
 #include "prprf.h"
 
 static const char *logTag = "sdp_token";
@@ -40,7 +40,7 @@ sdp_result_e sdp_build_version (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     if (sdp_p->version == SDP_INVALID_VALUE) {
         if (sdp_p->conf_p->version_reqd == TRUE) {
-            CSFLogError(logTag, "%s Invalid version for v= line, "
+            SDPLogError(logTag, "%s Invalid version for v= line, "
                         "build failed.", sdp_p->debug_str);
             sdp_p->conf_p->num_invalid_param++;
             return (SDP_INVALID_PARAMETER);
@@ -236,7 +236,7 @@ sdp_result_e sdp_build_owner (sdp_t *sdp_p, uint16_t level, flex_string *fs)
         }
 
         if (sdp_p->conf_p->owner_reqd == TRUE) {
-            CSFLogError(logTag, "%s Invalid params for o= owner line, "
+            SDPLogError(logTag, "%s Invalid params for o= owner line, "
                         "build failed.", sdp_p->debug_str);
             sdp_p->conf_p->num_invalid_param++;
             return (SDP_INVALID_PARAMETER);
@@ -291,7 +291,7 @@ sdp_result_e sdp_build_sessname (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     if (sdp_p->sessname[0] == '\0') {
         if (sdp_p->conf_p->session_name_reqd == TRUE) {
-            CSFLogError(logTag, "%s No param defined for s= session name line, "
+            SDPLogError(logTag, "%s No param defined for s= session name line, "
                         "build failed.", sdp_p->debug_str);
             sdp_p->conf_p->num_invalid_param++;
             return (SDP_INVALID_PARAMETER);
@@ -927,7 +927,7 @@ sdp_result_e sdp_build_timespec (sdp_t *sdp_p, uint16_t level, flex_string *fs)
         (sdp_p->timespec_p->start_time[0] == '\0') ||
         (sdp_p->timespec_p->stop_time[0] == '\0')) {
         if (sdp_p->conf_p->timespec_reqd == TRUE) {
-            CSFLogError(logTag, "%s Invalid params for t= time spec line, "
+            SDPLogError(logTag, "%s Invalid params for t= time spec line, "
                         "build failed.", sdp_p->debug_str);
             sdp_p->conf_p->num_invalid_param++;
             return (SDP_INVALID_PARAMETER);
@@ -1488,7 +1488,7 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, uint16_t level, flex_string *fs)
     }
 
     if (invalid_params == TRUE) {
-        CSFLogError(logTag, "%s Invalid params for m= media line, "
+        SDPLogError(logTag, "%s Invalid params for m= media line, "
                     "build failed.", sdp_p->debug_str);
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
@@ -1522,7 +1522,7 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, uint16_t level, flex_string *fs)
         } else if ((mca_p->vcci == SDP_CHOOSE_PARAM) ||
                    (mca_p->cid == SDP_CHOOSE_PARAM)) {
             /* If one is set but not the other, this is an error. */
-            CSFLogError(logTag, "%s Invalid params for m= port parameter, "
+            SDPLogError(logTag, "%s Invalid params for m= port parameter, "
                         "build failed.", sdp_p->debug_str);
             sdp_p->conf_p->num_invalid_param++;
             return (SDP_INVALID_PARAMETER);

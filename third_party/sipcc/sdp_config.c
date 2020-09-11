@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "sdp_os_defs.h"
-#include "sdp.h"
+#include "sipcc_sdp.h"
 #include "sdp_private.h"
 
-#include "CSFLog.h"
+#include "sdp_log.h"
 
 static const char* logTag = "sdp_config";
 
@@ -30,7 +30,7 @@ sdp_conf_options_t *sdp_init_config ()
     conf_p = SDP_MALLOC(sizeof(sdp_conf_options_t));
 
     if (!conf_p) {
-        CSFLogError(logTag, "SDP: could not allocate configuration object.");
+        SDPLogError(logTag, "SDP: could not allocate configuration object.");
         return NULL;
     }
 
@@ -83,7 +83,7 @@ sdp_conf_options_t *sdp_init_config ()
     conf_p->error_handler           = NULL;
     conf_p->error_handler_context   = NULL;
 
-    CSFLogInfo(logTag, "SDP: Initialized config pointer: %p", conf_p);
+    SDPLogInfo(logTag, "SDP: Initialized config pointer: %p", conf_p);
 
     return (conf_p);
 }

@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "sdp_os_defs.h"
-#include "sdp.h"
+#include "sipcc_sdp.h"
 #include "sdp_private.h"
 
-#include "CSFLog.h"
+#include "sdp_log.h"
 
 /******************************************************************/
 /*  Required Platform Routines                                    */
@@ -25,7 +25,7 @@
  */
 void sdp_dump_buffer (char * _ptr, int _size_bytes)
 {
-    CSFLogDebug("sdp", _ptr);
+    SDPLogDebug("sdp", _ptr);
 }
 
 /******************************************************************/

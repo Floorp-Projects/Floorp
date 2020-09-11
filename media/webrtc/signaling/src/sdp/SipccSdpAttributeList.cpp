@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"
 
 extern "C" {
-#include "signaling/src/sdp/sipcc/sdp_private.h"
+#include "sdp_private.h"
 }
 
 namespace mozilla {

@@ -9,7 +9,7 @@
 
 #include <utility>
 extern "C" {
-#include "signaling/src/sdp/sipcc/sdp.h"
+#include "sipcc_sdp.h"
 }
 
 namespace mozilla {

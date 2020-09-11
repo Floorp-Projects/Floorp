@@ -8,6 +8,7 @@
 #define _SDP_LOG_H_
 
 #include "mozilla/Logging.h"
+#include "sdp_log.h"
 
 namespace mozilla {
 extern mozilla::LazyLogModule SdpLog;
