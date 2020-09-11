@@ -361,8 +361,8 @@ void WorkerGlobalScope::ImportScripts(JSContext* aCx,
         }
       }
     }
-    AUTO_PROFILER_TEXT_MARKER_CAUSE("ImportScripts", urls, JS, Nothing(),
-                                    profiler_get_backtrace());
+    AUTO_PROFILER_MARKER_TEXT("ImportScripts",
+                              JS.WithOptions(MarkerStack::Capture()), urls);
 #endif
     workerinternals::Load(mWorkerPrivate, std::move(stack), aScriptURLs,
                           WorkerScript, aRv);

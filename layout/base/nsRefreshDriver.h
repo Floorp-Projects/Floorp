@@ -474,7 +474,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   mozilla::RefreshDriverTimer* ChooseTimer();
   mozilla::RefreshDriverTimer* mActiveTimer;
   RefPtr<mozilla::RefreshDriverTimer> mOwnTimer;
-  UniqueProfilerBacktrace mRefreshTimerStartedCause;
+  mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> mRefreshTimerStartedCause;
 
   // nsPresContext passed in constructor and unset in Disconnect.
   mozilla::WeakPtr<nsPresContext> mPresContext;
@@ -503,7 +503,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // flush since the last time we did it.
   const mozilla::TimeDuration mMinRecomputeVisibilityInterval;
 
-  UniqueProfilerBacktrace mViewManagerFlushCause;
+  mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> mViewManagerFlushCause;
 
   bool mThrottled : 1;
   bool mNeedToRecomputeVisibility : 1;
