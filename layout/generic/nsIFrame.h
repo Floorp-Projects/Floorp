@@ -2677,28 +2677,24 @@ class nsIFrame : public nsQueryFrame {
    * in order to fill its mComputedWidth and mComputedHeight member
    * variables.
    *
-   * The |height| member of the return value may be
-   * NS_UNCONSTRAINEDSIZE, but the |width| member must not be.
-   *
    * Note that the reason that border and padding need to be passed
    * separately is so that the 'box-sizing' property can be handled.
    * Thus aMargin includes absolute positioning offsets as well.
    *
-   * @param aWritingMode  The writing mode to use for the returned size
-   *                      (need not match this frame's writing mode).
-   *                      This is also the writing mode of the passed-in
-   *                      LogicalSize parameters.
+   * @param aWM  The writing mode to use for the returned size (need not match
+   *             this frame's writing mode). This is also the writing mode of
+   *             the passed-in LogicalSize parameters.
    * @param aCBSize  The size of the element's containing block.  (Well,
-   *                 the |height| component isn't really.)
-   * @param aAvailableWidth  The available width for 'auto' widths.
-   *                         This is usually the same as aCBSize.width,
+   *                 the BSize() component isn't really.)
+   * @param aAvailableISize  The available inline-size for 'auto' inline-size.
+   *                         This is usually the same as aCBSize.ISize(),
    *                         but differs in cases such as block
    *                         formatting context roots next to floats, or
    *                         in some cases of float reflow in quirks
    *                         mode.
-   * @param aMargin  The sum of the vertical / horizontal margins
-   *                 ***AND*** absolute positioning offsets (top, right,
-   *                 bottom, left) of the frame, including actual values
+   * @param aMargin  The sum of the inline / block margins ***AND***
+   *                 absolute positioning offsets (inset-block and
+   *                 inset-inline) of the frame, including actual values
    *                 resulting from percentages and from the
    *                 "hypothetical box" for absolute positioning, but
    *                 not including actual values resulting from 'auto'
@@ -2712,11 +2708,14 @@ class nsIFrame : public nsQueryFrame {
    * @param aFlags   Flags to further customize behavior (definitions in
    *                 LayoutConstants.h).
    *
-   * The return value includes the computed LogicalSize and the enum class which
-   * indicates whether the inline/block size is affected by aspect-ratio or not.
-   * We need this information during reflow because the final size may be
-   * affected by the content size after applying aspect-ratio.
+   * The return value includes the computed LogicalSize and AspectRatioUsage
+   * which indicates whether the inline/block size is affected by aspect-ratio
+   * or not. The BSize() of the returned LogicalSize may be
+   * NS_UNCONSTRAINEDSIZE, but the ISize() must not be. We need AspectRatioUsage
+   * during reflow because the final size may be affected by the content size
+   * after applying aspect-ratio.
    * https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
+   *
    */
   enum class AspectRatioUsage : uint8_t {
     None,
