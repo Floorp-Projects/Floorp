@@ -205,7 +205,7 @@ describe("#CachedTargetingGetter", () => {
   });
 });
 describe("#CacheListAttachedOAuthClients", () => {
-  const twoHours = 2 * 60 * 60 * 1000;
+  const fourHours = 4 * 60 * 60 * 1000;
   let sandbox;
   let clock;
   let fakeFxAccount;
@@ -232,19 +232,19 @@ describe("#CacheListAttachedOAuthClients", () => {
     clock.restore();
   });
 
-  it("should only make additional request every 2 hours", async () => {
-    clock.tick(twoHours);
+  it("should only make additional request every 4 hours", async () => {
+    clock.tick(fourHours);
 
     await authClientsCache.get();
     assert.calledOnce(fxAccounts.listAttachedOAuthClients);
 
-    clock.tick(twoHours);
+    clock.tick(fourHours);
     await authClientsCache.get();
     assert.calledTwice(fxAccounts.listAttachedOAuthClients);
   });
 
-  it("should not make additional request before 2 hours", async () => {
-    clock.tick(twoHours);
+  it("should not make additional request before 4 hours", async () => {
+    clock.tick(fourHours);
 
     await authClientsCache.get();
     assert.calledOnce(fxAccounts.listAttachedOAuthClients);

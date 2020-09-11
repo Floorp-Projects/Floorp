@@ -106,7 +106,7 @@ const FXA_USERNAME_PREF = "services.sync.username";
 
 const { activityStreamProvider: asProvider } = NewTabUtils;
 
-const FXA_ATTACHED_CLIENTS_UPDATE_INTERVAL = 2 * 60 * 60 * 1000; // Two hours
+const FXA_ATTACHED_CLIENTS_UPDATE_INTERVAL = 4 * 60 * 60 * 1000; // Four hours
 const FRECENT_SITES_UPDATE_INTERVAL = 6 * 60 * 60 * 1000; // Six hours
 const FRECENT_SITES_IGNORE_BLOCKED = false;
 const FRECENT_SITES_NUM_ITEMS = 25;
