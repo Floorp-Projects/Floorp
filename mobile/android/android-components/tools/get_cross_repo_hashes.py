@@ -47,6 +47,9 @@ to get valid hashes between the major repositories:
 1) fenix checkout -> a-c hash
     build & install Fenix, hit 3-dot -> Settings -> About Firefox Nightly
     and read hash at the end of the "AC:" line
+    OR
+    after building a release build, visit `mozilla.components.Build` from your
+    Fenix repo in Android Studio and go-to-definition on `gitHash`
 
 2) a-c checkout (current) -> GV Nightly version
     AUTOMATED: run this script
