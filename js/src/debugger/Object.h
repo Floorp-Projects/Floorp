@@ -49,9 +49,6 @@ class DebuggerObject : public NativeObject {
   static MOZ_MUST_USE bool getClassName(JSContext* cx,
                                         HandleDebuggerObject object,
                                         MutableHandleString result);
-  static MOZ_MUST_USE bool getParameterNames(
-      JSContext* cx, HandleDebuggerObject object,
-      MutableHandle<StringVector> result);
   static MOZ_MUST_USE bool getBoundTargetFunction(
       JSContext* cx, HandleDebuggerObject object,
       MutableHandleDebuggerObject result);

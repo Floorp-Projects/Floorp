@@ -353,28 +353,14 @@ bool DebuggerObject::CallData::parameterNamesGetter() {
     return true;
   }
 
-  Rooted<StringVector> names(cx, StringVector(cx));
-  if (!DebuggerObject::getParameterNames(cx, object, &names)) {
+  RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+
+  ArrayObject* arr = GetFunctionParameterNamesArray(cx, referent);
+  if (!arr) {
     return false;
   }
 
-  RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, names.length()));
-  if (!obj) {
-    return false;
-  }
-
-  obj->ensureDenseInitializedLength(cx, 0, names.length());
-  for (size_t i = 0; i < names.length(); ++i) {
-    Value v;
-    if (names[i]) {
-      v = StringValue(names[i]);
-    } else {
-      v = UndefinedValue();
-    }
-    obj->setDenseElement(i, v);
-  }
-
-  args.rval().setObject(*obj);
+  args.rval().setObject(*arr);
   return true;
 }
 
@@ -1764,45 +1750,6 @@ double DebuggerObject::promiseTimeToResolution() const {
   MOZ_ASSERT(promiseState() != JS::PromiseState::Pending);
 
   return promise()->timeToResolution();
-}
-
-/* static */
-bool DebuggerObject::getParameterNames(JSContext* cx,
-                                       HandleDebuggerObject object,
-                                       MutableHandle<StringVector> result) {
-  MOZ_ASSERT(object->isDebuggeeFunction());
-
-  RootedFunction referent(cx, &object->referent()->as<JSFunction>());
-
-  if (!result.growBy(referent->nargs())) {
-    return false;
-  }
-  if (IsInterpretedNonSelfHostedFunction(referent)) {
-    RootedScript script(cx, GetOrCreateFunctionScript(cx, referent));
-    if (!script) {
-      return false;
-    }
-
-    MOZ_ASSERT(referent->nargs() == script->numArgs());
-
-    if (referent->nargs() > 0) {
-      PositionalFormalParameterIter fi(script);
-      for (size_t i = 0; i < referent->nargs(); i++, fi++) {
-        MOZ_ASSERT(fi.argumentSlot() == i);
-        JSAtom* atom = fi.name();
-        if (atom) {
-          cx->markAtom(atom);
-        }
-        result[i].set(atom);
-      }
-    }
-  } else {
-    for (size_t i = 0; i < referent->nargs(); i++) {
-      result[i].set(nullptr);
-    }
-  }
-
-  return true;
 }
 
 /* static */

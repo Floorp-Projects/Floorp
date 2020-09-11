@@ -175,6 +175,36 @@ JSScript* js::GetOrCreateFunctionScript(JSContext* cx, HandleFunction fun) {
   return JSFunction::getOrCreateScript(cx, fun);
 }
 
+ArrayObject* js::GetFunctionParameterNamesArray(JSContext* cx,
+                                                HandleFunction fun) {
+  RootedValueVector names(cx);
+
+  // The default value for each argument is |undefined|.
+  if (!names.growBy(fun->nargs())) {
+    return nullptr;
+  }
+
+  if (IsInterpretedNonSelfHostedFunction(fun) && fun->nargs() > 0) {
+    RootedScript script(cx, GetOrCreateFunctionScript(cx, fun));
+    if (!script) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(fun->nargs() == script->numArgs());
+
+    PositionalFormalParameterIter fi(script);
+    for (size_t i = 0; i < fun->nargs(); i++, fi++) {
+      MOZ_ASSERT(fi.argumentSlot() == i);
+      if (JSAtom* atom = fi.name()) {
+        cx->markAtom(atom);
+        names[i].setString(atom);
+      }
+    }
+  }
+
+  return NewDenseCopiedArray(cx, names.length(), names.begin());
+}
+
 bool js::ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id) {
   if (!ToPropertyKey(cx, v, id)) {
     return false;
