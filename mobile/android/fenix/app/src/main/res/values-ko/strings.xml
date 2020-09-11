@@ -278,6 +278,8 @@
     <string name="preferences_open_links_in_a_private_tab">사생활 보호 탭에 링크 열기</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">사생활 보호 모드에서 스크린샷 허용</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">허용되는 경우, 여러 앱이 열려있을 때 사생활 보호 탭도 표시됨</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">사생활 보호 모드 바로 가기 추가</string>
     <!-- Preference for accessibility -->
@@ -298,6 +300,8 @@
     <string name="preferences_theme">테마</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">홈</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">제스처</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">사용자 지정</string>
     <!-- Preference description for banner about signing in -->
@@ -475,6 +479,16 @@
     <string name="preference_auto_battery_theme">배터리 절약 모드로 설정</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">기기 테마 따르기</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">당겨서 새로 고침</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">스크롤해서 툴바 숨기기</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">도구 모음을 옆으로 밀어서 탭 전환</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">도구 모음을 위로 밀어서 탭 열기</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1097,7 +1111,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">이 휴대폰의 다른 Firefox 브라우저에서 %s로 로그인했습니다. 이 계정으로 로그인하시겠습니까?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">이 기기의 다른 Firefox 브라우저에서 %s(으)로 로그인했습니다. 이 계정으로 로그인하시겠습니까?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">예, 로그인함</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1345,7 +1359,7 @@
     <string name="add_to_homescreen_text_placeholder">바로 가기 이름</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">이 웹 사이트를 휴대폰의 홈 화면에 쉽게 추가하여 앱과 같은 경험을 통해 즉시 액세스하고 더 빠르게 탐색 할 수 있습니다.</string>
+    <string name="add_to_homescreen_description_2">이 웹 사이트를 기기의 홈 화면에 쉽게 추가하여 앱과 같은 경험을 통해 즉시 액세스하고 더 빠르게 탐색 할 수 있습니다.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">로그인과 비밀번호</string>
@@ -1415,8 +1429,12 @@
     <string name="logins_site_copied">사이트가 클립보드에 복사됨</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">비밀번호 복사</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">비밀번호 지우기</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">사용자 이름 복사</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">사용자 이름 지우기</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">사이트 복사</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1574,7 +1592,7 @@
     <string name="saved_login_duplicate">해당 사용자 이름을 가진 로그인이 이미 존재합니다</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">다른 기기를 연결하세요.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">다시 인증하세요.</string>
@@ -1595,7 +1613,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">상위 사이트 제한에 도달</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">새로운 상위 사이트를 추가하려면 삭제하세요. 사이트를 길게 누르고 삭제를 선택하세요.</string>
+    <string name="top_sites_max_limit_content_2">새 상위 사이트를 추가하려면 하나를 삭제하세요. 사이트를 길게 터치하고 삭제를 선택하세요.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">확인</string>
 
@@ -1613,4 +1631,9 @@
     <string name="no_collections_header1">중요한 것들 수집하기</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">나중에 빠르게 접근할 수 있도록 유사한 검색, 사이트 및 탭을 모아 보세요.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">이 휴대폰의 다른 Firefox 브라우저에서 %s(으)로 로그인했습니다. 이 계정으로 로그인하시겠습니까?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">이 웹 사이트를 휴대폰의 홈 화면에 쉽게 추가하여 앱과 같은 경험을 통해 즉시 액세스하고 더 빠르게 탐색 할 수 있습니다.</string>
+
+    </resources>

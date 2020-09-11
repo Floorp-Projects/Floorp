@@ -290,6 +290,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Hjem</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Bevegelser</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Tilpass</string>
     <!-- Preference description for banner about signing in -->
@@ -465,6 +467,10 @@
     <string name="preference_auto_battery_theme">Innstilt av strømstyring</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Følg enhetens tema</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Trekk for å oppdatere</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1059,10 +1065,6 @@
     <string name="onboarding_account_sign_in_header">Begynn å synkronisere bokmerker, passord og mer med Firefox-kontoen din.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Les mer</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Du er logget inn som %s på en annen Firefox-nettleser på denne telefonen. Vil du logge inn med denne kontoen?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja, logg meg inn</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1313,9 +1315,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Navn på snarvei</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Du kan enkelt legge til dette nettstedet på telefonens startskjermen for å få øyeblikkelig tilgang og surfe raskere med en app-lignende opplevelse.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Innlogginger og passord</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1547,7 +1546,7 @@
     <string name="saved_login_duplicate">En innlogging med det brukernavnet eksisterer allerede</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Koble til en annen enhet.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Autentiser på nytt.</string>
@@ -1566,8 +1565,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Grense for populære nettsteder nådd</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">For å legge til et nytt populært nettsted må du fjern en annen. Trykk lenge på nettstedet og velg fjern.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, jeg skjønner</string>
 
@@ -1585,4 +1582,9 @@
     <string name="no_collections_header1">Samle tingene som betyr noe for deg</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Grupper sammen lignende søk, nettsteder og faner for rask tilgang senere.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Du er logget inn som %s på en annen Firefox-nettleser på denne telefonen. Vil du logge inn med denne kontoen?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Du kan enkelt legge til dette nettstedet på telefonens startskjermen for å få øyeblikkelig tilgang og surfe raskere med en app-lignende opplevelse.</string>
+
+    </resources>

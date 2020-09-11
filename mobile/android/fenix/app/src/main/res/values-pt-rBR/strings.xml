@@ -268,6 +268,8 @@
     <string name="preferences_open_links_in_a_private_tab">Abrir links em abas privativas</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Permitir capturas de tela na navegação privativa</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Se permitido, as abas privativas também ficam visíveis quando vários aplicativos estão abertos</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Adicionar atalho para navegação privativa</string>
     <!-- Preference for accessibility -->
@@ -288,6 +290,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Tela inicial</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gestos</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizar</string>
     <!-- Preference description for banner about signing in -->
@@ -461,6 +465,16 @@
     <string name="preference_auto_battery_theme">Definido pela economia de bateria</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Acompanhar tema do dispositivo</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Puxe para atualizar</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Deslize para ocultar a barra de ferramentas</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Deslize a barra de ferramentas para o lado para mudar de aba</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Deslize a barra de ferramentas para cima para abrir abas</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1052,7 +1066,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Você está conectado como %s em outro navegador Firefox neste celular. Quer entrar com esta conta?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Você está conectado como %s em outro navegador Firefox neste dispositivo. Quer entrar com esta conta?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Sim, entrar</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1299,7 +1313,7 @@
     <string name="add_to_homescreen_text_placeholder">Nome do atalho</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Você pode facilmente adicionar este site à tela inicial do celular para ter acesso imediato e navegar mais rápido com uma experiência semelhante a um aplicativo.</string>
+    <string name="add_to_homescreen_description_2">Você pode facilmente adicionar este site à tela inicial do dispositivo para ter acesso imediato e navegar mais rápido com uma experiência semelhante a um aplicativo.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Contas e senhas</string>
@@ -1369,8 +1383,12 @@
     <string name="logins_site_copied">Site copiado para a área de transferência</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copiar senha</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Limpar senha</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copiar nome de usuário</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Limpar nome de usuário</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar site</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1526,7 +1544,7 @@
     <string name="saved_login_duplicate">Já existe uma conta com este nome de usuário</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Conecte outro dispositivo.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Autentique novamente.</string>
@@ -1547,7 +1565,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Atingiu o limite de sites preferidos</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Para adicionar mais um site preferido, remova outro. Mantenha o dedo sobre o site e selecione remover.</string>
+    <string name="top_sites_max_limit_content_2">Para adicionar mais um site preferido, remova outro. Mantenha o dedo sobre o site e selecione remover.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, entendi</string>
 
@@ -1565,4 +1583,9 @@
     <string name="no_collections_header1">Reúna o que é importante para você</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Agrupe pesquisas, sites e abas semelhantes para acesso rápido mais tarde.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Você está conectado como %s em outro navegador Firefox neste celular. Quer entrar com esta conta?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Você pode facilmente adicionar este site à tela inicial do celular para ter acesso imediato e navegar mais rápido com uma experiência semelhante a um aplicativo.</string>
+
+    </resources>

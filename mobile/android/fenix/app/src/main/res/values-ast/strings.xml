@@ -263,6 +263,8 @@
     <string name="preferences_open_links_in_a_private_tab">Abrir los enllaces nuna llingüeta privada</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Permitir la fechura de captures nel restolar en privao</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Si s\'activa, les llingüetes privaes tamién van ser visibles cuando s\'abran munches aplicaciones</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Amestar un atayu pa restolar en privao</string>
     <!-- Preference for accessibility -->
@@ -281,6 +283,8 @@
     <string name="preferences_theme">Estilu</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Aniciu</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Xestos</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalización</string>
     <!-- Preference description for banner about signing in -->
@@ -1228,7 +1232,7 @@
     <string name="add_to_homescreen_text_placeholder">Nome del atayu</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Pues amestar fácilmente esti sitiu web a la pantalla d\'aniciu del preséu p\'acceder nel intre y restolalu como si fore una aplicación.</string>
+    <string name="add_to_homescreen_description_2">Pues amestar fácilmente esti sitiu web a la pantalla d\'Aniciu del preséu p\'acceder aína a elli como si fore una aplicación nativa.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Anicios de sesión y contraseñes</string>
@@ -1462,8 +1466,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Algamóse la llende de sitios destacaos</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">P\'amestar sitios nuevos desanicia dalgún. Ten primíu un sitiu y esbilla Desaniciar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Val, entendílo</string>
 
@@ -1478,4 +1480,7 @@
     <string name="no_collections_header1">Coleiciona les coses que t\'importen</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Agrupa busques, sitios y llingüetes asemeyaos p\'acceder aína a ellos dempués.</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Pues amestar fácilmente esti sitiu web a la pantalla d\'aniciu del preséu p\'acceder nel intre y restolalu como si fore una aplicación.</string>
+
     </resources>

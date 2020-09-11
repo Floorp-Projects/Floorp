@@ -272,6 +272,8 @@
     <string name="preferences_open_links_in_a_private_tab">Öppna länkar i en privat flik</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Tillåt skärmdumpar i privat surfning</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Om tillåtet kommer privata flikar också att visas när flera appar är öppna</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Lägg till genväg för privat surfning</string>
     <!-- Preference for accessibility -->
@@ -292,6 +294,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Hem</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gester</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Anpassa</string>
     <!-- Preference description for banner about signing in -->
@@ -469,6 +473,16 @@
     <string name="preference_auto_battery_theme">Bestämd av energisparläge</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Följ enhetens tema</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Dra för att uppdatera</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Bläddra för att dölja verktygsfältet</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Svep verktygsfältet i sidled för att byta flik</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Svep verktygsfältet uppåt för att öppna flikar</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1068,7 +1082,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Du är inloggad som %s på en annan Firefox-webbläsare på den här telefonen. Vill du logga in med det här kontot?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Du är inloggad som %s i en annan Firefox-webbläsare på den här enheten. Vill du logga in med det här kontot?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja, logga in mig</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1315,7 +1329,7 @@
     <string name="add_to_homescreen_text_placeholder">Genvägens namn</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Du kan enkelt lägga till den här webbplatsen på telefonens startsida för att få direktåtkomst och surfa snabbare med en appliknande upplevelse.</string>
+    <string name="add_to_homescreen_description_2">Du kan enkelt lägga till den här webbplatsen på enhetens startskärm för att få direktåtkomst och surfa snabbare med en appliknande upplevelse.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Inloggningar och lösenord</string>
@@ -1385,8 +1399,12 @@
     <string name="logins_site_copied">Webbplats kopierad till urklipp</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopiera lösenord</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Rensa lösenord</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopiera användarnamn</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Rensa användarnamn</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopiera webbplats</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1542,7 +1560,7 @@
     <string name="saved_login_duplicate">En inloggning med det användarnamnet finns redan</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Anslut en annan enhet.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Bekräfta igen.</string>
@@ -1562,7 +1580,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Övre gräns för mest besökta nådd</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">För att lägga till en ny mest besökt sida, ta bort en. Tryck länge på webbplatsen och välj ta bort.</string>
+    <string name="top_sites_max_limit_content_2">För att lägga till en ny mest besökt sida, ta bort en. Tryck länge på webbplatsen och välj ta bort.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, jag förstår</string>
 
@@ -1580,4 +1598,9 @@
     <string name="no_collections_header1">Samla de saker som är viktiga för dig</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Gruppera liknande sökningar, webbplatser och flikar för snabb åtkomst senare.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Du är inloggad som %s på en annan Firefox-webbläsare på den här telefonen. Vill du logga in med det här kontot?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Du kan enkelt lägga till den här webbplatsen på telefonens startsida för att få direktåtkomst och surfa snabbare med en appliknande upplevelse.</string>
+
+    </resources>

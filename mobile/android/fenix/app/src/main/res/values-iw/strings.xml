@@ -265,6 +265,8 @@
     <string name="preferences_open_links_in_a_private_tab">פתיחת קישורים בלשונית פרטית</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">לאפשר צילומי מסך בגלישה פרטית</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">אם אפשרות זו מופעלת, לשוניות פרטיות תהיינה מוצגות כאשר מספר יישומונים פתוחים</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">הוספת קיצור דרך לגלישה פרטית</string>
     <!-- Preference for accessibility -->
@@ -283,6 +285,8 @@
     <string name="preferences_theme">ערכת נושא</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">בית</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">מחוות</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">התאמה אישית</string>
     <!-- Preference description for banner about signing in -->
@@ -454,6 +458,16 @@
     <string name="preference_dark_theme">כהה</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">שימוש בערכת הנושא של המכשיר</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">משיכה לרענון הדף</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">גלילה להסתרת סרגל הכלים</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">החלקה על סרגל הכלים כלפי הצדדים למעבר בין לשוניות</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">החלקה על סרגל הכלים כלפי מעלה לפתיחת לשוניות</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1046,7 +1060,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">דפדפן Firefox נוסף בטלפון זה מחובר כ־%s. האם ברצונך להתחבר עם חשבון זה?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">דפדפן Firefox נוסף במכשיר זה מחובר כ־%s. האם ברצונך להתחבר עם חשבון זה?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">כן, תחברו אותי</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1288,7 +1302,7 @@
     <string name="add_to_homescreen_text_placeholder">שם קיצור הדרך</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">באפשרותך להוסיף בקלות אתר זה למסך הבית של הטלפון שלך כדי לקבל גישה מיידית ולגלוש מהר יותר עם חוויה שמדמה שימוש ביישומון.</string>
+    <string name="add_to_homescreen_description_2">באפשרותך להוסיף בקלות אתר זה למסך הבית של המכשיר שלך כדי לקבל גישה מיידית ולגלוש מהר יותר עם חוויה שמדמה שימוש ביישומון.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">כניסות וססמאות</string>
@@ -1350,8 +1364,12 @@
     <string name="logins_site_copied">האתר הועתק ללוח</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">העתקת ססמה</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">ניקוי ססמה</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">העתקת שם משתמש</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">ניקוי שם משתמש</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">העתקת אתר</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1503,7 +1521,7 @@
     <string name="saved_login_duplicate">כבר קיימת כניסה עם שם משתמש זה</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">נא לחבר מכשיר נוסף.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">נא להפעיל סנכרון לשוניות.</string>
@@ -1522,7 +1540,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">הגעת למכסת האתרים המובילים</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">כדי להוסיף אתר מוביל חדש, יש להסיר אחד אחר. יש ללחוץ לחיצה ארוכה על האתר ולבחור ב״הסרה״.</string>
+    <string name="top_sites_max_limit_content_2">כדי להוסיף אתר מוביל חדש, יש להסיר אחד אחר. יש ללחוץ לחיצה ארוכה על האתר ולבחור ב״הסרה״.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">בסדר, הבנתי</string>
 
@@ -1540,4 +1558,9 @@
     <string name="no_collections_header1">לאסוף את הדברים החשובים לך</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">ניתן לקבץ חיפושים, אתרים ולשוניות דומים יחד כדי לגשת אליהם מהר יותר בהמשך.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">דפדפן Firefox נוסף בטלפון זה מחובר כ־%s. האם ברצונך להתחבר עם חשבון זה?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">באפשרותך להוסיף בקלות אתר זה למסך הבית של הטלפון שלך כדי לקבל גישה מיידית ולגלוש מהר יותר עם חוויה שמדמה שימוש ביישומון.</string>
+
+    </resources>

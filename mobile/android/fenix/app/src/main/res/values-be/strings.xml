@@ -402,6 +402,8 @@
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Доследы</string>
 
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Дазваляе Mozilla ўсталёўваць эксперыментальныя функцыі і збіраць звесткі для іх</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Паведамляльнік пра крахі</string>
     <!-- Preference switch for Mozilla location service -->
@@ -934,6 +936,9 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Аўтаматычны памер шрыфту</string>
 
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Памер шрыфту будзе адпавядаць наладам Android. Адключыце, каб кіраваць шрыфтам тут.</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Выдаліць дадзеныя аглядання</string>
     <!-- Title for the tabs item in Delete browsing data -->
@@ -1184,6 +1189,8 @@
     <string name="etp_cryptominers_title">Майнеры крыптавалют</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Збіральнікі лічбавых адбіткаў</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Спыняе збор унікальнай ідэнтыфікацыйнай інфармацыі пра вашу прыладу, якая можа быць выкарыстана для сачэння.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Змест з элементамі сачэння</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
@@ -1354,6 +1361,9 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Апошняе выкарыстанне</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню сартавання лагінаў</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Дадаць пашукавік</string>
     <!-- Title of the Edit search engine screen -->
@@ -1474,7 +1484,7 @@
     <string name="saved_login_duplicate">Лагін з такім імем карыстальніка ўжо існуе</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Падключыць іншую прыладу.</string>
 
     <!-- Text displayed asking user to re-authenticate -->
