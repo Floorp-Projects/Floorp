@@ -6,6 +6,8 @@
 
 #include "EarlyBlankWindow.h"
 
+#include <algorithm>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/glue/Debug.h"
@@ -72,8 +74,198 @@ int CSSToDevPixels(int cssPixels, double scaling) {
   return floor(asDouble + 0.5);
 }
 
+struct ColorRect {
+  uint32_t color;
+  uint32_t x;
+  uint32_t y;
+  uint32_t width;
+  uint32_t height;
+};
+
 void DrawSkeletonUI(HWND hWnd) {
-  // TODO - here is where we will draw a skeleton UI for the application
+  if (!sGetSystemMetricsForDpi || !sGetDpiForWindow) {
+    return;
+  }
+
+  // NOTE: we opt here to paint a pixel buffer for the application chrome by
+  // hand, without using native UI library methods. Why do we do this?
+  //
+  // 1) It gives us a little bit more control, especially if we want to animate
+  //    any of this.
+  // 2) It's actually more portable. We can do this on any platform where we
+  //    can blit a pixel buffer to the screen, and it only has to change
+  //    insofar as the UI is different on those platforms (and thus would have
+  //    to change anyway.)
+  //
+  // The performance impact of this ought to be negligible. As far as has been
+  // observed, on slow reference hardware this might take up to a millisecond,
+  // for a startup which otherwise takes 30 seconds.
+  //
+  // The readability and maintainability are a greater concern. When the
+  // silhouette of Firefox's core UI changes, this code will likely need to
+  // change. However, for the foreseeable future, our skeleton UI will be mostly
+  // axis-aligned geometric shapes, and the thought is that any code which is
+  // manipulating raw pixels should not be *too* hard to maintain and
+  // understand so long as it is only painting such simple shapes.
+
+  // found in browser-aero.css ":root[tabsintitlebar]:not(:-moz-lwtheme)"
+  // (set to "hsl(235,33%,19%)")
+  uint32_t tabBarColor = 0x202340;
+  // --toolbar-non-lwt-bgcolor in browser.css
+  uint32_t backgroundColor = 0xf9f9fa;
+  // --chrome-content-separator-color in browser.css
+  uint32_t chromeContentDividerColor = 0xe2e1e3;
+  // We define this, but it will need to differ based on theme
+  uint32_t toolbarForegroundColor = 0xe5e5e5;
+  // controlled by css variable --tab-line-color
+  uint32_t tabLineColor = 0x0a75d3;
+
+  int chromeHorMargin = CSSToDevPixels(2, sCSSToDevPixelScaling);
+  int dpi = sGetDpiForWindow(hWnd);
+  int topOffset = sGetSystemMetricsForDpi(SM_CYBORDER, dpi);
+  int nonClientHorMargins = sGetSystemMetricsForDpi(SM_CXFRAME, dpi) +
+                            sGetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+  int horizontolOffset = nonClientHorMargins - chromeHorMargin;
+
+  // found in tabs.inc.css, "--tab-min-height" - depends on uidensity variable
+  int tabBarHeight = CSSToDevPixels(33, sCSSToDevPixelScaling) + topOffset;
+  // found in tabs.inc.css, ".titlebar-spacer"
+  int titlebarSpacerWidth =
+      CSSToDevPixels(40, sCSSToDevPixelScaling) + horizontolOffset;
+  // found in tabs.inc.css, ".tab-line"
+  int tabLineHeight = CSSToDevPixels(2, sCSSToDevPixelScaling) + topOffset;
+  int selectedTabWidth = CSSToDevPixels(224, sCSSToDevPixelScaling);
+
+  int toolbarHeight = CSSToDevPixels(39, sCSSToDevPixelScaling);
+
+  int tabPlaceholderBarMarginTop = CSSToDevPixels(13, sCSSToDevPixelScaling);
+  int tabPlaceholderBarMarginLeft = CSSToDevPixels(10, sCSSToDevPixelScaling);
+  int tabPlaceholderBarHeight = CSSToDevPixels(8, sCSSToDevPixelScaling);
+  int tabPlaceholderBarWidth = CSSToDevPixels(120, sCSSToDevPixelScaling);
+
+  int toolbarPlaceholderMarginTop = CSSToDevPixels(16, sCSSToDevPixelScaling);
+  int toolbarPlaceholderMarginLeft = CSSToDevPixels(9, sCSSToDevPixelScaling);
+  int toolbarPlaceholderMarginRight = CSSToDevPixels(11, sCSSToDevPixelScaling);
+  int toolbarPlaceholderWidth = CSSToDevPixels(90, sCSSToDevPixelScaling);
+  int toolbarPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
+
+  // The (traditionally dark blue on Windows) background of the tab bar.
+  ColorRect tabBar = {};
+  tabBar.color = tabBarColor;
+  tabBar.x = 0;
+  tabBar.y = 0;
+  tabBar.width = sWindowWidth;
+  tabBar.height = tabBarHeight;
+
+  // The blue highlight at the top of the initial selected tab
+  ColorRect tabLine = {};
+  tabLine.color = tabLineColor;
+  tabLine.x = titlebarSpacerWidth;
+  tabLine.y = 0;
+  tabLine.width = selectedTabWidth;
+  tabLine.height = tabLineHeight;
+
+  // The initial selected tab
+  ColorRect selectedTab = {};
+  selectedTab.color = backgroundColor;
+  selectedTab.x = titlebarSpacerWidth;
+  selectedTab.y = tabLineHeight;
+  selectedTab.width = selectedTabWidth;
+  selectedTab.height = tabBarHeight;
+
+  // A placeholder rect representing text that will fill the selected tab title
+  ColorRect tabTextPlaceholder = {};
+  tabTextPlaceholder.color = toolbarForegroundColor;
+  tabTextPlaceholder.x = selectedTab.x + tabPlaceholderBarMarginLeft;
+  tabTextPlaceholder.y = selectedTab.y + tabPlaceholderBarMarginTop;
+  tabTextPlaceholder.width = tabPlaceholderBarWidth;
+  tabTextPlaceholder.height = tabPlaceholderBarHeight;
+
+  // The toolbar background
+  ColorRect toolbar = {};
+  toolbar.color = backgroundColor;
+  toolbar.x = 0;
+  toolbar.y = tabBarHeight;
+  toolbar.width = sWindowWidth;
+  toolbar.height = toolbarHeight;
+
+  // A placeholder rect representing UI elements that will fill the left part
+  // of the toolbar
+  ColorRect leftToolbarPlaceholder = {};
+  leftToolbarPlaceholder.color = toolbarForegroundColor;
+  leftToolbarPlaceholder.x =
+      toolbar.x + toolbarPlaceholderMarginLeft + horizontolOffset;
+  leftToolbarPlaceholder.y = toolbar.y + toolbarPlaceholderMarginTop;
+  leftToolbarPlaceholder.width = toolbarPlaceholderWidth;
+  leftToolbarPlaceholder.height = toolbarPlaceholderHeight;
+
+  // A placeholder rect representing UI elements that will fill the right part
+  // of the toolbar
+  ColorRect rightToolbarPlaceholder = {};
+  rightToolbarPlaceholder.color = toolbarForegroundColor;
+  rightToolbarPlaceholder.x = sWindowWidth - horizontolOffset -
+                              toolbarPlaceholderMarginRight -
+                              toolbarPlaceholderWidth;
+  rightToolbarPlaceholder.y = toolbar.y + toolbarPlaceholderMarginTop;
+  rightToolbarPlaceholder.width = toolbarPlaceholderWidth;
+  rightToolbarPlaceholder.height = toolbarPlaceholderHeight;
+
+  // The single-pixel divider line below the toolbar
+  ColorRect chromeContentDivider = {};
+  chromeContentDivider.color = chromeContentDividerColor;
+  chromeContentDivider.x = 0;
+  chromeContentDivider.y = toolbar.y + toolbar.height;
+  chromeContentDivider.width = sWindowWidth;
+  chromeContentDivider.height = 1;
+
+  ColorRect rects[] = {
+      tabBar,
+      tabLine,
+      selectedTab,
+      tabTextPlaceholder,
+      toolbar,
+      leftToolbarPlaceholder,
+      rightToolbarPlaceholder,
+      chromeContentDivider,
+  };
+
+  int totalChromeHeight = chromeContentDivider.y + chromeContentDivider.height;
+
+  uint32_t* pixelBuffer =
+      (uint32_t*)calloc(sWindowWidth * totalChromeHeight, sizeof(uint32_t));
+
+  for (int i = 0; i < sizeof(rects) / sizeof(rects[0]); ++i) {
+    ColorRect rect = rects[i];
+    for (int y = rect.y; y < rect.y + rect.height; ++y) {
+      uint32_t* lineStart = &pixelBuffer[y * sWindowWidth];
+      uint32_t* dataStart = lineStart + rect.x;
+      std::fill(dataStart, dataStart + rect.width, rect.color);
+    }
+  }
+
+  HDC hdc = ::GetWindowDC(hWnd);
+
+  BITMAPINFO chromeBMI = {};
+  chromeBMI.bmiHeader.biSize = sizeof(chromeBMI.bmiHeader);
+  chromeBMI.bmiHeader.biWidth = sWindowWidth;
+  chromeBMI.bmiHeader.biHeight = -totalChromeHeight;
+  chromeBMI.bmiHeader.biPlanes = 1;
+  chromeBMI.bmiHeader.biBitCount = 32;
+  chromeBMI.bmiHeader.biCompression = BI_RGB;
+
+  // First, we just paint the chrome area with our pixel buffer
+  ::StretchDIBits(hdc, 0, 0, sWindowWidth, totalChromeHeight, 0, 0,
+                  sWindowWidth, totalChromeHeight, pixelBuffer, &chromeBMI,
+                  DIB_RGB_COLORS, SRCCOPY);
+
+  // Then, we just fill the rest with FillRect
+  RECT rect = {0, totalChromeHeight, (LONG)sWindowWidth, (LONG)sWindowHeight};
+  HBRUSH brush = ::CreateSolidBrush(backgroundColor);
+  ::FillRect(hdc, &rect, brush);
+
+  ::ReleaseDC(hWnd, hdc);
+
+  free(pixelBuffer);
 }
 
 LRESULT WINAPI EarlyBlankWindowProc(HWND hWnd, UINT msg, WPARAM wParam,
