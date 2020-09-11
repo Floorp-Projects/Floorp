@@ -15,13 +15,7 @@ import { FirstRun } from "./templates/FirstRun/FirstRun";
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
-const TEMPLATES_ABOVE_PAGE = [
-  "trailhead",
-  "full_page_interrupt",
-  "return_to_amo_overlay",
-  "extended_triplets",
-];
-const FIRST_RUN_TEMPLATES = TEMPLATES_ABOVE_PAGE;
+const TEMPLATES_ABOVE_PAGE = ["extended_triplets"];
 const TEMPLATES_BELOW_SEARCH = ["simple_below_search_snippet"];
 
 export const ASRouterUtils = {
@@ -127,7 +121,7 @@ export class ASRouterUISurface extends React.PureComponent {
     this.onUserAction = this.onUserAction.bind(this);
     this.fetchFlowParams = this.fetchFlowParams.bind(this);
 
-    this.state = { message: {}, interruptCleared: false };
+    this.state = { message: {} };
     if (props.document) {
       this.headerPortal = props.document.getElementById(
         "header-asrouter-container"
@@ -259,8 +253,6 @@ export class ASRouterUISurface extends React.PureComponent {
 
     if (id === this.state.message.id) {
       this.setState({ message: {} });
-      // Remove any styles related to the RTAMO message
-      document.body.classList.remove("welcome", "hide-main", "amo");
     }
   }
 
@@ -268,9 +260,6 @@ export class ASRouterUISurface extends React.PureComponent {
     switch (action.type) {
       case "SET_MESSAGE":
         this.setState({ message: action.data });
-        break;
-      case "CLEAR_INTERRUPT":
-        this.setState({ interruptCleared: true });
         break;
       case "CLEAR_MESSAGE":
         this.clearMessage(action.data.id);
@@ -290,21 +279,10 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   requestMessage(endpoint) {
-    // If we are loading about:welcome we want to trigger the onboarding messages
-    if (
-      this.props.document &&
-      this.props.document.location.href === "about:welcome"
-    ) {
-      ASRouterUtils.sendMessage({
-        type: "TRIGGER",
-        data: { trigger: { id: "firstRun" } },
-      });
-    } else {
-      ASRouterUtils.sendMessage({
-        type: "NEWTAB_MESSAGE_REQUEST",
-        data: { endpoint },
-      });
-    }
+    ASRouterUtils.sendMessage({
+      type: "NEWTAB_MESSAGE_REQUEST",
+      data: { endpoint },
+    });
   }
 
   componentWillMount() {
@@ -401,7 +379,7 @@ export class ASRouterUISurface extends React.PureComponent {
 
   renderFirstRun() {
     const { message } = this.state;
-    if (FIRST_RUN_TEMPLATES.includes(message.template)) {
+    if (TEMPLATES_ABOVE_PAGE.includes(message.template)) {
       return (
         <ImpressionsWrapper
           id="FIRST_RUN"
@@ -413,11 +391,9 @@ export class ASRouterUISurface extends React.PureComponent {
         >
           <FirstRun
             document={this.props.document}
-            interruptCleared={this.state.interruptCleared}
             message={message}
             sendUserActionTelemetry={this.sendUserActionTelemetry}
             executeAction={ASRouterUtils.executeAction}
-            dispatch={this.props.dispatch}
             onBlockById={ASRouterUtils.blockById}
             onDismiss={this.onDismissById(this.state.message.id)}
             fxaEndpoint={this.props.fxaEndpoint}
