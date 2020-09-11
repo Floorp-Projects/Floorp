@@ -1,4 +1,8 @@
-import { UTSessionPing, UTUserEventPing } from "test/schemas/pings";
+import {
+  UTSessionPing,
+  UTTrailheadEnrollPing,
+  UTUserEventPing,
+} from "test/schemas/pings";
 import { GlobalOverrider } from "test/unit/utils";
 import { UTEventReporting } from "lib/UTEventReporting.jsm";
 
@@ -45,6 +49,21 @@ const FAKE_SESSION_PING_UT = [
     page: "about:newtab",
   },
 ];
+const FAKE_TRAILHEAD_ENROLL_EVENT = {
+  experiment: "activity-stream-trailhead-firstrun-interrupts",
+  type: "as-firstrun",
+  branch: "supercharge",
+};
+const FAKE_TRAILHEAD_ENROLL_EVENT_UT = [
+  "activity_stream",
+  "enroll",
+  "preference_study",
+  "activity-stream-trailhead-firstrun-interrupts",
+  {
+    experimentType: "as-firstrun",
+    branch: "supercharge",
+  },
+];
 
 describe("UTEventReporting", () => {
   let globals;
@@ -87,6 +106,19 @@ describe("UTEventReporting", () => {
 
       let ping = global.Services.telemetry.recordEvent.firstCall.args;
       assert.validate(ping, UTSessionPing);
+    });
+  });
+
+  describe("#sendTrailheadEnrollEvent()", () => {
+    it("should queue up the correct data to send to Events Telemetry", async () => {
+      utEvents.sendTrailheadEnrollEvent(FAKE_TRAILHEAD_ENROLL_EVENT);
+      assert.calledWithExactly(
+        global.Services.telemetry.recordEvent,
+        ...FAKE_TRAILHEAD_ENROLL_EVENT_UT
+      );
+
+      let ping = global.Services.telemetry.recordEvent.firstCall.args;
+      assert.validate(ping, UTTrailheadEnrollPing);
     });
   });
 

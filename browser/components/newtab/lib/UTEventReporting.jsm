@@ -23,6 +23,7 @@ this.UTEventReporting = class UTEventReporting {
     Services.telemetry.setEventRecordingEnabled("activity_stream", true);
     this.sendUserEvent = this.sendUserEvent.bind(this);
     this.sendSessionEndEvent = this.sendSessionEndEvent.bind(this);
+    this.sendTrailheadEnrollEvent = this.sendTrailheadEnrollEvent.bind(this);
   }
 
   _createExtras(data) {
@@ -57,6 +58,19 @@ this.UTEventReporting = class UTEventReporting {
       "session",
       String(data.session_duration),
       this._createExtras(data)
+    );
+  }
+
+  sendTrailheadEnrollEvent(data) {
+    Services.telemetry.recordEvent(
+      "activity_stream",
+      "enroll",
+      "preference_study",
+      data.experiment,
+      {
+        experimentType: data.type,
+        branch: data.branch,
+      }
     );
   }
 

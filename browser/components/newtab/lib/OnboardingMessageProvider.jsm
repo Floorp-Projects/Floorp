@@ -3,6 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 /* globals Localization */
+ChromeUtils.defineModuleGetter(
+  this,
+  "AttributionCode",
+  "resource:///modules/AttributionCode.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonRepository",
+  "resource://gre/modules/addons/AddonRepository.jsm"
+);
 const { FX_MONITOR_OAUTH_CLIENT_ID } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
@@ -15,7 +25,146 @@ const L10N = new Localization([
   "browser/newtab/onboarding.ftl",
 ]);
 
+const TRAILHEAD_ONBOARDING_TEMPLATE = {
+  trigger: { id: "firstRun" },
+  template: "trailhead",
+  includeBundle: {
+    length: 3,
+    template: "onboarding",
+    trigger: { id: "showOnboarding" },
+  },
+};
+
+const TRAILHEAD_FULL_PAGE_CONTENT = {
+  title: { string_id: "onboarding-welcome-body" },
+  learn: {
+    text: { string_id: "onboarding-welcome-learn-more" },
+    url: "https://www.mozilla.org/firefox/accounts/",
+  },
+  form: {
+    title: { string_id: "onboarding-welcome-form-header" },
+    text: { string_id: "onboarding-join-form-body" },
+    email: { string_id: "onboarding-fullpage-form-email" },
+    button: { string_id: "onboarding-join-form-continue" },
+  },
+};
+
+const DEFAULT_WELCOME_CONTENT = {
+  className: "welcomeCohort",
+  benefits: ["sync", "monitor", "lockwise"].map(id => ({
+    id,
+    title: { string_id: `onboarding-benefit-${id}-title` },
+    text: { string_id: `onboarding-benefit-${id}-text` },
+  })),
+  learn: {
+    text: { string_id: "onboarding-welcome-modal-family-learn-more" },
+    url: "https://www.mozilla.org/firefox/accounts/",
+  },
+  form: {
+    title: { string_id: "onboarding-welcome-form-header" },
+    text: { string_id: "onboarding-join-form-body" },
+    email: { string_id: "onboarding-join-form-email" },
+    button: { string_id: "onboarding-join-form-continue" },
+  },
+  skipButton: { string_id: "onboarding-start-browsing-button-label" },
+};
+
 const ONBOARDING_MESSAGES = () => [
+  {
+    id: "TRAILHEAD_1",
+    utm_term: "trailhead-join",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      ...DEFAULT_WELCOME_CONTENT,
+      title: { string_id: "onboarding-welcome-body" },
+    },
+  },
+  {
+    id: "TRAILHEAD_2",
+    targeting: "trailheadInterrupt == 'sync'",
+    utm_term: "trailhead-sync",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      className: "syncCohort",
+      title: { string_id: "onboarding-sync-welcome-header" },
+      subtitle: { string_id: "onboarding-sync-welcome-content" },
+      benefits: [],
+      learn: {
+        text: { string_id: "onboarding-sync-welcome-learn-more-link" },
+        url: "https://www.mozilla.org/firefox/accounts/",
+      },
+      form: {
+        title: { string_id: "onboarding-sync-form-header" },
+        text: { string_id: "onboarding-sync-form-sub-header" },
+        email: { string_id: "onboarding-sync-form-input" },
+        button: { string_id: "onboarding-sync-form-continue-button" },
+      },
+      skipButton: { string_id: "onboarding-sync-form-skip-login-button" },
+    },
+  },
+  {
+    id: "TRAILHEAD_3",
+    targeting: "trailheadInterrupt == 'cards'",
+    utm_term: "trailhead-cards",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+  },
+  {
+    id: "TRAILHEAD_4",
+    template: "trailhead",
+    targeting: "trailheadInterrupt == 'nofirstrun'",
+    trigger: { id: "firstRun" },
+  },
+  {
+    id: "TRAILHEAD_6",
+    targeting: "trailheadInterrupt == 'modal_variant_a'",
+    utm_term: "trailhead-modal_variant_a",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      ...DEFAULT_WELCOME_CONTENT,
+      title: { string_id: "onboarding-welcome-modal-get-body" },
+    },
+  },
+  {
+    id: "TRAILHEAD_7",
+    targeting: "trailheadInterrupt == 'modal_variant_b'",
+    utm_term: "trailhead-modal_variant_b",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      ...DEFAULT_WELCOME_CONTENT,
+      title: { string_id: "onboarding-welcome-modal-supercharge-body" },
+    },
+  },
+  {
+    id: "TRAILHEAD_8",
+    targeting: "trailheadInterrupt == 'modal_variant_c'",
+    utm_term: "trailhead-modal_variant_c",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      ...DEFAULT_WELCOME_CONTENT,
+      title: { string_id: "onboarding-welcome-modal-privacy-body" },
+    },
+  },
+  {
+    id: "FULL_PAGE_1",
+    targeting: "trailheadInterrupt == 'full_page_d'",
+    utm_term: "trailhead-full_page_d",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      ...TRAILHEAD_FULL_PAGE_CONTENT,
+    },
+    template: "full_page_interrupt",
+  },
+  {
+    id: "FULL_PAGE_2",
+    targeting: "trailheadInterrupt == 'full_page_e'",
+    utm_term: "trailhead-full_page_e",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      className: "fullPageCardsAtTop",
+      ...TRAILHEAD_FULL_PAGE_CONTENT,
+    },
+    template: "full_page_interrupt",
+  },
   {
     id: "EXTENDED_TRIPLETS_1",
     template: "extended_triplets",
@@ -300,6 +449,38 @@ const ONBOARDING_MESSAGES = () => [
     trigger: { id: "showOnboarding" },
   },
   {
+    id: "RETURN_TO_AMO_1",
+    template: "return_to_amo_overlay",
+    content: {
+      header: { string_id: "onboarding-welcome-header" },
+      title: { string_id: "return-to-amo-sub-header" },
+      addon_icon: null,
+      icon: "gift-extension",
+      text: {
+        string_id: "return-to-amo-addon-header",
+        args: { "addon-name": null },
+      },
+      primary_button: {
+        label: { string_id: "return-to-amo-extension-button" },
+        action: {
+          type: "INSTALL_ADDON_FROM_URL",
+          data: { url: null, telemetrySource: "rtamo" },
+        },
+      },
+      secondary_button: {
+        label: { string_id: "return-to-amo-get-started-button" },
+      },
+    },
+    includeBundle: {
+      length: 3,
+      template: "onboarding",
+      trigger: { id: "showOnboarding" },
+    },
+    targeting:
+      "attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",
+    trigger: { id: "firstRun" },
+  },
+  {
     id: "FXA_ACCOUNTS_BADGE",
     template: "toolbar_badge",
     content: {
@@ -354,6 +535,40 @@ const OnboardingMessageProvider = {
         continue;
       }
 
+      // We need some addon info if we are showing return to amo overlay, so fetch
+      // that, and update the message accordingly
+      if (msg.template === "return_to_amo_overlay") {
+        try {
+          const { name, iconURL, url } = await this.getAddonInfo();
+          // If we do not have all the data from the AMO api to indicate to the user
+          // what they are installing we don't want to show the message
+          if (!name || !iconURL || !url) {
+            continue;
+          }
+
+          msg.content.text.args["addon-name"] = name;
+          msg.content.addon_icon = iconURL;
+          msg.content.primary_button.action.data.url = url;
+        } catch (e) {
+          continue;
+        }
+
+        // We know we want to show this message, so translate message strings
+        const [
+          primary_button_string,
+          title_string,
+          text_string,
+        ] = await L10N.formatMessages([
+          { id: msg.content.primary_button.label.string_id },
+          { id: msg.content.title.string_id },
+          { id: msg.content.text.string_id, args: msg.content.text.args },
+        ]);
+        translatedMessage.content.primary_button.label =
+          primary_button_string.value;
+        translatedMessage.content.title = title_string.value;
+        translatedMessage.content.text = text_string.value;
+      }
+
       // Translate any secondary buttons separately
       if (msg.content.secondary_button) {
         const [secondary_button_string] = await L10N.formatMessages([
@@ -371,6 +586,40 @@ const OnboardingMessageProvider = {
       translatedMessages.push(translatedMessage);
     }
     return translatedMessages;
+  },
+  async getAddonInfo() {
+    try {
+      let { content, source } = await AttributionCode.getAttrDataAsync();
+      if (!content || source !== "addons.mozilla.org") {
+        return null;
+      }
+      // Attribution data can be double encoded
+      while (content.includes("%")) {
+        try {
+          const result = decodeURIComponent(content);
+          if (result === content) {
+            break;
+          }
+          content = result;
+        } catch (e) {
+          break;
+        }
+      }
+      const [addon] = await AddonRepository.getAddonsByIDs([content]);
+      if (addon.sourceURI.scheme !== "https") {
+        return null;
+      }
+      return {
+        name: addon.name,
+        url: addon.sourceURI.spec,
+        iconURL: addon.icons["64"] || addon.icons["32"],
+      };
+    } catch (e) {
+      Cu.reportError(
+        "Failed to get the latest add-on version for Return to AMO"
+      );
+      return null;
+    }
   },
 };
 this.OnboardingMessageProvider = OnboardingMessageProvider;

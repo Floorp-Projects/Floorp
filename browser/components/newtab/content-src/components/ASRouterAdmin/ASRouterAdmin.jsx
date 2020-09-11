@@ -516,7 +516,7 @@ export class ASRouterAdminInner extends React.PureComponent {
       collapsedMessages: [],
       modifiedMessages: [],
       evaluationStatus: {},
-      trailheadTriplet: "",
+      trailhead: {},
       stringTargetingParameters: null,
       newStringTargetingParameters: null,
       copiedToClipboard: false,
@@ -1624,12 +1624,17 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   renderTrailheadInfo() {
+    const { trailheadInterrupt, trailheadTriplet } = this.state.trailhead;
     return (
       <table className="minimal-table">
         <tbody>
           <tr>
+            <td>Interrupt branch</td>
+            <td>{trailheadInterrupt}</td>
+          </tr>
+          <tr>
             <td>Triplet branch</td>
-            <td>{this.state.trailheadTriplet}</td>
+            <td>{trailheadTriplet}</td>
           </tr>
         </tbody>
       </table>

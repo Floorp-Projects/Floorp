@@ -61,15 +61,16 @@ export class Triplets extends React.PureComponent {
       cards,
       headerId,
       showCardPanel,
+      showContent,
       sendUserActionTelemetry,
     } = this.props;
     return (
       <div
         className={`trailheadCards ${showCardPanel ? "expanded" : "collapsed"}`}
       >
-        <div className="trailheadCardsInner" aria-hidden={!showCardPanel}>
+        <div className="trailheadCardsInner" aria-hidden={!showContent}>
           {headerId && <h1 data-l10n-id={headerId} />}
-          <div className={`trailheadCardGrid${showCardPanel ? " show" : ""}`}>
+          <div className={`trailheadCardGrid${showContent ? " show" : ""}`}>
             {cards.map(card => (
               <OnboardingCard
                 key={card.id}
