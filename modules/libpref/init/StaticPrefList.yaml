@@ -8622,6 +8622,30 @@
   value: true
   mirror: always
 
+# The default DPI for printing.
+#
+# For PDF-based output, DPI should ideally be irrelevant, but in fact it is not
+# for multiple reasons:
+#
+#  * Layout code that tries to respect device pixels (e.g. for snapping glyph
+#    positions and baselines, and especially for the "GDI Classic"
+#    rendering-mode threshold for certain fonts).
+#
+#  * The limitations of the PDF format mean that we can't natively represent
+#    certain effects, such as filters, in PDF output, so we need to rasterize
+#    the parts of the document with these applied.
+#
+#  * Other rasterized things like images and such are also affected by DPI
+#    (both in the output, and the images we select via srcset, for example).
+#
+# Therefore, using a high DPI is preferable. For now, we use 144dpi to match
+# physical printer output on Windows, but higher (e.g. 300dpi) might be better
+# if it does not lead to issues such as excessive memory use.
+- name: print.default_dpi
+  type: float
+  value: 144.0f
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "privacy."
 #---------------------------------------------------------------------------
