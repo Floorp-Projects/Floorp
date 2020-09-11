@@ -2,22 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsNSSCertValidity_h
-#define nsNSSCertValidity_h
+#ifndef X509CertValidity_h
+#define X509CertValidity_h
 
 #include "DateTimeFormat.h"
-#include "ScopedNSSTypes.h"
+#include "mozpkix/Input.h"
 #include "nsIX509CertValidity.h"
 
-class nsX509CertValidity : public nsIX509CertValidity {
+class X509CertValidity : public nsIX509CertValidity {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTVALIDITY
 
-  explicit nsX509CertValidity(const mozilla::UniqueCERTCertificate& cert);
+  explicit X509CertValidity(mozilla::pkix::Input certDER);
+
+  X509CertValidity(const X509CertValidity& x) = delete;
+  X509CertValidity& operator=(const X509CertValidity& x) = delete;
 
  protected:
-  virtual ~nsX509CertValidity() = default;
+  virtual ~X509CertValidity() = default;
 
  private:
   nsresult FormatTime(const PRTime& aTime, PRTimeParamFn aParamFn,
@@ -27,9 +30,6 @@ class nsX509CertValidity : public nsIX509CertValidity {
   PRTime mNotBefore;
   PRTime mNotAfter;
   bool mTimesInitialized;
-
-  nsX509CertValidity(const nsX509CertValidity& x) = delete;
-  nsX509CertValidity& operator=(const nsX509CertValidity& x) = delete;
 };
 
-#endif  // nsNSSCertValidity_h
+#endif  // X509CertValidity_h

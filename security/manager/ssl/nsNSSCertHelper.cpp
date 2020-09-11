@@ -17,7 +17,6 @@
 #include "mozilla/net/DNS.h"
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
-#include "nsNSSCertValidity.h"
 #include "nsNSSCertificate.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
