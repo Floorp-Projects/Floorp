@@ -1204,6 +1204,8 @@ pref("services.sync.prefs.sync.browser.discovery.enabled", true);
 pref("services.sync.prefs.sync.browser.download.useDownloadDir", true);
 pref("services.sync.prefs.sync.browser.formfill.enable", true);
 pref("services.sync.prefs.sync.browser.link.open_newwindow", true);
+pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", true);
+pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", true);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSearch", true);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSponsored", true);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.feeds.topsites", true);
@@ -1226,6 +1228,7 @@ pref("services.sync.prefs.sync.browser.safebrowsing.malware.enabled", true);
 pref("services.sync.prefs.sync.browser.safebrowsing.phishing.enabled", true);
 pref("services.sync.prefs.sync.browser.search.update", true);
 pref("services.sync.prefs.sync.browser.search.widget.inNavBar", true);
+pref("services.sync.prefs.sync.browser.sessionstore.warnOnQuit", true);
 pref("services.sync.prefs.sync.browser.startup.homepage", true);
 pref("services.sync.prefs.sync.browser.startup.page", true);
 pref("services.sync.prefs.sync.browser.tabs.loadInBackground", true);
@@ -1249,11 +1252,14 @@ pref("services.sync.prefs.sync.dom.security.https_only_mode_ever_enabled_pbm", t
 pref("services.sync.prefs.sync.dom.security.https_only_mode_pbm", true);
 pref("services.sync.prefs.sync.extensions.update.enabled", true);
 pref("services.sync.prefs.sync.extensions.activeThemeID", true);
+pref("services.sync.prefs.sync.general.autoScroll", true);
+pref("services.sync.prefs.sync.general.smoothScroll", true);
 pref("services.sync.prefs.sync.intl.accept_languages", true);
 pref("services.sync.prefs.sync.intl.regional_prefs.use_os_locales", true);
 pref("services.sync.prefs.sync.layout.spellcheckDefault", true);
 pref("services.sync.prefs.sync.media.autoplay.default", true);
 pref("services.sync.prefs.sync.media.eme.enabled", true);
+pref("services.sync.prefs.sync.media.videocontrols.picture-in-picture.video-toggle.enabled", true);
 pref("services.sync.prefs.sync.network.cookie.cookieBehavior", true);
 pref("services.sync.prefs.sync.network.cookie.lifetimePolicy", true);
 pref("services.sync.prefs.sync.network.cookie.thirdparty.sessionOnly", true);
@@ -1280,6 +1286,8 @@ pref("services.sync.prefs.sync.privacy.resistFingerprinting", true);
 pref("services.sync.prefs.sync.privacy.reduceTimerPrecision", true);
 pref("services.sync.prefs.sync.privacy.resistFingerprinting.reduceTimerPrecision.microseconds", true);
 pref("services.sync.prefs.sync.privacy.resistFingerprinting.reduceTimerPrecision.jitter", true);
+pref("services.sync.prefs.sync.privacy.userContext.enabled", true);
+pref("services.sync.prefs.sync.privacy.userContext.newTabContainerOnLeftClick.enabled", true);
 pref("services.sync.prefs.sync.security.default_personal_cert", true);
 pref("services.sync.prefs.sync.services.sync.syncedTabs.showRemoteIcons", true);
 pref("services.sync.prefs.sync.signon.autofillForms", true);
@@ -1287,6 +1295,7 @@ pref("services.sync.prefs.sync.signon.generation.enabled", true);
 pref("services.sync.prefs.sync.signon.management.page.breach-alerts.enabled", true);
 pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("services.sync.prefs.sync.spellchecker.dictionary", true);
+pref("services.sync.prefs.sync.ui.osk.enabled", true);
 
 // A preference which, if false, means sync will only apply incoming preference
 // changes if there's already a local services.sync.prefs.sync.* control pref.
