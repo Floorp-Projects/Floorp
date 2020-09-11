@@ -61,6 +61,8 @@ class StyleSheetWatcher {
     this._styleSheetMap = new Map();
     // List of all watched media queries. Change listeners are being registered from _getMediaRules.
     this._mqlList = [];
+
+    this._onApplicableStateChanged = this._onApplicableStateChanged.bind(this);
   }
 
   /**
@@ -75,7 +77,15 @@ class StyleSheetWatcher {
    */
   async watch(targetActor, { onAvailable, onUpdated }) {
     this._targetActor = targetActor;
+    this._onAvailable = onAvailable;
     this._onUpdated = onUpdated;
+
+    // Listen for new stylesheet being added via StyleSheetApplicableStateChanged
+    this._targetActor.chromeEventHandler.addEventListener(
+      "StyleSheetApplicableStateChanged",
+      this._onApplicableStateChanged,
+      true
+    );
 
     const styleSheets = [];
 
@@ -87,7 +97,7 @@ class StyleSheetWatcher {
       styleSheets.push(...(await this._getStyleSheets(window)));
     }
 
-    onAvailable(
+    this._onAvailable(
       await Promise.all(
         styleSheets.map(styleSheet => this._toResource(styleSheet))
       )
@@ -450,6 +460,42 @@ class StyleSheetWatcher {
     });
   }
 
+  /**
+   * Event handler that is called when the state of applicable of style sheet is changed.
+   *
+   * For now, StyleSheetApplicableStateChanged event will be called at following timings.
+   * - Append <link> of stylesheet to document
+   * - Append <style> to document
+   * - Change disable attribute of stylesheet object
+   * - Change disable attribute of <link> to false
+   * When appending <link>, <style> or changing `disable` attribute to false, `applicable`
+   * is passed as true. The other hand, when changing `disable` to true, this will be
+   * false.
+   * NOTE: For now, StyleSheetApplicableStateChanged will not be called when removing the
+   *       link and style element.
+   *
+   * @param {StyleSheetApplicableStateChanged}
+   *        The triggering event.
+   */
+  async _onApplicableStateChanged({ applicable, stylesheet: styleSheet }) {
+    for (const existing of this._styleSheetMap.values()) {
+      if (styleSheet === existing.styleSheet) {
+        return;
+      }
+    }
+
+    if (
+      // Have interest in applicable stylesheet only.
+      applicable &&
+      // No ownerNode means that this stylesheet is *not* associated to a DOM Element.
+      styleSheet.ownerNode &&
+      this._shouldListSheet(styleSheet) &&
+      !this._haveAncestorWithSameURL(styleSheet)
+    ) {
+      this._onAvailable([await this._toResource(styleSheet)]);
+    }
+  }
+
   _shouldListSheet(styleSheet) {
     // Special case about:PreferenceStyleSheet, as it is generated on the
     // fly and the URI is not registered with the about: handler.
@@ -494,7 +540,17 @@ class StyleSheetWatcher {
     ]);
   }
 
-  destroy() {}
+  destroy() {
+    if (!this._targetActor.docShell) {
+      return;
+    }
+
+    this._targetActor.chromeEventHandler.removeEventListener(
+      "StyleSheetApplicableStateChanged",
+      this._onApplicableStateChanged,
+      true
+    );
+  }
 }
 
 module.exports = StyleSheetWatcher;
