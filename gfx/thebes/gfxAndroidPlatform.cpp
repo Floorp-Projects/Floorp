@@ -16,6 +16,7 @@
 #include "mozilla/layers/AndroidHardwareBuffer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/StaticPrefs_webgl.h"
 
 #include "gfx2DGlue.h"
 #include "gfxFT2FontList.h"
@@ -113,8 +114,12 @@ void gfxAndroidPlatform::InitAcceleration() {
     if (StaticPrefs::gfx_use_ahardwarebuffer_content_AtStartup()) {
       gfxVars::SetUseAHardwareBufferContent(true);
     }
+    if (StaticPrefs::webgl_enable_ahardwarebuffer()) {
+      gfxVars::SetUseAHardwareBufferSharedSurface(true);
+    }
   }
-  if (gfx::gfxVars::UseAHardwareBufferContent()) {
+  if (gfx::gfxVars::UseAHardwareBufferContent() ||
+      gfxVars::UseAHardwareBufferSharedSurface()) {
     layers::AndroidHardwareBufferApi::Init();
     layers::AndroidHardwareBufferManager::Init();
   }

@@ -25,6 +25,7 @@ enum class SharedSurfaceType : uint8_t {
   GLXDrawable,
   SharedGLTexture,
   AndroidSurfaceTexture,
+  AndroidHardwareBuffer,
   EGLSurfaceDMABUF,
 };
 

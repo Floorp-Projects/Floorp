@@ -71,6 +71,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS += [
         'AndroidNativeWindow.h',
+        'SharedSurfaceAndroidHardwareBuffer.h',
+    ]
+    UNIFIED_SOURCES += [
+        'SharedSurfaceAndroidHardwareBuffer.cpp',
     ]
 
 if gl_provider == 'CGL':
