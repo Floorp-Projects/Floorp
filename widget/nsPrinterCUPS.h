@@ -48,6 +48,9 @@ class nsPrinterCUPS final : public nsPrinterBase {
     uint64_t mCUPSMajor = 0;
     uint64_t mCUPSMinor = 0;
     uint64_t mCUPSPatch = 0;
+
+    // Tracks whether we have attempted to fetch mPrinterInfo yet.
+    bool mWasInited = false;
     CUPSPrinterInfo() = default;
     CUPSPrinterInfo(const CUPSPrinterInfo&) = delete;
     CUPSPrinterInfo(CUPSPrinterInfo&&) = delete;
