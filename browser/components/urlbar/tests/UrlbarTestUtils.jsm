@@ -129,6 +129,7 @@ var UrlbarTestUtils = {
       window.gURLBar.setPageProxyState("invalid");
       window.gURLBar.startQuery();
     }
+
     return this.promiseSearchComplete(window);
   },
 

@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   SearchOneOffs: "resource:///modules/SearchOneOffs.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -152,8 +153,8 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
-   * Called when a one-off is clicked or the "Search in New Tab" context menu
-   * item is picked.  This is not called for the settings button.
+   * Called when a one-off is clicked. This is not called for the settings
+   * button.
    *
    * @param {event} event
    *   The event that triggered the pick.
@@ -162,23 +163,82 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
    *   documentation for details.
    * @param {boolean} forceNewTab
    *   True if the search results page should be loaded in a new tab.
+   *   TODO: We can remove this parameter when the update2 pref is removed. This
+   *   parameter is only used by the one-off context menu, which is removed in
+   *   update2.
    */
   handleSearchCommand(event, searchMode, forceNewTab = false) {
-    if (!this.view.oneOffsRefresh) {
-      let { where, params } = this._whereToOpen(event, forceNewTab);
-      this.input.handleCommand(event, where, params);
+    // The settings button is a special case. Its action should be executed
+    // immediately.
+    if (
+      this.selectedButton == this.view.oneOffSearchButtons.settingsButtonCompact
+    ) {
+      this.input.controller.engagementEvent.discard();
+      this.selectedButton.doCommand();
       return;
     }
 
-    this.input.setSearchMode(searchMode);
-    this.selectedButton = null;
     // We allow autofill in local but not remote search modes.
-    this.input.startQuery({
+    let startQueryParams = {
       allowAutofill:
         !searchMode.engineName &&
         searchMode.source != UrlbarUtils.RESULT_SOURCE.SEARCH,
       event,
-    });
+    };
+
+    let userTypedSearchString =
+      this.input.value && this.input.getAttribute("pageproxystate") != "valid";
+    let engine = Services.search.getEngineByName(searchMode.engineName);
+
+    let { where, params } = this._whereToOpen(event, forceNewTab);
+
+    // Some key combinations should execute a search immediately. We handle
+    // these here, outside the switch statement.
+    if (
+      !this.view.oneOffsRefresh ||
+      (userTypedSearchString &&
+        engine &&
+        (event.shiftKey || where != "current"))
+    ) {
+      this.input.handleNavigation({
+        event,
+        oneOffParams: {
+          openWhere: where,
+          openParams: params,
+          engine: this.selectedButton.engine,
+        },
+      });
+      this.selectedButton = null;
+      return;
+    }
+
+    this.selectedButton = null;
+    // Handle opening search mode in either the current tab or in a new tab.
+    switch (where) {
+      case "current": {
+        this.input.setSearchMode(searchMode);
+        this.input.startQuery(startQueryParams);
+        break;
+      }
+      case "tab": {
+        let newTab = this.input.window.gBrowser.addTrustedTab("about:newtab");
+        this.input.setSearchModeForBrowser(searchMode, newTab.linkedBrowser);
+        if (userTypedSearchString) {
+          // Set the search string for the new tab.
+          newTab.linkedBrowser.userTypedValue = this.input.value;
+        }
+        if (!params?.inBackground) {
+          this.input.window.gBrowser.selectedTab = newTab;
+          newTab.ownerGlobal.gURLBar.startQuery(startQueryParams);
+        }
+        break;
+      }
+      default: {
+        this.input.setSearchMode(searchMode);
+        this.input.startQuery(startQueryParams);
+        this.input.select();
+      }
+    }
   }
 
   /**
@@ -285,6 +345,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
       return;
     }
 
+    this.selectedButton = button;
     this.handleSearchCommand(event, {
       engineName: button.engine?.name,
       source: button.source,
@@ -293,16 +354,14 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
-   * Overrides the superclass's contextmenu listener to handle the context menu
-   * for local one-offs in addition to engine one-offs.
+   * Overrides the superclass's contextmenu listener to handle the context menu.
    *
    * @param {event} event
    *   The contextmenu event.
    */
   _on_contextmenu(event) {
-    // Prevent the context menu from appearing on the local one-offs.
-    let target = event.originalTarget;
-    if (!target.engine) {
+    // Prevent the context menu from appearing when update2 is enabled.
+    if (this.view.oneOffsRefresh) {
       event.preventDefault();
       return;
     }
