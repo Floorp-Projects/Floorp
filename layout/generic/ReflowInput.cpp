@@ -1639,36 +1639,36 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   SetComputedLogicalOffsets(offsets.ConvertTo(wm, cbwm));
 
   typedef nsIFrame::ComputeSizeFlags ComputeSizeFlags;
-  ComputeSizeFlags computeSizeFlags = ComputeSizeFlags::eDefault;
+  ComputeSizeFlags computeSizeFlags = ComputeSizeFlags::Default;
   if (mFlags.mIClampMarginBoxMinSize) {
     computeSizeFlags = ComputeSizeFlags(
-        computeSizeFlags | ComputeSizeFlags::eIClampMarginBoxMinSize);
+        computeSizeFlags | ComputeSizeFlags::IClampMarginBoxMinSize);
   }
   if (mFlags.mBClampMarginBoxMinSize) {
     computeSizeFlags = ComputeSizeFlags(
-        computeSizeFlags | ComputeSizeFlags::eBClampMarginBoxMinSize);
+        computeSizeFlags | ComputeSizeFlags::BClampMarginBoxMinSize);
   }
   if (mFlags.mApplyAutoMinSize) {
     computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
-                                        ComputeSizeFlags::eIApplyAutoMinSize);
+                                        ComputeSizeFlags::IApplyAutoMinSize);
   }
   if (mFlags.mShrinkWrap) {
     computeSizeFlags =
-        ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+        ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::ShrinkWrap);
   }
   if (mFlags.mUseAutoBSize) {
     computeSizeFlags =
-        ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eUseAutoBSize);
+        ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::UseAutoBSize);
   }
   if (wm.IsOrthogonalTo(cbwm)) {
     if (bStartIsAuto || bEndIsAuto) {
       computeSizeFlags =
-          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::ShrinkWrap);
     }
   } else {
     if (iStartIsAuto || iEndIsAuto) {
       computeSizeFlags =
-          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::ShrinkWrap);
     }
   }
 
@@ -2343,27 +2343,27 @@ void ReflowInput::InitConstraints(
           mFrame->IsFlexOrGridItem();
       typedef nsIFrame::ComputeSizeFlags ComputeSizeFlags;
       ComputeSizeFlags computeSizeFlags = isBlockLevel
-                                              ? ComputeSizeFlags::eDefault
-                                              : ComputeSizeFlags::eShrinkWrap;
+                                              ? ComputeSizeFlags::Default
+                                              : ComputeSizeFlags::ShrinkWrap;
       if (mFlags.mIClampMarginBoxMinSize) {
         computeSizeFlags = ComputeSizeFlags(
-            computeSizeFlags | ComputeSizeFlags::eIClampMarginBoxMinSize);
+            computeSizeFlags | ComputeSizeFlags::IClampMarginBoxMinSize);
       }
       if (mFlags.mBClampMarginBoxMinSize) {
         computeSizeFlags = ComputeSizeFlags(
-            computeSizeFlags | ComputeSizeFlags::eBClampMarginBoxMinSize);
+            computeSizeFlags | ComputeSizeFlags::BClampMarginBoxMinSize);
       }
       if (mFlags.mApplyAutoMinSize) {
         computeSizeFlags = ComputeSizeFlags(
-            computeSizeFlags | ComputeSizeFlags::eIApplyAutoMinSize);
+            computeSizeFlags | ComputeSizeFlags::IApplyAutoMinSize);
       }
       if (mFlags.mShrinkWrap) {
         computeSizeFlags =
-            ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+            ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::ShrinkWrap);
       }
       if (mFlags.mUseAutoBSize) {
-        computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
-                                            ComputeSizeFlags::eUseAutoBSize);
+        computeSizeFlags =
+            ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::UseAutoBSize);
       }
 
       nsIFrame* alignCB = mFrame->GetParent();
@@ -2385,8 +2385,8 @@ void ReflowInput::InitConstraints(
              inlineAxisAlignment != StyleAlignFlags::NORMAL) ||
             mStyleMargin->mMargin.GetIStart(wm).IsAuto() ||
             mStyleMargin->mMargin.GetIEnd(wm).IsAuto()) {
-          computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
-                                              ComputeSizeFlags::eShrinkWrap);
+          computeSizeFlags =
+              ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::ShrinkWrap);
         }
       } else {
         // Make sure legend frames with display:block and width:auto still
@@ -2400,19 +2400,19 @@ void ReflowInput::InitConstraints(
               mFrame->GetContentInsertionFrame()->IsLegendFrame()) ||
              (mCBReflowInput &&
               mCBReflowInput->GetWritingMode().IsOrthogonalTo(mWritingMode)))) {
-          computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
-                                              ComputeSizeFlags::eShrinkWrap);
+          computeSizeFlags =
+              ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::ShrinkWrap);
         }
 
         if (alignCB->IsFlexContainerFrame()) {
-          computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
-                                              ComputeSizeFlags::eShrinkWrap);
+          computeSizeFlags =
+              ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::ShrinkWrap);
 
           // If we're inside of a flex container that needs to measure our
           // auto BSize, pass that information along to ComputeSize().
           if (mFlags.mIsFlexContainerMeasuringBSize) {
-            computeSizeFlags = ComputeSizeFlags(
-                computeSizeFlags | ComputeSizeFlags::eUseAutoBSize);
+            computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
+                                                ComputeSizeFlags::UseAutoBSize);
           }
         } else {
           MOZ_ASSERT(!mFlags.mIsFlexContainerMeasuringBSize,

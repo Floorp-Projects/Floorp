@@ -2675,26 +2675,26 @@ class nsIFrame : public nsQueryFrame {
    * Bit-flags to pass to ComputeSize in |aFlags| parameter.
    */
   enum ComputeSizeFlags {
-    eDefault = 0,
+    Default = 0,
     /**
      * Set if the frame is in a context where non-replaced blocks should
      * shrink-wrap (e.g., it's floating, absolutely positioned, or
      * inline-block).
      */
-    eShrinkWrap = 1 << 0,
+    ShrinkWrap = 1 << 0,
     /**
      * Set if we'd like to compute our 'auto' bsize, regardless of our actual
      * corresponding computed value. (e.g. to get an intrinsic height for flex
      * items with "min-height: auto" to use during flexbox layout.)
      */
-    eUseAutoBSize = 1 << 1,
+    UseAutoBSize = 1 << 1,
     /**
      * Indicates that we should clamp the margin-box min-size to the given CB
      * size.  This is used for implementing the grid area clamping here:
      * https://drafts.csswg.org/css-grid/#min-size-auto
      */
-    eIClampMarginBoxMinSize = 1 << 2,  // clamp in our inline axis
-    eBClampMarginBoxMinSize = 1 << 3,  // clamp in our block axis
+    IClampMarginBoxMinSize = 1 << 2,  // clamp in our inline axis
+    BClampMarginBoxMinSize = 1 << 3,  // clamp in our block axis
     /**
      * The frame is stretching (per CSS Box Alignment) and doesn't have an
      * Automatic Minimum Size in the indicated axis.
@@ -2702,8 +2702,8 @@ class nsIFrame : public nsQueryFrame {
      * https://drafts.csswg.org/css-grid/#min-size-auto
      * https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch
      */
-    eIApplyAutoMinSize = 1 << 4,  // only has an effect when eShrinkWrap is
-                                  // false
+    IApplyAutoMinSize = 1 << 4,  // only has an effect when eShrinkWrap is
+                                 // false
   };
 
   /**
@@ -4747,7 +4747,7 @@ class nsIFrame : public nsQueryFrame {
                             nscoord aContentEdgeToBoxSizing,
                             nscoord aBoxSizingToMarginEdge,
                             const SizeOrMaxSize& aSize,
-                            ComputeSizeFlags aFlags = eDefault) {
+                            ComputeSizeFlags aFlags = Default) {
     MOZ_ASSERT(aSize.IsExtremumLength() || aSize.IsLengthPercentage(),
                "This doesn't handle auto / none");
     if (aSize.IsLengthPercentage()) {
