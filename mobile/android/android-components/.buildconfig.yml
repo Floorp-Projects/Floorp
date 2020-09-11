@@ -300,10 +300,6 @@ projects:
     path: components/service/pocket
     description: 'A library to communicate with the Pocket API'
     publish: true
-  service-telemetry:
-    path: components/service/telemetry
-    description: 'A generic library for generating and sending telemetry pings from Android applications to the Mozilla telemetry service.'
-    publish: true
   support-base:
     path: components/support/base
     description: 'Base component containing building blocks for components.'

@@ -14,6 +14,8 @@ permalink: /changelog/
 
 * **browser-tabstray**
  * Removed the `BrowserTabsTray` that was deprecated in previous releases.
+* **service-telemetry**
+  * This library has been removed. Please use `service-glean` instead.
 
 # 58.0.0
 

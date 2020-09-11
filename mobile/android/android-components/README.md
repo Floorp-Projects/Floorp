@@ -212,8 +212,6 @@ _Components and libraries to interact with backend services._
 
 * 🔴 [**Pocket**](components/service/pocket/README.md) - A library for communicating with the Pocket API.
 
-* 🔵 [**Telemetry**](components/service/telemetry/README.md) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
-
 ## Support
 
 _Supporting components with generic helper code._
