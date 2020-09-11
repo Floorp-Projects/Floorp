@@ -1077,7 +1077,7 @@ class SearchEngine {
 
   /**
    * Overrides the urls/parameters with those of the provided extension.
-   * The parameters are not saved to the search cache - the code handling
+   * The parameters are not saved to the search settings - the code handling
    * the extension should set these on every restart, this avoids potential
    * third party modifications and means that we can verify the WebExtension is
    * still in the allow list.
@@ -1161,8 +1161,8 @@ class SearchEngine {
    *   An object suitable for serialization as JSON.
    */
   toJSON() {
-    // For built-in engines we don't want to store all their data in the cache
-    // so just store the relevant metadata.
+    // For built-in engines we don't want to store all their data in the settings
+    // file so just store the relevant metadata.
     if (this._isAppProvided) {
       return {
         _name: this.name,

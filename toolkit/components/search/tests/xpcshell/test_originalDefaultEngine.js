@@ -21,7 +21,7 @@ function promiseDefaultNotification() {
 }
 
 add_task(async function test_originalDefaultEngine() {
-  await Promise.all([Services.search.init(), promiseAfterCache()]);
+  await Promise.all([Services.search.init(), promiseAfterSettings()]);
   Assert.equal(
     Services.search.originalDefaultEngine.name,
     "Multilocale AN",

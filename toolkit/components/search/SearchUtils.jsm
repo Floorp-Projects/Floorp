@@ -242,13 +242,13 @@ var SearchUtils = {
   },
 
   /**
-   * Current cache version. This should be incremented if the format of the cache
-   * file is modified.
+   * Current settings version. This should be incremented if the format of the
+   * settings file is modified.
    *
    * @returns {number}
-   *   The current cache version.
+   *   The current settings version.
    */
-  get CACHE_VERSION() {
+  get SETTINGS_VERSION() {
     return 5;
   },
 

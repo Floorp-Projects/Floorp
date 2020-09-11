@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["SearchCache"];
+var EXPORTED_SYMBOLS = ["SearchSettings"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -17,34 +17,33 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   return console.createInstance({
-    prefix: "SearchCache",
+    prefix: "SearchSettings",
     maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
   });
 });
 
-// A text encoder to UTF8, used whenever we commit the cache to disk.
+// A text encoder to UTF8, used whenever we commit the settings to disk.
 XPCOMUtils.defineLazyGetter(this, "gEncoder", function() {
   return new TextEncoder();
 });
 
-const CACHE_FILENAME = "search.json.mozlz4";
+const SETTINGS_FILENAME = "search.json.mozlz4";
 
 /**
- * This class manages the saves search cache that stores the search engine
- * settings.
+ * This class manages the saves search settings.
  *
- * Cache attributes can be saved and obtained from this class via the
+ * Global settings can be saved and obtained from this class via the
  * `*Attribute` methods.
  */
-class SearchCache {
+class SearchSettings {
   constructor(searchService) {
     this._searchService = searchService;
   }
 
   QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
 
-  // Delay for batching invalidation of the JSON cache (ms)
-  static CACHE_INVALIDATION_DELAY = 1000;
+  // Delay for batching invalidation of the JSON settings (ms)
+  static SETTINGS_INVALIDATION_DELAY = 1000;
 
   /**
    * A reference to the pending DeferredTask, if there is one.
@@ -52,7 +51,7 @@ class SearchCache {
   _batchTask = null;
 
   /**
-   * The current metadata stored in the cache. This stores:
+   * The current metadata stored in the settings. This stores:
    *   - current
    *       The current user-set default engine. The associated hash is called
    *       'hash'.
@@ -84,30 +83,30 @@ class SearchCache {
   }
 
   /**
-   * Reads the cache file.
+   * Reads the settings file.
    *
    * @param {string} origin
-   *   If this parameter is "test", then the cache will not be written. As
-   *   some tests manipulate the cache directly, we allow turning off writing to
-   *   avoid writing stale cache data.
+   *   If this parameter is "test", then the settings will not be written. As
+   *   some tests manipulate the settings directly, we allow turning off writing to
+   *   avoid writing stale settings data.
    * @returns {object}
-   *   Returns the cache file data.
+   *   Returns the settings file data.
    */
   async get(origin = "") {
     let json;
     await this._ensurePendingWritesCompleted(origin);
     try {
-      let cacheFilePath = OS.Path.join(
+      let settingsFilePath = OS.Path.join(
         OS.Constants.Path.profileDir,
-        CACHE_FILENAME
+        SETTINGS_FILENAME
       );
-      let bytes = await OS.File.read(cacheFilePath, { compression: "lz4" });
+      let bytes = await OS.File.read(settingsFilePath, { compression: "lz4" });
       json = JSON.parse(new TextDecoder().decode(bytes));
       if (!json.engines || !json.engines.length) {
         throw new Error("no engine in the file");
       }
     } catch (ex) {
-      logConsole.error("_readCacheFile: Error reading cache file:", ex);
+      logConsole.error("get: Error reading settings file:", ex);
       json = {};
     }
     if (json.metaData) {
@@ -118,7 +117,7 @@ class SearchCache {
   }
 
   /**
-   * Queues writing the cache until after CACHE_INVALIDATION_DELAY. If there
+   * Queues writing the settings until after SETTINGS_INVALIDATION_DELAY. If there
    * is a currently queued task then it will be restarted.
    */
   _delayedWrite() {
@@ -126,35 +125,35 @@ class SearchCache {
       this._batchTask.disarm();
     } else {
       let task = async () => {
-        logConsole.debug("batchTask: Invalidating engine cache");
+        logConsole.debug("batchTask: Invalidating engine settings");
         await this._write();
       };
       this._batchTask = new DeferredTask(
         task,
-        SearchCache.CACHE_INVALIDATION_DELAY
+        SearchSettings.SETTINGS_INVALIDATION_DELAY
       );
     }
     this._batchTask.arm();
   }
 
   /**
-   * Ensures any pending writes of the cache are completed.
+   * Ensures any pending writes of the settings are completed.
    *
    * @param {string} origin
-   *   If this parameter is "test", then the cache will not be written. As
-   *   some tests manipulate the cache directly, we allow turning off writing to
-   *   avoid writing stale cache data.
+   *   If this parameter is "test", then the settings will not be written. As
+   *   some tests manipulate the settings directly, we allow turning off writing to
+   *   avoid writing stale settings data.
    */
   async _ensurePendingWritesCompleted(origin = "") {
-    // Before we read the cache file, first make sure all pending tasks are clear.
+    // Before we read the settings file, first make sure all pending tasks are clear.
     if (!this._batchTask) {
       return;
     }
     logConsole.debug("finalizing batch task");
     let task = this._batchTask;
     this._batchTask = null;
-    // Tests manipulate the cache directly, so let's not double-write with
-    // stale cache data here.
+    // Tests manipulate the settings directly, so let's not double-write with
+    // stale settings data here.
     if (origin == "test") {
       task.disarm();
     } else {
@@ -163,50 +162,50 @@ class SearchCache {
   }
 
   /**
-   * Writes the cache to disk (no delay).
+   * Writes the settings to disk (no delay).
    */
   async _write() {
     if (this._batchTask) {
       this._batchTask.disarm();
     }
 
-    let cache = {};
+    let settings = {};
     let locale = Services.locale.requestedLocale;
     let buildID = Services.appinfo.platformBuildID;
 
-    // Allows us to force a cache refresh should the cache format change.
-    cache.version = SearchUtils.CACHE_VERSION;
+    // Allows us to force a settings refresh should the settings format change.
+    settings.version = SearchUtils.SETTINGS_VERSION;
     // We don't want to incur the costs of stat()ing each plugin on every
     // startup when the only (supported) time they will change is during
     // app updates (where the buildID is obviously going to change).
     // Extension-shipped plugins are the only exception to this, but their
     // directories are blown away during updates, so we'll detect their changes.
-    cache.buildID = buildID;
-    cache.locale = locale;
-    cache.builtInEngineList = this._searchService._searchOrder;
-    cache.engines = [...this._searchService._engines.values()];
-    cache.metaData = this._metaData;
+    settings.buildID = buildID;
+    settings.locale = locale;
+    settings.builtInEngineList = this._searchService._searchOrder;
+    settings.engines = [...this._searchService._engines.values()];
+    settings.metaData = this._metaData;
 
     try {
-      if (!cache.engines.length) {
+      if (!settings.engines.length) {
         throw new Error("cannot write without any engine.");
       }
 
-      logConsole.debug("_buildCache: Writing to cache file.");
-      let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
-      let data = gEncoder.encode(JSON.stringify(cache));
+      logConsole.debug("_write: Writing to settings file.");
+      let path = OS.Path.join(OS.Constants.Path.profileDir, SETTINGS_FILENAME);
+      let data = gEncoder.encode(JSON.stringify(settings));
       await OS.File.writeAtomic(path, data, {
         compression: "lz4",
         tmpPath: path + ".tmp",
       });
-      logConsole.debug("_buildCache: cache file written to disk.");
+      logConsole.debug("_write: settings file written to disk.");
       Services.obs.notifyObservers(
         null,
         SearchUtils.TOPIC_SEARCH_SERVICE,
-        "write-cache-to-disk-complete"
+        "write-settings-to-disk-complete"
       );
     } catch (ex) {
-      logConsole.error("_buildCache: Could not write to cache file:", ex);
+      logConsole.error("_write: Could not write to settings file:", ex);
     }
   }
 
@@ -279,7 +278,7 @@ class SearchCache {
   }
 
   /**
-   * Handles shutdown; writing the cache if necessary.
+   * Handles shutdown; writing the settings if necessary.
    *
    * @param {object} state
    *   The shutdownState object that is used to help analyzing the shutdown
