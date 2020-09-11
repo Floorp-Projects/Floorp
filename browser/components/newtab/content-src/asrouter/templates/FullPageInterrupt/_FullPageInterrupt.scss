@@ -1,0 +1,258 @@
+.activity-stream {
+  &.welcome {
+    overflow: hidden;
+  }
+
+  &:not(.welcome) {
+    .fullpage-wrapper {
+      display: none;
+    }
+  }
+}
+
+.fullpage-wrapper {
+  $responsive-breakpoint: 975px;
+  $responsive-width: 300px;
+  $header-size: 36px;
+  $form-text-size: 16px;
+
+  align-content: center;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 21000;
+  background-color: $ghost-white;
+
+  + div {
+    opacity: 0;
+  }
+
+  .fullpage-icon {
+    background-position-x: left;
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    &:dir(rtl) {
+      background-position-x: right;
+    }
+
+    @media screen and (max-width: $responsive-breakpoint) {
+      background-position: center;
+    }
+  }
+
+  .brand-logo {
+    background-image: url('chrome://branding/content/about-logo.png');
+    margin: 20px 10px 10px 20px;
+    padding-bottom: 50px;
+  }
+
+  .welcome-title,
+  .welcome-subtitle {
+    align-self: center;
+    margin: 0;
+    @media screen and (max-width: $responsive-breakpoint) {
+      text-align: center;
+    }
+  }
+
+  .welcome-title {
+    color: $trailhead-purple-80;
+    font-size: 46px;
+    font-weight: 600;
+    line-height: 62px;
+  }
+
+  .welcome-subtitle {
+    color: $trailhead-violet;
+    font-size: 20px;
+    line-height: 27px;
+  }
+
+  .container {
+    display: flex;
+    align-self: center;
+    padding: 50px 0;
+
+    @media screen and (max-width: $responsive-breakpoint) {
+      flex-direction: column;
+      width: $responsive-width;
+      text-align: center;
+    }
+  }
+
+  .fullpage-left-section {
+    position: relative;
+    width: 538px;
+    font-size: 18px;
+    line-height: 30px;
+
+    @media screen and (max-width: $responsive-breakpoint) {
+      width: $responsive-width;
+    }
+
+    .fullpage-left-content {
+      color: $grey-60;
+      display: inline;
+      margin: 0;
+      margin-inline-end: 2px;
+    }
+
+    .fullpage-left-link {
+      color: $blue-60;
+      display: block;
+      text-decoration: underline;
+      margin-bottom: 30px;
+
+      &:hover,
+      &:active,
+      &:focus {
+        color: $blue-60;
+      }
+    }
+
+    .fullpage-left-title {
+      margin: 0;
+      color: $trailhead-purple-80;
+      font-size: $header-size;
+      line-height: 48px;
+    }
+
+    .fx-systems-icons {
+      height: 33px;
+      display: block;
+      background-image: url('#{$image-path}trailhead/firefox-systems.png');
+      margin-bottom: 20px;
+    }
+  }
+
+  .fullpage-form {
+    position: relative;
+    text-align: center;
+    margin-inline-start: $header-size;
+
+    @media screen and (max-width: $responsive-breakpoint) {
+      margin-inline-start: 0;
+    }
+
+    .fxaSignupForm {
+      width: 356px;
+      padding: 25px;
+      box-shadow: 0 0 16px 0 $black-15;
+      border-radius: 6px;
+      background: $white;
+    }
+
+    .fxa-terms {
+      margin: 4px 0 20px;
+
+      a,
+      & {
+        color: $grey-60;
+        font-size: 12px;
+        line-height: $form-text-size;
+      }
+    }
+
+    .fxa-signin {
+      color: $grey-60;
+      line-height: 30px;
+      opacity: 0.77;
+
+      button {
+        color: $blue-60;
+      }
+    }
+
+    h3 {
+      color: $trailhead-purple-80;
+      font-weight: 400;
+      font-size: $header-size;
+      line-height: $header-size;
+      margin: 0;
+      padding: 8px;
+    }
+
+    h3 + p {
+      color: $grey-60;
+      font-size: $form-text-size;
+      line-height: 20px;
+      opacity: 0.77;
+    }
+
+    input {
+      background: $white;
+      border: 1px solid $grey-30;
+      border-radius: 2px;
+
+      &:hover {
+        border-color: $grey-50;
+      }
+
+      &.invalid {
+        border-color: $red-60;
+      }
+    }
+
+    button {
+      color: $white;
+      font-size: $form-text-size;
+
+      &:focus {
+        outline: dotted 1px $grey-50;
+      }
+    }
+  }
+
+  .section-divider::after {
+    content: '';
+    display: block;
+    border-bottom: 0.5px solid $grey-30;
+  }
+
+  .trailheadCard {
+    box-shadow: none;
+    background: none;
+    text-align: center;
+    width: 320px;
+    padding: 18px;
+
+    .onboardingTitle {
+      color: $grey-90;
+    }
+
+    .onboardingText {
+      font-weight: normal;
+      color: $grey-60;
+      margin-top: 4px;
+    }
+
+    .onboardingButton {
+      color: $grey-60;
+      background: $grey-90-10;
+
+      &:focus,
+      &:hover {
+        background: $grey-90-20;
+      }
+
+      &:active {
+        background: $grey-90-30;
+      }
+    }
+
+    .onboardingMessageImage {
+      height: 112px;
+      width: 154px;
+    }
+
+    @media screen and (max-width: $responsive-breakpoint) {
+      width: $responsive-width;
+    }
+  }
+}

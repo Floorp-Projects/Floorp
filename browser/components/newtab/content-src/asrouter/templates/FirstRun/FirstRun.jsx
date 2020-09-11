@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
+import { Interrupt } from "./Interrupt";
 import { Triplets } from "./Triplets";
 import { BASE_PARAMS } from "./addUtmParams";
 
@@ -33,10 +34,12 @@ export class FirstRun extends React.PureComponent {
     this.didLoadFlowParams = false;
 
     this.state = {
+      didUserClearInterrupt: false,
       didUserClearTriplets: false,
       flowParams: undefined,
     };
 
+    this.closeInterrupt = this.closeInterrupt.bind(this);
     this.closeTriplets = this.closeTriplets.bind(this);
 
     helpers.addFluent(this.props.document);
@@ -73,13 +76,46 @@ export class FirstRun extends React.PureComponent {
     }
   }
 
+  removeHideMain() {
+    if (!this.isInterruptVisible) {
+      // We need to remove hide-main since we should show it underneath everything that has rendered
+      this.props.document.body.classList.remove("hide-main", "welcome");
+    }
+  }
+
+  // Is there any interrupt content? This is false for new tab triplets.
+  get hasInterrupt() {
+    const { message } = this.props;
+    return Boolean(message && message.content);
+  }
+
+  // Are all conditions met for the interrupt to actually be visible?
+  // 1. hasInterrupt - Is there interrupt content?
+  // 2. state.didUserClearInterrupt - Was it cleared by the user?
+  // 3. props.interruptCleared - Was it cleared externally?
+  get isInterruptVisible() {
+    return (
+      this.hasInterrupt &&
+      !this.state.didUserClearInterrupt &&
+      !this.props.interruptCleared
+    );
+  }
+
   componentDidMount() {
     this.fetchFlowParams();
+    this.removeHideMain();
   }
 
   componentDidUpdate() {
     // In case we didn't have FXA info immediately, try again when we receive it.
     this.fetchFlowParams();
+    this.removeHideMain();
+  }
+
+  closeInterrupt() {
+    this.setState({
+      didUserClearInterrupt: true,
+    });
   }
 
   closeTriplets() {
@@ -93,15 +129,22 @@ export class FirstRun extends React.PureComponent {
 
   render() {
     const { props, state, UTMTerm } = this;
-    const { sendUserActionTelemetry, executeAction, message } = props;
+    const {
+      sendUserActionTelemetry,
+      fxaEndpoint,
+      dispatch,
+      executeAction,
+      message,
+    } = props;
 
     const { didUserClearTriplets, flowParams } = state;
 
     const hasTriplets = Boolean(message.bundle && message.bundle.length);
+    const interrupt = this.hasInterrupt ? message : null;
     const triplets = hasTriplets ? message.bundle : null;
     const isTripletsContainerVisible = hasTriplets && !didUserClearTriplets;
 
-    // Allow 1) falsy to not render a header 2) default welcome header 3) custom header
+    // Allow 1) falsy to not render a header 2) default welcome 3) custom header
     const tripletsHeaderId =
       message.tripletsHeaderId === undefined
         ? "onboarding-welcome-header"
@@ -109,12 +152,29 @@ export class FirstRun extends React.PureComponent {
 
     return (
       <>
+        {this.isInterruptVisible ? (
+          <Interrupt
+            document={props.document}
+            cards={triplets}
+            message={interrupt}
+            onNextScene={this.closeInterrupt}
+            UTMTerm={UTMTerm}
+            sendUserActionTelemetry={sendUserActionTelemetry}
+            executeAction={executeAction}
+            dispatch={dispatch}
+            flowParams={flowParams}
+            onDismiss={this.closeInterrupt}
+            fxaEndpoint={fxaEndpoint}
+            onBlockById={props.onBlockById}
+          />
+        ) : null}
         {hasTriplets ? (
           <Triplets
             document={props.document}
             cards={triplets}
             headerId={tripletsHeaderId}
             showCardPanel={isTripletsContainerVisible}
+            showContent={!this.isInterruptVisible}
             hideContainer={this.closeTriplets}
             sendUserActionTelemetry={sendUserActionTelemetry}
             UTMTerm={`${UTMTerm}-card`}

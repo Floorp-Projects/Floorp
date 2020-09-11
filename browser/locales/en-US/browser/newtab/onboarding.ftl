@@ -2,13 +2,40 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-### UI strings for the simplified onboarding / multistage about:welcome
+### UI strings for the simplified onboarding modal / about:welcome
 ### Various strings use a non-breaking space to avoid a single dangling /
 ### widowed word, so test on various window sizes if you also want this.
 
-## Welcome page strings
+## These button action text can be split onto multiple lines, so use explicit
+## newlines in translations to control where the line break appears (e.g., to
+## avoid breaking quoted text).
+
+onboarding-button-label-learn-more = Learn More
+onboarding-button-label-get-started = Get Started
+
+## Welcome modal dialog strings
 
 onboarding-welcome-header = Welcome to { -brand-short-name }
+onboarding-welcome-body = You’ve got the browser.<br/>Meet the rest of { -brand-product-name }.
+onboarding-welcome-learn-more = Learn more about the benefits.
+onboarding-welcome-modal-get-body = You’ve got the browser.<br/>Now get the most out of { -brand-product-name }.
+onboarding-welcome-modal-supercharge-body = Supercharge your privacy protection.
+onboarding-welcome-modal-privacy-body = You’ve got the browser. Let’s add more privacy protection.
+onboarding-welcome-modal-family-learn-more = Learn about the { -brand-product-name } family of products.
+onboarding-welcome-form-header = Start Here
+
+onboarding-join-form-body = Enter your email address to get started.
+onboarding-join-form-email =
+    .placeholder = Enter email
+onboarding-join-form-email-error = Valid email required
+onboarding-join-form-legal = By proceeding, you agree to the <a data-l10n-name="terms">Terms of Service</a> and <a data-l10n-name="privacy">Privacy Notice</a>.
+onboarding-join-form-continue = Continue
+
+# This message is followed by a link using onboarding-join-form-signin ("Sign In") as text.
+onboarding-join-form-signin-label = Already have an account?
+# Text for link to submit the sign in form
+onboarding-join-form-signin = Sign In
+
 onboarding-start-browsing-button-label = Start Browsing
 onboarding-cards-dismiss =
     .title = Dismiss
@@ -110,6 +137,52 @@ onboarding-multistage-theme-description-alpenglow =
     Use a colorful appearance for buttons,
     menus, and windows.
 
+## Welcome full page string
+
+onboarding-fullpage-welcome-subheader = Let’s start exploring everything you can do.
+onboarding-fullpage-form-email =
+    .placeholder = Your email address…
+
+## Firefox Sync modal dialog strings.
+
+onboarding-sync-welcome-header = Take { -brand-product-name } with You
+onboarding-sync-welcome-content = Get your bookmarks, history, passwords and other settings on all your devices.
+onboarding-sync-welcome-learn-more-link = Learn more about Firefox Accounts
+
+onboarding-sync-form-input =
+    .placeholder = Email
+
+onboarding-sync-form-continue-button = Continue
+onboarding-sync-form-skip-login-button = Skip this step
+
+## This is part of the line "Enter your email to continue to Firefox Sync"
+
+onboarding-sync-form-header = Enter your email
+onboarding-sync-form-sub-header = to continue to { -sync-brand-name }
+
+
+## These are individual benefit messages shown with an image, title and
+## description.
+
+onboarding-benefit-products-text = Get things done with a family of tools that respects your privacy across your devices.
+
+# "Personal Data Promise" is a concept that should be translated consistently
+# across the product. It refers to a concept shown elsewhere to the user: "The
+# Firefox Personal Data Promise is the way we honor your data in everything we
+# make and do. We take less data. We keep it safe. And we make sure that we are
+# transparent about how we use it."
+onboarding-benefit-privacy-text = Everything we do honors our Personal Data Promise: Take less. Keep it safe. No secrets.
+
+onboarding-benefit-sync-title = { -sync-brand-short-name }
+onboarding-benefit-sync-text = Take your bookmarks, passwords, history, and more everywhere you use { -brand-product-name }.
+
+onboarding-benefit-monitor-title = { -monitor-brand-short-name }
+onboarding-benefit-monitor-text = Get notified when your personal info is in a known data breach.
+
+onboarding-benefit-lockwise-title = { -lockwise-brand-short-name }
+onboarding-benefit-lockwise-text = Manage passwords that are protected and portable.
+
+
 ## These strings belong to the individual onboarding messages.
 
 ## Each message has a title and a description of what the browser feature is.
@@ -168,3 +241,15 @@ onboarding-import-browser-settings-button = Import Chrome Data
 onboarding-personal-data-promise-title = Private by Design
 onboarding-personal-data-promise-text = { -brand-product-name } treats your data with respect by taking less of it, protecting it, and being clear about how we use it.
 onboarding-personal-data-promise-button = Read our Promise
+
+## Message strings belonging to the Return to AMO flow
+
+return-to-amo-sub-header = Great, you’ve got { -brand-short-name }
+
+# <icon></icon> will be replaced with the icon belonging to the extension
+#
+# Variables:
+#   $addon-name (String) - Name of the add-on
+return-to-amo-addon-header = Now let’s get you <icon></icon><b>{ $addon-name }.</b>
+return-to-amo-extension-button = Add the Extension
+return-to-amo-get-started-button = Get Started with { -brand-short-name }

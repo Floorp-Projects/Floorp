@@ -420,8 +420,11 @@ const TargetingGetters = {
   get isFxAEnabled() {
     return isFxAEnabled;
   },
+  get trailheadInterrupt() {
+    return ASRouterPreferences.trailhead.trailheadInterrupt;
+  },
   get trailheadTriplet() {
-    return ASRouterPreferences.trailheadTriplet;
+    return ASRouterPreferences.trailhead.trailheadTriplet;
   },
   get sync() {
     return {
