@@ -976,7 +976,8 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
   nscoord availBased = aAvailableISize - aMargin.ISize(aWM) -
                        aBorder.ISize(aWM) - aPadding.ISize(aWM);
   // replaced elements always shrink-wrap
-  if ((aFlags & ComputeSizeFlags::ShrinkWrap) || IsFrameOfType(eReplaced)) {
+  if (aFlags.contains(ComputeSizeFlag::ShrinkWrap) ||
+      IsFrameOfType(eReplaced)) {
     // Only bother computing our 'auto' ISize if the result will be used.
     // It'll be used under two scenarios:
     // - If our ISize property is itself 'auto'.
@@ -2538,15 +2539,14 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
         }
       }
       if (stretchI != eNoStretch ||
-          (aFlags & ComputeSizeFlags::IClampMarginBoxMinSize)) {
+          aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize)) {
         iSize =
             std::max(nscoord(0), cbSize - aPadding.ISize(aWM) -
                                      aBorder.ISize(aWM) - aMargin.ISize(aWM));
       }
     } else {
       // Reset this flag to avoid applying the clamping below.
-      aFlags =
-          ComputeSizeFlags(aFlags & ~ComputeSizeFlags::IClampMarginBoxMinSize);
+      aFlags -= ComputeSizeFlag::IClampMarginBoxMinSize;
     }
   }
 
@@ -2601,15 +2601,14 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
         }
       }
       if (stretchB != eNoStretch ||
-          (aFlags & ComputeSizeFlags::BClampMarginBoxMinSize)) {
+          aFlags.contains(ComputeSizeFlag::BClampMarginBoxMinSize)) {
         bSize =
             std::max(nscoord(0), cbSize - aPadding.BSize(aWM) -
                                      aBorder.BSize(aWM) - aMargin.BSize(aWM));
       }
     } else {
       // Reset this flag to avoid applying the clamping below.
-      aFlags =
-          ComputeSizeFlags(aFlags & ~ComputeSizeFlags::BClampMarginBoxMinSize);
+      aFlags -= ComputeSizeFlag::BClampMarginBoxMinSize;
     }
   }
 
@@ -2665,7 +2664,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
       // If we need to clamp the inline size to fit the CB, we use the 'stretch'
       // or 'normal' codepath.  We use the ratio-preserving 'normal' codepath
       // unless we have 'stretch' in the other axis.
-      if ((aFlags & ComputeSizeFlags::IClampMarginBoxMinSize) &&
+      if (aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize) &&
           stretchI != eStretch && tentISize > iSize) {
         stretchI = (stretchB == eStretch ? eStretch : eStretchPreservingRatio);
       }
@@ -2679,7 +2678,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
       }
 
       // (ditto the comment about clamping the inline size above)
-      if ((aFlags & ComputeSizeFlags::BClampMarginBoxMinSize) &&
+      if (aFlags.contains(ComputeSizeFlag::BClampMarginBoxMinSize) &&
           stretchB != eStretch && tentBSize > bSize) {
         stretchB = (stretchI == eStretch ? eStretch : eStretchPreservingRatio);
       }
@@ -2736,7 +2735,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
         if (logicalRatio) {
           iSize = logicalRatio.ApplyTo(bSize);
         } else if (hasIntrinsicISize) {
-          if (!((aFlags & ComputeSizeFlags::IClampMarginBoxMinSize) &&
+          if (!(aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize) &&
                 intrinsicISize > iSize)) {
             iSize = intrinsicISize;
           }  // else - leave iSize as is to fill the CB
@@ -2754,7 +2753,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
         if (logicalRatio) {
           bSize = logicalRatio.Inverted().ApplyTo(iSize);
         } else if (hasIntrinsicBSize) {
-          if (!((aFlags & ComputeSizeFlags::BClampMarginBoxMinSize) &&
+          if (!(aFlags.contains(ComputeSizeFlag::BClampMarginBoxMinSize) &&
                 intrinsicBSize > bSize)) {
             bSize = intrinsicBSize;
           }  // else - leave bSize as is to fill the CB
