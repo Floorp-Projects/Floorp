@@ -25,6 +25,11 @@ add_task(async function setup() {
   await SearchTestUtils.useTestEngines("test-extensions");
   await promiseStartupManager();
 
+  Services.locale.availableLocales = [
+    ...Services.locale.availableLocales,
+    "af",
+  ];
+
   registerCleanupFunction(async () => {
     await promiseShutdownManager();
     Services.prefs.clearUserPref("browser.search.region");
