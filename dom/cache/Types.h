@@ -38,6 +38,11 @@ struct QuotaInfo {
   QuotaInfo() : mDirectoryLockId(-1) {}
 };
 
+struct DeletionInfo {
+  nsTArray<nsID> mDeletedBodyIdList;
+  int64_t mDeletedPaddingSize = 0;
+};
+
 typedef std::function<void(nsCOMPtr<nsIInputStream>&&)> InputStreamResolver;
 
 enum class OpenMode : uint8_t { Eager, Lazy, NumTypes };
