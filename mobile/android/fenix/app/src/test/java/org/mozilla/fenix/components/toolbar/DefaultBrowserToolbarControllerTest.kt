@@ -37,6 +37,7 @@ import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -241,10 +242,21 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleScroll() {
+    fun `handleScroll for dynamic toolbars`() {
         val controller = createController()
+        every { activity.settings().isDynamicToolbarEnabled } returns true
+
         controller.handleScroll(10)
         verify { engineView.setVerticalClipping(10) }
+    }
+
+    @Test
+    fun `handleScroll for static toolbars`() {
+        val controller = createController()
+        every { activity.settings().isDynamicToolbarEnabled } returns false
+
+        controller.handleScroll(10)
+        verify(exactly = 0) { engineView.setVerticalClipping(10) }
     }
 
     private fun createController(

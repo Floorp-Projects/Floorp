@@ -22,6 +22,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.sessionsOfType
+import org.mozilla.fenix.ext.settings
 
 /**
  * An interface that handles the view manipulation of the BrowserToolbar, triggered by the Interactor
@@ -156,7 +157,9 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleScroll(offset: Int) {
-        engineView.setVerticalClipping(offset)
+        if (activity.settings().isDynamicToolbarEnabled) {
+            engineView.setVerticalClipping(offset)
+        }
     }
 
     companion object {
