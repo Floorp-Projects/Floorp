@@ -31,9 +31,10 @@ class Perftest(MachCommandBase):
         parser=get_perftest_parser,
     )
     def run_perftest(self, **kwargs):
+        from pathlib import Path
+
         push_to_try = kwargs.pop("push_to_try", False)
         if push_to_try:
-            from pathlib import Path
 
             sys.path.append(str(Path(self.topsrcdir, "tools", "tryselect")))
 
@@ -66,12 +67,52 @@ class Perftest(MachCommandBase):
             push_to_try("perftest", "perftest", try_task_config=task_config)
             return
 
+        # user selection with fuzzy UI
+        from mozperftest.utils import ON_TRY
+
+        if not ON_TRY and kwargs.get("tests", []) == []:
+            from moztest.resolve import TestResolver
+            from mozperftest.fzf.fzf import select
+            from mozperftest.script import ScriptInfo, ScriptType
+
+            resolver = self._spawn(TestResolver)
+            test_objects = list(resolver.resolve_tests(paths=None, flavor="perftest"))
+
+            def full_path(s):
+                relative = s.split()[-1].lstrip(os.sep)
+                return str(Path(self.topsrcdir, relative))
+
+            kwargs["tests"] = [full_path(s) for s in select(test_objects)]
+
+            if kwargs["tests"] == []:
+                print("\nNo selection. Bye!")
+                return
+
+            if len(kwargs["tests"]) > 1:
+                print("\nSorry no support yet for multiple local perftest")
+                return
+
+            sel = "\n".join(kwargs["tests"])
+            print("\nGood job! Best selection.\n%s" % sel)
+
+            # if the script is xpcshell, we can force the flavor here
+            script_type = ScriptInfo.detect_type(kwargs["tests"][0])
+            if script_type == ScriptType.xpcshell:
+                kwargs["flavor"] = script_type.name
+            else:
+                # we set the value only if not provided (so "mobile-browser"
+                # can be picked)
+                if "flavor" not in kwargs:
+                    kwargs["flavor"] = "desktop-browser"
+
         # run locally
         MachCommandBase.activate_virtualenv(self)
 
         from mozperftest.runner import run_tests
 
         run_tests(mach_cmd=self, **kwargs)
+
+        print("\nFirefox. Fast For Good.\n")
 
 
 @CommandProvider
