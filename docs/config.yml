@@ -32,6 +32,7 @@ categories:
         - taskcluster
         - tools/moztreedocs
     testing_doc:
+        - testing/testing-policy
         - testing/marionette
         - testing/geckodriver
         - web-platform
