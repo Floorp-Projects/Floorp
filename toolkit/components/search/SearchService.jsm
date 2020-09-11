@@ -162,10 +162,10 @@ SearchService.prototype = {
   __sortedEngines: null,
 
   /**
-   * A flag to prevent setting of useDBForOrder when there's non-user
+   * A flag to prevent setting of useSavedOrder when there's non-user
    * activity happening.
    */
-  _dontSetUseDBForOrder: false,
+  _dontSetUseSavedOrder: false,
 
   /**
    * An object containing the {id, locale} of the WebExtension for the default
@@ -751,9 +751,9 @@ SearchService.prototype = {
     const prevCurrentEngine = this._currentEngine;
     const prevPrivateEngine = this._currentPrivateEngine;
 
-    // Ensure that we don't set the UseDBForOrder flag whilst we're doing this.
+    // Ensure that we don't set the useSavedOrder flag whilst we're doing this.
     // This isn't a user action, so we shouldn't be switching it.
-    this._dontSetUseDBForOrder = true;
+    this._dontSetUseSavedOrder = true;
 
     // The order of work here is designed to avoid potential issues when updating
     // the default engines, so that we're not removing active defaults or trying
@@ -936,7 +936,7 @@ SearchService.prototype = {
       SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.REMOVED);
     }
 
-    this._dontSetUseDBForOrder = false;
+    this._dontSetUseSavedOrder = false;
     // Clear out the sorted engines settings, so that we re-sort it if necessary.
     this.__sortedEngines = null;
     Services.obs.notifyObservers(
@@ -1016,7 +1016,7 @@ SearchService.prototype = {
       // has already been built (i.e. if this.__sortedEngines is non-null). If
       // it hasn't, we're loading engines from disk and the sorted engine list
       // will be built once we need it.
-      if (this.__sortedEngines && !this._dontSetUseDBForOrder) {
+      if (this.__sortedEngines && !this._dontSetUseSavedOrder) {
         this.__sortedEngines.push(engine);
         this._saveSortedEngineList();
       }
@@ -1158,12 +1158,9 @@ SearchService.prototype = {
   _saveSortedEngineList() {
     logConsole.debug("_saveSortedEngineList");
 
-    // Set the useDB pref to indicate that from now on we should use the order
-    // information stored in the database.
-    Services.prefs.setBoolPref(
-      SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder",
-      true
-    );
+    // Set the useSavedOrder attribute to indicate that from now on we should
+    // use the user's order information stored in settings.
+    this._settings.setAttribute("useSavedOrder", true);
 
     var engines = this._getSortedEngines(true);
 
@@ -1181,13 +1178,8 @@ SearchService.prototype = {
 
     // If the user has specified a custom engine order, read the order
     // information from the metadata instead of the default prefs.
-    if (
-      Services.prefs.getBoolPref(
-        SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder",
-        false
-      )
-    ) {
-      logConsole.debug("_buildSortedEngineList: using db for order");
+    if (this._settings.getAttribute("useSavedOrder")) {
+      logConsole.debug("_buildSortedEngineList: using saved order");
       let addedEngines = {};
 
       // Flag to keep track of whether or not we need to call _saveSortedEngineList.
@@ -1882,7 +1874,7 @@ SearchService.prototype = {
       this._internalRemoveEngine(engineToRemove);
 
       // Since we removed an engine, we may need to update the preferences.
-      if (!this._dontSetUseDBForOrder) {
+      if (!this._dontSetUseSavedOrder) {
         this._saveSortedEngineList();
       }
     }

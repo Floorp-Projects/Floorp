@@ -112,6 +112,17 @@ class SearchSettings {
     if (json.metaData) {
       this._metaData = json.metaData;
     }
+    // Versions of gecko older than 82 stored the order flag as a preference.
+    // This was changed in version 6 of the settings file.
+    if (json.version < 6 || !("useSavedOrder" in this._metaData)) {
+      const prefName = SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder";
+      let useSavedOrder = Services.prefs.getBoolPref(prefName, false);
+
+      this.setAttribute("useSavedOrder", useSavedOrder);
+
+      // Clear the old pref so it isn't lying around.
+      Services.prefs.clearUserPref(prefName);
+    }
 
     return json;
   }
@@ -210,6 +221,19 @@ class SearchSettings {
   }
 
   /**
+   * Sets an attribute without verification.
+   *
+   * @param {string} name
+   *   The name of the attribute to set.
+   * @param {*} val
+   *   The value to set.
+   */
+  setAttribute(name, val) {
+    this._metaData[name] = val;
+    this._delayedWrite();
+  }
+
+  /**
    * Sets a verified attribute. This will save an additional hash
    * value, that can be verified when reading back.
    *
@@ -235,7 +259,7 @@ class SearchSettings {
    *   The value of the attribute, or undefined if not known.
    */
   getAttribute(name) {
-    return this._metaData[name] || undefined;
+    return this._metaData[name] ?? undefined;
   }
 
   /**
