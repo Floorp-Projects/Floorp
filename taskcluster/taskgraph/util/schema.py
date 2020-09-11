@@ -229,7 +229,6 @@ OptimizationSchema = voluptuous.Any(
     # never optimize this task
     {'never': None},
     # skip the task except for every Nth push
-    {'push-interval-5': None},
     {'push-interval-10': None},
     {'push-interval-20': None},
     # skip this task if none of the given file patterns match
