@@ -26,6 +26,7 @@ import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.search_suggestions_hint.view.*
@@ -50,6 +51,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -219,6 +221,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                             setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
                                 requireComponents.analytics.metrics.track(Event.QRScannerNavigationDenied)
                                 dialog.cancel()
+                                resetFocus()
                             }
                             setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
                                 requireComponents.analytics.metrics.track(Event.QRScannerNavigationAllowed)
@@ -229,6 +232,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                                         from = BrowserDirection.FromSearch
                                     )
                                 dialog.dismiss()
+                                resetFocus()
                             }
                             create()
                         }.show()
@@ -241,8 +245,19 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         view.search_scan_button.setOnClickListener {
             toolbarView.view.clearFocus()
-            requireComponents.analytics.metrics.track(Event.QRScannerOpened)
-            qrFeature.get()?.scan(R.id.container)
+
+            val cameraPermissionsDenied = PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(
+                    getPreferenceKey(R.string.pref_key_camera_permissions),
+                    false
+                )
+
+            if (cameraPermissionsDenied) {
+                searchInteractor.onCameraPermissionsNeeded()
+            } else {
+                requireComponents.analytics.metrics.track(Event.QRScannerOpened)
+                qrFeature.get()?.scan(R.id.container)
+            }
         }
 
         view.search_engines_shortcut_button.setOnClickListener {
@@ -368,13 +383,17 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     override fun onBackPressed(): Boolean {
         return when {
             qrFeature.onBackPressed() -> {
-                toolbarView.view.edit.focus()
-                view?.search_scan_button?.isChecked = false
-                toolbarView.view.requestFocus()
+                resetFocus()
                 true
             }
             else -> false
         }
+    }
+
+    private fun resetFocus() {
+        search_scan_button.isChecked = false
+        toolbarView.view.edit.focus()
+        toolbarView.view.requestFocus()
     }
 
     private fun updateSearchWithLabel(searchState: SearchFragmentState) {
@@ -408,8 +427,16 @@ class SearchFragment : Fragment(), UserInteractionHandler {
                 context?.let { context: Context ->
                     if (context.isPermissionGranted(Manifest.permission.CAMERA)) {
                         permissionDidUpdate = true
+                        PreferenceManager.getDefaultSharedPreferences(context)
+                            .edit().putBoolean(
+                                getPreferenceKey(R.string.pref_key_camera_permissions), false
+                            ).apply()
                     } else {
-                        view?.search_scan_button?.isChecked = false
+                        PreferenceManager.getDefaultSharedPreferences(context)
+                            .edit().putBoolean(
+                                getPreferenceKey(R.string.pref_key_camera_permissions), true
+                            ).apply()
+                        resetFocus()
                     }
                 }
             }

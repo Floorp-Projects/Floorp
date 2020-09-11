@@ -4,7 +4,13 @@
 
 package org.mozilla.fenix.searchdialog
 
+import android.content.DialogInterface
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.text.SpannableString
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
@@ -184,6 +190,52 @@ class SearchDialogController(
         val session = sessionManager.findSessionById(tabId)
         if (session != null) {
             handleExistingSessionSelected(session)
+        }
+    }
+
+    /**
+     * Creates and shows an [AlertDialog] when camera permissions are needed.
+     *
+     * In versions above M, [AlertDialog.BUTTON_POSITIVE] takes the user to the app settings. This
+     * intent only exists in M and above. Below M, [AlertDialog.BUTTON_POSITIVE] routes to a SUMO
+     * help page to find the app settings.
+     *
+     * [AlertDialog.BUTTON_NEGATIVE] dismisses the dialog.
+     */
+    override fun handleCameraPermissionsNeeded() {
+        val dialog = buildDialog()
+        dialog.show()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun buildDialog(): AlertDialog.Builder {
+        return AlertDialog.Builder(activity).apply {
+            val spannableText = SpannableString(
+                activity.resources.getString(R.string.camera_permissions_needed_message)
+            )
+            setMessage(spannableText)
+            setNegativeButton(R.string.camera_permissions_needed_negative_button_text) { _, _ ->
+                dismissDialog()
+            }
+            setPositiveButton(R.string.camera_permissions_needed_positive_button_text) {
+                    dialog: DialogInterface, _ ->
+                val intent: Intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                } else {
+                    SupportUtils.createCustomTabIntent(
+                        activity,
+                        SupportUtils.getSumoURLForTopic(
+                            activity,
+                            SupportUtils.SumoTopic.QR_CAMERA_ACCESS
+                        )
+                    )
+                }
+                val uri = Uri.fromParts("package", activity.packageName, null)
+                intent.data = uri
+                dialog.cancel()
+                activity.startActivity(intent)
+            }
+            create()
         }
     }
 }

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.searchdialog
 
+import android.Manifest
 import android.app.Activity
 import android.app.Dialog
 import android.content.Context
@@ -28,11 +29,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.fragment_search_dialog.*
-import kotlinx.android.synthetic.main.fragment_search_dialog.fill_link_from_clipboard
-import kotlinx.android.synthetic.main.fragment_search_dialog.pill_wrapper
-import kotlinx.android.synthetic.main.fragment_search_dialog.qr_scan_button
-import kotlinx.android.synthetic.main.fragment_search_dialog.toolbar
 import kotlinx.android.synthetic.main.fragment_search_dialog.view.*
 import kotlinx.android.synthetic.main.search_suggestions_hint.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,6 +42,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.hasCamera
+import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
@@ -55,6 +54,7 @@ import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentAction
@@ -204,8 +204,22 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             if (!requireContext().hasCamera()) { return@setOnClickListener }
 
             toolbarView.view.clearFocus()
-            requireComponents.analytics.metrics.track(Event.QRScannerOpened)
-            qrFeature.get()?.scan(R.id.search_wrapper)
+
+            val cameraPermissionsDenied =
+                PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
+                    getPreferenceKey(R.string.pref_key_camera_permissions),
+                    false
+                )
+
+            if (cameraPermissionsDenied) {
+                interactor.onCameraPermissionsNeeded()
+                resetFocus()
+                view.hideKeyboard()
+                toolbarView.view.requestFocus()
+            } else {
+                requireComponents.analytics.metrics.track(Event.QRScannerOpened)
+                qrFeature.get()?.scan(R.id.search_wrapper)
+            }
         }
 
         fill_link_from_clipboard.setOnClickListener {
@@ -280,6 +294,19 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        resetFocus()
+        toolbarView.view.edit.focus()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        qr_scan_button.isChecked = false
+        view?.hideKeyboard()
+        toolbarView.view.requestFocus()
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
         if (requestCode == VoiceSearchActivity.SPEECH_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             intent?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.first()?.also {
@@ -293,9 +320,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     override fun onBackPressed(): Boolean {
         return when {
             qrFeature.onBackPressed() -> {
-                toolbarView.view.edit.focus()
-                view?.qr_scan_button?.isChecked = false
-                toolbarView.view.requestFocus()
+                resetFocus()
                 true
             }
             else -> {
@@ -348,6 +373,39 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     requireComponents.analytics.metrics.track(Event.QRScannerPromptDisplayed)
                 }
             })
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
+                context?.let { context: Context ->
+                    it.onPermissionsResult(permissions, grantResults)
+                    if (!context.isPermissionGranted(Manifest.permission.CAMERA)) {
+                        PreferenceManager.getDefaultSharedPreferences(context)
+                            .edit().putBoolean(
+                                getPreferenceKey(R.string.pref_key_camera_permissions), true
+                            ).apply()
+                        resetFocus()
+                    } else {
+                        PreferenceManager.getDefaultSharedPreferences(context)
+                            .edit().putBoolean(
+                                getPreferenceKey(R.string.pref_key_camera_permissions), false
+                            ).apply()
+                    }
+                }
+            }
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+
+    private fun resetFocus() {
+        qr_scan_button.isChecked = false
+        toolbarView.view.edit.focus()
+        toolbarView.view.requestFocus()
     }
 
     private fun setupConstraints(view: View) {
