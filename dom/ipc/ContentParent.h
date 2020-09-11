@@ -1138,22 +1138,6 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvDeviceReset();
 
-  mozilla::ipc::IPCResult RecvKeywordToURI(const nsCString& aKeyword,
-                                           const bool& aIsPrivateContext,
-                                           nsString* aProviderName,
-                                           RefPtr<nsIInputStream>* aPostData,
-                                           RefPtr<nsIURI>* aURI);
-
-  mozilla::ipc::IPCResult RecvGetFixupURIInfo(const nsString& aURIString,
-                                              const uint32_t& aFixupFlags,
-                                              bool aAllowThirdPartyFixup,
-                                              nsString* aProviderName,
-                                              RefPtr<nsIInputStream>* aPostData,
-                                              RefPtr<nsIURI>* aPreferredURI);
-
-  mozilla::ipc::IPCResult RecvNotifyKeywordSearchLoading(
-      const nsString& aProvider, const nsString& aKeyword);
-
   mozilla::ipc::IPCResult RecvCopyFavicon(
       nsIURI* aOldURI, nsIURI* aNewURI, const IPC::Principal& aLoadingPrincipal,
       const bool& aInPrivateBrowsing);

@@ -5749,32 +5749,7 @@ already_AddRefed<nsIURIFixupInfo> nsDocShell::KeywordToURI(
     const nsACString& aKeyword, bool aIsPrivateContext,
     nsIInputStream** aPostData) {
   nsCOMPtr<nsIURIFixupInfo> info;
-  if (XRE_IsContentProcess()) {
-    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-    if (!contentChild) {
-      return nullptr;
-    }
-
-    info = do_CreateInstance("@mozilla.org/docshell/uri-fixup-info;1");
-    if (NS_WARN_IF(!info)) {
-      return nullptr;
-    }
-    RefPtr<nsIInputStream> postData;
-    RefPtr<nsIURI> uri;
-    nsAutoString providerName;
-    nsAutoCString keyword(aKeyword);
-    // TODO (Bug 1375244): This synchronous IPC messaging should be changed.
-    if (contentChild->SendKeywordToURI(keyword, aIsPrivateContext,
-                                       &providerName, &postData, &uri)) {
-      NS_ConvertUTF8toUTF16 keywordW(aKeyword);
-      info->SetKeywordAsSent(keywordW);
-      info->SetKeywordProviderName(providerName);
-      if (aPostData) {
-        postData.forget(aPostData);
-      }
-      info->SetPreferredURI(uri);
-    }
-  } else {
+  if (!XRE_IsContentProcess()) {
     nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
     if (uriFixup) {
       uriFixup->KeywordToURI(aKeyword, aIsPrivateContext, aPostData,
@@ -12700,14 +12675,6 @@ void nsDocShell::NotifyJSRunToCompletionStop() {
 void nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
                                                  const nsString& aKeyword) {
   if (aProvider.IsEmpty()) {
-    return;
-  }
-
-  if (XRE_IsContentProcess()) {
-    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-    if (contentChild) {
-      contentChild->SendNotifyKeywordSearchLoading(aProvider, aKeyword);
-    }
     return;
   }
 

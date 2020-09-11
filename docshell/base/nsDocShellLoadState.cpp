@@ -18,7 +18,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/StaticPrefs_fission.h"
 
@@ -252,24 +251,7 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     }
 
     RefPtr<nsIInputStream> fixupStream;
-    if (XRE_IsContentProcess()) {
-      dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-      if (contentChild) {
-        RefPtr<nsIURI> preferredURI;
-        // TODO (Bug 1375244): This synchronous IPC messaging should be changed.
-        if (contentChild->SendGetFixupURIInfo(
-                PromiseFlatString(aURI), fixupFlags,
-                loadFlags &
-                    nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
-                &searchProvider, &fixupStream, &preferredURI)) {
-          if (preferredURI) {
-            didFixup = true;
-            rv = NS_OK;
-            uri = preferredURI;
-          }
-        }
-      }
-    } else {
+    if (!XRE_IsContentProcess()) {
       nsCOMPtr<nsIURIFixupInfo> fixupInfo;
       sURIFixup->GetFixupURIInfo(uriString, fixupFlags,
                                  getter_AddRefs(fixupStream),
