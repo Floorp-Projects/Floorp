@@ -76,6 +76,11 @@ interface nsISHEntry : nsISupports
     attribute AString title;
 
     /**
+     * The name of the browsing context.
+     */
+    attribute AString name;
+
+    /**
      * Was the entry created as a result of a subframe navigation?
      * - Will be 'false' when a frameset page is visited for the first time.
      * - Will be 'true' for all history entries created as a result of a

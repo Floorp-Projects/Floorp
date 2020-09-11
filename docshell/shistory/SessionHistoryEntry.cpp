@@ -405,6 +405,18 @@ SessionHistoryEntry::SetTitle(const nsAString& aTitle) {
 }
 
 NS_IMETHODIMP
+SessionHistoryEntry::GetName(nsAString& aName) {
+  aName = mInfo->mName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::SetName(const nsAString& aName) {
+  mInfo->mName = aName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 SessionHistoryEntry::GetIsSubFrame(bool* aIsSubFrame) {
   *aIsSubFrame = SharedInfo()->mIsFrameNavigation;
   return NS_OK;
@@ -1216,6 +1228,7 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
   WriteIPDLParam(aMsg, aActor, aParam.mResultPrincipalURI);
   WriteIPDLParam(aMsg, aActor, aParam.mReferrerInfo);
   WriteIPDLParam(aMsg, aActor, aParam.mTitle);
+  WriteIPDLParam(aMsg, aActor, aParam.mName);
   WriteIPDLParam(aMsg, aActor, aParam.mPostData);
   WriteIPDLParam(aMsg, aActor, aParam.mLoadType);
   WriteIPDLParam(aMsg, aActor, aParam.mScrollPositionX);
@@ -1250,6 +1263,7 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResultPrincipalURI) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mReferrerInfo) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mTitle) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mName) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mPostData) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLoadType) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mScrollPositionX) ||
