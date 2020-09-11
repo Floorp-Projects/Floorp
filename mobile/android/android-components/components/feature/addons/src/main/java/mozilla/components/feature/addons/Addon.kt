@@ -4,7 +4,9 @@
 
 package mozilla.components.feature.addons
 
+import android.content.Context
 import android.os.Parcelable
+import androidx.core.net.toUri
 import kotlinx.android.parcel.Parcelize
 
 /**
@@ -107,12 +109,12 @@ data class Addon(
     ) : Parcelable
 
     /**
-     * Returns a list of id resources per each item on the [permissions] list.
+     * Returns a list of localized Strings per each item on the [permissions] list.
+     * @param context A context reference.
      */
-    fun translatePermissions(): List<Int> {
-        return localizePermissions(permissions)
+    fun translatePermissions(context: Context): List<String> {
+        return localizePermissions(permissions, context)
     }
-
     /**
      * Returns whether or not this [Addon] is currently installed.
      */
@@ -193,8 +195,120 @@ data class Addon(
          * @param permissions The list of permissions to be localized. Valid permissions can be found in
          * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions
          */
-        fun localizePermissions(permissions: List<String>): List<Int> {
-            return permissions.mapNotNull { permissionToTranslation[it] }
+        fun localizePermissions(permissions: List<String>, context: Context): List<String> {
+            var localizedUrlAccessPermissions = emptyList<String>()
+            val requireAllUrlsAccess = permissions.contains("<all_urls>")
+            val notFoundPermissions = mutableListOf<String>()
+
+            val localizedNormalPermissions = permissions.mapNotNull {
+                val id = permissionToTranslation[it]
+                if (id == null) notFoundPermissions.add(it)
+                id
+            }.map { context.getString(it) }
+
+            if (!requireAllUrlsAccess && notFoundPermissions.isNotEmpty()) {
+                localizedUrlAccessPermissions = localizedURLAccessPermissions(context, notFoundPermissions)
+            }
+
+            return localizedNormalPermissions + localizedUrlAccessPermissions
+        }
+
+        @Suppress("MaxLineLength")
+        internal fun localizedURLAccessPermissions(context: Context, accessPermissions: List<String>): List<String> {
+            val localizedSiteAccessPermissions = mutableListOf<String>()
+            val permissionsToTranslations = mutableMapOf<String, Int>()
+
+            accessPermissions.forEach { permission ->
+                val id = localizeURLAccessPermission(permission)
+                if (id != null) {
+                    permissionsToTranslations[permission] = id
+                }
+            }
+
+            if (permissionsToTranslations.values.any { it.isAllURLsPermission() }) {
+                localizedSiteAccessPermissions.add(context.getString(R.string.mozac_feature_addons_permissions_all_urls_description))
+            } else {
+                formatURLAccessPermission(permissionsToTranslations, localizedSiteAccessPermissions, context)
+            }
+            return localizedSiteAccessPermissions
+        }
+
+        @Suppress("MagicNumber", "ComplexMethod")
+        private fun formatURLAccessPermission(
+            permissionsToTranslations: MutableMap<String, Int>,
+            localizedSiteAccessPermissions: MutableList<String>,
+            context: Context
+        ) {
+            val maxShownPermissionsEntries = 4
+            fun addExtraEntriesIfNeeded(count: Int, oneExtraPermission: Int, multiplePermissions: Int) {
+                val collapsedPermissions = count - maxShownPermissionsEntries
+                if (collapsedPermissions == 1) {
+                    localizedSiteAccessPermissions.add(context.getString(oneExtraPermission))
+                } else {
+                    localizedSiteAccessPermissions.add(context.getString(multiplePermissions, collapsedPermissions))
+                }
+            }
+
+            var domainCount = 0
+            var siteCount = 0
+
+            loop@ for ((permission, stringId) in permissionsToTranslations) {
+                var host = permission.toUri().host ?: ""
+                when {
+                    stringId.isDomainAccessPermission() -> {
+                        ++domainCount
+                        host = host.removePrefix("*.")
+
+                        if (domainCount > maxShownPermissionsEntries) continue@loop
+                    }
+
+                    stringId.isSiteAccessPermission() -> {
+                        ++siteCount
+                        if (siteCount > maxShownPermissionsEntries) continue@loop
+                    }
+                }
+                localizedSiteAccessPermissions.add(context.getString(stringId, host))
+            }
+
+            // If we have [maxPermissionsEntries] or fewer permissions, display them all, otherwise we
+            // display the first [maxPermissionsEntries] followed by an item that says "...plus N others"
+            if (domainCount > maxShownPermissionsEntries) {
+                val onePermission = R.string.mozac_feature_addons_permissions_one_extra_domain_description
+                val multiplePermissions = R.string.mozac_feature_addons_permissions_extra_domains_description_plural
+                addExtraEntriesIfNeeded(domainCount, onePermission, multiplePermissions)
+            }
+            if (siteCount > maxShownPermissionsEntries) {
+                val onePermission = R.string.mozac_feature_addons_permissions_one_extra_site_description
+                val multiplePermissions = R.string.mozac_feature_addons_permissions_extra_sites_description
+                addExtraEntriesIfNeeded(siteCount, onePermission, multiplePermissions)
+            }
+        }
+
+        private fun Int.isSiteAccessPermission(): Boolean {
+            return this == R.string.mozac_feature_addons_permissions_one_site_description
+        }
+
+        private fun Int.isDomainAccessPermission(): Boolean {
+            return this == R.string.mozac_feature_addons_permissions_sites_in_domain_description
+        }
+
+        private fun Int.isAllURLsPermission(): Boolean {
+            return this == R.string.mozac_feature_addons_permissions_all_urls_description
+        }
+
+        internal fun localizeURLAccessPermission(urlAccess: String): Int? {
+            val uri = urlAccess.toUri()
+            val host = (uri.host ?: "").trim()
+            val path = (uri.path ?: "").trim()
+
+            return when {
+                host == "*" || urlAccess == "<all_urls>" -> {
+                    R.string.mozac_feature_addons_permissions_all_urls_description
+                }
+                host.isEmpty() || path.isEmpty() -> null
+                host.startsWith(prefix = "*.") -> R.string.mozac_feature_addons_permissions_sites_in_domain_description
+                else -> R.string.mozac_feature_addons_permissions_one_site_description
+            }
         }
 
         /**

@@ -34,6 +34,10 @@ permalink: /changelog/
 * **feature-syncedtabs**
   * Added support for indicators to synced tabs `AwesomeBar` suggestions.
 
+* **feature-addons**
+  * ⚠️ **This is a breaking change**: The `Addon.translatePermissions` now requires a `context` object and returns a list of localized strings instead of a list of id string resources.
+  * 🚒 Bug fixed [issue #8323](https://github.com/mozilla-mobile/android-components/issues/8323) Add-on permission dialog does not prompt for host permissions.
+
 # 58.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v57.0.0...v58.0.0)

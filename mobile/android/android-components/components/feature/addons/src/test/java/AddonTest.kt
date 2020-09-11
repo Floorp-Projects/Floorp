@@ -7,6 +7,7 @@ package mozilla.components.feature.addons.amo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -53,7 +54,7 @@ class AddonTest {
             updatedAt = ""
         )
 
-        val translatedPermissions = addon.translatePermissions()
+        val translatedPermissions = addon.translatePermissions(testContext)
         val expectedPermissions = listOf(
             R.string.mozac_feature_addons_permissions_bookmarks_description,
             R.string.mozac_feature_addons_permissions_browser_setting_description,
@@ -78,7 +79,7 @@ class AddonTest {
             R.string.mozac_feature_addons_permissions_unlimited_storage_description,
             R.string.mozac_feature_addons_permissions_web_navigation_description,
             R.string.mozac_feature_addons_permissions_top_sites_description
-        )
+        ).map { testContext.getString(it) }
         assertEquals(expectedPermissions, translatedPermissions)
     }
 
@@ -145,5 +146,205 @@ class AddonTest {
         assertEquals(2, addonEs.translatableName.size)
         assertTrue(addonEs.translatableName.contains(addonEn.defaultLocale))
         assertTrue(addonEs.translatableName.contains("es"))
+    }
+
+    @Test
+    fun `localizedURLAccessPermissions - must translate all_urls access permission`() {
+        val expectedString = testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)
+        val permissions = listOf(
+                "webRequest",
+                "webRequestBlocking",
+                "<all_urls>"
+        )
+
+        val result = Addon.localizedURLAccessPermissions(testContext, permissions).first()
+
+        assertEquals(expectedString, result)
+    }
+
+    @Test
+    fun `localizedURLAccessPermissions - must translate all urls access permission`() {
+        val expectedString = testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)
+        val permissions = listOf(
+            "webRequest",
+            "webRequestBlocking",
+            "*://*/*"
+        )
+
+        val result = Addon.localizedURLAccessPermissions(testContext, permissions).first()
+
+        assertEquals(expectedString, result)
+    }
+
+    @Test
+    fun `localizedURLAccessPermissions - must translate domain access permissions`() {
+        val expectedString = listOf("tweetdeck.twitter.com", "twitter.com").map {
+            testContext.getString(R.string.mozac_feature_addons_permissions_one_site_description, it)
+        }
+        testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)
+        val permissions = listOf(
+                "webRequest",
+                "webRequestBlocking",
+                "*://tweetdeck.twitter.com/*",
+                "*://twitter.com/*"
+        )
+
+        val result = Addon.localizedURLAccessPermissions(testContext, permissions)
+
+        assertEquals(expectedString, result)
+    }
+
+    @Test
+    fun `localizedURLAccessPermissions - must translate one site access permissions`() {
+        val expectedString = listOf("youtube.com", "youtube-nocookie.com", "vimeo.com").map {
+            testContext.getString(R.string.mozac_feature_addons_permissions_sites_in_domain_description, it)
+        }
+        testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)
+        val permissions = listOf(
+            "webRequest",
+            "*://*.youtube.com/*",
+            "*://*.youtube-nocookie.com/*",
+            "*://*.vimeo.com/*"
+        )
+
+        val result = Addon.localizedURLAccessPermissions(testContext, permissions)
+
+        assertEquals(expectedString, result)
+    }
+
+    @Test
+    fun `localizedURLAccessPermissions - must collapse url access permissions`() {
+        var expectedString = listOf("youtube.com", "youtube-nocookie.com", "vimeo.com", "google.co.ao").map {
+            testContext.getString(R.string.mozac_feature_addons_permissions_sites_in_domain_description, it)
+        } + testContext.getString(R.string.mozac_feature_addons_permissions_one_extra_domain_description)
+
+        var permissions = listOf(
+            "webRequest",
+            "*://*.youtube.com/*",
+            "*://*.youtube-nocookie.com/*",
+            "*://*.vimeo.com/*",
+            "*://*.google.co.ao/*",
+            "*://*.google.com.do/*"
+        )
+
+        var result = Addon.localizedURLAccessPermissions(testContext, permissions)
+
+        // 1 domain permissions must be collapsed
+        assertEquals(expectedString, result)
+
+        expectedString = listOf("youtube.com", "youtube-nocookie.com", "vimeo.com", "google.co.ao").map {
+            testContext.getString(R.string.mozac_feature_addons_permissions_sites_in_domain_description, it)
+        } + testContext.getString(R.string.mozac_feature_addons_permissions_extra_domains_description_plural, 2)
+
+        permissions = listOf(
+            "webRequest",
+            "*://*.youtube.com/*",
+            "*://*.youtube-nocookie.com/*",
+            "*://*.vimeo.com/*",
+            "*://*.google.co.ao/*",
+            "*://*.google.com.do/*",
+            "*://*.google.co.ar/*"
+        )
+
+        result = Addon.localizedURLAccessPermissions(testContext, permissions)
+
+        // 2 domain permissions must be collapsed
+        assertEquals(expectedString, result)
+
+        permissions = listOf(
+            "webRequest",
+            "*://www.youtube.com/*",
+            "*://www.youtube-nocookie.com/*",
+            "*://www.vimeo.com/*",
+            "https://mozilla.org/a/b/c/",
+            "*://www.google.com.do/*"
+        )
+
+        expectedString = listOf("www.youtube.com", "www.youtube-nocookie.com", "www.vimeo.com", "mozilla.org").map {
+            testContext.getString(R.string.mozac_feature_addons_permissions_one_site_description, it)
+        } + testContext.getString(R.string.mozac_feature_addons_permissions_one_extra_site_description)
+
+        result = Addon.localizedURLAccessPermissions(testContext, permissions)
+
+        // 1 site permissions must be Collapsed
+        assertEquals(expectedString, result)
+
+        permissions = listOf(
+            "webRequest",
+            "*://www.youtube.com/*",
+            "*://www.youtube-nocookie.com/*",
+            "*://www.vimeo.com/*",
+            "https://mozilla.org/a/b/c/",
+            "*://www.google.com.do/*",
+            "*://www.google.co.ar/*"
+        )
+
+        expectedString = listOf("www.youtube.com", "www.youtube-nocookie.com", "www.vimeo.com", "mozilla.org").map {
+            testContext.getString(R.string.mozac_feature_addons_permissions_one_site_description, it)
+        } + testContext.getString(R.string.mozac_feature_addons_permissions_extra_sites_description, 2)
+
+        result = Addon.localizedURLAccessPermissions(testContext, permissions)
+
+        // 2 site permissions must be Collapsed
+        assertEquals(expectedString, result)
+
+        permissions = listOf(
+            "webRequest",
+            "*://www.youtube.com/*",
+            "*://www.youtube-nocookie.com/*",
+            "*://www.vimeo.com/*",
+            "https://mozilla.org/a/b/c/"
+        )
+
+        expectedString = listOf("www.youtube.com", "www.youtube-nocookie.com", "www.vimeo.com", "mozilla.org").map {
+            testContext.getString(R.string.mozac_feature_addons_permissions_one_site_description, it)
+        }
+
+        result = Addon.localizedURLAccessPermissions(testContext, permissions)
+
+        // None permissions must be collapsed
+        assertEquals(expectedString, result)
+    }
+
+    @Test
+    fun `localizeURLAccessPermission - must provide the correct localized string`() {
+        val siteAccess = listOf(
+            "*://twitter.com/*",
+            "*://tweetdeck.twitter.com/*",
+            "https://mozilla.org/a/b/c/",
+            "https://www.google.com.ag/*",
+            "https://www.google.co.ck/*"
+        )
+
+        siteAccess.forEach {
+            val stringId = Addon.localizeURLAccessPermission(it)
+            assertEquals(R.string.mozac_feature_addons_permissions_one_site_description, stringId)
+        }
+
+        val domainAccess = listOf(
+            "*://*.youtube.com/*",
+            "*://*.youtube.com/*",
+            "*://*.youtube-nocookie.com/*",
+            "*://*.vimeo.com/*",
+            "*://*.facebookcorewwwi.onion/*"
+        )
+
+        domainAccess.forEach {
+            val stringId = Addon.localizeURLAccessPermission(it)
+            assertEquals(R.string.mozac_feature_addons_permissions_sites_in_domain_description, stringId)
+        }
+
+        val allUrlsAccess = listOf(
+            "*://*/*",
+            "http://*/*",
+            "https://*/*",
+            "file://*/*",
+            "<all_urls>"
+        )
+
+        allUrlsAccess.forEach {
+            val stringId = Addon.localizeURLAccessPermission(it)
+            assertEquals(R.string.mozac_feature_addons_permissions_all_urls_description, stringId)
+        }
     }
 }
