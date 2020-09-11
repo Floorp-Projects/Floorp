@@ -9802,6 +9802,11 @@
   value: false
   mirror: always
 
+- name: webgl.enable-ahardwarebuffer
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: webgl.enable-webgl2
   type: RelaxedAtomicBool
   value: true

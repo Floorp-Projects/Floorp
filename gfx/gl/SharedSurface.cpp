@@ -41,6 +41,10 @@
 #  include "SharedSurfaceDMABUF.h"
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "SharedSurfaceAndroidHardwareBuffer.h"
+#endif
+
 namespace mozilla {
 namespace gl {
 
@@ -115,14 +119,18 @@ UniquePtr<SurfaceFactory> SurfaceFactory::Create(
 #endif
       return nullptr;
 
-    case layers::TextureType::AndroidHardwareBuffer:
-      return nullptr;
-
     case layers::TextureType::AndroidNativeWindow:
 #ifdef MOZ_WIDGET_ANDROID
       if (XRE_IsParentProcess() && !StaticPrefs::webgl_enable_surface_texture())
         return nullptr;
       return MakeUnique<SurfaceFactory_SurfaceTexture>(gl);
+#else
+      return nullptr;
+#endif
+
+    case layers::TextureType::AndroidHardwareBuffer:
+#ifdef MOZ_WIDGET_ANDROID
+      return SurfaceFactory_AndroidHardwareBuffer::Create(gl);
 #else
       return nullptr;
 #endif
