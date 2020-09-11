@@ -612,29 +612,34 @@ bool StartOffThreadParseScript(JSContext* cx,
                                const JS::ReadOnlyCompileOptions& options,
                                JS::SourceText<char16_t>& srcBuf,
                                JS::OffThreadCompileCallback callback,
-                               void* callbackData);
+                               void* callbackData,
+                               JS::OffThreadToken** tokenOut);
 bool StartOffThreadParseScript(JSContext* cx,
                                const JS::ReadOnlyCompileOptions& options,
                                JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                JS::OffThreadCompileCallback callback,
-                               void* callbackData);
+                               void* callbackData,
+                               JS::OffThreadToken** tokenOut);
 
 bool StartOffThreadParseModule(JSContext* cx,
                                const JS::ReadOnlyCompileOptions& options,
                                JS::SourceText<char16_t>& srcBuf,
                                JS::OffThreadCompileCallback callback,
-                               void* callbackData);
+                               void* callbackData,
+                               JS::OffThreadToken** tokenOut);
 bool StartOffThreadParseModule(JSContext* cx,
                                const JS::ReadOnlyCompileOptions& options,
                                JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                JS::OffThreadCompileCallback callback,
-                               void* callbackData);
+                               void* callbackData,
+                               JS::OffThreadToken** tokenOut);
 
 bool StartOffThreadDecodeScript(JSContext* cx,
                                 const JS::ReadOnlyCompileOptions& options,
                                 const JS::TranscodeRange& range,
                                 JS::OffThreadCompileCallback callback,
-                                void* callbackData);
+                                void* callbackData,
+                                JS::OffThreadToken** tokenOut);
 
 bool StartOffThreadDecodeMultiScripts(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
