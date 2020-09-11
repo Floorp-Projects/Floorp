@@ -32,4 +32,10 @@ interface nsIPaper : nsISupports
    * and left and right are the margins for the long edges.
    */
   [implicit_jscontext] readonly attribute Promise unwriteableMargin;
+
+  /**
+   * Windows only.
+   * An ID that if non-zero uniquely identifies the paper.
+   */
+  readonly attribute short paperId;
 };
