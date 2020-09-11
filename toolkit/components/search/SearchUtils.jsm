@@ -249,7 +249,7 @@ var SearchUtils = {
    *   The current settings version.
    */
   get SETTINGS_VERSION() {
-    return 5;
+    return 6;
   },
 
   /**

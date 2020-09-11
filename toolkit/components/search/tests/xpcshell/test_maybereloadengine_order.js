@@ -43,12 +43,9 @@ add_task(async function basic_multilocale_test() {
     Assert.ok(!engine._metaData.order, "Order is not defined");
   });
 
-  let useDBForOrder = Services.prefs.getBoolPref(
-    `${SearchUtils.BROWSER_SEARCH_PREF}useDBForOrder`,
-    false
-  );
-  Assert.ok(
-    !useDBForOrder,
+  Assert.equal(
+    Services.search.wrappedJSObject._settings.getAttribute("useSavedOrder"),
+    false,
     "We should not set the engine order during maybeReloadEngines"
   );
 });
