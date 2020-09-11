@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use ron::extensions::Extensions;
+
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
 struct UnitStruct;
 
@@ -66,10 +68,9 @@ fn roundtrip_pretty() {
         .collect(),
     };
 
-    let pretty = ron::ser::PrettyConfig {
-        enumerate_arrays: true,
-        ..Default::default()
-    };
+    let pretty = ron::ser::PrettyConfig::new()
+        .with_enumerate_arrays(true)
+        .with_extensions(Extensions::IMPLICIT_SOME);
     let serial = ron::ser::to_string_pretty(&value, pretty).unwrap();
 
     println!("Serialized: {}", serial);
@@ -109,13 +110,7 @@ fn roundtrip_sep_tuple_members() {
 
     let value = Both { a, b };
 
-    let pretty = ron::ser::PrettyConfig {
-        depth_limit: !0,
-        new_line: "\n".to_owned(),
-        indentor: "    ".to_owned(),
-        separate_tuple_members: true,
-        enumerate_arrays: false,
-    };
+    let pretty = ron::ser::PrettyConfig::new().with_separate_tuple_members(true);
     let serial = ron::ser::to_string_pretty(&value, pretty).unwrap();
 
     println!("Serialized: {}", serial);

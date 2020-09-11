@@ -11,7 +11,7 @@ structs, enums, tuples, arrays, generic maps, and primitive values.
 
 ## Example
 
-```
+```rust
 GameConfig( // optional struct name
     window_size: (800, 600),
     window_title: "PAC-MAN",
@@ -69,12 +69,12 @@ GameConfig( // optional struct name
 
 Notice these issues:
   1. Struct and maps are the same
-    - random order of exported fields
-      - annoying and inconvenient for reading
-      - doesn't work well with version control
-    - quoted field names
-      - too verbose
-    - no support for enums
+     - random order of exported fields
+       - annoying and inconvenient for reading
+       - doesn't work well with version control
+     - quoted field names
+       - too verbose
+     - no support for enums
   2. No trailing comma allowed
   3. No comments allowed
 
@@ -141,7 +141,13 @@ Why not XXX?
 
 ## Tooling
 
+IntelliJ: https://vultix.github.io/intellij-ron-plugin/
+
+VS Code: https://github.com/a5huynh/vscode-ron
+
 Sublime Text: https://packagecontrol.io/packages/RON
+
+Atom: https://atom.io/packages/language-ron
 
 Vim: https://github.com/ron-rs/ron.vim
 
