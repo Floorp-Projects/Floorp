@@ -52,7 +52,7 @@ runWasmWithDebugger(
             assertEq(env.inspectable, true);
             assertEq(env.parent !== null, true);
             assertEq(env.type, 'declarative');
-            assertEq(env.callee, null);
+            assertEq(env.calleeScript, null);
             assertEq(Array.isArray(env.names()), true);
             assertEq(env.names().length, 0);
 

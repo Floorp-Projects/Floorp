@@ -52,8 +52,8 @@ class DebuggerEnvironment : public NativeObject {
                               MutableHandleDebuggerEnvironment result) const;
   MOZ_MUST_USE bool getObject(JSContext* cx,
                               MutableHandleDebuggerObject result) const;
-  MOZ_MUST_USE bool getCallee(JSContext* cx,
-                              MutableHandleDebuggerObject result) const;
+  MOZ_MUST_USE bool getCalleeScript(JSContext* cx,
+                                    MutableHandleDebuggerScript result) const;
   bool isDebuggee() const;
   bool isOptimized() const;
 
