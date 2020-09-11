@@ -4,9 +4,6 @@
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -39,10 +36,6 @@ const NOTIFICATION_TIME = 3000;
 const HEARTBEAT_CSS_URI = Services.io.newURI(
   "resource://normandy/skin/shared/Heartbeat.css"
 );
-const HEARTBEAT_CSS_URI_OSX = Services.io.newURI(
-  "resource://normandy/skin/osx/Heartbeat.css"
-);
-
 const log = LogManager.getLogger("heartbeat");
 const windowsWithInjectedCss = new WeakSet();
 let anyWindowsWithInjectedCss = false;
@@ -54,9 +47,6 @@ CleanupManager.addCleanupHandler(() => {
       if (windowsWithInjectedCss.has(window)) {
         const utils = window.windowUtils;
         utils.removeSheet(HEARTBEAT_CSS_URI, window.AGENT_SHEET);
-        if (AppConstants.platform === "macosx") {
-          utils.removeSheet(HEARTBEAT_CSS_URI_OSX, window.AGENT_SHEET);
-        }
         windowsWithInjectedCss.delete(window);
       }
     }
@@ -143,9 +133,6 @@ var Heartbeat = class {
       windowsWithInjectedCss.add(chromeWindow);
       const utils = chromeWindow.windowUtils;
       utils.loadSheet(HEARTBEAT_CSS_URI, chromeWindow.AGENT_SHEET);
-      if (AppConstants.platform === "macosx") {
-        utils.loadSheet(HEARTBEAT_CSS_URI_OSX, chromeWindow.AGENT_SHEET);
-      }
       anyWindowsWithInjectedCss = true;
     }
 
