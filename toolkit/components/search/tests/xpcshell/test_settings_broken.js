@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Test initializing from a broken search cache. This is one where the engines
+ * Test initializing from broken search settings. This is one where the engines
  * array for some reason has lost all the default engines, but retained either
  * one or two, or a user-supplied engine. We don't know why this happens, but
  * we have seen it (bug 1578807).
@@ -10,17 +10,12 @@
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 const { getAppInfo } = ChromeUtils.import(
   "resource://testing-common/AppInfo.jsm"
 );
 
-var cacheTemplate, appPluginsPath, profPlugins;
-
-const enginesCache = {
-  version: SearchUtils.CACHE_VERSION,
+const enginesSettings = {
+  version: SearchUtils.SETTINGS_VERSION,
   buildID: "TBD",
   appVersion: "TBD",
   locale: "en-US",
@@ -101,22 +96,22 @@ add_task(async function setup() {
   Services.locale.requestedLocales = ["en-US"];
 
   // We dynamically generate the hashes because these depend on the profile.
-  enginesCache.metaData.searchDefaultHash = SearchUtils.getVerificationHash(
-    enginesCache.metaData.searchDefault
+  enginesSettings.metaData.searchDefaultHash = SearchUtils.getVerificationHash(
+    enginesSettings.metaData.searchDefault
   );
-  enginesCache.metaData.hash = SearchUtils.getVerificationHash(
-    enginesCache.metaData.current
+  enginesSettings.metaData.hash = SearchUtils.getVerificationHash(
+    enginesSettings.metaData.current
   );
-  enginesCache.metaData.visibleDefaultEnginesHash = SearchUtils.getVerificationHash(
-    enginesCache.metaData.visibleDefaultEngines
+  enginesSettings.metaData.visibleDefaultEnginesHash = SearchUtils.getVerificationHash(
+    enginesSettings.metaData.visibleDefaultEngines
   );
   const appInfo = getAppInfo();
-  enginesCache.buildID = appInfo.platformBuildID;
-  enginesCache.appVersion = appInfo.version;
+  enginesSettings.buildID = appInfo.platformBuildID;
+  enginesSettings.appVersion = appInfo.version;
 
   await OS.File.writeAtomic(
-    OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME),
-    new TextEncoder().encode(JSON.stringify(enginesCache)),
+    OS.Path.join(OS.Constants.Path.profileDir, SETTINGS_FILENAME),
+    new TextEncoder().encode(JSON.stringify(enginesSettings)),
     { compression: "lz4" }
   );
 });
@@ -137,7 +132,7 @@ add_task(async function test_cached_engine_properties() {
   Assert.equal(
     scalars["browser.searchinit.engines_cache_corrupted"],
     true,
-    "Should have recorded the engines cache as corrupted"
+    "Should have recorded the engine settings as corrupted"
   );
 
   const engines = await Services.search.getEngines();

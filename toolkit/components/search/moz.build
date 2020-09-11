@@ -24,10 +24,10 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
 
 EXTRA_JS_MODULES += [
     'OpenSearchEngine.jsm',
-    'SearchCache.jsm',
     'SearchEngine.jsm',
     'SearchEngineSelector.jsm',
     'SearchService.jsm',
+    'SearchSettings.jsm',
     'SearchStaticData.jsm',
     'SearchSuggestionController.jsm',
     'SearchSuggestions.jsm',

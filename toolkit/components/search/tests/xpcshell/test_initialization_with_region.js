@@ -98,7 +98,7 @@ add_task(async function test_initialization_with_region() {
   await initPromise;
 
   let otherPromises = [
-    promiseAfterCache(),
+    promiseAfterSettings(),
     SearchTestUtils.promiseSearchNotification(
       "engine-default",
       SEARCH_ENGINE_TOPIC

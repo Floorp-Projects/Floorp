@@ -23,7 +23,7 @@ add_task(async function test_save_sorted_engines() {
     { name: "Test search engine", xmlFileName: "engine.xml" },
     { name: "A second test engine", xmlFileName: "engine2.xml" },
   ]);
-  await promiseAfterCache();
+  await promiseAfterSettings();
 
   let search = Services.search;
 
@@ -32,7 +32,7 @@ add_task(async function test_save_sorted_engines() {
   await search.moveEngine(engine2, 1);
 
   // Changes should be commited immediately
-  await promiseAfterCache();
+  await promiseAfterSettings();
   info("Commit complete after moveEngine");
 
   // Check that the entries are placed as specified correctly
@@ -42,7 +42,7 @@ add_task(async function test_save_sorted_engines() {
 
   // Test removing an engine
   search.removeEngine(engine1);
-  await promiseAfterCache();
+  await promiseAfterSettings();
   info("Commit complete after removeEngine");
 
   // Check that the order of the remaining engine was updated correctly
@@ -55,7 +55,7 @@ add_task(async function test_save_sorted_engines() {
     method: "GET",
     template: "http://searchget/?search={searchTerms}",
   });
-  await promiseAfterCache();
+  await promiseAfterSettings();
   info("Commit complete after addEngineWithDetails");
 
   metadata = await promiseEngineMetadata();
