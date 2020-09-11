@@ -20,7 +20,7 @@ def test_scriptinfo_bt():
 
     display = str(info)
     assert "The description of the example test." in display
-    assert info.script_type == ScriptType.BROWSERTIME
+    assert info.script_type == ScriptType.browsertime
 
 
 @pytest.mark.parametrize("script", [EXAMPLE_XPCSHELL_TEST, EXAMPLE_XPCSHELL_TEST2])
@@ -30,7 +30,7 @@ def test_scriptinfo_xpcshell(script):
 
     display = str(info)
     assert "The description of the example test." in display
-    assert info.script_type == ScriptType.XPCSHELL
+    assert info.script_type == ScriptType.xpcshell
 
 
 def test_scriptinfo_failure():

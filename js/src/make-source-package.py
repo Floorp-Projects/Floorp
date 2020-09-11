@@ -176,7 +176,9 @@ rsync_filter_list = """
 
 + /layout/tools/reftest/reftest/**
 
++ /testing/moz.build
 + /testing/mozbase/**
++ /testing/performance/**
 + /testing/web-platform/tests/streams/**
 
 + /toolkit/crashreporter/tools/symbolstore.py
