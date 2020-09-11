@@ -15,6 +15,10 @@ SPHINX_TREES['prompts'] = 'docs'
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 
+TESTING_JS_MODULES += [
+    'test/PromptTestUtils.jsm',
+]
+
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
