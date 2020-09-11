@@ -473,6 +473,19 @@ class Alias(CompositeStrategy):
         return next(results)
 
 
+class Not(CompositeStrategy):
+    """Given a strategy, returns the opposite."""
+    def __init__(self, strategy):
+        super(Not, self).__init__(strategy)
+
+    @property
+    def description(self):
+        return "not-" + self.substrategies[0].description
+
+    def reduce(self, results):
+        return not next(results)
+
+
 def split_bugbug_arg(arg, substrategies):
     """Split args for bugbug based strategies.
 

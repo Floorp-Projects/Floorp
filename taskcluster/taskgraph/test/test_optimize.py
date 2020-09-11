@@ -8,7 +8,7 @@ from functools import partial
 
 import pytest
 from taskgraph import graph, optimize
-from taskgraph.optimize import OptimizationStrategy, All, Any
+from taskgraph.optimize import OptimizationStrategy, All, Any, Not
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.task import Task
 from mozunit import main
@@ -146,6 +146,18 @@ def make_triangle(deps=True, **opts):
             id="composite_strategies_all",
         ),
 
+        # Tasks with the 'not' composite strategy are removed when the substrategy says not to
+        pytest.param(
+            make_graph(
+                make_task('t1', {'not-never': None}),
+                make_task('t2', {'not-remove': None}),
+            ),
+            {"strategies": lambda: {"not-never": Not("never"), "not-remove": Not("remove")}},
+            # expectations
+            {"t1"},
+            id="composite_strategies_not",
+        ),
+
         # Removable tasks that are depended on by non-removable tasks are not removed
         pytest.param(
             make_triangle(
@@ -272,9 +284,11 @@ def test_remove_tasks(monkeypatch, graph, kwargs, exp_removed):
     # set up strategies
     strategies = default_strategies()
     monkeypatch.setattr(optimize, "registry", strategies)
-    strategies = kwargs.pop('strategies', None) or strategies
-    if callable(strategies):
-        strategies = strategies()
+    extra = kwargs.pop('strategies', None)
+    if extra:
+        if callable(extra):
+            extra = extra()
+        strategies.update(extra)
 
     kwargs.setdefault("params", {})
     kwargs.setdefault("do_not_optimize", set())
