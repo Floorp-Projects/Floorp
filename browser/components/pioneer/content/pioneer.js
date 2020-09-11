@@ -144,6 +144,10 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
     await install.install();
     document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
     joinBtn.disabled = false;
+
+    // Send an enrollment ping for this study. Note that this could be sent again
+    // if we are re-joining.
+    await sendEnrollmentPing(studyAddonId);
   }
 
   await updateStudy(cachedAddon.addon_id);
@@ -467,6 +471,10 @@ async function setup(cachedAddons) {
         }
         document.querySelector("dialog").close();
       }
+      // A this point we should have a valid pioneer id, so we should be able to send
+      // the enrollment ping.
+      await sendEnrollmentPing();
+
       showEnrollmentStatus();
     });
 
@@ -727,4 +735,49 @@ async function sendDeletionPing(studyAddonId) {
   };
 
   await TelemetryController.submitExternalPing(type, payload, options);
+}
+
+/**
+ * Sends a Pioneer enrollment ping.
+ *
+ * The `creationDate` provided by the telemetry APIs will be used as the timestamp for
+ * considering the user enrolled in pioneer and/or the study.
+ *
+ * @param [studyAddonid=undefined] - optional study id. It's sent in the ping, if present,
+ * to signal that user enroled in the study.
+ */
+async function sendEnrollmentPing(studyAddonId) {
+  let options = {
+    addPioneerId: true,
+    useEncryption: true,
+    // NOTE - while we're not actually sending useful data in this payload, the current Pioneer v2 Telemetry
+    // pipeline requires that pings are shaped this way so they are routed to the correct environment.
+    //
+    // At the moment, the public key used here isn't important but we do need to use *something*.
+    encryptionKeyId: "debug",
+    publicKey: {
+      crv: "P-256",
+      kty: "EC",
+      x: "XLkI3NaY3-AF2nRMspC63BT1u0Y3moXYSfss7VuQ0mk",
+      y: "SB0KnIW-pqk85OIEYZenoNkEyOOp5GeWQhS1KeRtEUE",
+    },
+    schemaName: "pioneer-enrollment",
+    schemaVersion: 1,
+    // Note that the schema namespace directly informs how data is segregated after ingestion.
+    // If this is an enrollment ping for the pioneer program (in contrast to the enrollment to
+    // a specific study), use a meta namespace.
+    schemaNamespace: "pioneer-meta",
+  };
+
+  // If we were provided with a study id, then this is an enrollment to a study.
+  // Send the id alongside with the data and change the schema namespace to simplify
+  // the work on the ingestion pipeline.
+  if (typeof studyAddonId != "undefined") {
+    options.studyName = studyAddonId;
+    // This is the same namespace used for 'deletion-request' pings. This works because
+    // the pipeline has a specific exception for it.
+    options.schemaNamespace = "pioneer-debug";
+  }
+
+  await TelemetryController.submitExternalPing("pioneer-study", {}, options);
 }
