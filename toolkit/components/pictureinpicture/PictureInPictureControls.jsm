@@ -5,7 +5,20 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TOGGLE_POLICIES", "TOGGLE_POLICY_STRINGS"];
+var EXPORTED_SYMBOLS = [
+  "KEYBOARD_CONTROLS",
+  "TOGGLE_POLICIES",
+  "TOGGLE_POLICY_STRINGS",
+];
+
+// These denote which keyboard controls to show for a qualified video element.
+this.KEYBOARD_CONTROLS = {
+  NONE: 0,
+  PLAY_PAUSE: 1 << 0,
+  MUTE_UNMUTE: 1 << 1,
+  VOLUME: 1 << 2,
+  SEEK: 1 << 3,
+};
 
 // These are the possible toggle positions along the right side of
 // a qualified video element.

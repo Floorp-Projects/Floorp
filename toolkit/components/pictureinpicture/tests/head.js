@@ -243,7 +243,7 @@ async function toggleOpacityReachesThreshold(
  * @param {String} videoID The ID of the video element that we expect the toggle
  * to appear on.
  * @param {Number} policy Optional argument. If policy is defined, then it should
- * be one of the values in the TOGGLE_POLICIES from PictureInPictureTogglePolicy.jsm.
+ * be one of the values in the TOGGLE_POLICIES from PictureInPictureControls.jsm.
  * If undefined, this function will ensure no policy attribute is set.
  *
  * @return Promise
@@ -271,7 +271,7 @@ async function assertTogglePolicy(
 
     if (policy) {
       const { TOGGLE_POLICY_STRINGS } = ChromeUtils.import(
-        "resource://gre/modules/PictureInPictureTogglePolicy.jsm"
+        "resource://gre/modules/PictureInPictureControls.jsm"
       );
       let policyAttr = toggle.getAttribute("policy");
       Assert.equal(
@@ -478,7 +478,7 @@ async function getToggleClientRect(
  * in this region will not result in the window opening.
  *
  * If policy is defined, then it should be one of the values in the
- * TOGGLE_POLICIES from PictureInPictureTogglePolicy.jsm.
+ * TOGGLE_POLICIES from PictureInPictureControls.jsm.
  *
  * See the documentation for the DEFAULT_TOGGLE_STYLES object for a sense
  * of what styleRules is expected to be. If left undefined, styleRules will
@@ -530,7 +530,7 @@ async function testToggle(testURL, expectations, prepFn = async () => {}) {
  * @param {Boolean} canToggle True if we expect the toggle to be visible and
  * clickable by the mouse for the associated video.
  * @param {Number} policy Optional argument. If policy is defined, then it should
- * be one of the values in the TOGGLE_POLICIES from PictureInPictureTogglePolicy.jsm.
+ * be one of the values in the TOGGLE_POLICIES from PictureInPictureControls.jsm.
  * @param {Object} toggleStyles Optional argument. See the documentation for the
  * DEFAULT_TOGGLE_STYLES object for a sense of what styleRules is expected to be.
  *

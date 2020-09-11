@@ -13,8 +13,14 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
+  "KEYBOARD_CONTROLS",
+  "resource://gre/modules/PictureInPictureControls.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
   "TOGGLE_POLICIES",
-  "resource://gre/modules/PictureInPictureTogglePolicy.jsm"
+  "resource://gre/modules/PictureInPictureControls.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -41,7 +47,7 @@ this.pictureInPictureParent = class extends ExtensionAPI {
           }
 
           Services.ppmm.sharedData.set(
-            "PictureInPicture:ToggleOverrides",
+            "PictureInPicture:SiteOverrides",
             overrides
           );
         },
@@ -60,6 +66,15 @@ this.pictureInPictureChild = class extends ExtensionAPI {
   getAPI(context) {
     return {
       pictureInPictureChild: {
+        getKeyboardControls() {
+          // The Picture-in-Picture toggle is only implemented for Desktop, so make
+          // this return nothing for non-Desktop builds.
+          if (AppConstants.platform == "android") {
+            return Cu.cloneInto({}, context.cloneScope);
+          }
+
+          return Cu.cloneInto(KEYBOARD_CONTROLS, context.cloneScope);
+        },
         getPolicies() {
           // The Picture-in-Picture toggle is only implemented for Desktop, so make
           // this return nothing for non-Desktop builds.

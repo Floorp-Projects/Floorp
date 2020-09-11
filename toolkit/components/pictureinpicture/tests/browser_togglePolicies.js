@@ -3,10 +3,10 @@
 
 "use strict";
 
-const SHARED_DATA_KEY = "PictureInPicture:ToggleOverrides";
+const SHARED_DATA_KEY = "PictureInPicture:SiteOverrides";
 
 const { TOGGLE_POLICIES } = ChromeUtils.import(
-  "resource://gre/modules/PictureInPictureTogglePolicy.jsm"
+  "resource://gre/modules/PictureInPictureControls.jsm"
 );
 
 /**
@@ -24,7 +24,7 @@ add_task(async () => {
 
   for (let policy of positionPolicies) {
     Services.ppmm.sharedData.set(SHARED_DATA_KEY, {
-      "*://example.com/*": policy,
+      "*://example.com/*": { policy },
     });
     Services.ppmm.sharedData.flush();
 
@@ -59,7 +59,7 @@ add_task(async () => {
  */
 add_task(async () => {
   Services.ppmm.sharedData.set(SHARED_DATA_KEY, {
-    "*://example.com/*": TOGGLE_POLICIES.HIDDEN,
+    "*://example.com/*": { policy: TOGGLE_POLICIES.HIDDEN },
   });
   Services.ppmm.sharedData.flush();
 
@@ -84,7 +84,7 @@ add_task(async () => {
  */
 add_task(async () => {
   Services.ppmm.sharedData.set(SHARED_DATA_KEY, {
-    "*://example.com/*/test-page.html": TOGGLE_POLICIES.HIDDEN,
+    "*://example.com/*/test-page.html": { policy: TOGGLE_POLICIES.HIDDEN },
   });
   Services.ppmm.sharedData.flush();
 

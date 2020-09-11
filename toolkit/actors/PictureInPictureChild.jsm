@@ -18,13 +18,18 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "KEYBOARD_CONTROLS",
+  "resource://gre/modules/PictureInPictureControls.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "TOGGLE_POLICIES",
-  "resource://gre/modules/PictureInPictureTogglePolicy.jsm"
+  "resource://gre/modules/PictureInPictureControls.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "TOGGLE_POLICY_STRINGS",
-  "resource://gre/modules/PictureInPictureTogglePolicy.jsm"
+  "resource://gre/modules/PictureInPictureControls.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -58,10 +63,10 @@ var gWeakIntersectingVideosForTesting = new WeakSet();
 
 // Overrides are expected to stay constant for the lifetime of a
 // content process, so we set this as a lazy process global.
-// See PictureInPictureToggleChild.getToggleOverrides for a sense
-// of what the return type is.
-XPCOMUtils.defineLazyGetter(this, "gToggleOverrides", () => {
-  return PictureInPictureToggleChild.getToggleOverrides();
+// See PictureInPictureToggleChild.getSiteOverrides for a
+// sense of what the return types are.
+XPCOMUtils.defineLazyGetter(this, "gSiteOverrides", () => {
+  return PictureInPictureToggleChild.getSiteOverrides();
 });
 
 /**
@@ -228,13 +233,13 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     switch (event.type) {
       case "change": {
         const { changedKeys } = event;
-        if (changedKeys.includes("PictureInPicture:ToggleOverrides")) {
-          // For now we only update our cache if the toggle overrides change.
+        if (changedKeys.includes("PictureInPicture:SiteOverrides")) {
+          // For now we only update our cache if the site overrides change.
           // the user will need to refresh the page for changes to apply.
           try {
-            gToggleOverrides = PictureInPictureToggleChild.getToggleOverrides();
+            gSiteOverrides = PictureInPictureToggleChild.getSiteOverrides();
           } catch (e) {
-            // Ignore resulting TypeError if gToggleOverrides is still unloaded
+            // Ignore resulting TypeError if gSiteOverrides is still unloaded
             if (!(e instanceof TypeError)) {
               throw e;
             }
@@ -760,13 +765,13 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       state.togglePolicy = TOGGLE_POLICIES.DEFAULT;
       // We cache the matchers process-wide. We'll skip this while running tests to make that
       // easier.
-      let toggleOverrides = this.toggleTesting
-        ? PictureInPictureToggleChild.getToggleOverrides()
-        : gToggleOverrides;
+      let siteOverrides = this.toggleTesting
+        ? PictureInPictureToggleChild.getSiteOverrides()
+        : gSiteOverrides;
 
       // Do we have any toggle overrides? If so, try to apply them.
-      for (let [override, policy] of toggleOverrides) {
-        if (override.matches(this.document.documentURI)) {
+      for (let [override, { policy }] of siteOverrides) {
+        if (policy && override.matches(this.document.documentURI)) {
           state.togglePolicy = policy;
           break;
         }
@@ -970,18 +975,20 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
   }
 
   /**
-   * Gets any Picture-in-Picture toggle overrides stored in the sharedData
-   * struct, and returns them as an Array of two-element Arrays, where the first
-   * element is a MatchPattern and the second element is a policy.
+   * Gets any Picture-in-Picture site-specific overrides stored in the
+   * sharedData struct, and returns them as an Array of two-element Arrays,
+   * where the first element is a MatchPattern and the second element is an
+   * object of the form { policy, keyboardControls } (where each property
+   * may be missing or undefined).
    *
    * @returns {Array<Array<2>>} Array of 2-element Arrays where the first element
-   * is a MatchPattern and the second element is a Number representing a toggle
-   * policy.
+   * is a MatchPattern and the second element is an object with optional policy
+   * and/or keyboardControls properties.
    */
-  static getToggleOverrides() {
+  static getSiteOverrides() {
     let result = [];
     let patterns = Services.cpmm.sharedData.get(
-      "PictureInPicture:ToggleOverrides"
+      "PictureInPicture:SiteOverrides"
     );
     for (let pattern in patterns) {
       let matcher = new MatchPattern(pattern);
@@ -1360,10 +1367,35 @@ class PictureInPictureChild extends JSWindowActorChild {
   }
 
   /**
+   * This checks if a given keybinding has been disabled for the specific site
+   * currently being viewed.
+   */
+  isKeyEnabled(key) {
+    const video = this.getWeakVideo();
+    if (!video) {
+      return false;
+    }
+    const { documentURI } = video.ownerDocument;
+    if (!documentURI) {
+      return true;
+    }
+    for (let [override, { keyboardControls }] of gSiteOverrides) {
+      if (keyboardControls !== undefined && override.matches(documentURI)) {
+        if (keyboardControls === KEYBOARD_CONTROLS.NONE) {
+          return false;
+        }
+        return keyboardControls & key;
+      }
+    }
+    return true;
+  }
+
+  /**
    * This reuses the keyHandler logic in the VideoControlsWidget
    * https://searchfox.org/mozilla-central/rev/cfd1cc461f1efe0d66c2fdc17c024a203d5a2fd8/toolkit/content/widgets/videocontrols.js#1687-1810.
    * There are future plans to eventually combine the two implementations.
    */
+  /* eslint-disable complexity */
   keyDown({ altKey, shiftKey, metaKey, ctrlKey, keyCode }) {
     let video = this.getWeakVideo();
     if (!video) {
@@ -1423,6 +1455,9 @@ class PictureInPictureChild extends JSWindowActorChild {
     try {
       switch (keystroke) {
         case "space" /* Toggle Play / Pause */:
+          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.PLAY_PAUSE)) {
+            return;
+          }
           if (video.paused || video.ended) {
             video.play();
           } else {
@@ -1430,24 +1465,36 @@ class PictureInPictureChild extends JSWindowActorChild {
           }
           break;
         case "downArrow" /* Volume decrease */:
+          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.VOLUME)) {
+            return;
+          }
           oldval = video.volume;
           video.volume = oldval < 0.1 ? 0 : oldval - 0.1;
           video.muted = false;
           break;
         case "upArrow" /* Volume increase */:
+          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.VOLUME)) {
+            return;
+          }
           oldval = video.volume;
           video.volume = oldval > 0.9 ? 1 : oldval + 0.1;
           video.muted = false;
           break;
         case "accel-downArrow" /* Mute */:
+          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
+            return;
+          }
           video.muted = true;
           break;
         case "accel-upArrow" /* Unmute */:
+          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
+            return;
+          }
           video.muted = false;
           break;
         case "leftArrow": /* Seek back 15 seconds */
         case "accel-leftArrow" /* Seek back 10% */:
-          if (isVideoStreaming) {
+          if (isVideoStreaming || !this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
 
@@ -1461,7 +1508,7 @@ class PictureInPictureChild extends JSWindowActorChild {
           break;
         case "rightArrow": /* Seek forward 15 seconds */
         case "accel-rightArrow" /* Seek forward 10% */:
-          if (isVideoStreaming) {
+          if (isVideoStreaming || !this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
 
@@ -1475,11 +1522,17 @@ class PictureInPictureChild extends JSWindowActorChild {
           video.currentTime = newval <= maxtime ? newval : maxtime;
           break;
         case "home" /* Seek to beginning */:
+          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
+            return;
+          }
           if (!isVideoStreaming) {
             video.currentTime = 0;
           }
           break;
         case "end" /* Seek to end */:
+          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
+            return;
+          }
           if (!isVideoStreaming && video.currentTime != video.duration) {
             video.currentTime = video.duration;
           }
