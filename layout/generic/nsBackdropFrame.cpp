@@ -53,7 +53,7 @@ LogicalSize nsBackdropFrame::ComputeAutoSize(
     ComputeSizeFlags aFlags) {
   // Note that this frame is a child of the viewport frame.
   LogicalSize result(aWM, 0xdeadbeef, NS_UNCONSTRAINEDSIZE);
-  if (aFlags & ComputeSizeFlags::eShrinkWrap) {
+  if (aFlags & ComputeSizeFlags::ShrinkWrap) {
     result.ISize(aWM) = 0;
   } else {
     result.ISize(aWM) = aAvailableISize - aMargin.ISize(aWM) -

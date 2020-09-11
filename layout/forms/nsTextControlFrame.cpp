@@ -569,7 +569,7 @@ LogicalSize nsTextControlFrame::ComputeAutoSize(
   // only for 'auto'), the block-size it returns is always NS_UNCONSTRAINEDSIZE.
   const auto& iSizeCoord = StylePosition()->ISize(aWM);
   if (iSizeCoord.IsAuto()) {
-    if (aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize) {
+    if (aFlags & ComputeSizeFlags::IClampMarginBoxMinSize) {
       // CalcIntrinsicSize isn't aware of grid-item margin-box clamping, so we
       // fall back to nsContainerFrame's ComputeAutoSize to handle that.
       // XXX maybe a font-inflation issue here? (per the assertion below).
