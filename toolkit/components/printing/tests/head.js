@@ -37,6 +37,7 @@ class PrintHelper {
       "Wait for dialog"
     );
     await dialog._dialogReady;
+    await this.win._initialized;
   }
 
   async withClosingFn(closeFn) {

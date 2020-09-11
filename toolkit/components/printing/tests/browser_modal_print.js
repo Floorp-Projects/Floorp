@@ -84,9 +84,6 @@ add_task(async function testTabOrder() {
       "Initial focus on printer picker"
     );
 
-    // Due to bug 1327274, if we shift+tab before print preview is initialized,
-    // focus will get trapped. Therefore, wait for initialization first.
-    await helper.win.PrintEventHandler._previewUpdatingPromise;
     const previewBrowser = document.querySelector(".printPreviewBrowser");
     ok(previewBrowser, "Got the print preview browser");
     let focused = BrowserTestUtils.waitForEvent(previewBrowser, "focus");
