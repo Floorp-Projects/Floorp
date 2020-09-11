@@ -19,192 +19,6 @@ let originalEngine;
 let newEngine;
 
 add_task(async function setup() {
-  SpecialPowers.pushPrefEnv({
-    set: [
-      // Avoid hitting the network with search suggestions.
-      ["browser.urlbar.suggest.searches", false],
-      ["browser.tabs.loadInBackground", true],
-    ],
-  });
-  gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
-
-  // Add a search suggestion engine and move it to the front so that it appears
-  // as the first one-off.
-  originalEngine = await Services.search.getDefault();
-  newEngine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
-  );
-  await Services.search.moveEngine(newEngine, 0);
-
-  registerCleanupFunction(async function() {
-    await PlacesUtils.history.clear();
-    await UrlbarTestUtils.formHistory.clear();
-    await Services.search.setDefault(originalEngine);
-  });
-
-  await PlacesUtils.history.clear();
-  await UrlbarTestUtils.formHistory.clear();
-
-  let visits = [];
-  for (let i = 0; i < gMaxResults; i++) {
-    visits.push({
-      uri: makeURI("http://example.com/browser_urlbarOneOffs.js/?" + i),
-      // TYPED so that the visit shows up when the urlbar's drop-down arrow is
-      // pressed.
-      transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
-    });
-  }
-  await PlacesTestUtils.addVisits(visits);
-});
-
-async function searchInTab(checkFn) {
-  // Ensure we've got a different engine selected to the one we added. so that
-  // it is a different engine to select.
-  await Services.search.setDefault(originalEngine);
-
-  await BrowserTestUtils.withNewTab({ gBrowser }, async testBrowser => {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "foo",
-    });
-
-    let contextMenu = oneOffSearchButtons.querySelector(
-      ".search-one-offs-context-menu"
-    );
-    let popupShownPromise = BrowserTestUtils.waitForEvent(
-      contextMenu,
-      "popupshown"
-    );
-    let oneOffs = oneOffSearchButtons.getSelectableButtons(true);
-    EventUtils.synthesizeMouseAtCenter(oneOffs[0], {
-      type: "contextmenu",
-      button: 2,
-    });
-    await popupShownPromise;
-
-    let tabOpenAndLoaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-
-    let openInTab = oneOffSearchButtons.querySelector(
-      ".search-one-offs-context-open-in-new-tab"
-    );
-    EventUtils.synthesizeMouseAtCenter(openInTab, {});
-
-    let newTab = await tabOpenAndLoaded;
-
-    checkFn(testBrowser, newTab);
-
-    BrowserTestUtils.removeTab(newTab);
-    await UrlbarTestUtils.formHistory.clear();
-  });
-}
-
-add_task(async function searchInNewTab_opensBackground() {
-  // TODO: Rewrite/duplicate this test to work with update2. See bug 1657212
-  // comment 1.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-      ["browser.tabs.loadInBackground", true],
-    ],
-  });
-
-  await searchInTab((testBrowser, newTab) => {
-    Assert.equal(
-      newTab.linkedBrowser.currentURI.spec,
-      "http://mochi.test:8888/?terms=foo",
-      "Should have loaded the expected URI in a new tab."
-    );
-
-    Assert.equal(
-      testBrowser.currentURI.spec,
-      "about:blank",
-      "Should not have touched the original tab"
-    );
-
-    Assert.equal(
-      testBrowser,
-      gBrowser.selectedTab.linkedBrowser,
-      "Should not have changed the selected tab"
-    );
-  });
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function searchInNewTab_opensForeground() {
-  // TODO: Rewrite/duplicate this test to work with update2. See bug 1657212
-  // comment 1.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", false],
-      ["browser.urlbar.update2.oneOffsRefresh", false],
-      ["browser.tabs.loadInBackground", false],
-    ],
-  });
-
-  await searchInTab((testBrowser, newTab) => {
-    Assert.equal(
-      newTab.linkedBrowser.currentURI.spec,
-      "http://mochi.test:8888/?terms=foo",
-      "Should have loaded the expected URI in a new tab."
-    );
-
-    Assert.equal(
-      testBrowser.currentURI.spec,
-      "about:blank",
-      "Should not have touched the original tab"
-    );
-
-    Assert.equal(
-      newTab,
-      gBrowser.selectedTab,
-      "Should have changed the selected tab"
-    );
-  });
-});
-
-add_task(async function switchDefaultEngine() {
-  await Services.search.setDefault(originalEngine);
-
-  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "foo",
-    });
-
-    let contextMenu = oneOffSearchButtons.querySelector(
-      ".search-one-offs-context-menu"
-    );
-    let popupShownPromise = BrowserTestUtils.waitForEvent(
-      contextMenu,
-      "popupshown"
-    );
-    let oneOffs = oneOffSearchButtons.getSelectableButtons(true);
-    EventUtils.synthesizeMouseAtCenter(oneOffs[0], {
-      type: "contextmenu",
-      button: 2,
-    });
-    await popupShownPromise;
-
-    let engineChangedPromise = SearchTestUtils.promiseSearchNotification(
-      "engine-default",
-      "browser-search-engine-modified"
-    );
-    let setDefault = oneOffSearchButtons.querySelector(
-      ".search-one-offs-context-set-default"
-    );
-    EventUtils.synthesizeMouseAtCenter(setDefault, {});
-    await engineChangedPromise;
-
-    Assert.equal(
-      await Services.search.getDefault(),
-      newEngine,
-      "Should have correctly changed the engine to the new one"
-    );
-  });
-});
-
-add_task(async function localOneOffsContextMenu() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.update2", true],
@@ -212,7 +26,10 @@ add_task(async function localOneOffsContextMenu() {
       ["browser.urlbar.update2.oneOffsRefresh", true],
     ],
   });
+});
 
+// The one-off context menu should not be shown.
+add_task(async function contextMenu_not_shown() {
   // Add a popupshown listener on the context menu that sets this
   // popupshownFired boolean.
   let popupshownFired = false;
@@ -230,13 +47,7 @@ add_task(async function localOneOffsContextMenu() {
     value: "foo",
   });
 
-  // First, open the context menu on a remote engine so we know this test works
-  // correctly.  We intentionally use the same logic here for detecting
-  // popupshown that we use below, when the menu should not appear.  That way we
-  // can have some confidence that the logic doesn't have any bugs and correctly
-  // detects popupshown.  If we used BrowserTestUtils.waitForEvent here instead,
-  // then it would be more likely that bugs in the logic detecting popupshown
-  // when the menu should not appear would go unnoticed.
+  // First, try to open the context menu on a remote engine.
   let allOneOffs = oneOffSearchButtons.getSelectableButtons(true);
   Assert.greater(allOneOffs.length, 0, "There should be at least one one-off");
   Assert.ok(
@@ -250,13 +61,10 @@ add_task(async function localOneOffsContextMenu() {
   let timeout = 500;
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, timeout));
-  Assert.ok(popupshownFired, "popupshown should be fired on a remote one-off");
-  popupshownFired = false;
-
-  // Close the context menu.
-  let hiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
-  contextMenu.hidePopup();
-  await hiddenPromise;
+  Assert.ok(
+    !popupshownFired,
+    "popupshown should not be fired on a remote one-off"
+  );
 
   // Now try to open the context menu on a local one-off.
   let localOneOffs = oneOffSearchButtons.localButtons;
