@@ -121,8 +121,8 @@ describe("ASRouter", () => {
     sandbox.spy(ASRouterPreferences, "uninit");
     sandbox.spy(ASRouterPreferences, "addListener");
     sandbox.spy(ASRouterPreferences, "removeListener");
-    sandbox.stub(ASRouterPreferences, "trailhead").get(() => {
-      return { trailheadTriplet: "test" };
+    sandbox.stub(ASRouterPreferences, "trailheadTriplet").get(() => {
+      return "test";
     });
     sandbox.replaceGetter(
       ASRouterPreferences,
@@ -583,7 +583,7 @@ describe("ASRouter", () => {
           providerPrefs: ASRouterPreferences.providers,
           userPrefs: ASRouterPreferences.getAllUserPreferences(),
           targetingParameters: {},
-          trailhead: ASRouterPreferences.trailhead,
+          trailheadTriplet: ASRouterPreferences.trailheadTriplet,
           errors: Router.errors,
         }),
       });
@@ -2111,7 +2111,7 @@ describe("ASRouter", () => {
             providerPrefs: ASRouterPreferences.providers,
             userPrefs: ASRouterPreferences.getAllUserPreferences(),
             targetingParameters: {},
-            trailhead: ASRouterPreferences.trailhead,
+            trailheadTriplet: ASRouterPreferences.trailheadTriplet,
             errors: Router.errors,
           }),
         });
@@ -2524,12 +2524,13 @@ describe("ASRouter", () => {
       });
 
       it("should set blockOnClick property true for dynamic triplet and matching messages more than 3", async () => {
-        sandbox.replaceGetter(ASRouterPreferences, "trailhead", function() {
-          return {
-            trailheadInterrupt: "join",
-            trailheadTriplet: "dynamic",
-          };
-        });
+        sandbox.replaceGetter(
+          ASRouterPreferences,
+          "trailheadTriplet",
+          function() {
+            return "dynamic";
+          }
+        );
         await Router.onMessage(msg);
         const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
         const expectedBundle = [
@@ -2559,12 +2560,13 @@ describe("ASRouter", () => {
       });
 
       it("should set blockOnClick property true for triplet branch name that starts with 'dynamic' and matching messages more than 3", async () => {
-        sandbox.replaceGetter(ASRouterPreferences, "trailhead", function() {
-          return {
-            trailheadInterrupt: "join",
-            trailheadTriplet: "dynamic_test",
-          };
-        });
+        sandbox.replaceGetter(
+          ASRouterPreferences,
+          "trailheadTriplet",
+          function() {
+            return "dynamic_test";
+          }
+        );
         await Router.onMessage(msg);
         const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
         const expectedBundle = [

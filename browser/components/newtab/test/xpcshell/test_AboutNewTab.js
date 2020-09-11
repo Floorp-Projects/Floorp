@@ -288,7 +288,7 @@ addTestsWithPrivilegedContentProcessPref(async function test_default_url() {
 });
 
 addTestsWithPrivilegedContentProcessPref(async function test_welcome_url() {
-  // Set about:welcome to use trailhead flow
+  // Disable about:welcome to load newtab
   Services.prefs.setBoolPref(SIMPLIFIED_WELCOME_ENABLED_PREF, false);
   Assert.equal(
     aboutNewTabService.welcomeURL,
