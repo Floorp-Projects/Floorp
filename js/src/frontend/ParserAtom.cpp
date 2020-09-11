@@ -230,13 +230,13 @@ template <typename CharT>
 ParserAtomsTable::AddPtr ParserAtomsTable::lookupForAdd(
     JSContext* cx, InflatedChar16Sequence<CharT> seq) {
   // Check against well-known.
-  const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(seq);
+  SpecificParserAtomLookup<CharT> lookup(seq);
+  const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(lookup);
   if (wk) {
     return AddPtr(wk);
   }
 
   // Check for existing atom.
-  SpecificParserAtomLookup<CharT> lookup(seq);
   return AddPtr(entrySet_.lookupForAdd(lookup), lookup.hash());
 }
 
@@ -477,8 +477,7 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::concatAtoms(
 
 template <typename CharT>
 const ParserAtom* WellKnownParserAtoms::lookupChar16Seq(
-    InflatedChar16Sequence<CharT> seq) const {
-  SpecificParserAtomLookup<CharT> lookup(seq);
+    const SpecificParserAtomLookup<CharT>& lookup) const {
   EntrySet::Ptr get = entrySet_.readonlyThreadsafeLookup(lookup);
   if (get) {
     return get->get()->asAtom();
