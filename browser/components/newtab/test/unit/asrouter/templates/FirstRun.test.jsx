@@ -2,7 +2,6 @@ import {
   FirstRun,
   FLUENT_FILES,
 } from "content-src/asrouter/templates/FirstRun/FirstRun";
-import { Interrupt } from "content-src/asrouter/templates/FirstRun/Interrupt";
 import { Triplets } from "content-src/asrouter/templates/FirstRun/Triplets";
 import { OnboardingMessageProvider } from "lib/OnboardingMessageProvider.jsm";
 import { mount } from "enzyme";
@@ -73,7 +72,7 @@ describe("<FirstRun>", () => {
   async function setup() {
     sandbox = sinon.createSandbox();
     clock = sandbox.useFakeTimers();
-    message = await getTestMessage("TRAILHEAD_1");
+    message = await getTestMessage("EXTENDED_TRIPLETS_1");
     fakeDoc = {
       body: document.createElement("body"),
       head: document.createElement("head"),
@@ -111,47 +110,21 @@ describe("<FirstRun>", () => {
   it("should render", () => {
     assert.ok(wrapper);
   });
-  describe("with both interrupt and triplets", () => {
-    it("should render interrupt and triplets", () => {
-      assert.lengthOf(wrapper.find(Interrupt), 1, "<Interrupt>");
+  describe("with triplets", () => {
+    it("should render triplets", () => {
       assert.lengthOf(wrapper.find(Triplets), 1, "<Triplets>");
     });
-    it("should show the card panel and hide the content on the Triplets", () => {
-      // This is so the container shows up in the background but we can fade in the content when intterupt is closed.
+    it("should show the card panel and the content on the Triplets", () => {
       const tripletsProps = wrapper.find(Triplets).props();
       assert.propertyVal(tripletsProps, "showCardPanel", true);
-      assert.propertyVal(tripletsProps, "showContent", false);
     });
-    it("should set the UTM term to trailhead-join (for the traihead-join message)", () => {
-      const iProps = wrapper.find(Interrupt).props();
+    it("should set the UTM term to trailhead-cards-card (for the extended-triplet message)", () => {
       const tProps = wrapper.find(Triplets).props();
-      assert.propertyVal(iProps, "UTMTerm", "trailhead-join");
-      assert.propertyVal(tProps, "UTMTerm", "trailhead-join-card");
+      assert.propertyVal(tProps, "UTMTerm", "trailhead-cards-card");
     });
   });
 
-  describe("with an interrupt but no triplets", () => {
-    beforeEach(() => {
-      message.bundle = []; // Empty triplets
-      wrapper = mount(<FirstRun message={message} document={fakeDoc} />);
-    });
-    it("should render interrupt but no triplets", () => {
-      assert.lengthOf(wrapper.find(Interrupt), 1, "<Interrupt>");
-      assert.lengthOf(wrapper.find(Triplets), 0, "<Triplets>");
-    });
-  });
-
-  describe("with triplets but no interrupt", () => {
-    it("should render interrupt but no triplets", () => {
-      delete message.content; // Empty interrupt
-      wrapper = mount(<FirstRun message={message} document={fakeDoc} />);
-
-      assert.lengthOf(wrapper.find(Interrupt), 0, "<Interrupt>");
-      assert.lengthOf(wrapper.find(Triplets), 1, "<Triplets>");
-    });
-  });
-
-  describe("with no triplets or interrupt", () => {
+  describe("with no triplets", () => {
     it("should render empty", () => {
       message = { type: "FOO_123" };
       wrapper = mount(<FirstRun message={message} document={fakeDoc} />);
@@ -165,8 +138,6 @@ describe("<FirstRun>", () => {
     wrapper = mount(
       <FirstRun message={message} document={fakeDoc} executeAction={stub} />
     );
-
-    assert.propertyVal(wrapper.find(Interrupt).props(), "executeAction", stub);
     assert.propertyVal(wrapper.find(Triplets).props(), "onAction", stub);
   });
 
@@ -176,7 +147,6 @@ describe("<FirstRun>", () => {
       <FirstRun
         message={message}
         document={fakeDoc}
-        dispatch={() => {}}
         fetchFlowParams={stub}
         fxaEndpoint="https://foo.com"
       />
@@ -187,12 +157,7 @@ describe("<FirstRun>", () => {
   it("should load flow params onUpdate if fxaEndpoint is not defined on mount and then later defined", () => {
     const stub = sandbox.stub();
     wrapper = mount(
-      <FirstRun
-        message={message}
-        document={fakeDoc}
-        fetchFlowParams={stub}
-        dispatch={() => {}}
-      />
+      <FirstRun message={message} document={fakeDoc} fetchFlowParams={stub} />
     );
     assert.notCalled(stub);
     wrapper.setProps({ fxaEndpoint: "https://foo.com" });
@@ -205,7 +170,6 @@ describe("<FirstRun>", () => {
       <FirstRun
         message={message}
         document={fakeDoc}
-        dispatch={() => {}}
         fetchFlowParams={stub}
         fxaEndpoint="https://foo.com"
       />
@@ -219,28 +183,6 @@ describe("<FirstRun>", () => {
     assert.lengthOf(fakeDoc.head.querySelectorAll("link"), FLUENT_FILES.length);
   });
 
-  it("should show triplet content only when interrupt is not visible", () => {
-    assert.lengthOf(wrapper.find(Interrupt), 1, "Interrupt shown");
-    assert.propertyVal(wrapper.find(Triplets).props(), "showContent", false);
-    assert.propertyVal(wrapper.find(Triplets).props(), "showCardPanel", true);
-
-    wrapper.setProps({ interruptCleared: true });
-
-    assert.propertyVal(wrapper.find(Triplets).props(), "showContent", true);
-    assert.propertyVal(wrapper.find(Triplets).props(), "showCardPanel", true);
-  });
-
-  it("should update didUserClearInterrupt state to false on close of interrupt", () => {
-    assert.isFalse(wrapper.state().didUserClearInterrupt);
-    // Simulate calling close interrupt
-    wrapper
-      .find(Interrupt)
-      .find(".trailheadStart")
-      .simulate("click");
-
-    assert.isTrue(wrapper.state().didUserClearInterrupt);
-  });
-
   it("should update didUserClearTriplets state to true on close of triplet", () => {
     assert.isFalse(wrapper.state().didUserClearTriplets);
     // Simulate calling close Triplets
@@ -249,30 +191,6 @@ describe("<FirstRun>", () => {
       .find(".icon-dismiss")
       .simulate("click");
     assert.isTrue(wrapper.state().didUserClearTriplets);
-  });
-
-  it("should hide the interrupt and show the triplets when onNextScene is called", () => {
-    // Simulate calling next scene
-    wrapper
-      .find(Interrupt)
-      .find(".trailheadStart")
-      .simulate("click");
-
-    assert.lengthOf(wrapper.find(Interrupt), 0, "Interrupt hidden");
-    assert.isTrue(
-      wrapper
-        .find(Triplets)
-        .find(".trailheadCardGrid")
-        .hasClass("show"),
-      "Show triplet content"
-    );
-  });
-
-  it("should hide the interrupt when props.interruptCleared changes to true", () => {
-    assert.lengthOf(wrapper.find(Interrupt), 1, "Interrupt shown");
-    wrapper.setProps({ interruptCleared: true });
-
-    assert.lengthOf(wrapper.find(Interrupt), 0, "Interrupt hidden");
   });
 
   it("should hide triplets when closeTriplets is called and block extended triplets after 500ms", () => {

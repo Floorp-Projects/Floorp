@@ -5,11 +5,8 @@ import {
 import { GlobalOverrider } from "test/unit/utils";
 import { OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME } from "content-src/lib/init-store";
 import { FAKE_LOCAL_MESSAGES } from "./constants";
-import { OnboardingMessageProvider } from "lib/OnboardingMessageProvider.jsm";
 import React from "react";
 import { mount } from "enzyme";
-import { Trailhead } from "../../../content-src/asrouter/templates/Trailhead/Trailhead";
-import { Triplets } from "../../../content-src/asrouter/templates/FirstRun/Triplets";
 import { actionCreators as ac } from "common/Actions.jsm";
 
 let [FAKE_MESSAGE] = FAKE_LOCAL_MESSAGES;
@@ -177,18 +174,6 @@ describe("ASRouterUISurface", () => {
     assert.equal(footerPortal.childElementCount, 0);
   });
 
-  it("should render a trailhead message in the header portal", async () => {
-    // wrapper = shallow(<ASRouterUISurface document={fakeDocument} />);
-    const message = (
-      await OnboardingMessageProvider.getUntranslatedMessages()
-    ).find(msg => msg.template === "trailhead");
-
-    wrapper.setState({ message });
-
-    assert.isTrue(headerPortal.childElementCount > 0);
-    assert.equal(footerPortal.childElementCount, 0);
-  });
-
   it("should dispatch an event to select the correct theme", () => {
     const stub = sandbox.stub(window, "dispatchEvent");
     sandbox
@@ -237,42 +222,7 @@ describe("ASRouterUISurface", () => {
     });
   });
 
-  describe("trailhead", () => {
-    it("should render trailhead if a trailhead message is received", async () => {
-      const message = (
-        await OnboardingMessageProvider.getUntranslatedMessages()
-      ).find(msg => msg.template === "trailhead");
-      wrapper.setState({ message });
-      assert.lengthOf(wrapper.find(Trailhead), 1);
-    });
-
-    it("should render Triplets if a trailhead message with bundle is received", async () => {
-      const FAKE_TRIPLETS_BUNDLE = [
-        {
-          id: "test",
-          content: {
-            title: { string_id: "foo" },
-            text: { string_id: "text1" },
-            icon: "icon",
-            primary_button: {
-              label: { string_id: "button1" },
-              action: {
-                type: "OPEN_URL",
-                data: { args: "https://example.com/" },
-              },
-            },
-          },
-        },
-      ];
-      const message = (
-        await OnboardingMessageProvider.getUntranslatedMessages()
-      ).find(msg => msg.template === "trailhead");
-      wrapper.setState({
-        message: { ...message, bundle: FAKE_TRIPLETS_BUNDLE },
-      });
-      assert.lengthOf(wrapper.find(Triplets), 1);
-    });
-
+  describe("Triplet bundle Card", () => {
     it("should send NEW_TAB_MESSAGE_REQUEST if a bundle card id is blocked or cleared", async () => {
       sandbox.stub(ASRouterUtils, "sendMessage");
       const FAKE_TRIPLETS_BUNDLE_1 = [
@@ -292,11 +242,8 @@ describe("ASRouterUISurface", () => {
           },
         },
       ];
-      const message = (
-        await OnboardingMessageProvider.getUntranslatedMessages()
-      ).find(msg => msg.id === "TRAILHEAD_1");
       wrapper.setState({
-        message: { ...message, bundle: FAKE_TRIPLETS_BUNDLE_1 },
+        message: { bundle: FAKE_TRIPLETS_BUNDLE_1 },
       });
 
       wrapper.instance().clearMessage("CARD_1");

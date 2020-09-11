@@ -42,12 +42,6 @@ function debounce(func, wait) {
 }
 
 export class _Base extends React.PureComponent {
-  componentWillMount() {
-    if (this.props.isFirstrun) {
-      global.document.body.classList.add("welcome", "hide-main");
-    }
-  }
-
   componentWillUnmount() {
     this.updateTheme();
   }
@@ -61,8 +55,6 @@ export class _Base extends React.PureComponent {
       "activity-stream",
       // If we skipped the about:welcome overlay and removed the CSS classes
       // we don't want to add them back to the Activity Stream view
-      document.body.classList.contains("welcome") ? "welcome" : "",
-      document.body.classList.contains("hide-main") ? "hide-main" : "",
       document.body.classList.contains("inline-onboarding")
         ? "inline-onboarding"
         : "",
