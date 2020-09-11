@@ -172,6 +172,11 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvRangeOfChild(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLeafAtOffset(
+    const uint64_t& aID, const int32_t& aOffset, uint64_t* aLeaf) {
+  return IPC_OK();
+}
+
 HyperTextAccessibleWrap*
 DocAccessiblePlatformExtChild::IdToHyperTextAccessibleWrap(
     const uint64_t& aID) const {
