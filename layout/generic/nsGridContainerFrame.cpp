@@ -2112,9 +2112,9 @@ struct nsGridContainerFrame::Tracks {
     nscoord SizeContributionForPhase() const {
       switch (phase) {
         case TrackSizingPhase::IntrinsicMinimums:
-        case TrackSizingPhase::IntrinsicMaximums:
           return mMinSize;
         case TrackSizingPhase::ContentBasedMinimums:
+        case TrackSizingPhase::IntrinsicMaximums:
           return mMinContentContribution;
         case TrackSizingPhase::MaxContentMinimums:
         case TrackSizingPhase::MaxContentMaximums:
@@ -6168,12 +6168,12 @@ void nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         }
         // Collect the various grid item size contributions we need.
         nscoord minSize = 0;
-        if (state & (TrackSize::eIntrinsicMinSizing |    // for 2.1
-                     TrackSize::eIntrinsicMaxSizing)) {  // for 2.5
+        if (state & TrackSize::eIntrinsicMinSizing) {  // for 2.1
           minSize = MinSize(gridItem, aState, rc, wm, mAxis, &cache);
         }
         nscoord minContent = 0;
-        if (state & contentBasedMinSelector) {  // for 2.2
+        if (state & (contentBasedMinSelector |           // for 2.2
+                     TrackSize::eIntrinsicMaxSizing)) {  // for 2.5
           minContent =
               MinContentContribution(gridItem, aState, rc, wm, mAxis, &cache);
         }
@@ -6266,7 +6266,7 @@ void nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       if (stateBitsForSpan & selector) {
         const bool willRunStep2_6 =
             stateBitsForSpan & TrackSize::eAutoOrMaxContentMaxSizing;
-        // Step 2.5 MinSize to intrinsic max-sizing.
+        // Step 2.5 MinContentContribution to intrinsic max-sizing.
         GrowSizeForSpanningItems<TrackSizingPhase::IntrinsicMaximums>(
             spanGroupStart, spanGroupEnd, tracks, plan, itemPlan, selector,
             fitContentClamper, willRunStep2_6);
