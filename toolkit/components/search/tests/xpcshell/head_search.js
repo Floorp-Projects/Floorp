@@ -175,8 +175,13 @@ async function promiseSetHomeRegion(region) {
  *   The locale to set.
  */
 async function promiseSetLocale(locale) {
+  if (!Services.locale.availableLocales.includes(locale)) {
+    throw new Error(
+      `"${locale}" needs to be included in Services.locales.availableLocales at the start of the test.`
+    );
+  }
+
   let promise = SearchTestUtils.promiseSearchNotification("engines-reloaded");
-  Services.locale.availableLocales = [locale];
   Services.locale.requestedLocales = [locale];
   await promise;
 }

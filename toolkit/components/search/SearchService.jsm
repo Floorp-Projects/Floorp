@@ -136,6 +136,12 @@ SearchService.prototype = {
   // or not).
   _initialized: false,
 
+  // Indicates if we're already waiting for maybeReloadEngines to be called.
+  _maybeReloadDebounce: false,
+
+  // Indicates if we're currently in maybeReloadEngines.
+  _reloadingEngines: false,
+
   // The engine selector singleton that is managing the engine configuration.
   _engineSelector: null,
 
@@ -721,32 +727,40 @@ SearchService.prototype = {
    * the service has already been initialized.
    */
   async _maybeReloadEngines() {
-    if (!this._initialized) {
-      if (this._maybeReloadDebounce) {
-        logConsole.debug(
-          "We're already waiting for init to finish and reload engines after."
-        );
-        return;
-      }
+    if (this._maybeReloadDebounce) {
+      logConsole.debug("We're already waiting to reload engines.");
+      return;
+    }
+
+    if (!this._initialized || this._reloadingEngines) {
       this._maybeReloadDebounce = true;
-      // Schedule a reload to happen at most 10 seconds after initialization of
-      // the service finished, during an idle moment.
-      this._initObservers.promise.then(() => {
-        Services.tm.idleDispatchToMainThread(() => {
-          if (!this._maybeReloadDebounce) {
-            return;
-          }
-          delete this._maybeReloadDebounce;
-          this._maybeReloadEngines().catch(Cu.reportError);
-        }, 10000);
-      });
+      // Schedule a reload to happen at most 10 seconds after the current run.
+      Services.tm.idleDispatchToMainThread(() => {
+        if (!this._maybeReloadDebounce) {
+          return;
+        }
+        this._maybeReloadDebounce = false;
+        this._maybeReloadEngines().catch(Cu.reportError);
+      }, 10000);
       logConsole.debug(
         "Post-poning maybeReloadEngines() as we're currently initializing."
       );
       return;
     }
-    logConsole.debug("Running maybeReloadEngines");
 
+    logConsole.debug("Running maybeReloadEngines");
+    this._reloadingEngines = true;
+
+    try {
+      await this._reloadEngines();
+    } catch (ex) {
+      logConsole.error("maybeReloadEngines failed", ex);
+    }
+    this._reloadingEngines = false;
+    logConsole.debug("maybeReloadEngines complete");
+  },
+
+  async _reloadEngines() {
     // Capture the current engine state, in case we need to notify below.
     const prevCurrentEngine = this._currentEngine;
     const prevPrivateEngine = this._currentPrivateEngine;
@@ -944,7 +958,6 @@ SearchService.prototype = {
       SearchUtils.TOPIC_SEARCH_SERVICE,
       "engines-reloaded"
     );
-    logConsole.debug("maybeReloadEngines complete");
   },
 
   /**

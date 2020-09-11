@@ -8,6 +8,12 @@
 add_task(async function setup() {
   await SearchTestUtils.useTestEngines();
 
+  Services.locale.availableLocales = [
+    ...Services.locale.availableLocales,
+    "de",
+    "fr",
+  ];
+
   Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
     true
@@ -20,7 +26,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_listJSONlocale() {
-  Services.locale.availableLocales = ["de"];
   Services.locale.requestedLocales = ["de"];
 
   await AddonTestUtils.promiseStartupManager();
