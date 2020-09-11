@@ -1386,8 +1386,8 @@ pref("browser.newtabpage.activity-stream.feeds.section.topstories", true);
   pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 #endif
 
-// Used to display triplet cards on newtab
-pref("trailhead.firstrun.newtab.triplets", "");
+pref("trailhead.firstrun.branches", "join-dynamic");
+
 // Separate about welcome
 pref("browser.aboutwelcome.enabled", true);
 // Used to set multistage welcome UX

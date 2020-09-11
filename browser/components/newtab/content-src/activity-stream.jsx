@@ -11,9 +11,9 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { reducers } from "common/Reducers.jsm";
 
-export const NewTab = ({ store }) => (
+export const NewTab = ({ store, isFirstrun }) => (
   <Provider store={store}>
-    <Base />
+    <Base isFirstrun={isFirstrun} />
   </Provider>
 );
 
@@ -43,12 +43,24 @@ export function renderWithoutState() {
     doRequest();
   }
 
-  ReactDOM.hydrate(<NewTab store={store} />, document.getElementById("root"));
+  ReactDOM.hydrate(
+    <NewTab
+      store={store}
+      isFirstrun={global.document.location.href === "about:welcome"}
+    />,
+    document.getElementById("root")
+  );
 }
 
 export function renderCache(initialState) {
   const store = initStore(reducers, initialState);
   new DetectUserSessionStart(store).sendEventOrAddListener();
 
-  ReactDOM.hydrate(<NewTab store={store} />, document.getElementById("root"));
+  ReactDOM.hydrate(
+    <NewTab
+      store={store}
+      isFirstrun={global.document.location.href === "about:welcome"}
+    />,
+    document.getElementById("root")
+  );
 }

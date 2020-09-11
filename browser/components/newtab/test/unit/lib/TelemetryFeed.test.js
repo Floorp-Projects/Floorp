@@ -45,6 +45,7 @@ describe("TelemetryFeed", () => {
   class UTEventReporting {
     sendUserEvent() {}
     sendSessionEndEvent() {}
+    sendTrailheadEnrollEvent() {}
     uninit() {}
   }
 
@@ -1544,6 +1545,15 @@ describe("TelemetryFeed", () => {
       assert.calledWith(eventCreator, action.data);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
+    it("should call .handleTrailheadEnrollEvent on a TRAILHEAD_ENROLL_EVENT action", () => {
+      const data = { experiment: "foo", type: "bar", branch: "baz" };
+      const action = { type: at.TRAILHEAD_ENROLL_EVENT, data };
+      sandbox.spy(instance, "handleTrailheadEnrollEvent");
+
+      instance.onAction(action);
+
+      assert.calledWith(instance.handleTrailheadEnrollEvent, action);
+    });
   });
   describe("#handleNewTabInit", () => {
     it("should set the session as preloaded if the browser is preloaded", () => {
@@ -1826,6 +1836,28 @@ describe("TelemetryFeed", () => {
         url,
         `${fakeEndpoint}/testNameSpace/testPingType/1/${fakeUUIDWithoutBraces}`
       );
+    });
+  });
+  describe("#handleTrailheadEnrollEvent", () => {
+    it("should send a TRAILHEAD_ENROLL_EVENT if the telemetry is enabled", () => {
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+      const data = { experiment: "foo", type: "bar", branch: "baz" };
+      instance = new TelemetryFeed();
+      sandbox.stub(instance.utEvents, "sendTrailheadEnrollEvent");
+
+      instance.handleTrailheadEnrollEvent({ data });
+
+      assert.calledWith(instance.utEvents.sendTrailheadEnrollEvent, data);
+    });
+    it("should not send TRAILHEAD_ENROLL_EVENT if the telemetry is disabled", () => {
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = false;
+      const data = { experiment: "foo", type: "bar", branch: "baz" };
+      instance = new TelemetryFeed();
+      sandbox.stub(instance.utEvents, "sendTrailheadEnrollEvent");
+
+      instance.handleTrailheadEnrollEvent({ data });
+
+      assert.notCalled(instance.utEvents.sendTrailheadEnrollEvent);
     });
   });
   describe("#handleASRouterUserEvent", () => {

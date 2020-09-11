@@ -549,6 +549,7 @@ class _ASRouter {
       providers: [],
       messageBlockList: [],
       messageImpressions: {},
+      trailheadInitialized: false,
       messages: [],
       groups: [],
       errors: [],
@@ -1037,7 +1038,7 @@ class _ASRouter {
           ASRouterTargeting.Environment,
           this._getMessagesContext()
         ),
-        trailheadTriplet: ASRouterPreferences.trailheadTriplet,
+        trailhead: ASRouterPreferences.trailhead,
         errors: this.errors,
       },
     });
@@ -1053,6 +1054,18 @@ class _ASRouter {
           event: "TARGETING_EXPRESSION_ERROR",
         })
       );
+    }
+  }
+
+  async setTrailHeadMessageSeen() {
+    if (!this.state.trailheadInitialized) {
+      Services.prefs.setBoolPref(
+        TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF,
+        true
+      );
+      await this.setState({
+        trailheadInitialized: true,
+      });
     }
   }
 
@@ -1214,7 +1227,9 @@ class _ASRouter {
             // This is used to determine whether to block when action is triggered
             // Only block for dynamic triplets experiment and when there are more messages available
             blockOnClick:
-              ASRouterPreferences.trailheadTriplet.startsWith("dynamic") &&
+              ASRouterPreferences.trailhead.trailheadTriplet.startsWith(
+                "dynamic"
+              ) &&
               allMessages.length >
                 TRAILHEAD_CONFIG.DYNAMIC_TRIPLET_BUNDLE_LENGTH,
           }))
@@ -1350,7 +1365,8 @@ class _ASRouter {
           type: "SET_MESSAGE",
           data: {
             ...message,
-            trailheadTriplet: ASRouterPreferences.trailheadTriplet || "",
+            trailheadTriplet:
+              ASRouterPreferences.trailhead.trailheadTriplet || "",
             bundle: bundledMessages && bundledMessages.bundle,
           },
         });
@@ -1883,6 +1899,11 @@ class _ASRouter {
 
   async sendTriggerMessage(target, trigger) {
     await this.loadMessagesFromAllProviders();
+
+    if (trigger.id === "firstRun") {
+      // On about welcome, set trailhead message seen on receiving firstrun trigger
+      await this.setTrailHeadMessageSeen();
+    }
 
     const telemetryObject = { port: target.portID };
     TelemetryStopwatch.start("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);

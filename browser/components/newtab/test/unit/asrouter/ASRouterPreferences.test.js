@@ -1,6 +1,7 @@
 import {
   _ASRouterPreferences,
   ASRouterPreferences as ASRouterPreferencesSingleton,
+  getTrailheadConfigFromPref,
   TEST_PROVIDERS,
 } from "lib/ASRouterPreferences.jsm";
 const FAKE_PROVIDERS = [{ id: "foo" }, { id: "bar" }];
@@ -372,6 +373,28 @@ describe("ASRouterPreferences", () => {
         ),
         scores
       );
+    });
+  });
+  describe("#getTrailheadConfigFromPref", () => {
+    it("should return trailHeadTriplet and trailHeadInterrupt", () => {
+      let result = getTrailheadConfigFromPref("foo-bar");
+      assert.propertyVal(result, "trailheadInterrupt", "foo");
+      assert.propertyVal(result, "trailheadTriplet", "bar");
+    });
+    it("should return default values when pref is empty", () => {
+      let result = getTrailheadConfigFromPref("");
+      assert.propertyVal(result, "trailheadInterrupt", "join");
+      assert.propertyVal(result, "trailheadTriplet", "supercharge");
+    });
+    it("should return default trailHeadTriplet and trailHeadInterrupt when no hyphen", () => {
+      let result = getTrailheadConfigFromPref("control");
+      assert.propertyVal(result, "trailheadInterrupt", "control");
+      assert.propertyVal(result, "trailheadTriplet", "supercharge");
+    });
+    it("should return trailHeadTriplet and default trailHeadInterrupt when prefixed with hyphen", () => {
+      let result = getTrailheadConfigFromPref("-control");
+      assert.propertyVal(result, "trailheadInterrupt", "join");
+      assert.propertyVal(result, "trailheadTriplet", "control");
     });
   });
 });
