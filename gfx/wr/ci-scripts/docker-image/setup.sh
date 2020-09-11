@@ -14,15 +14,18 @@ test "$(whoami)" == 'root'
 # Install stuff we need
 apt-get -y update
 apt-get install -y \
+    bison \
     bzip2 \
     cmake \
     curl \
+    flex \
     gcc \
     git \
     g++ \
     libfontconfig1-dev \
     libgl1-mesa-dev \
     libx11-dev \
+    ninja-build \
     openjdk-8-jdk \
     pkg-config \
     python \
@@ -31,6 +34,8 @@ apt-get install -y \
     python-setuptools \
     python-voluptuous \
     python-yaml \
+    python3-pip \
+    python3-mako \
     software-properties-common
 
 # Other stuff we need

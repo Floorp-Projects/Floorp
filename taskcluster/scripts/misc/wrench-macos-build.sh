@@ -39,12 +39,13 @@ pushd "${GECKO_PATH}/gfx/wr/wrench"
 cargo build --release -vv --frozen --target=${TARGET_TRIPLE} --features headless
 # Package up the wrench binary and some libraries that we will need
 cd "../target/${TARGET_TRIPLE}"
+
 mkdir wrench-macos-headless
 mv release wrench-macos-headless/
 tar cjf wrench-macos-headless.tar.bz2 \
     wrench-macos-headless/release/wrench \
-    wrench-macos-headless/release/build/osmesa-src*/out/src/gallium/targets/osmesa/.libs \
-    wrench-macos-headless/release/build/osmesa-src*/out/src/mapi/shared-glapi/.libs
+    wrench-macos-headless/release/build/osmesa-src*/out/mesa/src/gallium/targets/osmesa \
+    wrench-macos-headless/release/build/osmesa-src*/out/mesa/src/mapi/shared-glapi
 mv wrench-macos-headless.tar.bz2 "${UPLOAD_DIR}"
 # Clean the build
 cd "${GECKO_PATH}/gfx/wr"
