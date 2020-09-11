@@ -116,7 +116,6 @@ UNIFIED_SOURCES += [
     'nsNSSCertificate.cpp',
     'nsNSSCertificateDB.cpp',
     'nsNSSCertTrust.cpp',
-    'nsNSSCertValidity.cpp',
     'nsNSSComponent.cpp',
     'nsNSSIOLayer.cpp',
     'nsNSSModule.cpp',
@@ -146,6 +145,7 @@ UNIFIED_SOURCES += [
     'TransportSecurityInfo.cpp',
     'VerifySSLServerCertChild.cpp',
     'VerifySSLServerCertParent.cpp',
+    'X509CertValidity.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

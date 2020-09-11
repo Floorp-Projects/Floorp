@@ -33,7 +33,6 @@
 #include "nsCRTGlue.h"
 #include "nsIObserverService.h"
 #include "nsNSSCertHelper.h"
-#include "nsNSSCertValidity.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"
 #include "nsPrintfCString.h"

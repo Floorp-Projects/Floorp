@@ -8,6 +8,7 @@
 #include "CertVerifier.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
+#include "X509CertValidity.h"
 #include "certdb.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Assertions.h"
@@ -30,7 +31,6 @@
 #include "nsIX509Cert.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertTrust.h"
-#include "nsNSSCertValidity.h"
 #include "nsPK11TokenDB.h"
 #include "nsPKCS12Blob.h"
 #include "nsProxyRelease.h"
@@ -679,12 +679,15 @@ CERTCertificate* nsNSSCertificate::GetCert() {
 NS_IMETHODIMP
 nsNSSCertificate::GetValidity(nsIX509CertValidity** aValidity) {
   NS_ENSURE_ARG(aValidity);
-
   if (!mCert) {
     return NS_ERROR_FAILURE;
   }
-
-  nsCOMPtr<nsIX509CertValidity> validity = new nsX509CertValidity(mCert);
+  pkix::Input certInput;
+  pkix::Result rv = certInput.Init(mCert->derCert.data, mCert->derCert.len);
+  if (rv != pkix::Success) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIX509CertValidity> validity = new X509CertValidity(certInput);
   validity.forget(aValidity);
   return NS_OK;
 }
