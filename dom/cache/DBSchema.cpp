@@ -902,9 +902,9 @@ nsresult CacheMatchAll(mozIStorageConnection& aConn, CacheId aCacheId,
   }
 
   // TODO: replace this with a bulk load using SQL IN clause (bug 1110458)
-  for (uint32_t i = 0; i < matches.Length(); ++i) {
+  for (const auto match : matches) {
     SavedResponse savedResponse;
-    rv = ReadResponse(aConn, matches[i], &savedResponse);
+    rv = ReadResponse(aConn, match, &savedResponse);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1018,9 +1018,9 @@ nsresult CacheKeys(mozIStorageConnection& aConn, CacheId aCacheId,
   }
 
   // TODO: replace this with a bulk load using SQL IN clause (bug 1110458)
-  for (uint32_t i = 0; i < matches.Length(); ++i) {
+  for (const auto match : matches) {
     SavedRequest savedRequest;
-    rv = ReadRequest(aConn, matches[i], &savedRequest);
+    rv = ReadRequest(aConn, match, &savedRequest);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1096,15 +1096,15 @@ nsresult StorageMatch(mozIStorageConnection& aConn, Namespace aNamespace,
   }
 
   // Now try to find a match in each cache in order
-  for (uint32_t i = 0; i < cacheIdList.Length(); ++i) {
-    rv = CacheMatch(aConn, cacheIdList[i], aRequest, aParams, aFoundResponseOut,
+  for (const auto cacheId : cacheIdList) {
+    rv = CacheMatch(aConn, cacheId, aRequest, aParams, aFoundResponseOut,
                     aSavedResponseOut);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     if (*aFoundResponseOut) {
-      aSavedResponseOut->mCacheId = cacheIdList[i];
+      aSavedResponseOut->mCacheId = cacheId;
       return rv;
     }
   }
@@ -1500,9 +1500,8 @@ nsresult MatchByVaryHeader(mozIStorageConnection& aConn,
   // Assume the vary headers match until we find a conflict
   bool varyHeadersMatch = true;
 
-  for (uint32_t i = 0; i < varyValues.Length(); ++i) {
+  for (auto& varyValue : varyValues) {
     // Extract the header names inside the Vary header value.
-    nsAutoCString varyValue(varyValues[i]);
     char* rawBuffer = varyValue.BeginWriting();
     char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
     bool bailOut = false;
@@ -1648,20 +1647,20 @@ nsresult DeleteEntries(mozIStorageConnection& aConn,
         return rv;
       }
 
-      // First try to increment the count for this ID if we're already
-      // seen it
-      bool found = false;
-      for (uint32_t i = 0; i < aDeletedSecurityIdListOut.Length(); ++i) {
-        if (aDeletedSecurityIdListOut[i].mId == securityId) {
-          found = true;
-          aDeletedSecurityIdListOut[i].mCount += 1;
-          break;
-        }
-      }
+      // XXXtt: Consider using map for aDeletedSecuityIdListOut.
+      auto foundIt = std::find_if(aDeletedSecurityIdListOut.begin(),
+                                  aDeletedSecurityIdListOut.end(),
+                                  [securityId](const auto& deletedSecurityId) {
+                                    return deletedSecurityId.mId == securityId;
+                                  });
 
-      // Otherwise add a new entry for this ID with a count of 1
-      if (!found) {
+      if (foundIt == aDeletedSecurityIdListOut.end()) {
+        // Add a new entry for this ID with a count of 1, if it's not in the
+        // list
         aDeletedSecurityIdListOut.AppendElement(IdCount(securityId));
+      } else {
+        // Otherwise, increment the count for this ID
+        foundIt->mCount += 1;
       }
     }
 
@@ -1932,9 +1931,9 @@ nsresult DeleteSecurityInfo(mozIStorageConnection& aConn, int32_t aId,
 nsresult DeleteSecurityInfoList(
     mozIStorageConnection& aConn,
     const nsTArray<IdCount>& aDeletedStorageIdList) {
-  for (uint32_t i = 0; i < aDeletedStorageIdList.Length(); ++i) {
-    nsresult rv = DeleteSecurityInfo(aConn, aDeletedStorageIdList[i].mId,
-                                     aDeletedStorageIdList[i].mCount);
+  for (const auto& deletedStorageId : aDeletedStorageIdList) {
+    nsresult rv = DeleteSecurityInfo(aConn, deletedStorageId.mId,
+                                     deletedStorageId.mCount);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2232,14 +2231,13 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
     return rv;
   }
 
-  const nsTArray<HeadersEntry>& requestHeaders = aRequest.headers();
-  for (uint32_t i = 0; i < requestHeaders.Length(); ++i) {
-    rv = state->BindUTF8StringByName("name"_ns, requestHeaders[i].name());
+  for (const auto& requestHeader : aRequest.headers()) {
+    rv = state->BindUTF8StringByName("name"_ns, requestHeader.name());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = state->BindUTF8StringByName("value"_ns, requestHeaders[i].value());
+    rv = state->BindUTF8StringByName("value"_ns, requestHeader.value());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2266,14 +2264,13 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
     return rv;
   }
 
-  const nsTArray<HeadersEntry>& responseHeaders = aResponse.headers();
-  for (uint32_t i = 0; i < responseHeaders.Length(); ++i) {
-    rv = state->BindUTF8StringByName("name"_ns, responseHeaders[i].name());
+  for (const auto& responseHeader : aResponse.headers()) {
+    rv = state->BindUTF8StringByName("name"_ns, responseHeader.name());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = state->BindUTF8StringByName("value"_ns, responseHeaders[i].value());
+    rv = state->BindUTF8StringByName("value"_ns, responseHeader.value());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2298,9 +2295,8 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
     return rv;
   }
 
-  const nsTArray<nsCString>& responseUrlList = aResponse.urlList();
-  for (uint32_t i = 0; i < responseUrlList.Length(); ++i) {
-    rv = state->BindUTF8StringByName("url"_ns, responseUrlList[i]);
+  for (const auto& responseUrl : aResponse.urlList()) {
+    rv = state->BindUTF8StringByName("url"_ns, responseUrl);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2964,7 +2960,7 @@ nsresult Validate(mozIStorageConnection& aConn) {
 #ifdef DEBUG
   // This is the schema we expect the database at the latest version to
   // contain.  Update this list if you add a new table or index.
-  Expect expect[] = {
+  Expect expects[] = {
       Expect("caches", "table", kTableCaches),
       Expect("sqlite_sequence", "table"),  // auto-gen by sqlite
       Expect("security_info", "table", kTableSecurityInfo),
@@ -2978,7 +2974,6 @@ nsresult Validate(mozIStorageConnection& aConn) {
       Expect("storage", "table", kTableStorage),
       Expect("sqlite_autoindex_storage_1", "index"),  // auto-gen by sqlite
   };
-  const uint32_t expectLength = sizeof(expect) / sizeof(Expect);
 
   // Read the schema from the sqlite_master table and compare.
   nsCOMPtr<mozIStorageStatement> state;
@@ -3009,9 +3004,9 @@ nsresult Validate(mozIStorageConnection& aConn) {
     }
 
     bool foundMatch = false;
-    for (uint32_t i = 0; i < expectLength; ++i) {
-      if (name == expect[i].mName) {
-        if (type != expect[i].mType) {
+    for (const auto& expect : expects) {
+      if (name == expect.mName) {
+        if (type != expect.mType) {
           NS_WARNING(
               nsPrintfCString("Unexpected type for Cache schema entry %s",
                               name.get())
@@ -3019,7 +3014,7 @@ nsresult Validate(mozIStorageConnection& aConn) {
           return NS_ERROR_FAILURE;
         }
 
-        if (!expect[i].mIgnoreSql && sql != expect[i].mSql) {
+        if (!expect.mIgnoreSql && sql != expect.mSql) {
           NS_WARNING(nsPrintfCString("Unexpected SQL for Cache schema entry %s",
                                      name.get())
                          .get());
@@ -3078,7 +3073,6 @@ Migration sMigrationList[] = {
     Migration(23, MigrateFrom23To24), Migration(24, MigrateFrom24To25),
     Migration(25, MigrateFrom25To26), Migration(26, MigrateFrom26To27),
 };
-uint32_t sMigrationListLength = sizeof(sMigrationList) / sizeof(Migration);
 nsresult RewriteEntriesSchema(mozIStorageConnection& aConn) {
   nsresult rv = aConn.ExecuteSimpleSQL("PRAGMA writable_schema = ON"_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3129,10 +3123,10 @@ nsresult Migrate(mozIStorageConnection& aConn) {
     // accidentally get here for one of those old databases.
     MOZ_DIAGNOSTIC_ASSERT(currentVersion >= kFirstShippedSchemaVersion);
 
-    for (uint32_t i = 0; i < sMigrationListLength; ++i) {
-      if (sMigrationList[i].mFromVersion == currentVersion) {
+    for (const auto& migration : sMigrationList) {
+      if (migration.mFromVersion == currentVersion) {
         bool shouldRewrite = false;
-        rv = sMigrationList[i].mFunc(aConn, shouldRewrite);
+        rv = migration.mFunc(aConn, shouldRewrite);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
