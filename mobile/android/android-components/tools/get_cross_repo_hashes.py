@@ -6,7 +6,6 @@
 """See USAGE for details.
 
 Potential script improvements:
-- Display usage on all errors
 - AUTOMATE: a-c check out -> GV versions
 - AUTOMATE: fenix check out -> a-c hash
 - (later) Support more than nightly
@@ -52,10 +51,13 @@ In the future, we hope to automate steps 1 & 2 too.""".format(script_name=SCRIPT
 TEMPLATE_NIGHTLY_POM="https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-nightly-arm64-v8a/{version}/geckoview-nightly-arm64-v8a-{version}.pom"
 INDENT= '     '
 
+def print_usage(exit=False):
+    print(USAGE, file=sys.stderr)
+    if exit: sys.exit(1)
+
 def maybe_display_usage():
     if sys.argv[1] == '--help' or sys.argv[1] == '-h':
-        print(USAGE, file=sys.stderr)
-        sys.exit(1)
+        print_usage(exit=True)
 
 def validate_args(gv_nightly_version):
     major = gv_nightly_version[:gv_nightly_version.find('.')]
@@ -99,4 +101,11 @@ def main():
     print('mozilla-central hash: ' + mc_hash.decode('utf-8'))
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        # We display usage on all errors to make understanding how to use the
+        # script easier, given that our arg parsing is not robust.
+        print_usage()
+        print('\n---\n')  # separate usage from Exception.
+        raise e
