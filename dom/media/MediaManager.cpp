@@ -2056,6 +2056,8 @@ MediaManager* MediaManager::Get() {
       obs->AddObserver(sSingleton, "getUserMedia:unmuteVideo", false);
       obs->AddObserver(sSingleton, "getUserMedia:muteAudio", false);
       obs->AddObserver(sSingleton, "getUserMedia:unmuteAudio", false);
+      obs->AddObserver(sSingleton, "application-background", false);
+      obs->AddObserver(sSingleton, "application-foreground", false);
     }
     // else MediaManager won't work properly and will leak (see bug 837874)
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -3902,8 +3904,6 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
   } else if ((!strcmp(aTopic, "application-background") ||
               !strcmp(aTopic, "application-foreground")) &&
              StaticPrefs::media_getusermedia_camera_background_mute_enabled()) {
-    // TODO: These don't fire in the content process yet (see bug 1660049).
-    //
     // On mobile we turn off any cameras (but not mics) while in the background.
     // Keeping things simple for now by duplicating test-covered code above.
     //
