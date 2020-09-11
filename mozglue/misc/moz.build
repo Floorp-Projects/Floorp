@@ -25,6 +25,7 @@ EXPORTS.mozilla.glue += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla += [
+        'EarlyBlankWindow.h',
         'StackWalk_windows.h',
         'TimeStamp_windows.h',
     ]
@@ -57,6 +58,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'WindowsUnicode.h',
     ]
     SOURCES += [
+        'EarlyBlankWindow.cpp',
         'TimeStamp_windows.cpp',
         'WindowsMapRemoteView.cpp',
         'WindowsProcessMitigations.cpp',
@@ -97,3 +99,7 @@ SOURCES += [
 if CONFIG['CC_TYPE'] == 'clang':
     # Suppress warnings from third-party V8 Decimal code.
     SOURCES['decimal/Decimal.cpp'].flags += ['-Wno-implicit-fallthrough']
+
+for var in ('MOZ_APP_BASENAME', 'MOZ_APP_VENDOR'):
+    DEFINES[var] = '"%s"' % CONFIG[var]
+    
