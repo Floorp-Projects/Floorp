@@ -199,8 +199,9 @@ class EventStates {
 #define NS_EVENT_STATE_MOZ_UI_INVALID NS_DEFINE_EVENT_STATE_MACRO(13)
 // Content could not be rendered (image/object/etc).
 #define NS_EVENT_STATE_BROKEN NS_DEFINE_EVENT_STATE_MACRO(14)
-// Content disabled by the user (images turned off, say).
-#define NS_EVENT_STATE_USERDISABLED NS_DEFINE_EVENT_STATE_MACRO(15)
+
+// There's a free bit here.
+
 // Content suppressed by the user (ad blocking, etc).
 #define NS_EVENT_STATE_SUPPRESSED NS_DEFINE_EVENT_STATE_MACRO(16)
 // Content is still loading such that there is nothing to show the
