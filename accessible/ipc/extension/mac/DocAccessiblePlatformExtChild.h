@@ -57,6 +57,11 @@ class DocAccessiblePlatformExtChild : public PDocAccessiblePlatformExtChild {
                                             uint64_t* aContainer,
                                             int32_t* aOffset);
 
+  mozilla::ipc::IPCResult RecvRangeOfChild(const uint64_t& aID,
+                                           const uint64_t& aChild,
+                                           int32_t* aStartOffset,
+                                           int32_t* aEndOffset);
+
  private:
   HyperTextAccessibleWrap* IdToHyperTextAccessibleWrap(
       const uint64_t& aID) const;
