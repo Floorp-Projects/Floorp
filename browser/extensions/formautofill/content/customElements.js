@@ -143,13 +143,16 @@
         `url(${this.getAttribute("ac-image")})`
       );
 
-      let { primaryAffix, primary, secondary } = JSON.parse(
+      let { primaryAffix, primary, secondary, ariaLabel } = JSON.parse(
         this.getAttribute("ac-value")
       );
 
       this._labelAffix.textContent = primaryAffix;
       this._label.textContent = primary;
       this._comment.textContent = secondary;
+      if (ariaLabel) {
+        this.setAttribute("aria-label", ariaLabel);
+      }
     }
   };
 

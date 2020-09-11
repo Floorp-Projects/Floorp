@@ -66,6 +66,7 @@ add_task(async function check_menu_when_both_with_autocomplete_off() {
     primaryAffix: cc.ccNumberFmt.affix,
     primary: cc.ccNumberFmt.label,
     secondary: cc["cc-name"],
+    ariaLabel: `${getCCTypeName(cc)} ${cc.ccNumberFmt.affix} ${cc.ccNumberFmt.label} ${cc["cc-name"]}`,
   })));
 
   await setInput("#cc-name", "");
@@ -74,6 +75,7 @@ add_task(async function check_menu_when_both_with_autocomplete_off() {
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+    ariaLabel: `${getCCTypeName(cc)} ${cc["cc-name"]} ${cc.ccNumberFmt.affix}${cc.ccNumberFmt.label}`,
   })));
 });
 
