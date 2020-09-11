@@ -381,8 +381,8 @@ const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
 
   mInitialized = true;
 
-  AUTO_PROFILER_TEXT_MARKER_CAUSE("JS XPCOM", spec, JS, Nothing(),
-                                  profiler_get_backtrace());
+  AUTO_PROFILER_MARKER_TEXT("JS XPCOM", JS.WithOptions(MarkerStack::Capture()),
+                            spec);
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("mozJSComponentLoader::LoadModule",
                                         OTHER, spec);
 
@@ -1198,8 +1198,8 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
                                       bool aIgnoreExports) {
   mInitialized = true;
 
-  AUTO_PROFILER_TEXT_MARKER_CAUSE("ChromeUtils.import", aLocation, JS,
-                                  Nothing(), profiler_get_backtrace());
+  AUTO_PROFILER_MARKER_TEXT("ChromeUtils.import",
+                            JS.WithOptions(MarkerStack::Capture()), aLocation);
 
   ComponentLoaderInfo info(aLocation);
 

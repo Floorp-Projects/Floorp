@@ -1399,7 +1399,7 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
 
 #ifdef MOZ_GECKO_PROFILER
   if (!mRefreshTimerStartedCause) {
-    mRefreshTimerStartedCause = profiler_get_backtrace();
+    mRefreshTimerStartedCause = profiler_capture_backtrace();
   }
 #endif
 
@@ -1981,9 +1981,12 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     AppendTickReasonsToString(tickReasons, profilerStr);
   }
 #endif
-  AUTO_PROFILER_TEXT_MARKER_DOCSHELL_CAUSE(
-      "RefreshDriverTick", profilerStr, GRAPHICS, GetDocShell(mPresContext),
-      std::move(mRefreshTimerStartedCause));
+  AUTO_PROFILER_MARKER_TEXT(
+      "RefreshDriverTick",
+      GRAPHICS.WithOptions(
+          MarkerStack::TakeBacktrace(std::move(mRefreshTimerStartedCause)),
+          MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext))),
+      profilerStr);
 
   mResizeSuppressed = false;
 
@@ -2242,9 +2245,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
       transactionId.AppendInt((uint64_t)mNextTransactionId);
     }
 #endif
-    AUTO_PROFILER_TEXT_MARKER_CAUSE("ViewManagerFlush", transactionId, GRAPHICS,
-                                    Nothing(),
-                                    std::move(mViewManagerFlushCause));
+    AUTO_PROFILER_MARKER_TEXT("ViewManagerFlush",
+                              GRAPHICS.WithOptions(MarkerStack::TakeBacktrace(
+                                  std::move(mViewManagerFlushCause))),
+                              transactionId);
 
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
@@ -2583,7 +2587,7 @@ void nsRefreshDriver::ScheduleViewManagerFlush() {
                "Should only schedule view manager flush on root prescontexts");
   mViewManagerFlushIsPending = true;
   if (!mViewManagerFlushCause) {
-    mViewManagerFlushCause = profiler_get_backtrace();
+    mViewManagerFlushCause = profiler_capture_backtrace();
   }
   mHasScheduleFlush = true;
   EnsureTimerStarted(eNeverAdjustTimer);

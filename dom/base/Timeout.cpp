@@ -52,7 +52,7 @@ void Timeout::SetWhenOrTimeRemaining(const TimeStamp& aBaseTime,
   mSubmitTime = aBaseTime;
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
-    mCause = profiler_get_backtrace();
+    mCause = profiler_capture_backtrace();
   }
 #endif
 

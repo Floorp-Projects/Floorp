@@ -3340,10 +3340,9 @@ MOZ_NEVER_INLINE unsigned long long Fibonacci(unsigned long long n) {
   }
   unsigned long long f1 = Fibonacci<NextDepth(DEPTH)>(n - 1);
   if (DEPTH < MAX_MARKER_DEPTH) {
-    baseprofiler::profiler_add_text_marker(
-        "fib", std::to_string(DEPTH),
-        baseprofiler::ProfilingCategoryPair::OTHER, start,
-        TimeStamp::NowUnfuzzed());
+    BASE_PROFILER_MARKER_TEXT(
+        "fib", OTHER.WithOptions(MarkerTiming::IntervalUntilNowFrom(start)),
+        std::to_string(DEPTH));
   }
   return f2 + f1;
 }
@@ -3386,15 +3385,11 @@ void TestProfiler() {
     std::thread threadFib([]() {
       AUTO_BASE_PROFILER_REGISTER_THREAD("fibonacci");
       SleepMilli(5);
-      auto cause =
-#  if defined(__linux__) || defined(__ANDROID__)
-          // Currently disabled on these platforms, so just return a null.
-          decltype(baseprofiler::profiler_get_backtrace()){};
-#  else
-          baseprofiler::profiler_get_backtrace();
-#  endif
-      AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE("fibonacci", "First leaf call",
-                                           OTHER, std::move(cause));
+      auto cause = baseprofiler::profiler_capture_backtrace();
+      AUTO_BASE_PROFILER_MARKER_TEXT(
+          "fibonacci",
+          OTHER.WithOptions(MarkerStack::TakeBacktrace(std::move(cause))),
+          "First leaf call");
       static const unsigned long long fibStart = 37;
       printf("Fibonacci(%llu)...\n", fibStart);
       AUTO_BASE_PROFILER_LABEL("Label around Fibonacci", OTHER);
@@ -3406,8 +3401,7 @@ void TestProfiler() {
     std::thread threadCancelFib([]() {
       AUTO_BASE_PROFILER_REGISTER_THREAD("fibonacci canceller");
       SleepMilli(5);
-      AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE("fibonacci", "Canceller", OTHER,
-                                           nullptr);
+      AUTO_BASE_PROFILER_MARKER_TEXT("fibonacci", OTHER, "Canceller");
       static const int waitMaxSeconds = 10;
       for (int i = 0; i < waitMaxSeconds; ++i) {
         if (sStopFibonacci) {
@@ -3424,15 +3418,15 @@ void TestProfiler() {
     });
 
     {
-      AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(
-          "main thread", "joining fibonacci thread", OTHER, nullptr);
+      AUTO_BASE_PROFILER_MARKER_TEXT("main thread", OTHER,
+                                     "joining fibonacci thread");
       AUTO_BASE_PROFILER_THREAD_SLEEP;
       threadFib.join();
     }
 
     {
-      AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(
-          "main thread", "joining fibonacci-canceller thread", OTHER, nullptr);
+      AUTO_BASE_PROFILER_MARKER_TEXT("main thread", OTHER,
+                                     "joining fibonacci-canceller thread");
       sStopFibonacci = true;
       AUTO_BASE_PROFILER_THREAD_SLEEP;
       threadCancelFib.join();
@@ -3875,10 +3869,10 @@ void TestProfiler() {
   AUTO_BASE_PROFILER_INIT;
 
   // This wouldn't build if the macro did output its arguments.
-#  ifndef AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE
-#    error AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE not #defined
-#  endif  // AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE
-  AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(catch, catch, catch, catch);
+#  ifndef AUTO_BASE_PROFILER_MARKER_TEXT
+#    error AUTO_BASE_PROFILER_MARKER_TEXT not #defined
+#  endif  // AUTO_BASE_PROFILER_MARKER_TEXT
+  AUTO_BASE_PROFILER_MARKER_TEXT(catch, catch, catch);
 
 #  ifndef AUTO_BASE_PROFILER_LABEL
 #    error AUTO_BASE_PROFILER_LABEL not #defined
