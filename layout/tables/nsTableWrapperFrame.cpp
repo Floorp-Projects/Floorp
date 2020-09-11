@@ -381,7 +381,7 @@ nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
                                                                      childWM);
 
   // Shrink-wrap aChildFrame by default, except if we're a stretched grid item.
-  auto flags = ComputeSizeFlags::ShrinkWrap;
+  ComputeSizeFlags flags(ComputeSizeFlag::ShrinkWrap);
   if (MOZ_UNLIKELY(IsGridItem()) && !StyleMargin()->HasInlineAxisAuto(aWM)) {
     const auto* parent = GetParent();
     auto inlineAxisAlignment =
@@ -390,7 +390,7 @@ nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
             : StylePosition()->UsedJustifySelf(parent->Style())._0;
     if (inlineAxisAlignment == StyleAlignFlags::NORMAL ||
         inlineAxisAlignment == StyleAlignFlags::STRETCH) {
-      flags = nsIFrame::ComputeSizeFlags::Default;
+      flags -= ComputeSizeFlag::ShrinkWrap;
     }
   }
 

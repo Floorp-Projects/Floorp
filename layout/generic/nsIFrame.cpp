@@ -6117,7 +6117,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     // 'auto' inline-size for grid-level box - fill the CB for 'stretch' /
     // 'normal' and clamp it to the CB if requested:
     bool stretch = false;
-    if (!(aFlags & nsIFrame::ShrinkWrap) &&
+    if (!aFlags.contains(ComputeSizeFlag::ShrinkWrap) &&
         !StyleMargin()->HasInlineAxisAuto(aWM) &&
         !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisBlock
                                          : eLogicalAxisInline)) {
@@ -6127,7 +6127,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       stretch = inlineAxisAlignment == StyleAlignFlags::NORMAL ||
                 inlineAxisAlignment == StyleAlignFlags::STRETCH;
     }
-    if (stretch || (aFlags & ComputeSizeFlags::IClampMarginBoxMinSize)) {
+    if (stretch || aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize)) {
       auto iSizeToFillCB =
           std::max(nscoord(0), aCBSize.ISize(aWM) - aPadding.ISize(aWM) -
                                    aBorder.ISize(aWM) - aMargin.ISize(aWM));
@@ -6157,13 +6157,14 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     minISize = ComputeISizeValue(
         aRenderingContext, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
         boxSizingToMarginEdgeISize, minISizeCoord, aFlags);
-  } else if (MOZ_UNLIKELY(aFlags & IApplyAutoMinSize)) {
+  } else if (MOZ_UNLIKELY(
+                 aFlags.contains(ComputeSizeFlag::IApplyAutoMinSize))) {
     // This implements "Implied Minimum Size of Grid Items".
     // https://drafts.csswg.org/css-grid/#min-size-auto
     minISize = std::min(maxISize, GetMinISize(aRenderingContext));
     if (inlineStyleCoord->IsLengthPercentage()) {
       minISize = std::min(minISize, result.ISize(aWM));
-    } else if (aFlags & IClampMarginBoxMinSize) {
+    } else if (aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize)) {
       // "if the grid item spans only grid tracks that have a fixed max track
       // sizing function, its automatic minimum size in that dimension is
       // further clamped to less than or equal to the size necessary to fit
@@ -6199,7 +6200,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // (but not if we have auto bsize or if we received the "eUseAutoBSize"
   // flag -- then, we'll just stick with the bsize that we already calculated
   // in the initial ComputeAutoSize() call.)
-  if (!(aFlags & nsIFrame::UseAutoBSize)) {
+  if (!aFlags.contains(ComputeSizeFlag::UseAutoBSize)) {
     if (!nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM))) {
       result.BSize(aWM) = nsLayoutUtils::ComputeBSizeValue(
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
@@ -6227,7 +6228,8 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
           stretch = blockAxisAlignment == StyleAlignFlags::NORMAL ||
                     blockAxisAlignment == StyleAlignFlags::STRETCH;
         }
-        if (stretch || (aFlags & ComputeSizeFlags::BClampMarginBoxMinSize)) {
+        if (stretch ||
+            aFlags.contains(ComputeSizeFlag::BClampMarginBoxMinSize)) {
           auto bSizeToFillCB =
               std::max(nscoord(0), cbSize - aPadding.BSize(aWM) -
                                        aBorder.BSize(aWM) - aMargin.BSize(aWM));
@@ -6330,7 +6332,7 @@ nscoord nsIFrame::ShrinkWidthToFit(gfxContext* aRenderingContext,
   nscoord result;
   nscoord minISize = GetMinISize(aRenderingContext);
   if (minISize > aISizeInCB) {
-    const bool clamp = aFlags & ComputeSizeFlags::IClampMarginBoxMinSize;
+    const bool clamp = aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize);
     result = MOZ_UNLIKELY(clamp) ? aISizeInCB : minISize;
   } else {
     nscoord prefISize = GetPrefISize(aRenderingContext);
@@ -6361,7 +6363,8 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
     case StyleExtremumLength::MinContent:
       result = GetMinISize(aRenderingContext);
       NS_ASSERTION(result >= 0, "inline-size less than zero");
-      if (MOZ_UNLIKELY(aFlags & ComputeSizeFlags::IClampMarginBoxMinSize)) {
+      if (MOZ_UNLIKELY(
+              aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize))) {
         auto available = aContainingBlockISize -
                          (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
         result = std::min(available, result);
@@ -6372,7 +6375,8 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
               min = GetMinISize(aRenderingContext),
               fill = aContainingBlockISize -
                      (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
-      if (MOZ_UNLIKELY(aFlags & ComputeSizeFlags::IClampMarginBoxMinSize)) {
+      if (MOZ_UNLIKELY(
+              aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize))) {
         min = std::min(min, fill);
       }
       result = std::max(min, std::min(pref, fill));
@@ -10450,8 +10454,7 @@ void nsIFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
                         reflowInput.ComputedLogicalMargin().Size(wm),
                         reflowInput.ComputedLogicalBorderPadding().Size(wm) -
                             reflowInput.ComputedLogicalPadding().Size(wm),
-                        reflowInput.ComputedLogicalPadding().Size(wm),
-                        ComputeSizeFlags::Default)
+                        reflowInput.ComputedLogicalPadding().Size(wm), {})
                 .mLogicalSize.Height(wm));
       }
     }
