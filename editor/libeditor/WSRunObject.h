@@ -369,6 +369,31 @@ class MOZ_STACK_CLASS WSRunScanner final {
       const HTMLEditor& aHTMLEditor, const nsIContent& aAtomicContent);
 
   /**
+   * GetRangeForDeleteBlockElementBoundaries() returns a range starting from end
+   * of aLeftBlockElement to start of aRightBlockElement and extend invisible
+   * white-spaces around them.
+   *
+   * @param aHTMLEditor         The HTML editor.
+   * @param aLeftBlockElement   The block element which will be joined with
+   *                            aRightBlockElement.
+   * @param aRightBlockElement  The block element which will be joined with
+   *                            aLeftBlockElement.  This must be an element
+   *                            after aLeftBlockElement.
+   * @param aPointContainingTheOtherBlock
+   *                            When aRightBlockElement is an ancestor of
+   *                            aLeftBlockElement, this must be set and the
+   *                            container must be aRightBlockElement.
+   *                            When aLeftBlockElement is an ancestor of
+   *                            aRightBlockElement, this must be set and the
+   *                            container must be aLeftBlockElement.
+   *                            Otherwise, must not be set.
+   */
+  static EditorDOMRange GetRangeForDeletingBlockElementBoundaries(
+      const HTMLEditor& aHTMLEditor, const Element& aLeftBlockElement,
+      const Element& aRightBlockElement,
+      const EditorDOMPoint& aPointContainingTheOtherBlock);
+
+  /**
    * ShrinkRangeIfStartsFromOrEndsAfterAtomicContent() may shrink aRange if it
    * starts and/or ends with an atomic content, but the range boundary
    * is in adjacent text nodes.  Returns true if this modifies the range.
