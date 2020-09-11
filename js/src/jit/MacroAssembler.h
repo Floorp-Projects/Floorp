@@ -232,11 +232,6 @@ enum class CheckUnsafeCallWithABI {
 
 enum class CharEncoding { Latin1, TwoByte };
 
-constexpr uint32_t WasmCallerTLSOffsetBeforeCall =
-    wasm::FrameWithTls::callerTLSOffset() + ShadowStackSpace;
-constexpr uint32_t WasmCalleeTLSOffsetBeforeCall =
-    wasm::FrameWithTls::calleeTLSOffset() + ShadowStackSpace;
-
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
 // lifoAlloc use if one will be destroyed before the other.
@@ -638,12 +633,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
  private:
   // Reinitialize the variables which have to be cleared before making a call
   // with callWithABI.
-  template <class ABIArgGeneratorT>
-  void setupABICallHelper();
-
-  // Reinitialize the variables which have to be cleared before making a call
-  // with native abi.
-  void setupNativeABICall();
+  void setupABICall();
 
   // Reserve the stack and resolve the arguments move.
   void callWithABIPre(uint32_t* stackAdjust,
@@ -4223,9 +4213,9 @@ static inline MIRType ToMIRType(ABIArgType argType) {
   MOZ_CRASH("unexpected argType");
 }
 
-template <class VecT, class ABIArgGeneratorT>
-class ABIArgIterBase {
-  ABIArgGeneratorT gen_;
+template <class VecT>
+class ABIArgIter {
+  ABIArgGenerator gen_;
   const VecT& types_;
   unsigned i_;
 
@@ -4234,9 +4224,7 @@ class ABIArgIterBase {
   }
 
  public:
-  explicit ABIArgIterBase(const VecT& types) : types_(types), i_(0) {
-    settle();
-  }
+  explicit ABIArgIter(const VecT& types) : types_(types), i_(0) { settle(); }
   void operator++(int) {
     MOZ_ASSERT(!done());
     i_++;
@@ -4266,35 +4254,7 @@ class ABIArgIterBase {
   }
 };
 
-// This is not an alias because we want to allow class template argument
-// deduction.
-template <class VecT>
-class ABIArgIter : public ABIArgIterBase<VecT, ABIArgGenerator> {
- public:
-  explicit ABIArgIter(const VecT& types)
-      : ABIArgIterBase<VecT, ABIArgGenerator>(types) {}
-};
-
-class WasmABIArgGenerator : public ABIArgGenerator {
- public:
-  WasmABIArgGenerator() {
-    increaseStackOffset(wasm::FrameWithTls::sizeWithoutFrame());
-  }
-};
-
-template <class VecT>
-class WasmABIArgIter : public ABIArgIterBase<VecT, WasmABIArgGenerator> {
- public:
-  explicit WasmABIArgIter(const VecT& types)
-      : ABIArgIterBase<VecT, WasmABIArgGenerator>(types) {}
-};
 }  // namespace jit
-
-namespace wasm {
-const TlsData* ExtractCalleeTlsFromFrameWithTls(const Frame* fp);
-const TlsData* ExtractCallerTlsFromFrameWithTls(const Frame* fp);
-}  // namespace wasm
-
 }  // namespace js
 
 #endif /* jit_MacroAssembler_h */

@@ -5153,7 +5153,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     // Identify GC-managed pointers passed on the stack.
-    for (WasmABIArgIter i(args); !i.done(); i++) {
+    for (ABIArgIter i(args); !i.done(); i++) {
       ABIArg argLoc = *i;
       if (argLoc.kind() == ABIArg::Stack &&
           args[i.index()] == MIRType::RefOrNull) {
@@ -5238,7 +5238,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     // Copy arguments from registers to stack.
-    for (WasmABIArgIter i(args); !i.done(); i++) {
+    for (ABIArgIter i(args); !i.done(); i++) {
       if (args.isSyntheticStackResultPointerArg(i.index())) {
         // If there are stack results and the pointer to stack results
         // was passed in a register, store it to the stack.
@@ -5503,7 +5503,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     uint32_t lineOrBytecode;
-    WasmABIArgGenerator abi;
+    ABIArgGenerator abi;
     bool isInterModule;
     bool usesSystemAbi;
 #ifdef JS_CODEGEN_ARM
