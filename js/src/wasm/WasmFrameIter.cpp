@@ -40,14 +40,12 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
       codeRange_(nullptr),
       lineOrBytecode_(0),
       fp_(fp ? fp : activation->wasmExitFP()),
-      tls_(nullptr),
       unwoundIonCallerFP_(nullptr),
       unwoundIonFrameType_(jit::FrameType(-1)),
       unwind_(Unwind::False),
       unwoundAddressOfReturnAddress_(nullptr),
       resumePCinCurrentFrame_(nullptr) {
   MOZ_ASSERT(fp_);
-  tls_ = GetNearestEffectiveTls(fp_);
 
   // When the stack is captured during a trap (viz., to create the .stack
   // for an Error object), use the pc/bytecode information captured by the
@@ -59,7 +57,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
     const TrapData& trapData = activation->wasmTrapData();
     void* unwoundPC = trapData.unwoundPC;
 
-    code_ = &tls_->instance->code();
+    code_ = &fp_->instance()->code();
     MOZ_ASSERT(code_ == LookupCode(unwoundPC));
 
     codeRange_ = code_->lookupFuncRange(unwoundPC);
@@ -196,16 +194,12 @@ void WasmFrameIter::popFrame() {
     return;
   }
 
+  MOZ_ASSERT(code_ == &fp_->instance()->code());
   MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
 
   const CallSite* callsite = code_->lookupCallSite(returnAddress);
   MOZ_ASSERT(callsite);
 
-  if (callsite->mightBeCrossInstance()) {
-    tls_ = ExtractCallerTlsFromFrameWithTls(prevFP);
-  }
-
-  MOZ_ASSERT(code_ == &tls()->instance->code());
   lineOrBytecode_ = callsite->lineOrBytecode();
 
   MOZ_ASSERT(!done());
@@ -278,7 +272,7 @@ unsigned WasmFrameIter::computeLine(uint32_t* column) const {
 
 Instance* WasmFrameIter::instance() const {
   MOZ_ASSERT(!done());
-  return tls_->instance;
+  return fp_->instance();
 }
 
 void** WasmFrameIter::unwoundAddressOfReturnAddress() const {
@@ -924,39 +918,6 @@ static bool isSignatureCheckFail(uint32_t offsetInCode,
          (offsetInCode - codeRange->funcCheckedCallEntry()) > SetFP;
 }
 
-const TlsData* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
-  while (true) {
-    if (fp->callerIsExitOrJitEntryFP()) {
-      // It is a direct call from JIT.
-      MOZ_ASSERT(!LookupCode(fp->returnAddress()));
-      return ExtractCalleeTlsFromFrameWithTls(fp);
-    }
-
-    uint8_t* returnAddress = fp->returnAddress();
-    const CodeRange* codeRange = nullptr;
-    const Code* code = LookupCode(returnAddress, &codeRange);
-    MOZ_ASSERT(codeRange);
-
-    if (codeRange->isEntry()) {
-      return ExtractCalleeTlsFromFrameWithTls(fp);
-    }
-
-    MOZ_ASSERT(codeRange->kind() == CodeRange::Function);
-    MOZ_ASSERT(code);
-    const CallSite* callsite = code->lookupCallSite(returnAddress);
-    if (callsite->mightBeCrossInstance()) {
-      return ExtractCalleeTlsFromFrameWithTls(fp);
-    }
-
-    fp = fp->wasmCaller();
-  }
-}
-
-TlsData* js::wasm::GetNearestEffectiveTls(Frame* fp) {
-  return const_cast<TlsData*>(
-      GetNearestEffectiveTls(const_cast<const Frame*>(fp)));
-}
-
 bool js::wasm::StartUnwinding(const RegisterState& registers,
                               UnwindState* unwindState, bool* unwoundCaller) {
   // Shorthands.
@@ -1328,8 +1289,7 @@ void ProfilingFrameIterator::operator++() {
   }
 
   MOZ_ASSERT(code_ ==
-             &GetNearestEffectiveTls(Frame::fromUntaggedWasmExitFP(callerFP_))
-                  ->instance->code());
+             &Frame::fromUntaggedWasmExitFP(callerFP_)->instance()->code());
 
   switch (codeRange_->kind()) {
     case CodeRange::Function:
