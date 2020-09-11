@@ -1562,6 +1562,10 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   uint8_t* jitCodeRaw() const { return headerPtr(); }
 
  protected:
+  // Multi-purpose value that changes type as the script warms up from lazy form
+  // to interpreted-bytecode to JITs. See: ScriptWarmUpData type for more info.
+  ScriptWarmUpData warmUpData_ = {};
+
   // Object that determines what Realm this script is compiled for. For function
   // scripts this is the canonical function, otherwise it is the GlobalObject of
   // the realm.
@@ -1598,10 +1602,6 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   // and various script note structures. If the script is currently lazy, this
   // will be nullptr.
   RefPtr<js::RuntimeScriptData> sharedData_ = {};
-
-  // Multi-purpose value that changes type as the script warms up from lazy form
-  // to interpreted-bytecode to JITs. See: ScriptWarmUpData type for more info.
-  ScriptWarmUpData warmUpData_ = {};
 
   // End of fields.
 
