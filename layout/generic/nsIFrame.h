@@ -2672,43 +2672,6 @@ class nsIFrame : public nsQueryFrame {
   virtual mozilla::AspectRatio GetIntrinsicRatio();
 
   /**
-   * Bit-flags to pass to ComputeSize in |aFlags| parameter.
-   */
-  enum class ComputeSizeFlag : uint8_t {
-    /**
-     * Set if the frame is in a context where non-replaced blocks should
-     * shrink-wrap (e.g., it's floating, absolutely positioned, or
-     * inline-block).
-     */
-    ShrinkWrap,
-
-    /**
-     * Set if we'd like to compute our 'auto' bsize, regardless of our actual
-     * corresponding computed value. (e.g. to get an intrinsic height for flex
-     * items with "min-height: auto" to use during flexbox layout.)
-     */
-    UseAutoBSize,
-
-    /**
-     * Indicates that we should clamp the margin-box min-size to the given CB
-     * size.  This is used for implementing the grid area clamping here:
-     * https://drafts.csswg.org/css-grid/#min-size-auto
-     */
-    IClampMarginBoxMinSize,  // clamp in our inline axis
-    BClampMarginBoxMinSize,  // clamp in our block axis
-
-    /**
-     * The frame is stretching (per CSS Box Alignment) and doesn't have an
-     * Automatic Minimum Size in the indicated axis.
-     * (may be used for both flex/grid items, but currently only used for Grid)
-     * https://drafts.csswg.org/css-grid/#min-size-auto
-     * https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch
-     */
-    IApplyAutoMinSize,  // only has an effect when eShrinkWrap is false
-  };
-  using ComputeSizeFlags = mozilla::EnumSet<ComputeSizeFlag>;
-
-  /**
    * Compute the size that a frame will occupy.  Called while
    * constructing the ReflowInput to be used to Reflow the frame,
    * in order to fill its mComputedWidth and mComputedHeight member
@@ -2746,7 +2709,8 @@ class nsIFrame : public nsQueryFrame {
    * @param aPadding The sum of the vertical / horizontal margins of
    *                 the frame, including actual values resulting from
    *                 percentages.
-   * @param aFlags   Flags to further customize behavior (definitions above).
+   * @param aFlags   Flags to further customize behavior (definitions in
+   *                 LayoutConstants.h).
    *
    * The return value includes the computed LogicalSize and the enum class which
    * indicates whether the inline/block size is affected by aspect-ratio or not.
@@ -2767,7 +2731,7 @@ class nsIFrame : public nsQueryFrame {
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
-      const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags);
+      const mozilla::LogicalSize& aPadding, mozilla::ComputeSizeFlags aFlags);
 
  protected:
   /**
@@ -2789,14 +2753,14 @@ class nsIFrame : public nsQueryFrame {
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
-      const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags);
+      const mozilla::LogicalSize& aPadding, mozilla::ComputeSizeFlags aFlags);
 
   /**
    * Utility function for ComputeAutoSize implementations.  Return
    * max(GetMinISize(), min(aISizeInCB, GetPrefISize()))
    */
   nscoord ShrinkWidthToFit(gfxContext* aRenderingContext, nscoord aISizeInCB,
-                           ComputeSizeFlags aFlags);
+                           mozilla::ComputeSizeFlags aFlags);
 
  public:
   /**
@@ -4734,14 +4698,15 @@ class nsIFrame : public nsQueryFrame {
                             nscoord aContainingBlockISize,
                             nscoord aContentEdgeToBoxSizing,
                             nscoord aBoxSizingToMarginEdge,
-                            StyleExtremumLength aSize, ComputeSizeFlags aFlags);
+                            StyleExtremumLength aSize,
+                            mozilla::ComputeSizeFlags aFlags);
 
   nscoord ComputeISizeValue(gfxContext* aRenderingContext,
                             nscoord aContainingBlockISize,
                             nscoord aContentEdgeToBoxSizing,
                             nscoord aBoxSizingToMarginEdge,
                             const LengthPercentage& aSize,
-                            ComputeSizeFlags aFlags);
+                            mozilla::ComputeSizeFlags aFlags);
 
   template <typename SizeOrMaxSize>
   nscoord ComputeISizeValue(gfxContext* aRenderingContext,
@@ -4749,7 +4714,7 @@ class nsIFrame : public nsQueryFrame {
                             nscoord aContentEdgeToBoxSizing,
                             nscoord aBoxSizingToMarginEdge,
                             const SizeOrMaxSize& aSize,
-                            ComputeSizeFlags aFlags = {}) {
+                            mozilla::ComputeSizeFlags aFlags = {}) {
     MOZ_ASSERT(aSize.IsExtremumLength() || aSize.IsLengthPercentage(),
                "This doesn't handle auto / none");
     if (aSize.IsLengthPercentage()) {

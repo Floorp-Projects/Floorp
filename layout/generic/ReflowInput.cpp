@@ -1638,8 +1638,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
   SetComputedLogicalOffsets(offsets.ConvertTo(wm, cbwm));
 
-  using ComputeSizeFlag = nsIFrame::ComputeSizeFlag;
-  nsIFrame::ComputeSizeFlags computeSizeFlags;
+  ComputeSizeFlags computeSizeFlags;
   if (mFlags.mIClampMarginBoxMinSize) {
     computeSizeFlags += ComputeSizeFlag::IClampMarginBoxMinSize;
   }
@@ -2334,8 +2333,7 @@ void ReflowInput::InitConstraints(
       const bool isBlockLevel =
           NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType) ||
           mFrame->IsFlexOrGridItem();
-      using ComputeSizeFlag = nsIFrame::ComputeSizeFlag;
-      nsIFrame::ComputeSizeFlags computeSizeFlags;
+      ComputeSizeFlags computeSizeFlags;
       if (!isBlockLevel) {
         computeSizeFlags += ComputeSizeFlag::ShrinkWrap;
       }

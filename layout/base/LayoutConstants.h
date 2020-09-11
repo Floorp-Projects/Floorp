@@ -9,6 +9,7 @@
 #ifndef LayoutConstants_h___
 #define LayoutConstants_h___
 
+#include "mozilla/EnumSet.h"
 #include "nsSize.h"  // for NS_MAXSIZE
 
 /**
@@ -33,5 +34,47 @@
 // https://drafts.csswg.org/css2/visudet.html#inline-replaced-width
 #define REPLACED_ELEM_FALLBACK_PX_WIDTH 300
 #define REPLACED_ELEM_FALLBACK_PX_HEIGHT 150
+
+namespace mozilla {
+
+/**
+ * Bit-flags to pass to various functions that compute sizes like
+ * nsIFrame::ComputeSize().
+ */
+enum class ComputeSizeFlag : uint8_t {
+  /**
+   * Set if the frame is in a context where non-replaced blocks should
+   * shrink-wrap (e.g., it's floating, absolutely positioned, or
+   * inline-block).
+   */
+  ShrinkWrap,
+
+  /**
+   * Set if we'd like to compute our 'auto' bsize, regardless of our actual
+   * corresponding computed value. (e.g. to get an intrinsic height for flex
+   * items with "min-height: auto" to use during flexbox layout.)
+   */
+  UseAutoBSize,
+
+  /**
+   * Indicates that we should clamp the margin-box min-size to the given CB
+   * size.  This is used for implementing the grid area clamping here:
+   * https://drafts.csswg.org/css-grid/#min-size-auto
+   */
+  IClampMarginBoxMinSize,  // clamp in our inline axis
+  BClampMarginBoxMinSize,  // clamp in our block axis
+
+  /**
+   * The frame is stretching (per CSS Box Alignment) and doesn't have an
+   * Automatic Minimum Size in the indicated axis.
+   * (may be used for both flex/grid items, but currently only used for Grid)
+   * https://drafts.csswg.org/css-grid/#min-size-auto
+   * https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch
+   */
+  IApplyAutoMinSize,  // only has an effect when eShrinkWrap is false
+};
+using ComputeSizeFlags = mozilla::EnumSet<ComputeSizeFlag>;
+
+}  // namespace mozilla
 
 #endif  // LayoutConstants_h___
