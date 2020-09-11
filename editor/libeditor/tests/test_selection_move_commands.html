@@ -2,19 +2,16 @@
 <title>Test for nsSelectionMoveCommands</title>
 <link rel=stylesheet href="/tests/SimpleTest/test.css">
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=454004">Mozilla Bug 454004</a>
 
 <iframe id="edit" width="200" height="100" src="about:blank"></iframe>
 
 <script>
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("Legacy test, possibly no good reason");
-
-var winUtils = SpecialPowers.getDOMWindowUtils(window);
 
 async function setup() {
   await SpecialPowers.pushPrefEnv({set: [["general.smoothScroll", false]]});
-  winUtils.advanceTimeAndRefresh(100);
 }
 
 async function* runTests() {
@@ -24,22 +21,7 @@ async function* runTests() {
   var root = doc.documentElement;
   var body = doc.body;
 
-  body.style.fontSize = "16px";
-  body.style.lineHeight = "16px";
-  body.style.height = "400px";
-  body.style.padding = "0px";
-  body.style.margin = "0px";
-  body.style.borderWidth = "0px";
-
   var sel = win.getSelection();
-  doc.designMode = "on";
-  body.innerHTML = "1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>";
-  win.focus();
-  // Flush out layout to make sure that the subdocument will be the size we
-  // expect by the time we try to scroll it.
-  is(body.getBoundingClientRect().height, 400,
-     "Body height should be what we set it to");
-  yield;
 
   function testScrollCommand(cmd, expectTop) {
     const { top } = root.getBoundingClientRect();
@@ -121,16 +103,19 @@ async function* runTests() {
   ok(pageHeight > 0, "cmd_scrollPageDown works");
   ok(pageHeight <= 100, "cmd_scrollPageDown doesn't scroll too much");
   SpecialPowers.doCommand(window, "cmd_scrollBottom");
+  yield;
   SpecialPowers.doCommand(window, "cmd_scrollPageUp");
   yield;
   testScrollCommand("cmd_scrollPageUp", root.scrollHeight - 100 - pageHeight);
 
   SpecialPowers.doCommand(window, "cmd_scrollTop");
+  yield;
   SpecialPowers.doCommand(window, "cmd_scrollLineDown");
   yield;
   var lineHeight = -root.getBoundingClientRect().top;
   ok(lineHeight > 0, "Can scroll by lines");
   SpecialPowers.doCommand(window, "cmd_scrollBottom");
+  yield;
   SpecialPowers.doCommand(window, "cmd_scrollLineUp");
   yield;
   testScrollCommand("cmd_scrollLineUp", root.scrollHeight - 100 - lineHeight);
@@ -191,24 +176,48 @@ async function* runTests() {
 }
 
 function cleanup() {
-  winUtils.restoreNormalRefresh();
   SimpleTest.finish();
 }
 
 async function testRunner() {
+  var e = document.getElementById("edit");
+  var doc = e.contentDocument;
+  var win = e.contentWindow;
+  var body = doc.body;
+
+  body.style.fontSize = "16px";
+  body.style.lineHeight = "16px";
+  body.style.height = "400px";
+  body.style.padding = "0px";
+  body.style.margin = "0px";
+  body.style.borderWidth = "0px";
+
+  doc.designMode = "on";
+  body.innerHTML = "1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>";
+  win.focus();
+  // Flush out layout to make sure that the subdocument will be the size we
+  // expect by the time we try to scroll it.
+  is(body.getBoundingClientRect().height, 400,
+     "Body height should be what we set it to");
+
+  await new Promise(resolve => {win.requestAnimationFrame(() => { win.requestAnimationFrame(() => { flushApzRepaints(resolve, win); }); }); });
+
   let curTest = runTests();
   while (true) {
-    winUtils.advanceTimeAndRefresh(100);
+    let promise = new Promise(resolve => { win.addEventListener("scroll", () => { SimpleTest.executeSoon(resolve); }, {once: true, capture: true}); });
     if ((await curTest.next()).done) {
       break;
     }
-    winUtils.advanceTimeAndRefresh(100);
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await promise;
+    await new Promise(resolve => {win.requestAnimationFrame(() => { win.requestAnimationFrame(() => { flushApzRepaints(resolve, win); }); }); });
   }
 }
 
-setup()
-  .then(() => testRunner())
-  .then(() => cleanup())
-  .catch(err => ok(false, err));
+SimpleTest.waitForFocus(function() {
+  setup()
+    .then(() => testRunner())
+    .then(() => cleanup())
+    .catch(err => ok(false, err));
+}, window);
+
 </script>

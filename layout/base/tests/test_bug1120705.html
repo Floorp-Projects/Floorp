@@ -4,6 +4,7 @@
   <title>Test for Bug 1120705</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -50,6 +51,16 @@ function clickDownButton() {
                   { type: "mouseup" });
 }
 
+function waitToClearOutAnyPotentialScrolls(aWindow) {
+  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(resolve, aWindow); }); }); });
+}
+
+function waitForScrollEvent(aWindow) {
+  return new Promise(resolve => {
+    aWindow.addEventListener("scroll", () => { SimpleTest.executeSoon(resolve); }, {once: true, capture: true});
+  });
+}
+
 SimpleTest.waitForExplicitFinish();
 
 
@@ -57,24 +68,30 @@ addLoadEvent(function() {
   SpecialPowers.pushPrefEnv({
     "set": [["general.smoothScroll", false],
             ["toolkit.scrollbox.verticalScrollDistance", 3]]},
-    function() {
+    async function() {
       var sel = document.getElementById("sel");
       sel.size = 2;
       sel.scrollTo(0, 0);
+      await waitToClearOutAnyPotentialScrolls(window);
+      is(sel.scrollTop, 0, "sanity check that we start scrolling from 0");
+      let waitForScrolling = waitForScrollEvent(window);
       clickDownButton();
-      window.requestAnimationFrame(function() {
-        var restricted_top = sel.scrollTop;
-        isnot(restricted_top, 0,
-              "Expected to scroll when clicking scrollbar button");
-        sel.size = 10;
-        sel.scrollTo(0, 0);
-        clickDownButton();
-        window.requestAnimationFrame(function() {
-          isnot(sel.scrollTop, restricted_top,
-                "Scrollbar button scrolling should be limited by page size");
-          SimpleTest.finish();
-        });
-      });
+      await waitForScrolling;
+      var restricted_top = sel.scrollTop;
+      isnot(restricted_top, 0,
+            "Expected to scroll when clicking scrollbar button");
+      sel.size = 10;
+      sel.scrollTo(0, 0);
+      await waitToClearOutAnyPotentialScrolls(window);
+      is(sel.scrollTop, 0, "sanity check that we start scrolling from 0");
+      waitForScrolling = waitForScrollEvent(window);
+      clickDownButton();
+      await waitForScrolling;
+      isnot(sel.scrollTop, 0,
+            "Expected to scroll when clicking scrollbar button");
+      isnot(sel.scrollTop, restricted_top,
+            "Scrollbar button scrolling should be limited by page size");
+      SimpleTest.finish();
     });
 });
 </script>
