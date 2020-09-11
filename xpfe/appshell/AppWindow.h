@@ -247,16 +247,6 @@ class AppWindow final : public nsIBaseWindow,
   nsresult GetPersistentValue(const nsAtom* aAttr, nsAString& aValue);
   nsresult SetPersistentValue(const nsAtom* aAttr, const nsAString& aValue);
 
-  // Saves window size and positioning values in order to display a very early
-  // skeleton UI. This has to happen before we can reasonably initialize the
-  // xulstore (i.e., before even loading libxul), so they have to use a special
-  // purpose store to do so.
-  nsresult MaybeSaveEarlyWindowPersistentValues(
-      const LayoutDeviceIntRect& aRect);
-
-  // Gets the uri spec and the window element ID for this window.
-  nsresult GetDocXulStoreKeys(nsString& aUriSpec, nsString& aWindowElementId);
-
   // Enum for the current state of a fullscreen change.
   //
   // It is used to ensure that fullscreen change is issued after both
