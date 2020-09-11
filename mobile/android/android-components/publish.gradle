@@ -14,6 +14,13 @@ static def getLocalPublicationTimestamp() {
     return date.format('yyyyMMddHHmmss')
 }
 
+static def getGitHash() {
+    String[] cmd = ['git', 'rev-parse', '--verify', 'HEAD'] // via https://stackoverflow.com/a/949391/2219998
+    def process = Runtime.getRuntime().exec(cmd)
+    process.waitFor()
+    return process.inputStream.getText()
+}
+
 ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
     apply plugin: 'digital.wup.android-maven-publish'
 
@@ -53,6 +60,7 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
                         connection = libVcsUrl
                         developerConnection = libVcsUrl
                         url = libUrl
+                        tag = getGitHash()
                     }
                 }
             }
