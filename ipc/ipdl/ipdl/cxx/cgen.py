@@ -508,9 +508,9 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.printdent()
         sd.decl.accept(self)
         if sd.initargs is not None:
-            self.write('(')
+            self.write('{')
             self.writeDeclList(sd.initargs)
-            self.write(')')
+            self.write('}')
         if sd.init is not None:
             self.write(' = ')
             sd.init.accept(self)
