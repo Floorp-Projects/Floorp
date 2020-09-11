@@ -269,23 +269,8 @@ struct SizeComputationInput {
     // (e.g. columns), it should always reflow its placeholder children.
     bool mMustReflowPlaceholders : 1;
 
-    // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
-    bool mShrinkWrap : 1;
-
-    // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
-    bool mUseAutoBSize : 1;
-
     // the STATIC_POS_IS_CB_ORIGIN ctor flag
     bool mStaticPosIsCBOrigin : 1;
-
-    // the I_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
-    bool mIClampMarginBoxMinSize : 1;
-
-    // the B_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
-    bool mBClampMarginBoxMinSize : 1;
-
-    // the I_APPLY_AUTO_MIN_SIZE ctor flag
-    bool mApplyAutoMinSize : 1;
 
     // If set, the following two flags indicate that:
     // (1) this frame is absolutely-positioned (or fixed-positioned).
@@ -378,7 +363,8 @@ struct SizeComputationInput {
 
  protected:
   void InitOffsets(mozilla::WritingMode aWM, nscoord aPercentBasis,
-                   mozilla::LayoutFrameType aFrameType, ReflowInputFlags aFlags,
+                   mozilla::LayoutFrameType aFrameType,
+                   mozilla::ComputeSizeFlags aFlags = {},
                    const nsMargin* aBorder = nullptr,
                    const nsMargin* aPadding = nullptr,
                    const nsStyleDisplay* aDisplay = nullptr);
@@ -719,6 +705,7 @@ struct ReflowInput : public SizeComputationInput {
   nsIFrame** mDiscoveredClearance = nullptr;
 
   ReflowInputFlags mFlags;
+  mozilla::ComputeSizeFlags mComputeSizeFlags;
 
   // This value keeps track of how deeply nested a given reflow input
   // is from the top of the frame tree.
@@ -799,13 +786,16 @@ struct ReflowInput : public SizeComputationInput {
    *        computed by ComputeContainingBlockRectangle().
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
+   * @param aComputeSizeFlags A set of flags used when we call
+   *        nsIFrame::ComputeSize() internally.
    */
   ReflowInput(nsPresContext* aPresContext,
               const ReflowInput& aParentReflowInput, nsIFrame* aFrame,
               const mozilla::LogicalSize& aAvailableSpace,
               const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
                   mozilla::Nothing(),
-              uint32_t aFlags = 0);
+              uint32_t aFlags = 0,
+              mozilla::ComputeSizeFlags aComputeSizeFlags = {});
 
   // Values for |aFlags| passed to constructor
   enum {
@@ -817,14 +807,6 @@ struct ReflowInput : public SizeComputationInput {
     // that the constructor should not call Init().
     CALLER_WILL_INIT = (1 << 1),
 
-    // The caller wants shrink-wrap behavior (i.e. ComputeSizeFlags::eShrinkWrap
-    // will be passed to ComputeSize()).
-    COMPUTE_SIZE_SHRINK_WRAP = (1 << 2),
-
-    // The caller wants 'auto' bsize behavior (ComputeSizeFlags::eUseAutoBSize
-    // will be be passed to ComputeSize()).
-    COMPUTE_SIZE_USE_AUTO_BSIZE = (1 << 3),
-
     // The caller wants the abs.pos. static-position resolved at the origin of
     // the containing block, i.e. at LogicalPoint(0, 0). (Note that this
     // doesn't necessarily mean that (0, 0) is the *correct* static position
@@ -832,15 +814,6 @@ struct ReflowInput : public SizeComputationInput {
     // @note In a Grid container's masonry axis we'll always use
     // the placeholder's position in that axis regardless of this flag.
     STATIC_POS_IS_CB_ORIGIN = (1 << 4),
-
-    // Pass ComputeSizeFlags::eIClampMarginBoxMinSize to ComputeSize().
-    I_CLAMP_MARGIN_BOX_MIN_SIZE = (1 << 5),
-
-    // Pass ComputeSizeFlags::eBClampMarginBoxMinSize to ComputeSize().
-    B_CLAMP_MARGIN_BOX_MIN_SIZE = (1 << 6),
-
-    // Pass ComputeSizeFlags::eIApplyAutoMinSize to ComputeSize().
-    I_APPLY_AUTO_MIN_SIZE = (1 << 7),
   };
 
   // This method initializes various data members. It is automatically

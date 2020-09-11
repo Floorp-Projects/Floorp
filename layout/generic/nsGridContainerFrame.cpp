@@ -4945,29 +4945,30 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
                       true);
 #endif
   auto wm = aChild->GetWritingMode();
-  uint32_t riFlags = ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE;
+  ComputeSizeFlags csFlags = ComputeSizeFlag::UseAutoBSize;
   if (aAvailableSize.ISize(wm) == INFINITE_ISIZE_COORD) {
-    riFlags |= ReflowInput::COMPUTE_SIZE_SHRINK_WRAP;
+    csFlags += ComputeSizeFlag::ShrinkWrap;
   }
   if (aIMinSizeClamp != NS_MAXSIZE) {
-    riFlags |= ReflowInput::I_CLAMP_MARGIN_BOX_MIN_SIZE;
+    csFlags += ComputeSizeFlag::IClampMarginBoxMinSize;
   }
   if (aBMinSizeClamp != NS_MAXSIZE) {
-    riFlags |= ReflowInput::B_CLAMP_MARGIN_BOX_MIN_SIZE;
+    csFlags += ComputeSizeFlag::BClampMarginBoxMinSize;
     aChild->SetProperty(nsIFrame::BClampMarginBoxMinSizeProperty(),
                         aBMinSizeClamp);
   } else {
     aChild->RemoveProperty(nsIFrame::BClampMarginBoxMinSizeProperty());
   }
-  ReflowInput childRI(pc, *rs, aChild, aAvailableSize, Some(aCBSize), riFlags);
+  ReflowInput childRI(pc, *rs, aChild, aAvailableSize, Some(aCBSize), 0,
+                      csFlags);
 
-  // Because we pass ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE, and the
+  // Because we pass ComputeSizeFlag::UseAutoBSize, and the
   // previous reflow of the child might not have, set the child's
   // block-resize flag to true.
   // FIXME (perf): It would be faster to do this only if the previous
   // reflow of the child was not a measuring reflow, and only if the
   // child does some of the things that are affected by
-  // ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE.
+  // ComputeSizeFlag::UseAutoBSize.
   childRI.SetBResize(true);
   // Not 100% sure this is needed, but be conservative for now:
   childRI.mFlags.mIsBResizeForPercentages = true;
@@ -4998,19 +4999,19 @@ static void PostReflowStretchChild(
     LogicalAxis aChildAxis, const nscoord aNewContentBoxSize,
     nscoord aIMinSizeClamp = NS_MAXSIZE, nscoord aBMinSizeClamp = NS_MAXSIZE) {
   nsPresContext* pc = aChild->PresContext();
-  uint32_t riFlags = 0U;
+  ComputeSizeFlags csFlags;
   if (aIMinSizeClamp != NS_MAXSIZE) {
-    riFlags |= ReflowInput::I_CLAMP_MARGIN_BOX_MIN_SIZE;
+    csFlags += ComputeSizeFlag::IClampMarginBoxMinSize;
   }
   if (aBMinSizeClamp != NS_MAXSIZE) {
-    riFlags |= ReflowInput::B_CLAMP_MARGIN_BOX_MIN_SIZE;
+    csFlags += ComputeSizeFlag::BClampMarginBoxMinSize;
     aChild->SetProperty(nsIFrame::BClampMarginBoxMinSizeProperty(),
                         aBMinSizeClamp);
   } else {
     aChild->RemoveProperty(nsIFrame::BClampMarginBoxMinSizeProperty());
   }
-  ReflowInput ri(pc, aReflowInput, aChild, aAvailableSize, Some(aCBSize),
-                 riFlags);
+  ReflowInput ri(pc, aReflowInput, aChild, aAvailableSize, Some(aCBSize), 0,
+                 csFlags);
   if (aChildAxis == eLogicalAxisBlock) {
     ri.SetComputedBSize(ri.ApplyMinMaxBSize(aNewContentBoxSize));
   } else {
@@ -7166,7 +7167,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
   LogicalSize childCBSize = reflowSize.ConvertTo(childWM, wm);
 
   // Setup the ClampMarginBoxMinSize reflow flags and property, if needed.
-  uint32_t flags = 0;
+  ComputeSizeFlags csFlags;
   if (aGridItemInfo) {
     // AlignJustifyTracksInMasonryAxis stretches items in a masonry-axis so we
     // don't do that here.
@@ -7185,16 +7186,16 @@ void nsGridContainerFrame::ReflowInFlowChild(
     if (stretch[childIAxis]) {
       if (aGridItemInfo->mState[childIAxis] &
           ItemState::eClampMarginBoxMinSize) {
-        flags |= ReflowInput::I_CLAMP_MARGIN_BOX_MIN_SIZE;
+        csFlags += ComputeSizeFlag::IClampMarginBoxMinSize;
       }
     } else {
-      flags |= ReflowInput::COMPUTE_SIZE_SHRINK_WRAP;
+      csFlags += ComputeSizeFlag::ShrinkWrap;
     }
 
     auto childBAxis = GetOrthogonalAxis(childIAxis);
     if (stretch[childBAxis] &&
         aGridItemInfo->mState[childBAxis] & ItemState::eClampMarginBoxMinSize) {
-      flags |= ReflowInput::B_CLAMP_MARGIN_BOX_MIN_SIZE;
+      csFlags += ComputeSizeFlag::BClampMarginBoxMinSize;
       aChild->SetProperty(BClampMarginBoxMinSizeProperty(),
                           childCBSize.BSize(childWM));
     } else {
@@ -7202,7 +7203,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
     }
 
     if ((aGridItemInfo->mState[childIAxis] & ItemState::eApplyAutoMinSize)) {
-      flags |= ReflowInput::I_APPLY_AUTO_MIN_SIZE;
+      csFlags += ComputeSizeFlag::IApplyAutoMinSize;
     }
   }
 
@@ -7211,17 +7212,17 @@ void nsGridContainerFrame::ReflowInFlowChild(
   }
   LogicalSize percentBasis(cb.Size(wm).ConvertTo(childWM, wm));
   ReflowInput childRI(pc, *aState.mReflowInput, aChild, childCBSize,
-                      Some(percentBasis), flags);
+                      Some(percentBasis), 0, csFlags);
   childRI.mFlags.mIsTopOfPage =
       aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
 
-  // Because we pass ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE, and the
+  // Because we pass ComputeSizeFlag::UseAutoBSize, and the
   // previous reflow of the child might not have, set the child's
   // block-resize flag to true.
   // FIXME (perf): It would be faster to do this only if the previous
   // reflow of the child was a measuring reflow, and only if the child
   // does some of the things that are affected by
-  // ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE.
+  // ComputeSizeFlag::UseAutoBSize.
   childRI.SetBResize(true);
   childRI.mFlags.mIsBResizeForPercentages = true;
 
