@@ -352,6 +352,7 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_COOKIES_BLOCKED_FOREIGN         = 0x00000080;
   const unsigned long STATE_BLOCKED_SOCIALTRACKING_CONTENT  = 0x00010000;
   const unsigned long STATE_LOADED_SOCIALTRACKING_CONTENT   = 0x00020000;
+  const unsigned long STATE_UNBLOCKED_UNSAFE_CONTENT        = 0x00000010;
 
   /**
    * Notification indicating the state has changed for one of the requests
