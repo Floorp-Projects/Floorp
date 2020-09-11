@@ -186,11 +186,6 @@ void LIRGeneratorARM64::lowerForBitAndAndBranch(LBitAndAndBranch* baab,
   add(baab, mir);
 }
 
-void LIRGeneratorARM64::lowerWasmBuiltinTruncateToInt32(
-    MWasmBuiltinTruncateToInt32* ins) {
-  MOZ_CRASH("NYI");
-}
-
 void LIRGeneratorARM64::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition,
                                              LBlock* block, size_t lirIndex) {
   lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
@@ -287,15 +282,7 @@ void LIRGeneratorARM64::lowerModI(MMod* mod) {
 
 void LIRGeneratorARM64::lowerDivI64(MDiv* div) { MOZ_CRASH("NYI"); }
 
-void LIRGeneratorARM64::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
-  MOZ_CRASH("We don't use runtime div for this architecture");
-}
-
 void LIRGeneratorARM64::lowerModI64(MMod* mod) { MOZ_CRASH("NYI"); }
-
-void LIRGeneratorARM64::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
-  MOZ_CRASH("We don't use runtime mod for this architecture");
-}
 
 void LIRGenerator::visitPowHalf(MPowHalf* ins) {
   MDefinition* input = ins->input();
@@ -529,16 +516,6 @@ void LIRGenerator::visitSubstr(MSubstr* ins) {
 
 void LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins) {
   MOZ_CRASH("NYI");
-}
-
-void LIRGeneratorARM64::lowerWasmBuiltinTruncateToInt64(
-    MWasmBuiltinTruncateToInt64* ins) {
-  MOZ_CRASH("We don't use WasmBuiltinTruncateToInt64 for arm64");
-}
-
-void LIRGeneratorARM64::lowerBuiltinInt64ToFloatingPoint(
-    MBuiltinInt64ToFloatingPoint* ins) {
-  MOZ_CRASH("We don't use it for this architecture");
 }
 
 void LIRGenerator::visitWasmHeapBase(MWasmHeapBase* ins) { MOZ_CRASH("NYI"); }
