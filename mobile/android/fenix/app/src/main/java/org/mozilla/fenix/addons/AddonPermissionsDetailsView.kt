@@ -6,7 +6,6 @@ package org.mozilla.fenix.addons
 
 import android.net.Uri
 import android.view.View
-import androidx.annotation.StringRes
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.extensions.LayoutContainer
@@ -40,10 +39,7 @@ class AddonPermissionsDetailsView(
     private fun bindPermissions(addon: Addon) {
         add_ons_permissions.apply {
             layoutManager = LinearLayoutManager(context)
-            val sortedPermissions = addon.translatePermissions().map {
-                @StringRes val stringId = it
-                context.getString(stringId)
-            }.sorted()
+            val sortedPermissions = addon.translatePermissions(context).sorted()
             adapter = AddonPermissionsAdapter(
                 sortedPermissions,
                 style = AddonPermissionsAdapter.Style(
