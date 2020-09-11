@@ -121,6 +121,7 @@
   skin/classic/browser/protections/breached-password.svg       (../shared/protections/breached-password.svg)
   skin/classic/browser/protections/new-feature.svg             (../shared/protections/new-feature.svg)
 
+  skin/classic/browser/preferences/android-menu.svg            (../shared/preferences/android-menu.svg)
   skin/classic/browser/preferences/bookmark.svg                (../shared/preferences/bookmark.svg)
   skin/classic/browser/preferences/critters-postcard.jpg       (../shared/preferences/critters-postcard.jpg)
   skin/classic/browser/preferences/extensions.svg              (../shared/preferences/extensions.svg)
@@ -131,6 +132,7 @@
   skin/classic/browser/preferences/fxaPairDevice.css           (../shared/preferences/fxaPairDevice.css)
   skin/classic/browser/preferences/general.svg                 (../shared/preferences/general.svg)
   skin/classic/browser/preferences/history.svg                 (../shared/preferences/history.svg)
+  skin/classic/browser/preferences/ios-menu.svg                (../shared/preferences/ios-menu.svg)
   skin/classic/browser/preferences/no-search-bar.svg           (../shared/preferences/no-search-bar.svg)
   skin/classic/browser/preferences/no-search-results.svg       (../shared/preferences/no-search-results.svg)
   skin/classic/browser/preferences/preferences.svg             (../shared/preferences/preferences.svg)

@@ -24,13 +24,28 @@
   <script src="chrome://browser/content/preferences/fxaPairDevice.js"/>
 
   <vbox id="qrCodeDisplay">
-    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-phase1">
+    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-step1">
       <html:a
         id="connect-another-device-link"
         data-l10n-name="connect-another-device"
         class="text-link" target="_blank"/>
     </description>
-    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-phase2"></description>
+    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-step2"></description>
+    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-step3">
+      <html:img
+        src="chrome://browser/skin/preferences/ios-menu.svg"
+        data-l10n-name="ios-menu-icon"
+        class="menu-icon"/>
+      <html:img
+        src="chrome://browser/skin/preferences/android-menu.svg"
+        data-l10n-name="android-menu-icon"
+        class="menu-icon"/>
+      <html:img
+        src="chrome://global/skin/icons/settings.svg"
+        data-l10n-name="settings-icon"
+        class="menu-icon"/>
+    </description>
+    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-step4"></description>
     <vbox>
       <vbox align="center" id="qrWrapper" pairing-status="loading">
         <box id="qrContainer"></box>
