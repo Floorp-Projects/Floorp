@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "sdp_os_defs.h"
-#include "sdp.h"
+#include "sipcc_sdp.h"
 #include "sdp_private.h"
 
-#include "CSFLog.h"
+#include "sdp_log.h"
 
 static const char* logTag = "sdp_main";
 
@@ -1054,7 +1054,7 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, const char *buf, size_t len)
             sdp_parse_error(sdp_p,
                 "%s End of line beyond end of buffer.",
                 sdp_p->debug_str);
-            CSFLogError(logTag, "SDP: Invalid SDP, no \\n (len %u): %*s",
+            SDPLogError(logTag, "SDP: Invalid SDP, no \\n (len %u): %*s",
                         (unsigned)len, (int)len, *bufp);
             end_found = TRUE;
             break;
@@ -1361,7 +1361,7 @@ void sdp_parse_error(sdp_t* sdp, const char *format, ...) {
     flex_string_vsprintf(&fs, format, ap);
     va_end(ap);
 
-    CSFLogError("SDP Parse", "SDP Parse Error %s, line %u", fs.buffer,
+    SDPLogError("SDP Parse", "SDP Parse Error %s, line %u", fs.buffer,
                 sdp->parse_line);
 
     if (sdp->conf_p->error_handler) {

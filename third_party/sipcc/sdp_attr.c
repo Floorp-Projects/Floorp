@@ -8,11 +8,11 @@
 
 #include "plstr.h"
 #include "sdp_os_defs.h"
-#include "sdp.h"
+#include "sipcc_sdp.h"
 #include "sdp_private.h"
 #include "sdp_base64.h"
 
-#include "CSFLog.h"
+#include "sdp_log.h"
 
 static const char* logTag = "sdp_attr";
 
@@ -250,14 +250,14 @@ sdp_result_e sdp_build_attribute (sdp_t *sdp_p, uint16_t level, flex_string *fs)
     while (attr_p != NULL) {
         if (attr_p->type >= SDP_MAX_ATTR_TYPES) {
             if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                CSFLogDebug(logTag, "%s Invalid attribute type to build (%u)",
+                SDPLogDebug(logTag, "%s Invalid attribute type to build (%u)",
                          sdp_p->debug_str, (unsigned)attr_p->type);
             }
         } else {
             result = sdp_attr[attr_p->type].build_func(sdp_p, attr_p, fs);
 
             if (result != SDP_SUCCESS) {
-              CSFLogError(logTag, "%s error building attribute %d", __FUNCTION__, result);
+              SDPLogError(logTag, "%s error building attribute %d", __FUNCTION__, result);
               return result;
             }
 
@@ -1377,7 +1377,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
           codec_info_found = TRUE;
         } else {
           // unknown parameter - eat chars until ';'
-          CSFLogDebug(logTag, "%s Unknown fmtp type (%s) - ignoring", __FUNCTION__,
+          SDPLogDebug(logTag, "%s Unknown fmtp type (%s) - ignoring", __FUNCTION__,
                       tmp);
           fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t",
                                        &result1);
@@ -2780,7 +2780,7 @@ sdp_result_e sdp_build_attr_cap (sdp_t *sdp_p, sdp_attr_t *attr_p,
     cap_p = attr_p->attr.cap_p;
 
     if (cap_p == NULL) {
-        CSFLogError(logTag, "%s Invalid %s attribute, unable to build.",
+        SDPLogError(logTag, "%s Invalid %s attribute, unable to build.",
             sdp_p->debug_str, sdp_get_attr_name(attr_p->type));
         sdp_p->conf_p->num_invalid_param++;
         /* Return success so build won't fail. */
@@ -2790,7 +2790,7 @@ sdp_result_e sdp_build_attr_cap (sdp_t *sdp_p, sdp_attr_t *attr_p,
     /* Validate params for this capability line */
     if ((cap_p->media >= SDP_MAX_MEDIA_TYPES) ||
         (cap_p->transport >= SDP_MAX_TRANSPORT_TYPES)) {
-        CSFLogDebug(logTag, logTag, "%s Media or transport type invalid for %s "
+        SDPLogDebug(logTag, logTag, "%s Media or transport type invalid for %s "
             "attribute, unable to build.", sdp_p->debug_str,
                         sdp_get_attr_name(attr_p->type));
         sdp_p->conf_p->num_invalid_param++;
@@ -3019,7 +3019,7 @@ sdp_result_e sdp_build_attr_cpar (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     while (attr_p != NULL) {
         if (attr_p->type >= SDP_MAX_ATTR_TYPES) {
-            CSFLogDebug(logTag, "%s Invalid attribute type to build (%u)",
+            SDPLogDebug(logTag, "%s Invalid attribute type to build (%u)",
                 sdp_p->debug_str, (unsigned)attr_p->type);
         } else {
             flex_string_sprintf(fs, "a=%s: ", cpar_name);
@@ -3525,7 +3525,7 @@ sdp_result_e sdp_build_attr_srtpcontext (sdp_t *sdp_p, sdp_attr_t *attr_p,
     if ((status = base64_encode(base64_encoded_input, key_size + salt_size,
                       base64_encoded_data, &output_len)) != BASE64_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Error: Failure to Base64 Encoded data (%s) ",
+            SDPLogError(logTag, "%s Error: Failure to Base64 Encoded data (%s) ",
                      sdp_p->debug_str, BASE64_RESULT_TO_STRING(status));
         }
         return (SDP_INVALID_PARAMETER);
@@ -4252,7 +4252,7 @@ sdp_build_attr_sdescriptions (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     if (status != BASE64_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Error: Failure to Base64 Encoded data (%s) ",
+            SDPLogError(logTag, "%s Error: Failure to Base64 Encoded data (%s) ",
                        sdp_p->debug_str, BASE64_RESULT_TO_STRING(status));
         }
         return (SDP_INVALID_PARAMETER);
@@ -4606,7 +4606,7 @@ sdp_result_e sdp_build_attr_rtcp_fb(sdp_t *sdp_p,
             break;
 
         default:
-            CSFLogError(logTag, "%s Error: Invalid rtcp-fb enum (%d)",
+            SDPLogError(logTag, "%s Error: Invalid rtcp-fb enum (%d)",
                         sdp_p->debug_str, attr_p->attr.rtcp_fb.feedback_type);
             return SDP_FAILURE;
     }
@@ -4757,7 +4757,7 @@ sdp_result_e sdp_parse_attr_rtcp_fb (sdp_t *sdp_p,
 
         default:
             /* This is an internal error, not a parsing error */
-            CSFLogError(logTag, "%s Error: Invalid rtcp-fb enum (%d)",
+            SDPLogError(logTag, "%s Error: Invalid rtcp-fb enum (%d)",
                         sdp_p->debug_str, attr_p->attr.rtcp_fb.feedback_type);
             return SDP_FAILURE;
     }
@@ -4789,7 +4789,7 @@ sdp_result_e sdp_build_attr_setup(sdp_t *sdp_p,
             sdp_setup_type_val[attr_p->attr.setup].name);
         break;
     default:
-        CSFLogError(logTag, "%s Error: Invalid setup enum (%d)",
+        SDPLogError(logTag, "%s Error: Invalid setup enum (%d)",
                     sdp_p->debug_str, attr_p->attr.setup);
         return SDP_FAILURE;
     }
@@ -4829,7 +4829,7 @@ sdp_result_e sdp_parse_attr_setup(sdp_t *sdp_p,
         return SDP_INVALID_PARAMETER;
     default:
         /* This is an internal error, not a parsing error */
-        CSFLogError(logTag, "%s Error: Invalid setup enum (%d)",
+        SDPLogError(logTag, "%s Error: Invalid setup enum (%d)",
                     sdp_p->debug_str, attr_p->attr.setup);
         return SDP_FAILURE;
     }
@@ -4849,7 +4849,7 @@ sdp_result_e sdp_build_attr_connection(sdp_t *sdp_p,
             sdp_connection_type_val[attr_p->attr.connection].name);
         break;
     default:
-        CSFLogError(logTag, "%s Error: Invalid connection enum (%d)",
+        SDPLogError(logTag, "%s Error: Invalid connection enum (%d)",
                     sdp_p->debug_str, attr_p->attr.connection);
         return SDP_FAILURE;
     }
@@ -4887,7 +4887,7 @@ sdp_result_e sdp_parse_attr_connection(sdp_t *sdp_p,
         return SDP_INVALID_PARAMETER;
     default:
         /* This is an internal error, not a parsing error */
-        CSFLogError(logTag, "%s Error: Invalid connection enum (%d)",
+        SDPLogError(logTag, "%s Error: Invalid connection enum (%d)",
                     sdp_p->debug_str, attr_p->attr.connection);
         return SDP_FAILURE;
     }
