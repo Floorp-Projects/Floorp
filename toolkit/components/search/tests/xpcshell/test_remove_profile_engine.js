@@ -24,7 +24,7 @@ add_task(async function run_test() {
 
   let data = await readJSONFile(do_get_file("data/search-legacy.json"));
 
-  // Put the filePath inside the cache file, to simulate what a pre-58 version
+  // Put the filePath inside the settings file, to simulate what a pre-58 version
   // of Firefox would have done.
   for (let engine of data.engines) {
     if (engine._name == "Test search engine") {
@@ -32,7 +32,7 @@ add_task(async function run_test() {
     }
   }
 
-  await promiseSaveCacheData(data);
+  await promiseSaveSettingsData(data);
 
   await Services.search.init();
 

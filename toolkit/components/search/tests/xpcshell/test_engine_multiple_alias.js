@@ -11,13 +11,13 @@ add_task(async function setup() {
 });
 
 add_task(async function upgrade_with_configuration_change_test() {
-  let cacheFileWritten = promiseAfterCache();
+  let settingsFileWritten = promiseAfterSettings();
   let extension = await SearchTestUtils.installSearchExtension({
     name: NAME,
     keyword: [" test", "alias "],
   });
   await extension.awaitStartup();
-  await cacheFileWritten;
+  await settingsFileWritten;
 
   let engine = Services.search.getEngineByAlias("test");
   Assert.equal(engine?.name, NAME, "Can be fetched by either alias");

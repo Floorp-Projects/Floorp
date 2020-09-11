@@ -16,7 +16,7 @@ add_task(async function test_init_success() {
   Assert.equal(
     scalars["browser.searchinit.init_result_status_code"],
     Cr.NS_OK,
-    "Should have recorded the engines cache as not corrupted"
+    "Should have recorded the engine settings as not corrupted"
   );
 
   await Services.search.init();

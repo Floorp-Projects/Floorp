@@ -33,7 +33,7 @@ add_task(async function setup() {
 
 add_task(async function basic_install_test() {
   await Services.search.init();
-  await promiseAfterCache();
+  await promiseAfterSettings();
 
   // On first boot, we get the list.json defaults
   Assert.deepEqual(await getEngineNames(), ["Plain", "Special"]);
@@ -49,7 +49,7 @@ add_task(async function basic_install_test() {
   // User uninstalls their engine
   await extension.awaitStartup();
   await extension.unload();
-  await promiseAfterCache();
+  await promiseAfterSettings();
   Assert.deepEqual(await getEngineNames(), ["Plain", "Special"]);
 });
 

@@ -102,5 +102,5 @@ add_task(async function test_mozParamsFailForNonAppProvided() {
   check("{moz:locale}", "{moz:locale}");
 
   await extension.unload();
-  await promiseAfterCache();
+  await promiseAfterSettings();
 });

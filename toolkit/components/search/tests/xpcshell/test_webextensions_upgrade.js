@@ -37,7 +37,7 @@ add_task(async function setup() {
 
 add_task(async function basic_install_test() {
   await Services.search.init();
-  await promiseAfterCache();
+  await promiseAfterSettings();
 
   let info = extInfo("example", "Example", "1.0", "foo");
   let extension = ExtensionTestUtils.loadExtension(info);
@@ -69,5 +69,5 @@ add_task(async function basic_install_test() {
   Assert.ok(params.includes("version=2.0"), "Correct version installed");
 
   await extension.unload();
-  await promiseAfterCache();
+  await promiseAfterSettings();
 });
