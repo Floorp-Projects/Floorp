@@ -17,7 +17,7 @@ namespace wr {
 class RenderCompositorEGL : public RenderCompositor {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget> aWidget);
+      RefPtr<widget::CompositorWidget> aWidget, nsACString& aError);
 
   explicit RenderCompositorEGL(RefPtr<widget::CompositorWidget> aWidget);
   virtual ~RenderCompositorEGL();

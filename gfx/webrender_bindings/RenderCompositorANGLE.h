@@ -33,11 +33,11 @@ class DCLayerTree;
 class RenderCompositorANGLE : public RenderCompositor {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget);
+      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
 
   explicit RenderCompositorANGLE(RefPtr<widget::CompositorWidget>&& aWidget);
   virtual ~RenderCompositorANGLE();
-  bool Initialize();
+  bool Initialize(nsACString& aError);
 
   bool BeginFrame() override;
   RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) final;
@@ -110,12 +110,12 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool ResizeBufferIfNeeded();
   bool CreateEGLSurface();
   void DestroyEGLSurface();
-  ID3D11Device* GetDeviceOfEGLDisplay();
-  bool CreateSwapChain();
+  ID3D11Device* GetDeviceOfEGLDisplay(nsACString& aError);
+  bool CreateSwapChain(nsACString& aError);
   void CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2);
   RefPtr<IDXGISwapChain1> CreateSwapChainForDComp(bool aUseTripleBuffering,
                                                   bool aUseAlpha);
-  bool ShutdownEGLLibraryIfNecessary();
+  bool ShutdownEGLLibraryIfNecessary(nsACString& aError);
   RefPtr<ID3D11Query> GetD3D11Query();
   void ReleaseNativeCompositorResources();
   HWND GetCompositorHwnd();

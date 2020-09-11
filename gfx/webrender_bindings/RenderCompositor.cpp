@@ -127,25 +127,25 @@ void wr_compositor_unmap_tile(void* aCompositor) {
 
 /* static */
 UniquePtr<RenderCompositor> RenderCompositor::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget) {
+    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
   if (gfx::gfxVars::UseSoftwareWebRender()) {
 #ifdef XP_MACOSX
     // Mac uses NativeLayerCA
-    return RenderCompositorNativeSWGL::Create(std::move(aWidget));
+    return RenderCompositorNativeSWGL::Create(std::move(aWidget), aError);
 #else
-    return RenderCompositorSWGL::Create(std::move(aWidget));
+    return RenderCompositorSWGL::Create(std::move(aWidget), aError);
 #endif
   }
 
 #ifdef XP_WIN
   if (gfx::gfxVars::UseWebRenderANGLE()) {
-    return RenderCompositorANGLE::Create(std::move(aWidget));
+    return RenderCompositorANGLE::Create(std::move(aWidget), aError);
   }
 #endif
 
 #if defined(MOZ_WAYLAND) || defined(MOZ_WIDGET_ANDROID)
   UniquePtr<RenderCompositor> eglCompositor =
-      RenderCompositorEGL::Create(aWidget);
+      RenderCompositorEGL::Create(aWidget, aError);
   if (eglCompositor) {
     return eglCompositor;
   }
@@ -156,9 +156,9 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
   return nullptr;
 #elif defined(XP_MACOSX)
   // Mac uses NativeLayerCA
-  return RenderCompositorNativeOGL::Create(std::move(aWidget));
+  return RenderCompositorNativeOGL::Create(std::move(aWidget), aError);
 #else
-  return RenderCompositorOGL::Create(std::move(aWidget));
+  return RenderCompositorOGL::Create(std::move(aWidget), aError);
 #endif
 }
 

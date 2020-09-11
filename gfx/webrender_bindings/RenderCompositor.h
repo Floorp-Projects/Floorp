@@ -32,7 +32,7 @@ namespace wr {
 class RenderCompositor {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget);
+      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
 
   RenderCompositor(RefPtr<widget::CompositorWidget>&& aWidget);
   virtual ~RenderCompositor();

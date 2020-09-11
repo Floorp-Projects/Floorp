@@ -57,7 +57,8 @@ class DCLayerTree {
  public:
   static UniquePtr<DCLayerTree> Create(gl::GLContext* aGL, EGLConfig aEGLConfig,
                                        ID3D11Device* aDevice,
-                                       ID3D11DeviceContext* aCtx, HWND aHwnd);
+                                       ID3D11DeviceContext* aCtx, HWND aHwnd,
+                                       nsACString& aError);
   explicit DCLayerTree(gl::GLContext* aGL, EGLConfig aEGLConfig,
                        ID3D11Device* aDevice, ID3D11DeviceContext* aCtx,
                        IDCompositionDevice2* aCompositionDevice);
@@ -108,7 +109,7 @@ class DCLayerTree {
   GLuint GetOrCreateFbo(int aWidth, int aHeight);
 
  protected:
-  bool Initialize(HWND aHwnd);
+  bool Initialize(HWND aHwnd, nsACString& aError);
   bool InitializeVideoOverlaySupport();
   bool MaybeUpdateDebugCounter();
   bool MaybeUpdateDebugVisualRedrawRegions();
