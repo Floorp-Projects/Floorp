@@ -503,7 +503,7 @@ import_sibling_modules()
 
 # Register composite strategies.
 register_strategy('build', args=('skip-unless-schedules',))(Alias)
-register_strategy('build-fuzzing', args=('push-interval-10', 'backstop'))(All)
+register_strategy('build-fuzzing', args=('push-interval-10', 'skip-unless-backstop'))(All)
 register_strategy('test', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-verify', args=('skip-unless-schedules',))(Alias)
@@ -516,35 +516,57 @@ register_strategy('upload-symbols', args=('never',))(Alias)
 class project(object):
     """Strategies that should be applied per-project."""
 
-    # Optimize everything away, except on 10th pushes, where we run everything that was selected by
-    # bugbug for the last 10 pushes.
-    register_strategy(
-        'optimized-backstop',
-        args=(
-            'push-interval-10',
-            Any(
-                'skip-unless-schedules',
-                Any(
-                    'bugbug-reduced-manifests-fallback-last-10-pushes',
-                    'platform-disperse',
-                ),
-                split_args=split_bugbug_arg,
-            ),
-        ),
-    )(Any)
-
-    # The three strategies are part of an All composite strategy, which means they are linked
-    # by AND.
-    # - On 20th pushes, "backstop" will not allow the strategy to optimize anything away.
-    # - On 10th pushes, "backstop" allows the strategy to optimize things away, but
-    #   "optimized-backstop" will apply the relaxed bugbug optimization and will not allow the
-    #   normal bugbug optimization to apply.
-    # - On all other pushes, the normal bugbug optimization is applied.
     autoland = {
-        'test': All(
-            'backstop',
-            'optimized-backstop',
-            Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=split_bugbug_arg),
+        'test': Any(
+            # This `Any` strategy implements bi-modal behaviour. It allows different
+            # strategies on expanded pushes vs regular pushes.
+
+            # This first `All` handles "expanded" pushes.
+            All(
+                # There are three substrategies in this `All`, the first two act as barriers
+                # that help determine when to apply the third:
+                # 1. On backstop pushes, `skip-unless-backstop` returns False. Therefore
+                #    the overall composite strategy is False and we don't optimize.
+                # 2. On regular pushes, `Not('skip-unless-expanded')` returns False. Therefore
+                #    the overall composite strategy is False and we don't optimize.
+                # 3. On expanded pushes, the third strategy will determine whether or
+                #    not to optimize each individual task.
+
+                # The barrier strategies.
+                'skip-unless-backstop',
+                Not('skip-unless-expanded'),
+
+                # The actual test strategy applied to "expanded" pushes.
+                Any(
+                    'skip-unless-schedules',
+                    Any(
+                        'bugbug-reduced-manifests-fallback-last-10-pushes',
+                        'platform-disperse',
+                    ),
+                    split_args=split_bugbug_arg,
+                ),
+            ),
+
+            # This second `All` handles regular (aka not expanded or backstop)
+            # pushes.
+            All(
+                # There are two substrategies in this `All`, the first acts as a barrier
+                # that determines when to apply the second:
+                # 1. On expanded pushes (which includes backstops), `skip-unless-expanded`
+                #    returns False. Therefore the overall composite strategy is False and we
+                #    don't optimize.
+                # 2. On regular pushes, the second strategy will determine whether or
+                #    not to optimize each individual task.
+
+                # The barrier strategy.
+                'skip-unless-expanded',
+
+                # The actual test strategy applied to regular pushes.
+                Any(
+                    'skip-unless-schedules',
+                    'bugbug-reduced-fallback',
+                ),
+            ),
         ),
         'build': All(
             'push-interval-10',

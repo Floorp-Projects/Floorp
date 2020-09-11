@@ -10,8 +10,9 @@ from time import mktime
 import pytest
 from mozunit import main
 
-from taskgraph.optimize import registry
-from taskgraph.optimize.backstop import Backstop, PushInterval
+from taskgraph.optimize import project, registry
+from taskgraph.optimize.strategies import SkipUnlessSchedules
+from taskgraph.optimize.backstop import SkipUnlessBackstop, SkipUnlessPushInterval
 from taskgraph.optimize.bugbug import (
     BugBugPushSchedules,
     DisperseGroups,
@@ -19,6 +20,7 @@ from taskgraph.optimize.bugbug import (
     SkipUnlessDebug,
 )
 from taskgraph.task import Task
+from taskgraph.util.backstop import BACKSTOP_PUSH_INTERVAL
 from taskgraph.util.bugbug import (
     BUGBUG_BASE_URL,
     BugbugTimeoutException,
@@ -31,7 +33,7 @@ def clear_push_schedules_memoize():
     push_schedules.clear()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def params():
     return {
         'branch': 'integration/autoland',
@@ -312,7 +314,7 @@ def test_bugbug_fallback(monkeypatch, responses, params):
 
 def test_backstop(params):
     all_labels = {t.label for t in default_tasks}
-    opt = Backstop()
+    opt = SkipUnlessBackstop()
 
     params['backstop'] = False
     scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
@@ -325,7 +327,7 @@ def test_backstop(params):
 
 def test_push_interval(params):
     all_labels = {t.label for t in default_tasks}
-    opt = PushInterval(10)  # every 10th push
+    opt = SkipUnlessPushInterval(10)  # every 10th push
 
     # Only multiples of 10 schedule tasks.
     params['pushlog_id'] = 9
@@ -344,6 +346,59 @@ def test_push_interval(params):
     params['project'] = 'try'
     scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
     assert scheduled == set()
+
+
+def test_expanded(params):
+    all_labels = {t.label for t in default_tasks}
+    opt = registry["skip-unless-expanded"]
+
+    params['backstop'] = False
+    params['pushlog_id'] = BACKSTOP_PUSH_INTERVAL / 2
+    scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
+    assert scheduled == all_labels
+
+    params['pushlog_id'] += 1
+    scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
+    assert scheduled == set()
+
+    params['backstop'] = True
+    scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, None)}
+    assert scheduled == all_labels
+
+
+def test_project_autoland_test(monkeypatch, responses, params):
+    """Tests the behaviour of the `project.autoland["test"]` strategy on
+    various types of pushes.
+    """
+    # This is meant to test the composition of substrategies, and not the
+    # actual optimization implementations. So mock them out for simplicity.
+    monkeypatch.setattr(SkipUnlessSchedules, "should_remove_task", lambda *args: False)
+    monkeypatch.setattr(DisperseGroups, "should_remove_task", lambda *args: False)
+
+    def fake_bugbug_should_remove_task(self, task, params, importance):
+        if self.num_pushes > 1:
+            return task.label == "task-4"
+        return task.label in ("task-2", "task-3", "task-4")
+
+    monkeypatch.setattr(BugBugPushSchedules, "should_remove_task", fake_bugbug_should_remove_task)
+
+    opt = project.autoland['test']
+
+    # On backstop pushes, nothing gets optimized.
+    params['backstop'] = True
+    scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, {})}
+    assert scheduled == {t.label for t in default_tasks}
+
+    # On expanded pushes, some things are optimized.
+    params['backstop'] = False
+    params['pushlog_id'] = 10
+    scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, {})}
+    assert scheduled == {"task-0", "task-1", "task-2", "task-3"}
+
+    # On regular pushes, more things are optimized.
+    params['pushlog_id'] = 11
+    scheduled = {t.label for t in default_tasks if not opt.should_remove_task(t, params, {})}
+    assert scheduled == {"task-0", "task-1"}
 
 
 if __name__ == '__main__':
