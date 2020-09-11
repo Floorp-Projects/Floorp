@@ -63,23 +63,8 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
   if (aFlags & DUMMY_PARENT_REFLOW_INPUT) {
     mFlags.mDummyParentReflowInput = true;
   }
-  if (aFlags & COMPUTE_SIZE_SHRINK_WRAP) {
-    mFlags.mShrinkWrap = true;
-  }
-  if (aFlags & COMPUTE_SIZE_USE_AUTO_BSIZE) {
-    mFlags.mUseAutoBSize = true;
-  }
   if (aFlags & STATIC_POS_IS_CB_ORIGIN) {
     mFlags.mStaticPosIsCBOrigin = true;
-  }
-  if (aFlags & I_CLAMP_MARGIN_BOX_MIN_SIZE) {
-    mFlags.mIClampMarginBoxMinSize = true;
-  }
-  if (aFlags & B_CLAMP_MARGIN_BOX_MIN_SIZE) {
-    mFlags.mBClampMarginBoxMinSize = true;
-  }
-  if (aFlags & I_APPLY_AUTO_MIN_SIZE) {
-    mFlags.mApplyAutoMinSize = true;
   }
 
   if (!(aFlags & CALLER_WILL_INIT)) {
@@ -159,9 +144,8 @@ SizeComputationInput::SizeComputationInput(
     : mFrame(aFrame),
       mRenderingContext(aRenderingContext),
       mWritingMode(aFrame->GetWritingMode()) {
-  ReflowInputFlags flags;
   InitOffsets(aContainingBlockWritingMode, aContainingBlockISize,
-              mFrame->Type(), flags);
+              mFrame->Type());
 }
 
 // Initialize a reflow input for a child frame's reflow. Some state
@@ -171,7 +155,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
                          const ReflowInput& aParentReflowInput,
                          nsIFrame* aFrame, const LogicalSize& aAvailableSpace,
                          const Maybe<LogicalSize>& aContainingBlockSize,
-                         uint32_t aFlags)
+                         uint32_t aFlags, ComputeSizeFlags aComputeSizeFlags)
     : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext),
       mParentReflowInput(&aParentReflowInput),
       mFloatManager(aParentReflowInput.mFloatManager),
@@ -184,6 +168,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
               ? aParentReflowInput.mPercentBSizeObserver
               : nullptr),
       mFlags(aParentReflowInput.mFlags),
+      mComputeSizeFlags(aComputeSizeFlags),
       mReflowDepth(aParentReflowInput.mReflowDepth + 1) {
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
@@ -216,13 +201,8 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mIsFlexContainerMeasuringBSize = false;
   mFlags.mTreatBSizeAsIndefinite = false;
   mFlags.mDummyParentReflowInput = false;
-  mFlags.mShrinkWrap = !!(aFlags & COMPUTE_SIZE_SHRINK_WRAP);
-  mFlags.mUseAutoBSize = !!(aFlags & COMPUTE_SIZE_USE_AUTO_BSIZE);
   mFlags.mStaticPosIsCBOrigin = !!(aFlags & STATIC_POS_IS_CB_ORIGIN);
   mFlags.mIOffsetsNeedCSSAlign = mFlags.mBOffsetsNeedCSSAlign = false;
-  mFlags.mIClampMarginBoxMinSize = !!(aFlags & I_CLAMP_MARGIN_BOX_MIN_SIZE);
-  mFlags.mBClampMarginBoxMinSize = !!(aFlags & B_CLAMP_MARGIN_BOX_MIN_SIZE);
-  mFlags.mApplyAutoMinSize = !!(aFlags & I_APPLY_AUTO_MIN_SIZE);
   mFlags.mApplyLineClamp = false;
 
   if ((aFlags & DUMMY_PARENT_REFLOW_INPUT) ||
@@ -1638,29 +1618,13 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
   SetComputedLogicalOffsets(offsets.ConvertTo(wm, cbwm));
 
-  ComputeSizeFlags computeSizeFlags;
-  if (mFlags.mIClampMarginBoxMinSize) {
-    computeSizeFlags += ComputeSizeFlag::IClampMarginBoxMinSize;
-  }
-  if (mFlags.mBClampMarginBoxMinSize) {
-    computeSizeFlags += ComputeSizeFlag::BClampMarginBoxMinSize;
-  }
-  if (mFlags.mApplyAutoMinSize) {
-    computeSizeFlags += ComputeSizeFlag::IApplyAutoMinSize;
-  }
-  if (mFlags.mShrinkWrap) {
-    computeSizeFlags += ComputeSizeFlag::ShrinkWrap;
-  }
-  if (mFlags.mUseAutoBSize) {
-    computeSizeFlags += ComputeSizeFlag::UseAutoBSize;
-  }
   if (wm.IsOrthogonalTo(cbwm)) {
     if (bStartIsAuto || bEndIsAuto) {
-      computeSizeFlags += ComputeSizeFlag::ShrinkWrap;
+      mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
     }
   } else {
     if (iStartIsAuto || iEndIsAuto) {
-      computeSizeFlags += ComputeSizeFlag::ShrinkWrap;
+      mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
     }
   }
 
@@ -1675,7 +1639,7 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
         ComputedLogicalMargin().Size(wm) + ComputedLogicalOffsets().Size(wm),
         ComputedLogicalBorderPadding().Size(wm) -
             ComputedLogicalPadding().Size(wm),
-        ComputedLogicalPadding().Size(wm), computeSizeFlags);
+        ComputedLogicalPadding().Size(wm), mComputeSizeFlags);
     ComputedISize() = sizeResult.mLogicalSize.ISize(wm);
     ComputedBSize() = sizeResult.mLogicalSize.BSize(wm);
     NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");
@@ -2142,8 +2106,8 @@ void ReflowInput::InitConstraints(
   // height equal to the available space
   if (nullptr == mParentReflowInput || mFlags.mDummyParentReflowInput) {
     // XXXldb This doesn't mean what it used to!
-    InitOffsets(wm, cbSize.ISize(wm), aFrameType, mFlags, aBorder, aPadding,
-                mStyleDisplay);
+    InitOffsets(wm, cbSize.ISize(wm), aFrameType, mComputeSizeFlags, aBorder,
+                aPadding, mStyleDisplay);
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
     ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
@@ -2199,7 +2163,7 @@ void ReflowInput::InitConstraints(
     // padding, we use the writing mode of the containing block
     WritingMode cbwm = cbri->GetWritingMode();
     InitOffsets(cbwm, cbSize.ConvertTo(cbwm, wm).ISize(cbwm), aFrameType,
-                mFlags, aBorder, aPadding, mStyleDisplay);
+                mComputeSizeFlags, aBorder, aPadding, mStyleDisplay);
 
     // For calculating the size of this box, we use its own writing mode
     const auto& blockSize = mStylePosition->BSize(wm);
@@ -2333,24 +2297,8 @@ void ReflowInput::InitConstraints(
       const bool isBlockLevel =
           NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType) ||
           mFrame->IsFlexOrGridItem();
-      ComputeSizeFlags computeSizeFlags;
       if (!isBlockLevel) {
-        computeSizeFlags += ComputeSizeFlag::ShrinkWrap;
-      }
-      if (mFlags.mIClampMarginBoxMinSize) {
-        computeSizeFlags += ComputeSizeFlag::IClampMarginBoxMinSize;
-      }
-      if (mFlags.mBClampMarginBoxMinSize) {
-        computeSizeFlags += ComputeSizeFlag::BClampMarginBoxMinSize;
-      }
-      if (mFlags.mApplyAutoMinSize) {
-        computeSizeFlags += ComputeSizeFlag::IApplyAutoMinSize;
-      }
-      if (mFlags.mShrinkWrap) {
-        computeSizeFlags += ComputeSizeFlag::ShrinkWrap;
-      }
-      if (mFlags.mUseAutoBSize) {
-        computeSizeFlags += ComputeSizeFlag::UseAutoBSize;
+        mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
       }
 
       nsIFrame* alignCB = mFrame->GetParent();
@@ -2372,7 +2320,7 @@ void ReflowInput::InitConstraints(
              inlineAxisAlignment != StyleAlignFlags::NORMAL) ||
             mStyleMargin->mMargin.GetIStart(wm).IsAuto() ||
             mStyleMargin->mMargin.GetIEnd(wm).IsAuto()) {
-          computeSizeFlags += ComputeSizeFlag::ShrinkWrap;
+          mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
         }
       } else {
         // Make sure legend frames with display:block and width:auto still
@@ -2386,16 +2334,16 @@ void ReflowInput::InitConstraints(
               mFrame->GetContentInsertionFrame()->IsLegendFrame()) ||
              (mCBReflowInput &&
               mCBReflowInput->GetWritingMode().IsOrthogonalTo(mWritingMode)))) {
-          computeSizeFlags += ComputeSizeFlag::ShrinkWrap;
+          mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
         }
 
         if (alignCB->IsFlexContainerFrame()) {
-          computeSizeFlags += ComputeSizeFlag::ShrinkWrap;
+          mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
 
           // If we're inside of a flex container that needs to measure our
           // auto BSize, pass that information along to ComputeSize().
           if (mFlags.mIsFlexContainerMeasuringBSize) {
-            computeSizeFlags += ComputeSizeFlag::UseAutoBSize;
+            mComputeSizeFlags += ComputeSizeFlag::UseAutoBSize;
           }
         } else {
           MOZ_ASSERT(!mFlags.mIsFlexContainerMeasuringBSize,
@@ -2415,7 +2363,7 @@ void ReflowInput::InitConstraints(
           ComputedLogicalMargin().Size(wm),
           ComputedLogicalBorderPadding().Size(wm) -
               ComputedLogicalPadding().Size(wm),
-          ComputedLogicalPadding().Size(wm), computeSizeFlags);
+          ComputedLogicalPadding().Size(wm), mComputeSizeFlags);
 
       ComputedISize() = size.mLogicalSize.ISize(wm);
       ComputedBSize() = size.mLogicalSize.BSize(wm);
@@ -2461,7 +2409,7 @@ static void UpdateProp(nsIFrame* aFrame,
 
 void SizeComputationInput::InitOffsets(WritingMode aWM, nscoord aPercentBasis,
                                        LayoutFrameType aFrameType,
-                                       ReflowInputFlags aFlags,
+                                       ComputeSizeFlags aFlags,
                                        const nsMargin* aBorder,
                                        const nsMargin* aPadding,
                                        const nsStyleDisplay* aDisplay) {
@@ -2531,10 +2479,10 @@ void SizeComputationInput::InitOffsets(WritingMode aWM, nscoord aPercentBasis,
       }
     }
   };
-  if (!aFlags.mUseAutoBSize) {
+  if (!aFlags.contains(ComputeSizeFlag::UseAutoBSize)) {
     ApplyBaselinePadding(eLogicalAxisBlock, nsIFrame::BBaselinePadProperty());
   }
-  if (!aFlags.mShrinkWrap) {
+  if (!aFlags.contains(ComputeSizeFlag::ShrinkWrap)) {
     ApplyBaselinePadding(eLogicalAxisInline, nsIFrame::IBaselinePadProperty());
   }
 
