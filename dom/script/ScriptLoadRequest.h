@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_ScriptLoadRequest_h
 #define mozilla_dom_ScriptLoadRequest_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/Element.h"
@@ -323,6 +324,10 @@ class ScriptLoadRequest
 
   JS::OffThreadToken* mOffThreadToken;  // Off-thread parsing token.
   Maybe<nsString> mSourceMapURL;  // Holds source map url for loaded scripts
+
+  Atomic<Runnable*> mRunnable;  // Runnable created when dispatching off thread
+                                // compile. Tracked here so that it can be
+                                // properly released during cancellation.
 
   // Holds the top-level JSScript that corresponds to the current source, once
   // it is parsed, and planned to be saved in the bytecode cache.
