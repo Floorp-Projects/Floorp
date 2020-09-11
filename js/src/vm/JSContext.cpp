@@ -85,6 +85,15 @@ using namespace js;
 using mozilla::DebugOnly;
 using mozilla::PodArrayZero;
 
+#ifdef DEBUG
+JSContext* js::MaybeGetJSContext() {
+  if (!TlsContext.init()) {
+    return nullptr;
+  }
+  return TlsContext.get();
+}
+#endif
+
 bool js::AutoCycleDetector::init() {
   MOZ_ASSERT(cyclic);
 
