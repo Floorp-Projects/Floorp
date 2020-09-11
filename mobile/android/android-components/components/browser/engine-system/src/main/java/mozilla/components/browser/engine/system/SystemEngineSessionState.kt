@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.system
 
 import android.os.Bundle
+import android.util.JsonWriter
 import mozilla.components.concept.engine.EngineSessionState
 import org.json.JSONObject
 
@@ -25,6 +26,21 @@ class SystemEngineSessionState(
                 }
             }
         }
+    }
+
+    override fun writeTo(writer: JsonWriter) {
+        writer.beginObject()
+
+        bundle?.keySet()?.forEach { key ->
+            when (val value = bundle[key]) {
+                is Number -> writer.name(key).value(value)
+                is String -> writer.name(key).value(value)
+                is Boolean -> writer.name(key).value(value)
+            }
+        }
+
+        writer.endObject()
+        writer.flush()
     }
 
     companion object {

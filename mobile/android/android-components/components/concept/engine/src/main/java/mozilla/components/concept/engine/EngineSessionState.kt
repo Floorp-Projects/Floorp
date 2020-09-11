@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine
 
+import android.util.JsonWriter
 import org.json.JSONObject
 
 /**
@@ -18,5 +19,16 @@ interface EngineSessionState {
      * When reading JSON from disk [Engine.createSessionState] can be used to turn it back into an [EngineSessionState]
      * instance.
      */
+    // There's no deadline for removal. But we should migrate our code away from this at some point:
+    // https://github.com/mozilla-mobile/android-components/issues/8370
+    @Deprecated("Use writeTo() instead.")
     fun toJSON(): JSONObject
+
+    /**
+     * Writes this state as JSON to the given [JsonWriter].
+     *
+     * When reading JSON from disk [Engine.createSessionState] can be used to turn it back into an [EngineSessionState]
+     * instance.
+     */
+    fun writeTo(writer: JsonWriter)
 }

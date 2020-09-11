@@ -6,6 +6,7 @@ package mozilla.components.feature.tab.collections
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.JsonWriter
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.paging.PagedList
 import androidx.room.Room
@@ -374,4 +375,8 @@ class FakeEngine : Engine {
 
 class FakeEngineSessionState : EngineSessionState {
     override fun toJSON() = JSONObject()
+    override fun writeTo(writer: JsonWriter) {
+        writer.beginObject()
+        writer.endObject()
+    }
 }

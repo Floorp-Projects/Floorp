@@ -5,9 +5,11 @@
 package mozilla.components.support.ktx.util
 
 import android.util.AtomicFile
+import android.util.JsonWriter
 import org.json.JSONException
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStreamWriter
 
 /**
  * Reads an [AtomicFile] and provides a deserialized version of its content.
@@ -34,10 +36,41 @@ inline fun <T> AtomicFile.readAndDeserialize(block: (String) -> T): T? {
  * @return true if the file wrote otherwise false
  */
 inline fun AtomicFile.writeString(block: () -> String): Boolean {
+    return stream { writer ->
+        writer.write(block())
+    }
+}
+
+/**
+ * Opens the [AtomicFile] for writing and provides a [JsonWriter] to [block] for writing JSON
+ * directly to the file.
+ *
+ * At the end of [block] the writer will be flushed and the file closed.
+ */
+inline fun AtomicFile.streamJSON(block: JsonWriter.() -> Unit): Boolean {
+    return stream { writer ->
+        val jsonWriter = JsonWriter(writer)
+        block(jsonWriter)
+        jsonWriter.flush()
+    }
+}
+
+/**
+ * Opens the [AtomicFile] for writing and provides an [OutputStreamWriter] to [block] for writing
+ * directly to the file.
+ *
+ * At the end of [block] the writer will be flushed and the file closed.
+ */
+inline fun AtomicFile.stream(block: (OutputStreamWriter) -> Unit): Boolean {
     var outputStream: FileOutputStream? = null
     return try {
         outputStream = startWrite()
-        outputStream.write(block().toByteArray())
+
+        outputStream.buffered().writer().apply {
+            block(this)
+            flush()
+        }
+
         finishWrite(outputStream)
         true
     } catch (_: IOException) {

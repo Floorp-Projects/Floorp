@@ -39,7 +39,7 @@ fun AtomicFile.writeState(
     state: BrowserState,
     serializer: BrowserStateSerializer = BrowserStateSerializer()
 ): Boolean {
-    return writeString { serializer.toJSON(state) }
+    return serializer.write(state, file = this)
 }
 
 /**

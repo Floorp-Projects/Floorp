@@ -18,7 +18,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabsDatabase
 import mozilla.components.feature.recentlyclosed.db.toRecentlyClosedTabEntity
 import mozilla.components.support.ktx.java.io.truncateDirectory
-import mozilla.components.support.ktx.util.writeString
+import mozilla.components.support.ktx.util.streamJSON
 import java.io.File
 
 /**
@@ -97,9 +97,17 @@ class RecentlyClosedTabsStorage(
     internal fun addTabState(
         tab: ClosedTab
     ) {
-        val engineState = tab.engineSessionState?.toJSON()
         val entity = tab.toRecentlyClosedTabEntity()
-        val success = entity.getStateFile(filesDir).writeString { engineState.toString() }
+
+        val success = entity.getStateFile(filesDir).streamJSON {
+            val state = tab.engineSessionState
+            if (state == null) {
+                beginObject().endObject()
+            } else {
+                state.writeTo(this)
+            }
+        }
+
         if (success) {
             database.value.recentlyClosedTabDao().insertTab(entity)
         }
