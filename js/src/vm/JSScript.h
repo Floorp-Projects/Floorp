@@ -1517,11 +1517,12 @@ using RuntimeScriptDataTable =
 //              |   Engine:     Parser                |
 //              +-------------------------------------+
 //                                v
-//              +-------------------------------------+
-//              | BaseScript                          |
-//              |   Provides:   SourceExtent/Bindings |
-//              |   Engine:     CompileLazyFunction   |
-//              +-------------------------------------+
+//              +-----------------------------------------------+
+//              | BaseScript                                    |
+//              |   Provides:   SourceExtent/Bindings           |
+//              |   Engine:     CompileLazyFunctionToStencil    |
+//              |               /InstantiateStencilsForDelazify |
+//              +-----------------------------------------------+
 //                                v
 //              +-------------------------------------+
 //              | RuntimeScriptData                   |
