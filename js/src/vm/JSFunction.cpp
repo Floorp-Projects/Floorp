@@ -1559,14 +1559,13 @@ bool JSFunction::finishBoundFunctionInit(JSContext* cx, HandleFunction bound,
   return true;
 }
 
-static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
-                                              HandleFunction fun) {
-  Rooted<BaseScript*> lazy(cx, fun->baseScript());
-
+template <typename Unit>
+bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, HandleFunction fun,
+                                           Handle<BaseScript*> lazy,
+                                           ScriptSource* ss) {
   MOZ_ASSERT(!lazy->hasBytecode(), "Script is already compiled!");
   MOZ_ASSERT(lazy->function() == fun);
 
-  ScriptSource* ss = lazy->scriptSource();
   size_t sourceStart = lazy->sourceStart();
   size_t sourceLength = lazy->sourceEnd() - lazy->sourceStart();
   bool hadLazyScriptData = lazy->hasPrivateScriptData();
@@ -1577,38 +1576,20 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
     // Parse and compile the script from source.
     UncompressedSourceCache::AutoHoldEntry holder;
 
-    if (ss->hasSourceType<Utf8Unit>()) {
-      // UTF-8 source text.
-      ScriptSource::PinnedUnits<Utf8Unit> units(cx, ss, holder, sourceStart,
-                                                sourceLength);
-      if (!units.get()) {
-        return false;
-      }
+    MOZ_ASSERT(ss->hasSourceType<Unit>());
 
-      if (!frontend::CompileLazyFunction(cx, lazy, units.get(), sourceLength)) {
-        // The frontend shouldn't fail after linking the function and the
-        // non-lazy script together.
-        MOZ_ASSERT(fun->baseScript() == lazy);
-        MOZ_ASSERT(lazy->isReadyForDelazification());
-        return false;
-      }
-    } else {
-      MOZ_ASSERT(ss->hasSourceType<char16_t>());
+    ScriptSource::PinnedUnits<Unit> units(cx, ss, holder, sourceStart,
+                                          sourceLength);
+    if (!units.get()) {
+      return false;
+    }
 
-      // UTF-16 source text.
-      ScriptSource::PinnedUnits<char16_t> units(cx, ss, holder, sourceStart,
-                                                sourceLength);
-      if (!units.get()) {
-        return false;
-      }
-
-      if (!frontend::CompileLazyFunction(cx, lazy, units.get(), sourceLength)) {
-        // The frontend shouldn't fail after linking the function and the
-        // non-lazy script together.
-        MOZ_ASSERT(fun->baseScript() == lazy);
-        MOZ_ASSERT(lazy->isReadyForDelazification());
-        return false;
-      }
+    if (!frontend::CompileLazyFunction(cx, lazy, units.get(), sourceLength)) {
+      // The frontend shouldn't fail after linking the function and the
+      // non-lazy script together.
+      MOZ_ASSERT(fun->baseScript() == lazy);
+      MOZ_ASSERT(lazy->isReadyForDelazification());
+      return false;
     }
   }
 
@@ -1629,6 +1610,22 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
   }
 
   return true;
+}
+
+static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
+                                              HandleFunction fun) {
+  Rooted<BaseScript*> lazy(cx, fun->baseScript());
+  ScriptSource* ss = lazy->scriptSource();
+
+  if (ss->hasSourceType<Utf8Unit>()) {
+    // UTF-8 source text.
+    return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(cx, fun, lazy, ss);
+  }
+
+  MOZ_ASSERT(ss->hasSourceType<char16_t>());
+
+  // UTF-16 source text.
+  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, fun, lazy, ss);
 }
 
 /* static */
