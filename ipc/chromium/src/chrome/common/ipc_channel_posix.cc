@@ -108,6 +108,42 @@ bool SetCloseOnExec(int fd) {
 
 bool ErrorIsBrokenPipe(int err) { return err == EPIPE || err == ECONNRESET; }
 
+// Some Android ARM64 devices appear to have a bug where sendmsg
+// sometimes returns 0xFFFFFFFF, which we're assuming is a -1 that was
+// incorrectly truncated to 32-bit and then zero-extended.
+// See bug 1660826 for details.
+//
+// This is a workaround to detect that value and replace it with -1
+// (and check that there really was an error), because the largest
+// amount we'll ever write is Channel::kMaximumMessageSize (256MiB).
+//
+// The workaround is also enabled on x86_64 Android on debug builds,
+// although the bug isn't known to manifest there, so that there will
+// be some CI coverage of this code.
+
+static inline ssize_t corrected_sendmsg(int socket,
+                                        const struct msghdr* message,
+                                        int flags) {
+#if defined(ANDROID) && \
+    (defined(__aarch64__) || (defined(DEBUG) && defined(__x86_64__)))
+  static constexpr auto kBadValue = static_cast<ssize_t>(0xFFFFFFFF);
+  static_assert(kBadValue > 0);
+
+#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  errno = 0;
+#  endif
+  ssize_t bytes_written = sendmsg(socket, message, flags);
+  if (bytes_written == kBadValue) {
+    MOZ_DIAGNOSTIC_ASSERT(errno != 0);
+    bytes_written = -1;
+  }
+  MOZ_DIAGNOSTIC_ASSERT(bytes_written < kBadValue);
+  return bytes_written;
+#else
+  return sendmsg(socket, message, flags);
+#endif
+}
+
 }  // namespace
 //------------------------------------------------------------------------------
 
@@ -616,7 +652,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     msgh.msg_iov = iov;
     msgh.msg_iovlen = iov_count;
 
-    ssize_t bytes_written = HANDLE_EINTR(sendmsg(pipe_, &msgh, MSG_DONTWAIT));
+    ssize_t bytes_written =
+        HANDLE_EINTR(corrected_sendmsg(pipe_, &msgh, MSG_DONTWAIT));
 
 #if !defined(OS_MACOSX)
     // On OSX CommitAll gets called later, once we get the
