@@ -134,15 +134,22 @@ class BrowserToolbarBottomBehavior(
     }
 
     override fun layoutDependsOn(parent: CoordinatorLayout, child: BrowserToolbar, dependency: View): Boolean {
-        browserToolbar = child
-
-        engineView = parent.findViewInHierarchy { it is EngineView } as? EngineView
-
         if (dependency is Snackbar.SnackbarLayout) {
             positionSnackbar(child, dependency)
         }
 
         return super.layoutDependsOn(parent, child, dependency)
+    }
+
+    override fun onLayoutChild(
+        parent: CoordinatorLayout,
+        child: BrowserToolbar,
+        layoutDirection: Int
+    ): Boolean {
+        browserToolbar = child
+        engineView = parent.findViewInHierarchy { it is EngineView } as? EngineView
+
+        return super.onLayoutChild(parent, child, layoutDirection)
     }
 
     /**

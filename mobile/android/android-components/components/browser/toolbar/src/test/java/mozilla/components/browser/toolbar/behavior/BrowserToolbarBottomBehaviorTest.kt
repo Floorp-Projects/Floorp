@@ -5,15 +5,20 @@
 package mozilla.components.browser.toolbar.behavior
 
 import android.animation.ValueAnimator
+import android.content.Context
+import android.graphics.Bitmap
 import android.view.Gravity
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
+import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -358,5 +363,32 @@ class BrowserToolbarBottomBehaviorTest {
 
         verify(behavior).tryToScrollVertically(-30f)
         verify(behavior).forceExpand(toolbar)
+    }
+
+    @Test
+    fun `onLayoutChild initializes browserToolbar and engineView`() {
+        val toolbarView = BrowserToolbar(testContext)
+        val engineView = createDummyEngineView(testContext).asView()
+        val container = CoordinatorLayout(testContext).apply {
+            addView(BrowserToolbar(testContext))
+            addView(engineView)
+        }
+        val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
+
+        behavior.onLayoutChild(container, toolbarView, ViewCompat.LAYOUT_DIRECTION_LTR)
+
+        assertEquals(toolbarView, behavior.browserToolbar)
+        assertEquals(engineView, behavior.engineView)
+    }
+
+    private fun createDummyEngineView(context: Context): EngineView = DummyEngineView(context)
+
+    open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {
+        override fun setVerticalClipping(clippingHeight: Int) {}
+        override fun setDynamicToolbarMaxHeight(height: Int) {}
+        override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
+        override fun render(session: EngineSession) {}
+        override fun release() {}
+        override var selectionActionDelegate: SelectionActionDelegate? = null
     }
 }
