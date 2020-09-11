@@ -1,9 +1,5 @@
-// |jit-test| skip-if: !isTypeInferenceEnabled()
-// Test depends on singleton/clone behavior (the .callee getter calls
-// IsInternalFunctionObject).
-
-// Debugger.Environment.prototype.callee reveals the callee of environments
-// that have them.
+// Debugger.Environment.prototype.calleeScript reveals the script of function
+// environments.
 
 var g = newGlobal({newCompartment: true});
 var dbg = new Debugger;
@@ -16,7 +12,7 @@ function check(code, expectedType, expectedCallee) {
     hits++;
     var env = frame.environment;
     assertEq(env.type, expectedType);
-    assertEq(env.callee, expectedCallee);
+    assertEq(env.calleeScript, expectedCallee ? expectedCallee.script : null);
   };
   hits = 0;
   g.eval(code);

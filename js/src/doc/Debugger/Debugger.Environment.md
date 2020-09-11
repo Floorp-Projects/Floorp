@@ -101,11 +101,11 @@ declarative environment records have no such object). Both `"object"`
 and `"with"` environments have `object` properties that provide the
 object whose properties they reflect as variable bindings.
 
-### `callee`
+### `calleeScript`
 If this environment represents the variable environment (the top-level
 environment within the function, which receives `var` definitions) for
 a call to a function <i>f</i>, then this property's value is a
-[`Debugger.Object`][object] instance referring to <i>f</i>. Otherwise,
+[`Debugger.Script`][script] instance referring to <i>f</i>'s script. Otherwise,
 this property's value is `null`.
 
 ### `optimizedOut`
