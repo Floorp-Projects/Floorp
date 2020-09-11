@@ -82,32 +82,6 @@ describe("#CachedTargetingGetter", () => {
 
     assert(rejected);
   });
-  it("should check targeted message before message without targeting", async () => {
-    const messages = await OnboardingMessageProvider.getUntranslatedMessages();
-    const stub = sandbox
-      .stub(ASRouterTargeting, "checkMessageTargeting")
-      .resolves();
-    const context = {
-      attributionData: {
-        campaign: "non-fx-button",
-        source: "addons.mozilla.org",
-      },
-    };
-    await ASRouterTargeting.findMatchingMessage({
-      messages,
-      trigger: { id: "firstRun" },
-      context,
-    });
-
-    const messageCount = messages.filter(
-      message => message.trigger && message.trigger.id === "firstRun"
-    ).length;
-
-    assert.equal(stub.callCount, messageCount);
-    const calls = stub.getCalls().map(call => call.args[0]);
-    const lastCall = calls[calls.length - 1];
-    assert.equal(lastCall.id, "TRAILHEAD_1");
-  });
   describe("sortMessagesByPriority", () => {
     it("should sort messages in descending priority order", async () => {
       const [
