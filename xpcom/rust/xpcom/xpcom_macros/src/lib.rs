@@ -140,14 +140,9 @@
 //! [`RefCounted`]: ../xpcom/struct.RefCounted.html
 //! [`RefPtr`]: ../xpcom/struct.RefPtr.html
 
-// NOTE: We use some really big quote! invocations, so we need a high recursion
-// limit.
-#![recursion_limit = "256"]
-
 use lazy_static::lazy_static;
-use proc_macro::TokenStream;
-use proc_macro2::{Span, TokenStream as TokenStream2};
-use quote::{quote, ToTokens};
+use proc_macro2::{Span, TokenStream};
+use quote::{quote, format_ident, ToTokens};
 use std::collections::{HashMap, HashSet};
 use syn::punctuated::Punctuated;
 use syn::{
@@ -242,7 +237,7 @@ enum RefcntKind {
 
 /// Produces the tokens for the type representation.
 impl ToTokens for RefcntKind {
-    fn to_tokens(&self, tokens: &mut TokenStream2) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         match *self {
             RefcntKind::NonAtomic => quote!(xpcom::Refcnt).to_tokens(tokens),
             RefcntKind::Atomic => quote!(xpcom::AtomicRefcnt).to_tokens(tokens),
@@ -342,12 +337,12 @@ fn gen_real_struct(
     if !init.ident.to_string().starts_with("Init") {
         bail!(@(init.ident), "The target struct's name must begin with Init");
     }
-    let name: Ident = Ident::new(&init.ident.to_string()[4..], Span::call_site());
+    let name = Ident::new(&init.ident.to_string()[4..], init.ident.span());
     let vis = &init.vis;
 
     let bases = bases.iter().map(|base| {
-        let ident = Ident::new(&format!("__base_{}", base.name), Span::call_site());
-        let vtable = Ident::new(&format!("{}VTable", base.name), Span::call_site());
+        let ident = format_ident!("__base_{}", base.name);
+        let vtable = format_ident!("{}VTable", base.name);
         quote!(#ident : *const xpcom::interfaces::#vtable)
     });
 
@@ -368,8 +363,8 @@ fn gen_real_struct(
 /// These methods attempt to invoke the `recover_self` method to translate from
 /// the passed-in raw pointer to the actual `&self` value, and it is expected to
 /// be in scope.
-fn gen_vtable_methods(iface: &Interface) -> Result<TokenStream2, syn::Error> {
-    let base_ty = Ident::new(iface.name, Span::call_site());
+fn gen_vtable_methods(iface: &Interface) -> Result<TokenStream, syn::Error> {
+    let base_ty = format_ident!("{}", iface.name);
 
     let base_methods = if let Some(base) = iface.base() {
         gen_vtable_methods(base)?
@@ -379,19 +374,19 @@ fn gen_vtable_methods(iface: &Interface) -> Result<TokenStream2, syn::Error> {
 
     let mut method_defs = Vec::new();
     for method in iface.methods()? {
-        let name = Ident::new(method.name, Span::call_site());
         let ret = syn::parse_str::<Type>(method.ret)?;
 
         let mut params = Vec::new();
         let mut args = Vec::new();
         for param in method.params {
-            let name = Ident::new(param.name, Span::call_site());
+            let name = format_ident!("{}", param.name);
             let ty = syn::parse_str::<Type>(param.ty)?;
 
             params.push(quote! {#name : #ty,});
             args.push(quote! {#name,});
         }
 
+        let name = format_ident!("{}", method.name);
         method_defs.push(quote! {
             unsafe extern "system" fn #name (this: *const #base_ty, #(#params)*) -> #ret {
                 let lt = ();
@@ -408,8 +403,8 @@ fn gen_vtable_methods(iface: &Interface) -> Result<TokenStream2, syn::Error> {
 
 /// Generates the VTable for a given base interface. This assumes that the
 /// implementations of each of the `extern "system"` methods are in scope.
-fn gen_inner_vtable(iface: &Interface) -> Result<TokenStream2, syn::Error> {
-    let vtable_ty = Ident::new(&format!("{}VTable", iface.name), Span::call_site());
+fn gen_inner_vtable(iface: &Interface) -> Result<TokenStream, syn::Error> {
+    let vtable_ty = format_ident!("{}VTable", iface.name);
 
     // Generate the vtable for the base interface.
     let base_vtable = if let Some(base) = iface.base() {
@@ -424,7 +419,7 @@ fn gen_inner_vtable(iface: &Interface) -> Result<TokenStream2, syn::Error> {
         .methods()?
         .into_iter()
         .map(|method| {
-            let name = Ident::new(method.name, Span::call_site());
+            let name = format_ident!("{}", method.name);
             quote! { #name : #name , }
         })
         .collect::<Vec<_>>();
@@ -435,9 +430,9 @@ fn gen_inner_vtable(iface: &Interface) -> Result<TokenStream2, syn::Error> {
     }))
 }
 
-fn gen_root_vtable(name: &Ident, base: &Interface) -> Result<TokenStream2, syn::Error> {
-    let field = Ident::new(&format!("__base_{}", base.name), Span::call_site());
-    let vtable_ty = Ident::new(&format!("{}VTable", base.name), Span::call_site());
+fn gen_root_vtable(name: &Ident, base: &Interface) -> Result<TokenStream, syn::Error> {
+    let field = format_ident!("__base_{}", base.name);
+    let vtable_ty = format_ident!("{}VTable", base.name);
     let methods = gen_vtable_methods(base)?;
     let value = gen_inner_vtable(base)?;
 
@@ -482,7 +477,7 @@ fn gen_casts(
     name: &Ident,
     coerce_name: &Ident,
     vtable_field: &Ident,
-) -> Result<(TokenStream2, TokenStream2), syn::Error> {
+) -> Result<(TokenStream, TokenStream), syn::Error> {
     if !seen.insert(iface.name) {
         return Ok((quote! {}, quote! {}));
     }
@@ -495,7 +490,7 @@ fn gen_casts(
     };
 
     // Add the if statment to QueryInterface for the base class.
-    let base_name = Ident::new(iface.name, Span::call_site());
+    let base_name = format_ident!("{}", iface.name);
 
     let qi = quote! {
         #base_qi
@@ -532,7 +527,7 @@ fn gen_casts(
 }
 
 /// The root xpcom procedural macro definition.
-fn xpcom(init: DeriveInput) -> Result<TokenStream2, syn::Error> {
+fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
     if !init.generics.params.is_empty() || !init.generics.where_clause.is_none() {
         bail!(
             "Cannot #[derive(xpcom)] on a generic type, due to \
@@ -577,7 +572,7 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream2, syn::Error> {
 
     let name_init = &init.ident;
     let name = &real.ident;
-    let coerce_name = Ident::new(&format!("{}Coerce", name.to_string()), Span::call_site());
+    let coerce_name = format_ident!("{}Coerce", name);
 
     // Generate a VTable for each of the base interfaces.
     let mut vtables = Vec::new();
@@ -604,7 +599,7 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream2, syn::Error> {
             base,
             name,
             &coerce_name,
-            &Ident::new(&format!("__base_{}", base.name), Span::call_site()),
+            &format_ident!("__base_{}", base.name),
         )?;
         qi_impl.push(qi);
         coerce_impl.push(coerce);
@@ -722,7 +717,7 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream2, syn::Error> {
 }
 
 #[proc_macro_derive(xpcom, attributes(xpimplements, refcnt))]
-pub fn xpcom_internal(input: TokenStream) -> TokenStream {
+pub fn xpcom_internal(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match xpcom(input) {
         Ok(ts) => ts.into(),
