@@ -1200,17 +1200,18 @@ nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
   return EditorBase::ToGenericNSResult(rv);
 }
 
+bool TextEditor::AreClipboardCommandsUnconditionallyEnabled() const {
+  Document* document = GetDocument();
+  return document && document->AreClipboardCommandsUnconditionallyEnabled();
+}
+
 bool TextEditor::IsCutCommandEnabled() const {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return false;
   }
 
-  // Cut is always enabled in HTML documents, but if the document is chrome,
-  // let it control it.
-  Document* document = GetDocument();
-  if (document && document->IsHTMLOrXHTML() &&
-      !nsContentUtils::IsChromeDoc(document)) {
+  if (AreClipboardCommandsUnconditionallyEnabled()) {
     return true;
   }
 
@@ -1236,11 +1237,7 @@ bool TextEditor::IsCopyCommandEnabled() const {
     return false;
   }
 
-  // Copy is always enabled in HTML documents, but if the document is chrome,
-  // let it control it.
-  Document* document = GetDocument();
-  if (document && document->IsHTMLOrXHTML() &&
-      !nsContentUtils::IsChromeDoc(document)) {
+  if (AreClipboardCommandsUnconditionallyEnabled()) {
     return true;
   }
 

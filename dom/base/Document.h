@@ -2714,6 +2714,13 @@ class Document : public nsINode,
   }
 
   /**
+   * Some clipboard commands are unconditionally enabled on some documents, so
+   * as to always dispatch copy / paste events even though you'd normally not be
+   * able to copy.
+   */
+  bool AreClipboardCommandsUnconditionallyEnabled() const;
+
+  /**
    * Note a ChannelEventQueue which has been suspended on the document's behalf
    * to prevent XHRs from running content scripts while event handling is
    * suppressed. The document is responsible for resuming the queue after

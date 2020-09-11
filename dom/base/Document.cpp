@@ -11790,6 +11790,10 @@ void Document::UnsuppressEventHandlingAndFireEvents(bool aFireEvents) {
   }
 }
 
+bool Document::AreClipboardCommandsUnconditionallyEnabled() const {
+  return IsHTMLOrXHTML() && !nsContentUtils::IsChromeDoc(this);
+}
+
 void Document::AddSuspendedChannelEventQueue(net::ChannelEventQueue* aQueue) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(EventHandlingSuppressed());
