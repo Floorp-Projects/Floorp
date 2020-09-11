@@ -8,6 +8,7 @@
 
 #include "BuildConstants.h"
 #include "ipc/KnowsCompositor.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "PersistentBufferProvider.h"
@@ -116,6 +117,9 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
     return TextureType::X11;
   }
   if (kIsAndroid) {
+    if (gfx::gfxVars::UseAHardwareBufferSharedSurface()) {
+      return TextureType::AndroidHardwareBuffer;
+    }
     if (StaticPrefs::webgl_enable_surface_texture()) {
       return TextureType::AndroidNativeWindow;
     }
