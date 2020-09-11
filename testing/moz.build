@@ -8,6 +8,8 @@ with Files("*cppunittest*"):
 with Files("remote*"):
     BUG_COMPONENT = ("GeckoView", "General")
 
+SPHINX_TREES['/testing'] = 'docs'
+
 DIRS += ['mozbase']
 
 PERFTESTS_MANIFESTS += [
