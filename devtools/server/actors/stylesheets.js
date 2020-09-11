@@ -941,6 +941,14 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   },
 
   update(resourceId, text, transition) {
+    const styleSheetsWatcher = this._getStyleSheetsWatcher();
+    if (styleSheetsWatcher) {
+      return styleSheetsWatcher.update(resourceId, text, transition);
+    }
+
+    // Following code can be removed once we enable STYLESHEET resource on the watcher/server
+    // side by default. For now it is being preffed off and we have to support the two
+    // codepaths. Once enabled we will only support the stylesheet watcher codepath.
     const actor = this._getStyleSheetActor(resourceId);
     return actor.update(text, transition);
   },

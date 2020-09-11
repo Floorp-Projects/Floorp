@@ -21,10 +21,46 @@ loader.lazyRequireGetter(
   "devtools/shared/inspector/css-logic"
 );
 
+loader.lazyRequireGetter(
+  this,
+  ["addPseudoClassLock", "removePseudoClassLock"],
+  "devtools/server/actors/highlighters/utils/markup",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "loadSheet",
+  "devtools/shared/layout/utils",
+  true
+);
+
+const TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
+const TRANSITION_DURATION_MS = 500;
+const TRANSITION_BUFFER_MS = 1000;
+const TRANSITION_RULE_SELECTOR = `:root${TRANSITION_PSEUDO_CLASS}, :root${TRANSITION_PSEUDO_CLASS} *`;
+const TRANSITION_SHEET =
+  "data:text/css;charset=utf-8," +
+  encodeURIComponent(`
+  ${TRANSITION_RULE_SELECTOR} {
+    transition-duration: ${TRANSITION_DURATION_MS}ms !important;
+    transition-delay: 0ms !important;
+    transition-timing-function: ease-out !important;
+    transition-property: all !important;
+  }
+`);
+
 class StyleSheetWatcher {
   constructor() {
     this._resourceCount = 0;
+    // The _styleSheetMap maps resouceId and following value.
+    // {
+    //   styleSheet: Raw StyleSheet object.
+    //   modifiedText: Content of the stylesheet updated by update function.
+    //                 In case not updating, this value is undefined.
+    // }
     this._styleSheetMap = new Map();
+    // List of all watched media queries. Change listeners are being registered from _getMediaRules.
+    this._mqlList = [];
   }
 
   /**
@@ -62,7 +98,13 @@ class StyleSheetWatcher {
    * Protocol method to get the text of stylesheet of resourceId.
    */
   async getText(resourceId) {
-    const styleSheet = this._styleSheetMap.get(resourceId);
+    const { styleSheet, modifiedText } = this._styleSheetMap.get(resourceId);
+
+    // modifiedText is the content of the stylesheet updated by update function.
+    // In case not updating, this is undefined.
+    if (modifiedText !== undefined) {
+      return modifiedText;
+    }
 
     if (!styleSheet.href) {
       // this is an inline <style> sheet
@@ -78,12 +120,80 @@ class StyleSheetWatcher {
    * @return {Boolean} the disabled state after toggling.
    */
   toggleDisabled(resourceId) {
-    const styleSheet = this._styleSheetMap.get(resourceId);
+    const { styleSheet } = this._styleSheetMap.get(resourceId);
     styleSheet.disabled = !styleSheet.disabled;
 
     this._notifyPropertyChanged(resourceId, "disabled", styleSheet.disabled);
 
     return styleSheet.disabled;
+  }
+
+  /**
+   * Update the style sheet in place with new text.
+   *
+   * @param  {object} request
+   *         'text' - new text
+   *         'transition' - whether to do CSS transition for change.
+   */
+  async update(resourceId, text, transition) {
+    const { styleSheet } = this._styleSheetMap.get(resourceId);
+
+    InspectorUtils.parseStyleSheet(styleSheet, text);
+
+    this._styleSheetMap.set(resourceId, { styleSheet, modifiedText: text });
+
+    this._notifyPropertyChanged(
+      resourceId,
+      "ruleCount",
+      styleSheet.cssRules.length
+    );
+
+    if (transition) {
+      this._startTransition(resourceId);
+    } else {
+      this._updateResource(resourceId, "style-applied");
+    }
+
+    // Remove event handler from all media query list we set to.
+    for (const mql of this._mqlList) {
+      mql.onchange = null;
+    }
+
+    const mediaRules = await this._getMediaRules(resourceId, styleSheet);
+    this._updateResource(resourceId, "media-rules-changed", { mediaRules });
+  }
+
+  _startTransition(resourceId) {
+    const { styleSheet } = this._styleSheetMap.get(resourceId);
+    const document = styleSheet.ownerNode.ownerDocument;
+    const window = styleSheet.ownerNode.ownerGlobal;
+
+    if (!this._transitionSheetLoaded) {
+      this._transitionSheetLoaded = true;
+      // We don't remove this sheet. It uses an internal selector that
+      // we only apply via locks, so there's no need to load and unload
+      // it all the time.
+      loadSheet(window, TRANSITION_SHEET);
+    }
+
+    addPseudoClassLock(document.documentElement, TRANSITION_PSEUDO_CLASS);
+
+    // Set up clean up and commit after transition duration (+buffer)
+    // @see _onTransitionEnd
+    window.clearTimeout(this._transitionTimeout);
+    this._transitionTimeout = window.setTimeout(
+      this._onTransitionEnd.bind(this, resourceId),
+      TRANSITION_DURATION_MS + TRANSITION_BUFFER_MS
+    );
+  }
+
+  _onTransitionEnd(resourceId) {
+    const { styleSheet } = this._styleSheetMap.get(resourceId);
+    const document = styleSheet.ownerNode.ownerDocument;
+
+    this._transitionTimeout = null;
+    removePseudoClassLock(document.documentElement, TRANSITION_PSEUDO_CLASS);
+    this._updateResource(resourceId, "style-applied");
   }
 
   async _fetchStylesheet(styleSheet) {
@@ -204,18 +314,22 @@ class StyleSheetWatcher {
     return importedStyleSheets;
   }
 
-  async _getMediaRules(styleSheet) {
+  async _getMediaRules(resourceId, styleSheet) {
+    this._mqlList = [];
+
     const mediaRules = Array.from(await this._getCSSRules(styleSheet)).filter(
       rule => rule.type === CSSRule.MEDIA_RULE
     );
 
-    return mediaRules.map(rule => {
+    return mediaRules.map((rule, index) => {
       let matches = false;
 
       try {
         const window = styleSheet.ownerNode.ownerGlobal;
         const mql = window.matchMedia(rule.media.mediaText);
         matches = mql.matches;
+        mql.onchange = this._onMatchesChange.bind(this, resourceId, index);
+        this._mqlList.push(mql);
       } catch (e) {
         // Ignored
       }
@@ -228,6 +342,22 @@ class StyleSheetWatcher {
         column: InspectorUtils.getRuleColumn(rule),
       };
     });
+  }
+
+  _onMatchesChange(resourceId, index, mql) {
+    this._onUpdated([
+      {
+        resourceType: STYLESHEET,
+        resourceId,
+        updateType: "matches-change",
+        nestedResourceUpdates: [
+          {
+            path: ["mediaRules", index, "matches"],
+            value: mql.matches,
+          },
+        ],
+      },
+    ]);
   }
 
   _getNodeHref(styleSheet) {
@@ -332,12 +462,13 @@ class StyleSheetWatcher {
   }
 
   async _toResource(styleSheet) {
+    const resourceId = `stylesheet:${this._resourceCount++}`;
     const resource = {
-      resourceId: `stylesheet:${this._resourceCount++}`,
+      resourceId,
       resourceType: STYLESHEET,
       disabled: styleSheet.disabled,
       href: styleSheet.href,
-      mediaRules: await this._getMediaRules(styleSheet),
+      mediaRules: await this._getMediaRules(resourceId, styleSheet),
       nodeHref: this._getNodeHref(styleSheet),
       ruleCount: styleSheet.cssRules.length,
       sourceMapBaseURL: this._getSourcemapBaseURL(styleSheet),
@@ -347,7 +478,7 @@ class StyleSheetWatcher {
       title: styleSheet.title,
     };
 
-    this._styleSheetMap.set(resource.resourceId, styleSheet);
+    this._styleSheetMap.set(resource.resourceId, { styleSheet });
 
     return resource;
   }
