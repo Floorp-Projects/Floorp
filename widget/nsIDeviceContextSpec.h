@@ -8,6 +8,7 @@
 
 #include "gfxPoint.h"
 #include "nsISupports.h"
+#include "mozilla/StaticPrefs_print.h"
 
 class nsIWidget;
 class nsIPrintSettings;
@@ -62,14 +63,14 @@ class nsIDeviceContextSpec : public nsISupports {
    *
    * @return DPI for printing.
    */
-  virtual float GetDPI() { return 72.0f; }
+  virtual float GetDPI() { return mozilla::StaticPrefs::print_default_dpi(); }
 
   /**
    * Override to return something other than the default.
    *
    * @return the printing scale to be applied to the context for printing.
    */
-  virtual float GetPrintingScale() { return 1.0f; }
+  virtual float GetPrintingScale() { return 72.0f / GetDPI(); }
 
   /**
    * Override to return something other than the default.

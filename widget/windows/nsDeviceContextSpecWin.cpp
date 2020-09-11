@@ -59,14 +59,7 @@ static const wchar_t kDriverName[] = L"WINSPOOL";
 //---------------
 // static members
 //----------------------------------------------------------------------------------
-nsDeviceContextSpecWin::nsDeviceContextSpecWin()
-    : mDevMode(nullptr)
-#ifdef MOZ_ENABLE_SKIA_PDF
-      ,
-      mPrintViaSkPDF(false)
-#endif
-{
-}
+nsDeviceContextSpecWin::nsDeviceContextSpecWin() = default;
 
 //----------------------------------------------------------------------------------
 
@@ -335,38 +328,23 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
 }
 
 float nsDeviceContextSpecWin::GetDPI() {
+  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF || mPrintViaSkPDF) {
+    return nsIDeviceContextSpec::GetDPI();
+  }
   // To match the previous printing code we need to return 144 when printing to
   // a Windows surface.
-  // For PDF-based output, DPI should ideally be irrelevant, but in fact it is
-  // not because of layout/rendering code that tries to respect device pixels
-  // (e.g. for snapping glyph positions and baselines, and especially for the
-  // "GDI Classic" rendering-mode threshold for certain fonts). Therefore,
-  // using a high DPI is preferable. For now, we use 144dpi to match physical-
-  // printer output, but higher (e.g. 300dpi) might be better if it does not
-  // lead to issues such as excessive memory use.
-#ifdef MOZ_ENABLE_SKIA_PDF
-  if (mPrintViaSkPDF) {
-    return 72.0f;  // XXX should we use a higher value here, too?
-  }
-#endif
   return 144.0f;
 }
 
 float nsDeviceContextSpecWin::GetPrintingScale() {
   MOZ_ASSERT(mPrintSettings);
-#ifdef MOZ_ENABLE_SKIA_PDF
-  if (mPrintViaSkPDF) {
-    return 72.0f / GetDPI();
-  }
-#endif
-  // For PDF output, nominal resolution is 72dpi, but our "device DPI" is
-  // higher to avoid low-res glyph spacing artifacts, so we need to return
-  // the appropriate scale here.
-  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
-    return 72.0f / GetDPI();
+  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF || mPrintViaSkPDF) {
+    return nsIDeviceContextSpec::GetPrintingScale();
   }
 
   // The print settings will have the resolution stored from the real device.
+  //
+  // FIXME: Shouldn't we use this in GetDPI then instead of hard-coding 144.0?
   int32_t resolution;
   mPrintSettings->GetResolution(&resolution);
   return float(resolution) / GetDPI();
