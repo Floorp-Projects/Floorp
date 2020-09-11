@@ -29,73 +29,84 @@ struct SavedResponse;
 namespace db {
 
 // Note, this cannot be executed within a transaction.
-nsresult CreateOrMigrateSchema(mozIStorageConnection* aConn);
+nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn);
 
 // Note, this cannot be executed within a transaction.
-nsresult InitializeConnection(mozIStorageConnection* aConn);
+nsresult InitializeConnection(mozIStorageConnection& aConn);
 
-nsresult CreateCacheId(mozIStorageConnection* aConn, CacheId* aCacheIdOut);
+nsresult CreateCacheId(mozIStorageConnection& aConn, CacheId* aCacheIdOut);
 
-nsresult DeleteCacheId(mozIStorageConnection* aConn, CacheId aCacheId,
+// ToDo: Use Result for output parameters.
+nsresult DeleteCacheId(mozIStorageConnection& aConn, CacheId aCacheId,
                        nsTArray<nsID>& aDeletedBodyIdListOut,
                        int64_t* aDeletedPaddingSizeOut);
 
-nsresult FindOrphanedCacheIds(mozIStorageConnection* aConn,
+// ToDo: Use Result for output parameters.
+nsresult FindOrphanedCacheIds(mozIStorageConnection& aConn,
                               nsTArray<CacheId>& aOrphanedListOut);
 
-nsresult FindOverallPaddingSize(mozIStorageConnection* aConn,
+// ToDo: Use Result for output parameters.
+nsresult FindOverallPaddingSize(mozIStorageConnection& aConn,
                                 int64_t* aOverallPaddingSizeOut);
 
-nsresult GetKnownBodyIds(mozIStorageConnection* aConn,
+// ToDo: Use Result for output parameters.
+nsresult GetKnownBodyIds(mozIStorageConnection& aConn,
                          nsTArray<nsID>& aBodyIdListOut);
 
-nsresult CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
+// ToDo: Use Result for output parameters.
+nsresult CacheMatch(mozIStorageConnection& aConn, CacheId aCacheId,
                     const CacheRequest& aRequest,
                     const CacheQueryParams& aParams, bool* aFoundResponseOut,
                     SavedResponse* aSavedResponseOut);
 
-nsresult CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
+// ToDo: Use Result for output parameters.
+nsresult CacheMatchAll(mozIStorageConnection& aConn, CacheId aCacheId,
                        const Maybe<CacheRequest>& aMaybeRequest,
                        const CacheQueryParams& aParams,
                        nsTArray<SavedResponse>& aSavedResponsesOut);
 
-nsresult CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
+// ToDo: Use Result for output parameters.
+nsresult CachePut(mozIStorageConnection& aConn, CacheId aCacheId,
                   const CacheRequest& aRequest, const nsID* aRequestBodyId,
                   const CacheResponse& aResponse, const nsID* aResponseBodyId,
                   nsTArray<nsID>& aDeletedBodyIdListOut,
                   int64_t* aDeletedPaddingSizeOut);
 
-nsresult CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
+// ToDo: Use Result for output parameters.
+nsresult CacheDelete(mozIStorageConnection& aConn, CacheId aCacheId,
                      const CacheRequest& aRequest,
                      const CacheQueryParams& aParams,
                      nsTArray<nsID>& aDeletedBodyIdListOut,
                      int64_t* aDeletedPaddingSizeOut, bool* aSuccessOut);
 
-nsresult CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
+// ToDo: Use Result for output parameters.
+nsresult CacheKeys(mozIStorageConnection& aConn, CacheId aCacheId,
                    const Maybe<CacheRequest>& aMaybeRequest,
                    const CacheQueryParams& aParams,
                    nsTArray<SavedRequest>& aSavedRequestsOut);
 
-nsresult StorageMatch(mozIStorageConnection* aConn, Namespace aNamespace,
+// ToDo: Use Result for output parameters.
+nsresult StorageMatch(mozIStorageConnection& aConn, Namespace aNamespace,
                       const CacheRequest& aRequest,
                       const CacheQueryParams& aParams, bool* aFoundResponseOut,
                       SavedResponse* aSavedResponseOut);
 
-nsresult StorageGetCacheId(mozIStorageConnection* aConn, Namespace aNamespace,
+// ToDo: Use Result for output parameters.
+nsresult StorageGetCacheId(mozIStorageConnection& aConn, Namespace aNamespace,
                            const nsAString& aKey, bool* aFoundCacheOut,
                            CacheId* aCacheIdOut);
 
-nsresult StoragePutCache(mozIStorageConnection* aConn, Namespace aNamespace,
+nsresult StoragePutCache(mozIStorageConnection& aConn, Namespace aNamespace,
                          const nsAString& aKey, CacheId aCacheId);
 
-nsresult StorageForgetCache(mozIStorageConnection* aConn, Namespace aNamespace,
+nsresult StorageForgetCache(mozIStorageConnection& aConn, Namespace aNamespace,
                             const nsAString& aKey);
 
-nsresult StorageGetKeys(mozIStorageConnection* aConn, Namespace aNamespace,
+nsresult StorageGetKeys(mozIStorageConnection& aConn, Namespace aNamespace,
                         nsTArray<nsString>& aKeysOut);
 
 // Note, this works best when its NOT executed within a transaction.
-nsresult IncrementalVacuum(mozIStorageConnection* aConn);
+nsresult IncrementalVacuum(mozIStorageConnection& aConn);
 
 // We will wipe out databases with a schema versions less than this.  Newer
 // versions will be migrated on open to the latest schema version.

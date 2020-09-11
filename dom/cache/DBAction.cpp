@@ -267,7 +267,7 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
     }
   }
 
-  rv = db::InitializeConnection(conn);
+  rv = db::InitializeConnection(*conn);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

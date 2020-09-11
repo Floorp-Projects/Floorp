@@ -80,7 +80,7 @@ class SetupAction final : public SyncDBAction {
     }
 
     // executes in its own transaction
-    rv = db::CreateOrMigrateSchema(aConn);
+    rv = db::CreateOrMigrateSchema(*aConn);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -102,7 +102,7 @@ class SetupAction final : public SyncDBAction {
 
       // Clean up orphaned Cache objects
       AutoTArray<CacheId, 8> orphanedCacheIdList;
-      nsresult rv = db::FindOrphanedCacheIds(aConn, orphanedCacheIdList);
+      nsresult rv = db::FindOrphanedCacheIds(*aConn, orphanedCacheIdList);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -111,8 +111,8 @@ class SetupAction final : public SyncDBAction {
       for (uint32_t i = 0; i < orphanedCacheIdList.Length(); ++i) {
         AutoTArray<nsID, 16> deletedBodyIdList;
         int64_t deletedPaddingSize = 0;
-        rv = db::DeleteCacheId(aConn, orphanedCacheIdList[i], deletedBodyIdList,
-                               &deletedPaddingSize);
+        rv = db::DeleteCacheId(*aConn, orphanedCacheIdList[i],
+                               deletedBodyIdList, &deletedPaddingSize);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -133,7 +133,7 @@ class SetupAction final : public SyncDBAction {
 
       // Clean up orphaned body objects
       AutoTArray<nsID, 64> knownBodyIdList;
-      rv = db::GetKnownBodyIds(aConn, knownBodyIdList);
+      rv = db::GetKnownBodyIds(*aConn, knownBodyIdList);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -498,7 +498,7 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    nsresult rv = db::DeleteCacheId(aConn, mCacheId, mDeletedBodyIdList,
+    nsresult rv = db::DeleteCacheId(*aConn, mCacheId, mDeletedBodyIdList,
                                     &mDeletedPaddingSize);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -555,7 +555,7 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    nsresult rv = db::CacheMatch(aConn, mCacheId, mArgs.request(),
+    nsresult rv = db::CacheMatch(*aConn, mCacheId, mArgs.request(),
                                  mArgs.params(), &mFoundResponse, &mResponse);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -622,7 +622,7 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    nsresult rv = db::CacheMatchAll(aConn, mCacheId, mArgs.maybeRequest(),
+    nsresult rv = db::CacheMatchAll(*aConn, mCacheId, mArgs.maybeRequest(),
                                     mArgs.params(), mSavedResponses);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -853,7 +853,7 @@ class Manager::CachePutAllAction final : public DBAction {
       }
 
       int64_t deletedPaddingSize = 0;
-      rv = db::CachePut(mConn, mCacheId, e.mRequest,
+      rv = db::CachePut(*mConn, mCacheId, e.mRequest,
                         e.mRequestStream ? &e.mRequestBodyId : nullptr,
                         e.mResponse,
                         e.mResponseStream ? &e.mResponseBodyId : nullptr,
@@ -1092,7 +1092,7 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     nsresult rv =
-        db::CacheDelete(aConn, mCacheId, mArgs.request(), mArgs.params(),
+        db::CacheDelete(*aConn, mCacheId, mArgs.request(), mArgs.params(),
                         mDeletedBodyIdList, &mDeletedPaddingSize, &mSuccess);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1155,7 +1155,7 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    nsresult rv = db::CacheKeys(aConn, mCacheId, mArgs.maybeRequest(),
+    nsresult rv = db::CacheKeys(*aConn, mCacheId, mArgs.maybeRequest(),
                                 mArgs.params(), mSavedRequests);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1221,7 +1221,7 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     nsresult rv =
-        db::StorageMatch(aConn, mNamespace, mArgs.request(), mArgs.params(),
+        db::StorageMatch(*aConn, mNamespace, mArgs.request(), mArgs.params(),
                          &mFoundResponse, &mSavedResponse);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1284,7 +1284,7 @@ class Manager::StorageHasAction final : public Manager::BaseAction {
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     CacheId cacheId;
-    return db::StorageGetCacheId(aConn, mNamespace, mArgs.key(), &mCacheFound,
+    return db::StorageGetCacheId(*aConn, mNamespace, mArgs.key(), &mCacheFound,
                                  &cacheId);
   }
 
@@ -1318,7 +1318,7 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
 
     // Look for existing cache
     bool cacheFound;
-    nsresult rv = db::StorageGetCacheId(aConn, mNamespace, mArgs.key(),
+    nsresult rv = db::StorageGetCacheId(*aConn, mNamespace, mArgs.key(),
                                         &cacheFound, &mCacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1328,12 +1328,12 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
       return rv;
     }
 
-    rv = db::CreateCacheId(aConn, &mCacheId);
+    rv = db::CreateCacheId(*aConn, &mCacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = db::StoragePutCache(aConn, mNamespace, mArgs.key(), mCacheId);
+    rv = db::StoragePutCache(*aConn, mNamespace, mArgs.key(), mCacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1379,8 +1379,8 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     bool exists;
-    nsresult rv = db::StorageGetCacheId(aConn, mNamespace, mArgs.key(), &exists,
-                                        &mCacheId);
+    nsresult rv = db::StorageGetCacheId(*aConn, mNamespace, mArgs.key(),
+                                        &exists, &mCacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1392,7 +1392,7 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
 
     // Don't delete the removing padding size here, we'll delete it on
     // DeleteOrphanedCacheAction.
-    rv = db::StorageForgetCache(aConn, mNamespace, mArgs.key());
+    rv = db::StorageForgetCache(*aConn, mNamespace, mArgs.key());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1446,7 +1446,7 @@ class Manager::StorageKeysAction final : public Manager::BaseAction {
   virtual nsresult RunSyncWithDBOnTarget(
       const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    return db::StorageGetKeys(aConn, mNamespace, mKeys);
+    return db::StorageGetKeys(*aConn, mNamespace, mKeys);
   }
 
   virtual void Complete(Listener* aListener, ErrorResult&& aRv) override {

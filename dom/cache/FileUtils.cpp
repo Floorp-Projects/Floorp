@@ -871,7 +871,7 @@ nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
 
     // We don't need to add the aIncreaseSize or aDecreaseSize here, because
     // it's already encompassed within the database.
-    rv = db::FindOverallPaddingSize(aConn, &currentPaddingSize);
+    rv = db::FindOverallPaddingSize(*aConn, &currentPaddingSize);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -904,7 +904,7 @@ nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
       }
 
       int64_t paddingSizeFromDB = 0;
-      rv = db::FindOverallPaddingSize(aConn, &paddingSizeFromDB);
+      rv = db::FindOverallPaddingSize(*aConn, &paddingSizeFromDB);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -920,7 +920,7 @@ nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
 
 #ifdef DEBUG
     int64_t paddingSizeFromDB = 0;
-    rv = db::FindOverallPaddingSize(aConn, &paddingSizeFromDB);
+    rv = db::FindOverallPaddingSize(*aConn, &paddingSizeFromDB);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -996,7 +996,7 @@ nsresult LockedDirectoryPaddingRestore(nsIFile* aBaseDir,
   }
 
   int64_t paddingSize = 0;
-  rv = db::FindOverallPaddingSize(aConn, &paddingSize);
+  rv = db::FindOverallPaddingSize(*aConn, &paddingSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
