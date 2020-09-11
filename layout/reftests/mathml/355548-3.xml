@@ -59,14 +59,14 @@
   <m:mstyle mathsize=".px"><m:mi>Id</m:mi></m:mstyle>
   <m:mstyle mathsize="..px"><m:mi>Id</m:mi></m:mstyle>
   <m:mstyle mathsize="+20px"><m:mi>Id</m:mi></m:mstyle>
+  <m:mstyle mathsize="0.5"><m:mi>Id</m:mi></m:mstyle>
+  <m:mstyle mathsize="24.px"><m:mi>Id</m:mi></m:mstyle>
 </m:mstyle></m:math></p>
 
 <p><m:math><m:mstyle scriptlevel="0" scriptsizemultiplier="0.5" scriptminsize="18px" style="font-size:48px;">
   <!-- test valid values for MathML length attributes -->
   <m:mstyle mathsize=" 24px "><m:mi>Id</m:mi></m:mstyle>
   <m:mstyle mathsize="24.0px"><m:mi>Id</m:mi></m:mstyle>
-  <m:mstyle mathsize="24.px"><m:mi>Id</m:mi></m:mstyle>
-  <m:mstyle mathsize="0.5"><m:mi>Id</m:mi></m:mstyle>
   <m:mstyle mathsize="50%"><m:mi>Id</m:mi></m:mstyle>
   <m:mstyle mathsize=".0px"><m:mi>Id</m:mi></m:mstyle>
   <m:mstyle mathsize="-0px"><m:mi>Id</m:mi></m:mstyle>

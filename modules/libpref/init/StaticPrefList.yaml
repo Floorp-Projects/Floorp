@@ -6602,13 +6602,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Whether to disable legacy MathML number values that are not valid CSS numbers
-# (e.g. "1234.")
-- name: mathml.legacy_number_syntax.disabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether to disable legacy names "small", "normal" and "big" for the
 # mathsize attribute.
 - name: mathml.mathsize_names.disabled
@@ -6640,12 +6633,6 @@
 - name: mathml.mfrac_linethickness_names.disabled
   type: bool
   value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
-# Whether to disable nonzero unitless values e.g. linethickness="2" for 200%
-- name: mathml.nonzero_unitless_lengths.disabled
-  type: bool
-  value: true
   mirror: always
 
 # Whether to disable deprecated numalign/denomalign/align attributes

@@ -4,7 +4,7 @@
 == 347496-1.xhtml 347496-1-ref.xhtml
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-1.xml 355548-1-ref.xml # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-2.xml 355548-2-ref.xml # Bug 1392106
-pref(mathml.deprecated_style_attributes.disabled,false) pref(mathml.legacy_number_syntax.disabled,false) pref(mathml.nonzero_unitless_lengths.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
+pref(mathml.deprecated_style_attributes.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-4.xml 355548-4-ref.xml # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-5.xml 355548-5-ref.xml # Bug 1392106
 == 370692-1.xhtml 370692-1-ref.xhtml
@@ -153,7 +153,7 @@ pref(mathml.deprecated_alignment_attributes.disabled,false) random-if(/^Windows\
 pref(mathml.deprecated_alignment_attributes.disabled,false) == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
-pref(mathml.nonzero_unitless_lengths.disabled,false) == mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
+== mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
 == mfrac-linethickness-3.xhtml mfrac-linethickness-3-ref.xhtml
 pref(mathml.mathspace_names.disabled,false) == mathml-negativespace.html mathml-negativespace-ref.html
 == negative-mspace-1.html negative-mspace-1-ref.html
@@ -201,7 +201,7 @@ random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == opentype-fraction-dynamic-linethickness.html opentype-fraction-dynamic-linethickness-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
-pref(mathml.nonzero_unitless_lengths.disabled,false) == number-size-1.xhtml number-size-1-ref.xhtml
+== number-size-1.xhtml number-size-1-ref.xhtml
 fuzzy-if(skiaContent,0-1,0-80) fuzzy-if(Android,0-255,0-105) fuzzy-if(gtkWidget,255-255,96-96) skip-if(winWidget) == multiscripts-1.html multiscripts-1-ref.html # Windows: bug 1314684; Android: bug 1392254; Linux: bug 1599638
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
