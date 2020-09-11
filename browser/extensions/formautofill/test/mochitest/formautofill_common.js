@@ -459,4 +459,12 @@ function checkUsagePrefs(hasEntry, lastUsed) {
   );
 }
 
+/*
+ * Extremely over-simplified detection of card type from card number just for
+ * our tests. This is needed to test the aria-label of credit card menu entries.
+ */
+function getCCTypeName(creditCard) {
+  return creditCard["cc-number"][0] == "4" ? "Visa" : "MasterCard";
+}
+
 formAutoFillCommonSetup();
