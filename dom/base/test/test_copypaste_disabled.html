@@ -36,17 +36,13 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function() {
   const docShell = SpecialPowers.wrap(window).docShell;
 
-  const documentViewer = docShell.contentViewer.QueryInterface(
-    SpecialPowers.Ci.nsIContentViewerEdit
-  );
-
   const clipboard = SpecialPowers.Services.clipboard;
 
   function copySelectionToClipboard() {
     return SimpleTest.promiseClipboardChange(
       () => true,
       () => {
-        documentViewer.copySelection();
+        SpecialPowers.doCommand(window, "cmd_copy");
       }
     );
   }
@@ -102,6 +98,14 @@ SimpleTest.waitForFocus(async function() {
   iframe.width = window.innerWidth;
   iframe.height = window.innerHeight;
   await runTestsOn(iframe.contentDocument);
+
+  // Add a contenteditable element to test the case where there's an HTMLEditor
+  // around the page.
+  let div = document.createElement("div");
+  div.setAttribute("contenteditable", "true");
+  document.body.appendChild(div);
+
+  await runTestsOn(document);
 
   SimpleTest.finish();
 });

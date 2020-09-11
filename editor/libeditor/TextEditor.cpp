@@ -1150,9 +1150,16 @@ bool TextEditor::FireClipboardEvent(EventMessage aEventMessage,
     return false;
   }
 
-  if (!nsCopySupport::FireClipboardEvent(
-          aEventMessage, aSelectionType, presShell,
-          MOZ_KnownLive(SelectionRefPtr()), aActionTaken)) {
+  RefPtr<Selection> sel = SelectionRefPtr();
+  if (IsHTMLEditor() && aEventMessage == eCopy && sel->IsCollapsed()) {
+    // If we don't have a usable selection for copy and we're an HTML editor
+    // (which is global for the document) try to use the last focused selection
+    // instead.
+    sel = nsCopySupport::GetSelectionForCopy(GetDocument());
+  }
+
+  if (!nsCopySupport::FireClipboardEvent(aEventMessage, aSelectionType,
+                                         presShell, sel, aActionTaken)) {
     return false;
   }
 
