@@ -42,7 +42,7 @@ add_task(async function test_nocache() {
   let cache = await promiseCacheData();
   let found = false;
   for (let engine of cache.engines) {
-    if (engine._shortName == "test-search-engine") {
+    if (engine._name == "Test search engine") {
       found = true;
       break;
     }
