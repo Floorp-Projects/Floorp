@@ -19,6 +19,11 @@ namespace a11y {
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLeftWordAt(
     const uint64_t& aID, const int32_t& aOffset, uint64_t* aStartContainer,
     int32_t* aStartOffset, uint64_t* aEndContainer, int32_t* aEndOffset) {
+  *aStartContainer = 0;
+  *aStartOffset = 0;
+  *aEndContainer = 0;
+  *aEndOffset = 0;
+
   HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
   if (!acc) {
     return IPC_OK();
@@ -42,6 +47,11 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLeftWordAt(
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvRightWordAt(
     const uint64_t& aID, const int32_t& aOffset, uint64_t* aStartContainer,
     int32_t* aStartOffset, uint64_t* aEndContainer, int32_t* aEndOffset) {
+  *aStartContainer = 0;
+  *aStartOffset = 0;
+  *aEndContainer = 0;
+  *aEndOffset = 0;
+
   HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
   if (!acc) {
     return IPC_OK();
@@ -65,6 +75,9 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvRightWordAt(
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvNextClusterAt(
     const uint64_t& aID, const int32_t& aOffset, uint64_t* aNextContainer,
     int32_t* aNextOffset) {
+  *aNextContainer = 0;
+  *aNextOffset = 0;
+
   HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
   if (!acc) {
     return IPC_OK();
@@ -84,6 +97,9 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvNextClusterAt(
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPreviousClusterAt(
     const uint64_t& aID, const int32_t& aOffset, uint64_t* aPrevContainer,
     int32_t* aPrevOffset) {
+  *aPrevContainer = 0;
+  *aPrevOffset = 0;
+
   HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
   if (!acc) {
     return IPC_OK();
@@ -123,6 +139,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvBoundsForRange(
   HyperTextAccessibleWrap* endContainer =
       IdToHyperTextAccessibleWrap(aEndContainer);
   if (!acc || !endContainer) {
+    *aBounds = nsIntRect();
     return IPC_OK();
   }
 
@@ -135,6 +152,8 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLengthForRange(
     const uint64_t& aID, const int32_t& aStartOffset,
     const uint64_t& aEndContainer, const int32_t& aEndOffset,
     int32_t* aLength) {
+  *aLength = 0;
+
   HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
   HyperTextAccessibleWrap* endContainer =
       IdToHyperTextAccessibleWrap(aEndContainer);
@@ -150,6 +169,9 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLengthForRange(
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvOffsetAtIndex(
     const uint64_t& aID, const int32_t& aIndex, uint64_t* aContainer,
     int32_t* aOffset) {
+  *aContainer = 0;
+  *aOffset = 0;
+
   HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
   if (!acc) {
     return IPC_OK();
@@ -169,6 +191,9 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvOffsetAtIndex(
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvRangeOfChild(
     const uint64_t& aID, const uint64_t& aChild, int32_t* aStartOffset,
     int32_t* aEndOffset) {
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+
   HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
   Accessible* child =
       static_cast<DocAccessibleChild*>(Manager())->IdToAccessible(aChild);
@@ -182,6 +207,8 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvRangeOfChild(
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLeafAtOffset(
     const uint64_t& aID, const int32_t& aOffset, uint64_t* aLeaf) {
+  *aLeaf = 0;
+
   HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
   if (!acc) {
     return IPC_OK();
