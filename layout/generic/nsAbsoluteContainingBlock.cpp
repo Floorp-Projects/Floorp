@@ -691,7 +691,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
     availISize = aReflowInput.ComputedSizeWithPadding(wm).ISize(wm);
   }
 
-  uint32_t rsFlags = 0;
+  ReflowInput::InitFlags initFlags;
   if (aFlags & AbsPosReflowFlags::IsGridContainerCB) {
     // When a grid container generates the abs.pos. CB for a *child* then
     // the static position is determined via CSS Box Alignment within the
@@ -701,12 +701,12 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
     // abs.pos. CB origin, and then we'll align & offset it from there.
     nsIFrame* placeholder = aKidFrame->GetPlaceholderFrame();
     if (placeholder && placeholder->GetParent() == aDelegatingFrame) {
-      rsFlags |= ReflowInput::STATIC_POS_IS_CB_ORIGIN;
+      initFlags += ReflowInput::InitFlag::StaticPosIsCBOrigin;
     }
   }
   ReflowInput kidReflowInput(aPresContext, aReflowInput, aKidFrame,
                              LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE),
-                             Some(logicalCBSize), rsFlags);
+                             Some(logicalCBSize), initFlags);
 
   // Get the border values
   WritingMode outerWM = aReflowInput.GetWritingMode();

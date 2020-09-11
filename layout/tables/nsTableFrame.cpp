@@ -1970,7 +1970,7 @@ void nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     ReflowInput reflowInput(aPresContext, positionedPart,
                             aReflowInput.mRenderingContext, availSize,
-                            ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
+                            ReflowInput::InitFlag::DummyParentReflowInput);
     nsReflowStatus reflowStatus;
 
     // Reflow absolutely-positioned descendants of the positioned part.
@@ -2773,7 +2773,7 @@ nsresult nsTableFrame::SetupHeaderFooterChild(
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   ReflowInput kidReflowInput(presContext, aReflowInput.reflowInput, aFrame,
                              availSize, Nothing(),
-                             ReflowInput::CALLER_WILL_INIT);
+                             ReflowInput::InitFlag::CallerWillInit);
   InitChildReflowInput(kidReflowInput);
   kidReflowInput.mFlags.mIsTopOfPage = true;
   ReflowOutput desiredSize(aReflowInput.reflowInput);
@@ -2802,7 +2802,7 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
   kidAvailSize.BSize(wm) = aFooterHeight;
   ReflowInput footerReflowInput(presContext, aReflowInput.reflowInput, aTfoot,
                                 kidAvailSize, Nothing(),
-                                ReflowInput::CALLER_WILL_INIT);
+                                ReflowInput::InitFlag::CallerWillInit);
   InitChildReflowInput(footerReflowInput);
   aReflowInput.bCoord += GetRowSpacing(GetRowCount());
 
@@ -2945,7 +2945,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       // Reflow the child into the available space
       ReflowInput kidReflowInput(presContext, aReflowInput.reflowInput,
                                  kidFrame, kidAvailSize, Nothing(),
-                                 ReflowInput::CALLER_WILL_INIT);
+                                 ReflowInput::InitFlag::CallerWillInit);
       InitChildReflowInput(kidReflowInput);
 
       // If this isn't the first row group, and the previous row group has a
