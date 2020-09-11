@@ -1337,9 +1337,9 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
   if (stateData.isSome()) {
     aResult->mStateData = new nsStructuredCloneContainer();
     if (aActor->GetSide() == ChildSide) {
-      UnpackClonedMessageDataForChild(stateData.ref(), *aResult->mStateData);
+      aResult->mStateData->StealFromClonedMessageDataForChild(stateData.ref());
     } else {
-      UnpackClonedMessageDataForParent(stateData.ref(), *aResult->mStateData);
+      aResult->mStateData->StealFromClonedMessageDataForParent(stateData.ref());
     }
   }
   MOZ_ASSERT_IF(stateData.isNothing(), !aResult->mStateData);
