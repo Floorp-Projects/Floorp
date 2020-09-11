@@ -388,7 +388,7 @@ void nsTableRowGroupFrame::ReflowChildren(
       kidAvailSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
       ReflowInput kidReflowInput(aPresContext, aReflowInput.reflowInput,
                                  kidFrame, kidAvailSize, Nothing(),
-                                 ReflowInput::CALLER_WILL_INIT);
+                                 ReflowInput::InitFlag::CallerWillInit);
       InitChildReflowInput(*aPresContext, borderCollapse, kidReflowInput);
 
       // This can indicate that columns were resized.
@@ -1008,7 +1008,7 @@ void nsTableRowGroupFrame::SplitSpanningCells(
         ReflowInput rowReflowInput(
             &aPresContext, aReflowInput, row,
             LogicalSize(row->GetWritingMode(), rowAvailSize), Nothing(),
-            ReflowInput::CALLER_WILL_INIT);
+            ReflowInput::InitFlag::CallerWillInit);
         InitChildReflowInput(aPresContext, borderCollapse, rowReflowInput);
         rowReflowInput.mFlags.mIsTopOfPage = isTopOfPage;  // set top of page
 
@@ -1142,7 +1142,7 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
         ReflowInput rowReflowInput(
             aPresContext, aReflowInput, rowFrame,
             LogicalSize(rowFrame->GetWritingMode(), availSize), Nothing(),
-            ReflowInput::CALLER_WILL_INIT);
+            ReflowInput::InitFlag::CallerWillInit);
 
         InitChildReflowInput(*aPresContext, borderCollapse, rowReflowInput);
         rowReflowInput.mFlags.mIsTopOfPage = isTopOfPage;  // set top of page

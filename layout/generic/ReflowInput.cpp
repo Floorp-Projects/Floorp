@@ -51,7 +51,7 @@ static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
 // use for measuring things.
 ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
                          gfxContext* aRenderingContext,
-                         const LogicalSize& aAvailableSpace, uint32_t aFlags)
+                         const LogicalSize& aAvailableSpace, InitFlags aFlags)
     : SizeComputationInput(aFrame, aRenderingContext) {
   MOZ_ASSERT(aRenderingContext, "no rendering context");
   MOZ_ASSERT(aPresContext, "no pres context");
@@ -60,14 +60,14 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
   AvailableISize() = aAvailableSpace.ISize(mWritingMode);
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
 
-  if (aFlags & DUMMY_PARENT_REFLOW_INPUT) {
+  if (aFlags.contains(InitFlag::DummyParentReflowInput)) {
     mFlags.mDummyParentReflowInput = true;
   }
-  if (aFlags & STATIC_POS_IS_CB_ORIGIN) {
+  if (aFlags.contains(InitFlag::StaticPosIsCBOrigin)) {
     mFlags.mStaticPosIsCBOrigin = true;
   }
 
-  if (!(aFlags & CALLER_WILL_INIT)) {
+  if (!aFlags.contains(InitFlag::CallerWillInit)) {
     Init(aPresContext);
   }
 }
@@ -155,7 +155,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
                          const ReflowInput& aParentReflowInput,
                          nsIFrame* aFrame, const LogicalSize& aAvailableSpace,
                          const Maybe<LogicalSize>& aContainingBlockSize,
-                         uint32_t aFlags, ComputeSizeFlags aComputeSizeFlags)
+                         InitFlags aFlags, ComputeSizeFlags aComputeSizeFlags)
     : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext),
       mParentReflowInput(&aParentReflowInput),
       mFloatManager(aParentReflowInput.mFloatManager),
@@ -201,17 +201,17 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mIsFlexContainerMeasuringBSize = false;
   mFlags.mTreatBSizeAsIndefinite = false;
   mFlags.mDummyParentReflowInput = false;
-  mFlags.mStaticPosIsCBOrigin = !!(aFlags & STATIC_POS_IS_CB_ORIGIN);
+  mFlags.mStaticPosIsCBOrigin = aFlags.contains(InitFlag::StaticPosIsCBOrigin);
   mFlags.mIOffsetsNeedCSSAlign = mFlags.mBOffsetsNeedCSSAlign = false;
   mFlags.mApplyLineClamp = false;
 
-  if ((aFlags & DUMMY_PARENT_REFLOW_INPUT) ||
+  if (aFlags.contains(InitFlag::DummyParentReflowInput) ||
       (mParentReflowInput->mFlags.mDummyParentReflowInput &&
        mFrame->IsTableFrame())) {
     mFlags.mDummyParentReflowInput = true;
   }
 
-  if (!(aFlags & CALLER_WILL_INIT)) {
+  if (!aFlags.contains(InitFlag::CallerWillInit)) {
     Init(aPresContext, aContainingBlockSize);
   }
 }

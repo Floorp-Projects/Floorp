@@ -568,7 +568,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
     }
     ReflowInput kidReflowInput(aPresContext, aReflowInput, inner,
                                innerAvailSize, Nothing(),
-                               ReflowInput::CALLER_WILL_INIT);
+                               ReflowInput::InitFlag::CallerWillInit);
     // Override computed padding, in case it's percentage padding
     kidReflowInput.Init(aPresContext, Nothing(), nullptr,
                         &aReflowInput.ComputedPhysicalPadding());

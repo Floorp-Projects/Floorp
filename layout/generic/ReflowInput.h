@@ -12,6 +12,7 @@
 #include "nsMargin.h"
 #include "nsStyleConsts.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/WritingModes.h"
 #include "LayoutConstants.h"
@@ -749,6 +750,26 @@ struct ReflowInput : public SizeComputationInput {
   void SetIResize(bool aValue) { mFlags.mIsIResize = aValue; }
   void SetBResize(bool aValue) { mFlags.mIsBResize = aValue; }
 
+  // Values for |aFlags| passed to constructor
+  enum class InitFlag : uint8_t {
+    // Indicates that the parent of this reflow input is "fake" (see
+    // mDummyParentReflowInput in mFlags).
+    DummyParentReflowInput,
+
+    // Indicates that the calling function will initialize the reflow input, and
+    // that the constructor should not call Init().
+    CallerWillInit,
+
+    // The caller wants the abs.pos. static-position resolved at the origin of
+    // the containing block, i.e. at LogicalPoint(0, 0). (Note that this
+    // doesn't necessarily mean that (0, 0) is the *correct* static position
+    // for the frame in question.)
+    // @note In a Grid container's masonry axis we'll always use
+    // the placeholder's position in that axis regardless of this flag.
+    StaticPosIsCBOrigin,
+  };
+  using InitFlags = mozilla::EnumSet<InitFlag>;
+
   // Note: The copy constructor is written by the compiler automatically. You
   // can use that and then override specific values if you want, or you can
   // call Init as desired...
@@ -763,11 +784,12 @@ struct ReflowInput : public SizeComputationInput {
    *        writing-mode). See comments for mAvailableHeight and mAvailableWidth
    *        members for more information.
    * @param aFlags A set of flags used for additional boolean parameters (see
-   *        below).
+   *        InitFlags above).
    */
   ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
               gfxContext* aRenderingContext,
-              const mozilla::LogicalSize& aAvailableSpace, uint32_t aFlags = 0);
+              const mozilla::LogicalSize& aAvailableSpace,
+              InitFlags aFlags = {});
 
   /**
    * Initialize a reflow input for a child frame's reflow. Some parts of the
@@ -784,7 +806,7 @@ struct ReflowInput : public SizeComputationInput {
    *        the containing block size to use instead of the default which is
    *        computed by ComputeContainingBlockRectangle().
    * @param aFlags A set of flags used for additional boolean parameters (see
-   *        below).
+   *        InitFlags above).
    * @param aComputeSizeFlags A set of flags used when we call
    *        nsIFrame::ComputeSize() internally.
    */
@@ -793,27 +815,8 @@ struct ReflowInput : public SizeComputationInput {
               const mozilla::LogicalSize& aAvailableSpace,
               const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
                   mozilla::Nothing(),
-              uint32_t aFlags = 0,
+              InitFlags aFlags = {},
               mozilla::ComputeSizeFlags aComputeSizeFlags = {});
-
-  // Values for |aFlags| passed to constructor
-  enum {
-    // Indicates that the parent of this reflow input is "fake" (see
-    // mDummyParentReflowInput in mFlags).
-    DUMMY_PARENT_REFLOW_INPUT = (1 << 0),
-
-    // Indicates that the calling function will initialize the reflow input, and
-    // that the constructor should not call Init().
-    CALLER_WILL_INIT = (1 << 1),
-
-    // The caller wants the abs.pos. static-position resolved at the origin of
-    // the containing block, i.e. at LogicalPoint(0, 0). (Note that this
-    // doesn't necessarily mean that (0, 0) is the *correct* static position
-    // for the frame in question.)
-    // @note In a Grid container's masonry axis we'll always use
-    // the placeholder's position in that axis regardless of this flag.
-    STATIC_POS_IS_CB_ORIGIN = (1 << 4),
-  };
 
   // This method initializes various data members. It is automatically
   // called by the various constructors
