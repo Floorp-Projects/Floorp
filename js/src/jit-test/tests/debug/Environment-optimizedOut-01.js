@@ -1,7 +1,3 @@
-// |jit-test| skip-if: !isTypeInferenceEnabled()
-// Test depends on singleton/clone behavior (the .callee getter calls
-// IsInternalFunctionObject).
-
 // Optimized out scopes should be considered optimizedOut.
 
 var g = newGlobal({newCompartment: true});
@@ -22,21 +18,21 @@ dbg.onEnterFrame = function (f) {
     assertEq(blockenv.optimizedOut, true);
     assertEq(blockenv.inspectable, true);
     assertEq(blockenv.type, "declarative");
-    assertEq(blockenv.callee, null);
+    assertEq(blockenv.calleeScript, null);
     assertEq(blockenv.names().indexOf("y") !== -1, true);
 
     funenv = blockenv.parent;
     assertEq(funenv.optimizedOut, true);
     assertEq(funenv.inspectable, true);
     assertEq(funenv.type, "declarative");
-    assertEq(funenv.callee, f.older.callee);
+    assertEq(funenv.calleeScript, f.older.script);
     assertEq(funenv.names().indexOf("x") !== -1, true);
 
     globalenv = funenv.parent.parent;
     assertEq(globalenv.optimizedOut, false);
     assertEq(globalenv.inspectable, true);
     assertEq(globalenv.type, "object");
-    assertEq(globalenv.callee, null);
+    assertEq(globalenv.calleeScript, null);
 
     dbg.removeDebuggee(g);
 

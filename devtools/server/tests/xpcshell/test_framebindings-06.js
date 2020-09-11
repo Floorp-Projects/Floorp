@@ -12,19 +12,19 @@ add_task(
 
     const env = await packet.frame.getEnvironment();
     equal(env.type, "function");
-    equal(env.function.name, "banana3");
+    equal(env.function.displayName, "banana3");
     let parent = env.parent;
     equal(parent.type, "block");
     ok("banana3" in parent.bindings.variables);
     parent = parent.parent;
     equal(parent.type, "function");
-    equal(parent.function.name, "banana2");
+    equal(parent.function.displayName, "banana2");
     parent = parent.parent;
     equal(parent.type, "block");
     ok("banana2" in parent.bindings.variables);
     parent = parent.parent;
     equal(parent.type, "function");
-    equal(parent.function.name, "banana");
+    equal(parent.function.displayName, "banana");
 
     await threadFront.resume();
   })

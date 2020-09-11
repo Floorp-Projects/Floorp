@@ -31,7 +31,7 @@ dbg.onDebuggerStatement = function (frame) {
     // The frame's environement is a module environment.
     let env = frame.environment;
     assertEq(env.type, 'declarative');
-    assertEq(env.callee, null);
+    assertEq(env.calleeScript, null);
 
     // Top level module definitions and imports are visible.
     assertArrayEq(env.names().sort(), ['a', 'b', 'c', 'x', 'y', 'z']);

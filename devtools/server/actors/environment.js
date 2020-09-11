@@ -43,7 +43,7 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
 
     // What is this environment's type?
     if (this.obj.type == "declarative") {
-      form.type = this.obj.callee ? "function" : "block";
+      form.type = this.obj.calleeScript ? "function" : "block";
     } else {
       form.type = this.obj.type;
     }
@@ -67,12 +67,12 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     }
 
     // Is this the environment created for a function call?
-    if (this.obj.callee) {
-      form.function = createValueGrip(
-        this.obj.callee,
-        this.getParent(),
-        this.threadActor.objectGrip
-      );
+    if (this.obj.calleeScript) {
+      // Client only uses "displayName" for "function".
+      // Create a fake object actor containing only "displayName" as replacement
+      // for the no longer available obj.callee (see bug 1663847).
+      // See bug 1664218 for cleanup.
+      form.function = { displayName: this.obj.calleeScript.displayName };
     }
 
     // Shall we list this environment's bindings?
@@ -98,8 +98,8 @@ const EnvironmentActor = ActorClassWithSpec(environmentSpec, {
     }
 
     let parameterNames;
-    if (this.obj.callee) {
-      parameterNames = this.obj.callee.parameterNames;
+    if (this.obj.calleeScript) {
+      parameterNames = this.obj.calleeScript.parameterNames;
     } else {
       parameterNames = [];
     }

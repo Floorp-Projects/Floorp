@@ -18,6 +18,7 @@
 
 #include "debugger/Debugger.h"          // for Env, Debugger, ValueToIdentifier
 #include "debugger/Object.h"            // for DebuggerObject
+#include "debugger/Script.h"            // for DebuggerScript
 #include "frontend/BytecodeCompiler.h"  // for IsIdentifier
 #include "gc/Rooting.h"                 // for RootedDebuggerEnvironment
 #include "gc/Tracer.h"       // for TraceManuallyBarrieredCrossCompartmentEdge
@@ -121,7 +122,7 @@ struct MOZ_STACK_CLASS DebuggerEnvironment::CallData {
   bool scopeKindGetter();
   bool parentGetter();
   bool objectGetter();
-  bool calleeGetter();
+  bool calleeScriptGetter();
   bool inspectableGetter();
   bool optimizedOutGetter();
 
@@ -253,13 +254,13 @@ bool DebuggerEnvironment::CallData::objectGetter() {
   return true;
 }
 
-bool DebuggerEnvironment::CallData::calleeGetter() {
+bool DebuggerEnvironment::CallData::calleeScriptGetter() {
   if (!environment->requireDebuggee(cx)) {
     return false;
   }
 
-  RootedDebuggerObject result(cx);
-  if (!environment->getCallee(cx, &result)) {
+  RootedDebuggerScript result(cx);
+  if (!environment->getCalleeScript(cx, &result)) {
     return false;
   }
 
@@ -375,7 +376,7 @@ const JSPropertySpec DebuggerEnvironment::properties_[] = {
     JS_DEBUG_PSG("scopeKind", scopeKindGetter),
     JS_DEBUG_PSG("parent", parentGetter),
     JS_DEBUG_PSG("object", objectGetter),
-    JS_DEBUG_PSG("callee", calleeGetter),
+    JS_DEBUG_PSG("calleeScript", calleeScriptGetter),
     JS_DEBUG_PSG("inspectable", inspectableGetter),
     JS_DEBUG_PSG("optimizedOut", optimizedOutGetter),
     JS_PS_END};
@@ -472,8 +473,8 @@ bool DebuggerEnvironment::getObject(JSContext* cx,
   return owner()->wrapDebuggeeObject(cx, object, result);
 }
 
-bool DebuggerEnvironment::getCallee(JSContext* cx,
-                                    MutableHandleDebuggerObject result) const {
+bool DebuggerEnvironment::getCalleeScript(
+    JSContext* cx, MutableHandleDebuggerScript result) const {
   if (!referent()->is<DebugEnvironmentProxy>()) {
     result.set(nullptr);
     return true;
@@ -485,12 +486,15 @@ bool DebuggerEnvironment::getCallee(JSContext* cx,
     return true;
   }
 
-  RootedObject callee(cx, &scope.as<CallObject>().callee());
-  if (IsInternalFunctionObject(*callee)) {
-    callee = nullptr;
+  Rooted<BaseScript*> script(cx, scope.as<CallObject>().callee().baseScript());
+
+  DebuggerScript* scriptObject = owner()->wrapScript(cx, script);
+  if (!scriptObject) {
+    return false;
   }
 
-  return owner()->wrapNullableDebuggeeObject(cx, callee, result);
+  result.set(scriptObject);
+  return true;
 }
 
 bool DebuggerEnvironment::isDebuggee() const {
