@@ -703,7 +703,7 @@ document.addEventListener("DOMContentLoaded", async domEvent => {
     await showAvailableStudies(cachedAddons);
   } catch (ex) {
     // No need to throw here, we'll try again before letting users enroll in any studies.
-    console.error(`Could not install default add-on.`);
+    console.error(`Could not show available studies`, ex);
   }
 });
 
