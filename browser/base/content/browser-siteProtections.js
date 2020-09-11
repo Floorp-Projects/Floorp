@@ -108,6 +108,13 @@ var Fingerprinting = {
     return this.isBlocking(state) || this.isAllowing(state);
   },
 
+  isShimming(state) {
+    return (
+      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_UNSAFE_CONTENT &&
+      this.isAllowing(state)
+    );
+  },
+
   updateSubView() {
     let contentBlockingLog = gBrowser.selectedBrowser.getContentBlockingLog();
     contentBlockingLog = JSON.parse(contentBlockingLog);
@@ -131,7 +138,9 @@ var Fingerprinting = {
   },
 
   _createListItem(origin, actions) {
-    let isAllowed = actions.some(([state]) => this.isAllowing(state));
+    let isAllowed = actions.some(
+      ([state]) => this.isAllowing(state) && !this.isShimming(state)
+    );
     let isDetected =
       isAllowed || actions.some(([state]) => this.isBlocking(state));
 
@@ -245,6 +254,13 @@ var Cryptomining = {
     return this.isBlocking(state) || this.isAllowing(state);
   },
 
+  isShimming(state) {
+    return (
+      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_UNSAFE_CONTENT &&
+      this.isAllowing(state)
+    );
+  },
+
   updateSubView() {
     let contentBlockingLog = gBrowser.selectedBrowser.getContentBlockingLog();
     contentBlockingLog = JSON.parse(contentBlockingLog);
@@ -268,7 +284,9 @@ var Cryptomining = {
   },
 
   _createListItem(origin, actions) {
-    let isAllowed = actions.some(([state]) => this.isAllowing(state));
+    let isAllowed = actions.some(
+      ([state]) => this.isAllowing(state) && !this.isShimming(state)
+    );
     let isDetected =
       isAllowed || actions.some(([state]) => this.isBlocking(state));
 
@@ -446,6 +464,13 @@ var TrackingProtection = {
     return this.isBlocking(state) || this.isAllowing(state);
   },
 
+  isShimming(state) {
+    return (
+      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_UNSAFE_CONTENT &&
+      this.isAllowing(state)
+    );
+  },
+
   async updateSubView() {
     let previousURI = gBrowser.currentURI.spec;
     let previousWindow = gBrowser.selectedBrowser.innerWindowID;
@@ -506,7 +531,9 @@ var TrackingProtection = {
 
   async _createListItem(origin, actions) {
     // Figure out if this list entry was actually detected by TP or something else.
-    let isAllowed = actions.some(([state]) => this.isAllowing(state));
+    let isAllowed = actions.some(
+      ([state]) => this.isAllowing(state) && !this.isShimming(state)
+    );
     let isDetected =
       isAllowed || actions.some(([state]) => this.isBlocking(state));
 
@@ -1105,6 +1132,13 @@ var SocialTracking = {
     return this.isBlocking(state) || this.isAllowing(state);
   },
 
+  isShimming(state) {
+    return (
+      state & Ci.nsIWebProgressListener.STATE_UNBLOCKED_UNSAFE_CONTENT &&
+      this.isAllowing(state)
+    );
+  },
+
   get categoryItem() {
     let item = document.getElementById(
       "protections-popup-category-socialblock"
@@ -1153,7 +1187,9 @@ var SocialTracking = {
   },
 
   _createListItem(origin, actions) {
-    let isAllowed = actions.some(([state]) => this.isAllowing(state));
+    let isAllowed = actions.some(
+      ([state]) => this.isAllowing(state) && !this.isShimming(state)
+    );
     let isDetected =
       isAllowed || actions.some(([state]) => this.isBlocking(state));
 
