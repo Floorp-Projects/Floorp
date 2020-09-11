@@ -279,13 +279,20 @@ nsTArray<PaperInfo> nsPrinterCUPS::PaperList() const {
 
 void nsPrinterCUPS::EnsurePrinterInfo(
     CUPSPrinterInfo& aInOutPrinterInfo) const {
-  if (aInOutPrinterInfo.mPrinterInfo) {
+  if (aInOutPrinterInfo.mWasInited) {
     return;
   }
 
+  aInOutPrinterInfo.mWasInited = true;
+
+  // All CUPS calls that take the printer info do null-checks internally, so we
+  // can fetch this info and only worry about the result of the later CUPS
+  // functions.
   aInOutPrinterInfo.mPrinterInfo =
       mShim.cupsCopyDestInfo(CUPS_HTTP_DEFAULT, mPrinter);
-  MOZ_RELEASE_ASSERT(aInOutPrinterInfo.mPrinterInfo);
+
+  // Even if we failed to fetch printer info, it is still possible we can talk
+  // to the print server and get its CUPS version.
   FetchCUPSVersionForPrinter(mShim, mPrinter, aInOutPrinterInfo.mCUPSMajor,
                              aInOutPrinterInfo.mCUPSMinor,
                              aInOutPrinterInfo.mCUPSPatch);
