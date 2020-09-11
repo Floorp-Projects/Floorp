@@ -40,13 +40,12 @@ add_task(async function() {
 
   zoomInButton.click();
   let pageZoomLevel = parseInt(ZoomManager.zoom * 100);
-  console.log("Page oom level is: ", pageZoomLevel);
+  info("Page zoom level is: " + pageZoomLevel);
 
   let zoomResetButton = document.getElementById("zoom-reset-button");
   await TestUtils.waitForCondition(() => {
-    console.log(
-      "Current zoom is ",
-      parseInt(zoomResetButton.getAttribute("label"), 10)
+    info(
+      "Current zoom is " + parseInt(zoomResetButton.getAttribute("label"), 10)
     );
     return parseInt(zoomResetButton.getAttribute("label"), 10) == pageZoomLevel;
   });

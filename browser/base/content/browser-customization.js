@@ -34,9 +34,6 @@ var CustomizationHandler = {
       childNode.setAttribute("disabled", true);
     }
 
-    let cmd = document.getElementById("cmd_CustomizeToolbars");
-    cmd.setAttribute("disabled", "true");
-
     UpdateUrlbarSearchSplitterState();
 
     PlacesToolbarHelper.customizeStart();
@@ -51,14 +48,11 @@ var CustomizationHandler = {
     PlacesToolbarHelper.customizeDone();
 
     XULBrowserWindow.asyncUpdateUI();
-
     // Re-enable parts of the UI we disabled during the dialog
     let menubar = document.getElementById("main-menubar");
     for (let childNode of menubar.children) {
       childNode.setAttribute("disabled", false);
     }
-    let cmd = document.getElementById("cmd_CustomizeToolbars");
-    cmd.removeAttribute("disabled");
 
     gBrowser.selectedBrowser.focus();
 
