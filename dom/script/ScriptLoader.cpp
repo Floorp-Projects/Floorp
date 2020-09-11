@@ -230,9 +230,7 @@ ScriptLoader::~ScriptLoader() {
     mPendingChildLoaders[j]->RemoveParserBlockingScriptExecutionBlocker();
   }
 
-  // Cancel any unused preload requests
   for (size_t i = 0; i < mPreloads.Length(); i++) {
-    mPreloads[i].mRequest->Cancel();
     AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::NotUsed);
   }
 }
@@ -2200,6 +2198,9 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run() {
   // function.
   RefPtr<ScriptLoadRequest> request = std::move(mRequest);
 
+  // Runnable pointer should have been cleared in the offthread callback.
+  MOZ_ASSERT(!request->mRunnable);
+
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
     const char* scriptSourceString;
@@ -2223,16 +2224,19 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run() {
 
   RefPtr<ScriptLoader> loader = std::move(mLoader);
 
-  request->mOffThreadToken = mToken;
-  nsresult rv = loader->ProcessOffThreadRequest(request);
+  // Request was already cancelled at some earlier point.
+  if (!request->mOffThreadToken) {
+    return NS_OK;
+  }
 
-  return rv;
+  return loader->ProcessOffThreadRequest(request);
 }
 
 static void OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken,
                                           void* aCallbackData) {
   RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> aRunnable = dont_AddRef(
       static_cast<NotifyOffThreadScriptLoadCompletedRunnable*>(aCallbackData));
+  MOZ_ASSERT(aRunnable.get() == aRunnable->GetScriptLoadRequest()->mRunnable);
 
 #ifdef MOZ_GECKO_PROFILER
   aRunnable->GetScriptLoadRequest()->mOffThreadParseStopTime =
@@ -2242,6 +2246,12 @@ static void OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken,
   LogRunnable::Run run(aRunnable);
 
   aRunnable->SetToken(aToken);
+
+  // If mRunnable was cleared then request was canceled so do nothing.
+  if (!aRunnable->GetScriptLoadRequest()->mRunnable.exchange(nullptr)) {
+    return;
+  }
+
   NotifyOffThreadScriptLoadCompletedRunnable::Dispatch(aRunnable.forget());
 }
 
@@ -2302,6 +2312,9 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   aRequest->mOffThreadParseStartTime = TimeStamp::NowUnfuzzed();
 #endif
 
+  // Save the runnable so it can be properly cleared during cancellation.
+  aRequest->mRunnable = runnable.get();
+
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
     MaybeSourceText maybeSource;
@@ -2311,17 +2324,19 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     if (maybeSource.constructed<SourceText<char16_t>>()
             ? !JS::CompileOffThreadModule(
                   cx, options, maybeSource.ref<SourceText<char16_t>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
+                  &aRequest->mOffThreadToken)
             : !JS::CompileOffThreadModule(
                   cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
-                  OffThreadScriptLoaderCallback,
-                  static_cast<void*>(runnable))) {
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
+                  &aRequest->mOffThreadToken)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else if (aRequest->IsBytecode()) {
     if (!JS::DecodeOffThreadScript(
             cx, options, aRequest->mScriptBytecode, aRequest->mBytecodeOffset,
-            OffThreadScriptLoaderCallback, static_cast<void*>(runnable))) {
+            OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
+            &aRequest->mOffThreadToken)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else {
@@ -2333,11 +2348,12 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     if (maybeSource.constructed<SourceText<char16_t>>()
             ? !JS::CompileOffThread(
                   cx, options, maybeSource.ref<SourceText<char16_t>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
-            : !JS::CompileOffThread(cx, options,
-                                    maybeSource.ref<SourceText<Utf8Unit>>(),
-                                    OffThreadScriptLoaderCallback,
-                                    static_cast<void*>(runnable))) {
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
+                  &aRequest->mOffThreadToken)
+            : !JS::CompileOffThread(
+                  cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
+                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable),
+                  &aRequest->mOffThreadToken)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -2358,7 +2374,7 @@ nsresult ScriptLoader::CompileOffThreadOrProcessRequest(
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Processing requests when running scripts is unsafe.");
 
-  if (!aRequest->mOffThreadToken && !aRequest->mWasCompiledOMT) {
+  if (!aRequest->mOffThreadToken && !aRequest->InCompilingStage()) {
     bool couldCompile = false;
     nsresult rv = AttemptAsyncScriptCompile(aRequest, &couldCompile);
     if (NS_FAILED(rv)) {
@@ -3935,6 +3951,11 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   if (mParserBlockingRequest) {
     mParserBlockingRequest->Cancel();
     mParserBlockingRequest = nullptr;
+  }
+
+  // Cancel any unused scripts that were compiled speculatively
+  for (size_t i = 0; i < mPreloads.Length(); i++) {
+    mPreloads[i].mRequest->MaybeCancelOffThreadScript();
   }
 
   // Have to call this even if aTerminated so we'll correctly unblock
