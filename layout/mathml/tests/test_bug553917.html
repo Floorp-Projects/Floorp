@@ -17,9 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
 
       const allow_linethickness_names = !SpecialPowers.getBoolPref('mathml.mfrac_linethickness_names.disabled');
       const allow_mathsize_names = !SpecialPowers.getBoolPref('mathml.mathsize_names.disabled');
-      const allow_nonzero_unitless_lengths = !SpecialPowers.getBoolPref('mathml.nonzero_unitless_lengths.disabled');
       const allow_mathspace_names = !SpecialPowers.getBoolPref('mathml.mathspace_names.disabled');
-      const allow_legacy_numbers = !SpecialPowers.getBoolPref('mathml.legacy_number_syntax.disabled');
       
       var g_errorInfo = {
       /*<math><mroot></mroot></math>
@@ -86,8 +84,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
                      allow_mathspace_names,
                      allow_mathspace_names,
                      allow_mathspace_names,
-                     allow_legacy_numbers,
-                     allow_nonzero_unitless_lengths,
+                     false,
+                     false,
                     ],
             args: [["2..0px"],
                    ["1.5notaunit"],
@@ -118,15 +116,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         MMultiscriptsErrors: {
           status: [false, false, false],
           args: ["NoBase","DuplicateMprescripts", "SubSupMismatch"]
-        },
-      /*<math><mo minsize="17">+</mo></math>*/
-        UnitlessValuesAreDeprecated : {
-          status : [!allow_nonzero_unitless_lengths],
-          args : [[]] }};
+        }};
       
       var g_errorTypes = ["ChildCountIncorrect","AttributeParsingError",
-                          "AttributeParsingErrorNoTag","LengthParsingError", "MMultiscriptsErrors",
-                          "UnitlessValuesAreDeprecated"];
+                          "AttributeParsingErrorNoTag","LengthParsingError", "MMultiscriptsErrors"];
       
       function getErrorMessage(name,idx)
       {
@@ -219,13 +212,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <math><mspace width="verythickmathspace"/></math>
     <math><mspace width="veryverythickmathspace"/></math>
     <math><mspace width="12345."/></math>
-    
+    <math><mo minsize="17">+</mo></math>
+
     <!-- MMultiscriptsErrors -->
     <math><mmultiscripts></mmultiscripts></math>
     <math><mmultiscripts><mprescripts/><mprescripts/></mmultiscripts></math>
     <math><mmultiscripts><mi>x</mi><mi>y</mi></mmultiscripts></math>
-    
-    <!-- UnitlessValuesAreDeprecated -->
-    <math><mo minsize="17">+</mo></math>
   </body>
 </html>
