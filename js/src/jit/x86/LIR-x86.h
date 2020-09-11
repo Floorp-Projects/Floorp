@@ -86,87 +86,87 @@ class LWasmUint32ToFloat32 : public LInstructionHelper<1, 1, 1> {
 };
 
 class LDivOrModI64
-    : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES * 2 + 1, 0> {
+    : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES * 2, 1> {
  public:
   LIR_HEADER(DivOrModI64)
 
   static const size_t Lhs = 0;
   static const size_t Rhs = INT64_PIECES;
-  static const size_t Tls = 2 * INT64_PIECES;
 
   LDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs,
-               const LAllocation& tls)
+               const LDefinition& temp)
       : LCallInstructionHelper(classOpcode) {
     setInt64Operand(Lhs, lhs);
     setInt64Operand(Rhs, rhs);
-    setOperand(Tls, tls);
+    setTemp(0, temp);
   }
 
-  MDefinition* mir() const {
-    MOZ_ASSERT(mir_->isWasmBuiltinDivI64() || mir_->isWasmBuiltinModI64());
-    return mir_;
+  MBinaryArithInstruction* mir() const {
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    return static_cast<MBinaryArithInstruction*>(mir_);
   }
   bool canBeDivideByZero() const {
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->canBeDivideByZero();
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeDivideByZero();
     }
-    return mir_->toWasmBuiltinDivI64()->canBeDivideByZero();
+    return mir_->toDiv()->canBeDivideByZero();
   }
   bool canBeNegativeOverflow() const {
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->canBeNegativeDividend();
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeNegativeDividend();
     }
-    return mir_->toWasmBuiltinDivI64()->canBeNegativeOverflow();
+    return mir_->toDiv()->canBeNegativeOverflow();
   }
   wasm::BytecodeOffset bytecodeOffset() const {
-    MOZ_ASSERT(mir_->isWasmBuiltinDivI64() || mir_->isWasmBuiltinModI64());
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->bytecodeOffset();
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    if (mir_->isMod()) {
+      return mir_->toMod()->bytecodeOffset();
     }
-    return mir_->toWasmBuiltinDivI64()->bytecodeOffset();
+    return mir_->toDiv()->bytecodeOffset();
   }
+  const LDefinition* temp() { return getTemp(0); }
 };
 
 class LUDivOrModI64
-    : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES * 2 + 1, 0> {
+    : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES * 2, 1> {
  public:
   LIR_HEADER(UDivOrModI64)
 
   static const size_t Lhs = 0;
   static const size_t Rhs = INT64_PIECES;
-  static const size_t Tls = 2 * INT64_PIECES;
 
   LUDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs,
-                const LAllocation& tls)
+                const LDefinition& temp)
       : LCallInstructionHelper(classOpcode) {
     setInt64Operand(Lhs, lhs);
     setInt64Operand(Rhs, rhs);
-    setOperand(Tls, tls);
+    setTemp(0, temp);
   }
 
-  MDefinition* mir() const {
-    MOZ_ASSERT(mir_->isWasmBuiltinDivI64() || mir_->isWasmBuiltinModI64());
-    return mir_;
+  MBinaryArithInstruction* mir() const {
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    return static_cast<MBinaryArithInstruction*>(mir_);
   }
   bool canBeDivideByZero() const {
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->canBeDivideByZero();
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeDivideByZero();
     }
-    return mir_->toWasmBuiltinDivI64()->canBeDivideByZero();
+    return mir_->toDiv()->canBeDivideByZero();
   }
   bool canBeNegativeOverflow() const {
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->canBeNegativeDividend();
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeNegativeDividend();
     }
-    return mir_->toWasmBuiltinDivI64()->canBeNegativeOverflow();
+    return mir_->toDiv()->canBeNegativeOverflow();
   }
   wasm::BytecodeOffset bytecodeOffset() const {
-    MOZ_ASSERT(mir_->isWasmBuiltinDivI64() || mir_->isWasmBuiltinModI64());
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->bytecodeOffset();
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    if (mir_->isMod()) {
+      return mir_->toMod()->bytecodeOffset();
     }
-    return mir_->toWasmBuiltinDivI64()->bytecodeOffset();
+    return mir_->toDiv()->bytecodeOffset();
   }
+  const LDefinition* temp() { return getTemp(0); }
 };
 
 class LWasmTruncateToInt64 : public LInstructionHelper<INT64_PIECES, 1, 1> {
