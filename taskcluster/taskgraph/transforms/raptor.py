@@ -355,7 +355,13 @@ def apply_tier_optimization(config, tests):
             yield test
             continue
 
-        test['optimization'] = {'push-interval-10': None}
-        if test['tier'] > 1:
-            test['optimization'] = {'push-interval-20': None}
+        if test['test-platform'].startswith('win') and \
+           'windows10-64-ref' not in test['test-platform']:
+            test['optimization'] = {'push-interval-5': None}
+            if test['tier'] > 1:
+                test['optimization'] = {'push-interval-10': None}
+        else:
+            test['optimization'] = {'push-interval-10': None}
+            if test['tier'] > 1:
+                test['optimization'] = {'push-interval-20': None}
         yield test
