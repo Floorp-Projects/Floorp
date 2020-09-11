@@ -2841,8 +2841,10 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       // mDataType of the request might remain set to DataType::Unknown.
       MOZ_ASSERT(aRequest->IsTextSource() || aRequest->IsUnknownDataType());
       LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
-      AUTO_PROFILER_TEXT_MARKER_DOCSHELL("ModuleEvaluation",
-                                         profilerLabelString, JS, docShell);
+      AUTO_PROFILER_MARKER_TEXT(
+          "ModuleEvaluation",
+          JS.WithOptions(MarkerInnerWindowIdFromDocShell(docShell)),
+          profilerLabelString);
 
       // currentScript is set to null for modules.
       AutoCurrentScriptUpdater scriptUpdater(this, nullptr);
@@ -2915,16 +2917,20 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
           } else {
             LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute",
                  aRequest));
-            AUTO_PROFILER_TEXT_MARKER_DOCSHELL(
-                "BytecodeDecodeMainThread", profilerLabelString, JS, docShell);
+            AUTO_PROFILER_MARKER_TEXT(
+                "BytecodeDecodeMainThread",
+                JS.WithOptions(MarkerInnerWindowIdFromDocShell(docShell)),
+                profilerLabelString);
 
             rv = exec.Decode(options, aRequest->mScriptBytecode,
                              aRequest->mBytecodeOffset);
           }
 
           if (rv == NS_OK) {
-            AUTO_PROFILER_TEXT_MARKER_DOCSHELL(
-                "ScriptExecution", profilerLabelString, JS, docShell);
+            AUTO_PROFILER_MARKER_TEXT(
+                "ScriptExecution",
+                JS.WithOptions(MarkerInnerWindowIdFromDocShell(docShell)),
+                profilerLabelString);
             rv = ExecuteCompiledScript(cx, aRequest, exec, classicScript);
           }
 
@@ -2957,9 +2963,10 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
               // Main thread parsing (inline and small scripts)
               LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
               if (aRequest->IsBinASTSource()) {
-                AUTO_PROFILER_TEXT_MARKER_DOCSHELL("BinASTDecodeMainThread",
-                                                   profilerLabelString, JS,
-                                                   docShell);
+                AUTO_PROFILER_MARKER_TEXT(
+                    "BinASTDecodeMainThread",
+                    JS.WithOptions(MarkerInnerWindowIdFromDocShell(docShell)),
+                    profilerLabelString);
 
                 rv = exec.DecodeBinAST(options,
                                        aRequest->ScriptBinASTData().begin(),
@@ -2969,9 +2976,10 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
                 MaybeSourceText maybeSource;
                 rv = GetScriptSource(cx, aRequest, &maybeSource);
                 if (NS_SUCCEEDED(rv)) {
-                  AUTO_PROFILER_TEXT_MARKER_DOCSHELL("ScriptCompileMainThread",
-                                                     profilerLabelString, JS,
-                                                     docShell);
+                  AUTO_PROFILER_MARKER_TEXT(
+                      "ScriptCompileMainThread",
+                      JS.WithOptions(MarkerInnerWindowIdFromDocShell(docShell)),
+                      profilerLabelString);
 
                   rv = maybeSource.constructed<SourceText<char16_t>>()
                            ? exec.Compile(
@@ -2986,8 +2994,10 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
 
             if (rv == NS_OK) {
               script = exec.GetScript();
-              AUTO_PROFILER_TEXT_MARKER_DOCSHELL(
-                  "ScriptExecution", profilerLabelString, JS, docShell);
+              AUTO_PROFILER_MARKER_TEXT(
+                  "ScriptExecution",
+                  JS.WithOptions(MarkerInnerWindowIdFromDocShell(docShell)),
+                  profilerLabelString);
               rv = ExecuteCompiledScript(cx, aRequest, exec, classicScript);
             }
           }

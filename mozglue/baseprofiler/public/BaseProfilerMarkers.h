@@ -41,6 +41,7 @@
 #  define BASE_PROFILER_MARKER_UNTYPED(markerName, options)
 #  define BASE_PROFILER_MARKER(markerName, options, MarkerType, ...)
 #  define BASE_PROFILER_MARKER_TEXT(markerName, options, text)
+#  define AUTO_BASE_PROFILER_MARKER_TEXT(markerName, options, text)
 
 #else  // ndef MOZ_GECKO_PROFILER
 
@@ -122,6 +123,42 @@ struct Text {
           ::mozilla::baseprofiler::markers::Text>(                       \
           markerName, ::mozilla::baseprofiler::category::options, text); \
     } while (false)
+
+namespace mozilla::baseprofiler {
+
+// RAII object that adds a BASE_PROFILER_MARKER_TEXT when destroyed; the
+// marker's timing will be the interval from construction (unless an instant or
+// start time is already specified in the provided options) until destruction.
+class MOZ_RAII AutoProfilerTextMarker {
+ public:
+  AutoProfilerTextMarker(const char* aMarkerName, MarkerOptions&& aOptions,
+                         const std::string& aText)
+      : mMarkerName(aMarkerName), mOptions(std::move(aOptions)), mText(aText) {
+    MOZ_ASSERT(mOptions.Timing().EndTime().IsNull(),
+               "AutoProfilerTextMarker options shouldn't have an end time");
+    if (mOptions.Timing().StartTime().IsNull()) {
+      mOptions.Set(MarkerTiming::InstantNow());
+    }
+  }
+
+  ~AutoProfilerTextMarker() {
+    mOptions.Timing().SetIntervalEnd();
+    BASE_PROFILER_MARKER_TEXT(
+        ProfilerString8View::WrapNullTerminatedString(mMarkerName),
+        MarkerOptions(std::move(mOptions)), mText);
+  }
+
+ protected:
+  const char* mMarkerName;
+  MarkerOptions mOptions;
+  std::string mText;
+};
+
+}  // namespace mozilla::baseprofiler
+
+#  define AUTO_BASE_PROFILER_MARKER_TEXT(markerName, options, text)     \
+    ::mozilla::baseprofiler::AutoProfilerTextMarker BASE_PROFILER_RAII( \
+        markerName, ::mozilla::baseprofiler::category::options, text)
 
 #endif  // nfed MOZ_GECKO_PROFILER else
 

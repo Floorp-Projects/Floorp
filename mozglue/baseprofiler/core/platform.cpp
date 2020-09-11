@@ -3758,18 +3758,6 @@ void profiler_tracing_marker(const char* aCategoryString,
                                            aInnerWindowID, std::move(aCause)));
 }
 
-void profiler_add_text_marker(const char* aMarkerName, const std::string& aText,
-                              ProfilingCategoryPair aCategoryPair,
-                              const TimeStamp& aStartTime,
-                              const TimeStamp& aEndTime,
-                              const Maybe<uint64_t>& aInnerWindowID,
-                              UniqueProfilerBacktrace aCause) {
-  AUTO_PROFILER_STATS(base_add_marker_with_TextMarkerPayload);
-  profiler_add_marker(aMarkerName, aCategoryPair,
-                      TextMarkerPayload(aText, aStartTime, aEndTime,
-                                        aInnerWindowID, std::move(aCause)));
-}
-
 // NOTE: aCollector's methods will be called while the target thread is paused.
 // Doing things in those methods like allocating -- which may try to claim
 // locks -- is a surefire way to deadlock.

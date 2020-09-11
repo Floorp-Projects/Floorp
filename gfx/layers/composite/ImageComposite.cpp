@@ -50,8 +50,7 @@ void ImageComposite::UpdateBias(size_t aImageIndex, bool aFrameChanged) {
     nsPrintfCString str("current %.2lfms, next %.2lfms",
                         offsetCurrent.ToMilliseconds(),
                         offsetNext.ToMilliseconds());
-    AUTO_PROFILER_TEXT_MARKER_CAUSE("Video frame offsets", str, GRAPHICS,
-                                    Nothing(), nullptr);
+    PROFILER_MARKER_TEXT("Video frame offsets", GRAPHICS, str);
   }
 #endif
 
@@ -186,8 +185,7 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
                           ") to frameID %" PRId32 " (prod %" PRId32 ")",
                           len, len == 1 ? "image" : "images", first.mFrameID,
                           first.mProducerID, last.mFrameID, last.mProducerID);
-      AUTO_PROFILER_TEXT_MARKER_CAUSE("ImageComposite::SetImages", str,
-                                      GRAPHICS, Nothing(), nullptr);
+      PROFILER_MARKER_TEXT("ImageComposite::SetImages", GRAPHICS, str);
     }
 #endif
   }
@@ -231,8 +229,7 @@ bool ImageComposite::UpdateCompositedFrame(
       descr.AppendLiteral(", no change");
     }
   }
-  AUTO_PROFILER_TEXT_MARKER_CAUSE("UpdateCompositedFrame", descr, GRAPHICS,
-                                  Nothing(), nullptr);
+  PROFILER_MARKER_TEXT("UpdateCompositedFrame", GRAPHICS, descr);
 #endif
 
   if (mLastFrameID == image.mFrameID && mLastProducerID == image.mProducerID) {

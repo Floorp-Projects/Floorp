@@ -121,7 +121,9 @@ class Timeout final : protected LinkedListElement<RefPtr<Timeout>> {
   }
 
 #ifdef MOZ_GECKO_PROFILER
-  UniqueProfilerBacktrace TakeProfilerBacktrace() { return std::move(mCause); }
+  UniquePtr<ProfileChunkedBuffer> TakeProfilerBacktrace() {
+    return std::move(mCause);
+  }
 #endif
 
  private:
@@ -159,7 +161,7 @@ class Timeout final : protected LinkedListElement<RefPtr<Timeout>> {
   TimeDuration mInterval;
 
 #ifdef MOZ_GECKO_PROFILER
-  UniqueProfilerBacktrace mCause;
+  UniquePtr<ProfileChunkedBuffer> mCause;
 #endif
 
   // Returned as value of setTimeout()

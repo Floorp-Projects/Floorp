@@ -60,8 +60,6 @@
                                        categoryPair, kind)
 #  define AUTO_BASE_PROFILER_TRACING_MARKER(categoryString, markerName, \
                                             categoryPair)
-#  define AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(markerName, text, categoryPair, \
-                                               cause)
 
 #  define AUTO_PROFILER_STATS(name)
 
@@ -875,54 +873,6 @@ MFBT_API void profiler_tracing_marker(
         categoryString, markerName,                                     \
         ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair,   \
         Nothing())
-
-// Add a text marker. Text markers are similar to tracing markers, with the
-// difference that text markers have their "text" separate from the marker name;
-// multiple text markers with the same name can have different text, and these
-// markers will still be displayed in the same "row" in the UI.
-// Another difference is that text markers combine the start and end markers
-// into one marker.
-MFBT_API void profiler_add_text_marker(
-    const char* aMarkerName, const std::string& aText,
-    ProfilingCategoryPair aCategoryPair, const TimeStamp& aStartTime,
-    const TimeStamp& aEndTime,
-    const Maybe<uint64_t>& aInnerWindowID = Nothing(),
-    UniqueProfilerBacktrace aCause = nullptr);
-
-class MOZ_RAII AutoProfilerTextMarker {
- public:
-  AutoProfilerTextMarker(const char* aMarkerName, const std::string& aText,
-                         ProfilingCategoryPair aCategoryPair,
-                         const Maybe<uint64_t>& aInnerWindowID,
-                         UniqueProfilerBacktrace&& aCause = nullptr)
-      : mMarkerName(aMarkerName),
-        mText(aText),
-        mCategoryPair(aCategoryPair),
-        mStartTime(TimeStamp::NowUnfuzzed()),
-        mCause(std::move(aCause)),
-        mInnerWindowID(aInnerWindowID) {}
-
-  ~AutoProfilerTextMarker() {
-    profiler_add_text_marker(mMarkerName, mText, mCategoryPair, mStartTime,
-                             TimeStamp::NowUnfuzzed(), mInnerWindowID,
-                             std::move(mCause));
-  }
-
- protected:
-  const char* mMarkerName;
-  std::string mText;
-  const ProfilingCategoryPair mCategoryPair;
-  TimeStamp mStartTime;
-  UniqueProfilerBacktrace mCause;
-  const Maybe<uint64_t> mInnerWindowID;
-};
-
-#  define AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(markerName, text, categoryPair, \
-                                               cause)                          \
-    ::mozilla::baseprofiler::AutoProfilerTextMarker BASE_PROFILER_RAII(        \
-        markerName, text,                                                      \
-        ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair,          \
-        mozilla::Nothing(), cause)
 
 //---------------------------------------------------------------------------
 // Output profiles
