@@ -288,6 +288,21 @@ GeckoTextMarkerRange::GeckoTextMarkerRange(
   CFRelease(end_marker);
 }
 
+GeckoTextMarkerRange::GeckoTextMarkerRange(
+    const AccessibleOrProxy& aAccessible) {
+  mStart = GeckoTextMarker(aAccessible.Parent(), 0);
+  mEnd = GeckoTextMarker(aAccessible.Parent(), 0);
+  if (mStart.mContainer.IsProxy()) {
+    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendRangeOfChild(
+        mStart.mContainer.AsProxy()->ID(), aAccessible.AsProxy()->ID(),
+        &mStart.mOffset, &mEnd.mOffset);
+  } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
+    htWrap->RangeOfChild(aAccessible.AsAccessible(), &mStart.mOffset,
+                         &mEnd.mOffset);
+  }
+}
+
 id GeckoTextMarkerRange::CreateAXTextMarkerRange() {
   AXTextMarkerRangeRef cf_text_marker_range =
       AXTextMarkerRangeCreate(kCFAllocatorDefault, mStart.CreateAXTextMarker(),

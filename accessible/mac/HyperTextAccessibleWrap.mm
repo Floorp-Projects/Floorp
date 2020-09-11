@@ -351,6 +351,20 @@ void HyperTextAccessibleWrap::PreviousClusterAt(
   *aPrevOffset = prev.mOffset;
 }
 
+void HyperTextAccessibleWrap::RangeOfChild(Accessible* aChild,
+                                           int32_t* aStartOffset,
+                                           int32_t* aEndOffset) {
+  MOZ_ASSERT(aChild->Parent() == this);
+  *aStartOffset = *aEndOffset = -1;
+  int32_t index = GetIndexOf(aChild);
+  if (index != -1) {
+    *aStartOffset = GetChildOffset(index);
+    // If this is the last child index + 1 will return the total
+    // chracter count.
+    *aEndOffset = GetChildOffset(index + 1);
+  }
+}
+
 TextPoint HyperTextAccessibleWrap::FindTextPoint(
     int32_t aOffset, nsDirection aDirection, nsSelectionAmount aAmount,
     EWordMovementType aWordMovementType) {

@@ -74,6 +74,8 @@ class GeckoTextMarkerRange final {
   GeckoTextMarkerRange(AccessibleOrProxy aDoc,
                        AXTextMarkerRangeRef aTextMarkerRange);
 
+  explicit GeckoTextMarkerRange(const AccessibleOrProxy& aAccessible);
+
   id CreateAXTextMarkerRange();
 
   bool IsValid() const {
