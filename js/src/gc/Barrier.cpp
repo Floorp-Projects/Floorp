@@ -72,19 +72,23 @@ bool CurrentThreadIsIonCompilingSafeForMinorGC() {
 }
 
 bool CurrentThreadIsGCMarking() {
-  return TlsContext.get()->gcUse == JSContext::GCUse::Marking;
+  JSContext* cx = MaybeGetJSContext();
+  return cx && cx->gcUse == JSContext::GCUse::Marking;
 }
 
 bool CurrentThreadIsGCSweeping() {
-  return TlsContext.get()->gcUse == JSContext::GCUse::Sweeping;
+  JSContext* cx = MaybeGetJSContext();
+  return cx && cx->gcUse == JSContext::GCUse::Sweeping;
 }
 
 bool CurrentThreadIsGCFinalizing() {
-  return TlsContext.get()->gcUse == JSContext::GCUse::Finalizing;
+  JSContext* cx = MaybeGetJSContext();
+  return cx && cx->gcUse == JSContext::GCUse::Finalizing;
 }
 
 bool CurrentThreadIsTouchingGrayThings() {
-  return TlsContext.get()->isTouchingGrayThings;
+  JSContext* cx = MaybeGetJSContext();
+  return cx && cx->isTouchingGrayThings;
 }
 
 AutoTouchingGrayThings::AutoTouchingGrayThings() {
