@@ -34,16 +34,17 @@ UniquePtr<DCLayerTree> DCLayerTree::Create(gl::GLContext* aGL,
                                            EGLConfig aEGLConfig,
                                            ID3D11Device* aDevice,
                                            ID3D11DeviceContext* aCtx,
-                                           HWND aHwnd) {
+                                           HWND aHwnd, nsACString& aError) {
   RefPtr<IDCompositionDevice2> dCompDevice =
       gfx::DeviceManagerDx::Get()->GetDirectCompositionDevice();
   if (!dCompDevice) {
+    aError.Assign("DCLayerTree(no device)"_ns);
     return nullptr;
   }
 
   auto layerTree =
       MakeUnique<DCLayerTree>(aGL, aEGLConfig, aDevice, aCtx, dCompDevice);
-  if (!layerTree->Initialize(aHwnd)) {
+  if (!layerTree->Initialize(aHwnd, aError)) {
     return nullptr;
   }
 
@@ -79,35 +80,38 @@ void DCLayerTree::ReleaseNativeCompositorResources() {
   }
 }
 
-bool DCLayerTree::Initialize(HWND aHwnd) {
+bool DCLayerTree::Initialize(HWND aHwnd, nsACString& aError) {
   HRESULT hr;
 
   RefPtr<IDCompositionDesktopDevice> desktopDevice;
   hr = mCompositionDevice->QueryInterface(
       (IDCompositionDesktopDevice**)getter_AddRefs(desktopDevice));
   if (FAILED(hr)) {
-    gfxCriticalNote << "Failed to get IDCompositionDesktopDevice: "
-                    << gfx::hexa(hr);
+    aError.Assign(nsPrintfCString(
+        "DCLayerTree(get IDCompositionDesktopDevice failed %x)", hr));
     return false;
   }
 
   hr = desktopDevice->CreateTargetForHwnd(aHwnd, TRUE,
                                           getter_AddRefs(mCompositionTarget));
   if (FAILED(hr)) {
-    gfxCriticalNote << "Could not create DCompositionTarget: " << gfx::hexa(hr);
+    aError.Assign(nsPrintfCString(
+        "DCLayerTree(create DCompositionTarget failed %x)", hr));
     return false;
   }
 
   hr = mCompositionDevice->CreateVisual(getter_AddRefs(mRootVisual));
   if (FAILED(hr)) {
-    gfxCriticalNote << "Failed to create DCompositionVisual: " << gfx::hexa(hr);
+    aError.Assign(nsPrintfCString(
+        "DCLayerTree(create root DCompositionVisual failed %x)", hr));
     return false;
   }
 
   hr =
       mCompositionDevice->CreateVisual(getter_AddRefs(mDefaultSwapChainVisual));
   if (FAILED(hr)) {
-    gfxCriticalNote << "Failed to create DCompositionVisual: " << gfx::hexa(hr);
+    aError.Assign(nsPrintfCString(
+        "DCLayerTree(create swap chain DCompositionVisual failed %x)", hr));
     return false;
   }
 

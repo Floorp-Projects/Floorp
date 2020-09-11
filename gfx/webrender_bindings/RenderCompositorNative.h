@@ -142,7 +142,7 @@ static inline bool operator==(const RenderCompositorNative::TileKey& a0,
 class RenderCompositorNativeOGL : public RenderCompositorNative {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget);
+      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
 
   RenderCompositorNativeOGL(RefPtr<widget::CompositorWidget>&& aWidget,
                             RefPtr<gl::GLContext>&& aGL);
@@ -176,7 +176,7 @@ class RenderCompositorNativeOGL : public RenderCompositorNative {
 class RenderCompositorNativeSWGL : public RenderCompositorNative {
  public:
   static UniquePtr<RenderCompositor> Create(
-      RefPtr<widget::CompositorWidget>&& aWidget);
+      RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
 
   RenderCompositorNativeSWGL(RefPtr<widget::CompositorWidget>&& aWidget,
                              void* aContext);
