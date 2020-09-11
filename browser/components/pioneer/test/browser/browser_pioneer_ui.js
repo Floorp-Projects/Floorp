@@ -286,11 +286,6 @@ const TEST_ADDONS = [
   { id: "second-study@parnter" },
 ];
 
-const waitForAnimationFrame = () =>
-  new Promise(resolve => {
-    content.window.requestAnimationFrame(resolve);
-  });
-
 const setupLocale = async locale => {
   Services.locale.availableLocales = [locale];
   Services.locale.requestedLocales = [locale];
@@ -374,6 +369,12 @@ add_task(async function testBadDefaultAddon() {
       const acceptDialogButton = content.document.getElementById(
         "join-pioneer-accept-dialog-button"
       );
+      // Wait for the enrollment button to change its label to "leave", meaning
+      // that the policy was accepted.
+      let promiseDialogAccepted = BrowserTestUtils.waitForAttribute(
+        "data-l10n-id",
+        enrollmentButton
+      );
       acceptDialogButton.click();
 
       const pioneerEnrolled = Services.prefs.getStringPref(
@@ -382,7 +383,7 @@ add_task(async function testBadDefaultAddon() {
       );
       ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
 
-      await waitForAnimationFrame();
+      await promiseDialogAccepted;
       ok(
         document.l10n.getAttributes(enrollmentButton).id ==
           "pioneer-unenrollment-button",
@@ -475,6 +476,12 @@ add_task(async function testAboutPage() {
       const acceptDialogButton = content.document.getElementById(
         "join-pioneer-accept-dialog-button"
       );
+      // Wait for the enrollment button to change its label to "leave", meaning
+      // that the policy was accepted.
+      let promiseDialogAccepted = BrowserTestUtils.waitForAttribute(
+        "data-l10n-id",
+        enrollmentButton
+      );
       acceptDialogButton.click();
 
       const pioneerEnrolled = Services.prefs.getStringPref(
@@ -483,7 +490,7 @@ add_task(async function testAboutPage() {
       );
       ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
 
-      await waitForAnimationFrame();
+      await promiseDialogAccepted;
       ok(
         document.l10n.getAttributes(enrollmentButton).id ==
           "pioneer-unenrollment-button",
@@ -535,14 +542,23 @@ add_task(async function testAboutPage() {
           content.document
             .getElementById("join-study-consent-dialog")
             .addEventListener("open", () => {
-              resolve();
+              // Run resolve() on the next tick.
+              setTimeout(() => resolve(), 0);
             });
         });
 
-        await waitForAnimationFrame();
-
+        // When a modal dialog is cancelled, the inertness for other elements
+        // is reverted. However, in order to have the new state (non-inert)
+        // effective, Firefox needs to do a frame flush. This flush is taken
+        // place when it's really needed.
+        // getBoundingClientRect forces a frame flush here to ensure the
+        // following click is going to work properly.
+        //
+        // Note: this initial call is required because we're cycling through
+        // addons. So while in the first iteration this would work, it could
+        // fail on the second or third.
+        joinButton.getBoundingClientRect();
         joinButton.click();
-        await waitForAnimationFrame();
 
         await joinDialogOpen;
 
@@ -559,15 +575,26 @@ add_task(async function testAboutPage() {
           "After canceling study enrollment, join button is enabled."
         );
 
+        // When a modal dialog is cancelled, the inertness for other elements
+        // is reverted. However, in order to have the new state (non-inert)
+        // effective, Firefox needs to do a frame flush. This flush is taken
+        // place when it's really needed.
+        // getBoundingClientRect forces a frame flush here to ensure the
+        // following click is going to work properly.
+        joinButton.getBoundingClientRect();
         joinButton.click();
-        await waitForAnimationFrame();
 
         const studyAcceptButton = content.document.getElementById(
           "join-study-accept-dialog-button"
         );
 
+        // Wait for the "Join Button" to change to a "leave button".
+        let promiseJoinTurnsToLeave = BrowserTestUtils.waitForAttribute(
+          "data-l10n-id",
+          joinButton
+        );
         studyAcceptButton.click();
-        await waitForAnimationFrame();
+        await promiseJoinTurnsToLeave;
 
         ok(
           document.l10n.getAttributes(joinButton).id == "pioneer-leave-study",
@@ -587,13 +614,20 @@ add_task(async function testAboutPage() {
           content.document
             .getElementById("leave-study-consent-dialog")
             .addEventListener("open", () => {
-              resolve();
+              // Run resolve() on the next tick.
+              setTimeout(() => resolve(), 0);
             });
         });
 
+        // When a modal dialog is cancelled, the inertness for other elements
+        // is reverted. However, in order to have the new state (non-inert)
+        // effective, Firefox needs to do a frame flush. This flush is taken
+        // place when it's really needed.
+        // getBoundingClientRect forces a frame flush here to ensure the
+        // following click is going to work properly.
+        joinButton.getBoundingClientRect();
         joinButton.click();
 
-        await waitForAnimationFrame();
         await leaveDialogOpen;
 
         ok(
@@ -603,22 +637,31 @@ add_task(async function testAboutPage() {
         );
 
         leaveStudyCancelButton.click();
-        await waitForAnimationFrame();
 
         ok(
           !joinButton.disabled,
           "After canceling study leave, leave/join button is enabled."
         );
 
+        // When a modal dialog is cancelled, the inertness for other elements
+        // is reverted. However, in order to have the new state (non-inert)
+        // effective, Firefox needs to do a frame flush. This flush is taken
+        // place when it's really needed.
+        // getBoundingClientRect forces a frame flush here to ensure the
+        // following click is going to work properly.
+        joinButton.getBoundingClientRect();
         joinButton.click();
-        await waitForAnimationFrame();
 
         const acceptStudyCancelButton = content.document.getElementById(
           "leave-study-accept-dialog-button"
         );
 
+        let promiseJoinButtonDisabled = BrowserTestUtils.waitForAttribute(
+          "disabled",
+          joinButton
+        );
         acceptStudyCancelButton.click();
-        await waitForAnimationFrame();
+        await promiseJoinButtonDisabled;
 
         ok(
           joinButton.disabled,
@@ -632,7 +675,6 @@ add_task(async function testAboutPage() {
       }
 
       enrollmentButton.click();
-      await waitForAnimationFrame();
 
       const cancelUnenrollmentDialogButton = content.document.getElementById(
         "leave-pioneer-cancel-dialog-button"
@@ -650,7 +692,6 @@ add_task(async function testAboutPage() {
       );
 
       enrollmentButton.click();
-      await waitForAnimationFrame();
 
       const acceptUnenrollmentDialogButton = content.document.getElementById(
         "leave-pioneer-accept-dialog-button"
@@ -717,8 +758,6 @@ add_task(async function testAboutPage() {
           `${addonId}-join-button`
         );
 
-        await waitForAnimationFrame();
-
         if (cachedAddon.isDefault) {
           ok(!joinButton, "There is no join button for default study.");
         } else {
@@ -728,6 +767,128 @@ add_task(async function testAboutPage() {
           );
         }
       }
+    }
+  );
+});
+
+add_task(async function testEnrollmentPings() {
+  const CACHED_TEST_ADDON = CACHED_ADDONS[2];
+  const cachedContent = JSON.stringify(CACHED_CONTENT);
+  const cachedAddons = JSON.stringify([CACHED_TEST_ADDON]);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_TEST_CACHED_ADDONS, cachedAddons],
+      [PREF_TEST_CACHED_CONTENT, cachedContent],
+      [PREF_TEST_ADDONS, "[]"],
+    ],
+    clear: [
+      [PREF_PIONEER_ID, ""],
+      [PREF_PIONEER_COMPLETED_STUDIES, "[]"],
+    ],
+  });
+
+  // Clear any pending pings.
+  await TelemetryStorage.testClearPendingPings();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:pioneer",
+      gBrowser,
+    },
+    async function taskFn(browser) {
+      const beforePref = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+      ok(beforePref === null, "before enrollment, Pioneer pref is null.");
+
+      // Enroll in pioneer.
+      const enrollmentButton = content.document.getElementById(
+        "enrollment-button"
+      );
+      enrollmentButton.click();
+
+      const acceptDialogButton = content.document.getElementById(
+        "join-pioneer-accept-dialog-button"
+      );
+      let promiseDialogAccepted = BrowserTestUtils.waitForAttribute(
+        "data-l10n-id",
+        enrollmentButton
+      );
+      acceptDialogButton.click();
+
+      const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+      ok(pioneerId, "after enrollment, Pioneer pref is set.");
+
+      await promiseDialogAccepted;
+
+      // Enroll in the CACHED_TEST_ADDON study.
+      const joinButton = content.document.getElementById(
+        `${CACHED_TEST_ADDON.addon_id}-join-button`
+      );
+
+      const joinDialogOpen = new Promise(resolve => {
+        content.document
+          .getElementById("join-study-consent-dialog")
+          .addEventListener("open", () => {
+            resolve();
+          });
+      });
+
+      joinButton.click();
+
+      await joinDialogOpen;
+
+      // Accept consent for the study.
+      const studyAcceptButton = content.document.getElementById(
+        "join-study-accept-dialog-button"
+      );
+
+      studyAcceptButton.click();
+
+      // Verify that the proper pings were generated.
+      let pings;
+      await TestUtils.waitForCondition(async function() {
+        pings = await TelemetryArchive.promiseArchivedPingList();
+        return pings.length >= 2;
+      }, "Wait until we have at least 2 pings in the telemetry archive");
+
+      let pingDetails = [];
+      for (const ping of pings) {
+        ok(
+          ping.type == "pioneer-study",
+          "ping is of expected type pioneer-study"
+        );
+        const details = await TelemetryArchive.promiseArchivedPingById(ping.id);
+        pingDetails.push({
+          schemaName: details.payload.schemaName,
+          schemaNamespace: details.payload.schemaNamespace,
+          studyName: details.payload.studyName,
+          pioneerId: details.payload.pioneerId,
+        });
+      }
+
+      // We expect 1 ping with just the pioneer id (pioneer consent) and another
+      // with both the pioneer id and the study id (study consent).
+      ok(
+        pingDetails.find(
+          p =>
+            p.schemaName == "pioneer-enrollment" &&
+            p.schemaNamespace == "pioneer-meta" &&
+            p.pioneerId == pioneerId &&
+            !p.studyName
+        ),
+        "We expect the Pioneer program consent to be present"
+      );
+
+      ok(
+        pingDetails.find(
+          p =>
+            p.schemaName == "pioneer-enrollment" &&
+            p.schemaNamespace == "pioneer-debug" &&
+            p.pioneerId == pioneerId &&
+            p.studyName == CACHED_TEST_ADDON.addon_id
+        ),
+        "We expect the study consent to be present"
+      );
     }
   );
 });
@@ -839,8 +1000,6 @@ add_task(async function testLocaleGating() {
       gBrowser,
     },
     async function taskFn(browser) {
-      await waitForAnimationFrame();
-
       const localeNotificationBar = content.document.getElementById(
         "locale-notification"
       );
@@ -867,8 +1026,6 @@ add_task(async function testLocaleGating() {
       gBrowser,
     },
     async function taskFn(browser) {
-      await waitForAnimationFrame();
-
       const localeNotificationBar = content.document.getElementById(
         "locale-notification"
       );
