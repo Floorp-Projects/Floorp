@@ -22,7 +22,7 @@ linux64-android-sdk-linux-repack:
     run:
         script: repack-android-sdk-linux.sh
         resources:
-            - buildSrc/src/main/java/Config.kt
+            - .config.yml
         toolchain-artifact: mobile/android-sdk/android-sdk-linux.tar.xz
         toolchain-alias: android-sdk-linux
     treeherder:

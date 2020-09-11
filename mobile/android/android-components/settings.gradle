@@ -21,6 +21,32 @@ buildCache {
     }
 }
 
+// Synchronized library configuration for all modules
+// This "componentsVersion" number is defined in ".buildconfig.yml" and should follow
+// semantic versioning (MAJOR.MINOR.PATCH). See https://semver.org/
+class Config {
+
+    public final String componentsVersion
+    public final String componentsGroupId
+    public final Integer compileSdkVersion
+    public final Integer minSdkVersion
+    public final Integer targetSdkVersion
+
+    Config(
+        String componentsVersion,
+        String componentsGroupId,
+        Integer compileSdkVersion,
+        Integer minSdkVersion,
+        Integer targetSdkVersion
+    ) {
+        this.componentsVersion = componentsVersion
+        this.componentsGroupId = componentsGroupId
+        this.compileSdkVersion = compileSdkVersion
+        this.minSdkVersion = minSdkVersion
+        this.targetSdkVersion = targetSdkVersion
+    }
+}
+
 def setupProject(name, path, description) {
     settings.include(":$name")
 
@@ -43,6 +69,7 @@ buildconfig.projects.each { project ->
 }
 
 gradle.projectsLoaded { ->
+    def configData = yaml.load(new File(rootDir, '.config.yml').newInputStream())
     String version = buildconfig.componentsVersion
 
     if (gradle.rootProject.hasProperty("nightlyVersion")) {
@@ -55,7 +82,13 @@ gradle.projectsLoaded { ->
     // Wait until root project is "loaded" before we set "config"
     // Note that since this is set on "rootProject.ext", it will be "in scope" during the evaluation of all projects'
     // gradle files. This means that they can just access "config.<value>", and it'll function properly
-    gradle.rootProject.ext.config = new Config(version)
+    gradle.rootProject.ext.config = new Config(
+        version,
+        configData.componentsGroupId,
+        configData.compileSdkVersion,
+        configData.minSdkVersion,
+        configData.targetSdkVersion
+    )
     gradle.rootProject.ext.buildConfig = buildconfig
 }
 

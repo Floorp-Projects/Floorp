@@ -10,7 +10,7 @@ permalink: /changelog/
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/119?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
 # 58.0.0
 
