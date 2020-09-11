@@ -14,7 +14,26 @@
 using namespace js;
 using namespace js::jit;
 
-bool CacheIRHealth::spewStubHealth(AutoStructuredSpewer& spew, ICStub* stub) {
+// TODO: Refine how we assign happiness based on total health score.
+CacheIRHealth::Happiness CacheIRHealth::determineStubHappiness(
+    uint32_t stubHealthScore) {
+  if (stubHealthScore >= 30) {
+    return Sad;
+  }
+
+  if (stubHealthScore >= 20) {
+    return MediumSad;
+  }
+
+  if (stubHealthScore >= 10) {
+    return MediumHappy;
+  }
+
+  return Happy;
+}
+
+CacheIRHealth::Happiness CacheIRHealth::spewStubHealth(
+    AutoStructuredSpewer& spew, ICStub* stub) {
   const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
   CacheIRReader stubReader(stubInfo);
   uint32_t totalStubHealth = 0;
@@ -41,20 +60,39 @@ bool CacheIRHealth::spewStubHealth(AutoStructuredSpewer& spew, ICStub* stub) {
   spew->endList();  // cacheIROps
 
   spew->property("stubHealth", totalStubHealth);
-  return true;
+
+  Happiness stubHappiness = determineStubHappiness(totalStubHealth);
+  spew->property("stubHappiness", stubHappiness);
+
+  return stubHappiness;
 }
 
-bool CacheIRHealth::spewHealthForStubsInCacheIREntry(AutoStructuredSpewer& spew,
-                                                     ICEntry* entry) {
+CacheIRHealth::Happiness CacheIRHealth::spewHealthForStubsInCacheIREntry(
+    AutoStructuredSpewer& spew, ICEntry* entry) {
   jit::ICStub* stub = entry->firstStub();
 
   spew->beginListProperty("stubs");
+
+  Happiness entryHappiness = Happy;
+  bool sawNonZeroCount = false;
+
   while (stub && !stub->isFallback()) {
     spew->beginObject();
     {
       uint32_t count;
       if (js::jit::GetStubEnteredCount(stub, &count)) {
-        spewStubHealth(spew, stub);
+        Happiness stubHappiness = spewStubHealth(spew, stub);
+        if (stubHappiness < entryHappiness) {
+          entryHappiness = stubHappiness;
+        }
+
+        if (count > 0 && sawNonZeroCount) {
+          // More than one stub has a hit count greater than zero.
+          // This is sad because we do not Warp transpile in this case.
+          entryHappiness = Sad;
+        } else if (count > 0 && !sawNonZeroCount) {
+          sawNonZeroCount = true;
+        }
 
         spew->property("hitCount", count);
       }
@@ -65,33 +103,39 @@ bool CacheIRHealth::spewHealthForStubsInCacheIREntry(AutoStructuredSpewer& spew,
   }
   spew->endList();  // stubs
 
+  if (entry->fallbackStub()->state().mode() != ICState::Mode::Specialized) {
+    entryHappiness = Sad;
+  }
+
+  spew->property("entryHappiness", uint8_t(entryHappiness));
+
   spew->property("mode", uint8_t(entry->fallbackStub()->state().mode()));
 
   spew->property("fallbackCount", entry->fallbackStub()->enteredCount());
-  return true;
+
+  return entryHappiness;
 }
 
-void CacheIRHealth::spewJSOpAndCacheIRHealth(AutoStructuredSpewer& spew,
-                                             HandleScript script,
-                                             jit::ICEntry* entry,
-                                             jsbytecode* pc, JSOp op) {
+CacheIRHealth::Happiness CacheIRHealth::spewJSOpAndCacheIRHealth(
+    AutoStructuredSpewer& spew, HandleScript script, jit::ICEntry* entry,
+    jsbytecode* pc, JSOp op) {
   spew->beginObject();
-  {
-    spew->property("op", CodeName(op));
+  spew->property("op", CodeName(op));
 
-    if (pc == script->main()) {
-      spew->property("main", true);
-    }
-
-    // TODO: If a perf issue arises, look into improving the SrcNotes
-    // API call below.
-    unsigned column;
-    spew->property("lineno", PCToLineNumber(script, pc, &column));
-    spew->property("column", column);
-
-    spewHealthForStubsInCacheIREntry(spew, entry);
+  if (pc == script->main()) {
+    spew->property("main", true);
   }
+
+  // TODO: If a perf issue arises, look into improving the SrcNotes
+  // API call below.
+  unsigned column;
+  spew->property("lineno", PCToLineNumber(script, pc, &column));
+  spew->property("column", column);
+
+  Happiness entryHappiness = spewHealthForStubsInCacheIREntry(spew, entry);
   spew->endObject();
+
+  return entryHappiness;
 }
 
 bool CacheIRHealth::rateMyCacheIR(JSContext* cx, Handle<ScriptVector> scripts) {
@@ -102,6 +146,7 @@ bool CacheIRHealth::rateMyCacheIR(JSContext* cx, Handle<ScriptVector> scripts) {
 
   spew->beginListProperty("scripts");
   for (uint32_t i = 0; i < scripts.length(); i++) {
+    Happiness scriptHappiness = Happy;
     spew->beginObject();
     {
       HandleScript script = scripts[i];
@@ -132,12 +177,19 @@ bool CacheIRHealth::rateMyCacheIR(JSContext* cx, Handle<ScriptVector> scripts) {
 
         if (entry && (entry->firstStub()->isFallback() ||
                       ICStub::IsCacheIRKind(entry->firstStub()->kind()))) {
-          spewJSOpAndCacheIRHealth(spew, script, entry, next, op);
+          Happiness entryHappiness =
+              spewJSOpAndCacheIRHealth(spew, script, entry, next, op);
+
+          if (entryHappiness < scriptHappiness) {
+            scriptHappiness = entryHappiness;
+          }
         }
 
         next += len;
       }
       spew->endList();  // entries
+
+      spew->property("scriptHappiness", uint8_t(scriptHappiness));
     }
     spew->endObject();
   }

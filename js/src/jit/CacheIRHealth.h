@@ -35,16 +35,21 @@ namespace jit {
 //
 
 class CacheIRHealth {
+  enum Happiness : uint8_t { Sad, MediumSad, MediumHappy, Happy };
+
  public:
+  // Get happiness from health score.
+  Happiness determineStubHappiness(uint32_t stubHealthScore);
   // Health of an individual stub.
-  bool spewStubHealth(AutoStructuredSpewer& spew, ICStub* stub);
+  Happiness spewStubHealth(AutoStructuredSpewer& spew, ICStub* stub);
   // Health of all the stubs in an individual CacheIR Entry.
-  bool spewHealthForStubsInCacheIREntry(AutoStructuredSpewer& spew,
-                                        ICEntry* entry);
+  Happiness spewHealthForStubsInCacheIREntry(AutoStructuredSpewer& spew,
+                                             ICEntry* entry);
   // Show JSOps present in the script, formatted for CacheIR
   // health report.
-  void spewJSOpAndCacheIRHealth(AutoStructuredSpewer& spew, HandleScript script,
-                                jit::ICEntry* entry, jsbytecode* pc, JSOp op);
+  Happiness spewJSOpAndCacheIRHealth(AutoStructuredSpewer& spew,
+                                     HandleScript script, jit::ICEntry* entry,
+                                     jsbytecode* pc, JSOp op);
   // If a JitScript exists, shows health of all ICEntries that exist
   // for the specified script.
   bool rateMyCacheIR(JSContext* cx, Handle<ScriptVector> scripts);
