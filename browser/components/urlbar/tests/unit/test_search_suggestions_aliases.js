@@ -36,6 +36,11 @@ add_task(async function setup() {
 // keyword.  It should be treated as part of the search string.
 add_task(async function nonTokenAlias_noTrailingSpace() {
   Services.prefs.setBoolPref("browser.urlbar.update2", true);
+  Services.prefs.setBoolPref(
+    "browser.search.separatePrivateDefault.ui.enabled",
+    false
+  );
+
   let alias = "moz";
   engine.alias = alias;
   Assert.equal(engine.alias, alias);
@@ -48,16 +53,12 @@ add_task(async function nonTokenAlias_noTrailingSpace() {
         query: alias,
         heuristic: true,
       }),
-      makeSearchResult(context, {
-        engineName: DEFAULT_ENGINE_NAME,
-        query: alias,
-        heuristic: false,
-        inPrivateWindow: true,
-        isPrivateEngine: false,
-      }),
     ],
   });
   Services.prefs.clearUserPref("browser.urlbar.update2");
+  Services.prefs.clearUserPref(
+    "browser.search.separatePrivateDefault.ui.enabled"
+  );
 });
 
 // With update2 disabled, a non-token alias without a trailing space should be
