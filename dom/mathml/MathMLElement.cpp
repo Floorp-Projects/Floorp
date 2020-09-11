@@ -306,8 +306,7 @@ bool MathMLElement::ParseNumericValue(const nsString& aString,
     }
     number.Append(c);
   }
-  if (StaticPrefs::mathml_legacy_number_syntax_disabled() && gotDot &&
-      str[i - 1] == '.') {
+  if (gotDot && str[i - 1] == '.') {
     if (!(aFlags & PARSE_SUPPRESS_WARNINGS)) {
       ReportLengthParseError(aString, aDocument);
     }
@@ -332,31 +331,16 @@ bool MathMLElement::ParseNumericValue(const nsString& aString,
 
   nsCSSUnit cssUnit;
   if (unit.IsEmpty()) {
-    if (!StaticPrefs::mathml_nonzero_unitless_lengths_disabled() &&
-        (aFlags & PARSE_ALLOW_UNITLESS)) {
-      // no explicit unit, this is a number that will act as a multiplier
+    // We are supposed to have a unit, but there isn't one.
+    // If the value is 0 we can just call it "pixels" otherwise
+    // this is illegal.
+    if (floatValue != 0.0) {
       if (!(aFlags & PARSE_SUPPRESS_WARNINGS)) {
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, "MathML"_ns, aDocument,
-            nsContentUtils::eMATHML_PROPERTIES, "UnitlessValuesAreDeprecated");
+        ReportLengthParseError(aString, aDocument);
       }
-      if (aFlags & CONVERT_UNITLESS_TO_PERCENT) {
-        aCSSValue.SetPercentValue(floatValue);
-        return true;
-      } else
-        cssUnit = eCSSUnit_Number;
-    } else {
-      // We are supposed to have a unit, but there isn't one.
-      // If the value is 0 we can just call it "pixels" otherwise
-      // this is illegal.
-      if (floatValue != 0.0) {
-        if (!(aFlags & PARSE_SUPPRESS_WARNINGS)) {
-          ReportLengthParseError(aString, aDocument);
-        }
-        return false;
-      }
-      cssUnit = eCSSUnit_Pixel;
+      return false;
     }
+    cssUnit = eCSSUnit_Pixel;
   } else if (unit.EqualsLiteral("%")) {
     aCSSValue.SetPercentValue(floatValue / 100.0f);
     return true;
