@@ -11,7 +11,7 @@
 #include "cpr_string.h"
 
 
-#define SDP_PRINT(format, ...) CSFLogError("sdp" , format , ## __VA_ARGS__ )
+#define SDP_PRINT(format, ...) SDPLogError("sdp" , format , ## __VA_ARGS__ )
 
 /* Use operating system malloc */
 #define SDP_MALLOC(x) calloc(1, (x))

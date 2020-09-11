@@ -28,6 +28,9 @@ with Files('prio/**'):
 with Files('msgpack/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
+with Files('sipcc/**'):
+    BUG_COMPONENT = ('Core', 'WebRTC: Signaling')
+
 with Files('sqlite3/**'):
     BUG_COMPONENT = ('Toolkit', 'Storage')
 

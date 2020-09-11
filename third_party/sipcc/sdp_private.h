@@ -6,7 +6,7 @@
 #define _SIPCC_SDP_PRIVATE_H_
 
 
-#include "sdp.h"
+#include "sipcc_sdp.h"
 
 extern const sdp_attrarray_t sdp_attr[];
 extern const sdp_namearray_t sdp_media[];

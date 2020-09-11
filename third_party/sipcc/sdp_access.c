@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "sdp_os_defs.h"
-#include "sdp.h"
+#include "sipcc_sdp.h"
 #include "sdp_private.h"
 
-#include "CSFLog.h"
+#include "sdp_log.h"
 
 static const char* logTag = "sdp_access";
 
@@ -1006,7 +1006,7 @@ int32_t sdp_get_media_portnum (sdp_t *sdp_p, uint16_t level)
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI) &&
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Port num not valid for media line %u",
+            SDPLogError(logTag, "%s Port num not valid for media line %u",
                       sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1036,7 +1036,7 @@ int32_t sdp_get_media_portcount (sdp_t *sdp_p, uint16_t level)
     /* Make sure port number is valid for the specified format. */
     if (mca_p->port_format != SDP_PORT_NUM_COUNT) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Port count not valid for media line %u",
+            SDPLogError(logTag, "%s Port count not valid for media line %u",
                       sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1068,7 +1068,7 @@ int32_t sdp_get_media_vpi (sdp_t *sdp_p, uint16_t level)
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI) &&
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s VPI not valid for media line %u",
+            SDPLogError(logTag, "%s VPI not valid for media line %u",
                       sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1100,7 +1100,7 @@ uint32_t sdp_get_media_vci (sdp_t *sdp_p, uint16_t level)
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI) &&
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s VCI not valid for media line %u",
+            SDPLogError(logTag, "%s VCI not valid for media line %u",
                       sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1131,7 +1131,7 @@ int32_t sdp_get_media_vcci (sdp_t *sdp_p, uint16_t level)
     if ((mca_p->port_format != SDP_PORT_VCCI) &&
         (mca_p->port_format != SDP_PORT_VCCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s VCCI not valid for media line %u",
+            SDPLogError(logTag, "%s VCCI not valid for media line %u",
                       sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1162,7 +1162,7 @@ int32_t sdp_get_media_cid (sdp_t *sdp_p, uint16_t level)
     if ((mca_p->port_format != SDP_PORT_VCCI_CID) &&
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s CID not valid for media line %u",
+            SDPLogError(logTag, "%s CID not valid for media line %u",
                       sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1326,7 +1326,7 @@ rtp_ptype sdp_get_known_payload_type(sdp_t *sdp_p,
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_RTPMAP, (i + 1));
     if (attr_p == NULL) {
       if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-        CSFLogError(logTag, "%s rtpmap attribute, level %u instance %u "
+        SDPLogError(logTag, "%s rtpmap attribute, level %u instance %u "
                             "not found.",
                             sdp_p->debug_str,
                             (unsigned)level,
@@ -1497,7 +1497,7 @@ sdp_result_e sdp_insert_media_line (sdp_t *sdp_p, uint16_t level)
 
     if ((level < 1) || (level > (sdp_p->mca_count+1))) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Invalid media line (%u) to insert, max is "
+            SDPLogError(logTag, "%s Invalid media line (%u) to insert, max is "
                       "(%u).", sdp_p->debug_str, (unsigned)level, (unsigned)sdp_p->mca_count);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1675,7 +1675,7 @@ sdp_result_e sdp_add_media_profile (sdp_t *sdp_p, uint16_t level,
 
     if (mca_p->media_profiles_p->num_profiles >= SDP_MAX_PROFILES) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Max number of media profiles already specified"
+            SDPLogError(logTag, "%s Max number of media profiles already specified"
                       " for media level %u", sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1713,7 +1713,7 @@ sdp_result_e sdp_add_media_payload_type (sdp_t *sdp_p, uint16_t level,
 
     if (mca_p->num_payloads == SDP_MAX_PAYLOAD_TYPES) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Max number of payload types already defined "
+            SDPLogError(logTag, "%s Max number of payload types already defined "
                       "for media line %u", sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1753,7 +1753,7 @@ sdp_result_e sdp_add_media_profile_payload_type (sdp_t *sdp_p, uint16_t level,
     if ((prof_num < 1) ||
         (prof_num > mca_p->media_profiles_p->num_profiles)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Invalid profile number (%u) for set profile "
+            SDPLogError(logTag, "%s Invalid profile number (%u) for set profile "
                       " payload type", sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1763,7 +1763,7 @@ sdp_result_e sdp_add_media_profile_payload_type (sdp_t *sdp_p, uint16_t level,
     if (mca_p->media_profiles_p->num_payloads[prof_num-1] ==
         SDP_MAX_PAYLOAD_TYPES) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Max number of profile payload types already "
+            SDPLogError(logTag, "%s Max number of profile payload types already "
                       "defined profile %u on media line %u",
                       sdp_p->debug_str, (unsigned)prof_num, (unsigned)level);
         }
@@ -1850,7 +1850,7 @@ sdp_result_e sdp_copy_all_bw_lines (sdp_t *src_sdp_p, sdp_t *dst_sdp_p,
         mca_p = sdp_find_media_level(src_sdp_p, src_level);
         if (mca_p == NULL) {
             if (src_sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s Invalid src media level (%u) for copy all "
+                SDPLogError(logTag, "%s Invalid src media level (%u) for copy all "
                           "attrs ", src_sdp_p->debug_str, (unsigned)src_level);
             }
             return (SDP_INVALID_PARAMETER);
@@ -1865,7 +1865,7 @@ sdp_result_e sdp_copy_all_bw_lines (sdp_t *src_sdp_p, sdp_t *dst_sdp_p,
         mca_p = sdp_find_media_level(dst_sdp_p, dst_level);
         if (mca_p == NULL) {
             if (src_sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                CSFLogError(logTag, "%s Invalid dst media level (%u) for copy all "
+                SDPLogError(logTag, "%s Invalid dst media level (%u) for copy all "
                           "attrs ", src_sdp_p->debug_str, (unsigned)dst_level);
             }
             return (SDP_INVALID_PARAMETER);
