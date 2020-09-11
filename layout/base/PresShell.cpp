@@ -9591,7 +9591,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   // constrained height implies page/column breaking.
   LogicalSize reflowSize(wm, size.ISize(wm), NS_UNCONSTRAINEDSIZE);
   ReflowInput reflowInput(mPresContext, target, rcx, reflowSize,
-                          ReflowInput::CALLER_WILL_INIT);
+                          ReflowInput::InitFlag::CallerWillInit);
   reflowInput.mOrthogonalLimit = size.BSize(wm);
 
   if (isRoot) {

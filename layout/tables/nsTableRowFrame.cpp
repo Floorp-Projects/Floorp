@@ -33,7 +33,8 @@ namespace mozilla {
 struct TableCellReflowInput : public ReflowInput {
   TableCellReflowInput(nsPresContext* aPresContext,
                        const ReflowInput& aParentReflowInput, nsIFrame* aFrame,
-                       const LogicalSize& aAvailableSpace, uint32_t aFlags = 0)
+                       const LogicalSize& aAvailableSpace,
+                       ReflowInput::InitFlags aFlags = {})
       : ReflowInput(aPresContext, aParentReflowInput, aFrame, aAvailableSpace,
                     Nothing(), aFlags) {}
 
@@ -714,7 +715,7 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
       TableCellReflowInput kidReflowInput(
           aPresContext, aReflowInput, kidFrame,
           LogicalSize(kidFrame->GetWritingMode(), 0, 0),
-          ReflowInput::CALLER_WILL_INIT);
+          ReflowInput::InitFlag::CallerWillInit);
       InitChildReflowInput(*aPresContext, LogicalSize(wm), false,
                            kidReflowInput);
       ReflowOutput desiredSize(aReflowInput);
@@ -807,7 +808,8 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
 
         // Reflow the child
         kidReflowInput.emplace(aPresContext, aReflowInput, kidFrame,
-                               kidAvailSize, ReflowInput::CALLER_WILL_INIT);
+                               kidAvailSize,
+                               ReflowInput::InitFlag::CallerWillInit);
         InitChildReflowInput(*aPresContext, kidAvailSize, borderCollapse,
                              *kidReflowInput);
 
@@ -1066,7 +1068,7 @@ nscoord nsTableRowFrame::ReflowCellFrame(nsPresContext* aPresContext,
                "expected consistent writing-mode within table");
   TableCellReflowInput cellReflowInput(aPresContext, aReflowInput, aCellFrame,
                                        availSize,
-                                       ReflowInput::CALLER_WILL_INIT);
+                                       ReflowInput::InitFlag::CallerWillInit);
   InitChildReflowInput(*aPresContext, availSize, borderCollapse,
                        cellReflowInput);
   cellReflowInput.mFlags.mIsTopOfPage = aIsTopOfPage;

@@ -671,7 +671,7 @@ void nsTextControlFrame::ReflowTextControlChild(
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
 
   ReflowInput kidReflowInput(aPresContext, aReflowInput, aKid, availSize,
-                             Nothing(), ReflowInput::CALLER_WILL_INIT);
+                             Nothing(), ReflowInput::InitFlag::CallerWillInit);
   // Override padding with our computed padding in case we got it from theming
   // or percentage.
   kidReflowInput.Init(aPresContext, Nothing(), nullptr,
