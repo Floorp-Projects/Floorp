@@ -74,9 +74,20 @@ extern JS_PUBLIC_API bool CompileOffThread(
     SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
     void* callbackData, OffThreadToken** tokenOut = nullptr);
 
+// Finish the off-thread parse/decode task and return the script. Return the
+// script on success, or return null on failure (usually with an error reported)
 extern JS_PUBLIC_API JSScript* FinishOffThreadScript(JSContext* cx,
                                                      OffThreadToken* token);
 
+// Finish the off-thread parse/decode task and return the script, and register
+// an encoder on its script source, such that all functions can be encoded as
+// they are parsed. This strategy is used to avoid blocking the main thread in
+// a non-interruptible way.
+//
+// See also JS::FinishIncrementalEncoding.
+//
+// Return the script on success, or return null on failure (usually with an
+// error reported)
 extern JS_PUBLIC_API JSScript* FinishOffThreadScriptAndStartIncrementalEncoding(
     JSContext* cx, OffThreadToken* token);
 

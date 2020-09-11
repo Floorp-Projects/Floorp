@@ -56,10 +56,12 @@ enum TranscodeResult : uint8_t {
   TranscodeResult_Throw = 0x20
 };
 
+// Encode JSScript into the buffer.
 extern JS_PUBLIC_API TranscodeResult EncodeScript(JSContext* cx,
                                                   TranscodeBuffer& buffer,
                                                   Handle<JSScript*> script);
 
+// Decode JSScript from the buffer.
 extern JS_PUBLIC_API TranscodeResult
 DecodeScript(JSContext* cx, TranscodeBuffer& buffer,
              MutableHandle<JSScript*> scriptp, size_t cursorIndex = 0);
@@ -68,21 +70,27 @@ extern JS_PUBLIC_API TranscodeResult
 DecodeScript(JSContext* cx, const TranscodeRange& range,
              MutableHandle<JSScript*> scriptp);
 
-// Register an encoder on the given script source, such that all functions can
-// be encoded as they are parsed. This strategy is used to avoid blocking the
-// main thread in a non-interruptible way.
+// Decode JSScript from the buffer, and register an encoder on its script
+// source, such that all functions can be encoded as they are parsed. This
+// strategy is used to avoid blocking the main thread in a non-interruptible
+// way.
 //
-// The |script| argument of |StartIncrementalEncoding| and
-// |FinishIncrementalEncoding| should be the top-level script returned either as
-// an out-param of any of the |Compile| functions, or the result of
-// |FinishOffThreadScript|.
+// See also JS::FinishIncrementalEncoding.
+extern JS_PUBLIC_API TranscodeResult DecodeScriptAndStartIncrementalEncoding(
+    JSContext* cx, TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
+    size_t cursorIndex = 0);
+
+// Finish incremental encoding started by one of:
+//   * JS::CompileAndStartIncrementalEncoding
+//   * JS::FinishOffThreadScriptAndStartIncrementalEncoding
+//   * JS::DecodeScriptAndStartIncrementalEncoding
+//
+// The |script| argument of |FinishIncrementalEncoding| should be the top-level
+// script returned from one of the above.
 //
 // The |buffer| argument of |FinishIncrementalEncoding| is used for appending
 // the encoded bytecode into the buffer. If any of these functions failed, the
 // content of |buffer| would be undefined.
-extern JS_PUBLIC_API bool StartIncrementalEncoding(JSContext* cx,
-                                                   Handle<JSScript*> script);
-
 extern JS_PUBLIC_API bool FinishIncrementalEncoding(JSContext* cx,
                                                     Handle<JSScript*> script,
                                                     TranscodeBuffer& buffer);

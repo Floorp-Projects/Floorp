@@ -164,6 +164,17 @@ extern JS_PUBLIC_API JSScript* Compile(JSContext* cx,
                                        const ReadOnlyCompileOptions& options,
                                        SourceText<mozilla::Utf8Unit>& srcBuf);
 
+/**
+ * Compile the provided script using the given options, and register an encoder
+ * on is script source, such that all functions can be encoded as they are
+ * parsed. This strategy is used to avoid blocking the main thread in a
+ * non-interruptible way.
+ *
+ * See also JS::FinishIncrementalEncoding.
+ *
+ * Return the script on success, or return null on failure (usually with an
+ * error reported)
+ */
 extern JS_PUBLIC_API JSScript* CompileAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf);
