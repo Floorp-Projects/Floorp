@@ -42,8 +42,7 @@
         app:layout_constraintBottom_toTopOf="@+id/pill_wrapper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        mozac:awesomeBarChipBackgroundColor="@color/photonGreen50"
+        app:layout_constraintTop_toBottomOf="@id/top_barrier"
         mozac:awesomeBarDescriptionTextColor="?secondaryText"
         mozac:awesomeBarTitleTextColor="?primaryText" />
 
@@ -55,7 +54,15 @@
         android:layout="@layout/search_suggestions_hint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/top_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="search_suggestions_hint"/>
+
 
     <View
         android:id="@+id/search_suggestions_hint_divider"
