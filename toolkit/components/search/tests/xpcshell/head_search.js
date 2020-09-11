@@ -81,7 +81,7 @@ async function promiseEngineMetadata() {
   let cache = await promiseCacheData();
   let data = {};
   for (let engine of cache.engines) {
-    data[engine._shortName] = engine._metaData;
+    data[engine._name] = engine._metaData;
   }
   return data;
 }

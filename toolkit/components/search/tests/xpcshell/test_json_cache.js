@@ -131,12 +131,21 @@ add_task(async function test_cache_write() {
 
   let cacheData = await promiseCacheData();
   info("Check search.json.mozlz4");
+
+  // Remove _shortName from the cache template, as it is no longer supported,
+  // but older caches used to have it, so we keep it in the template as an
+  // example.
+  for (let engine of cacheTemplate.engines) {
+    if ("_shortName" in engine) {
+      delete engine._shortName;
+    }
+  }
   isSubObjectOf(cacheTemplate, cacheData, (prop, value) => {
-    // Skip items that are to do with icons for extensions, as we can't
-    // control the uuid.
     if (prop != "_iconURL" && prop != "{}") {
       return false;
     }
+    // Skip items that are to do with icons for extensions, as we can't
+    // control the uuid.
     return value.startsWith("moz-extension://");
   });
 });
