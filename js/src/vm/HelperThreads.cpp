@@ -1052,9 +1052,12 @@ template <typename Unit>
 static bool StartOffThreadParseScriptInternal(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
-    void* callbackData) {
+    void* callbackData, JS::OffThreadToken** tokenOut) {
   auto task = cx->make_unique<ScriptParseTask<Unit>>(cx, srcBuf, callback,
                                                      callbackData);
+  if (tokenOut) {
+    *tokenOut = static_cast<JS::OffThreadToken*>(task.get());
+  }
   if (!task) {
     return false;
   }
@@ -1066,27 +1069,33 @@ bool js::StartOffThreadParseScript(JSContext* cx,
                                    const ReadOnlyCompileOptions& options,
                                    JS::SourceText<char16_t>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
-                                   void* callbackData) {
+                                   void* callbackData,
+                                   JS::OffThreadToken** tokenOut) {
   return StartOffThreadParseScriptInternal(cx, options, srcBuf, callback,
-                                           callbackData);
+                                           callbackData, tokenOut);
 }
 
 bool js::StartOffThreadParseScript(JSContext* cx,
                                    const ReadOnlyCompileOptions& options,
                                    JS::SourceText<Utf8Unit>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
-                                   void* callbackData) {
+                                   void* callbackData,
+                                   JS::OffThreadToken** tokenOut) {
   return StartOffThreadParseScriptInternal(cx, options, srcBuf, callback,
-                                           callbackData);
+                                           callbackData, tokenOut);
 }
 
 template <typename Unit>
 static bool StartOffThreadParseModuleInternal(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
-    void* callbackData) {
+    void* callbackData, JS::OffThreadToken** tokenOut) {
   auto task = cx->make_unique<ModuleParseTask<Unit>>(cx, srcBuf, callback,
                                                      callbackData);
+
+  if (tokenOut) {
+    *tokenOut = static_cast<JS::OffThreadToken*>(task.get());
+  }
   if (!task) {
     return false;
   }
@@ -1098,27 +1107,33 @@ bool js::StartOffThreadParseModule(JSContext* cx,
                                    const ReadOnlyCompileOptions& options,
                                    JS::SourceText<char16_t>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
-                                   void* callbackData) {
+                                   void* callbackData,
+                                   JS::OffThreadToken** tokenOut) {
   return StartOffThreadParseModuleInternal(cx, options, srcBuf, callback,
-                                           callbackData);
+                                           callbackData, tokenOut);
 }
 
 bool js::StartOffThreadParseModule(JSContext* cx,
                                    const ReadOnlyCompileOptions& options,
                                    JS::SourceText<Utf8Unit>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
-                                   void* callbackData) {
+                                   void* callbackData,
+                                   JS::OffThreadToken** tokenOut) {
   return StartOffThreadParseModuleInternal(cx, options, srcBuf, callback,
-                                           callbackData);
+                                           callbackData, tokenOut);
 }
 
 bool js::StartOffThreadDecodeScript(JSContext* cx,
                                     const ReadOnlyCompileOptions& options,
                                     const JS::TranscodeRange& range,
                                     JS::OffThreadCompileCallback callback,
-                                    void* callbackData) {
+                                    void* callbackData,
+                                    JS::OffThreadToken** tokenOut) {
   auto task =
       cx->make_unique<ScriptDecodeTask>(cx, range, callback, callbackData);
+  if (tokenOut) {
+    *tokenOut = static_cast<JS::OffThreadToken*>(task.get());
+  }
   if (!task) {
     return false;
   }
@@ -2091,7 +2106,65 @@ JSObject* GlobalHelperThreadState::finishModuleParseTask(
 
 void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
                                               JS::OffThreadToken* token) {
-  destroyParseTask(rt, removeFinishedParseTask(kind, token));
+  AutoLockHelperThreadState lock;
+  MOZ_ASSERT(token);
+
+  ParseTask* task = static_cast<ParseTask*>(token);
+
+  // Check pending queues to see if we can simply remove the task.
+  GlobalHelperThreadState::ParseTaskVector& waitingOnGC =
+      HelperThreadState().parseWaitingOnGC(lock);
+  for (size_t i = 0; i < waitingOnGC.length(); i++) {
+    if (task == waitingOnGC[i]) {
+      MOZ_ASSERT(task->kind == kind);
+      MOZ_ASSERT(task->runtimeMatches(rt));
+      task->parseGlobal->zoneFromAnyThread()->clearUsedByHelperThread();
+      HelperThreadState().remove(waitingOnGC, &i);
+      return;
+    }
+  }
+
+  GlobalHelperThreadState::ParseTaskVector& worklist =
+      HelperThreadState().parseWorklist(lock);
+  for (size_t i = 0; i < worklist.length(); i++) {
+    if (task == worklist[i]) {
+      MOZ_ASSERT(task->kind == kind);
+      MOZ_ASSERT(task->runtimeMatches(rt));
+      LeaveParseTaskZone(rt, task);
+      HelperThreadState().remove(worklist, &i);
+      return;
+    }
+  }
+
+  // If task is currently running, wait for it to complete.
+  while (true) {
+    bool foundTask = false;
+    for (auto* helper : HelperThreadState().helperTasks(lock)) {
+      if (helper->is<ParseTask>() && helper->as<ParseTask>() == task) {
+        MOZ_ASSERT(helper->as<ParseTask>()->kind == kind);
+        MOZ_ASSERT(helper->as<ParseTask>()->runtimeMatches(rt));
+        foundTask = true;
+        break;
+      }
+    }
+
+    if (!foundTask) {
+      break;
+    }
+
+    HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+  }
+
+  auto& finished = HelperThreadState().parseFinishedList(lock);
+  for (auto* t : finished) {
+    if (task == t) {
+      MOZ_ASSERT(task->kind == kind);
+      MOZ_ASSERT(task->runtimeMatches(rt));
+      task->remove();
+      HelperThreadState().destroyParseTask(rt, task);
+      return;
+    }
+  }
 }
 
 void GlobalHelperThreadState::destroyParseTask(JSRuntime* rt,
