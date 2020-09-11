@@ -388,6 +388,10 @@ void MacroAssembler::branchIfScriptHasNoJitScript(Register script,
                                                   Label* label) {
   static_assert(ScriptWarmUpData::JitScriptTag == 0,
                 "Code below depends on tag value");
+  static_assert(BaseScript::offsetOfWarmUpData() ==
+                    SelfHostedLazyScript::offsetOfWarmUpData(),
+                "SelfHostedLazyScript and BaseScript must use same layout for "
+                "warmUpData_");
   branchTestPtr(Assembler::NonZero,
                 Address(script, JSScript::offsetOfWarmUpData()),
                 Imm32(ScriptWarmUpData::TagMask), label);
