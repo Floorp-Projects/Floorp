@@ -49,6 +49,8 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
   void RangeOfChild(Accessible* aChild, int32_t* aStartOffset,
                     int32_t* aEndOffset);
 
+  Accessible* LeafAtOffset(int32_t aOffset);
+
  protected:
   ~HyperTextAccessibleWrap() {}
 
