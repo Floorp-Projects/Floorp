@@ -874,7 +874,7 @@ add_task(async function testEnrollmentPings() {
             p.schemaName == "pioneer-enrollment" &&
             p.schemaNamespace == "pioneer-meta" &&
             p.pioneerId == pioneerId &&
-            !p.studyName
+            p.studyName == "pioneer-meta"
         ),
         "We expect the Pioneer program consent to be present"
       );
@@ -883,7 +883,7 @@ add_task(async function testEnrollmentPings() {
         pingDetails.find(
           p =>
             p.schemaName == "pioneer-enrollment" &&
-            p.schemaNamespace == "pioneer-debug" &&
+            p.schemaNamespace == CACHED_TEST_ADDON.addon_id &&
             p.pioneerId == pioneerId &&
             p.studyName == CACHED_TEST_ADDON.addon_id
         ),
