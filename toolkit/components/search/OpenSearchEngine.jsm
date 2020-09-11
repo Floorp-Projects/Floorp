@@ -73,9 +73,6 @@ function ENSURE_WARN(assertion, message, resultCode) {
 class OpenSearchEngine extends SearchEngine {
   // The data describing the engine, in the form of an XML document element.
   _data = null;
-  // A function to be invoked when this engine object's addition completes (or
-  // fails). Only used for installation via addEngine.
-  _installCallback = null;
 
   /**
    * Constructor.
@@ -145,9 +142,12 @@ class OpenSearchEngine extends SearchEngine {
    * Retrieves the engine data from a URI. Initializes the engine, flushes to
    * disk, and notifies the search service once initialization is complete.
    *
-   * @param {string|nsIURI} uri The uri to load the search plugin from.
+   * @param {string|nsIURI} uri
+   *   The uri to load the search plugin from.
+   * @param {function} [callback]
+   *   A callback to receive any details of errors.
    */
-  _initFromURIAndLoad(uri) {
+  _initFromURIAndLoad(uri, callback) {
     let loadURI = uri instanceof Ci.nsIURI ? uri : SearchUtils.makeURI(uri);
     ENSURE_WARN(
       loadURI,
@@ -169,7 +169,11 @@ class OpenSearchEngine extends SearchEngine {
       }
     }
     this._uri = loadURI;
-    var listener = new SearchUtils.LoadListener(chan, this, this._onLoad);
+
+    var listener = new SearchUtils.LoadListener(
+      chan,
+      this._onLoad.bind(this, callback)
+    );
     chan.notificationCallbacks = listener;
     chan.asyncOpen(listener);
   }
@@ -226,28 +230,18 @@ class OpenSearchEngine extends SearchEngine {
    * triggers parsing of the data. The engine is then flushed to disk. Notifies
    * the search service once initialization is complete.
    *
+   * @param {function} callback
+   *   A callback to receive success or failure notifications. May be null.
    * @param {array} bytes
    *  The loaded search engine data.
-   * @param {nsISearchEngine} engine
-   *  The engine being loaded.
    */
-  _onLoad(bytes, engine) {
-    /**
-     * Handle an error during the load of an engine by notifying the engine's
-     * error callback, if any.
-     *
-     * @param {number} errorCode
-     *   The relevant error code.
-     */
-    function onError(errorCode) {
-      if (engine._engineToUpdate) {
-        logConsole.warn("Failed to update", engine._engineToUpdate.name);
+  _onLoad(callback, bytes) {
+    let onError = errorCode => {
+      if (this._engineToUpdate) {
+        logConsole.warn("Failed to update", this._engineToUpdate.name);
       }
-      // Notify the callback of the failure
-      if (engine._installCallback) {
-        engine._installCallback(errorCode);
-      }
-    }
+      callback?.(errorCode);
+    };
 
     if (!bytes) {
       onError(Ci.nsISearchService.ERROR_DOWNLOAD_FAILURE);
@@ -256,14 +250,13 @@ class OpenSearchEngine extends SearchEngine {
 
     var parser = new DOMParser();
     var doc = parser.parseFromBuffer(bytes, "text/xml");
-    engine._data = doc.documentElement;
+    this._data = doc.documentElement;
 
     try {
-      // Initialize the engine from the obtained data
-      engine._initFromData();
+      this._initFromData();
     } catch (ex) {
       logConsole.error("_onLoad: Failed to init engine!", ex);
-      // Report an error to the user
+
       if (ex.result == Cr.NS_ERROR_FILE_CORRUPTED) {
         onError(Ci.nsISearchService.ERROR_ENGINE_CORRUPTED);
       } else {
@@ -272,54 +265,51 @@ class OpenSearchEngine extends SearchEngine {
       return;
     }
 
-    if (engine._engineToUpdate) {
-      let engineToUpdate = engine._engineToUpdate.wrappedJSObject;
+    if (this._engineToUpdate) {
+      let engineToUpdate = this._engineToUpdate.wrappedJSObject;
 
       // Preserve metadata and loadPath.
       Object.keys(engineToUpdate._metaData).forEach(key => {
-        engine.setAttr(key, engineToUpdate.getAttr(key));
+        this.setAttr(key, engineToUpdate.getAttr(key));
       });
-      engine._loadPath = engineToUpdate._loadPath;
+      this._loadPath = engineToUpdate._loadPath;
 
       // Keep track of the last modified date, so that we can make conditional
       // requests for future updates.
-      engine.setAttr("updatelastmodified", new Date().toUTCString());
+      this.setAttr("updatelastmodified", new Date().toUTCString());
 
       // Set the new engine's icon, if it doesn't yet have one.
-      if (!engine._iconURI && engineToUpdate._iconURI) {
-        engine._iconURI = engineToUpdate._iconURI;
+      if (!this._iconURI && engineToUpdate._iconURI) {
+        this._iconURI = engineToUpdate._iconURI;
       }
     } else {
       // Check that when adding a new engine (e.g., not updating an
       // existing one), a duplicate engine does not already exist.
-      if (Services.search.getEngineByName(engine.name)) {
+      if (Services.search.getEngineByName(this.name)) {
         onError(Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
         logConsole.debug("_onLoad: duplicate engine found, bailing");
         return;
       }
 
-      engine._loadPath = OpenSearchEngine.getAnonymizedLoadPath(
-        SearchUtils.sanitizeName(engine.name),
+      this._loadPath = OpenSearchEngine.getAnonymizedLoadPath(
+        SearchUtils.sanitizeName(this.name),
         null,
-        engine._uri
+        this._uri
       );
-      if (engine._extensionID) {
-        engine._loadPath += ":" + engine._extensionID;
+      if (this._extensionID) {
+        this._loadPath += ":" + this._extensionID;
       }
-      engine.setAttr(
+      this.setAttr(
         "loadPathHash",
-        SearchUtils.getVerificationHash(engine._loadPath)
+        SearchUtils.getVerificationHash(this._loadPath)
       );
     }
 
     // Notify the search service of the successful load. It will deal with
-    // updates by checking aEngine._engineToUpdate.
-    SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.LOADED);
+    // updates by checking this._engineToUpdate.
+    SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.LOADED);
 
-    // Notify the callback if needed
-    if (engine._installCallback) {
-      engine._installCallback();
-    }
+    callback?.();
   }
 
   /**
