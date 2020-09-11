@@ -180,8 +180,10 @@ void RenderCompositorNative::CompositorEndFrame() {
     for (const auto& it : mSurfaces) {
       nativeLayerCount += int(it.second.mNativeLayers.size());
     }
-    profiler_add_text_marker(
+    PROFILER_MARKER_TEXT(
         "WR OS Compositor frame",
+        GRAPHICS.WithOptions(
+            MarkerTiming::IntervalUntilNowFrom(mBeginFrameTimeStamp)),
         nsPrintfCString("%d%% painting, %d%% overdraw, %d used "
                         "layers (%d%% memory) + %d unused layers (%d%% memory)",
                         int(mDrawnPixelCount * 100 / windowPixelCount),
@@ -190,9 +192,7 @@ void RenderCompositorNative::CompositorEndFrame() {
                         int(mAddedTilePixelCount * 100 / windowPixelCount),
                         int(nativeLayerCount - mAddedLayers.Length()),
                         int((mTotalTilePixelCount - mAddedTilePixelCount) *
-                            100 / windowPixelCount)),
-        JS::ProfilingCategoryPair::GRAPHICS, mBeginFrameTimeStamp,
-        TimeStamp::NowUnfuzzed());
+                            100 / windowPixelCount)));
   }
 #endif
   mDrawnPixelCount = 0;
