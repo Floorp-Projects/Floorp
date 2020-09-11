@@ -4184,11 +4184,11 @@ dependencies = [
 
 [[package]]
 name = "ron"
-version = "0.5.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ece421e0c4129b90e4a35b6f625e472e96c552136f5093a2f4fa2bbb75a62d5"
+checksum = "f8a58080b7bb83b2ea28c3b7a9a994fd5e310330b7c8ca5258d99b98128ecfe4"
 dependencies = [
- "base64 0.10.1",
+ "base64 0.12.0",
  "bitflags",
  "serde",
 ]
@@ -5605,7 +5605,7 @@ dependencies = [
 name = "webrender"
 version = "0.61.0"
 dependencies = [
- "base64 0.10.1",
+ "base64 0.12.0",
  "bincode",
  "bitflags",
  "build-parallel",
