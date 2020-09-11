@@ -806,7 +806,9 @@ const PrintSettingsViewProxy = {
           );
           if (
             Object.keys(marginSettings).every(
-              name => marginSettings[name] == marginPresets[name]
+              name =>
+                marginSettings[name].toFixed(2) ==
+                marginPresets[name].toFixed(2)
             )
           ) {
             return presetName;
