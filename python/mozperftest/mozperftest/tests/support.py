@@ -11,6 +11,7 @@ from mozperftest.hooks import Hooks
 
 
 HERE = Path(__file__).parent
+ROOT = Path(HERE, "..", "..", "..", "..").resolve()
 EXAMPLE_TESTS_DIR = os.path.join(HERE, "data", "samples")
 EXAMPLE_TEST = os.path.join(EXAMPLE_TESTS_DIR, "perftest_example.js")
 EXAMPLE_XPCSHELL_TEST = Path(EXAMPLE_TESTS_DIR, "test_xpcshell.js")
