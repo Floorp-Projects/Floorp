@@ -1893,15 +1893,22 @@ pref("browser.crashReports.unsubmittedCheck.autoSubmit2", false);
 // any other value means autofill isn't available.
 // "detect" means it's enabled if conditions defined in the extension are met.
 pref("extensions.formautofill.available", "detect");
-pref("extensions.formautofill.creditCards.available", true);
 pref("extensions.formautofill.addresses.enabled", true);
 pref("extensions.formautofill.addresses.capture.enabled", false);
+#ifdef NIGHTLY_BUILD
+pref("extensions.formautofill.creditCards.available", true);
 pref("extensions.formautofill.creditCards.enabled", true);
+// Checkbox in sync options for credit card data sync service
+pref("services.sync.engine.creditcards.available", true);
+#else
+pref("extensions.formautofill.creditCards.available", false);
+pref("extensions.formautofill.creditCards.enabled", false);
+// Checkbox in sync options for credit card data sync service
+pref("services.sync.engine.creditcards.available", false);
+#endif
 // Temporary preference to control displaying the UI elements for
 // credit card autofill used for the duration of the A/B test.
 pref("extensions.formautofill.creditCards.hideui", false);
-// Enable the checkbox in sync options for credit card data sync service
-pref("services.sync.engine.creditcards.available", true);
 // Pref for shield/heartbeat to recognize users who have used Credit Card
 // Autofill. The valid values can be:
 // 0: none
