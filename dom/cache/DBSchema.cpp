@@ -749,47 +749,6 @@ nsresult DeleteCacheId(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
-nsresult IsCacheOrphaned(mozIStorageConnection* aConn, CacheId aCacheId,
-                         bool* aOrphanedOut) {
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(aConn);
-  MOZ_DIAGNOSTIC_ASSERT(aOrphanedOut);
-
-  // err on the side of not deleting user data
-  *aOrphanedOut = false;
-
-  nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv = aConn->CreateStatement(
-      nsLiteralCString(
-          "SELECT COUNT(*) FROM storage WHERE cache_id=:cache_id;"),
-      getter_AddRefs(state));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = state->BindInt64ByName("cache_id"_ns, aCacheId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool hasMoreData = false;
-  rv = state->ExecuteStep(&hasMoreData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  MOZ_DIAGNOSTIC_ASSERT(hasMoreData);
-
-  int32_t refCount;
-  rv = state->GetInt32(0, &refCount);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  *aOrphanedOut = refCount == 0;
-
-  return rv;
-}
-
 nsresult FindOrphanedCacheIds(mozIStorageConnection* aConn,
                               nsTArray<CacheId>& aOrphanedListOut) {
   nsCOMPtr<mozIStorageStatement> state;
