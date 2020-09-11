@@ -269,6 +269,21 @@ GeckoTextMarkerRange GeckoTextMarker::RightWordRange() {
   return GeckoTextMarkerRange(GeckoTextMarker(), GeckoTextMarker());
 }
 
+AccessibleOrProxy GeckoTextMarker::Leaf() {
+  MOZ_ASSERT(!mContainer.IsNull());
+  if (mContainer.IsProxy()) {
+    uint64_t leafID = 0;
+    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendLeafAtOffset(
+        mContainer.AsProxy()->ID(), mOffset, &leafID);
+    return ipcDoc->GetAccessible(leafID);
+  } else if (auto htWrap = ContainerAsHyperTextWrap()) {
+    return htWrap->LeafAtOffset(mOffset);
+  }
+
+  return mContainer;
+}
+
 // GeckoTextMarkerRange
 
 GeckoTextMarkerRange::GeckoTextMarkerRange(
