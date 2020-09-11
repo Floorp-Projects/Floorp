@@ -71,4 +71,9 @@ interface nsIWebSocketConnectionListener : nsISupports
 
     void onDataReceived([array, size_is(dataLength)]in uint8_t data,
                         in unsigned long dataLength);
+
+    /**
+     * Called to inform the listener that the outgoing data is ready to write.
+     */
+    void onReadyToSendData();
 };
