@@ -142,7 +142,7 @@ class MOZ_RAII AutoProfilerTextMarker {
   }
 
   ~AutoProfilerTextMarker() {
-    mOptions.Timing().SetIntervalEnd();
+    mOptions.TimingRef().SetIntervalEnd();
     BASE_PROFILER_MARKER_TEXT(
         ProfilerString8View::WrapNullTerminatedString(mMarkerName),
         MarkerOptions(std::move(mOptions)), mText);

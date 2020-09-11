@@ -119,7 +119,7 @@ class MOZ_RAII AutoProfilerTextMarker {
   }
 
   ~AutoProfilerTextMarker() {
-    mOptions.Timing().SetIntervalEnd();
+    mOptions.TimingRef().SetIntervalEnd();
     PROFILER_MARKER_TEXT(
         mozilla::ProfilerString8View::WrapNullTerminatedString(mMarkerName),
         MarkerOptions(std::move(mOptions)), mText);

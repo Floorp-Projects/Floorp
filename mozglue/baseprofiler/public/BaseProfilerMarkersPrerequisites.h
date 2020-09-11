@@ -611,23 +611,36 @@ class MarkerOptions {
     return mTiming.IsUnspecified();
   }
 
-  // Each options may be added in a chain by e.g.: `Set(MarkerThreadId(123))`.
-  // Read them with the option name (without "Marker"), e.g.: `ThreadId()`.
-#  define FUNCTION_ON_MEMBER(NAME)                       \
-    MarkerOptions&& Set(Marker##NAME&& a##NAME) {        \
+  // Each option may be added in a chain by e.g.:
+  // `options.Set(MarkerThreadId(123)).Set(MarkerTiming::IntervalEnd())`.
+  // When passed to an add-marker function, it must be an rvalue, either created
+  // on the spot, or `std::move`d from storage, e.g.:
+  // `PROFILER_MARKER_UNTYPED("...", OTHER.Set(...))`;
+  // `PROFILER_MARKER_UNTYPED("...", std::move(options).Set(...))`;
+  //
+  // Options can be read by their name (without "Marker"), e.g.: `o.ThreadId()`.
+  // Add "Ref" for a non-const reference, e.g.: `o.ThreadIdRef() = ...;`
+#  define FUNCTIONS_ON_MEMBER(NAME)                      \
+    MarkerOptions& Set(Marker##NAME&& a##NAME)& {        \
+      m##NAME = std::move(a##NAME);                      \
+      return *this;                                      \
+    }                                                    \
+                                                         \
+    MarkerOptions&& Set(Marker##NAME&& a##NAME)&& {      \
       m##NAME = std::move(a##NAME);                      \
       return std::move(*this);                           \
     }                                                    \
                                                          \
     const Marker##NAME& NAME() const { return m##NAME; } \
-    Marker##NAME& NAME() { return m##NAME; }
+                                                         \
+    Marker##NAME& NAME##Ref() { return m##NAME; }
 
-  FUNCTION_ON_MEMBER(Category);
-  FUNCTION_ON_MEMBER(ThreadId);
-  FUNCTION_ON_MEMBER(Timing);
-  FUNCTION_ON_MEMBER(Stack);
-  FUNCTION_ON_MEMBER(InnerWindowId);
-#  undef FUNCTION_ON_MEMBER
+  FUNCTIONS_ON_MEMBER(Category);
+  FUNCTIONS_ON_MEMBER(ThreadId);
+  FUNCTIONS_ON_MEMBER(Timing);
+  FUNCTIONS_ON_MEMBER(Stack);
+  FUNCTIONS_ON_MEMBER(InnerWindowId);
+#  undef FUNCTIONS_ON_MEMBER
 
  private:
   friend ProfileBufferEntryReader::Deserializer<MarkerOptions>;
