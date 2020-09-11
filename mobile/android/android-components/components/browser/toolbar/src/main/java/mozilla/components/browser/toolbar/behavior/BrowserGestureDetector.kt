@@ -25,6 +25,49 @@ internal class BrowserGestureDetector(
     applicationContext: Context,
     listener: GesturesListener
 ) {
+    @VisibleForTesting
+    @Suppress("MaxLineLength")
+    internal var gestureDetector = GestureDetector(
+        applicationContext,
+        CustomScrollDetectorListener { previousEvent: MotionEvent, currentEvent: MotionEvent, distanceX, distanceY ->
+            run {
+                listener.onScroll?.invoke(distanceX, distanceY)
+
+                if (abs(currentEvent.y - previousEvent.y) >= abs(currentEvent.x - previousEvent.x)) {
+                    listener.onVerticalScroll?.invoke(distanceY)
+                } else {
+                    listener.onHorizontalScroll?.invoke(distanceX)
+                }
+            }
+        }
+    )
+
+    @VisibleForTesting
+    internal var scaleGestureDetector = ScaleGestureDetector(
+        applicationContext,
+        CustomScaleDetectorListener(
+            listener.onScaleBegin ?: {},
+            listener.onScale ?: {},
+            listener.onScaleEnd ?: {})
+    ).apply {
+        // Use reflection to modify two fields controlling the sensitivity of our scale detector.
+        // The lower the values the higher the sensitivity.
+        // Values of 0 here would mean all swipe events will be treated as pinch/spread to zoom gestures,
+        // in our context effectively meaning no scrolling, only zooming.
+        try {
+            listOf(
+                javaClass.getDeclaredField("mSpanSlop"),
+                javaClass.getDeclaredField("mMinSpan")
+            ).forEach { field ->
+                field.isAccessible = true
+                field.set(this, (field.get(this) as Int) / 2)
+            }
+        } catch (e: ReflectiveOperationException) {
+            // Seems like some OEMs made some breaking changes in the framework.
+            // no-op
+        }
+    }
+
     /**
      * Accepts MotionEvents and dispatches zoom / scroll events to the registered listener when appropriate.
      *
@@ -34,67 +77,29 @@ internal class BrowserGestureDetector(
      *
      * @return if the event was handled by any of the registered detectors
      */
+    @Suppress("ComplexCondition")
     internal fun handleTouchEvent(event: MotionEvent): Boolean {
+        val eventAction = event.actionMasked
+
         // A double tap for a quick scale gesture (quick double tap followed by a drag)
         // would trigger a ACTION_CANCEL event before the MOVE_EVENT.
         // This would prevent the scale detector from properly inferring the movement.
         // We'll want to ignore ACTION_CANCEL but process the next stream of events.
-        if (event.actionMasked != MotionEvent.ACTION_CANCEL) {
+        if (eventAction != MotionEvent.ACTION_CANCEL) {
             scaleGestureDetector.onTouchEvent(event)
         }
 
         // Ignore scrolling if zooming is already in progress.
-        return if (!scaleGestureDetector.isInProgress) {
+        // Always pass motion begin / end events just to have the detector ready
+        // to infer scrolls when the scale gesture ended.
+        return if (!scaleGestureDetector.isInProgress ||
+            eventAction == MotionEvent.ACTION_DOWN ||
+            eventAction == MotionEvent.ACTION_UP ||
+            eventAction == MotionEvent.ACTION_CANCEL) {
+
             gestureDetector.onTouchEvent(event)
         } else {
             false
-        }
-    }
-
-    @VisibleForTesting
-    @Suppress("MaxLineLength")
-    internal val gestureDetector: GestureDetector by lazy(LazyThreadSafetyMode.NONE) {
-        GestureDetector(
-            applicationContext,
-            CustomScrollDetectorListener { previousEvent: MotionEvent, currentEvent: MotionEvent, distanceX, distanceY ->
-                run {
-                    listener.onScroll?.invoke(distanceX, distanceY)
-
-                    if (abs(currentEvent.y - previousEvent.y) >= abs(currentEvent.x - previousEvent.x)) {
-                        listener.onVerticalScroll?.invoke(distanceY)
-                    } else {
-                        listener.onHorizontalScroll?.invoke(distanceX)
-                    }
-                }
-            }
-        )
-    }
-
-    @VisibleForTesting
-    internal val scaleGestureDetector: ScaleGestureDetector by lazy(LazyThreadSafetyMode.NONE) {
-        ScaleGestureDetector(
-            applicationContext,
-            CustomScaleDetectorListener(
-                listener.onScaleBegin ?: {},
-                listener.onScale ?: {},
-                listener.onScaleEnd ?: {})
-        ).apply {
-            // Use reflection to modify two fields controlling the sensitivity of our scale detector.
-            // The lower the values the higher the sensitivity.
-            // Values of 0 here would mean all swipe events will be treated as pinch/spread to zoom gestures,
-            // in our context effectively meaning no scrolling, only zooming.
-            try {
-                listOf(
-                    javaClass.getDeclaredField("mSpanSlop"),
-                    javaClass.getDeclaredField("mMinSpan")
-                ).forEach { field ->
-                    field.isAccessible = true
-                    field.set(this, (field.get(this) as Int) / 2)
-                }
-            } catch (e: ReflectiveOperationException) {
-                // Seems like some OEMs made some breaking changes in the framework.
-                // no-op
-            }
         }
     }
 
