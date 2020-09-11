@@ -42,7 +42,7 @@ function cancelDeferredTasks() {
 document.addEventListener(
   "DOMContentLoaded",
   e => {
-    PrintEventHandler.init();
+    window._initialized = PrintEventHandler.init();
     ourBrowser.setAttribute("flex", "0");
     ourBrowser.classList.add("printSettingsBrowser");
     ourBrowser.closest(".dialogBox")?.classList.add("printDialogBox");
@@ -193,15 +193,17 @@ var PrintEventHandler = {
 
     await this.refreshSettings(selectedPrinter.value);
 
+    // Kick off the initial print preview with the source browsing context.
+    let initialPreviewDone = this._updatePrintPreview(sourceBrowsingContext);
+    // We don't need the sourceBrowsingContext anymore, get rid of it.
+    sourceBrowsingContext = undefined;
+
     // Use a DeferredTask for updating the preview. This will ensure that we
     // only have one update running at a time.
     this._updatePrintPreviewTask = createDeferredTask(async () => {
-      await this._updatePrintPreview(sourceBrowsingContext);
-      // After the first use of sourceBrowsingContext we want to use the preview
-      // browser's browsing context so throw this one away.
-      sourceBrowsingContext = undefined;
+      await initialPreviewDone;
+      await this._updatePrintPreview();
     }, 0);
-    this.updatePrintPreview();
 
     document.dispatchEvent(
       new CustomEvent("available-destinations", {
@@ -219,11 +221,13 @@ var PrintEventHandler = {
 
     document.body.removeAttribute("loading");
 
-    window.requestAnimationFrame(() => {
-      window.focus();
-      // Now that we're showing the form, select the destination select.
-      document.getElementById("printer-picker").focus();
-    });
+    await new Promise(resolve => window.requestAnimationFrame(resolve));
+
+    // Now that we're showing the form, select the destination select.
+    window.focus();
+    document.getElementById("printer-picker").focus();
+
+    await initialPreviewDone;
   },
 
   unload() {
@@ -472,32 +476,25 @@ var PrintEventHandler = {
       hasSelection,
     } = await previewBrowser.frameLoader.printPreview(settings, sourceWinId);
 
-    if (this._queuedPreviewUpdatePromise) {
-      // Now that we're done, the queued update (if there is one) will start.
-      this._previewUpdatingPromise = this._queuedPreviewUpdatePromise;
-      this._queuedPreviewUpdatePromise = null;
-    } else {
-      // No other update queued, send the page count and show the preview.
-      let numPages = totalPageCount;
-      // Adjust number of pages if the user specifies the pages they want printed
-      if (settings.printRange == Ci.nsIPrintSettings.kRangeSpecifiedPageRange) {
-        numPages = settings.endPageRange - settings.startPageRange + 1;
-      }
-      // Update the settings print options on whether there is a selection.
-      settings.SetPrintOptions(
-        Ci.nsIPrintSettings.kEnableSelectionRB,
-        hasSelection
-      );
-      document.dispatchEvent(
-        new CustomEvent("page-count", {
-          detail: { numPages, totalPages: totalPageCount },
-        })
-      );
-
-      stack.removeAttribute("rendering");
-      document.body.removeAttribute("rendering");
-      this._previewUpdatingPromise = null;
+    // Send the page count and show the preview.
+    let numPages = totalPageCount;
+    // Adjust number of pages if the user specifies the pages they want printed
+    if (settings.printRange == Ci.nsIPrintSettings.kRangeSpecifiedPageRange) {
+      numPages = settings.endPageRange - settings.startPageRange + 1;
     }
+    // Update the settings print options on whether there is a selection.
+    settings.SetPrintOptions(
+      Ci.nsIPrintSettings.kEnableSelectionRB,
+      hasSelection
+    );
+    document.dispatchEvent(
+      new CustomEvent("page-count", {
+        detail: { numPages, totalPages: totalPageCount },
+      })
+    );
+
+    stack.removeAttribute("rendering");
+    document.body.removeAttribute("rendering");
   },
 
   getSourceBrowsingContext() {
