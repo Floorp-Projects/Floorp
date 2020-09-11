@@ -26,6 +26,11 @@ add_task(async function setup() {
 
   await SearchTestUtils.useTestEngines();
 
+  Services.locale.availableLocales = [
+    ...Services.locale.availableLocales,
+    "gd",
+  ];
+
   Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
     true
