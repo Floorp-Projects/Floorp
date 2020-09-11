@@ -903,11 +903,11 @@ class FxaAccountManagerTest {
         var authErrorDetectedCalled = false
         var latestMigrateAuthInfo: ShareableAuthInfo? = null
 
-        override fun beginOAuthFlowAsync(scopes: Set<String>): Deferred<AuthFlowUrl?> {
+        override fun beginOAuthFlowAsync(scopes: Set<String>, entryPoint: String): Deferred<AuthFlowUrl?> {
             return CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         }
 
-        override fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<AuthFlowUrl?> {
+        override fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>, entryPoint: String): Deferred<AuthFlowUrl?> {
             return CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         }
 
@@ -1219,7 +1219,7 @@ class FxaAccountManagerTest {
         val fxaPanic = CompletableDeferred<AuthFlowUrl>()
         fxaPanic.completeExceptionally(FxaPanicException("panic!"))
 
-        `when`(mockAccount.beginPairingFlowAsync(any(), any())).thenReturn(fxaPanic)
+        `when`(mockAccount.beginPairingFlowAsync(any(), any(), anyString())).thenReturn(fxaPanic)
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1297,7 +1297,7 @@ class FxaAccountManagerTest {
         assertNull(manager.accountProfile())
 
         // Try again, without any network problems this time.
-        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyString())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
 
         assertEquals("auth://url", manager.beginAuthenticationAsync().await())
@@ -1344,7 +1344,7 @@ class FxaAccountManagerTest {
         assertNull(manager.accountProfile())
 
         // Try again, without any network problems this time.
-        `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
+        `when`(mockAccount.beginPairingFlowAsync(anyString(), any(), anyString())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
 
         assertEquals("auth://url", manager.beginAuthenticationAsync(pairingUrl = "auth://pairing").await())
@@ -1563,7 +1563,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
         `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(value = null))
-        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyString())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1630,7 +1630,7 @@ class FxaAccountManagerTest {
         // Our recovery flow should attempt to hit this API. Model the "can't recover" condition by returning false.
         `when`(mockAccount.checkAuthorizationStatusAsync(eq("profile"))).thenReturn(CompletableDeferred(false))
 
-        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyString())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1687,7 +1687,7 @@ class FxaAccountManagerTest {
         // Our recovery flow should attempt to hit this API. Model the "don't know what's up" condition by returning null.
         `when`(mockAccount.checkAuthorizationStatusAsync(eq("profile"))).thenReturn(CompletableDeferred(value = null))
 
-        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyString())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1748,7 +1748,7 @@ class FxaAccountManagerTest {
         // Recovery flow will hit this API, return a success.
         `when`(mockAccount.checkAuthorizationStatusAsync(eq("profile"))).thenReturn(CompletableDeferred(true))
 
-        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyString())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1820,7 +1820,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
         `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(exceptionalProfile)
-        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyString())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1900,8 +1900,8 @@ class FxaAccountManagerTest {
     ): FxaAccountManager {
 
         `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(profile))
-        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
-        `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyString())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
+        `when`(mockAccount.beginPairingFlowAsync(anyString(), any(), anyString())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -1933,8 +1933,8 @@ class FxaAccountManagerTest {
         `when`(mockAccount.getProfileAsync(ignoreCache = false)).thenReturn(CompletableDeferred(profile))
 
         `when`(mockAccount.disconnectAsync()).thenReturn(CompletableDeferred(true))
-        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(value = null))
-        `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred(value = null))
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyString())).thenReturn(CompletableDeferred(value = null))
+        `when`(mockAccount.beginPairingFlowAsync(anyString(), any(), anyString())).thenReturn(CompletableDeferred(value = null))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)

@@ -73,18 +73,31 @@ interface OAuthAccount : AutoCloseable {
      * Constructs a URL used to begin the OAuth flow for the requested scopes and keys.
      *
      * @param scopes List of OAuth scopes for which the client wants access
+     * @param entryPoint The UI entryPoint used to start this flow. An arbitrary
+     * string which is recorded in telemetry by the server to help analyze the
+     * most effective touchpoints
      * @return Deferred AuthFlowUrl that resolves to the flow URL when complete
      */
-    fun beginOAuthFlowAsync(scopes: Set<String>): Deferred<AuthFlowUrl?>
+    fun beginOAuthFlowAsync(
+        scopes: Set<String>,
+        entryPoint: String = "android-components"
+    ): Deferred<AuthFlowUrl?>
 
     /**
      * Constructs a URL used to begin the pairing flow for the requested scopes and pairingUrl.
      *
      * @param pairingUrl URL string for pairing
      * @param scopes List of OAuth scopes for which the client wants access
+     * @param entryPoint The UI entryPoint used to start this flow. An arbitrary
+     * string which is recorded in telemetry by the server to help analyze the
+     * most effective touchpoints
      * @return Deferred AuthFlowUrl Optional that resolves to the flow URL when complete
      */
-    fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<AuthFlowUrl?>
+    fun beginPairingFlowAsync(
+        pairingUrl: String,
+        scopes: Set<String>,
+        entryPoint: String = "android-components"
+    ): Deferred<AuthFlowUrl?>
 
     /**
      * Returns current FxA Device ID for an authenticated account.
