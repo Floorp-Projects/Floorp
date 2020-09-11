@@ -871,10 +871,7 @@ nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
 
     // We don't need to add the aIncreaseSize or aDecreaseSize here, because
     // it's already encompassed within the database.
-    rv = db::FindOverallPaddingSize(*aConn, &currentPaddingSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    CACHE_TRY_VAR(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
   } else {
     bool shouldRevise = false;
     if (aIncreaseSize > 0) {
@@ -903,12 +900,7 @@ nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
         return rv;
       }
 
-      int64_t paddingSizeFromDB = 0;
-      rv = db::FindOverallPaddingSize(*aConn, &paddingSizeFromDB);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      currentPaddingSize = paddingSizeFromDB;
+      CACHE_TRY_VAR(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
 
       // XXXtt: we should have an easy way to update (increase or recalulate)
       // padding size in the QM. For now, only correct the padding size in
@@ -919,13 +911,10 @@ nsresult LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
     }
 
 #ifdef DEBUG
-    int64_t paddingSizeFromDB = 0;
-    rv = db::FindOverallPaddingSize(*aConn, &paddingSizeFromDB);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    int64_t lastPaddingSize = currentPaddingSize;
+    CACHE_TRY_VAR(currentPaddingSize, db::FindOverallPaddingSize(*aConn));
 
-    MOZ_DIAGNOSTIC_ASSERT(paddingSizeFromDB == currentPaddingSize);
+    MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize == lastPaddingSize);
 #endif  // DEBUG
   }
 
@@ -995,16 +984,11 @@ nsresult LockedDirectoryPaddingRestore(nsIFile* aBaseDir,
     return rv;
   }
 
-  int64_t paddingSize = 0;
-  rv = db::FindOverallPaddingSize(*aConn, &paddingSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  CACHE_TRY_VAR(*aPaddingSizeOut, db::FindOverallPaddingSize(*aConn));
+  MOZ_DIAGNOSTIC_ASSERT(*aPaddingSizeOut >= 0);
 
-  MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
-  *aPaddingSizeOut = paddingSize;
-
-  rv = LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, paddingSize);
+  rv = LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE,
+                                   *aPaddingSizeOut);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // If we cannot write the correct padding size to file, just keep the
     // temporary file and let the padding size to be recalculate in the next
