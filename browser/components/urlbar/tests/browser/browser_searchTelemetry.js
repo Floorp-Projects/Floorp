@@ -194,16 +194,10 @@ async function compareCounts(clickCallback) {
   // * FHR
 
   let engine = await Services.search.getDefault();
-  let engineID = "org.mozilla.testsearchsuggestions";
 
-  let histogramKey = engineID + ".urlbar";
+  let histogramKey = `other-${engine.name}.urlbar`;
   let histogram = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
   histogram.clear();
-
-  // FHR -- first make sure the engine has an identifier so that FHR is happy.
-  Object.defineProperty(engine.wrappedJSObject, "identifier", {
-    value: engineID,
-  });
 
   gURLBar.focus();
   await clickCallback();

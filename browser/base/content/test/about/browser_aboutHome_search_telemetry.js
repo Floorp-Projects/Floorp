@@ -21,11 +21,6 @@ add_task(async function() {
         return engine.name;
       });
 
-      // Make this actually work in healthreport by giving it an ID:
-      Object.defineProperty(engine.wrappedJSObject, "identifier", {
-        value: "org.mozilla.testsearchsuggestions",
-      });
-
       await SpecialPowers.spawn(
         browser,
         [{ expectedName: engine.name }],
@@ -42,7 +37,7 @@ add_task(async function() {
 
       let numSearchesBefore = 0;
       // Get the current number of recorded searches.
-      let histogramKey = engine.identifier + ".abouthome";
+      let histogramKey = `other-${engine.name}.abouthome`;
       try {
         let hs = Services.telemetry
           .getKeyedHistogramById("SEARCH_COUNTS")

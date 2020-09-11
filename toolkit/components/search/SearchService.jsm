@@ -1093,7 +1093,6 @@ SearchService.prototype = {
   _loadEngineFromCache(json) {
     try {
       let engine = new SearchEngine({
-        shortName: json._shortName,
         // We renamed isBuiltin to isAppProvided in 1631898,
         // keep checking isBuiltin for older caches.
         isAppProvided: !!json._isAppProvided || !!json._isBuiltin,
@@ -1698,14 +1697,7 @@ SearchService.prototype = {
     }
 
     let engine = new SearchEngine({
-      // No need to sanitize the name, as shortName uses the WebExtension id
-      // which should already be sanitized.
-      // TODO: Setting the name here is a little incorrect, since it is
-      // setting the short name which gets overridden by _initFromManifest.
-      // When we split out WebExtensions into their own object (bug 1650761)
-      // we should look at simplifying this.
       name: manifest.chrome_settings_overrides.search_provider.name.trim(),
-      // shortName: engineParams.shortName,
       isAppProvided: policy.extension.isAppProvided,
       loadPath: `[other]addEngineWithDetails:${policy.extension.id}`,
     });
@@ -2328,20 +2320,20 @@ SearchService.prototype = {
   },
 
   async getDefaultEngineInfo() {
-    let [shortName, defaultSearchEngineData] = await this._getEngineInfo(
+    let [telemetryId, defaultSearchEngineData] = await this._getEngineInfo(
       this.defaultEngine
     );
     const result = {
-      defaultSearchEngine: shortName,
+      defaultSearchEngine: telemetryId,
       defaultSearchEngineData,
     };
 
     if (this._separatePrivateDefault) {
       let [
-        privateShortName,
+        privateTelemetryId,
         defaultPrivateSearchEngineData,
       ] = await this._getEngineInfo(this.defaultPrivateEngine);
-      result.defaultPrivateSearchEngine = privateShortName;
+      result.defaultPrivateSearchEngine = privateTelemetryId;
       result.defaultPrivateSearchEngineData = defaultPrivateSearchEngineData;
     }
 

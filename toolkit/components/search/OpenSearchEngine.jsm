@@ -141,7 +141,6 @@ class OpenSearchEngine extends SearchEngine {
     super({
       isAppProvided: false,
       loadPath: OpenSearchEngine.getAnonymizedLoadPath(shortName, file, uri),
-      shortName,
     });
   }
 
@@ -302,9 +301,7 @@ class OpenSearchEngine extends SearchEngine {
     if (engine._engineToUpdate) {
       let engineToUpdate = engine._engineToUpdate.wrappedJSObject;
 
-      // Make this new engine use the old engine's shortName, and preserve
-      // metadata.
-      engine._shortName = engineToUpdate._shortName;
+      // Preserve metadata and loadPath.
       Object.keys(engineToUpdate._metaData).forEach(key => {
         engine.setAttr(key, engineToUpdate.getAttr(key));
       });
@@ -327,9 +324,8 @@ class OpenSearchEngine extends SearchEngine {
         return;
       }
 
-      engine._shortName = SearchUtils.sanitizeName(engine.name);
       engine._loadPath = OpenSearchEngine.getAnonymizedLoadPath(
-        engine._shortName,
+        SearchUtils.sanitizeName(engine.name),
         null,
         engine._uri
       );

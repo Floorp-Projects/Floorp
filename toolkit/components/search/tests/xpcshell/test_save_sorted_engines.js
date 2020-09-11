@@ -37,8 +37,8 @@ add_task(async function test_save_sorted_engines() {
 
   // Check that the entries are placed as specified correctly
   let metadata = await promiseEngineMetadata();
-  Assert.equal(metadata["test-search-engine"].order, 1);
-  Assert.equal(metadata["a-second-test-engine"].order, 2);
+  Assert.equal(metadata["Test search engine"].order, 1);
+  Assert.equal(metadata["A second test engine"].order, 2);
 
   // Test removing an engine
   search.removeEngine(engine1);
@@ -47,7 +47,7 @@ add_task(async function test_save_sorted_engines() {
 
   // Check that the order of the remaining engine was updated correctly
   metadata = await promiseEngineMetadata();
-  Assert.equal(metadata["a-second-test-engine"].order, 1);
+  Assert.equal(metadata["A second test engine"].order, 1);
 
   // Test adding a new engine
   let engine = await search.addEngineWithDetails("foo", {
