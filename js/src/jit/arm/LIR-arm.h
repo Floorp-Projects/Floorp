@@ -95,86 +95,80 @@ class LDivI : public LBinaryMath<1> {
 };
 
 class LDivOrModI64
-    : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES * 2 + 1, 0> {
+    : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES * 2, 0> {
  public:
   LIR_HEADER(DivOrModI64)
 
   static const size_t Lhs = 0;
   static const size_t Rhs = INT64_PIECES;
-  static const size_t Tls = 2 * INT64_PIECES;
 
-  LDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs,
-               const LAllocation& tls)
+  LDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs)
       : LCallInstructionHelper(classOpcode) {
     setInt64Operand(Lhs, lhs);
     setInt64Operand(Rhs, rhs);
-    setOperand(Tls, tls);
   }
 
-  MDefinition* mir() const {
-    MOZ_ASSERT(mir_->isWasmBuiltinDivI64() || mir_->isWasmBuiltinModI64());
-    return mir_;
+  MBinaryArithInstruction* mir() const {
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    return static_cast<MBinaryArithInstruction*>(mir_);
   }
   bool canBeDivideByZero() const {
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->canBeDivideByZero();
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeDivideByZero();
     }
-    return mir_->toWasmBuiltinDivI64()->canBeDivideByZero();
+    return mir_->toDiv()->canBeDivideByZero();
   }
   bool canBeNegativeOverflow() const {
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->canBeNegativeDividend();
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeNegativeDividend();
     }
-    return mir_->toWasmBuiltinDivI64()->canBeNegativeOverflow();
+    return mir_->toDiv()->canBeNegativeOverflow();
   }
   wasm::BytecodeOffset bytecodeOffset() const {
-    MOZ_ASSERT(mir_->isWasmBuiltinDivI64() || mir_->isWasmBuiltinModI64());
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->bytecodeOffset();
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    if (mir_->isMod()) {
+      return mir_->toMod()->bytecodeOffset();
     }
-    return mir_->toWasmBuiltinDivI64()->bytecodeOffset();
+    return mir_->toDiv()->bytecodeOffset();
   }
 };
 
 class LUDivOrModI64
-    : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES * 2 + 1, 0> {
+    : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES * 2, 0> {
  public:
   LIR_HEADER(UDivOrModI64)
 
   static const size_t Lhs = 0;
   static const size_t Rhs = INT64_PIECES;
-  static const size_t Tls = 2 * INT64_PIECES;
 
-  LUDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs,
-                const LAllocation& tls)
+  LUDivOrModI64(const LInt64Allocation& lhs, const LInt64Allocation& rhs)
       : LCallInstructionHelper(classOpcode) {
     setInt64Operand(Lhs, lhs);
     setInt64Operand(Rhs, rhs);
-    setOperand(Tls, tls);
   }
 
-  MDefinition* mir() const {
-    MOZ_ASSERT(mir_->isWasmBuiltinDivI64() || mir_->isWasmBuiltinModI64());
-    return mir_;
+  MBinaryArithInstruction* mir() const {
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    return static_cast<MBinaryArithInstruction*>(mir_);
   }
   bool canBeDivideByZero() const {
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->canBeDivideByZero();
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeDivideByZero();
     }
-    return mir_->toWasmBuiltinDivI64()->canBeDivideByZero();
+    return mir_->toDiv()->canBeDivideByZero();
   }
   bool canBeNegativeOverflow() const {
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->canBeNegativeDividend();
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeNegativeDividend();
     }
-    return mir_->toWasmBuiltinDivI64()->canBeNegativeOverflow();
+    return mir_->toDiv()->canBeNegativeOverflow();
   }
   wasm::BytecodeOffset bytecodeOffset() const {
-    MOZ_ASSERT(mir_->isWasmBuiltinDivI64() || mir_->isWasmBuiltinModI64());
-    if (mir_->isWasmBuiltinModI64()) {
-      return mir_->toWasmBuiltinModI64()->bytecodeOffset();
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    if (mir_->isMod()) {
+      return mir_->toMod()->bytecodeOffset();
     }
-    return mir_->toWasmBuiltinDivI64()->bytecodeOffset();
+    return mir_->toDiv()->bytecodeOffset();
   }
 };
 
@@ -363,47 +357,26 @@ class LSoftUDivOrMod : public LBinaryCallInstructionHelper<1, 0> {
   MInstruction* mir() { return mir_->toInstruction(); }
 };
 
-class LWasmTruncateToInt64 : public LCallInstructionHelper<INT64_PIECES, 2, 0> {
-  static const size_t Input = 0;
-  static const size_t Tls = 1;
-
+class LWasmTruncateToInt64 : public LCallInstructionHelper<INT64_PIECES, 1, 0> {
  public:
   LIR_HEADER(WasmTruncateToInt64);
 
-  LWasmTruncateToInt64(const LAllocation& in, const LAllocation& tls)
+  explicit LWasmTruncateToInt64(const LAllocation& in)
       : LCallInstructionHelper(classOpcode) {
-    setOperand(Input, in);
-    setOperand(Tls, tls);
+    setOperand(0, in);
   }
 
-  LAllocation* input() { return getOperand(Input); }
-  LAllocation* tls() { return getOperand(Tls); }
-
-  MWasmBuiltinTruncateToInt64* mir() const {
-    return mir_->toWasmBuiltinTruncateToInt64();
-  }
+  MWasmTruncateToInt64* mir() const { return mir_->toWasmTruncateToInt64(); }
 };
 
 class LInt64ToFloatingPointCall
-    : public LCallInstructionHelper<1, INT64_PIECES + 1, 0> {
+    : public LCallInstructionHelper<1, INT64_PIECES, 0> {
  public:
   LIR_HEADER(Int64ToFloatingPointCall);
 
-  static const size_t Input = 0;
-  static const size_t Tls = INT64_PIECES;
+  LInt64ToFloatingPointCall() : LCallInstructionHelper(classOpcode) {}
 
-  LInt64ToFloatingPointCall(const LInt64Allocation& in, const LAllocation& tls)
-      : LCallInstructionHelper(classOpcode) {
-    setInt64Operand(Input, in);
-    setOperand(Tls, tls);
-  }
-
-  LAllocation* input() { return getOperand(Input); }
-  LAllocation* tls() { return getOperand(Tls); }
-
-  MBuiltinInt64ToFloatingPoint* mir() const {
-    return mir_->toBuiltinInt64ToFloatingPoint();
-  }
+  MInt64ToFloatingPoint* mir() const { return mir_->toInt64ToFloatingPoint(); }
 };
 
 namespace details {
