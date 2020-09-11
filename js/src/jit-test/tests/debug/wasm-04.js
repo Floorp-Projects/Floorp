@@ -16,6 +16,7 @@ g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(m
 assertEq(s.format, "wasm");
 
 assertThrowsInstanceOf(() => s.displayName, Error);
+assertThrowsInstanceOf(() => s.parameterNames, Error);
 assertThrowsInstanceOf(() => s.url, Error);
 assertThrowsInstanceOf(() => s.sourceStart, Error);
 assertThrowsInstanceOf(() => s.sourceLength, Error);

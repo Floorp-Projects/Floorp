@@ -139,6 +139,28 @@ var s = f(function () {});  // display name: s<
 
 **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
+### `parameterNames`
+**If the instance refers to a `JSScript`**, the names of its parameters,
+as an array of strings. If the script is not a function script this is
+`undefined`.
+
+If the function uses destructuring parameters, the corresponding array elements
+are `undefined`. For example, if the referent is a function script declared in this
+way:
+
+```js
+function f(a, [b, c], {d, e:f}) { ... }
+```
+
+then this `Debugger.Script` instance's `parameterNames` property would
+have the value:
+
+```js
+["a", undefined, undefined]
+```
+
+**If the instance refers to WebAssembly code**, throw a `TypeError`.
+
 ### `url`
 **If the instance refers to a `JSScript`**, the filename or URL from which
 this script's code was loaded. For scripts created by `eval` or the
