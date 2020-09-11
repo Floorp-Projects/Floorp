@@ -14,8 +14,8 @@
     android:focusable="true">
     <RadioButton
         android:id="@+id/radio_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/search_engine_radio_button_height"
+        android:layout_height="@dimen/search_engine_radio_button_height"
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:layout_marginStart="@dimen/search_bar_search_engine_icon_padding"
         android:layout_gravity="center" />
@@ -24,7 +24,7 @@
         android:importantForAccessibility="no"
         android:layout_width="@dimen/search_engine_engine_icon_height"
         android:layout_height="@dimen/search_engine_engine_icon_height"
-        android:layout_marginStart="@dimen/search_bar_search_icon_margin"
+        android:layout_marginStart="@dimen/search_engine_engine_icon_margin"
         android:layout_gravity="center" />
     <TextView
         android:id="@+id/engine_text"

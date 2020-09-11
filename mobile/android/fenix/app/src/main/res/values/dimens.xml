@@ -22,6 +22,7 @@
     <dimen name="preference_icon_drawable_size">24dp</dimen>
     <dimen name="search_bar_search_engine_icon_padding">12dp</dimen>
     <dimen name="search_bar_search_icon_margin">28dp</dimen>
+    <dimen name="search_engine_engine_icon_margin">12dp</dimen>
     <dimen name="search_engine_radio_button_height">48dp</dimen>
     <dimen name="search_engine_engine_icon_height">24dp</dimen>
     <dimen name="radio_button_drawable_padding">32dp</dimen>
