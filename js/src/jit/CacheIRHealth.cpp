@@ -94,45 +94,54 @@ void CacheIRHealth::spewJSOpAndCacheIRHealth(AutoStructuredSpewer& spew,
   spew->endObject();
 }
 
-bool CacheIRHealth::rateMyCacheIR(JSContext* cx, HandleScript script) {
-  AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, script);
+bool CacheIRHealth::rateMyCacheIR(JSContext* cx, Handle<ScriptVector> scripts) {
+  AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, nullptr);
   if (!spew) {
     return true;
   }
 
-  if (script->hasJitScript()) {
-    jit::JitScript* jitScript = script->jitScript();
+  spew->beginListProperty("scripts");
+  for (uint32_t i = 0; i < scripts.length(); i++) {
+    spew->beginObject();
+    {
+      HandleScript script = scripts[i];
+      jit::JitScript* jitScript = script->jitScript();
+      jsbytecode* next = script->code();
+      jsbytecode* end = script->codeEnd();
 
-    jsbytecode* next = script->code();
-    jsbytecode* end = script->codeEnd();
-    spew->beginListProperty("entries");
+      spew->property("filename", script->filename());
+      spew->property("line", script->lineno());
+      spew->property("column", script->column());
 
-    ICEntry* prevEntry = nullptr;
-    while (next < end) {
-      uint32_t len = 0;
-      uint32_t pcOffset = script->pcToOffset(next);
+      spew->beginListProperty("entries");
+      ICEntry* prevEntry = nullptr;
+      while (next < end) {
+        uint32_t len = 0;
+        uint32_t pcOffset = script->pcToOffset(next);
 
-      jit::ICEntry* entry =
-          jitScript->maybeICEntryFromPCOffset(pcOffset, prevEntry);
-      if (entry) {
-        prevEntry = entry;
+        jit::ICEntry* entry =
+            jitScript->maybeICEntryFromPCOffset(pcOffset, prevEntry);
+        if (entry) {
+          prevEntry = entry;
+        }
+
+        JSOp op = JSOp(*next);
+        const JSCodeSpec& cs = CodeSpec(op);
+        len = cs.length;
+        MOZ_ASSERT(len);
+
+        if (entry && (entry->firstStub()->isFallback() ||
+                      ICStub::IsCacheIRKind(entry->firstStub()->kind()))) {
+          spewJSOpAndCacheIRHealth(spew, script, entry, next, op);
+        }
+
+        next += len;
       }
-
-      JSOp op = JSOp(*next);
-      const JSCodeSpec& cs = CodeSpec(op);
-      len = cs.length;
-      MOZ_ASSERT(len);
-
-      if (entry && (entry->firstStub()->isFallback() ||
-                    ICStub::IsCacheIRKind(entry->firstStub()->kind()))) {
-        spewJSOpAndCacheIRHealth(spew, script, entry, next, op);
-      }
-
-      next += len;
+      spew->endList();  // entries
     }
-
-    spew->endList();  // entries
+    spew->endObject();
   }
+  spew->endList();  // scripts
 
   return true;
 }
