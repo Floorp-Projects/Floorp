@@ -74,6 +74,9 @@ class SessionHistoryInfo {
   const nsAString& GetTitle() { return mTitle; }
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
 
+  const nsAString& GetName() { return mName; }
+  void SetName(const nsAString& aName) { mName = aName; }
+
   void SetScrollRestorationIsManual(bool aIsManual) {
     mScrollRestorationIsManual = aIsManual;
   }
@@ -124,6 +127,7 @@ class SessionHistoryInfo {
   nsCOMPtr<nsIURI> mResultPrincipalURI;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   nsString mTitle;
+  nsString mName;
   nsCOMPtr<nsIInputStream> mPostData;
   uint32_t mLoadType = 0;
   int32_t mScrollPositionX = 0;
