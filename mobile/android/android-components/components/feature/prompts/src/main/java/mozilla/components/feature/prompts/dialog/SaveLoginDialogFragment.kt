@@ -26,21 +26,21 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Deferred
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.ext.onDone
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.toScope
@@ -291,8 +291,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
      * Check current state then update view state to match.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun update() {
-        val scope = view?.toScope() ?: return
+    fun update() = view?.toScope()?.launch(IO) {
         val login = Login(
             guid = guid,
             origin = origin,
@@ -301,12 +300,17 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
             username = username,
             password = password
         )
-        // The below code is not thread safe, so we ensure that we block here until we are sure that
-        // the previous call has been canceled
-        runBlocking { validateStateUpdate?.cancelAndJoin() }
-        var validateDeferred: Deferred<Result>? = null
-        validateStateUpdate = scope.launch(IO) {
-            val validationDelegate = feature?.loginValidationDelegate ?: return@launch
+
+        try {
+            validateStateUpdate?.cancelAndJoin()
+        } catch (cancellationException: CancellationException) {
+            Logger.error("Failed to cancel job", cancellationException)
+        }
+
+        var validateDeferred: Deferred<Result>?
+        validateStateUpdate = launch validate@{
+            val validationDelegate =
+                feature?.loginValidationDelegate ?: return@validate
             // We only want to fetch this list once. Since we are ignoring username the results will
             // not change when user changes username or password fields
             if (potentialDupesList == null) {
@@ -344,10 +348,10 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
                     }
                 }
             }
-        }
-        validateStateUpdate?.invokeOnCompletion {
-            if (it is CancellationException) {
-                validateDeferred?.cancel()
+            validateStateUpdate?.invokeOnCompletion {
+                if (it is CancellationException) {
+                    validateDeferred?.cancel()
+                }
             }
         }
     }
