@@ -8,7 +8,7 @@
 //! NOTE: The IIDs in these files must be kept in sync with the IDL definitions
 //! in the corresponding C++ files.
 
-use nsID;
+use crate::nsID;
 
 // XXX: This macro should have an option for a custom base interface instead of
 // nsISupports, such that Document can have nsINode as a base, etc. For now,

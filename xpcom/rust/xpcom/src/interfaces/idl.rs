@@ -4,8 +4,8 @@
 
 #![allow(bad_style)]
 
-use interfaces::*;
-use *;
+use crate::interfaces::*;
+use crate::*;
 
 // NOTE: This file contains a series of `include!()` invocations, defining all
 // idl interfaces directly within this module.
