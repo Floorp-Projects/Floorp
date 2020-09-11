@@ -1930,6 +1930,15 @@ class nsContextMenu {
 
   // Formats the 'Search <engine> for "<selection or link text>"' context menu.
   showAndFormatSearchContextItem() {
+    let menuItem = document.getElementById("context-searchselect");
+    let menuItemPrivate = document.getElementById(
+      "context-searchselect-private"
+    );
+    if (!Services.search.isInitialized) {
+      menuItem.hidden = true;
+      menuItemPrivate.hidden = true;
+      return;
+    }
     const docIsPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     const privatePref = "browser.search.separatePrivateDefault.ui.enabled";
     let showSearchSelect =
@@ -1943,10 +1952,6 @@ class nsContextMenu {
       !docIsPrivate &&
       Services.prefs.getBoolPref(privatePref);
 
-    let menuItem = document.getElementById("context-searchselect");
-    let menuItemPrivate = document.getElementById(
-      "context-searchselect-private"
-    );
     menuItem.hidden = !showSearchSelect;
     menuItemPrivate.hidden = !showPrivateSearchSelect;
     // If we're not showing the menu items, we can skip formatting the labels.

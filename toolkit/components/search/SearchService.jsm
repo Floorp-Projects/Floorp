@@ -73,8 +73,6 @@ function getLocalizedPref(prefName, defaultValue) {
   return defaultValue;
 }
 
-var gInitialized = false;
-
 // nsISearchParseSubmissionResult
 function ParseSubmissionResult(
   engine,
@@ -133,6 +131,10 @@ SearchService.prototype = {
 
   // The boolean indicates that the initialization has started or not.
   _initStarted: null,
+
+  // The boolean that indicates if initialization has been completed (successful
+  // or not).
+  _initialized: false,
 
   // The engine selector singleton that is managing the engine configuration.
   _engineSelector: null,
@@ -211,7 +213,7 @@ SearchService.prototype = {
   // initialization.
   // Throws in case of initialization error.
   _ensureInitialized() {
-    if (gInitialized) {
+    if (this._initialized) {
       if (!Components.isSuccessCode(this._initRV)) {
         logConsole.debug("_ensureInitialized: failure");
         throw Components.Exception(
@@ -295,7 +297,7 @@ SearchService.prototype = {
       this._initRV = ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE;
       logConsole.error("_init: failure initializing search:", ex.result);
     }
-    gInitialized = true;
+    this._initialized = true;
     if (Components.isSuccessCode(this._initRV)) {
       this._initObservers.resolve(this._initRV);
     } else {
@@ -719,7 +721,7 @@ SearchService.prototype = {
    * the service has already been initialized.
    */
   async _maybeReloadEngines() {
-    if (!gInitialized) {
+    if (!this._initialized) {
       if (this._maybeReloadDebounce) {
         logConsole.debug(
           "We're already waiting for init to finish and reload engines after."
@@ -949,7 +951,7 @@ SearchService.prototype = {
    * Test only - reset SearchService data. Ideally this should be replaced
    */
   reset() {
-    gInitialized = false;
+    this._initialized = false;
     this._initObservers = PromiseUtils.defer();
     this._initStarted = null;
     this._startupExtensions = new Set();
@@ -1358,7 +1360,7 @@ SearchService.prototype = {
   },
 
   get isInitialized() {
-    return gInitialized;
+    return this._initialized;
   },
 
   async getEngines() {
@@ -1553,7 +1555,7 @@ SearchService.prototype = {
     // We install search extensions during the init phase, both built in
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
-    if (!gInitialized && !isAppProvided && !initEngine) {
+    if (!this._initialized && !isAppProvided && !initEngine) {
       await this.init();
     }
     let existingEngine = this._engines.get(name);
@@ -1619,7 +1621,7 @@ SearchService.prototype = {
 
     if (extension.isAppProvided) {
       let inConfig = this._searchOrder.filter(el => el.id == extension.id);
-      if (gInitialized && inConfig.length) {
+      if (this._initialized && inConfig.length) {
         return this._installExtensionEngine(
           extension,
           inConfig.map(el => el.locale)
@@ -1631,7 +1633,7 @@ SearchService.prototype = {
 
     // If we havent started SearchService yet, store this extension
     // to install in SearchService.init().
-    if (!gInitialized) {
+    if (!this._initialized) {
       this._startupExtensions.add(extension);
       return [];
     }
@@ -2414,7 +2416,7 @@ SearchService.prototype = {
   },
 
   parseSubmissionURL(url) {
-    if (!gInitialized) {
+    if (!this._initialized) {
       // If search is not initialized, do nothing.
       // This allows us to use this function early in telemetry.
       // The only other consumer of this (places) uses it much later.
@@ -2675,7 +2677,7 @@ SearchService.prototype = {
           // The good news is, that if we don't write the cache here, we'll
           // detect the out-of-date cache on next state, and automatically
           // rebuild it.
-          if (!gInitialized) {
+          if (!this._initialized) {
             logConsole.warn(
               "not saving cache on shutdown due to initializing."
             );

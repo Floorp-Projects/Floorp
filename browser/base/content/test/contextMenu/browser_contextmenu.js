@@ -1511,6 +1511,33 @@ add_task(async function test_select_text() {
   );
 });
 
+add_task(async function test_select_text_search_service_not_initialized() {
+  // Pretend the search service is not initialised.
+  Services.search.wrappedJSObject._initialized = false;
+  await test_contextmenu(
+    "#test-select-text",
+    [
+      "context-copy",
+      true,
+      "context-selectall",
+      true,
+      "---",
+      null,
+      "context-viewpartialsource-selection",
+      true,
+    ],
+    {
+      offsetX: 6,
+      offsetY: 6,
+      async preCheckContextMenuFn() {
+        await selectText("#test-select-text");
+      },
+    }
+  );
+  // Pretend the search service is not initialised.
+  Services.search.wrappedJSObject._initialized = true;
+});
+
 add_task(async function test_select_text_link() {
   await test_contextmenu(
     "#test-select-text-link",
