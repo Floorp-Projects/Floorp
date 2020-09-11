@@ -312,8 +312,9 @@ class CreditCard {
   /**
    * Get credit card display label. It should display masked numbers, the
    * cardholder's name, and the expiration date, separated by a commas.
+   * In addition, the card type is provided in the accessibility label.
    */
-  static getLabelInfo({ number, name, month, year }) {
+  static getLabelInfo({ number, name, month, year, type }) {
     let formatSelector = ["number"];
     if (name) {
       formatSelector.push("name");
@@ -321,7 +322,7 @@ class CreditCard {
     if (month && year) {
       formatSelector.push("expiration");
     }
-    let stringId = "credit-card-label-" + formatSelector.join("-");
+    let stringId = `credit-card-label-${formatSelector.join("-")}-2`;
     return {
       id: stringId,
       args: {
@@ -329,6 +330,7 @@ class CreditCard {
         name,
         month: month?.toString(),
         year: year?.toString(),
+        type,
       },
     };
   }
