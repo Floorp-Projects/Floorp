@@ -3862,6 +3862,10 @@ void WebSocketChannel::DoEnqueueOutgoingMessage() {
         mHdrOut, mHdrOutSize, (uint8_t*)mCurrentOut->BeginReading(),
         mCurrentOut->Length());
 
+    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+      return;
+    }
+
     LOG(("WebSocketChannel::DoEnqueueOutgoingMessage: rv %" PRIx32 "\n",
          static_cast<uint32_t>(rv)));
 
@@ -3922,6 +3926,12 @@ WebSocketChannel::OnTCPClosed() {
 NS_IMETHODIMP
 WebSocketChannel::OnDataReceived(uint8_t* aData, uint32_t aCount) {
   return ProcessInput(aData, aCount);
+}
+
+NS_IMETHODIMP
+WebSocketChannel::OnReadyToSendData() {
+  DoEnqueueOutgoingMessage();
+  return NS_OK;
 }
 
 }  // namespace net

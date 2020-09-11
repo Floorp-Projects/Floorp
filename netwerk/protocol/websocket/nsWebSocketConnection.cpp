@@ -20,7 +20,8 @@ nsWebSocketConnection::nsWebSocketConnection(
       mSocketIn(aInputStream),
       mSocketOut(aOutputStream),
       mWriteOffset(0),
-      mStartReadingCalled(false) {
+      mStartReadingCalled(false),
+      mOutputStreamBlocked(false) {
   LOG(("nsWebSocketConnection ctor %p\n", this));
 }
 
@@ -103,6 +104,10 @@ nsWebSocketConnection::EnqueueOutputData(const uint8_t* aHdrBuf,
 
   if (mSocketOut) {
     mSocketOut->AsyncWait(this, 0, 0, mEventTarget);
+  }
+
+  if (mOutputStreamBlocked) {
+    return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
   return NS_OK;
@@ -215,6 +220,8 @@ nsWebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
     return NS_OK;
   }
 
+  mOutputStreamBlocked = false;
+
   while (!mOutputQueue.empty()) {
     const OutputData& data = mOutputQueue.front();
 
@@ -230,6 +237,7 @@ nsWebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
 
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       mSocketOut->AsyncWait(this, 0, 0, mEventTarget);
+      mOutputStreamBlocked = true;
       return NS_OK;
     }
 
@@ -247,6 +255,8 @@ nsWebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
       mOutputQueue.pop_front();
     }
   }
+
+  Unused << mListener->OnReadyToSendData();
 
   return NS_OK;
 }
