@@ -19,7 +19,7 @@ static def getGitHash() {
     String[] cmd = ['git', 'rev-parse', '--verify', 'HEAD'] // via https://stackoverflow.com/a/949391/2219998
     def process = Runtime.getRuntime().exec(cmd)
     process.waitFor()
-    return process.inputStream.getText()
+    return process.inputStream.getText().trim()
 }
 
 ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
