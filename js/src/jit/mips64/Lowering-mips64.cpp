@@ -161,10 +161,20 @@ void LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins) {
   defineInt64(new (alloc()) LWasmTruncateToInt64(useRegister(opd)), ins);
 }
 
+void LIRGeneratorMIPS64::lowerWasmBuiltinTruncateToInt64(
+    MWasmBuiltinTruncateToInt64* ins) {
+  MOZ_CRASH("We don't use it for this architecture");
+}
+
 void LIRGenerator::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins) {
   MDefinition* opd = ins->input();
   MOZ_ASSERT(opd->type() == MIRType::Int64);
   MOZ_ASSERT(IsFloatingPointType(ins->type()));
 
   define(new (alloc()) LInt64ToFloatingPoint(useInt64Register(opd)), ins);
+}
+
+void LIRGeneratorMIPS64::lowerBuiltinInt64ToFloatingPoint(
+    MBuiltinInt64ToFloatingPoint* ins) {
+  MOZ_CRASH("We don't use it for this architecture");
 }
