@@ -18,6 +18,20 @@ function stringForRange(macDoc, range) {
   );
 }
 
+function testUIElementAtMarker(macDoc, marker, expectedString) {
+  let elem = macDoc.getParameterizedAttributeValue(
+    "AXUIElementForTextMarker",
+    marker
+  );
+  is(elem.getAttributeValue("AXRole"), "AXStaticText");
+  is(elem.getAttributeValue("AXValue"), expectedString);
+  let elemRange = macDoc.getParameterizedAttributeValue(
+    "AXTextMarkerRangeForUIElement",
+    elem
+  );
+  is(stringForRange(macDoc, elemRange), expectedString);
+}
+
 function testWordAtMarker(
   macDoc,
   marker,
@@ -124,45 +138,46 @@ addAccessibleTask(
 
     let marker = macDoc.getAttributeValue("AXStartTextMarker");
 
-    function testWordAndAdvance(left, right, options = {}) {
-      testWordAtMarker(macDoc, marker, left, right, options);
+    function testWordAndAdvance(left, right, elemText) {
+      testWordAtMarker(macDoc, marker, left, right);
+      testUIElementAtMarker(macDoc, marker, elemText);
       marker = macDoc.getParameterizedAttributeValue(
         "AXNextTextMarkerForTextMarker",
         marker
       );
     }
 
-    testWordAndAdvance("hello", "hello");
-    testWordAndAdvance("hello", "hello");
-    testWordAndAdvance("hello", "hello");
-    testWordAndAdvance("hello", "hello");
-    testWordAndAdvance("hello", "hello");
-    testWordAndAdvance("hello", " ");
-    testWordAndAdvance(" ", "world");
-    testWordAndAdvance("world", "world");
-    testWordAndAdvance("world", "world");
-    testWordAndAdvance("world", "world");
-    testWordAndAdvance("world", "world");
-    testWordAndAdvance("world", " ");
-    testWordAndAdvance(" ", "i");
-    testWordAndAdvance("i", " ");
-    testWordAndAdvance(" ", "love");
-    testWordAndAdvance("love", "love");
-    testWordAndAdvance("love", "love");
-    testWordAndAdvance("love", "love");
-    testWordAndAdvance("love", " ");
-    testWordAndAdvance(" ", "you");
-    testWordAndAdvance("you", "you");
-    testWordAndAdvance("you", "you");
-    testWordAndAdvance("you", " ");
-    testWordAndAdvance(" ", "goodbye");
-    testWordAndAdvance("goodbye", "goodbye");
-    testWordAndAdvance("goodbye", "goodbye");
-    testWordAndAdvance("goodbye", "goodbye");
-    testWordAndAdvance("goodbye", "goodbye");
-    testWordAndAdvance("goodbye", "goodbye");
-    testWordAndAdvance("goodbye", "goodbye");
-    testWordAndAdvance("goodbye", "");
+    testWordAndAdvance("hello", "hello", "hello world ");
+    testWordAndAdvance("hello", "hello", "hello world ");
+    testWordAndAdvance("hello", "hello", "hello world ");
+    testWordAndAdvance("hello", "hello", "hello world ");
+    testWordAndAdvance("hello", "hello", "hello world ");
+    testWordAndAdvance("hello", " ", "hello world ");
+    testWordAndAdvance(" ", "world", "hello world ");
+    testWordAndAdvance("world", "world", "hello world ");
+    testWordAndAdvance("world", "world", "hello world ");
+    testWordAndAdvance("world", "world", "hello world ");
+    testWordAndAdvance("world", "world", "hello world ");
+    testWordAndAdvance("world", " ", "hello world ");
+    testWordAndAdvance(" ", "i", "i love you");
+    testWordAndAdvance("i", " ", "i love you");
+    testWordAndAdvance(" ", "love", "i love you");
+    testWordAndAdvance("love", "love", "i love you");
+    testWordAndAdvance("love", "love", "i love you");
+    testWordAndAdvance("love", "love", "i love you");
+    testWordAndAdvance("love", " ", "i love you");
+    testWordAndAdvance(" ", "you", "i love you");
+    testWordAndAdvance("you", "you", "i love you");
+    testWordAndAdvance("you", "you", "i love you");
+    testWordAndAdvance("you", " ", "i love you");
+    testWordAndAdvance(" ", "goodbye", " goodbye");
+    testWordAndAdvance("goodbye", "goodbye", " goodbye");
+    testWordAndAdvance("goodbye", "goodbye", " goodbye");
+    testWordAndAdvance("goodbye", "goodbye", " goodbye");
+    testWordAndAdvance("goodbye", "goodbye", " goodbye");
+    testWordAndAdvance("goodbye", "goodbye", " goodbye");
+    testWordAndAdvance("goodbye", "goodbye", " goodbye");
+    testWordAndAdvance("goodbye", "", " goodbye");
 
     ok(!marker, "Iterated through all markers");
     testMarkerIntegrity(accDoc);
@@ -178,12 +193,17 @@ addAccessibleTask(
 
     let marker = macDoc.getAttributeValue("AXStartTextMarker");
 
-    for (let i = 0; i < 7; i++) {
-      marker = macDoc.getParameterizedAttributeValue(
-        "AXNextTextMarkerForTextMarker",
-        marker
+    function getMarkerAtIndex(index) {
+      return macDoc.getParameterizedAttributeValue(
+        "AXTextMarkerForIndex",
+        index
       );
     }
+
+    testUIElementAtMarker(macDoc, marker, "hello ");
+
+    marker = getMarkerAtIndex(7);
+    testUIElementAtMarker(macDoc, marker, "wor");
 
     let left = macDoc.getParameterizedAttributeValue(
       "AXLeftWordTextMarkerRangeForTextMarker",
@@ -211,6 +231,9 @@ addAccessibleTask(
     );
     is(stringForRange(macDoc, left), "world", "Left word matches");
     is(stringForRange(macDoc, right), "world", "Right word matches");
+
+    marker = getMarkerAtIndex(14);
+    testUIElementAtMarker(macDoc, marker, "ld goodbye");
 
     testMarkerIntegrity(accDoc);
   }
