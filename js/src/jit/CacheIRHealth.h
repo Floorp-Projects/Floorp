@@ -47,7 +47,7 @@ class CacheIRHealth {
                                 jit::ICEntry* entry, jsbytecode* pc, JSOp op);
   // If a JitScript exists, shows health of all ICEntries that exist
   // for the specified script.
-  bool rateMyCacheIR(JSContext* cx, HandleScript script);
+  bool rateMyCacheIR(JSContext* cx, Handle<ScriptVector> scripts);
 };
 
 }  // namespace jit
