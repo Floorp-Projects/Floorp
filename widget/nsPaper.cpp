@@ -79,3 +79,9 @@ nsPaper::GetUnwriteableMargin(JSContext* aCx, Promise** aPromise) {
   promise.forget(aPromise);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPaper::GetPaperId(short* aPaperId) {
+  *aPaperId = mInfo.mPaperId;
+  return NS_OK;
+}

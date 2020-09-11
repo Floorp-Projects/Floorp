@@ -231,24 +231,6 @@ void nsPrintSettingsWin::InitWithInitializer(
       mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0;
   SetPaperWidth(aSettings.mPaperInfo.mSize.width * pointsToSizeUnit);
   SetPaperHeight(aSettings.mPaperInfo.mSize.height * pointsToSizeUnit);
-
-  double printableWidthInPoints = aSettings.mPaperInfo.mSize.width;
-  double printableHeightInPoints = aSettings.mPaperInfo.mSize.height;
-  if (aSettings.mPaperInfo.mUnwriteableMargin.isSome()) {
-    const auto& margin = aSettings.mPaperInfo.mUnwriteableMargin.value();
-    printableWidthInPoints -= (margin.top + margin.bottom);
-    printableHeightInPoints -= (margin.left + margin.right);
-  }
-
-  // Keep these values in portrait format, so we can reflect our own changes
-  // to mOrientation.
-  if (mOrientation == kPortraitOrientation) {
-    mPrintableWidthInInches = printableWidthInPoints / POINTS_PER_INCH_FLOAT;
-    mPrintableHeightInInches = printableHeightInPoints / POINTS_PER_INCH_FLOAT;
-  } else {
-    mPrintableHeightInInches = printableWidthInPoints / POINTS_PER_INCH_FLOAT;
-    mPrintableWidthInInches = printableHeightInPoints / POINTS_PER_INCH_FLOAT;
-  }
 }
 
 already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
@@ -314,51 +296,6 @@ NS_IMETHODIMP nsPrintSettingsWin::SetDevMode(DEVMODEW* aDevMode) {
 
   if (aDevMode) {
     CopyDevMode(aDevMode, mDevMode);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintSettingsWin::GetPrintableWidthInInches(double* aPrintableWidthInInches) {
-  MOZ_ASSERT(aPrintableWidthInInches);
-  *aPrintableWidthInInches = mPrintableWidthInInches;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintSettingsWin::SetPrintableWidthInInches(double aPrintableWidthInInches) {
-  mPrintableWidthInInches = aPrintableWidthInInches;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintSettingsWin::GetPrintableHeightInInches(
-    double* aPrintableHeightInInches) {
-  MOZ_ASSERT(aPrintableHeightInInches);
-  *aPrintableHeightInInches = mPrintableHeightInInches;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintSettingsWin::SetPrintableHeightInInches(
-    double aPrintableHeightInInches) {
-  mPrintableHeightInInches = aPrintableHeightInInches;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintSettingsWin::GetEffectivePageSize(double* aWidth, double* aHeight) {
-  // If printable page size not set, fall back to nsPrintSettings.
-  if (mPrintableWidthInInches == 0l || mPrintableHeightInInches == 0l) {
-    return nsPrintSettings::GetEffectivePageSize(aWidth, aHeight);
-  }
-
-  if (mOrientation == kPortraitOrientation) {
-    *aWidth = NS_INCHES_TO_TWIPS(mPrintableWidthInInches);
-    *aHeight = NS_INCHES_TO_TWIPS(mPrintableHeightInInches);
-  } else {
-    *aHeight = NS_INCHES_TO_TWIPS(mPrintableWidthInInches);
-    *aWidth = NS_INCHES_TO_TWIPS(mPrintableHeightInInches);
   }
   return NS_OK;
 }
@@ -431,39 +368,38 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
 
   InitUnwriteableMargin(aHdc);
 
+  int pixelsPerInchY = ::GetDeviceCaps(aHdc, LOGPIXELSY);
+
   // The length and width in DEVMODE are always in tenths of a millimeter.
   double sizeUnitToTenthsOfAmm =
       10L * (mPaperSizeUnit == kPaperSizeInches ? MM_PER_INCH_FLOAT : 1L);
   if (aDevMode->dmFields & DM_PAPERLENGTH) {
     mPaperHeight = aDevMode->dmPaperLength / sizeUnitToTenthsOfAmm;
   } else {
-    mPaperHeight = -1l;
+    // We need the paper height to be set, because it is used in the child for
+    // layout. If it is not set in the DEVMODE, get it from the device context.
+    int physicalHeight = ::GetDeviceCaps(aHdc, PHYSICALHEIGHT);
+    double physicalHeightInch = double(physicalHeight) / pixelsPerInchY;
+    mPaperHeight = mPaperSizeUnit == kPaperSizeInches
+                       ? physicalHeightInch
+                       : physicalHeightInch * MM_PER_INCH_FLOAT;
   }
 
   if (aDevMode->dmFields & DM_PAPERWIDTH) {
     mPaperWidth = aDevMode->dmPaperWidth / sizeUnitToTenthsOfAmm;
   } else {
-    mPaperWidth = -1l;
+    // We need the paper width to be set, because it is used in the child for
+    // layout. If it is not set in the DEVMODE, get it from the device context.
+    int pixelsPerInchX = ::GetDeviceCaps(aHdc, LOGPIXELSX);
+    int physicalWidth = ::GetDeviceCaps(aHdc, PHYSICALWIDTH);
+    double physicalWidthInch = double(physicalWidth) / pixelsPerInchX;
+    mPaperWidth = mPaperSizeUnit == kPaperSizeInches
+                      ? physicalWidthInch
+                      : physicalWidthInch * MM_PER_INCH_FLOAT;
   }
 
-  // Note: we only scale the printing using the LOGPIXELSY, so we use that
-  // when calculating the surface width as well as the height.
-  int32_t printableWidthInDots = GetDeviceCaps(aHdc, PHYSICALWIDTH);
-  int32_t printableHeightInDots = GetDeviceCaps(aHdc, PHYSICALHEIGHT);
-  int32_t heightDPI = GetDeviceCaps(aHdc, LOGPIXELSY);
-
-  // Keep these values in portrait format, so we can reflect our own changes
-  // to mOrientation.
-  if (mOrientation == kPortraitOrientation) {
-    mPrintableWidthInInches = double(printableWidthInDots) / heightDPI;
-    mPrintableHeightInInches = double(printableHeightInDots) / heightDPI;
-  } else {
-    mPrintableHeightInInches = double(printableWidthInDots) / heightDPI;
-    mPrintableWidthInInches = double(printableHeightInDots) / heightDPI;
-  }
-
-  // Using Y to match existing code for print scaling calculations.
-  mResolution = heightDPI;
+  // Using LOGPIXELSY to match existing code for print scaling calculations.
+  mResolution = pixelsPerInchY;
 }
 
 void nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode) {
@@ -561,9 +497,6 @@ nsPrintSettingsWin& nsPrintSettingsWin::operator=(
   } else {
     mDevMode = nullptr;
   }
-
-  mPrintableWidthInInches = rhs.mPrintableWidthInInches;
-  mPrintableHeightInInches = rhs.mPrintableHeightInInches;
 
   return *this;
 }
