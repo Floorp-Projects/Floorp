@@ -1370,7 +1370,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.locale-list-config", ""
 // List of regions that get stories by default.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-config", "US,DE,CA,GB,IE,CH,AT,BE");
 // List of regions that get spocs by default.
-pref("browser.newtabpage.activity-stream.discoverystream.region-spocs-config", "US,CA");
+pref("browser.newtabpage.activity-stream.discoverystream.region-spocs-config", "US,CA,DE");
 // List of regions that get the 7 row layout.
 pref("browser.newtabpage.activity-stream.discoverystream.region-layout-config", "US,CA,GB,DE,IE,CH,AT,BE");
 // Allows Pocket story collections to be dismissed.
