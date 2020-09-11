@@ -141,9 +141,7 @@ SizeComputationInput::SizeComputationInput(nsIFrame* aFrame,
 SizeComputationInput::SizeComputationInput(
     nsIFrame* aFrame, gfxContext* aRenderingContext,
     WritingMode aContainingBlockWritingMode, nscoord aContainingBlockISize)
-    : mFrame(aFrame),
-      mRenderingContext(aRenderingContext),
-      mWritingMode(aFrame->GetWritingMode()) {
+    : SizeComputationInput(aFrame, aRenderingContext) {
   InitOffsets(aContainingBlockWritingMode, aContainingBlockISize,
               mFrame->Type());
 }
