@@ -4,6 +4,7 @@
   <title>Test for scroll per page</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -61,6 +62,10 @@ async function doTests(aWindow) {
     });
   }
 
+  function waitToClearOutAnyPotentialScrolls() {
+    return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(resolve, aWindow); }); }); });
+  }
+
   async function doPageDown() {
     let waitForScrolling = waitForScrollEvent();
     if (kUseKeyboardEvent) {
@@ -97,6 +102,7 @@ async function doTests(aWindow) {
   container = doc.documentElement;
   let editor = doc.getElementById("editor");
   editor.focus();
+  await waitToClearOutAnyPotentialScrolls();
 
   let description = "PageDown in non-scrollable editing host: ";
   let previousScrollTop = container.scrollTop;
@@ -135,6 +141,7 @@ async function doTests(aWindow) {
   editor = doc.getElementById("editor");
   container = editor;
   editor.focus();
+  await waitToClearOutAnyPotentialScrolls();
 
   description = "PageDown in scrollable editing host: ";
   previousScrollTop = container.scrollTop;
@@ -165,6 +172,7 @@ async function doTests(aWindow) {
   editor = doc.getElementById("editor");
   container = doc.documentElement;
   editor.focus();
+  await waitToClearOutAnyPotentialScrolls();
 
   description = "PageDown in too large editing host: ";
   previousScrollTop = container.scrollTop;
@@ -176,6 +184,8 @@ async function doTests(aWindow) {
 
   selection.selectAllChildren(editor);
   selection.collapseToEnd();
+  await waitToClearOutAnyPotentialScrolls();
+
   description = "PageUp in too large editing host: ";
   container.scrollTop = container.scrollHeight;
   previousScrollTop = container.scrollTop;
@@ -188,6 +198,7 @@ async function doTests(aWindow) {
   editor = doc.getElementById("editor");
   container = editor;
   editor.focus();
+  await waitToClearOutAnyPotentialScrolls();
 
   description = "PageDown in scrollable editing host";
   previousScrollTop = container.scrollTop;
@@ -214,6 +225,7 @@ async function doTests(aWindow) {
   container = doc.documentElement;
   editor.focus();
   selection.collapse(editor.firstChild);
+  await waitToClearOutAnyPotentialScrolls();
 
   description = "PageDown in too high non-scrollable editing host";
   previousScrollTop = container.scrollTop;
