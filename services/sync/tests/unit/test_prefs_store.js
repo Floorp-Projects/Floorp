@@ -41,7 +41,7 @@ add_task(async function run_test() {
   await AddonTestUtils.promiseStartupManager();
 
   // Install another built-in theme.
-  await AddonManager.installBuiltinAddon("resource:///modules/themes/light/");
+  await AddonManager.installBuiltinAddon("resource://builtin-themes/light/");
 
   const defaultThemeAddon = await AddonManager.getAddonByID(DEFAULT_THEME_ID);
   ok(defaultThemeAddon, "Got an addon wrapper for the default theme");

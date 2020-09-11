@@ -10,7 +10,7 @@
   "name": "Dark",
   "description": "A theme with a dark color scheme.",
   "author": "Mozilla",
-  "version": "1.0",
+  "version": "1.1",
 
   "icons": {"32": "icon.svg"},
 

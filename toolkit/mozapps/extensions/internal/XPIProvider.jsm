@@ -128,7 +128,7 @@ const XPI_PERMISSION = "install";
 
 const XPI_SIGNATURE_CHECK_PERIOD = 24 * 60 * 60;
 
-const DB_SCHEMA = 32;
+const DB_SCHEMA = 33;
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -2460,8 +2460,8 @@ var XPIProvider = {
 
       this.maybeInstallBuiltinAddon(
         "default-theme@mozilla.org",
-        "1.0",
-        "resource://gre/modules/themes/default/"
+        "1.1",
+        "resource://default-theme/"
       );
 
       resolveProviderReady(Promise.all(this.startupPromises));
