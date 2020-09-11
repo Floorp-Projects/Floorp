@@ -209,6 +209,18 @@ nsSHEntry::SetTitle(const nsAString& aTitle) {
 }
 
 NS_IMETHODIMP
+nsSHEntry::GetName(nsAString& aName) {
+  aName = mName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetName(const nsAString& aName) {
+  mName = aName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSHEntry::GetPostData(nsIInputStream** aResult) {
   *aResult = mPostData;
   NS_IF_ADDREF(*aResult);
