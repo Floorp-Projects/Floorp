@@ -232,7 +232,6 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead> {
     WriteParam(aMsg, aParam.mContentLength);
     WriteParam(aMsg, aParam.mContentType);
     WriteParam(aMsg, aParam.mContentCharset);
-    WriteParam(aMsg, aParam.mHasCacheControl);
     WriteParam(aMsg, aParam.mCacheControlPublic);
     WriteParam(aMsg, aParam.mCacheControlPrivate);
     WriteParam(aMsg, aParam.mCacheControlNoStore);
@@ -255,7 +254,6 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead> {
         !ReadParam(aMsg, aIter, &aResult->mContentLength) ||
         !ReadParam(aMsg, aIter, &aResult->mContentType) ||
         !ReadParam(aMsg, aIter, &aResult->mContentCharset) ||
-        !ReadParam(aMsg, aIter, &aResult->mHasCacheControl) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlPublic) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlPrivate) ||
         !ReadParam(aMsg, aIter, &aResult->mCacheControlNoStore) ||
