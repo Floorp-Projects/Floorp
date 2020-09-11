@@ -440,6 +440,27 @@ var pktUI = (function() {
       }
     );
 
+    // Open a new tab with a Pocket story url
+    var _openTabWithPocketUrlMessageId = "openTabWithPocketUrl";
+    pktUIMessaging.addMessageListener(
+      iframe,
+      _openTabWithPocketUrlMessageId,
+      function(panelId, data, contentPrincipal, csp) {
+        try {
+          urlSecurityCheck(
+            data.url,
+            contentPrincipal,
+            Services.scriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL
+          );
+        } catch (ex) {
+          return;
+        }
+
+        var url = data.url;
+        openTabWithUrl(url, contentPrincipal, csp);
+      }
+    );
+
     // Close the panel
     var _closeMessageId = "close";
     pktUIMessaging.addMessageListener(iframe, _closeMessageId, function(

@@ -19,6 +19,7 @@ let templates = [
   `saved_tmplogin`,
   `signup_shell`,
   `signupstoryboard_shell`,
+  `item_recs`,
 ];
 
 // Append extension and base path

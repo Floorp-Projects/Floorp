@@ -5,6 +5,7 @@
 PKT_SAVED_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
 */
+
 var PKT_SAVED_OVERLAY = function(options) {
   var myself = this;
   this.inited = false;
@@ -513,7 +514,19 @@ var PKT_SAVED_OVERLAY = function(options) {
       myself.fillSuggestedTags();
     }
   };
-  this.renderItemRecs = function(data) {};
+  this.renderItemRecs = function(data) {
+    if (data && data.recommendations && data.recommendations.length) {
+      $(".pkt_ext_item_recs").append(Handlebars.templates.item_recs(data));
+      $(".pkt_ext_item_recs_link").click(function(e) {
+        e.preventDefault();
+        thePKT_SAVED.sendMessage("openTabWithPocketUrl", {
+          url: $(this).attr("href"),
+          activate: true,
+        });
+        myself.closePopup();
+      });
+    }
+  };
   this.createSendToMobilePanel = function(ho2, displayName) {
     PKT_SENDTOMOBILE.create(ho2, displayName, myself.premiumDetailsAdded);
   };
