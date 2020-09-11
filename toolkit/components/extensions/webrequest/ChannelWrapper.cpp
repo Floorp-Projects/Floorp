@@ -265,9 +265,10 @@ void ChannelWrapper::Resume(const nsCString& aText, ErrorResult& aRv) {
     if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
       rv = chan->Resume();
 
-      PROFILER_ADD_TEXT_MARKER("Extension Suspend", aText,
-                               JS::ProfilingCategoryPair::NETWORK, mSuspendTime,
-                               mozilla::TimeStamp::NowUnfuzzed());
+      PROFILER_MARKER_TEXT(
+          "Extension Suspend",
+          NETWORK.WithOptions(MarkerTiming::IntervalUntilNowFrom(mSuspendTime)),
+          aText);
     }
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);

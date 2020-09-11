@@ -96,7 +96,7 @@ using Text = ::mozilla::baseprofiler::markers::Text;
 
 #  define PROFILER_MARKER_TEXT(markerName, options, text)        \
     do {                                                         \
-      AUTO_PROFILER_STATS(add_marker_v2_with_Text);              \
+      AUTO_PROFILER_STATS(PROFILER_MARKER_TEXT);                 \
       ::profiler_add_marker<::geckoprofiler::markers::Text>(     \
           markerName, ::geckoprofiler::category::options, text); \
     } while (false)

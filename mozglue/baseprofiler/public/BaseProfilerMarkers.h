@@ -117,7 +117,7 @@ struct Text {
 
 #  define BASE_PROFILER_MARKER_TEXT(markerName, options, text)           \
     do {                                                                 \
-      AUTO_PROFILER_STATS(base_add_marker_v2_with_Text);                 \
+      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_TEXT);                    \
       ::mozilla::baseprofiler::AddMarker<                                \
           ::mozilla::baseprofiler::markers::Text>(                       \
           markerName, ::mozilla::baseprofiler::category::options, text); \

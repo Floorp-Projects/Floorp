@@ -7769,10 +7769,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
         BasePrincipal::Cast(thisPrincipal)->GetURI(getter_AddRefs(prinURI));
         nsPrintfCString marker("Iframe loaded in background: %s",
                                prinURI->GetSpecOrDefault().get());
-        TimeStamp now = TimeStamp::Now();
-        profiler_add_text_marker("Background Iframe", marker,
-                                 JS::ProfilingCategoryPair::DOM, now, now,
-                                 Nothing());
+        PROFILER_MARKER_TEXT("Background Iframe", DOM, marker);
 #endif
         SetBackgroundLoadIframe();
       }

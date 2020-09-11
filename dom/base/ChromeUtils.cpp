@@ -200,15 +200,8 @@ void ChromeUtils::AddProfilerMarker(
     const Optional<DOMHighResTimeStamp>& aStartTime,
     const Optional<nsACString>& aText) {
 #ifdef MOZ_GECKO_PROFILER
-  const nsCString& name = PromiseFlatCString(aName);
+  MarkerOptions options{::geckoprofiler::category::JS};
 
-  if (!aText.WasPassed() && !aStartTime.WasPassed()) {
-    profiler_add_js_marker(name.get());
-    return;
-  }
-
-  TimeStamp now = mozilla::TimeStamp::NowUnfuzzed();
-  TimeStamp startTime = now;
   if (aStartTime.WasPassed()) {
     RefPtr<Performance> performance;
 
@@ -227,22 +220,23 @@ void ChromeUtils::AddProfilerMarker(
     }
 
     if (performance) {
-      startTime = performance->CreationTimeStamp() +
-                  TimeDuration::FromMilliseconds(aStartTime.Value());
+      options.Set(MarkerTiming::IntervalUntilNowFrom(
+          performance->CreationTimeStamp() +
+          TimeDuration::FromMilliseconds(aStartTime.Value())));
     } else {
-      startTime = TimeStamp::ProcessCreation() +
-                  TimeDuration::FromMilliseconds(aStartTime.Value());
+      options.Set(MarkerTiming::IntervalUntilNowFrom(
+          TimeStamp::ProcessCreation() +
+          TimeDuration::FromMilliseconds(aStartTime.Value())));
     }
   }
 
   if (aText.WasPassed()) {
-    profiler_add_text_marker(name.get(), aText.Value(),
-                             JS::ProfilingCategoryPair::JS, startTime, now);
+    PROFILER_MARKER_TEXT(aName, MarkerOptions(std::move(options)),
+                         aText.Value());
   } else {
-    profiler_add_marker(name.get(), JS::ProfilingCategoryPair::JS,
-                        TimingMarkerPayload(startTime, now));
+    PROFILER_MARKER_UNTYPED(aName, MarkerOptions(std::move(options)));
   }
-#endif
+#endif  // MOZ_GECKO_PROFILER
 }
 
 /* static */

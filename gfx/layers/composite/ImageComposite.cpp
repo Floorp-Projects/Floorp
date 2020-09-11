@@ -257,14 +257,12 @@ bool ImageComposite::UpdateCompositedFrame(
     mDroppedFrames += dropped;
 #if MOZ_GECKO_PROFILER
     if (profiler_can_accept_markers()) {
-      TimeStamp now = TimeStamp::Now();
       const char* frameOrFrames = dropped == 1 ? "frame" : "frames";
       nsPrintfCString text("%" PRId32 " %s dropped: %" PRId32 " -> %" PRId32
                            " (producer %" PRId32 ")",
                            dropped, frameOrFrames, mLastFrameID, image.mFrameID,
                            mLastProducerID);
-      profiler_add_text_marker("Video frames dropped", text,
-                               JS::ProfilingCategoryPair::GRAPHICS, now, now);
+      PROFILER_MARKER_TEXT("Video frames dropped", GRAPHICS, text);
     }
 #endif
   }
@@ -374,10 +372,8 @@ void ImageComposite::DetectTimeStampJitter(const TimedImage* aNewImage) {
     }
   }
   if (jitter) {
-    TimeStamp now = TimeStamp::Now();
     nsPrintfCString text("%.2lfms", jitter->ToMilliseconds());
-    profiler_add_text_marker("VideoFrameTimeStampJitter", text,
-                             JS::ProfilingCategoryPair::GRAPHICS, now, now);
+    PROFILER_MARKER_TEXT("VideoFrameTimeStampJitter", GRAPHICS, text);
   }
 #endif
 }

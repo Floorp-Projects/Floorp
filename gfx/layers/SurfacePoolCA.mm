@@ -80,15 +80,14 @@ void SurfacePoolCA::LockedPool::MutateEntryStorage(const char* aMutationType,
 
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
-    profiler_add_text_marker(
-        "SurfacePool",
-        nsPrintfCString("%d -> %d in use | %d -> %d waiting for | %d -> %d available | %s %dx%d | "
-                        "%dMB total memory",
+    PROFILER_MARKER_TEXT(
+        "SurfacePool", GRAPHICS.WithOptions(MarkerTiming::IntervalUntilNowFrom(before)),
+        nsPrintfCString("%d -> %d in use | %d -> %d waiting for | %d -> %d "
+                        "available | %s %dx%d | %dMB total memory",
                         int(inUseCountBefore), int(mInUseEntries.size()), int(pendingCountBefore),
                         int(mPendingEntries.Length()), int(availableCountBefore),
                         int(mAvailableEntries.Length()), aMutationType, aSize.width, aSize.height,
-                        int(EstimateTotalMemory() / 1000 / 1000)),
-        JS::ProfilingCategoryPair::GRAPHICS, before, TimeStamp::NowUnfuzzed());
+                        int(EstimateTotalMemory() / 1000 / 1000)));
   }
 #endif
 }
