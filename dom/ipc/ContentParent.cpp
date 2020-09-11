@@ -209,13 +209,11 @@
 #include "nsIParentChannel.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsISearchService.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsISiteSecurityService.h"
 #include "nsISound.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
-#include "nsIURIFixup.h"
 #include "nsIURL.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIX509Cert.h"
@@ -4536,90 +4534,6 @@ nsresult ContentParent::DoSendAsyncMessage(const nsAString& aMessage,
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
-    const nsCString& aKeyword, const bool& aIsPrivateContext,
-    nsString* aProviderName, RefPtr<nsIInputStream>* aPostData,
-    RefPtr<nsIURI>* aURI) {
-  *aPostData = nullptr;
-  *aURI = nullptr;
-  nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
-  if (!fixup) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIURIFixupInfo> info;
-
-  if (NS_FAILED(fixup->KeywordToURI(aKeyword, aIsPrivateContext,
-                                    getter_AddRefs(*aPostData),
-                                    getter_AddRefs(info)))) {
-    return IPC_OK();
-  }
-  info->GetKeywordProviderName(*aProviderName);
-  nsCOMPtr<nsIURI> uri;
-  info->GetPreferredURI(getter_AddRefs(uri));
-  *aURI = uri;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvGetFixupURIInfo(
-    const nsString& aURIString, const uint32_t& aFixupFlags,
-    bool aAllowThirdPartyFixup, nsString* aProviderName,
-    RefPtr<nsIInputStream>* aPostData, RefPtr<nsIURI>* aPreferredURI) {
-  *aPostData = nullptr;
-  *aPreferredURI = nullptr;
-  nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
-  if (!fixup) {
-    return IPC_OK();
-  }
-
-  NS_ConvertUTF16toUTF8 uriString(aURIString);
-  // Cleanup the empty spaces that might be on each end.
-  uriString.Trim(" ");
-  // Eliminate embedded newlines, which single-line text fields now allow:
-  uriString.StripCRLF();
-
-  nsCOMPtr<nsIURIFixupInfo> info;
-  if (NS_FAILED(fixup->GetFixupURIInfo(uriString, aFixupFlags,
-                                       getter_AddRefs(*aPostData),
-                                       getter_AddRefs(info)))) {
-    return IPC_OK();
-  }
-  info->GetKeywordProviderName(*aProviderName);
-  nsCOMPtr<nsIURI> uri;
-  info->GetPreferredURI(getter_AddRefs(uri));
-  *aPreferredURI = uri;
-
-  if (aAllowThirdPartyFixup) {
-    nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-    if (serv) {
-      serv->NotifyObservers(info, "keyword-uri-fixup",
-                            PromiseFlatString(aURIString).get());
-    }
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvNotifyKeywordSearchLoading(
-    const nsString& aProvider, const nsString& aKeyword) {
-  nsCOMPtr<nsISearchService> searchSvc =
-      do_GetService("@mozilla.org/browser/search-service;1");
-  if (searchSvc) {
-    nsCOMPtr<nsISearchEngine> searchEngine;
-    searchSvc->GetEngineByName(aProvider, getter_AddRefs(searchEngine));
-    if (searchEngine) {
-      nsCOMPtr<nsIObserverService> obsSvc =
-          mozilla::services::GetObserverService();
-      if (obsSvc) {
-        // Note that "keyword-search" refers to a search via the url
-        // bar, not a bookmarks keyword search.
-        obsSvc->NotifyObservers(searchEngine, "keyword-search", aKeyword.get());
-      }
-    }
-  }
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCopyFavicon(
