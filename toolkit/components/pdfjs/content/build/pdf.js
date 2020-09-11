@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.7.37';
-const pdfjsBuild = '865de9ab9';
+const pdfjsVersion = '2.7.43';
+const pdfjsBuild = '008eed0ef';
 ;
 
 /***/ }),
@@ -1964,7 +1964,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.7.37',
+    apiVersion: '2.7.43',
     source: {
       data: source.data,
       url: source.url,
@@ -3889,9 +3889,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.7.37';
+const version = '2.7.43';
 exports.version = version;
-const build = '865de9ab9';
+const build = '008eed0ef';
 exports.build = build;
 
 /***/ }),
@@ -9465,6 +9465,9 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
       element.addEventListener("input", function (event) {
         storage.setValue(id, event.target.value);
+      });
+      element.addEventListener("blur", function (event) {
+        event.target.setSelectionRange(0, 0);
       });
       element.disabled = this.data.readOnly;
       element.name = this.data.fieldName;
