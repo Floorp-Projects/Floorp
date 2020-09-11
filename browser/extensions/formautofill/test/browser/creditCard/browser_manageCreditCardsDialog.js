@@ -60,33 +60,40 @@ add_task(async function test_removingSingleAndMultipleCreditCards() {
 
   const expectedLabels = [
     {
-      id: "credit-card-label-number-name",
-      args: { number: "**** 1881", name: "Chris P. Bacon" },
+      id: "credit-card-label-number-name-2",
+      args: { number: "**** 1881", name: "Chris P. Bacon", type: "Visa" },
     },
     {
-      id: "credit-card-label-number",
-      args: { number: "**** 5100" },
+      id: "credit-card-label-number-2",
+      args: { number: "**** 5100", type: "MasterCard" },
     },
     {
-      id: "credit-card-label-number-expiration",
-      args: { number: "**** 7870", month: "1", year: "2000" },
+      id: "credit-card-label-number-expiration-2",
+      args: {
+        number: "**** 7870",
+        month: "1",
+        year: "2000",
+        type: "MasterCard",
+      },
     },
     {
-      id: "credit-card-label-number-name-expiration",
+      id: "credit-card-label-number-name-expiration-2",
       args: {
         number: "**** 1045",
         name: "Timothy Berners-Lee",
         month: "12",
         year: (new Date().getFullYear() + 10).toString(),
+        type: "Visa",
       },
     },
     {
-      id: "credit-card-label-number-name-expiration",
+      id: "credit-card-label-number-name-expiration-2",
       args: {
         number: "**** 1111",
         name: "John Doe",
         month: "4",
         year: new Date().getFullYear().toString(),
+        type: "Visa",
       },
     },
   ];
