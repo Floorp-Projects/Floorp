@@ -3376,6 +3376,70 @@ EditorDOMRange WSRunScanner::GetRangesForDeletingAtomicContent(
       EditorDOMPoint::After(aAtomicContent));
 }
 
+// static
+EditorDOMRange WSRunScanner::GetRangeForDeletingBlockElementBoundaries(
+    const HTMLEditor& aHTMLEditor, const Element& aLeftBlockElement,
+    const Element& aRightBlockElement,
+    const EditorDOMPoint& aPointContainingTheOtherBlock) {
+  MOZ_ASSERT(&aLeftBlockElement != &aRightBlockElement);
+  MOZ_ASSERT_IF(
+      aPointContainingTheOtherBlock.IsSet(),
+      aPointContainingTheOtherBlock.GetContainer() == &aLeftBlockElement ||
+          aPointContainingTheOtherBlock.GetContainer() == &aRightBlockElement);
+  MOZ_ASSERT_IF(
+      aPointContainingTheOtherBlock.GetContainer() == &aLeftBlockElement,
+      aRightBlockElement.IsInclusiveDescendantOf(
+          aPointContainingTheOtherBlock.GetChild()));
+  MOZ_ASSERT_IF(
+      aPointContainingTheOtherBlock.GetContainer() == &aRightBlockElement,
+      aLeftBlockElement.IsInclusiveDescendantOf(
+          aPointContainingTheOtherBlock.GetChild()));
+  MOZ_ASSERT_IF(
+      !aPointContainingTheOtherBlock.IsSet(),
+      !aRightBlockElement.IsInclusiveDescendantOf(&aLeftBlockElement));
+  MOZ_ASSERT_IF(
+      !aPointContainingTheOtherBlock.IsSet(),
+      !aLeftBlockElement.IsInclusiveDescendantOf(&aRightBlockElement));
+  MOZ_ASSERT_IF(!aPointContainingTheOtherBlock.IsSet(),
+                EditorRawDOMPoint(const_cast<Element*>(&aLeftBlockElement))
+                    .IsBefore(EditorRawDOMPoint(
+                        const_cast<Element*>(&aRightBlockElement))));
+
+  const Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+
+  EditorDOMRange range;
+  // Include trailing invisible white-spaces in aLeftBlockElement.
+  TextFragmentData textFragmentDataAtEndOfLestBlockElement(
+      aPointContainingTheOtherBlock.GetContainer() == &aLeftBlockElement
+          ? aPointContainingTheOtherBlock
+          : EditorDOMPoint::AtEndOf(const_cast<Element&>(aLeftBlockElement)),
+      editingHost);
+  const EditorDOMRange& trailingWhiteSpaceRange =
+      textFragmentDataAtEndOfLestBlockElement
+          .InvisibleTrailingWhiteSpaceRangeRef();
+  if (trailingWhiteSpaceRange.StartRef().IsSet()) {
+    range.SetStart(trailingWhiteSpaceRange.StartRef());
+  } else {
+    range.SetStart(textFragmentDataAtEndOfLestBlockElement.ScanStartRef());
+  }
+  // Include leading invisible white-spaces in aRightBlockElement.
+  TextFragmentData textFragmentDataAtStartOfRightBlockElement(
+      aPointContainingTheOtherBlock.GetContainer() == &aRightBlockElement &&
+              !aPointContainingTheOtherBlock.IsEndOfContainer()
+          ? aPointContainingTheOtherBlock.NextPoint()
+          : EditorDOMPoint(const_cast<Element*>(&aRightBlockElement), 0),
+      editingHost);
+  const EditorDOMRange& leadingWhiteSpaceRange =
+      textFragmentDataAtStartOfRightBlockElement
+          .InvisibleLeadingWhiteSpaceRangeRef();
+  if (leadingWhiteSpaceRange.EndRef().IsSet()) {
+    range.SetEnd(leadingWhiteSpaceRange.EndRef());
+  } else {
+    range.SetEnd(textFragmentDataAtStartOfRightBlockElement.ScanStartRef());
+  }
+  return range;
+}
+
 /******************************************************************************
  * Utilities for other things.
  ******************************************************************************/
