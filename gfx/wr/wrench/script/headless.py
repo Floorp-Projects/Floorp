@@ -95,6 +95,7 @@ def optimized_build():
 
 
 def set_osmesa_env(bin_path):
+    # TODO: switch to `llvmpipe` for faster tests
     """Set proper LD_LIBRARY_PATH and DRIVE for software rendering on Linux and OSX"""
     if is_linux():
         osmesa_path = path.join(find_dep_path_newest('osmesa-src', bin_path), "out", "lib", "gallium")
@@ -103,9 +104,9 @@ def set_osmesa_env(bin_path):
         os.environ["GALLIUM_DRIVER"] = "softpipe"
     elif is_macos():
         osmesa_path = path.join(find_dep_path_newest('osmesa-src', bin_path),
-                                "out", "src", "gallium", "targets", "osmesa", ".libs")
+                                "out", "mesa", "src", "gallium", "targets", "osmesa")
         glapi_path = path.join(find_dep_path_newest('osmesa-src', bin_path),
-                               "out", "src", "mapi", "shared-glapi", ".libs")
+                               "out", "mesa", "src", "mapi", "shared-glapi")
         os.environ["DYLD_LIBRARY_PATH"] = osmesa_path + ":" + glapi_path
         os.environ["GALLIUM_DRIVER"] = "softpipe"
 
