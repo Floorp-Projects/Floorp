@@ -33,6 +33,10 @@ add_task(async function test_credit_card_dropdown() {
     const firstItem = getDisplayedPopupItems(browser)[0];
 
     isnot(firstItem.getAttribute("ac-image"), "", "Should show icon");
+    ok(
+      firstItem.getAttribute("aria-label").startsWith("Visa "),
+      "aria-label should start with Visa"
+    );
 
     // The breakpoint of two-lines layout is 185px
     await reopenPopupWithResizedInput(browser, focusInput, 175);

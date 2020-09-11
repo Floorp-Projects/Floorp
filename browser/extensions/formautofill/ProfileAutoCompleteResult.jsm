@@ -421,14 +421,30 @@ class CreditCardResult extends ProfileAutoCompleteResult {
           primaryAffix = affix;
           primary = label;
         }
+        const secondary = this._getSecondaryLabel(
+          focusedFieldName,
+          allFieldNames,
+          profile
+        );
+        // The card type is displayed visually using an image. For a11y, we need
+        // to expose it as text. We do this using aria-label. However,
+        // aria-label overrides the text content, so we must include that also.
+        let ccTypeName;
+        try {
+          ccTypeName = FormAutofillUtils.stringBundle.GetStringFromName(
+            `cardNetwork.${profile["cc-type"]}`
+          );
+        } catch (e) {
+          ccTypeName = null; // Unknown.
+        }
+        const ariaLabel = [ccTypeName, primaryAffix, primary, secondary]
+          .filter(chunk => !!chunk) // Exclude empty chunks.
+          .join(" ");
         return {
           primaryAffix,
           primary,
-          secondary: this._getSecondaryLabel(
-            focusedFieldName,
-            allFieldNames,
-            profile
-          ),
+          secondary,
+          ariaLabel,
         };
       });
     // Add an empty result entry for footer.

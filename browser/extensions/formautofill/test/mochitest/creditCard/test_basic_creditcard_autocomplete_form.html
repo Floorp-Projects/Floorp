@@ -74,6 +74,7 @@ add_task(async function all_saved_fields_less_than_threshold() {
   checkMenuEntries([reducedMockRecord].map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+    ariaLabel: `Visa ${cc["cc-name"]} ${cc.ccNumberFmt.affix}${cc.ccNumberFmt.label}`,
   })));
 
   await cleanUpCreditCards();
@@ -90,6 +91,7 @@ add_task(async function check_menu_when_both_existed() {
     primaryAffix: cc.ccNumberFmt.affix,
     primary: cc.ccNumberFmt.label,
     secondary: cc["cc-name"],
+    ariaLabel: `${getCCTypeName(cc)} ${cc.ccNumberFmt.affix} ${cc.ccNumberFmt.label} ${cc["cc-name"]}`,
   })));
 
   await setInput("#cc-name", "");
@@ -98,6 +100,7 @@ add_task(async function check_menu_when_both_existed() {
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+    ariaLabel: `${getCCTypeName(cc)} ${cc["cc-name"]} ${cc.ccNumberFmt.affix}${cc.ccNumberFmt.label}`,
   })));
 
   await setInput("#cc-exp-year", "");
@@ -106,6 +109,7 @@ add_task(async function check_menu_when_both_existed() {
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-year"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+    ariaLabel: `${getCCTypeName(cc)} ${cc["cc-exp-year"]} ${cc.ccNumberFmt.affix}${cc.ccNumberFmt.label}`,
   })));
 
   await setInput("#cc-exp-month", "");
@@ -114,6 +118,7 @@ add_task(async function check_menu_when_both_existed() {
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-month"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+    ariaLabel: `${getCCTypeName(cc)} ${cc["cc-exp-month"]} ${cc.ccNumberFmt.affix}${cc.ccNumberFmt.label}`,
   })));
 
   await cleanUpCreditCards();
@@ -165,6 +170,7 @@ add_task(async function check_fields_after_form_autofill() {
   checkMenuEntries(MOCK_STORAGE.slice(1).map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-exp-year"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+    ariaLabel: `${getCCTypeName(cc)} ${cc["cc-exp-year"]} ${cc.ccNumberFmt.affix}${cc.ccNumberFmt.label}`,
   })));
 
   synthesizeKey("KEY_ArrowDown");
@@ -197,6 +203,7 @@ add_task(async function check_cc_popup_on_field_blank() {
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+    ariaLabel: `${getCCTypeName(cc)} ${cc["cc-name"]} ${cc.ccNumberFmt.affix}${cc.ccNumberFmt.label}`,
   })));
 });
 
@@ -215,6 +222,7 @@ add_task(async function check_form_autofill_resume() {
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(cc => JSON.stringify({
     primary: cc["cc-name"],
     secondary: cc.ccNumberFmt.affix + cc.ccNumberFmt.label,
+    ariaLabel: `${getCCTypeName(cc)} ${cc["cc-name"]} ${cc.ccNumberFmt.affix}${cc.ccNumberFmt.label}`,
   })));
 });
 
