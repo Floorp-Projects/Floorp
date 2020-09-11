@@ -2,7 +2,6 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 from io import BytesIO
 import json
-import os
 import socket
 import uuid
 
@@ -712,15 +711,10 @@ class ResponseWriter(object):
             if not self._seen_header(name):
                 self.write_header(name, f())
 
-        if not self._seen_header("content-length"):
-            content_length = None
-            if isinstance(self._response.content, (binary_type, text_type)):
-                #Would be nice to avoid double-encoding here
-                content_length = len(self.encode(self._response.content))
-            elif isinstance(self._response.content, file):
-                content_length = os.fstat(self._response.content.fileno()).st_size
-            if content_length:
-                self.write_header("Content-Length", content_length)
+        if (isinstance(self._response.content, (binary_type, text_type)) and
+            not self._seen_header("content-length")):
+            #Would be nice to avoid double-encoding here
+            self.write_header("Content-Length", len(self.encode(self._response.content)))
 
     def end_headers(self):
         """Finish writing headers and write the separator.
