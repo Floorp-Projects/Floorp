@@ -2240,7 +2240,13 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       }
 
       if (loadBytecode) {
-        JS::TranscodeResult rv = JS::DecodeScript(cx, loadBuffer, &script);
+        JS::TranscodeResult rv;
+        if (saveIncrementalBytecode) {
+          rv = JS::DecodeScriptAndStartIncrementalEncoding(cx, loadBuffer,
+                                                           &script);
+        } else {
+          rv = JS::DecodeScript(cx, loadBuffer, &script);
+        }
         if (!ConvertTranscodeResultToJSException(cx, rv)) {
           return false;
         }
@@ -2255,7 +2261,12 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         if (envChain.length() != 0) {
           options.setNonSyntacticScope(true);
         }
-        script = JS::Compile(cx, options, srcBuf);
+
+        if (saveIncrementalBytecode) {
+          script = JS::CompileAndStartIncrementalEncoding(cx, options, srcBuf);
+        } else {
+          script = JS::Compile(cx, options, srcBuf);
+        }
       }
 
       if (!script) {
@@ -2278,15 +2289,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
       if (!script->scriptSource()->setSourceMapURL(cx, std::move(chars))) {
-        return false;
-      }
-    }
-
-    // If we want to save the bytecode incrementally, then we should
-    // register ahead the fact that every JSFunction which is being
-    // delazified should be encoded at the end of the delazification.
-    if (saveIncrementalBytecode) {
-      if (!StartIncrementalEncoding(cx, script)) {
         return false;
       }
     }

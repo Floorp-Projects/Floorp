@@ -5728,15 +5728,19 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
   return JS::TranscodeResult_Ok;
 }
 
-JS_PUBLIC_API bool JS::StartIncrementalEncoding(JSContext* cx,
-                                                JS::HandleScript script) {
-  if (!script) {
-    return false;
+JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
+    JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
+    size_t cursorIndex) {
+  JS::TranscodeResult res = JS::DecodeScript(cx, buffer, scriptp, cursorIndex);
+  if (res != JS::TranscodeResult_Ok) {
+    return res;
   }
-  if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
-    return false;
+
+  if (!scriptp->scriptSource()->xdrEncodeTopLevel(cx, scriptp)) {
+    return JS::TranscodeResult_Throw;
   }
-  return true;
+
+  return JS::TranscodeResult_Ok;
 }
 
 JS_PUBLIC_API bool JS::FinishIncrementalEncoding(JSContext* cx,
