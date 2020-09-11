@@ -25,7 +25,7 @@ fn main() {
         )
         "#;
 
-    let value: Value = data.parse().expect("Failed to deserialize");
+    let value = Value::from_str(data).expect("Failed to deserialize");
     let mut ser = serde_json::Serializer::pretty(std::io::stdout());
     value.serialize(&mut ser).expect("Failed to serialize");
 }
