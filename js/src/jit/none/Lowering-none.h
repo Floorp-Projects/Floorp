@@ -72,6 +72,12 @@ class LIRGeneratorNone : public LIRGeneratorShared {
   void lowerConstantFloat32(float, MInstruction*) { MOZ_CRASH(); }
   void lowerTruncateDToInt32(MTruncateToInt32*) { MOZ_CRASH(); }
   void lowerTruncateFToInt32(MTruncateToInt32*) { MOZ_CRASH(); }
+  void lowerBuiltinInt64ToFloatingPoint(MBuiltinInt64ToFloatingPoint* ins) {
+    MOZ_CRASH();
+  }
+  void lowerWasmBuiltinTruncateToInt64(MWasmBuiltinTruncateToInt64* ins) {
+    MOZ_CRASH();
+  }
   void lowerDivI(MDiv*) { MOZ_CRASH(); }
   void lowerModI(MMod*) { MOZ_CRASH(); }
   void lowerDivI64(MDiv*) { MOZ_CRASH(); }
