@@ -9398,7 +9398,7 @@
     "description": "Time spent to display first page in PDF Viewer (ms)"
   },
   "PDF_VIEWER_FALLBACK_REASON": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["content"],
     "products": ["firefox"],
     "expires_in_version": "84",
     "alert_emails": ["bdahl@mozilla.com"],
