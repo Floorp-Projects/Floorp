@@ -222,7 +222,7 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
     ProfileBufferChunkManagerSingle chunkManager(64 * 1024);
     ProfileChunkedBuffer chunkedBuffer(
         ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
-    aOptions.Stack().UseRequestedBacktrace(
+    aOptions.StackRef().UseRequestedBacktrace(
         aBacktraceCaptureFunction(chunkedBuffer) ? &chunkedBuffer : nullptr);
     // This call must be made from here, while chunkedBuffer is in scope.
     return AddMarkerWithOptionalStackToBuffer<MarkerType>(
