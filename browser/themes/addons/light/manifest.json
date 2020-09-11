@@ -10,7 +10,7 @@
   "name": "Light",
   "description": "A theme with a light color scheme.",
   "author": "Mozilla",
-  "version": "1.0",
+  "version": "1.1",
 
   "icons": {"32": "icon.svg"},
 
