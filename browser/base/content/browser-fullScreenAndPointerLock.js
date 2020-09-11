@@ -80,9 +80,12 @@ var PointerlockFsWarning = {
     }
     let uri = Services.io.newURI(this._origin);
     let host = null;
-    try {
-      host = uri.host;
-    } catch (e) {}
+    // Make an exception for PDF.js - we'll show "This document" instead.
+    if (this._origin != "resource://pdf.js") {
+      try {
+        host = uri.host;
+      } catch (e) {}
+    }
     let textElem = this._element.querySelector(
       ".pointerlockfswarning-domain-text"
     );
