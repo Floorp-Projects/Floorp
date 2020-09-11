@@ -718,7 +718,7 @@ async function sendDeletionPing(studyAddonId) {
     // pipeline requires that pings are shaped this way so they are routed to the correct environment.
     //
     // At the moment, the public key used here isn't important but we do need to use *something*.
-    encryptionKeyId: "debug",
+    encryptionKeyId: "discarded",
     publicKey: {
       crv: "P-256",
       kty: "EC",
@@ -727,7 +727,9 @@ async function sendDeletionPing(studyAddonId) {
     },
     schemaName: "deletion-request",
     schemaVersion: 1,
-    schemaNamespace: "pioneer-debug",
+    // The schema namespace needs to be the study addon id, as we
+    // want to route the ping to the specific study table.
+    schemaNamespace: studyAddonId,
   };
 
   const payload = {
@@ -748,13 +750,14 @@ async function sendDeletionPing(studyAddonId) {
  */
 async function sendEnrollmentPing(studyAddonId) {
   let options = {
+    studyName: "pioneer-meta",
     addPioneerId: true,
     useEncryption: true,
     // NOTE - while we're not actually sending useful data in this payload, the current Pioneer v2 Telemetry
     // pipeline requires that pings are shaped this way so they are routed to the correct environment.
     //
     // At the moment, the public key used here isn't important but we do need to use *something*.
-    encryptionKeyId: "debug",
+    encryptionKeyId: "discarded",
     publicKey: {
       crv: "P-256",
       kty: "EC",
@@ -774,9 +777,9 @@ async function sendEnrollmentPing(studyAddonId) {
   // the work on the ingestion pipeline.
   if (typeof studyAddonId != "undefined") {
     options.studyName = studyAddonId;
-    // This is the same namespace used for 'deletion-request' pings. This works because
-    // the pipeline has a specific exception for it.
-    options.schemaNamespace = "pioneer-debug";
+    // The schema namespace needs to be the study addon id, as we
+    // want to route the ping to the specific study table.
+    options.schemaNamespace = studyAddonId;
   }
 
   await TelemetryController.submitExternalPing("pioneer-study", {}, options);
