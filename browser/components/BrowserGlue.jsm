@@ -2164,7 +2164,7 @@ BrowserGlue.prototype = {
   },
 
   _monitorPioneerStudies() {
-    const STUDY_ADDON_COLLECTION_KEY = "pioneer-study-addons";
+    const STUDY_ADDON_COLLECTION_KEY = "pioneer-study-addons-v1";
     const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
       "toolkit.telemetry.pioneer-new-studies-available";
 
@@ -2200,12 +2200,19 @@ BrowserGlue.prototype = {
       onCloseWindow() {},
     };
 
+    // Update all open windows if the pref changes.
     Services.prefs.addObserver(PREF_PIONEER_NEW_STUDIES_AVAILABLE, _badgeIcon);
+
+    // Badge any currently-open windows.
+    if (Services.prefs.getBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, false)) {
+      _badgeIcon();
+    }
 
     RemoteSettings(STUDY_ADDON_COLLECTION_KEY).on("sync", async event => {
       Services.prefs.setBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, true);
     });
 
+    // When a new window opens, check if we need to badge the icon.
     Services.wm.addListener(windowListener);
   },
 
