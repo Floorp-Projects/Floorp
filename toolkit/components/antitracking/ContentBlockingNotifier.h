@@ -55,7 +55,8 @@ class ContentBlockingNotifier final {
   static void OnDecision(dom::BrowsingContext* aBrowsingContext,
                          BlockingDecision aDecision, uint32_t aRejectedReason);
 
-  static void OnEvent(nsIChannel* aChannel, uint32_t aRejectedReason);
+  static void OnEvent(nsIChannel* aChannel, uint32_t aRejectedReason,
+                      bool aBlocked = true);
 
   static void OnEvent(
       nsIChannel* aChannel, bool aBlocked, uint32_t aRejectedReason,
