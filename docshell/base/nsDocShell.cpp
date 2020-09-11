@@ -7772,6 +7772,10 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
 
   NS_ENSURE_SUCCESS(Embed(viewer), NS_ERROR_FAILURE);
 
+  if (!mBrowsingContext->GetHasLoadedNonInitialDocument()) {
+    MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetHasLoadedNonInitialDocument(true));
+  }
+
   if (TreatAsBackgroundLoad()) {
     nsCOMPtr<nsIRunnable> triggerParentCheckDocShell =
         NewRunnableMethod("nsDocShell::TriggerParentCheckDocShellIsEmpty", this,
