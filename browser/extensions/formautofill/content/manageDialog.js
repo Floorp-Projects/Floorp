@@ -445,6 +445,28 @@ class ManageCreditCards extends ManageRecords {
       let record = option.record;
       if (record && record["cc-type"]) {
         option.setAttribute("cc-type", record["cc-type"]);
+        // The card type is displayed visually using an image. For a11y, we need
+        // to expose it as text. We do this using aria-label. However,
+        // aria-label overrides the text content, so we must include that also.
+        // XXX Bug 1664086: We should set aria-label using Fluent. The code
+        // below does not react to locale changes, so aria-label will be wrong
+        // if the locale is changed at runtime. This hack was necessary to get
+        // this uplifted to 81, but should be fixed sooner rather than later.
+        let ccTypeName;
+        try {
+          ccTypeName = FormAutofillUtils.stringBundle.GetStringFromName(
+            `cardNetwork.${record["cc-type"]}`
+          );
+        } catch (e) {
+          ccTypeName = null; // Unknown.
+        }
+        if (ccTypeName) {
+          await document.l10n.translateElements([option]);
+          option.setAttribute(
+            "aria-label",
+            `${ccTypeName} ${option.textContent}`
+          );
+        }
       } else {
         option.removeAttribute("cc-type");
       }
