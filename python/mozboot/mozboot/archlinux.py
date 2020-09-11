@@ -129,7 +129,7 @@ class ArchlinuxBootstrapper(
         return self.generate_mobile_android_mozconfig(artifact_mode=True)
 
     def _update_package_manager(self):
-        self.pacman_update
+        self.pacman_update()
 
     def upgrade_mercurial(self, current):
         self.pacman_install('mercurial')
