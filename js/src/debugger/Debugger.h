@@ -1589,6 +1589,7 @@ MOZ_MUST_USE bool ReportObjectRequired(JSContext* cx);
 JSObject* IdVectorToArray(JSContext* cx, Handle<IdVector> ids);
 bool IsInterpretedNonSelfHostedFunction(JSFunction* fun);
 JSScript* GetOrCreateFunctionScript(JSContext* cx, HandleFunction fun);
+ArrayObject* GetFunctionParameterNamesArray(JSContext* cx, HandleFunction fun);
 bool ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id);
 bool ValueToStableChars(JSContext* cx, const char* fnname, HandleValue value,
                         JS::AutoStableStringChars& stableChars);

@@ -218,6 +218,7 @@ struct MOZ_STACK_CLASS DebuggerScript::CallData {
   bool getIsFunction();
   bool getIsModule();
   bool getDisplayName();
+  bool getParameterNames();
   bool getUrl();
   bool getStartLine();
   bool getStartColumn();
@@ -319,6 +320,26 @@ bool DebuggerScript::CallData::getDisplayName() {
     return false;
   }
   args.rval().set(namev);
+  return true;
+}
+
+bool DebuggerScript::CallData::getParameterNames() {
+  if (!ensureScriptMaybeLazy()) {
+    return false;
+  }
+
+  RootedFunction fun(cx, referent.as<BaseScript*>()->function());
+  if (!fun) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  ArrayObject* arr = GetFunctionParameterNamesArray(cx, fun);
+  if (!arr) {
+    return false;
+  }
+
+  args.rval().setObject(*arr);
   return true;
 }
 
@@ -2319,6 +2340,7 @@ const JSPropertySpec DebuggerScript::properties_[] = {
     JS_DEBUG_PSG("isFunction", getIsFunction),
     JS_DEBUG_PSG("isModule", getIsModule),
     JS_DEBUG_PSG("displayName", getDisplayName),
+    JS_DEBUG_PSG("parameterNames", getParameterNames),
     JS_DEBUG_PSG("url", getUrl),
     JS_DEBUG_PSG("startLine", getStartLine),
     JS_DEBUG_PSG("startColumn", getStartColumn),
