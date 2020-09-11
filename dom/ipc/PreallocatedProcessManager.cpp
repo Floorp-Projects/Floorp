@@ -38,6 +38,7 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   void AddBlocker(ContentParent* aParent);
   void RemoveBlocker(ContentParent* aParent);
   already_AddRefed<ContentParent> Take(const nsACString& aRemoteType);
+  bool Provide(ContentParent* aParent);
   void Erase(ContentParent* aParent);
 
  private:
@@ -74,6 +75,7 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   bool mLaunchInProgress;
   uint32_t mNumberPreallocs;
   std::deque<RefPtr<ContentParent>> mPreallocatedProcesses;
+  RefPtr<ContentParent> mPreallocatedE10SProcess;  // There can be only one
   // Even if we have multiple PreallocatedProcessManagerImpls, we'll have
   // one blocker counter
   static uint32_t sNumBlockers;
@@ -193,20 +195,49 @@ already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
     return nullptr;
   }
   RefPtr<ContentParent> process;
-  if (!mPreallocatedProcesses.empty()) {
+  if (aRemoteType == DEFAULT_REMOTE_TYPE) {
+    // we can recycle processes via Provide() for e10s only
+    process = mPreallocatedE10SProcess.forget();
+    if (process) {
+      MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+              ("Reuse web process %p", process.get()));
+    }
+  }
+  if (!process && !mPreallocatedProcesses.empty()) {
     process = mPreallocatedProcesses.front().forget();
     mPreallocatedProcesses.pop_front();  // holds a nullptr
-
-    ProcessPriorityManager::SetProcessPriority(process,
-                                               PROCESS_PRIORITY_FOREGROUND);
-
     // We took a preallocated process. Let's try to start up a new one
     // soon.
     AllocateOnIdle();
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Use prealloc process %p", process.get()));
   }
+  if (process) {
+    ProcessPriorityManager::SetProcessPriority(process,
+                                               PROCESS_PRIORITY_FOREGROUND);
+  }
   return process.forget();
+}
+
+bool PreallocatedProcessManagerImpl::Provide(ContentParent* aParent) {
+  MOZ_DIAGNOSTIC_ASSERT(aParent->GetRemoteType() == DEFAULT_REMOTE_TYPE);
+
+  // This will take the already-running process even if there's a
+  // launch in progress; if that process hasn't been taken by the
+  // time the launch completes, the new process will be shut down.
+  if (mEnabled && !sShutdown && !mPreallocatedE10SProcess) {
+    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+            ("Store for reuse web process %p", aParent));
+    ProcessPriorityManager::SetProcessPriority(aParent,
+                                               PROCESS_PRIORITY_BACKGROUND);
+    mPreallocatedE10SProcess = aParent;
+    return true;
+  }
+
+  // We might get a call from both NotifyTabDestroying and NotifyTabDestroyed
+  // with the same ContentParent. Returning true here for both calls is
+  // important to avoid the cached process to be destroyed.
+  return aParent == mPreallocatedE10SProcess;
 }
 
 void PreallocatedProcessManagerImpl::Erase(ContentParent* aParent) {
@@ -217,6 +248,9 @@ void PreallocatedProcessManagerImpl::Erase(ContentParent* aParent) {
       mPreallocatedProcesses.erase(it);
       break;
     }
+  }
+  if (mPreallocatedE10SProcess == aParent) {
+    mPreallocatedE10SProcess = nullptr;
   }
 }
 
@@ -242,6 +276,9 @@ void PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent) {
   // processes aren't blockers anymore because it's not useful and
   // interferes with async launch, and it's simpler if content
   // processes don't need to remember whether they were preallocated.
+  // (And preallocated processes can't AddBlocker when taken, because
+  // it's possible for a short-lived process to be recycled through
+  // Provide() and Take() before reaching RecvFirstIdle.)
 
   MOZ_DIAGNOSTIC_ASSERT(sNumBlockers > 0);
   sNumBlockers--;
@@ -358,13 +395,10 @@ void PreallocatedProcessManagerImpl::CloseProcesses() {
     process->ShutDownProcess(ContentParent::SEND_SHUTDOWN_MESSAGE);
     // drop ref and let it free
   }
-
-  // Make sure to also clear out the recycled E10S process cache, as it's also
-  // controlled by the same preference, and can be cleaned up due to memory
-  // pressure.
-  if (RefPtr<ContentParent> recycled =
-          ContentParent::sRecycledE10SProcess.forget()) {
-    recycled->MaybeBeginShutDown();
+  if (mPreallocatedE10SProcess) {
+    mPreallocatedE10SProcess->ShutDownProcess(
+        ContentParent::SEND_SHUTDOWN_MESSAGE);
+    mPreallocatedE10SProcess = nullptr;
   }
 }
 
@@ -374,14 +408,6 @@ PreallocatedProcessManager::GetPPMImpl() {
     return nullptr;
   }
   return PreallocatedProcessManagerImpl::Singleton();
-}
-
-/* static */
-bool PreallocatedProcessManager::Enabled() {
-  if (auto impl = GetPPMImpl()) {
-    return impl->mEnabled;
-  }
-  return false;
 }
 
 /* static */
@@ -415,6 +441,14 @@ already_AddRefed<ContentParent> PreallocatedProcessManager::Take(
     return impl->Take(aRemoteType);
   }
   return nullptr;
+}
+
+/* static */
+bool PreallocatedProcessManager::Provide(ContentParent* aParent) {
+  if (auto impl = GetPPMImpl()) {
+    return impl->Provide(aParent);
+  }
+  return false;  // We didn't take the ContentParent
 }
 
 /* static */
