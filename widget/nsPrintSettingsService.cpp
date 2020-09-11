@@ -164,8 +164,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   // assertions).
   // data->driverName() default-initializes
   // data->deviceName() default-initializes
-  data->printableWidthInInches() = 0;
-  data->printableHeightInInches() = 0;
   // data->GTKPrintSettings() default-initializes
   // data->printJobName() default-initializes
   data->printAllPages() = true;

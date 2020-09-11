@@ -886,6 +886,11 @@ const PrintSettingsViewProxy = {
         let paperSize = this.availablePaperSizes[paperName];
         target.paperWidth = paperSize.width;
         target.paperHeight = paperSize.height;
+        target.paperData = paperSize.paperId;
+        target.unwriteableMarginTop = paperSize.unwriteableMarginTop;
+        target.unwriteableMarginRight = paperSize.unwriteableMarginRight;
+        target.unwriteableMarginBottom = paperSize.unwriteableMarginBottom;
+        target.unwriteableMarginLeft = paperSize.unwriteableMarginLeft;
         target.paperName = value;
         // pull new margin values for the new paperName
         this.set(target, "margins", this.get(target, "margins"));

@@ -27,8 +27,7 @@ struct PaperInfo {
 
   PaperInfo() = default;
   PaperInfo(const nsAString& aName, const SizeDouble& aSize,
-            const Maybe<MarginDouble>& aUnwriteableMargin,
-            uint64_t aPaperId = 0)
+            const Maybe<MarginDouble>& aUnwriteableMargin, short aPaperId = 0)
       : mName(aName),
         mSize(aSize),
         mUnwriteableMargin(aUnwriteableMargin),
@@ -42,7 +41,7 @@ struct PaperInfo {
   const Maybe<MarginDouble> mUnwriteableMargin{Nothing()};
 
   // The paper id from the device, this is only useful on Windows, right now.
-  uint64_t mPaperId{0};
+  short mPaperId{0};
 };
 
 }  // namespace mozilla

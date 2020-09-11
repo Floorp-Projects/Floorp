@@ -228,7 +228,7 @@ nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
 }
 
 mozilla::gfx::MarginDouble nsPrinterWin::GetMarginsForPaper(
-    uint64_t aPaperId) const {
+    short aPaperId) const {
   static const wchar_t kDriverName[] = L"WINSPOOL";
   // Now get the margin info.
   // We need a DEVMODE to set the paper size on the context.

@@ -41,8 +41,6 @@ class nsPrintSettingsWin : public nsPrintSettings, public nsIPrintSettingsWin {
    */
   nsPrintSettingsWin& operator=(const nsPrintSettingsWin& rhs);
 
-  NS_IMETHOD GetEffectivePageSize(double* aWidth, double* aHeight) override;
-
  protected:
   void CopyDevMode(DEVMODEW* aInDevMode, DEVMODEW*& aOutDevMode);
   void InitUnwriteableMargin(HDC aHdc);
@@ -50,8 +48,6 @@ class nsPrintSettingsWin : public nsPrintSettings, public nsIPrintSettingsWin {
   nsString mDeviceName;
   nsString mDriverName;
   LPDEVMODEW mDevMode;
-  double mPrintableWidthInInches = 0l;
-  double mPrintableHeightInInches = 0l;
 };
 
 #endif /* nsPrintSettingsWin_h__ */

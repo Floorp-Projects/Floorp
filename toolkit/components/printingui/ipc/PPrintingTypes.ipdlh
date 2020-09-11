@@ -70,8 +70,6 @@ struct PrintData {
   /* Windows-specific things */
   nsString driverName;
   nsString deviceName;
-  double printableWidthInInches;
-  double printableHeightInInches;
   uint8_t[] devModeData;
 
   /**
