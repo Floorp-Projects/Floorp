@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["nobody@mozilla.com"]
 license = "MPL-2.0"
 description = "Rust bindings to xpcom string types"
+edition = "2018"
 
 [features]
 gecko_debug = []
