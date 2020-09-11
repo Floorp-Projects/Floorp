@@ -397,7 +397,8 @@ class WellKnownParserAtoms {
   bool init(JSContext* cx);
 
   template <typename CharT>
-  const ParserAtom* lookupChar16Seq(InflatedChar16Sequence<CharT> seq) const;
+  const ParserAtom* lookupChar16Seq(
+      const SpecificParserAtomLookup<CharT>& lookup) const;
 };
 
 /**
