@@ -86,15 +86,20 @@ extern JSScript* CompileEvalScript(JSContext* cx,
                                    JS::Handle<js::Scope*> enclosingScope,
                                    JS::Handle<JSObject*> enclosingEnv);
 
-extern MOZ_MUST_USE bool CompileLazyFunction(JSContext* cx,
-                                             JS::Handle<BaseScript*> lazy,
-                                             const char16_t* units,
-                                             size_t length);
+extern void FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
+                                              Handle<BaseScript*> lazy);
 
-extern MOZ_MUST_USE bool CompileLazyFunction(JSContext* cx,
-                                             JS::Handle<BaseScript*> lazy,
-                                             const mozilla::Utf8Unit* units,
-                                             size_t length);
+extern MOZ_MUST_USE bool CompileLazyFunctionToStencil(
+    JSContext* cx, CompilationInfo& compilationInfo,
+    JS::Handle<BaseScript*> lazy, const char16_t* units, size_t length);
+
+extern MOZ_MUST_USE bool CompileLazyFunctionToStencil(
+    JSContext* cx, CompilationInfo& compilationInfo,
+    JS::Handle<BaseScript*> lazy, const mozilla::Utf8Unit* units,
+    size_t length);
+
+extern bool InstantiateStencilsForDelazify(JSContext* cx,
+                                           CompilationInfo& compilationInfo);
 
 }  // namespace frontend
 

@@ -940,9 +940,21 @@ ModuleObject* frontend::CompileModule(JSContext* cx,
   return CompileModuleImpl(cx, options, srcBuf);
 }
 
+void frontend::FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
+                                                 JS::Handle<BaseScript*> lazy) {
+  options.setMutedErrors(lazy->mutedErrors())
+      .setFileAndLine(lazy->filename(), lazy->lineno())
+      .setColumn(lazy->column())
+      .setScriptSourceOffset(lazy->sourceStart())
+      .setNoScriptRval(false)
+      .setSelfHostingMode(false);
+}
+
 template <typename Unit>
-static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
-                                    const Unit* units, size_t length) {
+static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
+                                             CompilationInfo& compilationInfo,
+                                             Handle<BaseScript*> lazy,
+                                             const Unit* units, size_t length) {
   MOZ_ASSERT(cx->compartment() == lazy->compartment());
 
   // We can only compile functions whose parents have previously been
@@ -951,27 +963,17 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   MOZ_ASSERT(lazy->isReadyForDelazification());
 
   AutoAssertReportedException assertException(cx);
+
   Rooted<JSFunction*> fun(cx, lazy->function());
 
-  JS::CompileOptions options(cx);
-  options.setMutedErrors(lazy->mutedErrors())
-      .setFileAndLine(lazy->filename(), lazy->lineno())
-      .setColumn(lazy->column())
-      .setScriptSourceOffset(lazy->sourceStart())
-      .setNoScriptRval(false)
-      .setSelfHostingMode(false);
-
-  Rooted<CompilationInfo> compilationInfo(cx, CompilationInfo(cx, options));
-  compilationInfo.get().input.initFromLazy(lazy);
-
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options,
-                                              fun->enclosingScope());
+  frontend::CompilationState compilationState(
+      cx, allocScope, compilationInfo.input.options, fun->enclosingScope());
 
-  Parser<FullParseHandler, Unit> parser(cx, options, units, length,
-                                        /* foldConstants = */ true,
-                                        compilationInfo.get(), compilationState,
-                                        nullptr, lazy);
+  Parser<FullParseHandler, Unit> parser(
+      cx, compilationInfo.input.options, units, length,
+      /* foldConstants = */ true, compilationInfo, compilationState, nullptr,
+      lazy);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -986,11 +988,8 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
     return false;
   }
 
-  mozilla::DebugOnly<uint32_t> lazyFlags =
-      static_cast<uint32_t>(lazy->immutableFlags());
-
   BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(),
-                      compilationInfo.get(), compilationState,
+                      compilationInfo, compilationState,
                       BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
@@ -1000,8 +999,34 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
     return false;
   }
 
+  assertException.reset();
+  return true;
+}
+
+MOZ_MUST_USE bool frontend::CompileLazyFunctionToStencil(
+    JSContext* cx, CompilationInfo& compilationInfo,
+    JS::Handle<BaseScript*> lazy, const char16_t* units, size_t length) {
+  return CompileLazyFunctionToStencilImpl(cx, compilationInfo, lazy, units,
+                                          length);
+}
+
+MOZ_MUST_USE bool frontend::CompileLazyFunctionToStencil(
+    JSContext* cx, CompilationInfo& compilationInfo,
+    JS::Handle<BaseScript*> lazy, const mozilla::Utf8Unit* units,
+    size_t length) {
+  return CompileLazyFunctionToStencilImpl(cx, compilationInfo, lazy, units,
+                                          length);
+}
+
+bool frontend::InstantiateStencilsForDelazify(
+    JSContext* cx, CompilationInfo& compilationInfo) {
+  AutoAssertReportedException assertException(cx);
+
+  mozilla::DebugOnly<uint32_t> lazyFlags =
+      static_cast<uint32_t>(compilationInfo.input.lazy->immutableFlags());
+
   CompilationGCOutput gcOutput(cx);
-  if (!compilationInfo.get().instantiateStencils(cx, gcOutput)) {
+  if (!compilationInfo.instantiateStencils(cx, gcOutput)) {
     return false;
   }
 
@@ -1013,16 +1038,6 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
 
   assertException.reset();
   return true;
-}
-
-bool frontend::CompileLazyFunction(JSContext* cx, Handle<BaseScript*> lazy,
-                                   const char16_t* units, size_t length) {
-  return CompileLazyFunctionImpl(cx, lazy, units, length);
-}
-
-bool frontend::CompileLazyFunction(JSContext* cx, Handle<BaseScript*> lazy,
-                                   const Utf8Unit* units, size_t length) {
-  return CompileLazyFunctionImpl(cx, lazy, units, length);
 }
 
 static JSFunction* CompileStandaloneFunction(
