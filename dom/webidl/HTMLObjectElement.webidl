@@ -117,9 +117,6 @@ interface mixin MozObjectLoadingContent {
   // Suppressed by security policy
   [ChromeOnly]
   const unsigned long PLUGIN_SUPPRESSED           = 6;
-  // Blocked by content policy
-  [ChromeOnly]
-  const unsigned long PLUGIN_USER_DISABLED        = 7;
   /// ** All values >= PLUGIN_CLICK_TO_PLAY are plugin placeholder types that
   ///    would be replaced by a real plugin if activated (playPlugin())
   /// ** Furthermore, values >= PLUGIN_CLICK_TO_PLAY and

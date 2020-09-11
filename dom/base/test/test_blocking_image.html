@@ -28,9 +28,7 @@ function onLoad() {
       img:-moz-broken {
        color: red
       }
-      img:-moz-user-disabled {
-       color: blue
-      }`;
+    `;
     var sheetURL = "data:text/css," + encodeURIComponent(css);
     winUtils.loadSheetUsingURIString(sheetURL, winUtils.AGENT_SHEET);
 
@@ -82,16 +80,14 @@ function onLoad() {
       });
     }).then(() => {
       // Now image is denied, loading image will be rejected with REJECT_TYPE,
-      // which will be mapped to :-moz-user-disabled
+      // which will be mapped to :-moz-broken too.
       img3.src = "https://example.com/tests/image/test/mochitest/shaver.png";
       doc.body.appendChild(img3);
       return imgListener(img3);
     }).then(() => {
       ok(true, "img3 shouldn't be loaded");
 
-      // -moz-user-disabled is also chrome only, so we didn't use matches() to verify.
-      is(iframe.contentWindow.getComputedStyle(img3).color, "rgb(0, 0, 255)",
-         "color of img3 should be blue");
+      ok(img3.matches(":-moz-broken"), "should match ':-moz-broken' selector");
       is(img3.imageBlockingStatus, Ci.nsIContentPolicy.REJECT_TYPE,
          "imageBlockingStatues should be REJECT_TYPE.");
 

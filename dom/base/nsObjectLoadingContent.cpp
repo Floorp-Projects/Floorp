@@ -1276,8 +1276,6 @@ EventStates nsObjectLoadingContent::ObjectState() const {
       switch (mFallbackType) {
         case eFallbackSuppressed:
           return NS_EVENT_STATE_SUPPRESSED;
-        case eFallbackUserDisabled:
-          return NS_EVENT_STATE_USERDISABLED;
         case eFallbackClickToPlay:
         case eFallbackClickToPlayQuiet:
           return NS_EVENT_STATE_TYPE_CLICK_TO_PLAY;
@@ -2047,7 +2045,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
       LOG(("OBJLC [%p]: Load denied by policy", this));
       mType = eType_Null;
       if (contentPolicy == nsIContentPolicy::REJECT_TYPE) {
-        fallbackType = eFallbackUserDisabled;
+        fallbackType = eFallbackDisabled;
       } else {
         fallbackType = eFallbackSuppressed;
       }
