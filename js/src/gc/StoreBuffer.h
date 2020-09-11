@@ -22,6 +22,11 @@
 #include "threading/Mutex.h"
 
 namespace js {
+
+#ifdef DEBUG
+extern bool CurrentThreadIsGCMarking();
+#endif
+
 namespace gc {
 
 class Arena;
@@ -394,6 +399,7 @@ class StoreBuffer {
   inline void CheckAccess() const {
 #ifdef DEBUG
     if (JS::RuntimeHeapIsBusy()) {
+      MOZ_ASSERT(!CurrentThreadIsGCMarking());
       MOZ_ASSERT(lock_.ownedByCurrentThread());
     } else {
       MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
