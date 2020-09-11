@@ -17,7 +17,7 @@ namespace wr {
 
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget) {
+    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
   RefPtr<gl::GLContext> gl = RenderThread::Get()->SharedGL();
   if (!gl) {
     gl = gl::GLContextProvider::CreateForCompositorWidget(

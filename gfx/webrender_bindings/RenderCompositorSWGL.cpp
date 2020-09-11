@@ -13,7 +13,7 @@ namespace wr {
 
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorSWGL::Create(
-    RefPtr<widget::CompositorWidget>&& aWidget) {
+    RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
   void* ctx = wr_swgl_create_context();
   if (!ctx) {
     gfxCriticalNote << "Failed SWGL context creation for WebRender";
