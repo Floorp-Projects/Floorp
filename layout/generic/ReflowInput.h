@@ -188,139 +188,6 @@ struct SizeComputationInput {
                        mozilla::WritingMode aContainingBlockWritingMode,
                        nscoord aContainingBlockISize);
 
-  struct ReflowInputFlags {
-    ReflowInputFlags() { memset(this, 0, sizeof(*this)); }
-
-    // used by tables to communicate special reflow (in process) to handle
-    // percent bsize frames inside cells which may not have computed bsizes
-    bool mSpecialBSizeReflow : 1;
-
-    // nothing in the frame's next-in-flow (or its descendants) is changing
-    bool mNextInFlowUntouched : 1;
-
-    // Is the current context at the top of a page?  When true, we force
-    // something that's too tall for a page/column to fit anyway to avoid
-    // infinite loops.
-    bool mIsTopOfPage : 1;
-
-    // parent frame is an nsIScrollableFrame and it is assuming a horizontal
-    // scrollbar
-    bool mAssumingHScrollbar : 1;
-
-    // parent frame is an nsIScrollableFrame and it is assuming a vertical
-    // scrollbar
-    bool mAssumingVScrollbar : 1;
-
-    // Is frame a different inline-size than before?
-    bool mIsIResize : 1;
-
-    // Is frame (potentially) a different block-size than before?
-    // This includes cases where the block-size is 'auto' and the
-    // contents or width have changed.
-    bool mIsBResize : 1;
-
-    // Has this frame changed block-size in a way that affects
-    // block-size percentages on frames for which it is the containing
-    // block?  This includes a change between 'auto' and a length that
-    // doesn't actually change the frame's block-size.  It does not
-    // include cases where the block-size is 'auto' and the frame's
-    // contents have changed.
-    //
-    // In the current code, this is only true when mIsBResize is also
-    // true, although it doesn't necessarily need to be that way (e.g.,
-    // in the case of a frame changing from 'auto' to a length that
-    // produces the same height).
-    bool mIsBResizeForPercentages : 1;
-
-    // tables are splittable, this should happen only inside a page and never
-    // insider a column frame
-    bool mTableIsSplittable : 1;
-
-    // Does frame height depend on an ancestor table-cell?
-    bool mHeightDependsOnAncestorCell : 1;
-
-    // nsColumnSetFrame is balancing columns
-    bool mIsColumnBalancing : 1;
-
-    // True if ColumnSetWrapperFrame has a constrained block-size, and is going
-    // to consume all of its block-size in this fragment. This bit is passed to
-    // nsColumnSetFrame to determine whether to give up balancing and create
-    // overflow columns.
-    bool mColumnSetWrapperHasNoBSizeLeft : 1;
-
-    // nsFlexContainerFrame is reflowing this child to measure its intrinsic
-    // BSize.
-    bool mIsFlexContainerMeasuringBSize : 1;
-
-    // If this flag is set, the BSize of this frame should be considered
-    // indefinite for the purposes of percent resolution on child frames (we
-    // should behave as if ComputedBSize() were NS_UNCONSTRAINEDSIZE when doing
-    // percent resolution against this.ComputedBSize()).  For example: flex
-    // items may have their ComputedBSize() resolved ahead-of-time by their
-    // flex container, and yet their BSize might have to be considered
-    // indefinite per https://drafts.csswg.org/css-flexbox/#definite-sizes
-    bool mTreatBSizeAsIndefinite : 1;
-
-    // a "fake" reflow input made in order to be the parent of a real one
-    bool mDummyParentReflowInput : 1;
-
-    // Should this frame reflow its place-holder children? If the available
-    // height of this frame didn't change, but its in a paginated environment
-    // (e.g. columns), it should always reflow its placeholder children.
-    bool mMustReflowPlaceholders : 1;
-
-    // the STATIC_POS_IS_CB_ORIGIN ctor flag
-    bool mStaticPosIsCBOrigin : 1;
-
-    // If set, the following two flags indicate that:
-    // (1) this frame is absolutely-positioned (or fixed-positioned).
-    // (2) this frame's static position depends on the CSS Box Alignment.
-    // (3) we do need to compute the static position, because the frame's
-    //     {Inline and/or Block} offsets actually depend on it.
-    // When these bits are set, the offset values (IStart/IEnd, BStart/BEnd)
-    // represent the "start" edge of the frame's CSS Box Alignment container
-    // area, in that axis -- and these offsets need to be further-resolved
-    // (with CSS Box Alignment) after we know the OOF frame's size.
-    // NOTE: The "I" and "B" (for "Inline" and "Block") refer the axes of the
-    // *containing block's writing-mode*, NOT mFrame's own writing-mode. This
-    // is purely for convenience, since that's the writing-mode we're dealing
-    // with when we set & react to these bits.
-    bool mIOffsetsNeedCSSAlign : 1;
-    bool mBOffsetsNeedCSSAlign : 1;
-
-    // Are we somewhere inside an element with -webkit-line-clamp set?
-    // This flag is inherited into descendant ReflowInputs, but we don't bother
-    // resetting it to false when crossing over into a block descendant that
-    // -webkit-line-clamp skips over (such as a BFC).
-    bool mInsideLineClamp : 1;
-
-    // Is this a flex item, and should we add or remove a -webkit-line-clamp
-    // ellipsis on a descendant line?  It's possible for this flag to be true
-    // when mInsideLineClamp is false if we previously had a numeric
-    // -webkit-line-clamp value, but now have 'none' and we need to find the
-    // line with the ellipsis flag and clear it.
-    // This flag is not inherited into descendant ReflowInputs.
-    bool mApplyLineClamp : 1;
-
-    // Is this frame or one of its ancestors being reflowed in a different
-    // continuation than the one in which it was previously reflowed?  In
-    // other words, has it moved to a different column or page than it was in
-    // the previous reflow?
-    //
-    // FIXME: For now, we only ensure that this is set correctly for blocks.
-    // This is okay because the only thing that uses it only cares about
-    // whether there's been a fragment change within the same block formatting
-    // context.
-    bool mMovedBlockFragments : 1;
-
-    // If the block-size is replacd by aspect-ratio and inline size (i.e.
-    // block axis is the ratio-dependent axis). We set this flag, so we could
-    // apply Automatic content-based minimum sizes after we know the content
-    // size of child fraems.
-    // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
-    bool mBSizeIsSetByAspectRatio : 1;
-  };
-
 #ifdef DEBUG
   // Reflow trace methods.  Defined in nsFrame.cpp so they have access
   // to the display-reflow infrastructure.
@@ -704,7 +571,139 @@ struct ReflowInput : public SizeComputationInput {
   // requested here.
   nsIFrame** mDiscoveredClearance = nullptr;
 
-  ReflowInputFlags mFlags;
+  struct Flags {
+    Flags() { memset(this, 0, sizeof(*this)); }
+
+    // used by tables to communicate special reflow (in process) to handle
+    // percent bsize frames inside cells which may not have computed bsizes
+    bool mSpecialBSizeReflow : 1;
+
+    // nothing in the frame's next-in-flow (or its descendants) is changing
+    bool mNextInFlowUntouched : 1;
+
+    // Is the current context at the top of a page?  When true, we force
+    // something that's too tall for a page/column to fit anyway to avoid
+    // infinite loops.
+    bool mIsTopOfPage : 1;
+
+    // parent frame is an nsIScrollableFrame and it is assuming a horizontal
+    // scrollbar
+    bool mAssumingHScrollbar : 1;
+
+    // parent frame is an nsIScrollableFrame and it is assuming a vertical
+    // scrollbar
+    bool mAssumingVScrollbar : 1;
+
+    // Is frame a different inline-size than before?
+    bool mIsIResize : 1;
+
+    // Is frame (potentially) a different block-size than before?
+    // This includes cases where the block-size is 'auto' and the
+    // contents or width have changed.
+    bool mIsBResize : 1;
+
+    // Has this frame changed block-size in a way that affects
+    // block-size percentages on frames for which it is the containing
+    // block?  This includes a change between 'auto' and a length that
+    // doesn't actually change the frame's block-size.  It does not
+    // include cases where the block-size is 'auto' and the frame's
+    // contents have changed.
+    //
+    // In the current code, this is only true when mIsBResize is also
+    // true, although it doesn't necessarily need to be that way (e.g.,
+    // in the case of a frame changing from 'auto' to a length that
+    // produces the same height).
+    bool mIsBResizeForPercentages : 1;
+
+    // tables are splittable, this should happen only inside a page and never
+    // insider a column frame
+    bool mTableIsSplittable : 1;
+
+    // Does frame height depend on an ancestor table-cell?
+    bool mHeightDependsOnAncestorCell : 1;
+
+    // nsColumnSetFrame is balancing columns
+    bool mIsColumnBalancing : 1;
+
+    // True if ColumnSetWrapperFrame has a constrained block-size, and is going
+    // to consume all of its block-size in this fragment. This bit is passed to
+    // nsColumnSetFrame to determine whether to give up balancing and create
+    // overflow columns.
+    bool mColumnSetWrapperHasNoBSizeLeft : 1;
+
+    // nsFlexContainerFrame is reflowing this child to measure its intrinsic
+    // BSize.
+    bool mIsFlexContainerMeasuringBSize : 1;
+
+    // If this flag is set, the BSize of this frame should be considered
+    // indefinite for the purposes of percent resolution on child frames (we
+    // should behave as if ComputedBSize() were NS_UNCONSTRAINEDSIZE when doing
+    // percent resolution against this.ComputedBSize()).  For example: flex
+    // items may have their ComputedBSize() resolved ahead-of-time by their
+    // flex container, and yet their BSize might have to be considered
+    // indefinite per https://drafts.csswg.org/css-flexbox/#definite-sizes
+    bool mTreatBSizeAsIndefinite : 1;
+
+    // a "fake" reflow input made in order to be the parent of a real one
+    bool mDummyParentReflowInput : 1;
+
+    // Should this frame reflow its place-holder children? If the available
+    // height of this frame didn't change, but its in a paginated environment
+    // (e.g. columns), it should always reflow its placeholder children.
+    bool mMustReflowPlaceholders : 1;
+
+    // the STATIC_POS_IS_CB_ORIGIN ctor flag
+    bool mStaticPosIsCBOrigin : 1;
+
+    // If set, the following two flags indicate that:
+    // (1) this frame is absolutely-positioned (or fixed-positioned).
+    // (2) this frame's static position depends on the CSS Box Alignment.
+    // (3) we do need to compute the static position, because the frame's
+    //     {Inline and/or Block} offsets actually depend on it.
+    // When these bits are set, the offset values (IStart/IEnd, BStart/BEnd)
+    // represent the "start" edge of the frame's CSS Box Alignment container
+    // area, in that axis -- and these offsets need to be further-resolved
+    // (with CSS Box Alignment) after we know the OOF frame's size.
+    // NOTE: The "I" and "B" (for "Inline" and "Block") refer the axes of the
+    // *containing block's writing-mode*, NOT mFrame's own writing-mode. This
+    // is purely for convenience, since that's the writing-mode we're dealing
+    // with when we set & react to these bits.
+    bool mIOffsetsNeedCSSAlign : 1;
+    bool mBOffsetsNeedCSSAlign : 1;
+
+    // Are we somewhere inside an element with -webkit-line-clamp set?
+    // This flag is inherited into descendant ReflowInputs, but we don't bother
+    // resetting it to false when crossing over into a block descendant that
+    // -webkit-line-clamp skips over (such as a BFC).
+    bool mInsideLineClamp : 1;
+
+    // Is this a flex item, and should we add or remove a -webkit-line-clamp
+    // ellipsis on a descendant line?  It's possible for this flag to be true
+    // when mInsideLineClamp is false if we previously had a numeric
+    // -webkit-line-clamp value, but now have 'none' and we need to find the
+    // line with the ellipsis flag and clear it.
+    // This flag is not inherited into descendant ReflowInputs.
+    bool mApplyLineClamp : 1;
+
+    // Is this frame or one of its ancestors being reflowed in a different
+    // continuation than the one in which it was previously reflowed?  In
+    // other words, has it moved to a different column or page than it was in
+    // the previous reflow?
+    //
+    // FIXME: For now, we only ensure that this is set correctly for blocks.
+    // This is okay because the only thing that uses it only cares about
+    // whether there's been a fragment change within the same block formatting
+    // context.
+    bool mMovedBlockFragments : 1;
+
+    // If the block-size is replacd by aspect-ratio and inline size (i.e.
+    // block axis is the ratio-dependent axis). We set this flag, so we could
+    // apply Automatic content-based minimum sizes after we know the content
+    // size of child fraems.
+    // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
+    bool mBSizeIsSetByAspectRatio : 1;
+  };
+  Flags mFlags;
   mozilla::ComputeSizeFlags mComputeSizeFlags;
 
   // This value keeps track of how deeply nested a given reflow input
