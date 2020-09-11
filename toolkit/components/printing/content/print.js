@@ -346,8 +346,9 @@ var PrintEventHandler = {
 
     try {
       this.settings.showPrintProgress = true;
-      await PrintUtils.printWindow(
-        this.previewBrowser.browsingContext,
+      let bc = this.previewBrowser.browsingContext;
+      await bc.top.embedderElement.print(
+        bc.currentWindowGlobal.outerWindowId,
         settings
       );
     } catch (e) {
