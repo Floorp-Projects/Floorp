@@ -443,6 +443,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
     mAllowScrollOriginDowngrade = true;
     mApzScrollPos = GetScrollPosition();
     mRelativeOffset.reset();
+    mScrollUpdates.Clear();
   }
   void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort);
   bool GetDisplayPortAtLastApproximateFrameVisibilityUpdate(
@@ -464,6 +465,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool IsApzAnimationInProgress() const { return mApzAnimationInProgress; }
   uint32_t CurrentScrollGeneration() const { return mScrollGeneration; }
   nsPoint LastScrollDestination() const { return mDestination; }
+  nsTArray<ScrollPositionUpdate> GetScrollUpdates() const;
 
   using IncludeApzAnimation = nsIScrollableFrame::IncludeApzAnimation;
   bool IsScrollAnimating(IncludeApzAnimation = IncludeApzAnimation::Yes) const;
@@ -569,6 +571,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
   ScrollOrigin mLastSmoothScrollOrigin;
   Maybe<nsPoint> mApzSmoothScrollDestination;
   uint32_t mScrollGeneration;
+
+  nsTArray<ScrollPositionUpdate> mScrollUpdates;
+
   // NOTE: On mobile this value might be factoring into overflow:hidden region
   // in the case of the top level document.
   nsRect mScrollPort;
@@ -1066,6 +1071,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   nsPoint LastScrollDestination() final {
     return mHelper.LastScrollDestination();
   }
+  nsTArray<mozilla::ScrollPositionUpdate> GetScrollUpdates() const final {
+    return mHelper.GetScrollUpdates();
+  }
   void ResetScrollInfoIfNeeded(uint32_t aGeneration,
                                bool aApzAnimationInProgress) final {
     mHelper.ResetScrollInfoIfNeeded(aGeneration, aApzAnimationInProgress);
@@ -1543,6 +1551,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   nsPoint LastScrollDestination() final {
     return mHelper.LastScrollDestination();
+  }
+  nsTArray<mozilla::ScrollPositionUpdate> GetScrollUpdates() const final {
+    return mHelper.GetScrollUpdates();
   }
   void ResetScrollInfoIfNeeded(uint32_t aGeneration,
                                bool aApzAnimationInProgress) final {

@@ -18,6 +18,7 @@
 #include "mozilla/gfx/Logging.h"                 // for Log
 #include "mozilla/layers/LayersTypes.h"          // for ScrollDirection
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
+#include "mozilla/ScrollPositionUpdate.h"        // for ScrollPositionUpdate
 #include "mozilla/StaticPtr.h"                   // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"                   // for TimeStamp
 #include "nsDataHashtable.h"                     // for nsDataHashtable
@@ -933,7 +934,8 @@ struct ScrollMetadata {
            mResolutionUpdated == aOther.mResolutionUpdated &&
            mIsRDMTouchSimulationActive == aOther.mIsRDMTouchSimulationActive &&
            mDisregardedDirection == aOther.mDisregardedDirection &&
-           mOverscrollBehavior == aOther.mOverscrollBehavior;
+           mOverscrollBehavior == aOther.mOverscrollBehavior &&
+           mScrollUpdates == aOther.mScrollUpdates;
   }
 
   bool operator!=(const ScrollMetadata& aOther) const {
@@ -1035,6 +1037,10 @@ struct ScrollMetadata {
     return mOverscrollBehavior;
   }
 
+  void SetScrollUpdates(const nsTArray<ScrollPositionUpdate>& aUpdates) {
+    mScrollUpdates = aUpdates;
+  }
+
  private:
   FrameMetrics mMetrics;
 
@@ -1109,6 +1115,10 @@ struct ScrollMetadata {
 
   // The overscroll behavior for this scroll frame.
   OverscrollBehaviorInfo mOverscrollBehavior;
+
+  // The ordered list of scroll position updates for this scroll frame since
+  // the last transaction.
+  CopyableTArray<ScrollPositionUpdate> mScrollUpdates;
 
   // WARNING!!!!
   //

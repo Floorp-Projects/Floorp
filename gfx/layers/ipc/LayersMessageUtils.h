@@ -401,6 +401,10 @@ struct ParamTraits<mozilla::layers::LayerClip> {
 };
 
 template <>
+struct ParamTraits<mozilla::ScrollPositionUpdate>
+    : PlainOldDataSerializer<mozilla::ScrollPositionUpdate> {};
+
+template <>
 struct ParamTraits<mozilla::layers::ScrollMetadata>
     : BitfieldHelper<mozilla::layers::ScrollMetadata> {
   typedef mozilla::layers::ScrollMetadata paramType;
@@ -422,6 +426,7 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     WriteParam(aMsg, aParam.mIsRDMTouchSimulationActive);
     WriteParam(aMsg, aParam.mDisregardedDirection);
     WriteParam(aMsg, aParam.mOverscrollBehavior);
+    WriteParam(aMsg, aParam.mScrollUpdates);
   }
 
   static bool ReadContentDescription(const Message* aMsg, PickleIterator* aIter,
@@ -457,7 +462,8 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsRDMTouchSimulationActive)) &&
            ReadParam(aMsg, aIter, &aResult->mDisregardedDirection) &&
-           ReadParam(aMsg, aIter, &aResult->mOverscrollBehavior);
+           ReadParam(aMsg, aIter, &aResult->mOverscrollBehavior) &&
+           ReadParam(aMsg, aIter, &aResult->mScrollUpdates);
   }
 };
 

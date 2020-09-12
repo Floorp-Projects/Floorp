@@ -276,6 +276,10 @@ void AppendToString(std::stringstream& aStream, gfx::SurfaceType format,
 void AppendToString(std::stringstream& aStream, ImageFormat format,
                     const char* pfx = "", const char* sfx = "");
 
+void AppendToString(std::stringstream& aStream,
+                    const mozilla::ScrollPositionUpdate& aUpdate,
+                    const char* pfx = "", const char* sfx = "");
+
 // Sometimes, you just want a string from a single value.
 template <typename T>
 std::string Stringify(const T& obj) {

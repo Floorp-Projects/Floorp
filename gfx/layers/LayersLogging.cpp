@@ -498,6 +498,14 @@ void AppendToString(std::stringstream& aStream, ImageFormat format,
   aStream << sfx;
 }
 
+void AppendToString(std::stringstream& aStream,
+                    const mozilla::ScrollPositionUpdate& aUpdate,
+                    const char* pfx, const char* sfx) {
+  aStream << pfx;
+  aUpdate.AppendToString(aStream);
+  aStream << sfx;
+}
+
 }  // namespace layers
 }  // namespace mozilla
 

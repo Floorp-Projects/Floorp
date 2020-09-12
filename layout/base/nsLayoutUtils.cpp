@@ -9397,6 +9397,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     metadata.SetSnapInfo(scrollableFrame->GetScrollSnapInfo());
     metadata.SetOverscrollBehavior(
         scrollableFrame->GetOverscrollBehaviorInfo());
+    metadata.SetScrollUpdates(scrollableFrame->GetScrollUpdates());
   }
 
   // If we have the scrollparent being the same as the scroll id, the
