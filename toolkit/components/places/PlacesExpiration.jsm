@@ -148,8 +148,10 @@ const ACTION = {
 const EXPIRATION_QUERIES = {
   // Some visits can be expired more often than others, cause they are less
   // useful to the user and can pollute awesomebar results:
-  // 1. urls over 255 chars
-  // 2. redirect sources and downloads
+  // 1. visits to urls over 255 chars
+  // 2. downloads
+  // We never expire redirect targets, because they are currently necessary to
+  // recognize redirect sources (see Bug 468710 for better options).
   // Note: due to the REPLACE option, this should be executed before
   // QUERY_FIND_VISITS_TO_EXPIRE, that has a more complete result.
   QUERY_FIND_EXOTIC_VISITS_TO_EXPIRE: {
@@ -158,6 +160,7 @@ const EXPIRATION_QUERIES = {
           FROM moz_historyvisits v
           JOIN moz_places h ON h.id = v.place_id
           WHERE visit_date < strftime('%s','now','localtime','start of day','-60 days','utc') * 1000000
+          AND visit_type NOT IN (5,6)
           AND ( LENGTH(h.url) > 255 OR v.visit_type = 7 )
           ORDER BY v.visit_date ASC
           LIMIT :limit_visits`,
