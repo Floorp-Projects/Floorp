@@ -382,6 +382,7 @@ UNIFIED_SOURCES += [
     'apz/src/SampledAPZCState.cpp',
     'apz/src/SimpleVelocityTracker.cpp',
     'apz/src/SmoothMsdScrollAnimation.cpp',
+    'apz/src/SmoothScrollAnimation.cpp',
     'apz/src/WheelScrollAnimation.cpp',
     'apz/testutil/APZTestData.cpp',
     'apz/util/ActiveElementManager.cpp',
