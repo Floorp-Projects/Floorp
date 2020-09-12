@@ -27,8 +27,12 @@ add_task(async function init() {
     url: "http://example.com/",
   });
 
+  // The prompt service is mocked later, so set it up to be restored.
+  let { prompt } = Services;
+
   registerCleanupFunction(async () => {
     BrowserTestUtils.removeTab(tab);
+    Services.prompt = prompt;
   });
 });
 
@@ -290,8 +294,6 @@ function promiseAddonUninstalled(addonId) {
 }
 
 function mockPromptService() {
-  let { prompt } = Services;
-
   let promptService = {
     // The prompt returns 1 for cancelled and 0 for accepted.
     _response: 0,
@@ -300,10 +302,6 @@ function mockPromptService() {
   };
 
   Services.prompt = promptService;
-
-  registerCleanupFunction(() => {
-    Services.prompt = prompt;
-  });
 
   return promptService;
 }
