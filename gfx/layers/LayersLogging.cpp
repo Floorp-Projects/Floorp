@@ -228,9 +228,6 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
   if (m.GetVisualScrollUpdateType() != FrameMetrics::eNone) {
     AppendToString(aStream, m.GetVisualDestination(), "] [vd=");
   }
-  if (m.GetDoSmoothScroll()) {
-    AppendToString(aStream, m.GetSmoothScrollOffset(), "] [ss=");
-  }
   AppendToString(aStream, m.GetDisplayPort(), "] [dp=");
   AppendToString(aStream, m.GetCriticalDisplayPort(), "] [cdp=");
   if (!detailed) {
@@ -250,10 +247,9 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     AppendToString(aStream, m.GetCumulativeResolution(), " cr=");
     AppendToString(aStream, m.GetZoom(), " z=");
     AppendToString(aStream, m.GetExtraResolution(), " er=");
-    aStream << nsPrintfCString(")] [u=(%d %d %d %" PRIu32 ")",
-                               m.GetScrollUpdateType(),
-                               m.GetVisualScrollUpdateType(),
-                               m.GetDoSmoothScroll(), m.GetScrollGeneration())
+    aStream << nsPrintfCString(
+                   ")] [u=(%d %d %" PRIu32 ")", m.GetScrollUpdateType(),
+                   m.GetVisualScrollUpdateType(), m.GetScrollGeneration())
                    .get();
     aStream << nsPrintfCString("] [i=(%" PRIu32 " %" PRIu64 " %d)] }",
                                m.GetPresShellId(), m.GetScrollId(),
