@@ -2023,6 +2023,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::Invalid |
             NonTSPseudoClass::MozUIValid |
             NonTSPseudoClass::MozBroken |
+            NonTSPseudoClass::MozSuppressed |
             NonTSPseudoClass::MozLoading |
             NonTSPseudoClass::MozHandlerBlocked |
             NonTSPseudoClass::MozHandlerDisabled |
