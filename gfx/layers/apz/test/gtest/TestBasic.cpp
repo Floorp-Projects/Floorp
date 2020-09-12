@@ -455,6 +455,10 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
   metadata.GetMetrics().SetLayoutScrollOffset(mainThreadOffset);
   metadata.GetMetrics().SetScrollGeneration(1);
   metadata.GetMetrics().SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
+  nsTArray<ScrollPositionUpdate> scrollUpdates;
+  scrollUpdates.AppendElement(ScrollPositionUpdate::NewScroll(
+      1, ScrollOrigin::Other, CSSPoint::ToAppUnits(mainThreadOffset)));
+  metadata.SetScrollUpdates(scrollUpdates);
   apzc->NotifyLayersUpdated(metadata, false, true);
 
   // Continue and finish the touch-drag gesture.
@@ -478,6 +482,8 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
   metadata.GetMetrics().SetVisualDestination(mainThreadOffset);
   metadata.GetMetrics().SetScrollGeneration(2);
   metadata.GetMetrics().SetVisualScrollUpdateType(FrameMetrics::eMainThread);
+  scrollUpdates.Clear();
+  metadata.SetScrollUpdates(scrollUpdates);
   apzc->NotifyLayersUpdated(metadata, false, true);
   for (int i = 0; i < 20; ++i) {
     touchPos.y -= 1;
@@ -495,7 +501,7 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
 
 TEST_F(APZCBasicTester, RelativeScrollOffset) {
   // Set up initial conditions: zoomed in, layout offset at (100, 100),
-  // visual offset at (120, 120); the relative offset is such (20, 20).
+  // visual offset at (120, 120); the relative offset is therefore (20, 20).
   ScrollMetadata metadata;
   FrameMetrics& metrics = metadata.GetMetrics();
   metrics.SetScrollableRect(CSSRect(0, 0, 1000, 1000));
@@ -511,8 +517,13 @@ TEST_F(APZCBasicTester, RelativeScrollOffset) {
   FrameMetrics& mainThreadMetrics = mainThreadMetadata.GetMetrics();
   mainThreadMetrics.SetLayoutScrollOffset(CSSPoint(200, 200));
   mainThreadMetrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
-  mainThreadMetrics.SetScrollGeneration(
-      mainThreadMetrics.GetScrollGeneration() + 1);
+  uint32_t newGeneration = mainThreadMetrics.GetScrollGeneration() + 1;
+  mainThreadMetrics.SetScrollGeneration(newGeneration);
+  nsTArray<ScrollPositionUpdate> scrollUpdates;
+  scrollUpdates.AppendElement(ScrollPositionUpdate::NewScroll(
+      newGeneration, ScrollOrigin::Other,
+      CSSPoint::ToAppUnits(CSSPoint(200, 200))));
+  mainThreadMetadata.SetScrollUpdates(scrollUpdates);
   apzc->NotifyLayersUpdated(mainThreadMetadata, /*isFirstPaint=*/false,
                             /*thisLayerTreeUpdated=*/true);
 
