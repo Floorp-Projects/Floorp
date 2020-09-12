@@ -189,8 +189,10 @@ bool SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   // When not a low precision pass and the page is in danger of checker boarding
   // abort update.
   if (!aLowPrecision && !mProgressiveUpdateWasInDanger) {
-    bool scrollUpdatePending = contentMetrics.GetScrollOffsetUpdated() &&
-                               contentMetrics.GetScrollGeneration() !=
+    const nsTArray<ScrollPositionUpdate>& scrollUpdates =
+        aLayer.Metadata().GetScrollUpdates();
+    bool scrollUpdatePending = !scrollUpdates.IsEmpty() &&
+                               scrollUpdates.LastElement().GetGeneration() >
                                    compositorMetrics.GetScrollGeneration();
     // If scrollUpdatePending is true, then that means the content-side
     // metrics has a new scroll offset that is going to be forced into the
