@@ -99,3 +99,42 @@ add_task(async () => {
     }
   );
 });
+
+/**
+ * Tests that the Picture-In-Picture window is closed when something
+ * is fullscreened
+ */
+add_task(async () => {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      for (let videoId of VIDEOS) {
+        let pipWin = await triggerPictureInPicture(browser, videoId);
+        ok(pipWin, "Got Picture-In-Picture window.");
+
+        let pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
+
+        // need to focus first, since fullscreen request will be blocked otherwise
+        await SimpleTest.promiseFocus(window);
+
+        await promiseFullscreenEntered(window, async () => {
+          await SpecialPowers.spawn(browser, [], async () => {
+            this.content.document.body.requestFullscreen();
+          });
+        });
+
+        await pipClosed;
+        ok(pipWin.closed, "Picture-In-Picture successfully closed.");
+
+        await promiseFullscreenExited(window, async () => {
+          await SpecialPowers.spawn(browser, [], async () => {
+            this.content.document.exitFullscreen();
+          });
+        });
+      }
+    }
+  );
+});
