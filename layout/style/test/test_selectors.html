@@ -1125,6 +1125,8 @@ function runTests() {
 
     // Plugin pseudoclasses are chrome-only:
     test_unbalanced_unparseable(":-moz-type-unsupported");
+    test_unbalanced_unparseable(":-moz-suppressed");
+    test_unbalanced_unparseable(":-moz-type-unsupported");
     test_unbalanced_unparseable(":-moz-type-unsupported-platform");
     test_unbalanced_unparseable(":-moz-handler-clicktoplay");
     test_unbalanced_unparseable(":-moz-handler-vulnerable-updatable");

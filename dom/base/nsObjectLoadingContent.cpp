@@ -1274,6 +1274,8 @@ EventStates nsObjectLoadingContent::ObjectState() const {
       return EventStates();
     case eType_Null:
       switch (mFallbackType) {
+        case eFallbackSuppressed:
+          return NS_EVENT_STATE_SUPPRESSED;
         case eFallbackClickToPlay:
         case eFallbackClickToPlayQuiet:
           return NS_EVENT_STATE_TYPE_CLICK_TO_PLAY;
@@ -2038,11 +2040,15 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
       return NS_OK;
     }
 
-    // Load denied, switch to fallback and set disabled if applicable
+    // Load denied, switch to fallback and set disabled/suppressed if applicable
     if (!allowLoad) {
       LOG(("OBJLC [%p]: Load denied by policy", this));
       mType = eType_Null;
-      fallbackType = eFallbackDisabled;
+      if (contentPolicy == nsIContentPolicy::REJECT_TYPE) {
+        fallbackType = eFallbackDisabled;
+      } else {
+        fallbackType = eFallbackSuppressed;
+      }
     }
   }
 
@@ -3205,7 +3211,7 @@ bool nsObjectLoadingContent::ShouldPlay(FallbackType& aReason) {
     documentClassification = ownerDoc->DocumentFlashClassification();
   }
   if (documentClassification == FlashClassification::Denied) {
-    aReason = eFallbackDisabled;
+    aReason = eFallbackSuppressed;
     return false;
   }
 
