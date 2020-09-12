@@ -43,6 +43,7 @@ class JSActor : public nsISupports, public nsWrapperCache {
   explicit JSActor(nsISupports* aGlobal = nullptr);
 
   const nsCString& Name() const { return mName; }
+  void GetName(nsCString& aName) { aName = Name(); }
 
   void SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                         JS::Handle<JS::Value> aObj, ErrorResult& aRv);
