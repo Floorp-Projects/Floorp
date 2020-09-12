@@ -89,17 +89,6 @@ class MobileViewportManager final : public nsIDOMEventListener,
    * updated, and the visual viewport size needs to be updated. */
   void ResolutionUpdated(mozilla::ResolutionChangeOrigin aOrigin);
 
-  /* Ensure that the initial viewport has been set based on the meta viewport
-     tag. There are two important differences between this and
-     SetInitialViewport():
-       1. This may be called before page load or before-first-paint, if
-          e.g. page content queries innerWidth early on.
-       2. This has no effect if SetInitialViewport() has already been
-          called, and thus will not clobber a viewport that has
-          previously been set (and perhaps modified since then).
-   */
-  void EnsureInitialViewportSet();
-
   /* Called to compute the initial viewport on page load or before-first-paint,
    * whichever happens first. Also called directly if we are created after the
    * presShell is initialized. */
