@@ -4735,25 +4735,26 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       CSSPoint base = GetCurrentAnimationDestination(lock).valueOr(
           Metrics().GetVisualScrollOffset());
 
+      CSSPoint destination;
       if (StaticPrefs::apz_relative_update_enabled() &&
           scrollUpdate.GetType() == ScrollUpdateType::Relative) {
         CSSPoint delta =
             scrollUpdate.GetDestination() - scrollUpdate.GetSource();
         APZC_LOG("%p relative smooth scrolling from %s by %s\n", this,
                  ToString(base).c_str(), ToString(delta).c_str());
-        Metrics().ClampAndSetSmoothScrollOffset(base + delta);
+        destination = Metrics().CalculateScrollRange().ClampPoint(base + delta);
       } else if (scrollUpdate.GetType() == ScrollUpdateType::PureRelative) {
         CSSPoint delta = scrollUpdate.GetDelta();
         APZC_LOG("%p pure-relative smooth scrolling from %s by %s\n", this,
                  ToString(base).c_str(), ToString(delta).c_str());
-        Metrics().ClampAndSetSmoothScrollOffset(base + delta);
+        destination = Metrics().CalculateScrollRange().ClampPoint(base + delta);
       } else {
         APZC_LOG("%p smooth scrolling to %s\n", this,
                  ToString(scrollUpdate.GetDestination()).c_str());
-        Metrics().SetSmoothScrollOffset(scrollUpdate.GetDestination());
+        destination = scrollUpdate.GetDestination();
       }
 
-      SmoothScrollTo(Metrics().GetSmoothScrollOffset());
+      SmoothScrollTo(destination);
       continue;
     }
 
