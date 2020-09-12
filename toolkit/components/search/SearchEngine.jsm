@@ -772,10 +772,10 @@ class SearchEngine {
       case "ftp":
         var chan = SearchUtils.makeChannel(uri);
 
-        let iconLoadCallback = function(byteArray) {
+        let iconLoadCallback = function(byteArray, engine) {
           // This callback may run after we've already set a preferred icon,
           // so check again.
-          if (this._hasPreferredIcon && !isPreferred) {
+          if (engine._hasPreferredIcon && !isPreferred) {
             return;
           }
 
@@ -804,24 +804,27 @@ class SearchEngine {
             ";base64," +
             btoa(String.fromCharCode.apply(null, byteArray));
 
-          this._iconURI = SearchUtils.makeURI(dataURL);
+          engine._iconURI = SearchUtils.makeURI(dataURL);
 
           if (width && height) {
-            this._addIconToMap(width, height, dataURL);
+            engine._addIconToMap(width, height, dataURL);
           }
 
-          if (this._engineAddedToStore) {
-            SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
+          if (engine._engineAddedToStore) {
+            SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.CHANGED);
           }
-          this._hasPreferredIcon = isPreferred;
+          engine._hasPreferredIcon = isPreferred;
         };
+
+        // If we're currently acting as an "update engine", then the callback
+        // should set the icon on the engine we're updating and not us, since
+        // |this| might be gone by the time the callback runs.
+        var engineToSet = this._engineToUpdate || this;
 
         var listener = new SearchUtils.LoadListener(
           chan,
-          // If we're currently acting as an "update engine", then the callback
-          // should set the icon on the engine we're updating and not us, since
-          // |this| might be gone by the time the callback runs.
-          iconLoadCallback.bind(this._engineToUpdate || this)
+          engineToSet,
+          iconLoadCallback
         );
         chan.notificationCallbacks = listener;
         chan.asyncOpen(listener);

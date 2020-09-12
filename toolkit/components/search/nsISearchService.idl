@@ -216,9 +216,8 @@ interface nsISearchParseSubmissionResult : nsISupports
 [scriptable, uuid(0301834b-2630-440e-8b98-db8dc55f34b9)]
 interface nsISearchService : nsISupports
 {
-  const unsigned long ERROR_DOWNLOAD_FAILURE = 0x1;
+  const unsigned long ERROR_UNKNOWN_FAILURE = 0x1;
   const unsigned long ERROR_DUPLICATE_ENGINE = 0x2;
-  const unsigned long ERROR_ENGINE_CORRUPTED = 0x3;
 
   /**
    * Start asynchronous initialization.

@@ -12,7 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  SearchUIUtils: "resource:///modules/SearchUIUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
@@ -1197,17 +1196,38 @@ class SearchOneOffs {
     if (target.classList.contains("addengine-item")) {
       // On success, hide the panel and tell event listeners to reshow it to
       // show the new engine.
-      SearchUIUtils.addOpenSearchEngine(
-        target.getAttribute("uri"),
-        target.getAttribute("image"),
-        this.window.gBrowser.selectedBrowser.browsingContext
-      )
-        .then(result => {
-          if (result) {
-            this._rebuild();
-          }
+      Services.search
+        .addOpenSearchEngine(
+          target.getAttribute("uri"),
+          target.getAttribute("image")
+        )
+        .then(engine => {
+          this._rebuild();
         })
-        .catch(console.error);
+        .catch(errorCode => {
+          if (errorCode != Ci.nsISearchService.ERROR_DUPLICATE_ENGINE) {
+            // Download error is shown by the search service
+            return;
+          }
+          const kSearchBundleURI =
+            "chrome://global/locale/search/search.properties";
+          let searchBundle = Services.strings.createBundle(kSearchBundleURI);
+          let brandBundle = this.document.getElementById("bundle_brand");
+          let brandName = brandBundle.getString("brandShortName");
+          let title = searchBundle.GetStringFromName(
+            "error_invalid_engine_title"
+          );
+          let text = searchBundle.formatStringFromName(
+            "error_duplicate_engine_msg",
+            [brandName, target.getAttribute("uri")]
+          );
+          Services.prompt.alertBC(
+            this.window.gBrowser.selectedBrowser.browsingContext,
+            Ci.nsIPrompt.MODAL_TYPE_CONTENT,
+            title,
+            text
+          );
+        });
     }
 
     if (target.classList.contains("search-one-offs-context-open-in-new-tab")) {
