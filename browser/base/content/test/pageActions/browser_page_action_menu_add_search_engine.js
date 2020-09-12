@@ -1,5 +1,9 @@
 "use strict";
 
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
+
 // Checks the panel button with a page that doesn't offer any engines.
 add_task(async function none() {
   let url = "http://mochi.test:8888/";
@@ -98,6 +102,53 @@ add_task(async function one() {
       false,
       "Button should not expand into a subview"
     );
+  });
+});
+
+// Checks the panel button with a page that offers an invalid engine.
+add_task(async function invalid() {
+  let url =
+    getRootDirectory(gTestPath) +
+    "page_action_menu_add_search_engine_invalid.html";
+  await BrowserTestUtils.withNewTab(url, async tab => {
+    // Open the panel.
+    await promisePageActionPanelOpen();
+
+    // The action should be present.
+    let actions = PageActions.actionsInPanel(window);
+    let action = actions.find(a => a.id == "addSearchEngine");
+    Assert.ok(action, "Action should be present in panel");
+    let expectedTitle = "Add Search Engine";
+    Assert.equal(action.getTitle(window), expectedTitle, "Action title");
+    let button = BrowserPageActions.panelButtonNodeForActionID(
+      "addSearchEngine"
+    );
+    Assert.ok(button, "Button should be in panel");
+    Assert.equal(button.label, expectedTitle, "Button label");
+    Assert.equal(
+      button.classList.contains("subviewbutton-nav"),
+      false,
+      "Button should not expand into a subview"
+    );
+
+    // Click the action's button.
+    let hiddenPromise = promisePageActionPanelHidden();
+    let promptPromise = PromptTestUtils.waitForPrompt(tab.linkedBrowser, {
+      modalType: Ci.nsIPromptService.MODAL_TYPE_CONTENT,
+      promptType: "alert",
+    });
+    EventUtils.synthesizeMouseAtCenter(button, {});
+    await hiddenPromise;
+    let prompt = await promptPromise;
+
+    Assert.ok(
+      prompt.ui.infoBody.textContent.includes(
+        "http://mochi.test:8888/browser/browser/base/content/test/pageActions/page_action_menu_add_search_engine_404.xml"
+      ),
+      "Should have included the url in the prompt body"
+    );
+
+    await PromptTestUtils.handlePrompt(prompt);
   });
 });
 

@@ -7,6 +7,11 @@ ChromeUtils.defineModuleGetter(
   "SiteSpecificBrowser",
   "resource:///modules/SiteSpecificBrowserService.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "SearchUIUtils",
+  "resource:///modules/SearchUIUtils.jsm"
+);
 
 var BrowserPageActions = {
   /**
@@ -1322,35 +1327,17 @@ BrowserPageActions.addSearchEngine = {
   },
 
   _installEngine(uri, image) {
-    Services.search.addOpenSearchEngine(uri, image).then(
-      engine => {
-        showBrowserPageActionFeedback(this.action);
-      },
-      errorCode => {
-        if (errorCode != Ci.nsISearchService.ERROR_DUPLICATE_ENGINE) {
-          // Download error is shown by the search service
-          return;
+    SearchUIUtils.addOpenSearchEngine(
+      uri,
+      image,
+      gBrowser.selectedBrowser.browsingContext
+    )
+      .then(result => {
+        if (result) {
+          showBrowserPageActionFeedback(this.action);
         }
-        const kSearchBundleURI =
-          "chrome://global/locale/search/search.properties";
-        let searchBundle = Services.strings.createBundle(kSearchBundleURI);
-        let brandBundle = document.getElementById("bundle_brand");
-        let brandName = brandBundle.getString("brandShortName");
-        let title = searchBundle.GetStringFromName(
-          "error_invalid_engine_title"
-        );
-        let text = searchBundle.formatStringFromName(
-          "error_duplicate_engine_msg",
-          [brandName, uri]
-        );
-        Services.prompt.alertBC(
-          gBrowser.selectedBrowser.browsingContext,
-          Ci.nsIPrompt.MODAL_TYPE_CONTENT,
-          title,
-          text
-        );
-      }
-    );
+      })
+      .catch(console.error);
   },
 };
 
