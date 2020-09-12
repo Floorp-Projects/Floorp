@@ -628,7 +628,21 @@ function startup() {
       name: "GeckoViewProgress",
       onEnable: {
         resource: "resource://gre/modules/GeckoViewProgress.jsm",
-        frameScript: "chrome://geckoview/content/GeckoViewProgressChild.js",
+        actors: {
+          ProgressDelegate: {
+            parent: {
+              moduleURI: "resource:///actors/ProgressDelegateParent.jsm",
+            },
+            child: {
+              moduleURI: "resource:///actors/ProgressDelegateChild.jsm",
+              events: {
+                MozAfterPaint: { capture: false, mozSystemGroup: true },
+                DOMContentLoaded: { capture: false, mozSystemGroup: true },
+                pageshow: { capture: false, mozSystemGroup: true },
+              },
+            },
+          },
+        },
       },
     },
     {
