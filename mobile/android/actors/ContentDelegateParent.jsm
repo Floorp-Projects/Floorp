@@ -9,23 +9,24 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 
+const { GeckoViewActorParent } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewActorParent.jsm"
+);
+
 const { debug, warn } = GeckoViewUtils.initLogging("ContentDelegateParent");
 
-class ContentDelegateParent extends JSWindowActorParent {
+class ContentDelegateParent extends GeckoViewActorParent {
   async receiveMessage(aMsg) {
     debug`receiveMessage: ${aMsg.name} ${aMsg}`;
 
-    const browser = this.browsingContext.top.embedderElement;
-    const window = browser.ownerGlobal;
-
     switch (aMsg.name) {
       case "GeckoView:DOMFullscreenExit": {
-        window.windowUtils.remoteFrameFullscreenReverted();
+        this.window.windowUtils.remoteFrameFullscreenReverted();
         break;
       }
 
       case "GeckoView:DOMFullscreenRequest": {
-        window.windowUtils.remoteFrameFullscreenChanged(browser);
+        this.window.windowUtils.remoteFrameFullscreenChanged(this.browser);
         break;
       }
     }
