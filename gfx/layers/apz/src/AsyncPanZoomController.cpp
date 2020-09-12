@@ -669,13 +669,13 @@ class ZoomAnimation : public AsyncPanZoomAnimation {
   CSSToParentLayerScale2D mEndZoom;
 };
 
-class SmoothScrollAnimation : public AsyncPanZoomAnimation {
+class SmoothMsdScrollAnimation : public AsyncPanZoomAnimation {
  public:
-  SmoothScrollAnimation(AsyncPanZoomController& aApzc,
-                        const CSSPoint& aInitialPosition,
-                        const CSSPoint& aInitialVelocity,
-                        const CSSPoint& aDestination, double aSpringConstant,
-                        double aDampingRatio)
+  SmoothMsdScrollAnimation(AsyncPanZoomController& aApzc,
+                           const CSSPoint& aInitialPosition,
+                           const CSSPoint& aInitialVelocity,
+                           const CSSPoint& aDestination, double aSpringConstant,
+                           double aDampingRatio)
       : mApzc(aApzc),
         mXAxisModel(aInitialPosition.x, aDestination.x, aInitialVelocity.x,
                     aSpringConstant, aDampingRatio),
@@ -790,7 +790,9 @@ class SmoothScrollAnimation : public AsyncPanZoomAnimation {
     return CSSPoint(mXAxisModel.GetDestination(), mYAxisModel.GetDestination());
   }
 
-  SmoothScrollAnimation* AsSmoothScrollAnimation() override { return this; }
+  SmoothMsdScrollAnimation* AsSmoothMsdScrollAnimation() override {
+    return this;
+  }
 
  private:
   AsyncPanZoomController& mApzc;
@@ -1348,7 +1350,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
   switch (mState) {
     case FLING:
     case ANIMATING_ZOOM:
-    case SMOOTH_SCROLL:
+    case SMOOTHMSD_SCROLL:
     case OVERSCROLL_ANIMATION:
     case WHEEL_SCROLL:
     case KEYBOARD_SCROLL:
@@ -1391,7 +1393,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(
   APZC_LOG("%p got a touch-move in state %d\n", this, mState);
   switch (mState) {
     case FLING:
-    case SMOOTH_SCROLL:
+    case SMOOTHMSD_SCROLL:
     case NOTHING:
     case ANIMATING_ZOOM:
       // May happen if the user double-taps and drags without lifting after the
@@ -1478,7 +1480,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(
       NS_WARNING("Received impossible touch end in OnTouchEnd.");
       [[fallthrough]];
     case ANIMATING_ZOOM:
-    case SMOOTH_SCROLL:
+    case SMOOTHMSD_SCROLL:
     case NOTHING:
       // May happen if the user double-taps and drags without lifting after the
       // second tap. Ignore if this happens.
@@ -2064,11 +2066,11 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
 
   if (scrollSnapped) {
     // If we're scroll snapping, use a smooth scroll animation to get
-    // the desired physics. Note that SmoothScrollTo() will re-use an
+    // the desired physics. Note that SmoothMsdScrollTo() will re-use an
     // existing smooth scroll animation if there is one.
     APZC_LOG("%p keyboard scrolling to snap point %s\n", this,
              Stringify(destination).c_str());
-    SmoothScrollTo(destination);
+    SmoothMsdScrollTo(destination);
     return nsEventStatus_eConsumeDoDefault;
   }
 
@@ -2431,11 +2433,11 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
       if (MaybeAdjustDeltaForScrollSnappingOnWheelInput(aEvent, delta,
                                                         startPosition)) {
         // If we're scroll snapping, use a smooth scroll animation to get
-        // the desired physics. Note that SmoothScrollTo() will re-use an
+        // the desired physics. Note that SmoothMsdScrollTo() will re-use an
         // existing smooth scroll animation if there is one.
         APZC_LOG("%p wheel scrolling to snap point %s\n", this,
                  Stringify(startPosition).c_str());
-        SmoothScrollTo(startPosition);
+        SmoothMsdScrollTo(startPosition);
         break;
       }
 
@@ -2504,8 +2506,8 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(
     const PanGestureInput& aEvent) {
   APZC_LOG("%p got a pan-begin in state %d\n", this, mState);
 
-  if (mState == SMOOTH_SCROLL) {
-    // SMOOTH_SCROLL scrolls are cancelled by pan gestures.
+  if (mState == SMOOTHMSD_SCROLL) {
+    // SMOOTHMSD_SCROLL scrolls are cancelled by pan gestures.
     CancelAnimation();
   }
 
@@ -2536,17 +2538,17 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
                                             bool aFingersOnTouchpad) {
   APZC_LOG("%p got a pan-pan in state %d\n", this, mState);
 
-  if (mState == SMOOTH_SCROLL) {
+  if (mState == SMOOTHMSD_SCROLL) {
     if (!aFingersOnTouchpad) {
-      // When a SMOOTH_SCROLL scroll is being processed on a frame, mouse
+      // When a SMOOTHMSD_SCROLL scroll is being processed on a frame, mouse
       // wheel and trackpad momentum scroll position updates will not cancel the
-      // SMOOTH_SCROLL scroll animations, enabling scripts that depend on
+      // SMOOTHMSD_SCROLL scroll animations, enabling scripts that depend on
       // them to be responsive without forcing the user to wait for the momentum
       // scrolling to completely stop.
       return nsEventStatus_eConsumeNoDefault;
     }
 
-    // SMOOTH_SCROLL scrolls are cancelled by pan gestures.
+    // SMOOTHMSD_SCROLL scrolls are cancelled by pan gestures.
     CancelAnimation();
   }
 
@@ -2723,8 +2725,8 @@ nsEventStatus AsyncPanZoomController::OnPanMomentumStart(
     const PanGestureInput& aEvent) {
   APZC_LOG("%p got a pan-momentumstart in state %d\n", this, mState);
 
-  if (mState == SMOOTH_SCROLL) {
-    // SMOOTH_SCROLL scrolls are cancelled by pan gestures.
+  if (mState == SMOOTHMSD_SCROLL) {
+    // SMOOTHMSD_SCROLL scrolls are cancelled by pan gestures.
     CancelAnimation();
   }
 
@@ -3404,7 +3406,7 @@ ParentLayerPoint AsyncPanZoomController::AttemptFling(
   // scroll there using a smooth scroll animation. Otherwise, start a
   // fling animation.
   ScrollSnapToDestination();
-  if (mState != SMOOTH_SCROLL) {
+  if (mState != SMOOTHMSD_SCROLL) {
     SetState(FLING);
     AsyncPanZoomAnimation* fling =
         GetPlatformSpecificState()->CreateFlingAnimation(*this, aHandoffState,
@@ -3439,8 +3441,8 @@ Maybe<CSSPoint> AsyncPanZoomController::GetCurrentAnimationDestination(
   if (mState == WHEEL_SCROLL) {
     return Some(mAnimation->AsWheelScrollAnimation()->GetDestination());
   }
-  if (mState == SMOOTH_SCROLL) {
-    return Some(mAnimation->AsSmoothScrollAnimation()->GetDestination());
+  if (mState == SMOOTHMSD_SCROLL) {
+    return Some(mAnimation->AsSmoothMsdScrollAnimation()->GetDestination());
   }
   if (mState == KEYBOARD_SCROLL) {
     return Some(mAnimation->AsKeyboardScrollAnimation()->GetDestination());
@@ -3508,21 +3510,21 @@ void AsyncPanZoomController::HandleSmoothScrollOverscroll(
   HandleFlingOverscroll(aVelocity, BuildOverscrollHandoffChain(), nullptr);
 }
 
-void AsyncPanZoomController::SmoothScrollTo(const CSSPoint& aDestination) {
-  if (mState == SMOOTH_SCROLL && mAnimation) {
+void AsyncPanZoomController::SmoothMsdScrollTo(const CSSPoint& aDestination) {
+  if (mState == SMOOTHMSD_SCROLL && mAnimation) {
     APZC_LOG("%p updating destination on existing animation\n", this);
-    RefPtr<SmoothScrollAnimation> animation(
-        static_cast<SmoothScrollAnimation*>(mAnimation.get()));
+    RefPtr<SmoothMsdScrollAnimation> animation(
+        static_cast<SmoothMsdScrollAnimation*>(mAnimation.get()));
     animation->SetDestination(aDestination);
   } else {
     CancelAnimation();
-    SetState(SMOOTH_SCROLL);
+    SetState(SMOOTHMSD_SCROLL);
     // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s.
     CSSPoint initialVelocity = ParentLayerPoint(mX.GetVelocity() * 1000.0f,
                                                 mY.GetVelocity() * 1000.0f) /
                                Metrics().GetZoom();
 
-    StartAnimation(new SmoothScrollAnimation(
+    StartAnimation(new SmoothMsdScrollAnimation(
         *this, Metrics().GetVisualScrollOffset(), initialVelocity, aDestination,
         StaticPrefs::layout_css_scroll_behavior_spring_constant(),
         StaticPrefs::layout_css_scroll_behavior_damping_ratio()));
@@ -4754,7 +4756,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         destination = scrollUpdate.GetDestination();
       }
 
-      SmoothScrollTo(destination);
+      SmoothMsdScrollTo(destination);
       continue;
     }
 
@@ -5405,7 +5407,7 @@ void AsyncPanZoomController::ScrollSnapNear(const CSSPoint& aDestination) {
     if (*snapPoint != Metrics().GetVisualScrollOffset()) {
       APZC_LOG("%p smooth scrolling to snap point %s\n", this,
                Stringify(*snapPoint).c_str());
-      SmoothScrollTo(*snapPoint);
+      SmoothMsdScrollTo(*snapPoint);
     }
   }
 }
@@ -5451,7 +5453,7 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
         (float)Metrics().GetVisualScrollOffset().y, (float)startPosition.x,
         (float)startPosition.y);
 
-    SmoothScrollTo(startPosition);
+    SmoothMsdScrollTo(startPosition);
   }
 }
 
