@@ -3806,6 +3806,11 @@
   value: 200
   mirror: always
 
+- name: general.smoothScroll.lines
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: general.smoothScroll.lines.durationMaxMS
   type: RelaxedAtomicInt32
   value: 150
@@ -3836,6 +3841,11 @@
   value: 100
   mirror: always
 
+- name: general.smoothScroll.other
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: general.smoothScroll.other.durationMaxMS
   type: RelaxedAtomicInt32
   value: 150
@@ -3859,6 +3869,26 @@
 - name: general.smoothScroll.pages.durationMinMS
   type: RelaxedAtomicInt32
   value: 150
+  mirror: always
+
+- name: general.smoothScroll.scrollbars
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: general.smoothScroll.scrollbars.durationMaxMS
+  type: RelaxedAtomicInt32
+  value: 150
+  mirror: always
+
+- name: general.smoothScroll.scrollbars.durationMinMS
+  type: RelaxedAtomicInt32
+  value: 150
+  mirror: always
+
+- name: general.smoothScroll.pixels
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 - name: general.smoothScroll.pixels.durationMaxMS
