@@ -99,7 +99,7 @@
       
       document.getElementById("scroll_5").scrollTo({left: 0, top: 0});
       document.getElementById("scroll_5").scrollBy({left: 5, top: 5, behavior: "smooth"});
-      // Expected to interrupt smooth scrolling
+      // Expected to NOT interrupt smooth scrolling
       document.getElementById("scroll_5").scrollBy({});
       
       document.getElementById("scroll_6").scrollTo({left: 0, top: 0});
@@ -119,19 +119,19 @@
       
       document.getElementById("scroll_10").scrollTo(0, 0);
       document.getElementById("scroll_10").scrollBy({left: 5, top: 5, behavior: "smooth"});
-      // Expected to interrupt smooth scrolling
+      // Expected to NOT interrupt smooth scrolling
       document.getElementById("scroll_10").scrollBy(0, 0);
     } else {
       document.getElementById("scroll_1").scrollTo({left: 5, top: 0});
       document.getElementById("scroll_2").scrollTo({left: 0, top: 5});
       document.getElementById("scroll_3").scrollTo({left: 5, top: 5});
       document.getElementById("scroll_4").scrollTo({left: 5, top: 5});
-      document.getElementById("scroll_5").scrollTo({left: 0, top: 0});
+      document.getElementById("scroll_5").scrollTo({left: 5, top: 5});
       document.getElementById("scroll_6").scrollTo(0, 5);
       document.getElementById("scroll_7").scrollTo(5, 0);
       document.getElementById("scroll_8").scrollTo(0, 5);
       document.getElementById("scroll_9").scrollTo(5, 5);
-      document.getElementById("scroll_10").scrollTo(0, 0);
+      document.getElementById("scroll_10").scrollTo(5, 5);
     }
     
     // Allow smooth scrolling to complete before testing result
