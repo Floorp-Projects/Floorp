@@ -7038,7 +7038,7 @@ nsGridContainerFrame::GetNearestFragmentainer(
     const GridReflowInput& aState) const {
   Maybe<nsGridContainerFrame::Fragmentainer> data;
   const ReflowInput* gridRI = aState.mReflowInput;
-  if (gridRI->AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
+  if (gridRI->AvailableBSize() == NS_UNCONSTRAINEDSIZE && !GetPrevInFlow()) {
     return data;
   }
   WritingMode wm = aState.mWM;
@@ -7057,9 +7057,15 @@ nsGridContainerFrame::GetNearestFragmentainer(
         frameType == LayoutFrameType::ColumnSet) {
       data.emplace();
       data->mIsTopOfPage = gridRI->mFlags.mIsTopOfPage;
-      data->mToFragmentainerEnd = aState.mFragBStart +
-                                  gridRI->AvailableBSize() -
-                                  aState.mBorderPadding.BStart(wm);
+      if (gridRI->AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+        data->mToFragmentainerEnd = aState.mFragBStart +
+                                    gridRI->AvailableBSize() -
+                                    aState.mBorderPadding.BStart(wm);
+      } else {
+        // This occurs when nsColumnSetFrame reflows its last column in
+        // unconstrained available block-size.
+        data->mToFragmentainerEnd = NS_UNCONSTRAINEDSIZE;
+      }
       const auto numRows = aState.mRows.mSizes.Length();
       data->mCanBreakAtStart =
           numRows > 0 && aState.mRows.mSizes[0].mPosition > 0;
@@ -7102,8 +7108,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
     const GridArea& area = aGridItemInfo->mArea;
     MOZ_ASSERT(area.IsDefinite());
     cb = aState.ContainingBlockFor(area);
-    isConstrainedBSize = aFragmentainer && !wm.IsOrthogonalTo(childWM);
-    if (isConstrainedBSize) {
+    if (aFragmentainer && !wm.IsOrthogonalTo(childWM)) {
       // |gridAreaBOffset| is the offset of the child's grid area in this
       // container fragment (if negative, that distance is the child CB size
       // consumed in previous container fragments).  Note that cb.BStart
@@ -7112,9 +7117,12 @@ void nsGridContainerFrame::ReflowInFlowChild(
       nscoord gridAreaBOffset = cb.BStart(wm) - aState.mFragBStart;
       consumedGridAreaBSize = std::max(0, -gridAreaBOffset);
       cb.BStart(wm) = std::max(0, gridAreaBOffset);
-      toFragmentainerEnd = aFragmentainer->mToFragmentainerEnd -
-                           aState.mFragBStart - cb.BStart(wm);
-      toFragmentainerEnd = std::max(toFragmentainerEnd, 0);
+      if (aFragmentainer->mToFragmentainerEnd != NS_UNCONSTRAINEDSIZE) {
+        toFragmentainerEnd = aFragmentainer->mToFragmentainerEnd -
+                             aState.mFragBStart - cb.BStart(wm);
+        toFragmentainerEnd = std::max(toFragmentainerEnd, 0);
+        isConstrainedBSize = true;
+      }
     }
     cb += aContentArea.Origin(wm);
     aState.mRows.AlignBaselineSubtree(*aGridItemInfo);
@@ -7406,61 +7414,66 @@ nscoord nsGridContainerFrame::ReflowInFragmentainer(
     }
   }
 
-  // Check for forced breaks on the items.
-  const bool isTopOfPage = aFragmentainer.mIsTopOfPage;
+  // Check for forced breaks on the items if available block-size for children
+  // is constrained. That is, ignore forced breaks if available block-size for
+  // children is unconstrained since our parent expected us to be fully
+  // complete.
   bool isForcedBreak = false;
   const bool avoidBreakInside = ShouldAvoidBreakInside(*aState.mReflowInput);
-  for (const GridItemInfo* info : sortedItems) {
-    uint32_t itemStartRow = info->mArea.mRows.mStart;
-    if (itemStartRow == endRow) {
-      break;
-    }
-    auto disp = info->mFrame->StyleDisplay();
-    if (disp->BreakBefore()) {
-      // Propagate break-before on the first row to the container unless we're
-      // already at top-of-page.
-      if ((itemStartRow == 0 && !isTopOfPage) || avoidBreakInside) {
-        aStatus.SetInlineLineBreakBeforeAndReset();
-        return aState.mFragBStart;
+  if (childAvailableSize != NS_UNCONSTRAINEDSIZE) {
+    const bool isTopOfPage = aFragmentainer.mIsTopOfPage;
+    for (const GridItemInfo* info : sortedItems) {
+      uint32_t itemStartRow = info->mArea.mRows.mStart;
+      if (itemStartRow == endRow) {
+        break;
       }
-      if ((itemStartRow > startRow ||
-           (itemStartRow == startRow && !isTopOfPage)) &&
-          itemStartRow < endRow) {
-        endRow = itemStartRow;
-        isForcedBreak = true;
-        // reset any BREAK_AFTER we found on an earlier item
-        aStatus.Reset();
-        break;  // we're done since the items are sorted in row order
-      }
-    }
-    uint32_t itemEndRow = info->mArea.mRows.mEnd;
-    if (disp->BreakAfter()) {
-      if (itemEndRow != numRows) {
-        if (itemEndRow > startRow && itemEndRow < endRow) {
-          endRow = itemEndRow;
-          isForcedBreak = true;
-          // No "break;" here since later items with break-after may have
-          // a shorter span.
+      const auto* disp = info->mFrame->StyleDisplay();
+      if (disp->BreakBefore()) {
+        // Propagate break-before on the first row to the container unless we're
+        // already at top-of-page.
+        if ((itemStartRow == 0 && !isTopOfPage) || avoidBreakInside) {
+          aStatus.SetInlineLineBreakBeforeAndReset();
+          return aState.mFragBStart;
         }
-      } else {
-        // Propagate break-after on the last row to the container, we may still
-        // find a break-before on this row though (and reset aStatus).
-        aStatus.SetInlineLineBreakAfter();  // tentative
+        if ((itemStartRow > startRow ||
+             (itemStartRow == startRow && !isTopOfPage)) &&
+            itemStartRow < endRow) {
+          endRow = itemStartRow;
+          isForcedBreak = true;
+          // reset any BREAK_AFTER we found on an earlier item
+          aStatus.Reset();
+          break;  // we're done since the items are sorted in row order
+        }
+      }
+      uint32_t itemEndRow = info->mArea.mRows.mEnd;
+      if (disp->BreakAfter()) {
+        if (itemEndRow != numRows) {
+          if (itemEndRow > startRow && itemEndRow < endRow) {
+            endRow = itemEndRow;
+            isForcedBreak = true;
+            // No "break;" here since later items with break-after may have
+            // a shorter span.
+          }
+        } else {
+          // Propagate break-after on the last row to the container, we may
+          // still find a break-before on this row though (and reset aStatus).
+          aStatus.SetInlineLineBreakAfter();  // tentative
+        }
       }
     }
-  }
 
-  // Consume at least one row in each fragment until we have consumed them all.
-  // Except for the first row if there's a break opportunity before it.
-  if (startRow == endRow && startRow != numRows &&
-      (startRow != 0 || !aFragmentainer.mCanBreakAtStart)) {
-    ++endRow;
-  }
+    // Consume at least one row in each fragment until we have consumed them
+    // all. Except for the first row if there's a break opportunity before it.
+    if (startRow == endRow && startRow != numRows &&
+        (startRow != 0 || !aFragmentainer.mCanBreakAtStart)) {
+      ++endRow;
+    }
 
-  // Honor break-inside:avoid if we can't fit all rows.
-  if (avoidBreakInside && endRow < numRows) {
-    aStatus.SetInlineLineBreakBeforeAndReset();
-    return aState.mFragBStart;
+    // Honor break-inside:avoid if we can't fit all rows.
+    if (avoidBreakInside && endRow < numRows) {
+      aStatus.SetInlineLineBreakBeforeAndReset();
+      return aState.mFragBStart;
+    }
   }
 
   // Calculate the block-size including this fragment.
