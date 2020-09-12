@@ -633,10 +633,6 @@ nsRect nsImageFrame::SourceRectToDest(const nsIntRect& aRect) {
 }
 
 static bool ImageOk(EventStates aState) {
-  // Note that we treat NS_EVENT_STATE_SUPPRESSED images as "OK".  This means
-  // that we'll construct image frames for them as needed if their display is
-  // toggled from "none" (though we won't paint them, unless their visibility
-  // is changed too).
   return !aState.HasState(NS_EVENT_STATE_BROKEN);
 }
 
