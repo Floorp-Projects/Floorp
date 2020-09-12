@@ -161,7 +161,6 @@
 #include "nsBlockFrame.h"
 
 #include "DOMMatrix.h"
-#include "MobileViewportManager.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
@@ -846,16 +845,12 @@ nsRect Element::GetClientAreaRect() {
     // We will always have a pres shell if we have a pres context, and we will
     // only get here if we have a pres context from the root content document
     // check
-    RefPtr<PresShell> presShell = doc->GetPresShell();
+    PresShell* presShell = doc->GetPresShell();
 
     // Ensure up to date dimensions, but don't reflow
     RefPtr<nsViewManager> viewManager = presShell->GetViewManager();
     if (viewManager) {
       viewManager->FlushDelayedResize(false);
-    }
-    if (RefPtr<MobileViewportManager> mvm =
-            presShell->GetMobileViewportManager()) {
-      mvm->EnsureInitialViewportSet();
     }
     return nsRect(nsPoint(), presContext->GetVisibleArea().Size());
   }
