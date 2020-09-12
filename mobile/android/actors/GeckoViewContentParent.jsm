@@ -9,13 +9,13 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 
+const { GeckoViewActorParent } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewActorParent.jsm"
+);
+
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewContentParent");
 
-class GeckoViewContentParent extends JSWindowActorParent {
-  get browser() {
-    return this.browsingContext.top.embedderElement;
-  }
-
+class GeckoViewContentParent extends GeckoViewActorParent {
   async collectState() {
     return this.sendQuery("CollectSessionState");
   }
