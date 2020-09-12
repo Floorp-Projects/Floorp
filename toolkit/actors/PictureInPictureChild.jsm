@@ -1027,6 +1027,10 @@ class PictureInPictureChild extends JSWindowActorChild {
         this.closePictureInPicture({ reason: "pagehide" });
         break;
       }
+      case "MozDOMFullscreen:Request": {
+        this.closePictureInPicture({ reason: "fullscreen" });
+        break;
+      }
       case "play": {
         this.sendAsyncMessage("PictureInPicture:Playing");
         break;
@@ -1245,6 +1249,13 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.addEventListener("pause", this);
       originatingVideo.addEventListener("volumechange", this);
       originatingVideo.addEventListener("resize", this);
+
+      let chromeEventHandler = originatingWindow.docShell.chromeEventHandler;
+      chromeEventHandler.addEventListener(
+        "MozDOMFullscreen:Request",
+        this,
+        true
+      );
     }
   }
 
@@ -1262,6 +1273,13 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.removeEventListener("pause", this);
       originatingVideo.removeEventListener("volumechange", this);
       originatingVideo.removeEventListener("resize", this);
+
+      let chromeEventHandler = originatingWindow.docShell.chromeEventHandler;
+      chromeEventHandler.removeEventListener(
+        "MozDOMFullscreen:Request",
+        this,
+        true
+      );
     }
   }
 
