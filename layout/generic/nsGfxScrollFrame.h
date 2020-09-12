@@ -172,7 +172,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
     pt.y = mScrollPort.y - mScrolledFrame->GetPosition().y;
     return pt;
   }
-  nsPoint GetApzScrollPosition() const { return mApzScrollPos; }
   nsRect GetLayoutScrollRange() const;
   // Get the scroll range assuming the viewport has size (aWidth, aHeight).
   nsRect GetScrollRange(nscoord aWidth, nscoord aHeight) const;
@@ -467,7 +466,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   void ResetScrollInfoIfNeeded(uint32_t aGeneration,
                                bool aApzAnimationInProgress);
-  Maybe<nsPoint> GetRelativeOffset() const { return mRelativeOffset; }
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
       LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
@@ -927,9 +925,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   nsPoint GetLogicalScrollPosition() const final {
     return mHelper.GetLogicalScrollPosition();
   }
-  nsPoint GetApzScrollPosition() const final {
-    return mHelper.GetApzScrollPosition();
-  }
   nsRect GetScrollRange() const final { return mHelper.GetLayoutScrollRange(); }
   nsSize GetVisualViewportSize() const final {
     return mHelper.GetVisualViewportSize();
@@ -1046,9 +1041,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.ExpandRectToNearlyVisible(aRect);
   }
   ScrollOrigin LastScrollOrigin() final { return mHelper.LastScrollOrigin(); }
-  ScrollOrigin LastSmoothScrollOrigin() final {
-    return mHelper.LastSmoothScrollOrigin();
-  }
   bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
     return mHelper.IsScrollAnimating(aIncludeApz);
   }
@@ -1064,9 +1056,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void ResetScrollInfoIfNeeded(uint32_t aGeneration,
                                bool aApzAnimationInProgress) final {
     mHelper.ResetScrollInfoIfNeeded(aGeneration, aApzAnimationInProgress);
-  }
-  Maybe<nsPoint> GetRelativeOffset() const final {
-    return mHelper.GetRelativeOffset();
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
@@ -1412,9 +1401,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
   nsPoint GetLogicalScrollPosition() const final {
     return mHelper.GetLogicalScrollPosition();
   }
-  nsPoint GetApzScrollPosition() const final {
-    return mHelper.GetApzScrollPosition();
-  }
   nsRect GetScrollRange() const final { return mHelper.GetLayoutScrollRange(); }
   nsSize GetVisualViewportSize() const final {
     return mHelper.GetVisualViewportSize();
@@ -1527,9 +1513,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
     return mHelper.ExpandRectToNearlyVisible(aRect);
   }
   ScrollOrigin LastScrollOrigin() final { return mHelper.LastScrollOrigin(); }
-  ScrollOrigin LastSmoothScrollOrigin() final {
-    return mHelper.LastSmoothScrollOrigin();
-  }
   bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
     return mHelper.IsScrollAnimating(aIncludeApz);
   }
@@ -1545,9 +1528,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
   void ResetScrollInfoIfNeeded(uint32_t aGeneration,
                                bool aApzAnimationInProgress) final {
     mHelper.ResetScrollInfoIfNeeded(aGeneration, aApzAnimationInProgress);
-  }
-  Maybe<nsPoint> GetRelativeOffset() const final {
-    return mHelper.GetRelativeOffset();
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
