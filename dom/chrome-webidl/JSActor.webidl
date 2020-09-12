@@ -13,7 +13,9 @@ interface mixin JSActor {
     [Throws]
     Promise<any> sendQuery(DOMString messageName,
                            optional any obj);
-  };
+
+    readonly attribute UTF8String name;
+};
 
 /**
  * WebIDL callback interface version of the nsIObserver interface for use when
