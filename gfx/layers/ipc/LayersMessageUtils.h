@@ -879,10 +879,6 @@ struct ParamTraits<mozilla::layers::SimpleLayerAttributes> {
 };
 
 template <>
-struct ParamTraits<mozilla::layers::ScrollUpdateInfo>
-    : public PlainOldDataSerializer<mozilla::layers::ScrollUpdateInfo> {};
-
-template <>
 struct ParamTraits<mozilla::layers::CompositionPayloadType>
     : public ContiguousEnumSerializerInclusive<
           mozilla::layers::CompositionPayloadType,

@@ -640,10 +640,10 @@ void Layer::ApplyPendingUpdatesForThisTransaction() {
   for (size_t i = 0; i < mScrollMetadata.Length(); i++) {
     FrameMetrics& fm = mScrollMetadata[i].GetMetrics();
     ScrollableLayerGuid::ViewID scrollId = fm.GetScrollId();
-    Maybe<ScrollUpdateInfo> update =
+    Maybe<ScrollPositionUpdate> update =
         Manager()->GetPendingScrollInfoUpdate(scrollId);
     if (update) {
-      fm.UpdatePendingScrollInfo(update.value());
+      mScrollMetadata[i].UpdatePendingScrollInfo(update.value());
       Mutated();
     }
   }
@@ -2261,18 +2261,23 @@ bool LayerManager::IsLogEnabled() {
 
 bool LayerManager::SetPendingScrollUpdateForNextTransaction(
     ScrollableLayerGuid::ViewID aScrollId,
-    const ScrollUpdateInfo& aUpdateInfo) {
+    const ScrollPositionUpdate& aUpdateInfo) {
   Layer* withPendingTransform = DepthFirstSearch<ForwardIterator>(
       GetRoot(), [](Layer* aLayer) { return aLayer->HasPendingTransform(); });
   if (withPendingTransform) {
     return false;
   }
 
+  // XXX We should store a list of ScrollPositionUpdates here rather
+  // than bailing out if we get multiple scroll updates for the same scrollid.
+  if (mPendingScrollUpdates.Lookup(aScrollId)) {
+    return false;
+  }
   mPendingScrollUpdates.Put(aScrollId, aUpdateInfo);
   return true;
 }
 
-Maybe<ScrollUpdateInfo> LayerManager::GetPendingScrollInfoUpdate(
+Maybe<ScrollPositionUpdate> LayerManager::GetPendingScrollInfoUpdate(
     ScrollableLayerGuid::ViewID aScrollId) {
   auto p = mPendingScrollUpdates.Lookup(aScrollId);
   return p ? Some(p.Data()) : Nothing();

@@ -41,17 +41,6 @@ namespace mozilla {
 namespace layers {
 
 /**
- * Helper struct to hold a couple of fields that can be updated as part of
- * an empty transaction.
- */
-struct ScrollUpdateInfo {
-  uint32_t mScrollGeneration;
-  CSSPoint mLayoutScrollOffset;
-  CSSPoint mBaseScrollOffset;
-  bool mIsRelative;
-};
-
-/**
  * Metrics about a scroll frame that are sent to the compositor and used
  * by APZ.
  *
@@ -330,12 +319,14 @@ struct FrameMetrics {
     mDoSmoothScroll = true;
   }
 
-  void UpdatePendingScrollInfo(const ScrollUpdateInfo& aInfo) {
-    SetLayoutScrollOffset(aInfo.mLayoutScrollOffset);
-    mBaseScrollOffset = aInfo.mBaseScrollOffset;
-    mScrollGeneration = aInfo.mScrollGeneration;
+  void UpdatePendingScrollInfo(const ScrollPositionUpdate& aInfo) {
+    SetLayoutScrollOffset(aInfo.GetDestination());
+    mScrollGeneration = aInfo.GetGeneration();
     mScrollUpdateType = ePending;
-    mIsRelative = aInfo.mIsRelative;
+    mIsRelative = aInfo.GetType() == ScrollUpdateType::Relative;
+    if (mIsRelative) {
+      mBaseScrollOffset = aInfo.GetSource();
+    }
   }
 
  public:
@@ -1041,6 +1032,13 @@ struct ScrollMetadata {
     mScrollUpdates = aUpdates;
   }
 
+  void UpdatePendingScrollInfo(const ScrollPositionUpdate& aInfo) {
+    mMetrics.UpdatePendingScrollInfo(aInfo);
+
+    mScrollUpdates.Clear();
+    mScrollUpdates.AppendElement(aInfo);
+  }
+
  private:
   FrameMetrics mMetrics;
 
@@ -1131,7 +1129,8 @@ struct ScrollMetadata {
   // Please add new fields above this comment.
 };
 
-typedef nsDataHashtable<ScrollableLayerGuid::ViewIDHashKey, ScrollUpdateInfo>
+typedef nsDataHashtable<ScrollableLayerGuid::ViewIDHashKey,
+                        ScrollPositionUpdate>
     ScrollUpdatesMap;
 
 }  // namespace layers
