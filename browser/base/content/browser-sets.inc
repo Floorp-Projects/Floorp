@@ -237,6 +237,9 @@
 #ifndef XP_MACOSX
     <key id="key_togglePictureInPicture" data-l10n-id="picture-in-picture-toggle-shortcut" command="View:PictureInPicture" modifiers="accel,shift"/>
     <key                                 data-l10n-id="picture-in-picture-toggle-shortcut-alt" command="View:PictureInPicture" modifiers="accel,shift"/>
+#else
+    <key                                 data-l10n-id="picture-in-picture-toggle-shortcut-mac" command="View:PictureInPicture" modifiers="accel,alt,shift"/>
+    <key                                 data-l10n-id="picture-in-picture-toggle-shortcut-mac-alt" command="View:PictureInPicture" modifiers="accel,alt,shift"/>
 #endif
 
     <key data-l10n-id="nav-reload-shortcut" command="Browser:Reload" modifiers="accel" id="key_reload"/>
