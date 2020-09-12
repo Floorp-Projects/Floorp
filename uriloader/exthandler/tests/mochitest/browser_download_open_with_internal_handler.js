@@ -451,30 +451,39 @@ add_task(async function test_check_open_with_external_then_internal() {
  */
 add_task(
   async function test_internal_handler_hidden_with_viewable_internally_type() {
-    let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
-    let loadingTab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
-      TEST_PATH + "file_xml_attachment_test.xml"
-    );
-    let dialogWindow = await dialogWindowPromise;
-    is(
-      dialogWindow.location.href,
-      "chrome://mozapps/content/downloads/unknownContentType.xhtml",
-      "Should have seen the unknown content dialogWindow."
-    );
-    let doc = dialogWindow.document;
-    let internalHandlerRadio = doc.querySelector("#handleInternally");
+    for (let [file, checkDefault] of [
+      // The default for binary/octet-stream is changed by the PDF tests above,
+      // this may change given bug 1659008, so I'm just ignoring the default for now.
+      ["file_xml_attachment_binary_octet_stream.xml", false],
+      ["file_xml_attachment_test.xml", true],
+    ]) {
+      let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+      let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        TEST_PATH + file
+      );
+      let dialogWindow = await dialogWindowPromise;
+      is(
+        dialogWindow.location.href,
+        "chrome://mozapps/content/downloads/unknownContentType.xhtml",
+        "Should have seen the unknown content dialogWindow."
+      );
+      let doc = dialogWindow.document;
+      let internalHandlerRadio = doc.querySelector("#handleInternally");
 
-    // Prevent racing with initialization of the dialog and make sure that
-    // the final state of the dialog has the correct visibility of the internal-handler option.
-    await waitForAcceptButtonToGetEnabled(doc);
+      // Prevent racing with initialization of the dialog and make sure that
+      // the final state of the dialog has the correct visibility of the internal-handler option.
+      await waitForAcceptButtonToGetEnabled(doc);
 
-    ok(!internalHandlerRadio.hidden, "The option should be visible for XML");
-    ok(internalHandlerRadio.selected, "The option should be selected");
+      ok(!internalHandlerRadio.hidden, "The option should be visible for XML");
+      if (checkDefault) {
+        ok(internalHandlerRadio.selected, "The option should be selected");
+      }
 
-    let dialog = doc.querySelector("#unknownContentType");
-    dialog.cancelDialog();
-    BrowserTestUtils.removeTab(loadingTab);
+      let dialog = doc.querySelector("#unknownContentType");
+      dialog.cancelDialog();
+      BrowserTestUtils.removeTab(loadingTab);
+    }
   }
 );
 
