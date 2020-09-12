@@ -35,7 +35,6 @@ MOZ_END_STD_NAMESPACE
 #include "cubeb_utils.h"
 #include "cubeb-speex-resampler.h"
 #include "cubeb_resampler.h"
-#include "cubeb_log.h"
 #include <stdio.h>
 
 /* This header file contains the internal C++ API of the resamplers, for testing. */
@@ -192,19 +191,6 @@ public:
     speex_resampler = speex_resampler_init(channels, source_rate,
                                            target_rate, quality, &r);
     assert(r == RESAMPLER_ERR_SUCCESS && "resampler allocation failure");
-
-    uint32_t input_latency = speex_resampler_get_input_latency(speex_resampler);
-    const size_t LATENCY_SAMPLES = 8192;
-    T input_buffer[LATENCY_SAMPLES] = {};
-    T output_buffer[LATENCY_SAMPLES] = {};
-    uint32_t input_frame_count = input_latency;
-    uint32_t output_frame_count = LATENCY_SAMPLES;
-    assert(input_latency * channels <= LATENCY_SAMPLES);
-    speex_resample(
-      input_buffer,
-      &input_frame_count,
-      output_buffer,
-      &output_frame_count);
   }
 
   /** Destructor, deallocate the resampler */
@@ -268,14 +254,7 @@ public:
     speex_resample(resampling_in_buffer.data(), &in_len,
                    resampling_out_buffer.data(), &out_len);
 
-    if (out_len < output_frame_count) {
-      LOGV("underrun during resampling: got %u frames, expected %zu", (unsigned)out_len, output_frame_count);
-      // silence the rightmost part
-      T* data = resampling_out_buffer.data();
-      for (uint32_t i = frames_to_samples(out_len); i < frames_to_samples(output_frame_count); i++) {
-        data[i] = 0;
-      }
-    }
+    // assert(out_len == output_frame_count);
 
     /* This shifts back any unresampled samples to the beginning of the input
        buffer. */
@@ -307,9 +286,11 @@ public:
   uint32_t input_needed_for_output(int32_t output_frame_count) const
   {
     assert(output_frame_count >= 0); // Check overflow
+    int32_t unresampled_frames_left = samples_to_frames(resampling_in_buffer.length());
     int32_t resampled_frames_left = samples_to_frames(resampling_out_buffer.length());
-    float input_frames_needed = 
-      output_frame_count * resampling_ratio - resampled_frames_left;
+    float input_frames_needed =
+      (output_frame_count - unresampled_frames_left) * resampling_ratio
+        - resampled_frames_left;
     if (input_frames_needed < 0) {
       return 0;
     }
@@ -547,7 +528,6 @@ cubeb_resampler_create_internal(cubeb_stream * stream,
       (output_params && output_params->rate == target_rate)) ||
       (input_params && !output_params && (input_params->rate == target_rate)) ||
       (output_params && !input_params && (output_params->rate == target_rate))) {
-    LOG("Input and output sample-rate match, target rate of %dHz", target_rate);
     return new passthrough_resampler<T>(stream, callback,
                                         user_ptr,
                                         input_params ? input_params->channels : 0,
@@ -598,7 +578,6 @@ cubeb_resampler_create_internal(cubeb_stream * stream,
   }
 
   if (input_resampler && output_resampler) {
-    LOG("Resampling input (%d) and output (%d) to target rate of %dHz", input_params->rate, output_params->rate, target_rate);
     return new cubeb_resampler_speex<T,
                                      cubeb_resampler_speex_one_way<T>,
                                      cubeb_resampler_speex_one_way<T>>
@@ -606,7 +585,6 @@ cubeb_resampler_create_internal(cubeb_stream * stream,
                                         output_resampler.release(),
                                         stream, callback, user_ptr);
   } else if (input_resampler) {
-    LOG("Resampling input (%d) to target and output rate of %dHz", input_params->rate, target_rate);
     return new cubeb_resampler_speex<T,
                                      cubeb_resampler_speex_one_way<T>,
                                      delay_line<T>>
@@ -614,7 +592,6 @@ cubeb_resampler_create_internal(cubeb_stream * stream,
                                        output_delay.release(),
                                        stream, callback, user_ptr);
   } else {
-    LOG("Resampling output (%dHz) to target and input rate of %dHz", output_params->rate, target_rate);
     return new cubeb_resampler_speex<T,
                                      delay_line<T>,
                                      cubeb_resampler_speex_one_way<T>>

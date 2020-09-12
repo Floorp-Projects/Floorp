@@ -1,0 +1,22 @@
+diff --git a/media/libcubeb/src/cubeb_resampler_internal.h b/media/libcubeb/src/cubeb_resampler_internal.h
+--- a/media/libcubeb/src/cubeb_resampler_internal.h
++++ b/media/libcubeb/src/cubeb_resampler_internal.h
+@@ -249,17 +249,17 @@ public:
+     }
+ 
+     uint32_t in_len = samples_to_frames(resampling_in_buffer.length());
+     uint32_t out_len = output_frame_count;
+ 
+     speex_resample(resampling_in_buffer.data(), &in_len,
+                    resampling_out_buffer.data(), &out_len);
+ 
+-    assert(out_len == output_frame_count);
++    // assert(out_len == output_frame_count);
+ 
+     /* This shifts back any unresampled samples to the beginning of the input
+        buffer. */
+     resampling_in_buffer.pop(nullptr, frames_to_samples(in_len));
+     *input_frames_used = in_len;
+ 
+     return resampling_out_buffer.data();
+   }
