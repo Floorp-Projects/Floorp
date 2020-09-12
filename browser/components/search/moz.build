@@ -7,7 +7,6 @@
 EXTRA_JS_MODULES += [
     'SearchOneOffs.jsm',
     'SearchTelemetry.jsm',
-    'SearchUIUtils.jsm',
 ]
 
 BROWSER_CHROME_MANIFESTS += [

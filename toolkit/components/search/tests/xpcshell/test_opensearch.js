@@ -84,12 +84,6 @@ for (const test of tests) {
       test.description,
       "Should have a description"
     );
-
-    Assert.equal(
-      engine.wrappedJSObject._loadPath,
-      `[http]localhost/${test.file}`
-    );
-
     let submission = engine.getSubmission("foo");
     Assert.equal(
       submission.uri.spec,

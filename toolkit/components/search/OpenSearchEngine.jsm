@@ -29,6 +29,9 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   });
 });
 
+const SEARCH_BUNDLE = "chrome://global/locale/search/search.properties";
+const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
+
 const OPENSEARCH_NS_10 = "http://a9.com/-/spec/opensearch/1.0/";
 const OPENSEARCH_NS_11 = "http://a9.com/-/spec/opensearch/1.1/";
 
@@ -73,6 +76,9 @@ function ENSURE_WARN(assertion, message, resultCode) {
 class OpenSearchEngine extends SearchEngine {
   // The data describing the engine, in the form of an XML document element.
   _data = null;
+  // A function to be invoked when this engine object's addition completes (or
+  // fails). Only used for installation via addEngine.
+  _installCallback = null;
 
   /**
    * Constructor.
@@ -142,12 +148,9 @@ class OpenSearchEngine extends SearchEngine {
    * Retrieves the engine data from a URI. Initializes the engine, flushes to
    * disk, and notifies the search service once initialization is complete.
    *
-   * @param {string|nsIURI} uri
-   *   The uri to load the search plugin from.
-   * @param {function} [callback]
-   *   A callback to receive any details of errors.
+   * @param {string|nsIURI} uri The uri to load the search plugin from.
    */
-  _initFromURIAndLoad(uri, callback) {
+  _initFromURIAndLoad(uri) {
     let loadURI = uri instanceof Ci.nsIURI ? uri : SearchUtils.makeURI(uri);
     ENSURE_WARN(
       loadURI,
@@ -169,11 +172,7 @@ class OpenSearchEngine extends SearchEngine {
       }
     }
     this._uri = loadURI;
-
-    var listener = new SearchUtils.LoadListener(
-      chan,
-      this._onLoad.bind(this, callback)
-    );
+    var listener = new SearchUtils.LoadListener(chan, this, this._onLoad);
     chan.notificationCallbacks = listener;
     chan.asyncOpen(listener);
   }
@@ -230,86 +229,123 @@ class OpenSearchEngine extends SearchEngine {
    * triggers parsing of the data. The engine is then flushed to disk. Notifies
    * the search service once initialization is complete.
    *
-   * @param {function} callback
-   *   A callback to receive success or failure notifications. May be null.
    * @param {array} bytes
    *  The loaded search engine data.
+   * @param {nsISearchEngine} engine
+   *  The engine being loaded.
    */
-  _onLoad(callback, bytes) {
-    let onError = errorCode => {
-      if (this._engineToUpdate) {
-        logConsole.warn("Failed to update", this._engineToUpdate.name);
+  _onLoad(bytes, engine) {
+    /**
+     * Handle an error during the load of an engine by notifying the engine's
+     * error callback, if any.
+     *
+     * @param {number} [errorCode]
+     *   The relevant error code.
+     */
+    function onError(errorCode = Ci.nsISearchService.ERROR_UNKNOWN_FAILURE) {
+      // Notify the callback of the failure
+      if (engine._installCallback) {
+        engine._installCallback(errorCode);
       }
-      callback?.(errorCode);
-    };
+    }
+
+    function promptError(strings = {}, error = undefined) {
+      onError(error);
+
+      if (engine._engineToUpdate) {
+        // We're in an update, so just fail quietly
+        logConsole.warn("Failed to update", engine._engineToUpdate.name);
+        return;
+      }
+      var brandBundle = Services.strings.createBundle(BRAND_BUNDLE);
+      var brandName = brandBundle.GetStringFromName("brandShortName");
+
+      var searchBundle = Services.strings.createBundle(SEARCH_BUNDLE);
+      var msgStringName = strings.error || "error_loading_engine_msg2";
+      var titleStringName = strings.title || "error_loading_engine_title";
+      var title = searchBundle.GetStringFromName(titleStringName);
+      var text = searchBundle.formatStringFromName(msgStringName, [
+        brandName,
+        engine._location,
+      ]);
+
+      Services.ww.getNewPrompter(null).alert(title, text);
+    }
 
     if (!bytes) {
-      onError(Ci.nsISearchService.ERROR_DOWNLOAD_FAILURE);
+      promptError();
       return;
     }
 
     var parser = new DOMParser();
     var doc = parser.parseFromBuffer(bytes, "text/xml");
-    this._data = doc.documentElement;
+    engine._data = doc.documentElement;
 
     try {
-      this._initFromData();
+      // Initialize the engine from the obtained data
+      engine._initFromData();
     } catch (ex) {
       logConsole.error("_onLoad: Failed to init engine!", ex);
-
+      // Report an error to the user
       if (ex.result == Cr.NS_ERROR_FILE_CORRUPTED) {
-        onError(Ci.nsISearchService.ERROR_ENGINE_CORRUPTED);
+        promptError({
+          error: "error_invalid_engine_msg2",
+          title: "error_invalid_format_title",
+        });
       } else {
-        onError(Ci.nsISearchService.ERROR_DOWNLOAD_FAILURE);
+        promptError();
       }
       return;
     }
 
-    if (this._engineToUpdate) {
-      let engineToUpdate = this._engineToUpdate.wrappedJSObject;
+    if (engine._engineToUpdate) {
+      let engineToUpdate = engine._engineToUpdate.wrappedJSObject;
 
       // Preserve metadata and loadPath.
       Object.keys(engineToUpdate._metaData).forEach(key => {
-        this.setAttr(key, engineToUpdate.getAttr(key));
+        engine.setAttr(key, engineToUpdate.getAttr(key));
       });
-      this._loadPath = engineToUpdate._loadPath;
+      engine._loadPath = engineToUpdate._loadPath;
 
       // Keep track of the last modified date, so that we can make conditional
       // requests for future updates.
-      this.setAttr("updatelastmodified", new Date().toUTCString());
+      engine.setAttr("updatelastmodified", new Date().toUTCString());
 
       // Set the new engine's icon, if it doesn't yet have one.
-      if (!this._iconURI && engineToUpdate._iconURI) {
-        this._iconURI = engineToUpdate._iconURI;
+      if (!engine._iconURI && engineToUpdate._iconURI) {
+        engine._iconURI = engineToUpdate._iconURI;
       }
     } else {
       // Check that when adding a new engine (e.g., not updating an
       // existing one), a duplicate engine does not already exist.
-      if (Services.search.getEngineByName(this.name)) {
+      if (Services.search.getEngineByName(engine.name)) {
         onError(Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
         logConsole.debug("_onLoad: duplicate engine found, bailing");
         return;
       }
 
-      this._loadPath = OpenSearchEngine.getAnonymizedLoadPath(
-        SearchUtils.sanitizeName(this.name),
+      engine._loadPath = OpenSearchEngine.getAnonymizedLoadPath(
+        SearchUtils.sanitizeName(engine.name),
         null,
-        this._uri
+        engine._uri
       );
-      if (this._extensionID) {
-        this._loadPath += ":" + this._extensionID;
+      if (engine._extensionID) {
+        engine._loadPath += ":" + engine._extensionID;
       }
-      this.setAttr(
+      engine.setAttr(
         "loadPathHash",
-        SearchUtils.getVerificationHash(this._loadPath)
+        SearchUtils.getVerificationHash(engine._loadPath)
       );
     }
 
     // Notify the search service of the successful load. It will deal with
-    // updates by checking this._engineToUpdate.
-    SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.LOADED);
+    // updates by checking aEngine._engineToUpdate.
+    SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.LOADED);
 
-    callback?.();
+    // Notify the callback if needed
+    if (engine._installCallback) {
+      engine._installCallback();
+    }
   }
 
   /**
