@@ -125,5 +125,5 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch) {
   PinchWithPinchInput(apzc, ScreenIntPoint(50, 50), ScreenIntPoint(50, 50),
                       1.2f);
 
-  apzc->AssertStateIsSmoothScroll();
+  apzc->AssertStateIsSmoothMsdScroll();
 }

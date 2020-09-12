@@ -20,7 +20,7 @@ struct FrameMetrics;
 
 class WheelScrollAnimation;
 class KeyboardScrollAnimation;
-class SmoothScrollAnimation;
+class SmoothMsdScrollAnimation;
 
 class AsyncPanZoomAnimation {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomAnimation)
@@ -72,7 +72,9 @@ class AsyncPanZoomAnimation {
     return nullptr;
   }
   virtual WheelScrollAnimation* AsWheelScrollAnimation() { return nullptr; }
-  virtual SmoothScrollAnimation* AsSmoothScrollAnimation() { return nullptr; }
+  virtual SmoothMsdScrollAnimation* AsSmoothMsdScrollAnimation() {
+    return nullptr;
+  }
 
   virtual bool WantsRepaints() { return true; }
 
