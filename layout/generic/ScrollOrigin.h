@@ -30,6 +30,9 @@ enum class ScrollOrigin : uint8_t {
   // scroll destination is indicated by a delta from the current position
   // instead of an absolute value.
   Relative,
+  // The scroll came from an attempt by the main thread to re-clamp the scroll
+  // position after a reflow.
+  Clamp,
 
   // The following scroll origins also are associated with prefs of the form
   //   general.smoothScroll.<origin>(.*)
