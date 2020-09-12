@@ -90,9 +90,13 @@ var ModuleManager = {
       this
     );
 
+    this._moduleByActorName = new Map();
     this.forEach(module => {
       module.onInit();
       module.loadInitFrameScript();
+      for (const actorName of module.actorNames) {
+        this._moduleByActorName[actorName] = module;
+      }
     });
 
     window.addEventListener("unload", () => {
@@ -260,6 +264,10 @@ var ModuleManager = {
     );
   },
 
+  onMessageFromActor(aActorName, aMessage) {
+    this._moduleByActorName[aActorName].receiveMessage(aMessage);
+  },
+
   onEvent(aEvent, aData, aCallback) {
     debug`onEvent ${aEvent} ${aData}`;
     switch (aEvent) {
@@ -357,6 +365,19 @@ class ModuleInfo {
 
     this._onInitPhase = onInit;
     this._onEnablePhase = onEnable;
+
+    const actorNames = [];
+    if (this._onInitPhase?.actors) {
+      actorNames.push(Object.keys(this._onInitPhase.actors));
+    }
+    if (this._onEnablePhase?.actors) {
+      actorNames.push(Object.keys(this._onEnablePhase.actors));
+    }
+    this._actorNames = Object.freeze(actorNames);
+  }
+
+  get actorNames() {
+    return this._actorNames;
   }
 
   onInit() {
@@ -469,6 +490,14 @@ class ModuleInfo {
     }
 
     this._updateContentModuleState(/* includeSettings */ aEnabled);
+  }
+
+  receiveMessage(aMessage) {
+    if (!this._impl) {
+      throw new Error(`No impl for message: ${aMessage.name}.`);
+    }
+
+    this._impl.receiveMessage(aMessage);
   }
 
   onContentModuleLoaded() {
@@ -655,8 +684,7 @@ function startup() {
     },
   ]);
 
-  // TODO: Bug 1569360 Allows actors to temporarely access ModuleManager until
-  // we migrate everything over to actors.
+  // Allows actors to access ModuleManager.
   window.moduleManager = ModuleManager;
 
   Services.tm.dispatchToMainThread(() => {
