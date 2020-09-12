@@ -152,6 +152,7 @@ EXPORTS.mozilla += [
     'ReflowOutput.h',
     'ScrollbarPreferences.h',
     'ScrollOrigin.h',
+    'ScrollPositionUpdate.h',
     'ViewportFrame.h',
     'WritingModes.h',
 ]
@@ -222,6 +223,7 @@ UNIFIED_SOURCES += [
     'ScrollAnimationBezierPhysics.cpp',
     'ScrollAnimationMSDPhysics.cpp',
     'ScrollbarActivity.cpp',
+    'ScrollPositionUpdate.cpp',
     'ScrollSnap.cpp',
     'ScrollVelocityQueue.cpp',
     'StickyScrollContainer.cpp',

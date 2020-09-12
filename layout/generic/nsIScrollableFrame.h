@@ -15,6 +15,7 @@
 #include "mozilla/dom/WindowBinding.h"  // for mozilla::dom::ScrollBehavior
 #include "mozilla/Maybe.h"
 #include "mozilla/ScrollOrigin.h"
+#include "mozilla/ScrollPositionUpdate.h"
 #include "mozilla/ScrollStyles.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/gfx/Point.h"
@@ -460,6 +461,11 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * requested smooth scroll animation.
    */
   virtual nsPoint LastScrollDestination() = 0;
+  /**
+   * Returns the list of scroll position updates since the last call to
+   * NotifyApzTransaction().
+   */
+  virtual nsTArray<mozilla::ScrollPositionUpdate> GetScrollUpdates() const = 0;
   /**
    * Clears the "origin of last scroll" property stored in this frame, if
    * the generation counter passed in matches the current scroll generation
