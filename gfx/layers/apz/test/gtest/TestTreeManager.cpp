@@ -69,7 +69,9 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
 
     // Make layers[aRootContentLayerIndex] the root content
     ModifyFrameMetrics(layers[aRootContentLayerIndex],
-                       [](FrameMetrics& fm) { fm.SetIsRootContent(true); });
+                       [](ScrollMetadata& sm, FrameMetrics& fm) {
+                         fm.SetIsRootContent(true);
+                       });
 
     // Both layers are fully dispatch-to-content
     EventRegions regions;
@@ -240,10 +242,14 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
   UpdateHitTestingTree();
 
   // Simulate the main thread scrolling to the end of the scroll range.
-  ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
+  ModifyFrameMetrics(root, [](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
     aMetrics.SetLayoutScrollOffset(CSSPoint(300, 300));
     aMetrics.SetScrollGeneration(1);
     aMetrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
+    nsTArray<ScrollPositionUpdate> scrollUpdates;
+    scrollUpdates.AppendElement(ScrollPositionUpdate::NewScroll(
+        1, ScrollOrigin::Other, CSSPoint::ToAppUnits(CSSPoint(300, 300))));
+    aSm.SetScrollUpdates(scrollUpdates);
   });
   UpdateHitTestingTree();
 
@@ -255,7 +261,7 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
   // Simulate the main thread shrinking the scrollable rect to 400x400 (and
   // thereby the scroll range to (0,0,200,200) without sending a new scroll
   // offset update for the clamped scroll position (200,200).
-  ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
+  ModifyFrameMetrics(root, [](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
     aMetrics.SetScrollableRect(CSSRect(0, 0, 400, 400));
   });
   UpdateHitTestingTree();
@@ -272,10 +278,14 @@ TEST_F(APZCTreeManagerTester, Bug1557424) {
   UpdateHitTestingTree();
 
   // Simulate the main thread scrolling to the end of the scroll range.
-  ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
+  ModifyFrameMetrics(root, [](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
     aMetrics.SetLayoutScrollOffset(CSSPoint(300, 300));
     aMetrics.SetScrollGeneration(1);
     aMetrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
+    nsTArray<ScrollPositionUpdate> scrollUpdates;
+    scrollUpdates.AppendElement(ScrollPositionUpdate::NewScroll(
+        1, ScrollOrigin::Other, CSSPoint::ToAppUnits(CSSPoint(300, 300))));
+    aSm.SetScrollUpdates(scrollUpdates);
   });
   UpdateHitTestingTree();
 
@@ -287,7 +297,7 @@ TEST_F(APZCTreeManagerTester, Bug1557424) {
   // Simulate the main thread expanding the composition bounds to 300x300 (and
   // thereby shrinking the scroll range to (0,0,200,200) without sending a new
   // scroll offset update for the clamped scroll position (200,200).
-  ModifyFrameMetrics(root, [](FrameMetrics& aMetrics) {
+  ModifyFrameMetrics(root, [](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
     aMetrics.SetCompositionBounds(ParentLayerRect(0, 0, 300, 300));
   });
   UpdateHitTestingTree();
