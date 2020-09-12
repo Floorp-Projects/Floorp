@@ -215,7 +215,7 @@ void WebRenderScrollData::ApplyUpdates(ScrollUpdatesMap& aUpdates,
                                        uint32_t aPaintSequenceNumber) {
   for (auto it = aUpdates.Iter(); !it.Done(); it.Next()) {
     if (Maybe<size_t> index = HasMetadataFor(it.Key())) {
-      mScrollMetadatas[*index].GetMetrics().UpdatePendingScrollInfo(it.Data());
+      mScrollMetadatas[*index].UpdatePendingScrollInfo(it.Data());
     }
   }
   mPaintSequenceNumber = aPaintSequenceNumber;

@@ -65,7 +65,7 @@ bool ReadScrollUpdates(const IPC::Message* aMsg, PickleIterator* aIter,
   layers::ScrollUpdatesMap map(count);
   for (size_t i = 0; i < count; ++i) {
     layers::ScrollableLayerGuid::ViewID key;
-    layers::ScrollUpdateInfo data;
+    mozilla::ScrollPositionUpdate data;
     if (!ReadIPDLParam(aMsg, aIter, aActor, &key) ||
         !ReadIPDLParam(aMsg, aIter, aActor, &data)) {
       return false;
