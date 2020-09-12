@@ -34,7 +34,15 @@ add_task(async function test_pip_keyboard_shortcut() {
         }
       );
 
-      EventUtils.synthesizeKey("]", { accelKey: true, shiftKey: true });
+      if (AppConstants.platform == "macosx") {
+        EventUtils.synthesizeKey("]", {
+          accelKey: true,
+          shiftKey: true,
+          altKey: true,
+        });
+      } else {
+        EventUtils.synthesizeKey("]", { accelKey: true, shiftKey: true });
+      }
 
       let pipWin = await domWindowOpened;
       await videoReady;
