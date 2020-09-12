@@ -199,10 +199,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mCumulativeResolution);
     WriteParam(aMsg, aParam.mDevPixelsPerCSSPixel);
     WriteParam(aMsg, aParam.mScrollOffset);
-    WriteParam(aMsg, aParam.mBaseScrollOffset);
     WriteParam(aMsg, aParam.mZoom);
     WriteParam(aMsg, aParam.mScrollGeneration);
-    WriteParam(aMsg, aParam.mSmoothScrollOffset);
     WriteParam(aMsg, aParam.mRootCompositionSize);
     WriteParam(aMsg, aParam.mDisplayPortMargins);
     WriteParam(aMsg, aParam.mPresShellId);
@@ -213,10 +211,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mVisualDestination);
     WriteParam(aMsg, aParam.mVisualScrollUpdateType);
     WriteParam(aMsg, aParam.mFixedLayerMargins);
-    WriteParam(aMsg, aParam.mPureRelativeOffset);
     WriteParam(aMsg, aParam.mIsRootContent);
-    WriteParam(aMsg, aParam.mIsRelative);
-    WriteParam(aMsg, aParam.mDoSmoothScroll);
     WriteParam(aMsg, aParam.mIsScrollInfoLayer);
   }
 
@@ -232,10 +227,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
         ReadParam(aMsg, aIter, &aResult->mCumulativeResolution) &&
         ReadParam(aMsg, aIter, &aResult->mDevPixelsPerCSSPixel) &&
         ReadParam(aMsg, aIter, &aResult->mScrollOffset) &&
-        ReadParam(aMsg, aIter, &aResult->mBaseScrollOffset) &&
         ReadParam(aMsg, aIter, &aResult->mZoom) &&
         ReadParam(aMsg, aIter, &aResult->mScrollGeneration) &&
-        ReadParam(aMsg, aIter, &aResult->mSmoothScrollOffset) &&
         ReadParam(aMsg, aIter, &aResult->mRootCompositionSize) &&
         ReadParam(aMsg, aIter, &aResult->mDisplayPortMargins) &&
         ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
@@ -246,12 +239,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
         ReadParam(aMsg, aIter, &aResult->mVisualDestination) &&
         ReadParam(aMsg, aIter, &aResult->mVisualScrollUpdateType) &&
         ReadParam(aMsg, aIter, &aResult->mFixedLayerMargins) &&
-        ReadParam(aMsg, aIter, &aResult->mPureRelativeOffset) &&
         ReadBoolForBitfield(aMsg, aIter, aResult,
                             &paramType::SetIsRootContent) &&
-        ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsRelative) &&
-        ReadBoolForBitfield(aMsg, aIter, aResult,
-                            &paramType::SetDoSmoothScroll) &&
         ReadBoolForBitfield(aMsg, aIter, aResult,
                             &paramType::SetIsScrollInfoLayer));
   }

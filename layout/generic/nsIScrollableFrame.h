@@ -182,11 +182,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * As GetScrollPosition(), but uses the top-right as origin for RTL frames.
    */
   virtual nsPoint GetLogicalScrollPosition() const = 0;
-  /**
-   * Get the latest scroll position that the main thread has sent or received
-   * from APZ.
-   */
-  virtual nsPoint GetApzScrollPosition() const = 0;
 
   /**
    * Get the area that must contain the scroll position. Typically
@@ -423,21 +418,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * latest instant scroll.
    */
   virtual ScrollOrigin LastScrollOrigin() = 0;
-  /**
-   * Returns the origin that triggered the last smooth scroll.
-   * Will equal ScrollOrigin::Apz when the compositor's replica frame
-   * metrics includes the latest smooth scroll.  The compositor will always
-   * perform an instant scroll prior to instantiating any smooth scrolls
-   * if LastScrollOrigin and LastSmoothScrollOrigin indicate that
-   * an instant scroll and a smooth scroll have occurred since the last
-   * replication of the frame metrics.
-   *
-   * This is set to nullptr to when the compositor thread acknowledges that
-   * the smooth scroll has been started.  If the smooth scroll has been stomped
-   * by an instant scroll before the smooth scroll could be started by the
-   * compositor, this is set to nullptr to clear the smooth scroll.
-   */
-  virtual ScrollOrigin LastSmoothScrollOrigin() = 0;
 
   /**
    * Returns whether there's an async scroll going on.
@@ -475,10 +455,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual void ResetScrollInfoIfNeeded(uint32_t aGeneration,
                                        bool aApzAnimationInProgress) = 0;
-  /**
-   * Relative scrolling offset to be requested of apz.
-   */
-  virtual Maybe<nsPoint> GetRelativeOffset() const = 0;
   /**
    * Determine whether it is desirable to be able to asynchronously scroll this
    * scroll frame.
