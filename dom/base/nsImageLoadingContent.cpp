@@ -102,7 +102,6 @@ nsImageLoadingContent::nsImageLoadingContent()
       mLoading(false),
       // mBroken starts out true, since an image without a URI is broken....
       mBroken(true),
-      mSuppressed(false),
       mNewRequestsWillNeedAnimationReset(false),
       mUseUrgentStartForChannel(false),
       mLazyLoading(false),
@@ -1278,9 +1277,6 @@ EventStates nsImageLoadingContent::ImageState() const {
   if (mBroken) {
     states |= NS_EVENT_STATE_BROKEN;
   }
-  if (mSuppressed) {
-    states |= NS_EVENT_STATE_SUPPRESSED;
-  }
   if (mLoading) {
     states |= NS_EVENT_STATE_LOADING;
   }
@@ -1301,14 +1297,11 @@ void nsImageLoadingContent::UpdateImageState(bool aNotify) {
 
   nsIContent* thisContent = AsContent();
 
-  mLoading = mBroken = mSuppressed = false;
+  mLoading = mBroken = false;
 
-  // If we were blocked by server-based content policy, we claim to be
-  // suppressed.  If we were blocked by type-based content policy, we claim to
-  // be user-disabled.  Otherwise, claim to be broken.
-  if (mImageBlockingStatus == nsIContentPolicy::REJECT_SERVER) {
-    mSuppressed = true;
-  } else if (mImageBlockingStatus == nsIContentPolicy::REJECT_TYPE) {
+  // If we were blocked, we're broken, so are we if we don't have an image
+  // request at all or the image has errored.
+  if (mImageBlockingStatus != nsIContentPolicy::ACCEPT) {
     mBroken = true;
   } else if (!mCurrentRequest) {
     if (!mLazyLoading) {
