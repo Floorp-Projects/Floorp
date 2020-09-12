@@ -4328,6 +4328,13 @@ bool ScrollFrameHelper::DecideScrollableLayer(
   return mWillBuildScrollableLayer;
 }
 
+void ScrollFrameHelper::NotifyApzTransaction() {
+  mAllowScrollOriginDowngrade = true;
+  mApzScrollPos = GetScrollPosition();
+  mRelativeOffset.reset();
+  mScrollUpdates.Clear();
+}
+
 Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
     LayerManager* aLayerManager, const nsIFrame* aContainerReferenceFrame,
     const Maybe<ContainerLayerParameters>& aParameters,
@@ -7018,6 +7025,17 @@ bool ScrollFrameHelper::IsScrollAnimating(
   return mAsyncScroll || mAsyncSmoothMSDScroll ||
          LastSmoothScrollOrigin() != ScrollOrigin::None ||
          mRelativeOffset.isSome();
+}
+
+void ScrollFrameHelper::ResetScrollInfoIfNeeded(uint32_t aGeneration,
+                                                bool aApzAnimationInProgress) {
+  if (aGeneration == mScrollGeneration) {
+    mLastScrollOrigin = ScrollOrigin::None;
+    mLastSmoothScrollOrigin = ScrollOrigin::None;
+  }
+  // We can reset this regardless of scroll generation, as this is only set
+  // here, as a response to APZ requesting a repaint.
+  mApzAnimationInProgress = aApzAnimationInProgress;
 }
 
 UniquePtr<PresState> ScrollFrameHelper::SaveState() const {

@@ -271,13 +271,7 @@ struct FrameMetrics {
    *
    * @returns The clamped scroll offset delta that was applied
    */
-  CSSPoint ApplyRelativeScrollUpdateFrom(const ScrollPositionUpdate& aUpdate) {
-    MOZ_ASSERT(aUpdate.GetType() == ScrollUpdateType::Relative);
-    CSSPoint origin = GetVisualScrollOffset();
-    CSSPoint delta = (aUpdate.GetDestination() - aUpdate.GetSource());
-    ClampAndSetVisualScrollOffset(origin + delta);
-    return GetVisualScrollOffset() - origin;
-  }
+  CSSPoint ApplyRelativeScrollUpdateFrom(const ScrollPositionUpdate& aUpdate);
 
   void UpdatePendingScrollInfo(const ScrollPositionUpdate& aInfo) {
     SetLayoutScrollOffset(aInfo.GetDestination());
