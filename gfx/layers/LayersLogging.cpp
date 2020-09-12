@@ -215,6 +215,7 @@ void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
       AppendToString(aStream, overscrollY, "] [overscroll-y=");
     }
   }
+  aStream << "] [" << m.GetScrollUpdates().Length() << " scrollupdates";
   aStream << "] }" << sfx;
 }
 
