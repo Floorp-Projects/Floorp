@@ -2076,77 +2076,6 @@ class ScrollFrameHelper::AsyncScroll final : public nsARefreshObserver {
   }
 };
 
-/*
- * Calculate duration, possibly dynamically according to events rate and event
- * origin. (also maintain previous timestamps - which are only used here).
- */
-static ScrollAnimationBezierPhysicsSettings
-ComputeBezierAnimationSettingsForOrigin(ScrollOrigin aOrigin) {
-  int32_t minMS = 0;
-  int32_t maxMS = 0;
-  bool isOriginSmoothnessEnabled = false;
-  double intervalRatio = 1;
-
-  // Default values for all preferences are defined in all.js
-  static const int32_t kDefaultMinMS = 150, kDefaultMaxMS = 150;
-  static const bool kDefaultIsSmoothEnabled = true;
-
-  nsAutoCString prefBase;
-  switch (aOrigin) {
-    case ScrollOrigin::Pixels:
-      prefBase = "general.smoothScroll.pixels"_ns;
-      break;
-    case ScrollOrigin::Lines:
-      prefBase = "general.smoothScroll.lines"_ns;
-      break;
-    case ScrollOrigin::Pages:
-      prefBase = "general.smoothScroll.pages"_ns;
-      break;
-    case ScrollOrigin::MouseWheel:
-      prefBase = "general.smoothScroll.mouseWheel"_ns;
-      break;
-    case ScrollOrigin::Scrollbars:
-      prefBase = "general.smoothScroll.scrollbars"_ns;
-      break;
-    default:
-      prefBase = "general.smoothScroll.other"_ns;
-      break;
-  }
-
-  isOriginSmoothnessEnabled =
-      Preferences::GetBool(prefBase.get(), kDefaultIsSmoothEnabled);
-  if (isOriginSmoothnessEnabled) {
-    nsAutoCString prefMin = prefBase + ".durationMinMS"_ns;
-    nsAutoCString prefMax = prefBase + ".durationMaxMS"_ns;
-    minMS = Preferences::GetInt(prefMin.get(), kDefaultMinMS);
-    maxMS = Preferences::GetInt(prefMax.get(), kDefaultMaxMS);
-
-    if (aOrigin == ScrollOrigin::MouseWheel) {
-      std::tie(minMS, maxMS) = layers::apz::GetMouseWheelAnimationDurations();
-    }
-
-    static const int32_t kSmoothScrollMaxAllowedAnimationDurationMS = 10000;
-    maxMS = clamped(maxMS, 0, kSmoothScrollMaxAllowedAnimationDurationMS);
-    minMS = clamped(minMS, 0, maxMS);
-  }
-
-  // Keep the animation duration longer than the average event intervals
-  // (to "connect" consecutive scroll animations before the scroll comes to a
-  // stop).
-  //
-  // Default value is duplicated in all.js.
-  static const double kDefaultDurationToIntervalRatio = 2;
-  intervalRatio =
-      Preferences::GetInt("general.smoothScroll.durationToIntervalRatio",
-                          kDefaultDurationToIntervalRatio * 100) /
-      100.0;
-
-  // Duration should be at least as long as the intervals -> ratio is at least 1
-  intervalRatio = std::max(1.0, intervalRatio);
-
-  return ScrollAnimationBezierPhysicsSettings{minMS, maxMS, intervalRatio};
-}
-
 void ScrollFrameHelper::AsyncScroll::InitSmoothScroll(
     TimeStamp aTime, nsPoint aInitialPosition, nsPoint aDestination,
     ScrollOrigin aOrigin, const nsRect& aRange,
@@ -2178,7 +2107,7 @@ void ScrollFrameHelper::AsyncScroll::InitSmoothScroll(
           MakeUnique<ScrollAnimationMSDPhysics>(aInitialPosition);
     } else {
       ScrollAnimationBezierPhysicsSettings settings =
-          ComputeBezierAnimationSettingsForOrigin(mOrigin);
+          layers::apz::ComputeBezierAnimationSettingsForOrigin(mOrigin);
       mAnimationPhysics =
           MakeUnique<ScrollAnimationBezierPhysics>(aInitialPosition, settings);
     }

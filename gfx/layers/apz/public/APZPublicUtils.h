@@ -22,6 +22,8 @@
 #include "mozilla/DefineEnum.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/ScrollOrigin.h"
+#include "ScrollAnimationBezierPhysics.h"
 
 namespace mozilla {
 
@@ -82,6 +84,13 @@ const ScreenMargin CalculatePendingDisplayPort(
  * general.smoothScroll.mouseWheel.duration* prefs.
  */
 std::pair<int32_t, int32_t> GetMouseWheelAnimationDurations();
+
+/**
+ * Calculate the physics parameters for smooth scroll animations for the
+ * given origin, based on pref values.
+ */
+ScrollAnimationBezierPhysicsSettings
+ComputeBezierAnimationSettingsForOrigin(ScrollOrigin aOrigin);
 
 }  // namespace apz
 
