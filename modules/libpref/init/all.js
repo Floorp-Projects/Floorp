@@ -2392,22 +2392,6 @@ pref("mousewheel.with_win.delta_multiplier_x", 100);
 pref("mousewheel.with_win.delta_multiplier_y", 100);
 pref("mousewheel.with_win.delta_multiplier_z", 100);
 
-// These define the smooth scroll behavior (min ms, max ms) for different triggers
-// Some triggers:
-// mouseWheel: Discrete mouse wheel events, Synaptics touchpads on windows (generate wheel events)
-// Lines:  Up/Down/Left/Right KB arrows
-// Pages:  Page up/down, Space
-// Scrollbars: Clicking scrollbars arrows, clicking scrollbars tracks
-// Note: Currently OS X trackpad and magic mouse don't use our smooth scrolling
-// Note: These are relevant only when "general.smoothScroll" is enabled
-pref("general.smoothScroll.scrollbars.durationMinMS", 150);
-pref("general.smoothScroll.scrollbars.durationMaxMS", 150);
-// Enable disable smooth scrolling for different triggers (when "general.smoothScroll" is enabled)
-pref("general.smoothScroll.pixels", true);
-pref("general.smoothScroll.lines", true);
-pref("general.smoothScroll.scrollbars", true);
-pref("general.smoothScroll.other", true);
-
 // We can show it anytime from menus
 pref("profile.manage_only_at_launch", false);
 
