@@ -2279,6 +2279,9 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mProcessingScrollEvent(false),
       mApzAnimationInProgress(false),
       mVelocityQueue(aOuter->PresContext()) {
+  mScrollUpdates.AppendElement(
+      ScrollPositionUpdate::NewScrollframe(mScrollGeneration));
+
   if (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
   }
@@ -3028,6 +3031,17 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
     mRelativeOffset.reset();
   }
   mScrollGeneration = ++sScrollGenerationCounter;
+
+  if (aOrigin == ScrollOrigin::Relative) {
+    MOZ_ASSERT(!isScrollOriginDowngrade);
+    MOZ_ASSERT(mLastScrollOrigin == ScrollOrigin::Relative);
+    mScrollUpdates.AppendElement(ScrollPositionUpdate::NewRelativeScroll(
+        mScrollGeneration, mApzScrollPos, pt));
+  } else if (aOrigin != ScrollOrigin::Apz) {
+    mScrollUpdates.AppendElement(ScrollPositionUpdate::NewScroll(
+        mScrollGeneration, mLastScrollOrigin, pt));
+  }
+
   if (mLastScrollOrigin == ScrollOrigin::Apz) {
     mApzScrollPos = GetScrollPosition();
   }
@@ -4571,14 +4585,16 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
     if (mRelativeOffset.isNothing()) {
       mRelativeOffset = Some(nsPoint(0, 0));
     }
-    mRelativeOffset->x = NSCoordSaturatingAdd(
-        mRelativeOffset->x,
-        NSCoordSaturatingNonnegativeMultiply(aDelta.x, deltaMultiplier.width));
-    mRelativeOffset->y = NSCoordSaturatingAdd(
-        mRelativeOffset->y,
+    nsPoint delta(
+        NSCoordSaturatingNonnegativeMultiply(aDelta.x, deltaMultiplier.width),
         NSCoordSaturatingNonnegativeMultiply(aDelta.y, deltaMultiplier.height));
+    mRelativeOffset->x = NSCoordSaturatingAdd(mRelativeOffset->x, delta.x);
+    mRelativeOffset->y = NSCoordSaturatingAdd(mRelativeOffset->y, delta.y);
 
     mScrollGeneration = ++sScrollGenerationCounter;
+
+    mScrollUpdates.AppendElement(ScrollPositionUpdate::NewPureRelativeScroll(
+        mScrollGeneration, aOrigin, aMode, delta));
 
     if (!nsLayoutUtils::HasDisplayPort(mOuter->GetContent())) {
       if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug)) {
@@ -7594,6 +7610,9 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
   mApzSmoothScrollDestination = Some(aDestination);
   mScrollGeneration = ++sScrollGenerationCounter;
 
+  mScrollUpdates.AppendElement(ScrollPositionUpdate::NewSmoothScroll(
+      mScrollGeneration, aOrigin, aDestination));
+
   if (!nsLayoutUtils::HasDisplayPort(mOuter->GetContent())) {
     // If this frame doesn't have a displayport then there won't be an
     // APZC instance for it and so there won't be anything to process
@@ -7662,4 +7681,8 @@ bool ScrollFrameHelper::IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
   return (aBehavior == dom::ScrollBehavior::Auto &&
           styleFrame->StyleDisplay()->mScrollBehavior ==
               StyleScrollBehavior::Smooth);
+}
+
+nsTArray<ScrollPositionUpdate> ScrollFrameHelper::GetScrollUpdates() const {
+  return mScrollUpdates.Clone();
 }
