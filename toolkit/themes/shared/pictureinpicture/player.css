@@ -109,6 +109,11 @@ browser {
   top: 10px;
 }
 
+#close[mac="true"] {
+  right: auto;
+  left: 10px;
+}
+
 #playpause {
   left: 55%;
 }
