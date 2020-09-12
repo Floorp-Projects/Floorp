@@ -143,6 +143,52 @@ class ScreenshotTest : BaseSessionTest() {
         }
     }
 
+    // This tests tries to catch problems like Bug 1644561.
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun capturePixelsStressTest() {
+        val screenshots = mutableListOf<GeckoResult<Bitmap>>()
+        sessionRule.display?.let {
+            for (i in 0..100) {
+                screenshots.add(it.capturePixels())
+            }
+
+            for (i in 0..50) {
+                sessionRule.waitForResult(screenshots[i])
+            }
+
+            it.surfaceDestroyed()
+            screenshots.add(it.capturePixels())
+            it.surfaceDestroyed()
+
+            val texture = SurfaceTexture(0)
+            texture.setDefaultBufferSize(SCREEN_WIDTH, SCREEN_HEIGHT)
+            val surface = Surface(texture)
+            it.surfaceChanged(surface, SCREEN_WIDTH, SCREEN_HEIGHT)
+
+            for (i in 0..100) {
+                screenshots.add(it.capturePixels())
+            }
+
+            for (i in 0..100) {
+                it.surfaceDestroyed()
+                screenshots.add(it.capturePixels())
+                val newTexture = SurfaceTexture(0)
+                newTexture.setDefaultBufferSize(SCREEN_WIDTH, SCREEN_HEIGHT)
+                val newSurface = Surface(newTexture)
+                it.surfaceChanged(newSurface, SCREEN_WIDTH, SCREEN_HEIGHT)
+            }
+
+            try {
+                for (result in screenshots) {
+                    sessionRule.waitForResult(result)
+                }
+            } catch (ex: RuntimeException) {
+                // Rejecting the screenshot is fine
+            }
+        }
+    }
+
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test(expected = IllegalStateException::class)
     fun capturePixelsFailsCompositorPaused() {
