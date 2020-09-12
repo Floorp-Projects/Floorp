@@ -17,27 +17,24 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-// Maps from RESULT_SOURCE values to { restrict, pref } objects.
+// Maps from RESULT_SOURCE values to { restrict } objects.
 const LOCAL_MODES = new Map([
   [
     UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     {
       restrict: UrlbarTokenizer.RESTRICT.BOOKMARK,
-      pref: "suggest.bookmark",
     },
   ],
   [
     UrlbarUtils.RESULT_SOURCE.TABS,
     {
       restrict: UrlbarTokenizer.RESTRICT.OPENPAGE,
-      pref: "suggest.openpage",
     },
   ],
   [
     UrlbarUtils.RESULT_SOURCE.HISTORY,
     {
       restrict: UrlbarTokenizer.RESTRICT.HISTORY,
-      pref: "suggest.history",
     },
   ],
 ]);
@@ -274,9 +271,11 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   onPrefChanged(changedPref) {
     // Null out this._engines when the local-one-offs-related prefs change so
     // that they rebuild themselves the next time the view opens.
-    let prefs = [...LOCAL_MODES.values()].map(({ pref }) => pref);
-    prefs.push("update2", "update2.localOneOffs", "update2.oneOffsRefresh");
-    if (prefs.includes(changedPref)) {
+    if (
+      ["update2", "update2.localOneOffs", "update2.oneOffsRefresh"].includes(
+        changedPref
+      )
+    ) {
       this._engines = null;
     }
     this._setupOneOffsHorizontalKeyNavigation();
@@ -304,12 +303,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
       return;
     }
 
-    for (let [source, { restrict, pref }] of LOCAL_MODES) {
-      if (!UrlbarPrefs.get(pref)) {
-        // By design, don't show a local one-off when the user has disabled its
-        // corresponding pref.
-        continue;
-      }
+    for (let [source, { restrict }] of LOCAL_MODES) {
       let name = UrlbarUtils.getResultSourceName(source);
       let button = this.document.createXULElement("button");
       button.id = `urlbar-engine-one-off-item-${name}`;

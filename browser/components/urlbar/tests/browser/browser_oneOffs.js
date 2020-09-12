@@ -861,47 +861,17 @@ add_task(async function localOneOffEmptySearchString() {
   await SpecialPowers.popPrefEnv();
 });
 
-// The bookmarks one-off should be hidden when suggest.bookmark is false.
-add_task(async function hiddenBookmarksOneOff() {
-  await doLocalOneOffsShownTest("suggest.bookmark");
-});
-
-// The tabs one-off should be hidden when suggest.openpage is false.
-add_task(async function hiddenTabsOneOff() {
-  await doLocalOneOffsShownTest("suggest.openpage");
-});
-
-// The history one-off should be hidden when suggest.history is false.
-add_task(async function hiddenHistoryOneOff() {
-  await doLocalOneOffsShownTest("suggest.history");
-});
-
 /**
  * Checks that the local one-offs are shown correctly.
- *
- * @param {boolean} prefToDisable
- *   If given, this should be one of the `browser.urlbar.suggest` prefs.  It
- *   will be disabled before running the test to make sure the corresponding
- *   button isn't shown.
  */
-async function doLocalOneOffsShownTest(prefToDisable = "") {
-  let prefs = [
-    ["browser.urlbar.update2", true],
-    ["browser.urlbar.update2.localOneOffs", true],
-    ["browser.urlbar.update2.oneOffsRefresh", true],
-  ];
-  if (prefToDisable) {
-    prefs.push([`browser.urlbar.${prefToDisable}`, false]);
-  }
-  await SpecialPowers.pushPrefEnv({ set: prefs });
-
-  if (prefToDisable) {
-    Assert.equal(
-      UrlbarPrefs.get(prefToDisable),
-      false,
-      `Sanity check: Pref ${prefToDisable} is disabled`
-    );
-  }
+async function doLocalOneOffsShownTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.localOneOffs", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
 
   let rebuildPromise = BrowserTestUtils.waitForEvent(
     oneOffSearchButtons,
@@ -914,11 +884,7 @@ async function doLocalOneOffsShownTest(prefToDisable = "") {
   await rebuildPromise;
 
   let buttons = oneOffSearchButtons.localButtons;
-  Assert.equal(
-    buttons.length,
-    prefToDisable ? 2 : 3,
-    "Expected number of local buttons"
-  );
+  Assert.equal(buttons.length, 3, "Expected number of local buttons");
 
   let expectedSource;
   let seenIDs = new Set();
@@ -943,39 +909,9 @@ async function doLocalOneOffsShownTest(prefToDisable = "") {
         break;
     }
     Assert.equal(button.source, expectedSource, "Expected button.source");
-
-    switch (prefToDisable) {
-      case "suggest.bookmark":
-        Assert.notEqual(expectedSource, UrlbarUtils.RESULT_SOURCE.BOOKMARKS);
-        break;
-      case "suggest.openpage":
-        Assert.notEqual(expectedSource, UrlbarUtils.RESULT_SOURCE.TABS);
-        break;
-      case "suggest.history":
-        Assert.notEqual(expectedSource, UrlbarUtils.RESULT_SOURCE.HISTORY);
-        break;
-      default:
-        if (prefToDisable) {
-          Assert.ok(false, `Unexpected pref: ${prefToDisable}`);
-        }
-        break;
-    }
   }
 
   await hidePopup();
-
-  if (prefToDisable) {
-    // Run the test again with the pref toggled back to true in order to test
-    // that the buttons automatically rebuild on the pref change and that all
-    // buttons are shown.
-    info(`Running test again with ${prefToDisable} = true`);
-    await SpecialPowers.pushPrefEnv({
-      set: [[`browser.urlbar.${prefToDisable}`, true]],
-    });
-    await doLocalOneOffsShownTest();
-    await SpecialPowers.popPrefEnv();
-  }
-
   await SpecialPowers.popPrefEnv();
 }
 
