@@ -1326,7 +1326,8 @@ nsUnknownContentTypeDialog.prototype = {
         false
       ) &&
       DownloadIntegration.shouldViewDownloadInternally(
-        this.mLauncher.MIMEInfo.MIMEType
+        this.mLauncher.MIMEInfo.MIMEType,
+        primaryExtension
       )
     );
   },
