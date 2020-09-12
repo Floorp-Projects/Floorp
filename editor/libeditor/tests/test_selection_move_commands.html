@@ -29,7 +29,7 @@ async function* runTests() {
     // XXX(krosylight): Android scrolls slightly more inside
     // geckoview-test-verify-e10s CI job
     const isAndroid = SpecialPowers.Services.appinfo.widgetToolkit == "android";
-    const delta = isAndroid ? .134 : 0;
+    const delta = isAndroid ? .150 : 0;
     isfuzzy(top, -expectTop, delta, cmd);
   }
 
