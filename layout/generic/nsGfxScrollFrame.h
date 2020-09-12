@@ -439,12 +439,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
                              nsRect* aVisibleRect, nsRect* aDirtyRect,
                              bool aSetBase,
                              bool* aDirtyRectHasBeenOverriden = nullptr);
-  void NotifyApzTransaction() {
-    mAllowScrollOriginDowngrade = true;
-    mApzScrollPos = GetScrollPosition();
-    mRelativeOffset.reset();
-    mScrollUpdates.Clear();
-  }
+  void NotifyApzTransaction();
   void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort);
   bool GetDisplayPortAtLastApproximateFrameVisibilityUpdate(
       nsRect* aDisplayPort);
@@ -471,15 +466,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool IsScrollAnimating(IncludeApzAnimation = IncludeApzAnimation::Yes) const;
 
   void ResetScrollInfoIfNeeded(uint32_t aGeneration,
-                               bool aApzAnimationInProgress) {
-    if (aGeneration == mScrollGeneration) {
-      mLastScrollOrigin = ScrollOrigin::None;
-      mLastSmoothScrollOrigin = ScrollOrigin::None;
-    }
-    // We can reset this regardless of scroll generation, as this is only set
-    // here, as a response to APZ requesting a repaint.
-    mApzAnimationInProgress = aApzAnimationInProgress;
-  }
+                               bool aApzAnimationInProgress);
   Maybe<nsPoint> GetRelativeOffset() const { return mRelativeOffset; }
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
