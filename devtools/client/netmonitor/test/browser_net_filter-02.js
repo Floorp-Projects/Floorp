@@ -185,7 +185,8 @@ add_task(async function() {
   await testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   info("Performing more requests.");
-  wait = waitForNetworkEvents(monitor, 9);
+  // As the view is filtered and there is only one request for which we fetch event timings
+  wait = waitForNetworkEvents(monitor, 9, { expectedEventTimings: 1 });
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   await wait;
 
@@ -194,7 +195,7 @@ add_task(async function() {
   await testContents([1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   info("Performing more requests.");
-  wait = waitForNetworkEvents(monitor, 9);
+  wait = waitForNetworkEvents(monitor, 9, { expectedEventTimings: 1 });
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   await wait;
 

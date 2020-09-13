@@ -37,7 +37,10 @@ add_task(async function() {
     '["bogus", "js", "alsobogus"]'
   );
 
-  const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
+  const { monitor } = await initNetMonitor(FILTERING_URL, {
+    requestCount: 1,
+    expectedEventTimings: 0,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
@@ -53,7 +56,8 @@ add_task(async function() {
     "The first filter type is invalid, but loaded anyway."
   );
 
-  const wait = waitForNetworkEvents(monitor, 9);
+  // As the view is filtered and there is only one request for which we fetch event timings
+  const wait = waitForNetworkEvents(monitor, 9, { expectedEventTimings: 1 });
   await performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   await wait;
 

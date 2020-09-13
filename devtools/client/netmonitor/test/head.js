@@ -287,7 +287,10 @@ async function waitForAllNetworkUpdateEvents() {
   finishedQueue = {};
 }
 
-function initNetMonitor(url, { requestCount, enableCache = false }) {
+function initNetMonitor(
+  url,
+  { requestCount, expectedEventTimings, enableCache = false }
+) {
   info("Initializing a network monitor pane.");
 
   if (!requestCount) {
@@ -327,7 +330,9 @@ function initNetMonitor(url, { requestCount, enableCache = false }) {
 
       info("Disabling cache and reloading page.");
 
-      const requestsDone = waitForNetworkEvents(monitor, requestCount);
+      const requestsDone = waitForNetworkEvents(monitor, requestCount, {
+        expectedEventTimings,
+      });
       const markersDone = waitForTimelineMarkers(monitor);
       await toggleCache(target, true);
       await Promise.all([requestsDone, markersDone]);
@@ -371,21 +376,24 @@ function teardown(monitor) {
   })();
 }
 
-function isFiltering(monitor) {
-  const doc = monitor.panelWin.document;
-  return !!doc.querySelector(
-    ".requests-list-filter-buttons button[aria-pressed]"
-  );
-}
-
-function waitForNetworkEvents(monitor, getRequests) {
+/**
+ * Wait for the request(s) to be fully notified to the frontend.
+ *
+ * @param {Object} monitor
+ *        The netmonitor instance used for retrieving a context menu element.
+ * @param {Number} getRequests
+ *        The number of request to wait for
+ * @param {Object} options (optional)
+ *        - expectedEventTimings {Number} Number of EVENT_TIMINGS events to wait for.
+ *        In case of filtering, we get less of such events.
+ */
+function waitForNetworkEvents(monitor, getRequests, options = {}) {
   return new Promise(resolve => {
     const panel = monitor.panelWin;
     let networkEvent = 0;
     let nonBlockedNetworkEvent = 0;
     let payloadReady = 0;
     let eventTimings = 0;
-    const filtering = isFiltering(monitor);
 
     function onNetworkEvent(resource) {
       networkEvent++;
@@ -404,8 +412,18 @@ function waitForNetworkEvents(monitor, getRequests) {
       eventTimings++;
       maybeResolve(EVENTS.RECEIVED_EVENT_TIMINGS, response.from);
     }
-
     function maybeResolve(event, actor) {
+      const { document } = monitor.panelWin;
+      // Wait until networkEvent, payloadReady and event timings finish for each request.
+      // The UI won't fetch timings when:
+      // * hidden in background,
+      // * for any blocked request,
+      let expectedEventTimings =
+        document.visibilityState == "hidden" ? 0 : nonBlockedNetworkEvent;
+      // Typically ignore this option if it is undefined or null
+      if (typeof options?.expectedEventTimings == "number") {
+        expectedEventTimings = options.expectedEventTimings;
+      }
       info(
         "> Network event progress: " +
           "NetworkEvent: " +
@@ -417,10 +435,11 @@ function waitForNetworkEvents(monitor, getRequests) {
           payloadReady +
           "/" +
           getRequests +
+          ", " +
           "EventTimings: " +
           eventTimings +
           "/" +
-          getRequests +
+          expectedEventTimings +
           ", " +
           "got " +
           event +
@@ -428,18 +447,10 @@ function waitForNetworkEvents(monitor, getRequests) {
           actor
       );
 
-      const { document } = monitor.panelWin;
-      // Wait until networkEvent, payloadReady and event timings finish for each request.
-      // The UI won't fetch timings when:
-      // * hidden in background,
-      // * for any blocked request,
-      // * when filtering.
       if (
         networkEvent >= getRequests &&
         payloadReady >= getRequests &&
-        (eventTimings >= nonBlockedNetworkEvent ||
-          document.visibilityState == "hidden" ||
-          filtering)
+        eventTimings >= expectedEventTimings
       ) {
         panel.api.off(TEST_EVENTS.NETWORK_EVENT, onNetworkEvent);
         panel.api.off(EVENTS.PAYLOAD_READY, onPayloadReady);
