@@ -25,9 +25,11 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
+  const onNetworkEvents = waitForNetworkEvents(monitor, 1);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     await content.wrappedJSObject.openConnection();
   });
+  await onNetworkEvents;
 
   const requests = document.querySelectorAll(".request-list-item");
   is(requests.length, 1, "There should be one request");
@@ -64,11 +66,16 @@ add_task(async function() {
     "Data column shows correct payload"
   );
 
-  await waitForDOM(
-    document,
-    "#messages-view .msg-connection-closed-message",
-    1
-  );
+  // Closed message may already be here
+  if (
+    !document.querySelector("#messages-view .msg-connection-closed-message")
+  ) {
+    await waitForDOM(
+      document,
+      "#messages-view .msg-connection-closed-message",
+      1
+    );
+  }
 
   is(
     !!document.querySelector("#messages-view .msg-connection-closed-message"),
