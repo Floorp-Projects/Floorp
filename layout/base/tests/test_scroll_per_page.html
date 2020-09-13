@@ -63,8 +63,9 @@ async function doTests(aWindow) {
   }
 
   function waitToClearOutAnyPotentialScrolls() {
-    return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(resolve, aWindow); }); }); });
+    return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(() => { aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(resolve); } ); }, aWindow); }); }); });
   }
+
 
   async function doPageDown() {
     let waitForScrolling = waitForScrollEvent();

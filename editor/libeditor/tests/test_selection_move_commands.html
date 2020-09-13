@@ -209,7 +209,7 @@ async function testRunner() {
       break;
     }
     await promise;
-    await new Promise(resolve => {win.requestAnimationFrame(() => { win.requestAnimationFrame(() => { flushApzRepaints(resolve, win); }); }); });
+    await new Promise(resolve => {win.requestAnimationFrame(() => { win.requestAnimationFrame(() => { flushApzRepaints(() => { win.requestAnimationFrame(() => { win.requestAnimationFrame(resolve); } ); }, win); }); }); });
   }
 }
 
