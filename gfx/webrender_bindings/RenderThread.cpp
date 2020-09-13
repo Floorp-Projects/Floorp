@@ -48,7 +48,7 @@
 
 using namespace mozilla;
 
-static already_AddRefed<gl::GLContext> CreateGLContext();
+static already_AddRefed<gl::GLContext> CreateGLContext(nsACString& aError);
 
 MOZ_DEFINE_MALLOC_SIZE_OF(WebRenderRendererMallocSizeOf)
 
@@ -776,7 +776,8 @@ void RenderThread::InitDeviceTask() {
     return;
   }
 
-  mSharedGL = CreateGLContext();
+  nsAutoCString err;
+  mSharedGL = CreateGLContext(err);
   if (gfx::gfxVars::UseWebRenderProgramBinaryDisk()) {
     mProgramCache = MakeUnique<WebRenderProgramCache>(ThreadPool().Raw());
   }
@@ -867,9 +868,18 @@ bool RenderThread::IsHandlingWebRenderError() {
 }
 
 gl::GLContext* RenderThread::SharedGL() {
+  nsAutoCString err;
+  auto gl = SharedGL(err);
+  if (!err.IsEmpty()) {
+    gfxCriticalNote << err.get();
+  }
+  return gl;
+}
+
+gl::GLContext* RenderThread::SharedGL(nsACString& aError) {
   MOZ_ASSERT(IsInRenderThread());
   if (!mSharedGL) {
-    mSharedGL = CreateGLContext();
+    mSharedGL = CreateGLContext(aError);
     mShaders = nullptr;
   }
   if (mSharedGL && !mShaders) {
@@ -991,24 +1001,27 @@ WebRenderProgramCache::~WebRenderProgramCache() {
 }  // namespace mozilla
 
 #ifdef XP_WIN
-static already_AddRefed<gl::GLContext> CreateGLContextANGLE() {
+static already_AddRefed<gl::GLContext> CreateGLContextANGLE(
+    nsACString& aError) {
   const RefPtr<ID3D11Device> d3d11Device =
       gfx::DeviceManagerDx::Get()->GetCompositorDevice();
   if (!d3d11Device) {
-    gfxCriticalNote << "Failed to get compositor device for EGLDisplay";
+    aError.Assign("RcANGLE(no compositor device for EGLDisplay)"_ns);
     return nullptr;
   }
 
   nsCString failureId;
   const auto lib = gl::DefaultEglLibrary(&failureId);
   if (!lib) {
-    gfxCriticalNote << "Failed to load EGL library: " << failureId.get();
+    aError.Assign(
+        nsPrintfCString("RcANGLE(load EGL lib failed: %s)", failureId.get()));
     return nullptr;
   }
 
   const auto egl = lib->CreateDisplay(d3d11Device.get());
   if (!egl) {
-    gfxCriticalNote << "Failed to create EGL display: " << failureId.get();
+    aError.Assign(nsPrintfCString("RcANGLE(create EGLDisplay failed: %s)",
+                                  failureId.get()));
     return nullptr;
   }
 
@@ -1027,14 +1040,15 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE() {
   auto gl = gl::GLContextEGL::CreateEGLPBufferOffscreenContext(
       egl, {flags}, dummySize, &failureId);
   if (!gl || !gl->IsANGLE()) {
-    gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: "
-                    << gfx::hexa(gl.get());
+    aError.Assign(nsPrintfCString("RcANGLE(create GL context failed: %x, %s)",
+                                  gl.get(), failureId.get()));
     return nullptr;
   }
 
   if (!gl->MakeCurrent()) {
-    gfxCriticalNote << "Failed GL context creation for WebRender: "
-                    << gfx::hexa(gl.get());
+    aError.Assign(
+        nsPrintfCString("RcANGLE(make current GL context failed: %x, %x)",
+                        gl.get(), gl->mEgl->mLib->fGetError()));
     return nullptr;
   }
 
@@ -1067,12 +1081,12 @@ static already_AddRefed<gl::GLContext> CreateGLContextCGL() {
 }
 #endif
 
-static already_AddRefed<gl::GLContext> CreateGLContext() {
+static already_AddRefed<gl::GLContext> CreateGLContext(nsACString& aError) {
   RefPtr<gl::GLContext> gl;
 
 #ifdef XP_WIN
   if (gfx::gfxVars::UseWebRenderANGLE()) {
-    gl = CreateGLContextANGLE();
+    gl = CreateGLContextANGLE(aError);
   }
 #elif defined(MOZ_WIDGET_ANDROID)
   gl = CreateGLContextEGL();
