@@ -4697,6 +4697,30 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       relativeDelta =
           Some(Metrics().ApplyRelativeScrollUpdateFrom(scrollUpdate));
       Metrics().RecalculateLayoutViewportOffset();
+    } else if (scrollUpdate.GetType() == ScrollUpdateType::PureRelative) {
+      APZC_LOG("%p pure-relative updating scroll offset from %s by %s\n", this,
+               ToString(Metrics().GetVisualScrollOffset()).c_str(),
+               ToString(scrollUpdate.GetDelta()).c_str());
+
+      // Always need a repaint request with a repaint type for pure relative
+      // scrolls because apz is doing the scroll at the main thread's request.
+      // The main thread has not updated it's scroll offset yet, it is depending
+      // on apz to tell it where to scroll.
+      needContentRepaint = true;
+      contentRepaintType = RepaintUpdateType::eVisualUpdate;
+
+      // We have to cancel a visual scroll offset update otherwise it will
+      // clobber the relative scrolling we are about to do. We perform
+      // visualScrollOffset = visualScrollOffset + delta. Then the
+      // visualScrollOffsetUpdated block below will do visualScrollOffset =
+      // aLayerMetrics.GetVisualDestination(). We need visual scroll offset
+      // updates to be incorporated into this scroll update loop to properly fix
+      // this.
+      visualScrollOffsetUpdated = false;
+
+      relativeDelta =
+          Some(Metrics().ApplyPureRelativeScrollUpdateFrom(scrollUpdate));
+      Metrics().RecalculateLayoutViewportOffset();
     } else {
       APZC_LOG("%p updating scroll offset from %s to %s\n", this,
                ToString(Metrics().GetVisualScrollOffset()).c_str(),

@@ -82,7 +82,7 @@ ComputeBezierAnimationSettingsForOrigin(ScrollOrigin aOrigin) {
   bool isOriginSmoothnessEnabled = false;
 
 #define READ_DURATIONS(prefbase) \
-  isOriginSmoothnessEnabled = StaticPrefs::general_smoothScroll_ ## prefbase (); \
+  isOriginSmoothnessEnabled = StaticPrefs::general_smoothScroll() && StaticPrefs::general_smoothScroll_ ## prefbase (); \
   if (isOriginSmoothnessEnabled) { \
     minMS = StaticPrefs::general_smoothScroll_ ## prefbase ## _durationMinMS(); \
     maxMS = StaticPrefs::general_smoothScroll_ ## prefbase ## _durationMaxMS(); \
