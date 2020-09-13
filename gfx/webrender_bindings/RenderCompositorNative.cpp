@@ -107,6 +107,10 @@ bool RenderCompositorNative::MaybeReadback(
   MOZ_RELEASE_ASSERT(aReadbackFormat == wr::ImageFormat::BGRA8);
   if (!mNativeLayerRootSnapshotter) {
     mNativeLayerRootSnapshotter = mNativeLayerRoot->CreateSnapshotter();
+
+    if (!mNativeLayerRootSnapshotter) {
+      return false;
+    }
   }
   bool success = mNativeLayerRootSnapshotter->ReadbackPixels(
       aReadbackSize, gfx::SurfaceFormat::B8G8R8A8, aReadbackBuffer);
@@ -131,12 +135,15 @@ bool RenderCompositorNative::MaybeGrabScreenshot(
   if (!mNativeLayerRootSnapshotter) {
     mNativeLayerRootSnapshotter = mNativeLayerRoot->CreateSnapshotter();
   }
-  mNativeLayerRootSnapshotter->MaybeGrabProfilerScreenshot(
-      &mProfilerScreenshotGrabber, aWindowSize);
 
-  // MaybeGrabScreenshot might have changed the current context. Make sure our
-  // context is current again.
-  MakeCurrent();
+  if (mNativeLayerRootSnapshotter) {
+    mNativeLayerRootSnapshotter->MaybeGrabProfilerScreenshot(
+        &mProfilerScreenshotGrabber, aWindowSize);
+
+    // MaybeGrabScreenshot might have changed the current context. Make sure our
+    // context is current again.
+    MakeCurrent();
+  }
 
   return true;
 }
