@@ -95,11 +95,17 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       return false;
     }
 
-    return (
-      this._allowSuggestions(queryContext) &&
-      (UrlbarPrefs.get("maxHistoricalSearchSuggestions") ||
-        this._allowRemoteSuggestions(queryContext))
-    );
+    if (!this._allowSuggestions(queryContext)) {
+      return false;
+    }
+
+    let wantsLocalSuggestions =
+      UrlbarPrefs.get("maxHistoricalSearchSuggestions") &&
+      (!UrlbarPrefs.get("update2") ||
+        queryContext.trimmedSearchString ||
+        UrlbarPrefs.get("update2.emptySearchBehavior") != 0);
+
+    return wantsLocalSuggestions || this._allowRemoteSuggestions(queryContext);
   }
 
   /**
