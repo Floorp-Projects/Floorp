@@ -161,8 +161,12 @@ class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
   bool ReadbackPixels(const gfx::IntSize& aReadbackSize,
                       gfx::SurfaceFormat aReadbackFormat,
                       const Range<uint8_t>& aReadbackBuffer) override;
-  void MaybeGrabProfilerScreenshot(ScreenshotGrabber* aScreenshotGrabber,
-                                   const gfx::IntSize& aWindowSize) override;
+  already_AddRefed<profiler_screenshots::RenderSource> GetWindowContents(
+      const gfx::IntSize& aWindowSize) override;
+  already_AddRefed<profiler_screenshots::DownscaleTarget> CreateDownscaleTarget(
+      const gfx::IntSize& aSize) override;
+  already_AddRefed<profiler_screenshots::AsyncReadbackBuffer>
+  CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) override;
 
  protected:
   NativeLayerRootSnapshotterCA(NativeLayerRootCA* aLayerRoot,
