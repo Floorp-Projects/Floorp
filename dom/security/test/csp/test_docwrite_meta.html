@@ -45,8 +45,8 @@ function checkResultsBlocked() {
 
   // image: make sure image is blocked
   var img = writemetacspframe.contentDocument.getElementById("testimage");
-  is(img.width, 0, "image widht should be 0");
-  is(img.height, 0, "image widht should be 0");
+  is(img.naturalWidth, 0, "image width should be 0");
+  is(img.naturalHeight, 0, "image height should be 0");
 
   // script: make sure defined variable in external script is undefined
   is(writemetacspframe.contentDocument.myMetaCSPScript, undefined, "myMetaCSPScript should be 'undefined'");
