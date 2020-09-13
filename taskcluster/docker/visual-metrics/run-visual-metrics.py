@@ -107,13 +107,14 @@ def append_result(log, suites, test_name, name, result, extra_options):
         log.error("%s" % result)
         result = 0
 
+    orig_test_name = test_name
     if test_name in suites and suites[test_name]["extraOptions"] != extra_options:
         missing = set(extra_options) - set(suites[test_name]["extraOptions"])
         test_name = test_name + "-".join(list(missing))
 
     subtests = suites.setdefault(
         test_name,
-        {"name": test_name, "subtests": {}, "extraOptions": extra_options}
+        {"name": orig_test_name, "subtests": {}, "extraOptions": extra_options}
     )["subtests"]
 
     if name not in subtests:

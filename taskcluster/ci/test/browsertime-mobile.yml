@@ -180,15 +180,12 @@ browsertime-tp6m:
                             geckoview:
                                 by-test-platform: *android-warm-settings
                             default: []
-    pageload:
-        by-app:
-            fenix: both
-            geckoview: both
-            refbrow: both
-            fennec: both
-            default: cold
+    pageload: cold
     run-visual-metrics: true
     treeherder-symbol: Btime(tp6m)
+    mozharness:
+        extra-options:
+            - --chimera
 
 browsertime-youtube-playback-mobile:
     description: "Browsertime YouTube Playback on Android"
@@ -312,6 +309,7 @@ browsertime-tp6m-live:
     mozharness:
         extra-options:
             - --live-sites
+            - --chimera
 
 browsertime-tp6m-profiling:
     description: "Raptor (browsertime) tp6 page-load tests on android with Gecko profiling"
