@@ -252,6 +252,7 @@ class RenderThread final {
   }
 
   /// Can only be called from the render thread.
+  gl::GLContext* SharedGL(nsACString& aError);
   gl::GLContext* SharedGL();
   void ClearSharedGL();
   RefPtr<layers::SurfacePool> SharedSurfacePool();
