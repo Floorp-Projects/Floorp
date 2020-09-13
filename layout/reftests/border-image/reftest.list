@@ -62,7 +62,7 @@ fuzzy(0-1,0-42) fuzzy-if(skiaContent,0-2,0-20) fuzzy-if(webrender,0-1,0-37818) =
 fuzzy(0-1,0-46) fuzzy-if(OSX,0-2,0-4472) fuzzy-if(webrender,0-1,0-26363) == border-image-radial-gradient-slice-2.html border-image-radial-gradient-slice-2-ref.html
 fuzzy(0-1,0-85970) fuzzy-if(webrender,0-1,0-90873) == border-image-radial-gradient-slice-fill-1.html border-image-radial-gradient-slice-fill-1-ref.html
 fuzzy(0-1,0-57343) fuzzy-if(OSX,0-2,0-4478) fuzzy-if(skiaContent,0-2,0-120) fuzzy-if(webrender,0-1,0-61729) == border-image-radial-gradient-slice-fill-2.html border-image-radial-gradient-slice-fill-2-ref.html
-fuzzy-if(skiaContent,0-1,0-2) fuzzy-if(webrender,0-1,0-4894) == border-image-radial-gradient-width.html border-image-radial-gradient-width-ref.html
+fuzzy-if(skiaContent,0-1,0-2) fuzzy-if(webrender,0-2,0-4894) == border-image-radial-gradient-width.html border-image-radial-gradient-width-ref.html
 fuzzy(0-1,0-9000) fuzzy-if(webrender,0-3,0-66698) == border-image-radial-gradient-slice-width.html border-image-radial-gradient-slice-width-ref.html
 
 # OS X failures tracked in bug 957025
