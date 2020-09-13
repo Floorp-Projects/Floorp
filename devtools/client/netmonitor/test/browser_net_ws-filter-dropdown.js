@@ -23,10 +23,12 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   // Wait for WS connection to be established + send messages
+  const onNetworkEvents = waitForNetworkEvents(monitor, 2);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     await content.wrappedJSObject.openConnection(2);
     await content.wrappedJSObject.openConnection(3);
   });
+  await onNetworkEvents;
 
   const requests = document.querySelectorAll(".request-list-item");
   is(requests.length, 2, "There should be two requests");
@@ -107,12 +109,12 @@ add_task(async function() {
   );
 
   // Select the second request and check that the filter option is the same
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
   wait = waitForDOM(
     document,
     "#messages-view .message-list-table .message-list-item",
     3
   );
+  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
   await wait;
   const secondRequestFrames = document.querySelectorAll(
     "#messages-view .message-list-table .message-list-item"
