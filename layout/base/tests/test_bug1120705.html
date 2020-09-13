@@ -52,7 +52,7 @@ function clickDownButton() {
 }
 
 function waitToClearOutAnyPotentialScrolls(aWindow) {
-  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(resolve, aWindow); }); }); });
+  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(() => { aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(resolve); } ); }, aWindow); }); }); });
 }
 
 function waitForScrollEvent(aWindow) {
