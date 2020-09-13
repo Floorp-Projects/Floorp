@@ -81,6 +81,9 @@ add_task(async function setup() {
 
 add_task(async function emptySearch() {
   await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.update2.emptySearchBehavior", 2]],
+    });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: "",
@@ -92,6 +95,7 @@ add_task(async function emptySearch() {
     await checkResults(expectedFormHistoryResults);
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
     await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
   });
 });
 
@@ -108,6 +112,9 @@ add_task(async function emptySearch_withHistory() {
     },
   ]);
   await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.update2.emptySearchBehavior", 2]],
+    });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: "",
@@ -134,6 +141,50 @@ add_task(async function emptySearch_withHistory() {
 
     await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
     await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
+  });
+
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function emptySearch_behavior() {
+  // URLs with the same host as the search engine.
+  await PlacesTestUtils.addVisits([`http://mochi.test/`]);
+
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.update2.emptySearchBehavior", 0]],
+    });
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+    await UrlbarTestUtils.enterSearchMode(window);
+    Assert.equal(gURLBar.value, "", "Urlbar value should be cleared.");
+    // For the empty search case, we expect to get the form history relative to
+    // the picked engine, history without redirects, and no heuristic.
+    await checkResults([]);
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
+  });
+
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.update2.emptySearchBehavior", 1]],
+    });
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+    await UrlbarTestUtils.enterSearchMode(window);
+    Assert.equal(gURLBar.value, "", "Urlbar value should be cleared.");
+    // For the empty search case, we expect to get the form history relative to
+    // the picked engine, history without redirects, and no heuristic.
+    await checkResults([...expectedFormHistoryResults]);
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
   });
 
   await PlacesUtils.history.clear();
