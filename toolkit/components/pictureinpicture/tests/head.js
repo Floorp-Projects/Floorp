@@ -763,3 +763,39 @@ async function promiseFullscreenExited(window, asyncFn) {
     await new Promise(resolve => setTimeout(resolve, 2000));
   }
 }
+
+/**
+ * Helper function that ensures that the "This video is
+ * playing in Picture-in-Picture mode" message works,
+ * then closes the player window
+ *
+ * @param {Element} browser The <xul:browser> that has the <video> loaded in it.
+ * @param {String} videoID The ID of the video that has the toggle.
+ * @param {Element} pipWin The Picture-in-Picture window that was opened
+ * @param {Boolean} iframe True if the test is on an Iframe, which modifies
+ * the test behavior
+ */
+async function ensureMessageAndClosePiP(browser, videoID, pipWin, isIframe) {
+  try {
+    await assertShowingMessage(browser, videoID, true);
+  } finally {
+    let uaWidgetUpdate = null;
+    if (isIframe) {
+      uaWidgetUpdate = SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForEvent(
+          content.windowRoot,
+          "UAWidgetSetupOrChange",
+          true /* capture */
+        );
+      });
+    } else {
+      uaWidgetUpdate = BrowserTestUtils.waitForContentEvent(
+        browser,
+        "UAWidgetSetupOrChange",
+        true /* capture */
+      );
+    }
+    await BrowserTestUtils.closeWindow(pipWin);
+    await uaWidgetUpdate;
+  }
+}
