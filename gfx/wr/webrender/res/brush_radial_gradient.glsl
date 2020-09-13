@@ -14,7 +14,7 @@
 
 #define V_CENTER            flat_varying_vec4_0.xy
 #define V_START_RADIUS      flat_varying_vec4_0.z
-#define V_RADIUS_SCALE      flat_varying_vec4_0.w
+#define V_END_RADIUS        flat_varying_vec4_0.w
 
 #define V_REPEATED_SIZE     flat_varying_vec4_1.xy
 #define V_GRADIENT_REPEAT   flat_varying_vec4_1.z
@@ -69,13 +69,7 @@ void radial_gradient_brush_vs(
 
     V_CENTER = gradient.center_start_end_radius.xy;
     V_START_RADIUS = gradient.center_start_end_radius.z;
-    if (gradient.center_start_end_radius.z != gradient.center_start_end_radius.w) {
-      // Store 1/rd where rd = end_radius - start_start
-      V_RADIUS_SCALE = 1.0 / (gradient.center_start_end_radius.w - gradient.center_start_end_radius.z);
-    } else {
-      // If rd = 0, we can't get its reciprocal. Instead, just use a zero scale.
-      V_RADIUS_SCALE = 0.0;
-    }
+    V_END_RADIUS = gradient.center_start_end_radius.w;
 
     // Transform all coordinates by the y scale so the
     // fragment shader can work with circles
@@ -120,9 +114,43 @@ Fragment radial_gradient_brush_fs() {
     vec2 pos = mod(V_POS, V_REPEATED_SIZE);
 #endif
 
-    // Solve for t in length(pd) = V_START_RADIUS + t * rd
     vec2 pd = pos - V_CENTER;
-    float offset = (length(pd) - V_START_RADIUS) * V_RADIUS_SCALE;
+    float rd = V_END_RADIUS - V_START_RADIUS;
+
+    // Solve for t in length(t - pd) = V_START_RADIUS + t * rd
+    // using a quadratic equation in form of At^2 - 2Bt + C = 0
+    float A = -(rd * rd);
+    float B = V_START_RADIUS * rd;
+    float C = dot(pd, pd) - V_START_RADIUS * V_START_RADIUS;
+
+    float offset;
+    if (A == 0.0) {
+        // Since A is 0, just solve for -2Bt + C = 0
+        if (B == 0.0) {
+            discard;
+        }
+        float t = 0.5 * C / B;
+        if (V_START_RADIUS + rd * t >= 0.0) {
+            offset = t;
+        } else {
+            discard;
+        }
+    } else {
+        float discr = B * B - A * C;
+        if (discr < 0.0) {
+            discard;
+        }
+        discr = sqrt(discr);
+        float t0 = (B + discr) / A;
+        float t1 = (B - discr) / A;
+        if (V_START_RADIUS + rd * t0 >= 0.0) {
+            offset = t0;
+        } else if (V_START_RADIUS + rd * t1 >= 0.0) {
+            offset = t1;
+        } else {
+            discard;
+        }
+    }
 
     vec4 color = sample_gradient(V_GRADIENT_ADDRESS,
                                  offset,
@@ -140,7 +168,7 @@ Fragment radial_gradient_brush_fs() {
 #undef V_GRADIENT_ADDRESS
 #undef V_CENTER
 #undef V_START_RADIUS
-#undef V_RADIUS_SCALE
+#undef V_END_RADIUS
 #undef V_REPEATED_SIZE
 #undef V_GRADIENT_REPEAT
 #undef V_POS

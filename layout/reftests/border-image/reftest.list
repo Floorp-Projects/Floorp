@@ -57,7 +57,7 @@ fuzzy(0-1,0-2000) fuzzy-if(webrender&&!geckoview,1-2,3249-9500) == border-image-
 fuzzy(0-1,0-8533) fuzzy-if(webrender&&!geckoview,1-3,3188-9500) == border-image-linear-gradient-repeat-repeat-3.html border-image-linear-gradient-repeat-repeat-3-ref.html
 fuzzy(0-3,0-107563) fuzzy-if(webrender&&!geckoview,1-3,43500-107563) == border-image-linear-gradient-repeat-round-3.html border-image-linear-gradient-repeat-round-3-ref.html
 
-fuzzy-if(webrender,0-2,0-2096) == border-image-radial-gradient.html border-image-radial-gradient-ref.html
+fuzzy-if(webrender,0-1,0-2096) == border-image-radial-gradient.html border-image-radial-gradient-ref.html
 fuzzy(0-1,0-42) fuzzy-if(skiaContent,0-2,0-20) fuzzy-if(webrender,0-1,0-37818) == border-image-radial-gradient-slice-1.html border-image-radial-gradient-slice-1-ref.html
 fuzzy(0-1,0-46) fuzzy-if(OSX,0-2,0-4472) fuzzy-if(webrender,0-1,0-26363) == border-image-radial-gradient-slice-2.html border-image-radial-gradient-slice-2-ref.html
 fuzzy(0-1,0-85970) fuzzy-if(webrender,0-1,0-90873) == border-image-radial-gradient-slice-fill-1.html border-image-radial-gradient-slice-fill-1-ref.html
