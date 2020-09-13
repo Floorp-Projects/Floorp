@@ -114,6 +114,14 @@ CSSPoint FrameMetrics::ApplyRelativeScrollUpdateFrom(
   return GetVisualScrollOffset() - origin;
 }
 
+CSSPoint FrameMetrics::ApplyPureRelativeScrollUpdateFrom(
+    const ScrollPositionUpdate& aUpdate) {
+  MOZ_ASSERT(aUpdate.GetType() == ScrollUpdateType::PureRelative);
+  CSSPoint origin = GetVisualScrollOffset();
+  ClampAndSetVisualScrollOffset(origin + aUpdate.GetDelta());
+  return GetVisualScrollOffset() - origin;
+}
+
 ScrollSnapInfo::ScrollSnapInfo()
     : mScrollSnapStrictnessX(StyleScrollSnapStrictness::None),
       mScrollSnapStrictnessY(StyleScrollSnapStrictness::None) {}
