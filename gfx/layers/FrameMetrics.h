@@ -264,6 +264,9 @@ struct FrameMetrics {
    */
   CSSPoint ApplyRelativeScrollUpdateFrom(const ScrollPositionUpdate& aUpdate);
 
+  CSSPoint ApplyPureRelativeScrollUpdateFrom(
+      const ScrollPositionUpdate& aUpdate);
+
   void UpdatePendingScrollInfo(const ScrollPositionUpdate& aInfo) {
     SetLayoutScrollOffset(aInfo.GetDestination());
     mScrollGeneration = aInfo.GetGeneration();
