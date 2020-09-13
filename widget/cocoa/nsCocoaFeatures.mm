@@ -181,3 +181,22 @@ bool Gecko_OnHighSierraOrLater() { return nsCocoaFeatures::OnHighSierraOrLater()
                                                     int32_t aBugFix) {
   return macOSVersion() >= GetVersion(aMajor, aMinor, aBugFix);
 }
+
+/*
+ * Returns true if the process is running under Rosetta translation. Returns
+ * false if running natively or if an error was encountered. We use the
+ * `sysctl.proc_translated` sysctl which is documented by Apple to be used
+ * for this purpose. Note: using this in a sandboxed process requires allowing
+ * the sysctl in the sandbox policy.
+ */
+/* static */ bool nsCocoaFeatures::ProcessIsRosettaTranslated() {
+  int ret = 0;
+  size_t size = sizeof(ret);
+  if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
+    if (errno != ENOENT) {
+      fprintf(stderr, "Failed to check for translation environment\n");
+    }
+    return false;
+  }
+  return (ret == 1);
+}

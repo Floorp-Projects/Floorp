@@ -434,6 +434,11 @@ nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
           break;
       }
       return NS_OK;
+    } else if (aFeature == nsIGfxInfo::FEATURE_WEBRENDER &&
+               nsCocoaFeatures::ProcessIsRosettaTranslated()) {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      aFailureId = "FEATURE_UNQUALIFIED_WEBRENDER_MAC_ROSETTA";
+      return NS_OK;
     }
 #ifndef EARLY_BETA_OR_EARLIER
     else if (aFeature == nsIGfxInfo::FEATURE_WEBRENDER && os == OperatingSystem::OSX10_16) {
