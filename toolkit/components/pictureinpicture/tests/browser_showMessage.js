@@ -22,17 +22,7 @@ add_task(async () => {
         let pipWin = await triggerPictureInPicture(browser, videoID);
         ok(pipWin, "Got Picture-in-Picture window.");
 
-        try {
-          await assertShowingMessage(browser, videoID, true);
-        } finally {
-          let uaWidgetUpdate = BrowserTestUtils.waitForContentEvent(
-            browser,
-            "UAWidgetSetupOrChange",
-            true /* capture */
-          );
-          await BrowserTestUtils.closeWindow(pipWin);
-          await uaWidgetUpdate;
-        }
+        await ensureMessageAndClosePiP(browser, videoID, pipWin, false);
       }
     );
   }

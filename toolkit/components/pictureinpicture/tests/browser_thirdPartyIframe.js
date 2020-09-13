@@ -40,19 +40,7 @@ add_task(async () => {
         let pipWin = await triggerPictureInPicture(iframeBc, videoID);
         ok(pipWin, "Got Picture-in-Picture window.");
 
-        try {
-          await assertShowingMessage(iframeBc, videoID, true);
-        } finally {
-          let uaWidgetUpdate = SpecialPowers.spawn(iframeBc, [], async () => {
-            await ContentTaskUtils.waitForEvent(
-              content.windowRoot,
-              "UAWidgetSetupOrChange",
-              true /* capture */
-            );
-          });
-          await BrowserTestUtils.closeWindow(pipWin);
-          await uaWidgetUpdate;
-        }
+        await ensureMessageAndClosePiP(iframeBc, videoID, pipWin, true);
       }
     );
   }
