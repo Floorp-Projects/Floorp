@@ -5371,22 +5371,23 @@ void ScrollFrameHelper::UpdateScrollbarPosition() {
   mFrameIsUpdatingScrollbar = true;
 
   nsPoint pt = GetScrollPosition();
-  nsRect scrolledRect = GetScrolledRect();
+  nsRect scrollRange = GetVisualScrollRange();
 
   if (gfxPlatform::UseDesktopZoomingScrollbars()) {
     pt = GetVisualViewportOffset();
+    scrollRange = GetScrollRangeForUserInputEvents();
   }
 
   if (mVScrollbarBox) {
     SetCoordAttribute(mVScrollbarBox->GetContent()->AsElement(),
-                      nsGkAtoms::curpos, pt.y - scrolledRect.y);
+                      nsGkAtoms::curpos, pt.y - scrollRange.y);
     if (!weakFrame.IsAlive()) {
       return;
     }
   }
   if (mHScrollbarBox) {
     SetCoordAttribute(mHScrollbarBox->GetContent()->AsElement(),
-                      nsGkAtoms::curpos, pt.x - scrolledRect.x);
+                      nsGkAtoms::curpos, pt.x - scrollRange.x);
     if (!weakFrame.IsAlive()) {
       return;
     }
