@@ -114,9 +114,6 @@ interface mixin MozObjectLoadingContent {
   // The plugin has crashed
   [ChromeOnly]
   const unsigned long PLUGIN_CRASHED              = 5;
-  // Suppressed by security policy
-  [ChromeOnly]
-  const unsigned long PLUGIN_SUPPRESSED           = 6;
   /// ** All values >= PLUGIN_CLICK_TO_PLAY are plugin placeholder types that
   ///    would be replaced by a real plugin if activated (playPlugin())
   /// ** Furthermore, values >= PLUGIN_CLICK_TO_PLAY and

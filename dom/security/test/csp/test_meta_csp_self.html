@@ -27,8 +27,8 @@ function receiveMessage(event) {
 
   // make sure the img was blocked
   var img = SpecialPowers.wrap(frame).contentDocument.getElementById("testimg");
-  is(img.width, 0, "img should be blocked -  width should be 0");
-  is(img.height, 0, "img should be blocked - height should be 0");
+  is(img.naturalWidth, 0, "img should be blocked -  width should be 0");
+  is(img.naturalHeight, 0, "img should be blocked - height should be 0");
 
   // sanity check, make sure 'self' translates into data
   var contentDoc = SpecialPowers.wrap(frame).contentDocument;
