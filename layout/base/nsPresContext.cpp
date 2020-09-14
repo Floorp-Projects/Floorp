@@ -91,6 +91,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceTiming.h"
+#include "mozilla/dom/PerformancePaintTiming.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "MobileViewportManager.h"
 #include "mozilla/dom/ImageTracker.h"
@@ -192,6 +193,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mInflationDisabledForShrinkWrap(false),
       mInteractionTimeEnabled(true),
       mHasPendingInterrupt(false),
+      mHasEverBuiltInvisibleText(false),
       mPendingInterruptFromTest(false),
       mInterruptsEnabled(false),
       mSendAfterPaintToContent(false),
