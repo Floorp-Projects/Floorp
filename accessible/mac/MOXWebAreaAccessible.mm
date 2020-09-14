@@ -76,7 +76,6 @@ using namespace mozilla::a11y;
   MOXSearchInfo* search =
       [[MOXSearchInfo alloc] initWithParameters:searchPredicate
                                         andRoot:mGeckoAccessible];
-
   return [search performSearch];
 }
 
@@ -203,6 +202,13 @@ using namespace mozilla::a11y;
       RotorLandmarkRule rule = mImmediateDescendantsOnly
                                    ? RotorLandmarkRule(mStartElem)
                                    : RotorLandmarkRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+
+    if ([key isEqualToString:@"AXControlSearchKey"]) {
+      RotorControlRule rule = mImmediateDescendantsOnly
+                                  ? RotorControlRule(mStartElem)
+                                  : RotorControlRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
   }
