@@ -9,7 +9,6 @@
 
 #include "mozilla/net/DNSByTypeRecord.h"
 #include "mozilla/Assertions.h"
-#include "nsClassHashtable.h"
 #include "nsIChannel.h"
 #include "nsIHttpPushListener.h"
 #include "nsIInterfaceRequestor.h"
@@ -27,9 +26,14 @@ enum TrrType {
   TRRTYPE_NS = 2,
   TRRTYPE_CNAME = 5,
   TRRTYPE_AAAA = 28,
-  TRRTYPE_OPT = 41,
   TRRTYPE_TXT = 16,
   TRRTYPE_HTTPSSVC = nsIDNSService::RESOLVE_TYPE_HTTPSSVC,  // 65
+};
+
+class DOHaddr : public LinkedListElement<DOHaddr> {
+ public:
+  NetAddr mNet;
+  uint32_t mTtl;
 };
 
 class TRRService;
@@ -38,10 +42,15 @@ extern TRRService* gTRRService;
 
 class DOHresp {
  public:
+  ~DOHresp() {
+    DOHaddr* el;
+    while ((el = mAddresses.popLast())) {
+      delete el;
+    }
+  }
   nsresult Add(uint32_t TTL, unsigned char* dns, unsigned int index,
                uint16_t len, bool aLocalAllowed);
-  nsTArray<NetAddr> mAddresses;
-  uint32_t mTtl = UINT32_MAX;
+  LinkedList<DOHaddr> mAddresses;
 };
 
 class TRR : public Runnable,
@@ -146,8 +155,6 @@ class TRR : public Runnable,
   nsresult FollowCname(nsIChannel* aChannel);
 
   bool UseDefaultServer();
-  void SaveAdditionalRecords(
-      const nsClassHashtable<nsCStringHashKey, DOHresp>& aRecords);
 
   nsresult CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult);
 
@@ -172,7 +179,6 @@ class TRR : public Runnable,
   uint32_t mCnameLoop = kCnameChaseMax;  // loop detection counter
   bool mAllowRFC1918 = false;
 
-  uint16_t mExtendedError = UINT16_MAX;
   uint32_t mTTL = UINT32_MAX;
   TypeRecordResultType mResult = mozilla::AsVariant(Nothing());
 

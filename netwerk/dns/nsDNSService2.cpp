@@ -291,7 +291,7 @@ nsDNSRecord::GetNextAddrAsString(nsACString& result) {
   }
 
   char buf[kIPv6CStrBufSize];
-  if (addr.ToStringBuffer(buf, sizeof(buf))) {
+  if (NetAddrToString(&addr, buf, sizeof(buf))) {
     result.Assign(buf);
     return NS_OK;
   }

@@ -1176,138 +1176,32 @@ nsresult TRR::DohDecode(nsCString& aHost) {
   uint16_t arRecords = get16bit(mResponse, 10);
   LOG(("TRR Decode: %d additional resource records (%u bytes body)\n",
        arRecords, mBodySize));
-
-  nsClassHashtable<nsCStringHashKey, DOHresp> additionalRecords;
   while (arRecords) {
-    nsAutoCString qname;
-    rv = GetQname(qname, index);
+    rv = PassQName(index);
     if (NS_FAILED(rv)) {
-      LOG(("Bad qname for additional record"));
       return rv;
     }
 
     if (mBodySize < (index + 8)) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    uint16_t type = get16bit(mResponse, index);
-    index += 2;
-    // The next two bytes encode class
-    // (or udpPayloadSize when type is TRRTYPE_OPT)
-    uint16_t cls = get16bit(mResponse, index);
-    index += 2;
-    // The next 4 bytes encode TTL
-    // (or extRCode + ednsVersion + flags when type is TRRTYPE_OPT)
-    uint32_t ttl = get32bit(mResponse, index);
-    index += 4;
-    // cls and ttl are unused when type is TRRTYPE_OPT
+    index += 2;  // type
+    index += 2;  // class
+    index += 4;  // ttl
 
     // 16 bit RDLENGTH
     if (mBodySize < (index + 2)) {
-      LOG(("Record too small"));
       return NS_ERROR_ILLEGAL_VALUE;
     }
-
-    uint16_t rdlength = get16bit(mResponse, index);
+    uint16_t RDLENGTH = get16bit(mResponse, index);
     index += 2;
-    if (mBodySize < (index + rdlength)) {
-      LOG(("rdlength too big"));
+    if (mBodySize < (index + RDLENGTH)) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
-
-    auto parseRecord = [&]() {
-      LOG(("Parsing additional record type: %u", type));
-      auto& entry = additionalRecords.GetOrInsert(qname);
-      if (!entry) {
-        entry.reset(new DOHresp());
-      }
-
-      switch (type) {
-        case TRRTYPE_A:
-          if (kDNS_CLASS_IN != cls) {
-            LOG(("NOT IN - returning"));
-            return;
-          }
-          if (rdlength != 4) {
-            LOG(("TRR bad length for A (%u)\n", rdlength));
-            return;
-          }
-          rv = entry->Add(ttl, mResponse, index, rdlength, mAllowRFC1918);
-          if (NS_FAILED(rv)) {
-            LOG(
-                ("TRR:DohDecode failed: local IP addresses or unknown IP "
-                 "family\n"));
-            return;
-          }
-          break;
-        case TRRTYPE_AAAA:
-          if (kDNS_CLASS_IN != cls) {
-            LOG(("NOT IN - returning"));
-            return;
-          }
-          if (rdlength != 16) {
-            LOG(("TRR bad length for AAAA (%u)\n", rdlength));
-            return;
-          }
-          rv = entry->Add(ttl, mResponse, index, rdlength, mAllowRFC1918);
-          if (NS_FAILED(rv)) {
-            LOG(("TRR got unique/local IPv6 address!\n"));
-            return;
-          }
-          break;
-        case TRRTYPE_OPT: {  // OPT
-          LOG(("Parsing opt rdlen: %u", rdlength));
-          unsigned int offset = 0;
-          while (offset + 2 <= rdlength) {
-            uint16_t optCode = get16bit(mResponse, index + offset);
-            LOG(("optCode: %u", optCode));
-            offset += 2;
-            if (offset + 2 > rdlength) {
-              break;
-            }
-            uint16_t optLen = get16bit(mResponse, index + offset);
-            LOG(("optLen: %u", optLen));
-            offset += 2;
-            if (offset + optLen > rdlength) {
-              LOG(("offset: %u, optLen: %u, rdlen: %u", offset, optLen,
-                   rdlength));
-              break;
-            }
-
-            LOG(("OPT: code: %u len:%u", optCode, optLen));
-
-            if (optCode != 15) {
-              offset += optLen;
-              continue;
-            }
-
-            // optCode == 15; Extended DNS error
-
-            if (offset + 2 > rdlength || optLen < 2) {
-              break;
-            }
-            mExtendedError = get16bit(mResponse, index + offset);
-
-            LOG((
-                "Extended error code: %u message: %s", mExtendedError,
-                nsAutoCString((char*)mResponse + index + offset + 2, optLen - 2)
-                    .get()));
-            offset += optLen;
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    };
-
-    parseRecord();
-
-    index += rdlength;
+    index += RDLENGTH;
     LOG(("done with additional rr now %u of %u\n", index, mBodySize));
     arRecords--;
   }
-
-  SaveAdditionalRecords(additionalRecords);
 
   if (index != mBodySize) {
     LOG(("DohDecode failed to parse entire response body, %u out of %u bytes\n",
@@ -1316,8 +1210,8 @@ nsresult TRR::DohDecode(nsCString& aHost) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  if ((mType != TRRTYPE_NS) && mCname.IsEmpty() && mDNS.mAddresses.IsEmpty() &&
-      mResult.is<TypeRecordEmpty>()) {
+  if ((mType != TRRTYPE_NS) && mCname.IsEmpty() &&
+      !mDNS.mAddresses.getFirst() && mResult.is<TypeRecordEmpty>()) {
     // no entries were stored!
     LOG(("TRR: No entries were stored!\n"));
     return NS_ERROR_FAILURE;
@@ -1333,45 +1227,6 @@ nsresult TRR::DohDecode(nsCString& aHost) {
   }
 
   return NS_OK;
-}
-
-void TRR::SaveAdditionalRecords(
-    const nsClassHashtable<nsCStringHashKey, DOHresp>& aRecords) {
-  if (!mRec) {
-    return;
-  }
-  nsresult rv;
-  for (auto iter = aRecords.ConstIter(); !iter.Done(); iter.Next()) {
-    if (iter.Data() && iter.Data()->mAddresses.IsEmpty()) {
-      // no point in adding empty records.
-      continue;
-    }
-    RefPtr<nsHostRecord> hostRecord;
-    rv = mHostResolver->GetHostRecord(
-        iter.Key(), EmptyCString(), nsIDNSService::RESOLVE_TYPE_DEFAULT,
-        mRec->flags, AF_UNSPEC, mRec->pb, mRec->originSuffix,
-        getter_AddRefs(hostRecord));
-    if (NS_FAILED(rv)) {
-      LOG(("Failed to get host record for additional record %s",
-           nsCString(iter.Key()).get()));
-      continue;
-    }
-    RefPtr<AddrInfo> ai(new AddrInfo(iter.Key(), TRRTYPE_A,
-                                     std::move(iter.Data()->mAddresses),
-                                     iter.Data()->mTtl));
-
-    // Since we're not actually calling NameLookup for this record, we need
-    // to set these fields to avoid assertions in CompleteLookup.
-    // This is quite hacky, and should be fixed.
-    hostRecord->mResolving++;
-    hostRecord->mEffectiveTRRMode = mRec->mEffectiveTRRMode;
-    RefPtr<AddrHostRecord> addrRec = do_QueryObject(hostRecord);
-    addrRec->mTrrStart = TimeStamp::Now();
-    addrRec->mTrrA = this;  // Hack!
-    LOG(("Completing lookup for additional: %s", nsCString(iter.Key()).get()));
-    (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB,
-                                        mOriginSuffix, AddrHostRecord::TRR_OK);
-  }
 }
 
 nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
@@ -1515,10 +1370,21 @@ void TRR::StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord) {
 nsresult TRR::ReturnData(nsIChannel* aChannel) {
   if (mType != TRRTYPE_TXT && mType != TRRTYPE_HTTPSSVC) {
     // create and populate an AddrInfo instance to pass on
-    RefPtr<AddrInfo> ai(
-        new AddrInfo(mHost, mType, nsTArray<NetAddr>(), mDNS.mTtl));
+    DOHaddr* item;
+    uint32_t ttl = AddrInfo::NO_TTL_DATA;
+    nsTArray<NetAddr> addresses;
+    while ((item = static_cast<DOHaddr*>(mDNS.mAddresses.popFirst()))) {
+      addresses.AppendElement(item->mNet);
+      if (item->mTtl < ttl) {
+        // While the DNS packet might return individual TTLs for each address,
+        // we can only return one value in the AddrInfo class so pick the
+        // lowest number.
+        ttl = item->mTtl;
+      }
+    }
+    RefPtr<AddrInfo> ai(new AddrInfo(mHost, mType, nsTArray<NetAddr>(), ttl));
     auto builder = ai->Build();
-    builder.SetAddresses(std::move(mDNS.mAddresses));
+    builder.SetAddresses(std::move(addresses));
 
     // Set timings.
     nsCOMPtr<nsITimedChannel> timedChan = do_QueryInterface(aChannel);
@@ -1550,31 +1416,6 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
   return NS_OK;
 }
 
-// https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-extended-error-16#section-4
-// This is a list of errors for which we should not fallback to Do53.
-// These are normally DNSSEC failures or explicit filtering performed by the
-// recursive resolver.
-bool hardFail(uint16_t code) {
-  const uint16_t noFallbackErrors[] = {
-      4,   // Forged answer (malware filtering)
-      6,   // DNSSEC Boggus
-      7,   // Signature expired
-      8,   // Signature not yet valid
-      9,   // DNSKEY Missing
-      10,  // RRSIG missing
-      11,  // No ZONE Key Bit set
-      12,  // NSEC Missing
-      17,  // Filtered
-  };
-
-  for (const auto& err : noFallbackErrors) {
-    if (code == err) {
-      return true;
-    }
-  }
-  return false;
-}
-
 nsresult TRR::FailData(nsresult error) {
   if (!mHostResolver) {
     return NS_ERROR_FAILURE;
@@ -1582,10 +1423,6 @@ nsresult TRR::FailData(nsresult error) {
 
   // If we didn't record a reason until now, record a default one.
   RecordReason(nsHostRecord::TRR_FAILED);
-
-  if (mExtendedError != UINT16_MAX && hardFail(mExtendedError)) {
-    error = NS_ERROR_DEFINITIVE_UNKNOWN_HOST;
-  }
 
   if (mType == TRRTYPE_TXT || mType == TRRTYPE_HTTPSSVC) {
     TypeRecordResultType empty(Nothing{});
@@ -1608,7 +1445,7 @@ nsresult TRR::FailData(nsresult error) {
 nsresult TRR::FollowCname(nsIChannel* aChannel) {
   nsresult rv = NS_OK;
   nsAutoCString cname;
-  while (NS_SUCCEEDED(rv) && mDNS.mAddresses.IsEmpty() && !mCname.IsEmpty() &&
+  while (NS_SUCCEEDED(rv) && !mDNS.mAddresses.getFirst() && !mCname.IsEmpty() &&
          mCnameLoop > 0) {
     mCnameLoop--;
     LOG(("TRR::On200Response CNAME %s => %s (%u)\n", mHost.get(), mCname.get(),
@@ -1626,7 +1463,7 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
 
   // restore mCname as DohDecode() change it
   mCname = cname;
-  if (NS_SUCCEEDED(rv) && !mDNS.mAddresses.IsEmpty()) {
+  if (NS_SUCCEEDED(rv) && mDNS.mAddresses.getFirst()) {
     ReturnData(aChannel);
     return NS_OK;
   }
@@ -1656,7 +1493,7 @@ nsresult TRR::On200Response(nsIChannel* aChannel) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!mDNS.mAddresses.IsEmpty() || mType == TRRTYPE_TXT || mCname.IsEmpty()) {
+  if (mDNS.mAddresses.getFirst() || mType == TRRTYPE_TXT || mCname.IsEmpty()) {
     // pass back the response data
     ReturnData(aChannel);
     return NS_OK;
@@ -1781,42 +1618,37 @@ TRR::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
 
 nsresult DOHresp::Add(uint32_t TTL, unsigned char* dns, unsigned int index,
                       uint16_t len, bool aLocalAllowed) {
-  NetAddr addr;
+  auto doh = MakeUnique<DOHaddr>();
+  NetAddr* addr = &doh->mNet;
   if (4 == len) {
     // IPv4
-    addr.inet.family = AF_INET;
-    addr.inet.port = 0;  // unknown
-    addr.inet.ip = ntohl(get32bit(dns, index));
+    addr->inet.family = AF_INET;
+    addr->inet.port = 0;  // unknown
+    addr->inet.ip = ntohl(get32bit(dns, index));
   } else if (16 == len) {
     // IPv6
-    addr.inet6.family = AF_INET6;
-    addr.inet6.port = 0;      // unknown
-    addr.inet6.flowinfo = 0;  // unknown
-    addr.inet6.scope_id = 0;  // unknown
+    addr->inet6.family = AF_INET6;
+    addr->inet6.port = 0;      // unknown
+    addr->inet6.flowinfo = 0;  // unknown
+    addr->inet6.scope_id = 0;  // unknown
     for (int i = 0; i < 16; i++, index++) {
-      addr.inet6.ip.u8[i] = dns[index];
+      addr->inet6.ip.u8[i] = dns[index];
     }
   } else {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (addr.IsIPAddrLocal() && !aLocalAllowed) {
+  if (IsIPAddrLocal(addr) && !aLocalAllowed) {
     return NS_ERROR_FAILURE;
   }
-
-  // While the DNS packet might return individual TTLs for each address,
-  // we can only return one value in the AddrInfo class so pick the
-  // lowest number.
-  if (mTtl < TTL) {
-    mTtl = TTL;
-  }
+  doh->mTtl = TTL;
 
   if (LOG_ENABLED()) {
     char buf[128];
-    addr.ToStringBuffer(buf, sizeof(buf));
+    NetAddrToString(addr, buf, sizeof(buf));
     LOG(("DOHresp:Add %s\n", buf));
   }
-  mAddresses.AppendElement(addr);
+  mAddresses.insertBack(doh.release());
   return NS_OK;
 }
 
