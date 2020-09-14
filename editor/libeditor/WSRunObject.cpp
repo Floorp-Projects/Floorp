@@ -177,6 +177,11 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     // XXX Why do we ignore the result of MoveOneHardLineContents()?
     NS_ASSERTION(rightBlockElement == afterRightBlockChild.GetContainer(),
                  "The relation is not guaranteed but assumed");
+#ifdef DEBUG
+    Result<bool, nsresult> firstLineHasContent =
+        aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(EditorRawDOMPoint(
+            rightBlockElement, afterRightBlockChild.Offset()));
+#endif  // #ifdef DEBUG
     MoveNodeResult moveNodeResult = aHTMLEditor.MoveOneHardLineContents(
         EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
         EditorDOMPoint(&aLeftBlockElement, 0),
@@ -188,6 +193,16 @@ EditActionResult WhiteSpaceVisibilityKeeper::
                          "HTMLEditor::MoveOneHardLineContents("
                          "MoveToEndOfContainer::Yes) failed, but ignored");
     if (moveNodeResult.Succeeded()) {
+#ifdef DEBUG
+      MOZ_ASSERT(!firstLineHasContent.isErr());
+      if (firstLineHasContent.inspect()) {
+        NS_ASSERTION(moveNodeResult.Handled(),
+                     "Failed to consider whether moving or not something");
+      } else {
+        NS_ASSERTION(moveNodeResult.Ignored(),
+                     "Failed to consider whether moving or not something");
+      }
+#endif  // #ifdef DEBUG
       ret |= moveNodeResult;
     }
     // Now, all children of rightBlockElement were moved to leftBlockElement.
@@ -282,6 +297,10 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     // XXX Why do we ignore the error from MoveChildrenWithTransaction()?
     MOZ_ASSERT(originalLeftBlockElement == atLeftBlockChild.GetContainer(),
                "This is not guaranteed, but assumed");
+#ifdef DEBUG
+    Result<bool, nsresult> rightBlockHasContent =
+        aHTMLEditor.CanMoveChildren(aRightBlockElement, aLeftBlockElement);
+#endif  // #ifdef DEBUG
     MoveNodeResult moveNodeResult = aHTMLEditor.MoveChildrenWithTransaction(
         aRightBlockElement, EditorDOMPoint(atLeftBlockChild.GetContainer(),
                                            atLeftBlockChild.Offset()));
@@ -293,6 +312,16 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         "HTMLEditor::MoveChildrenWithTransaction() failed, but ignored");
     if (moveNodeResult.Succeeded()) {
       ret |= moveNodeResult;
+#ifdef DEBUG
+      MOZ_ASSERT(!rightBlockHasContent.isErr());
+      if (rightBlockHasContent.inspect()) {
+        NS_ASSERTION(moveNodeResult.Handled(),
+                     "Failed to consider whether moving or not children");
+      } else {
+        NS_ASSERTION(moveNodeResult.Ignored(),
+                     "Failed to consider whether moving or not children");
+      }
+#endif  // #ifdef DEBUG
     }
     // atLeftBlockChild was moved to rightListElement.  So, it's invalid now.
     atLeftBlockChild.Clear();
@@ -329,6 +358,12 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     // Because we don't want the moving content to receive the style of the
     // previous content, we split the previous content's style.
 
+#ifdef DEBUG
+    Result<bool, nsresult> firstLineHasContent =
+        aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(
+            EditorRawDOMPoint(&aRightBlockElement, 0));
+#endif  // #ifdef DEBUG
+
     Element* editingHost = aHTMLEditor.GetActiveEditingHost();
     // XXX It's odd to continue handling this edit action if there is no
     //     editing host.
@@ -358,12 +393,25 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       }
     }
 
-    ret |= aHTMLEditor.MoveOneHardLineContents(
+    MoveNodeResult moveNodeResult = aHTMLEditor.MoveOneHardLineContents(
         EditorDOMPoint(&aRightBlockElement, 0), atPreviousContent);
-    if (ret.Failed()) {
+    if (moveNodeResult.Failed()) {
       NS_WARNING("HTMLEditor::MoveOneHardLineContents() failed");
-      return ret;
+      return EditActionResult(moveNodeResult.Rv());
     }
+
+#ifdef DEBUG
+    MOZ_ASSERT(!firstLineHasContent.isErr());
+    if (firstLineHasContent.inspect()) {
+      NS_ASSERTION(moveNodeResult.Handled(),
+                   "Failed to consider whether moving or not something");
+    } else {
+      NS_ASSERTION(moveNodeResult.Ignored(),
+                   "Failed to consider whether moving or not something");
+    }
+#endif  // #ifdef DEBUG
+
+    ret |= moveNodeResult;
   }
 
   if (!invisibleBRElementBeforeLeftBlockElement) {
@@ -444,17 +492,35 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     }
     ret.MarkAsHandled();
   } else {
+#ifdef DEBUG
+    Result<bool, nsresult> firstLineHasContent =
+        aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(
+            EditorRawDOMPoint(&aRightBlockElement, 0));
+#endif  // #ifdef DEBUG
+
     // Nodes are dissimilar types.
-    ret |= aHTMLEditor.MoveOneHardLineContents(
+    MoveNodeResult moveNodeResult = aHTMLEditor.MoveOneHardLineContents(
         EditorDOMPoint(&aRightBlockElement, 0),
         EditorDOMPoint(&aLeftBlockElement, 0),
         HTMLEditor::MoveToEndOfContainer::Yes);
-    if (ret.Failed()) {
+    if (moveNodeResult.Failed()) {
       NS_WARNING(
           "HTMLEditor::MoveOneHardLineContents(MoveToEndOfContainer::Yes) "
           "failed");
-      return ret;
+      return EditActionResult(moveNodeResult.Rv());
     }
+
+#ifdef DEBUG
+    MOZ_ASSERT(!firstLineHasContent.isErr());
+    if (firstLineHasContent.inspect()) {
+      NS_ASSERTION(moveNodeResult.Handled(),
+                   "Failed to consider whether moving or not something");
+    } else {
+      NS_ASSERTION(moveNodeResult.Ignored(),
+                   "Failed to consider whether moving or not something");
+    }
+#endif  // #ifdef DEBUG
+    ret |= moveNodeResult;
   }
 
   if (!invisibleBRElementAtEndOfLeftBlockElement) {

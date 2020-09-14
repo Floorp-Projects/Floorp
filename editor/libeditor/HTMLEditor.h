@@ -1452,7 +1452,8 @@ class HTMLEditor final : public TextEditor,
    */
   template <typename PT, typename RT>
   EditorDOMPoint GetCurrentHardLineStartPoint(
-      const RangeBoundaryBase<PT, RT>& aPoint, EditSubAction aEditSubAction);
+      const RangeBoundaryBase<PT, RT>& aPoint,
+      EditSubAction aEditSubAction) const;
 
   /**
    * GetCurrentHardLineEndPoint() returns end point of hard line including
@@ -1466,7 +1467,7 @@ class HTMLEditor final : public TextEditor,
    */
   template <typename PT, typename RT>
   EditorDOMPoint GetCurrentHardLineEndPoint(
-      const RangeBoundaryBase<PT, RT>& aPoint);
+      const RangeBoundaryBase<PT, RT>& aPoint) const;
 
   /**
    * CreateRangeIncludingAdjuscentWhiteSpaces() creates an nsRange instance
@@ -1498,11 +1499,13 @@ class HTMLEditor final : public TextEditor,
    * range.  If this fails handling something, returns nullptr.
    */
   already_AddRefed<nsRange> CreateRangeExtendedToHardLineStartAndEnd(
-      const dom::AbstractRange& aAbstractRange, EditSubAction aEditSubAction);
+      const dom::AbstractRange& aAbstractRange,
+      EditSubAction aEditSubAction) const;
   template <typename SPT, typename SRT, typename EPT, typename ERT>
   already_AddRefed<nsRange> CreateRangeExtendedToHardLineStartAndEnd(
       const RangeBoundaryBase<SPT, SRT>& aStartRef,
-      const RangeBoundaryBase<EPT, ERT>& aEndRef, EditSubAction aEditSubAction);
+      const RangeBoundaryBase<EPT, ERT>& aEndRef,
+      EditSubAction aEditSubAction) const;
 
   /**
    * GetSelectionRangesExtendedToHardLineStartAndEnd() collects selection ranges
@@ -1609,7 +1612,7 @@ class HTMLEditor final : public TextEditor,
   template <typename SPT, typename SRT, typename EPT, typename ERT>
   void SelectBRElementIfCollapsedInEmptyBlock(
       RangeBoundaryBase<SPT, SRT>& aStartRef,
-      RangeBoundaryBase<EPT, ERT>& aEndRef);
+      RangeBoundaryBase<EPT, ERT>& aEndRef) const;
 
   /**
    * GetChildNodesOf() returns all child nodes of aParent with an array.
@@ -2198,6 +2201,15 @@ class HTMLEditor final : public TextEditor,
                                     const EditorDOMPoint& aPointToInsert);
 
   /**
+   * CanMoveNodeOrChildren() returns true if
+   * `MoveNodeOrChildrenWithTransaction()` can move or delete at least a
+   * descendant of aElement into aNewContainer.  I.e., when this returns true,
+   * `MoveNodeOrChildrenWithTransaction()` must return "handled".
+   */
+  Result<bool, nsresult> CanMoveNodeOrChildren(
+      const nsIContent& aContent, const nsINode& aNewContainer) const;
+
+  /**
    * MoveChildrenWithTransaction() moves the children of aElement to
    * aPointToInsert.  If cannot insert some children due to invalid relation,
    * calls MoveNodeOrChildrenWithTransaction() to remove the children but keep
@@ -2210,6 +2222,14 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveChildrenWithTransaction(
       Element& aElement, const EditorDOMPoint& aPointToInsert);
+
+  /**
+   * CanMoveChildren() returns true if `MoveChildrenWithTransaction()` can move
+   * at least a descendant of aElement into aNewContainer.  I.e., when this
+   * returns true, `MoveChildrenWithTransaction()` return "handled".
+   */
+  Result<bool, nsresult> CanMoveChildren(const Element& aElement,
+                                         const nsINode& aNewContainer) const;
 
   /**
    * MoveAllChildren() moves all children of aContainer to before
@@ -2288,6 +2308,18 @@ class HTMLEditor final : public TextEditor,
       const EditorDOMPoint& aPointInHardLine,
       const EditorDOMPoint& aPointToInsert,
       MoveToEndOfContainer aMoveToEndOfContainer = MoveToEndOfContainer::No);
+
+  /**
+   * CanMoveOrDeleteSomethingInHardLine() returns true if there are some content
+   * nodes which can be moved to another place or deleted.  Note that if there
+   * is only a padding `<br>` element in empty block element, this returns
+   * false even though it may be deleted.
+   *
+   * @param aPointInHardLine    A point in a hard line.
+   */
+  template <typename PT, typename CT>
+  Result<bool, nsresult> CanMoveOrDeleteSomethingInHardLine(
+      const EditorDOMPointBase<PT, CT>& aPointInHardLine) const;
 
   /**
    * SplitNodeWithTransaction() creates a transaction to create a new node
