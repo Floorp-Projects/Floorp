@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Some of this is copied from Skia and is governed by a BSD-style license
-// Every function in this file should be marked static and inline using SI.
 #define SI ALWAYS_INLINE static
 
 #include "vector_type.h"
@@ -612,6 +610,7 @@ Float approx_log2(Float x) {
   return e - 124.225514990f - 1.498030302f * m -
          1.725879990f / (0.3520887068f + m);
 }
+
 Float approx_pow2(Float x) {
   Float f = fract(x);
   return bit_cast<Float>(
@@ -619,14 +618,21 @@ Float approx_pow2(Float x) {
                                       27.728023300f / (4.84252568f - f)));
 }
 
-// From skia
+#define pow __glsl_pow
+
+SI float pow(float x, float y) { return powf(x, y); }
+
 Float pow(Float x, Float y) {
   return if_then_else((x == 0) | (x == 1), x, approx_pow2(approx_log2(x) * y));
 }
 
+#define exp __glsl_exp
+
+SI float exp(float x) { return expf(x); }
+
 Float exp(Float y) {
-  float x = 2.718281828459045235360287471352;
-  return approx_pow2(log2f(x) * y);
+  float l2e = 1.4426950408889634074f;
+  return approx_pow2(l2e * y);
 }
 
 struct ivec4;
