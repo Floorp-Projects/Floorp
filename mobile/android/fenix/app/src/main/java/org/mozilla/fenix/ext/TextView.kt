@@ -11,9 +11,9 @@ import androidx.core.text.toSpannable
 /**
  * Adds an underline effect to the text displayed in the TextView.
  */
-fun TextView.addUnderline() {
+fun TextView.addUnderline(start: Int = 0, end: Int = this.text.length, flags: Int = 0) {
     val currentText = text
     text = currentText.toSpannable().apply {
-        setSpan(UnderlineSpan(), 0, currentText.length, 0)
+        setSpan(UnderlineSpan(), start, end, flags)
     }
 }
