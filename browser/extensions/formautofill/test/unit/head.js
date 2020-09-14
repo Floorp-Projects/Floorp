@@ -307,6 +307,10 @@ add_task(async function head_initialize() {
     true
   );
   Services.prefs.setBoolPref(
+    "extensions.formautofill.creditCards.enabled",
+    true
+  );
+  Services.prefs.setBoolPref(
     "extensions.formautofill.heuristics.enabled",
     true
   );
@@ -320,6 +324,7 @@ add_task(async function head_initialize() {
     Services.prefs.clearUserPref(
       "extensions.formautofill.creditCards.available"
     );
+    Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
     Services.prefs.clearUserPref("extensions.formautofill.heuristics.enabled");
     Services.prefs.clearUserPref("extensions.formautofill.section.enabled");
     Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");

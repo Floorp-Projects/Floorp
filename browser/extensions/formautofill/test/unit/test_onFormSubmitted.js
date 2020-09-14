@@ -589,6 +589,12 @@ add_task(async function autofill_disabled() {
   // "_onFormSubmit" should be called as usual.
   Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
   Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
+
+  Services.prefs.setBoolPref(
+    "extensions.formautofill.creditCards.enabled",
+    true
+  );
+
   FormAutofillContent.formSubmitted(form, null);
   Assert.equal(FormAutofillContent._onFormSubmit.called, true);
   Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
@@ -632,6 +638,11 @@ TESTCASES.forEach(testcase => {
   add_task(async function check_records_saving_is_called_correctly() {
     info("Starting testcase: " + testcase.description);
 
+    Services.prefs.setBoolPref(
+      "extensions.formautofill.creditCards.enabled",
+      true
+    );
+
     let form = MOCK_DOC.getElementById("form1");
     form.reset();
     for (let key in testcase.formValue) {
@@ -670,5 +681,6 @@ TESTCASES.forEach(testcase => {
       );
     }
     FormAutofillContent._onFormSubmit.restore();
+    Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
   });
 });
