@@ -64,7 +64,8 @@ Http3Session::Http3Session()
       mIsClosedByNeqo(false),
       mError(NS_OK),
       mSocketError(NS_OK),
-      mBeforeConnectedError(false) {
+      mBeforeConnectedError(false),
+      mTimerActive(false) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3Session::Http3Session [this=%p]", this));
 
@@ -567,6 +568,9 @@ nsresult Http3Session::ProcessOutput() {
 // properly and close the connection.
 nsresult Http3Session::ProcessOutputAndEvents() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  // ProcessOutput could fire another timer. Need to unset the flag before that.
+  mTimerActive = false;
+
   nsresult rv = ProcessOutput();
   if (NS_FAILED(rv)) {
     return rv;
@@ -578,9 +582,20 @@ void Http3Session::SetupTimer(uint64_t aTimeout) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   LOG(("Http3Session::SetupTimer to %" PRIu64 "ms [this=%p].", aTimeout, this));
+
+  if (mTimerActive && mTimer) {
+    LOG(
+        ("  -- Previous timer has not fired. Update the delay instead of "
+         "re-initializing the timer"));
+    mTimer->SetDelay(aTimeout);
+    return;
+  }
+
   if (!mTimer) {
     mTimer = NS_NewTimer();
   }
+
+  mTimerActive = true;
 
   if (!mTimer ||
       NS_FAILED(mTimer->InitWithNamedFuncCallback(
