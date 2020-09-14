@@ -389,16 +389,10 @@ class GZWriterWrapper : public JSONWriteFunc {
  public:
   explicit GZWriterWrapper(nsGZFileWriter* aGZWriter) : mGZWriter(aGZWriter) {}
 
-  void Write(const char* aStr) override {
+  void Write(const Span<const char>& aStr) override {
     // Ignore any failure because JSONWriteFunc doesn't have a mechanism for
     // handling errors.
-    Unused << mGZWriter->Write(aStr);
-  }
-
-  void Write(const char* aStr, size_t aLen) override {
-    // Ignore any failure because JSONWriteFunc doesn't have a mechanism for
-    // handling errors.
-    Unused << mGZWriter->Write(aStr, aLen);
+    Unused << mGZWriter->Write(aStr.data(), aStr.size());
   }
 
   nsresult Finish() { return mGZWriter->Finish(); }
@@ -455,13 +449,12 @@ class HandleReportAndFinishReportingCallbacks final
 
     mWriter->StartObjectElement();
     {
-      mWriter->StringProperty("process", process.get());
-      mWriter->StringProperty("path", PromiseFlatCString(aPath).get());
+      mWriter->StringProperty("process", process);
+      mWriter->StringProperty("path", PromiseFlatCString(aPath));
       mWriter->IntProperty("kind", aKind);
       mWriter->IntProperty("units", aUnits);
       mWriter->IntProperty("amount", aAmount);
-      mWriter->StringProperty("description",
-                              PromiseFlatCString(aDescription).get());
+      mWriter->StringProperty("description", PromiseFlatCString(aDescription));
     }
     mWriter->EndObject();
 

@@ -56,15 +56,14 @@ Nullable<uint32_t> DeprecationReportBody::GetColumnNumber() const {
 }
 
 void DeprecationReportBody::ToJSON(JSONWriter& aWriter) const {
-  aWriter.StringProperty("id", NS_ConvertUTF16toUTF8(mId).get());
+  aWriter.StringProperty("id", NS_ConvertUTF16toUTF8(mId));
   // TODO: anticipatedRemoval? https://github.com/w3c/reporting/issues/132
-  aWriter.StringProperty("message", NS_ConvertUTF16toUTF8(mMessage).get());
+  aWriter.StringProperty("message", NS_ConvertUTF16toUTF8(mMessage));
 
   if (mSourceFile.IsEmpty()) {
     aWriter.NullProperty("sourceFile");
   } else {
-    aWriter.StringProperty("sourceFile",
-                           NS_ConvertUTF16toUTF8(mSourceFile).get());
+    aWriter.StringProperty("sourceFile", NS_ConvertUTF16toUTF8(mSourceFile));
   }
 
   if (mLineNumber.IsNull()) {

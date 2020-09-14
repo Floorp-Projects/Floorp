@@ -94,9 +94,8 @@ struct StringWriteFunc : public JSONWriteFunc {
   nsCString& mString;
 
   explicit StringWriteFunc(nsCString& aString) : mString(aString) {}
-  virtual void Write(const char* aStr) override { mString.Append(aStr); }
-  virtual void Write(const char* aStr, size_t aLen) override {
-    mString.Append(aStr, aLen);
+  virtual void Write(const Span<const char>& aStr) override {
+    mString.Append(aStr);
   }
 };
 
@@ -143,7 +142,7 @@ struct PerfStatsCollector {
       nsAutoCString url;
       uri->GetSpec(url);
 
-      writer.StringElement(url.BeginReading());
+      writer.StringElement(url);
     }
     writer.EndArray();
     AppendJSONStringAsProperty(string, "perfstats", aString);
@@ -247,7 +246,7 @@ nsCString PerfStats::CollectLocalPerfStatsJSONInternal() {
         w.StartObjectElement();
         {
           w.IntProperty("id", i);
-          w.StringProperty("metric", sMetricNames[i]);
+          w.StringProperty("metric", MakeStringSpan(sMetricNames[i]));
           w.DoubleProperty("time", mRecordedTimes[i]);
         }
         w.EndObject();

@@ -30,7 +30,7 @@ void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) const {
   aWriter.StartObjectElement();
   aWriter.DoubleProperty("browsingContextID", BrowsingContextID());
   aWriter.DoubleProperty("innerWindowID", InnerWindowID());
-  aWriter.StringProperty("url", Url().get());
+  aWriter.StringProperty("url", Url());
   aWriter.DoubleProperty("embedderInnerWindowID", EmbedderInnerWindowID());
   aWriter.EndObject();
 }

@@ -8,42 +8,31 @@
 #include "mozilla/JSONWriter.h"
 #include "mozilla/UniquePtr.h"
 #include <stdio.h>
+#include <string>
 #include <string.h>
 
 using mozilla::JSONWriteFunc;
 using mozilla::JSONWriter;
+using mozilla::MakeStringSpan;
 using mozilla::MakeUnique;
+using mozilla::Span;
 
 // This writes all the output into a big buffer.
 struct StringWriteFunc : public JSONWriteFunc {
-  const static size_t kLen = 100000;
-  char mBuf[kLen];
-  char* mPtr;
+  std::string mString;
 
-  StringWriteFunc() : mPtr(mBuf) {}
-
-  void Write(const char* aStr) override {
-    size_t len = strlen(aStr);
-    Write(aStr, len);
-  }
-
-  void Write(const char* aStr, size_t aLen) override {
-    char* last = mPtr + aLen;  // where the nul will be added
-
-    // If you change this test and this assertion fails, just make kLen bigger.
-    MOZ_RELEASE_ASSERT(last < mBuf + kLen);
-    sprintf(mPtr, "%s", aStr);
-    mPtr = last;
+  void Write(const mozilla::Span<const char>& aStr) override {
+    mString.append(aStr.data(), aStr.size());
   }
 };
 
 void Check(JSONWriteFunc* aFunc, const char* aExpected) {
-  const char* actual = static_cast<StringWriteFunc*>(aFunc)->mBuf;
-  if (strcmp(aExpected, actual) != 0) {
+  const std::string& actual = static_cast<StringWriteFunc*>(aFunc)->mString;
+  if (strcmp(aExpected, actual.c_str()) != 0) {
     fprintf(stderr,
             "---- EXPECTED ----\n<<<%s>>>\n"
             "---- ACTUAL ----\n<<<%s>>>\n",
-            aExpected, actual);
+            aExpected, actual.c_str());
     MOZ_RELEASE_ASSERT(false, "expected and actual output don't match");
   }
 }
@@ -72,6 +61,13 @@ void TestBasicProperties() {
  \"string2\": \"1234\",\n\
  \"string3\": \"hello\",\n\
  \"string4\": \"\\\" \\\\ \\u0007 \\b \\t \\n \\u000b \\f \\r\",\n\
+ \"string5\": \"hello\",\n\
+ \"string6\": \"\\\" \\\\ \\u0007 \\b \\t \",\n\
+ \"span1\": \"buf1\",\n\
+ \"span2\": \"buf2\",\n\
+ \"span3\": \"buf3\",\n\
+ \"span4\": \"buf\\n4\",\n\
+ \"span5\": \"MakeStringSpan\",\n\
  \"len 0 array, multi-line\": [\n\
  ],\n\
  \"len 0 array, single-line\": [],\n\
@@ -125,6 +121,18 @@ void TestBasicProperties() {
     w.StringProperty("string2", "1234");
     w.StringProperty("string3", "hello");
     w.StringProperty("string4", "\" \\ \a \b \t \n \v \f \r");
+    w.StringProperty("string5", "hello\0cut");  // '\0' marks the end.
+    w.StringProperty("string6", "\" \\ \a \b \t \0 \n \v \f \r");
+
+    const char buf1[] = {'b', 'u', 'f', '1'};
+    w.StringProperty("span1", buf1);
+    const char buf2[] = {'b', 'u', 'f', '2', '\0'};
+    w.StringProperty("span2", buf2);
+    const char buf3[] = {'b', 'u', 'f', '3', '\0', '?'};
+    w.StringProperty("span3", buf3);
+    const char buf4[] = {'b', 'u', 'f', '\n', '4', '\0', '?'};
+    w.StringProperty("span4", buf4);
+    w.StringProperty("span5", MakeStringSpan("MakeStringSpan"));
 
     w.StartArrayProperty("len 0 array, multi-line", w.MultiLineStyle);
     w.EndArray();
@@ -226,6 +234,13 @@ void TestBasicElements() {
   \"1234\",\n\
   \"hello\",\n\
   \"\\\" \\\\ \\u0007 \\b \\t \\n \\u000b \\f \\r\",\n\
+  \"hello\",\n\
+  \"\\\" \\\\ \\u0007 \\b \\t \",\n\
+  \"buf1\",\n\
+  \"buf2\",\n\
+  \"buf3\",\n\
+  \"buf\\n4\",\n\
+  \"MakeStringSpan\",\n\
   [\n\
   ],\n\
   [],\n\
@@ -281,6 +296,18 @@ void TestBasicElements() {
     w.StringElement("1234");
     w.StringElement("hello");
     w.StringElement("\" \\ \a \b \t \n \v \f \r");
+    w.StringElement("hello\0cut");  // '\0' marks the end.
+    w.StringElement("\" \\ \a \b \t \0 \n \v \f \r");
+
+    const char buf1[] = {'b', 'u', 'f', '1'};
+    w.StringElement(buf1);
+    const char buf2[] = {'b', 'u', 'f', '2', '\0'};
+    w.StringElement(buf2);
+    const char buf3[] = {'b', 'u', 'f', '3', '\0', '?'};
+    w.StringElement(buf3);
+    const char buf4[] = {'b', 'u', 'f', '\n', '4', '\0', '?'};
+    w.StringElement(buf4);
+    w.StringElement(MakeStringSpan("MakeStringSpan"));
 
     w.StartArrayElement();
     w.EndArray();
@@ -536,14 +563,14 @@ void TestDeepNesting() {
 void TestEscapedPropertyNames() {
   const char* expected =
       "\
-{\"i\\t\": 1, \"array\\t\": [null, [{}], {\"o\\t\": {}}, \"s\"], \"d\\t\": 3.33}\n\
+{\"i\\t\": 1, \"array\\t\": [null, [{}], {\"o\\t\": {}}, \"s\"], \"d\": 3.33}\n\
 ";
 
   JSONWriter w(MakeUnique<StringWriteFunc>());
 
   w.Start(w.SingleLineStyle);
 
-  w.IntProperty("i\t", 1);
+  w.IntProperty("i\t\0cut", 1);  // '\0' marks the end.
 
   w.StartArrayProperty("array\t");
   {
@@ -567,7 +594,7 @@ void TestEscapedPropertyNames() {
   }
   w.EndArray();
 
-  w.DoubleProperty("d\t", 3.33);
+  w.DoubleProperty("d\0\t", 3.33);
 
   w.End();
 

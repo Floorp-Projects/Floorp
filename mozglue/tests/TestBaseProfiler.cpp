@@ -3625,7 +3625,7 @@ void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
             DeserializeAfterKindAndStream(
                 aEntryReader, aWriter, 0,
                 [&](const mozilla::ProfilerString8View& aName) {
-                  aWriter.StringElement(aName.String().c_str());
+                  aWriter.StringElement(aName);
                 },
                 [&](mozilla::ProfileChunkedBuffer&) {
                   aWriter.StringElement("Real backtrace would be here");
@@ -3687,10 +3687,12 @@ void TestUserMarker() {
   // User-defined marker type with text. If there are no `Convert` functions,
   // it's fine to define it right in the function where it's used.
   struct MarkerTypeTestMinimal {
-    static constexpr const char* MarkerTypeName() { return "test-minimal"; }
+    static constexpr Span<const char> MarkerTypeName() {
+      return MakeStringSpan("test-minimal");
+    }
     static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
                                      const std::string& aText) {
-      aWriter.StringProperty("text", aText.c_str());
+      aWriter.StringProperty("text", aText);
     }
   };
 
@@ -3780,10 +3782,12 @@ void TestPredefinedMarkers() {
   // User-defined marker type with text. If there are no `Convert` functions,
   // it's fine to define it right in the function where it's used.
   struct MarkerTypeTestMinimal {
-    static constexpr const char* MarkerTypeName() { return "test-minimal"; }
+    static constexpr Span<const char> MarkerTypeName() {
+      return MakeStringSpan("test-minimal");
+    }
     static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
                                      const std::string& aText) {
-      aWriter.StringProperty("text", aText.c_str());
+      aWriter.StringProperty("text", aText);
     }
   };
 
