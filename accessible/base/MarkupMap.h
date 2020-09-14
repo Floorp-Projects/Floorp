@@ -214,7 +214,7 @@ MARKUPMAP(
       }
       if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                 nsGkAtoms::time, eIgnoreCase)) {
-        return new HTMLDateTimeAccessible<roles::TIME_EDITOR>(
+        return new HTMLDateTimeAccessible<roles::GROUPING>(
             aElement, aContext->Document());
       }
       if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,

@@ -1060,9 +1060,4 @@ interface nsIAccessibleRole : nsISupports
    */
   const unsigned long ROLE_CODE = 182;
 
-  /**
-   * Represents control whose purpose is to allow a user to edit a time.
-   */
-  const unsigned long ROLE_TIME_EDITOR = 183;
-
 };
