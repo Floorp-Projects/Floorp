@@ -579,7 +579,7 @@ add_task(async function test_open_search() {
   await promise;
 
   let engines = getOpenSearchItems();
-  is(engines.length, 2, "the opensearch.html page exposes 2 engines");
+  is(engines.length, 3, "the opensearch.html page exposes 3 engines");
 
   // Check that there's initially no selection.
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
