@@ -22,8 +22,11 @@
 #include "nsWeakReference.h"
 #include "secoidt.h"
 
-class nsCertOverride {
+class nsCertOverride final : public nsICertOverride {
  public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSICERTOVERRIDE
+
   enum class OverrideBits {
     None = 0,
     Untrusted = nsICertOverrideService::ERROR_UNTRUSTED,
@@ -44,6 +47,9 @@ class nsCertOverride {
 
   static void convertBitsToString(OverrideBits ob, nsACString& str);
   static void convertStringToBits(const nsACString& str, OverrideBits& ob);
+
+ private:
+  ~nsCertOverride() = default;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsCertOverride::OverrideBits)
@@ -86,7 +92,7 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr {
 
   inline KeyTypePointer HostWithPortPtr() const { return mHostWithPort.get(); }
 
-  nsCertOverride mSettings;
+  RefPtr<nsCertOverride> mSettings;
   nsCString mHostWithPort;
 };
 
@@ -105,8 +111,8 @@ class nsCertOverrideService final : public nsICertOverrideService,
   nsresult Init();
   void RemoveAllTemporaryOverrides();
 
-  typedef void (*CertOverrideEnumerator)(const nsCertOverride& aSettings,
-                                         void* aUserData);
+  typedef void (*CertOverrideEnumerator)(
+      const RefPtr<nsCertOverride>& aSettings, void* aUserData);
 
   // aCert == null: return all overrides
   // aCert != null: return overrides that match the given cert

@@ -289,8 +289,8 @@ struct nsCertAndArrayAndPositionAndCounterAndTracker {
 // track entries that have not yet been handled.
 // The created display-info references the cert, so make a note
 // of that by incrementing the cert usage counter.
-static void MatchingCertOverridesCallback(const nsCertOverride& aSettings,
-                                          void* aUserData) {
+static void MatchingCertOverridesCallback(
+    const RefPtr<nsCertOverride>& aSettings, void* aUserData) {
   nsCertAndArrayAndPositionAndCounterAndTracker* cap =
       (nsCertAndArrayAndPositionAndCounterAndTracker*)aUserData;
   if (!cap) return;
@@ -300,11 +300,11 @@ static void MatchingCertOverridesCallback(const nsCertOverride& aSettings,
     if (cap->certai) cap->certai->mUsageCount++;
     certdi->mAddonInfo = cap->certai;
     certdi->mTypeOfEntry = nsCertTreeDispInfo::host_port_override;
-    certdi->mAsciiHost = aSettings.mAsciiHost;
-    certdi->mPort = aSettings.mPort;
-    certdi->mOverrideBits = aSettings.mOverrideBits;
-    certdi->mIsTemporary = aSettings.mIsTemporary;
-    certdi->mCert = aSettings.mCert;
+    certdi->mAsciiHost = aSettings->mAsciiHost;
+    certdi->mPort = aSettings->mPort;
+    certdi->mOverrideBits = aSettings->mOverrideBits;
+    certdi->mIsTemporary = aSettings->mIsTemporary;
+    certdi->mCert = aSettings->mCert;
     cap->array->InsertElementAt(cap->position, certdi);
     cap->position++;
     cap->counter++;
@@ -313,22 +313,22 @@ static void MatchingCertOverridesCallback(const nsCertOverride& aSettings,
   // this entry is now associated to a displayed cert, remove
   // it from the list of remaining entries
   nsAutoCString hostPort;
-  nsCertOverrideService::GetHostWithPort(aSettings.mAsciiHost, aSettings.mPort,
-                                         hostPort);
+  nsCertOverrideService::GetHostWithPort(aSettings->mAsciiHost,
+                                         aSettings->mPort, hostPort);
   cap->tracker->RemoveEntry(hostPort);
 }
 
 // Used to collect a list of the (unique) host:port keys
 // for all stored overrides.
-static void CollectAllHostPortOverridesCallback(const nsCertOverride& aSettings,
-                                                void* aUserData) {
+static void CollectAllHostPortOverridesCallback(
+    const RefPtr<nsCertOverride>& aSettings, void* aUserData) {
   nsTHashtable<nsCStringHashKey>* collectorTable =
       (nsTHashtable<nsCStringHashKey>*)aUserData;
   if (!collectorTable) return;
 
   nsAutoCString hostPort;
-  nsCertOverrideService::GetHostWithPort(aSettings.mAsciiHost, aSettings.mPort,
-                                         hostPort);
+  nsCertOverrideService::GetHostWithPort(aSettings->mAsciiHost,
+                                         aSettings->mPort, hostPort);
   collectorTable->PutEntry(hostPort);
 }
 
@@ -342,14 +342,14 @@ struct nsArrayAndPositionAndCounterAndTracker {
 // Used when enumerating the stored host:port overrides where
 // no associated certificate was found in the NSS database.
 static void AddRemaningHostPortOverridesCallback(
-    const nsCertOverride& aSettings, void* aUserData) {
+    const RefPtr<nsCertOverride>& aSettings, void* aUserData) {
   nsArrayAndPositionAndCounterAndTracker* cap =
       (nsArrayAndPositionAndCounterAndTracker*)aUserData;
   if (!cap) return;
 
   nsAutoCString hostPort;
-  nsCertOverrideService::GetHostWithPort(aSettings.mAsciiHost, aSettings.mPort,
-                                         hostPort);
+  nsCertOverrideService::GetHostWithPort(aSettings->mAsciiHost,
+                                         aSettings->mPort, hostPort);
   if (!cap->tracker->GetEntry(hostPort)) return;
 
   // This entry is not associated to any stored cert,
@@ -359,11 +359,11 @@ static void AddRemaningHostPortOverridesCallback(
   if (certdi) {
     certdi->mAddonInfo = nullptr;
     certdi->mTypeOfEntry = nsCertTreeDispInfo::host_port_override;
-    certdi->mAsciiHost = aSettings.mAsciiHost;
-    certdi->mPort = aSettings.mPort;
-    certdi->mOverrideBits = aSettings.mOverrideBits;
-    certdi->mIsTemporary = aSettings.mIsTemporary;
-    certdi->mCert = aSettings.mCert;
+    certdi->mAsciiHost = aSettings->mAsciiHost;
+    certdi->mPort = aSettings->mPort;
+    certdi->mOverrideBits = aSettings->mOverrideBits;
+    certdi->mIsTemporary = aSettings->mIsTemporary;
+    certdi->mCert = aSettings->mCert;
     cap->array->InsertElementAt(cap->position, certdi);
     cap->position++;
     cap->counter++;

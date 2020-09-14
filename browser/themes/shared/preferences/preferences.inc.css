@@ -366,7 +366,7 @@ button > hbox > label {
   min-height: 0;
 }
 
-#rememberedList > richlistitem {
+.certManagerRichlistBox > richlistitem {
   min-height: 30px !important;
 }
 
