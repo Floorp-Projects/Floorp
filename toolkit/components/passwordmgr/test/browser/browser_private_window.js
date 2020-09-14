@@ -74,13 +74,14 @@ async function loadAccessRestrictedURL(browser, url, username, password) {
   let browserLoaded = BrowserTestUtils.browserLoaded(browser);
   BrowserTestUtils.loadURI(browser, url);
 
-  // Wait for the auth prompt, enter the login details and close the prompt
-  await PromptTestUtils.handleNextPrompt(
-    browser,
-    { modalType: authPromptModalType, promptType: "promptUserAndPass" },
-    { buttonNumClick: 0, loginInput: username, passwordInput: password }
-  );
+  let promptDoc = await waitForAuthPrompt();
+  let dialogUI = promptDoc.defaultView.Dialog.ui;
+  ok(dialogUI, "Got expected HTTP auth dialog Dialog.ui");
 
+  // fill and submit the dialog form
+  dialogUI.loginTextbox.value = username;
+  dialogUI.password1Textbox.value = password;
+  promptDoc.getElementById("commonDialog").acceptDialog();
   await SimpleTest.promiseFocus(browser.ownerGlobal);
   await browserLoaded;
 }
@@ -106,13 +107,11 @@ const authUrl = `https://example.com/${DIRECTORY_PATH}authenticate.sjs`;
 
 let normalWin;
 let privateWin;
-let authPromptModalType;
 
 // XXX: Note that tasks are currently run in sequence. Some tests may assume the state
 // resulting from successful or unsuccessful logins in previous tasks
 
 add_task(async function test_setup() {
-  authPromptModalType = Services.prefs.getIntPref("prompts.modalType.httpAuth");
   normalWin = await BrowserTestUtils.openNewBrowserWindow({ private: false });
   privateWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   Services.logins.removeAllLogins();

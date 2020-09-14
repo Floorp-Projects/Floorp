@@ -7,7 +7,6 @@ const { LoginManagerParent } = ChromeUtils.import(
 ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/PromptTestUtils.jsm", this);
 
 add_task(async function common_initialize() {
   await SpecialPowers.pushPrefEnv({

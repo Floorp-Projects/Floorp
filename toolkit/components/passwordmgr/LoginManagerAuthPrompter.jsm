@@ -756,29 +756,14 @@ LoginManagerAuthPrompter.prototype = {
           this._browser
         );
       }
-      if (this._browser) {
-        ok = Services.prompt.promptAuthBC(
-          this._browser.browsingContext,
-          LoginManagerAuthPrompter.promptAuthModalType,
-          aChannel,
-          aLevel,
-          aAuthInfo,
-          checkboxLabel,
-          checkbox
-        );
-      } else {
-        // Can't tab prompt without browser. Fallback to window prompt.
-        // For cases where this._chromeWindow is defined, this will keep our
-        // parent relationship intact as opposed to passing null above.
-        ok = Services.prompt.promptAuth(
-          this._chromeWindow,
-          aChannel,
-          aLevel,
-          aAuthInfo,
-          checkboxLabel,
-          checkbox
-        );
-      }
+      ok = Services.prompt.promptAuth(
+        this._chromeWindow,
+        aChannel,
+        aLevel,
+        aAuthInfo,
+        checkboxLabel,
+        checkbox
+      );
     }
 
     let [username, password] = this._GetAuthInfo(aAuthInfo);
@@ -1310,13 +1295,6 @@ XPCOMUtils.defineLazyGetter(LoginManagerAuthPrompter.prototype, "log", () => {
   let logger = LoginHelper.createLogger("LoginManagerAuthPrompter");
   return logger.log.bind(logger);
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  LoginManagerAuthPrompter,
-  "promptAuthModalType",
-  "prompts.modalType.httpAuth",
-  Services.prompt.MODAL_TYPE_WINDOW
-);
 
 const EXPORTED_SYMBOLS = [
   "LoginManagerAuthPromptFactory",

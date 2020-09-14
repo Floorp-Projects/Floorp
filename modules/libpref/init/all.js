@@ -4411,14 +4411,6 @@ pref("browser.sanitizer.loglevel", "Warn");
 // To disable blocking of auth prompts, set the limit to -1.
 pref("prompts.authentication_dialog_abuse_limit", 2);
 
-// The prompt type to use for http auth prompts
-// content: 1, tab: 2, window: 3
-#ifdef NIGHTLY_BUILD
-  pref("prompts.modalType.httpAuth", 2);
-#else
-  pref("prompts.modalType.httpAuth", 3);
-#endif
-
 // Payment Request API preferences
 pref("dom.payments.loglevel", "Warn");
 pref("dom.payments.defaults.saveCreditCard", false);
