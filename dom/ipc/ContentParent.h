@@ -739,6 +739,16 @@ class ContentParent final
       sJSPluginContentParents;
   static UniquePtr<LinkedList<ContentParent>> sContentParents;
 
+  /**
+   * In order to avoid rapidly creating and destroying content processes when
+   * running under e10s, we may keep alive a single unused "web" content
+   * process if it previously had a very short lifetime.
+   *
+   * This process will be re-used during process selection, avoiding spawning a
+   * new process, if the "web" remote type is being requested.
+   */
+  static StaticRefPtr<ContentParent> sRecycledE10SProcess;
+
   void AddShutdownBlockers();
   void RemoveShutdownBlockers();
 
