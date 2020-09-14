@@ -294,15 +294,17 @@ class AppWaiter(object):
            Pull the test log from the remote device and display new content.
         """
         if not self.device.is_file(self.remote_log):
+            log.info("gtest | update_log %s is not a file." % self.remote_log)
             return False
         try:
             new_content = self.device.get_file(self.remote_log, offset=self.remote_log_len)
         except mozdevice.ADBTimeoutError:
             raise
         except Exception as e:
-            log.info("exception reading log: %s" % str(e))
+            log.info("gtest | update_log : exception reading log: %s" % str(e))
             return False
         if not new_content:
+            log.info("gtest | update_log : no new content")
             return False
         new_content = six.ensure_text(new_content)
         last_full_line_pos = new_content.rfind('\n')
