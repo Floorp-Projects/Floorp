@@ -1438,6 +1438,18 @@ bool WarpCacheIRTranspiler::emitLoadStringCharCodeResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitNewStringObjectResult(
+    uint32_t templateObjectOffset, StringOperandId strId) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+  MDefinition* string = getOperand(strId);
+
+  auto* obj = MNewStringObject::New(alloc(), string, templateObj);
+  addEffectful(obj);
+
+  pushResult(obj);
+  return resumeAfter(obj);
+}
+
 bool WarpCacheIRTranspiler::emitStringFromCharCodeResult(
     Int32OperandId codeId) {
   MDefinition* code = getOperand(codeId);

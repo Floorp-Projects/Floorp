@@ -1091,6 +1091,14 @@
     templateObject: ObjectField
     array: ObjId
 
+- name: NewStringObjectResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    templateObject: ObjectField
+    str: StringId
+
 - name: StringFromCharCodeResult
   shared: false
   transpile: true
