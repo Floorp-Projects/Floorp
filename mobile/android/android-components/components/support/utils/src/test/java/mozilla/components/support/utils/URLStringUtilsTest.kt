@@ -134,6 +134,18 @@ class URLStringUtilsTest {
     }
 
     @Test
+    fun stripTrailingSlash() {
+        val testDisplayUrl = URLStringUtils.toDisplayUrl("mozilla.com/")
+        assertEquals("mozilla.com", testDisplayUrl)
+    }
+
+    @Test
+    fun stripUrlSchemeUrlWithHttpsAndTrailingSlash() {
+        val testDisplayUrl = URLStringUtils.toDisplayUrl("https://mozilla.com/")
+        assertEquals("mozilla.com", testDisplayUrl)
+    }
+
+    @Test
     fun stripUrlSchemeUrlWithHttp() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("http://mozilla.com")
         assertEquals("mozilla.com", testDisplayUrl)
