@@ -688,7 +688,7 @@ pub extern "C" fn neqo_http3conn_resumption_token(conn: &mut NeqoHttp3Conn, toke
 
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_set_resumption_token(conn: &mut NeqoHttp3Conn, token: &mut ThinVec<u8>,) {
-    let _ = conn.conn.set_resumption_token(Instant::now(), token);
+    let _ = conn.conn.enable_resumption(Instant::now(), token);
 }
 
 #[no_mangle]
