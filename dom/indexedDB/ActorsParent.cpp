@@ -581,25 +581,19 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
     nsIFile& aDatabaseFile, const int64_t aDirectoryLockId) {
   MOZ_ASSERT(aDirectoryLockId >= -1);
 
-  nsresult rv;
+  IDB_TRY_VAR(const auto protocolHandler,
+              ToResultGet<nsCOMPtr<nsIProtocolHandler>>(
+                  MOZ_SELECT_OVERLOAD(do_GetService),
+                  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file"));
 
-  nsCOMPtr<nsIProtocolHandler> protocolHandler(
-      do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file", &rv));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(const auto fileHandler,
+              ToResultGet<nsCOMPtr<nsIFileProtocolHandler>>(
+                  MOZ_SELECT_OVERLOAD(do_QueryInterface), protocolHandler));
 
-  nsCOMPtr<nsIFileProtocolHandler> fileHandler(
-      do_QueryInterface(protocolHandler, &rv));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  nsCOMPtr<nsIURIMutator> mutator;
-  rv = fileHandler->NewFileURIMutator(&aDatabaseFile, getter_AddRefs(mutator));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(const auto mutator,
+              ToResultInvoke<nsCOMPtr<nsIURIMutator>>(
+                  std::mem_fn(&nsIFileProtocolHandler::NewFileURIMutator),
+                  fileHandler, &aDatabaseFile));
 
   // aDirectoryLockId should only be -1 when we are called from
   // FileManager::InitDirectory when the temporary storage hasn't been
@@ -611,13 +605,15 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
           ? "&directoryLockId="_ns + IntCString(aDirectoryLockId)
           : EmptyCString();
 
-  nsCOMPtr<nsIFileURL> result;
-  rv = NS_MutateURI(mutator)
-           .SetQuery("cache=private"_ns + directoryLockIdClause)
-           .Finalize(result);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(
+      auto result, ([&mutator, &directoryLockIdClause] {
+        nsCOMPtr<nsIFileURL> result;
+        nsresult rv = NS_MutateURI(mutator)
+                          .SetQuery("cache=private"_ns + directoryLockIdClause)
+                          .Finalize(result);
+        return NS_SUCCEEDED(rv) ? Result<nsCOMPtr<nsIFileURL>, nsresult>{result}
+                                : Err(rv);
+      }()));
 
   return result;
 }
