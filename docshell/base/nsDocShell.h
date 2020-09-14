@@ -399,11 +399,12 @@ class nsDocShell final : public nsDocLoader,
 
   /**
    * Loads the given URI. See comments on nsDocShellLoadState members for more
-   * information on information used. aDocShell and aRequest come from
-   * onLinkClickSync, which is triggered during form submission.
+   * information on information used.
+   * `aCacheKey` gets passed to DoURILoad call.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult InternalLoad(nsDocShellLoadState* aLoadState);
+  nsresult InternalLoad(nsDocShellLoadState* aLoadState,
+                        Maybe<uint32_t> aCacheKey = mozilla::Nothing());
 
   // Clear the document's storage access flag if needed.
   void MaybeClearStorageAccessFlag();
@@ -505,6 +506,10 @@ class nsDocShell final : public nsDocLoader,
 
   already_AddRefed<nsIInputStream> GetPostDataFromCurrentEntry() const;
   Maybe<uint32_t> GetCacheKeyFromCurrentEntry() const;
+
+  // Loading and/or active entries are only set when pref
+  // fission.sessionHistoryInParent is on.
+  bool FillLoadStateFromCurrentEntry(nsDocShellLoadState& aLoadState);
 
   static bool ShouldAddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel);
 
@@ -668,7 +673,9 @@ class nsDocShell final : public nsDocLoader,
   // originalURI on the channel that does the load. If OriginalURI is null, URI
   // will be set as the originalURI. If LoadReplace is true, LOAD_REPLACE flag
   // will be set on the nsIChannel.
-  nsresult DoURILoad(nsDocShellLoadState* aLoadState, nsIRequest** aRequest);
+  // If `aCacheKey` is supplied, use it for the session history entry.
+  nsresult DoURILoad(nsDocShellLoadState* aLoadState, Maybe<uint32_t> aCacheKey,
+                     nsIRequest** aRequest);
 
   static nsresult AddHeadersToChannel(nsIInputStream* aHeadersData,
                                       nsIChannel* aChannel);
