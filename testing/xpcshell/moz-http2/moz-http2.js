@@ -924,9 +924,6 @@ function handleRequest(req, res) {
             values: [
               { key: "alpn", value: "h2" },
               { key: "port", value: serverPort },
-              { key: "ipv4hint", value: "1.2.3.4" },
-              { key: "echconfig", value: "123..." },
-              { key: "ipv6hint", value: "::1" },
               { key: 30, value: "somelargestring" },
             ],
           },
@@ -940,6 +937,46 @@ function handleRequest(req, res) {
           data: "127.0.0.1",
         });
       }
+
+      let buf = dnsPacket.encode({
+        type: "response",
+        id: packet.id,
+        flags: dnsPacket.RECURSION_DESIRED,
+        questions: packet.questions,
+        answers,
+      });
+
+      res.setHeader("Content-Type", "application/dns-message");
+      res.setHeader("Content-Length", buf.length);
+      res.writeHead(200);
+      res.write(buf);
+      res.end("");
+    });
+    return;
+  } else if (u.pathname === "/httpssvc_use_iphint") {
+    let payload = Buffer.from("");
+    req.on("data", function receiveData(chunk) {
+      payload = Buffer.concat([payload, chunk]);
+    });
+    req.on("end", function finishedData() {
+      let packet = dnsPacket.decode(payload);
+      let answers = [];
+      answers.push({
+        name: packet.questions[0].name,
+        type: "HTTPS",
+        ttl: 55,
+        class: "IN",
+        flush: false,
+        data: {
+          priority: 1,
+          name: ".",
+          values: [
+            { key: "alpn", value: "h2" },
+            { key: "port", value: serverPort },
+            { key: "ipv4hint", value: "127.0.0.1" },
+          ],
+        },
+      });
 
       let buf = dnsPacket.encode({
         type: "response",

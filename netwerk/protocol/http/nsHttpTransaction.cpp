@@ -2740,6 +2740,14 @@ NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
   LOG(("nsHttpTransaction::OnLookupComplete [this=%p] mActivated=%d", this,
        mActivated));
 
+  nsCOMPtr<nsIDNSAddrRecord> addrRecord = do_QueryInterface(aRecord);
+  // nsHttpTransaction::OnLookupComplete will be called again when receving the
+  // result of speculatively loading the addr records of the target name. In
+  // this case, just return NS_OK.
+  if (addrRecord) {
+    return NS_OK;
+  }
+
   {
     MutexAutoLock lock(mLock);
     mDNSRequest = nullptr;
@@ -2790,6 +2798,27 @@ NS_IMETHODIMP nsHttpTransaction::OnLookupComplete(nsICancelable* aRequest,
     // can be added to the right connection entry.
     UpdateConnectionInfo(newInfo);
   }
+
+  // Prefetch the A/AAAA records of the target name.
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  if (dns) {
+    uint32_t flags =
+        nsIDNSService::GetFlagsFromTRRMode(mConnInfo->GetTRRMode());
+    if (mCaps & NS_HTTP_REFRESH_DNS) {
+      flags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
+    }
+
+    nsCOMPtr<nsICancelable> tmpOutstanding;
+    nsAutoCString targetName;
+    Unused << svcbRecord->GetName(targetName);
+
+    Unused << dns->AsyncResolveNative(
+        targetName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+        flags | nsIDNSService::RESOLVE_SPECULATE, nullptr, this,
+        GetCurrentEventTarget(), mConnInfo->GetOriginAttributes(),
+        getter_AddRefs(tmpOutstanding));
+  }
+
   return NS_OK;
 }
 

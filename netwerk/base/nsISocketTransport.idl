@@ -277,6 +277,11 @@ interface nsISocketTransport : nsITransport
 %}
 
     /**
+     * If set, we will use IP hint addresses to connect to the host.
+     */
+    const unsigned long USE_IP_HINT_ADDRESS = (1 << 13);
+
+    /**
      * An opaque flags for non-standard behavior of the TLS system.
      * It is unlikely this will need to be set outside of telemetry studies
      * relating to the TLS implementation.
