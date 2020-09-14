@@ -1118,6 +1118,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
           {
             auto& results = mResult.as<TypeRecordHTTPSSVC>();
             results.AppendElement(parsed);
+            StoreIPHintAsDNSRecord(parsed);
           }
           break;
         }
@@ -1320,6 +1321,45 @@ nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
     }
   }
   return NS_OK;
+}
+
+void TRR::StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord) {
+  LOG(("TRR::StoreIPHintAsDNSRecord [%p] [%s]", this,
+       aSVCBRecord.mSvcDomainName.get()));
+  CopyableTArray<NetAddr> addresses;
+  aSVCBRecord.GetIPHints(addresses);
+  if (addresses.IsEmpty()) {
+    return;
+  }
+
+  RefPtr<nsHostRecord> hostRecord;
+  nsresult rv = mHostResolver->GetHostRecord(
+      aSVCBRecord.mSvcDomainName, EmptyCString(),
+      nsIDNSService::RESOLVE_TYPE_DEFAULT,
+      mRec->flags | nsHostResolver::RES_IP_HINT, AF_UNSPEC, mRec->pb,
+      mRec->originSuffix, getter_AddRefs(hostRecord));
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to get host record"));
+    return;
+  }
+
+  mHostResolver->MaybeRenewHostRecord(hostRecord);
+
+  uint32_t ttl = AddrInfo::NO_TTL_DATA;
+  RefPtr<AddrInfo> ai(new AddrInfo(aSVCBRecord.mSvcDomainName, TRRTYPE_A,
+                                   std::move(addresses), ttl));
+
+  // Since we're not actually calling NameLookup for this record, we need
+  // to set these fields to avoid assertions in CompleteLookup.
+  // This is quite hacky, and should be fixed.
+  hostRecord->mResolving++;
+  hostRecord->mEffectiveTRRMode = mRec->mEffectiveTRRMode;
+  RefPtr<AddrHostRecord> addrRec = do_QueryObject(hostRecord);
+  addrRec->mTrrStart = TimeStamp::Now();
+  addrRec->mTrrA = this;  // Hack!
+
+  (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB, mOriginSuffix,
+                                      AddrHostRecord::TRR_OK);
 }
 
 nsresult TRR::ReturnData(nsIChannel* aChannel) {

@@ -308,6 +308,12 @@ interface nsIDNSService : nsISupports
      * Only to be used for the proxy host resolution.
      */
     const unsigned long RESOLVE_IGNORE_SOCKS_DNS = 1 << 13;
+
+     /**
+     * If set, only cached IP hint addresses will be returned from
+     * resolve/asyncResolve.
+     */
+    const unsigned long RESOLVE_IP_HINT = 1 << 14;
 };
 
 %{C++
