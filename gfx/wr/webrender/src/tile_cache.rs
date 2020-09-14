@@ -211,10 +211,12 @@ impl TileCacheBuilder {
 
                     let mut shared_clips = Vec::new();
                     add_clips(
+                        scroll_root,
                         prim_instance.clip_set.clip_chain_id,
                         &mut shared_clips,
                         clip_store,
                         interners,
+                        spatial_tree,
                     );
 
                     self.last_checked_clip_chain = prim_instance.clip_set.clip_chain_id;
@@ -247,10 +249,12 @@ impl TileCacheBuilder {
             let prim_clips_buffer = &mut self.prim_clips_buffer;
             prim_clips_buffer.clear();
             add_clips(
+                pending_tile_cache.params.spatial_node_index,
                 prim_instance.clip_set.clip_chain_id,
                 prim_clips_buffer,
                 clip_store,
                 interners,
+                spatial_tree,
             );
 
             pending_tile_cache.params.shared_clips.retain(|h1: &ClipInstance| {
@@ -329,10 +333,12 @@ impl TileCacheBuilder {
 
 // Helper fn to collect clip handles from a given clip chain.
 fn add_clips(
+    scroll_root: SpatialNodeIndex,
     clip_chain_id: ClipChainId,
     prim_clips: &mut Vec<ClipInstance>,
     clip_store: &ClipStore,
     interners: &Interners,
+    spatial_tree: &SpatialTree,
 ) {
     let mut current_clip_chain_id = clip_chain_id;
 
@@ -342,7 +348,12 @@ fn add_clips(
 
         let clip_node_data = &interners.clip[clip_chain_node.handle];
         if let ClipNodeKind::Rectangle = clip_node_data.clip_node_kind {
-            prim_clips.push(ClipInstance::new(clip_chain_node.handle, clip_chain_node.spatial_node_index));
+            if spatial_tree.is_ancestor(
+                clip_chain_node.spatial_node_index,
+                scroll_root,
+            ) {
+                prim_clips.push(ClipInstance::new(clip_chain_node.handle, clip_chain_node.spatial_node_index));
+            }
         }
 
         current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
