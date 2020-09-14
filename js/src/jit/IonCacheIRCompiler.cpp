@@ -408,21 +408,6 @@ bool IonCacheIRCompiler::init() {
       allocator.initInputLocation(0, ic->value());
       break;
     }
-    case CacheKind::OptimizeSpreadCall: {
-      auto* ic = ic_->asOptimizeSpreadCallIC();
-      Register output = ic->output();
-
-      available.add(output);
-      available.add(ic->temp());
-
-      liveRegs_.emplace(ic->liveRegs());
-      outputUnchecked_.emplace(
-          TypedOrValueRegister(MIRType::Boolean, AnyRegister(output)));
-
-      MOZ_ASSERT(numInputs == 1);
-      allocator.initInputLocation(0, ic->value());
-      break;
-    }
     case CacheKind::In: {
       IonInIC* ic = ic_->asInIC();
       Register output = ic->output();
@@ -629,7 +614,6 @@ void IonCacheIRCompiler::assertFloatRegisterAvailable(FloatRegister reg) {
     case CacheKind::InstanceOf:
     case CacheKind::UnaryArith:
     case CacheKind::ToPropertyKey:
-    case CacheKind::OptimizeSpreadCall:
       MOZ_CRASH("No float registers available");
     case CacheKind::SetProp:
     case CacheKind::SetElem:

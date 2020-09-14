@@ -4618,15 +4618,6 @@ void LIRGenerator::visitGetIteratorCache(MGetIteratorCache* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitOptimizeSpreadCallCache(MOptimizeSpreadCallCache* ins) {
-  MDefinition* value = ins->value();
-  MOZ_ASSERT(value->type() == MIRType::Value);
-
-  auto* lir = new (alloc()) LOptimizeSpreadCallCache(useBox(value), temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitIteratorMore(MIteratorMore* ins) {
   LIteratorMore* lir =
       new (alloc()) LIteratorMore(useRegister(ins->iterator()), temp());

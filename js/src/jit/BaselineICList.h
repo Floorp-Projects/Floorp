@@ -51,8 +51,6 @@ namespace jit {
                                       \
   _(GetIterator_Fallback)             \
                                       \
-  _(OptimizeSpreadCall_Fallback)      \
-                                      \
   _(InstanceOf_Fallback)              \
                                       \
   _(TypeOf_Fallback)                  \
@@ -98,7 +96,6 @@ namespace jit {
   _(GetIntrinsic)                              \
   _(SetProp)                                   \
   _(GetIterator)                               \
-  _(OptimizeSpreadCall)                        \
   _(InstanceOf)                                \
   _(TypeOf)                                    \
   _(ToPropertyKey)                             \

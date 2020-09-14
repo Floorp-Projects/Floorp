@@ -68,7 +68,6 @@ class IonCompareIC;
 class IonUnaryArithIC;
 class IonBinaryArithIC;
 class IonToPropertyKeyIC;
-class IonOptimizeSpreadCallIC;
 
 class IonIC {
   // This either points at the OOL path for the fallback path, or the code for
@@ -173,10 +172,6 @@ class IonIC {
   IonGetIteratorIC* asGetIteratorIC() {
     MOZ_ASSERT(kind_ == CacheKind::GetIterator);
     return (IonGetIteratorIC*)this;
-  }
-  IonOptimizeSpreadCallIC* asOptimizeSpreadCallIC() {
-    MOZ_ASSERT(kind_ == CacheKind::OptimizeSpreadCall);
-    return (IonOptimizeSpreadCallIC*)this;
   }
   IonHasOwnIC* asHasOwnIC() {
     MOZ_ASSERT(kind_ == CacheKind::HasOwn);
@@ -417,31 +412,6 @@ class IonGetIteratorIC : public IonIC {
 
   static JSObject* update(JSContext* cx, HandleScript outerScript,
                           IonGetIteratorIC* ic, HandleValue value);
-};
-
-class IonOptimizeSpreadCallIC : public IonIC {
-  LiveRegisterSet liveRegs_;
-  ValueOperand value_;
-  Register output_;
-  Register temp_;
-
- public:
-  IonOptimizeSpreadCallIC(LiveRegisterSet liveRegs, ValueOperand value,
-                          Register output, Register temp)
-      : IonIC(CacheKind::OptimizeSpreadCall),
-        liveRegs_(liveRegs),
-        value_(value),
-        output_(output),
-        temp_(temp) {}
-
-  ValueOperand value() const { return value_; }
-  Register output() const { return output_; }
-  Register temp() const { return temp_; }
-  LiveRegisterSet liveRegs() const { return liveRegs_; }
-
-  static bool update(JSContext* cx, HandleScript outerScript,
-                     IonOptimizeSpreadCallIC* ic, HandleValue value,
-                     bool* result);
 };
 
 class IonHasOwnIC : public IonIC {

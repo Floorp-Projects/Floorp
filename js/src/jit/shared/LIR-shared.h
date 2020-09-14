@@ -5764,23 +5764,6 @@ class LGetIteratorCache : public LInstructionHelper<1, BOX_PIECES, 2> {
   const LDefinition* temp2() { return getTemp(1); }
 };
 
-class LOptimizeSpreadCallCache : public LInstructionHelper<1, BOX_PIECES, 1> {
- public:
-  LIR_HEADER(OptimizeSpreadCallCache)
-
-  static const size_t Value = 0;
-
-  LOptimizeSpreadCallCache(const LBoxAllocation& value, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Value, value);
-    setTemp(0, temp);
-  }
-  const MOptimizeSpreadCallCache* mir() const {
-    return mir_->toOptimizeSpreadCallCache();
-  }
-  const LDefinition* temp() { return getTemp(0); }
-};
-
 class LIteratorMore : public LInstructionHelper<BOX_PIECES, 1, 1> {
  public:
   LIR_HEADER(IteratorMore)

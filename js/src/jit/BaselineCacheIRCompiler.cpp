@@ -2323,7 +2323,6 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
     case CacheKind::TypeOf:
     case CacheKind::ToPropertyKey:
     case CacheKind::GetIterator:
-    case CacheKind::OptimizeSpreadCall:
     case CacheKind::ToBool:
     case CacheKind::UnaryArith:
       MOZ_ASSERT(numInputs == 1);

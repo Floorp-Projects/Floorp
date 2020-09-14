@@ -22,7 +22,7 @@
 #include "js/friend/DOMProxy.h"       // JS::ExpandoAndGeneration
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowIfWindowProxy
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo, JS::XrayJitInfo
-#include "js/ScalarType.h"  // js::Scalar::Type
+#include "js/ScalarType.h"          // js::Scalar::Type
 #include "js/Wrapper.h"
 #include "util/Unicode.h"
 #include "vm/ArrayBufferObject.h"
@@ -88,7 +88,6 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
     case CacheKind::GetName:
     case CacheKind::BindName:
     case CacheKind::Call:
-    case CacheKind::OptimizeSpreadCall:
       return 1;
     case CacheKind::Compare:
     case CacheKind::GetElem:
@@ -4957,162 +4956,6 @@ void GetIteratorIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-OptimizeSpreadCallIRGenerator::OptimizeSpreadCallIRGenerator(
-    JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
-    HandleValue value)
-    : IRGenerator(cx, script, pc, CacheKind::OptimizeSpreadCall, mode),
-      val_(value) {}
-
-AttachDecision OptimizeSpreadCallIRGenerator::tryAttachStub() {
-  MOZ_ASSERT(cacheKind_ == CacheKind::OptimizeSpreadCall);
-
-  AutoAssertNoPendingException aanpe(cx_);
-
-  TRY_ATTACH(tryAttachArray());
-  TRY_ATTACH(tryAttachNotOptimizable());
-
-  trackAttached(IRGenerator::NotAttached);
-  return AttachDecision::NoAction;
-}
-
-static bool IsArrayPrototypeOptimizable(JSContext* cx, ArrayObject* arr,
-                                        NativeObject** arrProto, uint32_t* slot,
-                                        JSFunction** iterFun) {
-  // Prototype must be Array.prototype.
-  auto* proto = cx->global()->maybeGetArrayPrototype();
-  if (!proto || arr->staticPrototype() != proto) {
-    return false;
-  }
-  *arrProto = proto;
-
-  // The object must not have an own @@iterator property.
-  JS::PropertyKey iteratorKey = SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator);
-  if (arr->lookupPure(iteratorKey)) {
-    return false;
-  }
-
-  // Ensure that Array.prototype's @@iterator slot is unchanged.
-  Shape* shape = proto->lookupPure(iteratorKey);
-  if (!shape || !shape->isDataProperty()) {
-    return false;
-  }
-
-  *slot = shape->slot();
-  MOZ_ASSERT(proto->numFixedSlots() == 0, "Stub code relies on this");
-
-  const Value& iterVal = proto->getSlot(*slot);
-  if (!iterVal.isObject() || !iterVal.toObject().is<JSFunction>()) {
-    return false;
-  }
-
-  *iterFun = &iterVal.toObject().as<JSFunction>();
-  return IsSelfHostedFunctionWithName(*iterFun, cx->names().ArrayValues);
-}
-
-static bool IsArrayIteratorPrototypeOptimizable(JSContext* cx,
-                                                NativeObject** arrIterProto,
-                                                uint32_t* slot,
-                                                JSFunction** nextFun) {
-  auto* proto = cx->global()->maybeGetArrayIteratorPrototype();
-  if (!proto) {
-    return false;
-  }
-  *arrIterProto = proto;
-
-  // Ensure that %ArrayIteratorPrototype%'s "next" slot is unchanged.
-  Shape* shape = proto->lookupPure(cx->names().next);
-  if (!shape || !shape->isDataProperty()) {
-    return false;
-  }
-
-  *slot = shape->slot();
-  MOZ_ASSERT(proto->numFixedSlots() == 0, "Stub code relies on this");
-
-  const Value& nextVal = proto->getSlot(*slot);
-  if (!nextVal.isObject() || !nextVal.toObject().is<JSFunction>()) {
-    return false;
-  }
-
-  *nextFun = &nextVal.toObject().as<JSFunction>();
-  return IsSelfHostedFunctionWithName(*nextFun, cx->names().ArrayIteratorNext);
-}
-
-AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
-  // The value must be a packed array.
-  if (!val_.isObject()) {
-    return AttachDecision::NoAction;
-  }
-  JSObject* obj = &val_.toObject();
-  if (!IsPackedArray(obj)) {
-    return AttachDecision::NoAction;
-  }
-
-  // Prototype must be Array.prototype and Array.prototype[@@iterator] must not
-  // be modified.
-  NativeObject* arrProto;
-  uint32_t arrProtoIterSlot;
-  JSFunction* iterFun;
-  if (!IsArrayPrototypeOptimizable(cx_, &obj->as<ArrayObject>(), &arrProto,
-                                   &arrProtoIterSlot, &iterFun)) {
-    return AttachDecision::NoAction;
-  }
-
-  // %ArrayIteratorPrototype%.next must not be modified.
-  NativeObject* arrayIteratorProto;
-  uint32_t iterNextSlot;
-  JSFunction* nextFun;
-  if (!IsArrayIteratorPrototypeOptimizable(cx_, &arrayIteratorProto,
-                                           &iterNextSlot, &nextFun)) {
-    return AttachDecision::NoAction;
-  }
-
-  ValOperandId valId(writer.setInputOperandId(0));
-  ObjOperandId objId = writer.guardToObject(valId);
-
-  // Guard the object is a packed array with Array.prototype as proto.
-  writer.guardShape(objId, obj->as<ArrayObject>().lastProperty());
-  writer.guardArrayIsPacked(objId);
-  if (obj->hasUncacheableProto()) {
-    writer.guardProto(objId, arrProto);
-  }
-
-  // Guard on Array.prototype[@@iterator].
-  ObjOperandId arrProtoId = writer.loadObject(arrProto);
-  ObjOperandId iterId = writer.loadObject(iterFun);
-  writer.guardShape(arrProtoId, arrProto->lastProperty());
-  writer.guardDynamicSlotIsSpecificObject(arrProtoId, iterId, arrProtoIterSlot);
-
-  // Guard on %ArrayIteratorPrototype%.next.
-  ObjOperandId iterProtoId = writer.loadObject(arrayIteratorProto);
-  ObjOperandId nextId = writer.loadObject(nextFun);
-  writer.guardShape(iterProtoId, arrayIteratorProto->lastProperty());
-  writer.guardDynamicSlotIsSpecificObject(iterProtoId, nextId, iterNextSlot);
-
-  writer.loadBooleanResult(true);
-  writer.returnFromIC();
-
-  trackAttached("Array");
-  return AttachDecision::Attach;
-}
-
-AttachDecision OptimizeSpreadCallIRGenerator::tryAttachNotOptimizable() {
-  ValOperandId valId(writer.setInputOperandId(0));
-
-  writer.loadBooleanResult(false);
-  writer.returnFromIC();
-
-  trackAttached("NotOptimizable");
-  return AttachDecision::Attach;
-}
-
-void OptimizeSpreadCallIRGenerator::trackAttached(const char* name) {
-#ifdef JS_CACHEIR_SPEW
-  if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
-    sp.valueProperty("val", val_);
-  }
-#endif
-}
-
 CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
                                  jsbytecode* pc, JSOp op, ICState::Mode mode,
                                  bool isFirstStub, uint32_t argc,
@@ -8303,11 +8146,29 @@ AttachDecision CallIRGenerator::tryAttachArrayIteratorPrototypeOptimizable(
   // TODO(Warp): attach this stub just once to prevent slowdowns for polymorphic
   // calls.
 
-  NativeObject* arrayIteratorProto;
-  uint32_t slot;
-  JSFunction* nextFun;
-  if (!IsArrayIteratorPrototypeOptimizable(cx_, &arrayIteratorProto, &slot,
-                                           &nextFun)) {
+  auto* arrayIteratorProto = cx_->global()->maybeGetArrayIteratorPrototype();
+  if (!arrayIteratorProto) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure that %ArrayIteratorPrototype%'s "next" slot is unchanged.
+  Shape* shape = arrayIteratorProto->lookupPure(cx_->names().next);
+  if (!shape || !shape->isDataProperty()) {
+    return AttachDecision::NoAction;
+  }
+
+  uint32_t slot = shape->slot();
+
+  MOZ_ASSERT(arrayIteratorProto->numFixedSlots() == 0,
+             "Stub code relies on this");
+
+  const Value& nextVal = arrayIteratorProto->getSlot(slot);
+  if (!nextVal.isObject() || !nextVal.toObject().is<JSFunction>()) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* nextFun = &nextVal.toObject().as<JSFunction>();
+  if (!IsSelfHostedFunctionWithName(nextFun, cx_->names().ArrayIteratorNext)) {
     return AttachDecision::NoAction;
   }
 

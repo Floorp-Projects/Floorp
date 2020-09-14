@@ -1670,13 +1670,6 @@ class ICGetIterator_Fallback : public ICFallbackStub {
       : ICFallbackStub(ICStub::GetIterator_Fallback, stubCode) {}
 };
 
-class ICOptimizeSpreadCall_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICOptimizeSpreadCall_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::OptimizeSpreadCall_Fallback, stubCode) {}
-};
-
 // InstanceOf
 //      JSOp::Instanceof
 class ICInstanceOf_Fallback : public ICFallbackStub {
@@ -1922,11 +1915,6 @@ extern bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 extern bool DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame,
                                   ICGetIterator_Fallback* stub,
                                   HandleValue value, MutableHandleValue res);
-
-extern bool DoOptimizeSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
-                                         ICOptimizeSpreadCall_Fallback* stub,
-                                         HandleValue value,
-                                         MutableHandleValue res);
 
 extern bool DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame,
                                  ICInstanceOf_Fallback* stub, HandleValue lhs,
