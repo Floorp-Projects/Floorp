@@ -32,6 +32,7 @@ FINAL_TARGET_FILES.actors += [
     'AboutNewInstallChild.jsm',
     'AboutNewInstallParent.jsm',
     'AboutNewTabChild.jsm',
+    'AboutNewTabParent.jsm',
     'AboutPluginsChild.jsm',
     'AboutPluginsParent.jsm',
     'AboutPrivateBrowsingChild.jsm',
