@@ -92,6 +92,7 @@ class BrowserToolbarView(
 
         with(container.context) {
             val sessionManager = components.core.sessionManager
+            val isPinningSupported = components.useCases.webAppUseCases.isPinningSupported()
 
             if (toolbarPosition == ToolbarPosition.TOP) {
                 val offsetChangedListener =
@@ -173,7 +174,8 @@ class BrowserToolbarView(
                     lifecycleOwner = lifecycleOwner,
                     sessionManager = sessionManager,
                     store = components.core.store,
-                    bookmarksStorage = bookmarkStorage
+                    bookmarksStorage = bookmarkStorage,
+                    isPinningSupported = isPinningSupported
                 )
                 view.display.setMenuDismissAction {
                     view.invalidateActions()

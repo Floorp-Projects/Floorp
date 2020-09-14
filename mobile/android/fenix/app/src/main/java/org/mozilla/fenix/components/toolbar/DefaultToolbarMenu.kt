@@ -50,7 +50,8 @@ class DefaultToolbarMenu(
     shouldReverseItems: Boolean,
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
     private val lifecycleOwner: LifecycleOwner,
-    private val bookmarksStorage: BookmarksStorage
+    private val bookmarksStorage: BookmarksStorage,
+    val isPinningSupported: Boolean
 ) : ToolbarMenu {
 
     private var currentUrlIsBookmarked = false
@@ -153,11 +154,11 @@ class DefaultToolbarMenu(
 
     // Predicates that need to be repeatedly called as the session changes
     private fun canAddToHomescreen(): Boolean =
-        session != null && context.components.useCases.webAppUseCases.isPinningSupported() &&
+        session != null && isPinningSupported &&
                 !context.components.useCases.webAppUseCases.isInstallable()
 
     private fun canInstall(): Boolean =
-        session != null && context.components.useCases.webAppUseCases.isPinningSupported() &&
+        session != null && isPinningSupported &&
                 context.components.useCases.webAppUseCases.isInstallable()
 
     private fun shouldShowOpenInApp(): Boolean = session?.let { session ->
