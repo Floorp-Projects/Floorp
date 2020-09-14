@@ -1757,12 +1757,12 @@ static void AddSharedLibraryInfoToStream(JSONWriter& aWriter,
   aWriter.IntProperty("start", SafeJSInteger(aLib.GetStart()));
   aWriter.IntProperty("end", SafeJSInteger(aLib.GetEnd()));
   aWriter.IntProperty("offset", SafeJSInteger(aLib.GetOffset()));
-  aWriter.StringProperty("name", aLib.GetModuleName().c_str());
-  aWriter.StringProperty("path", aLib.GetModulePath().c_str());
-  aWriter.StringProperty("debugName", aLib.GetDebugName().c_str());
-  aWriter.StringProperty("debugPath", aLib.GetDebugPath().c_str());
-  aWriter.StringProperty("breakpadId", aLib.GetBreakpadId().c_str());
-  aWriter.StringProperty("arch", aLib.GetArch().c_str());
+  aWriter.StringProperty("name", aLib.GetModuleName());
+  aWriter.StringProperty("path", aLib.GetModulePath());
+  aWriter.StringProperty("debugName", aLib.GetDebugName());
+  aWriter.StringProperty("debugPath", aLib.GetDebugPath());
+  aWriter.StringProperty("breakpadId", aLib.GetBreakpadId());
+  aWriter.StringProperty("arch", aLib.GetArch());
   aWriter.EndObject();
 }
 
@@ -2932,7 +2932,7 @@ static void locked_profiler_save_profile_to_file(PSLockRef aLock,
       Vector<std::string> exitProfiles = ActivePS::MoveExitProfiles(aLock);
       for (auto& exitProfile : exitProfiles) {
         if (!exitProfile.empty()) {
-          w.Splice(exitProfile.c_str(), exitProfile.length());
+          w.Splice(exitProfile);
         }
       }
       w.EndArray();

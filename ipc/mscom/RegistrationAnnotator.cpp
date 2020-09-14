@@ -20,9 +20,8 @@ namespace {
 
 class CStringWriter final : public mozilla::JSONWriteFunc {
  public:
-  void Write(const char* aStr) override { mBuf += aStr; }
-  void Write(const char* aStr, size_t aLen) override {
-    mBuf.Append(aStr, aLen);
+  void Write(const mozilla::Span<const char>& aStr) override {
+    mBuf.Append(aStr);
   }
 
   const nsCString& Get() const { return mBuf; }
@@ -138,7 +137,7 @@ static void AnnotateClsidRegistrationForHive(
 
   nsAutoString className;
   if (GetStringValue(aHive, clsidSubkey, kDefaultValue, className)) {
-    aJson.StringProperty("ClassName", NS_ConvertUTF16toUTF8(className).get());
+    aJson.StringProperty("ClassName", NS_ConvertUTF16toUTF8(className));
   }
 
   nsAutoString inprocServerSubkey(clsidSubkey);
@@ -147,17 +146,16 @@ static void AnnotateClsidRegistrationForHive(
   nsAutoString pathToServerDll;
   if (GetStringValue(aHive, inprocServerSubkey, kDefaultValue,
                      pathToServerDll)) {
-    aJson.StringProperty("Path", NS_ConvertUTF16toUTF8(pathToServerDll).get());
+    aJson.StringProperty("Path", NS_ConvertUTF16toUTF8(pathToServerDll));
     if (GetLoadedPath(pathToServerDll)) {
       aJson.StringProperty("LoadedPath",
-                           NS_ConvertUTF16toUTF8(pathToServerDll).get());
+                           NS_ConvertUTF16toUTF8(pathToServerDll));
     }
   }
 
   nsAutoString apartment;
   if (GetStringValue(aHive, inprocServerSubkey, kThreadingModel, apartment)) {
-    aJson.StringProperty("ThreadingModel",
-                         NS_ConvertUTF16toUTF8(apartment).get());
+    aJson.StringProperty("ThreadingModel", NS_ConvertUTF16toUTF8(apartment));
   }
 
   nsAutoString inprocHandlerSubkey(clsidSubkey);
@@ -166,10 +164,10 @@ static void AnnotateClsidRegistrationForHive(
   if (GetStringValue(aHive, inprocHandlerSubkey, kDefaultValue,
                      pathToHandlerDll)) {
     aJson.StringProperty("HandlerPath",
-                         NS_ConvertUTF16toUTF8(pathToHandlerDll).get());
+                         NS_ConvertUTF16toUTF8(pathToHandlerDll));
     if (GetLoadedPath(pathToHandlerDll)) {
       aJson.StringProperty("LoadedHandlerPath",
-                           NS_ConvertUTF16toUTF8(pathToHandlerDll).get());
+                           NS_ConvertUTF16toUTF8(pathToHandlerDll));
     }
   }
 
@@ -177,7 +175,7 @@ static void AnnotateClsidRegistrationForHive(
   if (GetStringValue(aHive, inprocHandlerSubkey, kThreadingModel,
                      handlerApartment)) {
     aJson.StringProperty("HandlerThreadingModel",
-                         NS_ConvertUTF16toUTF8(handlerApartment).get());
+                         NS_ConvertUTF16toUTF8(handlerApartment));
   }
 }
 
@@ -196,7 +194,7 @@ static void CheckTlbPath(JSONWriter& aJson, const nsAString& aTypelibPath) {
   HRESULT hr = LoadTypeLibEx(buf.get(), REGKIND_NONE, getter_AddRefs(typeLib));
 
   nsPrintfCString loadResult("0x%08X", hr);
-  aJson.StringProperty("LoadResult", loadResult.get());
+  aJson.StringProperty("LoadResult", loadResult);
 }
 
 template <size_t N>
@@ -212,8 +210,8 @@ static void AnnotateTypelibPlatform(JSONWriter& aJson, HKEY aBaseKey,
 
   nsAutoString tlbPath;
   if (GetStringValue(aBaseKey, fullSubkey, kDefaultValue, tlbPath)) {
-    aJson.StartObjectProperty(NS_ConvertUTF16toUTF8(platform).get(), aStyle);
-    aJson.StringProperty("Path", NS_ConvertUTF16toUTF8(tlbPath).get());
+    aJson.StartObjectProperty(NS_ConvertUTF16toUTF8(platform), aStyle);
+    aJson.StringProperty("Path", NS_ConvertUTF16toUTF8(tlbPath));
     CheckTlbPath(aJson, tlbPath);
     aJson.EndObject();
   }
@@ -233,8 +231,7 @@ static void AnnotateTypelibRegistrationForHive(
 
   nsAutoString typelibDesc;
   if (GetStringValue(aHive, typelibSubKey, kDefaultValue, typelibDesc)) {
-    aJson.StringProperty("Description",
-                         NS_ConvertUTF16toUTF8(typelibDesc).get());
+    aJson.StringProperty("Description", NS_ConvertUTF16toUTF8(typelibDesc));
   }
 
   nsAutoString flagsSubKey(typelibSubKey);
@@ -243,7 +240,7 @@ static void AnnotateTypelibRegistrationForHive(
 
   nsAutoString typelibFlags;
   if (GetStringValue(aHive, flagsSubKey, kDefaultValue, typelibFlags)) {
-    aJson.StringProperty("Flags", NS_ConvertUTF16toUTF8(typelibFlags).get());
+    aJson.StringProperty("Flags", NS_ConvertUTF16toUTF8(typelibFlags));
   }
 
   HKEY rawTypelibKey;
@@ -265,7 +262,7 @@ static void AnnotateTypelibRegistrationForHive(
     unsigned long lcid;
     if (result == ERROR_SUCCESS && ConvertLCID(keyName, WrapNotNull(&lcid))) {
       nsDependentString strLcid(keyName, keyNameLength);
-      aJson.StartObjectProperty(NS_ConvertUTF16toUTF8(strLcid).get(), aStyle);
+      aJson.StartObjectProperty(NS_ConvertUTF16toUTF8(strLcid), aStyle);
       AnnotateTypelibPlatform(aJson, typelibKey, strLcid, kWin32, aStyle);
 #if defined(HAVE_64BIT_BUILD)
       AnnotateTypelibPlatform(aJson, typelibKey, strLcid, kWin64, aStyle);
@@ -287,8 +284,7 @@ static void AnnotateInterfaceRegistrationForHive(
 
   nsAutoString interfaceName;
   if (GetStringValue(aHive, interfaceSubKey, kDefaultValue, interfaceName)) {
-    aJson.StringProperty("InterfaceName",
-                         NS_ConvertUTF16toUTF8(interfaceName).get());
+    aJson.StringProperty("InterfaceName", NS_ConvertUTF16toUTF8(interfaceName));
   }
 
   nsAutoString psSubKey(interfaceSubKey);
@@ -297,7 +293,7 @@ static void AnnotateInterfaceRegistrationForHive(
   nsAutoString psClsid;
   if (GetStringValue(aHive, psSubKey, kDefaultValue, psClsid)) {
     aJson.StartObjectProperty("ProxyStub", aStyle);
-    aJson.StringProperty("CLSID", NS_ConvertUTF16toUTF8(psClsid).get());
+    aJson.StringProperty("CLSID", NS_ConvertUTF16toUTF8(psClsid));
     AnnotateClsidRegistrationForHive(aJson, aHive, psClsid, aStyle);
     aJson.EndObject();
   }
@@ -318,12 +314,11 @@ static void AnnotateInterfaceRegistrationForHive(
   }
 
   if (haveTypelibId) {
-    aJson.StringProperty("ID", NS_ConvertUTF16toUTF8(typelibId).get());
+    aJson.StringProperty("ID", NS_ConvertUTF16toUTF8(typelibId));
   }
 
   if (haveTypelibVersion) {
-    aJson.StringProperty("Version",
-                         NS_ConvertUTF16toUTF8(typelibVersion).get());
+    aJson.StringProperty("Version", NS_ConvertUTF16toUTF8(typelibVersion));
   }
 
   if (haveTypelibId && haveTypelibVersion) {

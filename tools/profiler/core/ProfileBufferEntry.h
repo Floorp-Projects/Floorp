@@ -90,7 +90,7 @@ class UniqueJSONStrings {
 
   void WriteProperty(mozilla::JSONWriter& aWriter, const char* aName,
                      const char* aStr) {
-    aWriter.IntProperty(aName, GetOrAddIndex(aStr));
+    aWriter.IntProperty(mozilla::MakeStringSpan(aName), GetOrAddIndex(aStr));
   }
 
   void WriteElement(mozilla::JSONWriter& aWriter, const char* aStr) {

@@ -66,10 +66,7 @@ struct StringWriteFunc : public JSONWriteFunc {
 
   explicit StringWriteFunc(nsACString& buffer) : mBuffer(buffer) {}
 
-  void Write(const char* aStr) override { mBuffer.Append(aStr); }
-  void Write(const char* aStr, size_t aLen) override {
-    mBuffer.Append(aStr, aLen);
-  }
+  void Write(const Span<const char>& aStr) override { mBuffer.Append(aStr); }
 };
 
 class ControllerManifestFile {
@@ -593,8 +590,8 @@ bool OpenVRSession::SetupContollerActions() {
     auto SetupActionWriterByControllerType = [&](const char* aType,
                                                  const nsCString& aManifest) {
       actionWriter.StartObjectElement();
-      actionWriter.StringProperty("controller_type", aType);
-      actionWriter.StringProperty("binding_url", aManifest.BeginReading());
+      actionWriter.StringProperty("controller_type", MakeStringSpan(aType));
+      actionWriter.StringProperty("binding_url", aManifest);
       actionWriter.EndObject();
     };
     SetupActionWriterByControllerType("vive_controller", viveManifest);
@@ -610,8 +607,8 @@ bool OpenVRSession::SetupContollerActions() {
     for (auto& controller : mControllerHand) {
       auto SetActionsToWriter = [&](const ControllerAction& aAction) {
         actionWriter.StartObjectElement();
-        actionWriter.StringProperty("name", aAction.name.BeginReading());
-        actionWriter.StringProperty("type", aAction.type.BeginReading());
+        actionWriter.StringProperty("name", aAction.name);
+        actionWriter.StringProperty("type", aAction.type);
         actionWriter.EndObject();
       };
 

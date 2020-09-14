@@ -2223,9 +2223,8 @@ struct FileWriteFunc : public JSONWriteFunc {
   FILE* mFile;
   explicit FileWriteFunc(FILE* aFile) : mFile(aFile) {}
 
-  void Write(const char* aStr) override { fprintf(mFile, "%s", aStr); }
-  void Write(const char* aStr, size_t aLen) override {
-    fprintf(mFile, "%s", aStr);
+  void Write(const Span<const char>& aStr) override {
+    fprintf(mFile, "%.*s", int(aStr.size()), aStr.data());
   }
 };
 
@@ -2338,33 +2337,40 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
   JSONWriter w(MakeUnique<FileWriteFunc>(file));
   w.Start();
   {
-    w.StringProperty("type", pingType.get());
-    w.StringProperty("id", PromiseFlatCString(pingId).get());
-    w.StringProperty("creationDate", date);
+    w.StringProperty("type",
+                     Span<const char>(pingType.Data(), pingType.Length()));
+    w.StringProperty("id", PromiseFlatCString(pingId));
+    w.StringProperty("creationDate", MakeStringSpan(date));
     w.IntProperty("version", TELEMETRY_PING_FORMAT_VERSION);
-    w.StringProperty("clientId", clientId.get());
+    w.StringProperty("clientId", clientId);
     w.StartObjectProperty("application");
     {
-      w.StringProperty("architecture", arch.get());
-      w.StringProperty("buildId", gAppData->buildID);
-      w.StringProperty("name", gAppData->name);
-      w.StringProperty("version", gAppData->version);
+      w.StringProperty("architecture", arch);
+      w.StringProperty(
+          "buildId",
+          MakeStringSpan(static_cast<const char*>(gAppData->buildID)));
+      w.StringProperty(
+          "name", MakeStringSpan(static_cast<const char*>(gAppData->name)));
+      w.StringProperty(
+          "version",
+          MakeStringSpan(static_cast<const char*>(gAppData->version)));
       w.StringProperty("displayVersion",
                        MOZ_STRINGIFY(MOZ_APP_VERSION_DISPLAY));
-      w.StringProperty("vendor", gAppData->vendor);
+      w.StringProperty(
+          "vendor", MakeStringSpan(static_cast<const char*>(gAppData->vendor)));
       w.StringProperty("platformVersion", gToolkitVersion);
 #  ifdef TARGET_XPCOM_ABI
       w.StringProperty("xpcomAbi", TARGET_XPCOM_ABI);
 #  else
       w.StringProperty("xpcomAbi", "unknown");
 #  endif
-      w.StringProperty("channel", channel.get());
+      w.StringProperty("channel", channel);
     }
     w.EndObject();
     w.StartObjectProperty("payload");
     {
-      w.StringProperty("lastVersion", PromiseFlatCString(lastVersion).get());
-      w.StringProperty("lastBuildId", PromiseFlatCString(lastBuildId).get());
+      w.StringProperty("lastVersion", PromiseFlatCString(lastVersion));
+      w.StringProperty("lastBuildId", PromiseFlatCString(lastBuildId));
       w.BoolProperty("hasSync", aHasSync);
       w.IntProperty("button", aButton);
     }

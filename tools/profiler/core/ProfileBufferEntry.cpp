@@ -234,7 +234,7 @@ uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr) {
   }
 
   MOZ_RELEASE_ASSERT(mStringHashToIndexMap.add(entry, hash, count));
-  mStringTableWriter.StringElement(aStr);
+  mStringTableWriter.StringElement(MakeStringSpan(aStr));
   return count;
 }
 
@@ -358,8 +358,7 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
       auto frameJSON =
           jitFrameInfoRange.mJITFrameToFrameJSONMap.lookup(jitFrameKey);
       MOZ_RELEASE_ASSERT(frameJSON, "Should have cached JSON for this frame");
-      mFrameTableWriter.Splice(frameJSON->value().get(),
-                               frameJSON->value().Length());
+      mFrameTableWriter.Splice(frameJSON->value());
       MOZ_RELEASE_ASSERT(mFrameToIndexMap.add(entry, frameKey, index));
     }
     MOZ_RELEASE_ASSERT(frameKeys.append(std::move(frameKey)));
@@ -489,10 +488,7 @@ struct CStringWriteFunc : public JSONWriteFunc {
   nsACString& mBuffer;  // The struct must not outlive this buffer
   explicit CStringWriteFunc(nsACString& aBuffer) : mBuffer(aBuffer) {}
 
-  void Write(const char* aStr) override { mBuffer.Append(aStr); }
-  void Write(const char* aStr, size_t aLen) override {
-    mBuffer.Append(aStr, aLen);
-  }
+  void Write(const Span<const char>& aStr) override { mBuffer.Append(aStr); }
 };
 
 static nsCString JSONForJITFrame(JSContext* aContext,
@@ -1514,9 +1510,11 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
           static_cast<const BaseProfilerCount*>(iter.get().key());
 
       aWriter.Start();
-      aWriter.StringProperty("name", base_counter->mLabel);
-      aWriter.StringProperty("category", base_counter->mCategory);
-      aWriter.StringProperty("description", base_counter->mDescription);
+      aWriter.StringProperty("name", MakeStringSpan(base_counter->mLabel));
+      aWriter.StringProperty("category",
+                             MakeStringSpan(base_counter->mCategory));
+      aWriter.StringProperty("description",
+                             MakeStringSpan(base_counter->mDescription));
 
       aWriter.StartArrayProperty("sample_groups");
       for (auto counter_iter = counter.iter(); !counter_iter.done();
@@ -1597,7 +1595,7 @@ static void AddPausedRange(SpliceableJSONWriter& aWriter, const char* aReason,
   } else {
     aWriter.NullProperty("endTime");
   }
-  aWriter.StringProperty("reason", aReason);
+  aWriter.StringProperty("reason", MakeStringSpan(aReason));
   aWriter.End();
 }
 

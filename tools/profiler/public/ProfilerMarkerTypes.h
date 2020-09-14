@@ -46,17 +46,19 @@ using Log = mozilla::baseprofiler::markers::Log;
 using MediaSample = mozilla::baseprofiler::markers::MediaSample;
 
 struct Budget {
-  static constexpr const char* MarkerTypeName() { return "Budget"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("Budget");
+  }
   static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter) {}
 };
 
 struct DOMEvent {
-  static constexpr const char* MarkerTypeName() {
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
     // Note: DOMEventMarkerPayload wase originally a sub-class of
     // TracingMarkerPayload, so it uses the same payload type.
     // TODO: Change to its own distinct type, but this will require front-end
     // changes.
-    return "tracing";
+    return mozilla::MakeStringSpan("tracing");
   }
   static void StreamJSONMarkerData(
       mozilla::JSONWriter& aWriter,
@@ -65,7 +67,7 @@ struct DOMEvent {
       const mozilla::ProfilerString8View& aTracingCategory) {
     aWriter.StringProperty(
         "eventType",
-        NS_ConvertUTF16toUTF8(aEventType.Data(), aEventType.Length()).get());
+        NS_ConvertUTF16toUTF8(aEventType.Data(), aEventType.Length()));
     // Note: This is the event *creation* timestamp, which should be before the
     // marker's own timestamp. It is used to compute the event processing
     // latency.
@@ -77,13 +79,15 @@ struct DOMEvent {
       // Note: This is *not* the MarkerCategory, it's a identifier used to
       // combine pairs of markers. This should disappear after "set index" is
       // implemented in bug 1661114.
-      aWriter.StringProperty("category", aTracingCategory.String().c_str());
+      aWriter.StringProperty("category", aTracingCategory);
     }
   }
 };
 
 struct Pref {
-  static constexpr const char* MarkerTypeName() { return "PreferenceRead"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("PreferenceRead");
+  }
   static void StreamJSONMarkerData(
       mozilla::JSONWriter& aWriter,
       const mozilla::ProfilerString8View& aPrefName,
@@ -95,22 +99,24 @@ struct Pref {
     // removed; but the frontend may need updating first.
     mozilla::baseprofiler::WritePropertyTime(aWriter, "prefAccessTime",
                                              aPrefAccessTime);
-    aWriter.StringProperty("prefName", aPrefName.String().c_str());
+    aWriter.StringProperty("prefName", aPrefName);
     aWriter.StringProperty("prefKind", PrefValueKindToString(aPrefKind));
     aWriter.StringProperty("prefType", PrefTypeToString(aPrefType));
-    aWriter.StringProperty("prefValue", aPrefValue.String().c_str());
+    aWriter.StringProperty("prefValue", aPrefValue);
   }
 
  private:
-  static const char* PrefValueKindToString(
+  static mozilla::Span<const char> PrefValueKindToString(
       const mozilla::Maybe<mozilla::PrefValueKind>& aKind) {
     if (aKind) {
-      return *aKind == mozilla::PrefValueKind::Default ? "Default" : "User";
+      return *aKind == mozilla::PrefValueKind::Default
+                 ? mozilla::MakeStringSpan("Default")
+                 : mozilla::MakeStringSpan("User");
     }
     return "Shared";
   }
 
-  static const char* PrefTypeToString(
+  static mozilla::Span<const char> PrefTypeToString(
       const mozilla::Maybe<mozilla::PrefType>& type) {
     if (type) {
       switch (*type) {
@@ -133,7 +139,9 @@ struct Pref {
 // Contains the translation applied to a 2d layer so we can track the layer
 // position at each frame.
 struct LayerTranslation {
-  static constexpr const char* MarkerTypeName() { return "LayerTranslation"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("LayerTranslation");
+  }
   static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
                                    mozilla::layers::Layer* aLayer,
                                    mozilla::gfx::Point aPoint) {
@@ -149,12 +157,16 @@ struct LayerTranslation {
 
 // Tracks when a vsync occurs according to the HardwareComposer.
 struct Vsync {
-  static constexpr const char* MarkerTypeName() { return "VsyncTimestamp"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("VsyncTimestamp");
+  }
   static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter) {}
 };
 
 struct Network {
-  static constexpr const char* MarkerTypeName() { return "Network"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("Network");
+  }
   static void StreamJSONMarkerData(
       mozilla::JSONWriter& aWriter, int64_t aID,
       const mozilla::ProfilerString8View& aURI, NetworkLoadType aType,
@@ -170,12 +182,12 @@ struct Network {
     mozilla::baseprofiler::WritePropertyTime(aWriter, "endTime", aEndTime);
 
     aWriter.IntProperty("id", aID);
-    const char* typeString = GetNetworkState(aType);
-    const char* cacheString = GetCacheState(aCacheDisposition);
+    mozilla::Span<const char> typeString = GetNetworkState(aType);
+    mozilla::Span<const char> cacheString = GetCacheState(aCacheDisposition);
     // want to use aUniqueStacks.mUniqueStrings->WriteElement(aWriter,
     // typeString);
     aWriter.StringProperty("status", typeString);
-    if (cacheString) {
+    if (!cacheString.IsEmpty()) {
       aWriter.StringProperty("cache", cacheString);
     }
     aWriter.IntProperty("pri", aPri);
@@ -183,14 +195,14 @@ struct Network {
       aWriter.IntProperty("count", aCount);
     }
     if (aURI.Length() != 0) {
-      aWriter.StringProperty("URI", aURI.String().c_str());
+      aWriter.StringProperty("URI", aURI);
     }
     if (aRedirectURI.Length() != 0) {
-      aWriter.StringProperty("RedirectURI", aRedirectURI.String().c_str());
+      aWriter.StringProperty("RedirectURI", aRedirectURI);
     }
 
     if (aContentType.Length() != 0) {
-      aWriter.StringProperty("contentType", aContentType.String().c_str());
+      aWriter.StringProperty("contentType", aContentType);
     } else {
       aWriter.NullProperty("contentType");
     }
@@ -218,41 +230,41 @@ struct Network {
   }
 
  private:
-  static const char* GetNetworkState(NetworkLoadType aType) {
+  static mozilla::Span<const char> GetNetworkState(NetworkLoadType aType) {
     switch (aType) {
       case NetworkLoadType::LOAD_START:
-        return "STATUS_START";
+        return mozilla::MakeStringSpan("STATUS_START");
       case NetworkLoadType::LOAD_STOP:
-        return "STATUS_STOP";
+        return mozilla::MakeStringSpan("STATUS_STOP");
       case NetworkLoadType::LOAD_REDIRECT:
-        return "STATUS_REDIRECT";
+        return mozilla::MakeStringSpan("STATUS_REDIRECT");
     }
-    return "";
+    return mozilla::MakeStringSpan("");
   }
 
-  static const char* GetCacheState(
+  static mozilla::Span<const char> GetCacheState(
       mozilla::net::CacheDisposition aCacheDisposition) {
     switch (aCacheDisposition) {
       case mozilla::net::kCacheUnresolved:
-        return "Unresolved";
+        return mozilla::MakeStringSpan("Unresolved");
       case mozilla::net::kCacheHit:
-        return "Hit";
+        return mozilla::MakeStringSpan("Hit");
       case mozilla::net::kCacheHitViaReval:
-        return "HitViaReval";
+        return mozilla::MakeStringSpan("HitViaReval");
       case mozilla::net::kCacheMissedViaReval:
-        return "MissedViaReval";
+        return mozilla::MakeStringSpan("MissedViaReval");
       case mozilla::net::kCacheMissed:
-        return "Missed";
+        return mozilla::MakeStringSpan("Missed");
       case mozilla::net::kCacheUnknown:
       default:
-        return nullptr;
+        return mozilla::MakeStringSpan("");
     }
   }
 };
 
 struct ScreenshotPayload {
-  static constexpr const char* MarkerTypeName() {
-    return "CompositorScreenshot";
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("CompositorScreenshot");
   }
   static void StreamJSONMarkerData(
       mozilla::JSONWriter& aWriter,
@@ -261,7 +273,7 @@ struct ScreenshotPayload {
     // TODO: Use UniqueStacks&Strings
     // aUniqueStacks.mUniqueStrings->WriteProperty(aWriter, "url",
     //                                             mScreenshotDataURL.get());
-    aWriter.StringProperty("url", aScreenshotDataURL.String().c_str());
+    aWriter.StringProperty("url", aScreenshotDataURL);
 
     char hexWindowID[32];
     SprintfLiteral(hexWindowID, "0x%" PRIXPTR, aWindowIdentifier);
@@ -272,14 +284,16 @@ struct ScreenshotPayload {
 };
 
 struct GCSlice {
-  static constexpr const char* MarkerTypeName() { return "GCSlice"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("GCSlice");
+  }
   static void StreamJSONMarkerData(
       mozilla::JSONWriter& aWriter,
       const mozilla::ProfilerString8View& aTimingJSON) {
     if (aTimingJSON.Length() != 0) {
       // TODO: Is SplicedJSONProperty necessary here? (Guessing yes!)
-      // aWriter.SplicedJSONProperty("timings", aTimingJSON.String().c_str());
-      aWriter.StringProperty("timings", aTimingJSON.String().c_str());
+      // aWriter.SplicedJSONProperty("timings", aTimingJSON);
+      aWriter.StringProperty("timings", aTimingJSON);
     } else {
       aWriter.NullProperty("timings");
     }
@@ -287,14 +301,16 @@ struct GCSlice {
 };
 
 struct GCMajor {
-  static constexpr const char* MarkerTypeName() { return "GCMajor"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("GCMajor");
+  }
   static void StreamJSONMarkerData(
       mozilla::JSONWriter& aWriter,
       const mozilla::ProfilerString8View& aTimingJSON) {
     if (aTimingJSON.Length() != 0) {
       // TODO: Is SplicedJSONProperty necessary here? (Guessing yes!)
-      // aWriter.SplicedJSONProperty("timings", aTimingJSON.String().c_str());
-      aWriter.StringProperty("timings", aTimingJSON.String().c_str());
+      // aWriter.SplicedJSONProperty("timings", aTimingJSON);
+      aWriter.StringProperty("timings", aTimingJSON);
     } else {
       aWriter.NullProperty("timings");
     }
@@ -302,14 +318,16 @@ struct GCMajor {
 };
 
 struct GCMinor {
-  static constexpr const char* MarkerTypeName() { return "GCMinor"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("GCMinor");
+  }
   static void StreamJSONMarkerData(
       mozilla::JSONWriter& aWriter,
       const mozilla::ProfilerString8View& aTimingJSON) {
     if (aTimingJSON.Length() != 0) {
       // TODO: Is SplicedJSONProperty necessary here? (Guessing yes!)
-      // aWriter.SplicedJSONProperty("nursery", aTimingJSON.String().c_str());
-      aWriter.StringProperty("nursery", aTimingJSON.String().c_str());
+      // aWriter.SplicedJSONProperty("nursery", aTimingJSON);
+      aWriter.StringProperty("nursery", aTimingJSON);
     } else {
       aWriter.NullProperty("nursery");
     }
@@ -317,7 +335,9 @@ struct GCMinor {
 };
 
 struct StyleMarkerPayload {
-  static constexpr const char* MarkerTypeName() { return "Styles"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("Styles");
+  }
   static void StreamJSONMarkerData(
       mozilla::JSONWriter& aWriter,
       const mozilla::ServoTraversalStatistics& aStats) {
@@ -331,7 +351,9 @@ struct StyleMarkerPayload {
 };
 
 class JsAllocationMarkerPayload {
-  static constexpr const char* MarkerTypeName() { return "JS allocation"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("JS allocation");
+  }
   static void StreamJSONMarkerData(
       mozilla::JSONWriter& aWriter,
       const mozilla::ProfilerString16View& aTypeName,
@@ -340,21 +362,20 @@ class JsAllocationMarkerPayload {
       const mozilla::ProfilerString8View& aCoarseType, uint64_t aSize,
       bool aInNursery) {
     if (aClassName.Length() != 0) {
-      aWriter.StringProperty("className", aClassName.String().c_str());
+      aWriter.StringProperty("className", aClassName);
     }
     if (aTypeName.Length() != 0) {
       aWriter.StringProperty(
           "typeName",
-          NS_ConvertUTF16toUTF8(aTypeName.Data(), aTypeName.Length()).get());
+          NS_ConvertUTF16toUTF8(aTypeName.Data(), aTypeName.Length()));
     }
     if (aDescriptiveTypeName.Length() != 0) {
       aWriter.StringProperty(
           "descriptiveTypeName",
           NS_ConvertUTF16toUTF8(aDescriptiveTypeName.Data(),
-                                aDescriptiveTypeName.Length())
-              .get());
+                                aDescriptiveTypeName.Length()));
     }
-    aWriter.StringProperty("coarseType", aCoarseType.String().c_str());
+    aWriter.StringProperty("coarseType", aCoarseType);
     aWriter.IntProperty("size", aSize);
     aWriter.BoolProperty("inNursery", aInNursery);
   }
@@ -364,7 +385,9 @@ class JsAllocationMarkerPayload {
 // a memory hook into malloc and other memory functions that can sample a subset
 // of the allocations. This information is then stored in this payload.
 struct NativeAllocationMarkerPayload {
-  static constexpr const char* MarkerTypeName() { return "Native allocation"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("Native allocation");
+  }
   static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter, int64_t aSize,
                                    uintptr_t aMemoryAddress, int aThreadId) {
     aWriter.IntProperty("size", aSize);
@@ -374,7 +397,9 @@ struct NativeAllocationMarkerPayload {
 };
 
 struct IPCMarkerPayload {
-  static constexpr const char* MarkerTypeName() { return "IPC"; }
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("IPC");
+  }
   static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter,
                                    int32_t aOtherPid, int32_t aMessageSeqno,
                                    IPC::Message::msgid_t aMessageType,
@@ -390,42 +415,45 @@ struct IPCMarkerPayload {
     using namespace mozilla::ipc;
     aWriter.IntProperty("otherPid", aOtherPid);
     aWriter.IntProperty("messageSeqno", aMessageSeqno);
-    aWriter.StringProperty("messageType",
-                           IPC::StringFromIPCMessageType(aMessageType));
+    aWriter.StringProperty(
+        "messageType",
+        mozilla::MakeStringSpan(IPC::StringFromIPCMessageType(aMessageType)));
     aWriter.StringProperty("side", IPCSideToString(aSide));
-    aWriter.StringProperty("direction", aDirection == MessageDirection::eSending
-                                            ? "sending"
-                                            : "receiving");
+    aWriter.StringProperty("direction",
+                           aDirection == MessageDirection::eSending
+                               ? mozilla::MakeStringSpan("sending")
+                               : mozilla::MakeStringSpan("receiving"));
     aWriter.StringProperty("phase", IPCPhaseToString(aPhase));
     aWriter.BoolProperty("sync", aSync);
   }
 
  private:
-  static const char* IPCSideToString(mozilla::ipc::Side aSide) {
+  static mozilla::Span<const char> IPCSideToString(mozilla::ipc::Side aSide) {
     switch (aSide) {
       case mozilla::ipc::ParentSide:
-        return "parent";
+        return mozilla::MakeStringSpan("parent");
       case mozilla::ipc::ChildSide:
-        return "child";
+        return mozilla::MakeStringSpan("child");
       case mozilla::ipc::UnknownSide:
-        return "unknown";
+        return mozilla::MakeStringSpan("unknown");
       default:
         MOZ_ASSERT_UNREACHABLE("Invalid IPC side");
-        return "<invalid IPC side>";
+        return mozilla::MakeStringSpan("<invalid IPC side>");
     }
   }
 
-  static const char* IPCPhaseToString(mozilla::ipc::MessagePhase aPhase) {
+  static mozilla::Span<const char> IPCPhaseToString(
+      mozilla::ipc::MessagePhase aPhase) {
     switch (aPhase) {
       case mozilla::ipc::MessagePhase::Endpoint:
-        return "endpoint";
+        return mozilla::MakeStringSpan("endpoint");
       case mozilla::ipc::MessagePhase::TransferStart:
-        return "transferStart";
+        return mozilla::MakeStringSpan("transferStart");
       case mozilla::ipc::MessagePhase::TransferEnd:
-        return "transferEnd";
+        return mozilla::MakeStringSpan("transferEnd");
       default:
         MOZ_ASSERT_UNREACHABLE("Invalid IPC phase");
-        return "<invalid IPC phase>";
+        return mozilla::MakeStringSpan("<invalid IPC phase>");
     }
   }
 };

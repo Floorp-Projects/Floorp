@@ -180,6 +180,10 @@ class MOZ_STACK_CLASS ProfilerStringView {
   }
   // No `IsOwned...()` because it's a secret, only used internally!
 
+  [[nodiscard]] operator Span<const char>() const {
+    return Span<const char>(Data(), Length());
+  }
+
   [[nodiscard]] std::basic_string<CHAR> String() const {
     return std::basic_string<CHAR>(mStringView);
   }
