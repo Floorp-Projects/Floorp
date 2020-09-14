@@ -2736,23 +2736,23 @@ class nsIFrame : public nsQueryFrame {
   /**
    * A helper, used by |nsIFrame::ComputeSize| (for frames that need to
    * override only this part of ComputeSize), that computes the size
-   * that should be returned when 'width', 'height', and
-   * min/max-width/height are all 'auto' or equivalent.
+   * that should be returned when inline-size, block-size, and
+   * [min|max]-[inline-size|block-size] are all 'auto' or equivalent.
    *
-   * In general, frames that can accept any computed width/height should
-   * override only ComputeAutoSize, and frames that cannot do so need to
-   * override ComputeSize to enforce their width/height invariants.
+   * In general, frames that can accept any computed inline-size/block-size
+   * should override only ComputeAutoSize, and frames that cannot do so need to
+   * override ComputeSize to enforce their inline-size/block-size invariants.
    *
    * Implementations may optimize by returning a garbage width if
-   * StylePosition()->mWidth.GetUnit() != eStyleUnit_Auto, and
-   * likewise for height, since in such cases the result is guaranteed
-   * to be unused.
+   * StylePosition()->ISize() is not 'auto', and likewise for BSize(), since in
+   * such cases the result is guaranteed to be unused.
    */
   virtual mozilla::LogicalSize ComputeAutoSize(
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
-      const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
-      const mozilla::LogicalSize& aPadding, mozilla::ComputeSizeFlags aFlags);
+      const mozilla::LogicalSize& aMargin,
+      const mozilla::LogicalSize& aBorderPadding,
+      mozilla::ComputeSizeFlags aFlags);
 
   /**
    * Utility function for ComputeAutoSize implementations.  Return

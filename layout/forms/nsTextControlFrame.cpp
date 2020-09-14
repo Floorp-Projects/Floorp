@@ -560,8 +560,7 @@ nscoord nsTextControlFrame::GetMinISize(gfxContext* aRenderingContext) {
 LogicalSize nsTextControlFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorder, const LogicalSize& aPadding,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   LogicalSize autoSize = CalcIntrinsicSize(aRenderingContext, aWM, inflation);
 
@@ -575,15 +574,15 @@ LogicalSize nsTextControlFrame::ComputeAutoSize(
       // XXX maybe a font-inflation issue here? (per the assertion below).
       autoSize.ISize(aWM) =
           nsContainerFrame::ComputeAutoSize(aRenderingContext, aWM, aCBSize,
-                                            aAvailableISize, aMargin, aBorder,
-                                            aPadding, aFlags)
+                                            aAvailableISize, aMargin,
+                                            aBorderPadding, aFlags)
               .ISize(aWM);
     }
 #ifdef DEBUG
     else {
       LogicalSize ancestorAutoSize = nsContainerFrame::ComputeAutoSize(
-          aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin, aBorder,
-          aPadding, aFlags);
+          aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin,
+          aBorderPadding, aFlags);
       // Disabled when there's inflation; see comment in GetXULPrefSize.
       MOZ_ASSERT(inflation != 1.0f ||
                      ancestorAutoSize.ISize(aWM) == autoSize.ISize(aWM),

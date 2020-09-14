@@ -1563,11 +1563,10 @@ nscoord nsTableFrame::TableShrinkISizeToFit(gfxContext* aRenderingContext,
 LogicalSize nsTableFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorder, const LogicalSize& aPadding,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   // Tables always shrink-wrap.
-  nscoord cbBased = aAvailableISize - aMargin.ISize(aWM) - aBorder.ISize(aWM) -
-                    aPadding.ISize(aWM);
+  nscoord cbBased =
+      aAvailableISize - aMargin.ISize(aWM) - aBorderPadding.ISize(aWM);
   return LogicalSize(aWM, TableShrinkISizeToFit(aRenderingContext, cbBased),
                      NS_UNCONSTRAINEDSIZE);
 }
