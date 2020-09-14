@@ -67,15 +67,8 @@ nsresult nsJARInputStream::InitFile(nsJAR* aJar, nsZipItem* item) {
 
   // Must keep handle to filepointer and mmap structure as long as we need
   // access to the mmapped data
-  rv = aJar->mZip->GetPersistentHandle(item, &mItemHandle,
-                                       CacheAwareZipReader::DeferCaching);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  mZs.next_in =
-      (Bytef*)aJar->mZip->GetData(item, CacheAwareZipReader::DeferCaching);
-
+  mFd = aJar->mZip->GetFD();
+  mZs.next_in = (Bytef*)aJar->mZip->GetData(item);
   if (!mZs.next_in) {
     return NS_ERROR_FILE_CORRUPTED;
   }
@@ -199,7 +192,7 @@ nsJARInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytesRead) {
   *aBytesRead = 0;
 
   nsresult rv = NS_OK;
-  MMAP_FAULT_HANDLER_BEGIN_HANDLE(mItemHandle.UnderlyingFD())
+  MMAP_FAULT_HANDLER_BEGIN_HANDLE(mFd)
   switch (mMode) {
     case MODE_NOTINITED:
       return NS_OK;
@@ -218,15 +211,15 @@ nsJARInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytesRead) {
         rv = ContinueInflate(aBuffer, aCount, aBytesRead);
       }
       // be aggressive about releasing the file!
-      // note that sometimes, we will release mItemHandle before we've finished
+      // note that sometimes, we will release  mFd before we've finished
       // deflating - this is because zlib buffers the input
       if (mZs.avail_in == 0) {
-        mItemHandle.ReleaseHandle();
+        mFd = nullptr;
       }
       break;
 
     case MODE_COPY:
-      if (mItemHandle) {
+      if (mFd) {
         uint32_t count = std::min(aCount, mOutSize - uint32_t(mZs.total_out));
         if (count) {
           memcpy(aBuffer, mZs.next_in + mZs.total_out, count);
@@ -235,10 +228,9 @@ nsJARInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytesRead) {
         *aBytesRead = count;
       }
       // be aggressive about releasing the file!
-      // note that sometimes, we will release mItemHandle before we've finished
-      // copying.
+      // note that sometimes, we will release mFd before we've finished copying.
       if (mZs.total_out >= mOutSize) {
-        mItemHandle.ReleaseHandle();
+        mFd = nullptr;
       }
       break;
   }
@@ -270,7 +262,7 @@ nsJARInputStream::Close() {
   }
 #endif
   mMode = MODE_CLOSED;
-  mItemHandle.ReleaseHandle();
+  mFd = nullptr;
   return NS_OK;
 }
 

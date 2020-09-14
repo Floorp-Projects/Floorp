@@ -26,6 +26,8 @@
 #include "nsIThread.h"
 #include "nsReadableUtils.h"
 
+class nsZipArchive;
+
 namespace mozilla {
 namespace loader {
 class InputBuffer;
@@ -75,7 +77,7 @@ class URLPreloader final : public nsIObserver, public nsIMemoryReporter {
   static Result<nsCString, nsresult> ReadFile(nsIFile* file,
                                               ReadType readType = Forget);
 
-  static Result<nsCString, nsresult> ReadZip(CacheAwareZipReader* archive,
+  static Result<nsCString, nsresult> ReadZip(nsZipArchive* archive,
                                              const nsACString& path,
                                              ReadType readType = Forget);
 
@@ -195,7 +197,7 @@ class URLPreloader final : public nsIObserver, public nsIMemoryReporter {
       return "";
     }
 
-    already_AddRefed<CacheAwareZipReader> Archive() {
+    already_AddRefed<nsZipArchive> Archive() {
       return Omnijar::GetReader(OmnijarType());
     }
 

@@ -11,7 +11,6 @@
 #include "nsJAR.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Omnijar.h"
 
 #ifdef MOZ_JAR_BROTLI
 struct BrotliDecoderStateStruct;
@@ -52,11 +51,11 @@ class nsJARInputStream final : public nsIInputStream {
  private:
   ~nsJARInputStream() { Close(); }
 
-  mozilla::CacheAwareZipHandle mItemHandle;  // handle for reading
-  uint32_t mOutSize;                         // inflated size
-  uint32_t mInCrc;                           // CRC as provided by the zipentry
-  uint32_t mOutCrc;                          // CRC as calculated by me
-  z_stream mZs;                              // zip data structure
+  RefPtr<nsZipHandle> mFd;  // handle for reading
+  uint32_t mOutSize;        // inflated size
+  uint32_t mInCrc;          // CRC as provided by the zipentry
+  uint32_t mOutCrc;         // CRC as calculated by me
+  z_stream mZs;             // zip data structure
 #ifdef MOZ_JAR_BROTLI
   BrotliDecoderStateStruct* mBrotliState;  // Brotli decoder state
 #endif
