@@ -94,17 +94,8 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/mc_avx512.asm',
         ]
 
-    SOURCES += [
-        '../../../third_party/dav1d/src/x86/cdef_sse.asm',
-        '../../../third_party/dav1d/src/x86/cpuid.asm',
-        '../../../third_party/dav1d/src/x86/film_grain_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/ipred_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/itx_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/loopfilter_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/looprestoration_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/mc_sse.asm',
-        '../../../third_party/dav1d/src/x86/msac.asm',
-    ]
+    include('autovendored_sources.mozbuild')
+    SOURCES += sources
 
     # BITDEPTH
     relative_path = '../../../third_party/dav1d/src/x86/'
