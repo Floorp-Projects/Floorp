@@ -2931,7 +2931,3 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
 bool ReflowInput::IsFloating() const {
   return mStyleDisplay->IsFloating(mFrame);
 }
-
-mozilla::StyleDisplay ReflowInput::GetDisplay() const {
-  return mStyleDisplay->GetDisplay(mFrame);
-}
