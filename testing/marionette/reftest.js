@@ -145,7 +145,8 @@ reftest.Runner = class {
     let found = this.driver.findWindow([reftestWin], () => true);
     await this.driver.setWindowHandle(found, true);
 
-    this.lastURL = this.driver.currentURL.href;
+    const url = await this.driver._getCurrentURL();
+    this.lastURL = url.href;
     logger.debug(`loaded initial URL: ${this.lastURL}`);
 
     let browserRect = reftestWin.gBrowser.getBoundingClientRect();
