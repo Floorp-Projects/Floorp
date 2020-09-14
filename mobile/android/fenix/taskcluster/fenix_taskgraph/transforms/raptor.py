@@ -30,9 +30,10 @@ def add_variants(config, tasks):
         if build_type not in only_types:
             continue
 
-        for abi, apk_path in dep_task.attributes["apks"].items():
+        for abi, apk_metadata in dep_task.attributes["apks"].items():
             if abi not in only_abis:
                 continue
+            apk_path = apk_metadata["name"]
             for test in tests:
                 test = copy.deepcopy(test)
                 attributes = copy.deepcopy(dep_task.attributes)

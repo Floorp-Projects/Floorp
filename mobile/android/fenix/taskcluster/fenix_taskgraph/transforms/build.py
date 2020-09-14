@@ -121,7 +121,13 @@ def add_artifacts(config, tasks):
                         **apk
                     ),
                 })
-                apks[apk["abi"]] = apk_name
+                apks[apk["abi"]] = {
+                    "name": apk_name,
+                    "github-name": artifact_template["github-name"].format(
+                        version=config.params["version"],
+                        **apk
+                    )
+                }
 
         yield task
 
