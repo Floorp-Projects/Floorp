@@ -56,32 +56,25 @@ PermissionRequestBase::PermissionRequestBase(Element* aOwnerElement,
 PermissionRequestBase::~PermissionRequestBase() { AssertSanity(); }
 
 // static
-nsresult PermissionRequestBase::GetCurrentPermission(
-    nsIPrincipal* aPrincipal, PermissionValue* aCurrentValue) {
+Result<PermissionRequestBase::PermissionValue, nsresult>
+PermissionRequestBase::GetCurrentPermission(nsIPrincipal& aPrincipal) {
   AssertSanity();
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aCurrentValue);
 
-  nsCOMPtr<nsIPermissionManager> permMan = GetPermissionManager();
-  if (NS_WARN_IF(!permMan)) {
-    return NS_ERROR_FAILURE;
-  }
+  const nsCOMPtr<nsIPermissionManager> permMan = GetPermissionManager();
+  IDB_TRY(OkIf(permMan), Err(NS_ERROR_FAILURE));
 
-  uint32_t intPermission;
-  nsresult rv = permMan->TestExactPermissionFromPrincipal(
-      aPrincipal, kPermissionString, &intPermission);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const uint32_t intPermission,
+              MOZ_TO_RESULT_INVOKE(permMan, TestExactPermissionFromPrincipal,
+                                   &aPrincipal, kPermissionString));
 
-  PermissionValue permission = PermissionValueForIntPermission(intPermission);
+  const PermissionValue permission =
+      PermissionValueForIntPermission(intPermission);
 
   MOZ_ASSERT(permission == kPermissionAllowed ||
              permission == kPermissionDenied ||
              permission == kPermissionPrompt);
 
-  *aCurrentValue = permission;
-  return NS_OK;
+  return permission;
 }
 
 // static
@@ -113,12 +106,8 @@ nsresult PermissionRequestBase::PromptIfNeeded(PermissionValue* aCurrentValue) {
   nsCOMPtr<Element> element = std::move(mOwnerElement);
   nsCOMPtr<nsIPrincipal> principal = std::move(mPrincipal);
 
-  PermissionValue currentValue;
-  nsresult rv = GetCurrentPermission(principal, &currentValue);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  IDB_TRY_VAR(const PermissionValue currentValue,
+              GetCurrentPermission(*principal));
   MOZ_ASSERT(currentValue != kPermissionDefault);
 
   if (currentValue == kPermissionPrompt) {
@@ -131,8 +120,8 @@ nsresult PermissionRequestBase::PromptIfNeeded(PermissionValue* aCurrentValue) {
     mOwnerElement = std::move(element);
     mPrincipal = std::move(principal);
 
-    rv = obsSvc->NotifyObservers(static_cast<nsIObserver*>(this),
-                                 kPermissionPromptTopic, nullptr);
+    nsresult rv = obsSvc->NotifyObservers(static_cast<nsIObserver*>(this),
+                                          kPermissionPromptTopic, nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       // Finally release if we failed the prompt.
       mOwnerElement = nullptr;
