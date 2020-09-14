@@ -4060,54 +4060,48 @@ nsDocShell::GetSessionHistoryXPCOM(nsISupports** aSessionHistory) {
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsDocShell::LoadPageAsViewSource(nsISupports* aPageDescriptor) {
-  nsCOMPtr<nsISHEntry> shEntryIn(do_QueryInterface(aPageDescriptor));
-
-  // Currently, the opaque 'page descriptor' is an nsISHEntry...
-  if (!shEntryIn) {
+nsDocShell::LoadPageAsViewSource(nsIDocShell* aOtherDocShell,
+                                 const nsAString& aURI) {
+  if (!aOtherDocShell) {
     return NS_ERROR_INVALID_POINTER;
   }
-
-  // Now clone shEntryIn, since we might end up modifying it later on, and we
-  // want a page descriptor to be reusable.
-  nsCOMPtr<nsISHEntry> shEntry;
-  nsresult rv = shEntryIn->Clone(getter_AddRefs(shEntry));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Give our cloned shEntry a new bfcache entry so this load is independent
-  // of all other loads.  (This is important, in particular, for bugs 582795
-  // and 585298.)
-  rv = shEntry->AbandonBFCacheEntry();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  //
-  // load the page as view-source
-  //
-  nsCString spec, newSpec;
-
-  // Create a new view-source URI and replace the original.
-  nsCOMPtr<nsIURI> oldUri = shEntry->GetURI();
-
-  oldUri->GetSpec(spec);
-  newSpec.AppendLiteral("view-source:");
-  newSpec.Append(spec);
-
-  nsCOMPtr<nsIURI> newUri;
-  rv = NS_NewURI(getter_AddRefs(newUri), newSpec);
+  nsCOMPtr<nsIURI> newURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(newURI), aURI);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  shEntry->SetURI(newUri);
-  shEntry->SetOriginalURI(nullptr);
-  shEntry->SetResultPrincipalURI(nullptr);
-  // shEntry's current triggering principal is whoever loaded that page
-  // initially. But now we're doing another load of the page, via an API that
+
+  RefPtr<nsDocShellLoadState> loadState;
+  uint32_t cacheKey;
+  auto* otherDocShell = nsDocShell::Cast(aOtherDocShell);
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    loadState = new nsDocShellLoadState(newURI);
+    if (!otherDocShell->FillLoadStateFromCurrentEntry(*loadState)) {
+      return NS_ERROR_INVALID_POINTER;
+    }
+    cacheKey = otherDocShell->GetCacheKeyFromCurrentEntry().valueOr(0);
+  } else {
+    nsCOMPtr<nsISHEntry> entry;
+    bool isOriginalSHE;
+    otherDocShell->GetCurrentSHEntry(getter_AddRefs(entry), &isOriginalSHE);
+    if (!entry) {
+      return NS_ERROR_INVALID_POINTER;
+    }
+    rv = entry->CreateLoadInfo(getter_AddRefs(loadState));
+    NS_ENSURE_SUCCESS(rv, rv);
+    entry->GetCacheKey(&cacheKey);
+    loadState->SetURI(newURI);
+    loadState->SetSHEntry(nullptr);
+  }
+
+  // We're doing a load of the page, via an API that
   // is only exposed to system code.  The triggering principal for this load
   // should be the system principal.
-  shEntry->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
+  loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
+  loadState->SetOriginalURI(nullptr);
+  loadState->SetResultPrincipalURI(nullptr);
 
-  rv = LoadHistoryEntry(shEntry, LOAD_HISTORY);
-  return rv;
+  return InternalLoad(loadState, Some(cacheKey));
 }
 
 NS_IMETHODIMP
@@ -4175,6 +4169,19 @@ Maybe<uint32_t> nsDocShell::GetCacheKeyFromCurrentEntry() const {
   }
 
   return Nothing();
+}
+
+bool nsDocShell::FillLoadStateFromCurrentEntry(
+    nsDocShellLoadState& aLoadState) {
+  if (mLoadingEntry) {
+    mLoadingEntry->mInfo.FillLoadInfo(aLoadState);
+    return true;
+  }
+  if (mActiveEntry) {
+    mActiveEntry->FillLoadInfo(aLoadState);
+    return true;
+  }
+  return false;
 }
 
 //*****************************************************************************
@@ -8729,7 +8736,8 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   return NS_OK;
 }
 
-nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
+nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
+                                  Maybe<uint32_t> aCacheKey) {
   MOZ_ASSERT(aLoadState, "need a load state!");
   MOZ_ASSERT(aLoadState->TriggeringPrincipal(),
              "need a valid TriggeringPrincipal");
@@ -9091,7 +9099,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState) {
                    nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
 
   nsCOMPtr<nsIRequest> req;
-  rv = DoURILoad(aLoadState, getter_AddRefs(req));
+  rv = DoURILoad(aLoadState, aCacheKey, getter_AddRefs(req));
 
   if (NS_FAILED(rv)) {
     nsCOMPtr<nsIChannel> chan(do_QueryInterface(req));
@@ -9226,6 +9234,16 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
       }
     }
   } else if (SchemeIsViewSource(aURI)) {
+    // Instantiate view source handler protocol, if it doesn't exist already.
+    nsCOMPtr<nsIIOService> io(do_GetIOService());
+    MOZ_ASSERT(io);
+    nsCOMPtr<nsIProtocolHandler> handler;
+    nsresult rv =
+        io->GetProtocolHandler("view-source", getter_AddRefs(handler));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
     nsViewSourceHandler* vsh = nsViewSourceHandler::GetInstance();
     if (!vsh) {
       return NS_ERROR_FAILURE;
@@ -9589,6 +9607,7 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
 }
 
 nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
+                               Maybe<uint32_t> aCacheKey,
                                nsIRequest** aRequest) {
   // Double-check that we're still around to load this URI.
   if (mIsBeingDestroyed) {
@@ -9825,9 +9844,10 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   }
   loadInfo->SetTriggeringSandboxFlags(aLoadState->TriggeringSandboxFlags());
 
-  /* Get the cache Key from SH */
   uint32_t cacheKey = 0;
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (aCacheKey) {
+    cacheKey = *aCacheKey;
+  } else if (StaticPrefs::fission_sessionHistoryInParent()) {
     if (mLoadingEntry) {
       cacheKey = mLoadingEntry->mInfo.GetCacheKey();
     } else if (mActiveEntry) {  // for reload cases
