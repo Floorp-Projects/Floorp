@@ -46,9 +46,9 @@ that will do the rest:
     # download the bootstrap script
     curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -o bootstrap.py
 
-If you don't have Python 3.6 or later installed, see `2.1a Install dependencies
-via Homebrew <#install-via-homebrew>`_ for more information on how to do so.
-Then in your terminal from above start the bootstrapper like this:
+If you don't have Python 3.6 or later or Mercurial installed, see `2.1a Install
+dependencies via Homebrew <#install-via-homebrew>`_ for more information on how
+to do so. Then in your terminal from above start the bootstrapper like this:
 
 .. code-block:: shell
 
