@@ -31,6 +31,10 @@ MediaSession* ContentPlaybackController::GetMediaSession() const {
   }
 
   RefPtr<Navigator> navigator = window->GetNavigator();
+  if (!navigator) {
+    return nullptr;
+  }
+
   return navigator->HasCreatedMediaSession() ? navigator->MediaSession()
                                              : nullptr;
 }
