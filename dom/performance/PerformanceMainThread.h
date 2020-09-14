@@ -38,6 +38,7 @@ class PerformanceMainThread final : public Performance,
   void AddRawEntry(UniquePtr<PerformanceTimingData>,
                    const nsAString& aInitiatorType,
                    const nsAString& aEntryName);
+  virtual void SetFCPTimingEntry(PerformancePaintTiming* aEntry) override;
 
   TimeStamp CreationTimeStamp() const override;
 
@@ -90,6 +91,7 @@ class PerformanceMainThread final : public Performance,
   nsCOMPtr<nsITimedChannel> mChannel;
   RefPtr<PerformanceTiming> mTiming;
   RefPtr<PerformanceNavigation> mNavigation;
+  RefPtr<PerformancePaintTiming> mFCPTiming;
   JS::Heap<JSObject*> mMozMemory;
 
   const bool mCrossOriginIsolated;

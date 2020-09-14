@@ -132,11 +132,8 @@ void PerformanceObserver::QueueEntry(PerformanceEntry* aEntry) {
  * Keep this list in alphabetical order.
  * https://w3c.github.io/performance-timeline/#supportedentrytypes-attribute
  */
-static const char16_t* const sValidTypeNames[4] = {
-    u"mark",
-    u"measure",
-    u"navigation",
-    u"resource",
+static const char16_t* const sValidTypeNames[5] = {
+    u"mark", u"measure", u"navigation", u"paint", u"resource",
 };
 
 void PerformanceObserver::ReportUnsupportedTypesErrorToConsole(

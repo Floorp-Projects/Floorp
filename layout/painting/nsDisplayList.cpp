@@ -1065,7 +1065,8 @@ static bool DisplayListIsNonBlank(nsDisplayList* aList) {
 // non-white canvas or SVG. This excludes any content of iframes, but
 // includes text with pending webfonts. This is the first time users
 // could start consuming page content."
-static bool DisplayListIsContentful(nsDisplayList* aList) {
+static bool DisplayListIsContentful(nsDisplayListBuilder* aBuilder,
+                                    nsDisplayList* aList) {
   for (nsDisplayItem* i : *aList) {
     DisplayItemType type = i->GetType();
     nsDisplayList* children = i->GetChildren();
@@ -1077,10 +1078,14 @@ static bool DisplayListIsContentful(nsDisplayList* aList) {
       // actually tracking all modifications)
       default:
         if (i->IsContentful()) {
-          return true;
+          bool dummy;
+          nsRect bound = i->GetBounds(aBuilder, &dummy);
+          if (!bound.IsEmpty()) {
+            return true;
+          }
         }
         if (children) {
-          if (DisplayListIsContentful(children)) {
+          if (DisplayListIsContentful(aBuilder, children)) {
             return true;
           }
         }

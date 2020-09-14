@@ -6,6 +6,7 @@
 
 #include "PerformanceMainThread.h"
 #include "PerformanceNavigation.h"
+#include "PerformancePaintTiming.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_privacy.h"
 
@@ -43,14 +44,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(PerformanceMainThread)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PerformanceMainThread,
                                                 Performance)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTiming, mNavigation, mDocEntry)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTiming, mNavigation, mDocEntry, mFCPTiming)
   tmp->mMozMemory = nullptr;
   mozilla::DropJSObjects(this);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PerformanceMainThread,
                                                   Performance)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTiming, mNavigation, mDocEntry)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTiming, mNavigation, mDocEntry, mFCPTiming)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PerformanceMainThread,
@@ -159,6 +160,14 @@ void PerformanceMainThread::AddRawEntry(UniquePtr<PerformanceTimingData> aData,
       MakeRefPtr<PerformanceResourceTiming>(std::move(aData), this, aEntryName);
   entry->SetInitiatorType(aInitiatorType);
   InsertResourceEntry(entry);
+}
+
+void PerformanceMainThread::SetFCPTimingEntry(PerformancePaintTiming* aEntry) {
+  MOZ_ASSERT(aEntry);
+  if (!mFCPTiming) {
+    mFCPTiming = aEntry;
+    QueueEntry(aEntry);
+  }
 }
 
 // To be removed once bug 1124165 lands
@@ -376,6 +385,9 @@ void PerformanceMainThread::GetEntries(
     aRetval.AppendElement(mDocEntry);
   }
 
+  if (mFCPTiming) {
+    aRetval.AppendElement(mFCPTiming);
+  }
   aRetval.Sort(PerformanceEntryComparator());
 }
 
@@ -396,6 +408,13 @@ void PerformanceMainThread::GetEntriesByType(
     return;
   }
 
+  if (aEntryType.EqualsLiteral("paint")) {
+    if (mFCPTiming) {
+      aRetval.AppendElement(mFCPTiming);
+      return;
+    }
+  }
+
   Performance::GetEntriesByType(aEntryType, aRetval);
 }
 
@@ -409,6 +428,13 @@ void PerformanceMainThread::GetEntriesByName(
   }
 
   Performance::GetEntriesByName(aName, aEntryType, aRetval);
+
+  if (mFCPTiming && mFCPTiming->GetName().Equals(aName) &&
+      (!aEntryType.WasPassed() ||
+       mFCPTiming->GetEntryType().Equals(aEntryType.Value()))) {
+    aRetval.AppendElement(mFCPTiming);
+    return;
+  }
 
   // The navigation entry is the first one. If it exists and the name matches,
   // let put it in front.
