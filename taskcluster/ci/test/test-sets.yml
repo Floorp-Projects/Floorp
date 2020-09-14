@@ -310,10 +310,6 @@ windows-tests:
     - mochitest-plain
     - mochitest-plain-gpu
     - mochitest-remote
-    - mochitest-webgl1-core
-    - mochitest-webgl1-ext
-    - mochitest-webgl2-core
-    - mochitest-webgl2-ext
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
@@ -322,7 +318,11 @@ windows-tests:
     - test-verify-wpt
     - xpcshell
 
-windows-devtools:
+windows10-tests:
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
     - mochitest-devtools-chrome
 
 mingwclang-tests-debug:
