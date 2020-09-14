@@ -331,6 +331,32 @@ GeckoDriver.prototype.handleModalDialog = function(action, dialog, win) {
 };
 
 /**
+ * Get the current visible URL.
+ *
+ * Can be removed once WindowGlobal supports visibleURL (bug 1664881).
+ */
+GeckoDriver.prototype._getCurrentURL = async function() {
+  let url;
+
+  if (MarionettePrefs.useActors) {
+    url = await this.getActor({ top: true }).getCurrentUrl();
+    return new URL(url);
+  }
+
+  switch (this.context) {
+    case Context.Chrome:
+      const browsingContext = this.getBrowsingContext({ top: true });
+      url = browsingContext.window.location.href;
+      break;
+    case Context.Content:
+      url = await this.listener.getCurrentUrl();
+      break;
+  }
+
+  return new URL(url);
+};
+
+/**
  * Helper method to send async messages to the content listener.
  * Correct usage is to pass in the name of a function in listener.js,
  * a serialisable object, and optionally the current command's ID
@@ -377,11 +403,16 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
 /**
  * Get the current "MarionetteFrame" parent actor.
  *
+ * @param {Object} options
+ * @param {boolean=} options.top
+ *     If set to true use the window's top-level browsing context for the actor,
+ *     otherwise the one from the currently selected frame. Defaults to false.
+ *
  * @returns {MarionetteFrameParent}
  *     The parent actor.
  */
-GeckoDriver.prototype.getActor = function() {
-  const browsingContext = this.getBrowsingContext();
+GeckoDriver.prototype.getActor = function(options = {}) {
+  const browsingContext = this.getBrowsingContext(options);
   return browsingContext.currentWindowGlobal.getActor("MarionetteFrame");
 };
 
@@ -1187,10 +1218,8 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
   // We need to move to the top frame before navigating
   await this.listener.switchToFrame();
 
-  const loadEventExpected = navigate.isLoadEventExpected(
-    this.currentURL,
-    validURL
-  );
+  const currentURL = await this._getCurrentURL();
+  const loadEventExpected = navigate.isLoadEventExpected(currentURL, validURL);
 
   const navigated = this.listener.navigateTo({
     url: validURL.href,
@@ -1238,7 +1267,8 @@ GeckoDriver.prototype.getCurrentUrl = async function() {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  return this.currentURL.href;
+  const url = await this._getCurrentURL();
+  return url.href;
 };
 
 /**
@@ -1316,7 +1346,7 @@ GeckoDriver.prototype.goBack = async function() {
     return;
   }
 
-  let lastURL = this.currentURL;
+  let lastURL = await this._getCurrentURL();
   let goBack = this.listener.goBack({ pageTimeout: this.timeouts.pageLoad });
 
   // If a process change of the frame script interrupts our page load, this
@@ -1360,7 +1390,7 @@ GeckoDriver.prototype.goForward = async function() {
     return;
   }
 
-  let lastURL = this.currentURL;
+  let lastURL = await this._getCurrentURL();
   let goForward = this.listener.goForward({
     pageTimeout: this.timeouts.pageLoad,
   });
@@ -2721,7 +2751,7 @@ GeckoDriver.prototype.addCookie = async function(cmd) {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  let { protocol, hostname } = this.currentURL;
+  let { protocol, hostname } = await this._getCurrentURL();
 
   const networkSchemes = ["ftp:", "http:", "https:"];
   if (!networkSchemes.includes(protocol)) {
@@ -2751,7 +2781,7 @@ GeckoDriver.prototype.getCookies = async function() {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  let { hostname, pathname } = this.currentURL;
+  let { hostname, pathname } = await this._getCurrentURL();
   return [...cookie.iter(hostname, pathname)];
 };
 
@@ -2770,7 +2800,7 @@ GeckoDriver.prototype.deleteAllCookies = async function() {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  let { hostname, pathname } = this.currentURL;
+  let { hostname, pathname } = await this._getCurrentURL();
   for (let toDelete of cookie.iter(hostname, pathname)) {
     cookie.remove(toDelete);
   }
@@ -2791,7 +2821,7 @@ GeckoDriver.prototype.deleteCookie = async function(cmd) {
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
-  let { hostname, pathname } = this.currentURL;
+  let { hostname, pathname } = await this._getCurrentURL();
   let name = assert.string(cmd.parameters.name);
   for (let c of cookie.iter(hostname, pathname)) {
     if (c.name === name) {
