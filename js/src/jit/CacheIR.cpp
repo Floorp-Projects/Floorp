@@ -7923,6 +7923,42 @@ AttachDecision CallIRGenerator::tryAttachObjectIs(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachObjectIsPrototypeOf(
+    HandleFunction callee) {
+  // Ensure |this| is an object.
+  if (!thisval_.isObject()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Need a single argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the `isPrototypeOf` native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard that |this| is an object.
+  ValOperandId thisValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
+  ObjOperandId thisObjId = writer.guardToObject(thisValId);
+
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+
+  writer.loadInstanceOfObjectResult(argId, thisObjId);
+
+  // This stub does not need to be monitored, because it always returns a
+  // boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("ObjectIsPrototypeOf");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   if (!callee->isNativeWithoutJitEntry() || callee->native() != fun_call) {
     return AttachDecision::NoAction;
@@ -8978,6 +9014,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachObjectCreate(callee);
     case InlinableNative::ObjectIs:
       return tryAttachObjectIs(callee);
+    case InlinableNative::ObjectIsPrototypeOf:
+      return tryAttachObjectIsPrototypeOf(callee);
     case InlinableNative::ObjectToString:
       return AttachDecision::NoAction;  // Not yet supported.
 

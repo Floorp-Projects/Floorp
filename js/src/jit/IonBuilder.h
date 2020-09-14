@@ -792,6 +792,7 @@ class MOZ_STACK_CLASS IonBuilder {
   InliningResult inlineObject(CallInfo& callInfo);
   InliningResult inlineObjectCreate(CallInfo& callInfo);
   InliningResult inlineObjectIs(CallInfo& callInfo);
+  InliningResult inlineObjectIsPrototypeOf(CallInfo& callInfo);
   InliningResult inlineObjectToString(CallInfo& callInfo);
   InliningResult inlineDefineDataProperty(CallInfo& callInfo);
 

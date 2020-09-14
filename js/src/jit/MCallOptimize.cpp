@@ -326,6 +326,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineObjectCreate(callInfo);
     case InlinableNative::ObjectIs:
       return inlineObjectIs(callInfo);
+    case InlinableNative::ObjectIsPrototypeOf:
+      return inlineObjectIsPrototypeOf(callInfo);
     case InlinableNative::ObjectToString:
       return inlineObjectToString(callInfo);
 
@@ -2562,6 +2564,32 @@ IonBuilder::InliningResult IonBuilder::inlineObjectIs(CallInfo& callInfo) {
     current->add(ins);
     current->push(ins);
   }
+
+  callInfo.setImplicitlyUsedUnchecked();
+  return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult IonBuilder::inlineObjectIsPrototypeOf(
+    CallInfo& callInfo) {
+  if (callInfo.constructing() || callInfo.argc() != 1) {
+    return InliningStatus_NotInlined;
+  }
+
+  if (getInlineReturnType() != MIRType::Boolean) {
+    return InliningStatus_NotInlined;
+  }
+
+  MDefinition* thisArg = callInfo.thisArg();
+  if (thisArg->type() != MIRType::Object) {
+    return InliningStatus_NotInlined;
+  }
+
+  MDefinition* arg = callInfo.getArg(0);
+
+  auto* ins = MInstanceOf::New(alloc(), arg, thisArg);
+  current->add(ins);
+  current->push(ins);
+  MOZ_TRY(resumeAfter(ins));
 
   callInfo.setImplicitlyUsedUnchecked();
   return InliningStatus_Inlined;
