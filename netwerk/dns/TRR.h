@@ -31,27 +31,16 @@ enum TrrType {
   TRRTYPE_HTTPSSVC = nsIDNSService::RESOLVE_TYPE_HTTPSSVC,  // 65
 };
 
-class DOHaddr : public LinkedListElement<DOHaddr> {
- public:
-  NetAddr mNet;
-  uint32_t mTtl;
-};
-
 class TRRService;
 class TRRServiceChannel;
 extern TRRService* gTRRService;
 
 class DOHresp {
  public:
-  ~DOHresp() {
-    DOHaddr* el;
-    while ((el = mAddresses.popLast())) {
-      delete el;
-    }
-  }
   nsresult Add(uint32_t TTL, unsigned char* dns, unsigned int index,
                uint16_t len, bool aLocalAllowed);
-  LinkedList<DOHaddr> mAddresses;
+  nsTArray<NetAddr> mAddresses;
+  uint32_t mTtl = UINT32_MAX;
 };
 
 class TRR : public Runnable,
