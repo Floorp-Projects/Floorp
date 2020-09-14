@@ -1799,6 +1799,28 @@ os.environment:
     operating_systems:
       - "windows"
 
+  allowed_app_sources:
+    bug_numbers:
+      - 1659157
+    description: >
+      Indicates what sources the OS is currently configured to allow apps to be
+      installed from. Possible values are "Anywhere", "Recommendations",
+      "PreferStore", "StoreOnly", "NoSuchFeature", or "Error". "Recommendations"
+      allows installs from anywhere, but recommends a comparable app from the
+      store, if available. "NoSuchFeature" will be reported on versions of
+      Windows that do not have an app source setting.
+    expires: never
+    kind: string
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+    operating_systems:
+      - "windows"
+
 pictureinpicture:
   opened_method:
     bug_numbers:
