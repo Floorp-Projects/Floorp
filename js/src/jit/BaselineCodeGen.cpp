@@ -4661,15 +4661,10 @@ bool BaselineCodeGen<Handler>::emit_OptimizeSpreadCall() {
   frame.syncStack(0);
   masm.loadValue(frame.addressOfStackValue(-1), R0);
 
-  prepareVMCall();
-  pushArg(R0);
-
-  using Fn = bool (*)(JSContext*, HandleValue, bool*);
-  if (!callVM<Fn, OptimizeSpreadCall>()) {
+  if (!emitNextIC()) {
     return false;
   }
 
-  masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R0);
   frame.push(R0);
   return true;
 }
