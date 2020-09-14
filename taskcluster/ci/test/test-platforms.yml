@@ -214,6 +214,21 @@ windows7-32-devedition/opt:
         - web-platform-tests
         - mochitest-webgpu
 
+# win7 qr builds for try purposes
+windows7-32-qr/debug:
+    build-platform: win64/debug
+    test-sets:
+        - mochitest-webgpu
+        - windows-qr-tests
+        - web-platform-tests
+
+windows7-32-qr/opt:
+    build-platform: win64/opt
+    test-sets:
+        - awsy
+        - windows-qr-tests
+        - web-platform-tests
+
 # win64
 windows10-64-ccov/opt:
     build-platform: win64-ccov/opt
