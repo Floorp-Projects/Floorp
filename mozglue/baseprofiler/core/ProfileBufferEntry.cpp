@@ -222,7 +222,7 @@ uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr) {
   }
 
   MOZ_RELEASE_ASSERT(mStringHashToIndexMap.add(entry, hash, count));
-  mStringTableWriter.StringElement(aStr);
+  mStringTableWriter.StringElement(MakeStringSpan(aStr));
   return count;
 }
 
@@ -338,9 +338,8 @@ struct CStringWriteFunc : public JSONWriteFunc {
   std::string& mBuffer;  // The struct must not outlive this buffer
   explicit CStringWriteFunc(std::string& aBuffer) : mBuffer(aBuffer) {}
 
-  void Write(const char* aStr) override { mBuffer += aStr; }
-  void Write(const char* aStr, size_t aLen) override {
-    mBuffer.append(aStr, 0, aLen);
+  void Write(const Span<const char>& aStr) override {
+    mBuffer.append(aStr.data(), aStr.size());
   }
 };
 
@@ -1120,9 +1119,11 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
           static_cast<const BaseProfilerCount*>(iter.get().key());
 
       aWriter.Start();
-      aWriter.StringProperty("name", base_counter->mLabel);
-      aWriter.StringProperty("category", base_counter->mCategory);
-      aWriter.StringProperty("description", base_counter->mDescription);
+      aWriter.StringProperty("name", MakeStringSpan(base_counter->mLabel));
+      aWriter.StringProperty("category",
+                             MakeStringSpan(base_counter->mCategory));
+      aWriter.StringProperty("description",
+                             MakeStringSpan(base_counter->mDescription));
 
       aWriter.StartArrayProperty("sample_groups");
       for (auto counter_iter = counter.iter(); !counter_iter.done();
@@ -1198,7 +1199,7 @@ static void AddPausedRange(SpliceableJSONWriter& aWriter, const char* aReason,
   } else {
     aWriter.NullProperty("endTime");
   }
-  aWriter.StringProperty("reason", aReason);
+  aWriter.StringProperty("reason", MakeStringSpan(aReason));
   aWriter.End();
 }
 

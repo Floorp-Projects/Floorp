@@ -2194,10 +2194,7 @@ nsresult Database::MigrateV50Up() {
 struct StringWriteFunc : public JSONWriteFunc {
   nsCString& mCString;
   explicit StringWriteFunc(nsCString& aCString) : mCString(aCString) {}
-  void Write(const char* aStr) override { mCString.Append(aStr); }
-  void Write(const char* aStr, size_t aLen) override {
-    mCString.Append(aStr, aLen);
-  }
+  void Write(const Span<const char>& aStr) override { mCString.Append(aStr); }
 };
 
 nsresult Database::MigrateV51Up() {
@@ -2226,7 +2223,8 @@ nsresult Database::MigrateV51Up() {
   uint32_t length;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
     hasAtLeastOne = true;
-    jw.StringElement(stmt->AsSharedUTF8String(0, &length));
+    const char* stmtString = stmt->AsSharedUTF8String(0, &length);
+    jw.StringElement(Span<const char>(stmtString, length));
   }
   jw.EndArray();
 

@@ -37,7 +37,7 @@ void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) const {
   // when passed into and out of JS as a double.
   aWriter.DoubleProperty("browsingContextID", BrowsingContextID());
   aWriter.DoubleProperty("innerWindowID", InnerWindowID());
-  aWriter.StringProperty("url", Url().c_str());
+  aWriter.StringProperty("url", Url());
   aWriter.DoubleProperty("embedderInnerWindowID", EmbedderInnerWindowID());
   aWriter.EndObject();
 }

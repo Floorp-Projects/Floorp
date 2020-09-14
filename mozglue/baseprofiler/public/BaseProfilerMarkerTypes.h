@@ -30,26 +30,30 @@
 namespace mozilla::baseprofiler::markers {
 
 struct Tracing {
-  static constexpr const char* MarkerTypeName() { return "tracing"; }
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("tracing");
+  }
   static void StreamJSONMarkerData(JSONWriter& aWriter,
                                    const ProfilerString8View& aCategory) {
     if (aCategory.Length() != 0) {
-      aWriter.StringProperty("category", aCategory.String().c_str());
+      aWriter.StringProperty("category", aCategory);
     }
   }
 };
 
 struct FileIO {
-  static constexpr const char* MarkerTypeName() { return "FileIO"; }
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("FileIO");
+  }
   static void StreamJSONMarkerData(JSONWriter& aWriter,
                                    const ProfilerString8View& aOperation,
                                    const ProfilerString8View& aSource,
                                    const ProfilerString8View& aFilename,
                                    MarkerThreadId aOperationThreadId) {
-    aWriter.StringProperty("operation", aOperation.String().c_str());
-    aWriter.StringProperty("source", aSource.String().c_str());
+    aWriter.StringProperty("operation", aOperation);
+    aWriter.StringProperty("source", aSource);
     if (aFilename.Length() != 0) {
-      aWriter.StringProperty("filename", aFilename.String().c_str());
+      aWriter.StringProperty("filename", aFilename);
     }
     if (!aOperationThreadId.IsUnspecified()) {
       aWriter.IntProperty("threadId", aOperationThreadId.ThreadId());
@@ -58,10 +62,12 @@ struct FileIO {
 };
 
 struct UserTimingMark {
-  static constexpr const char* MarkerTypeName() { return "UserTiming"; }
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("UserTiming");
+  }
   static void StreamJSONMarkerData(JSONWriter& aWriter,
                                    const ProfilerString8View& aName) {
-    aWriter.StringProperty("name", aName.String().c_str());
+    aWriter.StringProperty("name", aName);
     aWriter.StringProperty("entryType", "mark");
     aWriter.NullProperty("startMark");
     aWriter.NullProperty("endMark");
@@ -69,21 +75,23 @@ struct UserTimingMark {
 };
 
 struct UserTimingMeasure {
-  static constexpr const char* MarkerTypeName() { return "UserTiming"; }
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("UserTiming");
+  }
   static void StreamJSONMarkerData(JSONWriter& aWriter,
                                    const ProfilerString8View& aName,
                                    const Maybe<ProfilerString8View>& aStartMark,
                                    const Maybe<ProfilerString8View>& aEndMark) {
-    aWriter.StringProperty("name", aName.String().c_str());
+    aWriter.StringProperty("name", aName);
     aWriter.StringProperty("entryType", "measure");
 
     if (aStartMark.isSome()) {
-      aWriter.StringProperty("startMark", aStartMark->String().c_str());
+      aWriter.StringProperty("startMark", *aStartMark);
     } else {
       aWriter.NullProperty("startMark");
     }
     if (aEndMark.isSome()) {
-      aWriter.StringProperty("endMark", aEndMark->String().c_str());
+      aWriter.StringProperty("endMark", *aEndMark);
     } else {
       aWriter.NullProperty("endMark");
     }
@@ -91,29 +99,37 @@ struct UserTimingMeasure {
 };
 
 struct Hang {
-  static constexpr const char* MarkerTypeName() { return "BHR-detected hang"; }
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("BHR-detected hang");
+  }
   static void StreamJSONMarkerData(JSONWriter& aWriter) {}
 };
 
 struct LongTask {
-  static constexpr const char* MarkerTypeName() { return "MainThreadLongTask"; }
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("MainThreadLongTask");
+  }
   static void StreamJSONMarkerData(JSONWriter& aWriter) {
     aWriter.StringProperty("category", "LongTask");
   }
 };
 
 struct Log {
-  static constexpr const char* MarkerTypeName() { return "Log"; }
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("Log");
+  }
   static void StreamJSONMarkerData(JSONWriter& aWriter,
                                    const ProfilerString8View& aModule,
                                    const ProfilerString8View& aText) {
-    aWriter.StringProperty("module", aModule.String().c_str());
-    aWriter.StringProperty("name", aText.String().c_str());
+    aWriter.StringProperty("module", aModule);
+    aWriter.StringProperty("name", aText);
   }
 };
 
 struct MediaSample {
-  static constexpr const char* MarkerTypeName() { return "MediaSample"; }
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("MediaSample");
+  }
   static void StreamJSONMarkerData(JSONWriter& aWriter,
                                    int64_t aSampleStartTimeUs,
                                    int64_t aSampleEndTimeUs) {

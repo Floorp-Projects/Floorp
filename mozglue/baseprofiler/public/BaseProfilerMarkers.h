@@ -79,7 +79,8 @@ ProfileBufferBlockIndex AddMarker(const ProfilerString8View& aName,
 
 // Marker types' StreamJSONMarkerData functions should use this to correctly
 // output timestamps as a JSON property.
-inline void WritePropertyTime(JSONWriter& aWriter, const char* aName,
+inline void WritePropertyTime(JSONWriter& aWriter,
+                              const Span<const char>& aName,
                               const TimeStamp& aTime) {
   if (!aTime.IsNull()) {
     aWriter.DoubleProperty(
@@ -108,10 +109,12 @@ inline void WritePropertyTime(JSONWriter& aWriter, const char* aName,
 namespace mozilla::baseprofiler::markers {
 // Most common marker type. Others are in BaseProfilerMarkerTypes.h.
 struct Text {
-  static constexpr const char* MarkerTypeName() { return "Text"; }
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("Text");
+  }
   static void StreamJSONMarkerData(JSONWriter& aWriter,
                                    const ProfilerString8View& aText) {
-    aWriter.StringProperty("name", aText.String().c_str());
+    aWriter.StringProperty("name", aText);
   }
 };
 }  // namespace mozilla::baseprofiler::markers

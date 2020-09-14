@@ -282,12 +282,8 @@ struct StringWriteFunc : public JSONWriteFunc {
   nsAString& mBuffer;  // This struct must not outlive this buffer
   explicit StringWriteFunc(nsAString& buffer) : mBuffer(buffer) {}
 
-  void Write(const char* aStr) override {
-    mBuffer.Append(NS_ConvertUTF8toUTF16(aStr));
-  }
-
-  void Write(const char* aStr, size_t aLen) override {
-    mBuffer.Append(NS_ConvertUTF8toUTF16(aStr, aLen));
+  void Write(const Span<const char>& aStr) override {
+    mBuffer.Append(NS_ConvertUTF8toUTF16(aStr.data(), aStr.size()));
   }
 };
 }  // namespace
@@ -808,7 +804,7 @@ void nsProfiler::GatheredOOPProfile(const nsACString& aProfile) {
 
   if (!aProfile.IsEmpty()) {
     // TODO: Remove PromiseFlatCString, see bug 1657033.
-    mWriter->Splice(PromiseFlatCString(aProfile).get(), aProfile.Length());
+    mWriter->Splice(PromiseFlatCString(aProfile));
   }
 
   mPendingProfiles--;
@@ -891,7 +887,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
   Vector<nsCString> exitProfiles = profiler_move_exit_profiles();
   for (auto& exitProfile : exitProfiles) {
     if (!exitProfile.IsEmpty()) {
-      mWriter->Splice(exitProfile.get(), exitProfile.Length());
+      mWriter->Splice(exitProfile);
     }
   }
 

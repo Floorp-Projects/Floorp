@@ -93,14 +93,15 @@ static void MOZ_ALWAYS_INLINE WriteTime(SpliceableJSONWriter& aWriter,
                                         const TimeStamp& aTime,
                                         const char* aName) {
   if (!aTime.IsNull()) {
-    aWriter.DoubleProperty(aName, (aTime - aProcessStartTime).ToMilliseconds());
+    aWriter.DoubleProperty(MakeStringSpan(aName),
+                           (aTime - aProcessStartTime).ToMilliseconds());
   }
 }
 
 void ProfilerMarkerPayload::StreamType(const char* aMarkerType,
                                        SpliceableJSONWriter& aWriter) const {
   MOZ_ASSERT(aMarkerType);
-  aWriter.StringProperty("type", aMarkerType);
+  aWriter.StringProperty("type", MakeStringSpan(aMarkerType));
 }
 
 ProfileBufferEntryWriter::Length
@@ -205,7 +206,7 @@ void TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   StreamCommonProps("tracing", aWriter, aProcessStartTime, aUniqueStacks);
 
   if (mCategory) {
-    aWriter.StringProperty("category", mCategory);
+    aWriter.StringProperty("category", MakeStringSpan(mCategory));
   }
 
   if (mKind == TRACING_INTERVAL_START) {
@@ -271,10 +272,10 @@ void FileIOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                         const TimeStamp& aProcessStartTime,
                                         UniqueStacks& aUniqueStacks) const {
   StreamCommonProps("FileIO", aWriter, aProcessStartTime, aUniqueStacks);
-  aWriter.StringProperty("operation", mOperation.get());
-  aWriter.StringProperty("source", mSource);
+  aWriter.StringProperty("operation", MakeStringSpan(mOperation.get()));
+  aWriter.StringProperty("source", MakeStringSpan(mSource));
   if (mFilename && *mFilename) {
-    aWriter.StringProperty("filename", mFilename.get());
+    aWriter.StringProperty("filename", MakeStringSpan(mFilename.get()));
   }
 }
 
@@ -342,16 +343,16 @@ void UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                             const TimeStamp& aProcessStartTime,
                                             UniqueStacks& aUniqueStacks) const {
   StreamCommonProps("UserTiming", aWriter, aProcessStartTime, aUniqueStacks);
-  aWriter.StringProperty("name", mName.c_str());
-  aWriter.StringProperty("entryType", mEntryType);
+  aWriter.StringProperty("name", mName);
+  aWriter.StringProperty("entryType", MakeStringSpan(mEntryType));
 
   if (mStartMark.isSome()) {
-    aWriter.StringProperty("startMark", mStartMark.value().c_str());
+    aWriter.StringProperty("startMark", mStartMark.ref());
   } else {
     aWriter.NullProperty("startMark");
   }
   if (mEndMark.isSome()) {
-    aWriter.StringProperty("endMark", mEndMark.value().c_str());
+    aWriter.StringProperty("endMark", mEndMark.ref());
   } else {
     aWriter.NullProperty("endMark");
   }
@@ -414,7 +415,7 @@ void TextMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                       const TimeStamp& aProcessStartTime,
                                       UniqueStacks& aUniqueStacks) const {
   StreamCommonProps("Text", aWriter, aProcessStartTime, aUniqueStacks);
-  aWriter.StringProperty("name", mText.c_str());
+  aWriter.StringProperty("name", mText);
 }
 
 LogMarkerPayload::LogMarkerPayload(const char* aModule, const char* aText,
@@ -460,8 +461,8 @@ void LogMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                      const TimeStamp& aProcessStartTime,
                                      UniqueStacks& aUniqueStacks) const {
   StreamCommonProps("Log", aWriter, aProcessStartTime, aUniqueStacks);
-  aWriter.StringProperty("name", mText.c_str());
-  aWriter.StringProperty("module", mModule.c_str());
+  aWriter.StringProperty("name", mText);
+  aWriter.StringProperty("module", mModule);
 }
 
 MediaSampleMarkerPayload::MediaSampleMarkerPayload(

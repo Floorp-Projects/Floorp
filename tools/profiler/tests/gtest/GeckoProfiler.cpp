@@ -621,8 +621,9 @@ void GTestMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                        UniqueStacks& aUniqueStacks) const {
   StreamCommonProps("gtest", aWriter, aStartTime, aUniqueStacks);
   char buf[64];
-  SprintfLiteral(buf, "gtest-%d", mN);
-  aWriter.IntProperty(buf, mN);
+  int written = SprintfLiteral(buf, "gtest-%d", mN);
+  ASSERT_GT(written, 0);
+  aWriter.IntProperty(mozilla::Span<const char>(buf, size_t(written)), mN);
   ++sNumStreamed;
 }
 

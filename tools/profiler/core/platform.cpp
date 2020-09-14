@@ -981,10 +981,11 @@ class ActivePS {
       PSLockRef, PostSamplingCallback&& aCallback);
 
   // Writes out the current active configuration of the profile.
-  static void WriteActiveConfiguration(PSLockRef aLock, JSONWriter& aWriter,
-                                       const char* aPropertyName = nullptr) {
+  static void WriteActiveConfiguration(
+      PSLockRef aLock, JSONWriter& aWriter,
+      const Span<const char>& aPropertyName = MakeStringSpan("")) {
     if (!sInstance) {
-      if (aPropertyName) {
+      if (!aPropertyName.empty()) {
         aWriter.NullProperty(aPropertyName);
       } else {
         aWriter.NullElement();
@@ -992,7 +993,7 @@ class ActivePS {
       return;
     };
 
-    if (aPropertyName) {
+    if (!aPropertyName.empty()) {
       aWriter.StartObjectProperty(aPropertyName);
     } else {
       aWriter.StartObjectElement();
@@ -1012,7 +1013,7 @@ class ActivePS {
     {
       aWriter.StartArrayProperty("threads", aWriter.SingleLineStyle);
       for (const auto& filter : sInstance->mFilters) {
-        aWriter.StringElement(filter.c_str());
+        aWriter.StringElement(filter);
       }
       aWriter.EndArray();
     }
@@ -2327,16 +2328,14 @@ static void AddSharedLibraryInfoToStream(JSONWriter& aWriter,
   aWriter.IntProperty("start", SafeJSInteger(aLib.GetStart()));
   aWriter.IntProperty("end", SafeJSInteger(aLib.GetEnd()));
   aWriter.IntProperty("offset", SafeJSInteger(aLib.GetOffset()));
-  aWriter.StringProperty("name",
-                         NS_ConvertUTF16toUTF8(aLib.GetModuleName()).get());
-  aWriter.StringProperty("path",
-                         NS_ConvertUTF16toUTF8(aLib.GetModulePath()).get());
+  aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(aLib.GetModuleName()));
+  aWriter.StringProperty("path", NS_ConvertUTF16toUTF8(aLib.GetModulePath()));
   aWriter.StringProperty("debugName",
-                         NS_ConvertUTF16toUTF8(aLib.GetDebugName()).get());
+                         NS_ConvertUTF16toUTF8(aLib.GetDebugName()));
   aWriter.StringProperty("debugPath",
-                         NS_ConvertUTF16toUTF8(aLib.GetDebugPath()).get());
-  aWriter.StringProperty("breakpadId", aLib.GetBreakpadId().get());
-  aWriter.StringProperty("arch", aLib.GetArch().c_str());
+                         NS_ConvertUTF16toUTF8(aLib.GetDebugPath()));
+  aWriter.StringProperty("breakpadId", aLib.GetBreakpadId());
+  aWriter.StringProperty("arch", aLib.GetArch());
   aWriter.EndObject();
 }
 
@@ -2541,7 +2540,8 @@ static void StreamMetaJSCustomObject(
   StreamCategories(aWriter);
   aWriter.EndArray();
 
-  ActivePS::WriteActiveConfiguration(aLock, aWriter, "configuration");
+  ActivePS::WriteActiveConfiguration(aLock, aWriter,
+                                     MakeStringSpan("configuration"));
 
   if (!NS_IsMainThread()) {
     // Leave the rest of the properties out if we're not on the main thread.
@@ -2572,37 +2572,34 @@ static void StreamMetaJSCustomObject(
 
   if (!aPreRecordedMetaInformation.mHttpPlatform.IsEmpty()) {
     aWriter.StringProperty("platform",
-                           aPreRecordedMetaInformation.mHttpPlatform.Data());
+                           aPreRecordedMetaInformation.mHttpPlatform);
   }
   if (!aPreRecordedMetaInformation.mHttpOscpu.IsEmpty()) {
-    aWriter.StringProperty("oscpu",
-                           aPreRecordedMetaInformation.mHttpOscpu.Data());
+    aWriter.StringProperty("oscpu", aPreRecordedMetaInformation.mHttpOscpu);
   }
   if (!aPreRecordedMetaInformation.mHttpMisc.IsEmpty()) {
-    aWriter.StringProperty("misc",
-                           aPreRecordedMetaInformation.mHttpMisc.Data());
+    aWriter.StringProperty("misc", aPreRecordedMetaInformation.mHttpMisc);
   }
 
   if (!aPreRecordedMetaInformation.mRuntimeABI.IsEmpty()) {
-    aWriter.StringProperty("abi",
-                           aPreRecordedMetaInformation.mRuntimeABI.Data());
+    aWriter.StringProperty("abi", aPreRecordedMetaInformation.mRuntimeABI);
   }
   if (!aPreRecordedMetaInformation.mRuntimeToolkit.IsEmpty()) {
     aWriter.StringProperty("toolkit",
-                           aPreRecordedMetaInformation.mRuntimeToolkit.Data());
+                           aPreRecordedMetaInformation.mRuntimeToolkit);
   }
 
   if (!aPreRecordedMetaInformation.mAppInfoProduct.IsEmpty()) {
     aWriter.StringProperty("product",
-                           aPreRecordedMetaInformation.mAppInfoProduct.Data());
+                           aPreRecordedMetaInformation.mAppInfoProduct);
   }
   if (!aPreRecordedMetaInformation.mAppInfoAppBuildID.IsEmpty()) {
-    aWriter.StringProperty(
-        "appBuildID", aPreRecordedMetaInformation.mAppInfoAppBuildID.Data());
+    aWriter.StringProperty("appBuildID",
+                           aPreRecordedMetaInformation.mAppInfoAppBuildID);
   }
   if (!aPreRecordedMetaInformation.mAppInfoSourceURL.IsEmpty()) {
-    aWriter.StringProperty(
-        "sourceURL", aPreRecordedMetaInformation.mAppInfoSourceURL.Data());
+    aWriter.StringProperty("sourceURL",
+                           aPreRecordedMetaInformation.mAppInfoSourceURL);
   }
 
   if (aPreRecordedMetaInformation.mProcessInfoCpuCores > 0) {
@@ -2636,13 +2633,13 @@ static void StreamMetaJSCustomObject(
 
           nsAutoString id;
           ext->GetId(id);
-          aWriter.StringElement(NS_ConvertUTF16toUTF8(id).get());
+          aWriter.StringElement(NS_ConvertUTF16toUTF8(id));
 
-          aWriter.StringElement(NS_ConvertUTF16toUTF8(ext->Name()).get());
+          aWriter.StringElement(NS_ConvertUTF16toUTF8(ext->Name()));
 
           auto url = ext->GetURL(u""_ns);
           if (url.isOk()) {
-            aWriter.StringElement(NS_ConvertUTF16toUTF8(url.unwrap()).get());
+            aWriter.StringElement(NS_ConvertUTF16toUTF8(url.unwrap()));
           }
 
           aWriter.EndArray();
@@ -2884,7 +2881,7 @@ static void locked_profiler_stream_json_for_this_process(
     UniquePtr<char[]> baseProfileThreads =
         ActivePS::MoveBaseProfileThreads(aLock);
     if (baseProfileThreads) {
-      aWriter.Splice(baseProfileThreads.get());
+      aWriter.Splice(MakeStringSpan(baseProfileThreads.get()));
     }
   }
   aWriter.EndArray();
@@ -2896,7 +2893,8 @@ static void locked_profiler_stream_json_for_this_process(
       // Collect Event Dictionary
       JS::TraceLoggerDictionaryBuffer collectionBuffer(lockGuard);
       while (collectionBuffer.NextChunk()) {
-        aWriter.StringElement(collectionBuffer.internalBuffer());
+        aWriter.StringElement(
+            MakeStringSpan(collectionBuffer.internalBuffer()));
       }
     }
     aWriter.EndArray();
@@ -4395,7 +4393,7 @@ static void locked_profiler_save_profile_to_file(
       Vector<nsCString> exitProfiles = ActivePS::MoveExitProfiles(aLock);
       for (auto& exitProfile : exitProfiles) {
         if (!exitProfile.IsEmpty()) {
-          w.Splice(exitProfile.get(), exitProfile.Length());
+          w.Splice(exitProfile);
         }
       }
       w.EndArray();

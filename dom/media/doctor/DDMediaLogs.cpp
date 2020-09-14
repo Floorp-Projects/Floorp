@@ -377,10 +377,7 @@ void DDMediaLogs::ProcessBuffer() {
 struct StringWriteFunc : public JSONWriteFunc {
   nsCString& mCString;
   explicit StringWriteFunc(nsCString& aCString) : mCString(aCString) {}
-  void Write(const char* aStr) override { mCString.Append(aStr); }
-  void Write(const char* aStr, size_t aLen) override {
-    mCString.Append(aStr, aLen);
-  }
+  void Write(const Span<const char>& aStr) override { mCString.Append(aStr); }
 };
 
 void DDMediaLogs::FulfillPromises() {
@@ -432,12 +429,12 @@ void DDMediaLogs::FulfillPromises() {
       } else {
         jw.StringProperty(
             "ob", nsPrintfCString(R"("%s[%p]")", message.mObject.TypeName(),
-                                  message.mObject.Pointer())
-                      .get());
+                                  message.mObject.Pointer()));
       }
-      jw.StringProperty("cat", ToShortString(message.mCategory));
+      jw.StringProperty("cat",
+                        MakeStringSpan(ToShortString(message.mCategory)));
       if (message.mLabel && message.mLabel[0] != '\0') {
-        jw.StringProperty("lbl", message.mLabel);
+        jw.StringProperty("lbl", MakeStringSpan(message.mLabel));
       }
       if (!message.mValue.is<DDNoValue>()) {
         if (message.mValue.is<DDLogObject>()) {
@@ -459,13 +456,12 @@ void DDMediaLogs::FulfillPromises() {
     mLifetimes.Visit(
         mediaElement,
         [&](const DDLifetime& lifetime) {
-          jw.StartObjectProperty(
-              nsPrintfCString("%" PRIi32, lifetime.mTag).get(),
-              JSONWriter::SingleLineStyle);
+          jw.StartObjectProperty(nsPrintfCString("%" PRIi32, lifetime.mTag),
+                                 JSONWriter::SingleLineStyle);
           jw.IntProperty("tag", lifetime.mTag);
-          jw.StringProperty("cls", lifetime.mObject.TypeName());
-          jw.StringProperty(
-              "ptr", nsPrintfCString("%p", lifetime.mObject.Pointer()).get());
+          jw.StringProperty("cls", MakeStringSpan(lifetime.mObject.TypeName()));
+          jw.StringProperty("ptr",
+                            nsPrintfCString("%p", lifetime.mObject.Pointer()));
           jw.IntProperty("con", lifetime.mConstructionIndex.Value());
           jw.DoubleProperty("con_ts",
                             ToSeconds(lifetime.mConstructionTimeStamp));

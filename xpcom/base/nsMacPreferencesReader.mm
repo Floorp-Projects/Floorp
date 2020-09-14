@@ -14,9 +14,8 @@ using namespace mozilla;
 struct StringWriteFunc : public JSONWriteFunc {
   nsAString& mString;
   explicit StringWriteFunc(nsAString& aStr) : mString(aStr) {}
-  void Write(const char* aStr) override { mString.Append(NS_ConvertUTF8toUTF16(aStr)); }
-  void Write(const char* aStr, size_t aLen) override {
-    mString.Append(NS_ConvertUTF8toUTF16(aStr, aLen));
+  void Write(const Span<const char>& aStr) override {
+    mString.Append(NS_ConvertUTF8toUTF16(aStr.data(), aStr.size()));
   }
 };
 
@@ -25,7 +24,7 @@ static void EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict
 static void EvaluateArray(JSONWriter* aWriter, NSArray* aArray) {
   for (id elem in aArray) {
     if ([elem isKindOfClass:[NSString class]]) {
-      aWriter->StringElement([elem UTF8String]);
+      aWriter->StringElement(MakeStringSpan([elem UTF8String]));
     } else if ([elem isKindOfClass:[NSNumber class]]) {
       aWriter->IntElement([elem longLongValue]);
     } else if ([elem isKindOfClass:[NSArray class]]) {
@@ -44,15 +43,15 @@ static void EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict
   for (NSString* key in aDict) {
     id value = aDict[key];
     if ([value isKindOfClass:[NSString class]]) {
-      aWriter->StringProperty([key UTF8String], [value UTF8String]);
+      aWriter->StringProperty(MakeStringSpan([key UTF8String]), MakeStringSpan([value UTF8String]));
     } else if ([value isKindOfClass:[NSNumber class]]) {
-      aWriter->IntProperty([key UTF8String], [value longLongValue]);
+      aWriter->IntProperty(MakeStringSpan([key UTF8String]), [value longLongValue]);
     } else if ([value isKindOfClass:[NSArray class]]) {
-      aWriter->StartArrayProperty([key UTF8String]);
+      aWriter->StartArrayProperty(MakeStringSpan([key UTF8String]));
       EvaluateArray(aWriter, value);
       aWriter->EndArray();
     } else if ([value isKindOfClass:[NSDictionary class]]) {
-      aWriter->StartObjectProperty([key UTF8String]);
+      aWriter->StartObjectProperty(MakeStringSpan([key UTF8String]));
       EvaluateDict(aWriter, value);
       aWriter->EndObject();
     }

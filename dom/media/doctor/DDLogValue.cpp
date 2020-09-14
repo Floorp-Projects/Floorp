@@ -69,17 +69,18 @@ void AppendToString(const DDLogValue& aValue, nsCString& aString) {
 
 struct LogValueMatcherJson {
   JSONWriter& mJW;
-  const char* mPropertyName;
+  const Span<const char> mPropertyName;
 
   void operator()(const DDNoValue&) const { mJW.NullProperty(mPropertyName); }
   void operator()(const DDLogObject& a) const {
-    mJW.StringProperty(
-        mPropertyName,
-        nsPrintfCString(R"("%s[%p]")", a.TypeName(), a.Pointer()).get());
+    nsPrintfCString s(R"("%s[%p]")", a.TypeName(), a.Pointer());
+    mJW.StringProperty(mPropertyName, s);
   }
-  void operator()(const char* a) const { mJW.StringProperty(mPropertyName, a); }
+  void operator()(const char* a) const {
+    mJW.StringProperty(mPropertyName, MakeStringSpan(a));
+  }
   void operator()(const nsCString& a) const {
-    mJW.StringProperty(mPropertyName, a.Data());
+    mJW.StringProperty(mPropertyName, a);
   }
   void operator()(bool a) const { mJW.BoolProperty(mPropertyName, a); }
   void operator()(int8_t a) const { mJW.IntProperty(mPropertyName, a); }
@@ -100,21 +101,20 @@ struct LogValueMatcherJson {
   void operator()(const nsresult& a) const {
     nsCString name;
     GetErrorName(a, name);
-    mJW.StringProperty(mPropertyName, name.get());
+    mJW.StringProperty(mPropertyName, name);
   }
   void operator()(const MediaResult& a) const {
     nsCString name;
     GetErrorName(a.Code(), name);
     mJW.StringProperty(mPropertyName,
                        nsPrintfCString(R"lit("MediaResult(%s, %s)")lit",
-                                       name.get(), a.Message().get())
-                           .get());
+                                       name.get(), a.Message().get()));
   }
 };
 
 void ToJSON(const DDLogValue& aValue, JSONWriter& aJSONWriter,
             const char* aPropertyName) {
-  aValue.match(LogValueMatcherJson{aJSONWriter, aPropertyName});
+  aValue.match(LogValueMatcherJson{aJSONWriter, MakeStringSpan(aPropertyName)});
 }
 
 }  // namespace mozilla
