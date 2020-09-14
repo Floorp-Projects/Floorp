@@ -6016,7 +6016,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     ComputeSizeFlags aFlags) {
   MOZ_ASSERT(!GetIntrinsicRatio(),
              "Please override this method and call "
-             "nsIFrame::ComputeSizeWithIntrinsicDimensions instead.");
+             "nsContainerFrame::ComputeSizeWithIntrinsicDimensions instead.");
   LogicalSize result =
       ComputeAutoSize(aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin,
                       aBorder, aPadding, aFlags);
@@ -6069,8 +6069,9 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
                        : eLogicalAxisBlock;
 
     // NOTE: The logic here should match the similar chunk for updating
-    // mainAxisCoord in nsIFrame::ComputeSizeWithIntrinsicDimensions() (aside
-    // from using a different dummy value in the IsUsedFlexBasisContent() case).
+    // mainAxisCoord in nsContainerFrame::ComputeSizeWithIntrinsicDimensions()
+    // (aside from using a different dummy value in the IsUsedFlexBasisContent()
+    // case).
     const auto* flexBasis = &stylePos->mFlexBasis;
     auto& mainAxisCoord =
         (flexMainAxis == eLogicalAxisInline ? inlineStyleCoord
