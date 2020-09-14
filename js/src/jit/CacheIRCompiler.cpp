@@ -3228,6 +3228,22 @@ bool CacheIRCompiler::emitLoadStringCharCodeResult(StringOperandId strId,
   return true;
 }
 
+bool CacheIRCompiler::emitNewStringObjectResult(uint32_t templateObjectOffset,
+                                                StringOperandId strId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+
+  callvm.prepare();
+  masm.Push(str);
+
+  using Fn = JSObject* (*)(JSContext*, HandleString);
+  callvm.call<Fn, NewStringObject>();
+  return true;
+}
+
 bool CacheIRCompiler::emitStringToLowerCaseResult(StringOperandId strId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
