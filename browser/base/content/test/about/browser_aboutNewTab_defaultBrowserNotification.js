@@ -3,6 +3,11 @@
 
 "use strict";
 
+let { DefaultBrowserNotification } = ChromeUtils.import(
+  "resource:///actors/AboutNewTabParent.jsm",
+  {}
+);
+
 add_task(async function notification_shown_on_first_newtab_when_not_default() {
   await test_with_mock_shellservice({ isDefault: false }, async function() {
     ok(
@@ -48,54 +53,6 @@ add_task(async function notification_shown_on_first_newtab_when_not_default() {
   });
 });
 
-add_task(async function notification_should_be_shown_on_loaded_abouthome() {
-  // Open about:home before calling DefaultBrowserNotificationOnNewTabPage.init()
-  let homeTab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
-    opening: "about:home",
-    waitForLoad: false,
-  });
-  ok(
-    homeTab.linkedBrowser &&
-      gBrowser.getNotificationBox(homeTab.linkedBrowser) &&
-      !gBrowser.getNotificationBox(homeTab.linkedBrowser).currentNotification,
-    "A notification should not be shown before the shell service is setup"
-  );
-  await test_with_mock_shellservice({ isDefault: false }, async function() {
-    let notification = await TestUtils.waitForCondition(
-      () =>
-        homeTab.linkedBrowser &&
-        gBrowser.getNotificationBox(homeTab.linkedBrowser) &&
-        gBrowser.getNotificationBox(homeTab.linkedBrowser).currentNotification,
-      "waiting for notification on about:home"
-    );
-    ok(notification, "A notification should be shown on about:home");
-    is(
-      notification.getAttribute("value"),
-      "default-browser",
-      "Notification should be default browser"
-    );
-
-    let newTab = await BrowserTestUtils.openNewForegroundTab({
-      gBrowser,
-      opening: "about:newtab",
-      waitForLoad: false,
-    });
-    ok(
-      newTab.linkedBrowser &&
-        gBrowser.getNotificationBox(newTab.linkedBrowser) &&
-        !gBrowser.getNotificationBox(newTab.linkedBrowser).currentNotification,
-      "A notification should not be shown on about:newtab since it was just shown on about:home"
-    );
-    window.removeEventListener(
-      "TabSelect",
-      window.DefaultBrowserNotificationOnNewTabPage
-    );
-    gBrowser.removeTab(newTab);
-  });
-  gBrowser.removeTab(homeTab);
-});
-
 add_task(async function notification_bar_removes_itself_on_navigation() {
   await test_with_mock_shellservice({ isDefault: false }, async function() {
     let firstTab = await BrowserTestUtils.openNewForegroundTab({
@@ -136,6 +93,41 @@ add_task(async function notification_bar_removes_itself_on_navigation() {
     );
 
     gBrowser.removeTab(firstTab);
+  });
+});
+
+add_task(async function notification_appears_on_first_navigation_to_homepage() {
+  await test_with_mock_shellservice({ isDefault: false }, async function() {
+    let tab = await BrowserTestUtils.openNewForegroundTab({
+      gBrowser,
+      opening: "about:robots",
+    });
+    ok(
+      tab.linkedBrowser &&
+        gBrowser.getNotificationBox(tab.linkedBrowser) &&
+        !gBrowser.getNotificationBox(tab.linkedBrowser).currentNotification,
+      "a notification should not be shown on about:robots"
+    );
+    await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:home");
+
+    let notification = await TestUtils.waitForCondition(
+      () =>
+        tab.linkedBrowser &&
+        gBrowser.getNotificationBox(tab.linkedBrowser) &&
+        gBrowser.getNotificationBox(tab.linkedBrowser).currentNotification,
+      "waiting for notification to appear on about:home after coming from about:robots"
+    );
+    ok(
+      notification,
+      "A notification should be shown after navigation to about:home"
+    );
+    is(
+      notification.getAttribute("value"),
+      "default-browser",
+      "Notification should be default browser"
+    );
+
+    gBrowser.removeTab(tab);
   });
 });
 
@@ -237,7 +229,9 @@ async function test_with_mock_shellservice(options, testFn) {
   let mockShellService = {
     _isDefault: options.isDefault,
     canSetDesktopBackground() {},
-    isDefaultBrowserOptOut() {},
+    isDefaultBrowserOptOut() {
+      return false;
+    },
     get shouldCheckDefaultBrowser() {
       return true;
     },
@@ -261,8 +255,9 @@ async function test_with_mock_shellservice(options, testFn) {
       ["browser.defaultbrowser.notificationbar.checkcount", 0],
     ],
   });
-  // Re-add the event listener since it gets removed on the first about:newtab
-  await window.DefaultBrowserNotificationOnNewTabPage.init();
+
+  // Reset the state so the notification can be shown multiple times in one session
+  DefaultBrowserNotification.reset();
 
   await testFn();
 

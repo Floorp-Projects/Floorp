@@ -72,6 +72,15 @@ class AboutNewTabChild extends JSWindowActorChild {
       for (let script of scripts) {
         Services.scriptloader.loadSubScript(script, this.contentWindow);
       }
+    } else if (
+      (event.type == "pageshow" || event.type == "visibilitychange") &&
+      // The default browser notification shouldn't be shown on about:welcome
+      // since we don't want to distract from the onboarding wizard.
+      !this.contentWindow.location.pathname.includes("welcome")
+    ) {
+      if (this.document.visibilityState == "visible") {
+        this.sendAsyncMessage("DefaultBrowserNotification");
+      }
     }
   }
 }
