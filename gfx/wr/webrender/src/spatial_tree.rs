@@ -611,7 +611,8 @@ impl SpatialTree {
         &self,
         spatial_node_index: SpatialNodeIndex,
     ) -> SpatialNodeIndex {
-        let mut scroll_root = ROOT_SPATIAL_NODE_INDEX;
+        let mut real_scroll_root = ROOT_SPATIAL_NODE_INDEX;
+        let mut outermost_scroll_root = ROOT_SPATIAL_NODE_INDEX;
         let mut node_index = spatial_node_index;
 
         while node_index != ROOT_SPATIAL_NODE_INDEX {
@@ -626,7 +627,8 @@ impl SpatialTree {
                         ReferenceFrameKind::Perspective { .. } => {
                             // When a reference frame is encountered, forget any scroll roots
                             // we have encountered, as they may end up with a non-axis-aligned transform.
-                            scroll_root = ROOT_SPATIAL_NODE_INDEX;
+                            real_scroll_root = ROOT_SPATIAL_NODE_INDEX;
+                            outermost_scroll_root = ROOT_SPATIAL_NODE_INDEX;
                         }
                     }
                 }
@@ -638,6 +640,10 @@ impl SpatialTree {
                             break;
                         }
                         ScrollFrameKind::Explicit => {
+                            // Store the closest scroll root we find to the root, for use
+                            // later on, even if it's not actually scrollable.
+                            outermost_scroll_root = node_index;
+
                             // If the scroll root has no scrollable area, we don't want to
                             // consider it. This helps pages that have a nested scroll root
                             // within a redundant scroll root to avoid selecting the wrong
@@ -655,7 +661,7 @@ impl SpatialTree {
                                    info.viewport_rect.size.height > 128.0 {
                                     // If we've found a root that is scrollable, and a reasonable
                                     // size, select that as the current root for this node
-                                    scroll_root = node_index;
+                                    real_scroll_root = node_index;
                                 }
                             }
                         }
@@ -665,7 +671,16 @@ impl SpatialTree {
             node_index = node.parent.expect("unable to find parent node");
         }
 
-        scroll_root
+        // If we didn't find any real (scrollable) frames, then return the outermost
+        // redundant scroll frame. This is important so that we can correctly find
+        // the clips defined on the content which should be handled when drawing the
+        // picture cache tiles (by definition these clips are ancestors of the
+        // scroll root selected for the picture cache).
+        if real_scroll_root == ROOT_SPATIAL_NODE_INDEX {
+            outermost_scroll_root
+        } else {
+            real_scroll_root
+        }
     }
 
     fn print_node<T: PrintTreePrinter>(
