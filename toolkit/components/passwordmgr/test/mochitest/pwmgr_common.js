@@ -32,6 +32,23 @@ const {
 const LOGIN_FIELD_UTILS = LoginTestUtils.loginField;
 const TESTS_DIR = "/tests/toolkit/components/passwordmgr/test/";
 
+// Depending on pref state we either show auth prompts as windows or on tab level.
+let authPromptModalType = SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW;
+if (SpecialPowers.Services.prefs.getBoolPref("prompts.tab_modal.enabled")) {
+  authPromptModalType = SpecialPowers.Services.prefs.getIntPref(
+    "prompts.modalType.httpAuth"
+  );
+}
+
+// Whether the auth prompt is a commonDialog.xhtml or a TabModalPrompt
+let authPromptIsCommonDialog =
+  authPromptModalType === SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW ||
+  (authPromptModalType === SpecialPowers.Services.prompt.MODAL_TYPE_TAB &&
+    SpecialPowers.Services.prefs.getBoolPref(
+      "prompts.tabChromePromptSubDialog",
+      false
+    ));
+
 /**
  * Returns the element with the specified |name| attribute.
  */
