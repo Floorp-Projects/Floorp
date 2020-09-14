@@ -170,6 +170,9 @@ class Http3Session final : public nsAHttpTransaction,
   bool mBeforeConnectedError;
   uint64_t mCurrentForegroundTabOuterContentWindowId;
 
+  // True if the mTimer is inited and waiting for firing.
+  bool mTimerActive;
+
   nsTArray<uint8_t> mPacketToSend;
 
   RefPtr<HttpConnectionUDP> mSegmentReaderWriter;
