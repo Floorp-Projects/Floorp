@@ -542,6 +542,7 @@ function dispatch(fn) {
 
 let getActiveElementFn = dispatch(getActiveElement);
 let getBrowsingContextIdFn = dispatch(getBrowsingContextId);
+let getCurrentUrlFn = dispatch(getCurrentUrl);
 let getElementAttributeFn = dispatch(getElementAttribute);
 let getElementPropertyFn = dispatch(getElementProperty);
 let getElementTextFn = dispatch(getElementText);
@@ -584,6 +585,7 @@ function startListeners() {
   addMessageListener("Marionette:findElementsContent", findElementsContentFn);
   addMessageListener("Marionette:getActiveElement", getActiveElementFn);
   addMessageListener("Marionette:getBrowsingContextId", getBrowsingContextIdFn);
+  addMessageListener("Marionette:getCurrentUrl", getCurrentUrlFn);
   addMessageListener("Marionette:getElementAttribute", getElementAttributeFn);
   addMessageListener("Marionette:getElementProperty", getElementPropertyFn);
   addMessageListener("Marionette:getElementRect", getElementRectFn);
@@ -633,6 +635,7 @@ function deregister() {
     "Marionette:getBrowsingContextId",
     getBrowsingContextIdFn
   );
+  removeMessageListener("Marionette:getCurrentUrl", getCurrentUrlFn);
   removeMessageListener(
     "Marionette:getElementAttribute",
     getElementAttributeFn
@@ -1287,6 +1290,16 @@ function getBrowsingContextId(topContext = false) {
   const bc = curContainer.frame.docShell.browsingContext;
 
   return topContext ? bc.top.id : bc.id;
+}
+
+/**
+ * Return the current visible URL.
+ *
+ * @return {string}
+ *     Current visible URL.
+ */
+function getCurrentUrl() {
+  return content.location.href;
 }
 
 /**
