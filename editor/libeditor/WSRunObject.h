@@ -1294,7 +1294,8 @@ class WhiteSpaceVisibilityKeeper final {
   MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
       HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
       Element& aRightBlockElement, const EditorDOMPoint& aAtRightBlockChild,
-      const Maybe<nsAtom*>& aListElementTagName);
+      const Maybe<nsAtom*>& aListElementTagName,
+      const dom::HTMLBRElement* aPrecedingInvisibleBRElement);
 
   /**
    * MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement() merges
@@ -1321,7 +1322,8 @@ class WhiteSpaceVisibilityKeeper final {
       HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
       Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
       nsIContent& aLeftContentInBlock,
-      const Maybe<nsAtom*>& aListElementTagName);
+      const Maybe<nsAtom*>& aListElementTagName,
+      const dom::HTMLBRElement* aPrecedingInvisibleBRElement);
 
   /**
    * MergeFirstLineOfRightBlockElementIntoLeftBlockElement() merges first
@@ -1340,7 +1342,8 @@ class WhiteSpaceVisibilityKeeper final {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
       HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
-      Element& aRightBlockElement, const Maybe<nsAtom*>& aListElementTagName);
+      Element& aRightBlockElement, const Maybe<nsAtom*>& aListElementTagName,
+      const dom::HTMLBRElement* aPrecedingInvisibleBRElement);
 
   /**
    * InsertBRElement() inserts a <br> node at (before) aPointToInsert and delete
