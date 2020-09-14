@@ -187,6 +187,20 @@ void ParserAtomEntry::dumpCharsNoQuote(js::GenericPrinter& out) const {
 ParserAtomsTable::ParserAtomsTable(JSRuntime* rt)
     : wellKnownTable_(*rt->commonParserNames) {}
 
+template <typename CharT>
+ParserAtomsTable::AddPtr ParserAtomsTable::lookupForAdd(
+    JSContext* cx, InflatedChar16Sequence<CharT> seq) {
+  // Check against well-known.
+  SpecificParserAtomLookup<CharT> lookup(seq);
+  const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(lookup);
+  if (wk) {
+    return AddPtr(wk);
+  }
+
+  // Check for existing atom.
+  return AddPtr(entrySet_.lookupForAdd(lookup), lookup.hash());
+}
+
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::addEntry(
     JSContext* cx, AddPtr& addPtr, UniquePtr<ParserAtomEntry> entry) {
   ParserAtomEntry* entryPtr = entry.get();
@@ -196,8 +210,6 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::addEntry(
   }
   return entryPtr->asAtom();
 }
-
-static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
 template <typename AtomCharT, typename SeqCharT>
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16Seq(
@@ -226,19 +238,7 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16Seq(
   return addEntry(cx, addPtr, std::move(entry));
 }
 
-template <typename CharT>
-ParserAtomsTable::AddPtr ParserAtomsTable::lookupForAdd(
-    JSContext* cx, InflatedChar16Sequence<CharT> seq) {
-  // Check against well-known.
-  SpecificParserAtomLookup<CharT> lookup(seq);
-  const ParserAtom* wk = wellKnownTable_.lookupChar16Seq(lookup);
-  if (wk) {
-    return AddPtr(wk);
-  }
-
-  // Check for existing atom.
-  return AddPtr(entrySet_.lookupForAdd(lookup), lookup.hash());
-}
+static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
 template <typename CharT>
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::lookupOrInternChar16Seq(
@@ -262,13 +262,6 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::lookupOrInternChar16Seq(
   // Otherwise, add new entry.
   return wide ? internChar16Seq<char16_t>(cx, addPtr, seq, length)
               : internChar16Seq<Latin1Char>(cx, addPtr, seq, length);
-}
-
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16(
-    JSContext* cx, const char16_t* char16Ptr, uint32_t length) {
-  InflatedChar16Sequence<char16_t> seq(char16Ptr, length);
-
-  return lookupOrInternChar16Seq(cx, seq);
 }
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internAscii(
@@ -324,6 +317,13 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internUtf8(
 
   // Otherwise, slowpath lookup/interning path that identifies the
   // proper target encoding.
+  return lookupOrInternChar16Seq(cx, seq);
+}
+
+JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16(
+    JSContext* cx, const char16_t* char16Ptr, uint32_t length) {
+  InflatedChar16Sequence<char16_t> seq(char16Ptr, length);
+
   return lookupOrInternChar16Seq(cx, seq);
 }
 
