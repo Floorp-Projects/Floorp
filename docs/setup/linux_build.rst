@@ -4,7 +4,7 @@ Building Firefox On Linux
 They aren’t complicated, but there are a few prerequisites to building Firefox on Linux. You need:
 
 #. A 64-bit installation of Linux. You can check by opening a terminal window; if ``uname -m`` returns ``x86_64`` you can proceed.
-#. Next, you’ll need Python 3.6 or later installed. You can check with ``python3 --version`` to see if you have it already. If not, see `Installing Python <#installingpython>`_.
+#. Next, you’ll need Python 3.6 or later installed. You can check with ``python3 --version`` to see if you have it already. If not, see `Installing Python <#installingpython>`_. You'll also need to install Mercurial and can do so with ``pip3 install Mercurial``.
 #. Finally, a reasonably fast internet connection and 30GB of free disk space.
 
 Getting Started
@@ -39,8 +39,8 @@ like this:
    python3 bootstrap.py
 
 ... and follow the prompts. This will use mercurial to checkout
-the source code. If you prefer to work with git, use this command
-instead:
+the source code. If you prefer to work with ``git``, use this command
+instead (make sure you have ``git`` installed):
 
 .. code-block:: shell
 
