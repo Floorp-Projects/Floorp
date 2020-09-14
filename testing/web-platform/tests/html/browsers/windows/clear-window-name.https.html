@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+  <title>Clear window.name when cross-origin</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+  <script>
+
+function anchorClick(n) {
+  const hyperlink = document.body.appendChild(document.createElement("a"))
+  hyperlink.rel = "noopener";
+  hyperlink.target = "_blank";
+  hyperlink.href = n;
+  hyperlink.click();
+}
+
+let testId = 0;
+
+async_test(t => {
+  const id = `test-window-name${++testId}`;
+
+  const bc = new BroadcastChannel(id);
+  bc.onmessage = t.step_func_done(e => {
+    bc.close();
+    assert_equals(e.data.name, id);
+  });
+
+  window.open(`resources/window-name.sub.html?report=${id}|close`, id);
+}, "Window.name is not reset when there is an opener around");
+
+async_test(t => {
+  const id = `test-window-name${++testId}`;
+
+  const bc = new BroadcastChannel(id);
+  bc.onmessage = t.step_func_done(e => {
+    bc.close();
+    assert_equals(e.data.name, id);
+  });
+
+  window.open(`resources/window-name.sub.html?cross|same|report=${id}|close`, id);
+}, "Window.name is not reset when there is an opener around (cross-origin)");
+
+async_test(t => {
+  const id = `test-window-name${++testId}`;
+
+  const bc = new BroadcastChannel(id);
+  bc.onmessage = t.step_func_done(e => {
+    bc.close();
+    assert_equals(e.data.name, id);
+  });
+
+  window.open(`resources/window-name.sub.html?report=${id}|close`, id, "noopener");
+}, "Window.name is not reset at the first navigation with noopener");
+
+async_test(t => {
+  const id = `test-window-name${++testId}`;
+
+  const bc = new BroadcastChannel(id);
+  bc.onmessage = t.step_func_done(e => {
+    bc.close();
+    assert_equals(e.data.name, "");
+  });
+
+  window.open(`resources/window-name.sub.html?cross|same|report=${id}|close`, id, "noopener");
+}, "Window.name is reset at the first cross-origin navigation with noopener");
+
+async_test(t => {
+  const id = `test-window-name${++testId}`;
+
+  const bc = new BroadcastChannel(id);
+  bc.onmessage = t.step_func_done(e => {
+    bc.close();
+    assert_equals(e.data.name, id);
+  });
+
+  anchorClick(`resources/window-name.sub.html?set=${id}|report=${id}|close`);
+}, "Window.name is set by the window");
+
+async_test(t => {
+  const id = `test-window-name${++testId}`;
+
+  const bc = new BroadcastChannel(id);
+  bc.onmessage = t.step_func_done(e => {
+    bc.close();
+    assert_equals(e.data.name, "");
+  });
+
+  anchorClick(`resources/window-name.sub.html?set=${id}|cross|same|report=${id}|close`);
+}, "Window.name is reset at the first cross-origin navigation");
+
+  </script>
+</body>
+</html>
