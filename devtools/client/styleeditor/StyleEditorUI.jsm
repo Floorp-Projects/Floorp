@@ -330,7 +330,7 @@ StyleEditorUI.prototype = {
         const {
           href,
           nodeHref,
-          actorID: id,
+          resourceId: id,
           sourceMapURL,
           sourceMapBaseURL,
         } = resource;

@@ -117,6 +117,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.PLATFORM_MESSAGE]: true,
           [Resources.TYPES.NETWORK_EVENT]:
             enableServerWatcher && hasBrowserElement,
+          [Resources.TYPES.STYLESHEET]:
+            enableServerWatcher && hasBrowserElement,
         },
       },
     };

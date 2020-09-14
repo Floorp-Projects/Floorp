@@ -14,6 +14,7 @@ const TYPES = {
   ERROR_MESSAGE: "error-message",
   PLATFORM_MESSAGE: "platform-message",
   NETWORK_EVENT: "network-event",
+  STYLESHEET: "stylesheet",
 };
 exports.TYPES = TYPES;
 
@@ -44,6 +45,9 @@ const FrameTargetResources = augmentResourceDictionary({
   },
   [TYPES.PLATFORM_MESSAGE]: {
     path: "devtools/server/actors/resources/platform-messages",
+  },
+  [TYPES.STYLESHEET]: {
+    path: "devtools/server/actors/resources/stylesheets",
   },
 });
 const ParentProcessResources = augmentResourceDictionary({

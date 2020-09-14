@@ -22,6 +22,7 @@ add_task(async function() {
   ok(!rootEl.classList.contains("loading"), "The loading indicator is hidden");
 
   const notifBox = toolbox.getNotificationBox();
+  await waitUntil(() => notifBox.getCurrentNotification());
   const notif = notifBox.getCurrentNotification();
   ok(notif, "The notification box contains a message");
   ok(

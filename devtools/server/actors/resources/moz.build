@@ -17,6 +17,7 @@ DevToolsModules(
     'index.js',
     'network-events.js',
     'platform-messages.js',
+    'stylesheets.js',
 )
 
 with Files('*-messages.js'):

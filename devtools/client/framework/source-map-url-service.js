@@ -233,7 +233,7 @@ class SourceMapURLService {
       nodeHref,
       sourceMapBaseURL,
       sourceMapURL,
-      actorID: id,
+      resourceId: id,
     } = sheet;
     const url = href || nodeHref;
 
