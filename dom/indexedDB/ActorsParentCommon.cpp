@@ -441,52 +441,46 @@ GetStructuredCloneReadInfoFromSource(T* aSource, uint32_t aDataIndex,
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aSource);
 
-  int32_t columnType;
-  nsresult rv = aSource->GetTypeOfIndex(aDataIndex, &columnType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(const int32_t columnType,
+              MOZ_TO_RESULT_INVOKE(aSource, GetTypeOfIndex, aDataIndex));
 
-  MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_BLOB ||
-             columnType == mozIStorageStatement::VALUE_TYPE_INTEGER);
+  IDB_TRY_VAR(const bool isNull,
+              MOZ_TO_RESULT_INVOKE(aSource, GetIsNull, aFileIdsIndex));
 
-  bool isNull;
-  rv = aSource->GetIsNull(aFileIdsIndex, &isNull);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(const nsString fileIds, ([aSource, aFileIdsIndex, isNull] {
+                // XXX MOZ_TO_RESULT_INVOKE doesn't seem to automatically
+                // determine the necessary return success type to be
+                // nsString rather than nsAString
+                return isNull ? Result<nsString, nsresult>{VoidString()}
+                              : ToResultInvoke<nsString>(
+                                    std::mem_fn(&T::GetString), aSource,
+                                    aFileIdsIndex);
+              }()));
 
-  nsString fileIds;
+  switch (columnType) {
+    case mozIStorageStatement::VALUE_TYPE_INTEGER: {
+      IDB_TRY_VAR(const int64_t intData,
+                  MOZ_TO_RESULT_INVOKE(aSource, GetInt64, aDataIndex));
 
-  if (isNull) {
-    fileIds.SetIsVoid(true);
-  } else {
-    rv = aSource->GetString(aFileIdsIndex, fileIds);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-  }
+      uint64_t uintData;
+      memcpy(&uintData, &intData, sizeof(uint64_t));
 
-  if (columnType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
-    uint64_t intData;
-    rv = aSource->GetInt64(aDataIndex, reinterpret_cast<int64_t*>(&intData));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
+      return GetStructuredCloneReadInfoFromExternalBlob(uintData, aFileManager,
+                                                        fileIds);
     }
 
-    return GetStructuredCloneReadInfoFromExternalBlob(intData, aFileManager,
-                                                      fileIds);
-  }
+    case mozIStorageStatement::VALUE_TYPE_BLOB: {
+      const uint8_t* blobData;
+      uint32_t blobDataLength;
+      IDB_TRY(aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData));
 
-  const uint8_t* blobData;
-  uint32_t blobDataLength;
-  rv = aSource->GetSharedBlob(aDataIndex, &blobDataLength, &blobData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+      return GetStructuredCloneReadInfoFromBlob(blobData, blobDataLength,
+                                                aFileManager, fileIds);
+    }
 
-  return GetStructuredCloneReadInfoFromBlob(blobData, blobDataLength,
-                                            aFileManager, fileIds);
+    default:
+      return Err(NS_ERROR_FILE_CORRUPTED);
+  }
 }
 
 }  // namespace
