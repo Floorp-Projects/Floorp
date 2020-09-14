@@ -2932,7 +2932,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
        * Prepare for joining inclusive ancestor block elements.  When this
        * returns false, the deletion should be canceled.
        */
-      Result<bool, nsresult> Prepare();
+      Result<bool, nsresult> Prepare(const HTMLEditor& aHTMLEditor);
 
       /**
        * When this returns true, this can join the blocks with `Run()`.
@@ -2960,6 +2960,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       RefPtr<Element> mRightBlockElement;
       Maybe<nsAtom*> mNewListElementTagNameOfRightListElement;
       EditorDOMPoint mPointContainingTheOtherBlockElement;
+      RefPtr<dom::HTMLBRElement> mPrecedingInvisibleBRElement;
       bool mCanJoinBlocks;
     };  // HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
         // AutoInclusiveAncestorBlockElementsJoiner
@@ -4316,7 +4317,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   // Else we are joining content to block
   AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
                                                   *mRightContent);
-  Result<bool, nsresult> canJoinThem = joiner.Prepare();
+  Result<bool, nsresult> canJoinThem = joiner.Prepare(aHTMLEditor);
   if (canJoinThem.isErr()) {
     NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
     return EditActionResult(canJoinThem.unwrapErr());
@@ -4436,7 +4437,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
                                                   *mRightContent);
-  Result<bool, nsresult> canJoinThem = joiner.Prepare();
+  Result<bool, nsresult> canJoinThem = joiner.Prepare(aHTMLEditor);
   if (canJoinThem.isErr()) {
     NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
     return EditActionResult(canJoinThem.unwrapErr());
@@ -4879,7 +4880,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
     AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
                                                     *mRightContent);
-    Result<bool, nsresult> canJoinThem = joiner.Prepare();
+    Result<bool, nsresult> canJoinThem = joiner.Prepare(aHTMLEditor);
     if (canJoinThem.isErr()) {
       NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
       return EditActionResult(canJoinThem.unwrapErr());
@@ -5911,9 +5912,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   return ret;
 }
 
-Result<bool, nsresult>
-HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
-    AutoInclusiveAncestorBlockElementsJoiner::Prepare() {
+Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
+    AutoBlockElementsJoiner::AutoInclusiveAncestorBlockElementsJoiner::Prepare(
+        const HTMLEditor& aHTMLEditor) {
   mLeftBlockElement =
       HTMLEditUtils::GetInclusiveAncestorBlockElementExceptHRElement(
           mInclusiveDescendantOfLeftBlockElement);
@@ -5980,6 +5981,22 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
         &mPointContainingTheOtherBlockElement);
   }
 
+  if (mPointContainingTheOtherBlockElement.GetContainer() ==
+      mRightBlockElement) {
+    mPrecedingInvisibleBRElement =
+        WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
+            aHTMLEditor, EditorDOMPoint::AtEndOf(mLeftBlockElement));
+  } else if (mPointContainingTheOtherBlockElement.GetContainer() ==
+             mLeftBlockElement) {
+    mPrecedingInvisibleBRElement =
+        WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
+            aHTMLEditor, mPointContainingTheOtherBlockElement);
+  } else {
+    mPrecedingInvisibleBRElement =
+        WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
+            aHTMLEditor, EditorDOMPoint::AtEndOf(mLeftBlockElement));
+  }
+
   mCanJoinBlocks = true;
   return true;
 }
@@ -6008,7 +6025,8 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
             aHTMLEditor, MOZ_KnownLive(*mLeftBlockElement),
             MOZ_KnownLive(*mRightBlockElement),
             mPointContainingTheOtherBlockElement,
-            mNewListElementTagNameOfRightListElement);
+            mNewListElementTagNameOfRightListElement,
+            MOZ_KnownLive(mPrecedingInvisibleBRElement));
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "WhiteSpaceVisibilityKeeper::"
                          "MergeFirstLineOfRightBlockElementIntoDescendantLeftBl"
@@ -6030,7 +6048,8 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
             MOZ_KnownLive(*mRightBlockElement),
             mPointContainingTheOtherBlockElement,
             MOZ_KnownLive(*mInclusiveDescendantOfLeftBlockElement),
-            mNewListElementTagNameOfRightListElement);
+            mNewListElementTagNameOfRightListElement,
+            MOZ_KnownLive(mPrecedingInvisibleBRElement));
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "WhiteSpaceVisibilityKeeper::"
                          "MergeFirstLineOfRightBlockElementIntoAncestorLeftBloc"
@@ -6048,7 +6067,8 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
       MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
           aHTMLEditor, MOZ_KnownLive(*mLeftBlockElement),
           MOZ_KnownLive(*mRightBlockElement),
-          mNewListElementTagNameOfRightListElement);
+          mNewListElementTagNameOfRightListElement,
+          MOZ_KnownLive(mPrecedingInvisibleBRElement));
   NS_WARNING_ASSERTION(
       result.Succeeded(),
       "WhiteSpaceVisibilityKeeper::"

@@ -97,7 +97,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
         HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
         Element& aRightBlockElement, const EditorDOMPoint& aAtRightBlockChild,
-        const Maybe<nsAtom*>& aListElementTagName) {
+        const Maybe<nsAtom*>& aListElementTagName,
+        const HTMLBRElement* aPrecedingInvisibleBRElement) {
   MOZ_ASSERT(
       EditorUtils::IsDescendantOf(aLeftBlockElement, aRightBlockElement));
   MOZ_ASSERT(&aRightBlockElement == aAtRightBlockChild.GetContainer());
@@ -155,6 +156,9 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
           aHTMLEditor, EditorDOMPoint::AtEndOf(aLeftBlockElement));
+  NS_ASSERTION(
+      aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
+      "The preceding invisible BR element computation was different");
   EditActionResult ret(NS_OK);
   if (NS_WARN_IF(aListElementTagName.isSome())) {
     // Since 2002, here was the following comment:
@@ -232,7 +236,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
         Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
         nsIContent& aLeftContentInBlock,
-        const Maybe<nsAtom*>& aListElementTagName) {
+        const Maybe<nsAtom*>& aListElementTagName,
+        const HTMLBRElement* aPrecedingInvisibleBRElement) {
   MOZ_ASSERT(
       EditorUtils::IsDescendantOf(aRightBlockElement, aLeftBlockElement));
   MOZ_ASSERT(
@@ -292,6 +297,9 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   RefPtr<HTMLBRElement> invisibleBRElementBeforeLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
           aHTMLEditor, atLeftBlockChild);
+  NS_ASSERTION(
+      aPrecedingInvisibleBRElement == invisibleBRElementBeforeLeftBlockElement,
+      "The preceding invisible BR element computation was different");
   EditActionResult ret(NS_OK);
   if (aListElementTagName.isSome()) {
     // XXX Why do we ignore the error from MoveChildrenWithTransaction()?
@@ -434,8 +442,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 EditActionResult WhiteSpaceVisibilityKeeper::
     MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
         HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
-        Element& aRightBlockElement,
-        const Maybe<nsAtom*>& aListElementTagName) {
+        Element& aRightBlockElement, const Maybe<nsAtom*>& aListElementTagName,
+        const HTMLBRElement* aPrecedingInvisibleBRElement) {
   MOZ_ASSERT(
       !EditorUtils::IsDescendantOf(aLeftBlockElement, aRightBlockElement));
   MOZ_ASSERT(
@@ -464,6 +472,9 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
           aHTMLEditor, EditorDOMPoint::AtEndOf(aLeftBlockElement));
+  NS_ASSERTION(
+      aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
+      "The preceding invisible BR element computation was different");
   EditActionResult ret(NS_OK);
   if (aListElementTagName.isSome() ||
       aLeftBlockElement.NodeInfo()->NameAtom() ==
