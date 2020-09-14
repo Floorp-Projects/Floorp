@@ -27,7 +27,7 @@ class MachCommands(MachCommandBase):
     @Command("ide", category="devenv", description="Generate a project and launch an IDE.")
     @CommandArgument("ide", choices=["eclipse", "visualstudio", "vscode"])
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def eclipse(self, ide, args):
+    def run(self, ide, args):
         if ide == "eclipse":
             backend = "CppEclipse"
         elif ide == "visualstudio":
@@ -109,25 +109,37 @@ class MachCommands(MachCommandBase):
     def found_vscode_path(self):
 
         if "linux" in self.platform[0]:
-            self.vscode_path = "/usr/bin/code"
+            cmd_and_path = [{"path": "/usr/bin/code", "cmd": ["/usr/bin/code"]}]
         elif "macos" in self.platform[0]:
-            self.vscode_path = "/usr/local/bin/code"
+            cmd_and_path = [
+                {"path": "/usr/local/bin/code", "cmd": ["/usr/local/bin/code"]},
+                {
+                    "path": "/Applications/Visual Studio Code.app",
+                    "cmd": ["open", "/Applications/Visual Studio Code.app", "--args"],
+                },
+            ]
         elif "win64" in self.platform[0]:
             from pathlib import Path
 
-            self.vscode_path = mozpath.join(
+            vscode_path = mozpath.join(
                 str(Path.home()), "AppData", "Local", "Programs", "Microsoft VS Code", "Code.exe",
             )
+            cmd_and_path = [
+                {"path": vscode_path, "cmd": [vscode_path]},
+            ]
 
-        # Path found
-        if os.path.exists(self.vscode_path):
-            return True
+        # Did we guess the path?
+        for element in cmd_and_path:
+            if os.path.exists(element["path"]):
+                self.vscode_cmd = element["cmd"]
+                return True
 
         for _ in range(5):
-            self.vscode_path = input(
+            vscode_path = input(
                 "Could not find the VSCode binary. Please provide the full path to it:\n"
             )
-            if os.path.exists(self.vscode_path):
+            if os.path.exists(vscode_path):
+                self.vscode_cmd = [vscode_path]
                 return True
 
         # Path cannot be found
@@ -186,12 +198,7 @@ class MachCommands(MachCommandBase):
             ]
         }
         """
-            % (
-                clangd_path,
-                clangd_cc_path,
-                multiprocessing.cpu_count(),
-                clang_tidy_cfg.checks,
-            )
+            % (clangd_path, clangd_cc_path, multiprocessing.cpu_count(), clang_tidy_cfg.checks,)
         )
 
         # Create an empty settings dictionary
@@ -237,7 +244,7 @@ class MachCommands(MachCommandBase):
             fh.write(json.dumps(settings, indent=4))
 
         # Open vscode with new configuration
-        rc = subprocess.call([self.vscode_path, self.topsrcdir])
+        rc = subprocess.call(self.vscode_cmd + [self.topsrcdir])
 
         if rc != 0:
             self.log(
