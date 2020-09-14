@@ -263,7 +263,7 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
         nullptr, NS_ConvertUTF8toUTF16(""), NS_ConvertUTF8toUTF16(""),
         NS_ConvertUTF8toUTF16(""), type, CUBEB_DEVICE_STATE_ENABLED,
         CUBEB_DEVICE_PREF_ALL, CUBEB_DEVICE_FMT_ALL, CUBEB_DEVICE_FMT_S16NE,
-        channels, 44100, 44100, 41000, 410, 128);
+        channels, 44100, 44100, 44100, 441, 128);
     devices.AppendElement(info);
   }
 #else
