@@ -36,6 +36,10 @@ loader.lazyRequireGetter(
   "devtools/shared/layout/utils",
   true
 );
+const {
+  TYPES,
+  getResourceWatcher,
+} = require("devtools/server/actors/resources/index");
 
 var TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;
@@ -905,12 +909,33 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     return this.parentActor._targetScopedActorPool.getActorByID(resourceId);
   },
 
+  _getStyleSheetsWatcher() {
+    return getResourceWatcher(this.parentActor, TYPES.STYLESHEET);
+  },
+
   toggleDisabled(resourceId) {
+    const styleSheetsWatcher = this._getStyleSheetsWatcher();
+    if (styleSheetsWatcher) {
+      return styleSheetsWatcher.toggleDisabled(resourceId);
+    }
+
+    // Following code can be removed once we enable STYLESHEET resource on the watcher/server
+    // side by default. For now it is being preffed off and we have to support the two
+    // codepaths. Once enabled we will only support the stylesheet watcher codepath.
     const actor = this._getStyleSheetActor(resourceId);
     return actor.toggleDisabled();
   },
 
-  getText(resourceId) {
+  async getText(resourceId) {
+    const styleSheetsWatcher = this._getStyleSheetsWatcher();
+    if (styleSheetsWatcher) {
+      const text = await styleSheetsWatcher.getText(resourceId);
+      return new LongStringActor(this.conn, text || "");
+    }
+
+    // Following code can be removed once we enable STYLESHEET resource on the watcher/server
+    // side by default. For now it is being preffed off and we have to support the two
+    // codepaths. Once enabled we will only support the stylesheet watcher codepath.
     const actor = this._getStyleSheetActor(resourceId);
     return actor.getText();
   },
