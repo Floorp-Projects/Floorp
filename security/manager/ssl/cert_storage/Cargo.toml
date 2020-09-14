@@ -19,6 +19,6 @@ rust_cascade = "0.6.0"
 sha2 = "^0.8"
 storage_variant = { path = "../../../../storage/variant" }
 tempfile = "3"
-thin-vec = { version = "0.1.0", features = ["gecko-ffi"] }
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 time = "0.1"
 xpcom = { path = "../../../../xpcom/rust/xpcom" }

@@ -23,7 +23,7 @@ features = ["endian_fd", "elf32", "elf64", "mach32", "mach64", "pe32", "pe64", "
 default-features = false
 
 [dependencies.thin-vec]
-version = "0.1.0"
+version = "0.2.1"
 features = ["gecko-ffi"]
 
 [features]

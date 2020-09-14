@@ -18,7 +18,7 @@ rkv = { version = "0.15.0", default-features = false, features=["no-canonicalize
 storage_variant = { path = "../../../storage/variant" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 tempfile = "3"
-thin-vec = { version = "0.1.0", features = ["gecko-ffi"] }
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 
 # Get rid of failure's dependency on backtrace. Eventually
 # backtrace will move into Rust core, but we don't need it here.
