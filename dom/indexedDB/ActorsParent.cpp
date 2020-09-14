@@ -3493,8 +3493,8 @@ class FactoryOp
   virtual void SendBlockedNotification() = 0;
 
  private:
-  nsresult CheckPermission(ContentParent* aContentParent,
-                           PermissionRequestBase::PermissionValue* aPermission);
+  mozilla::Result<PermissionRequestBase::PermissionValue, nsresult>
+  CheckPermission(ContentParent* aContentParent);
 
   static bool CheckAtLeastOneAppHasPermission(
       ContentParent* aContentParent, const nsACString& aPermissionString);
@@ -16347,11 +16347,7 @@ nsresult FactoryOp::Open() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  PermissionRequestBase::PermissionValue permission;
-  nsresult rv = CheckPermission(contentParent, &permission);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const auto permission, CheckPermission(contentParent));
 
   MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed ||
              permission == PermissionRequestBase::kPermissionDenied ||
@@ -16443,11 +16439,7 @@ nsresult FactoryOp::RetryCheckPermission() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  PermissionRequestBase::PermissionValue permission;
-  nsresult rv = CheckPermission(contentParent, &permission);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY_VAR(const auto permission, CheckPermission(contentParent));
 
   MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed ||
              permission == PermissionRequestBase::kPermissionDenied ||
@@ -16582,9 +16574,8 @@ void FactoryOp::FinishSendResults() {
   mFactory = nullptr;
 }
 
-nsresult FactoryOp::CheckPermission(
-    ContentParent* aContentParent,
-    PermissionRequestBase::PermissionValue* aPermission) {
+Result<PermissionRequestBase::PermissionValue, nsresult>
+FactoryOp::CheckPermission(ContentParent* aContentParent) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::Initial || mState == State::PermissionRetry);
 
@@ -16596,14 +16587,14 @@ nsresult FactoryOp::CheckPermission(
         aContentParent->KillHard("IndexedDB CheckPermission 0");
       }
 
-      return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+      return Err(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     }
 
     const ContentPrincipalInfo& contentPrincipalInfo =
         principalInfo.get_ContentPrincipalInfo();
     if (contentPrincipalInfo.attrs().mPrivateBrowsingId != 0) {
       // IndexedDB is currently disabled in privateBrowsing.
-      return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+      return Err(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     }
   }
 
@@ -16644,14 +16635,14 @@ nsresult FactoryOp::CheckPermission(
       if (mDeleting && !canWrite) {
         aContentParent->KillHard("IndexedDB CheckPermission 2");
         IDB_REPORT_INTERNAL_ERR();
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       }
 
       // Opening or deleting requires read permissions.
       if (!canRead) {
         aContentParent->KillHard("IndexedDB CheckPermission 3");
         IDB_REPORT_INTERNAL_ERR();
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       }
 
       mChromeWriteAccessAllowed = canWrite;
@@ -16667,8 +16658,7 @@ nsresult FactoryOp::CheckPermission(
       mEnforcingQuota = false;
     }
 
-    *aPermission = PermissionRequestBase::kPermissionAllowed;
-    return NS_OK;
+    return PermissionRequestBase::kPermissionAllowed;
   }
 
   MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
@@ -16678,11 +16668,8 @@ nsresult FactoryOp::CheckPermission(
   nsCString suffix;
   nsCString group;
   nsCString origin;
-  nsresult rv;
-  rv = QuotaManager::GetInfoFromPrincipal(principal, &suffix, &group, &origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(
+      QuotaManager::GetInfoFromPrincipal(principal, &suffix, &group, &origin));
 
   IDB_TRY_VAR(const auto permission,
               ([persistenceType, &origin, &principal = *principal]()
@@ -16710,8 +16697,7 @@ nsresult FactoryOp::CheckPermission(
     mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
   }
 
-  *aPermission = permission;
-  return NS_OK;
+  return permission;
 }
 
 nsresult FactoryOp::SendVersionChangeMessages(
