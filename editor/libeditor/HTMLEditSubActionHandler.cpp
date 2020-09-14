@@ -4309,30 +4309,30 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   }
 
   // Else we are joining content to block
+  AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
+                                                  *mRightContent);
+  Result<bool, nsresult> canJoinThem = joiner.Prepare();
+  if (canJoinThem.isErr()) {
+    NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
+    return EditActionResult(canJoinThem.unwrapErr());
+  }
+
   EditActionResult result(NS_OK);
   EditorDOMPoint pointToPutCaret(aCaretPoint);
-  {
-    AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
-    AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
-                                                    *mRightContent);
-    Result<bool, nsresult> canJoinThem = joiner.Prepare();
-    if (canJoinThem.isErr()) {
-      NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
-      return EditActionResult(canJoinThem.unwrapErr());
-    }
-    if (canJoinThem.inspect()) {
-      if (joiner.CanJoinBlocks()) {
-        result |= joiner.Run(aHTMLEditor);
-        if (result.Failed()) {
-          NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
-          return result;
-        }
-      } else {
-        result.MarkAsHandled();
+  if (canJoinThem.inspect()) {
+    if (joiner.CanJoinBlocks()) {
+      AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(),
+                                &pointToPutCaret);
+      result |= joiner.Run(aHTMLEditor);
+      if (result.Failed()) {
+        NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+        return result;
       }
     } else {
-      result.MarkAsCanceled();
+      result.MarkAsHandled();
     }
+  } else {
+    result.MarkAsCanceled();
   }
 
   // If AutoInclusiveAncestorBlockElementsJoiner didn't handle it and it's not
@@ -4420,35 +4420,36 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   MOZ_ASSERT(mLeftContent);
   MOZ_ASSERT(mRightContent);
 
+  AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
+                                                  *mRightContent);
+  Result<bool, nsresult> canJoinThem = joiner.Prepare();
+  if (canJoinThem.isErr()) {
+    NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
+    return EditActionResult(canJoinThem.unwrapErr());
+  }
+
   EditActionResult result(NS_OK);
   EditorDOMPoint pointToPutCaret(aCaretPoint);
-  {
-    AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
-    AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
-                                                    *mRightContent);
-    Result<bool, nsresult> canJoinThem = joiner.Prepare();
-    if (canJoinThem.isErr()) {
-      NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
-      return EditActionResult(canJoinThem.unwrapErr());
-    }
-    if (canJoinThem.inspect()) {
-      if (joiner.CanJoinBlocks()) {
-        result |= joiner.Run(aHTMLEditor);
-        if (result.Failed()) {
-          NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
-          return result;
-        }
-      } else {
-        result.MarkAsHandled();
+  if (canJoinThem.inspect()) {
+    if (joiner.CanJoinBlocks()) {
+      AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(),
+                                &pointToPutCaret);
+      result |= joiner.Run(aHTMLEditor);
+      if (result.Failed()) {
+        NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+        return result;
       }
     } else {
-      result.MarkAsCanceled();
+      result.MarkAsHandled();
     }
-    // This should claim that trying to join the block means that
-    // this handles the action because the caller shouldn't do anything
-    // anymore in this case.
-    result.MarkAsHandled();
+  } else {
+    result.MarkAsCanceled();
   }
+  // This should claim that trying to join the block means that
+  // this handles the action because the caller shouldn't do anything
+  // anymore in this case.
+  result.MarkAsHandled();
+
   nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
