@@ -8,6 +8,7 @@ apply plugin: 'kotlin-android-extensions'
 
 def generatedSrcDir = new File(buildDir, "generated/components/src/main/java")
 
+// This gitHash functionality is duplicated in publish.gradle.
 def getGitHash = { ->
     def stdout = new ByteArrayOutputStream()
     exec {
