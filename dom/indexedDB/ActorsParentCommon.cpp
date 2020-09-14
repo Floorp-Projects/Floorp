@@ -653,11 +653,10 @@ ReadCompressedNumber(const Span<const uint8_t> aSpan) {
         return !(byte & 0x80);
       });
 
-  if (NS_WARN_IF(newPos == end)) {
+  IDB_TRY(OkIf(newPos != end), Err(NS_ERROR_FILE_CORRUPTED), [](const auto&) {
     MOZ_ASSERT(false);
     IDB_REPORT_INTERNAL_ERR();
-    return Err(NS_ERROR_FILE_CORRUPTED);
-  }
+  });
 
   return std::pair{result, Span{newPos + 1, end}};
 }
