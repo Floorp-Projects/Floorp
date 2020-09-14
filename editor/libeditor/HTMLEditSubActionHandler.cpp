@@ -148,13 +148,13 @@ struct MOZ_STACK_CLASS SavedRange final {
 };
 
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    RangeBoundary& aStartRef, RangeBoundary& aEndRef);
+    RangeBoundary& aStartRef, RangeBoundary& aEndRef) const;
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    RawRangeBoundary& aStartRef, RangeBoundary& aEndRef);
+    RawRangeBoundary& aStartRef, RangeBoundary& aEndRef) const;
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    RangeBoundary& aStartRef, RawRangeBoundary& aEndRef);
+    RangeBoundary& aStartRef, RawRangeBoundary& aEndRef) const;
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    RawRangeBoundary& aStartRef, RawRangeBoundary& aEndRef);
+    RawRangeBoundary& aStartRef, RawRangeBoundary& aEndRef) const;
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     const RangeBoundary& aStartRef, const RangeBoundary& aEndRef);
@@ -170,31 +170,31 @@ HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     const RangeBoundary& aStartRef, const RangeBoundary& aEndRef,
-    EditSubAction aEditSubAction);
+    EditSubAction aEditSubAction) const;
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     const RawRangeBoundary& aStartRef, const RangeBoundary& aEndRef,
-    EditSubAction aEditSubAction);
+    EditSubAction aEditSubAction) const;
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     const RangeBoundary& aStartRef, const RawRangeBoundary& aEndRef,
-    EditSubAction aEditSubAction);
+    EditSubAction aEditSubAction) const;
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef,
-    EditSubAction aEditSubAction);
+    EditSubAction aEditSubAction) const;
 template EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
     const RangeBoundary& aPoint, ScanDirection aScanDirection);
 template EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
     const RawRangeBoundary& aPoint, ScanDirection aScanDirection);
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const RangeBoundary& aPoint, EditSubAction aEditSubAction);
+    const RangeBoundary& aPoint, EditSubAction aEditSubAction) const;
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const RawRangeBoundary& aPoint, EditSubAction aEditSubAction);
+    const RawRangeBoundary& aPoint, EditSubAction aEditSubAction) const;
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const RangeBoundary& aPoint);
+    const RangeBoundary& aPoint) const;
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const RawRangeBoundary& aPoint);
+    const RawRangeBoundary& aPoint) const;
 template nsIContent* HTMLEditor::FindNearEditableContent(
     const EditorDOMPoint& aPoint, nsIEditor::EDirection aDirection);
 template nsIContent* HTMLEditor::FindNearEditableContent(
@@ -206,6 +206,10 @@ template nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
     const EditorDOMPointInText& aStartPoint,
     const EditorDOMPointInText& aEndPoint,
     TreatEmptyTextNodes aTreatEmptyTextNodes);
+template Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
+    const EditorDOMPoint& aPointInHardLine) const;
+template Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
+    const EditorRawDOMPoint& aPointInHardLine) const;
 
 nsresult HTMLEditor::InitEditorContentAndSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -6044,6 +6048,83 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   return result;
 }
 
+template <typename PT, typename CT>
+Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
+    const EditorDOMPointBase<PT, CT>& aPointInHardLine) const {
+  RefPtr<nsRange> oneLineRange = CreateRangeExtendedToHardLineStartAndEnd(
+      aPointInHardLine.ToRawRangeBoundary(),
+      aPointInHardLine.ToRawRangeBoundary(),
+      EditSubAction::eMergeBlockContents);
+  if (!oneLineRange || oneLineRange->Collapsed() ||
+      !oneLineRange->IsPositioned() ||
+      !oneLineRange->GetStartContainer()->IsContent() ||
+      !oneLineRange->GetEndContainer()->IsContent()) {
+    return false;
+  }
+
+  // If there is only a padding `<br>` element in a empty block, it's selected
+  // by `SelectBRElementIfCollapsedInEmptyBlock()`.  However, it won't be
+  // moved.  Although it'll be deleted, `MoveOneHardLineContents()` returns
+  // "ignored".  Therefore, we should return `false` in this case.
+  if (nsIContent* childContent = oneLineRange->GetChildAtStartOffset()) {
+    if (childContent->IsHTMLElement(nsGkAtoms::br) &&
+        childContent->GetParent()) {
+      if (Element* blockElement =
+              HTMLEditUtils::GetInclusiveAncestorBlockElement(
+                  *childContent->GetParent())) {
+        if (IsEmptyNode(*blockElement, true, false)) {
+          return false;
+        }
+      }
+    }
+  }
+
+  nsINode* commonAncestor = oneLineRange->GetClosestCommonInclusiveAncestor();
+  // Currently, we move non-editable content nodes too.
+  EditorRawDOMPoint startPoint(oneLineRange->StartRef());
+  if (!startPoint.IsEndOfContainer()) {
+    return true;
+  }
+  EditorRawDOMPoint endPoint(oneLineRange->EndRef());
+  if (!endPoint.IsStartOfContainer()) {
+    return true;
+  }
+  if (startPoint.GetContainer() != commonAncestor) {
+    while (true) {
+      EditorRawDOMPoint pointInParent(startPoint.GetContainerAsContent());
+      if (NS_WARN_IF(!pointInParent.IsInContentNode())) {
+        return Err(NS_ERROR_FAILURE);
+      }
+      if (pointInParent.GetContainer() == commonAncestor) {
+        startPoint = pointInParent;
+        break;
+      }
+      if (!pointInParent.IsEndOfContainer()) {
+        return true;
+      }
+    }
+  }
+  if (endPoint.GetContainer() != commonAncestor) {
+    while (true) {
+      EditorRawDOMPoint pointInParent(endPoint.GetContainerAsContent());
+      if (NS_WARN_IF(!pointInParent.IsInContentNode())) {
+        return Err(NS_ERROR_FAILURE);
+      }
+      if (pointInParent.GetContainer() == commonAncestor) {
+        endPoint = pointInParent;
+        break;
+      }
+      if (!pointInParent.IsStartOfContainer()) {
+        return true;
+      }
+    }
+  }
+  // If start point and end point in the common ancestor are direct siblings,
+  // there is no content to move or delete.
+  // E.g., `<b>abc<br>[</b><i>]<br>def</i>`.
+  return startPoint.GetNextSiblingOfChild() != endPoint.GetChild();
+}
+
 MoveNodeResult HTMLEditor::MoveOneHardLineContents(
     const EditorDOMPoint& aPointInHardLine,
     const EditorDOMPoint& aPointToInsert,
@@ -6127,6 +6208,17 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
   return result;
 }
 
+Result<bool, nsresult> HTMLEditor::CanMoveNodeOrChildren(
+    const nsIContent& aContent, const nsINode& aNewContainer) const {
+  if (HTMLEditUtils::CanNodeContain(aNewContainer, aContent)) {
+    return true;
+  }
+  if (aContent.IsElement()) {
+    return CanMoveChildren(*aContent.AsElement(), aNewContainer);
+  }
+  return true;
+}
+
 MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
     nsIContent& aContent, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -6181,6 +6273,22 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
     }
   }
   return result;
+}
+
+Result<bool, nsresult> HTMLEditor::CanMoveChildren(
+    const Element& aElement, const nsINode& aNewContainer) const {
+  if (NS_WARN_IF(&aElement == &aNewContainer)) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  for (nsIContent* childContent = aElement.GetFirstChild(); childContent;
+       childContent = childContent->GetNextSibling()) {
+    Result<bool, nsresult> result =
+        CanMoveNodeOrChildren(*childContent, aNewContainer);
+    if (result.isErr() || result.inspect()) {
+      return result;
+    }
+  }
+  return false;
 }
 
 MoveNodeResult HTMLEditor::MoveChildrenWithTransaction(
@@ -9974,7 +10082,8 @@ EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
 
 template <typename PT, typename RT>
 EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const RangeBoundaryBase<PT, RT>& aPoint, EditSubAction aEditSubAction) {
+    const RangeBoundaryBase<PT, RT>& aPoint,
+    EditSubAction aEditSubAction) const {
   if (NS_WARN_IF(!aPoint.IsSet())) {
     return EditorDOMPoint();
   }
@@ -10047,7 +10156,7 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
 
 template <typename PT, typename RT>
 EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const RangeBoundaryBase<PT, RT>& aPoint) {
+    const RangeBoundaryBase<PT, RT>& aPoint) const {
   if (NS_WARN_IF(!aPoint.IsSet())) {
     return EditorDOMPoint();
   }
@@ -10184,7 +10293,7 @@ void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
 template <typename SPT, typename SRT, typename EPT, typename ERT>
 void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
     RangeBoundaryBase<SPT, SRT>& aStartRef,
-    RangeBoundaryBase<EPT, ERT>& aEndRef) {
+    RangeBoundaryBase<EPT, ERT>& aEndRef) const {
   // MOOSE major hack:
   // The GetWhiteSpaceEndPoint(), GetCurrentHardLineStartPoint() and
   // GetCurrentHardLineEndPoint() don't really do the right thing for
@@ -10280,7 +10389,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
 }
 
 already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
-    const AbstractRange& aAbstractRange, EditSubAction aEditSubAction) {
+    const AbstractRange& aAbstractRange, EditSubAction aEditSubAction) const {
   if (!aAbstractRange.IsPositioned()) {
     return nullptr;
   }
@@ -10291,7 +10400,8 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
 template <typename SPT, typename SRT, typename EPT, typename ERT>
 already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     const RangeBoundaryBase<SPT, SRT>& aStartRef,
-    const RangeBoundaryBase<EPT, ERT>& aEndRef, EditSubAction aEditSubAction) {
+    const RangeBoundaryBase<EPT, ERT>& aEndRef,
+    EditSubAction aEditSubAction) const {
   if (NS_WARN_IF(!aStartRef.IsSet()) || NS_WARN_IF(!aEndRef.IsSet())) {
     return nullptr;
   }
