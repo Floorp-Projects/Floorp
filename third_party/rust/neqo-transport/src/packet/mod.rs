@@ -6,8 +6,7 @@
 
 // Encoding and decoding packets off the wire.
 use crate::cid::{ConnectionId, ConnectionIdDecoder, ConnectionIdRef, MAX_CONNECTION_ID_LEN};
-use crate::crypto::{CryptoDxState, CryptoStates};
-use crate::tracking::PNSpace;
+use crate::crypto::{CryptoDxState, CryptoSpace, CryptoStates};
 use crate::{Error, Res};
 
 use neqo_common::{hex, hex_with_len, qtrace, Decoder, Encoder};
@@ -61,6 +60,29 @@ impl PacketType {
             Self::Handshake => PACKET_TYPE_HANDSHAKE,
             Self::Retry => PACKET_TYPE_RETRY,
             _ => panic!("shouldn't be here"),
+        }
+    }
+}
+
+impl Into<CryptoSpace> for PacketType {
+    fn into(self) -> CryptoSpace {
+        match self {
+            Self::Initial => CryptoSpace::Initial,
+            Self::ZeroRtt => CryptoSpace::ZeroRtt,
+            Self::Handshake => CryptoSpace::Handshake,
+            Self::Short => CryptoSpace::ApplicationData,
+            _ => panic!("shouldn't be here"),
+        }
+    }
+}
+
+impl From<CryptoSpace> for PacketType {
+    fn from(cs: CryptoSpace) -> Self {
+        match cs {
+            CryptoSpace::Initial => Self::Initial,
+            CryptoSpace::ZeroRtt => Self::ZeroRtt,
+            CryptoSpace::Handshake => Self::Handshake,
+            CryptoSpace::ApplicationData => Self::Short,
         }
     }
 }
@@ -624,34 +646,34 @@ impl<'a> PublicPacket<'a> {
     }
 
     pub fn decrypt(&self, crypto: &mut CryptoStates, release_at: Instant) -> Res<DecryptedPacket> {
-        let space = PNSpace::from(self.packet_type);
+        let cspace: CryptoSpace = self.packet_type.into();
         // This has to work in two stages because we need to remove header protection
         // before picking the keys to use.
-        if let Some(rx) = crypto.rx_hp(space) {
+        if let Some(rx) = crypto.rx_hp(cspace) {
             // Note that this will dump early, which creates a side-channel.
             // This is OK in this case because we the only reason this can
             // fail is if the cryptographic module is bad or the packet is
             // too small (which is public information).
             let (key_phase, pn, header, body) = self.decrypt_header(rx)?;
             qtrace!([rx], "decoded header: {:?}", header);
-            if let Some(rx) = crypto.rx(space, key_phase) {
-                let d = rx.decrypt(pn, &header, body)?;
-                // If this is the first packet ever successfully decrypted
-                // using `rx`, make sure to initiate a key update.
-                if rx.needs_update() {
-                    crypto.key_update_received(release_at)?;
-                }
-                crypto.check_pn_overlap()?;
-                Ok(DecryptedPacket {
-                    pt: self.packet_type,
-                    pn,
-                    data: d,
-                })
-            } else {
-                Err(Error::KeysNotFound)
+            let rx = crypto.rx(cspace, key_phase).unwrap();
+            let d = rx.decrypt(pn, &header, body)?;
+            // If this is the first packet ever successfully decrypted
+            // using `rx`, make sure to initiate a key update.
+            if rx.needs_update() {
+                crypto.key_update_received(release_at)?;
             }
+            crypto.check_pn_overlap()?;
+            Ok(DecryptedPacket {
+                pt: self.packet_type,
+                pn,
+                data: d,
+            })
+        } else if crypto.rx_pending(cspace) {
+            Err(Error::KeysPending(cspace))
         } else {
-            Err(Error::KeysNotFound)
+            qtrace!("keys for {:?} already discarded", cspace);
+            Err(Error::KeysDiscarded)
         }
     }
 

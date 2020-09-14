@@ -9,6 +9,7 @@
 
 use neqo_common::qinfo;
 
+mod addr_valid;
 mod cc;
 mod cid;
 mod connection;
@@ -39,7 +40,6 @@ pub use self::packet::QuicVersion;
 pub use self::stats::Stats;
 pub use self::stream_id::StreamId;
 
-const LOCAL_IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30); // 30 second
 pub use self::recv_stream::RECV_BUFFER_SIZE;
 pub use self::send_stream::SEND_BUFFER_SIZE;
 
@@ -79,11 +79,12 @@ pub enum Error {
     InvalidResumptionToken,
     InvalidRetry,
     InvalidStreamId,
+    KeysDiscarded,
     /// Packet protection keys are exhausted.
     /// Also used when too many key updates have happened.
     KeysExhausted,
-    /// Packet protection keys aren't available yet, or they have been discarded.
-    KeysNotFound,
+    /// Packet protection keys aren't available yet for the identified space.
+    KeysPending(crypto::CryptoSpace),
     /// An attempt to update keys can be blocked if
     /// a packet sent with the current keys hasn't been acknowledged.
     KeyUpdateBlocked,

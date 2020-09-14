@@ -146,6 +146,6 @@ pub fn resumption_setup(mode: Resumption) -> (Option<AntiReplay>, Vec<u8>) {
 
     // `client` is about to go out of scope,
     // but we only need to keep the resumption token, so clone it.
-    let token = client.resumption_token().expect("token is present").clone();
+    let token = client.resumption_token().expect("token is present");
     (anti_replay, token)
 }

@@ -340,7 +340,6 @@ mod tests {
     use crate::settings::{HSetting, HSettingType};
     use neqo_crypto::AuthenticationStatus;
     use neqo_transport::{Connection, StreamType};
-    use num_traits::Num;
     use test_fixture::{connect, default_client, default_server, now};
 
     #[allow(clippy::many_single_char_names)]
@@ -369,16 +368,8 @@ mod tests {
         let mut fr: HFrameReader = HFrameReader::new();
 
         // conver string into u8 vector
-        let mut buf: Vec<u8> = Vec::new();
-        if st.len() % 2 != 0 {
-            panic!("Needs to be even length");
-        }
-        for i in 0..st.len() / 2 {
-            let x = st.get(i * 2..i * 2 + 2);
-            let v = <u8 as Num>::from_str_radix(x.unwrap(), 16).unwrap();
-            buf.push(v);
-        }
-        conn_s.stream_send(stream_id, &buf).unwrap();
+        let buf = Encoder::from_hex(st);
+        conn_s.stream_send(stream_id, &buf[..]).unwrap();
         let out = conn_s.process(None, now());
         let _ = conn_c.process(out.dgram(), now());
 
