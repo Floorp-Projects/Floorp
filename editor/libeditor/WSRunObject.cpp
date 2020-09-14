@@ -119,7 +119,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() "
         "failed at left block");
-    return EditActionIgnored(rv);
+    return EditActionResult(rv);
   }
 
   OwningNonNull<Element> rightBlockElement = aRightBlockElement;
@@ -133,7 +133,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() "
           "failed at right block child");
-      return EditActionIgnored(rv);
+      return EditActionResult(rv);
     }
 
     // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
@@ -145,7 +145,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       rightBlockElement = *afterRightBlockChild.GetContainerAsElement();
     } else if (NS_WARN_IF(
                    !afterRightBlockChild.GetContainerParentAsElement())) {
-      return EditActionIgnored(NS_ERROR_UNEXPECTED);
+      return EditActionResult(NS_ERROR_UNEXPECTED);
     } else {
       rightBlockElement = *afterRightBlockChild.GetContainerParentAsElement();
     }
@@ -182,7 +182,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         EditorDOMPoint(&aLeftBlockElement, 0),
         HTMLEditor::MoveToEndOfContainer::Yes);
     if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
-      return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(moveNodeResult.Succeeded(),
                          "HTMLEditor::MoveOneHardLineContents("
@@ -202,15 +202,13 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   rv = aHTMLEditor.DeleteNodeWithTransaction(
       *invisibleBRElementAtEndOfLeftBlockElement);
   if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-    return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::DeleteNodeWithTransaction() failed, but ignored");
-  if (NS_SUCCEEDED(rv)) {
-    ret.MarkAsHandled();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed, but ignored");
+    return EditActionResult(rv);
   }
-  return ret;
+  return EditActionHandled();
 }
 
 // static
@@ -242,7 +240,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() failed "
         "at right block");
-    return EditActionIgnored(rv);
+    return EditActionResult(rv);
   }
 
   OwningNonNull<Element> originalLeftBlockElement = aLeftBlockElement;
@@ -259,7 +257,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces() "
           "failed at left block child");
-      return EditActionIgnored(rv);
+      return EditActionResult(rv);
     }
     // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
     //     Do we really need to do update aRightBlockElement here??
@@ -269,7 +267,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     if (atLeftBlockChild.GetContainerAsElement()) {
       leftBlockElement = *atLeftBlockChild.GetContainerAsElement();
     } else if (NS_WARN_IF(!atLeftBlockChild.GetContainerParentAsElement())) {
-      return EditActionIgnored(NS_ERROR_UNEXPECTED);
+      return EditActionResult(NS_ERROR_UNEXPECTED);
     } else {
       leftBlockElement = *atLeftBlockChild.GetContainerParentAsElement();
     }
@@ -288,7 +286,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         aRightBlockElement, EditorDOMPoint(atLeftBlockChild.GetContainer(),
                                            atLeftBlockChild.Offset()));
     if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
-      return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(
         moveNodeResult.Succeeded(),
@@ -340,7 +338,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
                                                           nullptr, nullptr);
       if (splitResult.Failed()) {
         NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
-        return EditActionIgnored(splitResult.Rv());
+        return EditActionResult(splitResult.Rv());
       }
 
       if (splitResult.Handled()) {
@@ -348,13 +346,13 @@ EditActionResult WhiteSpaceVisibilityKeeper::
           atPreviousContent.Set(splitResult.GetNextNode());
           if (!atPreviousContent.IsSet()) {
             NS_WARNING("Next node of split point was orphaned");
-            return EditActionIgnored(NS_ERROR_NULL_POINTER);
+            return EditActionResult(NS_ERROR_NULL_POINTER);
           }
         } else {
           atPreviousContent = splitResult.SplitPoint();
           if (!atPreviousContent.IsSet()) {
             NS_WARNING("Split node was orphaned");
-            return EditActionIgnored(NS_ERROR_NULL_POINTER);
+            return EditActionResult(NS_ERROR_NULL_POINTER);
           }
         }
       }
@@ -375,15 +373,13 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   rv = aHTMLEditor.DeleteNodeWithTransaction(
       *invisibleBRElementBeforeLeftBlockElement);
   if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-    return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::DeleteNodeWithTransaction() failed, but ignored");
-  if (NS_SUCCEEDED(rv)) {
-    ret.MarkAsHandled();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed, but ignored");
+    return EditActionResult(rv);
   }
-  return ret;
+  return EditActionHandled();
 }
 
 // static
@@ -414,7 +410,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::"
         "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
-    return EditActionIgnored(rv);
+    return EditActionResult(rv);
   }
   // Do br adjustment.
   RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
@@ -429,7 +425,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     nsresult rv = aHTMLEditor.JoinNearestEditableNodesWithTransaction(
         aLeftBlockElement, aRightBlockElement, &atFirstChildOfRightNode);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::JoinNearestEditableNodesWithTransaction()"
@@ -440,7 +436,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
               aRightBlockElement, MOZ_KnownLive(*aListElementTagName.ref()),
               *nsGkAtoms::li);
       if (NS_WARN_IF(convertListTypeResult.EditorDestroyed())) {
-        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
           convertListTypeResult.Succeeded(),
@@ -475,9 +471,9 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   //     is respected?
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-    return ret.SetResult(rv);
+    return EditActionResult(rv);
   }
-  return ret.MarkAsHandled();
+  return EditActionHandled();
 }
 
 // static
