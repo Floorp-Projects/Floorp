@@ -1066,7 +1066,12 @@ enum Role {
    */
   CODE = 182,
 
-  LAST_ROLE = CODE
+  /**
+   * Represents control whose purpose is to allow a user to edit a time.
+   */
+  TIME_EDITOR = 183,
+
+  LAST_ROLE = TIME_EDITOR
 };
 
 }  // namespace roles
