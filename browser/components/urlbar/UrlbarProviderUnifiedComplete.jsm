@@ -63,6 +63,13 @@ class ProviderUnifiedComplete extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
+    if (
+      !queryContext.trimmedSearchString &&
+      UrlbarPrefs.get("update2") &&
+      UrlbarPrefs.get("update2.emptySearchBehavior") < 2
+    ) {
+      return false;
+    }
     return true;
   }
 
