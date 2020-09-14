@@ -136,8 +136,6 @@ def install_mobile_android_sdk_or_ndk(url, path):
         os.unlink(abspath)
     finally:
         os.chdir(old_path)
-        # Remove the download directory
-        os.rmdir(download_path)
 
 
 def get_ndk_version(ndk_path):
