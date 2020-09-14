@@ -2431,7 +2431,8 @@ void MacroAssembler::convertValueToFloatingPoint(ValueOperand value,
 void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
                                            bool widenFloatToDouble,
                                            bool compilingWasm,
-                                           wasm::BytecodeOffset callOffset) {
+                                           wasm::BytecodeOffset callOffset,
+                                           mozilla::Maybe<int32_t> tlsOffset) {
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
   ScratchDoubleScope fpscratch(*this);
@@ -2458,7 +2459,7 @@ void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
   if (compilingWasm) {
     setupWasmABICall();
     passABIArg(src, MoveOp::DOUBLE);
-    callWithABI(callOffset, wasm::SymbolicAddress::ToInt32, mozilla::Nothing());
+    callWithABI(callOffset, wasm::SymbolicAddress::ToInt32, tlsOffset);
   } else {
     setupUnalignedABICall(dest);
     passABIArg(src, MoveOp::DOUBLE);
