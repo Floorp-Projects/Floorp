@@ -47,11 +47,8 @@ class PreallocatedProcessManager final {
                             ContentParent* aParent);
 
   /**
-   * Take the preallocated process, if we have one, or a recycled
-   * process cached via Provide().  Currently we only cache
-   * DEFAULT_REMOTE_TYPE ('web') processes and only reuse them for that
-   * type.  If we don't have a process to return (cached or preallocated),
-   * this returns null.
+   * Take a preallocated process, if we have one. If we don't have a
+   * preallocated process to return, this returns null.
    *
    * If we use a preallocated process, it will schedule the start of
    * another on Idle (AllocateOnIdle()).
@@ -59,12 +56,9 @@ class PreallocatedProcessManager final {
   static already_AddRefed<ContentParent> Take(const nsACString& aRemoteType);
 
   /**
-   * Cache a process (currently only DEFAULT_REMOTE_TYPE) for reuse later
-   * via Take().  Returns true if we cached the process, and false if
-   * another process is already cached (so the caller knows to destroy it).
-   * This takes a reference to the ContentParent if it is cached.
+   * Note that a process was shut down, and should no longer be tracked as a
+   * preallocated process.
    */
-  static bool Provide(ContentParent* aParent);
   static void Erase(ContentParent* aParent);
 
  private:
