@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.account
 
 import android.Manifest
 import android.os.Bundle
+import android.text.Spanned
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +26,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.addUnderline
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -64,6 +66,10 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         requireComponents.analytics.metrics.track(Event.SyncAuthScanPairing)
     }
 
+    private val createAccountClickListener = View.OnClickListener {
+        navigateToPairWithEmail()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireComponents.analytics.metrics.track(Event.SyncAuthOpened)
@@ -85,7 +91,8 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     override fun onResume() {
         super.onResume()
         if (pairWithEmailStarted ||
-            requireComponents.backgroundServices.accountManager.authenticatedAccount() != null) {
+            requireComponents.backgroundServices.accountManager.authenticatedAccount() != null
+        ) {
 
             findNavController().popBackStack()
             return
@@ -118,6 +125,20 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             DefaultSyncController(activity = activity as HomeActivity)
         )
 
+        val createAccountActionText = getString(R.string.sign_in_create_account_link)
+        val fullText = getString(R.string.sign_in_create_account_text, createAccountActionText)
+        val spanStart = fullText.indexOf(createAccountActionText, 0, false)
+        val spanEnd = spanStart + createAccountActionText.length
+
+        view.createAccount.apply {
+            text = fullText
+            addUnderline(
+                spanStart,
+                spanEnd,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            setOnClickListener(createAccountClickListener)
+        }
         return view
     }
 

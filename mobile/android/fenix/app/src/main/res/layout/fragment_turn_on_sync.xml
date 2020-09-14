@@ -71,7 +71,19 @@
             android:layout_margin="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/signInScanButton" />
+            app:layout_constraintTop_toBottomOf="@id/signInScanButton"
+            app:layout_constraintBottom_toTopOf="@id/createAccount"/>
+
+        <TextView
+            android:id="@+id/createAccount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textAppearance="@style/Body14TextStyle"
+            app:layout_constraintTop_toBottomOf="@id/signInEmailButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="@string/sign_in_create_account_text"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>
