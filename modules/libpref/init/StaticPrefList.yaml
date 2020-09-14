@@ -6551,16 +6551,6 @@
   value: true
   mirror: always
 
-# Whether :is() and :where() ignore errors inside their selector lists
-# internally, rather than failing to parse altogether.
-#
-# See https://github.com/w3c/csswg-drafts/issues/3264
-- name: layout.css.is-and-where-better-error-recovery.enabled
-  type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
-  mirror: always
-  rust: true
-
 # Whether frame visibility tracking is enabled globally.
 - name: layout.framevisibility.enabled
   type: bool

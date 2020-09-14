@@ -1244,14 +1244,9 @@ function runTests() {
     test_balanced_unparseable(":not(:nth-child(()))");
 
     // :-moz-any()
-    let parseable_if_any_is_is_and_has_better_error_recovery =
-      SpecialPowers.getBoolPref("layout.css.moz-any-is-is.enabled") &&
-      SpecialPowers.getBoolPref("layout.css.is-and-where-better-error-recovery.enabled")
-      ? test_parseable : test_balanced_unparseable;
-    parseable_if_any_is_is_and_has_better_error_recovery(":-moz-any()");
-    parseable_if_any_is_is_and_has_better_error_recovery(":-moz-any('foo')");
-    let parseable_if_any_is_is = SpecialPowers.getBoolPref("layout.css.moz-any-is-is.enabled")
-      ? test_parseable : test_balanced_unparseable;
+    test_balanced_unparseable(":-moz-any()");
+    test_balanced_unparseable(":-moz-any('foo')");
+    let parseable_if_any_is_is = SpecialPowers.getBoolPref("layout.css.moz-any-is-is.enabled") ? test_parseable : test_balanced_unparseable;
     parseable_if_any_is_is(":-moz-any(div p)");
     parseable_if_any_is_is(":-moz-any(div ~ p)");
     parseable_if_any_is_is(":-moz-any(div~p)");
@@ -1266,7 +1261,7 @@ function runTests() {
     test_parseable(":-moz-any(div,p,:link,span:focus)");
     test_parseable(":-moz-any(:active,:focus)");
     test_parseable(":-moz-any(:active,:link:focus)");
-    parseable_if_any_is_is_and_has_better_error_recovery(":-moz-any(div,:nonexistentpseudo)");
+    test_balanced_unparseable(":-moz-any(div,:nonexistentpseudo)");
     var any_elts = "<input type='text'><a href='http://www.example.com/'></a><div></div><a name='foo'>";
     test_selector_in_html(":-moz-any(a,input)", any_elts,
                           bodychildset([0, 1, 3]), bodychildset([2]));
@@ -1316,29 +1311,16 @@ function runTests() {
     test_parseable("::-moz-color-swatch:not(:hover)");
     test_parseable("::-moz-color-swatch:where(:hover)");
     test_balanced_unparseable("::-moz-color-swatch:not(.foo)");
+    test_balanced_unparseable("::-moz-color-swatch:where(.foo)");
+    test_balanced_unparseable("::-moz-color-swatch:is(.foo)");
+    test_balanced_unparseable("::-moz-color-swatch:where(p, :hover)");
+    test_balanced_unparseable("::-moz-color-swatch:is(p, :hover)");
     test_balanced_unparseable("::-moz-color-swatch:first-child");
     test_balanced_unparseable("::-moz-color-swatch:host");
     test_balanced_unparseable("::-moz-color-swatch:host(div)");
     test_balanced_unparseable("::-moz-color-swatch:nth-child(1)");
     test_balanced_unparseable("::-moz-color-swatch:hover#foo");
     test_balanced_unparseable(".foo::after:not(.bar) ~ h3");
-
-    {
-      let better_error_recovery = SpecialPowers.getBoolPref("layout.css.is-and-where-better-error-recovery.enabled");
-      let expected_fn = better_error_recovery ? test_parseable : test_balanced_unparseable;
-
-      for (let [selector, expected_serialization_when_parseable] of [
-        ["::-moz-color-swatch:where(.foo)", "::-moz-color-swatch:where()"],
-        ["::-moz-color-swatch:is(.foo)", "::-moz-color-swatch:is()"],
-        ["::-moz-color-swatch:where(p, :hover)", "::-moz-color-swatch:where(:hover)"],
-        ["::-moz-color-swatch:is(p, :hover)", "::-moz-color-swatch:is(:hover)"],
-      ]) {
-        expected_fn(selector);
-        if (better_error_recovery) {
-          should_serialize_to(selector, expected_serialization_when_parseable);
-        }
-      }
-    }
 
     test_parseable(":-moz-broken");
     test_parseable(":-moz-loading");
