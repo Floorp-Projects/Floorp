@@ -13,6 +13,7 @@ import kotlinx.android.synthetic.main.component_bookmark.view.*
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.UserInteractionHandler
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibraryPageView
@@ -135,7 +136,9 @@ class BookmarkView(
             interactor.onRequestSync()
         }
 
-        BookmarkTouchHelper(interactor).attachToRecyclerView(view.bookmark_list)
+        if (FeatureFlags.bookmarkSwipeToDelete) {
+            BookmarkTouchHelper(interactor).attachToRecyclerView(view.bookmark_list)
+        }
     }
 
     fun update(state: BookmarkFragmentState) {

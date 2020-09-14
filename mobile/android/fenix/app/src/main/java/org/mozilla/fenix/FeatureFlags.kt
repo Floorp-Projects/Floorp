@@ -40,4 +40,9 @@ object FeatureFlags {
      * Enables downloads with external download managers.
      */
     const val externalDownloadManager = true
+
+    /**
+     * Enables swipe to delete in bookmarks
+     */
+    val bookmarkSwipeToDelete = Config.channel.isNightlyOrDebug
 }
