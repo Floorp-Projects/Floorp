@@ -6,6 +6,22 @@
 
 const EXPORTED_SYMBOLS = ["WindowGlobalLogger"];
 
+function getWindowGlobalUri(windowGlobal) {
+  let windowGlobalUri = "";
+
+  if (windowGlobal.documentURI) {
+    // If windowGlobal is a WindowGlobalParent documentURI should be available.
+    windowGlobalUri = windowGlobal.documentURI.spec;
+  } else if (windowGlobal.browsingContext?.window) {
+    // If windowGlobal is a WindowGlobalChild, this code runs in the same
+    // process as the document and we can directly access the window.location
+    // object.
+    windowGlobalUri = windowGlobal.browsingContext.window.location.href;
+  }
+
+  return windowGlobalUri;
+}
+
 const WindowGlobalLogger = {
   /**
    * This logger can run from the content or parent process, and windowGlobal
@@ -23,6 +39,7 @@ const WindowGlobalLogger = {
   logWindowGlobal: function(windowGlobal, message) {
     const { browsingContext } = windowGlobal;
     const { parent } = browsingContext;
+    const windowGlobalUri = getWindowGlobalUri(windowGlobal);
 
     const details = [];
     details.push(
@@ -35,8 +52,7 @@ const WindowGlobalLogger = {
       "isCurrentGlobal: " + windowGlobal.isCurrentGlobal,
       "currentRemoteType: " + browsingContext.currentRemoteType,
       "hasParent: " + (parent ? parent.id : "no"),
-      "uri: " +
-        (windowGlobal.documentURI ? windowGlobal.documentURI.spec : "no-uri")
+      "uri: " + (windowGlobalUri ? windowGlobalUri : "no uri")
     );
 
     const header = "[WindowGlobalLogger] " + message;
