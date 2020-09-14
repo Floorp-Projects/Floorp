@@ -567,33 +567,32 @@ nsresult HTMLEditor::GetPositionAndDimensions(Element& aElement, int32_t& aX,
   return NS_OK;
 }
 
-nsresult HTMLEditor::SetAnonymousElementPositionWithTransaction(
+nsresult HTMLEditor::SetAnonymousElementPositionWithoutTransaction(
     nsStyledElement& aStyledElement, int32_t aX, int32_t aY) {
-  // XXX Why do we need to do this with transaction?
   nsresult rv;
-  rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(aStyledElement,
-                                                          *nsGkAtoms::left, aX);
+  rv = mCSSEditUtils->SetCSSPropertyPixelsWithoutTransaction(
+      aStyledElement, *nsGkAtoms::left, aX);
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
-        "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::left) "
+        "CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction(nsGkAtoms::left) "
         "destroyed the editor");
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::left) "
+      "CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction(nsGkAtoms::left) "
       "failed, but ignored");
-  rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(aStyledElement,
-                                                          *nsGkAtoms::top, aY);
+  rv = mCSSEditUtils->SetCSSPropertyPixelsWithoutTransaction(
+      aStyledElement, *nsGkAtoms::top, aY);
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
-        "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::top) "
+        "CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction(nsGkAtoms::top) "
         "destroyed the editor");
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::top) "
+      "CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction(nsGkAtoms::top) "
       "failed, but ignored");
   return NS_OK;
 }
