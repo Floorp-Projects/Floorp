@@ -972,13 +972,13 @@ mod tests {
     /// Perform a handshake, then another with the token from the first.
     /// The second should always resume, but it might not always accept early data.
     fn zero_rtt_with_settings(settings: QpackSettings, zero_rtt: &ZeroRttState) {
-        let (_, client) = connect();
+        let (_, mut client) = connect();
         let token = client.resumption_token();
         assert!(token.is_some());
 
         let mut server = create_server(settings);
         let mut client = default_client();
-        client.set_resumption_token(now(), &token.unwrap()).unwrap();
+        client.enable_resumption(now(), &token.unwrap()).unwrap();
 
         connect_transport(&mut server, &mut client, true);
         assert!(client.tls_info().unwrap().resumed());

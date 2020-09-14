@@ -19,13 +19,13 @@ use smallvec::{smallvec, SmallVec};
 use neqo_common::{qdebug, qinfo, qlog::NeqoQlog, qtrace};
 
 use crate::cc::CongestionControl;
+use crate::connection::LOCAL_IDLE_TIMEOUT;
 use crate::crypto::CryptoRecoveryToken;
 use crate::flow_mgr::FlowControlRecoveryToken;
 use crate::qlog::{self, QlogMetric};
 use crate::send_stream::StreamRecoveryToken;
 use crate::stats::{Stats, StatsCell};
 use crate::tracking::{AckToken, PNSpace, PNSpaceSet, SentPacket};
-use crate::LOCAL_IDLE_TIMEOUT;
 
 pub const GRANULARITY: Duration = Duration::from_millis(20);
 /// The default value for the maximum time a peer can delay acknowledgment
@@ -49,11 +49,12 @@ pub enum RecoveryToken {
     Crypto(CryptoRecoveryToken),
     Flow(FlowControlRecoveryToken),
     HandshakeDone,
+    NewToken(usize),
 }
 
 #[derive(Debug)]
 struct RttVals {
-    samples: u64,
+    first_sample_time: Option<Instant>,
     latest_rtt: Duration,
     smoothed_rtt: Duration,
     rttvar: Duration,
@@ -64,11 +65,15 @@ struct RttVals {
 impl RttVals {
     pub fn set_initial_rtt(&mut self, rtt: Duration) {
         // Only allow this when there are no samples.
-        debug_assert!(self.samples == 0);
+        debug_assert!(self.first_sample_time.is_none());
         self.latest_rtt = rtt;
         self.min_rtt = rtt;
         self.smoothed_rtt = rtt;
         self.rttvar = rtt / 2;
+    }
+
+    pub fn set_peer_max_ack_delay(&mut self, mad: Duration) {
+        self.max_ack_delay = mad;
     }
 
     fn update_rtt(
@@ -76,18 +81,19 @@ impl RttVals {
         mut qlog: &mut NeqoQlog,
         mut rtt_sample: Duration,
         ack_delay: Duration,
+        now: Instant,
     ) {
         // min_rtt ignores ack delay.
         self.min_rtt = min(self.min_rtt, rtt_sample);
-        // Limit ack_delay by max_ack_delay
-        let ack_delay = min(ack_delay, self.max_ack_delay);
-        // Adjust for ack delay if it's plausible.
+        // Note: the caller adjusts `ack_delay` based on `max_ack_delay`.
+        // Adjust for ack delay unless it goes below `min_rtt`.
         if rtt_sample - self.min_rtt >= ack_delay {
             rtt_sample -= ack_delay;
         }
 
-        if self.samples == 0 {
+        if self.first_sample_time.is_none() {
             self.set_initial_rtt(rtt_sample);
+            self.first_sample_time = Some(now);
         } else {
             // Calculate EWMA RTT (based on {{?RFC6298}}).
             let rttvar_sample = if self.smoothed_rtt > rtt_sample {
@@ -100,7 +106,6 @@ impl RttVals {
             self.rttvar = (self.rttvar * 3 + rttvar_sample) / 4;
             self.smoothed_rtt = (self.smoothed_rtt * 7 + rtt_sample) / 8;
         }
-        self.samples += 1;
         qtrace!(
             "RTT latest={:?} -> estimate={:?}~{:?}",
             self.latest_rtt,
@@ -130,12 +135,16 @@ impl RttVals {
                 Duration::from_millis(0)
             }
     }
+
+    fn first_sample_time(&self) -> Option<Instant> {
+        self.first_sample_time
+    }
 }
 
 impl Default for RttVals {
     fn default() -> Self {
         Self {
-            samples: 0,
+            first_sample_time: None,
             latest_rtt: INITIAL_RTT,
             smoothed_rtt: INITIAL_RTT,
             rttvar: INITIAL_RTT / 2,
@@ -617,6 +626,10 @@ impl LossRecovery {
         self.rtt_vals.set_initial_rtt(rtt)
     }
 
+    pub fn set_peer_max_ack_delay(&mut self, mad: Duration) {
+        self.rtt_vals.set_peer_max_ack_delay(mad);
+    }
+
     pub fn cwnd_avail(&self) -> usize {
         self.cc.cwnd_avail()
     }
@@ -664,6 +677,23 @@ impl LossRecovery {
         }
     }
 
+    /// Record an RTT sample.
+    fn rtt_sample(&mut self, send_time: Instant, now: Instant, ack_delay: Duration) {
+        // Limit ack delay by max_ack_delay if confirmed.
+        let delay = if let Some(confirmed) = self.confirmed_time {
+            if confirmed < send_time {
+                ack_delay
+            } else {
+                min(ack_delay, self.rtt_vals.max_ack_delay)
+            }
+        } else {
+            ack_delay
+        };
+
+        let sample = now - send_time;
+        self.rtt_vals.update_rtt(&mut self.qlog, sample, delay, now);
+    }
+
     /// Returns (acked packets, lost packets)
     pub fn on_ack_received(
         &mut self,
@@ -680,12 +710,12 @@ impl LossRecovery {
             largest_acked
         );
 
-        let stats = &mut *self.stats.borrow_mut();
         let space = self
             .spaces
             .get_mut(pn_space)
             .expect("ACK on discarded space");
-        let (acked_packets, any_ack_eliciting) = space.remove_acked(acked_ranges, stats);
+        let (acked_packets, any_ack_eliciting) =
+            space.remove_acked(acked_ranges, &mut *self.stats.borrow_mut());
         if acked_packets.is_empty() {
             // No new information.
             return (Vec::new(), Vec::new());
@@ -701,9 +731,7 @@ impl LossRecovery {
             let largest_acked_pkt = acked_packets.first().expect("must be there");
             space.largest_acked_sent_time = Some(largest_acked_pkt.time_sent);
             if any_ack_eliciting {
-                let latest_rtt = now - largest_acked_pkt.time_sent;
-                self.rtt_vals
-                    .update_rtt(&mut self.qlog, latest_rtt, ack_delay);
+                self.rtt_sample(largest_acked_pkt.time_sent, now, ack_delay);
             }
         }
 
@@ -719,14 +747,15 @@ impl LossRecovery {
             .get_mut(pn_space)
             .unwrap()
             .detect_lost_packets(now, loss_delay, cleanup, &mut lost);
-        stats.lost += lost.len();
+        self.stats.borrow_mut().lost += lost.len();
 
         // Tell the congestion controller about any lost packets.
         // The PTO for congestion control is the raw number, without exponential
         // backoff, so that we can determine persistent congestion.
         let pto_raw = self.pto_raw(pn_space);
+        let first_rtt_sample = self.rtt_vals.first_sample_time();
         self.cc
-            .on_packets_lost(now, prev_largest_acked, pto_raw, &lost);
+            .on_packets_lost(now, first_rtt_sample, prev_largest_acked, pto_raw, &lost);
 
         // This must happen after on_packets_lost. If in recovery, this could
         // take us out, and then lost packets will start a new recovery period
@@ -920,6 +949,8 @@ impl LossRecovery {
         qtrace!([self], "timeout {:?}", now);
 
         let loss_delay = self.loss_delay();
+        let first_rtt_sample = self.rtt_vals.first_sample_time();
+
         let mut lost_packets = Vec::new();
         for space in self.spaces.iter_mut() {
             let first = lost_packets.len(); // The first packet lost in this space.
@@ -927,6 +958,7 @@ impl LossRecovery {
             space.detect_lost_packets(now, loss_delay, pto, &mut lost_packets);
             self.cc.on_packets_lost(
                 now,
+                first_rtt_sample,
                 space.largest_acked_sent_time,
                 Self::pto_raw_inner(&self.rtt_vals, space.space()),
                 &lost_packets[first..],

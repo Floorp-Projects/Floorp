@@ -25,6 +25,8 @@ pub struct Stats {
     pub dups_rx: usize,
     /// Dropped packets or dropped garbage.
     pub dropped_rx: usize,
+    /// The number of packet that were saved for later processing.
+    pub saved_datagrams: usize,
 
     /// Total packets sent.
     pub packets_tx: usize,
@@ -61,8 +63,8 @@ impl Debug for Stats {
         writeln!(f, "stats for {}", self.info)?;
         writeln!(
             f,
-            "  rx: {} drop {} dup {}",
-            self.packets_rx, self.dropped_rx, self.dups_rx
+            "  rx: {} drop {} dup {} saved {}",
+            self.packets_rx, self.dropped_rx, self.dups_rx, self.saved_datagrams
         )?;
         writeln!(
             f,
