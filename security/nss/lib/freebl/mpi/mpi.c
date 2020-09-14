@@ -2693,7 +2693,7 @@ mp_radix_size(mp_int *mp, int radix)
 
     bits = USED(mp) * DIGIT_BIT - 1;
 
-    return s_mp_outlen(bits, radix);
+    return SIGN(mp) + s_mp_outlen(bits, radix);
 
 } /* end mp_radix_size() */
 

@@ -10,7 +10,7 @@
 # OS_TEST	(from uname -m)
 # OS_RELEASE	(from uname -v and/or -r)
 # OS_TARGET	User defined, or set to OS_ARCH
-# CPU_ARCH  	(from unmame -m or -p, ONLY on WINNT)
+# CPU_ARCH  	(from uname -m or -p, ONLY on WINNT)
 # OS_CONFIG	OS_TARGET + OS_RELEASE
 # OBJDIR_TAG    (uses GCOV_TAG, 64BIT_TAG)
 # OBJDIR_NAME
@@ -139,35 +139,6 @@ ifeq ($(OS_ARCH),OS_2)
     OS_ARCH = OS2
     OS_RELEASE := $(shell uname -v)
 endif
-
-#######################################################################
-# Master "Core Components" macros for Hardware features               #
-#######################################################################
-
-ifndef NSS_DISABLE_AVX2
-    ifneq ($(CPU_ARCH),x86_64)
-        # Disable AVX2 entirely on non-Intel platforms
-        NSS_DISABLE_AVX2 = 1
-        $(warning CPU_ARCH is not x86_64, disabling -mavx2)
-    else
-        ifdef CC_IS_CLANG
-            # Clang reports its version as an older gcc, but it's OK
-            NSS_DISABLE_AVX2 = 0
-        else
-            ifneq (,$(filter 4.8 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
-                NSS_DISABLE_AVX2 = 0
-            endif
-            ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
-                NSS_DISABLE_AVX2 = 0
-            endif
-        endif
-        ifndef NSS_DISABLE_AVX2
-            $(warning Unable to find gcc 4.8 or greater, disabling -Werror)
-            NSS_DISABLE_AVX2 = 1
-        endif
-    endif
-    export NSS_DISABLE_AVX2
-endif #ndef NSS_DISABLE_AVX2
 
 #######################################################################
 # Master "Core Components" macros for getting the OS target           #
