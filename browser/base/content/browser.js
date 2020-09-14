@@ -158,11 +158,6 @@ XPCOMUtils.defineLazyScriptGetter(
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,
-  "DefaultBrowserNotificationOnNewTabPage",
-  "chrome://browser/content/browser-defaultBrowserNotificationOnNewTabPage.js"
-);
-XPCOMUtils.defineLazyScriptGetter(
-  this,
   ["PointerLock", "FullScreen"],
   "chrome://browser/content/browser-fullScreenAndPointerLock.js"
 );
