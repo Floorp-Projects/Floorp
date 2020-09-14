@@ -576,17 +576,14 @@ MakeCompressedIndexDataValues(const nsTArray<IndexDataValue>& aIndexValues) {
                keyBufferLength + sortKeyBufferLength;
       });
 
-  if (NS_WARN_IF(!blobDataLength.isValid())) {
-    IDB_REPORT_INTERNAL_ERR();
-    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  IDB_TRY(OkIf(blobDataLength.isValid()),
+          Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
+          IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   UniqueFreePtr<uint8_t> blobData(
       static_cast<uint8_t*>(malloc(blobDataLength.value())));
-  if (NS_WARN_IF(!blobData)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return Err(NS_ERROR_OUT_OF_MEMORY);
-  }
+  IDB_TRY(OkIf(static_cast<bool>(blobData)), Err(NS_ERROR_OUT_OF_MEMORY),
+          IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
   uint8_t* blobDataIter = blobData.get();
 
