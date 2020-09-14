@@ -33,7 +33,7 @@ class NetworkEventWatcher {
    *        - onDestroyed: optional function
    *          This would be called multiple times for each resource.
    */
-  constructor(watcherActor, { onAvailable, onUpdated, onDestroyed }) {
+  async watch(watcherActor, { onAvailable, onUpdated, onDestroyed }) {
     this.networkEvents = new Map();
     this.watcherActor = watcherActor;
     this.onNetworkEventAvailable = onAvailable;

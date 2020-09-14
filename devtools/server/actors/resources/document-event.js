@@ -11,18 +11,18 @@ const {
   DocumentEventsListener,
 } = require("devtools/server/actors/webconsole/listeners/document-events");
 
-/**
- * Start watching for all document event related to a given Target Actor.
- *
- * @param TargetActor targetActor
- *        The target actor from which we should observe document event
- * @param Object options
- *        Dictionary object with following attributes:
- *        - onAvailable: mandatory function
- *          This will be called for each resource.
- */
 class DocumentEventWatcher {
-  constructor(targetActor, { onAvailable }) {
+  /**
+   * Start watching for all document event related to a given Target Actor.
+   *
+   * @param TargetActor targetActor
+   *        The target actor from which we should observe document event
+   * @param Object options
+   *        Dictionary object with following attributes:
+   *        - onAvailable: mandatory function
+   *          This will be called for each resource.
+   */
+  async watch(targetActor, { onAvailable }) {
     if (isWorker) {
       return;
     }

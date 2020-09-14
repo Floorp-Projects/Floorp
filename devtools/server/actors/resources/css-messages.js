@@ -30,8 +30,8 @@ class CSSMessageWatcher extends nsIConsoleListenerWatcher {
    *        - onAvailable: mandatory function
    *          This will be called for each resource.
    */
-  constructor(targetActor, { onAvailable }) {
-    super(targetActor, { onAvailable });
+  async watch(targetActor, { onAvailable }) {
+    super.watch(targetActor, { onAvailable });
 
     // Calling ensureCSSErrorReportingEnabled will make the server parse the stylesheets to
     // retrieve the warnings if the docShell wasn't already watching for CSS messages.
