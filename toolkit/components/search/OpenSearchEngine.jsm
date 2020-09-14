@@ -29,9 +29,6 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
   });
 });
 
-const SEARCH_BUNDLE = "chrome://global/locale/search/search.properties";
-const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
-
 const OPENSEARCH_NS_10 = "http://a9.com/-/spec/opensearch/1.0/";
 const OPENSEARCH_NS_11 = "http://a9.com/-/spec/opensearch/1.1/";
 
@@ -239,41 +236,21 @@ class OpenSearchEngine extends SearchEngine {
      * Handle an error during the load of an engine by notifying the engine's
      * error callback, if any.
      *
-     * @param {number} [errorCode]
+     * @param {number} errorCode
      *   The relevant error code.
      */
-    function onError(errorCode = Ci.nsISearchService.ERROR_UNKNOWN_FAILURE) {
+    function onError(errorCode) {
+      if (engine._engineToUpdate) {
+        logConsole.warn("Failed to update", engine._engineToUpdate.name);
+      }
       // Notify the callback of the failure
       if (engine._installCallback) {
         engine._installCallback(errorCode);
       }
     }
 
-    function promptError(strings = {}, error = undefined) {
-      onError(error);
-
-      if (engine._engineToUpdate) {
-        // We're in an update, so just fail quietly
-        logConsole.warn("Failed to update", engine._engineToUpdate.name);
-        return;
-      }
-      var brandBundle = Services.strings.createBundle(BRAND_BUNDLE);
-      var brandName = brandBundle.GetStringFromName("brandShortName");
-
-      var searchBundle = Services.strings.createBundle(SEARCH_BUNDLE);
-      var msgStringName = strings.error || "error_loading_engine_msg2";
-      var titleStringName = strings.title || "error_loading_engine_title";
-      var title = searchBundle.GetStringFromName(titleStringName);
-      var text = searchBundle.formatStringFromName(msgStringName, [
-        brandName,
-        engine._location,
-      ]);
-
-      Services.ww.getNewPrompter(null).alert(title, text);
-    }
-
     if (!bytes) {
-      promptError();
+      onError(Ci.nsISearchService.ERROR_DOWNLOAD_FAILURE);
       return;
     }
 
@@ -288,12 +265,9 @@ class OpenSearchEngine extends SearchEngine {
       logConsole.error("_onLoad: Failed to init engine!", ex);
       // Report an error to the user
       if (ex.result == Cr.NS_ERROR_FILE_CORRUPTED) {
-        promptError({
-          error: "error_invalid_engine_msg2",
-          title: "error_invalid_format_title",
-        });
+        onError(Ci.nsISearchService.ERROR_ENGINE_CORRUPTED);
       } else {
-        promptError();
+        onError(Ci.nsISearchService.ERROR_DOWNLOAD_FAILURE);
       }
       return;
     }
