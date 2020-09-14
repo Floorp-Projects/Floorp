@@ -149,19 +149,6 @@ done
 cat >> $CONFIG_STATUS <<\EOF
 ]
 
-dnl List of AC_DEFINEs that aren't to be exposed in ALLDEFINES
-non_global_defines = [
-EOF
-
-if test -n "$_NON_GLOBAL_ACDEFINES"; then
-  for var in $_NON_GLOBAL_ACDEFINES; do
-    echo "    '$var'," >> $CONFIG_STATUS
-  done
-fi
-
-cat >> $CONFIG_STATUS <<EOF
-]
-
 flags = [
 undivert(MOZ_DIVERSION_ARGS)dnl
 ]
