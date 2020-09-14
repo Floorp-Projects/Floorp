@@ -5690,8 +5690,6 @@ bool IonBuilder::ensureArrayIteratorPrototypeNextNotModified() {
 AbortReasonOr<Ok> IonBuilder::jsop_optimize_spreadcall() {
   MDefinition* arr = current->peek(-1);
 
-  // Assuming optimization isn't available doesn't affect correctness.
-  // TODO: Investigate dynamic checks.
   bool result = false;
   do {
     // Inline with MIsPackedArray if the conditions described in
@@ -5739,11 +5737,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_optimize_spreadcall() {
     auto* ins = MIsPackedArray::New(alloc(), arr);
     current->add(ins);
     current->push(ins);
-  } else {
-    arr->setImplicitlyUsedUnchecked();
-    pushConstant(BooleanValue(false));
+    return Ok();
   }
-  return Ok();
+
+  auto* ins = MOptimizeSpreadCallCache::New(alloc(), arr);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_funapplyarray(uint32_t argc) {
