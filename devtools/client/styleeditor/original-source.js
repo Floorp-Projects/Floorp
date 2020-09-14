@@ -78,7 +78,7 @@ OriginalSource.prototype = {
    *        properties.
    */
   getOriginalLocation: function(relatedSheet, line, column) {
-    const { href, nodeHref, actorID: sourceId } = relatedSheet;
+    const { href, nodeHref, resourceId: sourceId } = relatedSheet;
     const sourceUrl = href || nodeHref;
     return this._sourceMapService
       .getOriginalLocation({
