@@ -183,6 +183,7 @@ AndroidHardwareBuffer::FromFileDescriptor(ipc::FileDescriptor& aFileDescriptor,
                                           gfx::IntSize aSize,
                                           gfx::SurfaceFormat aFormat) {
   if (!aFileDescriptor.IsValid()) {
+    gfxCriticalNote << "AndroidHardwareBuffer invalid FileDescriptor";
     return nullptr;
   }
 
@@ -193,6 +194,7 @@ AndroidHardwareBuffer::FromFileDescriptor(ipc::FileDescriptor& aFileDescriptor,
   int ret = AndroidHardwareBufferApi::Get()->RecvHandleFromUnixSocket(
       rawFD.get(), &nativeBuffer);
   if (ret < 0) {
+    gfxCriticalNote << "RecvHandleFromUnixSocket failed";
     return nullptr;
   }
 
