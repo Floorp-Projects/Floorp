@@ -9,9 +9,10 @@
 let AVAILABLE_PIP_OVERRIDES;
 
 {
-  // See PictureInPictureTogglePolicy.jsm for these values.
+  // See PictureInPictureControls.jsm for these values.
   // eslint-disable-next-line no-unused-vars
   const TOGGLE_POLICIES = browser.pictureInPictureChild.getPolicies();
+  const KEYBOARD_CONTROLS = browser.pictureInPictureChild.getKeyboardControls();
 
   AVAILABLE_PIP_OVERRIDES = {
     // The keys of this object are match patterns for URLs, as documented in
@@ -19,24 +20,37 @@ let AVAILABLE_PIP_OVERRIDES;
     //
     // Example:
     //
-    // "https://*.youtube.com/*": TOGGLE_POLICIES.THREE_QUARTERS,
-    // "https://*.twitch.tv/mikeconley_dot_ca/*": TOGGLE_POLICIES.TOP,
+    // "https://*.youtube.com/*": {
+    //   policy: TOGGLE_POLICIES.THREE_QUARTERS,
+    //   keyboardControls: KEYBOARD_CONTROLS.PLAY_PAUSE | KEYBOARD_CONTROLS.VOLUME,
+    // },
+    // "https://*.twitch.tv/mikeconley_dot_ca/*": {
+    //   policy: TOGGLE_POLICIES.TOP,
+    //   keyboardControls: KEYBOARD_CONTROLS.NONE,
+    // },
 
-    // Instagram
-    "https://www.instagram.com/*": TOGGLE_POLICIES.ONE_QUARTER,
+    instagram: {
+      "https://www.instagram.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
+    },
 
-    // Laracasts
-    "https://*.laracasts.com/*": TOGGLE_POLICIES.ONE_QUARTER,
+    laracasts: {
+      "https://*.laracasts.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
+    },
 
-    // Netflix
-    "https://*.netflix.com/browse": TOGGLE_POLICIES.HIDDEN,
+    netflix: {
+      "https://*.netflix.com/*": { keyboardControls: ~KEYBOARD_CONTROLS.SEEK },
+      "https://*.netflix.com/browse": { policy: TOGGLE_POLICIES.HIDDEN },
+      "https://*.netflix.com/latest": { policy: TOGGLE_POLICIES.HIDDEN },
+    },
 
-    // Twitch
-    "https://*.twitch.tv/*": TOGGLE_POLICIES.ONE_QUARTER,
-    "https://*.twitch.tech/*": TOGGLE_POLICIES.ONE_QUARTER,
-    "https://*.twitch.a2z.com/*": TOGGLE_POLICIES.ONE_QUARTER,
+    twitch: {
+      "https://*.twitch.tv/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
+      "https://*.twitch.tech/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
+      "https://*.twitch.a2z.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
+    },
 
-    // Udemy
-    "https://*.udemy.com/*": TOGGLE_POLICIES.ONE_QUARTER,
+    udemy: {
+      "https://*.udemy.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
+    },
   };
 }
