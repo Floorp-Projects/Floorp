@@ -32,8 +32,6 @@ class GeckoViewContent extends GeckoViewModule {
       "GeckoView:UpdateInitData",
       "GeckoView:ZoomToInput",
     ]);
-
-    this.activeValueWhilePlayingAudio = null;
   }
 
   onEnable() {
@@ -58,7 +56,6 @@ class GeckoViewContent extends GeckoViewModule {
 
     this.window.addEventListener("DOMWindowClose", this);
     this.window.addEventListener("pagetitlechanged", this);
-    this.window.addEventListener("DOMAudioPlaybackStopped", this);
 
     Services.obs.addObserver(this, "oop-frameloader-crashed");
     Services.obs.addObserver(this, "ipc:content-shutdown");
@@ -83,7 +80,6 @@ class GeckoViewContent extends GeckoViewModule {
 
     this.window.removeEventListener("DOMWindowClose", this);
     this.window.removeEventListener("pagetitlechanged", this);
-    this.window.removeEventListener("DOMAudioPlaybackStopped", this);
 
     Services.obs.removeObserver(this, "oop-frameloader-crashed");
     Services.obs.removeObserver(this, "ipc:content-shutdown");
@@ -153,14 +149,7 @@ class GeckoViewContent extends GeckoViewModule {
         this.sendToAllChildren(aEvent, aData);
         break;
       case "GeckoView:SetActive":
-        // When audio is playing, don't change the active status of the
-        // docshell. Instead, store the value that would have been set, and
-        // change the status of the docshell when audio playback stops.
-        if (this.browser.audioPlaying) {
-          this.activeValueWhilePlayingAudio = !!aData.active;
-        } else {
-          this.browser.docShellIsActive = !!aData.active;
-        }
+        this.browser.docShellIsActive = !!aData.active;
         break;
       case "GeckoView:SetFocused":
         if (aData.focused) {
@@ -208,15 +197,6 @@ class GeckoViewContent extends GeckoViewModule {
           type: "GeckoView:PageTitleChanged",
           title: this.browser.contentTitle,
         });
-        break;
-      case "DOMAudioPlaybackStopped":
-        // Audio playback has stopped. If a SetActive call was delayed because
-        // audio was being backed back, it's now time to reevaluate whether the
-        // docshell should still be active.
-        if (this.activeValueWhilePlayingAudio !== null) {
-          this.browser.docShellIsActive = this.activeValueWhilePlayingAudio;
-          this.activeValueWhilePlayingAudio = null;
-        }
         break;
       case "DOMWindowClose":
         // We need this because we want to allow the app

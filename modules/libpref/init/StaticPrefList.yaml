@@ -2141,13 +2141,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Number of seconds of very quiet or silent audio before considering the audio
-# inaudible.
-- name: dom.media.silence_duration_for_audibility
-  type: AtomicFloat
-  value: 2.0f
-  mirror: always
-
 # Enable meta-viewport support in remote APZ-enabled frames.
 - name: dom.meta-viewport.enabled
   type: RelaxedAtomicBool
