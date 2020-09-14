@@ -70,7 +70,7 @@ function onLoad() {
       prefixForType = "delete-user-cert-";
       break;
     case "websites_tab":
-      prefixForType = "delete-ssl-cert-";
+      prefixForType = "delete-ssl-override-";
       break;
     case "ca_tab":
       prefixForType = "delete-ca-cert-";

@@ -83,6 +83,38 @@ class WriterRunnable : public Runnable {
   const nsCOMPtr<nsIFile> mFile;
 };
 
+NS_IMPL_ISUPPORTS(nsCertOverride, nsICertOverride)
+
+NS_IMETHODIMP
+nsCertOverride::GetAsciiHost(/*out*/ nsACString& aAsciiHost) {
+  aAsciiHost = mAsciiHost;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCertOverride::GetDbKey(/*out*/ nsACString& aDBKey) {
+  aDBKey = mDBKey;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCertOverride::GetPort(/*out*/ int32_t* aPort) {
+  *aPort = mPort;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCertOverride::GetIsTemporary(/*out*/ bool* aIsTemporary) {
+  *aIsTemporary = mIsTemporary;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCertOverride::GetHostPort(/*out*/ nsACString& aHostPort) {
+  nsCertOverrideService::GetHostWithPort(mAsciiHost, mPort, aHostPort);
+  return NS_OK;
+}
+
 void nsCertOverride::convertBitsToString(OverrideBits ob,
                                          /*out*/ nsACString& str) {
   str.Truncate();
@@ -222,8 +254,8 @@ void nsCertOverrideService::RemoveAllTemporaryOverrides() {
   MutexAutoLock lock(mMutex);
   for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
     nsCertOverrideEntry* entry = iter.Get();
-    if (entry->mSettings.mIsTemporary) {
-      entry->mSettings.mCert = nullptr;
+    if (entry->mSettings->mIsTemporary) {
+      entry->mSettings->mCert = nullptr;
       iter.Remove();
     }
   }
@@ -337,23 +369,23 @@ nsresult nsCertOverrideService::Write(const MutexAutoLock& aProofOfLock) {
   for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
     nsCertOverrideEntry* entry = iter.Get();
 
-    const nsCertOverride& settings = entry->mSettings;
-    if (settings.mIsTemporary) {
+    RefPtr<nsCertOverride> settings = entry->mSettings;
+    if (settings->mIsTemporary) {
       continue;
     }
 
     nsAutoCString bits_string;
-    nsCertOverride::convertBitsToString(settings.mOverrideBits, bits_string);
+    nsCertOverride::convertBitsToString(settings->mOverrideBits, bits_string);
 
     output.Append(entry->mHostWithPort);
     output.Append(kTab);
     output.Append(sSHA256OIDString);
     output.Append(kTab);
-    output.Append(settings.mFingerprint);
+    output.Append(settings->mFingerprint);
     output.Append(kTab);
     output.Append(bits_string);
     output.Append(kTab);
-    output.Append(settings.mDBKey);
+    output.Append(settings->mDBKey);
     output.Append(NS_LINEBREAK);
   }
 
@@ -494,7 +526,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString& aHostName,
 
   nsAutoCString hostPort;
   GetHostWithPort(aHostName, aPort, hostPort);
-  nsCertOverride settings;
+  RefPtr<nsCertOverride> settings;
 
   {
     MutexAutoLock lock(mMutex);
@@ -502,11 +534,11 @@ nsCertOverrideService::HasMatchingOverride(const nsACString& aHostName,
 
     if (!entry) return NS_OK;
 
-    settings = entry->mSettings;  // copy
+    settings = entry->mSettings;
   }
 
-  *aOverrideBits = static_cast<uint32_t>(settings.mOverrideBits);
-  *aIsTemporary = settings.mIsTemporary;
+  *aOverrideBits = static_cast<uint32_t>(settings->mOverrideBits);
+  *aIsTemporary = settings->mIsTemporary;
 
   nsAutoCString fpStr;
   nsresult rv;
@@ -516,7 +548,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString& aHostName,
     return rv;
   }
 
-  *_retval = settings.mFingerprint.Equals(fpStr);
+  *_retval = settings->mFingerprint.Equals(fpStr);
   return NS_OK;
 }
 
@@ -537,16 +569,18 @@ nsresult nsCertOverrideService::AddEntryToList(
 
   entry->mHostWithPort = hostPort;
 
-  nsCertOverride& settings = entry->mSettings;
-  settings.mAsciiHost = aHostName;
-  settings.mPort = aPort;
-  settings.mIsTemporary = aIsTemporary;
-  settings.mFingerprint = fingerprint;
-  settings.mOverrideBits = ob;
-  settings.mDBKey = dbKey;
+  RefPtr<nsCertOverride> settings(new nsCertOverride());
+
+  settings->mAsciiHost = aHostName;
+  settings->mPort = aPort;
+  settings->mIsTemporary = aIsTemporary;
+  settings->mFingerprint = fingerprint;
+  settings->mOverrideBits = ob;
+  settings->mDBKey = dbKey;
   // remove whitespace from stored dbKey for backwards compatibility
-  settings.mDBKey.StripWhitespace();
-  settings.mCert = aCert;
+  settings->mDBKey.StripWhitespace();
+  settings->mCert = aCert;
+  entry->mSettings = settings;
 
   return NS_OK;
 }
@@ -609,7 +643,7 @@ void nsCertOverrideService::CountPermanentOverrideTelemetry(
     const MutexAutoLock& aProofOfLock) {
   uint32_t overrideCount = 0;
   for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
-    if (!iter.Get()->mSettings.mIsTemporary) {
+    if (!iter.Get()->mSettings->mIsTemporary) {
       overrideCount++;
     }
   }
@@ -638,19 +672,19 @@ nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert* aCert,
   {
     MutexAutoLock lock(mMutex);
     for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
-      const nsCertOverride& settings = iter.Get()->mSettings;
+      RefPtr<nsCertOverride> settings = iter.Get()->mSettings;
 
-      if ((settings.mIsTemporary && !aCheckTemporaries) ||
-          (!settings.mIsTemporary && !aCheckPermanents)) {
+      if ((settings->mIsTemporary && !aCheckTemporaries) ||
+          (!settings->mIsTemporary && !aCheckPermanents)) {
         continue;
       }
 
-      if (matchesDBKey(aCert, settings.mDBKey)) {
+      if (matchesDBKey(aCert, settings->mDBKey)) {
         nsAutoCString cert_fingerprint;
         nsresult rv =
             GetCertFingerprintByOidTag(aCert, SEC_OID_SHA256, cert_fingerprint);
         if (NS_SUCCEEDED(rv) &&
-            settings.mFingerprint.Equals(cert_fingerprint)) {
+            settings->mFingerprint.Equals(cert_fingerprint)) {
           counter++;
         }
       }
@@ -695,21 +729,33 @@ nsresult nsCertOverrideService::EnumerateCertOverrides(
     nsIX509Cert* aCert, CertOverrideEnumerator aEnumerator, void* aUserData) {
   MutexAutoLock lock(mMutex);
   for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
-    const nsCertOverride& settings = iter.Get()->mSettings;
+    const RefPtr<nsCertOverride> settings = iter.Get()->mSettings;
 
     if (!aCert) {
       aEnumerator(settings, aUserData);
     } else {
-      if (matchesDBKey(aCert, settings.mDBKey)) {
+      if (matchesDBKey(aCert, settings->mDBKey)) {
         nsAutoCString cert_fingerprint;
         nsresult rv =
             GetCertFingerprintByOidTag(aCert, SEC_OID_SHA256, cert_fingerprint);
         if (NS_SUCCEEDED(rv) &&
-            settings.mFingerprint.Equals(cert_fingerprint)) {
+            settings->mFingerprint.Equals(cert_fingerprint)) {
           aEnumerator(settings, aUserData);
         }
       }
     }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCertOverrideService::GetOverrides(
+    /*out*/ nsTArray<RefPtr<nsICertOverride>>& retval) {
+  MutexAutoLock lock(mMutex);
+  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
+    const RefPtr<nsICertOverride> settings = iter.Get()->mSettings;
+
+    retval.AppendElement(settings);
   }
   return NS_OK;
 }
