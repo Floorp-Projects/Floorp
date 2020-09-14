@@ -4444,6 +4444,8 @@ pref("dom.clients.openwindow_favors_same_process", true);
   pref("toolkit.aboutPerformance.showInternals", true);
 #endif
 
+// If `true`, about:processes shows in-process subframes.
+pref("toolkit.aboutProcesses.showAllSubframes", false);
 // If `true`, about:processes shows thread information.
 pref("toolkit.aboutProcesses.showThreads", false);
 
