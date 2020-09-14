@@ -658,9 +658,7 @@ StyleSheetEditor.prototype = {
       return;
     }
 
-    const node = await this.walker.getStyleSheetOwnerNode(
-      this.styleSheet.actorID
-    );
+    const node = await this.walker.getStyleSheetOwnerNode(this.resourceId);
     await this.highlighter.show(node, {
       selector: info.selector,
       hideInfoBar: true,
