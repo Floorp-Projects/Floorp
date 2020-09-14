@@ -71,7 +71,8 @@
 .controlBar[hidden] .progressBar,
 .controlBar[hidden] .bufferBar,
 .pictureInPictureToggleButton[hidden],
-.videocontrols[inDOMFullscreen] > .controlsContainer > .controlsOverlay > .pictureInPictureToggleButton {
+.videocontrols[inDOMFullscreen] > .controlsContainer > .controlsOverlay > .pictureInPictureToggleButton,
+.videocontrols[inDOMFullscreen] > .controlsContainer > .controlsOverlay > #pictureInPictureToggleExperiment {
   display: none;
 }
 
