@@ -172,6 +172,7 @@ namespace jit {
   _(IonHasOwnICUpdate, js::jit::IonHasOwnIC::update)                           \
   _(IonInICUpdate, js::jit::IonInIC::update)                                   \
   _(IonInstanceOfICUpdate, js::jit::IonInstanceOfIC::update)                   \
+  _(IonOptimizeSpreadCallICUpdate, js::jit::IonOptimizeSpreadCallIC::update)   \
   _(IonRecompile, js::jit::IonRecompile)                                       \
   _(IonSetPropertyICUpdate, js::jit::IonSetPropertyIC::update)                 \
   _(IonToPropertyKeyICUpdate, js::jit::IonToPropertyKeyIC::update)             \

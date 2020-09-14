@@ -11311,6 +11311,19 @@ class MGetIteratorCache : public MUnaryInstruction,
   NAMED_OPERANDS((0, value))
 };
 
+class MOptimizeSpreadCallCache : public MUnaryInstruction,
+                                 public BoxInputsPolicy::Data {
+  explicit MOptimizeSpreadCallCache(MDefinition* val)
+      : MUnaryInstruction(classOpcode, val) {
+    setResultType(MIRType::Boolean);
+  }
+
+ public:
+  INSTRUCTION_HEADER(OptimizeSpreadCallCache)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, value))
+};
+
 class MIteratorMore : public MUnaryInstruction,
                       public SingleObjectPolicy::Data {
   explicit MIteratorMore(MDefinition* iter)
