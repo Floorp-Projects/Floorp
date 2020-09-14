@@ -6271,6 +6271,48 @@ AttachDecision CallIRGenerator::tryAttachString(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachStringConstructor(
+    HandleFunction callee) {
+  // Need a single string argument.
+  // TODO(Warp): Support all or more conversions to strings.
+  if (argc_ != 1 || !args_[0].isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  RootedString emptyString(cx_, cx_->runtime()->emptyString);
+  JSObject* templateObj = StringObject::create(
+      cx_, emptyString, /* proto = */ nullptr, TenuredObject);
+  if (!templateObj) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'String' function.
+  emitNativeCalleeGuard(callee);
+
+  CallFlags flags(IsConstructPC(pc_), IsSpreadPC(pc_));
+
+  // Guard that the argument is a string.
+  ValOperandId argId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags);
+  StringOperandId strId = writer.guardToString(argId);
+
+  if (!JitOptions.warpBuilder) {
+    // Store the template object for BaselineInspector.
+    writer.metaNativeTemplateObject(callee, templateObj);
+  }
+
+  writer.newStringObjectResult(templateObj, strId);
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("StringConstructor");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringToStringValueOf(
     HandleFunction callee) {
   // Expecting no arguments.
@@ -8674,6 +8716,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
         return tryAttachArrayConstructor(callee);
       case InlinableNative::TypedArrayConstructor:
         return tryAttachTypedArrayConstructor(callee);
+      case InlinableNative::String:
+        return tryAttachStringConstructor(callee);
       default:
         break;
     }
@@ -9278,6 +9322,11 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
 
     case InlinableNative::String: {
       if (!isConstructing) {
+        return true;
+      }
+
+      if (args_.length() == 1 && args_[0].isString()) {
+        // This case is handled by tryAttachStringConstructor.
         return true;
       }
 

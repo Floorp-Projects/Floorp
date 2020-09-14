@@ -1736,6 +1736,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachSubstringKernel(HandleFunction callee);
   AttachDecision tryAttachObjectHasPrototype(HandleFunction callee);
   AttachDecision tryAttachString(HandleFunction callee);
+  AttachDecision tryAttachStringConstructor(HandleFunction callee);
   AttachDecision tryAttachStringToStringValueOf(HandleFunction callee);
   AttachDecision tryAttachStringChar(HandleFunction callee, StringChar kind);
   AttachDecision tryAttachStringCharCodeAt(HandleFunction callee);
