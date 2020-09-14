@@ -34,7 +34,6 @@ class LoadListener {
   _callback = null;
   _channel = null;
   _countRead = 0;
-  _engine = null;
   _stream = null;
   QueryInterface = ChromeUtils.generateQI([
     Ci.nsIRequestObserver,
@@ -44,9 +43,8 @@ class LoadListener {
     Ci.nsIProgressEventSink,
   ]);
 
-  constructor(channel, engine, callback) {
+  constructor(channel, callback) {
     this._channel = channel;
-    this._engine = engine;
     this._callback = callback;
   }
 
@@ -71,9 +69,8 @@ class LoadListener {
       // send null so the callback can deal with the failure
       this._bytes = null;
     }
-    this._callback(this._bytes, this._engine);
+    this._callback(this._bytes);
     this._channel = null;
-    this._engine = null;
   }
 
   // nsIStreamListener
