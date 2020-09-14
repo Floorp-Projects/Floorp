@@ -380,14 +380,14 @@ bool nsHTTPSOnlyUtils::LoopbackOrLocalException(nsIURI* aURI) {
 
   mozilla::net::NetAddr addr(&tempAddr);
   // Loopback IPs are always exempt
-  if (addr.IsLoopbackAddr()) {
+  if (IsLoopBackAddress(&addr)) {
     return true;
   }
 
   // Local IP exception can get disabled with a pref
   bool upgradeLocal =
       mozilla::StaticPrefs::dom_security_https_only_mode_upgrade_local();
-  return (!upgradeLocal && addr.IsIPAddrLocal());
+  return (!upgradeLocal && IsIPAddrLocal(&addr));
 }
 
 /////////////////////////////////////////////////////////////////////

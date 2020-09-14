@@ -382,10 +382,6 @@ with modules["NETWORK"]:
     # speak to a proxy server, then it will generate this error if the proxy
     # hostname cannot be resolved.
     errors["NS_ERROR_UNKNOWN_PROXY_HOST"] = FAILURE(42)
-    # This DNS error will occur when the resolver uses the Extended DNS Error
-    # option to indicate an error code for which we should not fall back to the
-    # default DNS resolver. This means the DNS failure is definitive.
-    errors["NS_ERROR_DEFINITIVE_UNKNOWN_HOST"] = FAILURE(43)
 
     # Socket specific error codes:
 

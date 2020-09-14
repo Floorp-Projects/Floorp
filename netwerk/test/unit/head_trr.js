@@ -147,7 +147,6 @@ class TRRDNSListener {
       this.expectedAnswer,
       `Checking result for ${this.name}`
     );
-    inRecord.rewind(); // In case the caller also checks the addresses
 
     if (this.delay !== undefined) {
       Assert.greaterOrEqual(
@@ -269,39 +268,23 @@ function trrQueryHandler(req, resp, url) {
 
   function processRequest(req, resp, payload) {
     let dnsQuery = global.dnsPacket.decode(payload);
-    let response =
+    let answers =
       global.dns_query_answers[
         `${dnsQuery.questions[0].name}/${dnsQuery.questions[0].type}`
-      ] || {};
+      ] || [];
 
     let buf = global.dnsPacket.encode({
       type: "response",
       id: dnsQuery.id,
       flags: global.dnsPacket.RECURSION_DESIRED,
       questions: dnsQuery.questions,
-      answers: response.answers || [],
-      additionals: response.additionals || [],
+      answers,
     });
 
-    let writeResponse = (resp, buf) => {
-      resp.setHeader("Content-Length", buf.length);
-      resp.writeHead(200, { "Content-Type": "application/dns-message" });
-      resp.write(buf);
-      resp.end("");
-    };
-
-    if (response.delay) {
-      setTimeout(
-        arg => {
-          writeResponse(arg[0], arg[1]);
-        },
-        response.delay,
-        [resp, buf]
-      );
-      return;
-    }
-
-    writeResponse(resp, buf);
+    resp.setHeader("Content-Length", buf.length);
+    resp.writeHead(200, { "Content-Type": "application/dns-message" });
+    resp.write(buf);
+    resp.end("");
   }
 }
 
@@ -350,12 +333,10 @@ class TRRServer {
   ///          flush: false,
   ///          data: "1.2.3.4",
   ///        }]
-  async registerDoHAnswers(name, type, answers, additionals, delay = 0) {
-    let text = `global.dns_query_answers["${name}/${type}"] = ${JSON.stringify({
-      answers,
-      additionals,
-      delay,
-    })}`;
+  async registerDoHAnswers(name, type, answers) {
+    let text = `global.dns_query_answers["${name}/${type}"] = ${JSON.stringify(
+      answers
+    )}`;
     return this.execute(text);
   }
 }

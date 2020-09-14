@@ -892,7 +892,7 @@ nsresult nsSocketTransport::InitWithConnectedSocket(PRFileDesc* fd,
   NS_ASSERTION(!mFD.IsInitialized(), "already initialized");
 
   char buf[kNetAddrMaxCStrBufSize];
-  addr->ToStringBuffer(buf, sizeof(buf));
+  NetAddrToString(addr, buf, sizeof(buf));
   mHost.Assign(buf);
 
   uint16_t port;
@@ -1310,8 +1310,8 @@ nsresult nsSocketTransport::InitiateSocket() {
 #endif
 
     if (NS_SUCCEEDED(mCondition) && xpc::AreNonLocalConnectionsDisabled() &&
-        !(mNetAddr.IsIPAddrAny() || mNetAddr.IsIPAddrLocal() ||
-          mNetAddr.IsIPAddrShared())) {
+        !(IsIPAddrAny(&mNetAddr) || IsIPAddrLocal(&mNetAddr) ||
+          IsIPAddrShared(&mNetAddr))) {
       nsAutoCString ipaddr;
       RefPtr<nsNetAddr> netaddr = new nsNetAddr(&mNetAddr);
       netaddr->GetAddress(ipaddr);
@@ -1333,12 +1333,12 @@ nsresult nsSocketTransport::InitiateSocket() {
   // Hosts/Proxy Hosts that are Local IP Literals should not be speculatively
   // connected - Bug 853423.
   if (mConnectionFlags & nsISocketTransport::DISABLE_RFC1918 &&
-      mNetAddr.IsIPAddrLocal()) {
+      IsIPAddrLocal(&mNetAddr)) {
     if (SOCKET_LOG_ENABLED()) {
       nsAutoCString netAddrCString;
       netAddrCString.SetLength(kIPv6CStrBufSize);
-      if (!mNetAddr.ToStringBuffer(netAddrCString.BeginWriting(),
-                                   kIPv6CStrBufSize))
+      if (!NetAddrToString(&mNetAddr, netAddrCString.BeginWriting(),
+                           kIPv6CStrBufSize))
         netAddrCString = "<IP-to-string failed>"_ns;
       SOCKET_LOG(
           ("nsSocketTransport::InitiateSocket skipping "
@@ -1522,7 +1522,7 @@ nsresult nsSocketTransport::InitiateSocket() {
 
   if (SOCKET_LOG_ENABLED()) {
     char buf[kNetAddrMaxCStrBufSize];
-    mNetAddr.ToStringBuffer(buf, sizeof(buf));
+    NetAddrToString(&mNetAddr, buf, sizeof(buf));
     SOCKET_LOG(("  trying address: %s\n", buf));
   }
 
@@ -2526,7 +2526,7 @@ void nsSocketTransport::IsLocal(bool* aIsLocal) {
     }
 #endif
 
-    *aIsLocal = mNetAddr.IsLoopbackAddr();
+    *aIsLocal = IsLoopBackAddress(&mNetAddr);
   }
 }
 
