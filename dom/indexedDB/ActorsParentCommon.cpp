@@ -301,37 +301,32 @@ nsresult ReadCompressedIndexDataValuesFromSource(
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aOutIndexValues.IsEmpty());
 
-  int32_t columnType;
-  nsresult rv = aSource.GetTypeOfIndex(aColumnIndex, &columnType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  IDB_TRY_VAR(const int32_t columnType,
+              MOZ_TO_RESULT_INVOKE(aSource, GetTypeOfIndex, aColumnIndex));
+
+  switch (columnType) {
+    case mozIStorageStatement::VALUE_TYPE_NULL:
+      return NS_OK;
+
+    case mozIStorageStatement::VALUE_TYPE_BLOB: {
+      // XXX ToResultInvoke does not support multiple output parameters yet, so
+      // we also can't use IDB_TRY_VAR here.
+      const uint8_t* blobData;
+      uint32_t blobDataLength;
+      IDB_TRY(aSource.GetSharedBlob(aColumnIndex, &blobDataLength, &blobData));
+
+      IDB_TRY(OkIf(blobDataLength), NS_ERROR_FILE_CORRUPTED,
+              IDB_REPORT_INTERNAL_ERR_LAMBDA);
+
+      IDB_TRY(ReadCompressedIndexDataValuesFromBlob(
+          Span(blobData, blobDataLength), aOutIndexValues));
+
+      return NS_OK;
+    }
+
+    default:
+      return NS_ERROR_FILE_CORRUPTED;
   }
-
-  if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_BLOB);
-
-  const uint8_t* blobData;
-  uint32_t blobDataLength;
-  rv = aSource.GetSharedBlob(aColumnIndex, &blobDataLength, &blobData);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (NS_WARN_IF(!blobDataLength)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_FILE_CORRUPTED;
-  }
-
-  rv = ReadCompressedIndexDataValuesFromBlob(Span(blobData, blobDataLength),
-                                             aOutIndexValues);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
 }
 
 Result<StructuredCloneReadInfoParent, nsresult>
