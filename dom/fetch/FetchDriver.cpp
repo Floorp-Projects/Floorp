@@ -1430,7 +1430,7 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
                                     nsIAsyncVerifyRedirectCallback* aCallback) {
   nsCOMPtr<nsIHttpChannel> oldHttpChannel = do_QueryInterface(aOldChannel);
   nsCOMPtr<nsIHttpChannel> newHttpChannel = do_QueryInterface(aNewChannel);
-  if (newHttpChannel) {
+  if (oldHttpChannel && newHttpChannel) {
     nsAutoCString method;
     mRequest->GetMethod(method);
 
