@@ -21,6 +21,7 @@ pub mod pings;
 pub mod private;
 
 pub mod ipc;
+pub(crate) mod dispatcher;
 
 /// Run a closure with a mutable reference to the locked global Glean object.
 fn with_glean<F, R>(f: F) -> R
@@ -39,4 +40,8 @@ where
 /// See `glean_core::Glean.is_upload_enabled`.
 pub fn is_upload_enabled() -> bool {
     with_glean(|glean| glean.is_upload_enabled())
+}
+
+pub fn flush_init() -> Result<(), dispatcher::DispatchError> {
+    dispatcher::flush_init()
 }
