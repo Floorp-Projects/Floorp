@@ -378,8 +378,6 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
 
   AUTO_PROFILER_LABEL("GetStructuredCloneReadInfoFromExternalBlob", DOM);
 
-  nsresult rv;
-
   nsTArray<StructuredCloneFileParent> files;
   if (!aFileIds.IsVoid()) {
     IDB_TRY_VAR(files, DeserializeStructuredCloneFiles(aFileManager, aFileIds));
@@ -387,12 +385,10 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
 
   // Higher and lower 32 bits described
   // in ObjectStoreAddOrPutRequestOp::DoDatabaseWork.
-  const uint32_t index = uint32_t(aIntData & 0xFFFFFFFF);
+  const uint32_t index = uint32_t(aIntData & UINT32_MAX);
 
-  if (index >= files.Length()) {
-    MOZ_ASSERT(false, "Bad index value!");
-    return Err(NS_ERROR_UNEXPECTED);
-  }
+  IDB_TRY(OkIf(index < files.Length()), Err(NS_ERROR_UNEXPECTED),
+          [](const auto&) { MOZ_ASSERT(false, "Bad index value!"); });
 
   if (IndexedDatabaseManager::PreprocessingEnabled()) {
     return StructuredCloneReadInfoParent{
@@ -405,15 +401,14 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
   MOZ_ASSERT(file.Type() == StructuredCloneFileBase::eStructuredClone);
 
   const nsCOMPtr<nsIFile> nativeFile = file.FileInfo().GetFileForFileInfo();
-  if (NS_WARN_IF(!nativeFile)) {
-    return Err(NS_ERROR_FAILURE);
-  }
+  IDB_TRY(OkIf(nativeFile), Err(NS_ERROR_FAILURE));
 
+  // XXX NS_NewLocalFileInputStream does not follow the convention to place its
+  // output parameter last (it has optional parameters which makes that
+  // problematic), so we can't use ToResultInvoke, nor IDB_TRY_VAR.
   nsCOMPtr<nsIInputStream> fileInputStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), nativeFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY(
+      NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), nativeFile));
 
   const auto snappyInputStream =
       MakeRefPtr<SnappyUncompressInputStream>(fileInputStream);
@@ -422,19 +417,16 @@ GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
   do {
     char buffer[kFileCopyBufferSize];
 
-    uint32_t numRead;
-    rv = snappyInputStream->Read(buffer, sizeof(buffer), &numRead);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+    IDB_TRY_VAR(
+        const uint32_t numRead,
+        MOZ_TO_RESULT_INVOKE(snappyInputStream, Read, buffer, sizeof(buffer)));
 
     if (!numRead) {
       break;
     }
 
-    if (NS_WARN_IF(!data.AppendBytes(buffer, numRead))) {
-      return Err(NS_ERROR_OUT_OF_MEMORY);
-    }
+    IDB_TRY(OkIf(data.AppendBytes(buffer, numRead)),
+            Err(NS_ERROR_OUT_OF_MEMORY));
   } while (true);
 
   return StructuredCloneReadInfoParent{std::move(data), std::move(files),
