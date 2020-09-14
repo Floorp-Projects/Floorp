@@ -35,7 +35,7 @@ let whitelist = [
     isFromDevTools: false,
   },
   {
-    sourceName: /\b(html|mathml|ua|forms|svg)\.css$/i,
+    sourceName: /\b(minimal-xul|html|mathml|ua|forms|svg)\.css$/i,
     errorMessage: /Unknown property.*-moz-/i,
     isFromDevTools: false,
   },
