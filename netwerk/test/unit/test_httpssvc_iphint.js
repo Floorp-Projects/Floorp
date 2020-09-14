@@ -231,3 +231,65 @@ add_task(async function testStoreIPHint() {
     ["1.2.3.4", "5.6.7.8"]
   );
 });
+
+function makeChan(url) {
+  let chan = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
+  return chan;
+}
+
+function channelOpenPromise(chan) {
+  return new Promise(resolve => {
+    function finish(req, buffer) {
+      resolve([req, buffer]);
+    }
+    let internal = chan.QueryInterface(Ci.nsIHttpChannelInternal);
+    internal.setWaitForHTTPSSVCRecord();
+    chan.asyncOpen(new ChannelListener(finish, null, CL_ALLOW_UNKNOWN_CL));
+  });
+}
+
+// Test if we can connect to the server with the IP hint address.
+add_task(async function testConnectionWithIPHint() {
+  dns.clearCache(true);
+  prefs.setIntPref("network.trr.mode", 3);
+  prefs.setCharPref(
+    "network.trr.uri",
+    "https://127.0.0.1:" + h2Port + "/httpssvc_use_iphint"
+  );
+
+  // Resolving test.iphint.com should be failed.
+  let listener = new DNSListener();
+  let request = dns.asyncResolve(
+    "test.iphint.com",
+    dns.RESOLVE_TYPE_DEFAULT,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(
+    inStatus,
+    Cr.NS_ERROR_UNKNOWN_HOST,
+    "status is NS_ERROR_UNKNOWN_HOST"
+  );
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    true
+  );
+
+  // The connection should be succeeded since the IP hint is 127.0.0.1.
+  let chan = makeChan(`https://test.iphint.com:8080/`);
+  let [req, resp] = await channelOpenPromise(chan);
+  Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
+
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    false
+  );
+});

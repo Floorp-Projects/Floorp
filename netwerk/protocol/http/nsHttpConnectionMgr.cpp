@@ -4246,6 +4246,26 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
     tmpFlags |= nsISocketTransport::BE_CONSERVATIVE;
   }
 
+  if (ci->HasIPHintAddress()) {
+    nsCOMPtr<nsIDNSService> dns =
+        do_GetService("@mozilla.org/network/dns-service;1", &rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // The spec says: "If A and AAAA records for TargetName are locally
+    // available, the client SHOULD ignore these hints.", so we check if the DNS
+    // record is in cache before setting USE_IP_HINT_ADDRESS.
+    nsCOMPtr<nsIDNSRecord> record;
+    rv = dns->ResolveNative(ci->GetRoutedHost(), nsIDNSService::RESOLVE_OFFLINE,
+                            mEnt->mConnInfo->GetOriginAttributes(),
+                            getter_AddRefs(record));
+    if (NS_FAILED(rv) || !record) {
+      LOG(("Setting Socket to use IP hint address"));
+      tmpFlags |= nsISocketTransport::USE_IP_HINT_ADDRESS;
+    }
+  }
+
   if (mCaps & NS_HTTP_DISABLE_IPV4) {
     tmpFlags |= nsISocketTransport::DISABLE_IPV4;
   } else if (mCaps & NS_HTTP_DISABLE_IPV6) {

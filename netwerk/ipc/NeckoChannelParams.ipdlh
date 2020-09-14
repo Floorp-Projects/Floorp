@@ -369,6 +369,7 @@ struct HttpConnectionInfoCloneArgs
   bool isIPv6Disabled;
   nsCString topWindowOrigin;
   bool isHttp3;
+  bool hasIPHintAddress;
   ProxyInfoCloneArgs[] proxyInfo;
 };
 

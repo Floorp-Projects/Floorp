@@ -113,6 +113,7 @@ void nsHttpConnectionInfo::Init(const nsACString& host, int32_t port,
   mTRRMode = nsIRequest::TRR_DEFAULT_MODE;
   mIPv4Disabled = false;
   mIPv6Disabled = false;
+  mHasIPHintAddress = false;
 
   mUsingHttpsProxy = (proxyInfo && proxyInfo->IsHTTPS());
   mUsingHttpProxy = mUsingHttpsProxy || (proxyInfo && proxyInfo->IsHTTP());
@@ -337,6 +338,7 @@ already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
   clone->SetTRRMode(GetTRRMode());
   clone->SetIPv4Disabled(GetIPv4Disabled());
   clone->SetIPv6Disabled(GetIPv6Disabled());
+  clone->SetHasIPHintAddress(HasIPHintAddress());
   MOZ_ASSERT(clone->Equals(this));
 
   return clone.forget();
@@ -386,6 +388,12 @@ nsHttpConnectionInfo::CloneAndAdoptHTTPSSVCRecord(
   clone->SetIPv4Disabled(GetIPv4Disabled());
   clone->SetIPv6Disabled(GetIPv6Disabled());
 
+  bool hasIPHint = false;
+  Unused << aRecord->GetHasIPHintAddress(&hasIPHint);
+  if (hasIPHint) {
+    clone->SetHasIPHintAddress(hasIPHint);
+  }
+
   return clone.forget();
 }
 
@@ -413,6 +421,7 @@ void nsHttpConnectionInfo::SerializeHttpConnectionInfo(
   aArgs.isIPv6Disabled() = aInfo->GetIPv6Disabled();
   aArgs.topWindowOrigin() = aInfo->GetTopWindowOrigin();
   aArgs.isHttp3() = aInfo->IsHttp3();
+  aArgs.hasIPHintAddress() = aInfo->HasIPHintAddress();
 
   if (!aInfo->ProxyInfo()) {
     return;
@@ -456,6 +465,7 @@ nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(
   cinfo->SetTRRMode(static_cast<nsIRequest::TRRMode>(aInfoArgs.trrMode()));
   cinfo->SetIPv4Disabled(aInfoArgs.isIPv4Disabled());
   cinfo->SetIPv6Disabled(aInfoArgs.isIPv6Disabled());
+  cinfo->SetHasIPHintAddress(aInfoArgs.hasIPHintAddress());
 
   return cinfo.forget();
 }
@@ -481,6 +491,7 @@ void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo** outCI) {
   clone->SetTRRMode(GetTRRMode());
   clone->SetIPv4Disabled(GetIPv4Disabled());
   clone->SetIPv6Disabled(GetIPv6Disabled());
+  clone->SetHasIPHintAddress(HasIPHintAddress());
 
   clone.forget(outCI);
 }

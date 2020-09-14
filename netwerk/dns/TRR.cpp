@@ -1091,6 +1091,11 @@ nsresult TRR::DohDecode(nsCString& aHost) {
             if (key == SvcParamKeyMandatory || key > SvcParamKeyLast) {
               continue;
             }
+
+            if (value.mValue.is<SvcParamIpv4Hint>() ||
+                value.mValue.is<SvcParamIpv6Hint>()) {
+              parsed.mHasIPHints = true;
+            }
             parsed.mSvcFieldValue.AppendElement(value);
           }
 

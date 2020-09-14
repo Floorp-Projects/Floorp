@@ -91,6 +91,7 @@ struct SVCB {
   void GetIPHints(CopyableTArray<mozilla::net::NetAddr>& aAddresses) const;
   uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
+  bool mHasIPHints = false;
   CopyableTArray<SvcFieldValue> mSvcFieldValue;
 };
 
