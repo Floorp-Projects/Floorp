@@ -208,6 +208,11 @@ NS_IMETHODIMP SVCBRecord::GetValues(nsTArray<RefPtr<nsISVCParam>>& aValues) {
   return NS_OK;
 }
 
+NS_IMETHODIMP SVCBRecord::GetHasIPHintAddress(bool* aHasIPHintAddress) {
+  *aHasIPHintAddress = mData.mHasIPHints;
+  return NS_OK;
+}
+
 already_AddRefed<nsISVCBRecord>
 DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
     bool aNoHttp2, bool aNoHttp3, const nsTArray<SVCB>& aRecords,

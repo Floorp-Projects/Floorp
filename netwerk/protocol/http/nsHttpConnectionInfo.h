@@ -209,6 +209,9 @@ class nsHttpConnectionInfo final : public ARefBase {
 
   bool IsHttp3() const { return mIsHttp3; }
 
+  void SetHasIPHintAddress(bool aHasIPHint) { mHasIPHintAddress = aHasIPHint; }
+  bool HasIPHintAddress() const { return mHasIPHintAddress; }
+
  private:
   // These constructor versions are intended to be used from Clone() and
   // DeserializeHttpConnectionInfoCloneArgs().
@@ -259,6 +262,8 @@ class nsHttpConnectionInfo final : public ARefBase {
                         // tls1.3. If the tls version is till not know or it
                         // is 1.3 or greater the value will be false.
   bool mIsHttp3;
+
+  bool mHasIPHintAddress = false;
 
   // for RefPtr
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHttpConnectionInfo, override)

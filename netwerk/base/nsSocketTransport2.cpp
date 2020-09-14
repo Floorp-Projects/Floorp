@@ -1045,6 +1045,10 @@ nsresult nsSocketTransport::ResolveHost() {
   if (mConnectionFlags & nsSocketTransport::DISABLE_TRR)
     dnsFlags |= nsIDNSService::RESOLVE_DISABLE_TRR;
 
+  if (mConnectionFlags & nsSocketTransport::USE_IP_HINT_ADDRESS) {
+    dnsFlags |= nsIDNSService::RESOLVE_IP_HINT;
+  }
+
   dnsFlags |= nsIDNSService::GetFlagsFromTRRMode(
       nsISocketTransport::GetTRRModeFromFlags(mConnectionFlags));
 
