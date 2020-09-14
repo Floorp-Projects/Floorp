@@ -223,11 +223,12 @@ void WriteCompressedIndexId(IndexOrObjectStoreId aIndexId, bool aUnique,
 // aOutIndexValues is an output parameter, since its storage is reused.
 nsresult ReadCompressedIndexDataValuesFromBlob(
     const Span<const uint8_t> aBlobData,
-    nsTArray<IndexDataValue>& aOutIndexValues) {
+    nsTArray<IndexDataValue>* aOutIndexValues) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(!aBlobData.IsEmpty());
-  MOZ_ASSERT(aOutIndexValues.IsEmpty());
+  MOZ_ASSERT(aOutIndexValues);
+  MOZ_ASSERT(aOutIndexValues->IsEmpty());
 
   AUTO_PROFILER_LABEL("ReadCompressedIndexDataValuesFromBlob", DOM);
 
@@ -284,10 +285,10 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
       remainder = remainderAfterSortKeyBuffer;
     }
 
-    IDB_TRY(OkIf(aOutIndexValues.AppendElement(std::move(idv), fallible)),
+    IDB_TRY(OkIf(aOutIndexValues->AppendElement(std::move(idv), fallible)),
             NS_ERROR_OUT_OF_MEMORY, IDB_REPORT_INTERNAL_ERR_LAMBDA);
   }
-  aOutIndexValues.Sort();
+  aOutIndexValues->Sort();
 
   return NS_OK;
 }
@@ -296,10 +297,11 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
 template <typename T>
 nsresult ReadCompressedIndexDataValuesFromSource(
     T& aSource, uint32_t aColumnIndex,
-    nsTArray<IndexDataValue>& aOutIndexValues) {
+    nsTArray<IndexDataValue>* aOutIndexValues) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aOutIndexValues.IsEmpty());
+  MOZ_ASSERT(aOutIndexValues);
+  MOZ_ASSERT(aOutIndexValues->IsEmpty());
 
   IDB_TRY_VAR(const int32_t columnType,
               MOZ_TO_RESULT_INVOKE(aSource, GetTypeOfIndex, aColumnIndex));
@@ -614,20 +616,14 @@ nsresult ReadCompressedIndexDataValues(
     mozIStorageStatement& aStatement, uint32_t aColumnIndex,
     nsTArray<IndexDataValue>& aOutIndexValues) {
   return ReadCompressedIndexDataValuesFromSource(aStatement, aColumnIndex,
-                                                 aOutIndexValues);
+                                                 &aOutIndexValues);
 }
 
-using IndexDataValuesAutoArray = AutoTArray<IndexDataValue, 32>;
 Result<IndexDataValuesAutoArray, nsresult> ReadCompressedIndexDataValues(
     mozIStorageValueArray& aValues, uint32_t aColumnIndex) {
-  IndexDataValuesAutoArray result;
-  const nsresult rv =
-      ReadCompressedIndexDataValuesFromSource(aValues, aColumnIndex, result);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  return result;
+  return ToResultInvoke<IndexDataValuesAutoArray>(
+      &ReadCompressedIndexDataValuesFromSource<mozIStorageValueArray>, aValues,
+      aColumnIndex);
 }
 
 Result<std::tuple<IndexOrObjectStoreId, bool, Span<const uint8_t>>, nsresult>
