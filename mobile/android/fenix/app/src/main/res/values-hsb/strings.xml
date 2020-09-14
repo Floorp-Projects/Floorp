@@ -328,6 +328,8 @@
     <string name="preferences_search_bookmarks">Zapołožki přepytać</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontowe nastajenja</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">URL awtomatisce wudospołnić</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Wotkazy w nałoženjach wočinić</string>
 
@@ -1576,7 +1578,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Wotstronić</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Wućehńće najlěpše z %s.</string>
 

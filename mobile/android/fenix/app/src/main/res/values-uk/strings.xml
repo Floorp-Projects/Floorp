@@ -270,6 +270,8 @@
     <string name="preferences_open_links_in_a_private_tab">Відкривати посилання в приватній вкладці</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Дозволити знімки екрана в приватному перегляді</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Якщо дозволено, приватні вкладки також будуть видимі, коли відкрито декілька програм</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Додати ярлик приватного перегляду</string>
     <!-- Preference for accessibility -->
@@ -291,6 +293,8 @@
     <string name="preferences_theme">Тема</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Домівка</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Жести</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Пристосування</string>
     <!-- Preference description for banner about signing in -->
@@ -329,6 +333,8 @@
     <string name="preferences_search_bookmarks">Шукати закладки</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Обліковий запис</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Автозавершення URL-адрес</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Відкривати посилання в програмах</string>
 
@@ -468,6 +474,16 @@
     <string name="preference_auto_battery_theme">Враховувати режим економії заряду</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Тема пристрою</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Потягнути для оновлення</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Прокрутити для приховання панелі інструментів</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Провести вбік на панелі інструментів для перемикання вкладок</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Провести вгору на панелі інструментів вгору для відкриття вкладок</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1062,7 +1078,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Ви увійшли як %s в іншому браузері Firefox на цьому пристрої. Бажаєте увійти в цей обліковий запис?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Ви увійшли як %s в іншому браузері Firefox на цьому пристрої. Бажаєте увійти в цей обліковий запис?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Так, увійти</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1309,7 +1325,7 @@
     <string name="add_to_homescreen_text_placeholder">Назва ярлика</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Ви можете легко додати цей вебсайт на головний екран вашого телефону, щоб мати миттєвий доступ до нього і працювати швидше, неначе зі звичайною програмою.</string>
+    <string name="add_to_homescreen_description_2">Ви можете легко додати цей вебсайт на головний екран вашого пристрою, щоб мати миттєвий доступ до нього і працювати швидше.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Паролі</string>
@@ -1381,8 +1397,12 @@
     <string name="logins_site_copied">Сайт скопійовано в буфер обміну</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Копіювати пароль</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Стерти пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Копіювати ім’я користувача</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Стерти ім’я користувача</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Копіювати сайт</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1539,7 +1559,7 @@
     <string name="saved_login_duplicate">Запис з таким іменем користувача вже існує</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Під’єднати інший пристрій.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Повторіть автентифікацію.</string>
@@ -1559,7 +1579,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Досягнуто ліміту популярних сайтів</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Щоб додати новий популярний сайт, вилучіть один інший тривалим дотиком.</string>
+    <string name="top_sites_max_limit_content_2">Щоб додати новий популярний сайт, вилучіть один. Торкніться й утримуйте сайт, потім виберіть вилучити.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Гаразд, зрозуміло</string>
 
@@ -1569,7 +1589,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Вилучити</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Отримайте якнайбільше від %s.</string>
 
@@ -1577,4 +1597,9 @@
     <string name="no_collections_header1">Зберігайте важливе для вас</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Групуйте подібні пошуки, сайти та вкладки для швидкого доступу.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Ви увійшли як %s в іншому браузері Firefox на цьому пристрої. Бажаєте увійти в цей обліковий запис?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Ви можете легко додати цей вебсайт на головний екран вашого телефону, щоб мати миттєвий доступ до нього і працювати швидше, неначе зі звичайною програмою.</string>
+
+    </resources>

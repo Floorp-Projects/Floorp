@@ -263,6 +263,8 @@
     <string name="preferences_open_links_in_a_private_tab">Сілтемелерді жекелік беттерде ашу</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Жекелік шолу режимінде скриншоттарды рұқсат ету</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Рұқсат етілсе, жеке беттер бірнеше қолданба ашық болған кезде де көрінеді</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Жеке шолу жарлығын қосу</string>
     <!-- Preference for accessibility -->
@@ -1042,10 +1044,6 @@
     <string name="onboarding_account_sign_in_header">Firefox тіркелгісімен бетбелгілер, парольдер және т.б. синхрондауды бастаңыз.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Көбірек білу</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Сіз осы телефондағы басқа Firefox браузерінде %s ретінде кірдіңіз. Осы тіркелгімен кіргіңіз келе ме?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Иә, авторизациялау</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1289,8 +1287,6 @@
     <string name="add_to_homescreen_continue">Веб-сайтқа өту</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Жарлық атауы</string>
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Бұл веб-сайтты жылдам қатынау және қолданба тектес режимде жылдам шолу мақсатымен телефоныңыздың үй бетіңізге қосуға болады.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Логиндер және парольдер</string>
@@ -1517,7 +1513,7 @@
     <string name="saved_login_duplicate">Бұл пайдаланушы атын қолданатын логин бар болып тұр</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Басқа құрылғыны байланыстыру.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Қайта аутентификациялаңыз.</string>
@@ -1536,8 +1532,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Үздік сайттар саны шегіне жетті</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Жаңа үздік сайтын қосу үшін, біреуін өшіріңіз. Сайтқа ұзақ басып, өшіру таңдаңыз.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Жақсы, түсіндім</string>
 
@@ -1547,7 +1541,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Өшіру</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s өнімін толықтай пайдаланыңыз.</string>
 
@@ -1555,4 +1549,9 @@
     <string name="no_collections_header1">Өзіңізге маңызды заттарды жинаңыз</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Кейінірек жылдам қатынау үшін ұқсас іздеулер, сайттар және беттерді топтастырыңыз.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Сіз осы телефондағы басқа Firefox браузерінде %s ретінде кірдіңіз. Осы тіркелгімен кіргіңіз келе ме?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Бұл веб-сайтты жылдам қатынау және қолданба тектес режимде жылдам шолу мақсатымен телефоныңыздың үй бетіңізге қосуға болады.</string>
+
     </resources>

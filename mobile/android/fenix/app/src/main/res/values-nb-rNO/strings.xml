@@ -270,6 +270,8 @@
     <string name="preferences_open_links_in_a_private_tab">Åpne lenke i en privat fane</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Tillat å ta skjermbilder i privat nettlesing</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Hvis tillatt, vil private faner også være synlige når flere apper er åpne</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Legg til snarvei for privat nettlesing</string>
     <!-- Preference for accessibility -->
@@ -329,6 +331,8 @@
     <string name="preferences_search_bookmarks">Søk i bokmerker</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontoinnstillinger</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Autofullfør nettadresser</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Åpne lenker i apper</string>
     <!-- Preference for open download with an external download manager app -->
@@ -471,6 +475,13 @@
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Trekk for å oppdatere</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Bla for å skjule verktøylinjen</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Sveip verktøylinjen sidelengs for å bytte fane</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Sveip verktøylinjen opp for å åpne faner</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1065,6 +1076,10 @@
     <string name="onboarding_account_sign_in_header">Begynn å synkronisere bokmerker, passord og mer med Firefox-kontoen din.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Les mer</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Du er logget inn som %s på en annen Firefox-nettleser på denne enheten. Vil du logge inn med denne kontoen?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja, logg meg inn</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1315,6 +1330,9 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Navn på snarvei</string>
 
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Du kan enkelt legge til dette nettstedet på enhetens startskjerm for å få øyeblikkelig tilgang og surfe raskere med en app-lignende opplevelse.</string>
+
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Innlogginger og passord</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1385,8 +1403,12 @@
     <string name="logins_site_copied">Nettsted kopiert til utklippstavlen</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopier passord</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Tøm passord</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopier brukernavn</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Tøm brukernavn</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopier nettsted</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1565,6 +1587,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Grense for populære nettsteder nådd</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">For å legge til et nytt populært nettsted må du fjerne et annet. Trykk og hold på nettstedet, og velg fjern.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, jeg skjønner</string>
 
@@ -1574,7 +1598,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Fjern</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Få mest mulig ut av %s.</string>
 
@@ -1585,6 +1609,6 @@
     <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
     <string name="onboarding_firefox_account_auto_signin_header_2">Du er logget inn som %s på en annen Firefox-nettleser på denne telefonen. Vil du logge inn med denne kontoen?</string>
     <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Du kan enkelt legge til dette nettstedet på telefonens startskjermen for å få øyeblikkelig tilgang og surfe raskere med en app-lignende opplevelse.</string>
+    <string name="add_to_homescreen_description">Du kan enkelt legge til dette nettstedet på telefonens startskjerm for å få øyeblikkelig tilgang og surfe raskere med en app-lignende opplevelse.</string>
 
     </resources>

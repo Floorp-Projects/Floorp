@@ -292,6 +292,8 @@
     <string name="preferences_theme">Vzhled</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Domovská stránka</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gesta</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Přizpůsobení</string>
     <!-- Preference description for banner about signing in -->
@@ -329,6 +331,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Nastavení účtu</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Automaticky doplňovat URL adresy</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Otevírat odkazy v aplikacích</string>
 
@@ -469,6 +473,14 @@
     <string name="preference_auto_battery_theme">Podle nastavení spořiče baterie</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Podle nastavení zařízení</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Znovu načíst stránku potažením shora</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Skrýt nástrojovou lištu při posouvání</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Přepínat panely posunutím prstem do stran</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1064,6 +1076,10 @@
     <string name="onboarding_account_sign_in_header">S účtem Firefoxu můžete synchronizovat záložky, hesla i další svá data.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Zjistit více</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">V dalším prohlížeči Firefox na tomto zařízení už jste přihlášení jako %s. Chcete se přihlásit tímto účtem?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ano, přihlásit</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1305,6 +1321,9 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Název zkratky</string>
 
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Tuto stránku si můžete snadno přidat na domovskou obrazovku svého zařázení. Budete k ní mít okamžitý přístup a prohlížení bude rychlejší se zážitkem jako v aplikaci.</string>
+
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Přihlašovací údaje</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1373,8 +1392,12 @@
     <string name="logins_site_copied">Server zkopírován do schránky</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopírovat heslo</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Vymazat heslo</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopírovat uživatelské jméno</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Vymazat uživatelské jméno</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopírovat server</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1553,13 +1576,18 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Dosažen limit počtu top stránek</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Pro přidání další top stránky nejdříve nějakou odeberte. Stačí na ní podržet prst.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, rozumím</string>
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Zobrazovat nejnavštěvovanější stránky</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Odstranit</string>
+
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Využijte aplikaci %s naplno.</string>
 
@@ -1570,6 +1598,6 @@
     <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
     <string name="onboarding_firefox_account_auto_signin_header_2">V dalším prohlížeči Firefox na tomto telefonu už jste přihlášení jako %s. Chcete se přihlásit tímto účtem?</string>
     <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Tuto stránku si můžete snadno přidat na domovskou obrazovku vašeho telefonu. Budete k ní mít okamžitý přístup a prohlížení bude rychlejší se zážitkem jako v aplikaci.</string>
+    <string name="add_to_homescreen_description">Tuto stránku si můžete snadno přidat na domovskou obrazovku svého telefonu. Budete k ní mít okamžitý přístup a prohlížení bude rychlejší se zážitkem jako v aplikaci.</string>
 
     </resources>

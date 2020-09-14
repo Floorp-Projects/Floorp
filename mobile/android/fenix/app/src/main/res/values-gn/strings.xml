@@ -292,6 +292,8 @@
     <string name="preferences_theme">Téma</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Ñepyrũ</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Ñeha’ãnga</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Ñemomba’ete</string>
     <!-- Preference description for banner about signing in -->
@@ -465,6 +467,17 @@
     <string name="preference_auto_battery_theme">Batería mboareveha moĩmbyre</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Ehapykueho mba’e’oka téma</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Embosyryry hekopyahu hag̃ua</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Emongu’e emoñemi hag̃ua mba’erenda</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Eraha mba’erenda yke gotyo emoambue hag̃ua tendayke</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Eraha mba’erenda yvate gotyo embojuruja hag̃ua tendayke</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1065,10 +1078,6 @@
     <string name="onboarding_account_sign_in_header">Embojuehe techaukaha, ñe’ẽñemi ha hetave ne mba’ete Firefox pegua ndive.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Eikuaave</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Eñepyrũ tembiapo %s ramo ambue Firefox kundahára ko pumbyry pegua. ¿Eñepyrũse tembiapo ko mba’ete ndive?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Héẽ, eñepyrũ tembiapo</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1319,9 +1328,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Jeike pya’eha réra</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Ikatu embojuaju ko ñanduti renda ne mba’erechaha ñepyrũgua rehe eike hag̃ua ha eikundaha pya’eve rekávo tembipuru’ícharamo.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Tembiapo ñepyrũ ha ñe’ẽñemi</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1390,8 +1396,12 @@
     <string name="logins_site_copied">Tenda ohasáva kuatiajokohápe</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Emonguatia ñe’ẽñemi</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Embogue ñe’ẽñemi</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Emonguatia puruhára réra</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Embogue puruhára réra</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Emonguatia tenda</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1550,7 +1560,7 @@
     <string name="saved_login_duplicate">Oĩma tembiapo ñepyrũ puruhára réra peichagua</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Emoinge ambue mba’e’oka.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ikatúpiko emoneĩjey.</string>
@@ -1570,8 +1580,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Ehupytýma hu’ã tenda mba’guasúvape g̃uarã</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Embojuaju hag̃ua tenda pyahu, omboguéta peteĩ. Ejopy are tenda ha eiporavo mboguete.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Oĩma, aikumby</string>
 
@@ -1589,4 +1597,9 @@
     <string name="no_collections_header1">Embyaty umi mba’ekuéra ehayhu añetéva</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Emboaty hekaha, tenda ha tendayke ojueheguáva eike pya’eve hag̃ua ag̃ave.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Eñepyrũ tembiapo %s ramo ambue Firefox kundahára ko pumbyry pegua. ¿Eñepyrũse tembiapo ko mba’ete ndive?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Ikatu embojuaju ko ñanduti renda ne mba’erechaha ñepyrũgua rehe eike hag̃ua ha eikundaha pya’eve rekávo tembipuru’ícharamo.</string>
+
+    </resources>

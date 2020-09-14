@@ -272,6 +272,8 @@
     <string name="preferences_open_links_in_a_private_tab">Abrir enlace en una pestaña privada</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Permitir capturas de pantalla en navegación privada</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Si se permite, las pestañas privadas también serán visibles cuando haya varias aplicaciones abiertas</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Agregar atajo de navegación privada</string>
     <!-- Preference for accessibility -->
@@ -292,6 +294,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Inicio</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gestos</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizar</string>
     <!-- Preference description for banner about signing in -->
@@ -329,6 +333,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Ajustes de la cuenta</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Autocompletar URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Abrir enlaces en aplicaciones</string>
 
@@ -473,6 +479,16 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Usar el tema del dispositivo</string>
 
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Arrastrar para actualizar</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Desplazar para ocultar la barra</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Deslizar la barra hacia los costados para cambiar de pestaña</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Deslizar la barra hacia arriba para abrir pestañas</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1071,7 +1087,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Iniciaste sesión como %s en otro navegador Firefox en este teléfono. ¿Querés iniciar sesión con esta cuenta?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Ingresaste como %s en otro navegador Firefox en este dispositivo. ¿Querés iniciar sesión con esta cuenta?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Sí, iniciá mi sesión</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1316,7 +1332,7 @@
     <string name="add_to_homescreen_text_placeholder">Nombre de acceso directo</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Podés agregar fácilmente este sitio web a la pantalla de inicio de tu teléfono para tener acceso instantáneo y navegar más rápido con una experiencia similar a la de una aplicación.</string>
+    <string name="add_to_homescreen_description_2">Podés agregar este sitio a la pantalla de inicio del dispositivo fácilmente para tener acceso instantáneo y navegar más rápido con una experiencia similar a la de una aplicación.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Inicios de sesión y contraseñas</string>
@@ -1386,8 +1402,12 @@
     <string name="logins_site_copied">Sitio copiado al portapapeles</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copiar contraseña</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Borrar contraseña</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copiar nombre de usuario</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Borrar nombre de usuario</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar sitio</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1544,7 +1564,7 @@
     <string name="saved_login_duplicate">Ya existe un inicio de sesión con ese nombre de usuario</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Conectar otro dispositivo.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Volver a autenticar.</string>
@@ -1565,7 +1585,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Alcanzaste el límite para sitios importantes</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Para agregar un nuevo sitio importante, eliminá uno. Mantené presionado el sitio y seleccioná eliminar.</string>
+    <string name="top_sites_max_limit_content_2">Para agregar un nuevo sitio importante, eliminá uno. Mantené presionado el sitio y seleccioná eliminar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Listo, lo entendí.</string>
 
@@ -1575,7 +1595,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Eliminar</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Aprovechá %s al máximo.</string>
 
@@ -1583,4 +1603,9 @@
     <string name="no_collections_header1">Recolectá lo que te importa</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Agrupar búsquedas, sitios y pestañas similares para acceder rápidamente más tarde.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Iniciaste sesión como %s en otro navegador Firefox en este teléfono. ¿Querés iniciar sesión con esta cuenta?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Podés agregar fácilmente este sitio web a la pantalla de inicio de tu teléfono para tener acceso instantáneo y navegar más rápido con una experiencia similar a la de una aplicación.</string>
+
     </resources>

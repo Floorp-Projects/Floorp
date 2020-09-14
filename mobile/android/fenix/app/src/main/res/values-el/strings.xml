@@ -69,6 +69,9 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Όχι, ευχαριστώ</string>
 
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Ταχύτερη μετάβαση στο Firefox. Προσθέστε ένα γραφικό στοιχείο στην αρχική σας οθόνη.</string>
     <!-- Text for the positive button -->
     <string name="search_widget_cfr_pos_button_text">Προσθήκη widget</string>
     <!-- Text for the negative button -->
@@ -281,6 +284,8 @@
     <string name="preferences_theme">Θέμα</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Αρχική σελίδα</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Χειρονομίες</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Προσαρμογή</string>
     <!-- Preference description for banner about signing in -->
@@ -317,6 +322,8 @@
     <string name="preferences_search_bookmarks">Αναζήτηση σελιδοδεικτών</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Ρυθμίσεις λογαριασμού</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Αυτόματη συμπλήρωση URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Άνοιγμα συνδέσμων σε εφαρμογές</string>
     <!-- Preference for open download with an external download manager app -->
@@ -383,6 +390,8 @@
     <string name="preferences_tracking_protection_description">Φραγή περιεχομένου και σεναρίων που σας παρακολουθούν στο διαδίκτυο</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Εξαιρέσεις</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Η προστασία από καταγραφή είναι ανενεργή για αυτές τις ιστοσελίδες</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Ενεργοποίηση για όλες τις σελίδες</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
@@ -1039,10 +1048,6 @@
     <string name="onboarding_account_sign_in_header">Ξεκινήστε το συγχρονισμό σελιδοδεικτών, κωδικών πρόσβασης και άλλων δεδομένων με το λογαριασμό Firefox σας.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Μάθετε περισσότερα</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Έχετε συνδεθεί ως %s σε άλλο πρόγραμμα περιήγησης Firefox σε αυτό το τηλέφωνο. Θέλετε να συνδεθείτε με αυτό το λογαριασμό;</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ναι, σύνδεση</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1276,9 +1281,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Όνομα συντόμευσης</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Μπορείτε εύκολα να προσθέσετε αυτή την ιστοσελίδα στην αρχική οθόνη για άμεση πρόσβαση και ταχύτερη περιήγηση, σαν να ήταν εφαρμογή.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Συνδέσεις και κωδικοί πρόσβασης</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1347,8 +1349,12 @@
     <string name="logins_site_copied">Η ιστοσελίδα αντιγράφτηκε στο πρόχειρο</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Αντιγραφή κωδικού πρόσβασης</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Εκκαθάριση κωδικού πρόσβασης</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Αντιγραφή ονόματος χρήστη</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Εκκαθάριση ονόματος χρήστη</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Αντιγραφή ιστοσελίδας</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1502,7 +1508,7 @@
     <string name="saved_login_duplicate">Υπάρχει ήδη σύνδεση με αυτό το όνομα χρήστη</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Συνδέστε μια άλλη συσκευή.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Παρακαλούμε επαληθεύστε ξανά την ταυτότητά σας.</string>
@@ -1523,7 +1529,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Έχετε φτάσει το ανώτατο όριο κορυφαίων ιστοσελίδων</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Για να προσθέσετε μια νέα κορυφαία σελίδα, αφαιρέστε μια υπάρχουσα. Πατήστε παρατεταμένα στη σελίδα και επιλέξτε &quot;Αφαίρεση&quot;.</string>
+    <string name="top_sites_max_limit_content_2">Για να προσθέσετε μια νέα κορυφαία σελίδα, αφαιρέστε μια υπάρχουσα. Πατήστε παρατεταμένα τη σελίδα και επιλέξτε &quot;Αφαίρεση&quot;.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, το κατάλαβα</string>
 
@@ -1533,7 +1539,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Αφαίρεση</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Αξιοποιήστε στο έπακρο το %s.</string>
 
@@ -1541,4 +1547,9 @@
     <string name="no_collections_header1">Συλλέξτε όλα όσα έχουν σημασία για εσάς</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Ομαδοποιήστε παρόμοιες αναζητήσεις, σελίδες και καρτέλες για γρήγορη πρόσβαση αργότερα.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Έχετε συνδεθεί ως %s σε άλλο πρόγραμμα περιήγησης Firefox σε αυτό το τηλέφωνο. Θέλετε να συνδεθείτε με αυτό το λογαριασμό;</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Μπορείτε εύκολα να προσθέσετε αυτή την ιστοσελίδα στην αρχική οθόνη για άμεση πρόσβαση και ταχύτερη περιήγηση, σαν να ήταν εφαρμογή.</string>
+
     </resources>

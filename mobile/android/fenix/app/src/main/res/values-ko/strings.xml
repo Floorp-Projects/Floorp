@@ -339,6 +339,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">계정 설정</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">URL 자동 완성</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">앱에서 링크 열기</string>
 
@@ -1623,7 +1625,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">삭제</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s를 최대한 활용해 보세요.</string>
 

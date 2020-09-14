@@ -272,6 +272,8 @@
     <string name="preferences_open_links_in_a_private_tab">用隱私分頁開啟鏈結</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">允許在隱私瀏覽模式中拍攝畫面擷圖</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">若允許，隱私分頁內容將在切換應用程式時顯示</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">新增隱私瀏覽模式捷徑</string>
     <!-- Preference for accessibility -->
@@ -292,6 +294,8 @@
     <string name="preferences_theme">佈景主題</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">主畫面</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">手勢</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">自訂</string>
     <!-- Preference description for banner about signing in -->
@@ -330,6 +334,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">帳號設定</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">自動完成網址</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">用 App 開啟鏈結</string>
 
@@ -469,6 +475,16 @@
     <string name="preference_auto_battery_theme">由系統省電模式設定</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">依照裝置佈景主題顯示</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">向下滑動即可重新整理</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">滾動畫面即可隱藏工具列</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">橫向滑動工具列來切換分頁</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">向上滑動工具列來開新分頁</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1082,7 +1098,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">您已經在這支手機的其他 Firefox 瀏覽器以 %s 登入。也要使用此帳號登入嗎？</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">您已經在此裝置的另一套 Firefox 瀏覽器以 %s 登入。也要使用此帳號登入嗎？</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">好，請幫我登入</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1325,7 +1341,7 @@
     <string name="add_to_homescreen_text_placeholder">捷徑名稱</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">您可將此網站加到手機主畫面，方便快速開啟，或是以類似 App 的方式使用。</string>
+    <string name="add_to_homescreen_description_2">您可將此網站加到裝置主畫面，方便快速開啟，或是以類似 App 的方式使用。</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">登入資訊與密碼</string>
@@ -1395,8 +1411,12 @@
     <string name="logins_site_copied">已將網站複製至剪貼簿</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">複製密碼</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">清除密碼</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">複製使用者名稱</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">清除使用者名稱</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">複製網站</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1551,7 +1571,7 @@
     <string name="saved_login_duplicate">已有該使用者名稱的登入資訊</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">連結另一部裝置。</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">請重新登入。</string>
@@ -1571,7 +1591,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">超出熱門網站限制</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">請先移除現有的熱門網站才能再新增。請按住網站，然後選擇移除。</string>
+    <string name="top_sites_max_limit_content_2">請先移除現有的熱門網站才能再新增。請按住網站，然後選擇移除。</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">好，知道了！</string>
 
@@ -1581,7 +1601,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">移除</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">發揮 %s 的最大威力。</string>
 
@@ -1589,4 +1609,9 @@
     <string name="no_collections_header1">收集對您而言重要的東西</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">將類似的搜尋、網站、分頁放在一起，方便之後快速使用。</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">您已經在這支手機的其他 Firefox 瀏覽器以 %s 登入。也要使用此帳號登入嗎？</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">您可將此網站加到手機主畫面，方便快速開啟，或是以類似 App 的方式使用。</string>
+
+    </resources>

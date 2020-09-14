@@ -330,6 +330,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Fiókbeállítások</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Automatikus URL-kiegészítés</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Hivatkozások megnyitása alkalmazásokban</string>
 
@@ -1585,7 +1587,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Eltávolítás</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Hozza ki a legtöbbet a %s böngészőből.</string>
 

@@ -268,6 +268,8 @@
     <string name="preferences_open_links_in_a_private_tab">Wótkaze w priwatnem rejtariku wócyniś</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Fota wobrazowki w priwatnem modusu dowóliś</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Jolic dowólone, budu priwatne rejtariki teke widobne, gaž někotare nałoženja su wócynjone</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Skrotconku za priwatny modus pśidaś</string>
     <!-- Preference for accessibility -->
@@ -288,6 +290,8 @@
     <string name="preferences_theme">Drastwa</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Startowy bok</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gesty</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Pśiměriś</string>
     <!-- Preference description for banner about signing in -->
@@ -324,6 +328,8 @@
     <string name="preferences_search_bookmarks">Cytańske znamjenja pśepytaś</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontowe nastajenja</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">URL awtomatiski wudopołniś</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Wótkaze w nałoženjach wócyniś</string>
 
@@ -461,6 +467,16 @@
     <string name="preference_auto_battery_theme">Pó zažarjeńskich nastajenjach baterije</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Na rědowu drastwu źiwaś</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Śěgniśo, aby aktualizěrował</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Kulniśo, aby symbolowu rědku schował</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Trějśo symbolowu rědku na bok, aby rejtariki pśešaltował</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Trějśo symbolowu rědku górjej, aby rejtariki wócynił</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1052,7 +1068,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Sćo se pśizjawił ako %s w drugem wobglědowaku Firefox na toś tom telefonje. Cośo se z toś tym kontom pśizjawiś?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Sćo se pśizjawił ako %s w drugem wobglědowaku Firefox na toś tom rěźe. Cośo se z toś tym kontom pśizjawiś?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Jo, pśizjawiś</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1299,7 +1315,7 @@
     <string name="add_to_homescreen_text_placeholder">Mě skrotconki</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Móžośo startowej wobrazowce swójogo telefona toś to websedło lažko pśidaś, aby direktny pśistup měł a malsnjej z dožywjenim nałoženja pśeglědował.</string>
+    <string name="add_to_homescreen_description_2">Móžośo startowej wobrazowce swójogo rěda toś to websedło lažko pśidaś, aby direktny pśistup měł a malsnjej z dožywjenim nałoženja pśeglědował.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Pśizjawjenja a gronidła</string>
@@ -1370,8 +1386,12 @@
     <string name="logins_site_copied">Sedło jo se kopěrowało do mjazywótkłada</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Gronidło kopěrowaś</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Gronidło lašowaś</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Wužywaŕske mě kopěrowaś</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Wužywaŕske mě lašowaś</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Sedło kopěrowaś</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1527,7 +1547,7 @@
     <string name="saved_login_duplicate">Pśizjawjenje z tym wužywaŕskim mjenim južo esistěrujo</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Z drugim rědom zwězaś.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Pšosym awtentificěrujśo znowego.</string>
@@ -1548,7 +1568,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Limit za wažne sedła dostany</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Aby nowe wažne sedło pśidał, wótwónoźćo jadno z nich. Tłocćo dłujko na sedło a wubjeŕśo „Wótwónoźeś“.</string>
+    <string name="top_sites_max_limit_content_2">Aby nowe wažne sedło pśidał, wótwónoźćo jadno z nich. Dotykniśo a źaržćo sedło a wubjeŕśo „Wótwónoźeś“.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">W pórěźe, som zrozměł</string>
 
@@ -1558,7 +1578,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Wótwónoźeś</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Wuwónoźćo nejlěpše z %s.</string>
 
@@ -1566,4 +1586,9 @@
     <string name="no_collections_header1">Gromaźćo wěcy, kótarež su wam wažne</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Zrědujśo pódobne pytanja, sedła a rejtariki za póznjejšy malsny pśistup.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Sćo se pśizjawił ako %s w drugem wobglědowaku Firefox na toś tom telefonje. Cośo se z toś tym kontom pśizjawiś?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Móžośo startowej wobrazowce swójogo telefona toś to websedło lažko pśidaś, aby direktny pśistup měł a malsnjej z dožywjenim nałoženja pśeglědował.</string>
+
+    </resources>

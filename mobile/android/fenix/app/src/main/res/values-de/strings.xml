@@ -334,6 +334,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontoeinstellungen</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Autovervollständigung von Adressen</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Links in Apps öffnen</string>
 
@@ -1605,7 +1607,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Entfernen</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Machen Sie das Beste aus %s.</string>
 

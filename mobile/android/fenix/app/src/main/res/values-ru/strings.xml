@@ -298,6 +298,8 @@
     <string name="preferences_theme">Тема</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Домой</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Жесты</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Персонализация</string>
     <!-- Preference description for banner about signing in -->
@@ -1087,7 +1089,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">В другом браузере Firefox на этом устройстве вы вошли как %s. Вы хотите авторизоваться с помощью этого аккаунта?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">В другом браузере Firefox на этом устройстве вы вошли как %s. Вы хотите авторизоваться с помощью этого аккаунта?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Да, авторизоваться</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1332,7 +1334,7 @@
     <string name="add_to_homescreen_text_placeholder">Название ярлыка</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Вы можете легко добавить этот веб-сайт на домашний экран вашего телефона, чтобы иметь к нему мгновенный доступ и сёрфить быстрее со скоростью нативного приложения.</string>
+    <string name="add_to_homescreen_description_2">Вы можете легко добавить этот веб-сайт на домашний экран вашего устройства, чтобы иметь к нему мгновенный доступ и сёрфить быстрее со скоростью нативного приложения.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Логины и пароли</string>
@@ -1402,8 +1404,12 @@
     <string name="logins_site_copied">Сайт скопирован в буфер обмена</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Копировать пароль</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Очистить пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Копировать имя пользователя</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Очистить имя пользователя</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Копировать сайт</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1558,7 +1564,7 @@
     <string name="saved_login_duplicate">Логин с таким именем пользователя уже существует</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Подключить другое устройство.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Пожалуйста, авторизуйтесь повторно.</string>
@@ -1577,8 +1583,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Достигнут лимит топа сайтов</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Чтобы добавить новый сайт в топ, удалите другой. Долгим нажатием по нему откройте меню и нажмите удалить.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, понятно</string>
 
@@ -1596,4 +1600,9 @@
     <string name="no_collections_header1">Собирайте то, что важно для вас</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Объединяйте похожие запросы, сайты и вкладки, для быстрого доступа к ним в будущем.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">В другом браузере Firefox на этом устройстве вы вошли как %s. Вы хотите авторизоваться с помощью этого аккаунта?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Вы можете легко добавить этот веб-сайт на домашний экран вашего телефона, чтобы иметь к нему мгновенный доступ и сёрфить быстрее со скоростью нативного приложения.</string>
+
+    </resources>

@@ -1057,10 +1057,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_account_sign_in_header">Bdu amtawi n ticraḍ, awalen uffiren, akked waṭas-nniḍen s umiḍan n Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Issin ugar</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Aql-ak teqqneḍ s %s ɣef yiminig-nniḍen Firefox s wugur-a. Tenɣiḍ ad teqqneḍ s umiḍan-a?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ih, qqen-iyi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1306,9 +1302,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Isem n unegzum</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Adtizmireḍ s tifses ad ternuḍ asmel-a web ɣer ugdil agejdan n tiliɣri-ik akken ad tesɛuḍ anekcum askudan daɣen ad tinigeḍ s zreb s termit icuban asnas.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Inekcam d wawalen uffiren</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1377,6 +1370,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="logins_site_copied">Asmel yenɣel ɣef aus</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Nɣel awal uffir</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Sfeḍ awal uffir</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Nɣel isem n useqdac</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
@@ -1537,7 +1532,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="saved_login_duplicate">Anekcam s yisem-agi n useqdac yella yakan</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Qqen ibenk-nniḍen.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ma ulac aɣilif, ales asesteb.</string>
@@ -1557,8 +1552,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Tewwḍeḍ ɣer talast n usmel</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">I tmerna n usmel afellay amaynut, kkes yiwen. Sit mliḥ ɣef usmel syen fren kkes.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">IH, awi-t-id</string>
 
@@ -1576,4 +1569,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="no_collections_header1">Lqeḍ tiɣawsiwin i tḥemmleḍ</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Segrew akk akken inadiyen, ismal d waccaren yemṣadan akken ad yishil unekcum ɣer-sen mbeεd.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Aql-ak teqqneḍ s %s ɣef yiminig-nniḍen Firefox s wugur-a. Tenɣiḍ ad teqqneḍ s umiḍan-a?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Adtizmireḍ s tifses ad ternuḍ asmel-a web ɣer ugdil agejdan n tiliɣri-ik akken ad tesɛuḍ anekcum askudan daɣen ad tinigeḍ s zreb s termit icuban asnas.</string>
+
+    </resources>

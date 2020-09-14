@@ -267,6 +267,8 @@
     <string name="preferences_open_links_in_a_private_tab">Mở liên kết trong thẻ riêng tư</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Cho phép chụp ảnh màn hình trong trình duyệt riêng tư</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Nếu được phép, các thẻ riêng tư cũng sẽ hiển thị khi nhiều ứng dụng đang mở</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Thêm lối tắt duyệt web riêng tư</string>
     <!-- Preference for accessibility -->
@@ -287,6 +289,8 @@
     <string name="preferences_theme">Chủ đề</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Trang chủ</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Cử chỉ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Tùy biến</string>
     <!-- Preference description for banner about signing in -->
@@ -323,6 +327,8 @@
     <string name="preferences_search_bookmarks">Tìm kiếm dấu trang</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Cài đặt tài khoản</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Tự động điền URL</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Mở liên kết trong ứng dụng</string>
 
@@ -459,6 +465,16 @@
     <string name="preference_auto_battery_theme">Đặt theo trình tiết kiệm pin</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Đặt theo chủ đề thiết bị</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Kéo để làm mới</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Cuộn để ẩn thanh công cụ</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Vuốt thanh công cụ sang hai bên để chuyển đổi các thẻ</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Vuốt thanh công cụ lên để mở các thẻ</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1046,7 +1062,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Bạn đã đăng nhập dưới dạng %s trên một trình duyệt Firefox khác trên điện thoại này. Bạn có muốn đăng nhập bằng tài khoản này không?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Bạn đã đăng nhập dưới dạng %s trên trình duyệt Firefox khác trên điện thoại này. Bạn có muốn đăng nhập bằng tài khoản này không?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Có, đăng nhập cho tôi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1290,7 +1306,7 @@
     <string name="add_to_homescreen_text_placeholder">Tên lối tắt</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Bạn có thể dễ dàng thêm trang web vào màn hình chính của điện thoại của bạn để có thể truy cập và duyệt web nhanh hơn với trải nghiệm giống như trên ứng dụng.</string>
+    <string name="add_to_homescreen_description_2">Bạn có thể dễ dàng thêm trang web vào màn hình chính thiết bị của bạn để có thể truy cập và duyệt web nhanh hơn với trải nghiệm giống như trên ứng dụng.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Đăng nhập và mật khẩu</string>
@@ -1360,8 +1376,12 @@
     <string name="logins_site_copied">Đã sao chép trang web vào bộ nhớ tạm</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Sao chép mật khẩu</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Xóa mật khẩu</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Sao chép tên người dùng</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Xóa tên người dùng</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Sao chép URL trang web</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1516,7 +1536,7 @@
     <string name="saved_login_duplicate">Một thông tin đăng nhập với tên người dùng đó đã tồn tại</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Kết nối thiết bị khác.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Vui lòng xác thực lại.</string>
@@ -1536,7 +1556,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Đã đạt đến giới hạn trang web hàng đầu</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Để thêm một trang web hàng đầu mới, loại bỏ một cái cũ trước. Chạm và giữ trang web và chọn xóa.</string>
+    <string name="top_sites_max_limit_content_2">Để thêm một trang web hàng đầu mới, loại bỏ một cái cũ trước. Chạm và giữ trang web và chọn xóa.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, đã hiểu</string>
 
@@ -1546,7 +1566,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Xóa</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Tận dụng tối đa %s.</string>
 
@@ -1554,4 +1574,9 @@
     <string name="no_collections_header1">Thu thập những thứ quan trọng với bạn</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Nhóm các tìm kiếm, trang web và thẻ tương tự để truy cập nhanh sau này.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Bạn đã đăng nhập dưới dạng %s trên một trình duyệt Firefox khác trên điện thoại này. Bạn có muốn đăng nhập bằng tài khoản này không?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Bạn có thể dễ dàng thêm trang web vào màn hình chính của điện thoại của bạn để có thể truy cập và duyệt web nhanh hơn với trải nghiệm giống như trên ứng dụng.</string>
+
+    </resources>

@@ -288,6 +288,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Domača stran</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Poteze</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Prilagodi</string>
     <!-- Preference description for banner about signing in -->
@@ -466,6 +468,10 @@
     <string name="preference_auto_battery_theme">Nastavi ohranjevalnik baterije</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Sledi temi naprave</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Povlecite za osvežitev</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1061,7 +1067,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">V drugem brskalniku Firefox na tem telefonu ste prijavljeni kot %s. Ali se želite prijaviti s tem računom?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">V drugem brskalniku Firefox na tej napravi ste prijavljeni kot %s. Ali se želite prijaviti s tem računom?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Da, prijavi me</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1308,7 +1314,7 @@
     <string name="add_to_homescreen_text_placeholder">Ime bližnjice</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">To stran lahko preprosto dodate na svoj domači zaslon telefona za lažji dostop in hitrejše brskanje v načinu, podobnem aplikaciji.</string>
+    <string name="add_to_homescreen_description_2">To stran lahko preprosto dodate na svoj domači zaslon naprave za lažji dostop in hitrejše brskanje v načinu, podobnem aplikaciji.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prijave in gesla</string>
@@ -1378,8 +1384,12 @@
     <string name="logins_site_copied">Spletno mesto kopirano v odložišče</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopiraj geslo</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Počisti geslo</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopiraj uporabniško ime</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Počisti uporabniško ime</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopiraj spletno mesto</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1540,7 +1550,7 @@
     <string name="saved_login_duplicate">Prijava s tem uporabniškim imenom že obstaja</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Poveži drugo napravo.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ponovno se prijavite.</string>
@@ -1561,7 +1571,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Omejitev glavnih strani je dosežena</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Če želite dodati novo glavno stran, eno odstranite. Podržite prst na njej in izberite &quot;Odstrani&quot;.</string>
+    <string name="top_sites_max_limit_content_2">Če želite dodati novo glavno stran, eno odstranite. Podržite prst na njej in izberite &quot;Odstrani&quot;.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">V redu, razumem</string>
 
@@ -1571,7 +1581,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Odstrani</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Kar najbolje izkoristite %s.</string>
 
@@ -1579,4 +1589,9 @@
     <string name="no_collections_header1">Zbirajte stvari, ki vam kaj pomenijo</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Združite podobna iskanja, spletne strani in zavihke za hitrejši dostop.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">V drugem brskalniku Firefox na tem telefonu ste prijavljeni kot %s. Ali se želite prijaviti s tem računom?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">To stran lahko preprosto dodate na svoj domači zaslon telefona za lažji dostop in hitrejše brskanje v načinu, podobnem aplikaciji.</string>
+
+    </resources>

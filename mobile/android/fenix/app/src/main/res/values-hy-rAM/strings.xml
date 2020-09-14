@@ -267,6 +267,8 @@
     <string name="preferences_open_links_in_a_private_tab">Բացել հղումը գաղտնի ներդիրում</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Թույլ տալ էկրանի կորզումը գաղտնի դիտարկումում</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Թույլատրելու դեպքում գաղտնի ներդիրները նույնպես տեսանելի կլինեն, երբ բազմաթիվ հավելվածներ բաց լինեն</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ավելացնել գաղտնի դիտարկման դյուրանցում</string>
     <!-- Preference for accessibility -->
@@ -287,6 +289,8 @@
     <string name="preferences_theme">Ոճ</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Տուն</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Ժեստեր</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Հարմարեցնել</string>
     <!-- Preference description for banner about signing in -->
@@ -325,6 +329,8 @@
     <string name="preferences_search_bookmarks">Որոնել էջանիշեր</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Հաշվի կարգավորումներ</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Ինքնալրացում</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Բացել հղումները հավելվածներում</string>
     <!-- Preference for open download with an external download manager app -->
@@ -460,6 +466,16 @@
     <string name="preference_auto_battery_theme">Կայված է մարտկոցի խնայարարի միջոցով</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Ըստ սարքի ոճի</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Քաշեք՝ թարմացնելու համար</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Ոլորեք՝ գործիքագոտին թաքցնելու համար</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Սեղմեք գործիքագոտը կողքից՝ ներդիրներին անցնելու համար</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Սահեցրեք գործիքագոտին վերև՝ ներդիրները բացելու համար</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1052,7 +1068,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Դուք մուտք եք գործել որպես %s այլ Firefox դիտարկիչում: Ցանկանո՞ւմ եք մուտք գործել այս հաշիվ:</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Դուք մուտք եք գործել որպես %s տվյալ սարքից այլ Firefox դիտարկիչում: Ցանկանո՞ւմ եք մուտք գործել այս հաշիվ:</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Այո, գրանցեք ինձ</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1297,7 +1313,7 @@
     <string name="add_to_homescreen_text_placeholder">Դյուրանցման անունը</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Հեշտությամբ կարող եք ավելացնել այս կայքը ձեր հեռախոսի Տնային էկրանին՝ ակնթարթորեն մատչելու և արագ դիտարկելու համար:</string>
+    <string name="add_to_homescreen_description_2">Հեշտությամբ կարող եք ավելացնել այս կայքը ձեր հեռախոսի Տնային էկրանին՝ ակնթարթորեն մատչելու և արագ դիտարկելու համար:</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Մուտքանուններ և գաղտնաբառեր</string>
@@ -1368,8 +1384,12 @@
     <string name="logins_site_copied">Կայքը պատճենված է</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Պատճենել գաղտնաբառը</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Մաքրել գաղտնաբառը</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Պատճենել օգտվողի անունը</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Մաքրել օգտվողի անունը</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Պատճենել կայքը</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1525,7 +1545,7 @@
     <string name="saved_login_duplicate">Այդ անունով մուտքանուն արդեն գոյություն ունի</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Կապակցել այլ սարքի:</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Խնդրում ենք վերահաստատել:</string>
@@ -1546,7 +1566,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Լավագույն կայքերի ցանկը լրացել է</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Նոր լավագույն կայքի ավելացման համար հեռացրեք մեկը: Սեղմած պահեք կայքին և ընտրեք հեռացնել:</string>
+    <string name="top_sites_max_limit_content_2">Նոր լավագույն կայքի ավելացման համար հեռացրեք մեկը: Հպեք և սեղմած պահեք կայքը և ընտրեք հեռացնել:</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Հասկանալի է</string>
 
@@ -1556,7 +1576,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Հեռացնել</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Ստացեք առավելագույնը %s-ից:</string>
 
@@ -1564,4 +1584,9 @@
     <string name="no_collections_header1">Հավաքեք ձեզ համար կարևոր բաները</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Խմբավորեք համանման որոնումները, կայքերը և ներդիրները՝ հետո արագ մատչելու համար:</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Դուք մուտք եք գործել որպես %s այլ Firefox դիտարկիչում: Ցանկանո՞ւմ եք մուտք գործել այս հաշիվ:</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Հեշտությամբ կարող եք ավելացնել այս կայքը ձեր հեռախոսի Տնային էկրանին՝ ակնթարթորեն մատչելու և արագ դիտարկելու համար:</string>
+
+    </resources>

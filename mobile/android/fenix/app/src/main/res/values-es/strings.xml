@@ -30,6 +30,11 @@
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">%1$s seleccionado</string>
 
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Has salido del modo de selección múltiple</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Has ingresado al modo de selección múltiple, selecciona pestañas para guardar en una colección</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s es producido por Mozilla.</string>
 
@@ -61,6 +66,17 @@
     <string name="search_widget_cfr_pos_button_text">Agregar widget</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Ahora no</string>
+
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Ir a ajustes</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Descartar</string>
+
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Descartar</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Configura que las pestañas abiertas se cierren automáticamente si no han sido vistas en el último día, semana o mes.</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -248,6 +264,8 @@
     <string name="preferences_toolbar">Barra de herramientas</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gestos</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizar</string>
     <!-- Preference description for banner about signing in -->
@@ -418,6 +436,13 @@
     <string name="preference_auto_battery_theme">Establecido por el ahorrador de batería</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seguir el tema del dispositivo</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Desplazar para ocultar la barra</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Deslizar la barra hacia los lados para cambiar de pestaña</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Deslizar la barra hacia arriba para abrir pestañas</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -724,10 +749,6 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menú de la colección</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">Colecciona las cosas que te importan</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Agrupar búsquedas, sitios y pestañas similares para acceder rápidamente más tarde.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Seleccionar pestañas</string>
 
@@ -990,14 +1011,8 @@
     <string name="onboarding_whats_new_description">¿Tienes preguntas sobre el rediseño de %s? ¿Quieres saber qué ha cambiado?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Obtén respuestas aquí</string>
-    <!-- text for the firefox account onboarding card header -->
-    <string name="onboarding_firefox_account_header">Sácale el máximo provecho a %s.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Aprender más</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Has iniciado sesión como %s en otro navegador Firefox en este teléfono. ¿Deseas iniciar sesión con esta cuenta?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Sí, iniciar sesión</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1243,9 +1258,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nombre del acceso directo</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Puedes agregar fácilmente este sitio web a tu página de inicio para tener acceso instantáneo y navegar rápidamente como si fuera una aplicación.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Inicios de sesión y contraseñas</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1472,7 +1484,7 @@
     <string name="saved_login_duplicate">Ya existe un inicio de sesión con ese nombre de usuario</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Conectar otro dispositivo.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Por favor, vuelve a autentificarte.</string>
@@ -1491,9 +1503,20 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Límite de sitios frecuentes alcanzado</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Para añadir un nuevo sitio frecuente, elimina uno. Mantén presionado el sitio y selecciona eliminar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Vale, entendido</string>
 
-</resources>
+    <!-- depcrecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Sácale el máximo provecho a %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Colecciona las cosas que te importan</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agrupar búsquedas, sitios y pestañas similares para acceder rápidamente más tarde.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Has iniciado sesión como %s en otro navegador Firefox en este teléfono. ¿Deseas iniciar sesión con esta cuenta?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Puedes agregar fácilmente este sitio web a tu página de inicio para tener acceso instantáneo y navegar rápidamente como si fuera una aplicación.</string>
+
+    </resources>

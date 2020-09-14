@@ -281,6 +281,8 @@
     <string name="preferences_theme">అలంకారం</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">ముంగిలి</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">సైగలు</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">అభిమతీకరణ</string>
     <!-- Preference description for banner about signing in -->
@@ -1060,10 +1062,6 @@
     <string name="onboarding_account_sign_in_header">మీ Firefox ఖాతాతో ఇష్టాంశాలను, సంకేతపదాలను, ఇంకా మరెన్నిటినో సింక్రనించుకోవడం మొదలుపెట్టండి.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">ఇంకా తెలుసుకోండి</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">ఈ ఫోను లోని మరో Firefox విహారిణిలో మీరు %s‌గా ప్రవేశించారు. మీరు అదే ఖాతాతో ప్రవేశించాలనుకుంటున్నారా?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">అవును, నన్ను ప్రవేశింపజేయి</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1313,9 +1311,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">సత్వరమార్గం పేరు</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">తక్షణం చేరుకొని, అనువర్తనం-వంటి అనుభూతితో వేగంగా విహరించడానికి, ఈ వెబ్‌సైటును మీ చరవాణి ముంగిలి తెరకు తేలికగా చేర్చుకోవచ్చు.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ప్రవేశాలు, సంకేతపదాలు</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1542,7 +1537,7 @@
     <string name="saved_login_duplicate">ఆ వాడుకరి పేరుతో ఒక ప్రవేశం ఇప్పటికే ఉంది</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">మరొక పరికరాన్ని అనుసంధానించండి.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">దయచేసి పునరధీకరణ చేయండి.</string>
@@ -1561,8 +1556,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">మేటి సైట్ల పరిమితి చేరుకున్నారు</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">కొత్త మేటి సైటును చేర్చడానికి, ఒకదాన్ని తీసివేయండి. సైటు మీద ఎక్కువసేపు తట్టి, తీసివేయిను ఎంచుకోండి.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">సరే, అర్థమయ్యింది</string>
 
@@ -1572,10 +1565,15 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">తొలగించు</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s నుండి ఎక్కువగా పొందండి.</string>
 
     <!-- Deprecated: No Open Tabs Message Header -->
     <string name="no_collections_header1">మీకు ముఖ్యమైన విషయాలను సేకరించండి</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">ఈ ఫోను లోని మరో Firefox విహారిణిలో మీరు %s‌గా ప్రవేశించారు. మీరు అదే ఖాతాతో ప్రవేశించాలనుకుంటున్నారా?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">తక్షణం చేరుకొని, అనువర్తనం-వంటి అనుభూతితో వేగంగా విహరించడానికి, ఈ వెబ్‌సైటును మీ చరవాణి ముంగిలి తెరకు తేలికగా చేర్చుకోవచ్చు.</string>
+
     </resources>

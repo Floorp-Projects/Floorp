@@ -266,6 +266,8 @@
     <string name="preferences_open_links_in_a_private_tab">Hapi lidhjet në skedë private</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Lejo foto ekrani nën shfletim privat</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Në u lejoftë, skedat private do të jenë të dukshme edhe kur janë hapur aplikacione të shumtë</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Shtoni shkurtore shfletimi privat</string>
     <!-- Preference for accessibility -->
@@ -286,6 +288,8 @@
     <string name="preferences_theme">Temë</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Kreu</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gjeste</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Përshtateni</string>
     <!-- Preference description for banner about signing in -->
@@ -322,6 +326,8 @@
     <string name="preferences_search_bookmarks">Kërkoni te faqerojtësit</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Rregullime llogarie</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Vetëplotësim URL-sh</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Hapi lidhjet në aplikacione</string>
 
@@ -458,6 +464,16 @@
     <string name="preference_auto_battery_theme">Caktuar nga Kursyesi i Baterisë</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Ndiq temën e pajisjes</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Tërhiqeni, që të rifreskohet</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Rrëshqiteni, që të fshihet paneli</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Fërkojeni panelin anash, që të këmbeni skeda</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Fërkoni panelin për sipër, që të hapen skeda</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1050,7 +1066,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Jeni i futur si %s në një tjetër shfletues Firefox në këtë telefon. Doni të hyhet me këtë llogari?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Jeni i futur si %s në një shfletues tjetër Firefox në këtë pajisje. Do të donit të bënit hyrjen me këtë llogari?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Po, futmë</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1297,7 +1313,7 @@
     <string name="add_to_homescreen_text_placeholder">Emër shkurtoreje</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Këtë sajt mund ta shtoni lehtë te skena Kreu e telefonit tuaj, që ta hapni në çast dhe të shfletoni më shpejt, si të ish aplikacion.</string>
+    <string name="add_to_homescreen_description_2">Këtë sajt mund ta shtoni lehtë te skena Kreu e pajisjes tuaj, që ta hapni në çast dhe të shfletoni më shpejt, si të ish aplikacion.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Kredenciale hyrjesh dhe fjalëkalime</string>
@@ -1367,8 +1383,12 @@
     <string name="logins_site_copied">Sajti u kopjua në të papastër</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopjoje fjalëkalimin</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Spastroje fjalëkalimin</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopjo emër përdoruesi</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Spastroje emrin e përdoruesit</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopjo sajtin</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1526,7 +1546,7 @@
     <string name="saved_login_duplicate">Ka tashmë një palë kredenciale me këtë emër përdoruesi</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Lidhni pajisje tjetër.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ju lutemi, ribëni mirëfilltësimin.</string>
@@ -1546,7 +1566,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">U mbërrit te kufi sajtesh</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Që të shtoni një sajt të ri kryesues, hiqni një të tillë. Mbajeni të shtypur mbi sajtin dhe përzgjidhni Hiqe.</string>
+    <string name="top_sites_max_limit_content_2">Që të shtoni një sajt të ri kryesues, hiqni një të tillë. Prekeni dhe mbajeni të shtypur sajtin dhe përzgjidhni Hiqe.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, e mora vesh</string>
 
@@ -1556,7 +1576,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Hiqe</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Përfitoni maksimumin nga %s.</string>
 
@@ -1564,4 +1584,9 @@
     <string name="no_collections_header1">Koleksiononi gjërat që kanë rëndësi për ju</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Gruponi tok kërkime, sajte dhe skeda të ngjashme, për përdorim të shpejtë më pas.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Jeni i futur si %s në një tjetër shfletues Firefox në këtë telefon. Doni të hyhet me këtë llogari?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Këtë sajt mund ta shtoni lehtë te skena Kreu e telefonit tuaj, që ta hapni në çast dhe të shfletoni më shpejt, si të ish aplikacion.</string>
+
     </resources>

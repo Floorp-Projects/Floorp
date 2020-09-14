@@ -272,6 +272,8 @@
     <string name="preferences_open_links_in_a_private_tab">Avaa linkit yksityisessä välilehdessä</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Salli kuvakaappaukset yksityisen selauksen tilassa</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Jos sallittu, yksityiset välilehdet ovat näkyvissä kun useita sovelluksia on avoinna</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Lisää yksityisen selauksen pikakuvake</string>
     <!-- Preference for accessibility -->
@@ -292,6 +294,8 @@
     <string name="preferences_theme">Teema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Koti</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Eleet</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Mukauta</string>
     <!-- Preference description for banner about signing in -->
@@ -329,6 +333,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Tilin asetukset</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Täydennä osoitteet automaattisesti</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Avaa linkit sovelluksissa</string>
 
@@ -467,6 +473,17 @@
     <string name="preference_auto_battery_theme">Asetettu virransäästön toimesta</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seuraa laitteen teemaa</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Vedä päivittääksesi</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Viertä piilottaaksesi työkalurivin</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Pyyhkäise työkaluriviä sivuttain vaihtaaksesi välilehtiä</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Pyyhkäise työkaluriviä ylös avataksesi välilehdet</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1066,7 +1083,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Olet kirjautunut tilillä %s toiseen Firefox-selaimeen tällä puhelimessa. Haluatko kirjautua sisään tällä tilillä?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Olet kirjautunut tilillä %s toiseen Firefox-selaimeen tällä laitteella. Haluatko kirjautua sisään tällä tilillä?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Kyllä, kirjaa minut sisään</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1312,7 +1329,7 @@
     <string name="add_to_homescreen_text_placeholder">Pikakuvakkeen nimi</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Voit lisätä tämän sivuston puhelimesi aloitusnäytölle, jolloin sivuston käyttö onnistuu nopeasti ja tarjoaa sovelluksen kaltaisen kokemuksen.</string>
+    <string name="add_to_homescreen_description_2">Voit lisätä tämän sivuston laitteesi aloitusnäytölle, jolloin sivuston käyttö onnistuu nopeasti ja tarjoaa sovelluksen kaltaisen kokemuksen.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Käyttäjätunnukset ja salasanat</string>
@@ -1382,8 +1399,12 @@
     <string name="logins_site_copied">Sivusto kopioitu leikepöydälle</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopioi salasana</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Tyhjennä salasana</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopioi käyttäjätunnus</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Tyhjennä käyttäjätunnus</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopioi sivusto</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1540,7 +1561,7 @@
     <string name="saved_login_duplicate">Kirjautumistieto tällä käyttäjänimellä on jo olemassa</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Yhdistä toinen laite.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Tunnistaudu uudelleen.</string>
@@ -1560,7 +1581,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Ykkössivustojen määrä täynnä</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Lisätäksesi uuden ykkössivuston, poista yksi olemassa oleva. Paina pitkään sivustoa ja valitse poista.</string>
+    <string name="top_sites_max_limit_content_2">Lisätäksesi uuden ykkössivuston, poista yksi olemassa oleva. Kosketa sivustoa ja pidä pohjassa, sitten valitse poista.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Selvä</string>
 
@@ -1570,7 +1591,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Poista</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Ota kaikki irti %sista.</string>
 
@@ -1578,4 +1599,9 @@
     <string name="no_collections_header1">Kerää yhteen sinulle tärkeät asiat</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Kokoa yhteen samanlaiset haut, sivustot ja välilehdet nopeaa käyttöä varten.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Olet kirjautunut tilillä %s toiseen Firefox-selaimeen tällä puhelimessa. Haluatko kirjautua sisään tällä tilillä?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Voit lisätä tämän sivuston puhelimesi aloitusnäytölle, jolloin sivuston käyttö onnistuu nopeasti ja tarjoaa sovelluksen kaltaisen kokemuksen.</string>
+
+    </resources>

@@ -266,6 +266,8 @@
     <string name="preferences_open_links_in_a_private_tab">Otvori poveznice u privatnoj kartici</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Dopusti snimanje zaslona u privatnom pretraživanju</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Ako je uključeno, privatne kartice bit će vidljive i kad je otvoreno više aplikacija</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Dodaj prečac za privatno pregledavanje</string>
     <!-- Preference for accessibility -->
@@ -286,6 +288,8 @@
     <string name="preferences_theme">Motiv</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Početna</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Geste</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Prilagodi</string>
     <!-- Preference description for banner about signing in -->
@@ -323,6 +327,8 @@
     <string name="preferences_search_bookmarks">Pretraži zabilješke</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Postavke računa</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Automatski dovrši URL-ove</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Otvori poveznice u aplikacijama</string>
 
@@ -463,6 +469,16 @@
 
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Slijedi motiv uređaja</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Povuci za osvježavanje</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Skrivanje alatne trake pomakom stranice</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Prebacivanje kartica horizontalnim pomakom alatne trake</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Otvaranje kartica vertikalnim pomakom alatne trake</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1058,7 +1074,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Prijavljen/a si kao %s na jednom drugom Firefox pregledniku na ovom telefonu. Želiš li se prijaviti s ovim računom?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Prijavljen/a si kao %s u drugom pregledniku Firefox na ovom uređaju. Želiš li se prijaviti s ovim računom?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Da, prijavi me</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1306,7 +1322,7 @@
     <string name="add_to_homescreen_text_placeholder">Ime prečaca</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Možete jednostavno dodati ovu web stranicu na početni zaslon uređaja kako biste imali brz pristup i pretraživali brže, kao da ste u aplikaciji.</string>
+    <string name="add_to_homescreen_description_2">Ovu stranicu lako možeš dodati na početni zaslon svog uređaja za brže pretraživanje s iskustvom sličnim aplikacijama.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prijave i lozinke</string>
@@ -1377,8 +1393,12 @@
     <string name="logins_site_copied">Web-stranica je kopirana u međuspremnik</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopiraj lozinku</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Očisti lozinku</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopiraj korisničko ime</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Očisti korisničko ime</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopiraj web-stranicu</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1538,7 +1558,7 @@
     <string name="saved_login_duplicate">Prijava s tim korisničkim imenom već postoji</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Poveži drugi uređaj.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ponovite autorizaciju.</string>
@@ -1559,7 +1579,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Dostignuto ograničenje za omiljene stranice</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Za dodavanje nove omiljene stranice, ukloni neku. Pritisni i drži stranicu, zatim odaberi ukloni.</string>
+    <string name="top_sites_max_limit_content_2">Za dodavanje nove omiljene stranice prvo treba ukloniti jednu. Dotakni i drži jednu od njih i odaberi uklanjanje.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">U redu, shvaćam</string>
 
@@ -1569,7 +1589,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Ukloni</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Iskoristi sve prednosti aplikacije %s.</string>
 
@@ -1577,4 +1597,9 @@
     <string name="no_collections_header1">Skupi stvari koje su ti bitne</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Grupiraj slične pretrage, stranice i kartice za brži pristup kasnije.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Prijavljen/a si kao %s na jednom drugom Firefox pregledniku na ovom telefonu. Želiš li se prijaviti s ovim računom?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Možete jednostavno dodati ovu web stranicu na početni zaslon uređaja kako biste imali brz pristup i pretraživali brže, kao da ste u aplikaciji.</string>
+
+    </resources>
