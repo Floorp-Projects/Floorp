@@ -4,12 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemoteBackbuffer.h"
+#include "mozilla/Span.h"
 #include <algorithm>
 #include <type_traits>
 
 namespace mozilla {
 namespace widget {
 namespace remote_backbuffer {
+
+// This number can be adjusted as a time-memory tradeoff
+constexpr uint8_t kMaxDirtyRects = 8;
 
 struct IpcSafeRect {
   explicit IpcSafeRect(const gfx::IntRect& aRect)
@@ -44,7 +48,8 @@ struct BorrowResponseData {
 };
 
 struct PresentRequestData {
-  IpcSafeRect dirtyRect;
+  uint8_t lenDirtyRects;
+  IpcSafeRect dirtyRects[kMaxDirtyRects];
 };
 
 struct PresentResponseData {
@@ -228,7 +233,7 @@ class PresentableSharedImage {
   }
 
   bool PresentToWindow(HWND aWindowHandle, nsTransparencyMode aTransparencyMode,
-                       const IpcSafeRect& aDirtyRect) {
+                       Span<const IpcSafeRect> aDirtyRects) {
     if (aTransparencyMode == eTransparencyTransparent) {
       // If our window is a child window or a child-of-a-child, the window
       // that needs to be updated is the top level ancestor of the tree
@@ -246,18 +251,26 @@ class PresentableSharedImage {
 
     IntRect sharedImageRect{0, 0, mSharedImage.GetWidth(),
                             mSharedImage.GetHeight()};
-    IntRect dirtyRect{aDirtyRect.x, aDirtyRect.y, aDirtyRect.width,
-                      aDirtyRect.height};
-    IntRect bltRect = dirtyRect.Intersect(sharedImageRect);
+
+    bool result = true;
 
     HDC windowDC = ::GetDC(aWindowHandle);
     if (!windowDC) {
       return false;
     }
 
-    bool result = ::BitBlt(windowDC, bltRect.x /*dstX*/, bltRect.y /*dstY*/,
-                           bltRect.width, bltRect.height, mDeviceContext,
-                           bltRect.x /*srcX*/, bltRect.y /*srcY*/, SRCCOPY);
+    for (auto& ipcDirtyRect : aDirtyRects) {
+      IntRect dirtyRect{ipcDirtyRect.x, ipcDirtyRect.y, ipcDirtyRect.width,
+                        ipcDirtyRect.height};
+      IntRect bltRect = dirtyRect.Intersect(sharedImageRect);
+
+      if (!::BitBlt(windowDC, bltRect.x /*dstX*/, bltRect.y /*dstY*/,
+                    bltRect.width, bltRect.height, mDeviceContext,
+                    bltRect.x /*srcX*/, bltRect.y /*srcY*/, SRCCOPY)) {
+        result = false;
+        break;
+      }
+    }
 
     MOZ_ALWAYS_TRUE(::ReleaseDC(aWindowHandle, windowDC));
 
@@ -498,14 +511,17 @@ void Provider::HandlePresentRequest(const PresentRequestData& aRequestData,
                                     PresentResponseData* aResponseData) {
   MOZ_ASSERT(aResponseData);
 
+  Span rectSpan(aRequestData.dirtyRects, kMaxDirtyRects);
+
   aResponseData->result = ResponseResult::Error;
 
   if (!mBackbuffer) {
     return;
   }
 
-  if (!mBackbuffer->PresentToWindow(mWindowHandle, mTransparencyMode,
-                                    aRequestData.dirtyRect)) {
+  if (!mBackbuffer->PresentToWindow(
+          mWindowHandle, mTransparencyMode,
+          rectSpan.First(aRequestData.lenDirtyRects))) {
     return;
   }
 
@@ -600,9 +616,22 @@ already_AddRefed<gfx::DrawTarget> Client::BorrowDrawTarget() {
   return mBackbuffer->CreateDrawTarget();
 }
 
-bool Client::PresentDrawTarget(const gfx::IntRect& aDirtyRect) {
+bool Client::PresentDrawTarget(gfx::IntRegion aDirtyRegion) {
   mSharedDataPtr->dataType = SharedDataType::PresentRequest;
-  mSharedDataPtr->data.presentRequest.dirtyRect = IpcSafeRect(aDirtyRect);
+
+  // Simplify the region until it has <= kMaxDirtyRects
+  aDirtyRegion.SimplifyOutward(kMaxDirtyRects);
+
+  Span rectSpan(mSharedDataPtr->data.presentRequest.dirtyRects, kMaxDirtyRects);
+
+  uint8_t rectIndex = 0;
+  for (auto iter = aDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+    rectSpan[rectIndex] = IpcSafeRect(iter.Get());
+    ++rectIndex;
+  }
+
+  mSharedDataPtr->data.presentRequest.lenDirtyRects = rectIndex;
+
   MOZ_ALWAYS_TRUE(::SetEvent(mRequestReadyEvent));
   MOZ_ALWAYS_TRUE(::WaitForSingleObject(mResponseReadyEvent, INFINITE) ==
                   WAIT_OBJECT_0);
