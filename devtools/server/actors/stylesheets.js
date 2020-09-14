@@ -878,7 +878,16 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @return {object}
    *         Object with 'styelSheet' property for form on new actor.
    */
-  addStyleSheet: function(text, fileName = null) {
+  async addStyleSheet(text, fileName = null) {
+    const styleSheetsWatcher = this._getStyleSheetsWatcher();
+    if (styleSheetsWatcher) {
+      await styleSheetsWatcher.addStyleSheet(this.document, text, fileName);
+      return;
+    }
+
+    // Following code can be removed once we enable STYLESHEET resource on the watcher/server
+    // side by default. For now it is being preffed off and we have to support the two
+    // codepaths. Once enabled we will only support the stylesheet watcher codepath.
     const parent = this.document.documentElement;
     const style = this.document.createElementNS(
       "http://www.w3.org/1999/xhtml",
@@ -902,6 +911,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     this._addingStyleSheetInfo.set(style.sheet, { isNew: true, fileName });
 
     const actor = this.parentActor.createStyleSheetActor(style.sheet);
+    // eslint-disable-next-line consistent-return
     return actor;
   },
 
