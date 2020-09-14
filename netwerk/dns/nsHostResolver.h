@@ -446,6 +446,7 @@ class AHostResolver {
                                       mozilla::net::TRR* pushedTRR = nullptr) {
     return NS_ERROR_FAILURE;
   }
+  virtual void MaybeRenewHostRecord(nsHostRecord* aRec) {}
 };
 
 /**
@@ -535,7 +536,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
     // RES_DISABLE_IPv4 = nsIDNSService::RESOLVE_DISABLE_IPV4, // Not Used
     RES_ALLOW_NAME_COLLISION = nsIDNSService::RESOLVE_ALLOW_NAME_COLLISION,
     RES_DISABLE_TRR = nsIDNSService::RESOLVE_DISABLE_TRR,
-    RES_REFRESH_CACHE = nsIDNSService::RESOLVE_REFRESH_CACHE
+    RES_REFRESH_CACHE = nsIDNSService::RESOLVE_REFRESH_CACHE,
+    RES_IP_HINT = nsIDNSService::RESOLVE_IP_HINT
   };
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -558,6 +560,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   nsresult TrrLookup_unlocked(nsHostRecord*,
                               mozilla::net::TRR* pushedTRR = nullptr) override;
   static mozilla::net::ResolverMode Mode();
+
+  virtual void MaybeRenewHostRecord(nsHostRecord* aRec) override;
 
  private:
   explicit nsHostResolver(uint32_t maxCacheEntries,

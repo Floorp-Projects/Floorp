@@ -172,6 +172,20 @@ Maybe<nsCString> SVCB::GetAlpn(bool aNoHttp2, bool aNoHttp3) const {
   return Nothing();
 }
 
+void SVCB::GetIPHints(CopyableTArray<mozilla::net::NetAddr>& aAddresses) const {
+  if (mSvcFieldPriority == 0) {
+    return;
+  }
+
+  for (const auto& value : mSvcFieldValue) {
+    if (value.mValue.is<SvcParamIpv4Hint>()) {
+      aAddresses.AppendElements(value.mValue.as<SvcParamIpv4Hint>().mValue);
+    } else if (value.mValue.is<SvcParamIpv6Hint>()) {
+      aAddresses.AppendElements(value.mValue.as<SvcParamIpv6Hint>().mValue);
+    }
+  }
+}
+
 NS_IMETHODIMP SVCBRecord::GetPriority(uint16_t* aPriority) {
   *aPriority = mData.mSvcFieldPriority;
   return NS_OK;

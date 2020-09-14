@@ -165,6 +165,8 @@ class TRR : public Runnable,
   nsresult ParseSvcParam(unsigned int svcbIndex, uint16_t key,
                          SvcFieldValue& field, uint16_t length);
 
+  void StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord);
+
   nsCOMPtr<nsIChannel> mChannel;
   enum TrrType mType;
   unsigned char mResponse[kMaxSize]{};

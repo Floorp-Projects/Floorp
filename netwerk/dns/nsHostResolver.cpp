@@ -151,9 +151,10 @@ static inline bool IsLowPriority(uint16_t flags) {
 // this macro filters out any flags that are not used when constructing the
 // host key.  the significant flags are those that would affect the resulting
 // host record (i.e., the flags that are passed down to PR_GetAddrInfoByName).
-#define RES_KEY_FLAGS(_f)                                                     \
-  ((_f) & (nsHostResolver::RES_CANON_NAME | nsHostResolver::RES_DISABLE_TRR | \
-           nsIDNSService::RESOLVE_TRR_MODE_MASK))
+#define RES_KEY_FLAGS(_f)                                              \
+  ((_f) &                                                              \
+   (nsHostResolver::RES_CANON_NAME | nsHostResolver::RES_DISABLE_TRR | \
+    nsIDNSService::RESOLVE_TRR_MODE_MASK | nsHostResolver::RES_IP_HINT))
 
 #define IS_ADDR_TYPE(_type) ((_type) == nsIDNSService::RESOLVE_TYPE_DEFAULT)
 #define IS_OTHER_TYPE(_type) ((_type) != nsIDNSService::RESOLVE_TYPE_DEFAULT)
@@ -1319,6 +1320,16 @@ nsresult nsHostResolver::TrrLookup_unlocked(nsHostRecord* rec, TRR* pushedTRR) {
   return TrrLookup(rec, pushedTRR);
 }
 
+void nsHostResolver::MaybeRenewHostRecord(nsHostRecord* aRec) {
+  if (aRec->isInList()) {
+    // we're already on the eviction queue. This is a renewal
+    MOZ_ASSERT(mEvictionQSize);
+    AssertOnQ(aRec, mEvictionQ);
+    aRec->remove();
+    mEvictionQSize--;
+  }
+}
+
 // returns error if no TRR resolve is issued
 // it is impt this is not called while a native lookup is going on
 nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
@@ -1357,14 +1368,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
-  if (rec->isInList()) {
-    // we're already on the eviction queue. This is a renewal
-    MOZ_ASSERT(mEvictionQSize);
-    AssertOnQ(rec, mEvictionQ);
-
-    rec->remove();
-    mEvictionQSize--;
-  }
+  MaybeRenewHostRecord(rec);
 
   bool madeQuery = false;
 
@@ -1482,12 +1486,7 @@ nsresult nsHostResolver::NativeLookup(nsHostRecord* aRec) {
   addrRec->mNativeStart = TimeStamp::Now();
 
   // Add rec to one of the pending queues, possibly removing it from mEvictionQ.
-  if (rec->isInList()) {
-    MOZ_ASSERT(mEvictionQSize);
-    AssertOnQ(rec, mEvictionQ);
-    rec->remove();  // was on the eviction queue
-    mEvictionQSize--;
-  }
+  MaybeRenewHostRecord(rec);
 
   switch (AddrHostRecord::GetPriority(rec->flags)) {
     case AddrHostRecord::DNS_PRIORITY_HIGH:
@@ -1606,6 +1605,11 @@ void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
 // Kick-off a name resolve operation, using native resolver and/or TRR
 nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
   LOG(("NameLookup host:%s af:%" PRId16, rec->host.get(), rec->af));
+
+  if (rec->flags & RES_IP_HINT) {
+    LOG(("Skip lookup if RES_IP_HINT is set\n"));
+    return NS_ERROR_UNKNOWN_HOST;
+  }
 
   nsresult rv = NS_ERROR_UNKNOWN_HOST;
   if (rec->mResolving) {
