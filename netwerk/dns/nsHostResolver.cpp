@@ -311,7 +311,7 @@ bool AddrHostRecord::Blacklisted(const NetAddr* aQuery) {
   }
 
   char buf[kIPv6CStrBufSize];
-  if (!aQuery->ToStringBuffer(buf, sizeof(buf))) {
+  if (!NetAddrToString(aQuery, buf, sizeof(buf))) {
     return false;
   }
   nsDependentCString strQuery(buf);
@@ -336,7 +336,7 @@ void AddrHostRecord::ReportUnusable(const NetAddr* aAddress) {
   ++mBlacklistedCount;
 
   char buf[kIPv6CStrBufSize];
-  if (aAddress->ToStringBuffer(buf, sizeof(buf))) {
+  if (NetAddrToString(aAddress, buf, sizeof(buf))) {
     LOG(
         ("Successfully adding address [%s] to blacklist for host "
          "[%s].\n",
@@ -2011,9 +2011,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
 
       if (NS_FAILED(addrRec->mFirstTRRresult) && NS_FAILED(status) &&
           (addrRec->mFirstTRRresult != NS_ERROR_UNKNOWN_HOST) &&
-          (status != NS_ERROR_UNKNOWN_HOST) &&
-          (addrRec->mFirstTRRresult != NS_ERROR_DEFINITIVE_UNKNOWN_HOST) &&
-          (status != NS_ERROR_DEFINITIVE_UNKNOWN_HOST)) {
+          (status != NS_ERROR_UNKNOWN_HOST)) {
         // the errors are not failed resolves, that means
         // something else failed, consider this as *TRR not used*
         // for actually trying to resolve the host
@@ -2040,8 +2038,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       }
 
       if (!addrRec->mTRRSuccess &&
-          addrRec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
-          addrRec->mFirstTRRresult != NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+          addrRec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE) {
         MOZ_ASSERT(!addrRec->mResolving);
         NativeLookup(addrRec);
         MOZ_ASSERT(addrRec->mResolving);
@@ -2106,7 +2103,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
     if (addrRec->addr_info) {
       for (const auto& elem : addrRec->addr_info->Addresses()) {
         char buf[128];
-        elem.ToStringBuffer(buf, sizeof(buf));
+        NetAddrToString(&elem, buf, sizeof(buf));
         LOG(("CompleteLookup: %s has %s\n", addrRec->host.get(), buf));
       }
     } else {
@@ -2421,7 +2418,7 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
       MutexAutoLock lock(addrRec->addr_info_lock);
       for (const auto& addr : addrRec->addr_info->Addresses()) {
         char buf[kIPv6CStrBufSize];
-        if (addr.ToStringBuffer(buf, sizeof(buf))) {
+        if (NetAddrToString(&addr, buf, sizeof(buf))) {
           info.hostaddr.AppendElement(buf);
         }
       }

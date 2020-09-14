@@ -98,8 +98,7 @@ void NetAddrToPRNetAddr(const NetAddr* addr, PRNetAddr* prAddr) {
 #endif
 }
 
-bool NetAddr::ToStringBuffer(char* buf, uint32_t bufSize) const {
-  const NetAddr* addr = this;
+bool NetAddrToString(const NetAddr* addr, char* buf, uint32_t bufSize) {
   if (addr->raw.family == AF_INET) {
     if (bufSize < INET_ADDRSTRLEN) {
       return false;
@@ -139,8 +138,7 @@ bool NetAddr::ToStringBuffer(char* buf, uint32_t bufSize) const {
   return false;
 }
 
-bool NetAddr::IsLoopbackAddr() const {
-  const NetAddr* addr = this;
+bool IsLoopBackAddress(const NetAddr* addr) {
   if (addr->raw.family == AF_INET) {
     // Consider 127.0.0.1/8 as loopback
     uint32_t ipv4Addr = ntohl(addr->inet.ip);
@@ -159,17 +157,17 @@ bool NetAddr::IsLoopbackAddr() const {
   return false;
 }
 
-bool NetAddr::IsIPAddrAny() const {
-  if (this->raw.family == AF_INET) {
-    if (this->inet.ip == htonl(INADDR_ANY)) {
+bool IsIPAddrAny(const NetAddr* addr) {
+  if (addr->raw.family == AF_INET) {
+    if (addr->inet.ip == htonl(INADDR_ANY)) {
       return true;
     }
-  } else if (this->raw.family == AF_INET6) {
-    if (IPv6ADDR_IS_UNSPECIFIED(&this->inet6.ip)) {
+  } else if (addr->raw.family == AF_INET6) {
+    if (IPv6ADDR_IS_UNSPECIFIED(&addr->inet6.ip)) {
       return true;
     }
-    if (IPv6ADDR_IS_V4MAPPED(&this->inet6.ip) &&
-        IPv6ADDR_V4MAPPED_TO_IPADDR(&this->inet6.ip) == htonl(INADDR_ANY)) {
+    if (IPv6ADDR_IS_V4MAPPED(&addr->inet6.ip) &&
+        IPv6ADDR_V4MAPPED_TO_IPADDR(&addr->inet6.ip) == htonl(INADDR_ANY)) {
       return true;
     }
   }
@@ -178,17 +176,17 @@ bool NetAddr::IsIPAddrAny() const {
 
 NetAddr::NetAddr(const PRNetAddr* prAddr) { PRNetAddrToNetAddr(prAddr, this); }
 
-bool NetAddr::IsIPAddrV4() const { return this->raw.family == AF_INET; }
+bool IsIPAddrV4(const NetAddr* addr) { return addr->raw.family == AF_INET; }
 
-bool NetAddr::IsIPAddrV4Mapped() const {
-  if (this->raw.family == AF_INET6) {
-    return IPv6ADDR_IS_V4MAPPED(&this->inet6.ip);
+bool IsIPAddrV4Mapped(const NetAddr* addr) {
+  if (addr->raw.family == AF_INET6) {
+    return IPv6ADDR_IS_V4MAPPED(&addr->inet6.ip);
   }
   return false;
 }
 
-bool NetAddr::IsIPAddrLocal() const {
-  const NetAddr* addr = this;
+bool IsIPAddrLocal(const NetAddr* addr) {
+  MOZ_ASSERT(addr);
 
   // IPv4 RFC1918 and Link Local Addresses.
   if (addr->raw.family == AF_INET) {
@@ -212,8 +210,8 @@ bool NetAddr::IsIPAddrLocal() const {
   return false;
 }
 
-bool NetAddr::IsIPAddrShared() const {
-  const NetAddr* addr = this;
+bool IsIPAddrShared(const NetAddr* addr) {
+  MOZ_ASSERT(addr);
 
   // IPv4 RFC6598.
   if (addr->raw.family == AF_INET) {
@@ -227,12 +225,12 @@ bool NetAddr::IsIPAddrShared() const {
   return false;
 }
 
-nsresult NetAddr::GetPort(uint16_t* aResult) const {
+nsresult GetPort(const NetAddr* aAddr, uint16_t* aResult) {
   uint16_t port;
-  if (this->raw.family == PR_AF_INET) {
-    port = this->inet.port;
-  } else if (this->raw.family == PR_AF_INET6) {
-    port = this->inet6.port;
+  if (aAddr->raw.family == PR_AF_INET) {
+    port = aAddr->inet.port;
+  } else if (aAddr->raw.family == PR_AF_INET6) {
+    port = aAddr->inet6.port;
   } else {
     return NS_ERROR_NOT_INITIALIZED;
   }

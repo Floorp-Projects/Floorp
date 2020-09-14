@@ -251,7 +251,7 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
   // address, whereas for IPv4 127.0.0.1/8 are considered as potentially
   // trustworthy.  We already handled "[::1]" above, so all that's remained to
   // handle here are IPv4 loopback addresses.
-  return addr.IsIPAddrV4() && addr.IsLoopbackAddr();
+  return IsIPAddrV4(&addr) && IsLoopBackAddress(&addr);
 }
 
 bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {
