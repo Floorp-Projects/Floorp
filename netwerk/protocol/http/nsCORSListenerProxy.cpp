@@ -737,7 +737,7 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(
 
     bool rewriteToGET = false;
     nsCOMPtr<nsIHttpChannel> oldHttpChannel = do_QueryInterface(aOldChannel);
-    if (aOldChannel) {
+    if (oldHttpChannel) {
       nsAutoCString method;
       Unused << oldHttpChannel->GetRequestMethod(method);
       Unused << oldHttpChannel->ShouldStripRequestBodyHeader(method,
