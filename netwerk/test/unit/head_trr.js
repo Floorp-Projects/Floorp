@@ -283,10 +283,25 @@ function trrQueryHandler(req, resp, url) {
       additionals: response.additionals || [],
     });
 
-    resp.setHeader("Content-Length", buf.length);
-    resp.writeHead(200, { "Content-Type": "application/dns-message" });
-    resp.write(buf);
-    resp.end("");
+    let writeResponse = (resp, buf) => {
+      resp.setHeader("Content-Length", buf.length);
+      resp.writeHead(200, { "Content-Type": "application/dns-message" });
+      resp.write(buf);
+      resp.end("");
+    };
+
+    if (response.delay) {
+      setTimeout(
+        arg => {
+          writeResponse(arg[0], arg[1]);
+        },
+        response.delay,
+        [resp, buf]
+      );
+      return;
+    }
+
+    writeResponse(resp, buf);
   }
 }
 
@@ -335,10 +350,11 @@ class TRRServer {
   ///          flush: false,
   ///          data: "1.2.3.4",
   ///        }]
-  async registerDoHAnswers(name, type, answers, additionals) {
+  async registerDoHAnswers(name, type, answers, additionals, delay = 0) {
     let text = `global.dns_query_answers["${name}/${type}"] = ${JSON.stringify({
       answers,
       additionals,
+      delay,
     })}`;
     return this.execute(text);
   }
