@@ -181,6 +181,7 @@ class TypedOperandId : public OperandId {
   _(ToPropertyKey)        \
   _(InstanceOf)           \
   _(GetIterator)          \
+  _(OptimizeSpreadCall)   \
   _(Compare)              \
   _(ToBool)               \
   _(Call)                 \
@@ -1646,6 +1647,22 @@ class MOZ_RAII GetIteratorIRGenerator : public IRGenerator {
  public:
   GetIteratorIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                          ICState::Mode mode, HandleValue value);
+
+  AttachDecision tryAttachStub();
+
+  void trackAttached(const char* name);
+};
+
+class MOZ_RAII OptimizeSpreadCallIRGenerator : public IRGenerator {
+  HandleValue val_;
+
+  AttachDecision tryAttachArray();
+  AttachDecision tryAttachNotOptimizable();
+
+ public:
+  OptimizeSpreadCallIRGenerator(JSContext* cx, HandleScript script,
+                                jsbytecode* pc, ICState::Mode mode,
+                                HandleValue value);
 
   AttachDecision tryAttachStub();
 

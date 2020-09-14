@@ -3390,6 +3390,10 @@ bool DoOptimizeSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "OptimizeSpreadCall");
 
+  TryAttachStub<OptimizeSpreadCallIRGenerator>(
+      "OptimizeSpreadCall", cx, frame, stub, BaselineCacheIRStubKind::Regular,
+      value);
+
   bool optimized;
   if (!OptimizeSpreadCall(cx, value, &optimized)) {
     return false;
