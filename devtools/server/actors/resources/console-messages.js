@@ -37,7 +37,7 @@ const {
  *          This will be called for each resource.
  */
 class ConsoleMessageWatcher {
-  constructor(targetActor, { onAvailable }) {
+  async watch(targetActor, { onAvailable }) {
     // The following code expects the ThreadActor to be instantiated, via:
     // prepareConsoleMessageForRemote > TabSources.getActorIdForInternalSourceId
     // The Thread Actor is instantiated via Target.attach, but we should

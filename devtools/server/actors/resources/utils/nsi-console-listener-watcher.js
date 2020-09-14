@@ -26,7 +26,7 @@ class nsIConsoleListenerWatcher {
    *        - onAvailable: mandatory function
    *          This will be called for each resource.
    */
-  constructor(targetActor, { onAvailable }) {
+  async watch(targetActor, { onAvailable }) {
     if (!this.shouldHandleTarget(targetActor)) {
       return;
     }
