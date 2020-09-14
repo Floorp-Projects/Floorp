@@ -274,6 +274,10 @@ const SpecialMessageActions = {
         break;
       case "CONFIGURE_HOMEPAGE":
         this.configureHomepage(action.data);
+        const topWindow = browser.ownerGlobal.window.BrowserWindowTracker.getTopWindow();
+        if (topWindow) {
+          topWindow.BrowserHome();
+        }
         break;
       default:
         throw new Error(
