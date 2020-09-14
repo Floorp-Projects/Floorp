@@ -313,7 +313,7 @@ pkix_Logger_Destroy(
 
         logger->callback = NULL;
         PKIX_DECREF(logger->context);
-        logger->logComponent = (PKIX_ERRORCLASS)NULL;
+        logger->logComponent = (PKIX_ERRORCLASS)0;
 
 cleanup:
 
@@ -614,7 +614,7 @@ PKIX_Logger_Create(
 
         logger->callback = callback;
         logger->maxLevel = 0;
-        logger->logComponent = (PKIX_ERRORCLASS)NULL;
+        logger->logComponent = (PKIX_ERRORCLASS)0;
 
         PKIX_INCREF(loggerContext);
         logger->context = loggerContext;
