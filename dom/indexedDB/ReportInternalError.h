@@ -28,7 +28,8 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
+MOZ_COLD void ReportInternalError(const char* aFile, uint32_t aLine,
+                                  const char* aStr);
 
 }  // namespace indexedDB
 }  // namespace dom
