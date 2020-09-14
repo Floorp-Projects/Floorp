@@ -79,7 +79,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    * ensure that multiple animations started during the same event off
    * the main event loop have the same start time.)
    */
-  mozilla::TimeStamp MostRecentRefresh() const;
+  mozilla::TimeStamp MostRecentRefresh(bool aEnsureTimerStarted = true) const;
 
   /**
    * Add / remove refresh observers.

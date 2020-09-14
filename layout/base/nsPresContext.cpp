@@ -2403,10 +2403,26 @@ void nsPresContext::NotifyContentfulPaint() {
         ->PostDOMEvent();
 #endif
     mHadContentfulPaint = true;
-    if (IsRootContentDocument()) {
-      if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
-        mFirstContentfulPaintTransactionId =
-            Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
+    if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
+      mFirstContentfulPaintTransactionId =
+          Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
+      if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
+        if (Performance* perf = innerWindow->GetPerformance()) {
+          TimeStamp nowTime =
+              rootPresContext->RefreshDriver()->MostRecentRefresh(
+                  /* aEnsureTimerStarted */ false);
+          MOZ_ASSERT(
+              !nowTime.IsNull(),
+              "Most recent refresh timestamp should exist since we are in "
+              "a refresh driver tick");
+          MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
+                     "We should only notify contentful paint during refresh "
+                     "driver ticks");
+          RefPtr<PerformancePaintTiming> paintTiming =
+              new PerformancePaintTiming(perf, u"first-contentful-paint"_ns,
+                                         nowTime);
+          perf->SetFCPTimingEntry(paintTiming);
+        }
       }
     }
   }
