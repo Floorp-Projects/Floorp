@@ -7871,12 +7871,6 @@ bool nsWindow::HideTitlebarByDefault() {
     return hideTitlebar;
   }
 
-  // We hide system titlebar on KDE on recent enough systems.
-  if (gtk_check_version(3, 24, 0) == nullptr &&
-      strstr(currentDesktop, "KDE") != nullptr) {
-    return hideTitlebar;
-  }
-
   // Don't hide system titlebar by default for other desktops.
   hideTitlebar = false;
   return hideTitlebar;
