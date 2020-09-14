@@ -137,6 +137,14 @@ class StyleSheetWatcher {
   }
 
   /**
+   * Return owner node of the style sheet of the given resource id.
+   */
+  getOwnerNode(resourceId) {
+    const { styleSheet } = this._styleSheetMap.get(resourceId);
+    return styleSheet.ownerNode;
+  }
+
+  /**
    * Protocol method to get the text of stylesheet of resourceId.
    */
   async getText(resourceId) {
