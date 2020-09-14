@@ -355,6 +355,11 @@ pref("browser.urlbar.update2.localOneOffs", false);
 pref("browser.urlbar.update2.oneOffsRefresh", false);
 #endif
 
+// Controls the empty search behavior in Search Mode:
+//  0 - Show nothing
+//  1 - Show search history
+//  2 - Show search and browsing history
+pref("browser.urlbar.update2.emptySearchBehavior", 2);
 // Whether we display a tab-to-complete result when the user types an engine
 // name.
 pref("browser.urlbar.update2.tabToComplete", false);
