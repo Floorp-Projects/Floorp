@@ -12,6 +12,7 @@
 #include <initializer_list>
 #include "mozilla/AbstractEventQueue.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/InputTaskManager.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
@@ -95,6 +96,7 @@ void TaskController::SetPerformanceCounterState(
 
 /* static */
 void TaskController::Shutdown() {
+  InputTaskManager::Cleanup();
   if (sSingleton) {
     sSingleton->ShutdownInternal();
   }

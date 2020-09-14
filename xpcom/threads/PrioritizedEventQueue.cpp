@@ -26,7 +26,7 @@ PrioritizedEventQueue::PrioritizedEventQueue(
       mDeferredTimersQueue(
           MakeUnique<EventQueue>(EventQueuePriority::DeferredTimers)),
       mIdleQueue(MakeUnique<EventQueue>(EventQueuePriority::Idle)) {
-  mInputTaskManager = new InputTaskManager();
+  mInputTaskManager = InputTaskManager::Get();
   mIdleTaskManager = new IdleTaskManager(std::move(aIdlePeriod));
   TaskController::Get()->SetIdleTaskManager(mIdleTaskManager);
 }

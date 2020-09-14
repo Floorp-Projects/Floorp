@@ -8,6 +8,8 @@
 
 namespace mozilla {
 
+StaticRefPtr<InputTaskManager> InputTaskManager::gInputTaskManager;
+
 void InputTaskManager::EnableInputEventPrioritization() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mInputQueueState == STATE_DISABLED);
@@ -67,6 +69,17 @@ void InputTaskManager::DidRunTask() {
   MOZ_ASSERT(!mStartTimes.IsEmpty());
   TimeStamp start = mStartTimes.PopLastElement();
   InputEventStatistics::Get().UpdateInputDuration(TimeStamp::Now() - start);
+}
+
+// static
+InputTaskManager* InputTaskManager::Get() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (gInputTaskManager) {
+    return gInputTaskManager.get();
+  }
+
+  gInputTaskManager = new InputTaskManager();
+  return gInputTaskManager.get();
 }
 
 }  // namespace mozilla

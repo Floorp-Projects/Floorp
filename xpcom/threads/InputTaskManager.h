@@ -13,7 +13,6 @@ namespace mozilla {
 
 class InputTaskManager : public TaskManager {
  public:
-  InputTaskManager() : mInputQueueState(STATE_DISABLED) {}
   int32_t GetPriorityModifierForEventLoopTurn(
       const MutexAutoLock& aProofOfLock) final;
   void WillRunTask() final;
@@ -41,10 +40,17 @@ class InputTaskManager : public TaskManager {
     mInputHandlingStartTime = aStartTime;
   }
 
+  static InputTaskManager* Get();
+  static void Cleanup() { gInputTaskManager = nullptr; }
+
  private:
+  InputTaskManager() : mInputQueueState(STATE_DISABLED) {}
+
   TimeStamp mInputHandlingStartTime;
   Atomic<InputEventQueueState> mInputQueueState;
   AutoTArray<TimeStamp, 4> mStartTimes;
+
+  static StaticRefPtr<InputTaskManager> gInputTaskManager;
 };
 
 }  // namespace mozilla
