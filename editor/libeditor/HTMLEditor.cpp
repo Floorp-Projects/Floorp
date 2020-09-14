@@ -6288,17 +6288,6 @@ already_AddRefed<Element> HTMLEditor::GetInputEventTargetElement() const {
 
 Element* HTMLEditor::GetEditorRoot() const { return GetActiveEditingHost(); }
 
-nsHTMLDocument* HTMLEditor::GetHTMLDocument() const {
-  Document* document = GetDocument();
-  if (NS_WARN_IF(!document)) {
-    return nullptr;
-  }
-  if (!document->IsHTMLOrXHTML()) {
-    return nullptr;
-  }
-  return document->AsHTMLDocument();
-}
-
 nsresult HTMLEditor::OnModifyDocument() {
   MOZ_ASSERT(mPendingDocumentModifiedRunner,
              "HTMLEditor::OnModifyDocument() should be called via a runner");
