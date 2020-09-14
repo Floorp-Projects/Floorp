@@ -2916,7 +2916,8 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
           : mInclusiveDescendantOfLeftBlockElement(
                 aInclusiveDescendantOfLeftBlockElement),
             mInclusiveDescendantOfRightBlockElement(
-                aInclusiveDescendantOfRightBlockElement) {}
+                aInclusiveDescendantOfRightBlockElement),
+            mCanJoinBlocks(false) {}
 
       bool IsSet() const { return mLeftBlockElement && mRightBlockElement; }
       bool IsSameBlockElement() const {
@@ -2925,9 +2926,14 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
 
       /**
        * Prepare for joining inclusive ancestor block elements.  When this
-       * returns error or "canceled" or "handled" state, don't call Run().
+       * returns false, the deletion should be canceled.
        */
-      EditActionResult Prepare();
+      Result<bool, nsresult> Prepare();
+
+      /**
+       * When this returns true, this can join the blocks with `Run()`.
+       */
+      bool CanJoinBlocks() const { return mCanJoinBlocks; }
 
       /**
        * Join inclusive ancestor block elements which are found by preceding
@@ -2949,6 +2955,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       RefPtr<Element> mLeftBlockElement;
       RefPtr<Element> mRightBlockElement;
       Maybe<nsAtom*> mNewListElementTagNameOfRightListElement;
+      bool mCanJoinBlocks;
     };  // HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
         // AutoInclusiveAncestorBlockElementsJoiner
 
@@ -4308,17 +4315,23 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
     AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
                                                     *mRightContent);
-    result |= joiner.Prepare();
-    if (result.Failed()) {
+    Result<bool, nsresult> canJoinThem = joiner.Prepare();
+    if (canJoinThem.isErr()) {
       NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
-      return result;
+      return EditActionResult(canJoinThem.unwrapErr());
     }
-    if (!result.Canceled() && !result.Handled()) {
-      result |= joiner.Run(aHTMLEditor);
-      if (result.Failed()) {
-        NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
-        return result;
+    if (canJoinThem.inspect()) {
+      if (joiner.CanJoinBlocks()) {
+        result |= joiner.Run(aHTMLEditor);
+        if (result.Failed()) {
+          NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+          return result;
+        }
+      } else {
+        result.MarkAsHandled();
       }
+    } else {
+      result.MarkAsCanceled();
     }
   }
 
@@ -4413,17 +4426,23 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     AutoTrackDOMPoint tracker(aHTMLEditor.RangeUpdaterRef(), &pointToPutCaret);
     AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
                                                     *mRightContent);
-    result |= joiner.Prepare();
-    if (result.Failed()) {
+    Result<bool, nsresult> canJoinThem = joiner.Prepare();
+    if (canJoinThem.isErr()) {
       NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
-      return result;
+      return EditActionResult(canJoinThem.unwrapErr());
     }
-    if (!result.Canceled() && !result.Handled()) {
-      result |= joiner.Run(aHTMLEditor);
-      if (result.Failed()) {
-        NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
-        return result;
+    if (canJoinThem.inspect()) {
+      if (joiner.CanJoinBlocks()) {
+        result |= joiner.Run(aHTMLEditor);
+        if (result.Failed()) {
+          NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+          return result;
+        }
+      } else {
+        result.MarkAsHandled();
       }
+    } else {
+      result.MarkAsCanceled();
     }
     // This should claim that trying to join the block means that
     // this handles the action because the caller shouldn't do anything
@@ -4839,19 +4858,25 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     if (joinInclusiveAncestorBlockElements) {
       AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
                                                       *mRightContent);
-      EditActionResult preparationResult = joiner.Prepare();
-      result |= preparationResult;
-      if (result.Failed()) {
+      Result<bool, nsresult> canJoinThem = joiner.Prepare();
+      if (canJoinThem.isErr()) {
         NS_WARNING(
             "AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
-        return result;
+        return EditActionResult(canJoinThem.unwrapErr());
       }
-      if (!preparationResult.Canceled() && !preparationResult.Handled()) {
-        result |= joiner.Run(aHTMLEditor);
-        if (result.Failed()) {
-          NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
-          return result;
+      if (canJoinThem.inspect()) {
+        if (joiner.CanJoinBlocks()) {
+          result |= joiner.Run(aHTMLEditor);
+          if (result.Failed()) {
+            NS_WARNING(
+                "AutoInclusiveAncestorBlockElementsJoiner::Run() failed");
+            return result;
+          }
+        } else {
+          result.MarkAsHandled();
         }
+      } else {
+        result.Canceled();
       }
 
       // If we're joining blocks: if deleting forward the selection should
@@ -5861,7 +5886,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   return ret;
 }
 
-EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
+Result<bool, nsresult>
+HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     AutoInclusiveAncestorBlockElementsJoiner::Prepare() {
   mLeftBlockElement =
       HTMLEditUtils::GetInclusiveAncestorBlockElementExceptHRElement(
@@ -5871,25 +5897,29 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
           mInclusiveDescendantOfRightBlockElement);
 
   if (NS_WARN_IF(!IsSet())) {
-    return EditActionIgnored(NS_ERROR_UNEXPECTED);
+    mCanJoinBlocks = false;
+    return Err(NS_ERROR_UNEXPECTED);
   }
 
   if (HTMLEditUtils::IsAnyTableElement(mLeftBlockElement) ||
       HTMLEditUtils::IsAnyTableElement(mRightBlockElement)) {
-    // Do not try to merge table elements
-    return EditActionCanceled();
+    // Do not try to merge table elements, cancel the deletion.
+    mCanJoinBlocks = false;
+    return false;
   }
 
   // Bail if both blocks the same
   if (IsSameBlockElement()) {
-    return EditActionIgnored();
+    mCanJoinBlocks = true;  // XXX Anyway, Run() will ingore this case.
+    return true;
   }
 
   // Joining a list item to its parent is a NOP.
   if (HTMLEditUtils::IsAnyListElement(mLeftBlockElement) &&
       HTMLEditUtils::IsListItem(mRightBlockElement) &&
       mRightBlockElement->GetParentNode() == mLeftBlockElement) {
-    return EditActionHandled();
+    mCanJoinBlocks = false;
+    return true;
   }
 
   // Special rule here: if we are trying to join list items, and they are in
@@ -5918,7 +5948,8 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     }
   }
 
-  return EditActionIgnored();
+  mCanJoinBlocks = true;
+  return true;
 }
 
 EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
@@ -5929,6 +5960,10 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   if (IsSameBlockElement()) {
     return EditActionIgnored();
+  }
+
+  if (!mCanJoinBlocks) {
+    return EditActionHandled();
   }
 
   // If the left block element is in the right block element, move the hard
