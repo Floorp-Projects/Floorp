@@ -21,30 +21,31 @@ const WindowGlobalLogger = {
    *        A custom message that will be displayed at the beginning of the log.
    */
   logWindowGlobal: function(windowGlobal, message) {
-    const browsingContext = windowGlobal.browsingContext;
-    dump(
-      message +
-        " | BrowsingContext.browserId: " +
-        browsingContext.browserId +
-        " id: " +
-        browsingContext.id +
-        " Inner Window ID: " +
-        windowGlobal.innerWindowId +
-        " pid:" +
-        windowGlobal.osPid +
-        " isClosed:" +
-        windowGlobal.isClosed +
-        " isInProcess:" +
-        windowGlobal.isInProcess +
-        " isCurrentGlobal:" +
-        windowGlobal.isCurrentGlobal +
-        " currentRemoteType:" +
-        browsingContext.currentRemoteType +
-        " hasParent:" +
-        (browsingContext.parent ? browsingContext.parent.id : "no") +
-        " => " +
-        (windowGlobal.documentURI ? windowGlobal.documentURI.spec : "no-uri") +
-        "\n"
+    const { browsingContext } = windowGlobal;
+    const { parent } = browsingContext;
+
+    const details = [];
+    details.push(
+      "BrowsingContext.browserId: " + browsingContext.browserId,
+      "BrowsingContext.id: " + browsingContext.id,
+      "innerWindowId: " + windowGlobal.innerWindowId,
+      "pid: " + windowGlobal.osPid,
+      "isClosed: " + windowGlobal.isClosed,
+      "isInProcess: " + windowGlobal.isInProcess,
+      "isCurrentGlobal: " + windowGlobal.isCurrentGlobal,
+      "currentRemoteType: " + browsingContext.currentRemoteType,
+      "hasParent: " + (parent ? parent.id : "no"),
+      "uri: " +
+        (windowGlobal.documentURI ? windowGlobal.documentURI.spec : "no-uri")
     );
+
+    const header = "[WindowGlobalLogger] " + message;
+
+    // Use a padding for multiline display.
+    const padding = "    ";
+    const formattedDetails = details.map(s => padding + s);
+    const detailsString = formattedDetails.join("\n");
+
+    dump(header + "\n" + detailsString + "\n");
   },
 };
