@@ -248,6 +248,11 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvShare(IPCWebShareData&& aData,
                                     ShareResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvUpdateDocumentWouldPreloadResources();
+  mozilla::ipc::IPCResult RecvSubmitLoadEventPreloadTelemetry(
+      TimeStamp aNavigationStart, TimeStamp aLoadEventStart,
+      TimeStamp aLoadEventEnd);
+
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,
@@ -298,6 +303,7 @@ class WindowGlobalParent final : public WindowContext,
 
   bool mDocumentHasLoaded;
   bool mDocumentHasUserInteracted;
+  bool mDocumentTreeWouldPreloadResources = false;
   bool mBlockAllMixedContent;
   bool mUpgradeInsecureRequests;
 

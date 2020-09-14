@@ -733,6 +733,10 @@ bool IsWebCoopCoepRemoteType(const nsACString& aContentProcessType) {
                           WITH_COOP_COEP_REMOTE_TYPE_PREFIX);
 }
 
+bool IsPriviligedMozillaRemoteType(const nsACString& aContentProcessType) {
+  return aContentProcessType == PRIVILEGEDMOZILLA_REMOTE_TYPE;
+}
+
 /*static*/
 uint32_t ContentParent::GetMaxProcessCount(
     const nsACString& aContentProcessType) {
