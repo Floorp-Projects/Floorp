@@ -24,6 +24,18 @@ document.addEventListener("DOMContentLoaded", function() {
       RPMGetFormatURLPref("app.support.baseURL") + "private-browsing-myths"
     );
 
+  // Setup the private browsing VPN link.
+  const vpnPromoUrl = RPMGetFormatURLPref(
+    "browser.privatebrowsing.vpnpromourl"
+  );
+  if (vpnPromoUrl) {
+    document
+      .getElementById("private-browsing-vpn-link")
+      .setAttribute("href", vpnPromoUrl);
+  } else {
+    document.getElementById("private-browsing-vpn-banner").remove();
+  }
+
   // Set up the private search banner.
   const privateSearchBanner = document.getElementById("search-banner");
 
