@@ -32,6 +32,9 @@ const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 const SHOW_THREADS = Services.prefs.getBoolPref(
   "toolkit.aboutProcesses.showThreads"
 );
+const SHOW_ALL_SUBFRAMES = Services.prefs.getBoolPref(
+  "toolkit.aboutProcesses.showAllSubframes"
+);
 
 /**
  * Returns a Promise that's resolved after the next turn of the event loop.
@@ -993,8 +996,10 @@ var Control = {
 
       let winRow;
       for (let win of process.windows) {
-        winRow = View.appendDOMWindowRow(win, process);
-        winRow.win = win;
+        if (SHOW_ALL_SUBFRAMES || win.tab || win.isProcessRoot) {
+          winRow = View.appendDOMWindowRow(win, process);
+          winRow.win = win;
+        }
       }
 
       if (SHOW_THREADS) {
