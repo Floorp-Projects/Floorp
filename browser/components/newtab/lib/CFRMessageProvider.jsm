@@ -963,6 +963,87 @@ const CFR_MESSAGES = [
       patterns: ["*://*/*"],
     },
   },
+  {
+    id: "HOMEPAGE_REMEDIATION_82",
+    frequency: {
+      lifetime: 3,
+    },
+    targeting:
+      "!homePageSettings.isDefault && homePageSettings.isCustomUrl && homePageSettings.urls[.host == 'google.com']|length > 0 && visitsCount >= 3 && userPrefs.cfrFeatures",
+    template: "cfr_doorhanger",
+    content: {
+      layout: "icon_and_message",
+      text:
+        "Update your homepage to search Google while also being able to search your Firefox history and bookmarks.",
+      icon: "chrome://browser/skin/preferences/search.svg",
+      buttons: {
+        secondary: [
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-cancel-button",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-never-show-recommendation",
+            },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-manage-settings-button",
+            },
+            action: {
+              type: "OPEN_PREFERENCES_PAGE",
+              data: {
+                category: "general-cfrfeatures",
+              },
+            },
+          },
+        ],
+        primary: {
+          label: {
+            value: "Activate now",
+            attributes: {
+              accesskey: "A",
+            },
+          },
+          action: {
+            type: "CONFIGURE_HOMEPAGE",
+            data: {
+              homePage: "default",
+              newtab: "default",
+              layout: {
+                search: true,
+                topsites: false,
+                highlights: false,
+                topstories: false,
+                snippets: false,
+              },
+            },
+          },
+        },
+      },
+      bucket_id: "HOMEPAGE_REMEDIATION_82",
+      heading_text: "A better search experience",
+      info_icon: {
+        label: {
+          string_id: "cfr-doorhanger-extension-sumo-link",
+        },
+        sumo_path: "extensionrecommendations",
+      },
+      notification_text: {
+        string_id: "cfr-doorhanger-feature-notification",
+      },
+      category: "cfrFeatures",
+    },
+    trigger: {
+      id: "openURL",
+      params: ["google.com", "www.google.com"],
+    },
+  },
 ];
 
 const CFRMessageProvider = {
