@@ -141,7 +141,6 @@
 #include "mozilla/mozalloc.h"
 #include "mozilla/PRemoteLazyInputStreamParent.h"
 #include "mozilla/storage/Variant.h"
-#include "mozzconf.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
