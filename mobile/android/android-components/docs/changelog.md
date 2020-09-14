@@ -16,6 +16,19 @@ permalink: /changelog/
  * Removed the `BrowserTabsTray` that was deprecated in previous releases.
 * **service-telemetry**
   * This library has been removed. Please use `service-glean` instead.
+* **service-glean**
+  * Glean was upgraded to v32.3.2
+    * Track the size of the database file at startup ([#1141](https://github.com/mozilla/glean/pull/1141)).
+    * Submitting a ping with upload disabled no longer shows an error message ([#1201](https://github.com/mozilla/glean/pull/1201)).
+    * BUGFIX: scan the pending pings directories **after** dealing with upload status on initialization. This is important, because in case upload is disabled we delete any outstanding non-deletion ping file, and if we scan the pending pings folder before doing that we may end up sending pings that should have been discarded. ([#1205](https://github.com/mozilla/glean/pull/1205))
+    * Move logic to limit the number of retries on ping uploading "recoverable failures" to glean-core. ([#1120](https://github.com/mozilla/glean/pull/1120))
+    * The functionality to limit the number of retries in these cases was introduced to the Glean SDK in `v31.1.0`. The work done now was to move that logic to the glean-core in order to avoid code duplication throughout the language bindings.
+    * Update `glean_parser` to `v1.28.3`
+      * BUGFIX: Generate valid C# code when using Labeled metric types.
+      * BUGFIX: Support `HashSet` and `Dictionary` in the C# generated code.
+    * Add a 10MB quota to the pending pings storage. ([#1100](https://github.com/mozilla/glean/pull/1110))
+    * Handle ping registration off the main thread. This removes a potential blocking call ([#1132](https://github.com/mozilla/glean/pull/1132)).
+
 
 # 58.0.0
 
