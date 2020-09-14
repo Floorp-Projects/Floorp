@@ -1576,7 +1576,15 @@ function stringToPDFString(str) {
 }
 
 function escapeString(str) {
-  return str.replace(/([\(\)\\])/g, "\\$1");
+  return str.replace(/([\(\)\\\n\r])/g, match => {
+    if (match === "\n") {
+      return "\\n";
+    } else if (match === "\r") {
+      return "\\r";
+    }
+
+    return `\\${match}`;
+  });
 }
 
 function stringToUTF8String(str) {
