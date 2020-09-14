@@ -420,6 +420,7 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   mPlaying = true;
   mPrincipalHandle.Connect(mCanonicalOutputPrincipal);
   mWatchManager.Watch(mPlaying, &DecodedStream::PlayingChanged);
+  mAudibilityMonitor.emplace(AudibilityMonitor(mInfo.mAudio.mRate, 2.0f));
   ConnectListener();
 
   class R : public Runnable {
@@ -517,6 +518,7 @@ void DecodedStream::Stop() {
 
   mPrincipalHandle.DisconnectIfConnected();
   mWatchManager.Unwatch(mPlaying, &DecodedStream::PlayingChanged);
+  mAudibilityMonitor.reset();
 }
 
 bool DecodedStream::IsStarted() const {
@@ -674,7 +676,9 @@ void DecodedStream::SendAudio(double aVolume,
 void DecodedStream::CheckIsDataAudible(const AudioData* aData) {
   MOZ_ASSERT(aData);
 
-  bool isAudible = aData->IsAudible();
+  mAudibilityMonitor->ProcessAudioData(aData);
+  bool isAudible = mAudibilityMonitor->RecentlyAudible();
+
   if (isAudible != mIsAudioDataAudible) {
     mIsAudioDataAudible = isAudible;
     mAudibleEvent.Notify(mIsAudioDataAudible);

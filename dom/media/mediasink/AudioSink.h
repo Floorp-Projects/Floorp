@@ -7,6 +7,7 @@
 #define AudioSink_h__
 
 #include "AudioStream.h"
+#include "AudibilityMonitor.h"
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
 #include "MediaQueue.h"
@@ -161,10 +162,8 @@ class AudioSink : private AudioStream::DataSource {
   // Never modifed after construction.
   uint32_t mOutputRate;
   uint32_t mOutputChannels;
-
-  // True when audio is producing audible sound, false when audio is silent.
+  AudibilityMonitor mAudibilityMonitor;
   bool mIsAudioDataAudible;
-
   MediaEventProducer<bool> mAudibleEvent;
 
   MediaQueue<AudioData>& mAudioQueue;
