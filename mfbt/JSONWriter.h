@@ -111,16 +111,6 @@ namespace mozilla {
 class JSONWriteFunc {
  public:
   virtual void Write(const Span<const char>& aStr) = 0;
-
-  template <size_t LenPlusOne>
-  inline void WriteLiteral(const char (&aStr)[LenPlusOne]) {
-    Write(Span<const char>(aStr, LenPlusOne - 1));
-  }
-
-  // Prevent calls with a raw string pointer, users should know the length in
-  // most cases, which is more efficient, and build a Span from that.
-  void Write(const char*) = delete;
-
   virtual ~JSONWriteFunc() = default;
 };
 
@@ -240,11 +230,19 @@ class JSONWriter {
  protected:
   static constexpr Span<const char> scArrayBeginString = MakeStringSpan("[");
   static constexpr Span<const char> scArrayEndString = MakeStringSpan("]");
+  static constexpr Span<const char> scCommaString = MakeStringSpan(",");
   static constexpr Span<const char> scEmptyString = MakeStringSpan("");
   static constexpr Span<const char> scFalseString = MakeStringSpan("false");
+  static constexpr Span<const char> scNewLineString = MakeStringSpan("\n");
   static constexpr Span<const char> scNullString = MakeStringSpan("null");
   static constexpr Span<const char> scObjectBeginString = MakeStringSpan("{");
   static constexpr Span<const char> scObjectEndString = MakeStringSpan("}");
+  static constexpr Span<const char> scPropertyBeginString =
+      MakeStringSpan("\"");
+  static constexpr Span<const char> scPropertyEndString =
+      MakeStringSpan("\": ");
+  static constexpr Span<const char> scQuoteString = MakeStringSpan("\"");
+  static constexpr Span<const char> scSpaceString = MakeStringSpan(" ");
   static constexpr Span<const char> scTopObjectBeginString =
       MakeStringSpan("{");
   static constexpr Span<const char> scTopObjectEndString =
@@ -258,7 +256,7 @@ class JSONWriter {
 
   void Indent() {
     for (size_t i = 0; i < mDepth; i++) {
-      mWriter->WriteLiteral(" ");
+      mWriter->Write(scSpaceString);
     }
   }
 
@@ -267,20 +265,20 @@ class JSONWriter {
   // before.
   void Separator() {
     if (mNeedComma[mDepth]) {
-      mWriter->WriteLiteral(",");
+      mWriter->Write(scCommaString);
     }
     if (mDepth > 0 && mNeedNewlines[mDepth]) {
-      mWriter->WriteLiteral("\n");
+      mWriter->Write(scNewLineString);
       Indent();
     } else if (mNeedComma[mDepth]) {
-      mWriter->WriteLiteral(" ");
+      mWriter->Write(scSpaceString);
     }
   }
 
   void PropertyNameAndColon(const Span<const char>& aName) {
-    mWriter->WriteLiteral("\"");
+    mWriter->Write(scPropertyBeginString);
     mWriter->Write(EscapedString(aName).SpanRef());
-    mWriter->WriteLiteral("\": ");
+    mWriter->Write(scPropertyEndString);
   }
 
   void Scalar(const Span<const char>& aMaybePropertyName,
@@ -299,9 +297,9 @@ class JSONWriter {
     if (!aMaybePropertyName.empty()) {
       PropertyNameAndColon(aMaybePropertyName);
     }
-    mWriter->WriteLiteral("\"");
+    mWriter->Write(scQuoteString);
     mWriter->Write(aStringValue);
-    mWriter->WriteLiteral("\"");
+    mWriter->Write(scQuoteString);
     mNeedComma[mDepth] = true;
   }
 
@@ -333,7 +331,7 @@ class JSONWriter {
   void EndCollection(const Span<const char>& aEndChar) {
     MOZ_ASSERT(mDepth > 0);
     if (mNeedNewlines[mDepth]) {
-      mWriter->WriteLiteral("\n");
+      mWriter->Write(scNewLineString);
       mDepth--;
       Indent();
     } else {
