@@ -1330,11 +1330,7 @@ pref("browser.partnerlink.attributionURL", "https://topsites.services.mozilla.co
 // Whether to show tab level system prompts opened via nsIPrompt(Service) as
 // SubDialogs in the TabDialogBox (true) or as TabModalPrompt in the
 // TabModalPromptBox (false).
-#ifdef NIGHTLY_BUILD
-  pref("prompts.tabChromePromptSubDialog", true);
-#else
-  pref("prompts.tabChromePromptSubDialog", false);
-#endif
+pref("prompts.tabChromePromptSubDialog", true);
 
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
