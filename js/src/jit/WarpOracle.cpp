@@ -793,8 +793,8 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   MOZ_ASSERT(loc.opHasIC());
 
-  // Don't create snapshots for the arguments analysis.
-  if (info_->isAnalysis()) {
+  // Don't create snapshots for the arguments analysis or when testing ICs.
+  if (info_->isAnalysis() || JitOptions.forceInlineCaches) {
     return Ok();
   }
 
