@@ -711,7 +711,7 @@ ROLE(COLOR_CHOOSER,
 ROLE(DATE_EDITOR,
      "date editor",
      ATK_ROLE_DATE_EDITOR,
-     @"AXDateField",
+     NSAccessibilityUnknownRole,
      NSAccessibilityUnknownSubrole,
      USE_ROLE_STRING,
      IA2_ROLE_DATE_EDITOR,
@@ -1856,14 +1856,4 @@ ROLE(CODE,
      IA2_ROLE_TEXT_FRAME,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNoNameRule)
-
-ROLE(TIME_EDITOR,
-     "time editor",
-     ATK_ROLE_PANEL,
-     @"AXTimeField",
-     NSAccessibilityUnknownSubrole,
-     ROLE_SYSTEM_GROUPING,
-     ROLE_SYSTEM_GROUPING,
-     java::SessionAccessibility::CLASSNAME_VIEW,
-     eNameFromSubtreeIfReqRule)
 // clang-format on
