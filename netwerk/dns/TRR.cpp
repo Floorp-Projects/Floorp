@@ -1800,7 +1800,7 @@ nsresult DOHresp::Add(uint32_t TTL, unsigned char* dns, unsigned int index,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (IsIPAddrLocal(&addr) && !aLocalAllowed) {
+  if (addr.IsIPAddrLocal() && !aLocalAllowed) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1813,7 +1813,7 @@ nsresult DOHresp::Add(uint32_t TTL, unsigned char* dns, unsigned int index,
 
   if (LOG_ENABLED()) {
     char buf[128];
-    NetAddrToString(&addr, buf, sizeof(buf));
+    addr.ToStringBuffer(buf, sizeof(buf));
     LOG(("DOHresp:Add %s\n", buf));
   }
   mAddresses.AppendElement(addr);

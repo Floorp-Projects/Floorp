@@ -311,7 +311,7 @@ bool AddrHostRecord::Blacklisted(const NetAddr* aQuery) {
   }
 
   char buf[kIPv6CStrBufSize];
-  if (!NetAddrToString(aQuery, buf, sizeof(buf))) {
+  if (!aQuery->ToStringBuffer(buf, sizeof(buf))) {
     return false;
   }
   nsDependentCString strQuery(buf);
@@ -336,7 +336,7 @@ void AddrHostRecord::ReportUnusable(const NetAddr* aAddress) {
   ++mBlacklistedCount;
 
   char buf[kIPv6CStrBufSize];
-  if (NetAddrToString(aAddress, buf, sizeof(buf))) {
+  if (aAddress->ToStringBuffer(buf, sizeof(buf))) {
     LOG(
         ("Successfully adding address [%s] to blacklist for host "
          "[%s].\n",
@@ -2106,7 +2106,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
     if (addrRec->addr_info) {
       for (const auto& elem : addrRec->addr_info->Addresses()) {
         char buf[128];
-        NetAddrToString(&elem, buf, sizeof(buf));
+        elem.ToStringBuffer(buf, sizeof(buf));
         LOG(("CompleteLookup: %s has %s\n", addrRec->host.get(), buf));
       }
     } else {
@@ -2421,7 +2421,7 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
       MutexAutoLock lock(addrRec->addr_info_lock);
       for (const auto& addr : addrRec->addr_info->Addresses()) {
         char buf[kIPv6CStrBufSize];
-        if (NetAddrToString(&addr, buf, sizeof(buf))) {
+        if (addr.ToStringBuffer(buf, sizeof(buf))) {
           info.hostaddr.AppendElement(buf);
         }
       }

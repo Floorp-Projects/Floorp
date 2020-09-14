@@ -97,7 +97,7 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
     return NS_ERROR_FAILURE;
   }
   char buf[kIPv6CStrBufSize];
-  NetAddrToString(&selfAddr, buf, kIPv6CStrBufSize);
+  selfAddr.ToStringBuffer(buf, kIPv6CStrBufSize);
 
   nsAutoCString selfAddrStr;
   if (selfAddr.raw.family == AF_INET6) {
@@ -118,7 +118,7 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
     LOG3(("Http3Session::Init GetPeerAddr failed [this=%p]", this));
     return NS_ERROR_FAILURE;
   }
-  NetAddrToString(&peerAddr, buf, kIPv6CStrBufSize);
+  peerAddr.ToStringBuffer(buf, kIPv6CStrBufSize);
 
   nsAutoCString peerAddrStr;
   if (peerAddr.raw.family == AF_INET6) {
