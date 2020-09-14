@@ -12,6 +12,7 @@
 #include "gfxFontUtils.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
+#include "nsXULAppAPI.h"
 #include "mozilla/UniquePtr.h"
 
 // This is split out from SharedFontList.h because that header is included
@@ -198,18 +199,27 @@ class FontList {
   uint32_t GetGeneration() { return GetHeader().mGeneration; }
 
   /**
+   * Header fields present in every shared-memory block. The mBlockSize field
+   * is not modified after initial block creation (before the block has been
+   * shared to any other process), and the mAllocated field is used only by
+   * the parent process, so neither of these needs to be std::atomic<>.
+   */
+  struct BlockHeader {
+    uint32_t mAllocated;  // Space allocated from this block.
+    uint32_t mBlockSize;  // Total size of this block.
+  };
+
+  /**
    * Header info that is stored at the beginning of the first shared-memory
    * block for the font list.
-   * (Subsequent blocks have only the mAllocated field, accessed via the
-   * Block::Allocated() method.)
+   * (Subsequent blocks have only the mBlockHeader.)
    * The mGeneration and mFamilyCount fields are set by the parent process
    * during font-list construction, before the list has been shared with any
    * other process, and subsequently never change; therefore, we don't need
    * to use std::atomic<> for these.
    */
   struct Header {
-    std::atomic<uint32_t> mAllocated;   // Space allocated from this block;
-                                        // must be first field in Header
+    BlockHeader mBlockHeader;
     uint32_t mGeneration;               // Font-list generation ID
     uint32_t mFamilyCount;              // Number of font families in the list
     std::atomic<uint32_t> mBlockCount;  // Total number of blocks that exist
@@ -249,49 +259,53 @@ class FontList {
   /**
    * Support for memory reporter.
    */
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-    size_t result = mBlocks.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    for (const auto& b : mBlocks) {
-      result += aMallocSizeOf(b.get()) + aMallocSizeOf(b->mShmem.get());
-    }
-    return result;
-  }
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-  }
-
-  size_t AllocatedShmemSize() const {
-    return mBlocks.Length() * SHM_BLOCK_SIZE;
-  }
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t AllocatedShmemSize() const;
 
   /**
-   * This must be large enough that we can allocate the largest possible
-   * SharedBitSet (around 140K, see comments on SharedBitSet in gfxFontUtils.h)
-   * within a single ShmBlock.
    * Using a larger block size will speed up allocation, at the cost of more
    * wasted space in the shared memory (on average).
    */
-  static const size_t SHM_BLOCK_SIZE = 256 * 1024;
+#if ANDROID
+  // Android devices usually have a much smaller number of fonts than desktop
+  // systems, and memory is more constrained, so use a smaller default block
+  // size.
+  static constexpr uint32_t SHM_BLOCK_SIZE = 64 * 1024;
+#else
+  static constexpr uint32_t SHM_BLOCK_SIZE = 256 * 1024;
+#endif
   static_assert(SHM_BLOCK_SIZE <= (1 << Pointer::kBlockShift),
                 "SHM_BLOCK_SIZE too large");
-  static_assert(SHM_BLOCK_SIZE >= SharedBitSet::kMaxSize + 4,
-                "SHM_BLOCK_SIZE too small");
 
  private:
   struct ShmBlock {
-    // Takes ownership of aShmem
+    // Takes ownership of aShmem. Note that in a child process, aShmem will be
+    // mapped as read-only.
     explicit ShmBlock(mozilla::UniquePtr<base::SharedMemory>&& aShmem)
         : mShmem(std::move(aShmem)) {}
 
     // Get pointer to the mapped memory.
     void* Memory() const { return mShmem->memory(); }
 
-    // The first 32-bit word of each block holds the current amount allocated
-    // in that block; this is updated whenever a new record is stored in the
-    // block.
-    std::atomic<uint32_t>& Allocated() const {
-      return *static_cast<std::atomic<uint32_t>*>(Memory());
+    // Because only the parent process does allocation, this doesn't need to
+    // be an atomic.
+    // Further allocations may happen within the block after it has been shared
+    // to content processes, but as their access is read-only and they cannot
+    // do allocations themselves, they never look at this field; only the parent
+    // reads or updates it.
+    uint32_t& Allocated() const {
+      MOZ_ASSERT(XRE_IsParentProcess());
+      return static_cast<BlockHeader*>(Memory())->mAllocated;
+    }
+
+    // This is stored by the parent process during block creation and never
+    // changes, so does not need to be atomic.
+    // Note that some blocks may be larger than SHM_BLOCK_SIZE, if needed for
+    // individual large allocations.
+    uint32_t& BlockSize() const {
+      MOZ_ASSERT(XRE_IsParentProcess());
+      return static_cast<BlockHeader*>(Memory())->mBlockSize;
     }
 
     mozilla::UniquePtr<base::SharedMemory> mShmem;
@@ -309,7 +323,7 @@ class FontList {
    *
    * Only used in the parent process.
    */
-  bool AppendShmBlock();
+  bool AppendShmBlock(uint32_t aSizeNeeded);
 
   /**
    * Used by child processes to ensure all the blocks are registered.

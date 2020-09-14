@@ -21,7 +21,9 @@ class FontList;  // See the separate SharedFontList-impl.h header
  * A Pointer in the shared font list contains a packed index/offset pair,
  * with a 12-bit index into the array of shared-memory blocks, and a 20-bit
  * offset into the block.
- * The maximum size of each block is therefore 2^20 bytes (1048576).
+ * The maximum size of each block is therefore 2^20 bytes (1 MB) if sub-parts
+ * of the block are to be allocated; however, a larger block (up to 2^32 bytes)
+ * can be created and used as a single allocation if necessary.
  */
 struct Pointer {
  private:
