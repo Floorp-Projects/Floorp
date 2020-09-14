@@ -58,11 +58,13 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   virtual IntrinsicSize GetIntrinsicSize() override;
   virtual AspectRatio GetIntrinsicRatio() override;
 
-  SizeComputationResult ComputeSize(
-      gfxContext* aRenderingContext, WritingMode aWritingMode,
-      const LogicalSize& aCBSize, nscoord aAvailableISize,
-      const LogicalSize& aMargin, const LogicalSize& aBorder,
-      const LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
+  SizeComputationResult ComputeSize(gfxContext* aRenderingContext,
+                                    WritingMode aWritingMode,
+                                    const LogicalSize& aCBSize,
+                                    nscoord aAvailableISize,
+                                    const LogicalSize& aMargin,
+                                    const LogicalSize& aBorderPadding,
+                                    ComputeSizeFlags aFlags) override;
 
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,

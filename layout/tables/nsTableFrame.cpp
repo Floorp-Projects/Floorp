@@ -1505,11 +1505,10 @@ nsTableFrame::IntrinsicISizeOffsets(nscoord aPercentageBasis) {
 nsIFrame::SizeComputationResult nsTableFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorder, const LogicalSize& aPadding,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   auto result = nsContainerFrame::ComputeSize(aRenderingContext, aWM, aCBSize,
-                                              aAvailableISize, aMargin, aBorder,
-                                              aPadding, aFlags);
+                                              aAvailableISize, aMargin,
+                                              aBorderPadding, aFlags);
 
   // XXX The code below doesn't make sense if the caller's writing mode
   // is orthogonal to this frame's. Not sure yet what should happen then;

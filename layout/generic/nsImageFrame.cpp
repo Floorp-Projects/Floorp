@@ -938,12 +938,11 @@ void nsImageFrame::EnsureIntrinsicSizeAndRatio() {
 nsIFrame::SizeComputationResult nsImageFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorder, const LogicalSize& aPadding,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   EnsureIntrinsicSizeAndRatio();
   return {ComputeSizeWithIntrinsicDimensions(
               aRenderingContext, aWM, mIntrinsicSize, mIntrinsicRatio, aCBSize,
-              aMargin, aBorder, aPadding, aFlags),
+              aMargin, aBorderPadding, aFlags),
           AspectRatioUsage::None};
 }
 

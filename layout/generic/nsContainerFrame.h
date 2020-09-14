@@ -834,7 +834,7 @@ class nsContainerFrame : public nsSplittableFrame {
       const mozilla::IntrinsicSize& aIntrinsicSize,
       const mozilla::AspectRatio& aIntrinsicRatio,
       const mozilla::LogicalSize& aCBSize, const mozilla::LogicalSize& aMargin,
-      const mozilla::LogicalSize& aBorder, const mozilla::LogicalSize& aPadding,
+      const mozilla::LogicalSize& aBorderPadding,
       mozilla::ComputeSizeFlags aFlags);
 
   // Compute tight bounds assuming this frame honours its border, background

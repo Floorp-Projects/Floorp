@@ -61,8 +61,7 @@ class nsVideoFrame final : public nsContainerFrame,
                                     const mozilla::LogicalSize& aCBSize,
                                     nscoord aAvailableISize,
                                     const mozilla::LogicalSize& aMargin,
-                                    const mozilla::LogicalSize& aBorder,
-                                    const mozilla::LogicalSize& aPadding,
+                                    const mozilla::LogicalSize& aBorderPadding,
                                     mozilla::ComputeSizeFlags aFlags) override;
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
