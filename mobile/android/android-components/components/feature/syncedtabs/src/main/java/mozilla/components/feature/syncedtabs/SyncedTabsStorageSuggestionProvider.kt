@@ -1,15 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 package mozilla.components.feature.syncedtabs
 
+import android.graphics.drawable.Drawable
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
+import mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag
 import java.util.UUID
 
 /**
@@ -19,7 +21,8 @@ import java.util.UUID
 class SyncedTabsStorageSuggestionProvider(
     private val syncedTabs: SyncedTabsStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
-    private val icons: BrowserIcons? = null
+    private val icons: BrowserIcons? = null,
+    private val deviceIndicators: DeviceIndicators = DeviceIndicators()
 ) : AwesomeBar.SuggestionProvider {
 
     override val id: String = UUID.randomUUID().toString()
@@ -39,7 +42,8 @@ class SyncedTabsStorageSuggestionProvider(
                     results.add(ClientTabPair(
                         clientName = client.displayName,
                         tab = activeTabEntry,
-                        lastUsed = tab.lastUsed
+                        lastUsed = tab.lastUsed,
+                        deviceType = client.deviceType
                     ))
                 }
             }
@@ -59,6 +63,13 @@ class SyncedTabsStorageSuggestionProvider(
             AwesomeBar.Suggestion(
                 provider = this@SyncedTabsStorageSuggestionProvider,
                 icon = icon?.await()?.bitmap,
+                indicatorIcon = when (result.deviceType) {
+                    DeviceType.DESKTOP -> deviceIndicators.desktop
+                    DeviceType.MOBILE -> deviceIndicators.mobile
+                    DeviceType.TABLET -> deviceIndicators.tablet
+                    else -> null
+                },
+                flags = setOf(Flag.SYNC_TAB),
                 title = result.tab.title,
                 description = result.clientName,
                 onSuggestionClicked = { loadUrlUseCase.invoke(result.tab.url) }
@@ -67,4 +78,18 @@ class SyncedTabsStorageSuggestionProvider(
     }
 }
 
-private data class ClientTabPair(val clientName: String, val tab: TabEntry, val lastUsed: Long)
+/**
+ * AwesomeBar suggestion indicators data class for desktop, mobile, tablet device types.
+ */
+data class DeviceIndicators(
+    val desktop: Drawable? = null,
+    val mobile: Drawable? = null,
+    val tablet: Drawable? = null
+)
+
+private data class ClientTabPair(
+    val clientName: String,
+    val tab: TabEntry,
+    val lastUsed: Long,
+    val deviceType: DeviceType
+)

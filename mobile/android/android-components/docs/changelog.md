@@ -16,7 +16,7 @@ permalink: /changelog/
   * 🚒 Bug fixed [issue #8354](https://github.com/mozilla-mobile/android-components/issues/8354) Do not restart FAILED downloads.
 
 * **browser-tabstray**
- * Removed the `BrowserTabsTray` that was deprecated in previous releases.
+  * Removed the `BrowserTabsTray` that was deprecated in previous releases.
 * **service-telemetry**
   * This library has been removed. Please use `service-glean` instead.
 * **service-glean**
@@ -31,7 +31,8 @@ permalink: /changelog/
       * BUGFIX: Support `HashSet` and `Dictionary` in the C# generated code.
     * Add a 10MB quota to the pending pings storage. ([#1100](https://github.com/mozilla/glean/pull/1110))
     * Handle ping registration off the main thread. This removes a potential blocking call ([#1132](https://github.com/mozilla/glean/pull/1132)).
-
+* **feature-syncedtabs**
+  * Added support for indicators to synced tabs `AwesomeBar` suggestions.
 
 # 58.0.0
 
