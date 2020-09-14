@@ -471,6 +471,10 @@ int32_t nsTreeBodyFrame::GetHorizontalPosition() const {
 }
 
 Maybe<CSSIntRegion> nsTreeBodyFrame::GetSelectionRegion() {
+  if (!mView) {
+    return Nothing();
+  }
+
   nsCOMPtr<nsITreeSelection> selection;
   mView->GetSelection(getter_AddRefs(selection));
   if (!selection) {
