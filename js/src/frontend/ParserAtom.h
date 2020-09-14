@@ -479,7 +479,7 @@ class ParserAtomsTable {
                                                    uint32_t length);
 
   JS::Result<const ParserAtom*, OOM&> internUtf8(
-      JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t length);
+      JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte);
 
   JS::Result<const ParserAtom*, OOM&> internJSAtom(
       JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom);
