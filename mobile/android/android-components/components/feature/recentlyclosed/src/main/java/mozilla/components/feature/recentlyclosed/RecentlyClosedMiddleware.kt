@@ -40,6 +40,7 @@ class RecentlyClosedMiddleware(
         RecentlyClosedTabsStorage(applicationContext, engine = engine)
     }
 
+    @Suppress("ComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -61,11 +62,14 @@ class RecentlyClosedMiddleware(
                 )
             }
             is TabListAction.RemoveTabAction -> {
-                context.store.dispatch(
-                    RecentlyClosedAction.AddClosedTabsAction(
-                        listOfNotNull(context.state.findTab(action.tabId)).toClosedTab()
+                val tab = context.state.findTab(action.tabId) ?: return
+                if (!tab.content.private) {
+                    context.store.dispatch(
+                        RecentlyClosedAction.AddClosedTabsAction(
+                            listOf(tab).toClosedTab()
+                        )
                     )
-                )
+                }
             }
             is RecentlyClosedAction.AddClosedTabsAction -> {
                 addTabsToStorage(
