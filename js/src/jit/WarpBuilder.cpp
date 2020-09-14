@@ -2697,8 +2697,12 @@ bool WarpBuilder::build_SpreadSuperCall(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_OptimizeSpreadCall(BytecodeLocation loc) {
-  MDefinition* value = current->peek(-1);
-  return buildIC(loc, CacheKind::OptimizeSpreadCall, {value});
+  // TODO: like IonBuilder's slow path always deoptimize for now. Consider using
+  // an IC for this so that we can optimize by inlining Baseline's CacheIR.
+  MDefinition* arr = current->peek(-1);
+  arr->setImplicitlyUsedUnchecked();
+  pushConstant(BooleanValue(false));
+  return true;
 }
 
 bool WarpBuilder::build_Debugger(BytecodeLocation loc) {
@@ -3097,13 +3101,6 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
       current->push(ins);
       return resumeAfter(ins, loc);
     }
-    case CacheKind::OptimizeSpreadCall: {
-      MOZ_ASSERT(numInputs == 1);
-      auto* ins = MOptimizeSpreadCallCache::New(alloc(), getInput(0));
-      current->add(ins);
-      current->push(ins);
-      return resumeAfter(ins, loc);
-    }
     case CacheKind::GetIntrinsic:
     case CacheKind::ToBool:
     case CacheKind::TypeOf:
@@ -3152,7 +3149,6 @@ bool WarpBuilder::buildBailoutForColdIC(BytecodeLocation loc, CacheKind kind) {
     case CacheKind::HasOwn:
     case CacheKind::CheckPrivateField:
     case CacheKind::InstanceOf:
-    case CacheKind::OptimizeSpreadCall:
       resultType = MIRType::Boolean;
       break;
     case CacheKind::SetProp:
