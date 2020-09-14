@@ -16673,7 +16673,7 @@ nsresult FactoryOp::CheckPermission(
 
   MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-  IDB_TRY_VAR(auto principal, PrincipalInfoToPrincipal(principalInfo));
+  IDB_TRY_VAR(const auto principal, PrincipalInfoToPrincipal(principalInfo));
 
   nsCString suffix;
   nsCString group;
@@ -16684,24 +16684,22 @@ nsresult FactoryOp::CheckPermission(
     return rv;
   }
 
-  PermissionRequestBase::PermissionValue permission;
-
-  if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    if (QuotaManager::IsOriginInternal(origin)) {
-      permission = PermissionRequestBase::kPermissionAllowed;
-    } else {
+  IDB_TRY_VAR(const auto permission,
+              ([persistenceType, &origin, &principal = *principal]()
+                   -> mozilla::Result<PermissionRequestBase::PermissionValue,
+                                      nsresult> {
+                if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+                  if (QuotaManager::IsOriginInternal(origin)) {
+                    return PermissionRequestBase::kPermissionAllowed;
+                  }
 #ifdef IDB_MOBILE
-      return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+                  return Err(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
 #else
-      rv = PermissionRequestBase::GetCurrentPermission(principal, &permission);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+                  return PermissionRequestBase::GetCurrentPermission(principal);
 #endif
-    }
-  } else {
-    permission = PermissionRequestBase::kPermissionAllowed;
-  }
+                }
+                return PermissionRequestBase::kPermissionAllowed;
+              })());
 
   if (permission != PermissionRequestBase::kPermissionDenied &&
       State::Initial == mState) {

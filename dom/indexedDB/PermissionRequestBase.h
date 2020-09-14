@@ -41,8 +41,8 @@ class PermissionRequestBase : public nsIObserver,
   // This function will not actually prompt. It will never return
   // kPermissionDefault but will instead translate the permission manager value
   // into the correct value for the given type.
-  static nsresult GetCurrentPermission(nsIPrincipal* aPrincipal,
-                                       PermissionValue* aCurrentValue);
+  static Result<PermissionValue, nsresult> GetCurrentPermission(
+      nsIPrincipal& aPrincipal);
 
   static PermissionValue PermissionValueForIntPermission(
       uint32_t aIntPermission);
