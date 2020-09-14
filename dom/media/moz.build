@@ -75,6 +75,12 @@ if CONFIG['FUZZING_INTERFACES']:
         'fuzz'
     ]
 
+if CONFIG['MOZ_WEBRTC_SIGNALING']:
+    if CONFIG['FUZZING_INTERFACES']:
+        TEST_DIRS += [
+            'webrtc/tests/fuzztests'
+        ]
+
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
     'tests/mochitest/identity/mochitest.ini',
