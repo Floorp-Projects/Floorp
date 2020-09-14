@@ -34,14 +34,17 @@ static bool WithDefaultDevMode(const nsString& aName,
                                Callback&& aCallback) {
   nsHPRINTER hPrinter = nullptr;
   BOOL status = ::OpenPrinterW(aName.get(), &hPrinter, nullptr);
-  if (NS_WARN_IF(!status)) {
+  MOZ_DIAGNOSTIC_ASSERT(status, "OpenPrinterW failed");
+  if (!status) {
     return false;
   }
   nsAutoPrinter autoPrinter(hPrinter);
   // Allocate devmode storage of the correct size.
   LONG bytesNeeded = ::DocumentPropertiesW(nullptr, autoPrinter.get(),
                                            aName.get(), nullptr, nullptr, 0);
-  if (NS_WARN_IF(bytesNeeded < 0)) {
+  MOZ_DIAGNOSTIC_ASSERT(bytesNeeded >= sizeof(DEVMODEW),
+             "DocumentPropertiesW failed to get valid size");
+  if (bytesNeeded < sizeof(DEVMODEW)) {
     return false;
   }
 
@@ -49,7 +52,8 @@ static bool WithDefaultDevMode(const nsString& aName,
   auto* devmode = reinterpret_cast<DEVMODEW*>(aStorage.Elements());
   LONG ret = ::DocumentPropertiesW(nullptr, autoPrinter.get(), aName.get(),
                                    devmode, nullptr, DM_OUT_BUFFER);
-  if (NS_WARN_IF(ret != IDOK)) {
+  MOZ_DIAGNOSTIC_ASSERT(ret == IDOK, "DocumentPropertiesW failed");
+  if (ret != IDOK) {
     return false;
   }
 
@@ -76,7 +80,8 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
 
         nsAutoHDC printerDc(
             ::CreateICW(nullptr, mName.get(), nullptr, devmode));
-        if (NS_WARN_IF(!printerDc)) {
+        MOZ_DIAGNOSTIC_ASSERT(printerDc, "CreateICW failed");
+        if (!printerDc) {
           return false;
         }
 

@@ -168,7 +168,6 @@ void nsPrintSettingsWin::InitWithInitializer(
   nsPrintSettings::InitWithInitializer(aSettings);
 
   if (aSettings.mDevmodeWStorage.Length() < sizeof(DEVMODEW)) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "Why did nsPrinterWin::DefaultSettings fail?");
     return;
   }
 
