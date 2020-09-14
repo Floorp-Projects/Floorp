@@ -342,28 +342,24 @@ GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
   const size_t compressedLength = size_t(aBlobDataLength);
 
   size_t uncompressedLength;
-  if (NS_WARN_IF(!snappy::GetUncompressedLength(compressed, compressedLength,
-                                                &uncompressedLength))) {
-    return Err(NS_ERROR_FILE_CORRUPTED);
-  }
+  IDB_TRY(OkIf(snappy::GetUncompressedLength(compressed, compressedLength,
+                                             &uncompressedLength)),
+          Err(NS_ERROR_FILE_CORRUPTED));
 
   AutoTArray<uint8_t, 512> uncompressed;
-  if (NS_WARN_IF(!uncompressed.SetLength(uncompressedLength, fallible))) {
-    return Err(NS_ERROR_OUT_OF_MEMORY);
-  }
+  IDB_TRY(OkIf(uncompressed.SetLength(uncompressedLength, fallible)),
+          Err(NS_ERROR_OUT_OF_MEMORY));
 
   char* const uncompressedBuffer =
       reinterpret_cast<char*>(uncompressed.Elements());
 
-  if (NS_WARN_IF(!snappy::RawUncompress(compressed, compressedLength,
-                                        uncompressedBuffer))) {
-    return Err(NS_ERROR_FILE_CORRUPTED);
-  }
+  IDB_TRY(OkIf(snappy::RawUncompress(compressed, compressedLength,
+                                     uncompressedBuffer)),
+          Err(NS_ERROR_FILE_CORRUPTED));
 
   JSStructuredCloneData data(JS::StructuredCloneScope::DifferentProcess);
-  if (!data.AppendBytes(uncompressedBuffer, uncompressed.Length())) {
-    return Err(NS_ERROR_OUT_OF_MEMORY);
-  }
+  IDB_TRY(OkIf(data.AppendBytes(uncompressedBuffer, uncompressed.Length())),
+          Err(NS_ERROR_OUT_OF_MEMORY));
 
   nsTArray<StructuredCloneFileParent> files;
   if (!aFileIds.IsVoid()) {
