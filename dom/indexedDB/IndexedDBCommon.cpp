@@ -6,13 +6,4 @@
 
 #include "IndexedDBCommon.h"
 
-namespace mozilla::dom::indexedDB {
-
-void HandleError(const char* const aExpr, const char* const aSourceFile,
-                 const int32_t aSourceLine) {
-  mozilla::dom::quota::LogError(nsLiteralCString("IndexedDB"),
-                                nsDependentCString(aExpr),
-                                nsDependentCString(aSourceFile), aSourceLine);
-}
-
-}  // namespace mozilla::dom::indexedDB
+namespace mozilla::dom::indexedDB {}  // namespace mozilla::dom::indexedDB

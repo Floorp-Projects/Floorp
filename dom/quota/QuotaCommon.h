@@ -791,7 +791,8 @@ void AssertCurrentThreadOwnsQuotaMutex();
 
 bool IsOnIOThread();
 
-void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
+MOZ_COLD void ReportInternalError(const char* aFile, uint32_t aLine,
+                                  const char* aStr);
 
 LogModule* GetQuotaManagerLogger();
 
@@ -860,18 +861,35 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
                                            int32_t aSourceLine);
 #endif
 
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#  define QM_META_HANDLE_ERROR(module)                                     \
+    MOZ_COLD inline void HandleError(                                      \
+        const char* aExpr, const char* aSourceFile, int32_t aSourceLine) { \
+      mozilla::dom::quota::LogError(module, nsDependentCString(aExpr),     \
+                                    nsDependentCString(aSourceFile),       \
+                                    aSourceLine);                          \
+    }
+#else
+#  define QM_META_HANDLE_ERROR(module)            \
+    MOZ_ALWAYS_INLINE constexpr void HandleError( \
+        const char* aExpr, const char* aSourceFile, int32_t aSourceLine) {}
+#endif
+
 // As this is a function that will only be called in error cases, this is marked
-// with MOZ_NEVER_INLINE to avoid bloating the code of calling functions.
+// with MOZ_COLD to avoid bloating the code of calling functions, if it's not
+// empty.
+//
 // For the same reason, the string-ish parameters are of type const char* rather
 // than any ns*String type, to minimize the code at each call site. This
 // deliberately de-optimizes runtime performance, which is uncritical during
 // error handling.
 //
-// The corresponding functions in the quota clients should have exactly the same
+// The corresponding functions in the quota clients should be defined using
+// QM_META_HANDLE_ERROR, in particular they should have exactly the same
 // signature incl. attributes. These functions are not intended to be called
 // directly, they should only be called from the QM_* macros.
-MOZ_NEVER_INLINE void HandleError(const char* aExpr, const char* aSourceFile,
-                                  int32_t aSourceLine);
+
+QM_META_HANDLE_ERROR("QuotaManager"_ns)
 
 }  // namespace quota
 }  // namespace dom

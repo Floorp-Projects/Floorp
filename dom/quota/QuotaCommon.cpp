@@ -225,14 +225,6 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
 }
 #endif
 
-void HandleError(const char* const aExpr, const char* const aSourceFile,
-                 const int32_t aSourceLine) {
-  LogError(nsLiteralCString("QuotaManager"), nsDependentCString(aExpr),
-           nsDependentCString(aSourceFile), aSourceLine);
-
-  // TODO: Report to telemetry
-}
-
 }  // namespace quota
 }  // namespace dom
 }  // namespace mozilla
