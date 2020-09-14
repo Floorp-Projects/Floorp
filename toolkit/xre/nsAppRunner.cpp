@@ -3831,20 +3831,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   // Initialize GTK here for splash.
 
 #  if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
-  // Disable XInput2 multidevice support due to focus bugginess
-  // on old Gtk versions, see bugs 1182700, 1170342, 1207700.
+  // Disable XInput2 multidevice support due to focus bugginess.
+  // See bugs 1182700, 1170342.
   // gdk_disable_multidevice() affects Gdk X11 backend only,
   // the multidevice support is always enabled on Wayland backend.
-  const char* useXI2env = PR_GetEnv("MOZ_USE_XINPUT2");
-  const bool disableXI2ByPref = (useXI2env && (*useXI2env == '0'));
-  const bool enabledXI2ByPref = (useXI2env && (*useXI2env == '1'));
-  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  const bool IsKDEDesktop =
-      (currentDesktop && strstr(currentDesktop, "KDE") != nullptr);
-  if (!enabledXI2ByPref && (gtk_check_version(3, 24, 0) != nullptr ||
-                            disableXI2ByPref || IsKDEDesktop)) {
-    gdk_disable_multidevice();
-  }
+  const char* useXI2 = PR_GetEnv("MOZ_USE_XINPUT2");
+  if (!useXI2 || (*useXI2 == '0')) gdk_disable_multidevice();
 #  endif
 
   // Open the display ourselves instead of using gtk_init, so that we can
