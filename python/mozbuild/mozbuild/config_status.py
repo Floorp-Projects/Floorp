@@ -61,9 +61,8 @@ files by running:
 '''.strip()
 
 
-def config_status(topobjdir='.', topsrcdir='.', defines=None,
-                  non_global_defines=None, substs=None, source=None,
-                  mozconfig=None, args=sys.argv[1:]):
+def config_status(topobjdir='.', topsrcdir='.', defines=None, substs=None,
+                  source=None, mozconfig=None, args=sys.argv[1:]):
     '''Main function, providing config.status functionality.
 
     Contrary to config.status, it doesn't use CONFIG_FILES or CONFIG_HEADERS
@@ -113,8 +112,7 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
     if not options.not_topobjdir:
         topobjdir = os.path.realpath('.')
 
-    env = ConfigEnvironment(topsrcdir, topobjdir, defines=defines,
-                            non_global_defines=non_global_defines, substs=substs,
+    env = ConfigEnvironment(topsrcdir, topobjdir, defines=defines, substs=substs,
                             source=source, mozconfig=mozconfig)
 
     with FileAvoidWrite(os.path.join(topobjdir, 'mozinfo.json')) as f:
