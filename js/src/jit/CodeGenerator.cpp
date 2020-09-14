@@ -735,26 +735,6 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       masm.jump(ool->rejoin());
       return;
     }
-    case CacheKind::OptimizeSpreadCall: {
-      auto* optimizeSpreadCallIC = ic->asOptimizeSpreadCallIC();
-
-      saveLive(lir);
-
-      pushArg(optimizeSpreadCallIC->value());
-      icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->outerInfo().script()));
-
-      using Fn = bool (*)(JSContext*, HandleScript, IonOptimizeSpreadCallIC*,
-                          HandleValue, bool*);
-      callVM<Fn, IonOptimizeSpreadCallIC::update>(lir);
-
-      StoreRegisterTo(optimizeSpreadCallIC->output()).generate(this);
-      restoreLiveIgnore(
-          lir, StoreRegisterTo(optimizeSpreadCallIC->output()).clobbered());
-
-      masm.jump(ool->rejoin());
-      return;
-    }
     case CacheKind::In: {
       IonInIC* inIC = ic->asInIC();
 
@@ -10924,17 +10904,6 @@ void CodeGenerator::visitGetIteratorCache(LGetIteratorCache* lir) {
   Register temp2 = ToRegister(lir->temp2());
 
   IonGetIteratorIC ic(liveRegs, val, output, temp1, temp2);
-  addIC(lir, allocateIC(ic));
-}
-
-void CodeGenerator::visitOptimizeSpreadCallCache(
-    LOptimizeSpreadCallCache* lir) {
-  LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
-  ValueOperand val = ToValue(lir, LOptimizeSpreadCallCache::Value);
-  Register output = ToRegister(lir->output());
-  Register temp = ToRegister(lir->temp());
-
-  IonOptimizeSpreadCallIC ic(liveRegs, val, output, temp);
   addIC(lir, allocateIC(ic));
 }
 

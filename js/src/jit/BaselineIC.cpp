@@ -508,14 +508,6 @@ bool ICScript::initICEntries(JSContext* cx, JSScript* script) {
         }
         break;
       }
-      case JSOp::OptimizeSpreadCall: {
-        ICStub* stub = alloc.newStub<ICOptimizeSpreadCall_Fallback>(
-            Kind::OptimizeSpreadCall);
-        if (!addIC(loc, stub)) {
-          return false;
-        }
-        break;
-      }
       case JSOp::Rest: {
         ArrayObject* templateObject = ObjectGroup::newArrayObject(
             cx, nullptr, 0, TenuredObject,
@@ -3378,42 +3370,6 @@ bool FallbackICCodeCompiler::emit_GetIterator() {
   using Fn = bool (*)(JSContext*, BaselineFrame*, ICGetIterator_Fallback*,
                       HandleValue, MutableHandleValue);
   return tailCallVM<Fn, DoGetIteratorFallback>(masm);
-}
-
-//
-// OptimizeSpreadCall_Fallback
-//
-
-bool DoOptimizeSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
-                                  ICOptimizeSpreadCall_Fallback* stub,
-                                  HandleValue value, MutableHandleValue res) {
-  stub->incrementEnteredCount();
-  FallbackICSpew(cx, stub, "OptimizeSpreadCall");
-
-  TryAttachStub<OptimizeSpreadCallIRGenerator>(
-      "OptimizeSpreadCall", cx, frame, stub, BaselineCacheIRStubKind::Regular,
-      value);
-
-  bool optimized;
-  if (!OptimizeSpreadCall(cx, value, &optimized)) {
-    return false;
-  }
-
-  res.setBoolean(optimized);
-  return true;
-}
-
-bool FallbackICCodeCompiler::emit_OptimizeSpreadCall() {
-  EmitRestoreTailCallReg(masm);
-
-  masm.pushValue(R0);
-  masm.push(ICStubReg);
-  pushStubPayload(masm, R0.scratchReg());
-
-  using Fn =
-      bool (*)(JSContext*, BaselineFrame*, ICOptimizeSpreadCall_Fallback*,
-               HandleValue, MutableHandleValue);
-  return tailCallVM<Fn, DoOptimizeSpreadCallFallback>(masm);
 }
 
 //
