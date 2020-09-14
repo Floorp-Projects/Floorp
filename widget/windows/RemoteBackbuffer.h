@@ -6,9 +6,11 @@
 #ifndef widget_windows_RemoteBackbuffer_h
 #define widget_windows_RemoteBackbuffer_h
 
+#include "nsIWidget.h"
+#include "mozilla/widget/PCompositorWidgetParent.h"
+#include "mozilla/Maybe.h"
 #include <thread>
 #include <windows.h>
-#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace widget {
@@ -68,7 +70,7 @@ class Client {
   bool Initialize(const RemoteBackbufferHandles& aRemoteHandles);
 
   already_AddRefed<gfx::DrawTarget> BorrowDrawTarget();
-  bool PresentDrawTarget(const gfx::IntRect& aDirtyRect);
+  bool PresentDrawTarget(gfx::IntRegion aDirtyRegion);
 
   Client(const Client&) = delete;
   Client(Client&&) = delete;
