@@ -167,12 +167,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // one-off buttons.
   ["update2.disableOneOffsHorizontalKeyNavigation", false],
 
-  // Controls the empty search behavior in Search Mode:
-  //  0 - Show nothing
-  //  1 - Show search history
-  //  2 - Show search and browsing history
-  ["update2.emptySearchBehavior", 2],
-
   // Whether the urlbar displays one-offs to filter searches to history,
   // bookmarks, or tabs.
   ["update2.localOneOffs", false],
