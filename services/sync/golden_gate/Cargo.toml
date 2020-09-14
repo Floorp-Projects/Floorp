@@ -19,5 +19,5 @@ sync15-traits = { git = "https://github.com/mozilla/application-services", rev =
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 
 [dependencies.thin-vec]
-version = "0.1.0"
+version = "0.2.1"
 features = ["gecko-ffi"]

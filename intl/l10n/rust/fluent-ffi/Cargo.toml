@@ -10,4 +10,4 @@ fluent-pseudo = "0.2"
 intl-memoizer = "0.5"
 unic-langid = "0.9"
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
-thin-vec = { version = "0.1.0", features = ["gecko-ffi"] }
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
