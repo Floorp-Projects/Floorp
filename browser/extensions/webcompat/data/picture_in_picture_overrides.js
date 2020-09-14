@@ -40,6 +40,7 @@ let AVAILABLE_PIP_OVERRIDES;
     netflix: {
       "https://*.netflix.com/*": { keyboardControls: ~KEYBOARD_CONTROLS.SEEK },
       "https://*.netflix.com/browse": { policy: TOGGLE_POLICIES.HIDDEN },
+      "https://*.netflix.com/latest": { policy: TOGGLE_POLICIES.HIDDEN },
     },
 
     twitch: {
