@@ -33,6 +33,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/InputTaskManager.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/FontTableURIProtocolHandler.h"
@@ -563,6 +564,12 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         }
         mPendingParentProcessVsync = true;
       }
+
+      if (NS_IsMainThread()) {
+        // This clears the input handling start time.
+        InputTaskManager::Get()->SetInputHandlingStartTime(TimeStamp());
+      }
+
       nsCOMPtr<nsIRunnable> vsyncEvent = new ParentProcessVsyncNotifier(this);
       NS_DispatchToMainThread(vsyncEvent);
       return true;

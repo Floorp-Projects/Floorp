@@ -242,7 +242,6 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
       event = mHighQueue->GetEvent(nullptr, aProofOfLock,
                                    aHypotheticalInputEventDelay);
       MOZ_ASSERT(event);
-      mInputTaskManager->SetInputHandlingStartTime(TimeStamp());
       break;
 
     case EventQueuePriority::InputHigh:
