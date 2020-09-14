@@ -1998,15 +1998,14 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 void ContentParent::ActorDealloc() { mSelfRef = nullptr; }
 
 bool ContentParent::TryToRecycle() {
-  // We can only do this if we have a separate cache for recycled
-  // 'web' processes, and handle them differently than webIsolated ones
-  if (mRemoteType != DEFAULT_REMOTE_TYPE) {
-    return false;
-  }
-
-  // Don't bother recycling "web" processes if Fission is enabled, as they
-  // should be largely unused.
-  if (mozilla::FissionAutostart()) {
+  // Only try to recycle "web" content processes, as other remote types are
+  // generally more unique, and cannot be effectively re-used. This is disabled
+  // with Fission, as "web" content processes are no longer frequently used.
+  //
+  // Disabling the process pre-allocator will also disable process recycling,
+  // allowing for more consistent process counts under testing.
+  if (mRemoteType != DEFAULT_REMOTE_TYPE || mozilla::FissionAutostart() ||
+      !PreallocatedProcessManager::Enabled()) {
     return false;
   }
 
