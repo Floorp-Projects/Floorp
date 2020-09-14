@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
+  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.jsm",
@@ -109,7 +110,11 @@ class UrlbarInput {
     this._untrimmedValue = "";
     this._searchModesByBrowser = new WeakMap();
 
-    UrlbarPrefs.addObserver(this);
+    this.QueryInterface = ChromeUtils.generateQI([
+      "nsIObserver",
+      "nsISupportsWeakReference",
+    ]);
+    this._addObservers();
 
     // This exists only for tests.
     this._enableAutofillPlaceholder = true;
@@ -1260,8 +1265,13 @@ class UrlbarInput {
    *   the values in UrlbarUtils.SEARCH_MODE_ENTRY.
    */
   setSearchMode({ engineName, source, entry }) {
-    if (!UrlbarPrefs.get("update2")) {
-      // Exit search mode.
+    // Exit search mode if update2 is disabled or the passed-in engine is
+    // invalid or hidden.
+    let engine = Services.search.getEngineByName(engineName);
+    if (
+      !UrlbarPrefs.get("update2") ||
+      (engineName && (!engine || engine.hidden))
+    ) {
       engineName = null;
       source = null;
     }
@@ -1588,7 +1598,28 @@ class UrlbarInput {
     return true;
   }
 
+  observe(subject, topic, data) {
+    switch (topic) {
+      case SearchUtils.TOPIC_ENGINE_MODIFIED: {
+        switch (data) {
+          case SearchUtils.MODIFIED_TYPE.CHANGED:
+          case SearchUtils.MODIFIED_TYPE.REMOVED:
+            if (this.searchMode?.engineName == subject.name) {
+              // We exit search mode if the current search mode engine was removed.
+              this.setSearchMode(this.searchMode);
+            }
+            break;
+        }
+        break;
+      }
+    }
+  }
+
   // Private methods below.
+  _addObservers() {
+    UrlbarPrefs.addObserver(this);
+    Services.obs.addObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED, true);
+  }
 
   _getURIFixupInfo(searchString) {
     let flags =
