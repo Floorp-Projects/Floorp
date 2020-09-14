@@ -21,9 +21,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import logging
-from six import string_types, text_type
+import re
 
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
+from six import string_types, text_type
 from voluptuous import (
     Any,
     Optional,
@@ -81,6 +82,11 @@ WINDOWS_WORKER_TYPES = {
       'hardware': 't-win10-64-1803-hw',
     },
     'windows7-32-mingwclang': {
+      'virtual': 't-win7-32',
+      'virtual-with-gpu': 't-win7-32-gpu',
+      'hardware': 't-win10-64-1803-hw',
+    },
+    'windows7-32-qr': {
       'virtual': 't-win7-32',
       'virtual-with-gpu': 't-win7-32-gpu',
       'hardware': 't-win10-64-1803-hw',
@@ -1400,6 +1406,20 @@ def handle_fission_attributes(config, tasks):
 
             task[attr] = fission_attr
 
+        yield task
+
+
+@transforms.add
+def disable_try_only_platforms(config, tasks):
+    """Turns off platforms that should only run on try."""
+    try_only_platforms = (
+        "windows7-32-qr/.*",
+    )
+    for task in tasks:
+        if any(re.match(k + "$", task["test-platform"]) for k in try_only_platforms):
+            task["run-on-projects"] = []
+            if "fission-run-on-projects" in task:
+                task["fission-run-on-projects"] = []
         yield task
 
 
