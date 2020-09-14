@@ -3229,8 +3229,9 @@ class ADBDevice(ADBCommand):
         cmd = "dumpsys window windows"
         try:
             data = self.shell_output(cmd, timeout=timeout)
-        except Exception:
+        except Exception as e:
             # dumpsys intermittently fails on some platforms.
+            self._logger.info("_get_top_activity_P: Exception %s: %s" % (cmd, e))
             return package
         m = re.search('mFocusedApp(.+)/', data)
         if not m:
@@ -3255,17 +3256,13 @@ class ADBDevice(ADBCommand):
         cmd = "dumpsys window"
         try:
             data = self.shell_output(cmd, timeout=timeout)
-        except Exception:
+        except Exception as e:
             # dumpsys intermittently fails on some platforms (4.3 arm emulator)
+            self._logger.info("_get_top_activity_Q: Exception %s: %s" % (cmd, e))
             return package
-        m = re.search(r'mFocusedApp=AppWindowToken{\w+ token=Token{'
-                      r'\w+ ActivityRecord{\w+ w+ (\w+)/w+ \w+}}}', data)
+        m = re.search(r'mFocusedWindow=Window{\S+ \S+ (\S+)/\S+}', data)
         if m:
-            line = m.group(1)
-            # Extract package name: string of non-whitespace ending in forward slash
-            m = re.search(r'(\S+)/', line)
-            if m:
-                package = m.group(1)
+            package = m.group(1)
         if self._verbose:
             self._logger.debug('get_top_activity: %s' % str(package))
         return package
