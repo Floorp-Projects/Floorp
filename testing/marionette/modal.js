@@ -66,24 +66,6 @@ modal.findModalDialogs = function(context) {
     }
   }
 
-  // No dialog found yet, check the TabDialogBox.
-  // This is for prompts that are shown in SubDialogs in the browser chrome.
-  if (context.tab && context.tabBrowser.getTabDialogBox) {
-    let contentBrowser = context.contentBrowser;
-    let dialogManager = context.tabBrowser.getTabDialogBox(contentBrowser)
-      ._dialogManager;
-    let dialogs = dialogManager._dialogs.filter(
-      dialog => dialog._openedURL === COMMON_DIALOG
-    );
-
-    if (dialogs.length) {
-      return new modal.Dialog(
-        () => context,
-        Cu.getWeakReference(dialogs[0]._frame.contentWindow)
-      );
-    }
-  }
-
   return null;
 };
 
