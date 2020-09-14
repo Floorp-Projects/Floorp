@@ -73,6 +73,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:findElements":
           result = await this.findElements(data);
           break;
+        case "MarionetteFrameParent:getCurrentUrl":
+          result = await this.getCurrentUrl();
+          break;
         case "MarionetteFrameParent:getElementAttribute":
           result = await this.getElementAttribute(data);
           break;
@@ -130,6 +133,13 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const container = { frame: this.content };
     const el = await element.find(container, strategy, selector, opts);
     return this.seenEls.addAll(el);
+  }
+
+  /**
+   * Get the current URL.
+   */
+  async getCurrentUrl() {
+    return this.content.location.href;
   }
 
   /**
