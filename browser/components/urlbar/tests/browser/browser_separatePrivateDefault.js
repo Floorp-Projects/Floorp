@@ -385,10 +385,7 @@ add_task(async function test_oneoff_selected_with_private_engine_keyboard() {
 
 add_task(async function test_alias_no_query() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.emptySearchBehavior", 2],
-    ],
+    set: [["browser.urlbar.update2", true]],
   });
   info(
     "Test that 'Search in a Private Window' doesn't appear if an alias is typed with no query"
@@ -411,10 +408,7 @@ add_task(async function test_alias_no_query() {
 
 add_task(async function test_alias_query() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.update2", true],
-      ["browser.urlbar.update2.emptySearchBehavior", 2],
-    ],
+    set: [["browser.urlbar.update2", true]],
   });
   info(
     "Test that 'Search in a Private Window' appears when an alias is typed with a query"
