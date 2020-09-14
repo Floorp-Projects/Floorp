@@ -5296,8 +5296,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport* trans,
       for (uint32_t i = 0; i < addressSet.Length(); ++i) {
         nsCString* newKey = mEnt->mCoalescingKeys.AppendElement(nsCString());
         newKey->SetLength(kIPv6CStrBufSize + 26);
-        NetAddrToString(&addressSet[i], newKey->BeginWriting(),
-                        kIPv6CStrBufSize);
+        addressSet[i].ToStringBuffer(newKey->BeginWriting(), kIPv6CStrBufSize);
         newKey->SetLength(strlen(newKey->BeginReading()));
         if (mEnt->mConnInfo->GetAnonymous()) {
           newKey->AppendLiteral("~A:");

@@ -147,7 +147,7 @@ ChildDNSRecord::GetNextAddrAsString(nsACString& result) {
   }
 
   char buf[kIPv6CStrBufSize];
-  if (NetAddrToString(&addr, buf, sizeof(buf))) {
+  if (addr.ToStringBuffer(buf, sizeof(buf))) {
     result.Assign(buf);
     return NS_OK;
   }
