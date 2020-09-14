@@ -37,6 +37,8 @@ class PreallocatedProcessManager final {
  public:
   static PreallocatedProcessManagerImpl* GetPPMImpl();
 
+  static bool Enabled();
+
   /**
    * Before first paint we don't want to allocate any processes in the
    * background. To avoid that, the PreallocatedProcessManager won't start up
