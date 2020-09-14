@@ -122,7 +122,10 @@ let RemotePageAccessManager = {
       RPMSendQuery: ["ShouldShowSearchBanner"],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
-      RPMGetFormatURLPref: ["app.support.baseURL"],
+      RPMGetFormatURLPref: [
+        "app.support.baseURL",
+        "browser.privatebrowsing.vpnpromourl",
+      ],
       RPMIsWindowPrivate: ["*"],
     },
     "about:protections": {
