@@ -66,26 +66,10 @@ AudioSink::AudioSink(AbstractThread* aThread,
       mOwnerThread(aThread),
       mProcessedQueueLength(0),
       mFramesParsed(0),
-      mIsAudioDataAudible(false),
-      mAudioQueue(aAudioQueue) {
-  bool resampling = StaticPrefs::media_resampling_enabled();
-
-  if (resampling) {
-    mOutputRate = 48000;
-  } else if (mInfo.mRate == 44100 || mInfo.mRate == 48000) {
-    // The original rate is of good quality and we want to minimize unecessary
-    // resampling. The common scenario being that the sampling rate is one or
-    // the other, this allows to minimize audio quality regression and hoping
-    // content provider want change from those rates mid-stream.
-    mOutputRate = mInfo.mRate;
-  } else {
-    // We will resample all data to match cubeb's preferred sampling rate.
-    mOutputRate = AudioStream::GetPreferredRate();
-  }
-  MOZ_DIAGNOSTIC_ASSERT(mOutputRate, "output rate can't be 0.");
-
-  mOutputChannels = DecideAudioPlaybackChannels(mInfo);
-}
+      mOutputRate(DecideAudioPlaybackSampleRate(aInfo)),
+      mOutputChannels(DecideAudioPlaybackChannels(aInfo)),
+      mAudioQueue(aAudioQueue)
+  { }
 
 AudioSink::~AudioSink() = default;
 
