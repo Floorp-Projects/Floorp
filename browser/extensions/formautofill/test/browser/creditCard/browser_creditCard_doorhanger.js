@@ -527,6 +527,7 @@ add_task(async function test_submit_creditCard_with_sync_account() {
     set: [
       [SYNC_USERNAME_PREF, "foo@bar.com"],
       [SYNC_CREDITCARDS_AVAILABLE_PREF, true],
+      [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
     ],
   });
 
