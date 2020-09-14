@@ -14,6 +14,7 @@ This is the nascent documentation of the Toolkit code that is shared across Fire
    search/index
    components/normandy/normandy/index
    components/messaging-system/docs/index
+   components/pictureinpicture/pictureinpicture/index
    components/prompts/prompts/index
    modules/subprocess/toolkit_modules/subprocess/index
    components/telemetry/index
