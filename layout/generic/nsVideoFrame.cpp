@@ -566,12 +566,11 @@ nsresult nsVideoFrame::GetFrameName(nsAString& aResult) const {
 nsIFrame::SizeComputationResult nsVideoFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorder, const LogicalSize& aPadding,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   if (!HasVideoElement()) {
     return nsContainerFrame::ComputeSize(aRenderingContext, aWM, aCBSize,
-                                         aAvailableISize, aMargin, aBorder,
-                                         aPadding, aFlags);
+                                         aAvailableISize, aMargin,
+                                         aBorderPadding, aFlags);
   }
 
   nsSize size = GetVideoIntrinsicSize(aRenderingContext);
@@ -580,7 +579,7 @@ nsIFrame::SizeComputationResult nsVideoFrame::ComputeSize(
   auto intrinsicRatio = GetIntrinsicRatio();
   return {ComputeSizeWithIntrinsicDimensions(
               aRenderingContext, aWM, intrinsicSize, intrinsicRatio, aCBSize,
-              aMargin, aBorder, aPadding, aFlags),
+              aMargin, aBorderPadding, aFlags),
           AspectRatioUsage::None};
 }
 

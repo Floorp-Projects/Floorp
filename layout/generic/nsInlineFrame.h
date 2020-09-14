@@ -81,8 +81,7 @@ class nsInlineFrame : public nsContainerFrame {
                                     const mozilla::LogicalSize& aCBSize,
                                     nscoord aAvailableISize,
                                     const mozilla::LogicalSize& aMargin,
-                                    const mozilla::LogicalSize& aBorder,
-                                    const mozilla::LogicalSize& aPadding,
+                                    const mozilla::LogicalSize& aBorderPadding,
                                     mozilla::ComputeSizeFlags aFlags) override;
   virtual nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,

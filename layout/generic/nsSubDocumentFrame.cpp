@@ -677,11 +677,10 @@ LogicalSize nsSubDocumentFrame::ComputeAutoSize(
 nsIFrame::SizeComputationResult nsSubDocumentFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorder, const LogicalSize& aPadding,
-    ComputeSizeFlags aFlags) {
+    const LogicalSize& aBorderPadding, ComputeSizeFlags aFlags) {
   return {ComputeSizeWithIntrinsicDimensions(
               aRenderingContext, aWM, GetIntrinsicSize(), GetIntrinsicRatio(),
-              aCBSize, aMargin, aBorder, aPadding, aFlags),
+              aCBSize, aMargin, aBorderPadding, aFlags),
           AspectRatioUsage::None};
 }
 

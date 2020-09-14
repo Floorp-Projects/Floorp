@@ -419,8 +419,7 @@ class nsTextFrame : public nsIFrame {
                                     const mozilla::LogicalSize& aCBSize,
                                     nscoord aAvailableISize,
                                     const mozilla::LogicalSize& aMargin,
-                                    const mozilla::LogicalSize& aBorder,
-                                    const mozilla::LogicalSize& aPadding,
+                                    const mozilla::LogicalSize& aBorderPadding,
                                     mozilla::ComputeSizeFlags aFlags) final;
   nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const final;
   nsresult GetPrefWidthTightBounds(gfxContext* aContext, nscoord* aX,
