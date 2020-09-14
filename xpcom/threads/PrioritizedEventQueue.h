@@ -11,6 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/IdlePeriodState.h"
+#include "mozilla/InputTaskManager.h"
 #include "mozilla/TaskController.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -23,42 +24,6 @@ namespace mozilla {
 namespace ipc {
 class IdleSchedulerChild;
 }
-
-class InputTaskManager : public TaskManager {
- public:
-  InputTaskManager() : mInputQueueState(STATE_DISABLED) {}
-  int32_t GetPriorityModifierForEventLoopTurn(
-      const MutexAutoLock& aProofOfLock) final;
-  void WillRunTask() final;
-  void DidRunTask() final;
-
-  enum InputEventQueueState {
-    STATE_DISABLED,
-    STATE_FLUSHING,
-    STATE_SUSPEND,
-    STATE_ENABLED
-  };
-
-  void EnableInputEventPrioritization();
-  void FlushInputEventPrioritization();
-  void SuspendInputEventPrioritization();
-  void ResumeInputEventPrioritization();
-
-  InputEventQueueState State() { return mInputQueueState; }
-
-  void SetState(InputEventQueueState aState) { mInputQueueState = aState; }
-
-  TimeStamp InputHandlingStartTime() { return mInputHandlingStartTime; }
-
-  void SetInputHandlingStartTime(TimeStamp aStartTime) {
-    mInputHandlingStartTime = aStartTime;
-  }
-
- private:
-  TimeStamp mInputHandlingStartTime;
-  Atomic<InputEventQueueState> mInputQueueState;
-  AutoTArray<TimeStamp, 4> mStartTimes;
-};
 
 // This AbstractEventQueue implementation has one queue for each
 // EventQueuePriority. The type of queue used for each priority is determined by
