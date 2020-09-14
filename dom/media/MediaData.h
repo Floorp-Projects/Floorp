@@ -375,6 +375,10 @@ class AudioData : public MediaData {
   // If mAudioBuffer is null, creates it from mAudioData.
   void EnsureAudioBuffer();
 
+  // To check whether mAudioData has audible signal, it's used to distinguish
+  // the audiable data and silent data.
+  bool IsAudible() const;
+
   // Return true if the adjusted time is valid. Caller should handle error when
   // the result is invalid.
   bool AdjustForStartTime(const media::TimeUnit& aStartTime) override;
