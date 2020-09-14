@@ -60,19 +60,20 @@ const HAS_USED_PREF =
  * toggle.
  */
 const DEFAULT_TOGGLE_STYLES = {
-  rootID: "pictureInPictureToggleButton",
+  rootID: "pictureInPictureToggleExperiment",
   stages: {
     hoverVideo: {
       opacities: {
-        "#pictureInPictureToggleButton": 0.8,
+        ".pip-wrapper": 0.8,
       },
-      hidden: ["#pictureInPictureToggleExperiment"],
+      hidden: ["#pictureInPictureToggleButton", ".pip-expanded"],
     },
+
     hoverToggle: {
       opacities: {
-        "#pictureInPictureToggleButton": 1.0,
+        ".pip-wrapper": 1.0,
       },
-      hidden: ["#pictureInPictureToggleExperiment"],
+      hidden: ["#pictureInPictureToggleButton", ".pip-expanded"],
     },
   },
 };
