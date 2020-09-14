@@ -408,6 +408,21 @@ bool IonCacheIRCompiler::init() {
       allocator.initInputLocation(0, ic->value());
       break;
     }
+    case CacheKind::OptimizeSpreadCall: {
+      auto* ic = ic_->asOptimizeSpreadCallIC();
+      Register output = ic->output();
+
+      available.add(output);
+      available.add(ic->temp());
+
+      liveRegs_.emplace(ic->liveRegs());
+      outputUnchecked_.emplace(
+          TypedOrValueRegister(MIRType::Boolean, AnyRegister(output)));
+
+      MOZ_ASSERT(numInputs == 1);
+      allocator.initInputLocation(0, ic->value());
+      break;
+    }
     case CacheKind::In: {
       IonInIC* ic = ic_->asInIC();
       Register output = ic->output();
@@ -528,7 +543,6 @@ bool IonCacheIRCompiler::init() {
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewObject:
-    case CacheKind::OptimizeSpreadCall:
       MOZ_CRASH("Unsupported IC");
   }
 
