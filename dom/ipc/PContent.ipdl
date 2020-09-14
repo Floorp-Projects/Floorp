@@ -44,7 +44,6 @@ include protocol PVRManager;
 include protocol PRemoteDecoderManager;
 include protocol PProfiler;
 include protocol PScriptCache;
-include protocol PStartupCache;
 include protocol PSessionStorageObserver;
 include protocol PBenchmarkStorage;
 include DOMTypes;
@@ -416,7 +415,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PURLClassifier;
     manages PURLClassifierLocal;
     manages PScriptCache;
-    manages PStartupCache;
     manages PLoginReputation;
     manages PSessionStorageObserver;
     manages PBenchmarkStorage;
@@ -545,8 +543,6 @@ child:
     async PTestShell();
 
     async PScriptCache(FileDescOrError cacheFile, bool wantCacheData);
-
-    async PStartupCache();
 
     async RegisterChrome(ChromePackage[] packages, SubstitutionMapping[] substitutions,
                          OverrideMapping[] overrides, nsCString locale, bool reset);
