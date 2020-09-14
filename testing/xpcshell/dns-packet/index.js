@@ -729,6 +729,15 @@ roption.encode = function (option, buf, offset) {
           offset += 2
         }
         break
+      case 15: // EDNS_ERROR
+        const text = option.text || "";
+        buf.writeUInt16BE(text.length + 2, offset)
+        offset += 2;
+        buf.writeUInt16BE(option.extended_error, offset)
+        offset += 2;
+        buf.write(text, offset);
+        offset += option.text.length;
+        break;
       default:
         throw new Error(`Unknown roption code: ${option.code}`)
     }
@@ -797,6 +806,8 @@ roption.encodingLength = function (option) {
       return option.length + 4
     case 14: // KEY-TAG
       return 4 + (option.tags.length * 2)
+    case 15: // EDNS_ERROR
+      return 4 + 2 + option.text.length
   }
   throw new Error(`Unknown roption code: ${option.code}`)
 }
