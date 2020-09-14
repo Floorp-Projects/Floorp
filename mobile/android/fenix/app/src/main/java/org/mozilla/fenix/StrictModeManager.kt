@@ -16,16 +16,24 @@ object StrictModeManager {
 
     /***
      * Enables strict mode for debug purposes. meant to be run only in the main process.
-     * @param setPenaltyDialog boolean value to decide setting the dialog box as  a penalty.
+     * @param setPenaltyDeath boolean value to decide setting the penaltyDeath as a penalty.
+     * @param setPenaltyDialog boolean value to decide setting the dialog box as a penalty.
+     * Note: dialog penalty cannot be set with penaltyDeath
      */
-    fun enableStrictMode(setPenaltyDialog: Boolean) {
+    fun enableStrictMode(setPenaltyDeath: Boolean, setPenaltyDialog: Boolean = false) {
         if (Config.channel.isDebug) {
             val threadPolicy = StrictMode.ThreadPolicy.Builder()
                 .detectAll()
                 .penaltyLog()
-            if (setPenaltyDialog && Build.MANUFACTURER !in strictModeExceptionList) {
+            if (setPenaltyDeath && Build.MANUFACTURER !in strictModeExceptionList) {
+                threadPolicy.penaltyDeath()
+            }
+
+            // dialog penalty cannot be set with penaltyDeath
+            if (!setPenaltyDeath && setPenaltyDialog) {
                 threadPolicy.penaltyDialog()
             }
+
             StrictMode.setThreadPolicy(threadPolicy.build())
 
             val builder = StrictMode.VmPolicy.Builder()
@@ -39,7 +47,7 @@ object StrictModeManager {
                 builder.detectContentUriWithoutPermission()
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                if (setPenaltyDialog) {
+                if (setPenaltyDeath || setPenaltyDialog) {
                     builder.permitNonSdkApiUsage()
                 } else {
                     builder.detectNonSdkApiUsage()
@@ -50,14 +58,15 @@ object StrictModeManager {
     }
 
     /**
-     * Revert strict mode to disable penalty dialog. Tied to fragment lifecycle since strict mode
+     * Revert strict mode to disable penalty. Tied to fragment lifecycle since strict mode
      * needs to switch to penalty logs. Using the fragment life cycle allows decoupling from any
      * specific fragment.
      */
     fun changeStrictModePolicies(fragmentManager: FragmentManager) {
-        fragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
+        fragmentManager.registerFragmentLifecycleCallbacks(object :
+            FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
-                enableStrictMode(false)
+                enableStrictMode(setPenaltyDeath = false, setPenaltyDialog = false)
                 fm.unregisterFragmentLifecycleCallbacks(this)
             }
         }, false)
