@@ -23,6 +23,9 @@
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">لا يمكن فتح الملف</string>
 
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">لم يوجد أي تطبيق يفتح ملفات %1$s</string>
+
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">ألبِث</string>
     <!-- Button that resumes the download when pressed -->
@@ -36,4 +39,8 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">أغلِق</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">أكمل الإجراء باستخدام</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">تعذر فتح %1$s</string>
 </resources>

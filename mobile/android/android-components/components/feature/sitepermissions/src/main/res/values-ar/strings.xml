@@ -10,6 +10,9 @@
     <string name="mozac_feature_sitepermissions_location_title">أتسمح بأن يستعمل %1$s مكانك؟</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
     <string name="mozac_feature_sitepermissions_camera_and_microphone">أستسمح بأن يستعمل %1$s الكمرة والميكروفون؟</string>
+    <!-- Option in a dialog for requesting a microphone permission, this option will give access to
+         the first microphone-->
+    <string name="mozac_feature_sitepermissions_option_microphone_one">ميكروفون 1</string>
     <!-- Option in a dialog for requesting a camera permission, this option will give access to
          back facing camera-->
     <string name="mozac_feature_sitepermissions_back_facing_camera2">الكمرة الخلفية</string>
