@@ -586,6 +586,7 @@ UniquePtr<nsDataHashtable<nsUint32HashKey, ContentParent*>>
     ContentParent::sJSPluginContentParents;
 UniquePtr<nsTArray<ContentParent*>> ContentParent::sPrivateContent;
 UniquePtr<LinkedList<ContentParent>> ContentParent::sContentParents;
+StaticRefPtr<ContentParent> ContentParent::sRecycledE10SProcess;
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 UniquePtr<SandboxBrokerPolicyFactory>
     ContentParent::sSandboxBrokerPolicyFactory;
@@ -922,27 +923,43 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     }
   }
 
-  // Try to take the preallocated process except for certain remote types.
+  // If we are loading into the "web" remote type, are choosing to launch a new
+  // tab, and have a recycled E10S process, we should launch into that process.
+  RefPtr<ContentParent> p;
+  if (aRemoteType == DEFAULT_REMOTE_TYPE &&
+      (p = sRecycledE10SProcess.forget())) {
+    MOZ_DIAGNOSTIC_ASSERT(p->GetRemoteType() == DEFAULT_REMOTE_TYPE);
+    p->AssertAlive();
+
+#ifdef MOZ_GECKO_PROFILER
+    if (profiler_thread_is_being_profiled()) {
+      nsPrintfCString marker("Recycled process %u (%p)",
+                             (unsigned int)p->ChildID(), p.get());
+      TimeStamp now = TimeStamp::Now();
+      PROFILER_ADD_MARKER_WITH_PAYLOAD("Process", DOM, TextMarkerPayload,
+                                       (marker, now, now));
+    }
+#endif
+    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+            ("Recycled process %p", p.get()));
+
+    return p.forget();
+  }
+
+  // Try to take a preallocated process except for certain remote types.
   // The preallocated process manager might not had the chance yet to release
   // the process after a very recent ShutDownProcess, let's make sure we don't
   // try to reuse a process that is being shut down.
-  RefPtr<ContentParent> p;
-  bool preallocated = false;
   if (aRemoteType != FILE_REMOTE_TYPE &&
       aRemoteType != EXTENSION_REMOTE_TYPE &&  // Bug 1638119
       (p = PreallocatedProcessManager::Take(aRemoteType)) &&
       !p->mShutdownPending) {
+    MOZ_DIAGNOSTIC_ASSERT(p->GetRemoteType() == PREALLOC_REMOTE_TYPE);
     p->AssertAlive();
 
-    // p may be a preallocated process, or (if not PREALLOC_REMOTE_TYPE)
-    // a previously-used process that's being recycled.  Currently this is
-    // only done for short-duration web (DEFAULT_REMOTE_TYPE) processes
-    preallocated = p->mRemoteType == PREALLOC_REMOTE_TYPE;
-    // For pre-allocated process we have not set the opener yet.
 #ifdef MOZ_GECKO_PROFILER
     if (profiler_thread_is_being_profiled()) {
-      nsPrintfCString marker("Assigned %s process %u",
-                             preallocated ? "preallocated" : "reused web",
+      nsPrintfCString marker("Assigned preallocated process %u",
                              (unsigned int)p->ChildID());
       TimeStamp now = TimeStamp::Now();
       PROFILER_ADD_MARKER_WITH_PAYLOAD("Process", DOM, TextMarkerPayload,
@@ -950,30 +967,23 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     }
 #endif
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("Adopted %s process %p for type %s",
-             preallocated ? "preallocated" : "reused web", p.get(),
+            ("Adopted preallocated process %p for type %s", p.get(),
              PromiseFlatCString(aRemoteType).get()));
+
+    // Specialize this process for the appropriate remote type, and activate it.
     p->mActivateTS = TimeStamp::Now();
     p->AddToPool(aContentParents);
-    if (preallocated) {
-      p->mRemoteType.Assign(aRemoteType);
-      // Specialize this process for the appropriate eTLD+1
-      Unused << p->SendRemoteType(p->mRemoteType);
 
-      nsCOMPtr<nsIObserverService> obs =
-          mozilla::services::GetObserverService();
+    p->mRemoteType.Assign(aRemoteType);
+    Unused << p->SendRemoteType(p->mRemoteType);
 
-      if (obs) {
-        nsAutoString cpId;
-        cpId.AppendInt(static_cast<uint64_t>(p->ChildID()));
-        obs->NotifyObservers(static_cast<nsIObserver*>(p), "process-type-set",
-                             cpId.get());
-        p->AssertAlive();
-      }
-    } else {
-      // we only allow "web" to "web" for security reasons
-      MOZ_RELEASE_ASSERT(p->mRemoteType == DEFAULT_REMOTE_TYPE &&
-                         aRemoteType == DEFAULT_REMOTE_TYPE);
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      nsAutoString cpId;
+      cpId.AppendInt(static_cast<uint64_t>(p->ChildID()));
+      obs->NotifyObservers(static_cast<nsIObserver*>(p), "process-type-set",
+                           cpId.get());
+      p->AssertAlive();
     }
     return p.forget();
   }
@@ -1543,7 +1553,7 @@ void ContentParent::MaybeAsyncSendShutDownMessage() {
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
           ("MaybeAsyncSendShutDownMessage %p", this));
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!TryToRecycle());
+  MOZ_ASSERT(sRecycledE10SProcess != this);
 
 #ifdef DEBUG
   // Calling this below while the lock is acquired will deadlock.
@@ -1664,6 +1674,7 @@ void ContentParent::AssertNotInPool() {
   MOZ_RELEASE_ASSERT(!mIsInPool);
 
   MOZ_RELEASE_ASSERT(!sPrivateContent || !sPrivateContent->Contains(this));
+  MOZ_RELEASE_ASSERT(sRecycledE10SProcess != this);
   if (IsForJSPlugin()) {
     MOZ_RELEASE_ASSERT(!sJSPluginContentParents ||
                        !sJSPluginContentParents->Get(mJSPluginID));
@@ -1716,6 +1727,10 @@ void ContentParent::RemoveFromList() {
   // again in the future, if it is restored to the pool.
   for (auto& group : mGroups) {
     group.GetKey()->RemoveHostProcess(this);
+  }
+
+  if (sRecycledE10SProcess == this) {
+    sRecycledE10SProcess = nullptr;
   }
 
   if (sBrowserContentParents) {
@@ -1964,6 +1979,7 @@ bool ContentParent::TryToRecycle() {
   if (mRemoteType != DEFAULT_REMOTE_TYPE) {
     return false;
   }
+
   // This life time check should be replaced by a memory health check (memory
   // usage + fragmentation).
 
@@ -1978,28 +1994,35 @@ bool ContentParent::TryToRecycle() {
   if (mShutdownPending || mCalledKillHard || !IsAlive() ||
       (TimeStamp::Now() - mActivateTS).ToSeconds() > kMaxLifeSpan) {
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("TryToRecycle did not take ownership of %p", this));
-    // It's possible that the process was already cached via Provide() (such
-    // as from TabDestroyed), and we're being called from a different path,
-    // such as UnregisterRemoveWorkerActor(), and we're now past kMaxLifeSpan
-    // (or some other).  Ensure that if we're going to destroy this process
-    // that we don't have it in the cache.
-    PreallocatedProcessManager::Erase(this);
+            ("TryToRecycle did not recycle %p", this));
+
+    // It's possible that the process was already cached, and we're being called
+    // from a different path, and we're now past kMaxLifeSpan (or some other).
+    // Ensure that if we're going to this process we don't recycle it.
+    if (sRecycledE10SProcess == this) {
+      sRecycledE10SProcess = nullptr;
+    }
     return false;
   }
-  // This will either cache it and take ownership, realize it was already
-  // cached (due to this being called a second time via a different
-  // path), or it will decide to not take ownership (if it has another
-  // already cached)
-  bool retval = PreallocatedProcessManager::Provide(this);
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("Provide did %stake ownership of %p", retval ? "" : "not ", this));
-  if (retval) {
-    // The PreallocatedProcessManager took over the ownership let's not keep a
-    // reference to it
-    RemoveFromList();
+
+  if (!sRecycledE10SProcess) {
+    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+            ("TryToRecycle began recycling %p", this));
+    sRecycledE10SProcess = this;
+    return true;
   }
-  return retval;
+
+  if (sRecycledE10SProcess == this) {
+    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+            ("TryToRecycle continue recycling %p", this));
+    return true;
+  }
+
+  // Some other process is already being recycled, just shut this one down.
+  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+          ("TryToRecycle did not recycle %p (already recycling %p)", this,
+           sRecycledE10SProcess.get()));
+  return false;
 }
 
 bool ContentParent::HasActiveWorkerOrJSPlugin() {
