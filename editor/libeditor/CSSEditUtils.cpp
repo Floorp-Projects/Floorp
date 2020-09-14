@@ -416,6 +416,28 @@ nsresult CSSEditUtils::SetCSSPropertyPixelsWithTransaction(
   return rv;
 }
 
+nsresult CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction(
+    nsStyledElement& aStyledElement, const nsAtom& aProperty,
+    int32_t aIntValue) {
+  nsCOMPtr<nsICSSDeclaration> cssDecl = aStyledElement.Style();
+
+  nsAutoCString propertyNameString;
+  aProperty.ToUTF8String(propertyNameString);
+
+  nsAutoCString s;
+  s.AppendInt(aIntValue);
+  s.AppendLiteral("px");
+
+  ErrorResult error;
+  cssDecl->SetProperty(propertyNameString, s, EmptyString(), error);
+  if (error.Failed()) {
+    NS_WARNING("nsICSSDeclaration::SetProperty() failed");
+    return error.StealNSResult();
+  }
+
+  return NS_OK;
+}
+
 // The lowest level above the transaction; removes the value aValue from the
 // list of values specified for the CSS property aProperty, or totally remove
 // the declaration if this property accepts only one value

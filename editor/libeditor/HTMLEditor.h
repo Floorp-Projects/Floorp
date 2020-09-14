@@ -4477,8 +4477,8 @@ class HTMLEditor final : public TextEditor,
 
   ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SetAnonymousElementPositionWithTransaction(nsStyledElement& aStyledElement,
-                                             int32_t aX, int32_t aY);
+  SetAnonymousElementPositionWithoutTransaction(nsStyledElement& aStyledElement,
+                                                int32_t aX, int32_t aY);
 
   ManualNACPtr CreateShadow(nsIContent& aParentContent,
                             Element& aOriginalObject);
