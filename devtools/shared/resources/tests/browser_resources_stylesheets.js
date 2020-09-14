@@ -95,6 +95,20 @@ const ADDITIONAL_FROM_ACTOR_RESOURCE = {
 };
 
 add_task(async function() {
+  await pushPref("devtools.testing.enableServerWatcherSupport", false);
+  await testResourceAvailableFeature();
+  await testResourceUpdateFeature();
+  await testNestedResourceUpdateFeature();
+
+  await pushPref("devtools.testing.enableServerWatcherSupport", true);
+  await testResourceAvailableFeature();
+  await testResourceUpdateFeature();
+  await testNestedResourceUpdateFeature();
+});
+
+async function testResourceAvailableFeature() {
+  info("Check resource available feature of the ResourceWatcher");
+
   const tab = await addTab(STYLE_TEST_URL);
 
   const {
@@ -157,12 +171,12 @@ add_task(async function() {
     ADDITIONAL_FROM_ACTOR_RESOURCE
   );
 
-  await targetList.stopListening();
+  await targetList.destroy();
   await client.close();
-});
+}
 
-add_task(async function() {
-  info("Check updating feature of the ResourceWatcher");
+async function testResourceUpdateFeature() {
+  info("Check resource update feature of the ResourceWatcher");
 
   const tab = await addTab(STYLE_TEST_URL);
 
@@ -272,38 +286,8 @@ add_task(async function() {
     expectedMediaRules
   );
 
-  const styleSheetResult = await ContentTask.spawn(
-    tab.linkedBrowser,
-    null,
-    () => {
-      const document = content.document;
-      const stylesheet = document.styleSheets[0];
-      const ruleCount = stylesheet.cssRules.length;
-
-      const mediaRules = [];
-      for (const rule of stylesheet.cssRules) {
-        if (!rule.media) {
-          continue;
-        }
-
-        let matches = false;
-        try {
-          const mql = content.matchMedia(rule.media.mediaText);
-          matches = mql.matches;
-        } catch (e) {
-          // Ignored
-        }
-
-        mediaRules.push({
-          mediaText: rule.media.mediaText,
-          conditionText: rule.conditionText,
-          matches,
-        });
-      }
-
-      return { ruleCount, mediaRules };
-    }
-  );
+  // Check the actual page.
+  const styleSheetResult = await getStyleSheetResult(tab);
 
   is(
     styleSheetResult.ruleCount,
@@ -314,13 +298,158 @@ add_task(async function() {
 
   await targetList.destroy();
   await client.close();
-});
+}
+
+async function testNestedResourceUpdateFeature() {
+  info("Check nested resource update feature of the ResourceWatcher");
+
+  const tab = await addTab(STYLE_TEST_URL);
+
+  const {
+    outerWidth: originalWindowWidth,
+    outerHeight: originalWindowHeight,
+  } = tab.ownerGlobal;
+
+  registerCleanupFunction(() => {
+    tab.ownerGlobal.resizeTo(originalWindowWidth, originalWindowHeight);
+  });
+
+  const {
+    client,
+    resourceWatcher,
+    targetList,
+  } = await initResourceWatcherAndTarget(tab);
+
+  info("Setup the watcher");
+  const availableResources = [];
+  const updates = [];
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.STYLESHEET], {
+    onAvailable: resources => availableResources.push(...resources),
+    onUpdated: newUpdates => updates.push(...newUpdates),
+  });
+  is(
+    availableResources.length,
+    EXISTING_RESOURCES.length,
+    "Length of existing resources is correct"
+  );
+
+  info("Apply new media query");
+  // In order to avoid applying the media query (min-height: 400px).
+  tab.ownerGlobal.resizeTo(originalWindowWidth, 300);
+
+  const resource = availableResources[0];
+  const styleSheetsFront = await resource.targetFront.getFront("stylesheets");
+  await styleSheetsFront.update(
+    resource.resourceId,
+    "@media (min-height: 400px) { color: red; }",
+    false
+  );
+  await waitUntil(() => updates.length === 3);
+  is(resource.mediaRules[0].matches, false, "Media query is not matched yet");
+
+  info("Change window size to fire matches-change event");
+  tab.ownerGlobal.resizeTo(originalWindowWidth, 500);
+  await waitUntil(() => updates.length === 4);
+
+  // Check the update content.
+  const isServerWatcher = Services.prefs.getBoolPref(
+    "devtools.testing.enableServerWatcherSupport"
+  );
+  const targetUpdate = updates[3];
+  assertUpdate(targetUpdate.update, {
+    resourceId: resource.resourceId,
+    updateType: "matches-change",
+  });
+  ok(resource === targetUpdate.resource, "Update object has the same resource");
+
+  if (isServerWatcher) {
+    is(
+      JSON.stringify(targetUpdate.update.nestedResourceUpdates[0].path),
+      JSON.stringify(["mediaRules", 0, "matches"]),
+      "path of nestedResourceUpdates is correct"
+    );
+    is(
+      targetUpdate.update.nestedResourceUpdates[0].value,
+      true,
+      "value of nestedResourceUpdates is correct"
+    );
+  } else {
+    is(
+      JSON.stringify(targetUpdate.update.nestedResourceUpdates[0].path),
+      JSON.stringify(["mediaRules", 0]),
+      "path of nestedResourceUpdates is correct"
+    );
+    is(
+      targetUpdate.update.nestedResourceUpdates[0].value.matches,
+      true,
+      "value of nestedResourceUpdates is correct"
+    );
+  }
+
+  // Check the resource.
+  const expectedMediaRules = [
+    {
+      conditionText: "(min-height: 400px)",
+      mediaText: "(min-height: 400px)",
+      matches: true,
+    },
+  ];
+
+  assertMediaRules(targetUpdate.resource.mediaRules, expectedMediaRules);
+
+  // Check the actual page.
+  const styleSheetResult = await getStyleSheetResult(tab);
+  is(
+    styleSheetResult.ruleCount,
+    1,
+    "ruleCount of actual stylesheet is updated correctly"
+  );
+  assertMediaRules(styleSheetResult.mediaRules, expectedMediaRules);
+
+  tab.ownerGlobal.resizeTo(originalWindowWidth, originalWindowHeight);
+
+  await targetList.destroy();
+  await client.close();
+}
 
 function findMatchingExpectedResource(resource) {
   return EXISTING_RESOURCES.find(
     expected =>
       resource.href === expected.href && resource.nodeHref === expected.nodeHref
   );
+}
+
+async function getStyleSheetResult(tab) {
+  const result = await ContentTask.spawn(tab.linkedBrowser, null, () => {
+    const document = content.document;
+    const stylesheet = document.styleSheets[0];
+    const ruleCount = stylesheet.cssRules.length;
+
+    const mediaRules = [];
+    for (const rule of stylesheet.cssRules) {
+      if (!rule.media) {
+        continue;
+      }
+
+      let matches = false;
+      try {
+        const mql = content.matchMedia(rule.media.mediaText);
+        matches = mql.matches;
+      } catch (e) {
+        // Ignored
+      }
+
+      mediaRules.push({
+        mediaText: rule.media.mediaText,
+        conditionText: rule.conditionText,
+        matches,
+      });
+    }
+
+    return { ruleCount, mediaRules };
+  });
+
+  return result;
 }
 
 function assertMediaRules(mediaRules, expected) {
