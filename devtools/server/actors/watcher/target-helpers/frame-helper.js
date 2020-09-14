@@ -8,6 +8,9 @@ const Services = require("Services");
 const {
   WatcherRegistry,
 } = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
+const {
+  WindowGlobalLogger,
+} = require("devtools/server/connectors/js-window-actor/WindowGlobalLogger.jsm");
 const Targets = require("devtools/server/actors/targets/index");
 
 /**
@@ -296,27 +299,6 @@ function logWindowGlobal(windowGlobal, message) {
   if (!DEBUG) {
     return;
   }
-  const browsingContext = windowGlobal.browsingContext;
-  dump(
-    message +
-      " | BrowsingContext.browserId: " +
-      browsingContext.browserId +
-      " id: " +
-      browsingContext.id +
-      " Inner Window ID: " +
-      windowGlobal.innerWindowId +
-      " pid:" +
-      windowGlobal.osPid +
-      " isClosed:" +
-      windowGlobal.isClosed +
-      " isInProcess:" +
-      windowGlobal.isInProcess +
-      " isCurrentGlobal:" +
-      windowGlobal.isCurrentGlobal +
-      " currentRemoteType:" +
-      browsingContext.currentRemoteType +
-      " => " +
-      (windowGlobal.documentURI ? windowGlobal.documentURI.spec : "no-uri") +
-      "\n"
-  );
+
+  WindowGlobalLogger.logWindowGlobal(windowGlobal, message);
 }

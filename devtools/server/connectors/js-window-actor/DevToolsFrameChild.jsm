@@ -19,6 +19,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://devtools/server/actors/targets/target-actor-registry.jsm",
 });
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  WindowGlobalLogger:
+    "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.jsm",
+});
+
 // Name of the attribute into which we save data in `sharedData` object.
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
@@ -97,31 +102,7 @@ function logWindowGlobal(windowGlobal, message) {
   if (!DEBUG) {
     return;
   }
-  const browsingContext = windowGlobal.browsingContext;
-  dump(
-    message +
-      " | BrowsingContext.browserId: " +
-      browsingContext.browserId +
-      " id: " +
-      browsingContext.id +
-      " Inner Window ID: " +
-      windowGlobal.innerWindowId +
-      " pid:" +
-      windowGlobal.osPid +
-      " isClosed:" +
-      windowGlobal.isClosed +
-      " isInProcess:" +
-      windowGlobal.isInProcess +
-      " isCurrentGlobal:" +
-      windowGlobal.isCurrentGlobal +
-      " currentRemoteType:" +
-      browsingContext.currentRemoteType +
-      " hasParent:" +
-      (browsingContext.parent ? browsingContext.parent.id : "no") +
-      " => " +
-      (windowGlobal.documentURI ? windowGlobal.documentURI.spec : "no-uri") +
-      "\n"
-  );
+  WindowGlobalLogger.logWindowGlobal(windowGlobal, message);
 }
 
 class DevToolsFrameChild extends JSWindowActorChild {
