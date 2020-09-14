@@ -456,6 +456,21 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1654906",
+    platform: "all",
+    domain: "reallygoodemails.com",
+    bug: "1654906",
+    contentScripts: {
+      allFrames: true,
+      matches: ["*://reallygoodemails.com/emails/*/live"],
+      js: [
+        {
+          file: "injections/js/bug1654906-contentDocument-fix.js",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
