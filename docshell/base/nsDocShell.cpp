@@ -4141,10 +4141,14 @@ already_AddRefed<nsIInputStream> nsDocShell::GetPostDataFromCurrentEntry()
   if (StaticPrefs::fission_sessionHistoryInParent()) {
     if (mActiveEntry) {
       postData = mActiveEntry->GetPostData();
+    } else if (mLoadingEntry) {
+      postData = mLoadingEntry->mInfo.GetPostData();
     }
   } else {
     if (mOSHE) {
       postData = mOSHE->GetPostData();
+    } else if (mLSHE) {
+      postData = mLSHE->GetPostData();
     }
   }
 
@@ -4156,9 +4160,17 @@ Maybe<uint32_t> nsDocShell::GetCacheKeyFromCurrentEntry() const {
     if (mActiveEntry) {
       return Some(mActiveEntry->GetCacheKey());
     }
+
+    if (mLoadingEntry) {
+      return Some(mLoadingEntry->mInfo.GetCacheKey());
+    }
   } else {
     if (mOSHE) {
       return Some(mOSHE->GetCacheKey());
+    }
+
+    if (mLSHE) {
+      return Some(mLSHE->GetCacheKey());
     }
   }
 
