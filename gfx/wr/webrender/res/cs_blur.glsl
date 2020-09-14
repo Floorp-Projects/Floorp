@@ -4,13 +4,12 @@
 
 #include shared,prim_shared
 
-varying vec2 vUv;
-flat varying float vUvLayer;
+varying vec3 vUv;
 flat varying vec4 vUvRect;
 flat varying vec2 vOffsetScale;
+flat varying float vSigma;
 // The number of pixels on each end that we apply the blur filter over.
 flat varying int vSupport;
-flat varying vec2 vGaussCoefficients;
 
 #ifdef WR_VERTEX_SHADER
 // Applies a separable gaussian blur in one direction, as specified
@@ -41,30 +40,6 @@ BlurTask fetch_blur_task(int address) {
     return task;
 }
 
-void calculate_gauss_coefficients(float sigma) {
-    // Incremental Gaussian Coefficent Calculation (See GPU Gems 3 pp. 877 - 889)
-    vGaussCoefficients = vec2(1.0 / (sqrt(2.0 * 3.14159265) * sigma),
-                              exp(-0.5 / (sigma * sigma)));
-
-    // Pre-calculate the coefficient total in the vertex shader so that
-    // we can avoid having to do it per-fragment and also avoid division
-    // by zero in the degenerate case.
-    vec3 gauss_coefficient = vec3(vGaussCoefficients,
-                                  vGaussCoefficients.y * vGaussCoefficients.y);
-    float gauss_coefficient_total = gauss_coefficient.x;
-    for (int i = 1; i <= vSupport; i += 2) {
-        gauss_coefficient.xy *= gauss_coefficient.yz;
-        float gauss_coefficient_subtotal = gauss_coefficient.x;
-        gauss_coefficient.xy *= gauss_coefficient.yz;
-        gauss_coefficient_subtotal += gauss_coefficient.x;
-        gauss_coefficient_total += 2.0 * gauss_coefficient_subtotal;
-    }
-
-    // Scale initial coefficient by total to avoid passing the total separately
-    // to the fragment shader.
-    vGaussCoefficients.x /= gauss_coefficient_total;
-}
-
 void main(void) {
     BlurTask blur_task = fetch_blur_task(aBlurRenderTaskAddress);
     RenderTaskCommonData src_task = fetch_render_task_common_data(aBlurSourceTaskAddress);
@@ -77,7 +52,8 @@ void main(void) {
 #else
     vec2 texture_size = vec2(textureSize(sPrevPassAlpha, 0).xy);
 #endif
-    vUvLayer = src_task.texture_layer_index;
+    vUv.z = src_task.texture_layer_index;
+    vSigma = blur_task.blur_radius;
 
     // Ensure that the support is an even number of pixels to simplify the
     // fragment shader logic.
@@ -85,13 +61,6 @@ void main(void) {
     // TODO(pcwalton): Actually make use of this fact and use the texture
     // hardware for linear filtering.
     vSupport = int(ceil(1.5 * blur_task.blur_radius)) * 2;
-
-    if (vSupport > 0) {
-        calculate_gauss_coefficients(blur_task.blur_radius);
-    } else {
-        // The gauss function gets NaNs when blur radius is zero.
-        vGaussCoefficients = vec2(1.0, 1.0);
-    }
 
     switch (aBlurDirection) {
         case DIR_HORIZONTAL:
@@ -112,7 +81,7 @@ void main(void) {
 
     vec2 uv0 = src_rect.p0 / texture_size;
     vec2 uv1 = (src_rect.p0 + src_rect.size) / texture_size;
-    vUv = mix(uv0, uv1, aPosition.xy);
+    vUv.xy = mix(uv0, uv1, aPosition.xy);
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 }
@@ -122,10 +91,10 @@ void main(void) {
 
 #if defined WR_FEATURE_COLOR_TARGET
 #define SAMPLE_TYPE vec4
-#define SAMPLE_TEXTURE(uv)  texture(sPrevPassColor, vec3(uv, vUvLayer))
+#define SAMPLE_TEXTURE(uv)  texture(sPrevPassColor, uv)
 #else
 #define SAMPLE_TYPE float
-#define SAMPLE_TEXTURE(uv)  texture(sPrevPassAlpha, vec3(uv, vUvLayer)).r
+#define SAMPLE_TEXTURE(uv)  texture(sPrevPassAlpha, uv).r
 #endif
 
 // TODO(gw): Write a fast path blur that handles smaller blur radii
@@ -135,11 +104,23 @@ void main(void) {
 void main(void) {
     SAMPLE_TYPE original_color = SAMPLE_TEXTURE(vUv);
 
-    // Incremental Gaussian Coefficent Calculation (See GPU Gems 3 pp. 877 - 889)
-    vec3 gauss_coefficient = vec3(vGaussCoefficients,
-                                  vGaussCoefficients.y * vGaussCoefficients.y);
+    // TODO(gw): The gauss function gets NaNs when blur radius
+    //           is zero. In the future, detect this earlier
+    //           and skip the blur passes completely.
+    if (vSupport == 0) {
+        oFragColor = vec4(original_color);
+        return;
+    }
 
+    // Incremental Gaussian Coefficent Calculation (See GPU Gems 3 pp. 877 - 889)
+    vec3 gauss_coefficient;
+    gauss_coefficient.x = 1.0 / (sqrt(2.0 * 3.14159265) * vSigma);
+    gauss_coefficient.y = exp(-0.5 / (vSigma * vSigma));
+    gauss_coefficient.z = gauss_coefficient.y * gauss_coefficient.y;
+
+    float gauss_coefficient_total = gauss_coefficient.x;
     SAMPLE_TYPE avg_color = original_color * gauss_coefficient.x;
+    gauss_coefficient.xy *= gauss_coefficient.yz;
 
     // Evaluate two adjacent texels at a time. We can do this because, if c0
     // and c1 are colors of adjacent texels and k0 and k1 are arbitrary
@@ -161,8 +142,6 @@ void main(void) {
     // Equation 1 with a single texture lookup.
 
     for (int i = 1; i <= vSupport; i += 2) {
-        gauss_coefficient.xy *= gauss_coefficient.yz;
-
         float gauss_coefficient_subtotal = gauss_coefficient.x;
         gauss_coefficient.xy *= gauss_coefficient.yz;
         gauss_coefficient_subtotal += gauss_coefficient.x;
@@ -170,12 +149,16 @@ void main(void) {
 
         vec2 offset = vOffsetScale * (float(i) + gauss_ratio);
 
-        vec2 st0 = max(vUv - offset, vUvRect.xy);
-        vec2 st1 = min(vUv + offset, vUvRect.zw);
-        avg_color += (SAMPLE_TEXTURE(st0) + SAMPLE_TEXTURE(st1)) *
-                     gauss_coefficient_subtotal;
+        vec2 st0 = clamp(vUv.xy - offset, vUvRect.xy, vUvRect.zw);
+        avg_color += SAMPLE_TEXTURE(vec3(st0, vUv.z)) * gauss_coefficient_subtotal;
+
+        vec2 st1 = clamp(vUv.xy + offset, vUvRect.xy, vUvRect.zw);
+        avg_color += SAMPLE_TEXTURE(vec3(st1, vUv.z)) * gauss_coefficient_subtotal;
+
+        gauss_coefficient_total += 2.0 * gauss_coefficient_subtotal;
+        gauss_coefficient.xy *= gauss_coefficient.yz;
     }
 
-    oFragColor = vec4(avg_color);
+    oFragColor = vec4(avg_color) / gauss_coefficient_total;
 }
 #endif
