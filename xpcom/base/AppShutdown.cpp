@@ -142,7 +142,7 @@ void AppShutdown::Init(AppShutdownMode aMode) {
 
   // Very early shutdowns can happen before the startup cache is even
   // initialized; don't bother initializing it during shutdown.
-  if (auto* cache = scache::StartupCache::GetSingleton()) {
+  if (auto* cache = scache::StartupCache::GetSingletonNoInit()) {
     cache->MaybeInitShutdownWrite();
   }
 }
@@ -152,7 +152,7 @@ void AppShutdown::MaybeFastShutdown(ShutdownPhase aPhase) {
   // the late write checking code. Anything that writes to disk and which
   // we don't want to skip should be listed out explicitly in this section.
   if (aPhase == sFastShutdownPhase || aPhase == sLateWriteChecksPhase) {
-    if (auto* cache = scache::StartupCache::GetSingleton()) {
+    if (auto* cache = scache::StartupCache::GetSingletonNoInit()) {
       cache->EnsureShutdownWriteComplete();
     }
 
