@@ -603,11 +603,13 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::SetElem:
       case JSOp::StrictSetElem:
       case JSOp::ToPropertyKey:
+      case JSOp::OptimizeSpreadCall:
         MOZ_TRY(maybeInlineIC(opSnapshots, loc));
         break;
 
       case JSOp::InitElemArray:
         // WarpBuilder does not use an IC for this op.
+        // TODO(post-Warp): do the same in Baseline.
         break;
 
       case JSOp::Nop:
@@ -718,7 +720,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::FunWithProto:
       case JSOp::SpreadNew:
       case JSOp::SpreadSuperCall:
-      case JSOp::OptimizeSpreadCall:
       case JSOp::Debugger:
       case JSOp::TableSwitch:
       case JSOp::Exception:

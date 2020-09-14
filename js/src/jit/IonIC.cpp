@@ -60,6 +60,8 @@ Register IonIC::scratchRegisterForEntryJump() {
       return asCheckPrivateFieldIC()->output();
     case CacheKind::GetIterator:
       return asGetIteratorIC()->temp1();
+    case CacheKind::OptimizeSpreadCall:
+      return asOptimizeSpreadCallIC()->temp();
     case CacheKind::InstanceOf:
       return asInstanceOfIC()->output();
     case CacheKind::UnaryArith:
@@ -75,7 +77,6 @@ Register IonIC::scratchRegisterForEntryJump() {
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewObject:
-    case CacheKind::OptimizeSpreadCall:
       MOZ_CRASH("Unsupported IC");
   }
 
@@ -480,6 +481,18 @@ JSObject* IonGetIteratorIC::update(JSContext* cx, HandleScript outerScript,
                                                              value);
 
   return ValueToIterator(cx, value);
+}
+
+/* static */
+bool IonOptimizeSpreadCallIC::update(JSContext* cx, HandleScript outerScript,
+                                     IonOptimizeSpreadCallIC* ic,
+                                     HandleValue value, bool* result) {
+  IonScript* ionScript = outerScript->ionScript();
+
+  TryAttachIonStub<OptimizeSpreadCallIRGenerator, IonOptimizeSpreadCallIC>(
+      cx, ic, ionScript, value);
+
+  return OptimizeSpreadCall(cx, value, result);
 }
 
 /* static */
