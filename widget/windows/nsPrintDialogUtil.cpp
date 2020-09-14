@@ -218,6 +218,13 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
     prntdlg.Flags |= PD_NOSELECTION;
   }
 
+  int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
+  aPrintSettings->GetPrintRange(&printRangeType);
+  // if there is a specified page range then enable the "Custom" radio button
+  if (printRangeType == nsIPrintSettings::kRangeSpecifiedPageRange) {
+    prntdlg.Flags |= PD_PAGENUMS;
+  }
+
   int32_t pg = 1;
   aPrintSettings->GetStartPageRange(&pg);
   prntdlg.nFromPage = pg;
