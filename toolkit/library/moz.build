@@ -283,15 +283,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
 if CONFIG['MOZ_ENABLE_LIBPROXY']:
     OS_LIBS += CONFIG['MOZ_LIBPROXY_LIBS']
 
-if CONFIG['OS_ARCH'] == 'SunOS':
-    OS_LIBS += [
-        'elf',
-    ]
-    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-        OS_LIBS += [
-            'demangle',
-        ]
-
 if CONFIG['OS_ARCH'] == 'FreeBSD':
     OS_LIBS += [
         'util',
