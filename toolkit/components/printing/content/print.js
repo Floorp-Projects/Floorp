@@ -25,6 +25,42 @@ const MM_PER_POINT = 25.4 / 72;
 const INCHES_PER_POINT = 1 / 72;
 const ourBrowser = window.docShell.chromeEventHandler;
 
+var logger = (function() {
+  const getMaxLogLevel = () =>
+    Services.prefs.getBoolPref("print.debug", false) ? "all" : "warn";
+
+  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+  // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
+  let _logger = new ConsoleAPI({
+    prefix: "printUI",
+    maxLogLevel: getMaxLogLevel(),
+  });
+
+  // Watch for pref changes and the maxLogLevel for the logger
+  Services.prefs.addObserver("print.debug", () => {
+    if (_logger) {
+      _logger.maxLogLevel = getMaxLogLevel();
+    }
+  });
+  return _logger;
+})();
+
+function serializeSettings(settings, logPrefix) {
+  let re = /^(k[A-Z]|resolution)/; // accessing settings.resolution throws an exception?
+  let types = new Set(["string", "boolean", "number", "undefined"]);
+  let nameValues = {};
+  for (let key in settings) {
+    try {
+      if (!re.test(key) && types.has(typeof settings[key])) {
+        nameValues[key] = settings[key];
+      }
+    } catch (e) {
+      logger.warn("Exception accessing setting: ", key, e);
+    }
+  }
+  return nameValues;
+}
+
 let deferredTasks = [];
 function createDeferredTask(fn, timeout) {
   let task = new DeferredTask(fn, timeout);
@@ -145,6 +181,9 @@ var PrintEventHandler = {
     PrintSettingsViewProxy.availablePrinters = printersByName;
     PrintSettingsViewProxy.fallbackPaperList = fallbackPaperList;
     PrintSettingsViewProxy.defaultSystemPrinter = defaultSystemPrinter;
+
+    logger.debug("availablePrinters: ", Object.keys(printersByName));
+    logger.debug("defaultSystemPrinter: ", defaultSystemPrinter);
 
     document.addEventListener("print", e => this.print());
     document.addEventListener("update-print-settings", e =>
@@ -271,6 +310,9 @@ var PrintEventHandler = {
     this.settings = currentPrinter.settings;
     this.defaultSettings = currentPrinter.defaultSettings;
 
+    logger.debug("currentPrinter name: ", printerName);
+    logger.debug("settings:", serializeSettings(this.settings));
+
     // Some settings are only used by the UI
     // assigning new values should update the underlying settings
     this.viewSettings = new Proxy(this.settings, PrintSettingsViewProxy);
@@ -296,12 +338,19 @@ var PrintEventHandler = {
 
     // See if the paperName needs to change
     let paperName = this.viewSettings.paperName;
-    let matchedPaper = PrintSettingsViewProxy.getBestPaperMatch(
-      paperName,
-      this.viewSettings.paperWidth,
-      this.viewSettings.paperHeight,
-      this.viewSettings.paperSizeUnit
+    logger.debug("settings.paperName: ", paperName);
+    logger.debug(
+      "Available paper sizes: ",
+      PrintSettingsViewProxy.availablePaperSizes
     );
+    let matchedPaper =
+      paperName &&
+      PrintSettingsViewProxy.getBestPaperMatch(
+        paperName,
+        this.viewSettings.paperWidth,
+        this.viewSettings.paperHeight,
+        this.viewSettings.paperSizeUnit
+      );
     if (!matchedPaper) {
       // We didn't find a good match. Take the first paper size, but clear the
       // global flag for carrying the paper size over.
@@ -311,13 +360,14 @@ var PrintEventHandler = {
       // The exact paper name doesn't exist for this printer, update it
       flags |= this.settingFlags.paperName;
       paperName = matchedPaper.name;
-      console.log(
+      logger.log(
         `Initial settings.paperName: "${this.viewSettings.paperName}" missing, using: ${paperName} instead`
       );
     }
     // Compute and cache the margins for the current paper size
     await PrintSettingsViewProxy.fetchPaperMargins(paperName);
     this.viewSettings.paperName = paperName;
+    logger.debug("Resolved current paperName: ", paperName);
 
     if (flags) {
       this.saveSettingsToPrefs(flags);
@@ -598,7 +648,7 @@ var PrintEventHandler = {
   },
 };
 
-const PrintSettingsViewProxy = {
+var PrintSettingsViewProxy = {
   get defaultHeadersAndFooterValues() {
     const defaultBranch = Services.prefs.getDefaultBranch("");
     let settingValues = {};
@@ -787,7 +837,7 @@ const PrintSettingsViewProxy = {
     switch (name) {
       case "currentPaper": {
         let paperName = this.get(target, "paperName");
-        return this.availablePaperSizes[paperName];
+        return paperName && this.availablePaperSizes[paperName];
       }
 
       case "margins":
@@ -867,7 +917,7 @@ const PrintSettingsViewProxy = {
     switch (name) {
       case "margins":
         if (!["default", "minimum", "none"].includes(value)) {
-          console.warn("Unexpected margin preset name: ", value);
+          logger.warn("Unexpected margin preset name: ", value);
           value = "default";
         }
         let paperSize = this.get(target, "currentPaper");
