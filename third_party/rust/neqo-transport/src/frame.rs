@@ -626,9 +626,11 @@ impl Frame {
                 })
             }
             FRAME_TYPE_NEW_TOKEN => {
-                Ok(Self::NewToken {
-                    token: d!(dec.decode_vvec()).to_vec(), // TODO(mt) unnecessary copy
-                })
+                let token = d!(dec.decode_vvec()).to_vec();
+                if token.is_empty() {
+                    return Err(Error::FrameEncodingError);
+                }
+                Ok(Self::NewToken { token })
             }
             FRAME_TYPE_STREAM..=FRAME_TYPE_STREAM_MAX => {
                 let s = dv!(dec);
@@ -815,12 +817,21 @@ mod tests {
     }
 
     #[test]
-    fn test_new_token() {
+    fn new_token() {
         let f = Frame::NewToken {
             token: vec![0x12, 0x34, 0x56],
         };
 
         enc_dec(&f, "0703123456");
+    }
+
+    #[test]
+    fn empty_new_token() {
+        let mut dec = Decoder::from(&[0x07, 0x00][..]);
+        assert_eq!(
+            Frame::decode(&mut dec).unwrap_err(),
+            Error::FrameEncodingError
+        );
     }
 
     #[test]

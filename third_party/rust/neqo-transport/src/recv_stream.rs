@@ -8,7 +8,7 @@
 // incoming STREAM frames.
 
 use std::cell::RefCell;
-use std::cmp::{max, min};
+use std::cmp::max;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::mem;
@@ -224,39 +224,41 @@ impl RxStreamOrderer {
     /// Copy received data (if any) into the buffer. Returns bytes copied.
     fn read(&mut self, buf: &mut [u8]) -> usize {
         qtrace!("Reading {} bytes, {} available", buf.len(), self.buffered());
-        let mut buf_remaining = buf.len();
         let mut copied = 0;
 
         for (&range_start, range_data) in &mut self.data_ranges {
+            let mut keep = false;
             if self.retired >= range_start {
-                // Frame data has some new contig bytes after some old bytes
-
-                // Convert to offset into data vec and move past bytes we
-                // already have
+                // Frame data has new contiguous bytes.
                 let copy_offset =
                     usize::try_from(max(range_start, self.retired) - range_start).unwrap();
-                let copy_bytes = min(range_data.len() - copy_offset, buf_remaining);
-                let copy_slc = &mut range_data[copy_offset..copy_offset + copy_bytes];
-                buf[copied..copied + copy_bytes].copy_from_slice(copy_slc);
-                copied += copy_bytes;
-                buf_remaining -= copy_bytes;
-                self.retired += copy_bytes as u64;
+                let available = range_data.len() - copy_offset;
+                let space = buf.len() - copied;
+                let copy_bytes = if available > space {
+                    keep = true;
+                    space
+                } else {
+                    available
+                };
+
+                if copy_bytes > 0 {
+                    let copy_slc = &range_data[copy_offset..copy_offset + copy_bytes];
+                    buf[copied..copied + copy_bytes].copy_from_slice(copy_slc);
+                    copied += copy_bytes;
+                    self.retired += u64::try_from(copy_bytes).unwrap();
+                }
             } else {
-                break; // we're missing bytes
+                // The data in the buffer isn't contiguous.
+                keep = true;
+            }
+            if keep {
+                let mut keep = self.data_ranges.split_off(&range_start);
+                mem::swap(&mut self.data_ranges, &mut keep);
+                return copied;
             }
         }
 
-        // Remove map items that are consumed
-        let to_remove = self
-            .data_ranges
-            .iter()
-            .take_while(|(start, data)| self.retired >= *start + data.len() as u64)
-            .map(|(k, _)| *k)
-            .collect::<Vec<_>>();
-        for key in to_remove {
-            self.data_ranges.remove(&key);
-        }
-
+        self.data_ranges.clear();
         copied
     }
 
@@ -681,6 +683,93 @@ mod tests {
         // Now with the first range split.
         recv_ranges(&[10..14, 14..20, 10..15, 0..10], 20);
         recv_ranges(&[10..15, 16..20, 21..25, 10..25, 0..10], 25);
+    }
+
+    /// Reading exactly one chunk works, when the next chunk starts immediately.
+    #[test]
+    fn stop_reading_at_chunk() {
+        const CHUNK_SIZE: usize = 10;
+        const EXTRA_SIZE: usize = 3;
+        let mut s = RxStreamOrderer::new();
+
+        // Add three chunks.
+        s.inbound_frame(0, vec![0; CHUNK_SIZE]).unwrap();
+        let offset = u64::try_from(CHUNK_SIZE).unwrap();
+        s.inbound_frame(offset, vec![0; EXTRA_SIZE]).unwrap();
+        let offset = u64::try_from(CHUNK_SIZE + EXTRA_SIZE).unwrap();
+        s.inbound_frame(offset, vec![0; EXTRA_SIZE]).unwrap();
+
+        // Read, providing only enough space for the first.
+        let mut buf = vec![0; 100];
+        let count = s.read(&mut buf[..CHUNK_SIZE]);
+        assert_eq!(count, CHUNK_SIZE);
+        let count = s.read(&mut buf[..]);
+        assert_eq!(count, EXTRA_SIZE * 2);
+    }
+
+    /// Reading exactly one chunk works, when there is a gap.
+    #[test]
+    fn stop_reading_at_gap() {
+        const CHUNK_SIZE: usize = 10;
+        const EXTRA_SIZE: usize = 3;
+        let mut s = RxStreamOrderer::new();
+
+        // Add three chunks.
+        s.inbound_frame(0, vec![0; CHUNK_SIZE]).unwrap();
+        let offset = u64::try_from(CHUNK_SIZE + EXTRA_SIZE).unwrap();
+        s.inbound_frame(offset, vec![0; EXTRA_SIZE]).unwrap();
+
+        // Read, providing only enough space for the first chunk.
+        let mut buf = vec![0; 100];
+        let count = s.read(&mut buf[..CHUNK_SIZE]);
+        assert_eq!(count, CHUNK_SIZE);
+
+        // Now fill the gap and ensure that everything can be read.
+        let offset = u64::try_from(CHUNK_SIZE).unwrap();
+        s.inbound_frame(offset, vec![0; EXTRA_SIZE]).unwrap();
+        let count = s.read(&mut buf[..]);
+        assert_eq!(count, EXTRA_SIZE * 2);
+    }
+
+    /// Reading exactly one chunk works, when there is a gap.
+    #[test]
+    fn stop_reading_in_chunk() {
+        const CHUNK_SIZE: usize = 10;
+        const EXTRA_SIZE: usize = 3;
+        let mut s = RxStreamOrderer::new();
+
+        // Add two chunks.
+        s.inbound_frame(0, vec![0; CHUNK_SIZE]).unwrap();
+        let offset = u64::try_from(CHUNK_SIZE).unwrap();
+        s.inbound_frame(offset, vec![0; EXTRA_SIZE]).unwrap();
+
+        // Read, providing only enough space for some of the first chunk.
+        let mut buf = vec![0; 100];
+        let count = s.read(&mut buf[..CHUNK_SIZE - EXTRA_SIZE]);
+        assert_eq!(count, CHUNK_SIZE - EXTRA_SIZE);
+
+        let count = s.read(&mut buf[..]);
+        assert_eq!(count, EXTRA_SIZE * 2);
+    }
+
+    /// Read one byte at a time.
+    #[test]
+    fn read_byte_at_a_time() {
+        const CHUNK_SIZE: usize = 10;
+        const EXTRA_SIZE: usize = 3;
+        let mut s = RxStreamOrderer::new();
+
+        // Add two chunks.
+        s.inbound_frame(0, vec![0; CHUNK_SIZE]).unwrap();
+        let offset = u64::try_from(CHUNK_SIZE).unwrap();
+        s.inbound_frame(offset, vec![0; EXTRA_SIZE]).unwrap();
+
+        let mut buf = vec![0; 1];
+        for _ in 0..CHUNK_SIZE + EXTRA_SIZE {
+            let count = s.read(&mut buf[..]);
+            assert_eq!(count, 1);
+        }
+        assert_eq!(0, s.read(&mut buf[..]));
     }
 
     #[test]

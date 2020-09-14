@@ -244,7 +244,6 @@ impl QPackEncoder {
         value: &[u8],
     ) -> Res<u64> {
         qdebug!([self], "insert {:?} {:?}.", name, value);
-        self.send(conn)?;
 
         let entry_size = name.len() + value.len() + ADDITIONAL_TABLE_ENTRY_SIZE;
 
@@ -359,6 +358,20 @@ impl QPackEncoder {
         stream_id: u64,
     ) -> Res<HeaderEncoder> {
         qdebug!([self], "encoding headers.");
+
+        let mut encoder_blocked = false;
+        // Try to send capacity instructions if present.
+        match self.send(conn) {
+            Ok(()) => {}
+            Err(Error::EncoderStreamBlocked) => {
+                encoder_blocked = true;
+            }
+            Err(e) => {
+                // `InternalError`, `ClosedCriticalStream`
+                return Err(e);
+            }
+        }
+
         let mut encoded_h =
             HeaderEncoder::new(self.table.base(), self.use_huffman, self.max_entries);
 
@@ -366,8 +379,6 @@ impl QPackEncoder {
         let can_block = self.blocked_stream_cnt < self.max_blocked_streams || stream_is_blocker;
 
         let mut ref_entries = HashSet::new();
-
-        let mut encoder_blocked = false;
 
         for iter in h.iter() {
             let name = iter.0.clone().into_bytes();

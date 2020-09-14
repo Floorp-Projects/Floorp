@@ -98,12 +98,12 @@ impl Path {
     }
 
     /// Get local address as `SocketAddr`
-    pub fn local_address(&self) -> &SocketAddr {
-        &self.local
+    pub fn local_address(&self) -> SocketAddr {
+        self.local
     }
 
     /// Get remote address as `SocketAddr`
-    pub fn remote_address(&self) -> &SocketAddr {
-        &self.remote
+    pub fn remote_address(&self) -> SocketAddr {
+        self.remote
     }
 }
