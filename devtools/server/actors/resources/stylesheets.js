@@ -105,6 +105,38 @@ class StyleSheetWatcher {
   }
 
   /**
+   * Create a new style sheet in the document with the given text.
+   *
+   * @param  {Document} document
+   *         Document that the new style sheet belong to.
+   * @param  {string} text
+   *         Content of style sheet.
+   * @param  {string} fileName
+   *         If the stylesheet adding is from file, `fileName` indicates the path.
+   */
+  async addStyleSheet(document, text, fileName) {
+    const parent = document.documentElement;
+    const style = document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "style"
+    );
+    style.setAttribute("type", "text/css");
+
+    if (text) {
+      style.appendChild(document.createTextNode(text));
+    }
+
+    // This triggers StyleSheetApplicableStateChanged event.
+    parent.appendChild(style);
+
+    if (!this._stylesheetCreationData) {
+      this._stylesheetCreationData = new WeakMap();
+    }
+    // style.sheet will be available after the style element is appneded.
+    this._stylesheetCreationData.set(style.sheet, { fileName });
+  }
+
+  /**
    * Protocol method to get the text of stylesheet of resourceId.
    */
   async getText(resourceId) {
@@ -492,7 +524,14 @@ class StyleSheetWatcher {
       this._shouldListSheet(styleSheet) &&
       !this._haveAncestorWithSameURL(styleSheet)
     ) {
-      this._onAvailable([await this._toResource(styleSheet)]);
+      const creationData = this._stylesheetCreationData?.get(styleSheet);
+      this._onAvailable([
+        await this._toResource(styleSheet, {
+          isCreatedByDevTools: !!creationData,
+          fileName: creationData?.fileName,
+        }),
+      ]);
+      this._stylesheetCreationData?.delete(styleSheet);
     }
   }
 
@@ -507,13 +546,18 @@ class StyleSheetWatcher {
     return true;
   }
 
-  async _toResource(styleSheet) {
+  async _toResource(
+    styleSheet,
+    { isCreatedByDevTools = false, fileName = null } = {}
+  ) {
     const resourceId = `stylesheet:${this._resourceCount++}`;
     const resource = {
       resourceId,
       resourceType: STYLESHEET,
       disabled: styleSheet.disabled,
+      fileName,
       href: styleSheet.href,
+      isNew: isCreatedByDevTools,
       mediaRules: await this._getMediaRules(resourceId, styleSheet),
       nodeHref: this._getNodeHref(styleSheet),
       ruleCount: styleSheet.cssRules.length,

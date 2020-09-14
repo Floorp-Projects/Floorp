@@ -100,7 +100,7 @@ const styleSheetsSpec = generateActorSpec({
         text: Arg(0, "string"),
         fileName: Arg(1, "nullable:string"),
       },
-      response: { styleSheet: RetVal("stylesheet") },
+      response: { styleSheet: RetVal("nullable:stylesheet") },
     },
     toggleDisabled: {
       request: { resourceId: Arg(0, "string") },
