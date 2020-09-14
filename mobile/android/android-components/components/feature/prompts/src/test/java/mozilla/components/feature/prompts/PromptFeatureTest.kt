@@ -47,6 +47,7 @@ import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
+import mozilla.components.feature.prompts.login.LoginPicker
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -80,6 +81,7 @@ class PromptFeatureTest {
 
     private lateinit var store: BrowserStore
     private lateinit var fragmentManager: FragmentManager
+    private lateinit var loginPicker: LoginPicker
 
     private val tabId = "test-tab"
     private fun tab(): TabSessionState? {
@@ -101,6 +103,7 @@ class PromptFeatureTest {
                 selectedTabId = tabId
             )
         )
+        loginPicker = mock()
         fragmentManager = mockFragmentManager()
     }
 
@@ -938,6 +941,30 @@ class PromptFeatureTest {
 
         assertTrue(feature.promptAbuserDetector.shouldShowMoreDialogs)
         verify(fragmentManager).beginTransaction()
+    }
+
+    @Test
+    fun `When page is refreshed login dialog is dismissed`() {
+        val feature =
+            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+        feature.loginPicker = loginPicker
+        val onLoginDismiss: () -> Unit = {}
+        val onLoginConfirm: (Login) -> Unit = {}
+
+        val login = Login(null, "origin", username = "username", password = "password")
+        val selectLoginRequest =
+            PromptRequest.SelectLoginPrompt(listOf(login), onLoginDismiss, onLoginConfirm)
+
+        feature.start()
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, selectLoginRequest))
+            .joinBlocking()
+
+        verify(loginPicker).handleSelectLoginRequest(selectLoginRequest)
+
+        // Simulate reloading page
+        store.dispatch(ContentAction.UpdateLoadingStateAction(tabId, true)).joinBlocking()
+
+        verify(loginPicker).dismissCurrentLoginSelect(selectLoginRequest)
     }
 
     @Test
