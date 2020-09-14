@@ -24,9 +24,9 @@
 
 #include <algorithm>
 #include <array>
-#include <cstring>
 #include <iterator>
 #include <limits>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -60,14 +60,6 @@ class Span;
 
 // implementation details
 namespace span_details {
-
-inline size_t strlen16(const char16_t* aZeroTerminated) {
-  size_t len = 0;
-  while (*(aZeroTerminated++)) {
-    len++;
-  }
-  return len;
-}
 
 template <class T>
 struct is_span_oracle : std::false_type {};
@@ -931,23 +923,24 @@ inline Span<char> AsWritableChars(Span<uint8_t> s) {
  * Create span from a zero-terminated C string. nullptr is
  * treated as the empty string.
  */
-inline Span<const char> MakeStringSpan(const char* aZeroTerminated) {
+constexpr Span<const char> MakeStringSpan(const char* aZeroTerminated) {
   if (!aZeroTerminated) {
     return Span<const char>();
   }
-  return Span<const char>(aZeroTerminated, std::strlen(aZeroTerminated));
+  return Span<const char>(aZeroTerminated,
+                          std::char_traits<char>::length(aZeroTerminated));
 }
 
 /**
  * Create span from a zero-terminated UTF-16 C string. nullptr is
  * treated as the empty string.
  */
-inline Span<const char16_t> MakeStringSpan(const char16_t* aZeroTerminated) {
+constexpr Span<const char16_t> MakeStringSpan(const char16_t* aZeroTerminated) {
   if (!aZeroTerminated) {
     return Span<const char16_t>();
   }
-  return Span<const char16_t>(aZeroTerminated,
-                              span_details::strlen16(aZeroTerminated));
+  return Span<const char16_t>(
+      aZeroTerminated, std::char_traits<char16_t>::length(aZeroTerminated));
 }
 
 }  // namespace mozilla

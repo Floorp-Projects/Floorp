@@ -1159,6 +1159,9 @@ SPAN_TEST(from_cstring) {
     ASSERT_EQ(cs.data(), str);
     ASSERT_EQ(cs[2], 'c');
 
+    static_assert(MakeStringSpan("abc").size() == 3U);
+    static_assert(MakeStringSpan("abc")[2] == 'c');
+
 #ifdef CONFIRM_COMPILATION_ERRORS
     Span<const char> scccl("literal");  // error
 
@@ -1203,6 +1206,9 @@ SPAN_TEST(from_cstring) {
     ASSERT_EQ(cs.size(), 3U);
     ASSERT_EQ(cs.data(), str);
     ASSERT_EQ(cs[2], 'c');
+
+    static_assert(MakeStringSpan(u"abc").size() == 3U);
+    static_assert(MakeStringSpan(u"abc")[2] == u'c');
 
     cs = MakeStringSpan(arr);
     ASSERT_EQ(cs.size(), 3U);
