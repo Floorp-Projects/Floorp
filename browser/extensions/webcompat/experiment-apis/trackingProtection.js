@@ -38,8 +38,13 @@ class Manager {
           const channel = subject.QueryInterface(
             Ci.nsIUrlClassifierBlockedChannel
           );
-          const { channelId, topLevelUrl, url } = channel;
-          const topHost = new URL(topLevelUrl).hostname;
+          const { channelId, url } = channel;
+          let topHost;
+          try {
+            topHost = new URL(channel.topLevelUrl).hostname;
+          } catch (_) {
+            return;
+          }
           for (const allowList of this._allowLists.values()) {
             for (const entry of allowList.values()) {
               const { matcher, hosts, notHosts } = entry;
