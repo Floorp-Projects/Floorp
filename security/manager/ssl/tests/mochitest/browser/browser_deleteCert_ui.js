@@ -213,19 +213,6 @@ add_task(async function testDeleteOtherPeopleCerts() {
   );
 });
 
-// Test deleting certs from the "Servers" tab.
-add_task(async function testDeleteServerCerts() {
-  const expectedTitleL10nId = { id: "delete-ssl-cert-title", args: null };
-  const expectedConfirmL10nId = { id: "delete-ssl-cert-confirm", args: null };
-  const expectedImpactL10nId = { id: "delete-ssl-cert-impact", args: null };
-  await testHelper(
-    "websites_tab",
-    expectedTitleL10nId,
-    expectedConfirmL10nId,
-    expectedImpactL10nId
-  );
-});
-
 // Test deleting certs from the "Authorities" tab.
 add_task(async function testDeleteCACerts() {
   const expectedTitleL10nId = { id: "delete-ca-cert-title", args: null };

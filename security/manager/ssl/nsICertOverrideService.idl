@@ -13,6 +13,38 @@ interface nsIX509Cert;
 #define NS_CERTOVERRIDE_CONTRACTID "@mozilla.org/security/certoverride;1"
 %}
 
+[scriptable, builtinclass, uuid(ed735e24-fa55-4163-906d-17fb78851fe1)]
+interface nsICertOverride : nsISupports {
+
+  /**
+  *   The hostname of the server the override is used for.
+  */
+  readonly attribute ACString asciiHost;
+
+  /**
+  *   The port of the server the override is used for.
+  */
+  readonly attribute int32_t port;
+
+  /**
+  *   Whether or not the override is only used for this
+  *   session (true) or stored persistently (false)
+  */
+  readonly attribute boolean isTemporary;
+
+  /**
+  *   The database key for the associated certificate.
+  */
+  readonly attribute ACString dbKey;
+
+  /**
+  *   A combination of hostname and port in the form host:port.
+  *   Since the port can be -1 which is equivalent to port 433 we use an
+  *   existing function of nsCertOverrideService to create this property.
+  */
+  readonly attribute ACString hostPort;
+};
+
 /**
  * This represents the global list of triples
  *   {host:port, cert-fingerprint, allowed-overrides}
@@ -130,6 +162,8 @@ interface nsICertOverrideService : nsISupports {
   uint32_t isCertUsedForOverrides(in nsIX509Cert aCert,
                                   in boolean aCheckTemporaries,
                                   in boolean aCheckPermanents);
+
+  Array<nsICertOverride> getOverrides();
 
   /**
    *  NOTE: This function is used only for testing!
