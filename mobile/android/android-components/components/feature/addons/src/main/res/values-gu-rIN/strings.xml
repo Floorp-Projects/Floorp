@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">ચાલુ કરો</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">બંધ કરો</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">ખાનગી બ્રાઉઝિંગમાં ચલાવવાની મંજૂરી આપો</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">ખાનગી બ્રાઉઝિંગમાં ચલાવો</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">સક્રિય</string>
     <!-- Indicates the add-on is disabled. -->
@@ -96,8 +100,8 @@
     <string name="mozac_feature_addons_permissions_dialog_cancel">રદ કરો</string>
     <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">ઍડ-ઑન સ્થાપિત કરો</string>
-    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
-    <string name="mozac_feature_addons_user_rating_count">વપરાશકર્તાઓ: %1$s</string>
+    <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+    <string name="mozac_feature_addons_install_addon_dialog_cancel">રદ કરો</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
@@ -146,6 +150,8 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s સફળતાપૂર્વક દૂર કર્યું</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s ને દૂર કરવામાં નિષ્ફળ</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">આ એડ-ઓનને %1$s ના પહેલાનાં સંસ્કરણથી સ્થાનાંતરિત કરવામાં આવ્યું હતું</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 એડ-ઓન</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
@@ -158,8 +164,16 @@
     <string name="mozac_feature_addons_updater_status_no_update_available">કોઇ સુધારો ઉપલબ્ધ નથી</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">ભૂલ</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">અપડેટરની માહિતી</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">છેલ્લો પ્રયાસ:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">પરિસ્થિતિ:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s %2$s માં ઉમેરવામાં આવ્યું છે.</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">તેને મેનૂમાં ખોલો</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">ઠીક છે, સમજાઇ ગયું</string>
 </resources>
