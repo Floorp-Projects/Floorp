@@ -22,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric.buildAttributeSet
@@ -414,5 +415,13 @@ class InlineAutocompleteEditTextTest {
 
         et.setText("g")
         assertEquals("google.com", "${et.text}")
+    }
+
+    @Test
+    fun `WHEN setting text THEN isEnabled is never modified`() {
+        val et = spy(InlineAutocompleteEditText(testContext, attributes))
+        et.setText("", shouldAutoComplete = false)
+        // assigning here so it verifies the setter, not the getter
+        verify(et, never()).isEnabled = true
     }
 }
