@@ -1262,8 +1262,8 @@ nsresult TRR::DohDecode(nsCString& aHost) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  if ((mType != TRRTYPE_NS) && mCname.IsEmpty() &&
-      !mDNS.mAddresses.getFirst() && mResult.is<TypeRecordEmpty>()) {
+  if ((mType != TRRTYPE_NS) && mCname.IsEmpty() && mDNS.mAddresses.IsEmpty() &&
+      mResult.is<TypeRecordEmpty>()) {
     // no entries were stored!
     LOG(("TRR: No entries were stored!\n"));
     return NS_ERROR_FAILURE;
@@ -1288,7 +1288,7 @@ void TRR::SaveAdditionalRecords(
   }
   nsresult rv;
   for (auto iter = aRecords.ConstIter(); !iter.Done(); iter.Next()) {
-    if (iter.Data() && iter.Data()->mAddresses.isEmpty()) {
+    if (iter.Data() && iter.Data()->mAddresses.IsEmpty()) {
       // no point in adding empty records.
       continue;
     }
@@ -1302,20 +1302,9 @@ void TRR::SaveAdditionalRecords(
            nsCString(iter.Key()).get()));
       continue;
     }
-    uint32_t ttl = AddrInfo::NO_TTL_DATA;
-    DOHaddr* item = nullptr;
-    nsTArray<NetAddr> addresses;
-    while ((item = static_cast<DOHaddr*>(iter.Data()->mAddresses.popFirst()))) {
-      addresses.AppendElement(item->mNet);
-      if (item->mTtl < ttl) {
-        // While the DNS packet might return individual TTLs for each address,
-        // we can only return one value in the AddrInfo class so pick the
-        // lowest number.
-        ttl = item->mTtl;
-      }
-    }
-    RefPtr<AddrInfo> ai(
-        new AddrInfo(iter.Key(), TRRTYPE_A, std::move(addresses), ttl));
+    RefPtr<AddrInfo> ai(new AddrInfo(iter.Key(), TRRTYPE_A,
+                                     std::move(iter.Data()->mAddresses),
+                                     iter.Data()->mTtl));
 
     // Since we're not actually calling NameLookup for this record, we need
     // to set these fields to avoid assertions in CompleteLookup.
@@ -1472,21 +1461,10 @@ void TRR::StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord) {
 nsresult TRR::ReturnData(nsIChannel* aChannel) {
   if (mType != TRRTYPE_TXT && mType != TRRTYPE_HTTPSSVC) {
     // create and populate an AddrInfo instance to pass on
-    DOHaddr* item;
-    uint32_t ttl = AddrInfo::NO_TTL_DATA;
-    nsTArray<NetAddr> addresses;
-    while ((item = static_cast<DOHaddr*>(mDNS.mAddresses.popFirst()))) {
-      addresses.AppendElement(item->mNet);
-      if (item->mTtl < ttl) {
-        // While the DNS packet might return individual TTLs for each address,
-        // we can only return one value in the AddrInfo class so pick the
-        // lowest number.
-        ttl = item->mTtl;
-      }
-    }
-    RefPtr<AddrInfo> ai(new AddrInfo(mHost, mType, nsTArray<NetAddr>(), ttl));
+    RefPtr<AddrInfo> ai(
+        new AddrInfo(mHost, mType, nsTArray<NetAddr>(), mDNS.mTtl));
     auto builder = ai->Build();
-    builder.SetAddresses(std::move(addresses));
+    builder.SetAddresses(std::move(mDNS.mAddresses));
 
     // Set timings.
     nsCOMPtr<nsITimedChannel> timedChan = do_QueryInterface(aChannel);
@@ -1547,7 +1525,7 @@ nsresult TRR::FailData(nsresult error) {
 nsresult TRR::FollowCname(nsIChannel* aChannel) {
   nsresult rv = NS_OK;
   nsAutoCString cname;
-  while (NS_SUCCEEDED(rv) && !mDNS.mAddresses.getFirst() && !mCname.IsEmpty() &&
+  while (NS_SUCCEEDED(rv) && mDNS.mAddresses.IsEmpty() && !mCname.IsEmpty() &&
          mCnameLoop > 0) {
     mCnameLoop--;
     LOG(("TRR::On200Response CNAME %s => %s (%u)\n", mHost.get(), mCname.get(),
@@ -1565,7 +1543,7 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
 
   // restore mCname as DohDecode() change it
   mCname = cname;
-  if (NS_SUCCEEDED(rv) && mDNS.mAddresses.getFirst()) {
+  if (NS_SUCCEEDED(rv) && !mDNS.mAddresses.IsEmpty()) {
     ReturnData(aChannel);
     return NS_OK;
   }
@@ -1595,7 +1573,7 @@ nsresult TRR::On200Response(nsIChannel* aChannel) {
     return NS_ERROR_FAILURE;
   }
 
-  if (mDNS.mAddresses.getFirst() || mType == TRRTYPE_TXT || mCname.IsEmpty()) {
+  if (!mDNS.mAddresses.IsEmpty() || mType == TRRTYPE_TXT || mCname.IsEmpty()) {
     // pass back the response data
     ReturnData(aChannel);
     return NS_OK;
@@ -1720,37 +1698,42 @@ TRR::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
 
 nsresult DOHresp::Add(uint32_t TTL, unsigned char* dns, unsigned int index,
                       uint16_t len, bool aLocalAllowed) {
-  auto doh = MakeUnique<DOHaddr>();
-  NetAddr* addr = &doh->mNet;
+  NetAddr addr;
   if (4 == len) {
     // IPv4
-    addr->inet.family = AF_INET;
-    addr->inet.port = 0;  // unknown
-    addr->inet.ip = ntohl(get32bit(dns, index));
+    addr.inet.family = AF_INET;
+    addr.inet.port = 0;  // unknown
+    addr.inet.ip = ntohl(get32bit(dns, index));
   } else if (16 == len) {
     // IPv6
-    addr->inet6.family = AF_INET6;
-    addr->inet6.port = 0;      // unknown
-    addr->inet6.flowinfo = 0;  // unknown
-    addr->inet6.scope_id = 0;  // unknown
+    addr.inet6.family = AF_INET6;
+    addr.inet6.port = 0;      // unknown
+    addr.inet6.flowinfo = 0;  // unknown
+    addr.inet6.scope_id = 0;  // unknown
     for (int i = 0; i < 16; i++, index++) {
-      addr->inet6.ip.u8[i] = dns[index];
+      addr.inet6.ip.u8[i] = dns[index];
     }
   } else {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (IsIPAddrLocal(addr) && !aLocalAllowed) {
+  if (IsIPAddrLocal(&addr) && !aLocalAllowed) {
     return NS_ERROR_FAILURE;
   }
-  doh->mTtl = TTL;
+
+  // While the DNS packet might return individual TTLs for each address,
+  // we can only return one value in the AddrInfo class so pick the
+  // lowest number.
+  if (mTtl < TTL) {
+    mTtl = TTL;
+  }
 
   if (LOG_ENABLED()) {
     char buf[128];
-    NetAddrToString(addr, buf, sizeof(buf));
+    NetAddrToString(&addr, buf, sizeof(buf));
     LOG(("DOHresp:Add %s\n", buf));
   }
-  mAddresses.insertBack(doh.release());
+  mAddresses.AppendElement(addr);
   return NS_OK;
 }
 
