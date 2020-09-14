@@ -2959,6 +2959,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       RefPtr<Element> mLeftBlockElement;
       RefPtr<Element> mRightBlockElement;
       Maybe<nsAtom*> mNewListElementTagNameOfRightListElement;
+      EditorDOMPoint mPointContainingTheOtherBlockElement;
       bool mCanJoinBlocks;
     };  // HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
         // AutoInclusiveAncestorBlockElementsJoiner
@@ -5972,6 +5973,13 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     }
   }
 
+  if (!EditorUtils::IsDescendantOf(*mLeftBlockElement, *mRightBlockElement,
+                                   &mPointContainingTheOtherBlockElement)) {
+    Unused << EditorUtils::IsDescendantOf(
+        *mRightBlockElement, *mLeftBlockElement,
+        &mPointContainingTheOtherBlockElement);
+  }
+
   mCanJoinBlocks = true;
   return true;
 }
@@ -5993,13 +6001,13 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   // If the left block element is in the right block element, move the hard
   // line including the right block element to end of the left block.
   // However, if we are merging list elements, we don't join them.
-  EditorDOMPoint atRightBlockChild;
-  if (EditorUtils::IsDescendantOf(*mLeftBlockElement, *mRightBlockElement,
-                                  &atRightBlockChild)) {
+  if (mPointContainingTheOtherBlockElement.GetContainer() ==
+      mRightBlockElement) {
     EditActionResult result = WhiteSpaceVisibilityKeeper::
         MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
             aHTMLEditor, MOZ_KnownLive(*mLeftBlockElement),
-            MOZ_KnownLive(*mRightBlockElement), atRightBlockChild,
+            MOZ_KnownLive(*mRightBlockElement),
+            mPointContainingTheOtherBlockElement,
             mNewListElementTagNameOfRightListElement);
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "WhiteSpaceVisibilityKeeper::"
@@ -6008,21 +6016,19 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     return result;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(!atRightBlockChild.IsSet());
-
   // If the right block element is in the left block element:
   // - move list item elements in the right block element to where the left
   //   list element is
   // - or first hard line in the right block element to where:
   //   - the left block element is.
   //   - or the given left content in the left block is.
-  EditorDOMPoint atLeftBlockChild;
-  if (EditorUtils::IsDescendantOf(*mRightBlockElement, *mLeftBlockElement,
-                                  &atLeftBlockChild)) {
+  if (mPointContainingTheOtherBlockElement.GetContainer() ==
+      mLeftBlockElement) {
     EditActionResult result = WhiteSpaceVisibilityKeeper::
         MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement(
             aHTMLEditor, MOZ_KnownLive(*mLeftBlockElement),
-            MOZ_KnownLive(*mRightBlockElement), atLeftBlockChild,
+            MOZ_KnownLive(*mRightBlockElement),
+            mPointContainingTheOtherBlockElement,
             MOZ_KnownLive(*mInclusiveDescendantOfLeftBlockElement),
             mNewListElementTagNameOfRightListElement);
     NS_WARNING_ASSERTION(result.Succeeded(),
@@ -6031,6 +6037,8 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
                          "kElement() failed");
     return result;
   }
+
+  MOZ_ASSERT(!mPointContainingTheOtherBlockElement.IsSet());
 
   // Normal case.  Blocks are siblings, or at least close enough.  An example
   // of the latter is <p>paragraph</p><ul><li>one<li>two<li>three</ul>.  The
