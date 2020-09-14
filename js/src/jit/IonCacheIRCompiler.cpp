@@ -528,6 +528,7 @@ bool IonCacheIRCompiler::init() {
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
     case CacheKind::NewObject:
+    case CacheKind::OptimizeSpreadCall:
       MOZ_CRASH("Unsupported IC");
   }
 
@@ -614,6 +615,7 @@ void IonCacheIRCompiler::assertFloatRegisterAvailable(FloatRegister reg) {
     case CacheKind::InstanceOf:
     case CacheKind::UnaryArith:
     case CacheKind::ToPropertyKey:
+    case CacheKind::OptimizeSpreadCall:
       MOZ_CRASH("No float registers available");
     case CacheKind::SetProp:
     case CacheKind::SetElem:
