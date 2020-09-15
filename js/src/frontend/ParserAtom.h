@@ -9,7 +9,6 @@
 
 #include "mozilla/DebugOnly.h"      // mozilla::DebugOnly
 #include "mozilla/HashFunctions.h"  // HashString
-#include "mozilla/MaybeOneOf.h"     // mozilla::MaybeOneOf
 #include "mozilla/Range.h"          // mozilla::Range
 #include "mozilla/Variant.h"        // mozilla::Variant
 
@@ -218,7 +217,9 @@ class alignas(alignof(void*)) ParserAtomEntry {
   //
   // Otherwise, this should hold AtomIndex into CompilationInfo.atoms,
   // or empty if the JSAtom isn't yet allocated.
-  mutable mozilla::MaybeOneOf<AtomIndex, WellKnownAtomId> atomIndex_;
+  using AtomIndexType =
+      mozilla::Variant<mozilla::Nothing, AtomIndex, WellKnownAtomId>;
+  mutable AtomIndexType atomIndex_ = AtomIndexType(mozilla::Nothing());
 
  public:
   static const uint32_t MAX_LENGTH = JSString::MAX_LENGTH;
@@ -299,11 +300,10 @@ class alignas(alignof(void*)) ParserAtomEntry {
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
   void setAtomIndex(AtomIndex index) const {
-    atomIndex_.construct<AtomIndex>(index);
+    atomIndex_ = mozilla::AsVariant(index);
   }
-
   void setWellKnownAtomId(WellKnownAtomId kind) const {
-    atomIndex_.construct<WellKnownAtomId>(kind);
+    atomIndex_ = mozilla::AsVariant(kind);
   }
 
   // Convert this entry to a js-atom.  The first time this method is called
