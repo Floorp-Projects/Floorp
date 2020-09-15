@@ -545,7 +545,7 @@ PRStatus nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc* fd) {
 
       if (MOZ_LOG_TEST(gSOCKSLog, LogLevel::Debug)) {
         char buf[kIPv6CStrBufSize];
-        NetAddrToString(&mInternalProxyAddr, buf, sizeof(buf));
+        mInternalProxyAddr.ToStringBuffer(buf, sizeof(buf));
         LOGDEBUG(("socks: trying proxy server, %s:%hu", buf,
                   ntohs(mInternalProxyAddr.inet.port)));
       }

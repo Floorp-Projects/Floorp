@@ -559,7 +559,7 @@ bool nsHttpConnectionInfo::HostIsLocalIPLiteral() const {
     return false;
   }
   NetAddr netAddr(&prAddr);
-  return IsIPAddrLocal(&netAddr);
+  return netAddr.IsIPAddrLocal();
 }
 
 }  // namespace net
