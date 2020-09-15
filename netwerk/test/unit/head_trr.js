@@ -147,6 +147,7 @@ class TRRDNSListener {
       this.expectedAnswer,
       `Checking result for ${this.name}`
     );
+    inRecord.rewind(); // In case the caller also checks the addresses
 
     if (this.delay !== undefined) {
       Assert.greaterOrEqual(
@@ -268,17 +269,18 @@ function trrQueryHandler(req, resp, url) {
 
   function processRequest(req, resp, payload) {
     let dnsQuery = global.dnsPacket.decode(payload);
-    let answers =
+    let response =
       global.dns_query_answers[
         `${dnsQuery.questions[0].name}/${dnsQuery.questions[0].type}`
-      ] || [];
+      ] || {};
 
     let buf = global.dnsPacket.encode({
       type: "response",
       id: dnsQuery.id,
       flags: global.dnsPacket.RECURSION_DESIRED,
       questions: dnsQuery.questions,
-      answers,
+      answers: response.answers || [],
+      additionals: response.additionals || [],
     });
 
     resp.setHeader("Content-Length", buf.length);
@@ -333,10 +335,11 @@ class TRRServer {
   ///          flush: false,
   ///          data: "1.2.3.4",
   ///        }]
-  async registerDoHAnswers(name, type, answers) {
-    let text = `global.dns_query_answers["${name}/${type}"] = ${JSON.stringify(
-      answers
-    )}`;
+  async registerDoHAnswers(name, type, answers, additionals) {
+    let text = `global.dns_query_answers["${name}/${type}"] = ${JSON.stringify({
+      answers,
+      additionals,
+    })}`;
     return this.execute(text);
   }
 }

@@ -1176,8 +1176,11 @@ nsresult TRR::DohDecode(nsCString& aHost) {
   uint16_t arRecords = get16bit(mResponse, 10);
   LOG(("TRR Decode: %d additional resource records (%u bytes body)\n",
        arRecords, mBodySize));
+
+  nsClassHashtable<nsCStringHashKey, DOHresp> additionalRecords;
   while (arRecords) {
-    rv = PassQName(index);
+    nsAutoCString qname;
+    rv = GetQname(qname, index);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1185,23 +1188,72 @@ nsresult TRR::DohDecode(nsCString& aHost) {
     if (mBodySize < (index + 8)) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
+    uint16_t type = get16bit(mResponse, index);
     index += 2;  // type
+    uint16_t cls = get16bit(mResponse, index);
     index += 2;  // class
+    uint32_t ttl = get32bit(mResponse, index);
     index += 4;  // ttl
 
     // 16 bit RDLENGTH
     if (mBodySize < (index + 2)) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    uint16_t RDLENGTH = get16bit(mResponse, index);
+
+    uint16_t rdlength = get16bit(mResponse, index);
     index += 2;
-    if (mBodySize < (index + RDLENGTH)) {
+    if (mBodySize < (index + rdlength)) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    index += RDLENGTH;
+
+    auto parseRecord = [&]() {
+      if (kDNS_CLASS_IN != cls) {
+        return;
+      }
+
+      auto& entry = additionalRecords.GetOrInsert(qname);
+      if (!entry) {
+        entry.reset(new DOHresp());
+      }
+
+      switch (type) {
+        case TRRTYPE_A:
+          if (rdlength != 4) {
+            LOG(("TRR bad length for A (%u)\n", rdlength));
+            return;
+          }
+          rv = entry->Add(ttl, mResponse, index, rdlength, mAllowRFC1918);
+          if (NS_FAILED(rv)) {
+            LOG(
+                ("TRR:DohDecode failed: local IP addresses or unknown IP "
+                 "family\n"));
+            return;
+          }
+          break;
+        case TRRTYPE_AAAA:
+          if (rdlength != 16) {
+            LOG(("TRR bad length for AAAA (%u)\n", rdlength));
+            return;
+          }
+          rv = entry->Add(ttl, mResponse, index, rdlength, mAllowRFC1918);
+          if (NS_FAILED(rv)) {
+            LOG(("TRR got unique/local IPv6 address!\n"));
+            return;
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    parseRecord();
+
+    index += rdlength;
     LOG(("done with additional rr now %u of %u\n", index, mBodySize));
     arRecords--;
   }
+
+  SaveAdditionalRecords(additionalRecords);
 
   if (index != mBodySize) {
     LOG(("DohDecode failed to parse entire response body, %u out of %u bytes\n",
@@ -1227,6 +1279,56 @@ nsresult TRR::DohDecode(nsCString& aHost) {
   }
 
   return NS_OK;
+}
+
+void TRR::SaveAdditionalRecords(
+    const nsClassHashtable<nsCStringHashKey, DOHresp>& aRecords) {
+  if (!mRec) {
+    return;
+  }
+  nsresult rv;
+  for (auto iter = aRecords.ConstIter(); !iter.Done(); iter.Next()) {
+    if (iter.Data() && iter.Data()->mAddresses.isEmpty()) {
+      // no point in adding empty records.
+      continue;
+    }
+    RefPtr<nsHostRecord> hostRecord;
+    rv = mHostResolver->GetHostRecord(
+        iter.Key(), EmptyCString(), nsIDNSService::RESOLVE_TYPE_DEFAULT,
+        mRec->flags, AF_UNSPEC, mRec->pb, mRec->originSuffix,
+        getter_AddRefs(hostRecord));
+    if (NS_FAILED(rv)) {
+      LOG(("Failed to get host record for additional record %s",
+           nsCString(iter.Key()).get()));
+      continue;
+    }
+    uint32_t ttl = AddrInfo::NO_TTL_DATA;
+    DOHaddr* item = nullptr;
+    nsTArray<NetAddr> addresses;
+    while ((item = static_cast<DOHaddr*>(iter.Data()->mAddresses.popFirst()))) {
+      addresses.AppendElement(item->mNet);
+      if (item->mTtl < ttl) {
+        // While the DNS packet might return individual TTLs for each address,
+        // we can only return one value in the AddrInfo class so pick the
+        // lowest number.
+        ttl = item->mTtl;
+      }
+    }
+    RefPtr<AddrInfo> ai(
+        new AddrInfo(iter.Key(), TRRTYPE_A, std::move(addresses), ttl));
+
+    // Since we're not actually calling NameLookup for this record, we need
+    // to set these fields to avoid assertions in CompleteLookup.
+    // This is quite hacky, and should be fixed.
+    hostRecord->mResolving++;
+    hostRecord->mEffectiveTRRMode = mRec->mEffectiveTRRMode;
+    RefPtr<AddrHostRecord> addrRec = do_QueryObject(hostRecord);
+    addrRec->mTrrStart = TimeStamp::Now();
+    addrRec->mTrrA = this;  // Hack!
+    LOG(("Completing lookup for additional: %s", nsCString(iter.Key()).get()));
+    (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB,
+                                        mOriginSuffix, AddrHostRecord::TRR_OK);
+  }
 }
 
 nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
