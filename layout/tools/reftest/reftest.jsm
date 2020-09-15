@@ -1693,6 +1693,10 @@ function RecvStartPrint(isPrintSelection, printRange)
     ps.showPrintProgress = false;
     ps.printBGImages = true;
     ps.printBGColors = true;
+    ps.unwriteableMarginTop = 0;
+    ps.unwriteableMarginRight = 0;
+    ps.unwriteableMarginLeft = 0;
+    ps.unwriteableMarginBottom = 0;
     ps.printToFile = true;
     ps.toFileName = file.path;
     ps.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
