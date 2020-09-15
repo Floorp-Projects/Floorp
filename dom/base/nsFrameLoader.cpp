@@ -2754,9 +2754,8 @@ void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
   }
 }
 
-nsresult nsFrameLoader::FinishStaticClone(nsFrameLoader* aStaticCloneOf,
-                                          nsIDocShell** aCloneDocShell,
-                                          Document** aCloneDocument) {
+nsresult nsFrameLoader::FinishStaticClone(
+    nsFrameLoader* aStaticCloneOf, bool* aOutHasInProcessPrintCallbacks) {
   MOZ_DIAGNOSTIC_ASSERT(
       !nsContentUtils::IsSafeToRunScript(),
       "A script blocker should be on the stack while FinishStaticClone is run");
@@ -2772,6 +2771,7 @@ nsresult nsFrameLoader::FinishStaticClone(nsFrameLoader* aStaticCloneOf,
   if (NS_WARN_IF(IsDead())) {
     return NS_ERROR_UNEXPECTED;
   }
+
   if (NS_WARN_IF(aStaticCloneOf->IsRemoteFrame())) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -2793,12 +2793,9 @@ nsresult nsFrameLoader::FinishStaticClone(nsFrameLoader* aStaticCloneOf,
   nsCOMPtr<Document> doc = origDocShell->GetDocument();
   NS_ENSURE_STATE(doc);
 
-  nsCOMPtr<Document> clonedDoc = doc->CreateStaticClone(docShell);
+  nsCOMPtr<Document> clonedDoc =
+      doc->CreateStaticClone(docShell, viewer, aOutHasInProcessPrintCallbacks);
 
-  viewer->SetDocument(clonedDoc);
-
-  docShell.forget(aCloneDocShell);
-  clonedDoc.forget(aCloneDocument);
   return NS_OK;
 }
 
