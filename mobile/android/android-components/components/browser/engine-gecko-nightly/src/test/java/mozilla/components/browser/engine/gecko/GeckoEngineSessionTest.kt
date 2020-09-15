@@ -266,7 +266,7 @@ class GeckoEngineSessionTest {
     @Test
     fun contentDelegateNotifiesObserverAboutDownloads() {
         val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider)
+                geckoSessionProvider = geckoSessionProvider, privateMode = true)
 
         val observer: EngineSession.Observer = mock()
         engineSession.register(observer)
@@ -286,6 +286,7 @@ class GeckoEngineSessionTest {
             fileName = "image.png",
             contentLength = 42,
             contentType = "image/png",
+            isPrivate = true,
             userAgent = null,
             cookie = null)
     }

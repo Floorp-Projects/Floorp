@@ -714,6 +714,7 @@ class EngineObserverTest {
                 fileName = "file.txt",
                 userAgent = "userAgent",
                 contentType = "text/plain",
+                isPrivate = true,
                 contentLength = 100L)
 
         store.waitUntilIdle()
@@ -725,6 +726,7 @@ class EngineObserverTest {
         assertEquals("userAgent", tab.content.download?.userAgent)
         assertEquals("text/plain", tab.content.download?.contentType)
         assertEquals(100L, tab.content.download?.contentLength)
+        assertEquals(true, tab.content.download?.private)
     }
 
     @Test

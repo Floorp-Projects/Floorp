@@ -24,6 +24,7 @@ import java.util.UUID
  * @property referrerUrl The site that linked to this download.
  * @property skipConfirmation Whether or not the confirmation dialog should be shown before the download begins.
  * @property id The unique identifier of this download.
+ * @property private Indicates if the download was created from a private session.
  * @property createdTime A timestamp when the download was created.
  * @
  */
@@ -42,6 +43,7 @@ data class DownloadState(
     val skipConfirmation: Boolean = false,
     val id: String = UUID.randomUUID().toString(),
     val sessionId: String? = null,
+    val private: Boolean = false,
     val createdTime: Long = System.currentTimeMillis()
 ) : Parcelable {
     val filePath: String get() =

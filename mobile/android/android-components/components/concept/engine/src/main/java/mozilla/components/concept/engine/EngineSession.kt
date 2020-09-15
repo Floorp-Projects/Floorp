@@ -123,6 +123,17 @@ abstract class EngineSession(
             appIntent: Intent?
         ) = Unit
 
+        /**
+         * The engine received a request to download a file.
+         *
+         * @param url The string url that was requested.
+         * @param fileName The file name.
+         * @param contentLength The size of the file to be downloaded.
+         * @param contentType The type of content to be downloaded.
+         * @param cookie The cookie related to request.
+         * @param userAgent The user agent of the engine.
+         * @param isPrivate Indicates if the download was requested from a private session.
+         */
         @Suppress("LongParameterList")
         fun onExternalResource(
             url: String,
@@ -130,7 +141,8 @@ abstract class EngineSession(
             contentLength: Long? = null,
             contentType: String? = null,
             cookie: String? = null,
-            userAgent: String? = null
+            userAgent: String? = null,
+            isPrivate: Boolean = false
         ) = Unit
 
         /**

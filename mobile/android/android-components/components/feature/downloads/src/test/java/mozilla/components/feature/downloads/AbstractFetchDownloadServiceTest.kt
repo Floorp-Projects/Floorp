@@ -1003,6 +1003,32 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
+    fun `WHEN a download is from a private session the client must include the correct CookiePolicy`() = runBlocking {
+        val response = Response(
+            "https://example.com/file.txt",
+            200,
+            MutableHeaders(),
+            Response.Body(mock())
+        )
+        doReturn(response).`when`(client).fetch(any())
+        val download = DownloadState("https://example.com/file.txt", "file.txt", private = true)
+        val downloadJob = DownloadJobState(state = download, status = DOWNLOADING)
+        val providedRequest = argumentCaptor<Request>()
+
+        service.performDownload(downloadJob)
+        verify(client).fetch(providedRequest.capture())
+
+        assertEquals(Request.CookiePolicy.OMIT, providedRequest.value.cookiePolicy)
+
+        downloadJob.state = download.copy(private = false)
+        service.performDownload(downloadJob)
+
+        verify(client, times(2)).fetch(providedRequest.capture())
+
+        assertEquals(Request.CookiePolicy.INCLUDE, providedRequest.value.cookiePolicy)
+    }
+
+    @Test
     fun `onDestroy cancels all running jobs`() = runBlocking {
         val download = DownloadState("https://example.com/file.txt", "file.txt")
         val response = Response(

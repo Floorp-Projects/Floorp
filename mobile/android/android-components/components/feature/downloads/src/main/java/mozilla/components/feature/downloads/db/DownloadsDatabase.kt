@@ -11,11 +11,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * Internal database for saving downloads.
  */
-@Database(entities = [DownloadEntity::class], version = 1)
+@Database(entities = [DownloadEntity::class], version = 2)
 @TypeConverters(StatusConverter::class)
 internal abstract class DownloadsDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
@@ -32,9 +34,19 @@ internal abstract class DownloadsDatabase : RoomDatabase() {
                 context,
                 DownloadsDatabase::class.java,
                 "mozac_downloads_database"
+            ).addMigrations(
+                Migrations.migration_1_2
             ).build().also {
                 instance = it
             }
+        }
+    }
+}
+internal object Migrations {
+    val migration_1_2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                    "ALTER TABLE downloads ADD COLUMN is_private INTEGER NOT NULL DEFAULT 0")
         }
     }
 }

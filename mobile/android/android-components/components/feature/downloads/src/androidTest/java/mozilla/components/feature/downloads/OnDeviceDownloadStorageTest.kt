@@ -8,12 +8,16 @@ import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.paging.PagedList
 import androidx.room.Room
+import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.db.DownloadsDatabase
+import mozilla.components.feature.downloads.db.Migrations
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -23,11 +27,21 @@ import org.junit.Test
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+private const val MIGRATION_TEST_DB = "migration-test"
+
 @ExperimentalCoroutinesApi
 class OnDeviceDownloadStorageTest {
     private lateinit var context: Context
     private lateinit var storage: DownloadStorage
     private lateinit var executor: ExecutorService
+    private lateinit var database: DownloadsDatabase
+
+    @get:Rule
+    val helper: MigrationTestHelper = MigrationTestHelper(
+        InstrumentationRegistry.getInstrumentation(),
+        DownloadsDatabase::class.java.canonicalName,
+        FrameworkSQLiteOpenHelperFactory()
+    )
 
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
@@ -37,7 +51,7 @@ class OnDeviceDownloadStorageTest {
         executor = Executors.newSingleThreadExecutor()
 
         context = ApplicationProvider.getApplicationContext()
-        val database = Room.inMemoryDatabaseBuilder(context, DownloadsDatabase::class.java).build()
+        database = Room.inMemoryDatabaseBuilder(context, DownloadsDatabase::class.java).build()
 
         storage = DownloadStorage(context)
         storage.database = lazy { database }
@@ -46,6 +60,32 @@ class OnDeviceDownloadStorageTest {
     @After
     fun tearDown() {
         executor.shutdown()
+        database.close()
+    }
+
+    @Test
+    fun migrate1to2() {
+        helper.createDatabase(MIGRATION_TEST_DB, 1).apply {
+            query("SELECT * FROM downloads").use { cursor ->
+                assertEquals(-1, cursor.columnNames.indexOf("is_private"))
+            }
+            execSQL(
+                    "INSERT INTO " +
+                            "downloads " +
+                            "(id, url, file_name, content_type,content_length,status,destination_directory,created_at) " +
+                            "VALUES " +
+                            "(1,'url','file_name','content_type',1,1,'destination_directory',1)"
+            )
+        }
+
+        val dbVersion2 = helper.runMigrationsAndValidate(MIGRATION_TEST_DB, 2, true, Migrations.migration_1_2)
+
+        dbVersion2.query("SELECT * FROM downloads").use { cursor ->
+            assertTrue(cursor.columnNames.contains("is_private"))
+
+            cursor.moveToFirst()
+            assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("is_private")))
+        }
     }
 
     @Test

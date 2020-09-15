@@ -202,7 +202,8 @@ internal class EngineObserver(
         contentLength: Long?,
         contentType: String?,
         cookie: String?,
-        userAgent: String?
+        userAgent: String?,
+        isPrivate: Boolean
     ) {
         // We want to avoid negative contentLength values
         // For more info see https://bugzilla.mozilla.org/show_bug.cgi?id=1632594
@@ -215,7 +216,8 @@ internal class EngineObserver(
             0,
             INITIATED,
             userAgent,
-            Environment.DIRECTORY_DOWNLOADS
+            Environment.DIRECTORY_DOWNLOADS,
+            private = isPrivate
         )
 
         store?.dispatch(ContentAction.UpdateDownloadAction(

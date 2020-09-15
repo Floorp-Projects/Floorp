@@ -441,7 +441,8 @@ class SystemEngineViewTest {
                 contentLength: Long?,
                 contentType: String?,
                 cookie: String?,
-                userAgent: String?
+                userAgent: String?,
+                isPrivate: Boolean
             ) {
                 assertEquals("https://download.mozilla.org", url)
                 assertEquals("image.png", fileName)

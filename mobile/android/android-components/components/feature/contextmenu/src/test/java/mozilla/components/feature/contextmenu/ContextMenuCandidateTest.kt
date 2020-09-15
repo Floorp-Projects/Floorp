@@ -437,6 +437,8 @@ class ContextMenuCandidateTest {
             store.state.tabs.first().content.download!!.url)
         assertTrue(
             store.state.tabs.first().content.download!!.skipConfirmation)
+        assertTrue(
+                store.state.tabs.first().content.download!!.private)
     }
 
     @Test
@@ -491,6 +493,9 @@ class ContextMenuCandidateTest {
             store.state.tabs.first().content.download!!.url)
         assertTrue(
             store.state.tabs.first().content.download!!.skipConfirmation)
+
+        assertTrue(
+                store.state.tabs.first().content.download!!.private)
     }
 
     @Test
@@ -563,6 +568,8 @@ class ContextMenuCandidateTest {
             store.state.tabs.first().content.download!!.url)
         assertTrue(
             store.state.tabs.first().content.download!!.skipConfirmation)
+
+        assertTrue(store.state.tabs.first().content.download!!.private)
     }
 
     @Test

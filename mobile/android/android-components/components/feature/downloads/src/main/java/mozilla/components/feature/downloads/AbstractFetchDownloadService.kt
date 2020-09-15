@@ -574,7 +574,13 @@ abstract class AbstractFetchDownloadService : Service() {
             headers.append(RANGE, "bytes=${currentDownloadJobState.currentBytesCopied}-")
         }
 
-        val request = Request(download.url.sanitizeURL(), headers = headers)
+        val cookiePolicy = if (download.private) {
+            Request.CookiePolicy.OMIT
+        } else {
+            Request.CookiePolicy.INCLUDE
+        }
+
+        val request = Request(download.url.sanitizeURL(), headers = headers, cookiePolicy = cookiePolicy)
         val response = httpClient.fetch(request)
         logger.debug("Fetching download for ${currentDownloadJobState.state.id} ")
 

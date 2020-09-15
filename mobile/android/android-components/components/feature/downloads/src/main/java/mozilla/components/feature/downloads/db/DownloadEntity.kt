@@ -36,6 +36,9 @@ internal data class DownloadEntity(
     @ColumnInfo(name = "destination_directory")
     var destinationDirectory: String,
 
+    @ColumnInfo(name = "is_private")
+    var isPrivate: Boolean,
+
     @ColumnInfo(name = "created_at")
     var createdAt: Long
 
@@ -55,6 +58,7 @@ internal data class DownloadEntity(
             skipConfirmation = false,
             id = id,
             sessionId = null,
+            private = isPrivate,
             createdTime = createdAt
         )
     }
@@ -69,6 +73,7 @@ internal fun DownloadState.toDownloadEntity(): DownloadEntity {
         contentLength,
         status = status,
         destinationDirectory = destinationDirectory,
+        isPrivate = private,
         createdAt = createdTime
     )
 }

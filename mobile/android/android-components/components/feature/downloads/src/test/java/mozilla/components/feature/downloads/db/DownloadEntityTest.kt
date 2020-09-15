@@ -24,6 +24,7 @@ class DownloadEntityTest {
             contentLength = 5242880,
             status = DownloadState.Status.DOWNLOADING,
             destinationDirectory = Environment.DIRECTORY_MUSIC,
+            isPrivate = true,
             createdAt = 33
         )
 
@@ -37,6 +38,7 @@ class DownloadEntityTest {
         assertEquals(downloadEntity.status, downloadState.status)
         assertEquals(downloadEntity.destinationDirectory, downloadState.destinationDirectory)
         assertEquals(downloadEntity.createdAt, downloadState.createdTime)
+        assertEquals(downloadEntity.isPrivate, downloadState.private)
     }
 
     @Test
@@ -49,6 +51,7 @@ class DownloadEntityTest {
             contentLength = 5242880,
             status = DownloadState.Status.DOWNLOADING,
             destinationDirectory = Environment.DIRECTORY_MUSIC,
+            private = true,
             createdTime = 33
         )
 
@@ -62,5 +65,6 @@ class DownloadEntityTest {
         assertEquals(downloadState.status, downloadEntity.status)
         assertEquals(downloadState.destinationDirectory, downloadEntity.destinationDirectory)
         assertEquals(downloadState.createdTime, downloadEntity.createdAt)
+        assertEquals(downloadState.private, downloadEntity.isPrivate)
     }
 }
