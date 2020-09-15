@@ -145,9 +145,9 @@ add_test(function test_string() {
 });
 
 add_test(function test_open() {
-  assert.open({ closed: false });
+  assert.open({ currentWindowGlobal: {} });
 
-  for (let typ of [null, undefined, { closed: true }]) {
+  for (let typ of [null, undefined, { currentWindowGlobal: null }]) {
     Assert.throws(() => assert.open(typ), /NoSuchWindowError/);
   }
 

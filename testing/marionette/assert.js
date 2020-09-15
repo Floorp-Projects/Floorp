@@ -146,40 +146,26 @@ assert.content = function(context, msg = "") {
 };
 
 /**
- * Asserts that the {@link ChromeWindow} is open or that the {@link
- * browser.Context} has a content browser attached.
+ * Asserts that the {@link CanonicalBrowsingContext} is open.
  *
- * When passed in a {@link ChromeContext} this is equivalent to
- * testing that the associated <code>window</code> global is open,
- * and when given {@link browser.Context} it will test that the content
- * frame, represented by <code>&lt;xul:browser&gt;</code>, is
- * connected.
- *
- * @param {(ChromeWindow|browser.Context)} context
- *     Browsing context to test.
+ * @param {CanonicalBrowsingContext} browsingContext
+ *     Canonical browsing context to check.
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {(ChromeWindow|browser.Context)}
- *     <var>context</var> is returned unaltered.
+ * @return {CanonicalBrowsingContext}
+ *     <var>browsingContext</var> is returned unaltered.
  *
  * @throws {NoSuchWindowError}
- *     If <var>context</var>'s <code>window</code> has been closed.
+ *     If <var>browsingContext</var> is no longer open.
  */
-assert.open = function(context, msg = "") {
-  // TODO: The contentBrowser uses a cached tab, which is only updated when
-  // switchToTab is called. Because of that an additional check is needed to
-  // make sure that the chrome window has not already been closed.
-  if (context instanceof browser.Context) {
-    assert.open(context.window);
-  }
-
+assert.open = function(browsingContext, msg = "") {
   msg = msg || "Browsing context has been discarded";
   return assert.that(
-    ctx => ctx && !ctx.closed,
+    browsingContext => !!browsingContext?.currentWindowGlobal,
     msg,
     error.NoSuchWindowError
-  )(context);
+  )(browsingContext);
 };
 
 /**
