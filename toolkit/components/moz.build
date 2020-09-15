@@ -56,7 +56,6 @@ DIRS += [
     'perfmonitoring',
     'pictureinpicture',
     'places',
-    'processtools',
     'processsingleton',
     'promiseworker',
     'prompts',
