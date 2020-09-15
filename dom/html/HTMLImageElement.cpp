@@ -700,15 +700,9 @@ already_AddRefed<HTMLImageElement> HTMLImageElement::Image(
   return img.forget();
 }
 
-uint32_t HTMLImageElement::Height() {
-  RefPtr<imgRequestProxy> currentRequest(mCurrentRequest);
-  return GetWidthHeightForImage(currentRequest).height;
-}
+uint32_t HTMLImageElement::Height() { return GetWidthHeightForImage().height; }
 
-uint32_t HTMLImageElement::Width() {
-  RefPtr<imgRequestProxy> currentRequest(mCurrentRequest);
-  return GetWidthHeightForImage(currentRequest).width;
-}
+uint32_t HTMLImageElement::Width() { return GetWidthHeightForImage().width; }
 
 uint32_t HTMLImageElement::NaturalHeight() {
   uint32_t height = nsImageLoadingContent::NaturalHeight();

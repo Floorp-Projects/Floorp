@@ -1267,6 +1267,37 @@ uint32_t nsImageLoadingContent::NaturalHeight() {
   return size;
 }
 
+CSSIntSize nsImageLoadingContent::GetWidthHeightForImage() {
+  Element* element = AsContent()->AsElement();
+  if (nsIFrame* frame = element->GetPrimaryFrame(FlushType::Layout)) {
+    return CSSIntSize::FromAppUnitsRounded(frame->GetContentRect().Size());
+  }
+  const nsAttrValue* value;
+  nsCOMPtr<imgIContainer> image;
+  if (mCurrentRequest) {
+    mCurrentRequest->GetImage(getter_AddRefs(image));
+  }
+
+  CSSIntSize size;
+  if ((value = element->GetParsedAttr(nsGkAtoms::width)) &&
+      value->Type() == nsAttrValue::eInteger) {
+    size.width = value->GetIntegerValue();
+  } else if (image) {
+    image->GetWidth(&size.width);
+  }
+
+  if ((value = element->GetParsedAttr(nsGkAtoms::height)) &&
+      value->Type() == nsAttrValue::eInteger) {
+    size.height = value->GetIntegerValue();
+  } else if (image) {
+    image->GetHeight(&size.height);
+  }
+
+  NS_ASSERTION(size.width >= 0, "negative width");
+  NS_ASSERTION(size.height >= 0, "negative height");
+  return size;
+}
+
 EventStates nsImageLoadingContent::ImageState() const {
   if (mIsImageStateForced) {
     return mForcedImageState;
