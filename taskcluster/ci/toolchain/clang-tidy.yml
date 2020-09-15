@@ -97,13 +97,13 @@ win64-clang-tidy:
             - cmake
             - ninja
 
-linux64-civet-tidy:
+linux-clang-tidy-external:
     attributes:
         local-toolchain: false
     index:
-        job-name: linux64-civet-tidy
+        job-name: linux-clang-tidy-external
     treeherder:
-        symbol: TL(linux64-civet-tidy)
+        symbol: TL(linux-clang-tidy-external)
     worker:
         artifacts:
             - name: project/civet/clang-tidy.tar.zst
@@ -111,11 +111,11 @@ linux64-civet-tidy:
               type: file
     run:
         toolchain-artifact: project/civet/clang-tidy.tar.zst
-        script: build-civet.sh
+        script: build-clang-tidy-external.sh
         arguments:
-            - 'build/build-clang/civet-tidy-linux64.json'
+            - 'build/build-clang/clang-tidy-external-linux64.json'
         resources:
-            - 'build/build-clang/civet-tidy-linux64.json'
+            - 'build/build-clang/clang-tidy-external-linux64.json'
     run-on-projects: []
     fetches:
         fetch:

@@ -7,7 +7,7 @@ export UPLOAD_DIR="/builds/worker/private-artifacts/"
 # # Delete the external directory
 rm -rf $GECKO_PATH/build/clang-plugin/external/*
 
-# # Move civet into its place
+# Move external repository into its place
 cp -r $MOZ_FETCHES_DIR/civet.git/* $GECKO_PATH/build/clang-plugin/external
 
 # Call build-clang.sh with this script's first argument (our JSON config)

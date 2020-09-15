@@ -4,6 +4,6 @@
 
 // Placeholder file to be overwritten with external checks during build
 // The list of #include directives necessary for the checker classes that
-// are compatible with civet-tidy.
+// are compatible with clang-tidy-external.
 
 // #include "ExternalChecker.h"

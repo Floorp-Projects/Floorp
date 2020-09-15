@@ -3,6 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Placeholder file to be overwritten with external checks during build
-// The list of checker classes that are compatible with civet-tidy.
+// The list of checker classes that are compatible with clang-tidy-external.
 
 // CHECK(ExternalChecker, "external-checker")
