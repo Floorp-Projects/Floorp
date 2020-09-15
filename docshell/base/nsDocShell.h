@@ -409,6 +409,10 @@ class nsDocShell final : public nsDocLoader,
   // Clear the document's storage access flag if needed.
   void MaybeClearStorageAccessFlag();
 
+  void MaybeRestoreWindowName();
+
+  void StoreWindowNameToSHEntries();
+
   void SetWillChangeProcess() { mWillChangeProcess = true; }
   bool WillChangeProcess() { return mWillChangeProcess; }
 

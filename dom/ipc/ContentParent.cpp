@@ -6909,6 +6909,29 @@ ContentParent::RecvSessionHistoryEntryScrollRestorationIsManual(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+ContentParent::RecvSessionHistoryEntryStoreWindowNameInContiguousEntries(
+    const MaybeDiscarded<BrowsingContext>& aContext, const nsString& aName) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  // Per https://html.spec.whatwg.org/#history-traversal 4.2.1, we need to set
+  // the name to all contiguous entries. This has to be called before
+  // CanonicalBrowsingContext::SessionHistoryCommit(), so the active entry is
+  // still the old entry that we want to set.
+
+  SessionHistoryEntry* entry =
+      aContext.get_canonical()->GetActiveSessionHistoryEntry();
+
+  if (entry) {
+    nsSHistory::WalkContiguousEntries(
+        entry, [&](nsISHEntry* aEntry) { aEntry->SetName(aName); });
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryCacheKey(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const uint32_t& aCacheKey) {
