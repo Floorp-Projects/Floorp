@@ -22,7 +22,8 @@ class AudibilityMonitor {
   AudibilityMonitor(uint32_t aSamplerate, float aSilenceDurationSeconds)
       : mSamplerate(aSamplerate),
         mSilenceDurationSeconds(aSilenceDurationSeconds),
-        mSilentFramesInARow(0) {}
+        mSilentFramesInARow(0),
+        mEverAudible(false) {}
 
   void ProcessAudioData(const AudioData* aData) {
     ProcessInterleaved(aData->Data(), aData->mChannels);
@@ -36,16 +37,17 @@ class AudibilityMonitor {
 
     uint32_t readIndex = 0;
     for (uint32_t i = 0; i < frameCount; i++) {
-      bool atLeastOneNonSilent = false;
+      bool atLeastOneAudible = false;
       for (uint32_t j = 0; j < aChannels; j++) {
         float dbfs = dom::WebAudioUtils::ConvertLinearToDecibels(
             abs(AudioSampleToFloat(samples[readIndex++])), -100.f);
         if (dbfs > AUDIBILITY_THREHSOLD) {
-          atLeastOneNonSilent = true;
+          atLeastOneAudible = true;
         }
       }
-      if (atLeastOneNonSilent) {
+      if (atLeastOneAudible) {
         mSilentFramesInARow = 0;
+        mEverAudible = true;
       } else {
         mSilentFramesInARow++;
       }
@@ -53,16 +55,17 @@ class AudibilityMonitor {
   }
 
   // A stream is considered audible if there was audible content in the last
-  // `mSilenceDurationSeconds` seconds.
+  // `mSilenceDurationSeconds` seconds, or it has never been audible for now.
   bool RecentlyAudible() {
-    return (static_cast<float>(mSilentFramesInARow) / mSamplerate) <
-           mSilenceDurationSeconds;
+    return mEverAudible && (static_cast<float>(mSilentFramesInARow) /
+                            mSamplerate) < mSilenceDurationSeconds;
   }
 
  private:
   const uint32_t mSamplerate;
   const float mSilenceDurationSeconds;
   uint64_t mSilentFramesInARow;
+  bool mEverAudible;
 };
 
 };  // namespace mozilla
