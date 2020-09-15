@@ -3704,6 +3704,12 @@
           ; with the install hash and an extension indicating the kind of file.
           ; so use a wildcard to delete them all.
           Delete "$PROGRAMFILES32\Mozilla Maintenance Service\UpdateLogs\$R1.*"
+
+          ; If the UpdateLogs directory is now empty, then delete it.
+          ; The Maintenance Service uninstaller should do this, but it may not
+          ; be up to date enough because of bug 1665193, so doing this here as
+          ; well lets us make sure it really happens.
+          RmDir /REBOOTOK "$PROGRAMFILES32\Mozilla Maintenance Service\UpdateLogs"
         ${EndIf}
       ${EndIf}
 
