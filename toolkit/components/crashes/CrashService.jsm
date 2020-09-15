@@ -6,7 +6,6 @@
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 // Set to true if the application is quitting
@@ -107,7 +106,7 @@ function runMinidumpAnalyzer(minidumpPath, allThreads) {
 function computeMinidumpHash(minidumpPath) {
   return (async function() {
     try {
-      let minidumpData = await OS.File.read(minidumpPath);
+      let minidumpData = await IOUtils.read(minidumpPath);
       let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
         Ci.nsICryptoHash
       );
@@ -143,7 +142,7 @@ function processExtraFile(extraPath) {
   return (async function() {
     try {
       let decoder = new TextDecoder();
-      let extraData = await OS.File.read(extraPath);
+      let extraData = await IOUtils.read(extraPath);
 
       return JSON.parse(decoder.decode(extraData));
     } catch (e) {
