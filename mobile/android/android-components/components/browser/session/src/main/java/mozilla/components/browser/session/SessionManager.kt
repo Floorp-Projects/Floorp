@@ -259,6 +259,40 @@ class SessionManager(
     }
 
     /**
+     * Removes all normal (non-private) sessions (excluding custom tabs).
+     *
+     * Avoid calling this method directly and use `TabsUseCases.removeNormalTabs` instead.
+     */
+    fun removeNormalSessions() {
+        // This method was introduced to map the removal of all normal tabs to a single action to
+        // be dispatched on the store. Since we didn't want to introduce a new
+        // SessionManager.Observer function, we map this internally to multiple normal removes.
+        // https://github.com/mozilla-mobile/android-components/issues/8406
+        sessions.filter { !it.private }.forEach {
+            delegate.remove(it)
+        }
+
+        store?.syncDispatch(TabListAction.RemoveAllNormalTabsAction)
+    }
+
+    /**
+     * Removes all private sessions (excluding custom tabs).
+     *
+     * Avoid calling this method directly and use `TabsUseCases.removePrivateTabs` instead.
+     */
+    fun removePrivateSessions() {
+        // This method was introduced to map the removal of all normal tabs to a single action to
+        // be dispatched on the store. Since we didn't want to introduce a new
+        // SessionManager.Observer function, we map this internally to multiple normal removes.
+        // https://github.com/mozilla-mobile/android-components/issues/8406
+        sessions.filter { it.private }.forEach {
+            delegate.remove(it)
+        }
+
+        store?.syncDispatch(TabListAction.RemoveAllPrivateTabsAction)
+    }
+
+    /**
      * Removes all sessions including CustomTab sessions.
      */
     fun removeAll() {

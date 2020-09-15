@@ -230,7 +230,7 @@ class TabsUseCasesTest {
     }
 
     @Test
-    fun `RemoveAllTabsOfTypeUseCase will remove sessions for particular type of tabs private or normal`() {
+    fun `RemoveNormalTabsUseCase and RemovePrivateTabsUseCase will remove sessions for particular type of tabs private or normal`() {
         val sessionManager = spy(SessionManager(mock()))
         val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
@@ -241,7 +241,7 @@ class TabsUseCasesTest {
         useCases.addTab("https://www.mozilla.org")
         assertEquals(3, sessionManager.size)
 
-        useCases.removeAllTabsOfType(private = false)
+        useCases.removeNormalTabs.invoke()
         assertEquals(2, sessionManager.all.size)
 
         useCases.addPrivateTab("https://www.mozilla.org")
@@ -249,10 +249,10 @@ class TabsUseCasesTest {
         useCases.addTab("https://www.mozilla.org")
         assertEquals(5, sessionManager.size)
 
-        useCases.removeAllTabsOfType(private = true)
+        useCases.removePrivateTabs.invoke()
         assertEquals(3, sessionManager.size)
 
-        useCases.removeAllTabsOfType(private = false)
+        useCases.removeNormalTabs.invoke()
         assertEquals(1, sessionManager.size)
 
         assertTrue(sessionManager.all[0].isCustomTabSession())
