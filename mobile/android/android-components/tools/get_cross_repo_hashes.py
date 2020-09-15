@@ -60,17 +60,20 @@ to get valid hashes between the major repositories:
 
 In the future, we hope to automate step 1.""".format(script_name=SCRIPT_NAME)
 
+INDENT= '  '
+INDENT2=INDENT * 2
+
 # For a-c, we deliberately choose a component that's unlikely to be renamed or go away.
 TEMPLATE_POM_URL_AC_NIGHTLY="https://nightly.maven.mozilla.org/maven2/org/mozilla/components/support-base/{version}/support-base-{version}.pom"
-TEMPLATE_NIGHTLY_POM="https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-nightly-arm64-v8a/{version}/geckoview-nightly-arm64-v8a-{version}.pom"
-INDENT= '  '
+TEMPLATE_POM_URL_GV_NIGHTLY="https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-nightly-arm64-v8a/{version}/geckoview-nightly-arm64-v8a-{version}.pom"
 
 # We get the ac version from a published POM.xml; the ac hash wasn't (roughly) available before this version.
 VERSION_MIN_AC_NIGHTLY='59.0.20200914093656'
 VERSION_MIN_AC_NIGHTLY_BUGFIX=VERSION_MIN_AC_NIGHTLY.split('.')[2]
+VERSION_MIN_GV_NIGHTLY_MAJOR='71' # it may actually be some intermediate v70 that the hash was added.
 
 PATH_AC_VERSION=os.path.join('buildSrc', 'src', 'main', 'java', 'AndroidComponents.kt')
-GV_VERSION_PATH=os.path.join('buildSrc', 'src', 'main', 'java', 'Gecko.kt')
+PATH_GV_VERSION=os.path.join('buildSrc', 'src', 'main', 'java', 'Gecko.kt')
 
 class Mode(Enum):
     Default = 1
@@ -85,10 +88,6 @@ def maybe_display_usage():
     if len(sys.argv) >= 2 and (sys.argv[1] == '--help' or sys.argv[1] == '-h'):
         print_usage(exit=True)
 
-def print_err_and_exit(msg):
-    print(msg, file=sys.stderr)
-    sys.exit(1)
-
 def validate_args():
     if len(sys.argv) <= 1:
         return Mode.Default, None
@@ -97,10 +96,7 @@ def validate_args():
         raise Exception('unknown argument ' + sys.argv[1])
 
     gv_nightly_version = sys.argv[2]
-    major = gv_nightly_version[:gv_nightly_version.find('.')]
-    if int(major) < 71:  # it may actually be some intermediate v70 that the hash was added.
-        print_err_and_exit('ERROR: GV versions below 71 do not have an m-c hash associated with their POM. Aborting...')
-
+    validate_gv_nightly_version(gv_nightly_version)
     return Mode.Nightly_version, gv_nightly_version
 
 ### SECTION: UTILITIES ###
@@ -160,17 +156,22 @@ def fenix_checkout_to_ac_hash(fenix_path):
     return get_hash_from_pom(pom, debug_pom_url)
 
 ### SECTION: ac -> mc ###
-def get_mc_hash_from_gv_nightly(gv_nightly_version):
-    pom_url = TEMPLATE_NIGHTLY_POM.format(version=gv_nightly_version)
+def validate_gv_nightly_version(version):
+    major = version.split('.')[0]
+    if int(major) < int(VERSION_MIN_GV_NIGHTLY_MAJOR):
+        raise Exception('Found GV nightly version {} is too old: use major version {} or newer (e.g. use a newer version of ac).'.format(version, VERSION_MIN_GV_NIGHTLY_MAJOR))
+
+def gv_nightly_version_to_mc_hash(gv_nightly_version):
+    pom_url = TEMPLATE_POM_URL_GV_NIGHTLY.format(version=gv_nightly_version)
     pom, debug_pom_url = fetch_pom(pom_url)
     return get_hash_from_pom(pom, debug_pom_url)
 
-def get_gv_versions_from_ac_checkout(ac_root):
+def ac_checkout_to_gv_versions(ac_root):
     release_version = None
     beta_version = None
     nightly_version = None
 
-    gv_version_path = os.path.join(ac_root, GV_VERSION_PATH)
+    gv_version_path = os.path.join(ac_root, PATH_GV_VERSION)
     with open(gv_version_path) as f:
         for line in f:
             stripped = line.strip()
@@ -184,6 +185,14 @@ def get_gv_versions_from_ac_checkout(ac_root):
                 release_version = extract_str_inside_quotes(line)
     return release_version, beta_version, nightly_version
 
+def ac_checkout_to_mc_hash(ac_root):
+    gv_version_path = os.path.join(SCRIPT_DIR, '..')
+    releasev, betav, nightlyv = ac_checkout_to_gv_versions(gv_version_path)
+
+    validate_gv_nightly_version(nightlyv)
+    mc_hash = gv_nightly_version_to_mc_hash(nightlyv)
+    return mc_hash, releasev, betav, nightlyv
+
 ### SECTION: MAIN ###
 def main_mode_default():
     # fenix checkout -> ac hash
@@ -194,22 +203,17 @@ def main_mode_default():
     print(INDENT + 'to be rerun after the new revision is checked out')
     print()
 
-    # ac checkout -> GV versions
-    gv_version_path = os.path.join(SCRIPT_DIR, '..')
-    releasev, betav, nightlyv = get_gv_versions_from_ac_checkout(gv_version_path)
-    print('ac checkout (current) -> GV versions')
-    print(INDENT + 'nightly: ' + nightlyv)
-    print(INDENT + 'beta:    ' + betav)
-    print(INDENT + 'release: ' + releasev)
-    print()
-
-    # GV Nightly -> mc hash
-    mc_hash = get_mc_hash_from_gv_nightly(nightlyv)
-    print('GV nightly version -> mc hash:')
+    # ac checkout -> mc hash
+    mc_hash, releasev, betav, nightlyv, = ac_checkout_to_mc_hash('.')
+    print('ac checkout -> mc hash')
     print(INDENT + mc_hash.decode('utf-8'))
+    print(INDENT + 'derived from:')
+    print(INDENT2 + 'GV nightly: ' + nightlyv)
+    print(INDENT2 + 'GV beta:    ' + betav)
+    print(INDENT2 + 'GV release: ' + releasev)
 
 def main_mode_nightly(gv_nightly_version):
-    mc_hash = get_mc_hash_from_gv_nightly(gv_nightly_version)
+    mc_hash = gv_nightly_version_to_mc_hash(gv_nightly_version)
     print(mc_hash.decode('utf-8'))
 
 def main():
