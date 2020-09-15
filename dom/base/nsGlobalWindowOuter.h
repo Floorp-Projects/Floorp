@@ -1046,6 +1046,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   bool IsOnlyTopLevelDocumentInSHistory();
 
+  void MaybeResetWindowName(Document* aNewDocument);
+
  public:
   bool DelayedPrintUntilAfterLoad() const {
     return mDelayedPrintUntilAfterLoad;

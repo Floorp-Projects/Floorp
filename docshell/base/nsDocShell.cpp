@@ -2574,6 +2574,70 @@ void nsDocShell::MaybeClearStorageAccessFlag() {
   }
 }
 
+void nsDocShell::MaybeRestoreWindowName() {
+  if (!StaticPrefs::privacy_window_name_update_enabled()) {
+    return;
+  }
+
+  // We only restore window.name for the top-level content.
+  if (!mBrowsingContext->IsTopContent()) {
+    return;
+  }
+
+  nsAutoString name;
+
+  // Following implements https://html.spec.whatwg.org/#history-traversal:
+  // Step 4.4. Check if the loading entry has a name.
+
+  if (mLSHE) {
+    mLSHE->GetName(name);
+  }
+
+  if (mLoadingEntry) {
+    name = mLoadingEntry->mInfo.GetName();
+  }
+
+  if (name.IsEmpty()) {
+    return;
+  }
+
+  // Step 4.4.1. Set the name to the browsing context.
+  Unused << mBrowsingContext->SetName(name);
+
+  // Step 4.4.2. Clear the name of all entries that are contiguous and
+  // same-origin with the loading entry.
+  if (mLSHE) {
+    nsSHistory::WalkContiguousEntries(
+        mLSHE, [](nsISHEntry* aEntry) { aEntry->SetName(EmptyString()); });
+  }
+
+  if (mLoadingEntry) {
+    // Clear the name of the session entry in the child side. For parent side,
+    // the clearing will be done when we commit the history to the parent.
+    mLoadingEntry->mInfo.SetName(EmptyString());
+  }
+}
+
+void nsDocShell::StoreWindowNameToSHEntries() {
+  MOZ_ASSERT(mBrowsingContext->IsTopContent());
+
+  nsAutoString name;
+  mBrowsingContext->GetName(name);
+
+  if (mOSHE) {
+    nsSHistory::WalkContiguousEntries(
+        mOSHE, [&](nsISHEntry* aEntry) { aEntry->SetName(name); });
+  }
+
+  // Ask parent process to store the name in entries.
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    mozilla::Unused
+        << ContentChild::GetSingleton()
+               ->SendSessionHistoryEntryStoreWindowNameInContiguousEntries(
+                   mBrowsingContext, name);
+  }
+}
+
 NS_IMETHODIMP
 nsDocShell::GetInProcessSameTypeParent(nsIDocShellTreeItem** aParent) {
   if (BrowsingContext* parentBC = mBrowsingContext->GetParent()) {

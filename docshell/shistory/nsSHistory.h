@@ -127,6 +127,12 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                                      WalkHistoryEntriesFunc aCallback,
                                      void* aData);
 
+  // This function finds all entries that are contiguous and same-origin with
+  // the aEntry. And call the aCallback on them, including the aEntry. This only
+  // works for the root entries. It will do nothing for non-root entries.
+  static void WalkContiguousEntries(
+      nsISHEntry* aEntry, const std::function<void(nsISHEntry*)>& aCallback);
+
   nsTArray<nsCOMPtr<nsISHEntry>>& Entries() { return mEntries; }
 
   void RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex,

@@ -941,6 +941,9 @@ parent:
     async SessionHistoryEntryCacheKey(MaybeDiscardedBrowsingContext aContext,
                                       uint32_t aCacheKey);
 
+    async SessionHistoryEntryStoreWindowNameInContiguousEntries(MaybeDiscardedBrowsingContext aContext,
+                                                                nsString aName);
+
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
     async CreateGMPService();
