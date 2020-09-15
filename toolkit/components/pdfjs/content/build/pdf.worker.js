@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.7.53';
-const pdfjsBuild = '1e11f871b';
+const pdfjsVersion = '2.7.59';
+const pdfjsBuild = 'e73354a32';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.7.53';
+    const workerVersion = '2.7.59';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -19341,6 +19341,12 @@ class Annotation {
     this.setColor(dict.getArray("C"));
     this.setBorderStyle(dict);
     this.setAppearance(dict);
+    this._streams = [];
+
+    if (this.appearance) {
+      this._streams.push(this.appearance);
+    }
+
     this.data = {
       annotationFlags: this.flags,
       borderStyle: this.borderStyle,
@@ -19539,7 +19545,7 @@ class Annotation {
         operatorList: opList
       }).then(() => {
         opList.addOp(_util.OPS.endAnnotation, []);
-        appearance.reset();
+        this.reset();
         return opList;
       });
     });
@@ -19547,6 +19553,12 @@ class Annotation {
 
   async save(evaluator, task, annotationStorage) {
     return null;
+  }
+
+  reset() {
+    for (const stream of this._streams) {
+      stream.reset();
+    }
   }
 
 }
@@ -19770,6 +19782,8 @@ class MarkupAnnotation extends Annotation {
     appearanceDict.set("BBox", bbox);
     this.appearance = new _stream.StringStream("/GS0 gs /Fm0 Do");
     this.appearance.dict = appearanceDict;
+
+    this._streams.push(this.appearance, appearanceStream);
   }
 
 }
@@ -19800,10 +19814,20 @@ class WidgetAnnotation extends Annotation {
       key: "FT"
     });
     data.fieldType = (0, _primitives.isName)(fieldType) ? fieldType.name : null;
-    this.fieldResources = (0, _core_utils.getInheritableProperty)({
+    const localResources = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "DR"
-    }) || params.acroForm.get("DR") || _primitives.Dict.empty;
+    });
+    const acroFormResources = params.acroForm.get("DR");
+    this._fieldResources = {
+      localResources,
+      acroFormResources,
+      mergedResources: _primitives.Dict.merge({
+        xref: params.xref,
+        dictArray: [localResources, acroFormResources],
+        mergeSubDicts: true
+      })
+    };
     data.fieldFlags = (0, _core_utils.getInheritableProperty)({
       dict,
       key: "Ff"
@@ -19898,7 +19922,7 @@ class WidgetAnnotation extends Annotation {
       return evaluator.getOperatorList({
         stream,
         task,
-        resources: this.fieldResources,
+        resources: this._fieldResources.mergedResources,
         operatorList
       }).then(function () {
         operatorList.addOp(_util.OPS.endAnnotation, []);
@@ -19918,7 +19942,10 @@ class WidgetAnnotation extends Annotation {
       return null;
     }
 
-    const dict = evaluator.xref.fetchIfRef(this.ref);
+    const {
+      xref
+    } = evaluator;
+    const dict = xref.fetchIfRef(this.ref);
 
     if (!(0, _primitives.isDict)(dict)) {
       return null;
@@ -19930,10 +19957,10 @@ class WidgetAnnotation extends Annotation {
       path: (0, _util.stringToPDFString)(dict.get("T") || ""),
       value
     };
-    const newRef = evaluator.xref.getNewRef();
-    const AP = new _primitives.Dict(evaluator.xref);
+    const newRef = xref.getNewRef();
+    const AP = new _primitives.Dict(xref);
     AP.set("N", newRef);
-    const encrypt = evaluator.xref.encrypt;
+    const encrypt = xref.encrypt;
     let originalTransform = null;
     let newTransform = null;
 
@@ -19946,10 +19973,10 @@ class WidgetAnnotation extends Annotation {
     dict.set("V", value);
     dict.set("AP", AP);
     dict.set("M", `D:${(0, _util.getModificationDate)()}`);
-    const appearanceDict = new _primitives.Dict(evaluator.xref);
+    const appearanceDict = new _primitives.Dict(xref);
     appearanceDict.set("Length", appearance.length);
     appearanceDict.set("Subtype", _primitives.Name.get("Form"));
-    appearanceDict.set("Resources", this.fieldResources);
+    appearanceDict.set("Resources", this._getSaveFieldResources(xref));
     appearanceDict.set("BBox", bbox);
     const bufferOriginal = [`${this.ref.num} ${this.ref.gen} obj\n`];
     (0, _writer.writeDict)(dict, bufferOriginal, originalTransform);
@@ -19971,6 +19998,7 @@ class WidgetAnnotation extends Annotation {
   }
 
   async _getAppearance(evaluator, task, annotationStorage) {
+    this._fontName = null;
     const isPassword = this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD);
 
     if (!annotationStorage || isPassword) {
@@ -19989,8 +20017,10 @@ class WidgetAnnotation extends Annotation {
     const totalWidth = this.data.rect[2] - this.data.rect[0];
     const fontInfo = await this._getFontData(evaluator, task);
     const [font, fontName] = fontInfo;
-    let fontSize = fontInfo[2];
-    fontSize = this._computeFontSize(font, fontName, fontSize, totalHeight);
+
+    const fontSize = this._computeFontSize(...fontInfo, totalHeight);
+
+    this._fontName = fontName;
     let descent = font.descent;
 
     if (isNaN(descent)) {
@@ -20033,7 +20063,7 @@ class WidgetAnnotation extends Annotation {
     await evaluator.getOperatorList({
       stream: new _stream.StringStream(this.data.defaultAppearance),
       task,
-      resources: this.fieldResources,
+      resources: this._fieldResources.mergedResources,
       operatorList,
       initialState
     });
@@ -20079,6 +20109,43 @@ class WidgetAnnotation extends Annotation {
     shift = shift.toFixed(2);
     vPadding = vPadding.toFixed(2);
     return `${shift} ${vPadding} Td (${(0, _util.escapeString)(text)}) Tj`;
+  }
+
+  _getSaveFieldResources(xref) {
+    const {
+      localResources,
+      acroFormResources
+    } = this._fieldResources;
+
+    if (!this._fontName) {
+      return localResources || _primitives.Dict.empty;
+    }
+
+    if (localResources instanceof _primitives.Dict) {
+      const localFont = localResources.get("Font");
+
+      if (localFont instanceof _primitives.Dict && localFont.has(this._fontName)) {
+        return localResources;
+      }
+    }
+
+    if (acroFormResources instanceof _primitives.Dict) {
+      const acroFormFont = acroFormResources.get("Font");
+
+      if (acroFormFont instanceof _primitives.Dict && acroFormFont.has(this._fontName)) {
+        const subFontDict = new _primitives.Dict(xref);
+        subFontDict.set(this._fontName, acroFormFont.getRaw(this._fontName));
+        const subResourcesDict = new _primitives.Dict(xref);
+        subResourcesDict.set("Font", subFontDict);
+        return _primitives.Dict.merge({
+          xref,
+          dictArray: [subResourcesDict, localResources],
+          mergeSubDicts: true
+        });
+      }
+    }
+
+    return localResources || _primitives.Dict.empty;
   }
 
 }
@@ -20405,11 +20472,11 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     this.data.fieldValue = this.data.buttonValue = null;
     const fieldParent = params.dict.get("Parent");
 
-    if ((0, _primitives.isDict)(fieldParent) && fieldParent.has("V")) {
+    if ((0, _primitives.isDict)(fieldParent)) {
+      this.parent = params.dict.getRaw("Parent");
       const fieldParentValue = fieldParent.get("V");
 
       if ((0, _primitives.isName)(fieldParentValue)) {
-        this.parent = params.dict.getRaw("Parent");
         this.data.fieldValue = this._decodeFormValue(fieldParentValue);
       }
     }
