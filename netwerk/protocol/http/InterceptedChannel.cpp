@@ -228,5 +228,165 @@ already_AddRefed<nsIURI> InterceptedChannelBase::SecureUpgradeChannelURI(
   return upgradedURI.forget();
 }
 
+InterceptedChannelContent::InterceptedChannelContent(
+    HttpChannelChild* aChannel, nsINetworkInterceptController* aController,
+    InterceptStreamListener* aListener, bool aSecureUpgrade)
+    : InterceptedChannelBase(aController),
+      mChannel(aChannel),
+      mStreamListener(aListener),
+      mSecureUpgrade(aSecureUpgrade) {}
+
+void InterceptedChannelContent::NotifyController() { DoNotifyController(); }
+
+NS_IMETHODIMP
+InterceptedChannelContent::GetChannel(nsIChannel** aChannel) {
+  NS_IF_ADDREF(*aChannel = mChannel);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::ResetInterception() {
+  if (mClosed) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mReportCollector->FlushConsoleReports(mChannel);
+
+  mChannel->ResetInterception();
+
+  mClosed = true;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::SynthesizeStatus(uint16_t aStatus,
+                                            const nsACString& aReason) {
+  if (mClosed) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  DoSynthesizeStatus(aStatus, aReason);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::SynthesizeHeader(const nsACString& aName,
+                                            const nsACString& aValue) {
+  if (mClosed) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return DoSynthesizeHeader(aName, aValue);
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::StartSynthesizedResponse(
+    nsIInputStream* aBody, nsIInterceptedBodyCallback* aBodyCallback,
+    nsICacheInfoChannel* aCacheInfoChannel, const nsACString& aFinalURLSpec,
+    bool aResponseRedirected) {
+  if (NS_WARN_IF(mClosed)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  EnsureSynthesizedResponse();
+
+  nsCOMPtr<nsIURI> originalURI;
+  mChannel->GetURI(getter_AddRefs(originalURI));
+
+  nsCOMPtr<nsIURI> responseURI;
+  if (!aFinalURLSpec.IsEmpty()) {
+    nsresult rv = NS_NewURI(getter_AddRefs(responseURI), aFinalURLSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (mSecureUpgrade) {
+    nsresult rv =
+        NS_GetSecureUpgradedURI(originalURI, getter_AddRefs(responseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    responseURI = originalURI;
+  }
+
+  bool equal = false;
+  originalURI->Equals(responseURI, &equal);
+  if (!equal) {
+    mChannel->ForceIntercepted(aBody, aBodyCallback, aCacheInfoChannel);
+    mChannel->BeginNonIPCRedirect(responseURI, mSynthesizedResponseHead->get(),
+                                  aResponseRedirected);
+  } else {
+    mChannel->OverrideWithSynthesizedResponse(
+        mSynthesizedResponseHead.ref(), aBody, aBodyCallback, mStreamListener,
+        aCacheInfoChannel);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::FinishSynthesizedResponse() {
+  if (NS_WARN_IF(mClosed)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mReportCollector->FlushConsoleReports(mChannel);
+
+  mStreamListener = nullptr;
+  mClosed = true;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::CancelInterception(nsresult aStatus) {
+  MOZ_ASSERT(NS_FAILED(aStatus));
+
+  if (mClosed) {
+    return NS_ERROR_FAILURE;
+  }
+  mClosed = true;
+
+  mReportCollector->FlushConsoleReports(mChannel);
+
+  Unused << mChannel->Cancel(aStatus);
+  mStreamListener = nullptr;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::SetChannelInfo(dom::ChannelInfo* aChannelInfo) {
+  if (mClosed) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return aChannelInfo->ResurrectInfoOnChannel(mChannel);
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::GetInternalContentPolicyType(
+    nsContentPolicyType* aPolicyType) {
+  NS_ENSURE_ARG(aPolicyType);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+
+  *aPolicyType = loadInfo->InternalContentPolicyType();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::GetSecureUpgradedChannelURI(nsIURI** aURI) {
+  nsCOMPtr<nsIURI> uri;
+  if (mSecureUpgrade) {
+    uri = SecureUpgradeChannelURI(mChannel);
+  } else {
+    nsresult rv = mChannel->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  if (uri) {
+    uri.forget(aURI);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
 }  // namespace net
 }  // namespace mozilla
