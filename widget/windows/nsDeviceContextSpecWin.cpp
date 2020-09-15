@@ -419,6 +419,10 @@ nsresult nsDeviceContextSpecWin::GetDataFromPrinter(const nsAString& aName,
       return NS_ERROR_FAILURE;
     }
 
+    // Some drivers do not return the correct size for their DEVMODE, so we
+    // over-allocate to try and compensate.
+    // (See https://bugzilla.mozilla.org/show_bug.cgi?id=1664530#c5)
+    needed *= 2;
     pDevMode =
         (LPDEVMODEW)::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, needed);
     if (!pDevMode) return NS_ERROR_FAILURE;
