@@ -825,6 +825,42 @@ class TextInputDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun editorInfo_autocapitalize() {
+        // no way to set autocapitalize on designmode.
+        assumeThat("Not in designmode", id, not(equalTo("#designmode")))
+
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.forms.autocapitalize" to true))
+
+        mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
+
+        mainSession.loadTestPath(INPUTS_PATH)
+        mainSession.waitForPageStop()
+
+        textContent = ""
+        val values = listOf("characters", "none", "sentences", "words", "off", "on")
+        for (autocapitalize in values) {
+            mainSession.evaluateJS("""
+                document.querySelector('$id').autocapitalize = '$autocapitalize';
+                document.querySelector('$id').focus()""")
+            mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+
+            val editorInfo = EditorInfo()
+            mainSession.textInput.onCreateInputConnection(editorInfo)
+            assertThat("EditorInfo.inputType by $autocapitalize", editorInfo.inputType and 0x00007000, equalTo(
+                when (autocapitalize) {
+                    "characters" -> InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
+                    "on" -> InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                    "sentences" -> InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                    "words" -> InputType.TYPE_TEXT_FLAG_CAP_WORDS
+                    else -> 0
+                }))
+
+            mainSession.evaluateJS("document.querySelector('$id').blur()")
+            mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+        }
+    }
+
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun bug1613804_finishComposingText() {
         mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
 
