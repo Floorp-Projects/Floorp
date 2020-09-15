@@ -214,7 +214,7 @@ class MockCubebStream {
   MediaEventSource<void>& ErrorForcedEvent() { return mErrorForcedEvent; }
 
  private:
-  // Simulates the audio thread. The thread is created at Start anda destroyed
+  // Simulates the audio thread. The thread is created at Start and destroyed
   // at Stop. At next StreamStart a new thread is created.
   static void ThreadFunction_s(MockCubebStream* that) {
     that->ThreadFunction();
