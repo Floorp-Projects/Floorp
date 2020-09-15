@@ -34,7 +34,7 @@ from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
 from .sentry import register_sentry, NoopErrorReporter
-from .telemetry import report_invocation_metrics, Telemetry
+from .telemetry import report_invocation_metrics, create_telemetry_from_environment
 from .util import setenv, UserError
 
 SUGGEST_MACH_BUSTED_TEMPLATE = r'''
@@ -391,7 +391,7 @@ To see more help for a specific command, run:
             sys.stderr = orig_stderr
 
     def _run(self, argv, sentry):
-        telemetry = Telemetry.from_environment(self.settings)
+        telemetry = create_telemetry_from_environment(self.settings)
         context = CommandContext(cwd=self.cwd,
                                  settings=self.settings, log_manager=self.log_manager,
                                  commands=Registrar, telemetry=telemetry)
@@ -429,7 +429,7 @@ To see more help for a specific command, run:
             raise MachError('ArgumentParser result missing mach handler info.')
 
         handler = getattr(args, 'mach_handler')
-        report_invocation_metrics(context.telemetry.metrics, handler.name)
+        report_invocation_metrics(context.telemetry, handler.name)
 
         # Add JSON logging to a file if requested.
         if args.logfile:
