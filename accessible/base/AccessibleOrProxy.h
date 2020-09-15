@@ -70,7 +70,7 @@ class AccessibleOrProxy {
    * Return the child object either an accessible or a proxied accessible at
    * the given index.
    */
-  AccessibleOrProxy ChildAt(uint32_t aIdx) {
+  AccessibleOrProxy ChildAt(uint32_t aIdx) const {
     if (IsProxy()) {
       return AsProxy()->ChildAt(aIdx);
     }
