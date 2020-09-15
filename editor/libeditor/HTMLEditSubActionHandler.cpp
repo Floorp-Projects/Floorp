@@ -4459,6 +4459,12 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   // adjacent block
   mMode = Mode::JoinCurrentBlock;
 
+  // Don't break the basic structure of the HTML document.
+  if (aCurrentBlockElement.IsAnyOfHTMLElements(nsGkAtoms::html, nsGkAtoms::head,
+                                               nsGkAtoms::body)) {
+    return false;
+  }
+
   // Make sure it's not a table element.  If so, cancel the operation
   // (translation: users cannot backspace or delete across table cells)
   if (HTMLEditUtils::IsAnyTableElement(&aCurrentBlockElement)) {
@@ -6002,6 +6008,16 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   if (NS_WARN_IF(!IsSet())) {
     mCanJoinBlocks = false;
     return Err(NS_ERROR_UNEXPECTED);
+  }
+
+  // Don't join the blocks if both of them are basic structure of the HTML
+  // document (Note that `<body>` can be joined with its children).
+  if (mLeftBlockElement->IsAnyOfHTMLElements(nsGkAtoms::html, nsGkAtoms::head,
+                                             nsGkAtoms::body) &&
+      mRightBlockElement->IsAnyOfHTMLElements(nsGkAtoms::html, nsGkAtoms::head,
+                                              nsGkAtoms::body)) {
+    mCanJoinBlocks = false;
+    return false;
   }
 
   if (HTMLEditUtils::IsAnyTableElement(mLeftBlockElement) ||
