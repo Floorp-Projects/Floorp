@@ -29,6 +29,10 @@ const ONE_KILO = 1024;
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 
+const SHOW_THREADS = Services.prefs.getBoolPref(
+  "toolkit.aboutProcesses.showThreads"
+);
+
 /**
  * Returns a Promise that's resolved after the next turn of the event loop.
  *
@@ -293,26 +297,31 @@ var State = {
       result.title = titles[0];
     }
     if (!prev) {
-      result.threads = cur.threads.map(data =>
-        this._getThreadDelta(data, null, null)
-      );
+      if (SHOW_THREADS) {
+        result.threads = cur.threads.map(data =>
+          this._getThreadDelta(data, null, null)
+        );
+      }
       return result;
     }
     if (prev.pid != cur.pid) {
       throw new Error("Assertion failed: A process cannot change pid.");
     }
-    let prevThreads = new Map();
-    for (let thread of prev.threads) {
-      prevThreads.set(thread.tid, thread);
-    }
     let deltaT = (cur.date - prev.date) * MS_PER_NS;
-    let threads = cur.threads.map(curThread => {
-      let prevThread = prevThreads.get(curThread.tid);
-      if (!prevThread) {
-        return this._getThreadDelta(curThread);
+    let threads = null;
+    if (SHOW_THREADS) {
+      let prevThreads = new Map();
+      for (let thread of prev.threads) {
+        prevThreads.set(thread.tid, thread);
       }
-      return this._getThreadDelta(curThread, prevThread, deltaT);
-    });
+      threads = cur.threads.map(curThread => {
+        let prevThread = prevThreads.get(curThread.tid);
+        if (!prevThread) {
+          return this._getThreadDelta(curThread);
+        }
+        return this._getThreadDelta(curThread, prevThread, deltaT);
+      });
+    }
     result.deltaResidentUniqueSize =
       cur.residentUniqueSize - prev.residentUniqueSize;
     result.slopeCpuUser = (cur.cpuUser - prev.cpuUser) / deltaT;
@@ -934,12 +943,14 @@ var Control = {
         winRow.win = win;
       }
 
-      let threadSummaryRow = View.appendThreadSummaryRow(process, isOpen);
-      threadSummaryRow.process = process;
+      if (SHOW_THREADS) {
+        let threadSummaryRow = View.appendThreadSummaryRow(process, isOpen);
+        threadSummaryRow.process = process;
 
-      if (isOpen) {
-        this._openItems.add(process.pid);
-        this._showThreads(processRow);
+        if (isOpen) {
+          this._openItems.add(process.pid);
+          this._showThreads(processRow);
+        }
       }
       if (
         this._sortColumn == null &&
