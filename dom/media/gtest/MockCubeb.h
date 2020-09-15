@@ -198,6 +198,7 @@ class MockCubebStream {
   uint32_t InputSampleRate() const { return mAudioGenerator.mSampleRate; }
   uint32_t InputFrequency() const { return mAudioGenerator.mFrequency; }
 
+  void SetDriftFactor(float aDriftFactor) { mDriftFactor = aDriftFactor; }
   void GoFaster() { mFastMode = true; }
   void DontGoFaster() { mFastMode = false; }
   void ForceError() { mForceErrorState = true; }
@@ -249,8 +250,10 @@ class MockCubebStream {
       }
       uint32_t sampleRate(mInputParams.rate ? mInputParams.rate
                                             : mOutputParams.rate);
-      std::this_thread::sleep_for(std::chrono::milliseconds(
-          mFastMode ? 0 : NUM_OF_FRAMES * 1000 / sampleRate));
+      std::this_thread::sleep_for(std::chrono::microseconds(
+          mFastMode ? 0
+                    : static_cast<int32_t>(NUM_OF_FRAMES * 1000 * 1000 /
+                                           mDriftFactor / sampleRate)));
     }
     mOutputVerificationEvent.Notify(MakeTuple(
         mAudioVerifier.PreSilenceSamples(), mAudioVerifier.EstimatedFreq(),
@@ -284,6 +287,7 @@ class MockCubebStream {
   cubeb_devid mInputDeviceID;
   cubeb_devid mOutputDeviceID;
 
+  std::atomic<float> mDriftFactor{1.0};
   std::atomic_bool mFastMode{false};
   std::atomic_bool mForceErrorState{false};
   AudioGenerator<AudioDataValue> mAudioGenerator;
