@@ -263,11 +263,6 @@ void nsLookAndFeel::RefreshImpl() {
   nsXPLookAndFeel::RefreshImpl();
   moz_gtk_refresh();
 
-  mDefaultFontCached = false;
-  mButtonFontCached = false;
-  mFieldFontCached = false;
-  mMenuFontCached = false;
-
   mInitialized = false;
 }
 
