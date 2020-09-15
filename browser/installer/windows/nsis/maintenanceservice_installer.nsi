@@ -242,6 +242,14 @@ Function un.RenameDelete
   ClearErrors
 FunctionEnd
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; NOTE: The maintenance service uninstaller does not currently get updated when
+; the service itself does during application updates. Under normal use, only
+; running the Firefox installer will generate a new maintenance service
+; uninstaller. That means anything added here will not be seen by users until
+; they run a new Firefox installer. Fixing this is tracked in
+; https://bugzilla.mozilla.org/show_bug.cgi?id=1665193
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Section "Uninstall"
   ; Delete the service so that no updates will be attempted
   ExecWait '"$INSTDIR\maintenanceservice.exe" uninstall'
