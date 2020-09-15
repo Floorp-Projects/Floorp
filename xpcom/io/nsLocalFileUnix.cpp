@@ -38,7 +38,6 @@
 #  endif
 #endif
 
-#include "xpcom-private.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
