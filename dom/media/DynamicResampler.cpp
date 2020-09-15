@@ -455,7 +455,7 @@ void AudioResampler::Update(int aOutRate, int aChannels) {
 
 int AudioResampler::InputDuration() const {
   if (!mIsSampleFormatSet) {
-    return 0;
+    return (int)mResampler.mPreBufferFrames;
   }
   MOZ_ASSERT((int)mResampler.InFramesBuffered(0) >= 0);
   return (int)mResampler.InFramesBuffered(0);
