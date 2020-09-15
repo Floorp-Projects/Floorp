@@ -2290,6 +2290,16 @@ void WebRenderBridgeParent::FlushRendering(bool aWaitForPresent) {
   }
 }
 
+void WebRenderBridgeParent::SetClearColor(const gfx::DeviceColor& aColor) {
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
+
+  if (!IsRootWebRenderBridgeParent() || mDestroyed) {
+    return;
+  }
+
+  mApi->SetClearColor(aColor);
+}
+
 void WebRenderBridgeParent::Pause() {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
 
