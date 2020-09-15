@@ -26,6 +26,7 @@
 #include "js/BuildId.h"                 // JS::BuildIdCharVector
 #include "js/experimental/TypedData.h"  // JS_NewUint8Array
 #include "threading/LockGuard.h"
+#include "vm/HelperThreadState.h"  // Tier2GeneratorTask
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"

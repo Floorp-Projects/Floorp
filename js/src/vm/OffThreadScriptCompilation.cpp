@@ -17,7 +17,8 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
-#include "vm/HelperThreads.h"  // js::OffThreadParsingMustWaitForGC, js::StartOffThreadParseScript
+#include "js/SourceText.h"      // JS::SourceText
+#include "vm/HelperThreadState.h"  // js::OffThreadParsingMustWaitForGC, js::StartOffThreadParseScript
 #include "vm/JSContext.h"  // JSContext
 #include "vm/Runtime.h"    // js::CanUseExtraThreads
 
