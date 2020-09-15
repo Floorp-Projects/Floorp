@@ -6,21 +6,16 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.topsites
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import kotlinx.android.synthetic.main.component_top_sites.view.*
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSiteViewHolder
 
 class TopSitesPagerAdapter(
     private val interactor: TopSiteInteractor
-) : RecyclerView.Adapter<TopSiteViewHolder>() {
-
-    private var topSites: List<List<TopSite>> = listOf()
-
-    fun updateData(topSites: List<TopSite>) {
-        this.topSites = topSites.chunked(TOP_SITES_PER_PAGE)
-        notifyDataSetChanged()
-    }
+) : ListAdapter<List<TopSite>, TopSiteViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopSiteViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -29,12 +24,17 @@ class TopSitesPagerAdapter(
     }
 
     override fun onBindViewHolder(holder: TopSiteViewHolder, position: Int) {
-        holder.bind(this.topSites[position])
+        val adapter = holder.itemView.top_sites_list.adapter as TopSitesAdapter
+        adapter.submitList(getItem(position))
     }
 
-    override fun getItemCount(): Int = this.topSites.size
+    private object DiffCallback : DiffUtil.ItemCallback<List<TopSite>>() {
+        override fun areItemsTheSame(oldItem: List<TopSite>, newItem: List<TopSite>): Boolean {
+            return oldItem.size == newItem.size
+        }
 
-    companion object {
-        const val TOP_SITES_PER_PAGE = 8
+        override fun areContentsTheSame(oldItem: List<TopSite>, newItem: List<TopSite>): Boolean {
+            return newItem.zip(oldItem).all { (new, old) -> new == old }
+        }
     }
 }

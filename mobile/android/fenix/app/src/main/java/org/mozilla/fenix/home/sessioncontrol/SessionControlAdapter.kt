@@ -45,7 +45,7 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     data class TopSitePager(val topSites: List<TopSite>) : AdapterItem(TopSitePagerViewHolder.LAYOUT_ID) {
         override fun sameAs(other: AdapterItem): Boolean {
             val newTopSites = (other as? TopSitePager) ?: return false
-            return newTopSites.topSites == this.topSites
+            return newTopSites.topSites.size == this.topSites.size
         }
 
         override fun contentsSameAs(other: AdapterItem): Boolean {
@@ -53,7 +53,7 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
             if (newTopSites.topSites.size != this.topSites.size) return false
             val newSitesSequence = newTopSites.topSites.asSequence()
             val oldTopSites = this.topSites.asSequence()
-            return newSitesSequence.zip(oldTopSites).all { (new, old) -> new.title == old.title }
+            return newSitesSequence.zip(oldTopSites).all { (new, old) -> new == old }
         }
     }
 

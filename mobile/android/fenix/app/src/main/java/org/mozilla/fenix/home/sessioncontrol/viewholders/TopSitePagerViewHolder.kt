@@ -44,7 +44,8 @@ class TopSitePagerViewHolder(
     }
 
     fun bind(topSites: List<TopSite>) {
-        topSitesPagerAdapter.updateData(topSites)
+        val chunkedTopSites = topSites.chunked(TOP_SITES_PER_PAGE)
+        topSitesPagerAdapter.submitList(chunkedTopSites)
 
         // Don't show any page indicator if there is only 1 page.
         val numPages = if (topSites.size > TOP_SITES_PER_PAGE) {
