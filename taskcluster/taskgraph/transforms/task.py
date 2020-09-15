@@ -31,9 +31,9 @@ from taskgraph.util.schema import (
     Schema,
     optionally_keyed_by,
     resolve_keyed_by,
-    OptimizationSchema,
     taskref_or_string,
 )
+from taskgraph.optimize.schema import OptimizationSchema
 from taskgraph.util.partners import get_partners_to_be_published
 from taskgraph.util.scriptworker import (
     BALROG_ACTIONS,
