@@ -60,6 +60,7 @@
 
 #include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/EarlyBlankWindow.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MiscEvents.h"
@@ -889,9 +890,21 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       aInitData->mWindowType == eWindowType_plugin_ipc_content) {
     style |= WS_DISABLED;
   }
-  mWnd = ::CreateWindowExW(extendedStyle, className, L"", style, aRect.X(),
-                           aRect.Y(), aRect.Width(), GetHeight(aRect.Height()),
-                           parent, nullptr, nsToolkit::mDllInstance, nullptr);
+
+  if (aInitData->mWindowType == eWindowType_toplevel && !aParent) {
+    mWnd = ConsumeEarlyBlankWindowHandle();
+    if (mWnd) {
+      ::SetWindowLongPtrW(mWnd, GWL_STYLE, style);
+      ::SetWindowLongPtrW(mWnd, GWL_EXSTYLE, extendedStyle);
+    }
+  }
+
+  if (!mWnd) {
+    mWnd =
+        ::CreateWindowExW(extendedStyle, className, L"", style, aRect.X(),
+                          aRect.Y(), aRect.Width(), GetHeight(aRect.Height()),
+                          parent, nullptr, nsToolkit::mDllInstance, nullptr);
+  }
 
   if (!mWnd) {
     NS_WARNING("nsWindow CreateWindowEx failed.");
