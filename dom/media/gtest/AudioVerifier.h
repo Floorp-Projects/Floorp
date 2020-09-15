@@ -42,7 +42,7 @@ class AudioVerifier {
     }
   }
 
-  uint32_t EstimatedFreq() const {
+  float EstimatedFreq() const {
     if (mTotalFramesSoFar == PreSilenceSamples()) {
       return 0;
     }
@@ -52,7 +52,8 @@ class AudioVerifier {
     if (mZeroCrossCount <= 1) {
       return 0;
     }
-    return mRate / (mSumPeriodInSamples / (mZeroCrossCount - 1));
+    return mRate /
+           (static_cast<float>(mSumPeriodInSamples) / (mZeroCrossCount - 1));
   }
 
   // Returns the maximum difference in value between two adjacent samples along
