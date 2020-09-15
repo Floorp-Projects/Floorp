@@ -16,12 +16,6 @@ interface nsIHttpChannelChild : nsISupports
 {
   [must_use] void addCookiesToRequest();
 
-  // Mark this channel as requiring an interception; this will propagate
-  // to the corresponding parent channel when a redirect occurs.
-  [must_use]
-  void forceIntercepted(in boolean postRedirectChannelShouldIntercept,
-                        in boolean postRedirectChannelShouldUpgrade);
-
   // Headers that the channel client has set via SetRequestHeader.
   [must_use] readonly attribute RequestHeaderTuples clientSetRequestHeaders;
 
