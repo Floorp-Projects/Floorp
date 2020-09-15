@@ -31,8 +31,6 @@ add_task(async function load_image_from_https_test() {
     } catch (e) {
       Assert.ok(false);
     }
-
-    Assert.equal(img.imageBlockingStatus, Ci.nsIContentPolicy.ACCEPT);
   });
 
   gBrowser.removeTab(tab);
@@ -65,12 +63,6 @@ add_task(async function load_image_from_http_test() {
     } catch (e) {
       Assert.ok(false);
     }
-
-    Assert.equal(
-      img.imageBlockingStatus,
-      Ci.nsIContentPolicy.REJECT_SERVER,
-      "images from http should be blocked"
-    );
   });
 
   gBrowser.removeTab(tab);
@@ -112,12 +104,6 @@ add_task(async function load_https_and_http_test() {
     } catch (e) {
       Assert.ok(false);
     }
-
-    Assert.equal(
-      img.imageBlockingStatus,
-      Ci.nsIContentPolicy.REJECT_SERVER,
-      "image.src changed to http should be blocked"
-    );
   });
 
   gBrowser.removeTab(tab);
@@ -126,9 +112,7 @@ add_task(async function load_https_and_http_test() {
 /**
  * Loading an image from https.
  * Then after we have size information of the image, we immediately change the
- * location to a http:// site (hence should be blocked by CSP). This will make
- * the 2nd request as a PENDING_REQUEST, also blocking 2nd load shouldn't change
- * the imageBlockingStatus value.
+ * location to a http:// site (hence should be blocked by CSP).
  */
 add_task(async function block_pending_request_test() {
   let tab = BrowserTestUtils.addTab(gBrowser, TEST_URI);
@@ -193,7 +177,6 @@ add_task(async function block_pending_request_test() {
       req,
       "CURRENT_REQUEST shouldn't be replaced."
     );
-    Assert.equal(img.imageBlockingStatus, Ci.nsIContentPolicy.ACCEPT);
   });
 
   gBrowser.removeTab(tab);
