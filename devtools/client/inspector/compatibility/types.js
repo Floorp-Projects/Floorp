@@ -25,7 +25,7 @@ const browser = {
 const node = PropTypes.object;
 
 const issue = {
-  // Type of this issue. The type should be one of MDNCompatibility.ISSUE_TYPE.
+  // Type of this issue. The type should be one of COMPATIBILITY_ISSUE_TYPE.
   type: PropTypes.string.isRequired,
   // The CSS property which caused this issue.
   property: PropTypes.string.isRequired,

@@ -4,6 +4,7 @@
 
 // Test for the MDN compatibility diagnosis module.
 
+const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
 const MDNCompatibility = require("devtools/shared/compatibility/MDNCompatibility");
 const cssPropertiesCompatData = require("devtools/shared/compatibility/dataset/css-properties.json");
 
@@ -53,7 +54,7 @@ const TEST_DATA = [
     browsers: [FIREFOX_1],
     expectedIssues: [
       {
-        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
         property: "grid-column",
         url: "https://developer.mozilla.org/docs/Web/CSS/grid-column",
         deprecated: false,
@@ -74,7 +75,7 @@ const TEST_DATA = [
     browsers: [FIREFOX_69],
     expectedIssues: [
       {
-        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
         property: "clip",
         url: "https://developer.mozilla.org/docs/Web/CSS/clip",
         deprecated: true,
@@ -89,7 +90,7 @@ const TEST_DATA = [
     browsers: [FIREFOX_1],
     expectedIssues: [
       {
-        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
         property: "font-variant-alternates",
         url:
           "https://developer.mozilla.org/docs/Web/CSS/font-variant-alternates",
@@ -106,7 +107,7 @@ const TEST_DATA = [
     browsers: [FIREFOX_69, SAFARI_13],
     expectedIssues: [
       {
-        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
+        type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY_ALIASES,
         property: "user-select",
         aliases: ["-moz-user-select"],
         url: "https://developer.mozilla.org/docs/Web/CSS/user-select",
@@ -127,7 +128,7 @@ const TEST_DATA = [
     browsers: [FIREFOX_ANDROID_1, FIREFOX_69, SAFARI_13],
     expectedIssues: [
       {
-        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
+        type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY_ALIASES,
         property: "user-select",
         aliases: ["-moz-user-select", "-webkit-user-select"],
         url: "https://developer.mozilla.org/docs/Web/CSS/user-select",
@@ -153,7 +154,7 @@ const TEST_DATA = [
     browsers: [FIREFOX_1, FIREFOX_60, FIREFOX_69],
     expectedIssues: [
       {
-        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
         property: "-moz-binding",
         url: "https://developer.mozilla.org/docs/Web/CSS/-moz-binding",
         deprecated: true,

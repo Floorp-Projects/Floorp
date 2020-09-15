@@ -5,7 +5,7 @@
 
 // Test whether the deprecated CSS property is shown as issue correctly or not.
 
-const MDNCompatibility = require("devtools/shared/compatibility/MDNCompatibility");
+const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
 
 const TEST_URI = `
   <style>
@@ -25,14 +25,14 @@ const TEST_URI = `
 
 const TEST_DATA_SELECTED = [
   {
-    type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+    type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
     property: "border-block-color",
     url: "https://developer.mozilla.org/docs/Web/CSS/border-block-color",
     deprecated: false,
     experimental: false,
   },
   {
-    type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
+    type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY_ALIASES,
     property: "user-modify",
     url: "https://developer.mozilla.org/docs/Web/CSS/user-modify",
     aliases: ["user-modify"],
@@ -44,7 +44,7 @@ const TEST_DATA_SELECTED = [
 const TEST_DATA_ALL = [
   ...TEST_DATA_SELECTED,
   {
-    type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+    type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
     property: "font-variant-alternates",
     url: "https://developer.mozilla.org/docs/Web/CSS/font-variant-alternates",
     deprecated: true,

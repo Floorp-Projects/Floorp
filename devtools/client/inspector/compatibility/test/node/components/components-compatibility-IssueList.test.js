@@ -10,7 +10,7 @@
 const { shallow } = require("enzyme");
 const React = require("react");
 
-const MDNCompatibility = require("devtools/shared/compatibility/MDNCompatibility");
+const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
 const IssueList = React.createFactory(
   require("devtools/client/inspector/compatibility/components/IssueList")
 );
@@ -21,7 +21,7 @@ describe("IssueList component", () => {
       IssueList({
         issues: [
           {
-            type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+            type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
             property: "border-block-color",
             url:
               "https://developer.mozilla.org/docs/Web/CSS/border-block-color",
@@ -30,7 +30,7 @@ describe("IssueList component", () => {
             unsupportedBrowsers: [],
           },
           {
-            type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
+            type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY_ALIASES,
             property: "user-modify",
             url: "https://developer.mozilla.org/docs/Web/CSS/user-modify",
             aliases: ["user-modify"],

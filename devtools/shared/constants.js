@@ -101,6 +101,13 @@ const SIMULATION_TYPE = {
   CONTRAST_LOSS: "CONTRAST_LOSS",
 };
 
+/* Compatibility Panel ====================================================== */
+
+const COMPATIBILITY_ISSUE_TYPE = {
+  CSS_PROPERTY: "CSS_PROPERTY",
+  CSS_PROPERTY_ALIASES: "CSS_PROPERTY_ALIASES",
+};
+
 /* WebConsole Panel ====================================================== */
 
 const MESSAGE_CATEGORY = {
@@ -114,5 +121,6 @@ module.exports = {
     SCORES,
     SIMULATION_TYPE,
   },
+  COMPATIBILITY_ISSUE_TYPE,
   MESSAGE_CATEGORY,
 };
