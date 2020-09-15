@@ -460,7 +460,6 @@ class MockCubeb {
         aContext, aInputDevice, aInputStreamParams, aOutputDevice,
         aOutputStreamParams, aDataCallback, aStateCallback, aUserPtr);
     *aStream = reinterpret_cast<cubeb_stream*>(mockStream);
-    mCurrentMockStream = mockStream;
     mStreamInitEvent.Notify(mockStream);
     return CUBEB_OK;
   }
@@ -470,8 +469,6 @@ class MockCubeb {
     MockCubebStream* mockStream = reinterpret_cast<MockCubebStream*>(aStream);
     delete mockStream;
   }
-
-  MockCubebStream* CurrentStream() { return mCurrentMockStream; }
 
   MediaEventSource<MockCubebStream*>& StreamInitEvent() {
     return mStreamInitEvent;
@@ -499,10 +496,6 @@ class MockCubeb {
   // Our input and output devices.
   nsTArray<cubeb_device_info> mInputDevices;
   nsTArray<cubeb_device_info> mOutputDevices;
-
-  // The latest cubeb stream. The init of a stream happens in a helper thread
-  // inside Gecko so a synchronization method is needed.
-  std::atomic<MockCubebStream*> mCurrentMockStream{nullptr};
 
   MediaEventProducer<MockCubebStream*> mStreamInitEvent;
   MediaEventProducer<void> mStreamDestroyEvent;
