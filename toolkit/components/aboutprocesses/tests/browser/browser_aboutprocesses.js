@@ -305,12 +305,23 @@ add_task(async function testAboutProcesses() {
   let children = row.children;
   let memoryResidentContent = children[1].textContent;
   let cpuContent = children[2].textContent;
-  let pidContent = children[3].textContent;
-  let numberOfThreadsContent = children[4].textContent;
+  let pidContent = document.l10n.getAttributes(children[0].children[0]).args
+    .pid;
+
+  let threadDetailsRow = row.nextSibling;
+  while (threadDetailsRow) {
+    if (threadDetailsRow.classList.contains("thread-summary")) {
+      break;
+    }
+    threadDetailsRow = threadDetailsRow.nextSibling;
+  }
+  let numberOfThreadsContent = document.l10n.getAttributes(
+    threadDetailsRow.children[0].children[1]
+  ).args.number;
 
   info("Sanity checks: pid");
   let pid = Number.parseInt(pidContent);
-  Assert.ok(pid > 0);
+  Assert.ok(pid > 0, `Checking pid ${pidContent}`);
   Assert.equal(pid, row.process.pid);
 
   info("Sanity checks: memory resident");
@@ -337,30 +348,33 @@ add_task(async function testAboutProcesses() {
   Assert.ok(
     numberOfThreads <= HARDCODED_ASSUMPTIONS_PROCESS.maximalNumberOfThreads
   );
+  Assert.equal(numberOfThreads, row.process.threads.length);
 
   info("Testing that we can open the list of threads");
-  let twisty = row.getElementsByClassName("twisty")[0];
-  EventUtils.synthesizeMouseAtCenter(
-    twisty,
-    {},
-    tabAboutProcesses.linkedBrowser.contentWindow
+  let twisty = threadDetailsRow.getElementsByClassName("twisty")[0];
+  twisty.click();
+  Assert.equal(
+    numberOfThreads,
+    tbody.getElementsByClassName("thread").length,
+    "Displayed number of threads is correct"
   );
 
   let numberOfThreadsFound = 0;
   for (
-    let threadRow = row.nextSibling;
+    let threadRow = threadDetailsRow.nextSibling;
     threadRow && threadRow.classList.contains("thread");
     threadRow = threadRow.nextSibling
   ) {
     let children = threadRow.children;
     let cpuContent = children[2].textContent;
-    let tidContent = children[3].textContent;
+    let tidContent = document.l10n.getAttributes(children[0].children[0]).args
+      .tid;
     ++numberOfThreadsFound;
 
     info("Sanity checks: tid");
     let tid = Number.parseInt(tidContent);
     Assert.notEqual(tid, 0, "The tid should be set");
-    Assert.equal(tid, threadRow.thread.tid);
+    Assert.equal(tid, threadRow.thread.tid, "Displayed tid is correct");
 
     info("Sanity checks: CPU (User and Kernel)");
     testCpu(
@@ -370,7 +384,11 @@ add_task(async function testAboutProcesses() {
       HARDCODED_ASSUMPTIONS_THREAD
     );
   }
-  Assert.equal(numberOfThreads, numberOfThreadsFound);
+  Assert.equal(
+    numberOfThreads,
+    numberOfThreadsFound,
+    "Found as many threads as expected"
+  );
 
   info("Ensuring that the hung process is marked as hung");
   let isOneNonHungProcessDetected = false;

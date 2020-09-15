@@ -7,25 +7,35 @@ about-processes-title = Process Manager
 
 ## Column headers
 
-about-processes-column-id = Id
 about-processes-column-name = Name
 about-processes-column-memory-resident = Memory
 about-processes-column-cpu-total = CPU
-about-processes-column-threads = Threads
 
 ## Individual cells
 
-about-processes-browser-name = { -brand-short-name }
+# The main process
+# Variables:
+#    $pid (String) The process id of this process, assigned by the OS.
+about-processes-browser-name = { -brand-short-name } (process { $pid })
 
-# Thread
+# Single-line summary of threads
+# Variables:
+#    $number (Number) The number of threads in the process. Typically larger
+#                     than 30. We don't expect to ever have processes with less
+#                     than 5 threads.
+about-processes-thread-summary = Threads ({ $number })
+
+# Thread details
 # Variables:
 #   $name (String) The name assigned to the thread.
-about-processes-thread-name = Thread: { $name }
+#   $tid (String) The thread id of this thread, assigned by the OS.
+about-processes-thread-name = Thread { $tid }: { $name }
 
 # Process
 # Variables:
 #   $name (String) The name assigned to the process.
-about-processes-process-name = Process: { $name }
+#   $pid (String) The process id of this process, assigned by the OS.
+about-processes-process-name = Process { $pid }: { $name }
 
 # Extension
 # Variables:
