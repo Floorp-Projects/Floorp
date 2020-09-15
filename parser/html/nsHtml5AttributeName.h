@@ -491,6 +491,7 @@ class nsHtml5AttributeName {
   static nsHtml5AttributeName* ATTR_AUTOPLAY;
   static nsHtml5AttributeName* ATTR_AUTOCOMPLETE;
   static nsHtml5AttributeName* ATTR_AUTOFOCUS;
+  static nsHtml5AttributeName* ATTR_AUTOCAPITALIZE;
   static nsHtml5AttributeName* ATTR_BGCOLOR;
   static nsHtml5AttributeName* ATTR_COLOR_PROFILE;
   static nsHtml5AttributeName* ATTR_COLOR_RENDERING;
