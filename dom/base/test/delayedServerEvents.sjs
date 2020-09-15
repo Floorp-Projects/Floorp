@@ -7,8 +7,7 @@ var strings_to_send = ["retry:999999999\ndata\r\n\nda", "ta", ":", "de", "layed1
                        "data:delayed2\n\n", "", ""];
 var resp = null;
 
-function sendNextString()
-{
+function sendNextString() {
   if (strings_to_send.length == 0) {
     timer.cancel();
     resp.finish();
@@ -17,24 +16,25 @@ function sendNextString()
     return;
   }
 
-  resp.write(strings_to_send[0]);
-  strings_to_send = strings_to_send.splice(1, strings_to_send.length - 1);
+  try {
+    resp.write(strings_to_send.shift());
+  } catch (e) {
+    timer.cancel();
+    timer = null;
+    resp = null;
+  }
 }
 
-function handleRequest(request, response)
-{
-  var b = 0;
-  for (var i=0; i < strings_to_send.length; ++i) {
-    b += strings_to_send[i].length;
-  }
-  
+function handleRequest(request, response) {
+  var bytes = strings_to_send.reduce((len, s) => len + s.length, 0);
+
   response.seizePower();
   response.write("HTTP/1.1 200 OK\r\n")
-  response.write("Content-Length: " + b + "\r\n");
+  response.write(`Content-Length: ${bytes}\r\n`);
   response.write("Content-Type: text/event-stream; charset=utf-8\r\n");
   response.write("Cache-Control: no-cache, must-revalidate\r\n");
   response.write("\r\n");
-  
+
   resp = response;
 
   timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
