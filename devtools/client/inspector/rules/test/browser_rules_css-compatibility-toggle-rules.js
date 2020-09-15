@@ -24,15 +24,9 @@ const TEST_URI = `
 
 const TEST_DATA_INITIAL = [
   {
-    selector: ".test-inline",
+    selector: ".test-class-linked",
     rules: [
-      {
-        color: { value: "pink" },
-        "user-select": {
-          value: "none",
-          expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
-        },
-      },
+      {},
       {
         color: { value: "green" },
         "background-color": { value: "black" },
@@ -44,9 +38,15 @@ const TEST_DATA_INITIAL = [
     ],
   },
   {
-    selector: ".test-class-linked",
+    selector: ".test-inline",
     rules: [
-      {},
+      {
+        color: { value: "pink" },
+        "user-select": {
+          value: "none",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
+        },
+      },
       {
         color: { value: "green" },
         "background-color": { value: "black" },
@@ -61,6 +61,17 @@ const TEST_DATA_INITIAL = [
 
 const TEST_DATA_TOGGLE_CLASS_DECLARATION = [
   {
+    selector: ".test-class-linked",
+    rules: [
+      {},
+      {
+        color: { value: "green" },
+        "background-color": { value: "black" },
+        cursor: { value: "pointer" },
+      },
+    ],
+  },
+  {
     selector: ".test-inline",
     rules: [
       {
@@ -77,6 +88,9 @@ const TEST_DATA_TOGGLE_CLASS_DECLARATION = [
       },
     ],
   },
+];
+
+const TEST_DATA_TOGGLE_INLINE = [
   {
     selector: ".test-class-linked",
     rules: [
@@ -88,9 +102,6 @@ const TEST_DATA_TOGGLE_CLASS_DECLARATION = [
       },
     ],
   },
-];
-
-const TEST_DATA_TOGGLE_INLINE = [
   {
     selector: ".test-inline",
     rules: [
@@ -98,17 +109,6 @@ const TEST_DATA_TOGGLE_INLINE = [
         color: { value: "pink" },
         "user-select": { value: "none" },
       },
-      {
-        color: { value: "green" },
-        "background-color": { value: "black" },
-        cursor: { value: "pointer" },
-      },
-    ],
-  },
-  {
-    selector: ".test-class-linked",
-    rules: [
-      {},
       {
         color: { value: "green" },
         "background-color": { value: "black" },

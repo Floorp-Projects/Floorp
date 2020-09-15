@@ -107,6 +107,10 @@ class TextProperty {
    * if any.
    */
   updateEditor() {
+    // When the editor updates, reset the saved
+    // compatibility issues list as any updates
+    // may alter the compatibility status of declarations
+    this.rule.compatibilityIssues = null;
     if (this.editor) {
       this.editor.update();
     }
@@ -311,12 +315,13 @@ class TextProperty {
       return { isCompatible: true };
     }
 
-    if (!this.rule.domRule.compatibilityIssues.length) {
+    const compatibilityIssues = await this.rule.getCompatibilityIssues();
+    if (!compatibilityIssues.length) {
       return { isCompatible: true };
     }
 
     const property = this.name;
-    const indexOfProperty = this.rule.domRule.compatibilityIssues.findIndex(
+    const indexOfProperty = compatibilityIssues.findIndex(
       issue => issue.property === property || issue.aliases?.includes(property)
     );
 
@@ -330,7 +335,7 @@ class TextProperty {
       experimental,
       url,
       unsupportedBrowsers,
-    } = this.rule.domRule.compatibilityIssues[indexOfProperty];
+    } = compatibilityIssues[indexOfProperty];
 
     let msgId = COMPATIBILITY_TOOLTIP_MESSAGE.default;
     if (deprecated && experimental && !unsupportedBrowsers.length) {
