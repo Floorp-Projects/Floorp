@@ -43,12 +43,15 @@ static bool WithDefaultDevMode(const nsString& aName,
   LONG bytesNeeded = ::DocumentPropertiesW(nullptr, autoPrinter.get(),
                                            aName.get(), nullptr, nullptr, 0);
   MOZ_DIAGNOSTIC_ASSERT(bytesNeeded >= sizeof(DEVMODEW),
-             "DocumentPropertiesW failed to get valid size");
+                        "DocumentPropertiesW failed to get valid size");
   if (bytesNeeded < sizeof(DEVMODEW)) {
     return false;
   }
 
-  aStorage.SetLength(bytesNeeded);
+  // Allocate extra space in case of bad drivers that return a too-small
+  // result from DocumentProperties.
+  // (See https://bugzilla.mozilla.org/show_bug.cgi?id=1664530#c5)
+  aStorage.SetLength(bytesNeeded * 2);
   auto* devmode = reinterpret_cast<DEVMODEW*>(aStorage.Elements());
   LONG ret = ::DocumentPropertiesW(nullptr, autoPrinter.get(), aName.get(),
                                    devmode, nullptr, DM_OUT_BUFFER);
@@ -234,22 +237,30 @@ nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
 
 mozilla::gfx::MarginDouble nsPrinterWin::GetMarginsForPaper(
     short aPaperId) const {
-  static const wchar_t kDriverName[] = L"WINSPOOL";
-  // Now get the margin info.
-  // We need a DEVMODE to set the paper size on the context.
-  DEVMODEW devmode = {};
-  devmode.dmSize = sizeof(DEVMODEW);
-  devmode.dmFields = DM_PAPERSIZE;
-  devmode.dmPaperSize = aPaperId;
+  gfx::MarginDouble margin;
 
-  // Create an information context, so that we can get margin information.
-  // Note: this blocking call interacts with the driver and can be slow.
-  nsAutoHDC printerDc(::CreateICW(kDriverName, mName.get(), nullptr, &devmode));
+  nsTArray<uint8_t> storage;
+  bool success =
+      WithDefaultDevMode(mName, storage, [&](HANDLE, DEVMODEW* devmode) {
+        devmode->dmFields = DM_PAPERSIZE;
+        devmode->dmPaperSize = aPaperId;
+        nsAutoHDC printerDc(
+            ::CreateICW(nullptr, mName.get(), nullptr, devmode));
+        MOZ_DIAGNOSTIC_ASSERT(printerDc, "CreateICW failed");
+        if (!printerDc) {
+          return false;
+        }
+        margin = WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
+        margin.top *= POINTS_PER_INCH_FLOAT;
+        margin.right *= POINTS_PER_INCH_FLOAT;
+        margin.bottom *= POINTS_PER_INCH_FLOAT;
+        margin.left *= POINTS_PER_INCH_FLOAT;
+        return true;
+      });
 
-  auto margin = WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
-  margin.top *= POINTS_PER_INCH_FLOAT;
-  margin.right *= POINTS_PER_INCH_FLOAT;
-  margin.bottom *= POINTS_PER_INCH_FLOAT;
-  margin.left *= POINTS_PER_INCH_FLOAT;
+  if (!success) {
+    return {};
+  }
+
   return margin;
 }
