@@ -1656,7 +1656,7 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
   ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -1669,12 +1669,12 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* shape) {
     const ParserAtom* propName = cx->parserNames().*name;
 
     uint32_t propNameIndex = 0;
-    if (!data.addAtom(propName, &propNameIndex)) {
+    if (!data.addAtom(cx, propName, &propNameIndex)) {
       return false;
     }
     data.writer().setPropName(propNameIndex);
 
-    if (!data.writer().propWithUndefinedValue()) {
+    if (!data.writer().propWithUndefinedValue(cx)) {
       return false;
     }
   }
@@ -4622,7 +4622,7 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
   }
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -8835,7 +8835,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
                                                  ObjLiteralFlags flags) {
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -8851,7 +8851,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
 
     if (key->is<NameNode>()) {
       uint32_t propNameIndex = 0;
-      if (!data.addAtom(key->as<NameNode>().atom(), &propNameIndex)) {
+      if (!data.addAtom(cx, key->as<NameNode>().atom(), &propNameIndex)) {
         return false;
       }
       data.writer().setPropName(propNameIndex);
@@ -8867,7 +8867,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     }
 
     if (noValues) {
-      if (!data.writer().propWithUndefinedValue()) {
+      if (!data.writer().propWithUndefinedValue(cx)) {
         return false;
       }
     } else {
@@ -8904,7 +8904,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   ObjLiteralFlags flags{ObjLiteralFlag::NoValues};
 
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -8927,12 +8927,12 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
     }
 
     uint32_t propNameIndex = 0;
-    if (!data.addAtom(atom, &propNameIndex)) {
+    if (!data.addAtom(cx, atom, &propNameIndex)) {
       return false;
     }
     data.writer().setPropName(propNameIndex);
 
-    if (!data.writer().propWithUndefinedValue()) {
+    if (!data.writer().propWithUndefinedValue(cx)) {
       return false;
     }
   }
@@ -8957,7 +8957,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
 
 bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
   ObjLiteralIndex objIndex(compilationInfo.stencil.objLiteralData.length());
-  if (!compilationInfo.stencil.objLiteralData.emplaceBack(cx)) {
+  if (!compilationInfo.stencil.objLiteralData.emplaceBack()) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -9012,32 +9012,32 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralStencil* data,
     } else {
       v.setDouble(numValue);
     }
-    if (!data->writer().propWithConstNumericValue(v)) {
+    if (!data->writer().propWithConstNumericValue(cx, v)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::TrueExpr)) {
-    if (!data->writer().propWithTrueValue()) {
+    if (!data->writer().propWithTrueValue(cx)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::FalseExpr)) {
-    if (!data->writer().propWithFalseValue()) {
+    if (!data->writer().propWithFalseValue(cx)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::NullExpr)) {
-    if (!data->writer().propWithNullValue()) {
+    if (!data->writer().propWithNullValue(cx)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::RawUndefinedExpr)) {
-    if (!data->writer().propWithUndefinedValue()) {
+    if (!data->writer().propWithUndefinedValue(cx)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::StringExpr) ||
              value->isKind(ParseNodeKind::TemplateStringExpr)) {
     uint32_t valueAtomIndex = 0;
-    if (!data->addAtom(value->as<NameNode>().atom(), &valueAtomIndex)) {
+    if (!data->addAtom(cx, value->as<NameNode>().atom(), &valueAtomIndex)) {
       return false;
     }
-    if (!data->writer().propWithAtomValue(valueAtomIndex)) {
+    if (!data->writer().propWithAtomValue(cx, valueAtomIndex)) {
       return false;
     }
   } else {
