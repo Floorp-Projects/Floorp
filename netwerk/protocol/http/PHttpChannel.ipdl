@@ -156,12 +156,6 @@ child:
 
 
 both:
-  // After receiving this message, the parent also calls
-  // SendFinishInterceptedRedirect, and makes sure not to send any more messages
-  // after that. When receiving this message, the child will call
-  // Send__delete__() and complete the steps required to finish the redirect.
-  async FinishInterceptedRedirect();
-
   async SetPriority(int16_t priority);
 };
 

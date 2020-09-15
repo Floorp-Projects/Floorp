@@ -78,8 +78,6 @@ HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
       mDivertingFromChild(false),
       mDivertedOnStartRequest(false),
       mSuspendedForDiversion(false),
-      mSuspendAfterSynthesizeResponse(false),
-      mWillSynthesizeResponse(false),
       mCacheNeedFlowControlInitialized(false),
       mNeedFlowControl(true),
       mSuspendedForFlowControl(false),
@@ -118,13 +116,6 @@ void HttpChannelParent::ActorDestroy(ActorDestroyReason why) {
   // yet, but child process has crashed.  We must not try to send any more msgs
   // to child, or IPDL will kill chrome process, too.
   mIPCClosed = true;
-
-  // If this is an intercepted channel, we need to make sure that any resources
-  // are cleaned up to avoid leaks.
-  if (mParentListener) {
-    mParentListener->ClearInterceptedChannel(this);
-  }
-
   CleanupBackgroundChannel();
 }
 
@@ -142,10 +133,8 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
           a.thirdPartyFlags(), a.resumeAt(), a.startPos(), a.entityID(),
           a.chooseApplicationCache(), a.appCacheClientID(), a.allowSpdy(),
           a.allowAltSvc(), a.beConservative(), a.tlsFlags(), a.loadInfo(),
-          a.synthesizedResponseHead(), a.synthesizedSecurityInfoSerialization(),
           a.cacheKey(), a.requestContextID(), a.preflightArgs(),
-          a.initialRwin(), a.blockAuthPrompt(),
-          a.suspendAfterSynthesizeResponse(), a.allowStaleCacheContent(),
+          a.initialRwin(), a.blockAuthPrompt(), a.allowStaleCacheContent(),
           a.preferCacheLoadOverBypass(), a.contentTypeHint(), a.corsMode(),
           a.redirectMode(), a.channelId(), a.integrityMetadata(),
           a.contentWindowId(), a.preferredAlternativeTypes(),
@@ -157,7 +146,7 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
     }
     case HttpChannelCreationArgs::THttpChannelConnectArgs: {
       const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
-      return ConnectChannel(cArgs.registrarId(), cArgs.shouldIntercept());
+      return ConnectChannel(cArgs.registrarId());
     }
     default:
       MOZ_ASSERT_UNREACHABLE("unknown open type");
@@ -388,12 +377,9 @@ bool HttpChannelParent::DoAsyncOpen(
     const bool& chooseApplicationCache, const nsCString& appCacheClientID,
     const bool& allowSpdy, const bool& allowAltSvc, const bool& beConservative,
     const uint32_t& tlsFlags, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
-    const Maybe<nsHttpResponseHead>& aSynthesizedResponseHead,
-    const nsCString& aSecurityInfoSerialization, const uint32_t& aCacheKey,
-    const uint64_t& aRequestContextID,
+    const uint32_t& aCacheKey, const uint64_t& aRequestContextID,
     const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
     const uint32_t& aInitialRwin, const bool& aBlockAuthPrompt,
-    const bool& aSuspendAfterSynthesizeResponse,
     const bool& aAllowStaleCacheContent, const bool& aPreferCacheLoadOverBypass,
     const nsCString& aContentTypeHint, const uint32_t& aCorsMode,
     const uint32_t& aRedirectMode, const uint64_t& aChannelId,
@@ -541,22 +527,6 @@ bool HttpChannelParent::DoAsyncOpen(
     httpChannel->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
   }
 
-  if (aSynthesizedResponseHead.isSome()) {
-    parentListener->SetupInterception(aSynthesizedResponseHead.ref());
-    mWillSynthesizeResponse = true;
-    httpChannelImpl->SetCouldBeSynthesized();
-
-    if (!aSecurityInfoSerialization.IsEmpty()) {
-      nsCOMPtr<nsISupports> secInfo;
-      rv = NS_DeserializeObject(aSecurityInfoSerialization,
-                                getter_AddRefs(secInfo));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
-                            "Deserializing security info should not fail");
-      rv = httpChannel->OverrideSecurityInfo(secInfo);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-  }
-
   nsCOMPtr<nsICacheInfoChannel> cacheChannel =
       do_QueryInterface(static_cast<nsIChannel*>(httpChannel.get()));
   if (cacheChannel) {
@@ -649,8 +619,6 @@ bool HttpChannelParent::DoAsyncOpen(
   mParentListener = std::move(parentListener);
   mChannel->SetNotificationCallbacks(mParentListener);
 
-  mSuspendAfterSynthesizeResponse = aSuspendAfterSynthesizeResponse;
-
   MOZ_ASSERT(!mBgParent);
   MOZ_ASSERT(mPromise.IsEmpty());
   // Wait for HttpBackgrounChannel to continue the async open procedure.
@@ -700,8 +668,7 @@ RefPtr<GenericNonExclusivePromise> HttpChannelParent::WaitForBgParent() {
   return mPromise.Ensure(__func__);
 }
 
-bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId,
-                                       const bool& shouldIntercept) {
+bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId) {
   nsresult rv;
 
   LOG(
@@ -733,18 +700,6 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId,
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
   if (httpChannelImpl) {
     httpChannelImpl->SetWarningReporter(this);
-  }
-
-  nsCOMPtr<nsINetworkInterceptController> controller;
-  NS_QueryNotificationCallbacks(channel, controller);
-  RefPtr<ParentChannelListener> parentListener = do_QueryObject(controller);
-  if (parentListener) {
-    // It's possible with DocumentChannel redirects that we failed to Suspend
-    // the nsHttpChannel, so it has delivered OnDataAvailable/OnStopRequest
-    // to the DocumentChannelParent, and then cleared the listener pointer.
-    // In that case the DocumentChannelParent will handle forwarding
-    // those messages to us so we don't need to add the listener again.
-    parentListener->SetupInterceptionAfterRedirect(shouldIntercept);
   }
 
   if (mPBOverride != kPBOverride_Unset) {
@@ -1285,20 +1240,7 @@ void HttpChannelParent::MaybeFlushPendingDiversion() {
   }
 }
 
-void HttpChannelParent::ResponseSynthesized() {
-  // Suspend now even though the FinishSynthesizeResponse runnable has
-  // not executed.  We want to suspend after we get far enough to trigger
-  // the synthesis, but not actually allow the nsHttpChannel to trigger
-  // any OnStartRequests().
-  if (mSuspendAfterSynthesizeResponse) {
-    mChannel->Suspend();
-  }
-
-  mWillSynthesizeResponse = false;
-
-  MaybeFlushPendingDiversion();
-}
-
+MaybeFlushPendingDiversion();
 mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
     const URIParams& uri,
     const mozilla::ipc::PrincipalInfo& requestingPrincipal) {
@@ -2511,16 +2453,6 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvDeletingChannel() {
   // messages after this, as the child is going away. DoSendDeleteSelf will
   // set mIPCClosed = true;
   if (!DoSendDeleteSelf()) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult HttpChannelParent::RecvFinishInterceptedRedirect() {
-  // We make sure not to send any more messages until the IPC channel is torn
-  // down by the child.
-  mIPCClosed = true;
-  if (!SendFinishInterceptedRedirect()) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
