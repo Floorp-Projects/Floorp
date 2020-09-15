@@ -28,7 +28,7 @@ namespace mozilla {
  * performance impact.
  *
  * The pref `media.clock drift.buffering` can be used to configure the desired
- * internal buffering. Right now it is at 5ms. But it can be increased if there
+ * internal buffering. Right now it is at 50ms. But it can be increased if there
  * are audio quality problems.
  */
 class ClockDrift final {
@@ -71,7 +71,7 @@ class ClockDrift final {
 
  private:
   void CalculateCorrection(int aBufferedFrames) {
-    // We want to maintain 4 ms buffered
+    // We want to maintain the desired buffer
     int32_t bufferedFramesDiff = aBufferedFrames - mDesiredBuffering;
     int32_t resampledSourceClock = mSourceClock + bufferedFramesDiff;
     if (mTargetRate != mSourceRate) {
@@ -152,7 +152,7 @@ class AudioDriftCorrection final {
  public:
   AudioDriftCorrection(int32_t aSourceRate, int32_t aTargetRate)
       : mDesiredBuffering(
-            std::max(1, Preferences::GetInt("media.clockdrift.buffering", 5)) *
+            std::max(5, Preferences::GetInt("media.clockdrift.buffering", 50)) *
             aSourceRate / 1000),
         mTargetRate(aTargetRate),
         mClockDrift(aSourceRate, aTargetRate, mDesiredBuffering),

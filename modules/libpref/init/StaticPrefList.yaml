@@ -6757,11 +6757,11 @@
   value: false
 #endif
 
-# ClockDrift desired buffering
+# ClockDrift desired buffering in milliseconds
 - name: media.clockdrift.buffering
   type: int32_t
   mirror: always
-  value: 5
+  value: 50
 
 # If a resource is known to be smaller than this size (in kilobytes), a
 # memory-backed MediaCache may be used; otherwise the (single shared global)
