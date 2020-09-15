@@ -412,7 +412,7 @@ bool RootList::init(CompartmentSet& debuggees) {
   if (!tracer.okay) {
     return false;
   }
-  js::gc::TraceIncomingCCWs(&tracer, debuggees);
+  TraceIncomingCCWs(&tracer, debuggees);
   if (!tracer.okay) {
     return false;
   }

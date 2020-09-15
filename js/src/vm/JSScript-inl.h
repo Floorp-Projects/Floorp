@@ -14,6 +14,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/IonAnalysis.h"
 #include "jit/JitScript.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/RegExpObject.h"
 #include "wasm/AsmJS.h"
 

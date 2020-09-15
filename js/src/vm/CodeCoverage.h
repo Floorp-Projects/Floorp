@@ -11,7 +11,6 @@
 
 #include "ds/LifoAlloc.h"
 
-#include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"

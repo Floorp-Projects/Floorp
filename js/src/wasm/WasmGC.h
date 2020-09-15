@@ -19,19 +19,10 @@
 #ifndef wasm_gc_h
 #define wasm_gc_h
 
-#include "mozilla/BinarySearch.h"
-
-#include "jit/MacroAssembler.h"  // For ABIArgIter
-#include "js/AllocPolicy.h"
-#include "js/Vector.h"
+#include "jit/MacroAssembler.h"
 #include "util/Memory.h"
 
 namespace js {
-
-namespace jit {
-class MacroAssembler;
-}  // namespace jit
-
 namespace wasm {
 
 using namespace js::jit;
@@ -236,8 +227,8 @@ class StackMaps {
     };
 
     size_t result;
-    if (mozilla::BinarySearchIf(mapping_, 0, mapping_.length(),
-                                Comparator(nextInsnAddr), &result)) {
+    if (BinarySearchIf(mapping_, 0, mapping_.length(), Comparator(nextInsnAddr),
+                       &result)) {
       return mapping_[result].map;
     }
 

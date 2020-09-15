@@ -9,7 +9,6 @@
 #include "jit/CodeGenerator.h"
 #include "jit/JitScript.h"
 #include "jit/WarpSnapshot.h"
-#include "vm/HelperThreadState.h"
 #include "vm/JSScript.h"
 
 #include "vm/JSScript-inl.h"

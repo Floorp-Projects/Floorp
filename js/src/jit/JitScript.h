@@ -14,7 +14,6 @@
 #include "jit/TrialInlining.h"
 #include "js/UniquePtr.h"
 #include "util/TrailingArray.h"
-#include "vm/EnvironmentObject.h"
 #include "vm/TypeInference.h"
 
 class JS_PUBLIC_API JSScript;

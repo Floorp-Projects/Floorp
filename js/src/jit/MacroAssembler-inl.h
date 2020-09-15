@@ -13,7 +13,6 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "gc/Zone.h"
-#include "vm/ProxyObject.h"
 
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/MacroAssembler-x86-inl.h"

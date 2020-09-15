@@ -17,9 +17,9 @@
 
 #include "jsapi.h"
 
-#include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
 #include "js/BuildId.h"  // JS::BuildIdCharVector
+#include "vm/EnvironmentObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
 #include "vm/TraceLogging.h"

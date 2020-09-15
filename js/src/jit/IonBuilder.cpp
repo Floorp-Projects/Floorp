@@ -12,7 +12,6 @@
 #include <algorithm>
 
 #include "builtin/Eval.h"
-#include "builtin/ModuleObject.h"
 #include "builtin/TypedObject.h"
 #include "frontend/SourceNotes.h"
 #include "jit/BaselineFrame.h"
@@ -32,6 +31,7 @@
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/Instrumentation.h"
 #include "vm/Opcodes.h"
 #include "vm/PlainObject.h"  // js::PlainObject

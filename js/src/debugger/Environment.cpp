@@ -24,6 +24,7 @@
 #include "gc/Tracer.h"       // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/HeapAPI.h"      // for IsInsideNursery
 #include "vm/Compartment.h"  // for Compartment
+#include "vm/EnvironmentObject.h"  // for JSObject::is, DebugEnvironmentProxy
 #include "vm/JSAtom.h"             // for Atomize, PinAtom
 #include "vm/JSContext.h"          // for JSContext
 #include "vm/JSFunction.h"         // for JSFunction
