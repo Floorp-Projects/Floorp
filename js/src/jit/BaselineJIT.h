@@ -16,7 +16,6 @@
 #include "jit/JitCode.h"
 #include "jit/shared/Assembler-shared.h"
 #include "util/TrailingArray.h"
-#include "vm/EnvironmentObject.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/TraceLogging.h"
