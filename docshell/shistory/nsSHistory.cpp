@@ -536,6 +536,58 @@ nsresult nsSHistory::CloneAndReplace(
   return rv;
 }
 
+// static
+void nsSHistory::WalkContiguousEntries(
+    nsISHEntry* aEntry, const std::function<void(nsISHEntry*)>& aCallback) {
+  MOZ_ASSERT(aEntry);
+
+  nsCOMPtr<nsISHistory> shistory = aEntry->GetShistory();
+  if (!shistory) {
+    // If there is no session history in the entry, it means this is not a root
+    // entry. So, we can return from here.
+    return;
+  }
+
+  int32_t index = shistory->GetIndexOfEntry(aEntry);
+  int32_t count = shistory->GetCount();
+
+  nsCOMPtr<nsIURI> targetURI = aEntry->GetURI();
+
+  // First, call the callback on the input entry.
+  aCallback(aEntry);
+
+  // Walk backward to find the entries that have the same origin as the
+  // input entry.
+  for (int32_t i = index - 1; i >= 0; i--) {
+    RefPtr<nsISHEntry> entry;
+    shistory->GetEntryAtIndex(i, getter_AddRefs(entry));
+    if (entry) {
+      nsCOMPtr<nsIURI> uri = entry->GetURI();
+      if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
+              targetURI, uri, false, false))) {
+        break;
+      }
+
+      aCallback(entry);
+    }
+  }
+
+  // Then, Walk forward.
+  for (int32_t i = index + 1; i < count; i++) {
+    RefPtr<nsISHEntry> entry;
+    shistory->GetEntryAtIndex(i, getter_AddRefs(entry));
+    if (entry) {
+      nsCOMPtr<nsIURI> uri = entry->GetURI();
+      if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
+              targetURI, uri, false, false))) {
+        break;
+      }
+
+      aCallback(entry);
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsSHistory::AddChildSHEntryHelper(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
                                   BrowsingContext* aRootBC,
