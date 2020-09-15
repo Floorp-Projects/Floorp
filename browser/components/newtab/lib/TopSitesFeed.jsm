@@ -75,6 +75,7 @@ ChromeUtils.defineModuleGetter(
 const DEFAULT_SITES_PREF = "default.sites";
 const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 const DEFAULT_TOP_SITES = [];
+const ATTRIBUTION_REQUEST_SITES = [];
 const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
 const CACHED_LINK_PROPS_TO_MIGRATE = ["screenshot", "customScreenshot"];
@@ -240,13 +241,13 @@ this.TopSitesFeed = class TopSitesFeed {
 
     // Clear out the array of any previous defaults.
     DEFAULT_TOP_SITES.length = 0;
+    ATTRIBUTION_REQUEST_SITES.length = 0;
 
     for (let siteData of remoteSettingData) {
       let link = {
         isDefault: true,
         url: siteData.url,
         hostname: shortURL(siteData),
-        sendAttributionRequest: !!siteData.send_attribution_request,
       };
       if (siteData.url_urlbar_override) {
         link.url_urlbar = siteData.url_urlbar_override;
@@ -258,6 +259,9 @@ this.TopSitesFeed = class TopSitesFeed {
         link = await this.topSiteToSearchTopSite(link);
       }
       DEFAULT_TOP_SITES.push(link);
+      if (siteData.send_attribution_request) {
+        ATTRIBUTION_REQUEST_SITES.push(siteData.url);
+      }
     }
 
     this.refresh({ broadcast: true, isStartup });
@@ -266,6 +270,7 @@ this.TopSitesFeed = class TopSitesFeed {
   refreshDefaults(sites, { isStartup = false } = {}) {
     // Clear out the array of any previous defaults
     DEFAULT_TOP_SITES.length = 0;
+    ATTRIBUTION_REQUEST_SITES.length = 0;
 
     // Add default sites if any based on the pref
     if (sites) {
@@ -639,6 +644,10 @@ this.TopSitesFeed = class TopSitesFeed {
 
         // Indicate that these links should get a frecency bonus when clicked
         link.typedBonus = true;
+
+        if (ATTRIBUTION_REQUEST_SITES.includes(link.original_url || link.url)) {
+          link.sendAttributionRequest = true;
+        }
 
         for (let [hostname, url] of searchTileOverrideURLs) {
           // The `searchVendor` property is set if the engine was re-added manually.
