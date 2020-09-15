@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<title>Test for bug 1646601</title>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const frame = document.createElement('iframe');
+  document.body.appendChild(frame);
+  frame.srcdoc = '<html></html>';
+  await new Promise(resolve => frame.onload = resolve);
+  const subwin = frame.contentWindow;
+  const subcontext = subwin.AudioContext;
+  // Construct an AudioContext while the subdocument is fully active to start
+  // a MediaTrackGraph.
+  new subcontext();
+  // Unload the subdocument and wait for completion.
+  // This shuts down the MediaTrackGraph.
+  subwin.location.reload();
+  await new Promise(resolve => frame.onload = resolve);
+  // Test that a new AudioContext on the inactive subdocument does not attempt
+  // to use the shut-down MediaTrackGraph.
+  try { new subcontext() } catch {}
+  document.documentElement.removeAttribute('class');
+});
+</script>
+</head>
+</html>
