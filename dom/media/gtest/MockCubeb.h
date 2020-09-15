@@ -145,6 +145,8 @@ class MockCubebStream {
                   cubeb_data_callback aDataCallback,
                   cubeb_state_callback aStateCallback, void* aUserPtr)
       : context(aContext),
+        mHasInput(aInputStreamParams),
+        mHasOutput(aOutputStreamParams),
         mDataCallback(aDataCallback),
         mStateCallback(aStateCallback),
         mUserPtr(aUserPtr),
@@ -255,6 +257,9 @@ class MockCubebStream {
 
  public:
   cubeb* context = nullptr;
+
+  const bool mHasInput;
+  const bool mHasOutput;
 
  private:
   // Thread that simulates the audio thread.
