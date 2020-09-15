@@ -31,6 +31,7 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "AudioStream.h"
 
 namespace mozilla {
 
@@ -178,6 +179,28 @@ uint32_t DecideAudioPlaybackChannels(const AudioInfo& info) {
   }
 
   return info.mChannels;
+}
+
+uint32_t DecideAudioPlaybackSampleRate(const AudioInfo& aInfo) {
+  bool resampling = StaticPrefs::media_resampling_enabled();
+
+  uint32_t rate = 0;
+
+  if (resampling) {
+    rate = 48000;
+  } else if (aInfo.mRate == 44100 || aInfo.mRate == 48000) {
+    // The original rate is of good quality and we want to minimize unecessary
+    // resampling. The common scenario being that the sampling rate is one or
+    // the other. This minimizes audio quality regressions but depends on
+    // content providers not changing rates mid-stream.
+    rate = aInfo.mRate;
+  } else {
+    // We will resample all data to match cubeb's preferred sampling rate.
+    rate = AudioStream::GetPreferredRate();
+  }
+  MOZ_DIAGNOSTIC_ASSERT(rate, "output rate can't be 0.");
+
+  return rate;
 }
 
 bool IsDefaultPlaybackDeviceMono() {
