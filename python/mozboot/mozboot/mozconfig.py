@@ -29,6 +29,17 @@ class MozconfigFindException(Exception):
     """Raised when a mozconfig location is not defined properly."""
 
 
+class MozconfigBuilder(object):
+    def __init__(self):
+        self._lines = []
+
+    def append(self, block):
+        self._lines.extend([line.strip() for line in block.split('\n') if line.strip()])
+
+    def generate(self):
+        return '\n'.join(self._lines)
+
+
 def find_mozconfig(topsrcdir, env=os.environ):
     """Find the active mozconfig file for the current environment.
 

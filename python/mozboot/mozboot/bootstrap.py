@@ -44,7 +44,7 @@ from mozboot.solus import SolusBootstrapper
 from mozboot.void import VoidBootstrapper
 from mozboot.windows import WindowsBootstrapper
 from mozboot.mozillabuild import MozillaBuildBootstrapper
-from mozboot.mozconfig import find_mozconfig
+from mozboot.mozconfig import find_mozconfig, MozconfigBuilder
 from mozboot.util import get_state_dir
 
 # Use distro package to retrieve linux platform information
@@ -344,6 +344,7 @@ class Bootstrapper(object):
             raise Exception('Please pick a valid application choice: (%s)' %
                             '/'.join(APPLICATIONS.keys()))
 
+        mozconfig_builder = MozconfigBuilder()
         self.instance.application = application
         self.instance.artifact_mode = 'artifact_mode' in application
 
@@ -366,13 +367,13 @@ class Bootstrapper(object):
             self.check_telemetry_opt_in(state_dir)
             self.maybe_install_private_packages_or_exit(state_dir,
                                                         checkout_root)
-            self._output_mozconfig(application)
+            self._output_mozconfig(application, mozconfig_builder)
             sys.exit(0)
 
         self.instance.install_system_packages()
 
         # Like 'install_browser_packages' or 'install_mobile_android_packages'.
-        getattr(self.instance, 'install_%s_packages' % application)()
+        getattr(self.instance, 'install_%s_packages' % application)(mozconfig_builder)
 
         hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
         if not self.instance.artifact_mode:
@@ -415,23 +416,27 @@ class Bootstrapper(object):
         if not self.instance.which("moz-phab"):
             print(MOZ_PHAB_ADVERTISE)
 
-        self._output_mozconfig(application)
+        self._output_mozconfig(application, mozconfig_builder)
 
-    def _output_mozconfig(self, application):
+    def _output_mozconfig(self, application, mozconfig_builder):
         # Like 'generate_browser_mozconfig' or 'generate_mobile_android_mozconfig'.
-        mozconfig = getattr(self.instance, 'generate_%s_mozconfig' % application)()
+        additional_mozconfig = getattr(self.instance, 'generate_%s_mozconfig' % application)()
+        if additional_mozconfig:
+            mozconfig_builder.append(additional_mozconfig)
+        raw_mozconfig = mozconfig_builder.generate()
 
-        if mozconfig:
+        if raw_mozconfig:
             mozconfig_path = find_mozconfig(self.mach_context.topdir)
             if not mozconfig_path:
                 # No mozconfig file exists yet
                 mozconfig_path = os.path.join(self.mach_context.topdir, 'mozconfig')
                 with open(mozconfig_path, 'w') as mozconfig_file:
-                    mozconfig_file.write(mozconfig)
+                    mozconfig_file.write(raw_mozconfig)
                 print('Your requested configuration has been written to "%s".'
                       % mozconfig_path)
             else:
-                suggestion = MOZCONFIG_SUGGESTION_TEMPLATE % (mozconfig_path, mozconfig)
+                suggestion = MOZCONFIG_SUGGESTION_TEMPLATE % (
+                    mozconfig_path, raw_mozconfig)
                 print(suggestion)
 
 

@@ -54,10 +54,10 @@ class FreeBSDBootstrapper(BaseBootstrapper):
     def install_system_packages(self):
         self.pkg_install(*self.packages)
 
-    def install_browser_packages(self):
+    def install_browser_packages(self, mozconfig_builder):
         self.ensure_browser_packages()
 
-    def install_browser_artifact_mode_packages(self):
+    def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.ensure_browser_packages(artifact_mode=True)
 
     def ensure_browser_packages(self, artifact_mode=False):

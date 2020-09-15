@@ -86,13 +86,13 @@ class WindowsBootstrapper(BaseBootstrapper):
     def upgrade_mercurial(self, current):
         self.pip_install('mercurial')
 
-    def install_browser_packages(self):
+    def install_browser_packages(self, mozconfig_builder):
         self.pacman_install(*self.BROWSER_PACKAGES)
 
-    def install_mobile_android_packages(self):
+    def install_mobile_android_packages(self, mozconfig_builder):
         raise NotImplementedError('We do not support building Android on Windows. Sorry!')
 
-    def install_mobile_android_artifact_mode_packages(self):
+    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
         raise NotImplementedError('We do not support building Android on Windows. Sorry!')
 
     def ensure_clang_static_analysis_package(self, state_dir, checkout_root):

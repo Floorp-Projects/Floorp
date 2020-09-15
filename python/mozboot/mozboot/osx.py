@@ -197,18 +197,19 @@ class OSXBootstrapper(BaseBootstrapper):
                   "It will be installed with %s" % self.package_manager)
         getattr(self, 'ensure_%s_system_packages' % self.package_manager)(not hg_modern)
 
-    def install_browser_packages(self):
+    def install_browser_packages(self, mozconfig_builder):
         getattr(self, 'ensure_%s_browser_packages' % self.package_manager)()
 
-    def install_browser_artifact_mode_packages(self):
+    def install_browser_artifact_mode_packages(self, mozconfig_builder):
         getattr(self, 'ensure_%s_browser_packages' % self.package_manager)(artifact_mode=True)
 
-    def install_mobile_android_packages(self):
-        getattr(self, 'ensure_%s_mobile_android_packages' % self.package_manager)()
-
-    def install_mobile_android_artifact_mode_packages(self):
+    def install_mobile_android_packages(self, mozconfig_builder):
         getattr(self, 'ensure_%s_mobile_android_packages' %
-                self.package_manager)(artifact_mode=True)
+                self.package_manager)(mozconfig_builder)
+
+    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
+        getattr(self, 'ensure_%s_mobile_android_packages' %
+                self.package_manager)(mozconfig_builder, artifact_mode=True)
 
     def generate_mobile_android_mozconfig(self):
         return getattr(self, 'generate_%s_mobile_android_mozconfig' %
@@ -367,7 +368,7 @@ class OSXBootstrapper(BaseBootstrapper):
         ]
         self._ensure_homebrew_packages(packages)
 
-    def ensure_homebrew_mobile_android_packages(self, artifact_mode=False):
+    def ensure_homebrew_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         # Multi-part process:
         # 1. System packages.
         # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
@@ -392,7 +393,7 @@ class OSXBootstrapper(BaseBootstrapper):
         # Prefer homebrew's java binary by putting it on the path first.
         os.environ['PATH'] = \
             '{}{}{}'.format(JAVA_PATH, os.pathsep, os.environ['PATH'])
-        self.ensure_java()
+        self.ensure_java(mozconfig_builder)
         from mozboot import android
 
         android.ensure_android('macosx', artifact_mode=artifact_mode,
@@ -450,7 +451,7 @@ class OSXBootstrapper(BaseBootstrapper):
 
         self._ensure_macports_packages(packages)
 
-    def ensure_macports_mobile_android_packages(self, artifact_mode=False):
+    def ensure_macports_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         # Multi-part process:
         # 1. System packages.
         # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
@@ -467,7 +468,7 @@ class OSXBootstrapper(BaseBootstrapper):
                             'GeckoView/Firefox for Android.')
 
         # 2. Android pieces.
-        self.ensure_java()
+        self.ensure_java(mozconfig_builder)
         from mozboot import android
         android.ensure_android('macosx', artifact_mode=artifact_mode,
                                no_interactive=self.no_interactive)
