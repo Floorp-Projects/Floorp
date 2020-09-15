@@ -160,6 +160,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
       "The preceding invisible BR element computation was different");
   EditActionResult ret(NS_OK);
+  // NOTE: Keep syncing with CanMergeLeftAndRightBlockElements() of
+  //       AutoInclusiveAncestorBlockElementsJoiner.
   if (NS_WARN_IF(aListElementTagName.isSome())) {
     // Since 2002, here was the following comment:
     // > The idea here is to take all children in rightListElement that are
@@ -301,6 +303,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       aPrecedingInvisibleBRElement == invisibleBRElementBeforeLeftBlockElement,
       "The preceding invisible BR element computation was different");
   EditActionResult ret(NS_OK);
+  // NOTE: Keep syncing with CanMergeLeftAndRightBlockElements() of
+  //       AutoInclusiveAncestorBlockElementsJoiner.
   if (aListElementTagName.isSome()) {
     // XXX Why do we ignore the error from MoveChildrenWithTransaction()?
     MOZ_ASSERT(originalLeftBlockElement == atLeftBlockChild.GetContainer(),
