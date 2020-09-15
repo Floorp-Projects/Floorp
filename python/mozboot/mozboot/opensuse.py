@@ -56,19 +56,19 @@ class OpenSUSEBootstrapper(
     def install_system_packages(self):
         self.zypper_install(*self.SYSTEM_PACKAGES)
 
-    def install_browser_packages(self):
+    def install_browser_packages(self, mozconfig_builder):
         self.ensure_browser_packages()
 
     def install_browser_group_packages(self):
         self.ensure_browser_group_packages()
 
-    def install_browser_artifact_mode_packages(self):
+    def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.ensure_browser_packages(artifact_mode=True)
 
-    def install_mobile_android_packages(self):
+    def install_mobile_android_packages(self, mozconfig_builder):
         self.ensure_mobile_android_packages()
 
-    def install_mobile_android_artifact_mode_packages(self):
+    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
         self.ensure_mobile_android_packages(artifact_mode=True)
 
     def install_mercurial(self):

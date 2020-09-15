@@ -173,19 +173,19 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         # the last version that comes with wheels.
         self.pip_install('mercurial', '--only-binary', 'mercurial')
 
-    def install_browser_packages(self):
+    def install_browser_packages(self, mozconfig_builder):
         pass
 
-    def install_browser_artifact_mode_packages(self):
+    def install_browser_artifact_mode_packages(self, mozconfig_builder):
         pass
 
-    def install_mobile_android_packages(self):
-        self.ensure_mobile_android_packages()
+    def install_mobile_android_packages(self, mozconfig_builder):
+        self.ensure_mobile_android_packages(mozconfig_builder)
 
-    def install_mobile_android_artifact_mode_packages(self):
-        self.ensure_mobile_android_packages(artifact_mode=True)
+    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
+        self.ensure_mobile_android_packages(mozconfig_builder, artifact_mode=True)
 
-    def ensure_mobile_android_packages(self, artifact_mode=False):
+    def ensure_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         java_path = get_oracle_jdk_8_path() or get_adopt_open_jdk_8_path()
 
         if java_path:
@@ -193,7 +193,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
             setenv('PATH', '{}{}{}'.format(os.path.join(java_path, 'bin'), os.pathsep,
                                            os.environ['PATH']))
 
-        self.ensure_java()
+        self.ensure_java(mozconfig_builder)
 
         from mozboot import android
         android.ensure_android('windows', artifact_mode=artifact_mode,

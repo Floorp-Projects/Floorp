@@ -177,7 +177,7 @@ class BaseBootstrapper(object):
         raise NotImplementedError('%s must implement install_system_packages()' %
                                   __name__)
 
-    def install_browser_packages(self):
+    def install_browser_packages(self, mozconfig_builder):
         '''
         Install packages required to build Firefox for Desktop (application
         'browser').
@@ -196,7 +196,7 @@ class BaseBootstrapper(object):
         '''
         pass
 
-    def install_browser_artifact_mode_packages(self):
+    def install_browser_artifact_mode_packages(self, mozconfig_builder):
         '''
         Install packages required to build Firefox for Desktop (application
         'browser') in Artifact Mode.
@@ -216,7 +216,7 @@ class BaseBootstrapper(object):
         '''
         return BROWSER_ARTIFACT_MODE_MOZCONFIG
 
-    def install_mobile_android_packages(self):
+    def install_mobile_android_packages(self, mozconfig_builder):
         '''
         Install packages required to build Firefox for Android (application
         'mobile/android', also known as Fennec).
@@ -236,7 +236,7 @@ class BaseBootstrapper(object):
         raise NotImplementedError('%s does not yet implement generate_mobile_android_mozconfig()' %
                                   __name__)
 
-    def install_mobile_android_artifact_mode_packages(self):
+    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
         '''
         Install packages required to build GeckoView/Firefox for Android (application
         'mobile/android', also known as Fennec) in Artifact Mode.
@@ -830,7 +830,7 @@ class BaseBootstrapper(object):
             os.remove(dest)
             raise ValueError('Hash of downloaded file does not match expected hash')
 
-    def ensure_java(self, extra_search_dirs=()):
+    def ensure_java(self, mozconfig_builder, extra_search_dirs=()):
         """Verify the presence of java.
 
         Note that we currently require a JDK (not just a JRE) because we
@@ -843,20 +843,48 @@ class BaseBootstrapper(object):
         Gradle.
         """
 
-        java = None
+        # We look up the realpath() of "jarsigner" instead of "java" because the
+        # structure of some JDKs places "java" in a different directory:
+        #
+        # $JDK/
+        #    bin/
+        #        jarsigner
+        #        java -> ../jre/bin/java
+        #        ...
+        #    jre/
+        #        bin/
+        #            java
+        #            ...
+        #    ...
+        #
+        # Realpath-ing "jarsigner" consistently gives us a JDK bin dir
+        # containing both "java" and "jarsigner".
+        jdk_bin_dir = None
         if 'JAVA_HOME' in os.environ:
             # Search JAVA_HOME if it is set as it's finer grained than looking at PATH.
-            possible_java_path = os.path.join(os.environ['JAVA_HOME'], 'bin', 'java')
-            if os.path.isfile(possible_java_path) and os.access(possible_java_path, os.X_OK):
-                java = possible_java_path
+            possible_jarsigner_path = os.path.join(os.environ['JAVA_HOME'], 'bin', 'jarsigner')
+            if (os.path.isfile(possible_jarsigner_path)
+                    and os.access(possible_jarsigner_path, os.X_OK)):
+                jdk_bin_dir = os.path.dirname(os.path.realpath(possible_jarsigner_path))
         else:
             # Search the path if JAVA_HOME is not set.
+            jarsigner = self.which('jarsigner', *extra_search_dirs)
             java = self.which('java', *extra_search_dirs)
 
-        if not java:
+            if jarsigner and java:
+                jdk_bin_dir = os.path.dirname(os.path.realpath(jarsigner))
+                if os.path.realpath(java) != os.path.realpath(os.path.join(jdk_bin_dir, 'java')):
+                    # This can happen on Ubuntu if "update-alternatives" has been
+                    # manually overridden once for either "java" or "jarsigner".
+                    raise Exception('The "java" and "jarsigner" binaries on the PATH are '
+                                    'currently coming from two different JDKs. Please '
+                                    'resolve this, or explicitly set JAVA_HOME.')
+
+        if not jdk_bin_dir:
             raise Exception('You need to have Java Development Kit version 1.8 installed. '
                             'Please install it from https://adoptopenjdk.net/?variant=openjdk8')
 
+        java = os.path.join(jdk_bin_dir, 'java')
         try:
             output = subprocess.check_output([java,
                                               '-XshowSettings:properties',
@@ -885,6 +913,12 @@ class BaseBootstrapper(object):
             version = version[0].split(' = ')[-1]
             if version not in ['1.8', '8']:
                 raise unknown_version_exception
+
+            mozconfig_builder.append('''
+            # Use the same Java binary that was used in bootstrap in case the global
+            # system default version is changed.
+            ac_add_options --with-java-bin-path={}
+            '''.format(jdk_bin_dir))
         except subprocess.CalledProcessError as e:
             raise Exception('Failed to get java version from {}: {}'.format(java, e.output))
 
