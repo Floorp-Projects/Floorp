@@ -1324,7 +1324,7 @@ async function setInitialState(addon, initialState) {
   }
 }
 
-async function setupBuiltinExtension(extensionData, location = "ext-test") {
+async function setupBuiltinExtension(extensionData) {
   let xpi = await AddonTestUtils.createTempWebExtensionFile(extensionData);
 
   // The built-in location requires a resource: URL that maps to a
@@ -1334,7 +1334,7 @@ async function setupBuiltinExtension(extensionData, location = "ext-test") {
   let resProto = Services.io
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler);
-  resProto.setSubstitution(location, base);
+  resProto.setSubstitution("ext-test", base);
 }
 
 async function installBuiltinExtension(extensionData, waitForStartup = true) {
