@@ -18,23 +18,6 @@
 namespace mozilla {
 const uint32_t NUM_OF_CHANNELS = 2;
 
-#ifdef LOG
-#  undef LOG
-#endif
-//#define LOGGING_ENABLED
-#ifdef LOGGING_ENABLED
-#  if defined(__ANDROID__)
-#    define LOG(args...) \
-      __android_log_print(ANDROID_LOG_INFO, "MockCubeb", ##args)
-#  else
-#    define LOG(args...)       \
-      fprintf(stderr, ##args); \
-      fprintf(stderr, "\n")
-#  endif
-#else
-#  define LOG(...)
-#endif
-
 struct cubeb_ops {
   int (*init)(cubeb** context, char const* context_name);
   char const* (*get_backend_id)(cubeb* context);
@@ -160,8 +143,6 @@ class MockCubebStream {
         mAudioVerifier(aInputStreamParams ? aInputStreamParams->rate
                                           : aOutputStreamParams->rate,
                        100 /* aFrequency */) {
-    LOG("MockCubeb(%p) StreamInit: Input id = %p, Output id = %p", this,
-        mInputDeviceID, mOutputDeviceID);
     if (aInputStreamParams) {
       mInputParams = *aInputStreamParams;
     }
@@ -312,7 +293,7 @@ class MockCubebStream {
 // should do, depending on what is being tested.
 class MockCubeb {
  public:
-  MockCubeb() : ops(&mock_ops) { LOG("MockCubeb(%p) created", this); }
+  MockCubeb() : ops(&mock_ops) {}
   ~MockCubeb() = default;
   // Cubeb backend implementation
   // This allows passing this class as a cubeb* instance.
