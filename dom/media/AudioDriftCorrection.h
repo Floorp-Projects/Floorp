@@ -187,6 +187,9 @@ class AudioDriftCorrection final {
     return output;
   }
 
+  // Only accessible from the same thread that is driving RequestFrames().
+  uint32_t CurrentBuffering() const { return mResampler.InputDuration(); }
+
   const int32_t mDesiredBuffering;
   const int32_t mTargetRate;
 
