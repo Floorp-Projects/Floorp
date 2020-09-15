@@ -6,8 +6,84 @@
 
 const EXPORTED_SYMBOLS = ["navigate"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  error: "chrome://marionette/content/error.js",
+  Log: "chrome://marionette/content/log.js",
+  modal: "chrome://marionette/content/modal.js",
+  PageLoadStrategy: "chrome://marionette/content/capabilities.js",
+  TimedPromise: "chrome://marionette/content/sync.js",
+  truncate: "chrome://marionette/content/format.js",
+});
+
+XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+
+// Timeouts used to check if a new navigation has been initiated.
+const TIMEOUT_BEFOREUNLOAD_EVENT = 200;
+const TIMEOUT_UNLOAD_EVENT = 5000;
+
 /** @namespace */
 this.navigate = {};
+
+/**
+ * Checks the value of readyState for the current page
+ * load activity, and resolves the command if the load
+ * has been finished. It also takes care of the selected
+ * page load strategy.
+ *
+ * @param {PageLoadStrategy} pageLoadStrategy
+ *     Strategy when navigation is considered as finished.
+ * @param {object} eventData
+ * @param {string} eventData.documentURI
+ *     Current document URI of the document.
+ * @param {string} eventData.readyState
+ *     Current ready state of the document.
+ *
+ * @return {boolean}
+ *     True if the page load has been finished.
+ */
+function checkReadyState(pageLoadStrategy, eventData = {}) {
+  const { documentURI, readyState } = eventData;
+
+  const result = { error: null, finished: false };
+
+  switch (readyState) {
+    case "interactive":
+      if (documentURI.startsWith("about:certerror")) {
+        result.error = new error.InsecureCertificateError();
+        result.finished = true;
+      } else if (/about:.*(error)\?/.exec(documentURI)) {
+        result.error = new error.UnknownError(
+          `Reached error page: ${documentURI}`
+        );
+        result.finished = true;
+
+        // Return early with a page load strategy of eager, and also
+        // special-case about:blocked pages which should be treated as
+        // non-error pages but do not raise a pageshow event. about:blank
+        // is also treaded specifically here, because it gets temporary
+        // loaded for new content processes, and we only want to rely on
+        // complete loads for it.
+      } else if (
+        (pageLoadStrategy === PageLoadStrategy.Eager &&
+          documentURI != "about:blank") ||
+        /about:blocked\?/.exec(documentURI)
+      ) {
+        result.finished = true;
+      }
+      break;
+
+    case "complete":
+      result.finished = true;
+      break;
+  }
+
+  return result;
+}
 
 /**
  * Determines if we expect to get a DOM load event (DOMContentLoaded)
@@ -53,4 +129,229 @@ navigate.isLoadEventExpected = function(current, future = undefined) {
   }
 
   return true;
+};
+
+/**
+ * Load the given URL in the specified browsing context.
+ *
+ * @param {CanonicalBrowsingContext} browsingContext
+ *     Browsing context to load the URL into.
+ * @param {string} url
+ *     URL to navigate to.
+ */
+navigate.navigateTo = async function(browsingContext, url) {
+  const opts = {
+    loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  };
+  browsingContext.loadURI(url, opts);
+};
+
+/**
+ * Reload the page.
+ *
+ * @param {CanonicalBrowsingContext} browsingContext
+ *     Browsing context to refresh.
+ */
+navigate.refresh = async function(browsingContext) {
+  const flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+  browsingContext.reload(flags);
+};
+
+/**
+ * Execute a callback and wait for a possible navigation to complete
+ *
+ * @param {GeckoDriver} driver
+ *     Reference to driver instance.
+ * @param {Function} callback
+ *     Callback to execute that might trigger a navigation.
+ * @param {Object} options
+ * @param {BrowsingContext=} browsingContext
+ *     Browsing context to observe. Defaults to the current top-level
+ *     browsing context.
+ * @param {boolean=} loadEventExpected
+ *     If false, return immediately and don't wait for
+ *     the navigation to be completed. Defaults to true.
+ * @param {boolean=} requireBeforeUnload
+ *     If false and no beforeunload event is fired, abort waiting
+ *     for the navigation. Defaults to true.
+ */
+navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
+  driver,
+  callback,
+  options = {}
+) {
+  const {
+    browsingContext = driver.getBrowsingContext({ top: true }),
+    loadEventExpected = true,
+    requireBeforeUnload = true,
+  } = options;
+
+  const pageLoadStrategy = driver.capabilities.get("pageLoadStrategy");
+  const chromeWindow = browsingContext.topChromeWindow;
+
+  // Return immediately if no load event is expected
+  if (!loadEventExpected || pageLoadStrategy === PageLoadStrategy.None) {
+    return Promise.resolve();
+  }
+
+  return new TimedPromise(
+    async (resolve, reject) => {
+      const frameRemovedMessage = "Marionette:FrameRemoved";
+      const navigationMessage = "Marionette:NavigationEvent";
+
+      let seenBeforeUnload = false;
+      let seenUnload = false;
+
+      let unloadTimer;
+
+      const checkDone = ({ finished, error }) => {
+        if (finished) {
+          chromeWindow.removeEventListener("TabClose", onUnload);
+          chromeWindow.removeEventListener("unload", onUnload);
+          driver.dialogObserver.remove(onDialogOpened);
+          driver.mm.removeMessageListener(
+            frameRemovedMessage,
+            onFrameRemoved,
+            true
+          );
+          driver.mm.removeMessageListener(
+            navigationMessage,
+            onNavigation,
+            true
+          );
+          unloadTimer?.cancel();
+
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        }
+      };
+
+      const onDialogOpened = (action, dialog, win) => {
+        // Only care about modals of the currently selected window.
+        if (win !== chromeWindow) {
+          return;
+        }
+
+        if (action === modal.ACTION_OPENED) {
+          logger.trace("Canceled page load listener because a dialog opened");
+          checkDone({ finished: true });
+        }
+      };
+
+      const onTimer = timer => {
+        // In the case when a document has a beforeunload handler
+        // registered, the currently active command will return immediately
+        // due to the modal dialog observer in proxy.js.
+        //
+        // Otherwise the timeout waiting for the document to start
+        // navigating is increased by 5000 ms to ensure a possible load
+        // event is not missed. In the common case such an event should
+        // occur pretty soon after beforeunload, and we optimise for this.
+        if (seenBeforeUnload) {
+          seenBeforeUnload = false;
+          unloadTimer.initWithCallback(
+            onTimer,
+            TIMEOUT_UNLOAD_EVENT,
+            Ci.nsITimer.TYPE_ONE_SHOT
+          );
+
+          // If no page unload has been detected, ensure to properly stop
+          // the load listener, and return from the currently active command.
+        } else if (!seenUnload) {
+          logger.trace(
+            "Canceled page load listener because no navigation " +
+              "has been detected"
+          );
+          checkDone({ finished: true });
+        }
+      };
+
+      const onNavigation = ({ json }) => {
+        if (json.browsingContext.browserId != browsingContext.browserId) {
+          return;
+        }
+
+        logger.trace(
+          truncate`Received message ${json.type} for ${json.documentURI}`
+        );
+
+        switch (json.type) {
+          case "beforeunload":
+            seenBeforeUnload = true;
+            seenUnload = false;
+            break;
+
+          case "pagehide":
+            seenUnload = true;
+            break;
+
+          case "hashchange":
+          case "popstate":
+            checkDone({ finished: true });
+            break;
+
+          case "DOMContentLoaded":
+          case "pageshow":
+            if (!seenUnload) {
+              return;
+            }
+            const result = checkReadyState(pageLoadStrategy, json);
+            checkDone(result);
+            break;
+        }
+      };
+
+      // In the case when the currently selected frame is closed,
+      // there will be no further load events. Stop listening immediately.
+      const onFrameRemoved = ({ json }) => {
+        if (json.browsingContextId != browsingContext.id) {
+          return;
+        }
+
+        logger.trace(
+          "Canceled page load listener because current frame has been removed"
+        );
+        checkDone({ finished: true });
+      };
+
+      const onUnload = event => {
+        logger.trace(
+          "Canceled page load listener " +
+            "because the top-browsing context has been closed"
+        );
+        checkDone({ finished: true });
+      };
+
+      // Certain commands like clickElement can cause a navigation. Setup a timer
+      // to check if a "beforeunload" event has been emitted within the given
+      // time frame. If not resolve the Promise.
+      if (!requireBeforeUnload) {
+        unloadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+        unloadTimer.initWithCallback(
+          onTimer,
+          TIMEOUT_BEFOREUNLOAD_EVENT,
+          Ci.nsITimer.TYPE_ONE_SHOT
+        );
+      }
+
+      chromeWindow.addEventListener("TabClose", onUnload);
+      chromeWindow.addEventListener("unload", onUnload);
+      driver.dialogObserver.add(onDialogOpened);
+      driver.mm.addMessageListener(frameRemovedMessage, onFrameRemoved, true);
+      driver.mm.addMessageListener(navigationMessage, onNavigation, true);
+
+      try {
+        await callback();
+      } catch (e) {
+        checkDone({ finished: true, error: e });
+      }
+    },
+    {
+      timeout: driver.timeouts.pageLoad,
+    }
+  );
 };

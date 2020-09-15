@@ -4,8 +4,8 @@
 
 from __future__ import absolute_import, print_function
 
-from marionette_driver.errors import InvalidArgumentException, UnsupportedOperationException
-from marionette_harness import MarionetteTestCase
+from marionette_driver.errors import UnsupportedOperationException
+from marionette_harness import MarionetteTestCase, skip
 
 
 class TestReftest(MarionetteTestCase):
@@ -30,6 +30,7 @@ class TestReftest(MarionetteTestCase):
 
         super(TestReftest, self).tearDown()
 
+    @skip("Bug 1648444 - Unexpected page unload when refreshing about:blank")
     def test_basic(self):
         self.marionette._send_message("reftest:setup", {"screenshot": "unexpected"})
         rv = self.marionette._send_message("reftest:run",

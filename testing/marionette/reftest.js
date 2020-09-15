@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   capture: "chrome://marionette/content/capture.js",
   error: "chrome://marionette/content/error.js",
   Log: "chrome://marionette/content/log.js",
+  navigate: "chrome://marionette/content/navigate.js",
   print: "chrome://marionette/content/print.js",
 });
 
@@ -124,11 +125,9 @@ reftest.Runner = class {
     if (Services.appinfo.OS == "Android") {
       logger.debug("Using current window");
       reftestWin = this.parentWindow;
-      await this.driver.listener.navigateTo({
-        commandID: this.driver.listener.activeMessageId,
-        pageTimeout: timeout,
-        url: "about:blank",
-        loadEventExpected: true,
+      await navigate.waitForNavigationCompleted(this.driver, () => {
+        const browsingContext = this.driver.getBrowsingContext();
+        navigate.navigateTo(browsingContext, "about:blank");
       });
     } else {
       logger.debug("Using separate window");
@@ -616,14 +615,14 @@ max-width: ${width}px; max-height: ${height}px`;
   }
 
   async loadTestUrl(win, url, timeout) {
+    const browsingContext = this.driver.getBrowsingContext({ top: true });
+
     logger.debug(`Starting load of ${url}`);
-    let navigateOpts = {
-      commandId: this.driver.listener.activeMessageId,
-      pageTimeout: timeout,
-    };
     if (this.lastURL === url) {
       logger.debug(`Refreshing page`);
-      await this.driver.listener.refresh(navigateOpts);
+      await navigate.waitForNavigationCompleted(this.driver, () => {
+        navigate.refresh(browsingContext);
+      });
     } else {
       // HACK: DocumentLoadListener currently doesn't know how to
       // process-switch loads in a non-tabbed <browser>. We need to manually
@@ -632,14 +631,14 @@ max-width: ${width}px; max-height: ${height}px`;
       //
       // See bug 1636169.
       this.updateBrowserRemotenessByURL(win.gBrowser, url);
+      navigate.navigateTo(browsingContext, url);
 
-      navigateOpts.url = url;
-      navigateOpts.loadEventExpected = false;
-      await this.driver.listener.navigateTo(navigateOpts);
       this.lastURL = url;
     }
 
     this.ensureFocus(win);
+
+    // TODO: Move all the wait logic into the parent process (bug 1648444)
     await this.driver.listener.reftestWait(url, this.useRemoteTabs);
   }
 
