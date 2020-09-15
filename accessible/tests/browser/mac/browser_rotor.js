@@ -401,6 +401,58 @@ addAccessibleTask(
 );
 
 /**
+ * Test rotor with buttons
+ */
+addAccessibleTask(
+  `
+  <button id="button">hello world</button><br>
+
+  <input type="button" value="another kinda button" id="input"><br>
+  `,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXButtonSearchKey",
+      AXImmediateDescendants: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const buttonCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(2, buttonCount, "Found two buttons");
+
+    const buttons = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    const button = getNativeInterface(accDoc, "button");
+    const input = getNativeInterface(accDoc, "input");
+
+    is(
+      button.getAttributeValue("AXRole"),
+      buttons[0].getAttributeValue("AXRole"),
+      "Found correct button"
+    );
+    is(
+      input.getAttributeValue("AXRole"),
+      buttons[1].getAttributeValue("AXRole"),
+      "Found correct input button"
+    );
+  }
+);
+
+/**
  * Test rotor with heading
  */
 addAccessibleTask(
