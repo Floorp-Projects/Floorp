@@ -168,6 +168,7 @@ class nsWebBrowserPersist final : public nsIInterfaceRequestor,
   // mCancel is used from both the main thread, and (inside OnDataAvailable)
   // from a background thread.
   mozilla::Atomic<bool> mCancel;
+  bool mEndCalled;
   bool mCompleted;
   bool mStartSaving;
   bool mReplaceExisting;
