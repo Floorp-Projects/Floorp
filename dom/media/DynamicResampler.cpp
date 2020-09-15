@@ -461,7 +461,6 @@ uint32_t AudioResampler::InputDuration() const {
   if (!mIsSampleFormatSet) {
     return mResampler.mPreBufferFrames;
   }
-  MOZ_ASSERT(mResampler.InFramesBuffered(0) >= 0);
   return mResampler.InFramesBuffered(0);
 }
 
@@ -469,7 +468,6 @@ uint32_t AudioResampler::InputRemainingDuration() const {
   if (!mIsSampleFormatSet) {
     return mResampler.mPreBufferFrames;
   }
-  MOZ_ASSERT(mResampler.InFramesLeftToBuffer(0) >= 0);
   return mResampler.InFramesLeftToBuffer(0);
 }
 
