@@ -15,6 +15,11 @@ class PrintHelper {
 
     await SpecialPowers.popPrefEnv();
 
+    // Reset all of the other printing prefs to their default.
+    for (let name of Services.prefs.getChildList("print.")) {
+      Services.prefs.clearUserPref(name);
+    }
+
     return taskReturn;
   }
 
@@ -76,9 +81,7 @@ class PrintHelper {
   }
 
   get _printBrowser() {
-    let dialog = this.dialog;
-    ok(dialog, "The dialog exists");
-    return dialog._frame;
+    return this.dialog._frame;
   }
 
   get doc() {
@@ -89,7 +92,51 @@ class PrintHelper {
     return this._printBrowser.contentWindow;
   }
 
+  get(id) {
+    return this.doc.getElementById(id);
+  }
+
   get sourceURI() {
     return this.win.PrintEventHandler.originalSourceCurrentURI;
+  }
+
+  async waitForPreview(changeFn) {
+    changeFn();
+    await BrowserTestUtils.waitForEvent(this.doc, "preview-updated");
+  }
+
+  click(el) {
+    EventUtils.synthesizeMouseAtCenter(el, {}, this.win);
+  }
+
+  text(el, text) {
+    this.click(el);
+    el.value = "";
+    EventUtils.sendString(text, this.win);
+  }
+
+  async openMoreSettings() {
+    this.click(this.get("more-settings").firstElementChild);
+    await this.awaitAnimationFrame();
+  }
+
+  dispatchSettingsChange(settings) {
+    this.doc.dispatchEvent(
+      new CustomEvent("update-print-settings", {
+        detail: settings,
+      })
+    );
+  }
+
+  get settings() {
+    return this.win.PrintEventHandler.settings;
+  }
+
+  get viewSettings() {
+    return this.win.PrintEventHandler.viewSettings;
+  }
+
+  awaitAnimationFrame() {
+    return new Promise(resolve => this.win.requestAnimationFrame(resolve));
   }
 }
