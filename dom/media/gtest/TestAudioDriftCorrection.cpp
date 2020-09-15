@@ -11,6 +11,26 @@
 #include "gtest/gtest-printers.h"
 #include "gtest/gtest.h"
 
+// Runs UpdateClock() and checks that the reported correction level doesn't
+// change for enough time to trigger a correction update on the first
+// following UpdateClock(). Returns the first reported correction level.
+static float RunUntilCorrectionUpdate(ClockDrift& aC, int aSource, int aTarget,
+                                      int aBuffering, int aSourceOffset = 0,
+                                      int aTargetOffset = 0) {
+  Maybe<float> correction;
+  for (int s = aSourceOffset, t = aTargetOffset;
+       s < aC.mSourceRate && t < aC.mTargetRate; s += aSource, t += aTarget) {
+    aC.UpdateClock(aSource, aTarget, aBuffering);
+    if (correction) {
+      EXPECT_FLOAT_EQ(aC.GetCorrection(), *correction)
+          << "s=" << s << "; t=" << t;
+    } else {
+      correction = Some(aC.GetCorrection());
+    }
+  }
+  return *correction;
+};
+
 TEST(TestClockDrift, Basic)
 {
   // Keep buffered frames to the wanted level in order to not affect that test.
@@ -19,26 +39,10 @@ TEST(TestClockDrift, Basic)
   ClockDrift c(48000, 48000, buffered);
   EXPECT_EQ(c.GetCorrection(), 1.0);
 
-  // Keep buffered frames to the wanted level in order to not affect that test.
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480, 480, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
-
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480, 480 + 48, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
-
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480, 480, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.1);
-  }
-
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480 + 48, 480, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480, buffered), 1.0);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480 + 48, buffered), 1.0);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480, buffered), 1.1);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480 + 48, 480, buffered), 1.0);
 
   c.UpdateClock(0, 0, 5 * 480);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 0.90909094);
@@ -50,33 +54,25 @@ TEST(TestClockDrift, BasicResampler)
   const int buffered = 5 * 240;
 
   ClockDrift c(24000, 48000, buffered);
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(240, 480, 5 * 240);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
 
   // Keep buffered frames to the wanted level in order to not affect that test.
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(240, 480 + 48, 5 * 240);  // +10%
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 240, 480, buffered), 1.0);
 
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(240 + 24, 480, 5 * 240);  // +10%
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.1);
-  }
+  // +10%
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 240, 480 + 48, buffered), 1.0);
 
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(240, 480 - 48, 5 * 240);  // -10%
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 0.90909094);
-  }
+  // +10%
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 240 + 24, 480, buffered), 1.1);
 
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(240 + 12, 480 - 24, 5 * 240);  //-5%, -5%
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 0.90909094);
-  }
+  // -10%
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 240, 480 - 48, buffered),
+                  0.90909094);
 
-  c.UpdateClock(0, 0, 5 * 240);
+  // +5%, -5%
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 240 + 12, 480 - 24, buffered),
+                  0.90909094);
+
+  c.UpdateClock(0, 0, buffered);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 0.90909094);
 }
 
@@ -85,31 +81,23 @@ TEST(TestClockDrift, BufferedInput)
   ClockDrift c(48000, 48000, 5 * 480);
   EXPECT_EQ(c.GetCorrection(), 1.0);
 
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480, 480, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
-  c.UpdateClock(480, 480, 0);  // 0 buffered on 100th iteration
-  EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0526316);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480, 5 * 480), 1.0);
 
-  for (int i = 0; i < 99; ++i) {
-    c.UpdateClock(480, 480, 2 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0526316);
-  }
+  c.UpdateClock(480, 480, 0);  // 0 buffered when updating correction
+  EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0526316);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480, 2 * 480, 480, 480),
+                  1.0526316);
+
   c.UpdateClock(480, 480, 2 * 480);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0309278);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480, 5 * 480, 480, 480),
+                  1.0309278);
 
-  for (int i = 0; i < 99; ++i) {
-    c.UpdateClock(480, 480, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0309278);
-  }
   c.UpdateClock(480, 480, 5 * 480);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480, 7 * 480, 480, 480),
+                  1.0);
 
-  for (int i = 0; i < 99; ++i) {
-    c.UpdateClock(480, 480, 7 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
   c.UpdateClock(480, 480, 7 * 480);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 0.980392);
 }
@@ -119,31 +107,23 @@ TEST(TestClockDrift, BufferedInputWithResampling)
   ClockDrift c(24000, 48000, 5 * 240);
   EXPECT_EQ(c.GetCorrection(), 1.0);
 
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(240, 480, 5 * 240);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
-  c.UpdateClock(240, 480, 0);  // 0 buffered on 100th iteration
-  EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0526316);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 240, 480, 5 * 240), 1.0);
 
-  for (int i = 0; i < 99; ++i) {
-    c.UpdateClock(240, 480, 2 * 240);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0526316);
-  }
+  c.UpdateClock(240, 480, 0);  // 0 buffered when updating correction
+  EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0526316);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 240, 480, 2 * 240, 240, 480),
+                  1.0526316);
+
   c.UpdateClock(240, 480, 2 * 240);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0309278);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 240, 480, 5 * 240, 240, 480),
+                  1.0309278);
 
-  for (int i = 0; i < 99; ++i) {
-    c.UpdateClock(240, 480, 5 * 240);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0309278);
-  }
   c.UpdateClock(240, 480, 5 * 240);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 240, 480, 7 * 240, 240, 480),
+                  1.0);
 
-  for (int i = 0; i < 99; ++i) {
-    c.UpdateClock(240, 480, 7 * 240);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
   c.UpdateClock(240, 480, 7 * 240);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 0.980392);
 }
@@ -155,15 +135,15 @@ TEST(TestClockDrift, Clamp)
 
   ClockDrift c(48000, 48000, buffered);
 
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480, 480 + 2 * 48, 5 * 480);  // +20%
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480, 480 - 2 * 48, 5 * 480);  // -20%
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.1);
-  }
-  c.UpdateClock(0, 0, 5 * 480);
+  // +20%
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480 + 2 * 48, buffered),
+                  1.0);
+
+  // -20%
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480 - 2 * 48, buffered),
+                  1.1);
+
+  c.UpdateClock(0, 0, buffered);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 0.9);
 }
 
@@ -174,24 +154,11 @@ TEST(TestClockDrift, SmallDiff)
 
   ClockDrift c(48000, 48000, buffered);
 
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480 + 4, 480, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480 + 5, 480, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480, 480, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 0.98969072);
-  }
-  // Reset to 1.0 again
-  for (int i = 0; i < 100; ++i) {
-    c.UpdateClock(480, 480 + 4, 5 * 480);  // +0.83%
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  }
-  c.UpdateClock(0, 0, 5 * 480);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480 + 4, 480, buffered), 1.0);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480 + 5, 480, buffered), 1.0);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480, buffered), 0.98969072);
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480 + 4, buffered), 1.0);
+  c.UpdateClock(0, 0, buffered);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0083333);
 }
 
@@ -205,10 +172,8 @@ TEST(TestClockDrift, SmallBufferedFrames)
   c.UpdateClock(480, 480, 0);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0526316);
 
-  for (int i = 0; i < 50; ++i) {
-    c.UpdateClock(480, 480, 5 * 480);
-    EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0526316);
-  }
+  EXPECT_FLOAT_EQ(RunUntilCorrectionUpdate(c, 480, 480, 5 * 480, 24000, 24000),
+                  1.0526316);
   c.UpdateClock(480, 480, 0);
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.1);
 }
