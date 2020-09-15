@@ -9,7 +9,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "gc/ParallelWork.h"
-#include "vm/HelperThreads.h"
+#include "vm/HelperThreadState.h"
 #include "vm/Runtime.h"
 #include "vm/TraceLogging.h"
 
