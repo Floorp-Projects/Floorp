@@ -3,7 +3,7 @@
 
 "use strict";
 
-const MDNCompatibility = require("devtools/shared/compatibility/MDNCompatibility");
+const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
 
 const {
   COMPATIBILITY_UPDATE_NODE_COMPLETE,
@@ -12,7 +12,7 @@ const {
 // Test the behavior rules are dynamically added
 
 const ISSUE_CURSOR = {
-  type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+  type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
   property: "cursor",
   url: "https://developer.mozilla.org/docs/Web/CSS/cursor",
   deprecated: false,
@@ -20,7 +20,7 @@ const ISSUE_CURSOR = {
 };
 
 const ISSUE_HYPHENS = {
-  type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
+  type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY_ALIASES,
   aliases: ["hyphens"],
   property: "hyphens",
   url: "https://developer.mozilla.org/docs/Web/CSS/hyphens",
