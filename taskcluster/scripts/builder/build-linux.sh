@@ -27,6 +27,7 @@ echo "running as" $(id)
 : MH_BUILD_POOL                 ${MH_BUILD_POOL:=staging}
 
 : WORKSPACE                     ${WORKSPACE:=/builds/worker/workspace}
+: MOZ_OBJDIR                    ${MOZ_OBJDIR:=$WORKSPACE/obj-build}
 
 set -v
 
@@ -80,6 +81,8 @@ fi
 # cache.  However, only some mozharness scripts use tooltool_wrapper.sh, so this may not be
 # entirely effective.
 export TOOLTOOL_CACHE
+
+export MOZ_OBJDIR
 
 config_path_cmds=""
 for path in ${MOZHARNESS_CONFIG_PATHS}; do
