@@ -86,8 +86,9 @@ nsresult SecondsToUsecs(double aSeconds, int64_t& aOutUsecs) {
 
 static int32_t ConditionDimension(float aValue) {
   // This will exclude NaNs and too-big values.
-  if (aValue > 1.0 && aValue <= float(INT32_MAX))
+  if (aValue > 1.0 && aValue <= float(INT32_MAX)) {
     return int32_t(NS_round(aValue));
+  }
   return 0;
 }
 
@@ -104,7 +105,9 @@ void ScaleDisplayByAspectRatio(gfx::IntSize& aDisplay, float aAspectRatio) {
 static int64_t BytesToTime(int64_t offset, int64_t length, int64_t durationUs) {
   NS_ASSERTION(length > 0, "Must have positive length");
   double r = double(offset) / double(length);
-  if (r > 1.0) r = 1.0;
+  if (r > 1.0) {
+    r = 1.0;
+  }
   return int64_t(double(durationUs) * r);
 }
 
@@ -112,7 +115,9 @@ media::TimeIntervals GetEstimatedBufferedTimeRanges(
     mozilla::MediaResource* aStream, int64_t aDurationUsecs) {
   media::TimeIntervals buffered;
   // Nothing to cache if the media takes 0us to play.
-  if (aDurationUsecs <= 0 || !aStream) return buffered;
+  if (aDurationUsecs <= 0 || !aStream) {
+    return buffered;
+  }
 
   // Special case completely cached files.  This also handles local files.
   if (aStream->IsDataCachedToEndOfResource(0)) {
@@ -126,7 +131,9 @@ media::TimeIntervals GetEstimatedBufferedTimeRanges(
   // If we can't determine the total size, pretend that we have nothing
   // buffered. This will put us in a state of eternally-low-on-undecoded-data
   // which is not great, but about the best we can do.
-  if (totalBytes <= 0) return buffered;
+  if (totalBytes <= 0) {
+    return buffered;
+  }
 
   int64_t startOffset = aStream->GetNextCachedData(0);
   while (startOffset >= 0) {
@@ -156,7 +163,7 @@ void DownmixStereoToMono(mozilla::AudioDataValue* aBuffer, uint32_t aFrames) {
     int sample = 0;
 #endif
     // The sample of the buffer would be interleaved.
-    sample = (aBuffer[fIdx * channels] + aBuffer[fIdx * channels + 1]) * 0.5;
+    sample = (aBuffer[fIdx * channels] + aBuffer[fIdx * channels + 1]) * 0.5f;
     aBuffer[fIdx * channels] = aBuffer[fIdx * channels + 1] = sample;
   }
 }
@@ -179,10 +186,7 @@ bool IsDefaultPlaybackDeviceMono() {
 
 bool IsVideoContentType(const nsCString& aContentType) {
   constexpr auto video = "video"_ns;
-  if (FindInReadable(video, aContentType)) {
-    return true;
-  }
-  return false;
+  return FindInReadable(video, aContentType);
 }
 
 bool IsValidVideoRegion(const gfx::IntSize& aFrame,
@@ -458,7 +462,9 @@ nsresult GenerateRandomName(nsCString& aOutSalt, uint32_t aLength) {
   nsresult rv;
   nsCOMPtr<nsIRandomGenerator> rg =
       do_GetService("@mozilla.org/security/random-generator;1", &rv);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // For each three bytes of random data we will get four bytes of ASCII.
   const uint32_t requiredBytesLength =
@@ -466,7 +472,9 @@ nsresult GenerateRandomName(nsCString& aOutSalt, uint32_t aLength) {
 
   uint8_t* buffer;
   rv = rg->GenerateRandomBytes(requiredBytesLength, &buffer);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsCString temp;
   nsDependentCSubstring randomData(reinterpret_cast<const char*>(buffer),
@@ -474,7 +482,9 @@ nsresult GenerateRandomName(nsCString& aOutSalt, uint32_t aLength) {
   rv = Base64Encode(randomData, temp);
   free(buffer);
   buffer = nullptr;
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   aOutSalt = std::move(temp);
   return NS_OK;
@@ -482,7 +492,9 @@ nsresult GenerateRandomName(nsCString& aOutSalt, uint32_t aLength) {
 
 nsresult GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength) {
   nsresult rv = GenerateRandomName(aOutSalt, aLength);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Base64 characters are alphanumeric (a-zA-Z0-9) and '+' and '/', so we need
   // to replace illegal characters -- notably '/'
