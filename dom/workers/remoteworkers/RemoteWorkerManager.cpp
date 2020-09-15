@@ -15,6 +15,9 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundParent.h"
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#  include "mozilla/Sprintf.h"  // SprintfLiteral
+#endif
 #include "mozilla/StaticPrefs_extensions.h"
 #include "nsCOMPtr.h"
 #include "nsIE10SUtils.h"
