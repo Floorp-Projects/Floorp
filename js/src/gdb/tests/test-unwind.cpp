@@ -1,5 +1,6 @@
 #include "gdb-tests.h"
 #include "jsapi.h"  // sundry symbols not moved to more-specific headers yet
+#include "jsfriendapi.h"  // JSFunctionSpecWithHelp
 
 #include "jit/JitOptions.h"               // js::jit::JitOptions
 #include "js/CallArgs.h"                  // JS::CallArgs, JS::CallArgsFromVp

@@ -7,9 +7,14 @@
 #ifndef js_Tracer_h
 #define js_Tracer_h
 
-#include "jsfriendapi.h"
-
 #include "gc/Barrier.h"
+#include "js/HashTable.h"
+
+namespace JS {
+using CompartmentSet =
+    js::HashSet<Compartment*, js::DefaultHasher<Compartment*>,
+                js::SystemAllocPolicy>;
+}  // namespace JS
 
 namespace js {
 
@@ -305,6 +310,13 @@ namespace gc {
 // deep or infinite recursion.
 void TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape);
 void TraceCycleCollectorChildren(JS::CallbackTracer* trc, ObjectGroup* group);
+
+/**
+ * Trace every value within |compartments| that is wrapped by a
+ * cross-compartment wrapper from a compartment that is not an element of
+ * |compartments|.
+ */
+void TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments);
 
 }  // namespace gc
 }  // namespace js
