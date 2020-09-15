@@ -1726,9 +1726,6 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
   addFontSetFamilies(appFonts, policy.get(), /* aAppFonts = */ true);
 #endif
 
-  ApplyWhitelist(families);
-  families.Sort();
-
   mozilla::fontlist::FontList* list = SharedFontList();
   list->SetFamilyNames(families);
 

@@ -990,8 +990,6 @@ void gfxMacPlatformFontList::InitSharedFontListForPlatform() {
           fontlist::Family::InitData(key, name, 0, GetVisibilityForFamily(name)));
     }
     CFRelease(familyNames);
-    ApplyWhitelist(families);
-    families.Sort();
     SharedFontList()->SetFamilyNames(families);
     InitAliasesForSingleFaceList();
     GetPrefsAndStartLoader();
