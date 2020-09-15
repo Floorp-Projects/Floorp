@@ -715,16 +715,14 @@ already_AddRefed<nsIWidget> EditorBase::GetWidget() {
   return NS_WARN_IF(!widget) ? nullptr : widget.forget();
 }
 
-NS_IMETHODIMP EditorBase::GetContentsMIMEType(char** aContentsMIMEType) {
-  if (NS_WARN_IF(!aContentsMIMEType)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aContentsMIMEType = ToNewCString(mContentMIMEType);
+NS_IMETHODIMP EditorBase::GetContentsMIMEType(nsAString& aContentsMIMEType) {
+  aContentsMIMEType = mContentMIMEType;
   return NS_OK;
 }
 
-NS_IMETHODIMP EditorBase::SetContentsMIMEType(const char* aContentsMIMEType) {
-  mContentMIMEType.Assign(aContentsMIMEType ? aContentsMIMEType : "");
+NS_IMETHODIMP EditorBase::SetContentsMIMEType(
+    const nsAString& aContentsMIMEType) {
+  mContentMIMEType.Assign(aContentsMIMEType);
   return NS_OK;
 }
 
