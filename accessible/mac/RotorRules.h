@@ -39,6 +39,12 @@ class RotorLandmarkRule final : public PivotRoleRule {
   explicit RotorLandmarkRule(AccessibleOrProxy& aDirectDescendantsFrom);
 };
 
+class RotorButtonRule final : public PivotRoleRule {
+ public:
+  explicit RotorButtonRule();
+  explicit RotorButtonRule(AccessibleOrProxy& aDirectDescendantsFrom);
+};
+
 class RotorControlRule final : public PivotRule {
  public:
   explicit RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom);
