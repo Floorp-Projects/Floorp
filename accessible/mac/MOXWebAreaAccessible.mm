@@ -205,6 +205,13 @@ using namespace mozilla::a11y;
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
+    if ([key isEqualToString:@"AXButtonSearchKey"]) {
+      RotorButtonRule rule = mImmediateDescendantsOnly
+                                 ? RotorButtonRule(mStartElem)
+                                 : RotorButtonRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+
     if ([key isEqualToString:@"AXControlSearchKey"]) {
       RotorControlRule rule = mImmediateDescendantsOnly
                                   ? RotorControlRule(mStartElem)
