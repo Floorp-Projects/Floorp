@@ -672,6 +672,16 @@ async function runTest25() {
 
 async function runTest26() {
   await compareFiles("printpreview_downloadable_font_in_iframe.html", "printpreview_downloadable_font_in_iframe_ref.html");
+  requestAnimationFrame(() => setTimeout(runTest27));
+}
+
+async function runTest27() {
+  await compareFiles("data:text/html,<style>:root { background-color: red; background-image: linear-gradient(red, red) }</style>", "data:text/html,", {
+    settings: {
+      printBGColors: false,
+      printBGImages: false,
+    }
+  });
   finish();
 }
 
