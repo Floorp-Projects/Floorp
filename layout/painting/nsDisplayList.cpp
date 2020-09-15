@@ -3509,9 +3509,11 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   }
 
   bool drawBackgroundColor = false;
-  bool drawBackgroundImage = false;
+  // Dummy initialisation to keep Valgrind/Memcheck happy.
+  // See bug 1122375 comment 1.
   nscolor color = NS_RGBA(0, 0, 0, 0);
   if (!nsCSSRendering::IsCanvasFrame(aFrame) && bg) {
+    bool drawBackgroundImage;
     color = nsCSSRendering::DetermineBackgroundColor(
         presContext, bgSC, aFrame, drawBackgroundImage, drawBackgroundColor);
   }
@@ -3591,7 +3593,7 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     return true;
   }
 
-  if (!bg || !drawBackgroundImage) {
+  if (!bg) {
     aList->AppendToTop(&bgItemList);
     return false;
   }
