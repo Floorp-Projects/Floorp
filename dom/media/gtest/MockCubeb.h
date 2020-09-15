@@ -201,6 +201,8 @@ class MockCubebStream {
     return mFramesProcessedEvent;
   }
 
+  MediaEventSource<void>& ErrorForcedEvent() { return mErrorForcedEvent; }
+
  private:
   // Simulates the audio thread. The thread is created at Start anda destroyed
   // at Stop. At next StreamStart a new thread is created.
@@ -228,7 +230,9 @@ class MockCubebStream {
         break;
       }
       if (mForceErrorState) {
+        mForceErrorState = false;
         mStateCallback(stream, mUserPtr, CUBEB_STATE_ERROR);
+        mErrorForcedEvent.Notify();
         break;
       }
       uint32_t sampleRate(mInputParams.rate ? mInputParams.rate
@@ -280,6 +284,7 @@ class MockCubebStream {
   AudioVerifier<AudioDataValue> mAudioVerifier;
 
   MediaEventProducer<uint32_t> mFramesProcessedEvent;
+  MediaEventProducer<void> mErrorForcedEvent;
 };
 
 // This class has two facets: it is both a fake cubeb backend that is intended
