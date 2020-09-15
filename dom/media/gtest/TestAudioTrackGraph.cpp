@@ -12,6 +12,9 @@
 #include "CrossGraphPort.h"
 #include "MediaEngineWebRTCAudio.h"
 #include "MockCubeb.h"
+#include "mozilla/Preferences.h"
+
+#define DRIFT_BUFFERING_PREF "media.clockdrift.buffering"
 
 namespace {
 /**
@@ -479,4 +482,17 @@ TEST(TestAudioTrackGraph, CrossGraphPort)
   TestCrossGraphPort(52110, 17781, 1);
   TestCrossGraphPort(52110, 17781, 1.08);
   TestCrossGraphPort(52110, 17781, 0.92);
+}
+
+TEST(TestAudioTrackGraph, CrossGraphPortLargeBuffer)
+{
+  const int32_t oldBuffering = Preferences::GetInt(DRIFT_BUFFERING_PREF);
+  Preferences::SetInt(DRIFT_BUFFERING_PREF, 5000);
+
+  TestCrossGraphPort(44100, 44100, 1.02);
+  TestCrossGraphPort(48000, 44100, 1.08);
+  TestCrossGraphPort(44100, 48000, 0.95);
+  TestCrossGraphPort(52110, 17781, 0.92);
+
+  Preferences::SetInt(DRIFT_BUFFERING_PREF, oldBuffering);
 }
