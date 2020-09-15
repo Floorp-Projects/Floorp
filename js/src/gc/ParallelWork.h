@@ -12,6 +12,7 @@
 
 #include "gc/GC.h"
 #include "gc/GCParallelTask.h"
+#include "gc/GCRuntime.h"
 #include "js/SliceBudget.h"
 #include "vm/HelperThreads.h"
 
@@ -113,7 +114,7 @@ class MOZ_RAII AutoRunParallelWork {
   }
 
   ~AutoRunParallelWork() {
-    MOZ_ASSERT(HelperThreadState().isLockedByCurrentThread());
+    MOZ_ASSERT(gHelperThreadLock.ownedByCurrentThread());
 
     for (size_t i = 0; i < tasksStarted; i++) {
       gc->joinTask(*tasks[i], phaseKind, lock);

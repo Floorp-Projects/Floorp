@@ -501,7 +501,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   MOZ_ASSERT(!gcmarker->isWeakMarking());
 
   /* Wait for off-thread parsing which can allocate. */
-  HelperThreadState().waitForAllThreads();
+  WaitForAllHelperThreads();
 
   gc->waitBackgroundAllocEnd();
   gc->waitBackgroundSweepEnd();
