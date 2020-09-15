@@ -119,7 +119,7 @@ void DynamicResampler::UpdateResampler(int aOutRate, int aChannels) {
       if ((mSampleFormat == AUDIO_FORMAT_S16 ||
            mSampleFormat == AUDIO_FORMAT_FLOAT32) &&
           mChannels == STEREO) {
-        // The mono channel is allways up to date. When we are going from mono
+        // The mono channel is always up to date. When we are going from mono
         // to stereo upmix the mono to stereo channel
         int bufferedDuration = mInternalInBuffer[0].AvailableRead();
         mInternalInBuffer[1].Clear();

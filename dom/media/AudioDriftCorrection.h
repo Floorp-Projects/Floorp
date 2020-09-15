@@ -51,7 +51,7 @@ class ClockDrift final {
 
   /**
    * Update the available source frames, target frames, and the current
-   * buffering, in every iteration. If the condition are met a new correction is
+   * buffer, in every iteration. If the conditions are met a new correction is
    * calculated. A new correction is calculated in the following cases:
    *   1. Every mAdjustmentIntervalMs milliseconds (1000ms).
    *   2. Every time we run low on buffered frames (less than 20ms).
@@ -81,13 +81,13 @@ class ClockDrift final {
           resampledSourceClock *
           (static_cast<float>(mTargetRate) / static_cast<float>(mSourceRate));
     }
-    mCorrection = (float)mTargetClock / resampledSourceClock;
+    mCorrection = static_cast<float>(mTargetClock) / resampledSourceClock;
 
-    // Clamp to ragnge [0.9, 1.1] to avoid distortion
+    // Clamp to range [0.9, 1.1] to avoid distortion
     mCorrection = std::min(std::max(mCorrection, 0.9f), 1.1f);
 
-    // If previous correction slightly smaller  (-1%) ignore it to avoid
-    // recalculations. Don't do it when is greater (+1%) to avoid risking
+    // If previous correction is slightly greater (0% - +1%) ignore it to avoid
+    // recalculations. Don't ignore it when it is smaller to avoid the risk of
     // running out of frames.
     if (mPreviousCorrection - mCorrection <= 0.01 &&
         mPreviousCorrection - mCorrection > 0) {
@@ -95,7 +95,7 @@ class ClockDrift final {
     }
     mPreviousCorrection = mCorrection;
 
-    // Reset the counters to preper for the new period.
+    // Reset the counters to prepare for the next period.
     mTargetClock = 0;
     mSourceClock = 0;
   }
