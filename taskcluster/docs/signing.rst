@@ -58,29 +58,31 @@ and multiple formats for a given set of paths.
 Signing kinds
 -------------
 
-We currently have 12 different signing kinds. These fall into several categories:
+We currently have multiple signing kinds. These fall into several categories:
 
 **Build internal signing**: Certain package types require the internals to be signed.
 For certain package types, e.g. exe or dmg, we extract the internal binaries
 (e.g. xul.dll) and sign them. This is true for certain zipfiles, exes, and dmgs;
 we need to sign the internals before we [re]create the package. For linux
 tarballs, we don't need special packaging, so we can sign everything in this
-task. These kinds include `build-signing`, `shippable-l10n-signing`,
-`release-eme-free-repack-signing`, and `release-partner-repack-signing`.
+task. These kinds include ``build-signing``, ``shippable-l10n-signing``,
+``release-eme-free-repack-signing``, and ``release-partner-repack-signing``.
 
 **Build repackage signing**: Once we take the signed internals and package them
-(known as a `repackage`), certain formats require a signed external package.
+(known as a ``repackage``), certain formats require a signed external package.
 If we have created an update MAR file from the signed internals, the MAR
-file will also need to be signed. These kinds include `repackage-signing`,
-`release-eme-free-repack-repackage-signing`, and `release-partner-repack-repackage-signing`.
+file will also need to be signed. These kinds include ``repackage-signing``,
+``release-eme-free-repack-repackage-signing``, and ``release-partner-repack-repackage-signing``.
 
-`release-source-signing` and `partials-signing` sign the release source tarball
+``release-source-signing`` and ``partials-signing`` sign the release source tarball
 and partial update MARs.
+
+**Mac signing and notarization**: For mac, we have ``*-notarization-part-1``, which signs the app and pkg and submits them to Apple for notarization, ``*-notarization-poller``, which polls Apple until it finds a successful notarization status, and the ``*-signing`` task downloads the signed app and pkg from the ``part-1`` task and staples the notarization to them.
 
 We generate signed checksums at the top of the releases directories, like
 in `60.0`_. To generate these, we have the checksums signing kinds, including
-`release-generate-checksums-signing`, `checksums-signing`, and
-`release-source-checksums-signing`
+``release-generate-checksums-signing``, ``checksums-signing``, and
+``release-source-checksums-signing``
 
 .. _signing formats:
 
@@ -149,33 +151,40 @@ verification will raise an exception.
 Signing scriptworker workerTypes
 --------------------------------
 
-The `depsigning`_ pool handles all of the dep signing. These are heavily in use
-on try and autoland, but also other branches. These verify
-the `chain of trust` artifact but not its signature, and they don't have a
+The `linux-depsigning`_ pool handles all of the non-mac dep signing. These are
+heavily in use on try and autoland, but also other branches. These verify
+the `chain of trust`_ artifact but not its signature, and they don't have a
 gpg key to sign their own chain of trust artifact. This is by design; the chain
 of trust should and will break if a production scriptworker is downstream from
 a depsigning worker.
 
-The `signing-linux-v1`_ pool is the production signing pool; it handles the
+The `linux-signing`_ pool is the production signing pool; it handles the
 nightly- and release- signing requests. As such, it verifies the upstream
 chain of trust and all signatures, and signs its chain of trust artifact.
 
-The `signing-linux-dev`_ pool is intended for signingscript and scriptworker
+The `linux-devsigning`_ pool is intended for signingscript and scriptworker
 development use. Because it isn't used on any Firefox-developer-facing branch,
 Mozilla Releng is able to make breaking changes on this pool without affecting
 any other team.
+
+Similarly, we have the `mac-depsigning`_ and `mac-signing`_ pools, which handle
+CI and nightly/release signing, respectively. The `mac-notarization-poller`_
+pool consists of lightweight workers that poll Apple for status.
 
 .. _60.0: https://archive.mozilla.org/pub/firefox/releases/60.0/
 .. _addonscript: https://github.com/mozilla-releng/addonscript/
 .. _code signing: https://en.wikipedia.org/wiki/Code_signing
 .. _chain of trust: https://scriptworker.readthedocs.io/en/latest/chain_of_trust.html
-.. _depsigning: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-t-signing
+.. _linux-depsigning: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-t-signing
 .. _should_sign_windows: https://github.com/mozilla-releng/signingscript/blob/65cbb99ea53896fda9f4844e050a9695c762d24f/signingscript/sign.py#L369
 .. _Encrypted Media Extensions: https://hacks.mozilla.org/2014/05/reconciling-mozillas-mission-and-w3c-eme/
 .. _signing password files: https://github.com/mozilla/build-puppet/tree/feff5e12ab70f2c060b29940464e77208c7f0ef2/modules/signing_scriptworker/templates
 .. _signingscript: https://github.com/mozilla-releng/signingscript/
-.. _signing-linux-dev: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-t-signing-dev
-.. _signing-linux-v1: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-3-signing
+.. _linux-devsigning: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-t-signing-dev
+.. _linux-signing: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-k8s/worker-types/gecko-3-signing
+.. _mac-depsigning: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-prov-v1/worker-types/depsigning-mac-v1
+.. _mac-signing: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-prov-v1/worker-types/signing-mac-v1
+.. _mac-notarization-poller: https://firefox-ci-tc.services.mozilla.com/provisioners/scriptworker-prov-v1/worker-types/mac-notarization-poller
 .. _signtool: https://github.com/mozilla-releng/signtool
 .. _Scriptworker: https://github.com/mozilla-releng/scriptworker/
 .. _widevine site: https://www.widevine.com/wv_drm.html
