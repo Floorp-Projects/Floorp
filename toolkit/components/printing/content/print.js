@@ -497,6 +497,9 @@ var PrintEventHandler = {
    * the in progress update completes.
    */
   async updatePrintPreview() {
+    // Make sure the rendering state is set so we don't visibly update the
+    // sheet count with incomplete data.
+    this._showRenderingIndicator();
     this._updatePrintPreviewTask.arm();
   },
 
@@ -516,9 +519,7 @@ var PrintEventHandler = {
     // We never want the progress dialog to show
     settings.showPrintProgress = false;
 
-    let stack = previewBrowser.parentElement;
-    stack.setAttribute("rendering", true);
-    document.body.setAttribute("rendering", true);
+    this._showRenderingIndicator();
 
     let sourceWinId;
     if (sourceBrowsingContext) {
@@ -548,6 +549,17 @@ var PrintEventHandler = {
       })
     );
 
+    this._hideRenderingIndicator();
+  },
+
+  _showRenderingIndicator() {
+    let stack = this.previewBrowser.parentElement;
+    stack.setAttribute("rendering", true);
+    document.body.setAttribute("rendering", true);
+  },
+
+  _hideRenderingIndicator() {
+    let stack = this.previewBrowser.parentElement;
     stack.removeAttribute("rendering");
     document.body.removeAttribute("rendering");
   },
