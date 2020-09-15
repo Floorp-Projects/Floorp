@@ -234,183 +234,200 @@ function testMemory(string, total, delta, assumptions) {
 add_task(async function testAboutProcesses() {
   info("Setting up about:processes");
 
-  // The tab we're testing.
-  let tabAboutProcesses = (gBrowser.selectedTab = BrowserTestUtils.addTab(
-    gBrowser,
-    "about:processes"
-  ));
-  await BrowserTestUtils.browserLoaded(tabAboutProcesses.linkedBrowser);
+  // Test twice, once without `showThreads`, once with it.
+  for (let showThreads of [false, true]) {
+    Services.prefs.setBoolPref(
+      "toolkit.aboutProcesses.showThreads",
+      showThreads
+    );
+    // The tab we're testing.
+    let tabAboutProcesses = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+      gBrowser,
+      "about:processes"
+    ));
+    await BrowserTestUtils.browserLoaded(tabAboutProcesses.linkedBrowser);
 
-  info("Setting up example.com");
-  // Another tab that we'll pretend is hung.
-  let tabHung = BrowserTestUtils.addTab(gBrowser, "http://example.com");
-  await BrowserTestUtils.browserLoaded(tabHung.linkedBrowser);
+    info("Setting up example.com");
+    // Another tab that we'll pretend is hung.
+    let tabHung = BrowserTestUtils.addTab(gBrowser, "http://example.com");
+    await BrowserTestUtils.browserLoaded(tabHung.linkedBrowser);
 
-  info("Setting up fake process hang detector");
-  let hungChildID = tabHung.linkedBrowser.frameLoader.childID;
+    info("Setting up fake process hang detector");
+    let hungChildID = tabHung.linkedBrowser.frameLoader.childID;
 
-  let doc = tabAboutProcesses.linkedBrowser.contentDocument;
-  let tbody = doc.getElementById("process-tbody");
+    let doc = tabAboutProcesses.linkedBrowser.contentDocument;
+    let tbody = doc.getElementById("process-tbody");
 
-  // Keep informing about:processes that `tabHung` is hung.
-  // Note: this is a background task, do not `await` it.
-  let isProcessHangDetected = false;
-  let fakeProcessHangMonitor = async function() {
-    for (let i = 0; i < 100; ++i) {
-      if (isProcessHangDetected || !tabHung.linkedBrowser) {
-        // Let's stop spamming as soon as we can.
-        return;
+    // Keep informing about:processes that `tabHung` is hung.
+    // Note: this is a background task, do not `await` it.
+    let isProcessHangDetected = false;
+    let fakeProcessHangMonitor = async function() {
+      for (let i = 0; i < 100; ++i) {
+        if (isProcessHangDetected || !tabHung.linkedBrowser) {
+          // Let's stop spamming as soon as we can.
+          return;
+        }
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        await new Promise(resolve => setTimeout(resolve, 300));
+        Services.obs.notifyObservers(
+          {
+            childID: hungChildID,
+            hangType: Ci.nsIHangReport.PLUGIN_HANG,
+            pluginName: "Fake plug-in",
+            QueryInterface: ChromeUtils.generateQI(["nsIHangReport"]),
+          },
+          "process-hang-report"
+        );
       }
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      await new Promise(resolve => setTimeout(resolve, 300));
-      Services.obs.notifyObservers(
-        {
-          childID: hungChildID,
-          hangType: Ci.nsIHangReport.PLUGIN_HANG,
-          pluginName: "Fake plug-in",
-          QueryInterface: ChromeUtils.generateQI(["nsIHangReport"]),
-        },
-        "process-hang-report"
-      );
-    }
-  };
-  fakeProcessHangMonitor();
+    };
+    fakeProcessHangMonitor();
 
-  info("Waiting for the first update of about:processes");
-  // Wait until the table has first been populated.
-  await TestUtils.waitForCondition(() => tbody.childElementCount);
+    info("Waiting for the first update of about:processes");
+    // Wait until the table has first been populated.
+    await TestUtils.waitForCondition(() => tbody.childElementCount);
 
-  info("Waiting for the second update of about:processes");
-  // And wait for another update using a mutation observer, to give our newly created test tab some time
-  // to burn some CPU.
-  await new Promise(resolve => {
-    let observer = new doc.ownerGlobal.MutationObserver(() => {
-      observer.disconnect();
-      resolve();
+    info("Waiting for the second update of about:processes");
+    // And wait for another update using a mutation observer, to give our newly created test tab some time
+    // to burn some CPU.
+    await new Promise(resolve => {
+      let observer = new doc.ownerGlobal.MutationObserver(() => {
+        observer.disconnect();
+        resolve();
+      });
+      observer.observe(tbody, { childList: true });
     });
-    observer.observe(tbody, { childList: true });
-  });
 
-  info("Looking at the contents of about:processes");
-  // Find the row for the browser process.
-  let row = tbody.firstChild;
-  while (row) {
-    if (row.process && row.process.type == "browser") {
-      break;
+    info("Looking at the contents of about:processes");
+    // Find the row for the browser process.
+    let row = tbody.firstChild;
+    while (row) {
+      if (row.process && row.process.type == "browser") {
+        break;
+      }
+      row = row.nextSibling;
     }
-    row = row.nextSibling;
-  }
 
-  Assert.ok(row, "found a table row for the browser");
-  let children = row.children;
-  let memoryResidentContent = children[1].textContent;
-  let cpuContent = children[2].textContent;
-  let pidContent = document.l10n.getAttributes(children[0].children[0]).args
-    .pid;
-
-  let threadDetailsRow = row.nextSibling;
-  while (threadDetailsRow) {
-    if (threadDetailsRow.classList.contains("thread-summary")) {
-      break;
-    }
-    threadDetailsRow = threadDetailsRow.nextSibling;
-  }
-  let numberOfThreadsContent = document.l10n.getAttributes(
-    threadDetailsRow.children[0].children[1]
-  ).args.number;
-
-  info("Sanity checks: pid");
-  let pid = Number.parseInt(pidContent);
-  Assert.ok(pid > 0, `Checking pid ${pidContent}`);
-  Assert.equal(pid, row.process.pid);
-
-  info("Sanity checks: memory resident");
-  testMemory(
-    memoryResidentContent,
-    row.process.totalResidentUniqueSize,
-    row.process.deltaResidentUniqueSize,
-    HARDCODED_ASSUMPTIONS_PROCESS
-  );
-
-  info("Sanity checks: CPU (Total)");
-  testCpu(
-    cpuContent,
-    row.process.totalCpu,
-    row.process.slopeCpu,
-    HARDCODED_ASSUMPTIONS_PROCESS
-  );
-
-  info("Sanity checks: number of threads");
-  let numberOfThreads = Number.parseInt(numberOfThreadsContent);
-  Assert.ok(
-    numberOfThreads >= HARDCODED_ASSUMPTIONS_PROCESS.minimalNumberOfThreads
-  );
-  Assert.ok(
-    numberOfThreads <= HARDCODED_ASSUMPTIONS_PROCESS.maximalNumberOfThreads
-  );
-  Assert.equal(numberOfThreads, row.process.threads.length);
-
-  info("Testing that we can open the list of threads");
-  let twisty = threadDetailsRow.getElementsByClassName("twisty")[0];
-  twisty.click();
-  Assert.equal(
-    numberOfThreads,
-    tbody.getElementsByClassName("thread").length,
-    "Displayed number of threads is correct"
-  );
-
-  let numberOfThreadsFound = 0;
-  for (
-    let threadRow = threadDetailsRow.nextSibling;
-    threadRow && threadRow.classList.contains("thread");
-    threadRow = threadRow.nextSibling
-  ) {
-    let children = threadRow.children;
+    Assert.ok(row, "found a table row for the browser");
+    let children = row.children;
+    let memoryResidentContent = children[1].textContent;
     let cpuContent = children[2].textContent;
-    let tidContent = document.l10n.getAttributes(children[0].children[0]).args
-      .tid;
-    ++numberOfThreadsFound;
+    let pidContent = document.l10n.getAttributes(children[0].children[0]).args
+      .pid;
 
-    info("Sanity checks: tid");
-    let tid = Number.parseInt(tidContent);
-    Assert.notEqual(tid, 0, "The tid should be set");
-    Assert.equal(tid, threadRow.thread.tid, "Displayed tid is correct");
+    info("Sanity checks: pid");
+    let pid = Number.parseInt(pidContent);
+    Assert.ok(pid > 0, `Checking pid ${pidContent}`);
+    Assert.equal(pid, row.process.pid);
 
-    info("Sanity checks: CPU (User and Kernel)");
+    info("Sanity checks: memory resident");
+    testMemory(
+      memoryResidentContent,
+      row.process.totalResidentUniqueSize,
+      row.process.deltaResidentUniqueSize,
+      HARDCODED_ASSUMPTIONS_PROCESS
+    );
+
+    info("Sanity checks: CPU (Total)");
     testCpu(
       cpuContent,
-      threadRow.thread.totalCpu,
-      threadRow.thread.slopeCpu,
-      HARDCODED_ASSUMPTIONS_THREAD
+      row.process.totalCpu,
+      row.process.slopeCpu,
+      HARDCODED_ASSUMPTIONS_PROCESS
     );
-  }
-  Assert.equal(
-    numberOfThreads,
-    numberOfThreadsFound,
-    "Found as many threads as expected"
-  );
 
-  info("Ensuring that the hung process is marked as hung");
-  let isOneNonHungProcessDetected = false;
-  for (let row of tbody.getElementsByClassName("process")) {
-    if (row.classList.contains("hung")) {
-      if (row.process.childID == hungChildID) {
-        isProcessHangDetected = true;
+    let threadDetailsRow = row.nextSibling;
+    while (threadDetailsRow) {
+      if (threadDetailsRow.classList.contains("thread-summary")) {
+        break;
       }
+      threadDetailsRow = threadDetailsRow.nextSibling;
+    }
+    if (!showThreads) {
+      Assert.equal(
+        threadDetailsRow,
+        null,
+        "In hidden threads mode, we shouldn't have any thread summary"
+      );
     } else {
-      isOneNonHungProcessDetected = true;
+      let numberOfThreadsContent = document.l10n.getAttributes(
+        threadDetailsRow.children[0].children[1]
+      ).args.number;
+
+      info("Sanity checks: number of threads");
+      let numberOfThreads = Number.parseInt(numberOfThreadsContent);
+      Assert.ok(
+        numberOfThreads >= HARDCODED_ASSUMPTIONS_PROCESS.minimalNumberOfThreads
+      );
+      Assert.ok(
+        numberOfThreads <= HARDCODED_ASSUMPTIONS_PROCESS.maximalNumberOfThreads
+      );
+      Assert.equal(numberOfThreads, row.process.threads.length);
+
+      info("Testing that we can open the list of threads");
+      let twisty = threadDetailsRow.getElementsByClassName("twisty")[0];
+      twisty.click();
+      Assert.equal(
+        numberOfThreads,
+        tbody.getElementsByClassName("thread").length,
+        "Displayed number of threads is correct"
+      );
+
+      let numberOfThreadsFound = 0;
+      for (
+        let threadRow = threadDetailsRow.nextSibling;
+        threadRow && threadRow.classList.contains("thread");
+        threadRow = threadRow.nextSibling
+      ) {
+        let children = threadRow.children;
+        let cpuContent = children[2].textContent;
+        let tidContent = document.l10n.getAttributes(children[0].children[0])
+          .args.tid;
+        ++numberOfThreadsFound;
+
+        info("Sanity checks: tid");
+        let tid = Number.parseInt(tidContent);
+        Assert.notEqual(tid, 0, "The tid should be set");
+        Assert.equal(tid, threadRow.thread.tid, "Displayed tid is correct");
+
+        info("Sanity checks: CPU (User and Kernel)");
+        testCpu(
+          cpuContent,
+          threadRow.thread.totalCpu,
+          threadRow.thread.slopeCpu,
+          HARDCODED_ASSUMPTIONS_THREAD
+        );
+      }
+      Assert.equal(
+        numberOfThreads,
+        numberOfThreadsFound,
+        "Found as many threads as expected"
+      );
     }
-    if (isProcessHangDetected && isOneNonHungProcessDetected) {
-      break;
+
+    info("Ensuring that the hung process is marked as hung");
+    let isOneNonHungProcessDetected = false;
+    for (let row of tbody.getElementsByClassName("process")) {
+      if (row.classList.contains("hung")) {
+        if (row.process.childID == hungChildID) {
+          isProcessHangDetected = true;
+        }
+      } else {
+        isOneNonHungProcessDetected = true;
+      }
+      if (isProcessHangDetected && isOneNonHungProcessDetected) {
+        break;
+      }
     }
+
+    Assert.ok(isProcessHangDetected, "We have found our hung process");
+    Assert.ok(
+      isOneNonHungProcessDetected,
+      "We have found at least one non-hung process"
+    );
+
+    BrowserTestUtils.removeTab(tabAboutProcesses);
+    BrowserTestUtils.removeTab(tabHung);
   }
 
-  Assert.ok(isProcessHangDetected, "We have found our hung process");
-  Assert.ok(
-    isOneNonHungProcessDetected,
-    "We have found at least one non-hung process"
-  );
-
-  BrowserTestUtils.removeTab(tabAboutProcesses);
-  BrowserTestUtils.removeTab(tabHung);
+  Services.prefs.clearUserPref("toolkit.aboutProcesses.showThreads");
 });
