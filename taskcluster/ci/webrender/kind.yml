@@ -57,7 +57,7 @@ jobs:
         run:
             using: run-task
             command: >-
-                export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin &&
+                export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin:${MOZ_FETCHES_DIR}/wrench-deps/meson/bin &&
                 cd $HOME/checkouts/gecko/gfx/wr &&
                 mv $MOZ_FETCHES_DIR/wrench-deps/{vendor,.cargo} ./ &&
                 CARGOFLAGS="--verbose --frozen" ci-scripts/linux-release-tests.sh
@@ -81,7 +81,7 @@ jobs:
         run:
             using: run-task
             command: >-
-                export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin &&
+                export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin:${MOZ_FETCHES_DIR}/wrench-deps/meson/bin &&
                 cd $HOME/checkouts/gecko/gfx/wr &&
                 mv $MOZ_FETCHES_DIR/wrench-deps/{vendor,.cargo} ./ &&
                 CARGOFLAGS="--verbose --frozen" ci-scripts/linux-debug-tests.sh
