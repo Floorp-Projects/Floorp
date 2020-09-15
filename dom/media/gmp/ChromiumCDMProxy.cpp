@@ -368,11 +368,6 @@ void ChromiumCDMProxy::RejectPromise(PromiseId aId, ErrorResult&& aException,
           this, aId, aException.ErrorCodeAsInt(), aReason.get());
   if (!mKeys.IsNull()) {
     mKeys->RejectPromise(aId, std::move(aException), aReason);
-    return;
-  } else {
-    // We don't have a MediaKeys object to pass the exception to, so silence
-    // the exception to avoid it asserting due to being unused.
-    aException.SuppressException();
   }
 }
 
