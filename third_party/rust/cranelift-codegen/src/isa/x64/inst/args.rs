@@ -412,6 +412,7 @@ pub enum SseOpcode {
     Psubd,
     Psubq,
     Psubw,
+    Pxor,
     Rcpss,
     Roundss,
     Roundsd,
@@ -512,6 +513,7 @@ impl SseOpcode {
             | SseOpcode::Psubd
             | SseOpcode::Psubq
             | SseOpcode::Psubw
+            | SseOpcode::Pxor
             | SseOpcode::Sqrtpd
             | SseOpcode::Sqrtsd
             | SseOpcode::Subpd
@@ -607,6 +609,7 @@ impl fmt::Debug for SseOpcode {
             SseOpcode::Psubd => "psubd",
             SseOpcode::Psubq => "psubq",
             SseOpcode::Psubw => "psubw",
+            SseOpcode::Pxor => "pxor",
             SseOpcode::Rcpss => "rcpss",
             SseOpcode::Roundss => "roundss",
             SseOpcode::Roundsd => "roundsd",
@@ -998,6 +1001,14 @@ pub enum OperandSize {
 }
 
 impl OperandSize {
+    pub(crate) fn from_bytes(num_bytes: u32) -> Self {
+        match num_bytes {
+            1 | 2 | 4 => OperandSize::Size32,
+            8 => OperandSize::Size64,
+            _ => unreachable!(),
+        }
+    }
+
     pub(crate) fn to_bytes(&self) -> u8 {
         match self {
             Self::Size32 => 4,
