@@ -141,6 +141,24 @@ static const nsAttrValue::EnumTable kEnterKeyHintTable[] = {
     {"send", NS_ENTERKEYHINT_SEND},
     {nullptr, 0}};
 
+static const uint8_t NS_AUTOCAPITALIZE_NONE = 1;
+static const uint8_t NS_AUTOCAPITALIZE_SENTENCES = 2;
+static const uint8_t NS_AUTOCAPITALIZE_WORDS = 3;
+static const uint8_t NS_AUTOCAPITALIZE_CHARACTERS = 4;
+
+static const nsAttrValue::EnumTable kAutocapitalizeTable[] = {
+    {"none", NS_AUTOCAPITALIZE_NONE},
+    {"sentences", NS_AUTOCAPITALIZE_SENTENCES},
+    {"words", NS_AUTOCAPITALIZE_WORDS},
+    {"characters", NS_AUTOCAPITALIZE_CHARACTERS},
+    {"off", NS_AUTOCAPITALIZE_NONE},
+    {"on", NS_AUTOCAPITALIZE_SENTENCES},
+    {"", 0},
+    {nullptr, 0}};
+
+static const nsAttrValue::EnumTable* kDefaultAutocapitalize =
+    &kAutocapitalizeTable[1];
+
 nsresult nsGenericHTMLElement::CopyInnerTo(Element* aDst) {
   MOZ_ASSERT(!aDst->GetUncomposedDoc(),
              "Should not CopyInnerTo an Element in a document");
@@ -885,6 +903,10 @@ bool nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
 
     if (aAttribute == nsGkAtoms::enterkeyhint) {
       return aResult.ParseEnumValue(aValue, kEnterKeyHintTable, false);
+    }
+
+    if (aAttribute == nsGkAtoms::autocapitalize) {
+      return aResult.ParseEnumValue(aValue, kAutocapitalizeTable, false);
     }
   }
 
@@ -2876,4 +2898,28 @@ already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(
 
   // 7. Create a new ElementInternals instance targeting element, and return it.
   return MakeAndAddRef<ElementInternals>(this);
+}
+
+void nsGenericHTMLElement::GetAutocapitalize(nsAString& aValue) {
+  GetEnumAttr(nsGkAtoms::autocapitalize, nullptr, kDefaultAutocapitalize->tag,
+              aValue);
+}
+
+bool nsGenericHTMLFormElement::IsAutocapitalizeInheriting() const {
+  uint32_t type = ControlType();
+  return (type & NS_FORM_INPUT_ELEMENT) || (type & NS_FORM_BUTTON_ELEMENT) ||
+         type == NS_FORM_FIELDSET || type == NS_FORM_OUTPUT ||
+         type == NS_FORM_SELECT || type == NS_FORM_TEXTAREA;
+}
+
+void nsGenericHTMLFormElement::GetAutocapitalize(nsAString& aValue) {
+  if (nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
+                                      nsGkAtoms::autocapitalize)) {
+    nsGenericHTMLElement::GetAutocapitalize(aValue);
+    return;
+  }
+
+  if (mForm && IsAutocapitalizeInheriting()) {
+    mForm->GetAutocapitalize(aValue);
+  }
 }
