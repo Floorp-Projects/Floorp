@@ -14,6 +14,7 @@
 
 #include "gc/GCParallelTask.h"
 #include "gc/Heap.h"
+#include "js/AllocPolicy.h"
 #include "js/Class.h"
 #include "js/HeapAPI.h"
 #include "js/TracingAPI.h"
