@@ -20,6 +20,7 @@
 #include "jit/MacroAssembler.h"
 #include "js/HashTable.h"
 #include "js/ValueArray.h"
+#include "vm/HelperThreadState.h"
 #include "vm/JSContext.h"
 #include "vm/JSONParser.h"
 
