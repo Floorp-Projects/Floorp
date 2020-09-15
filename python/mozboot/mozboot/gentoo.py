@@ -21,17 +21,17 @@ class GentooBootstrapper(
     def install_system_packages(self):
         self.ensure_system_packages()
 
-    def install_browser_packages(self):
+    def install_browser_packages(self, mozconfig_builder):
         self.ensure_browser_packages()
 
-    def install_browser_artifact_mode_packages(self):
+    def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.ensure_browser_packages(artifact_mode=True)
 
-    def install_mobile_android_packages(self):
-        self.ensure_mobile_android_packages(artifact_mode=False)
+    def install_mobile_android_packages(self, mozconfig_builder):
+        self.ensure_mobile_android_packages(mozconfig_builder, artifact_mode=False)
 
-    def install_mobile_android_artifact_mode_packages(self):
-        self.ensure_mobile_android_packages(artifact_mode=True)
+    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
+        self.ensure_mobile_android_packages(mozconfig_builder, artifact_mode=True)
 
     def ensure_system_packages(self):
         self.run_as_root(['emerge', '--noreplace', '--quiet',
@@ -51,11 +51,11 @@ class GentooBootstrapper(
                           'x11-libs/libXt'
                           ])
 
-    def ensure_mobile_android_packages(self, artifact_mode=False):
+    def ensure_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         self.run_as_root(['emerge', '--noreplace', '--quiet',
                           'dev-java/openjdk-bin'])
 
-        self.ensure_java()
+        self.ensure_java(mozconfig_builder)
         from mozboot import android
         android.ensure_android('linux', artifact_mode=artifact_mode,
                                no_interactive=self.no_interactive)
