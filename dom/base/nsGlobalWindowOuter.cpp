@@ -5284,36 +5284,6 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
 #endif
 }
 
-// Returns whether there's any print callback.
-static bool BuildNestedClones(Document& aJustClonedDoc) {
-  bool hasPrintCallbacks = aJustClonedDoc.HasPrintCallbacks();
-  auto pendingFrameClones = aJustClonedDoc.TakePendingFrameStaticClones();
-  for (const auto& clone : pendingFrameClones) {
-    RefPtr<Element> element = do_QueryObject(clone.mElement);
-    RefPtr<nsFrameLoader> frameLoader =
-        nsFrameLoader::Create(element, /* aNetworkCreated */ false);
-
-    if (NS_WARN_IF(!frameLoader)) {
-      continue;
-    }
-
-    clone.mElement->SetFrameLoader(frameLoader);
-
-    nsCOMPtr<nsIDocShell> docshell;
-    RefPtr<Document> doc;
-    nsresult rv = frameLoader->FinishStaticClone(
-        clone.mStaticCloneOf, getter_AddRefs(docshell), getter_AddRefs(doc));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
-
-    if (doc) {
-      hasPrintCallbacks |= BuildNestedClones(*doc);
-    }
-  }
-  return hasPrintCallbacks;
-}
-
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     nsIPrintSettings* aPrintSettings, nsIWebProgressListener* aListener,
     nsIDocShell* aDocShellToCloneInto, IsPreview aIsPreview,
@@ -5431,23 +5401,12 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     auto dispatchAfterPrint = MakeScopeExit(
         [&] { DispatchPrintEventToWindowTree(*docToPrint, u"afterprint"_ns); });
 
-    RefPtr<Document> clone;
-    {
-      nsAutoScriptBlocker blockScripts;
-      clone = docToPrint->CreateStaticClone(cloneDocShell);
-      if (!clone) {
-        aError.ThrowNotSupportedError("Clone operation for printing failed");
-        return nullptr;
-      }
-
-      // Do this now so that we get a script handling object, and thus can
-      // create our clones.
-      aError = cv->SetDocument(clone);
-      if (aError.Failed()) {
-        return nullptr;
-      }
-
-      hasPrintCallbacks |= BuildNestedClones(*clone);
+    nsAutoScriptBlocker blockScripts;
+    RefPtr<Document> clone =
+        docToPrint->CreateStaticClone(cloneDocShell, cv, &hasPrintCallbacks);
+    if (!clone) {
+      aError.ThrowNotSupportedError("Clone operation for printing failed");
+      return nullptr;
     }
   }
 
