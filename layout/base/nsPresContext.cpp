@@ -82,6 +82,7 @@
 #include "nsFontFaceUtils.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/StaticPrefs_font.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_zoom.h"
 #include "mozilla/StyleSheet.h"
@@ -92,6 +93,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "MobileViewportManager.h"
 #include "mozilla/dom/ImageTracker.h"
+#include "mozilla/gfx/gfxVars.h"
 
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
@@ -503,7 +505,9 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   if (StringBeginsWith(prefName, "browser.viewport."_ns) ||
       StringBeginsWith(prefName, "font.size.inflation."_ns) ||
       prefName.EqualsLiteral("dom.meta-viewport.enabled")) {
-    if (mPresShell) {
+    if (mPresShell &&
+        (!gfxVars::UseWebRender() ||
+         !StaticPrefs::font_size_inflation_skipmaybereflowwithwebrender())) {
       mPresShell->MaybeReflowForInflationScreenSizeChange();
     }
   }
