@@ -17,7 +17,6 @@ XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 DevToolsModules(
     'CompatibilityView.js',
     'types.js',
-    'UserSettings.js',
 )
 
 with Files('**'):

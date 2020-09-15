@@ -4,33 +4,14 @@
 
 "use strict";
 
-const Services = require("Services");
 var protocol = require("devtools/shared/protocol");
 const { compatibilitySpec } = require("devtools/shared/specs/compatibility");
-
-loader.lazyRequireGetter(
-  this,
-  "browsersDataset",
-  "devtools/shared/browsers.json"
-);
 
 loader.lazyGetter(this, "mdnCompatibility", () => {
   const MDNCompatibility = require("devtools/server/actors/compatibility/lib/MDNCompatibility");
   const cssPropertiesCompatData = require("devtools/shared/compatibility/dataset/css-properties.json");
   return new MDNCompatibility(cssPropertiesCompatData);
 });
-
-const TARGET_BROWSER_ID = [
-  "firefox",
-  "firefox_android",
-  "chrome",
-  "chrome_android",
-  "safari",
-  "safari_ios",
-  "edge",
-];
-const TARGET_BROWSER_STATUS = ["esr", "current", "beta", "nightly"];
-const TARGET_BROWSER_PREF = "devtools.inspector.compatibility.target-browsers";
 
 const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
   /**
@@ -59,52 +40,21 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
     this.inspector = null;
   },
 
-  _getDefaultTargetBrowsers() {
-    // Retrieve the information that matches to the browser id and the status
-    // from the browsersDataset.
-    // For the structure of then browsersDataset,
-    // see https://github.com/mdn/browser-compat-data/blob/master/browsers/firefox.json
-    const targets = [];
-
-    for (const id of TARGET_BROWSER_ID) {
-      const { name, releases } = browsersDataset[id];
-
-      for (const version in releases) {
-        const { status } = releases[version];
-
-        if (!TARGET_BROWSER_STATUS.includes(status)) {
-          continue;
-        }
-
-        // MDN compat data might have browser data that have the same id and status.
-        // e.g. https://github.com/mdn/browser-compat-data/commit/53453400ecb2a85e7750d99e2e0a1611648d1d56#diff-31a16f09157f13354db27821261604aa
-        // In this case, replace to the browser that has newer version to keep uniqueness
-        // by id and status.
-        const target = { id, name, version, status };
-        const index = targets.findIndex(
-          t => target.id === t.id && target.status === t.status
-        );
-
-        if (index < 0) {
-          targets.push(target);
-          continue;
-        }
-
-        const existingTarget = targets[index];
-        if (parseFloat(existingTarget.version) < parseFloat(target.version)) {
-          targets[index] = target;
-        }
-      }
-    }
-
-    return targets;
+  form() {
+    return {
+      actor: this.actorID,
+    };
   },
 
-  _getTargetBrowsers() {
-    const targetsString = Services.prefs.getCharPref(TARGET_BROWSER_PREF, "");
-    return targetsString
-      ? JSON.parse(targetsString)
-      : this._getDefaultTargetBrowsers();
+  getTraits() {
+    return {
+      traits: {
+        // Indicates the function for compatibility check exists
+        // This is to preserve backwards compatibility and can be
+        // removed once FF82 hits release channel
+        declarationBlockIssueComputationEnabled: true,
+      },
+    };
   },
 
   /**
@@ -117,9 +67,9 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
    *      // Declaration value
    *      value: <string>,
    *    }
-   * @param object options
-   *  `targetBrowsers`: Array of target browsers to be used to check CSS compatibility against.
-   *     It is an Array of the following form
+   * @param array targetBrowsers
+   *  Array of target browsers to be used to check CSS compatibility against.
+   *  It is an Array of the following form
    *     {
    *       // Browser id as specified in `devtools/shared/compatibility/datasets/browser.json`
    *       id: <string>,
@@ -144,9 +94,7 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
    *      unsupportedBrowsers: <Array>,
    *    }
    */
-  getCSSDeclarationBlockIssues: function(declarationBlock, options) {
-    const targetBrowsers =
-      (options && options.targetBrowsers) || this._getTargetBrowsers();
+  getCSSDeclarationBlockIssues: function(declarationBlock, targetBrowsers) {
     return mdnCompatibility.getCSSDeclarationBlockIssues(
       declarationBlock,
       targetBrowsers

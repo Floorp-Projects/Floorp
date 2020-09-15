@@ -28,10 +28,26 @@ types.addDictType("compatibilityissues", {
   unsupportedBrowsers: "array:browsertype",
 });
 
+types.addDictType("declaration", {
+  name: "string",
+  value: "string",
+});
+
 const compatibilitySpec = generateActorSpec({
   typeName: "compatibility",
 
   methods: {
+    getTraits: {
+      request: {},
+      response: { traits: RetVal("json") },
+    },
+    getCSSDeclarationBlockIssues: {
+      request: {
+        declarationBlock: Arg(0, "array:declaration"),
+        targetBrowsers: Arg(1, "array:browsertype"),
+      },
+      response: RetVal("array:compatibilityissues"),
+    },
     getNodeCssIssues: {
       request: {
         node: Arg(0, "domnode"),

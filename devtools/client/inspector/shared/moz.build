@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'compatibility-user-settings.js',
     'highlighters-overlay.js',
     'node-reps.js',
     'node-types.js',

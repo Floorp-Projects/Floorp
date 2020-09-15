@@ -6,7 +6,7 @@
 
 const nodeConstants = require("devtools/shared/dom-node-constants");
 
-const UserSettings = require("devtools/client/inspector/compatibility/UserSettings");
+const UserSettings = require("devtools/client/inspector/shared/compatibility-user-settings");
 
 const {
   COMPATIBILITY_APPEND_NODE_START,
