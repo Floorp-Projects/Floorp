@@ -4636,31 +4636,32 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
     LMegamorphicLoadSlotByValue* lir) {
   Register obj = ToRegister(lir->object());
   ValueOperand idVal = ToValue(lir, LMegamorphicLoadSlotByValue::IdIndex);
-  Register temp = ToRegister(lir->temp());
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
   ValueOperand output = ToOutValue(lir);
 
   Label bail;
-  masm.branchIfNonNativeObj(obj, temp, &bail);
+  masm.branchIfNonNativeObj(obj, temp1, &bail);
 
   // idVal will be in vp[0], result will be stored in vp[1].
   masm.subFromStackPtr(Imm32(sizeof(Value)));
   masm.pushValue(idVal);
-  masm.moveStackPtrTo(idVal.scratchReg());
+  masm.moveStackPtrTo(temp1);
 
-  masm.setupUnalignedABICall(temp);
-  masm.loadJSContext(temp);
-  masm.passABIArg(temp);
+  masm.setupUnalignedABICall(temp2);
+  masm.loadJSContext(temp2);
+  masm.passABIArg(temp2);
   masm.passABIArg(obj);
-  masm.passABIArg(idVal.scratchReg());
+  masm.passABIArg(temp1);
   masm.callWithABI(
       JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValuePure<true>)));
 
-  MOZ_ASSERT(!idVal.aliases(temp));
-  masm.mov(ReturnReg, temp);
+  MOZ_ASSERT(!idVal.aliases(temp1));
+  masm.mov(ReturnReg, temp1);
   masm.popValue(idVal);
 
   Label ok;
-  masm.branchIfTrueBool(temp, &ok);
+  masm.branchIfTrueBool(temp1, &ok);
   masm.addToStackPtr(Imm32(sizeof(Value)));  // Discard result Value.
   masm.jump(&bail);
 
@@ -4678,17 +4679,18 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   ValueOperand rhs = ToValue(lir, LMegamorphicStoreSlot::RhsIndex);
   Register temp1 = ToRegister(lir->temp1());
   Register temp2 = ToRegister(lir->temp2());
+  Register temp3 = ToRegister(lir->temp3());
 
   masm.pushValue(rhs);
-  masm.moveStackPtrTo(rhs.scratchReg());
+  masm.moveStackPtrTo(temp1);
 
-  masm.setupUnalignedABICall(temp1);
-  masm.loadJSContext(temp1);
-  masm.passABIArg(temp1);
-  masm.passABIArg(obj);
-  masm.movePtr(ImmGCPtr(lir->mir()->name()), temp2);
+  masm.setupUnalignedABICall(temp2);
+  masm.loadJSContext(temp2);
   masm.passABIArg(temp2);
-  masm.passABIArg(rhs.scratchReg());
+  masm.passABIArg(obj);
+  masm.movePtr(ImmGCPtr(lir->mir()->name()), temp3);
+  masm.passABIArg(temp3);
+  masm.passABIArg(temp1);
   masm.callWithABI(
       JS_FUNC_TO_DATA_PTR(void*, (SetNativeDataPropertyPure<false>)));
 
@@ -4704,19 +4706,20 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
 void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   Register obj = ToRegister(lir->object());
   ValueOperand idVal = ToValue(lir, LMegamorphicHasProp::IdIndex);
-  Register temp = ToRegister(lir->temp());
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
   Register output = ToRegister(lir->output());
 
   // idVal will be in vp[0], result will be stored in vp[1].
   masm.subFromStackPtr(Imm32(sizeof(Value)));
   masm.pushValue(idVal);
-  masm.moveStackPtrTo(idVal.scratchReg());
+  masm.moveStackPtrTo(temp1);
 
-  masm.setupUnalignedABICall(temp);
-  masm.loadJSContext(temp);
-  masm.passABIArg(temp);
+  masm.setupUnalignedABICall(temp2);
+  masm.loadJSContext(temp2);
+  masm.passABIArg(temp2);
   masm.passABIArg(obj);
-  masm.passABIArg(idVal.scratchReg());
+  masm.passABIArg(temp1);
   if (lir->mir()->hasOwn()) {
     masm.callWithABI(
         JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<true>));
@@ -4725,12 +4728,12 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
         JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<false>));
   }
 
-  MOZ_ASSERT(!idVal.aliases(temp));
-  masm.mov(ReturnReg, temp);
+  MOZ_ASSERT(!idVal.aliases(temp1));
+  masm.mov(ReturnReg, temp1);
   masm.popValue(idVal);
 
   Label bail, ok;
-  masm.branchIfTrueBool(temp, &ok);
+  masm.branchIfTrueBool(temp1, &ok);
   masm.addToStackPtr(Imm32(sizeof(Value)));  // Discard result Value.
   masm.jump(&bail);
 
