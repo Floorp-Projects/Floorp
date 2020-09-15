@@ -339,6 +339,7 @@ TEST(TestAudioTrackGraph, SourceTrack)
     sourceTrack->Destroy();
   });
 
+  uint32_t inputRate = stream->InputSampleRate();
   uint32_t inputFrequency = stream->InputFrequency();
   uint64_t preSilenceSamples;
   uint32_t estimatedFreq;
@@ -347,7 +348,7 @@ TEST(TestAudioTrackGraph, SourceTrack)
       WaitFor(stream->OutputVerificationEvent());
 
   EXPECT_EQ(estimatedFreq, inputFrequency);
-  EXPECT_GE(preSilenceSamples, static_cast<uint32_t>(NUM_OF_FRAMES));
+  EXPECT_GE(preSilenceSamples, inputRate / 100 /* 10 ms */);
   // Waveform may start after the beginning. In this case, there is a gap
   // at the beginning and the end which is counted as discontinuity.
   EXPECT_GE(nrDiscontinuities, 0U);
