@@ -72,7 +72,7 @@ fuzzy(5,4435) == shadow-border.yaml shadow-solid-ref.yaml
 fuzzy(5,4435) == shadow-image.yaml shadow-solid-ref.yaml
 options(disable-aa) == snap-clip.yaml snap-clip-ref.yaml
 platform(linux) == perspective-clip.yaml perspective-clip.png
-fuzzy(1,39) options(disable-subpixel) == raster-space-snap.yaml raster-space-snap-ref.yaml
+fuzzy(1,63) options(disable-subpixel) == raster-space-snap.yaml raster-space-snap-ref.yaml
 # == intermediate-transform.yaml intermediate-transform-ref.yaml # fails because of AA inavailable with an intermediate surface
 platform(linux) force_subpixel_aa_where_possible(true) == text-fixed-slice.yaml text-fixed-slice-slow.png
 platform(linux) force_subpixel_aa_where_possible(false) == text-fixed-slice.yaml text-fixed-slice-fast.png

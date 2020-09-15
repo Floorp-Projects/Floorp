@@ -1896,33 +1896,21 @@ pub fn show_hir_expr_inner(state: &OutputState, expr: &hir::Expr, top_level: boo
                                         &state.hir, &args[0], &args[1], &args[3],
                                     ) {
                                         let base_sym = state.hir.sym(base);
-                                        if symbol_run_class(&base_sym.decl, state.vector_mask)
-                                            == hir::RunClass::Scalar
-                                        {
-                                            let sampler_sym = state.hir.sym(sampler);
-                                            add_used_global(state, &sampler);
-                                            if let hir::SymDecl::Global(..) = &base_sym.decl {
-                                                add_used_global(state, &base);
-                                            }
-                                            if y != 0 {
-                                                write!(
-                                                    state,
-                                                    "{}_{}_fetch[{}+{}*{}->stride]",
-                                                    sampler_sym.name,
-                                                    base_sym.name,
-                                                    x,
-                                                    y,
-                                                    sampler_sym.name
-                                                );
-                                            } else {
-                                                write!(
-                                                    state,
-                                                    "{}_{}_fetch[{}]",
-                                                    sampler_sym.name, base_sym.name, x
-                                                );
-                                            }
-                                            return;
+                                        let sampler_sym = state.hir.sym(sampler);
+                                        add_used_global(state, &sampler);
+                                        if let hir::SymDecl::Global(..) = &base_sym.decl {
+                                            add_used_global(state, &base);
                                         }
+                                        write!(
+                                            state,
+                                            "texelFetchUnchecked({}, {}_{}_fetch, {}, {})",
+                                            sampler_sym.name,
+                                            sampler_sym.name,
+                                            base_sym.name,
+                                            x,
+                                            y,
+                                        );
+                                        return;
                                     }
                                 }
                                 show_sym(state, name)
@@ -2358,15 +2346,12 @@ pub fn show_declaration(state: &mut OutputState, d: &hir::Declaration) {
                 let base = list.head.name;
                 let base_sym = state.hir.sym(base);
                 if let hir::SymDecl::Local(..) = &base_sym.decl {
-                    if symbol_run_class(&base_sym.decl, state.vector_mask) == hir::RunClass::Scalar
+                    let mut texel_fetches = state.texel_fetches.borrow_mut();
+                    while let Some(idx) = texel_fetches.iter().position(|&(_, b, _)| b == base)
                     {
-                        let mut texel_fetches = state.texel_fetches.borrow_mut();
-                        while let Some(idx) = texel_fetches.iter().position(|&(_, b, _)| b == base)
-                        {
-                            let (sampler, _, offsets) = texel_fetches.remove(idx);
-                            let sampler_sym = state.hir.sym(sampler);
-                            define_texel_fetch_ptr(state, &base_sym, &sampler_sym, &offsets);
-                        }
+                        let (sampler, _, offsets) = texel_fetches.remove(idx);
+                        let sampler_sym = state.hir.sym(sampler);
+                        define_texel_fetch_ptr(state, &base_sym, &sampler_sym, &offsets);
                     }
                 }
             }
@@ -2672,32 +2657,32 @@ fn define_texel_fetch_ptr(
     offsets: &hir::TexelFetchOffsets,
 ) {
     show_indent(state);
-    if let hir::SymDecl::Global(_, _, ty, _) = &sampler_sym.decl {
-        match ty.kind {
-            hir::TypeKind::Sampler2D
-            | hir::TypeKind::Sampler2DRect => {
-                write!(
-                    state,
-                    "vec4_scalar* {}_{}_fetch = ",
-                    sampler_sym.name, base_sym.name
-                );
+    let ptr_type = if let hir::SymDecl::Global(_, _, ty, _) = &sampler_sym.decl {
+        if symbol_run_class(&base_sym.decl, state.vector_mask) == hir::RunClass::Scalar {
+            match ty.kind {
+                hir::TypeKind::Sampler2D
+                | hir::TypeKind::Sampler2DRect => "vec4_scalar*",
+                hir::TypeKind::ISampler2D => "ivec4_scalar*",
+                _ => panic!(),
             }
-            hir::TypeKind::ISampler2D => {
-                write!(
-                    state,
-                    "ivec4_scalar* {}_{}_fetch = ",
-                    sampler_sym.name, base_sym.name
-                );
-            }
-            _ => panic!(),
+        } else {
+            "I32"
         }
     } else {
         panic!();
-    }
+    };
     write!(
         state,
-        "texelFetchPtr({}, {}, {}, {}, {}, {});\n",
-        sampler_sym.name, base_sym.name, offsets.min_x, offsets.max_x, offsets.min_y, offsets.max_y
+        "{} {}_{}_fetch = texelFetchPtr({}, {}, {}, {}, {}, {});\n",
+        ptr_type,
+        sampler_sym.name,
+        base_sym.name,
+        sampler_sym.name,
+        base_sym.name,
+        offsets.min_x,
+        offsets.max_x,
+        offsets.min_y,
+        offsets.max_y,
     );
 }
 
@@ -2753,24 +2738,22 @@ pub fn show_function_definition(
         let mut texel_fetches = state.texel_fetches.borrow_mut();
         texel_fetches.clear();
         for ((sampler, base), offsets) in fd.texel_fetches.iter() {
+            add_used_global(state, sampler);
+            let sampler_sym = state.hir.sym(*sampler);
             let base_sym = state.hir.sym(*base);
-            if symbol_run_class(&base_sym.decl, vector_mask) == hir::RunClass::Scalar {
-                add_used_global(state, sampler);
-                let sampler_sym = state.hir.sym(*sampler);
-                match &base_sym.decl {
-                    hir::SymDecl::Global(..) => {
-                        add_used_global(state, base);
-                        define_texel_fetch_ptr(state, &base_sym, &sampler_sym, &offsets);
-                    }
-                    hir::SymDecl::Local(..) => {
-                        if fd.prototype.has_parameter(*base) {
-                            define_texel_fetch_ptr(state, &base_sym, &sampler_sym, &offsets);
-                        } else {
-                            texel_fetches.push((*sampler, *base, offsets.clone()));
-                        }
-                    }
-                    _ => panic!(),
+            match &base_sym.decl {
+                hir::SymDecl::Global(..) => {
+                    add_used_global(state, base);
+                    define_texel_fetch_ptr(state, &base_sym, &sampler_sym, &offsets);
                 }
+                hir::SymDecl::Local(..) => {
+                    if fd.prototype.has_parameter(*base) {
+                        define_texel_fetch_ptr(state, &base_sym, &sampler_sym, &offsets);
+                    } else {
+                        texel_fetches.push((*sampler, *base, offsets.clone()));
+                    }
+                }
+                _ => panic!(),
             }
         }
     }
