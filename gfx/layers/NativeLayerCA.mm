@@ -43,6 +43,20 @@ using gl::GLContextCGL;
 
 // Utility classes for NativeLayerRootSnapshotter (NLRS) profiler screenshots.
 
+class WindowNLRS : public profiler_screenshots::Window {
+ public:
+  WindowNLRS(gl::GLContext* aGL, RenderSourceNLRS* aSnapshot) : mGL(aGL), mSnapshot(aSnapshot) {}
+  already_AddRefed<profiler_screenshots::RenderSource> GetWindowContents() override;
+  already_AddRefed<profiler_screenshots::DownscaleTarget> CreateDownscaleTarget(
+      const IntSize& aSize) override;
+  already_AddRefed<profiler_screenshots::AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
+      const IntSize& aSize) override;
+
+ protected:
+  RefPtr<gl::GLContext> mGL;
+  RefPtr<RenderSourceNLRS> mSnapshot;
+};
+
 class RenderSourceNLRS : public profiler_screenshots::RenderSource {
  public:
   explicit RenderSourceNLRS(UniquePtr<gl::MozFramebuffer>&& aFramebuffer)
@@ -341,12 +355,6 @@ NativeLayerRootSnapshotterCA::~NativeLayerRootSnapshotterCA() {
   [mRenderer release];
 }
 
-already_AddRefed<profiler_screenshots::RenderSource>
-NativeLayerRootSnapshotterCA::GetWindowContents(const IntSize& aWindowSize) {
-  UpdateSnapshot(aWindowSize);
-  return do_AddRef(mSnapshot);
-}
-
 void NativeLayerRootSnapshotterCA::UpdateSnapshot(const IntSize& aSize) {
   CGRect bounds = CGRectMake(0, 0, aSize.width, aSize.height);
 
@@ -435,27 +443,12 @@ bool NativeLayerRootSnapshotterCA::ReadbackPixels(const IntSize& aReadbackSize,
   return true;
 }
 
-already_AddRefed<profiler_screenshots::DownscaleTarget>
-NativeLayerRootSnapshotterCA::CreateDownscaleTarget(const IntSize& aSize) {
-  auto fb = gl::MozFramebuffer::Create(mGL, aSize, 0, false);
-  if (!fb) {
-    return nullptr;
-  }
-  RefPtr<profiler_screenshots::DownscaleTarget> dt = new DownscaleTargetNLRS(mGL, std::move(fb));
-  return dt.forget();
-}
+void NativeLayerRootSnapshotterCA::MaybeGrabProfilerScreenshot(
+    ScreenshotGrabber* aScreenshotGrabber, const gfx::IntSize& aWindowSize) {
+  UpdateSnapshot(aWindowSize);
 
-already_AddRefed<profiler_screenshots::AsyncReadbackBuffer>
-NativeLayerRootSnapshotterCA::CreateAsyncReadbackBuffer(const IntSize& aSize) {
-  size_t bufferByteCount = aSize.width * aSize.height * 4;
-  GLuint bufferHandle = 0;
-  mGL->fGenBuffers(1, &bufferHandle);
-
-  gl::ScopedPackState scopedPackState(mGL);
-  mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, bufferHandle);
-  mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 1);
-  mGL->fBufferData(LOCAL_GL_PIXEL_PACK_BUFFER, bufferByteCount, nullptr, LOCAL_GL_STREAM_READ);
-  return MakeAndAddRef<AsyncReadbackBufferNLRS>(mGL, aSize, bufferHandle);
+  WindowNLRS window(mGL, mSnapshot);
+  aScreenshotGrabber->MaybeGrabScreenshot(window);
 }
 
 NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque,
@@ -1001,6 +994,33 @@ Maybe<NativeLayerCA::SurfaceWithInvalidRegion> NativeLayerCA::GetUnusedSurfaceAn
   mSurfaces = std::move(usedSurfaces);
 
   return unusedSurface;
+}
+
+already_AddRefed<profiler_screenshots::RenderSource> WindowNLRS::GetWindowContents() {
+  return do_AddRef(mSnapshot);
+}
+
+already_AddRefed<profiler_screenshots::DownscaleTarget> WindowNLRS::CreateDownscaleTarget(
+    const IntSize& aSize) {
+  auto fb = gl::MozFramebuffer::Create(mGL, aSize, 0, false);
+  if (!fb) {
+    return nullptr;
+  }
+  RefPtr<profiler_screenshots::DownscaleTarget> dt = new DownscaleTargetNLRS(mGL, std::move(fb));
+  return dt.forget();
+}
+
+already_AddRefed<profiler_screenshots::AsyncReadbackBuffer> WindowNLRS::CreateAsyncReadbackBuffer(
+    const IntSize& aSize) {
+  size_t bufferByteCount = aSize.width * aSize.height * 4;
+  GLuint bufferHandle = 0;
+  mGL->fGenBuffers(1, &bufferHandle);
+
+  gl::ScopedPackState scopedPackState(mGL);
+  mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, bufferHandle);
+  mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 1);
+  mGL->fBufferData(LOCAL_GL_PIXEL_PACK_BUFFER, bufferByteCount, nullptr, LOCAL_GL_STREAM_READ);
+  return MakeAndAddRef<AsyncReadbackBufferNLRS>(mGL, aSize, bufferHandle);
 }
 
 bool DownscaleTargetNLRS::DownscaleFrom(profiler_screenshots::RenderSource* aSource,
