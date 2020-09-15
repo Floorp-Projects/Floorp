@@ -211,6 +211,8 @@ typedef enum {
   MOZ_GTK_TEXT_VIEW,
   /* The "text" window or node of a GtkTextView */
   MOZ_GTK_TEXT_VIEW_TEXT,
+  /* The "selection" node of a GtkTextView.text */
+  MOZ_GTK_TEXT_VIEW_TEXT_SELECTION,
   /* Paints a GtkOptionMenu. */
   MOZ_GTK_DROPDOWN,
   /* Paints a dropdown arrow (a GtkButton containing a down GtkArrow). */

@@ -1073,6 +1073,9 @@ static GtkStyleContext* GetCssNodeStyleInternal(WidgetNodeType aNodeType) {
       style = CreateSubStyleWithClass(MOZ_GTK_SCROLLED_WINDOW,
                                       GTK_STYLE_CLASS_FRAME);
       break;
+    case MOZ_GTK_TEXT_VIEW_TEXT_SELECTION:
+      style = CreateChildCSSNode("selection", MOZ_GTK_TEXT_VIEW_TEXT);
+      break;
     case MOZ_GTK_TEXT_VIEW_TEXT:
     case MOZ_GTK_RESIZER:
       style = CreateChildCSSNode("text", MOZ_GTK_TEXT_VIEW);
