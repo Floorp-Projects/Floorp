@@ -49,11 +49,23 @@ tr {
 /* column-memory-resident */
 td:nth-child(2) {
   width:  15%;
+  /*
+  Right-alignment is more readable in LTR languages.
+  At the time of this writing, the units are not localized, so this is also true in RTL
+  languages. However, if/when we localize units, we should make this a `text-align: end`.
+  */
+  text-align: right;
 }
 
 /* column-cpu-total */
 td:nth-child(3) {
-    width: 15%;
+  width: 15%;
+  /*
+  Right-alignment is more readable in LTR languages.
+  At the time of this writing, the units are not localized, so this is also true in RTL
+  languages. However, if/when we localize units, we should make this a `text-align: end`.
+  */
+  text-align: right;
 }
 
 #process-thead > tr {
