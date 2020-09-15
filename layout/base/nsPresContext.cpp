@@ -503,7 +503,9 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   if (StringBeginsWith(prefName, "browser.viewport."_ns) ||
       StringBeginsWith(prefName, "font.size.inflation."_ns) ||
       prefName.EqualsLiteral("dom.meta-viewport.enabled")) {
-    if (mPresShell) {
+    if (mPresShell &&
+        (!gfxVars::UseWebRender() ||
+         !StaticPrefs::font_size_inflation_skipmaybereflowwithwebrender())) {
       mPresShell->MaybeReflowForInflationScreenSizeChange();
     }
   }
