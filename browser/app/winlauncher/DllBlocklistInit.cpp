@@ -24,6 +24,17 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 #endif
 
+namespace {
+
+template <typename T>
+T* GetRemoteAddress(T* aLocalAddress, HMODULE aLocal, HMODULE aRemote) {
+  ptrdiff_t diff = nt::PEHeaders::HModuleToBaseAddr<uint8_t*>(aRemote) -
+                   nt::PEHeaders::HModuleToBaseAddr<uint8_t*>(aLocal);
+  return reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(aLocalAddress) + diff);
+}
+
+}  // namespace
+
 namespace mozilla {
 
 #if defined(MOZ_ASAN) || defined(_M_ARM64)
@@ -91,10 +102,21 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
   }
 
+  // We used to pass ourModule to RestoreImportDirectory based on the assumption
+  // that the executable is mapped onto the same address in a different process,
+  // but our telemetry told us it was not guaranteed.  That's why we retrieve
+  // HMODULE from |aChildProcess|.
+  LauncherResult<HMODULE> remoteImageBaseResult =
+      nt::GetProcessExeModule(aChildProcess);
+  if (remoteImageBaseResult.isErr()) {
+    return remoteImageBaseResult.propagateErr();
+  }
+  HMODULE remoteImageBase = remoteImageBaseResult.unwrap();
+
   // As part of our mitigation of binary tampering, copy our import directory
   // from the original in our executable file.
   LauncherVoidResult importDirRestored = RestoreImportDirectory(
-      aFullImagePath, ourExeImage, aChildProcess, ourModule);
+      aFullImagePath, ourExeImage, aChildProcess, remoteImageBase);
   if (importDirRestored.isErr()) {
     return importDirRestored;
   }
@@ -136,6 +158,9 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
         aCachedNtdllThunk ? aCachedNtdllThunk : firstIatThunkDst;
     SIZE_T iatLength = ntdllThunks.value().LengthBytes();
 
+    firstIatThunkDst =
+        GetRemoteAddress(firstIatThunkDst, ourModule, remoteImageBase);
+
     AutoVirtualProtect prot(firstIatThunkDst, iatLength, PAGE_READWRITE,
                             aChildProcess);
     if (!prot) {
@@ -158,8 +183,10 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     newFlags |= eDllBlocklistInitFlagIsChildProcess;
   }
 
-  ok = !!::WriteProcessMemory(aChildProcess, &gBlocklistInitFlags, &newFlags,
-                              sizeof(newFlags), &bytesWritten);
+  ok = !!::WriteProcessMemory(
+      aChildProcess,
+      GetRemoteAddress(&gBlocklistInitFlags, ourModule, remoteImageBase),
+      &newFlags, sizeof(newFlags), &bytesWritten);
   if (!ok || bytesWritten != sizeof(newFlags)) {
     return LAUNCHER_ERROR_FROM_LAST();
   }
@@ -187,8 +214,7 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
       return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
     }
 
-    return RestoreImportDirectory(aFullImagePath, localImage, aChildProcess,
-                                  exeImageBase);
+    return RestoreImportDirectory(aFullImagePath, localImage, aChildProcess);
   }
 
   return InitializeDllBlocklistOOPInternal(aFullImagePath, aChildProcess,
