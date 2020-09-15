@@ -7,6 +7,7 @@
 DIRS += [
     'accessibility',
     'addon',
+    'compatibility',
     'descriptors',
     'emulation',
     'highlighters',
@@ -28,7 +29,6 @@ DevToolsModules(
     'breakpoint.js',
     'changes.js',
     'common.js',
-    'compatibility.js',
     'css-properties.js',
     'device.js',
     'environment.js',

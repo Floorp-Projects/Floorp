@@ -11,11 +11,11 @@ const { compatibilitySpec } = require("devtools/shared/specs/compatibility");
 loader.lazyRequireGetter(
   this,
   "browsersDataset",
-  "devtools/shared/compatibility/dataset/browsers.json"
+  "devtools/shared/browsers.json"
 );
 
 loader.lazyGetter(this, "mdnCompatibility", () => {
-  const MDNCompatibility = require("devtools/shared/compatibility/MDNCompatibility");
+  const MDNCompatibility = require("devtools/server/actors/compatibility/lib/MDNCompatibility");
   const cssPropertiesCompatData = require("devtools/shared/compatibility/dataset/css-properties.json");
   return new MDNCompatibility(cssPropertiesCompatData);
 });
@@ -160,7 +160,7 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
    * @param targetBrowsers Array
    *   An Array of JSON object of target browser to check compatibility against in following form:
    *   {
-   *     // Browser id as specified in `devtools/shared/compatibility/datasets/browser.json`
+   *     // Browser id as specified in `devtools/server/actors/compatibility/lib/datasets/browser.json`
    *     id: <string>,
    *     name: <string>,
    *     version: <string>,
