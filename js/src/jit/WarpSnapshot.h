@@ -10,6 +10,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Variant.h"
 
+#include "builtin/ModuleObject.h"
 #include "gc/Policy.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitContext.h"

@@ -37,6 +37,7 @@
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/CommonFunctions.h"
 #endif
+#include "builtin/ModuleObject.h"
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
 #ifdef DEBUG

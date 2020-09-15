@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "builtin/ModuleObject.h"
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
