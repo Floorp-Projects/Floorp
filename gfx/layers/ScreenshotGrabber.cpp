@@ -33,7 +33,7 @@ class ScreenshotGrabberImpl final {
   explicit ScreenshotGrabberImpl(const IntSize& aBufferSize);
   ~ScreenshotGrabberImpl();
 
-  void GrabScreenshot(Window& aWindow, const IntSize& aWindowSize);
+  void GrabScreenshot(Window& aWindow);
   void ProcessQueue();
 
  private:
@@ -67,13 +67,13 @@ ScreenshotGrabber::ScreenshotGrabber() = default;
 ScreenshotGrabber::~ScreenshotGrabber() = default;
 
 void ScreenshotGrabber::MaybeGrabScreenshot(
-    profiler_screenshots::Window& aWindow, const IntSize& aWindowSize) {
+    profiler_screenshots::Window& aWindow) {
   if (ProfilerScreenshots::IsEnabled()) {
     if (!mImpl) {
       mImpl = MakeUnique<profiler_screenshots::ScreenshotGrabberImpl>(
           ProfilerScreenshots::ScreenshotSize());
     }
-    mImpl->GrabScreenshot(aWindow, aWindowSize);
+    mImpl->GrabScreenshot(aWindow);
   } else if (mImpl) {
     Destroy();
   }
@@ -143,10 +143,8 @@ RefPtr<RenderSource> ScreenshotGrabberImpl::ScaleDownWindowRenderSourceToSize(
   return nullptr;
 }
 
-void ScreenshotGrabberImpl::GrabScreenshot(Window& aWindow,
-                                           const IntSize& aWindowSize) {
-  RefPtr<RenderSource> windowRenderSource =
-      aWindow.GetWindowContents(aWindowSize);
+void ScreenshotGrabberImpl::GrabScreenshot(Window& aWindow) {
+  RefPtr<RenderSource> windowRenderSource = aWindow.GetWindowContents();
 
   if (!windowRenderSource) {
     PROFILER_MARKER_UNTYPED(
@@ -156,9 +154,10 @@ void ScreenshotGrabberImpl::GrabScreenshot(Window& aWindow,
     return;
   }
 
-  float scale = std::min(mBufferSize.width / aWindowSize.width,
-                         mBufferSize.height / aWindowSize.height);
-  IntSize scaledSize = IntSize::Round(Size(aWindowSize) * scale);
+  Size windowSize(windowRenderSource->Size());
+  float scale = std::min(mBufferSize.width / windowSize.width,
+                         mBufferSize.height / windowSize.height);
+  IntSize scaledSize = IntSize::Round(windowSize * scale);
   RefPtr<RenderSource> scaledTarget = ScaleDownWindowRenderSourceToSize(
       aWindow, scaledSize, windowRenderSource, 0);
 
