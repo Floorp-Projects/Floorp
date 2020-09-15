@@ -2651,6 +2651,20 @@ bool nsPIDOMWindowInner::IsCurrentInnerWindow() const {
   return outer && outer->GetCurrentInnerWindow() == this;
 }
 
+bool nsPIDOMWindowInner::IsFullyActive() const {
+  WindowContext* currentContext = GetWindowContext();
+  if (!currentContext) {
+    return false;
+  }
+  do {
+    if (currentContext->IsDiscarded() || currentContext->IsCached()) {
+      return false;
+    }
+  } while ((currentContext = currentContext->GetParentWindowContext()));
+
+  return true;
+}
+
 void nsPIDOMWindowInner::SetAudioCapture(bool aCapture) {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
