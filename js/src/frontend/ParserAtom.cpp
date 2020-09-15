@@ -211,6 +211,30 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::addEntry(
   return entryPtr->asAtom();
 }
 
+JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internLatin1Seq(
+    JSContext* cx, AddPtr& addPtr, const Latin1Char* latin1Ptr,
+    uint32_t length) {
+  MOZ_ASSERT(!addPtr);
+
+  InflatedChar16Sequence<Latin1Char> seq(latin1Ptr, length);
+  UniquePtr<ParserAtomEntry> entry;
+
+  // Allocate an entry for inline strings.
+  if (length <= ParserAtomEntry::MaxInline<Latin1Char>()) {
+    MOZ_TRY_VAR(entry, ParserAtomEntry::allocateInline<Latin1Char>(
+                           cx, seq, length, addPtr.inner().hash));
+    return addEntry(cx, addPtr, std::move(entry));
+  }
+
+  UniqueLatin1Chars copy = js::DuplicateString(cx, latin1Ptr, length);
+  if (!copy) {
+    return RaiseParserAtomsOOMError(cx);
+  }
+  MOZ_TRY_VAR(entry, ParserAtomEntry::allocate(cx, std::move(copy), length,
+                                               addPtr.inner().hash));
+  return addEntry(cx, addPtr, std::move(entry));
+}
+
 template <typename AtomCharT, typename SeqCharT>
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16Seq(
     JSContext* cx, AddPtr& addPtr, InflatedChar16Sequence<SeqCharT> seq,
@@ -240,30 +264,6 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16Seq(
 
 static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
-template <typename CharT>
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::lookupOrInternChar16Seq(
-    JSContext* cx, InflatedChar16Sequence<CharT> seq) {
-  // Check for well-known or existing.
-  AddPtr addPtr = lookupForAdd(cx, seq);
-  if (addPtr) {
-    return addPtr.get()->asAtom();
-  }
-
-  // Compute the total length and the storage requirements.
-  bool wide = false;
-  uint32_t length = 0;
-  InflatedChar16Sequence<CharT> seqCopy = seq;
-  while (seqCopy.hasMore()) {
-    char16_t ch = seqCopy.next();
-    wide = wide || (ch > MAX_LATIN1_CHAR);
-    length += 1;
-  }
-
-  // Otherwise, add new entry.
-  return wide ? internChar16Seq<char16_t>(cx, addPtr, seq, length)
-              : internChar16Seq<Latin1Char>(cx, addPtr, seq, length);
-}
-
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internAscii(
     JSContext* cx, const char* asciiPtr, uint32_t length) {
   // ASCII strings are strict subsets of Latin1 strings.
@@ -273,30 +273,14 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internAscii(
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internLatin1(
     JSContext* cx, const Latin1Char* latin1Ptr, uint32_t length) {
-  InflatedChar16Sequence<Latin1Char> seq(latin1Ptr, length);
-
   // Check for well-known or existing.
+  InflatedChar16Sequence<Latin1Char> seq(latin1Ptr, length);
   AddPtr addPtr = lookupForAdd(cx, seq);
   if (addPtr) {
     return addPtr.get()->asAtom();
   }
 
-  // Existing entry not found, heap-allocate a copy and add it to the table.
-  if (length <= ParserAtomEntry::MaxInline<Latin1Char>()) {
-    UniquePtr<ParserAtomEntry> entry;
-    MOZ_TRY_VAR(entry, ParserAtomEntry::allocateInline<Latin1Char>(
-                           cx, seq, length, addPtr.inner().hash));
-    return addEntry(cx, addPtr, std::move(entry));
-  }
-
-  UniqueLatin1Chars copy = js::DuplicateString(cx, latin1Ptr, length);
-  if (!copy) {
-    return RaiseParserAtomsOOMError(cx);
-  }
-  UniquePtr<ParserAtomEntry> entry;
-  MOZ_TRY_VAR(entry, ParserAtomEntry::allocate(cx, std::move(copy), length,
-                                               addPtr.inner().hash));
-  return addEntry(cx, addPtr, std::move(entry));
+  return internLatin1Seq(cx, addPtr, latin1Ptr, length);
 }
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internUtf8(
@@ -305,7 +289,8 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internUtf8(
   // is the same as the length of the UTF8 input.  Convert it to a Latin1
   // encoded string on the heap.
   UTF8Chars utf8(utf8Ptr, nbyte);
-  if (FindSmallestEncoding(utf8) == JS::SmallestEncoding::ASCII) {
+  JS::SmallestEncoding minEncoding = FindSmallestEncoding(utf8);
+  if (minEncoding == JS::SmallestEncoding::ASCII) {
     // As ascii strings are a subset of Latin1 strings, and each encoding
     // unit is the same size, we can reliably cast this `Utf8Unit*`
     // to a `Latin1Char*`.
@@ -313,18 +298,55 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internUtf8(
     return internLatin1(cx, latin1Ptr, nbyte);
   }
 
+  // Check for existing.
+  // NOTE: Well-known are all ASCII so have been handled above.
   InflatedChar16Sequence<mozilla::Utf8Unit> seq(utf8Ptr, nbyte);
+  SpecificParserAtomLookup<mozilla::Utf8Unit> lookup(seq);
+  MOZ_ASSERT(wellKnownTable_.lookupChar16Seq(lookup) == nullptr);
+  AddPtr addPtr(entrySet_.lookupForAdd(lookup), lookup.hash());
+  if (addPtr) {
+    return addPtr.get()->asAtom();
+  }
 
-  // Otherwise, slowpath lookup/interning path that identifies the
-  // proper target encoding.
-  return lookupOrInternChar16Seq(cx, seq);
+  // Compute length in code-points.
+  uint32_t length = 0;
+  InflatedChar16Sequence<mozilla::Utf8Unit> seqCopy = seq;
+  while (seqCopy.hasMore()) {
+    mozilla::Unused << seqCopy.next();
+    length += 1;
+  }
+
+  // Otherwise, add new entry.
+  bool wide = (minEncoding == JS::SmallestEncoding::UTF16);
+  return wide ? internChar16Seq<char16_t>(cx, addPtr, seq, length)
+              : internChar16Seq<Latin1Char>(cx, addPtr, seq, length);
 }
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16(
     JSContext* cx, const char16_t* char16Ptr, uint32_t length) {
   InflatedChar16Sequence<char16_t> seq(char16Ptr, length);
 
-  return lookupOrInternChar16Seq(cx, seq);
+  // Check for well-known or existing.
+  AddPtr addPtr = lookupForAdd(cx, seq);
+  if (addPtr) {
+    return addPtr.get()->asAtom();
+  }
+
+  // Compute the target encoding.
+  // NOTE: Length in code-points will be same, even if we deflate to Latin1.
+  bool wide = false;
+  InflatedChar16Sequence<char16_t> seqCopy = seq;
+  while (seqCopy.hasMore()) {
+    char16_t ch = seqCopy.next();
+    if (ch > MAX_LATIN1_CHAR) {
+      wide = true;
+      break;
+    }
+  }
+
+  // Otherwise, add new entry.
+  return wide ? internChar16Seq<char16_t>(cx, addPtr, seq, length)
+              : internChar16Seq<Latin1Char>(cx, addPtr, seq, length);
 }
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internJSAtom(
