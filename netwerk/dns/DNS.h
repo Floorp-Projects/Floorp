@@ -134,6 +134,15 @@ union NetAddr {
 
   NetAddr() { memset(this, 0, sizeof(NetAddr)); }
   explicit NetAddr(const PRNetAddr* prAddr);
+
+  bool IsIPAddrAny() const;
+  bool IsLoopbackAddr() const;
+  bool IsIPAddrV4() const;
+  bool IsIPAddrV4Mapped() const;
+  bool IsIPAddrLocal() const;
+  bool IsIPAddrShared() const;
+  nsresult GetPort(uint16_t* aResult) const;
+  bool ToStringBuffer(char* buf, uint32_t bufSize) const;
 };
 
 class AddrInfo {
@@ -219,22 +228,6 @@ void PRNetAddrToNetAddr(const PRNetAddr* prAddr, NetAddr* addr);
 // Copies the contents of a NetAddr to a PRNetAddr.
 // Does not do a ptr safety check!
 void NetAddrToPRNetAddr(const NetAddr* addr, PRNetAddr* prAddr);
-
-bool NetAddrToString(const NetAddr* addr, char* buf, uint32_t bufSize);
-
-bool IsLoopBackAddress(const NetAddr* addr);
-
-bool IsIPAddrAny(const NetAddr* addr);
-
-bool IsIPAddrV4(const NetAddr* addr);
-
-bool IsIPAddrV4Mapped(const NetAddr* addr);
-
-bool IsIPAddrLocal(const NetAddr* addr);
-
-bool IsIPAddrShared(const NetAddr* addr);
-
-nsresult GetPort(const NetAddr* aAddr, uint16_t* aResult);
 
 }  // namespace net
 }  // namespace mozilla

@@ -70,7 +70,7 @@ static nsresult CheckIOStatus(const NetAddr* aAddr) {
     return NS_ERROR_FAILURE;
   }
 
-  if (gIOService->IsOffline() && !IsLoopBackAddress(aAddr)) {
+  if (gIOService->IsOffline() && !aAddr->IsLoopbackAddr()) {
     return NS_ERROR_OFFLINE;
   }
 
@@ -472,7 +472,7 @@ void nsUDPSocket::OnSocketDetached(PRFileDesc* fd) {
 
 void nsUDPSocket::IsLocal(bool* aIsLocal) {
   // If bound to loopback, this UDP socket only accepts local connections.
-  *aIsLocal = IsLoopBackAddress(&mAddr);
+  *aIsLocal = mAddr.IsLoopbackAddr();
 }
 
 //-----------------------------------------------------------------------------
@@ -567,7 +567,7 @@ nsUDPSocket::InitWithAddress(const NetAddr* aAddr, nsIPrincipal* aPrincipal,
   }
 
   uint16_t port;
-  if (NS_FAILED(net::GetPort(aAddr, &port))) {
+  if (NS_FAILED(aAddr->GetPort(&port))) {
     NS_WARNING("invalid bind address");
     goto fail;
   }
@@ -684,7 +684,7 @@ NS_IMETHODIMP
 nsUDPSocket::GetPort(int32_t* aResult) {
   // no need to enter the lock here
   uint16_t result;
-  nsresult rv = net::GetPort(&mAddr, &result);
+  nsresult rv = mAddr.GetPort(&result);
   *aResult = static_cast<int32_t>(result);
   return rv;
 }
