@@ -1219,9 +1219,9 @@ nsresult nsFtpState::S_pasv() {
     if (sTrans) {
       nsresult rv = sTrans->GetPeerAddr(&mServerAddress);
       if (NS_SUCCEEDED(rv)) {
-        if (!IsIPAddrAny(&mServerAddress))
+        if (!mServerAddress.IsIPAddrAny())
           mServerIsIPv6 = (mServerAddress.raw.family == AF_INET6) &&
-                          !IsIPAddrV4Mapped(&mServerAddress);
+                          !mServerAddress.IsIPAddrV4Mapped();
         else {
           /*
            * In case of SOCKS5 remote DNS resolution, we do
@@ -1234,7 +1234,7 @@ nsresult nsFtpState::S_pasv() {
           rv = sTrans->GetSelfAddr(&selfAddress);
           if (NS_SUCCEEDED(rv))
             mServerIsIPv6 = (selfAddress.raw.family == AF_INET6) &&
-                            !IsIPAddrV4Mapped(&selfAddress);
+                            !selfAddress.IsIPAddrV4Mapped();
         }
       }
     }
@@ -1351,9 +1351,9 @@ nsFtpState::R_pasv() {
     nsCOMPtr<nsISocketTransport> strans;
 
     nsAutoCString host;
-    if (!IsIPAddrAny(&mServerAddress)) {
+    if (!mServerAddress.IsIPAddrAny()) {
       char buf[kIPv6CStrBufSize];
-      NetAddrToString(&mServerAddress, buf, sizeof(buf));
+      mServerAddress.ToStringBuffer(buf, sizeof(buf));
       host.Assign(buf);
     } else {
       /*

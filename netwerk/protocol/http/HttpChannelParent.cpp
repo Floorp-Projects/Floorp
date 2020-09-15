@@ -1632,7 +1632,7 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     isLocal = (peerAddr.raw.family == PR_AF_LOCAL);
 #endif
 
-    isLocal = isLocal || IsLoopBackAddress(&peerAddr);
+    isLocal = isLocal || peerAddr.IsLoopbackAddr();
 
     if (!isLocal) {
       if (!mHasSuspendedByBackPressure) {
