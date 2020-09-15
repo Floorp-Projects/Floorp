@@ -104,8 +104,8 @@ void js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind) {
   });
 }
 
-JS_PUBLIC_API void JS::TraceIncomingCCWs(
-    JSTracer* trc, const JS::CompartmentSet& compartments) {
+void js::gc::TraceIncomingCCWs(JSTracer* trc,
+                               const JS::CompartmentSet& compartments) {
   for (CompartmentsIter source(trc->runtime()); !source.done(); source.next()) {
     if (compartments.has(source)) {
       continue;
