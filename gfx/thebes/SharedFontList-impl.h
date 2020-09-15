@@ -94,6 +94,10 @@ class FontList {
    * appear in this list, although some may be marked as "hidden" so that
    * they are not exposed to the font-family property.
    *
+   * The passed-in array may be modified (to eliminate duplicates of bundled
+   * fonts, or restrict the available list to a specified subset), so if the
+   * caller intends to make further use of it this should be kept in mind.
+   *
    * Once initialized, the master family list is immutable; in the (rare)
    * event that the system's collection of installed fonts changes, we discard
    * the FontList and create a new one.
@@ -107,7 +111,7 @@ class FontList {
    *
    * Only used in the parent process.
    */
-  void SetFamilyNames(const nsTArray<Family::InitData>& aFamilies);
+  void SetFamilyNames(nsTArray<Family::InitData>& aFamilies);
 
   /**
    * Aliases are Family records whose Face entries are already part of another

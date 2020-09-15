@@ -1428,8 +1428,6 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
       AppendFamiliesFromCollection(mBundledFonts, families);
     }
 #endif
-    ApplyWhitelist(families);
-    families.Sort();
     SharedFontList()->SetFamilyNames(families);
     GetPrefsAndStartLoader();
   }
@@ -1479,27 +1477,31 @@ nsresult gfxDWriteFontList::InitFontListForPlatform() {
     return NS_ERROR_FAILURE;
   }
 
+#ifdef MOZ_BUNDLED_FONTS
+  // Get bundled fonts before the system collection, so that in the case of
+  // duplicate names, we have recorded the family as bundled (and therefore
+  // available regardless of visibility settings).
+  mBundledFonts = CreateBundledFontsCollection(factory);
+  if (mBundledFonts) {
+    GetFontsFromCollection(mBundledFonts);
+  }
+#endif
+  const uint32_t kBundledCount = mFontFamilies.Count();
+
   QueryPerformanceCounter(&t3);  // system font collection
 
   GetFontsFromCollection(mSystemFonts);
 
   // if no fonts found, something is out of whack, bail and use GDI backend
-  NS_ASSERTION(mFontFamilies.Count() != 0,
+  NS_ASSERTION(mFontFamilies.Count() > kBundledCount,
                "no fonts found in the system fontlist -- holy crap batman!");
-  if (mFontFamilies.Count() == 0) {
+  if (mFontFamilies.Count() == kBundledCount) {
     Telemetry::Accumulate(Telemetry::DWRITEFONT_INIT_PROBLEM,
                           uint32_t(errNoFonts));
     return NS_ERROR_FAILURE;
   }
 
   QueryPerformanceCounter(&t4);  // iterate over system fonts
-
-#ifdef MOZ_BUNDLED_FONTS
-  mBundledFonts = CreateBundledFontsCollection(factory);
-  if (mBundledFonts) {
-    GetFontsFromCollection(mBundledFonts);
-  }
-#endif
 
   mOtherFamilyNamesInitialized = true;
   GetFontSubstitutes();

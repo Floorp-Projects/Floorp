@@ -730,14 +730,35 @@ Pointer FontList::Alloc(uint32_t aSize) {
   return Pointer(blockIndex, curAlloc);
 }
 
-void FontList::SetFamilyNames(const nsTArray<Family::InitData>& aFamilies) {
+void FontList::SetFamilyNames(nsTArray<Family::InitData>& aFamilies) {
   // Only the parent process should ever assign the list of families.
   MOZ_ASSERT(XRE_IsParentProcess());
 
   Header& header = GetHeader();
   MOZ_ASSERT(!header.mFamilyCount);
 
+  gfxPlatformFontList::PlatformFontList()->ApplyWhitelist(aFamilies);
+  aFamilies.Sort();
+
   size_t count = aFamilies.Length();
+
+  // Check for duplicate family entries (can occur if there is a bundled font
+  // that has the same name as a system-installed one); in this case we keep
+  // the bundled one as it will always be exposed.
+  if (count > 1) {
+    const nsCString* prevKey = &aFamilies[0].mKey;
+    for (size_t i = 1; i < count; ++i) {
+      if (aFamilies[i].mKey.Equals(*prevKey)) {
+        // Decide whether to discard the current entry or the preceding one
+        size_t discard =
+            aFamilies[i].mBundled && !aFamilies[i - 1].mBundled ? i - 1 : i;
+        aFamilies.RemoveElementAt(discard);
+        --count;
+        --i;
+      }
+    }
+  }
+
   header.mFamilies = Alloc(count * sizeof(Family));
   if (header.mFamilies.IsNull()) {
     return;
