@@ -1807,6 +1807,13 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
                                    : new nsPresContext(aPO->mDocument, type);
   aPO->mPresContext->SetPrintSettings(printData->mPrintSettings);
 
+  // set the presentation context to the value in the print settings
+  bool printBGColors;
+  printData->mPrintSettings->GetPrintBGColors(&printBGColors);
+  aPO->mPresContext->SetBackgroundColorDraw(printBGColors);
+  printData->mPrintSettings->GetPrintBGImages(&printBGColors);
+  aPO->mPresContext->SetBackgroundImageDraw(printBGColors);
+
   // init it with the DC
   MOZ_TRY(aPO->mPresContext->Init(printData->mPrintDC));
 
