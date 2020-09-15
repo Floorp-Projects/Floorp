@@ -137,12 +137,6 @@ class CommandAction(argparse.Action):
             # Try to find similar commands, may raise UnknownCommandError.
             command = self._suggest_command(command)
 
-        # This is used by the `mach` driver to find the command name amidst
-        # global arguments.
-        if getattr(self._context, 'get_command', False) is True:
-            setattr(namespace, 'command', command)
-            return
-
         handler = self._mach_registrar.command_handlers.get(command)
 
         prog = command
