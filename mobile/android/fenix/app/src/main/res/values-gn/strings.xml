@@ -272,6 +272,8 @@
     <string name="preferences_open_links_in_a_private_tab">Embojuruja juajuha tendayke ñemíme</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Emoneĩ mba’erechaha japyhy kundaha ñemíme</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Oñemoneĩrõ, umi tendayke ñemigua ojehecháta oĩ vove heta tembipuru’i ijurujáva</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Embojuaju jeike pya’eha tendayke ñemiguáre</string>
     <!-- Preference for accessibility -->
@@ -330,6 +332,8 @@
     <string name="preferences_search_bookmarks">Eheka techaukaha</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Mba’ete ñemboheko</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Moĩmbajehegui URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Embojuruja juajuha tembipuru’ípe</string>
     <!-- Preference for open download with an external download manager app -->
@@ -1078,6 +1082,10 @@
     <string name="onboarding_account_sign_in_header">Embojuehe techaukaha, ñe’ẽñemi ha hetave ne mba’ete Firefox pegua ndive.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Eikuaave</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Eike %s ramo ambue Firefox kundahára ko mba’e’oka pegua. ¿Eikese añetépa ko mba’ete ndive?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Héẽ, eñepyrũ tembiapo</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1327,6 +1335,9 @@
     <string name="add_to_homescreen_continue">Eimeve ñanduti rendápe</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Jeike pya’eha réra</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Ikatu embojuaju ko ñanduti renda ne mba’e’oka mba’erechaha ñepyrũgua rehe eike hag̃ua ha eikundaha pya’eve, peteĩ tembipuru’ícharamo.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Tembiapo ñepyrũ ha ñe’ẽñemi</string>
@@ -1580,6 +1591,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Ehupytýma hu’ã tenda mba’guasúvape g̃uarã</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Embojuaju hag̃ua tenda pyahu, embogue peteĩ. Ejopy are tenda ha eiporavo mboguete.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Oĩma, aikumby</string>
 
@@ -1589,7 +1602,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Mboguete</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Eguenohẽ %s-gui eikotevẽva.</string>
 

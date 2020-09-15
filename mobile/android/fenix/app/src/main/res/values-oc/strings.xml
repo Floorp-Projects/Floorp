@@ -282,6 +282,8 @@
     <string name="preferences_theme">Tèma</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Acuèlh</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gèstes</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizacion</string>
     <!-- Preference description for banner about signing in -->
@@ -319,6 +321,8 @@
     <string name="preferences_search_bookmarks">Cercar dins los marcapaginas</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Paramètres del compte</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Autocomplecion URL</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Dobrir los ligams dins las aplicacions</string>
     <!-- Preference for open download with an external download manager app -->
@@ -457,6 +461,12 @@
     <string name="preference_auto_battery_theme">Definit per l’estalviador de batariá</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Segon lo tèma del periferic</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Tirar per actualizar</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Desfilar per amagar la barra d’aisinas</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1319,8 +1329,12 @@
     <string name="logins_site_copied">Site copiat al quichapapièrs</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copiar lo senhal</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Escafar senhal</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copiar lo nom d’utilizaire</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Escafar identificant</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar lo site</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1461,7 +1475,7 @@
     <string name="saved_login_duplicate">Un identificant amb aqueste nom d’utilizaire existís ja</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Connectatz un autre periferic.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Tornatz vos autentificar.</string>
@@ -1480,8 +1494,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Arribat a la limita dels sites principals</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Per ajustar un site principal novèl, suprimissètz-ne un autre. Tocatz longament sul site e causissètz suprimir.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Òc, plan comprés</string>
 
@@ -1491,7 +1503,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Suprimir</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Ne fasètz mai amb %s.</string>
 

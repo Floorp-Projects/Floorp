@@ -269,6 +269,8 @@
     <string name="preferences_open_links_in_a_private_tab">Keppelingen iepenje yn in priveeljepblêd</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Skermôfbyldingen meitsje yn priveenavigaasje tastean</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Wannear tastien, binne priveeljepblêden ek sichtber wannear mear apps iepene binne</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Fluchkeppeling nei priveenavigaasje tafoegje</string>
     <!-- Preference for accessibility -->
@@ -289,6 +291,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Startside</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Bewegingen</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Oanpasse</string>
     <!-- Preference description for banner about signing in -->
@@ -326,6 +330,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Accountynstellingen</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">URL’s automatysk oanfolje</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Keppelingen iepenje yn apps</string>
 
@@ -461,6 +467,16 @@
     <string name="preference_auto_battery_theme">Ynsteld troch Batterijbesparing</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Apparaattema folgje</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Lûk om te fernijen</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Scroll om de wurkbalke te ferstopjen</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Fei de wurkbalke op side om fan ljepblêd te wikseljen</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Fei de wurkbalke omheech om ljepblêden te iepenjen</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1050,7 +1066,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Jo binne op in oare Firefox-browser op dizze telefoan oanmeld as %s . Wolle jo oanmelde mei dizze account?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Jo binne oanmeld as %s op in oare Firefox-browser op dit apparaat. Wolle jo oanmelde mei dizze account?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja, my oanmelde</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1297,7 +1313,7 @@
     <string name="add_to_homescreen_text_placeholder">Namme fluchtoets</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Jo kinne dizze website ienfâldichwei oan it startskerm fan jo telefoan tafoegje foar daliks tagong en flugger surfe mei in app-eftige ûnderfining.</string>
+    <string name="add_to_homescreen_description_2">Jo kinne dizze website ienfâldich oan it startskerm fan jo apparaat tafoegje, om sa daliks tagong te hawwen en flugger te navigearjen mei in app-eftige ûnderfining.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Oanmeldingen en wachtwurden</string>
@@ -1367,8 +1383,12 @@
     <string name="logins_site_copied">Website nei klamboerd kopiearre</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Wachtwurd kopiearje</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Wachtwurd wiskje</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Brûkersnamme kopiearje</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Brûkersnamme wiskje</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Website kopiearje</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1523,7 +1543,7 @@
     <string name="saved_login_duplicate">Der bestiet al in oanmelding mei dy brûkersnamme</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">In oar apparaat ferbine.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Graach opnij autentisearje.</string>
@@ -1544,7 +1564,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Limyt foar topwebsites berikke</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Smyt in topwebsite fuort om in nije ta te foegjen. Hâld de website yndrukt en selektearje Fuortsmite.</string>
+    <string name="top_sites_max_limit_content_2">Smyt in topwebsite fuort om in nije ta te foegjen. Hâld de website yndrukt en selektearje Fuortsmite.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, begrepen</string>
 
@@ -1554,7 +1574,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Fuortsmite</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Helje it measte út %s.</string>
 
@@ -1562,4 +1582,9 @@
     <string name="no_collections_header1">Sammelje de dingen dy\'t wichtich foar jo binne</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Groepearje fergelykbere sykopdrachten, websites en ljepblêden foar flugge tagong letter.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Jo binne op in oare Firefox-browser op dizze telefoan oanmeld as %s . Wolle jo oanmelde mei dizze account?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Jo kinne dizze website ienfâldichwei oan it startskerm fan jo telefoan tafoegje foar daliks tagong en flugger surfe mei in app-eftige ûnderfining.</string>
+
+    </resources>

@@ -292,6 +292,8 @@
     <string name="preferences_theme">Téma vzhľadu</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Domov</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gestá</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Prispôsobenie</string>
     <!-- Preference description for banner about signing in -->
@@ -329,6 +331,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Nastavenia účtu</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Automaticky dokončovať URL adresy</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Otvárať odkazy v aplikáciách</string>
 
@@ -1369,8 +1373,12 @@
     <string name="logins_site_copied">Stránka bola skopírovaná do schránky</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopírovať heslo</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Vymazať heslo</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopírovať používateľské meno</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Vymazať používateľské meno</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopírovať stránku</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1545,6 +1553,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Bol dosiahnutý limit top stránok</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Ak chcete pridať novú top stránku, musíte jednu odstrániť. Podržte na nej prst a vyberte možnosť Odstrániť.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, rozumiem</string>
 

@@ -316,7 +316,7 @@
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Vis forslag fra udklipsholder</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
-    <string name="preferences_search_browsing_history">Søg i søgehistorik</string>
+    <string name="preferences_search_browsing_history">Søg i browserhistorik</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Søg i bogmærker</string>
     <!-- Preference for account settings -->
@@ -1040,10 +1040,6 @@
     <string name="onboarding_account_sign_in_header">Begynd at synkronisere bogmærker, adgangskoder m.m. med din Firefox-konto.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Læs mere</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Du er logget ind som %s i en anden version af Firefox på denne telefon. Vil du logge ind med denne konto?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja, log mig ind</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1284,9 +1280,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Genvejsnavn</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Du kan nemt føje dette websted til din telefons startskærm for at have hurtig adgang til det og browse hurtigere med en app-lignende oplevelse.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Logins og adgangskoder</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1511,7 +1504,7 @@
     <string name="saved_login_duplicate">Et login med dette brugernavn findes allerede</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Opret forbindelse til en ny enhed.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Godkend igen.</string>
@@ -1530,8 +1523,6 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Grænsen for Mest besøgte websider er nået</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Hvis du vil tilføje en ny webside, skal du først fjerne én. Tryk og hold på websiden, og vælg så Fjern.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, forstået</string>
 
@@ -1541,7 +1532,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Fjern</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Få det meste ud af %s.</string>
 
@@ -1549,4 +1540,9 @@
     <string name="no_collections_header1">Saml de ting, der betyder noget for dig</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Saml relaterede søgninger, websteder og faneblade i grupper. Så kan du hurtigt finde dem igen.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Du er logget ind som %s i en anden version af Firefox på denne telefon. Vil du logge ind med denne konto?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Du kan nemt føje dette websted til din telefons startskærm for at have hurtig adgang til det og browse hurtigere med en app-lignende oplevelse.</string>
+
     </resources>
