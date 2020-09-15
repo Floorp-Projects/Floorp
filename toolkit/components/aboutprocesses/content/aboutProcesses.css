@@ -56,16 +56,6 @@ td:nth-child(3) {
     width: 15%;
 }
 
-/* column-pid */
-td:nth-child(4) {
-  width: 10%;
-}
-
-/* column-cpu-threads */
-td:nth-child(5) {
-  width: 10%;
-}
-
 #process-thead > tr {
   height: inherit;
 }
@@ -92,19 +82,18 @@ td.type, td.favicon {
   background-repeat: no-repeat;
   background-origin: border-box;
   background-size: 16px 16px;
-  background-position: 16px center;
+  background-position: 8px center;
+  padding-inline-start: 32px;
   -moz-context-properties: fill;
   fill: currentColor;
 }
 td.type:dir(rtl), td.favicon:dir(rtl) {
-  background-position-x: right 16px;
+  background-position-x: right 8px;
 }
 #process-tbody > tr > td:first-child {
   text-overflow: ellipsis;
 }
 .twisty {
-  margin-inline: -10px 0px;
-  padding-inline: 18px;
   position: relative;
 }
 /* Putting the background image in a positioned pseudo element lets us
@@ -115,8 +104,7 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
   display: block;
   line-height: 50%;
   top: 4px; /* Half the image's height */
-  inset-inline-start: 0;
-  padding-inline-start: 2px;
+  inset-inline-start: -16px;
   width: 100%;
   -moz-context-properties: fill;
   fill: currentColor;
@@ -199,10 +187,10 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
 }
 
 /*
-  Show a the separation between process groups.
+  Show a separation between process groups.
  */
 
-#process-tbody > tr.separate-from-next-process-group {
-  border-bottom: dotted 1px var(--in-content-box-border-color);
-  margin-bottom: -1px;
+#process-tbody > tr.separate-from-previous-process-group {
+  border-top: dotted 1px var(--in-content-box-border-color);
+  margin-top: -1px;
 }
