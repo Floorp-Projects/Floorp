@@ -205,6 +205,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  void SetClearColor(const gfx::DeviceColor& aColor);
+
   void Pause();
   bool Resume();
 
