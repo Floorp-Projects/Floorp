@@ -213,8 +213,8 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
   uint32_t sourceFrames;
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
-  // Run for some time: 6 * 250 = 1500 iterations
-  for (int j = 0; j < 6; ++j) {
+  // Run for some time: 3 * 1050 = 3150 iterations
+  for (int j = 0; j < 3; ++j) {
     // apply some drift
     if (j % 2 == 0) {
       sourceFrames = sampleRateTransmitter / 100 + 10;
@@ -222,7 +222,9 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
       sourceFrames = sampleRateTransmitter / 100 - 10;
     }
 
-    for (int n = 0; n < 250; ++n) {
+    // 10.5 seconds, allows for at least 10 correction changes, to stabilize
+    // around the desired buffer.
+    for (int n = 0; n < 1050; ++n) {
       // Create the input (sine tone)
       AudioSegment inSegment;
       tone.Generate(inSegment, sourceFrames);
@@ -238,6 +240,10 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
       outToneVerifier.AppendData(outSegment);
     }
   }
+
+  EXPECT_NEAR(ad.CurrentBuffering(),
+              ad.mDesiredBuffering - sampleRateTransmitter / 100, 512);
+
   EXPECT_EQ(inToneVerifier.EstimatedFreq(), tone.mFrequency);
   EXPECT_EQ(inToneVerifier.PreSilenceSamples(), 0U);
   EXPECT_EQ(inToneVerifier.CountDiscontinuities(), 0U);
