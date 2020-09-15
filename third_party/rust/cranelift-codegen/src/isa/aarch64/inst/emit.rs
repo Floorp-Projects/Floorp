@@ -170,7 +170,7 @@ fn enc_conditional_br(taken: BranchTarget, kind: CondBrKind) -> u32 {
     }
 }
 
-const MOVE_WIDE_FIXED: u32 = 0x92800000;
+const MOVE_WIDE_FIXED: u32 = 0x12800000;
 
 #[repr(u32)]
 enum MoveWideOpcode {
@@ -179,9 +179,15 @@ enum MoveWideOpcode {
     MOVK = 0b11,
 }
 
-fn enc_move_wide(op: MoveWideOpcode, rd: Writable<Reg>, imm: MoveWideConst) -> u32 {
+fn enc_move_wide(
+    op: MoveWideOpcode,
+    rd: Writable<Reg>,
+    imm: MoveWideConst,
+    size: OperandSize,
+) -> u32 {
     assert!(imm.shift <= 0b11);
     MOVE_WIDE_FIXED
+        | size.sf_bit() << 31
         | (op as u32) << 29
         | u32::from(imm.shift) << 21
         | u32::from(imm.bits) << 5
@@ -434,7 +440,7 @@ pub struct EmitState {
 }
 
 impl MachInstEmitState<Inst> for EmitState {
-    fn new(abi: &dyn ABIBody<I = Inst>) -> Self {
+    fn new(abi: &dyn ABICallee<I = Inst>) -> Self {
         EmitState {
             virtual_sp_offset: 0,
             nominal_sp_to_fp: abi.frame_size() as i64,
@@ -491,21 +497,12 @@ impl MachInstEmit for Inst {
                     ALUOp::AddS64 => 0b10101011_000,
                     ALUOp::SubS32 => 0b01101011_000,
                     ALUOp::SubS64 => 0b11101011_000,
-                    ALUOp::SubS64XR => 0b11101011_001,
                     ALUOp::SDiv64 => 0b10011010_110,
                     ALUOp::UDiv64 => 0b10011010_110,
                     ALUOp::RotR32 | ALUOp::Lsr32 | ALUOp::Asr32 | ALUOp::Lsl32 => 0b00011010_110,
                     ALUOp::RotR64 | ALUOp::Lsr64 | ALUOp::Asr64 | ALUOp::Lsl64 => 0b10011010_110,
-
-                    ALUOp::MAdd32
-                    | ALUOp::MAdd64
-                    | ALUOp::MSub32
-                    | ALUOp::MSub64
-                    | ALUOp::SMulH
-                    | ALUOp::UMulH => {
-                        //// RRRR ops.
-                        panic!("Bad ALUOp {:?} in RRR form!", alu_op);
-                    }
+                    ALUOp::SMulH => 0b10011011_010,
+                    ALUOp::UMulH => 0b10011011_110,
                 };
                 let bit15_10 = match alu_op {
                     ALUOp::SDiv64 => 0b000011,
@@ -514,16 +511,13 @@ impl MachInstEmit for Inst {
                     ALUOp::Lsr32 | ALUOp::Lsr64 => 0b001001,
                     ALUOp::Asr32 | ALUOp::Asr64 => 0b001010,
                     ALUOp::Lsl32 | ALUOp::Lsl64 => 0b001000,
-                    ALUOp::SubS64XR => 0b011000,
+                    ALUOp::SMulH | ALUOp::UMulH => 0b011111,
                     _ => 0b000000,
                 };
                 debug_assert_ne!(writable_stack_reg(), rd);
-                // The stack pointer is the zero register if this instruction
-                // doesn't have access to extended registers, so this might be
-                // an indication that something is wrong.
-                if alu_op != ALUOp::SubS64XR {
-                    debug_assert_ne!(stack_reg(), rn);
-                }
+                // The stack pointer is the zero register in this context, so this might be an
+                // indication that something is wrong.
+                debug_assert_ne!(stack_reg(), rn);
                 debug_assert_ne!(stack_reg(), rm);
                 sink.put4(enc_arith_rrr(top11, bit15_10, rd, rn, rm));
             }
@@ -535,13 +529,10 @@ impl MachInstEmit for Inst {
                 ra,
             } => {
                 let (top11, bit15) = match alu_op {
-                    ALUOp::MAdd32 => (0b0_00_11011_000, 0),
-                    ALUOp::MSub32 => (0b0_00_11011_000, 1),
-                    ALUOp::MAdd64 => (0b1_00_11011_000, 0),
-                    ALUOp::MSub64 => (0b1_00_11011_000, 1),
-                    ALUOp::SMulH => (0b1_00_11011_010, 0),
-                    ALUOp::UMulH => (0b1_00_11011_110, 0),
-                    _ => unimplemented!("{:?}", alu_op),
+                    ALUOp3::MAdd32 => (0b0_00_11011_000, 0),
+                    ALUOp3::MSub32 => (0b0_00_11011_000, 1),
+                    ALUOp3::MAdd64 => (0b1_00_11011_000, 0),
+                    ALUOp3::MSub64 => (0b1_00_11011_000, 1),
                 };
                 sink.put4(enc_arith_rrrr(top11, rm, bit15, ra, rn, rd));
             }
@@ -999,7 +990,7 @@ impl MachInstEmit for Inst {
                     }
                 }
             }
-            &Inst::Mov { rd, rm } => {
+            &Inst::Mov64 { rd, rm } => {
                 assert!(rd.to_reg().get_class() == rm.get_class());
                 assert!(rm.get_class() == RegClass::I64);
 
@@ -1029,9 +1020,15 @@ impl MachInstEmit for Inst {
                 // Encoded as ORR rd, rm, zero.
                 sink.put4(enc_arith_rrr(0b00101010_000, 0b000_000, rd, zero_reg(), rm));
             }
-            &Inst::MovZ { rd, imm } => sink.put4(enc_move_wide(MoveWideOpcode::MOVZ, rd, imm)),
-            &Inst::MovN { rd, imm } => sink.put4(enc_move_wide(MoveWideOpcode::MOVN, rd, imm)),
-            &Inst::MovK { rd, imm } => sink.put4(enc_move_wide(MoveWideOpcode::MOVK, rd, imm)),
+            &Inst::MovZ { rd, imm, size } => {
+                sink.put4(enc_move_wide(MoveWideOpcode::MOVZ, rd, imm, size))
+            }
+            &Inst::MovN { rd, imm, size } => {
+                sink.put4(enc_move_wide(MoveWideOpcode::MOVN, rd, imm, size))
+            }
+            &Inst::MovK { rd, imm, size } => {
+                sink.put4(enc_move_wide(MoveWideOpcode::MOVK, rd, imm, size))
+            }
             &Inst::CSel { rd, rn, rm, cond } => {
                 sink.put4(enc_csel(rd, rn, rm, cond));
             }
@@ -2076,19 +2073,6 @@ impl MachInstEmit for Inst {
                 // Lowering produces an EmitIsland before using a JTSequence, so we can safely
                 // disable the worst-case-size check in this case.
                 start_off = sink.cur_offset();
-            }
-            &Inst::LoadConst64 { rd, const_data } => {
-                let inst = Inst::ULoad64 {
-                    rd,
-                    mem: AMode::Label(MemLabel::PCRel(8)),
-                    srcloc: None, // can't cause a user trap.
-                };
-                inst.emit(sink, flags, state);
-                let inst = Inst::Jump {
-                    dest: BranchTarget::ResolvedOffset(12),
-                };
-                inst.emit(sink, flags, state);
-                sink.put8(const_data);
             }
             &Inst::LoadExtName {
                 rd,

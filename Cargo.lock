@@ -762,7 +762,7 @@ dependencies = [
 [[package]]
 name = "cranelift-bforest"
 version = "0.66.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=a7f7c23bf9c37c642da962d575b7c99007918872#a7f7c23bf9c37c642da962d575b7c99007918872"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=379aed8092cd1241ec7839e77d05557b1dceb234#379aed8092cd1241ec7839e77d05557b1dceb234"
 dependencies = [
  "cranelift-entity 0.66.0",
 ]
@@ -770,7 +770,7 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen"
 version = "0.66.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=a7f7c23bf9c37c642da962d575b7c99007918872#a7f7c23bf9c37c642da962d575b7c99007918872"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=379aed8092cd1241ec7839e77d05557b1dceb234#379aed8092cd1241ec7839e77d05557b1dceb234"
 dependencies = [
  "byteorder",
  "cranelift-bforest",
@@ -787,7 +787,7 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen-meta"
 version = "0.66.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=a7f7c23bf9c37c642da962d575b7c99007918872#a7f7c23bf9c37c642da962d575b7c99007918872"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=379aed8092cd1241ec7839e77d05557b1dceb234#379aed8092cd1241ec7839e77d05557b1dceb234"
 dependencies = [
  "cranelift-codegen-shared",
  "cranelift-entity 0.66.0",
@@ -796,7 +796,7 @@ dependencies = [
 [[package]]
 name = "cranelift-codegen-shared"
 version = "0.66.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=a7f7c23bf9c37c642da962d575b7c99007918872#a7f7c23bf9c37c642da962d575b7c99007918872"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=379aed8092cd1241ec7839e77d05557b1dceb234#379aed8092cd1241ec7839e77d05557b1dceb234"
 
 [[package]]
 name = "cranelift-entity"
@@ -806,12 +806,12 @@ source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=477d8fc53a6
 [[package]]
 name = "cranelift-entity"
 version = "0.66.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=a7f7c23bf9c37c642da962d575b7c99007918872#a7f7c23bf9c37c642da962d575b7c99007918872"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=379aed8092cd1241ec7839e77d05557b1dceb234#379aed8092cd1241ec7839e77d05557b1dceb234"
 
 [[package]]
 name = "cranelift-frontend"
 version = "0.66.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=a7f7c23bf9c37c642da962d575b7c99007918872#a7f7c23bf9c37c642da962d575b7c99007918872"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=379aed8092cd1241ec7839e77d05557b1dceb234#379aed8092cd1241ec7839e77d05557b1dceb234"
 dependencies = [
  "cranelift-codegen",
  "log",
@@ -822,7 +822,7 @@ dependencies = [
 [[package]]
 name = "cranelift-wasm"
 version = "0.66.0"
-source = "git+https://github.com/bytecodealliance/wasmtime?rev=a7f7c23bf9c37c642da962d575b7c99007918872#a7f7c23bf9c37c642da962d575b7c99007918872"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=379aed8092cd1241ec7839e77d05557b1dceb234#379aed8092cd1241ec7839e77d05557b1dceb234"
 dependencies = [
  "cranelift-codegen",
  "cranelift-entity 0.66.0",
