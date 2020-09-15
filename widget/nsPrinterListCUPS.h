@@ -15,7 +15,8 @@ class nsPrinterListCUPS final : public nsPrinterListBase {
 
   nsTArray<PrinterInfo> Printers() const final;
   RefPtr<nsIPrinter> CreatePrinter(PrinterInfo) const final;
-  Maybe<PrinterInfo> NamedPrinter(nsString aPrinterName) const final;
+  Maybe<PrinterInfo> PrinterByName(nsString aPrinterName) const final;
+  Maybe<PrinterInfo> PrinterBySystemName(nsString aPrinterName) const final;
   nsresult SystemDefaultPrinterName(nsAString&) const final;
 
  private:

@@ -137,6 +137,12 @@ nsPrinterCUPS::GetName(nsAString& aName) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPrinterCUPS::GetSystemName(nsAString& aName) {
+  CopyUTF8toUTF16(MakeStringSpan(mPrinter->name), aName);
+  return NS_OK;
+}
+
 void nsPrinterCUPS::GetPrinterName(nsAString& aName) const {
   if (mDisplayName.IsEmpty()) {
     aName.Truncate();
