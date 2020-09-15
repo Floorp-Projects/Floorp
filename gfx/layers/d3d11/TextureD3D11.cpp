@@ -288,20 +288,7 @@ static void DestroyDrawTarget(RefPtr<DrawTarget>& aDT,
 
 D3D11TextureData::~D3D11TextureData() {
   if (mDrawTarget) {
-    if (PaintThread::Get() &&
-        StaticPrefs::gfx_direct2d_destroy_dt_on_paintthread()) {
-      RefPtr<DrawTarget> dt = mDrawTarget;
-      RefPtr<ID3D11Texture2D> tex = mTexture;
-      RefPtr<Runnable> task = NS_NewRunnableFunction(
-          "PaintThread::RunFunction",
-          [dt, tex]() mutable { DestroyDrawTarget(dt, tex); });
-      PaintThread::Get()->Dispatch(task);
-    }
-#ifdef DEBUG
-    else {
-      DestroyDrawTarget(mDrawTarget, mTexture);
-    }
-#endif
+    DestroyDrawTarget(mDrawTarget, mTexture);
   }
 }
 
