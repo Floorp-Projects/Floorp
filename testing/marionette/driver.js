@@ -1424,9 +1424,14 @@ GeckoDriver.prototype.getIdForBrowser = function(browser) {
  *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.getWindowHandle = function() {
-  assert.open(this.getBrowsingContext({ context: Context.Content, top: true }));
+  const browsingContext = assert.open(
+    this.getBrowsingContext({
+      context: Context.Content,
+      top: true,
+    })
+  );
 
-  return this.curBrowser.curFrameId.toString();
+  return browsingContext.id.toString();
 };
 
 /**
@@ -1461,15 +1466,14 @@ GeckoDriver.prototype.getWindowHandles = function() {
  *     Internal browsing context reference not found
  */
 GeckoDriver.prototype.getChromeWindowHandle = function() {
-  assert.open(this.getBrowsingContext({ context: Context.Chrome, top: true }));
+  const browsingContext = assert.open(
+    this.getBrowsingContext({
+      context: Context.Chrome,
+      top: true,
+    })
+  );
 
-  for (let i in this.browsers) {
-    if (this.curBrowser == this.browsers[i]) {
-      return i;
-    }
-  }
-
-  throw new error.UnknownError("Invalid browsing context");
+  return browsingContext.id.toString();
 };
 
 /**
