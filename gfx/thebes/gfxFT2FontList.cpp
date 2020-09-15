@@ -1656,9 +1656,6 @@ void gfxFT2FontList::InitSharedFontListForPlatform() {
   // mFaceInitData (shared font list).
   FindFonts();
 
-  ApplyWhitelist(mFamilyInitData);
-  mFamilyInitData.Sort();
-
   mozilla::fontlist::FontList* list = SharedFontList();
   list->SetFamilyNames(mFamilyInitData);
 
