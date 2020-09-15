@@ -13,6 +13,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsPrintfCString.h"
 
 #ifdef MOZ_GECKO_PROFILER
@@ -68,9 +69,11 @@ AudioSink::AudioSink(AbstractThread* aThread,
       mFramesParsed(0),
       mOutputRate(DecideAudioPlaybackSampleRate(aInfo)),
       mOutputChannels(DecideAudioPlaybackChannels(aInfo)),
-      mAudibilityMonitor(mOutputRate, 2.0),
-      mAudioQueue(aAudioQueue)
-  { }
+      mAudibilityMonitor(
+          mOutputRate,
+          StaticPrefs::dom_media_silence_duration_for_audibility()),
+      mIsAudioDataAudible(false),
+      mAudioQueue(aAudioQueue) {}
 
 AudioSink::~AudioSink() = default;
 
