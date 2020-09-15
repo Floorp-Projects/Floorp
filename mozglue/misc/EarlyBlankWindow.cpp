@@ -22,6 +22,7 @@ static const wchar_t kEarlyBlankWindowKeyPath[] =
 static bool sEarlyBlankWindowEnabled = false;
 static HWND sEarlyBlankWindowHandle;
 static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
+static LPWSTR const gIDCWait = MAKEINTRESOURCEW(32514);
 
 typedef BOOL(WINAPI* EnableNonClientDpiScalingProc)(HWND);
 static EnableNonClientDpiScalingProc sEnableNonClientDpiScaling = NULL;
@@ -29,6 +30,34 @@ typedef int(WINAPI* GetSystemMetricsForDpiProc)(int, UINT);
 GetSystemMetricsForDpiProc sGetSystemMetricsForDpi = NULL;
 typedef UINT(WINAPI* GetDpiForWindowProc)(HWND);
 GetDpiForWindowProc sGetDpiForWindow = NULL;
+typedef ATOM(WINAPI* RegisterClassWProc)(const WNDCLASSW*);
+RegisterClassWProc sRegisterClassW = NULL;
+typedef HICON(WINAPI* LoadIconWProc)(HINSTANCE, LPCWSTR);
+LoadIconWProc sLoadIconW = NULL;
+typedef HICON(WINAPI* LoadCursorWProc)(HINSTANCE, LPCWSTR);
+LoadCursorWProc sLoadCursorW = NULL;
+typedef HWND(WINAPI* CreateWindowExWProc)(DWORD, LPCWSTR, LPCWSTR, DWORD, int,
+                                          int, int, int, HWND, HMENU, HINSTANCE,
+                                          LPVOID);
+CreateWindowExWProc sCreateWindowExW = NULL;
+typedef BOOL(WINAPI* ShowWindowProc)(HWND, int);
+ShowWindowProc sShowWindow = NULL;
+typedef BOOL(WINAPI* SetWindowPosProc)(HWND, HWND, int, int, int, int, UINT);
+SetWindowPosProc sSetWindowPos = NULL;
+typedef BOOL(WINAPI* RedrawWindowProc)(HWND, const RECT*, HRGN, UINT);
+RedrawWindowProc sRedrawWindow = NULL;
+typedef HDC(WINAPI* GetWindowDCProc)(HWND);
+GetWindowDCProc sGetWindowDC = NULL;
+typedef int(WINAPI* FillRectProc)(HDC, const RECT*, HBRUSH);
+FillRectProc sFillRect = NULL;
+typedef int(WINAPI* ReleaseDCProc)(HWND, HDC);
+ReleaseDCProc sReleaseDC = NULL;
+typedef int(WINAPI* StretchDIBitsProc)(HDC, int, int, int, int, int, int, int,
+                                       int, const VOID*, const BITMAPINFO*,
+                                       UINT, DWORD);
+StretchDIBitsProc sStretchDIBits = NULL;
+typedef HBRUSH(WINAPI* CreateSolidBrushProc)(COLORREF);
+CreateSolidBrushProc sCreateSolidBrush = NULL;
 
 #if WINVER < 0x0605
 WINUSERAPI DPI_AWARENESS_CONTEXT WINAPI GetThreadDpiAwarenessContext();
@@ -243,7 +272,7 @@ void DrawSkeletonUI(HWND hWnd) {
     }
   }
 
-  HDC hdc = ::GetWindowDC(hWnd);
+  HDC hdc = sGetWindowDC(hWnd);
 
   BITMAPINFO chromeBMI = {};
   chromeBMI.bmiHeader.biSize = sizeof(chromeBMI.bmiHeader);
@@ -254,16 +283,16 @@ void DrawSkeletonUI(HWND hWnd) {
   chromeBMI.bmiHeader.biCompression = BI_RGB;
 
   // First, we just paint the chrome area with our pixel buffer
-  ::StretchDIBits(hdc, 0, 0, sWindowWidth, totalChromeHeight, 0, 0,
-                  sWindowWidth, totalChromeHeight, pixelBuffer, &chromeBMI,
-                  DIB_RGB_COLORS, SRCCOPY);
+  sStretchDIBits(hdc, 0, 0, sWindowWidth, totalChromeHeight, 0, 0, sWindowWidth,
+                 totalChromeHeight, pixelBuffer, &chromeBMI, DIB_RGB_COLORS,
+                 SRCCOPY);
 
   // Then, we just fill the rest with FillRect
   RECT rect = {0, totalChromeHeight, (LONG)sWindowWidth, (LONG)sWindowHeight};
-  HBRUSH brush = ::CreateSolidBrush(backgroundColor);
-  ::FillRect(hdc, &rect, brush);
+  HBRUSH brush = sCreateSolidBrush(backgroundColor);
+  sFillRect(hdc, &rect, brush);
 
-  ::ReleaseDC(hWnd, hdc);
+  sReleaseDC(hWnd, hdc);
 
   free(pixelBuffer);
 }
@@ -319,29 +348,48 @@ void CreateAndStoreEarlyBlankWindow(HINSTANCE hInstance) {
   // EnableNonClientDpiScaling must be called during the initialization of
   // the window, so we have to find it and store it before we create our
   // window in order to run it in our WndProc.
-  HMODULE user32Dll = ::GetModuleHandleW(L"user32");
+  HMODULE user32Dll = ::LoadLibraryW(L"user32");
+  HMODULE gdi32Dll = ::LoadLibraryW(L"gdi32");
 
-  if (user32Dll) {
-    auto getThreadDpiAwarenessContext =
-        (decltype(GetThreadDpiAwarenessContext)*)::GetProcAddress(
-            user32Dll, "GetThreadDpiAwarenessContext");
-    auto areDpiAwarenessContextsEqual =
-        (decltype(AreDpiAwarenessContextsEqual)*)::GetProcAddress(
-            user32Dll, "AreDpiAwarenessContextsEqual");
-    if (getThreadDpiAwarenessContext && areDpiAwarenessContextsEqual &&
-        areDpiAwarenessContextsEqual(getThreadDpiAwarenessContext(),
-                                     DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE)) {
-      // Only per-monitor v1 requires these workarounds.
-      sEnableNonClientDpiScaling =
-          (EnableNonClientDpiScalingProc)::GetProcAddress(
-              user32Dll, "EnableNonClientDpiScaling");
-    }
-
-    sGetSystemMetricsForDpi = (GetSystemMetricsForDpiProc)::GetProcAddress(
-        user32Dll, "GetSystemMetricsForDpi");
-    sGetDpiForWindow =
-        (GetDpiForWindowProc)::GetProcAddress(user32Dll, "GetDpiForWindow");
+  if (!user32Dll || !gdi32Dll) {
+    return;
   }
+
+  auto getThreadDpiAwarenessContext =
+      (decltype(GetThreadDpiAwarenessContext)*)::GetProcAddress(
+          user32Dll, "GetThreadDpiAwarenessContext");
+  auto areDpiAwarenessContextsEqual =
+      (decltype(AreDpiAwarenessContextsEqual)*)::GetProcAddress(
+          user32Dll, "AreDpiAwarenessContextsEqual");
+  if (getThreadDpiAwarenessContext && areDpiAwarenessContextsEqual &&
+      areDpiAwarenessContextsEqual(getThreadDpiAwarenessContext(),
+                                   DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE)) {
+    // Only per-monitor v1 requires these workarounds.
+    sEnableNonClientDpiScaling =
+        (EnableNonClientDpiScalingProc)::GetProcAddress(
+            user32Dll, "EnableNonClientDpiScaling");
+  }
+
+  sGetSystemMetricsForDpi = (GetSystemMetricsForDpiProc)::GetProcAddress(
+      user32Dll, "GetSystemMetricsForDpi");
+  sGetDpiForWindow =
+      (GetDpiForWindowProc)::GetProcAddress(user32Dll, "GetDpiForWindow");
+  sRegisterClassW =
+      (RegisterClassWProc)::GetProcAddress(user32Dll, "RegisterClassW");
+  sCreateWindowExW =
+      (CreateWindowExWProc)::GetProcAddress(user32Dll, "CreateWindowExW");
+  sShowWindow = (ShowWindowProc)::GetProcAddress(user32Dll, "ShowWindow");
+  sSetWindowPos = (SetWindowPosProc)::GetProcAddress(user32Dll, "SetWindowPos");
+  sRedrawWindow = (RedrawWindowProc)::GetProcAddress(user32Dll, "RedrawWindow");
+  sGetWindowDC = (GetWindowDCProc)::GetProcAddress(user32Dll, "GetWindowDC");
+  sFillRect = (FillRectProc)::GetProcAddress(user32Dll, "FillRect");
+  sReleaseDC = (ReleaseDCProc)::GetProcAddress(user32Dll, "ReleaseDC");
+  sLoadIconW = (LoadIconWProc)::GetProcAddress(user32Dll, "LoadIconW");
+  sLoadCursorW = (LoadCursorWProc)::GetProcAddress(user32Dll, "LoadCursorW");
+  sStretchDIBits =
+      (StretchDIBitsProc)::GetProcAddress(gdi32Dll, "StretchDIBits");
+  sCreateSolidBrush =
+      (CreateSolidBrushProc)::GetProcAddress(gdi32Dll, "CreateSolidBrush");
 
   WNDCLASSW wc;
   wc.style = CS_DBLCLKS;
@@ -349,15 +397,15 @@ void CreateAndStoreEarlyBlankWindow(HINSTANCE hInstance) {
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   wc.hInstance = hInstance;
-  wc.hIcon = ::LoadIconW(::GetModuleHandleW(nullptr), gStockApplicationIcon);
-  wc.hCursor = ::LoadCursor(nullptr, IDC_WAIT);
+  wc.hIcon = sLoadIconW(::GetModuleHandleW(nullptr), gStockApplicationIcon);
+  wc.hCursor = sLoadCursorW(hInstance, gIDCWait);
   wc.hbrBackground = nullptr;
   wc.lpszMenuName = nullptr;
 
   // TODO: just ensure we disable this if we've overridden the window class
   wc.lpszClassName = L"MozillaWindowClass";
 
-  if (!::RegisterClassW(&wc)) {
+  if (!sRegisterClassW(&wc)) {
     printf_stderr("RegisterClassW error %lu\n", GetLastError());
     return;
   }
@@ -402,16 +450,16 @@ void CreateAndStoreEarlyBlankWindow(HINSTANCE hInstance) {
   }
 
   sEarlyBlankWindowHandle =
-      ::CreateWindowExW(sWindowStyleEx, L"MozillaWindowClass", L"",
-                        sWindowStyle, screenX, screenY, sWindowWidth,
-                        sWindowHeight, nullptr, nullptr, hInstance, nullptr);
+      sCreateWindowExW(sWindowStyleEx, L"MozillaWindowClass", L"", sWindowStyle,
+                       screenX, screenY, sWindowWidth, sWindowHeight, nullptr,
+                       nullptr, hInstance, nullptr);
 
-  ::ShowWindow(sEarlyBlankWindowHandle, SW_SHOWNORMAL);
-  ::SetWindowPos(sEarlyBlankWindowHandle, 0, 0, 0, 0, 0,
-                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
-                     SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
+  sShowWindow(sEarlyBlankWindowHandle, SW_SHOWNORMAL);
+  sSetWindowPos(sEarlyBlankWindowHandle, 0, 0, 0, 0, 0,
+                SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
+                    SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
   DrawSkeletonUI(sEarlyBlankWindowHandle);
-  ::RedrawWindow(sEarlyBlankWindowHandle, NULL, NULL, RDW_INVALIDATE);
+  sRedrawWindow(sEarlyBlankWindowHandle, NULL, NULL, RDW_INVALIDATE);
 }
 
 HWND ConsumeEarlyBlankWindowHandle() {

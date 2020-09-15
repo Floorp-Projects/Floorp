@@ -312,14 +312,14 @@ int main(int argc, char* argv[], char* envp[]) {
 
     return result;
   }
-
-#  if defined(XP_WIN)
-  mozilla::CreateAndStoreEarlyBlankWindow(GetModuleHandle(nullptr));
-#  endif
 #endif
 
 #ifdef HAS_DLL_BLOCKLIST
   DllBlocklist_Initialize(gBlocklistInitFlags);
+#endif
+
+#if defined(XP_WIN)
+  mozilla::CreateAndStoreEarlyBlankWindow(GetModuleHandle(nullptr));
 #endif
 
   nsresult rv = InitXPCOMGlue(LibLoadingStrategy::ReadAhead);
