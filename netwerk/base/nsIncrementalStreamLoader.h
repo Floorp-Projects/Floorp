@@ -46,8 +46,9 @@ class nsIncrementalStreamLoader final
   // available.
   mozilla::Vector<uint8_t, 0> mData;
 
-  // Number of consumed bytes from the mData.
-  size_t mBytesConsumed;
+  // Number of bytes read, which may not match the number of bytes in mData at
+  // all, as we incrementally remove from there.
+  mozilla::Atomic<uint32_t, mozilla::MemoryOrdering::Relaxed> mBytesRead;
 };
 
 #endif  // nsIncrementalStreamLoader_h__

@@ -38,7 +38,7 @@ NS_IMPL_ISUPPORTS(nsStreamLoader, nsIStreamLoader, nsIRequestObserver,
 
 NS_IMETHODIMP
 nsStreamLoader::GetNumBytesRead(uint32_t* aNumBytes) {
-  *aNumBytes = mData.length();
+  *aNumBytes = mBytesRead;
   return NS_OK;
 }
 
@@ -118,7 +118,6 @@ nsresult nsStreamLoader::WriteSegmentFun(nsIInputStream* inStr, void* closure,
   }
 
   *writeCount = count;
-
   return NS_OK;
 }
 
@@ -126,7 +125,10 @@ NS_IMETHODIMP
 nsStreamLoader::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
                                 uint64_t sourceOffset, uint32_t count) {
   uint32_t countRead;
-  return inStr->ReadSegments(WriteSegmentFun, this, count, &countRead);
+  nsresult rv = inStr->ReadSegments(WriteSegmentFun, this, count, &countRead);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mBytesRead += countRead;
+  return NS_OK;
 }
 
 void nsStreamLoader::ReleaseData() { mData.clearAndFree(); }
