@@ -8,8 +8,6 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
 });
 
 add_task(async function setup() {
-  let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
-  Services.prefs.setIntPref("extensions.enabledScopes", scopes);
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42.0", "42.0");
 
   await promiseStartupManager();
@@ -50,76 +48,4 @@ add_task(async function test_update_of_disabled_theme() {
   equal(addon.version, "2.0", "Theme should be updated");
   ok(addon.userDisabled, "Theme is still disabled after an update");
   await addon.uninstall();
-});
-
-add_task(async function test_builtin_location_migration() {
-  const ADDON_ID = "mytheme@mozilla.org";
-
-  let themeDef = {
-    manifest: {
-      applications: { gecko: { id: ADDON_ID } },
-      version: "1.0",
-      theme: {},
-    },
-  };
-
-  await setupBuiltinExtension(themeDef, "first-loc", false);
-  let themeInstalled = AddonTestUtils.promiseAddonEvent("onInstalled");
-  await AddonManager.maybeInstallBuiltinAddon(
-    ADDON_ID,
-    "1.0",
-    "resource://first-loc/"
-  );
-  await themeInstalled;
-
-  let addon = await AddonManager.getAddonByID(ADDON_ID);
-  await addon.enable();
-  Assert.ok(!addon.userDisabled, "Add-on should be enabled.");
-
-  Assert.equal(
-    Services.prefs.getCharPref("extensions.activeThemeID", ""),
-    ADDON_ID,
-    "Pref should be set."
-  );
-
-  let { addons: activeThemes } = await AddonManager.getActiveAddons(["theme"]);
-  Assert.equal(activeThemes.length, 1, "Should have 1 theme.");
-  Assert.equal(activeThemes[0].id, ADDON_ID, "Should have enabled the theme.");
-
-  // If we restart and update, and install a newer version of the theme,
-  // it should be activated.
-  await promiseShutdownManager();
-
-  // Force schema change and restart
-  Services.prefs.setIntPref("extensions.databaseSchema", 0);
-  await promiseStartupManager();
-
-  // Set up a new version of the builtin add-on.
-  let newDef = { manifest: Object.assign({}, themeDef.manifest) };
-  newDef.manifest.version = "1.1";
-  await setupBuiltinExtension(newDef, "second-loc");
-  themeInstalled = AddonTestUtils.promiseAddonEvent("onInstalled");
-  await AddonManager.maybeInstallBuiltinAddon(
-    ADDON_ID,
-    "1.1",
-    "resource://second-loc/"
-  );
-  await themeInstalled;
-
-  let newAddon = await AddonManager.getAddonByID(ADDON_ID);
-  Assert.ok(!newAddon.userDisabled, "Add-on should be enabled.");
-
-  ({ addons: activeThemes } = await AddonManager.getActiveAddons(["theme"]));
-  Assert.equal(activeThemes.length, 1, "Should still have 1 theme.");
-  Assert.equal(
-    activeThemes[0].id,
-    ADDON_ID,
-    "Should still have the theme enabled."
-  );
-  Assert.equal(
-    Services.prefs.getCharPref("extensions.activeThemeID", ""),
-    ADDON_ID,
-    "Pref should still be set."
-  );
-  await promiseShutdownManager();
 });
