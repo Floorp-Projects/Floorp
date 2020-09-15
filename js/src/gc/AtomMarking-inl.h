@@ -11,6 +11,7 @@
 #include <type_traits>
 
 #include "vm/Realm.h"
+#include "vm/SymbolType.h"
 
 #include "gc/Heap-inl.h"
 
@@ -80,6 +81,14 @@ MOZ_ALWAYS_INLINE bool AtomMarkingRuntime::inlinedMarkAtomInternal(
   markChildren(cx, thing);
 
   return true;
+}
+
+void AtomMarkingRuntime::markChildren(JSContext* cx, JSAtom*) {}
+
+void AtomMarkingRuntime::markChildren(JSContext* cx, JS::Symbol* symbol) {
+  if (JSAtom* description = symbol->description()) {
+    markAtom(cx, description);
+  }
 }
 
 template <typename T>
