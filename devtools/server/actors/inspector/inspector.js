@@ -94,7 +94,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "CompatibilityActor",
-  "devtools/server/actors/compatibility",
+  "devtools/server/actors/compatibility/compatibility",
   true
 );
 
