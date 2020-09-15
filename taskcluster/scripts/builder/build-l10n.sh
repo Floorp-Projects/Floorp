@@ -28,6 +28,7 @@ echo "running as" $(id)
 : MOZ_SCM_LEVEL                 ${MOZ_SCM_LEVEL:=1}
 
 : WORKSPACE                     ${WORKSPACE:=/builds/worker/workspace}
+: MOZ_OBJDIR                    ${MOZ_OBJDIR:=$WORKSPACE/obj-build}
 
 set -v
 
@@ -65,6 +66,8 @@ fi
 # cache.  However, only some mozharness scripts use tooltool_wrapper.sh, so this may not be
 # entirely effective.
 export TOOLTOOL_CACHE
+
+export MOZ_OBJDIR
 
 config_path_cmds=""
 for path in ${MOZHARNESS_CONFIG_PATHS}; do
