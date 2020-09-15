@@ -291,14 +291,11 @@ struct HttpChannelOpenArgs
   bool                        beConservative;
   uint32_t                    tlsFlags;
   LoadInfoArgs?               loadInfo;
-  nsHttpResponseHead?         synthesizedResponseHead;
-  nsCString                   synthesizedSecurityInfoSerialization;
   uint32_t                    cacheKey;
   uint64_t                    requestContextID;
   CorsPreflightArgs?          preflightArgs;
   uint32_t                    initialRwin;
   bool                        blockAuthPrompt;
-  bool                        suspendAfterSynthesizeResponse;
   bool                        allowStaleCacheContent;
   bool                        preferCacheLoadOverBypass;
   nsCString                   contentTypeHint;
@@ -323,7 +320,6 @@ struct HttpChannelOpenArgs
 struct HttpChannelConnectArgs
 {
   uint32_t registrarId;
-  bool shouldIntercept;
 };
 
 union HttpChannelCreationArgs
