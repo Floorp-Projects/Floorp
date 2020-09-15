@@ -273,80 +273,58 @@ TEST(TestAudioTrackGraph, SourceTrack)
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
-  MediaTrackGraph* primary = MediaTrackGraph::GetInstance(
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
       MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr,
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr);
 
-  RefPtr<SourceMediaTrack> sourceTrack =
-      primary->CreateSourceTrack(MediaSegment::AUDIO);
+  RefPtr<SourceMediaTrack> sourceTrack;
+  RefPtr<ProcessedMediaTrack> outputTrack;
+  RefPtr<MediaInputPort> port;
+  Unused << WaitFor(Invoke([&] {
+    sourceTrack = graph->CreateSourceTrack(MediaSegment::AUDIO);
+    outputTrack = graph->CreateForwardedInputTrack(MediaSegment::AUDIO);
+    port = outputTrack->AllocateInputPort(sourceTrack);
 
-  RefPtr<ProcessedMediaTrack> outputTrack =
-      primary->CreateForwardedInputTrack(MediaSegment::AUDIO);
+    outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
 
-  /* How the source track connects to another ProcessedMediaTrack.
-   * Check in MediaManager how it is connected to AudioStreamTrack. */
-  RefPtr<MediaInputPort> port = outputTrack->AllocateInputPort(sourceTrack);
-  outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
+    return graph->NotifyWhenDeviceStarted(sourceTrack);
+  }));
 
-  {
-    // Wait for the output-only stream to be created.
-    bool done = false;
-    MediaEventListener onStreamInit = cubeb->StreamInitEvent().Connect(
-        AbstractThread::GetCurrent(), [&] { done = true; });
-    SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-        [&] { return done; });
-    onStreamInit.Disconnect();
-  }
+  RefPtr<AudioInputProcessing> listener;
+  RefPtr<AudioInputProcessingPullListener> pullListener;
+  DispatchFunction([&] {
+    /* Primary graph: Open Audio Input through SourceMediaTrack */
+    listener = new AudioInputProcessing(2, sourceTrack, PRINCIPAL_HANDLE_NONE);
+    listener->SetPassThrough(true);
 
-  /* Primary graph: Open Audio Input through SourceMediaTrack */
-  RefPtr<AudioInputProcessing> listener =
-      new AudioInputProcessing(2, sourceTrack, PRINCIPAL_HANDLE_NONE);
-  listener->SetPassThrough(true);
+    pullListener = new AudioInputProcessingPullListener(listener);
 
-  RefPtr<AudioInputProcessingPullListener> pullListener =
-      new AudioInputProcessingPullListener(listener);
+    sourceTrack->AddListener(pullListener);
 
-  sourceTrack->AddListener(pullListener);
+    sourceTrack->GraphImpl()->AppendMessage(
+        MakeUnique<StartInputProcessing>(listener));
+    sourceTrack->SetPullingEnabled(true);
+    // Device id does not matter. Ignore.
+    sourceTrack->OpenAudioInput((void*)1, listener);
+  });
 
-  sourceTrack->GraphImpl()->AppendMessage(
-      MakeUnique<StartInputProcessing>(listener));
-  sourceTrack->SetPullingEnabled(true);
-  // Device id does not matter. Ignore.
-  sourceTrack->OpenAudioInput((void*)1, listener);
+  auto p = Invoke([&] { return graph->NotifyWhenDeviceStarted(sourceTrack); });
+  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream->mHasInput);
+  stream->VerifyOutput();
+  Unused << WaitFor(p);
 
-  MockCubebStream* stream = nullptr;
-  {
-    // Wait for the full-duplex stream to be created.
-    MediaEventListener onStreamInit = cubeb->StreamInitEvent().Connect(
-        AbstractThread::GetCurrent(),
-        [&](MockCubebStream* aStream) { stream = aStream; });
-    SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-        [&] { return !!stream; });
-    onStreamInit.Disconnect();
-  }
+  // Wait for a second worth of audio data.
+  stream->GoFaster();
+  uint32_t totalFrames = 0;
+  WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+    totalFrames += aFrames;
+    return totalFrames > static_cast<uint32_t>(graph->GraphRate());
+  });
+  stream->DontGoFaster();
 
-  {
-    // Wait for a second worth of audio data.
-    uint32_t totalFrames = 0;
-    MediaEventListener onFrames = stream->FramesProcessedEvent().Connect(
-        AbstractThread::GetCurrent(),
-        [&](uint32_t aFrames) { totalFrames += aFrames; });
-    stream->VerifyOutput();
-    stream->GoFaster();
-    SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>([&] {
-      return totalFrames > static_cast<uint32_t>(primary->GraphRate());
-    });
-    stream->DontGoFaster();
-    onFrames.Disconnect();
-  }
-
-  {
-    // Wait for the full-duplex stream to be destroyed.
-    bool done = false;
-    MediaEventListener onStreamDestroy = cubeb->StreamDestroyEvent().Connect(
-        AbstractThread::GetCurrent(), [&] { done = true; });
-
-    // Clean up on MainThread
+  // Clean up.
+  DispatchFunction([&] {
     outputTrack->RemoveAudioOutput((void*)1);
     outputTrack->Destroy();
     port->Destroy();
@@ -358,11 +336,9 @@ TEST(TestAudioTrackGraph, SourceTrack)
         Some(reinterpret_cast<CubebUtils::AudioDeviceID>(1));
     sourceTrack->CloseAudioInput(id);
     sourceTrack->Destroy();
+  });
 
-    SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-        [&] { return done; });
-    onStreamDestroy.Disconnect();
-  }
+  WaitFor(cubeb->StreamDestroyEvent());
 }
 
 TEST(TestAudioTrackGraph, CrossGraphPort)
