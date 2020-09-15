@@ -323,13 +323,16 @@ pub fn translate_operator<FE: FuncEnvironment + ?Sized>(
                 // since we truncate the stack back to the original height
                 // below.
             }
+
             builder.switch_to_block(next_block);
             builder.seal_block(next_block);
+
             // If it is a loop we also have to seal the body loop block
             if let ControlStackFrame::Loop { header, .. } = frame {
                 builder.seal_block(header)
             }
-            state.stack.truncate(frame.original_stack_size());
+
+            frame.truncate_value_stack_to_original_size(&mut state.stack);
             state
                 .stack
                 .extend_from_slice(builder.block_params(next_block));
@@ -1888,9 +1891,8 @@ fn translate_unreachable_operator<FE: FuncEnvironment + ?Sized>(
                                 let (params, _results) =
                                     blocktype_params_results(module_translation_state, blocktype)?;
                                 let else_block = block_with_params(builder, params, environ)?;
-                                state.stack.truncate(
-                                    state.control_stack.last().unwrap().original_stack_size(),
-                                );
+                                let frame = state.control_stack.last().unwrap();
+                                frame.truncate_value_stack_to_else_params(&mut state.stack);
 
                                 // We change the target of the branch instruction.
                                 builder.change_jump_destination(branch_inst, else_block);
@@ -1898,9 +1900,8 @@ fn translate_unreachable_operator<FE: FuncEnvironment + ?Sized>(
                                 else_block
                             }
                             ElseData::WithElse { else_block } => {
-                                state.stack.truncate(
-                                    state.control_stack.last().unwrap().original_stack_size(),
-                                );
+                                let frame = state.control_stack.last().unwrap();
+                                frame.truncate_value_stack_to_else_params(&mut state.stack);
                                 else_block
                             }
                         };
@@ -1921,9 +1922,8 @@ fn translate_unreachable_operator<FE: FuncEnvironment + ?Sized>(
             let control_stack = &mut state.control_stack;
             let frame = control_stack.pop().unwrap();
 
-            // Now we have to split off the stack the values not used
-            // by unreachable code that hasn't been translated
-            stack.truncate(frame.original_stack_size());
+            // Pop unused parameters from stack.
+            frame.truncate_value_stack_to_original_size(stack);
 
             let reachable_anyway = match frame {
                 // If it is a loop we also have to seal the body loop block
