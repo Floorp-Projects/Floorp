@@ -56,6 +56,8 @@ interface HTMLElement : Element {
            attribute DOMString inputMode;
   [CEReactions, Pure, SetterThrows, Pref="dom.forms.enterkeyhint"]
            attribute DOMString enterKeyHint;
+  [CEReactions, Pure, SetterThrows, Pref="dom.forms.autocapitalize"]
+           attribute DOMString autocapitalize;
 
   attribute DOMString nonce;
 

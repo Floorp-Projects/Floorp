@@ -2013,6 +2013,12 @@
   value: 0
   mirror: always
 
+# Is support for HTMLElement.autocapitalize enabled?
+- name: dom.forms.autocapitalize
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Support for input type=month, type=week and type=datetime-local. By default,
 # disabled.
 - name: dom.forms.datetime.others

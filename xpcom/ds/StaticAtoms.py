@@ -156,6 +156,7 @@ STATIC_ATOMS = [
     Atom("attributes", "attributes"),
     Atom("attributeSet", "attribute-set"),
     Atom("_auto", "auto"),
+    Atom("autocapitalize", "autocapitalize"),
     Atom("autocheck", "autocheck"),
     Atom("autocomplete", "autocomplete"),
     Atom("autocomplete_richlistbox", "autocomplete-richlistbox"),
