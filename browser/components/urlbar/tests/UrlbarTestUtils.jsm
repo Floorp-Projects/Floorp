@@ -481,7 +481,13 @@ var UrlbarTestUtils = {
 
     // If this is an engine search mode, check that all results are either
     // search results with the same engine or have the same host as the engine.
-    if (expectedSearchMode.engineName && this.isPopupOpen(window)) {
+    // Search mode preview can show other results since it is not supposed to
+    // start a query.
+    if (
+      expectedSearchMode.engineName &&
+      !expectedSearchMode.isPreview &&
+      this.isPopupOpen(window)
+    ) {
       let resultCount = this.getResultCount(window);
       for (let i = 0; i < resultCount; i++) {
         let result = await this.getDetailsOfResultAt(window, i);
