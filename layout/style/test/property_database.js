@@ -8192,6 +8192,7 @@ var gCSSProperties = {
     applies_to_first_letter: true,
     applies_to_first_line: true,
     applies_to_placeholder: true,
+    applies_to_marker: true,
     initial_values: ["none"],
     other_values: [
       "capitalize",
