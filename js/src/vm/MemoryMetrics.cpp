@@ -16,7 +16,7 @@
 #include "util/Text.h"
 #include "vm/ArrayObject.h"
 #include "vm/BigIntType.h"
-#include "vm/HelperThreads.h"
+#include "vm/HelperThreadState.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/Realm.h"

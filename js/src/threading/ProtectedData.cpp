@@ -107,7 +107,7 @@ void CheckGlobalLock<Lock, Helper>::check() const {
           TlsContext.get()->runtime()->currentThreadHasScriptDataAccess());
       break;
     case GlobalLock::HelperThreadLock:
-      MOZ_ASSERT(HelperThreadState().isLockedByCurrentThread());
+      MOZ_ASSERT(gHelperThreadLock.ownedByCurrentThread());
       break;
   }
 }
