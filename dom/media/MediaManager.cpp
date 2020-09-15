@@ -2282,21 +2282,6 @@ nsresult MediaManager::GenerateUUID(nsAString& aResult) {
   return NS_OK;
 }
 
-static bool IsFullyActive(nsPIDOMWindowInner* aWindow) {
-  dom::WindowContext* currentContext;
-  if (!aWindow || !(currentContext = aWindow->GetWindowContext())) {
-    return false;
-  }
-  for (; currentContext;
-       currentContext = currentContext->GetParentWindowContext()) {
-    if (currentContext->IsDiscarded() || currentContext->IsCached()) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 enum class GetUserMediaSecurityState {
   Other = 0,
   HTTPS = 1,
@@ -2363,7 +2348,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
         __func__);
   }
 
-  if (!IsFullyActive(aWindow)) {
+  if (!aWindow->IsFullyActive()) {
     return StreamPromise::CreateAndReject(
         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::InvalidStateError),
         __func__);
