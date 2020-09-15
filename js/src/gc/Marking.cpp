@@ -35,7 +35,6 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
 #include "vm/BigIntType.h"
-#include "vm/EnvironmentObject.h"
 #include "vm/GeneratorObject.h"
 #include "vm/RegExpShared.h"
 #include "vm/Scope.h"

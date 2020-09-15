@@ -12,7 +12,6 @@
 
 #include "jsapi.h"  // js::AssertHeapIsIdle
 
-#include "vm/EnvironmentObject.h"  // js::LexicalEnvironmentObject
 #include "vm/GlobalObject.h"       // js::GlobalObject
 #include "vm/JSContext.h"          // JSContext, CHECK_THREAD
 #include "vm/JSObject.h"           // JSObject
