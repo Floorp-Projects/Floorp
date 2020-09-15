@@ -9,7 +9,7 @@ namespace mozilla {
 
 DynamicResampler::DynamicResampler(int aInRate, int aOutRate,
                                    uint32_t aPreBufferFrames)
-    : mInRate(aInRate), mOutRate(aOutRate), mPreBufferFrames(aPreBufferFrames) {
+    : mInRate(aInRate), mPreBufferFrames(aPreBufferFrames), mOutRate(aOutRate) {
   MOZ_ASSERT(aInRate);
   MOZ_ASSERT(aOutRate);
   UpdateResampler(mOutRate, STEREO);
