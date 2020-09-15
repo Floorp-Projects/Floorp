@@ -917,7 +917,7 @@ class MacOSWebRTCStatusbarIndicator {
     this._screen = null;
 
     this._hiddenDoc = Services.appShell.hiddenDOMWindow.document;
-    this._statusBar = Cc["@mozilla.org/widget/macsystemstatusbar;1"].getService(
+    this._statusBar = Cc["@mozilla.org/widget/systemstatusbar;1"].getService(
       Ci.nsISystemStatusBar
     );
 

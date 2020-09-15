@@ -33,7 +33,7 @@
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
-  let systemStatusBar = Cc["@mozilla.org/widget/macsystemstatusbar;1"].getService(Ci.nsISystemStatusBar);
+  let systemStatusBar = Cc["@mozilla.org/widget/systemstatusbar;1"].getService(Ci.nsISystemStatusBar);
   ok(systemStatusBar, "should have got an nsISystemStatusBar instance");
 
   let menu1 = document.getElementById("menu1");

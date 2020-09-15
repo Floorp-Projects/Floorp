@@ -115,7 +115,7 @@
   }
 
 // {b6e1a890-b2b8-4883-a65f-9476f6185313}
-#define NS_MACSYSTEMSTATUSBAR_CID                    \
+#define NS_SYSTEMSTATUSBAR_CID                       \
   {                                                  \
     0xb6e1a890, 0xb2b8, 0x4883, {                    \
       0xa6, 0x5f, 0x94, 0x76, 0xf6, 0x18, 0x53, 0x13 \
