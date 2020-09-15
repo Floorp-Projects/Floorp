@@ -9,6 +9,7 @@
 
 #ifdef JS_ION_PERF
 #  include <stdio.h>
+#  include "jit/MacroAssembler.h"
 #endif
 
 namespace {

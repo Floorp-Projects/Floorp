@@ -8,7 +8,6 @@
 #define jit_IonIC_h
 
 #include "jit/CacheIR.h"
-#include "jit/shared/Assembler-shared.h"
 
 namespace js {
 namespace jit {

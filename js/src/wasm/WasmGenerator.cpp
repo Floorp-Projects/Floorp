@@ -28,7 +28,6 @@
 
 #include "util/Memory.h"
 #include "util/Text.h"
-#include "vm/HelperThreadState.h"
 #include "vm/Time.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
@@ -109,7 +108,12 @@ ModuleGenerator::~ModuleGenerator() {
       AutoLockHelperThreadState lock;
 
       // Remove any pending compilation tasks from the worklist.
-      size_t removed = RemovePendingWasmCompileTasks(taskState_, mode(), lock);
+      CompileTaskPtrFifo& worklist =
+          HelperThreadState().wasmWorklist(lock, mode());
+      auto pred = [this](CompileTask* task) {
+        return &task->state == &taskState_;
+      };
+      size_t removed = worklist.eraseIf(pred);
       MOZ_ASSERT(outstanding_ >= removed);
       outstanding_ -= removed;
 
