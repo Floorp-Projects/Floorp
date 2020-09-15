@@ -157,57 +157,27 @@ TEST(TestAudioTrackGraph, DifferentDeviceIDs)
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
       /*OutputDeviceID*/ reinterpret_cast<cubeb_devid>(1));
 
-  EXPECT_NE(g1, g2) << "Different graphs have due to different device ids";
+  EXPECT_NE(g1, g2) << "Different graphs due to different device ids";
   EXPECT_EQ(g1, g1_2) << "Same graphs for same device ids";
   EXPECT_EQ(g2, g2_2) << "Same graphs for same device ids";
 
-  // Dummy track to make graph rolling. Add it and remove it to remove the
-  // graph from the global hash table and let it shutdown.
-  RefPtr<SourceMediaTrack> dummySource1 =
-      g1->CreateSourceTrack(MediaSegment::AUDIO);
-  RefPtr<SourceMediaTrack> dummySource2 =
-      g2->CreateSourceTrack(MediaSegment::AUDIO);
+  for (MediaTrackGraph* g : {g1, g2}) {
+    // Dummy track to make graph rolling. Add it and remove it to remove the
+    // graph from the global hash table and let it shutdown.
 
-  // Use a test monitor and a counter to wait for the current Graphs. It will
-  // wait for the Graphs to init and shutting down before the test finish.
-  // Otherwise, the workflow of the current graphs might affect the following
-  // tests (cubeb is a single instance process-wide).
-  GMPTestMonitor testMonitor;
-  Atomic<int> counter{0};
+    using SourceTrackPromise = MozPromise<SourceMediaTrack*, nsresult, true>;
+    auto p = Invoke([g] {
+      return SourceTrackPromise::CreateAndResolve(
+          g->CreateSourceTrack(MediaSegment::AUDIO), __func__);
+    });
 
-  /* Use a ControlMessage to signal that the Graph has requested shutdown. */
-  class Message : public ControlMessage {
-   public:
-    explicit Message(MediaTrack* aTrack) : ControlMessage(aTrack) {}
-    void Run() override {
-      MOZ_ASSERT(mTrack->GraphImpl()->CurrentDriver()->AsAudioCallbackDriver());
-      if (++(*mCounter) == 2) {
-        mTestMonitor->SetFinished();
-      }
-    }
-    void RunDuringShutdown() override {
-      // During shutdown we still want the listener's NotifyRemoved to be
-      // called, since not doing that might block shutdown of other modules.
-      Run();
-    }
-    GMPTestMonitor* mTestMonitor = nullptr;
-    Atomic<int>* mCounter = nullptr;
-  };
+    WaitFor(cubeb->StreamInitEvent());
+    RefPtr<SourceMediaTrack> dummySource = WaitFor(p).unwrap();
 
-  UniquePtr<Message> message1 = MakeUnique<Message>(dummySource1);
-  message1->mTestMonitor = &testMonitor;
-  message1->mCounter = &counter;
-  dummySource1->GraphImpl()->AppendMessage(std::move(message1));
+    DispatchMethod(dummySource, &SourceMediaTrack::Destroy);
 
-  UniquePtr<Message> message2 = MakeUnique<Message>(dummySource2);
-  message2->mTestMonitor = &testMonitor;
-  message2->mCounter = &counter;
-  dummySource2->GraphImpl()->AppendMessage(std::move(message2));
-
-  dummySource1->Destroy();
-  dummySource2->Destroy();
-
-  testMonitor.AwaitFinished();
+    WaitFor(cubeb->StreamDestroyEvent());
+  }
 }
 
 TEST(TestAudioTrackGraph, SetOutputDeviceID)
