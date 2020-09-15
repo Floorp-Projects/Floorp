@@ -96,18 +96,17 @@ def optimized_build():
 
 def set_osmesa_env(bin_path):
     """Set proper LD_LIBRARY_PATH and DRIVE for software rendering on Linux and OSX"""
+    base = find_dep_path_newest('osmesa-src', bin_path)
+    osmesa_path = path.join(base, "out", "mesa", "src", "gallium", "targets", "osmesa")
+    # TODO: switch to `llvmpipe` for faster tests
+    os.environ["GALLIUM_DRIVER"] = "softpipe"
     if is_linux():
-        osmesa_path = path.join(find_dep_path_newest('osmesa-src', bin_path), "out", "lib", "gallium")
         print(osmesa_path)
         os.environ["LD_LIBRARY_PATH"] = osmesa_path
-        os.environ["GALLIUM_DRIVER"] = "softpipe"
     elif is_macos():
-        osmesa_path = path.join(find_dep_path_newest('osmesa-src', bin_path),
-                                "out", "src", "gallium", "targets", "osmesa", ".libs")
-        glapi_path = path.join(find_dep_path_newest('osmesa-src', bin_path),
-                               "out", "src", "mapi", "shared-glapi", ".libs")
+        osmesa_path = path.join(base, "out", "mesa", "src", "gallium", "targets", "osmesa")
+        glapi_path = path.join(base, "out", "mesa", "src", "mapi", "shared-glapi")
         os.environ["DYLD_LIBRARY_PATH"] = osmesa_path + ":" + glapi_path
-        os.environ["GALLIUM_DRIVER"] = "softpipe"
 
 
 extra_flags = os.getenv('CARGOFLAGS', None)
