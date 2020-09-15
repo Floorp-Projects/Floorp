@@ -108,6 +108,7 @@ EXPORTS += [
     'ADTSDecoder.h',
     'ADTSDemuxer.h',
     'AsyncLogger.h',
+    'AudibilityMonitor.h',
     'AudioBufferUtils.h',
     'AudioChannelFormat.h',
     'AudioCompactor.h',
