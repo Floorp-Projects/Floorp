@@ -17,7 +17,6 @@
 #include "gc/ClearEdgesTracer.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
-#include "jit/MacroAssembler.h"
 #include "js/HashTable.h"
 #include "js/ValueArray.h"
 #include "vm/HelperThreadState.h"
