@@ -463,7 +463,12 @@ var E10SUtils = {
           if (
             flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS &&
             (useSeparatePrivilegedAboutContentProcess ||
-              aURI.filePath == "logins")
+              aURI.filePath == "logins" ||
+              // Force about:welcome into the privileged content process to
+              // workaround code coverage test failures which result from the
+              // workaround in bug 161269. Once that bug is fixed for real,
+              // the about:welcome case below can be removed.
+              aURI.filePath == "welcome")
           ) {
             return PRIVILEGEDABOUT_REMOTE_TYPE;
           }
