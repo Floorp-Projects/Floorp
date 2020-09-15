@@ -24,43 +24,6 @@
 #  include "nsILocalFileMac.h"
 #endif
 
-/**
- *  we need these for statfs()
- */
-#ifdef HAVE_SYS_STATVFS_H
-#  if defined(__osf__) && defined(__DECCXX)
-extern "C" int statvfs(const char*, struct statvfs*);
-#  endif
-#  include <sys/statvfs.h>
-#endif
-
-#ifdef HAVE_SYS_STATFS_H
-#  include <sys/statfs.h>
-#endif
-
-#ifdef HAVE_SYS_VFS_H
-#  include <sys/vfs.h>
-#endif
-
-#ifdef HAVE_SYS_MOUNT_H
-#  include <sys/param.h>
-#  include <sys/mount.h>
-#endif
-
-#if defined(HAVE_STATVFS64) && (!defined(LINUX) && !defined(__osf__))
-#  define STATFS statvfs64
-#  define F_BSIZE f_frsize
-#elif defined(HAVE_STATVFS) && (!defined(LINUX) && !defined(__osf__))
-#  define STATFS statvfs
-#  define F_BSIZE f_frsize
-#elif defined(HAVE_STATFS64)
-#  define STATFS statfs64
-#  define F_BSIZE f_bsize
-#elif defined(HAVE_STATFS)
-#  define STATFS statfs
-#  define F_BSIZE f_bsize
-#endif
-
 // stat64 and lstat64 are deprecated on OS X. Normal stat and lstat are
 // 64-bit by default on OS X 10.6+.
 #if defined(HAVE_STAT64) && defined(HAVE_LSTAT64) && !defined(XP_DARWIN)

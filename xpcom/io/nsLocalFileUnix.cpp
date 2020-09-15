@@ -76,6 +76,43 @@ static nsresult MacErrorMapper(OSErr inErr);
 #include "nsTraceRefcnt.h"
 #include "nsHashKeys.h"
 
+/**
+ *  we need these for statfs()
+ */
+#ifdef HAVE_SYS_STATVFS_H
+#  if defined(__osf__) && defined(__DECCXX)
+extern "C" int statvfs(const char*, struct statvfs*);
+#  endif
+#  include <sys/statvfs.h>
+#endif
+
+#ifdef HAVE_SYS_STATFS_H
+#  include <sys/statfs.h>
+#endif
+
+#ifdef HAVE_SYS_VFS_H
+#  include <sys/vfs.h>
+#endif
+
+#ifdef HAVE_SYS_MOUNT_H
+#  include <sys/param.h>
+#  include <sys/mount.h>
+#endif
+
+#if defined(HAVE_STATVFS64) && (!defined(LINUX) && !defined(__osf__))
+#  define STATFS statvfs64
+#  define F_BSIZE f_frsize
+#elif defined(HAVE_STATVFS) && (!defined(LINUX) && !defined(__osf__))
+#  define STATFS statvfs
+#  define F_BSIZE f_frsize
+#elif defined(HAVE_STATFS64)
+#  define STATFS statfs64
+#  define F_BSIZE f_bsize
+#elif defined(HAVE_STATFS)
+#  define STATFS statfs
+#  define F_BSIZE f_bsize
+#endif
+
 using namespace mozilla;
 
 #define ENSURE_STAT_CACHE()                            \
