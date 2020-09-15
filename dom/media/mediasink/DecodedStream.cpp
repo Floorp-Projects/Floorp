@@ -18,6 +18,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {
@@ -420,7 +421,9 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   mPlaying = true;
   mPrincipalHandle.Connect(mCanonicalOutputPrincipal);
   mWatchManager.Watch(mPlaying, &DecodedStream::PlayingChanged);
-  mAudibilityMonitor.emplace(AudibilityMonitor(mInfo.mAudio.mRate, 2.0f));
+  mAudibilityMonitor.emplace(
+      mInfo.mAudio.mRate,
+      StaticPrefs::dom_media_silence_duration_for_audibility());
   ConnectListener();
 
   class R : public Runnable {
