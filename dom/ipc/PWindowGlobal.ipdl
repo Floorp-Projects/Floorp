@@ -149,6 +149,12 @@ parent:
                                         TimeStamp aLoadStart,
                                         TimeStamp aLoadEnd);
 
+  /**
+   * Submit Time-to-First-Interaction telemetry correlated with whether or not
+   * the document tree preloaded any resources.
+   */
+  async SubmitTimeToFirstInteractionPreloadTelemetry(uint32_t aMillis);
+
   async Destroy();
 };
 
