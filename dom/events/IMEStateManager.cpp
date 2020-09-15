@@ -1283,6 +1283,13 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
         ToLowerCase(context.mHTMLInputInputmode);
       }
     }
+
+    if (aContent->IsHTMLElement() && aState.IsEditable() &&
+        StaticPrefs::dom_forms_autocapitalize() &&
+        context.IsAutocapitalizeSupported()) {
+      nsGenericHTMLElement::FromNode(aContent)->GetAutocapitalize(
+          context.mAutocapitalize);
+    }
   }
 
   if (aAction.mCause == InputContextAction::CAUSE_UNKNOWN &&

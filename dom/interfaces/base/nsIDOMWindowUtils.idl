@@ -1536,6 +1536,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute AString focusedInputMode;
 
   /**
+   * Get the autocapitalize of the currently focused editing host, if any.
+   */
+  readonly attribute AString focusedAutocapitalize;
+
+  /**
    * Find the view ID for a given element. This is the reverse of
    * findElementWithViewId().
    */
