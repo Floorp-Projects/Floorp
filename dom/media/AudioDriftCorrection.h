@@ -74,7 +74,8 @@ class ClockDrift final {
   void CalculateCorrection(int aBufferedFrames) {
     // We want to maintain the desired buffer
     int32_t bufferedFramesDiff = aBufferedFrames - mDesiredBuffering;
-    int32_t resampledSourceClock = mSourceClock + bufferedFramesDiff;
+    int32_t resampledSourceClock =
+        std::max(1, mSourceClock + bufferedFramesDiff);
     if (mTargetRate != mSourceRate) {
       resampledSourceClock =
           resampledSourceClock *
@@ -101,7 +102,8 @@ class ClockDrift final {
 
   void BufferedFramesCorrection(int aBufferedFrames) {
     int32_t bufferedFramesDiff = aBufferedFrames - mDesiredBuffering;
-    int32_t resampledSourceClock = mSourceRate + bufferedFramesDiff;
+    int32_t resampledSourceClock =
+        std::max(1, mSourceRate + bufferedFramesDiff);
     if (mTargetRate != mSourceRate) {
       resampledSourceClock = resampledSourceClock *
                              (static_cast<float>(mTargetRate) / mSourceRate);
