@@ -1347,7 +1347,8 @@ var ActivityStreamProvider = {
       didSuccessfulImport &&
       Services.prefs.getBoolPref(
         `browser.newtabpage.activity-stream.${searchShortcuts.SEARCH_SHORTCUTS_EXPERIMENT}`
-      )
+      ) &&
+      !Services.prefs.getBoolPref("browser.topsites.useRemoteSetting")
     ) {
       links.forEach(link => {
         let searchProvider = searchShortcuts.getSearchProvider(
