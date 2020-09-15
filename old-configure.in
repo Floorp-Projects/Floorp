@@ -2487,7 +2487,6 @@ if test "$NECKO_WIFI"; then
     AC_MSG_ERROR([Necko WiFi scanning needs DBus on your platform, remove --disable-dbus or use --disable-necko-wifi])
   fi
   AC_DEFINE(NECKO_WIFI)
-  _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_WIFI"
 fi
 AC_SUBST(NECKO_WIFI)
 AC_SUBST(NECKO_WIFI_DBUS)
@@ -2833,19 +2832,6 @@ fi
 
 dnl Spit out some output
 dnl ========================================================
-
-dnl The following defines are used by xpcom
-_NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES
-HAVE_GETPAGESIZE
-HAVE_STATVFS64
-HAVE_STATVFS
-HAVE_STATFS64
-HAVE_STATFS
-HAVE_SYS_STATVFS_H
-HAVE_SYS_STATFS_H
-HAVE_SYS_VFS_H
-HAVE_SYS_MOUNT_H
-"
 
 # Avoid using obsolete NSPR features
 AC_DEFINE(NO_NSPR_10_SUPPORT)

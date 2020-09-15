@@ -304,10 +304,9 @@ class TestMozbuildObject(unittest.TestCase):
                 fh.write("topsrcdir = '%s'\n" % topsrcdir)
                 fh.write("mozconfig = None\n")
                 fh.write("defines = { 'FOO': 'foo' }\n")
-                fh.write("non_global_defines = ['BAR']\n")
                 fh.write("substs = { 'QUX': 'qux' }\n")
                 fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
-                         "'non_global_defines', 'substs', 'mozconfig']")
+                         "'substs', 'mozconfig']")
 
             base = self.get_base(topobjdir=d)
 
