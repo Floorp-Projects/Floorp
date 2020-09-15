@@ -7,6 +7,15 @@
 
 "use strict";
 
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
+  });
+});
+
 // Tests that we exit search mode in the active tab when the search mode engine
 // is removed.
 add_task(async function activeTab() {
