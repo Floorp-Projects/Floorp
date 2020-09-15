@@ -51,7 +51,7 @@ void FailureSimulator::simulateFailureAfter(Kind kind, uint64_t checks,
   Maybe<AutoLockHelperThreadState> lock;
   if (IsHelperThreadType(targetThread_) || IsHelperThreadType(thread)) {
     lock.emplace();
-    HelperThreadState().waitForAllThreadsLocked(lock.ref());
+    WaitForAllHelperThreads(lock.ref());
   }
 
   MOZ_ASSERT(counter_ + checks > counter_);
@@ -66,7 +66,7 @@ void FailureSimulator::reset() {
   Maybe<AutoLockHelperThreadState> lock;
   if (IsHelperThreadType(targetThread_)) {
     lock.emplace();
-    HelperThreadState().waitForAllThreadsLocked(lock.ref());
+    WaitForAllHelperThreads(lock.ref());
   }
 
   targetThread_ = THREAD_TYPE_NONE;
