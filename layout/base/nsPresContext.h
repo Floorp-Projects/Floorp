@@ -704,10 +704,17 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   bool ElementWouldPropagateScrollStyles(const mozilla::dom::Element&);
 
   /**
-   * Methods for controlling the background drawing.
+   * Set and get methods for controlling the background drawing
    */
   bool GetBackgroundImageDraw() const { return mDrawImageBackground; }
+  void SetBackgroundImageDraw(bool aCanDraw) {
+    mDrawImageBackground = aCanDraw;
+  }
+
   bool GetBackgroundColorDraw() const { return mDrawColorBackground; }
+  void SetBackgroundColorDraw(bool aCanDraw) {
+    mDrawColorBackground = aCanDraw;
+  }
 
   /**
    *  Check if bidi enabled (set depending on the presence of RTL
