@@ -27,6 +27,7 @@ enum TrrType {
   TRRTYPE_NS = 2,
   TRRTYPE_CNAME = 5,
   TRRTYPE_AAAA = 28,
+  TRRTYPE_OPT = 41,
   TRRTYPE_TXT = 16,
   TRRTYPE_HTTPSSVC = nsIDNSService::RESOLVE_TYPE_HTTPSSVC,  // 65
 };
@@ -171,6 +172,7 @@ class TRR : public Runnable,
   uint32_t mCnameLoop = kCnameChaseMax;  // loop detection counter
   bool mAllowRFC1918 = false;
 
+  uint16_t mExtendedError = UINT16_MAX;
   uint32_t mTTL = UINT32_MAX;
   TypeRecordResultType mResult = mozilla::AsVariant(Nothing());
 
