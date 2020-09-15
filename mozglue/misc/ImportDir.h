@@ -47,11 +47,12 @@ inline LauncherResult<nt::DataDirectoryEntry> GetImageDirectoryViaFileIo(
  * @param aRemoteExeImage HMODULE referencing the child process's executable
  *                        binary that we are touching. This value is used to
  *                        determine the base address of the binary within the
- *                        target process.
+ *                        target process.  If nullptr is passed, we use
+ *                        |aTargetProcess| to retrieve a value.
  */
 inline LauncherVoidResult RestoreImportDirectory(
     const wchar_t* aFullImagePath, const nt::PEHeaders& aLocalExeImage,
-    HANDLE aTargetProcess, HMODULE aRemoteExeImage) {
+    HANDLE aTargetProcess, HMODULE aRemoteExeImage = nullptr) {
   uint32_t importDirEntryRva;
   PIMAGE_DATA_DIRECTORY importDirEntry =
       aLocalExeImage.GetImageDirectoryEntryPtr(IMAGE_DIRECTORY_ENTRY_IMPORT,
@@ -81,40 +82,23 @@ inline LauncherVoidResult RestoreImportDirectory(
 
   nt::DataDirectoryEntry toWrite = realImportDirectory.unwrap();
 
-  do {  // Scope for prot
-    void* remoteAddress =
-        nt::PEHeaders::HModuleToBaseAddr<char*>(aRemoteExeImage) +
-        importDirEntryRva;
+  if (!aRemoteExeImage) {
+    LauncherResult<HMODULE> remoteImageBase =
+        nt::GetProcessExeModule(aTargetProcess);
+    if (remoteImageBase.isErr()) {
+      return remoteImageBase.propagateErr();
+    }
+    aRemoteExeImage = remoteImageBase.unwrap();
+  }
 
+  void* remoteAddress =
+      nt::PEHeaders::HModuleToBaseAddr<char*>(aRemoteExeImage) +
+      importDirEntryRva;
+
+  {  // Scope for prot
     AutoVirtualProtect prot(remoteAddress, sizeof(IMAGE_DATA_DIRECTORY),
                             PAGE_READWRITE, aTargetProcess);
     if (!prot) {
-#if defined(NIGHTLY_BUILD)
-      if (prot.GetError() ==
-          WindowsError::FromWin32Error(ERROR_INVALID_ADDRESS)) {
-        // Experimental fix.  In case that the executable's imagebase in
-        // a child process is different from the parent's imagebase, we
-        // retrieve it from the handle of a child process if the given
-        // aRemoteExeImage was invalid.  Once our telemetry proves this
-        // fix works, we promote this to a permanent fix.
-        LauncherResult<HMODULE> remoteImageBase =
-            nt::GetProcessExeModule(aTargetProcess);
-        if (remoteImageBase.isErr()) {
-          return remoteImageBase.propagateErr();
-        }
-
-        if (remoteImageBase.unwrap() == aRemoteExeImage) {
-          // GetProcessExeModule also returned an invalid address or
-          // importDirEntryRva is wrong.  Return a different error to
-          // distinguish from telemetry.
-          return LAUNCHER_ERROR_GENERIC();
-        }
-
-        // Try VirtualProtect with a new imagebase.
-        aRemoteExeImage = remoteImageBase.unwrap();
-        continue;
-      }
-#endif  // defined(NIGHTLY_BUILD)
       return LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(prot.GetError());
     }
 
@@ -124,9 +108,7 @@ inline LauncherVoidResult RestoreImportDirectory(
         bytesWritten != sizeof(IMAGE_DATA_DIRECTORY)) {
       return LAUNCHER_ERROR_FROM_LAST();
     }
-
-    break;
-  } while (1);
+  }
 
   return Ok();
 }
