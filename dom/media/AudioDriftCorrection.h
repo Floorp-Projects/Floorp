@@ -88,15 +88,6 @@ class ClockDrift final {
     // Clamp to range [0.9, 1.1] to avoid distortion
     mCorrection = std::min(std::max(mCorrection, 0.9f), 1.1f);
 
-    // If previous correction is slightly greater (0% - +1%) ignore it to avoid
-    // recalculations. Don't ignore it when it is smaller to avoid the risk of
-    // running out of frames.
-    if (mPreviousCorrection - mCorrection <= 0.01 &&
-        mPreviousCorrection - mCorrection > 0) {
-      mCorrection = mPreviousCorrection;
-    }
-    mPreviousCorrection = mCorrection;
-
     // Reset the counters to prepare for the next period.
     mTargetClock = 0;
     mSourceClock = 0;
@@ -126,7 +117,6 @@ class ClockDrift final {
 
  private:
   float mCorrection = 1.0;
-  float mPreviousCorrection = 1.0;
 
   int32_t mSourceClock = 0;
   int32_t mTargetClock = 0;
