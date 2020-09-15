@@ -372,7 +372,6 @@ class TCPConnection {
    *     The response to send back to the client.
    */
   sendToClient(resp) {
-    this.driver.responseCompleted();
     this.sendMessage(resp);
   }
 

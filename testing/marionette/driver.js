@@ -358,16 +358,14 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
     payload.commandID = commandID;
   }
 
-  this.curBrowser.executeWhenReady(() => {
-    if (this.curBrowser.curFrameId) {
-      let target = `Marionette:${name}`;
-      this.curBrowser.messageManager.sendAsyncMessage(target, payload);
-    } else {
-      throw new error.NoSuchWindowError(
-        "No such content frame; perhaps the listener was not registered?"
-      );
-    }
-  });
+  if (this.curBrowser.curFrameId) {
+    let target = `Marionette:${name}`;
+    this.curBrowser.messageManager.sendAsyncMessage(target, payload);
+  } else {
+    throw new error.NoSuchWindowError(
+      "No such content frame; perhaps the listener was not registered?"
+    );
+  }
 };
 
 /**
@@ -3506,8 +3504,6 @@ GeckoDriver.prototype.receiveMessage = function(message) {
           );
           this.contentBrowsingContext = browsingContext;
         }
-
-        this.curBrowser.flushPendingCommands();
       }
       break;
 
@@ -3516,12 +3512,6 @@ GeckoDriver.prototype.receiveMessage = function(message) {
   }
 };
 /* eslint-enable consistent-return */
-
-GeckoDriver.prototype.responseCompleted = function() {
-  if (this.curBrowser !== null) {
-    this.curBrowser.pendingCommands = [];
-  }
-};
 
 /**
  * Retrieve the localized string for the specified entity id.
