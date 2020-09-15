@@ -19,6 +19,7 @@ fun:*ProcessState*sandbox*
 src:*pe_image.h
 src:*pe_image.cc
 src:*resolver_32.cc
+src:*resolver_64.cc
 src:*filesystem_interception.cc
 src:*process_thread_interception.cc
 src:*registry_interception.cc
