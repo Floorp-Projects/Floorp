@@ -2831,8 +2831,7 @@ class Document : public nsINode,
    *
    * @param aCloneContainer The container for the clone document.
    */
-  virtual already_AddRefed<Document> CreateStaticClone(
-      nsIDocShell* aCloneContainer);
+  already_AddRefed<Document> CreateStaticClone(nsIDocShell* aCloneContainer);
 
   /**
    * If this document is a static clone, this returns the original

@@ -12283,8 +12283,10 @@ already_AddRefed<Document> Document::CreateStaticClone(
   });
 
   // Make document use different container during cloning.
+  //
+  // FIXME(emilio): Why is this needed?
   RefPtr<nsDocShell> originalShell = mDocumentContainer.get();
-  SetContainer(static_cast<nsDocShell*>(aCloneContainer));
+  SetContainer(nsDocShell::Cast(aCloneContainer));
   IgnoredErrorResult rv;
   nsCOMPtr<nsINode> clonedNode = this->CloneNode(true, rv);
   SetContainer(originalShell);
