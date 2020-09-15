@@ -290,6 +290,7 @@ nsWebBrowserPersist::nsWebBrowserPersist()
       mFirstAndOnlyUse(true),
       mSavingDocument(false),
       mCancel(false),
+      mEndCalled(false),
       mCompleted(false),
       mStartSaving(false),
       mReplaceExisting(true),
@@ -518,6 +519,10 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsISupports* aDocument,
 }
 
 NS_IMETHODIMP nsWebBrowserPersist::Cancel(nsresult aReason) {
+  // No point cancelling if we're already complete.
+  if (mEndCalled) {
+    return NS_OK;
+  }
   mCancel = true;
   EndDownload(aReason);
   return NS_OK;
@@ -957,6 +962,8 @@ NS_IMETHODIMP
 nsWebBrowserPersist::OnDataAvailable(nsIRequest* request,
                                      nsIInputStream* aIStream, uint64_t aOffset,
                                      uint32_t aLength) {
+  // MOZ_ASSERT(!NS_IsMainThread()); // no guarantees, but it's likely.
+
   bool cancel = mCancel;
   if (!cancel) {
     nsresult rv = NS_OK;
@@ -1069,15 +1076,13 @@ nsWebBrowserPersist::OnDataAvailable(nsIRequest* request,
             self->SendErrorStatusChange(readError, rv, req, file);
           });
       NS_DispatchToMainThread(errorOnMainThread);
-    }
-  }
 
-  // Cancel reading?
-  if (cancel) {
-    nsCOMPtr<nsIRunnable> endOnMainThread = NewRunnableMethod<nsresult>(
-        "nsWebBrowserPersist::EndDownload", this,
-        &nsWebBrowserPersist::EndDownload, NS_BINDING_ABORTED);
-    NS_DispatchToMainThread(endOnMainThread);
+      // And end the download on the main thread.
+      nsCOMPtr<nsIRunnable> endOnMainThread = NewRunnableMethod<nsresult>(
+          "nsWebBrowserPersist::EndDownload", this,
+          &nsWebBrowserPersist::EndDownload, NS_BINDING_ABORTED);
+      NS_DispatchToMainThread(endOnMainThread);
+    }
   }
 
   return cancel ? NS_BINDING_ABORTED : NS_OK;
@@ -2294,13 +2299,34 @@ nsresult nsWebBrowserPersist::MakeOutputStreamFromURI(
   return NS_OK;
 }
 
-void nsWebBrowserPersist::FinishDownload() { EndDownload(NS_OK); }
+void nsWebBrowserPersist::FinishDownload() {
+  // We call FinishDownload when we run out of things to download for this
+  // persist operation, by dispatching this method to the main thread. By now,
+  // it's possible that we have been canceled or encountered an error earlier
+  // in the download, or something else called EndDownload. In that case, don't
+  // re-run EndDownload.
+  if (mEndCalled) {
+    return;
+  }
+  EndDownload(NS_OK);
+}
 
 void nsWebBrowserPersist::EndDownload(nsresult aResult) {
+  MOZ_ASSERT(NS_IsMainThread(), "Should end download on the main thread.");
+
+  MOZ_DIAGNOSTIC_ASSERT(!mEndCalled, "Should only end the download once.");
+  // Really this should just never happen, but if it does, at least avoid
+  // no-op notifications or pretending we succeeded if we already failed.
+  if (mEndCalled && (NS_SUCCEEDED(aResult) || mPersistResult == aResult)) {
+    return;
+  }
+  mEndCalled = true;
+
   // Store the error code in the result if it is an error
   if (NS_SUCCEEDED(mPersistResult) && NS_FAILED(aResult)) {
     mPersistResult = aResult;
   }
+
   ClosePromise::All(GetCurrentSerialEventTarget(), mFileClosePromises)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr{this}, aResult]() {
