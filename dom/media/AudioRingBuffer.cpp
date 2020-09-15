@@ -35,7 +35,7 @@ class RingBuffer final {
   /**
    * Write `aSamples` number of zeros in the buffer.
    */
-  uint32_t WriteSilence(uint32_t aSamples) {
+  int WriteSilence(int aSamples) {
     MOZ_ASSERT(aSamples);
     return Write(Span<T>(), aSamples);
   }
@@ -43,7 +43,7 @@ class RingBuffer final {
   /**
    * Copy `aBuffer` to the RingBuffer.
    */
-  uint32_t Write(const Span<const T>& aBuffer) {
+  int Write(const Span<const T>& aBuffer) {
     MOZ_ASSERT(!aBuffer.IsEmpty());
     return Write(aBuffer, aBuffer.Length());
   }
@@ -53,7 +53,7 @@ class RingBuffer final {
    * Copy `aSamples` number of elements from `aBuffer` to the RingBuffer. If
    * `aBuffer` is empty append `aSamples` of zeros.
    */
-  uint32_t Write(const Span<const T>& aBuffer, uint32_t aSamples) {
+  int Write(const Span<const T>& aBuffer, int aSamples) {
     MOZ_ASSERT(aSamples > 0 &&
                aBuffer.Length() <= static_cast<uint32_t>(aSamples));
 
@@ -61,9 +61,9 @@ class RingBuffer final {
       return 0;
     }
 
-    uint32_t toWrite = std::min(AvailableWrite(), aSamples);
-    uint32_t part1 = std::min(Capacity() - mWriteIndex, toWrite);
-    uint32_t part2 = toWrite - part1;
+    int toWrite = std::min(AvailableWrite(), aSamples);
+    int part1 = std::min(Capacity() - mWriteIndex, toWrite);
+    int part2 = toWrite - part1;
 
     Span<T> part1Buffer = mStorage.Subspan(mWriteIndex, part1);
     Span<T> part2Buffer = mStorage.To(part2);
@@ -90,21 +90,20 @@ class RingBuffer final {
    * Copy `aSamples` number of elements from `aBuffer` to the RingBuffer. The
    * `aBuffer` does not change.
    */
-  uint32_t Write(const RingBuffer& aBuffer, uint32_t aSamples) {
+  int Write(const RingBuffer& aBuffer, int aSamples) {
     MOZ_ASSERT(aSamples);
 
     if (IsFull()) {
       return 0;
     }
 
-    uint32_t toWriteThis = std::min(AvailableWrite(), aSamples);
-    uint32_t toReadThat = std::min(aBuffer.AvailableRead(), toWriteThis);
-    uint32_t part1 =
-        std::min(aBuffer.Capacity() - aBuffer.mReadIndex, toReadThat);
-    uint32_t part2 = toReadThat - part1;
+    int toWriteThis = std::min(AvailableWrite(), aSamples);
+    int toReadThat = std::min(aBuffer.AvailableRead(), toWriteThis);
+    int part1 = std::min(aBuffer.Capacity() - aBuffer.mReadIndex, toReadThat);
+    int part2 = toReadThat - part1;
 
     Span<T> part1Buffer = aBuffer.mStorage.Subspan(aBuffer.mReadIndex, part1);
-    DebugOnly<uint32_t> ret = Write(part1Buffer);
+    DebugOnly<int> ret = Write(part1Buffer);
     MOZ_ASSERT(ret == part1);
     if (part2) {
       Span<T> part2Buffer = aBuffer.mStorage.To(part2);
@@ -118,17 +117,17 @@ class RingBuffer final {
   /**
    * Copy `aBuffer.Length()` number of elements from RingBuffer to `aBuffer`.
    */
-  uint32_t Read(const Span<T>& aBuffer) {
+  int Read(const Span<T>& aBuffer) {
     MOZ_ASSERT(!aBuffer.IsEmpty());
-    MOZ_ASSERT(aBuffer.size() <= std::numeric_limits<uint32_t>::max());
+    MOZ_ASSERT(aBuffer.size() <= std::numeric_limits<int>::max());
 
     if (IsEmpty()) {
       return 0;
     }
 
-    uint32_t toRead = std::min<uint32_t>(AvailableRead(), aBuffer.Length());
-    uint32_t part1 = std::min(Capacity() - mReadIndex, toRead);
-    uint32_t part2 = toRead - part1;
+    int toRead = std::min(AvailableRead(), static_cast<int>(aBuffer.Length()));
+    int part1 = std::min(Capacity() - mReadIndex, toRead);
+    int part2 = toRead - part1;
 
     Span<T> part1Buffer = mStorage.Subspan(mReadIndex, part1);
     Span<T> part2Buffer = mStorage.To(part2);
@@ -165,17 +164,16 @@ class RingBuffer final {
    * the `aCallable`. In the body of the `aCallable` those buffers can be used
    * directly without any copy or intermediate steps.
    */
-  uint32_t ReadNoCopy(
-      std::function<uint32_t(const Span<const T>&)>&& aCallable) {
+  int ReadNoCopy(std::function<int(const Span<const T>&)>&& aCallable) {
     if (IsEmpty()) {
       return 0;
     }
 
-    uint32_t part1 = std::min(Capacity() - mReadIndex, AvailableRead());
-    uint32_t part2 = AvailableRead() - part1;
+    int part1 = std::min(Capacity() - mReadIndex, AvailableRead());
+    int part2 = AvailableRead() - part1;
 
     Span<T> part1Buffer = mStorage.Subspan(mReadIndex, part1);
-    uint32_t toRead = aCallable(part1Buffer);
+    int toRead = aCallable(part1Buffer);
     MOZ_ASSERT(toRead <= part1);
 
     if (toRead == part1 && part2) {
@@ -192,14 +190,14 @@ class RingBuffer final {
   /**
    * Remove the next `aSamples` number of samples from the ring buffer.
    */
-  uint32_t Discard(uint32_t aSamples) {
+  int Discard(int aSamples) {
     MOZ_ASSERT(aSamples);
 
     if (IsEmpty()) {
       return 0;
     }
 
-    uint32_t toDiscard = std::min(AvailableRead(), aSamples);
+    int toDiscard = std::min(AvailableRead(), aSamples);
     mReadIndex = NextIndex(mReadIndex, toDiscard);
 
     return toDiscard;
@@ -208,12 +206,12 @@ class RingBuffer final {
   /**
    * Empty the ring buffer.
    */
-  uint32_t Clear() {
+  int Clear() {
     if (IsEmpty()) {
       return 0;
     }
 
-    uint32_t toDiscard = AvailableRead();
+    int toDiscard = AvailableRead();
     mReadIndex = NextIndex(mReadIndex, toDiscard);
 
     return toDiscard;
@@ -234,10 +232,10 @@ class RingBuffer final {
   /**
    * The number of samples available for writing.
    */
-  uint32_t AvailableWrite() const {
+  int AvailableWrite() const {
     /* We subtract one element here to always keep at least one sample
      * free in the buffer, to distinguish between full and empty array. */
-    uint32_t rv = mReadIndex - mWriteIndex - 1;
+    int rv = mReadIndex - mWriteIndex - 1;
     if (mWriteIndex >= mReadIndex) {
       rv += Capacity();
     }
@@ -247,7 +245,7 @@ class RingBuffer final {
   /**
    * The number of samples available for reading.
    */
-  uint32_t AvailableRead() const {
+  int AvailableRead() const {
     if (mWriteIndex >= mReadIndex) {
       return mWriteIndex - mReadIndex;
     }
@@ -255,13 +253,14 @@ class RingBuffer final {
   }
 
  private:
-  uint32_t NextIndex(uint32_t aIndex, uint32_t aStep) const {
+  int NextIndex(int aIndex, int aStep) const {
+    MOZ_ASSERT(aStep >= 0);
     MOZ_ASSERT(aStep < Capacity());
     MOZ_ASSERT(aIndex < Capacity());
     return (aIndex + aStep) % Capacity();
   }
 
-  uint32_t Capacity() const { return mStorage.Length(); }
+  int32_t Capacity() const { return mStorage.Length(); }
 
   Span<T> ConvertToSpan(const AlignedByteBuffer& aOther) const {
     MOZ_ASSERT(aOther.Length() >= sizeof(T));
@@ -275,8 +274,8 @@ class RingBuffer final {
   }
 
  private:
-  uint32_t mReadIndex = 0;
-  uint32_t mWriteIndex = 0;
+  int mReadIndex = 0;
+  int mWriteIndex = 0;
   /* Points to the mMemoryBuffer. */
   const Span<T> mStorage;
   /* The actual allocated memory set from outside. It is set in the ctor and it
@@ -297,9 +296,10 @@ class AudioRingBuffer::AudioRingBufferPrivate {
   Maybe<AlignedByteBuffer> mBackingBuffer;
 };
 
-AudioRingBuffer::AudioRingBuffer(uint32_t aSizeInBytes)
+AudioRingBuffer::AudioRingBuffer(int aSizeInBytes)
     : mPtr(MakeUnique<AudioRingBufferPrivate>()) {
   MOZ_ASSERT(aSizeInBytes > 0);
+  MOZ_ASSERT(aSizeInBytes < std::numeric_limits<int>::max());
   mPtr->mBackingBuffer.emplace(aSizeInBytes);
   MOZ_ASSERT(mPtr->mBackingBuffer);
 }
@@ -323,22 +323,21 @@ void AudioRingBuffer::SetSampleFormat(AudioSampleFormat aFormat) {
   MOZ_ASSERT(!mPtr->mBackingBuffer);
 }
 
-uint32_t AudioRingBuffer::Write(const Span<const float>& aBuffer) {
+int AudioRingBuffer::Write(const Span<const float>& aBuffer) {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
   MOZ_ASSERT(!mPtr->mIntRingBuffer);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
   return mPtr->mFloatRingBuffer->Write(aBuffer);
 }
 
-uint32_t AudioRingBuffer::Write(const Span<const int16_t>& aBuffer) {
+int AudioRingBuffer::Write(const Span<const int16_t>& aBuffer) {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16);
   MOZ_ASSERT(!mPtr->mFloatRingBuffer);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
   return mPtr->mIntRingBuffer->Write(aBuffer);
 }
 
-uint32_t AudioRingBuffer::Write(const AudioRingBuffer& aBuffer,
-                                uint32_t aSamples) {
+int AudioRingBuffer::Write(const AudioRingBuffer& aBuffer, int aSamples) {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16 ||
              mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
@@ -352,7 +351,7 @@ uint32_t AudioRingBuffer::Write(const AudioRingBuffer& aBuffer,
                                        aSamples);
 }
 
-uint32_t AudioRingBuffer::WriteSilence(uint32_t aSamples) {
+int AudioRingBuffer::WriteSilence(int aSamples) {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16 ||
              mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
@@ -364,37 +363,37 @@ uint32_t AudioRingBuffer::WriteSilence(uint32_t aSamples) {
   return mPtr->mFloatRingBuffer->WriteSilence(aSamples);
 }
 
-uint32_t AudioRingBuffer::Read(const Span<float>& aBuffer) {
+int AudioRingBuffer::Read(const Span<float>& aBuffer) {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
   MOZ_ASSERT(!mPtr->mIntRingBuffer);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
   return mPtr->mFloatRingBuffer->Read(aBuffer);
 }
 
-uint32_t AudioRingBuffer::Read(const Span<int16_t>& aBuffer) {
+int AudioRingBuffer::Read(const Span<int16_t>& aBuffer) {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16);
   MOZ_ASSERT(!mPtr->mFloatRingBuffer);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
   return mPtr->mIntRingBuffer->Read(aBuffer);
 }
 
-uint32_t AudioRingBuffer::ReadNoCopy(
-    std::function<uint32_t(const Span<const float>&)>&& aCallable) {
+int AudioRingBuffer::ReadNoCopy(
+    std::function<int(const Span<const float>&)>&& aCallable) {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
   MOZ_ASSERT(!mPtr->mIntRingBuffer);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
   return mPtr->mFloatRingBuffer->ReadNoCopy(std::move(aCallable));
 }
 
-uint32_t AudioRingBuffer::ReadNoCopy(
-    std::function<uint32_t(const Span<const int16_t>&)>&& aCallable) {
+int AudioRingBuffer::ReadNoCopy(
+    std::function<int(const Span<const int16_t>&)>&& aCallable) {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16);
   MOZ_ASSERT(!mPtr->mFloatRingBuffer);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
   return mPtr->mIntRingBuffer->ReadNoCopy(std::move(aCallable));
 }
 
-uint32_t AudioRingBuffer::Discard(uint32_t aSamples) {
+int AudioRingBuffer::Discard(int aSamples) {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16 ||
              mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
@@ -406,7 +405,7 @@ uint32_t AudioRingBuffer::Discard(uint32_t aSamples) {
   return mPtr->mFloatRingBuffer->Discard(aSamples);
 }
 
-uint32_t AudioRingBuffer::Clear() {
+int AudioRingBuffer::Clear() {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16 ||
              mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
@@ -444,7 +443,7 @@ bool AudioRingBuffer::IsEmpty() const {
   return mPtr->mFloatRingBuffer->IsEmpty();
 }
 
-uint32_t AudioRingBuffer::AvailableWrite() const {
+int AudioRingBuffer::AvailableWrite() const {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16 ||
              mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
@@ -456,7 +455,7 @@ uint32_t AudioRingBuffer::AvailableWrite() const {
   return mPtr->mFloatRingBuffer->AvailableWrite();
 }
 
-uint32_t AudioRingBuffer::AvailableRead() const {
+int AudioRingBuffer::AvailableRead() const {
   MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16 ||
              mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
   MOZ_ASSERT(!mPtr->mBackingBuffer);
