@@ -225,7 +225,9 @@ class MockCubebStream {
       mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
                                            NUM_OF_CHANNELS);
 
-      mFramesProcessedEvent.Notify(outframes);
+      if (mAudioVerifier.PreSilenceEnded()) {
+        mFramesProcessedEvent.Notify(outframes);
+      }
 
       if (outframes < NUM_OF_FRAMES) {
         mStateCallback(stream, mUserPtr, CUBEB_STATE_DRAINED);
