@@ -7,7 +7,6 @@
 #ifndef gc_Heap_h
 #define gc_Heap_h
 
-#include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 
 #include "ds/BitArray.h"
@@ -610,39 +609,37 @@ static_assert(ArenasPerChunk == 252,
 
 /* A chunk bitmap contains enough mark bits for all the cells in a chunk. */
 struct ChunkBitmap {
-  volatile uintptr_t bitmap[ArenaBitmapWords * ArenasPerChunk];
-
- public:
-  ChunkBitmap() = default;
+  static constexpr size_t WordCount = ArenaBitmapWords * ArenasPerChunk;
+  MarkBitmapWord bitmap[WordCount];
 
   MOZ_ALWAYS_INLINE void getMarkWordAndMask(const TenuredCell* cell,
                                             ColorBit colorBit,
-                                            uintptr_t** wordp,
+                                            MarkBitmapWord** wordp,
                                             uintptr_t* maskp) {
     MOZ_ASSERT(size_t(colorBit) < MarkBitsPerCell);
     detail::GetGCThingMarkWordAndMask(uintptr_t(cell), colorBit, wordp, maskp);
   }
 
-  MOZ_ALWAYS_INLINE MOZ_TSAN_BLACKLIST bool markBit(const TenuredCell* cell,
-                                                    ColorBit colorBit) {
-    uintptr_t *word, mask;
+ public:
+  ChunkBitmap() = default;
+
+  MOZ_ALWAYS_INLINE bool markBit(const TenuredCell* cell, ColorBit colorBit) {
+    MarkBitmapWord* word;
+    uintptr_t mask;
     getMarkWordAndMask(cell, colorBit, &word, &mask);
     return *word & mask;
   }
 
-  MOZ_ALWAYS_INLINE MOZ_TSAN_BLACKLIST bool isMarkedAny(
-      const TenuredCell* cell) {
+  MOZ_ALWAYS_INLINE bool isMarkedAny(const TenuredCell* cell) {
     return markBit(cell, ColorBit::BlackBit) ||
            markBit(cell, ColorBit::GrayOrBlackBit);
   }
 
-  MOZ_ALWAYS_INLINE MOZ_TSAN_BLACKLIST bool isMarkedBlack(
-      const TenuredCell* cell) {
+  MOZ_ALWAYS_INLINE bool isMarkedBlack(const TenuredCell* cell) {
     return markBit(cell, ColorBit::BlackBit);
   }
 
-  MOZ_ALWAYS_INLINE MOZ_TSAN_BLACKLIST bool isMarkedGray(
-      const TenuredCell* cell) {
+  MOZ_ALWAYS_INLINE bool isMarkedGray(const TenuredCell* cell) {
     return !markBit(cell, ColorBit::BlackBit) &&
            markBit(cell, ColorBit::GrayOrBlackBit);
   }
@@ -650,7 +647,8 @@ struct ChunkBitmap {
   // The return value indicates if the cell went from unmarked to marked.
   MOZ_ALWAYS_INLINE bool markIfUnmarked(const TenuredCell* cell,
                                         MarkColor color) {
-    uintptr_t *word, mask;
+    MarkBitmapWord* word;
+    uintptr_t mask;
     getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
     if (*word & mask) {
       return false;
@@ -672,17 +670,20 @@ struct ChunkBitmap {
   }
 
   MOZ_ALWAYS_INLINE void markBlack(const TenuredCell* cell) {
-    uintptr_t *word, mask;
+    MarkBitmapWord* word;
+    uintptr_t mask;
     getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
     *word |= mask;
   }
 
   MOZ_ALWAYS_INLINE void copyMarkBit(TenuredCell* dst, const TenuredCell* src,
                                      ColorBit colorBit) {
-    uintptr_t *srcWord, srcMask;
+    MarkBitmapWord* srcWord;
+    uintptr_t srcMask;
     getMarkWordAndMask(src, colorBit, &srcWord, &srcMask);
 
-    uintptr_t *dstWord, dstMask;
+    MarkBitmapWord* dstWord;
+    uintptr_t dstMask;
     getMarkWordAndMask(dst, colorBit, &dstWord, &dstMask);
 
     *dstWord &= ~dstMask;
@@ -692,23 +693,29 @@ struct ChunkBitmap {
   }
 
   MOZ_ALWAYS_INLINE void unmark(const TenuredCell* cell) {
-    uintptr_t *word, mask;
+    MarkBitmapWord* word;
+    uintptr_t mask;
     getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
     *word &= ~mask;
     getMarkWordAndMask(cell, ColorBit::GrayOrBlackBit, &word, &mask);
     *word &= ~mask;
   }
 
-  void clear() { memset((void*)bitmap, 0, sizeof(bitmap)); }
+  void clear() {
+    for (size_t i = 0; i < WordCount; i++) {
+      bitmap[i] = 0;
+    }
+  }
 
-  uintptr_t* arenaBits(Arena* arena) {
+  MarkBitmapWord* arenaBits(Arena* arena) {
     static_assert(
         ArenaBitmapBits == ArenaBitmapWords * JS_BITS_PER_WORD,
         "We assume that the part of the bitmap corresponding to the arena "
         "has the exact number of words so we do not need to deal with a word "
         "that covers bits from two arenas.");
 
-    uintptr_t *word, unused;
+    MarkBitmapWord* word;
+    uintptr_t unused;
     getMarkWordAndMask(reinterpret_cast<TenuredCell*>(arena->address()),
                        ColorBit::BlackBit, &word, &unused);
     return word;

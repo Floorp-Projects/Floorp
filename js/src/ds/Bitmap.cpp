@@ -101,19 +101,3 @@ void SparseBitmap::bitwiseOrInto(DenseBitmap& other) const {
     }
   }
 }
-
-void SparseBitmap::bitwiseOrRangeInto(size_t wordStart, size_t numWords,
-                                      uintptr_t* target) const {
-  size_t blockWord = blockStartWord(wordStart);
-
-  // We only support using a single bit block in this API.
-  MOZ_ASSERT(numWords &&
-             (blockWord == blockStartWord(wordStart + numWords - 1)));
-
-  BitBlock* block = getBlock(blockWord / WordsInBlock);
-  if (block) {
-    for (size_t i = 0; i < numWords; i++) {
-      target[i] |= (*block)[wordStart - blockWord + i];
-    }
-  }
-}
