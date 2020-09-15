@@ -9,13 +9,11 @@
 
 #include <type_traits>
 
-#include "builtin/ModuleObject.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "gc/Barrier.h"
 #include "gc/WeakMap.h"
 #include "js/GCHashTable.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
@@ -24,7 +22,10 @@
 
 namespace js {
 
+class AbstractGeneratorObject;
+class IndirectBindingMap;
 class ModuleObject;
+
 using HandleModuleObject = Handle<ModuleObject*>;
 
 /*

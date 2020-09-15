@@ -27,9 +27,6 @@
 #include "jit/JitRealm.h"
 #include "util/Poison.h"
 #include "vm/ArrayObject.h"
-#if defined(DEBUG)
-#  include "vm/EnvironmentObject.h"
-#endif
 #include "vm/JSONPrinter.h"
 #include "vm/Realm.h"
 #include "vm/Time.h"
