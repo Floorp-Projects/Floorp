@@ -18,16 +18,12 @@ config = {
     'defines': {
         'MOZ_FOO': '1',
         'MOZ_BAR': '2',
-        'MOZ_NON_GLOBAL': '3',
     },
     'substs': {
         'MOZ_SUBST_1': '1',
         'MOZ_SUBST_2': '2',
         'CPP': 'cpp',
     },
-    'non_global_defines': [
-        'MOZ_NON_GLOBAL',
-    ],
 }
 
 
