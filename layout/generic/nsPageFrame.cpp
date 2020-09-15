@@ -94,8 +94,10 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
       mPageContentMargin.Side(side) =
           aPresContext->GetDefaultPageMargin().Side(side);
     } else {
-      mPageContentMargin.Side(side) =
-          kidReflowInput.ComputedPhysicalMargin().Side(side);
+      nscoord unwriteable = nsPresContext::CSSTwipsToAppUnits(
+          mPD->mPrintSettings->GetUnwriteableMarginInTwips().Side(side));
+      mPageContentMargin.Side(side) = std::max(
+          kidReflowInput.ComputedPhysicalMargin().Side(side), unwriteable);
     }
   }
 
