@@ -15,6 +15,14 @@ interface nsIPrinter : nsISupports
   readonly attribute AString name;
 
   /**
+   * The system name of the printer.
+   *
+   * This may be faster for lookup in nsIPrinterList functions, but will only
+   * work for functions that will accept the system name.
+   */
+  readonly attribute AString systemName;
+
+  /**
    * Creates a Promise that will resolve to an nsIPrintSettings object containing
    * the default settings for this printer. For convenience, a new, mutable
    * nsIPrintSettings object is created for each call.

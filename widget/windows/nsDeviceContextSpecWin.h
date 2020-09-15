@@ -98,7 +98,8 @@ class nsPrinterListWin final : public nsPrinterListBase {
  protected:
   nsresult SystemDefaultPrinterName(nsAString&) const final;
 
-  Maybe<PrinterInfo> NamedPrinter(nsString) const final;
+  Maybe<PrinterInfo> PrinterByName(nsString) const final;
+  Maybe<PrinterInfo> PrinterBySystemName(nsString aPrinterName) const final;
 
  private:
   ~nsPrinterListWin();

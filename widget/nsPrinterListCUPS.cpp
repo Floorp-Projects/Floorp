@@ -66,7 +66,7 @@ RefPtr<nsIPrinter> nsPrinterListCUPS::CreatePrinter(PrinterInfo aInfo) const {
       static_cast<cups_dest_t*>(aInfo.mCupsHandle));
 }
 
-Maybe<PrinterInfo> nsPrinterListCUPS::NamedPrinter(
+Maybe<PrinterInfo> nsPrinterListCUPS::PrinterByName(
     nsString aPrinterName) const {
   Maybe<PrinterInfo> rv;
   if (!sCupsShim.EnsureInitialized()) {
@@ -116,6 +116,20 @@ Maybe<PrinterInfo> nsPrinterListCUPS::NamedPrinter(
   return rv;
 }
 
+Maybe<PrinterInfo> nsPrinterListCUPS::PrinterBySystemName(
+    nsString aPrinterName) const {
+  Maybe<PrinterInfo> rv;
+  if (!sCupsShim.EnsureInitialized()) {
+    return rv;
+  }
+
+  const auto printerName = NS_ConvertUTF16toUTF8(aPrinterName);
+  if (cups_dest_t* const printer = sCupsShim.cupsGetNamedDest(
+          CUPS_HTTP_DEFAULT, printerName.get(), nullptr)) {
+    rv.emplace(PrinterInfo{std::move(aPrinterName), printer});
+  }
+  return rv;
+}
 nsresult nsPrinterListCUPS::SystemDefaultPrinterName(nsAString& aName) const {
   aName.Truncate();
 

@@ -545,7 +545,7 @@ nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
   return list;
 }
 
-Maybe<nsPrinterListBase::PrinterInfo> nsPrinterListWin::NamedPrinter(
+Maybe<nsPrinterListBase::PrinterInfo> nsPrinterListWin::PrinterByName(
     nsString aName) const {
   Maybe<PrinterInfo> rv;
 
@@ -562,6 +562,11 @@ Maybe<nsPrinterListBase::PrinterInfo> nsPrinterListWin::NamedPrinter(
   }
 
   return rv;
+}
+
+Maybe<nsPrinterListBase::PrinterInfo> nsPrinterListWin::PrinterBySystemName(
+    nsString aName) const {
+  return PrinterByName(std::move(aName));
 }
 
 RefPtr<nsIPrinter> nsPrinterListWin::CreatePrinter(PrinterInfo aInfo) const {
