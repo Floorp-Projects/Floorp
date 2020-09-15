@@ -1,0 +1,372 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+// Create a test extension with the provided function as the background
+// script.  The background script will have a few helpful functions
+// available.
+/* global awaitLoad, gatherFrameSources */
+function makeExtension(background) {
+  // Wait for a webNavigation.onCompleted event where the details for the
+  // loaded page match the attributes of `filter`.
+  function awaitLoad(filter) {
+    return new Promise(resolve => {
+      const listener = details => {
+        if (Object.keys(filter).every(key => details[key] === filter[key])) {
+          browser.webNavigation.onCompleted.removeListener(listener);
+          resolve();
+        }
+      };
+      browser.webNavigation.onCompleted.addListener(listener);
+    });
+  }
+
+  // Return a string with a (sorted) list of the source of all frames
+  // in the given tab into which this extension can inject scripts
+  // (ie all frames for which it has the activeTab permission).
+  // Source is the hostname for frames in http sources, or the full
+  // location href in other documents (eg about: pages)
+  async function gatherFrameSources(tabid) {
+    let result = await browser.tabs.executeScript(tabid, {
+      allFrames: true,
+      matchAboutBlank: true,
+      code: "window.location.hostname || window.location.href;",
+    });
+    return String(result.sort());
+  }
+
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["activeTab", "webNavigation"],
+    },
+    background: `${awaitLoad}\n${gatherFrameSources}\n${ExtensionTestCommon.serializeScript(background)}`,
+  });
+}
+
+// Test that executeScript() fails without the activeTab permission
+// (or any specific origin permissions).
+add_task(async function test_no_activeTab() {
+  let extension = makeExtension(async function background() {
+    const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab.html";
+
+    let [tab] = await Promise.all([
+      browser.tabs.create({url: URL}),
+      awaitLoad({frameId: 0}),
+    ]);
+
+    try {
+      await gatherFrameSources(tab.id);
+      browser.test.fail("executeScript() should fail without activeTab permission");
+    } catch (err) {
+      browser.test.assertTrue(/^Missing host permission/.test(err.message),
+                              "executeScript() without activeTab permission failed");
+    }
+
+    await browser.tabs.remove(tab.id);
+
+    browser.test.notifyPass("no-active-tab");
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("no-active-tab");
+  await extension.unload();
+});
+
+// Test that dynamically created iframes do not get the activeTab permission
+add_task(async function test_dynamic_frames() {
+  let extension = makeExtension(async function background() {
+    const BASE_HOST = "www.example.com";
+
+    let [tab] = await Promise.all([
+      browser.tabs.create({url: `http://${BASE_HOST}/`}),
+      awaitLoad({frameId: 0}),
+    ]);
+
+    function inject() {
+      let nframes = 4;
+      function frameLoaded() {
+        nframes--;
+        if (nframes == 0) {
+          browser.runtime.sendMessage("frames-loaded");
+        }
+      }
+
+      let frame = document.createElement("iframe");
+      frame.addEventListener("load", frameLoaded, {once: true});
+      document.body.appendChild(frame);
+
+      let div = document.createElement("div");
+      div.innerHTML = "<iframe src='http://test1.example.com/'></iframe>";
+      let framelist = div.getElementsByTagName("iframe");
+      browser.test.assertEq(1, framelist.length, "Found 1 frame inside div");
+      framelist[0].addEventListener("load", frameLoaded, {once: true});
+      document.body.appendChild(div);
+
+      let div2 = document.createElement("div");
+      div2.innerHTML = "<iframe srcdoc=\"<iframe src='http://test2.example.com/'&gt;</iframe&gt;\"></iframe>";
+      framelist = div2.getElementsByTagName("iframe");
+      browser.test.assertEq(1, framelist.length, "Found 1 frame inside div");
+      framelist[0].addEventListener("load", frameLoaded, {once: true});
+      document.body.appendChild(div2);
+
+      const URL = "http://www.example.com/tests/toolkit/components/extensions/test/mochitest/file_contentscript_iframe.html";
+
+      let xhr = new XMLHttpRequest();
+      xhr.open("GET", URL);
+      xhr.responseType = "document";
+      xhr.overrideMimeType("text/html");
+
+      xhr.addEventListener("load", () => {
+        if (xhr.readyState != 4) {
+          return;
+        }
+        if (xhr.status != 200) {
+          browser.runtime.sendMessage("error");
+        }
+
+        let frame = xhr.response.getElementById("frame");
+        browser.test.assertTrue(frame, "Found frame in response document");
+        frame.addEventListener("load", frameLoaded, {once: true});
+        document.body.appendChild(frame);
+      }, {once: true});
+      xhr.addEventListener("error", () => {
+        browser.runtime.sendMessage("error");
+      }, {once: true});
+      xhr.send();
+    }
+
+    browser.test.onMessage.addListener(async () => {
+      let loadedPromise = new Promise((resolve, reject) => {
+        let listener = msg => {
+          let unlisten = () => browser.runtime.onMessage.removeListener(listener);
+          if (msg == "frames-loaded") {
+            unlisten();
+            resolve();
+          } else if (msg == "error") {
+            unlisten();
+            reject();
+          }
+        };
+        browser.runtime.onMessage.addListener(listener);
+      });
+
+      await browser.tabs.executeScript(tab.id, {
+        code: `(${inject})();`,
+      });
+
+      await loadedPromise;
+
+      let result = await gatherFrameSources(tab.id);
+      browser.test.assertEq(String([BASE_HOST]), result,
+                            "Script is not injected into dynamically created frames");
+
+      await browser.tabs.remove(tab.id);
+
+      browser.test.notifyPass("dynamic-frames");
+    });
+
+    browser.test.sendMessage("ready", tab.id);
+  });
+
+  await extension.startup();
+
+  let tabId = await extension.awaitMessage("ready");
+  extension.grantActiveTab(tabId);
+
+  extension.sendMessage("go");
+  await extension.awaitFinish("dynamic-frames");
+
+  await extension.unload();
+});
+
+// Test that an iframe created from an <iframe srcdoc> gets the
+// activeTab permission.
+add_task(async function test_srcdoc() {
+  let extension = makeExtension(async function background() {
+    const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab2.html";
+    const OUTER_SOURCE = "about:srcdoc";
+    const PAGE_SOURCE = "mochi.test";
+    const FRAME_SOURCE = "test1.example.com";
+
+    let [tab] = await Promise.all([
+      browser.tabs.create({url: URL}),
+      awaitLoad({frameId: 0}),
+    ]);
+
+    browser.test.onMessage.addListener(async msg => {
+      if (msg == "go") {
+        let result = await gatherFrameSources(tab.id);
+        browser.test.assertEq(String([OUTER_SOURCE, PAGE_SOURCE, FRAME_SOURCE]),
+                              result,
+                              "Script is injected into frame created from <iframe srcdoc>");
+
+        await browser.tabs.remove(tab.id);
+
+        browser.test.notifyPass("srcdoc");
+      }
+    });
+
+    browser.test.sendMessage("ready", tab.id);
+  });
+
+  await extension.startup();
+
+  let tabId = await extension.awaitMessage("ready");
+  extension.grantActiveTab(tabId);
+
+  extension.sendMessage("go");
+  await extension.awaitFinish("srcdoc");
+
+  await extension.unload();
+});
+
+// Test that navigating frames by setting the src attribute from the
+// parent page revokes the activeTab permission.
+add_task(async function test_navigate_by_src() {
+  let extension = makeExtension(async function background() {
+    const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab.html";
+    const PAGE_SOURCE = "mochi.test";
+    const EMPTY_SOURCE = "about:blank";
+    const FRAME_SOURCE = "test1.example.com";
+
+    let [tab] = await Promise.all([
+      browser.tabs.create({url: URL}),
+      awaitLoad({frameId: 0}),
+    ]);
+
+    browser.test.onMessage.addListener(async msg => {
+      if (msg == "go") {
+        let result = await gatherFrameSources(tab.id);
+        browser.test.assertEq(String([EMPTY_SOURCE, PAGE_SOURCE, FRAME_SOURCE]),
+                              result,
+                              "In original page, script is injected into base page and original frames");
+
+        let loadedPromise = awaitLoad({tabId: tab.id});
+        await browser.tabs.executeScript(tab.id, {
+          code: "document.getElementById('emptyframe').src = 'http://test2.example.com/';",
+        });
+        await loadedPromise;
+
+        result = await gatherFrameSources(tab.id);
+        browser.test.assertEq(String([PAGE_SOURCE, FRAME_SOURCE]), result,
+                              "Script is not injected into initially empty frame after navigation");
+
+        loadedPromise = awaitLoad({tabId: tab.id});
+        await browser.tabs.executeScript(tab.id, {
+          code: "document.getElementById('regularframe').src = 'http://test2.example.com/';",
+        });
+        await loadedPromise;
+
+        result = await gatherFrameSources(tab.id);
+        browser.test.assertEq(String([PAGE_SOURCE]), result,
+                              "Script is not injected into regular frame after navigation");
+
+        await browser.tabs.remove(tab.id);
+        browser.test.notifyPass("test-scripts");
+      }
+    });
+
+    browser.test.sendMessage("ready", tab.id);
+  });
+
+  await extension.startup();
+
+  let tabId = await extension.awaitMessage("ready");
+  extension.grantActiveTab(tabId);
+
+  extension.sendMessage("go");
+  await extension.awaitFinish("test-scripts");
+
+  await extension.unload();
+});
+
+// Test that navigating frames by setting window.location from inside the
+// frame revokes the activeTab permission.
+add_task(async function test_navigate_by_window_location() {
+  let extension = makeExtension(async function background() {
+    const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab.html";
+    const PAGE_SOURCE = "mochi.test";
+    const EMPTY_SOURCE = "about:blank";
+    const FRAME_SOURCE = "test1.example.com";
+
+    let [tab] = await Promise.all([
+      browser.tabs.create({url: URL}),
+      awaitLoad({frameId: 0}),
+    ]);
+
+    browser.test.onMessage.addListener(async msg => {
+      if (msg == "go") {
+        let result = await gatherFrameSources(tab.id);
+        browser.test.assertEq(String([EMPTY_SOURCE, PAGE_SOURCE, FRAME_SOURCE]),
+                              result,
+                              "Script initially injected into all frames");
+
+        let nframes = 0;
+        let frames = await browser.webNavigation.getAllFrames({tabId: tab.id});
+        for (let frame of frames) {
+          if (frame.parentFrameId == -1) {
+            continue;
+          }
+
+          let loadPromise = awaitLoad({
+            tabId: tab.id,
+            frameId: frame.frameId,
+          });
+
+          await browser.tabs.executeScript(tab.id, {
+            frameId: frame.frameId,
+            matchAboutBlank: true,
+            code: "window.location.href = 'https://test2.example.com/';",
+          });
+          await loadPromise;
+
+          try {
+            result = await browser.tabs.executeScript(tab.id, {
+              frameId: frame.frameId,
+              matchAboutBlank: true,
+              code: "window.location.hostname;",
+            });
+
+            browser.test.fail("executeScript should have failed on navigated frame");
+          } catch (err) {
+            browser.test.assertEq("Frame not found, or missing host permission", err.message);
+          }
+
+          nframes++;
+        }
+        browser.test.assertEq(2, nframes, "Found 2 frames");
+
+        await browser.tabs.remove(tab.id);
+        browser.test.notifyPass("scripted-navigation");
+      }
+    });
+
+    browser.test.sendMessage("ready", tab.id);
+  });
+
+  await extension.startup();
+
+  let tabId = await extension.awaitMessage("ready");
+  extension.grantActiveTab(tabId);
+
+  extension.sendMessage("go");
+  await extension.awaitFinish("scripted-navigation");
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>
