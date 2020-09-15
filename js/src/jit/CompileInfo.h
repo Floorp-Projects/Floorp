@@ -14,6 +14,7 @@
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitFrames.h"
 #include "jit/Registers.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/JSFunction.h"
 
 namespace js {

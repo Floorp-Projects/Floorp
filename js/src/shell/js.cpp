@@ -4761,7 +4761,7 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
 
   // JIT compiler options are process-wide, so we have to stop off-thread
   // compilations for all runtimes to avoid races.
-  WaitForAllHelperThreads();
+  HelperThreadState().waitForAllThreads();
 
   // Only release JIT code for the current runtime because there's no good
   // way to discard code for other runtimes.

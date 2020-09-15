@@ -54,7 +54,7 @@
 #include "js/UniquePtr.h"
 #include "util/Memory.h"
 #include "util/Windows.h"
-#include "vm/HelperThreadState.h"
+#include "vm/HelperThreads.h"
 #include "vm/Realm.h"
 #include "vm/TraceLogging.h"
 #ifdef MOZ_VTUNE

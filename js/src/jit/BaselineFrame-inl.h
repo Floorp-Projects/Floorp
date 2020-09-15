@@ -9,6 +9,7 @@
 
 #include "jit/BaselineFrame.h"
 
+#include "vm/EnvironmentObject.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 

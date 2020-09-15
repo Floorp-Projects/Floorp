@@ -26,8 +26,6 @@
 #include "threading/CpuCount.h"
 #include "util/NativeStack.h"
 #include "vm/ErrorReporting.h"
-#include "vm/HelperThreadState.h"
-#include "vm/MutexIDs.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
@@ -55,7 +53,6 @@ using JS::ReadOnlyCompileOptions;
 
 namespace js {
 
-Mutex gHelperThreadLock(mutexid::GlobalHelperThreadState);
 GlobalHelperThreadState* gHelperThreadState = nullptr;
 
 }  // namespace js
@@ -148,16 +145,6 @@ bool GlobalHelperThreadState::submitTask(wasm::CompileTask* task,
 
   dispatch(lock);
   return true;
-}
-
-size_t js::RemovePendingWasmCompileTasks(
-    const wasm::CompileTaskState& taskState, wasm::CompileMode mode,
-    const AutoLockHelperThreadState& lock) {
-  wasm::CompileTaskPtrFifo& worklist =
-      HelperThreadState().wasmWorklist(lock, mode);
-  return worklist.eraseIf([&taskState](wasm::CompileTask* task) {
-    return &task->state == &taskState;
-  });
 }
 
 void js::StartOffThreadWasmTier2Generator(wasm::UniqueTier2GeneratorTask task) {
@@ -1250,7 +1237,8 @@ GlobalHelperThreadState::GlobalHelperThreadState()
       totalCountRunningTasks(0),
       registerThread(nullptr),
       unregisterThread(nullptr),
-      wasmTier2GeneratorsFinished_(0) {
+      wasmTier2GeneratorsFinished_(0),
+      helperLock(mutexid::GlobalHelperThreadState) {
   cpuCount = ClampDefaultCPUCount(GetCPUCount());
   threadCount = ThreadCountForCPUCount(cpuCount);
   gcParallelThreadCount = threadCount;
@@ -1339,7 +1327,7 @@ void GlobalHelperThreadState::destroyHelperContexts(
 
 #ifdef DEBUG
 bool GlobalHelperThreadState::isLockedByCurrentThread() const {
-  return gHelperThreadLock.ownedByCurrentThread();
+  return helperLock.ownedByCurrentThread();
 }
 #endif  // DEBUG
 
@@ -1367,12 +1355,6 @@ void GlobalHelperThreadState::notifyOne(CondVar which,
 bool GlobalHelperThreadState::hasActiveThreads(
     const AutoLockHelperThreadState& lock) {
   return !helperTasks(lock).empty();
-}
-
-void js::WaitForAllHelperThreads() { HelperThreadState().waitForAllThreads(); }
-
-void js::WaitForAllHelperThreads(AutoLockHelperThreadState& lock) {
-  HelperThreadState().waitForAllThreadsLocked(lock);
 }
 
 void GlobalHelperThreadState::waitForAllThreads() {

@@ -21,7 +21,6 @@
 #include "vm/ArrayObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSContext.h"
-#include "vm/ProxyObject.h"
 #include "vm/Realm.h"
 
 namespace js {
