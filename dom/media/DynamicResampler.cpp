@@ -245,6 +245,14 @@ uint32_t DynamicResampler::InFramesBuffered(int aChannelIndex) const {
   return mInternalInBuffer[aChannelIndex].AvailableRead();
 }
 
+uint32_t DynamicResampler::InFramesLeftToBuffer(int aChannelIndex) const {
+  MOZ_ASSERT(mChannels);
+  MOZ_ASSERT(aChannelIndex >= 0);
+  MOZ_ASSERT(aChannelIndex <= mChannels);
+  MOZ_ASSERT((uint32_t)aChannelIndex <= mInternalInBuffer.Length());
+  return mInternalInBuffer[aChannelIndex].AvailableWrite();
+}
+
 AudioChunkList::AudioChunkList(int aTotalDuration, int aChannels) {
   int numOfChunks = aTotalDuration / mChunkCapacity;
   if (aTotalDuration % mChunkCapacity) {
@@ -459,6 +467,14 @@ int AudioResampler::InputDuration() const {
   }
   MOZ_ASSERT((int)mResampler.InFramesBuffered(0) >= 0);
   return (int)mResampler.InFramesBuffered(0);
+}
+
+int AudioResampler::InputRemainingDuration() const {
+  if (!mIsSampleFormatSet) {
+    return (int)mResampler.mPreBufferFrames;
+  }
+  MOZ_ASSERT((int)mResampler.InFramesLeftToBuffer(0) >= 0);
+  return (int)mResampler.InFramesLeftToBuffer(0);
 }
 
 }  // namespace mozilla
