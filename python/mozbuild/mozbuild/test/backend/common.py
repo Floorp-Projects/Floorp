@@ -30,10 +30,12 @@ test_data_path = mozpath.join(test_data_path, 'data')
 
 CONFIGS = defaultdict(lambda: {
     'defines': {},
+    'non_global_defines': [],
     'substs': {'OS_TARGET': 'WINNT'},
 }, {
     'binary-components': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'LIB_PREFIX': 'lib',
             'RUST_LIB_PREFIX': 'lib',
@@ -44,6 +46,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'rust-library': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'COMPILE_ENVIRONMENT': '1',
             'RUST_TARGET': 'x86_64-unknown-linux-gnu',
@@ -55,6 +58,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'host-rust-library': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'COMPILE_ENVIRONMENT': '1',
             'RUST_HOST_TARGET': 'x86_64-unknown-linux-gnu',
@@ -67,6 +71,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'host-rust-library-features': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'COMPILE_ENVIRONMENT': '1',
             'RUST_HOST_TARGET': 'x86_64-unknown-linux-gnu',
@@ -79,6 +84,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'rust-library-features': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'COMPILE_ENVIRONMENT': '1',
             'RUST_TARGET': 'x86_64-unknown-linux-gnu',
@@ -90,6 +96,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'rust-programs': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'COMPILE_ENVIRONMENT': '1',
             'RUST_TARGET': 'i686-pc-windows-msvc',
@@ -100,6 +107,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'test-support-binaries-tracked': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'COMPILE_ENVIRONMENT': '1',
             'LIB_SUFFIX': 'dll',
@@ -108,6 +116,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'sources': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'LIB_PREFIX': 'lib',
             'LIB_SUFFIX': 'a',
@@ -118,6 +127,10 @@ CONFIGS = defaultdict(lambda: {
             'MOZ_TRUE_1': '1',
             'MOZ_TRUE_2': '1',
         },
+        'non_global_defines': [
+            'MOZ_NONGLOBAL_1',
+            'MOZ_NONGLOBAL_2',
+        ],
         'substs': {
             'MOZ_FOO': 'foo',
             'MOZ_BAR': 'bar',
@@ -125,6 +138,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'substitute_config_files': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'MOZ_FOO': 'foo',
             'MOZ_BAR': 'bar',
@@ -135,18 +149,21 @@ CONFIGS = defaultdict(lambda: {
             'foo': 'baz qux',
             'baz': 1,
         },
+        'non_global_defines': [],
         'substs': {
             'foo': 'bar baz',
         },
     },
     'visual-studio': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'MOZ_APP_NAME': 'my_app',
         },
     },
     'prog-lib-c-only': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'COMPILE_ENVIRONMENT': '1',
             'LIB_SUFFIX': '.a',
@@ -155,6 +172,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'gn-processor': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'BUILD_BACKENDS': [
                 'GnMozbuildWriter',
@@ -172,6 +190,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'ipdl_sources': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'COMPILE_ENVIRONMENT': '1',
             'LIB_SUFFIX': '.a',
@@ -180,6 +199,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'program-paths': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'COMPILE_ENVIRONMENT': '1',
             'BIN_SUFFIX': '.prog',
@@ -187,6 +207,7 @@ CONFIGS = defaultdict(lambda: {
     },
     'linkage': {
         'defines': {},
+        'non_global_defines': [],
         'substs': {
             'CC_TYPE': 'clang',
             'COMPILE_ENVIRONMENT': '1',
