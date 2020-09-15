@@ -136,9 +136,9 @@ void DynamicResampler::UpdateResampler(int aOutRate, int aChannels) {
     // because allocates and this is executed in audio thread.
     mInternalInBuffer.Clear();
     for (int i = 0; i < mChannels; ++i) {
-      // Pre-allocate something big, 100ms of audio.
-      AudioRingBuffer* b =
-          mInternalInBuffer.AppendElement(sizeof(float) * mInRate / 10);
+      // Pre-allocate something big, twice the pre-buffer, or at least 100ms.
+      AudioRingBuffer* b = mInternalInBuffer.AppendElement(
+          sizeof(float) * std::max(2 * mPreBufferFrames, mInRate / 10));
       if (mSampleFormat != AUDIO_FORMAT_SILENCE) {
         // In ctor this update is not needed
         b->SetSampleFormat(mSampleFormat);
