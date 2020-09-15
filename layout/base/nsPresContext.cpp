@@ -269,13 +269,11 @@ static const char* gExactCallbackPrefs[] = {
     "nglayout.debug.paint_flashing",
     "nglayout.debug.paint_flashing_chrome",
     "intl.accept_languages",
-    "dom.meta-viewport.enabled",
     nullptr,
 };
 
 static const char* gPrefixCallbackPrefs[] = {
-    "font.", "browser.display.",    "browser.viewport.",
-    "bidi.", "gfx.font_rendering.", nullptr,
+    "font.", "browser.display.", "bidi.", "gfx.font_rendering.", nullptr,
 };
 
 void nsPresContext::Destroy() {
@@ -499,17 +497,6 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     }
     return;
   }
-
-  if (StringBeginsWith(prefName, "browser.viewport."_ns) ||
-      StringBeginsWith(prefName, "font.size.inflation."_ns) ||
-      prefName.EqualsLiteral("dom.meta-viewport.enabled")) {
-    if (mPresShell &&
-        (!gfxVars::UseWebRender() ||
-         !StaticPrefs::font_size_inflation_skipmaybereflowwithwebrender())) {
-      mPresShell->MaybeReflowForInflationScreenSizeChange();
-    }
-  }
-
   // Changing any of these potentially changes the value of @media
   // (prefers-contrast).
   if (prefName.EqualsLiteral("layout.css.prefers-contrast.enabled") ||
