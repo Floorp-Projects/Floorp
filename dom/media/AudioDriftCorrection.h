@@ -36,15 +36,11 @@ class ClockDrift final {
   /**
    * Provide the nominal source and the target sample rate.
    */
-  ClockDrift(int32_t aSourceRate, int32_t aTargetRate)
+  ClockDrift(int32_t aSourceRate, int32_t aTargetRate,
+             int32_t aDesiredBuffering)
       : mSourceRate(aSourceRate),
         mTargetRate(aTargetRate),
-        mDesiredBuffering(5 * mSourceRate / 100) {
-    if (Preferences::HasUserValue("media.clockdrift.buffering")) {
-      int msecs = Preferences::GetInt("media.clockdrift.buffering");
-      mDesiredBuffering = msecs * mSourceRate / 100;
-    }
-  }
+        mDesiredBuffering(aDesiredBuffering) {}
 
   /**
    * The correction in the form of a ratio. A correction of 0.98 means that the
@@ -118,14 +114,15 @@ class ClockDrift final {
     mCorrection = std::min(std::max(mCorrection, 0.9f), 1.1f);
   }
 
- private:
+ public:
   const int32_t mSourceRate;
   const int32_t mTargetRate;
+  const int32_t mDesiredBuffering;
 
+ private:
   float mCorrection = 1.0;
   float mPreviousCorrection = 1.0;
   const int32_t mAdjustementWindow = 100;
-  int32_t mDesiredBuffering;  // defult: 5ms
 
   int32_t mSourceClock = 0;
   int32_t mTargetClock = 0;
@@ -154,9 +151,12 @@ class ClockDrift final {
 class AudioDriftCorrection final {
  public:
   AudioDriftCorrection(int32_t aSourceRate, int32_t aTargetRate)
-      : mClockDrift(aSourceRate, aTargetRate),
-        mResampler(aSourceRate, aTargetRate, aTargetRate / 20 /*50ms*/),
-        mTargetRate(aTargetRate) {}
+      : mDesiredBuffering(
+            std::max(1, Preferences::GetInt("media.clockdrift.buffering", 5)) *
+            aSourceRate / 1000),
+        mTargetRate(aTargetRate),
+        mClockDrift(aSourceRate, aTargetRate, mDesiredBuffering),
+        mResampler(aSourceRate, aTargetRate, mDesiredBuffering) {}
 
   /**
    * The source audio frames and request the number of target audio frames must
@@ -188,10 +188,12 @@ class AudioDriftCorrection final {
     return output;
   }
 
+  const int32_t mDesiredBuffering;
+  const int32_t mTargetRate;
+
  private:
   ClockDrift mClockDrift;
   AudioResampler mResampler;
-  const int32_t mTargetRate;
 };
 
 };     // namespace mozilla
