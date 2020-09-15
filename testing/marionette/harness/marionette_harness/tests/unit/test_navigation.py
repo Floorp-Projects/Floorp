@@ -292,6 +292,13 @@ class TestNavigate(BaseNavigationTestCase):
 
         self.marionette.navigate("about:blank")
 
+    def test_about_newtab(self):
+        with self.marionette.using_prefs({"browser.newtabpage.enabled": True}):
+            self.marionette.navigate("about:newtab")
+
+            self.marionette.navigate(self.test_page_remote)
+            self.marionette.find_element(By.ID, "testDiv")
+
     @run_if_manage_instance("Only runnable if Marionette manages the instance")
     def test_focus_after_navigation(self):
         self.marionette.restart()
