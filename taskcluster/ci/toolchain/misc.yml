@@ -134,6 +134,7 @@ browsertime:
         sparse-profile: null
         resources:
             - 'tools/browsertime/package.json'
+            - 'tools/browsertime/package-lock.json'
             - 'tools/browsertime/mach_commands.py'
         toolchain-artifact: public/build/browsertime.tar.bz2
     fetches:
