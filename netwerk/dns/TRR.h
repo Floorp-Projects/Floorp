@@ -9,6 +9,7 @@
 
 #include "mozilla/net/DNSByTypeRecord.h"
 #include "mozilla/Assertions.h"
+#include "nsClassHashtable.h"
 #include "nsIChannel.h"
 #include "nsIHttpPushListener.h"
 #include "nsIInterfaceRequestor.h"
@@ -155,6 +156,8 @@ class TRR : public Runnable,
   nsresult FollowCname(nsIChannel* aChannel);
 
   bool UseDefaultServer();
+  void SaveAdditionalRecords(
+      const nsClassHashtable<nsCStringHashKey, DOHresp>& aRecords);
 
   nsresult CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult);
 
