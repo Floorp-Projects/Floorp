@@ -7552,6 +7552,30 @@
     "n_buckets": 50,
     "description": "Time (ms) from the Input event being created to the end of it being handled for events handling during page load only"
   },
+  "LOAD_INPUT_EVENT_RESPONSE_PRELOAD_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "barret@mozilla.com"],
+    "bug_numbers": [1663762],
+    "expires_in_version": "88",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "description": "Time (ms) from the Input event being created to the end of it being handled for events handled during page load only. This is submitted only when the document would preload a resource (i.e., if it encounters a <link> element or a Link header with rel=\"preload\"), even if the network.preload pref is disabled."
+  },
+  "LOAD_INPUT_EVENT_RESPONSE_NO_PRELOAD_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "barret@mozilla.com"],
+    "bug_numbers": [1663762],
+    "expires_in_version": "88",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "description": "Time (ms) from the Input event being created to the end of it being handled for events handled during page load only. This is only submitted on when the document would not preload a resource."
+  },
   "EVENTLOOP_UI_ACTIVITY_EXP_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
