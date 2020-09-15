@@ -7,6 +7,8 @@
 #ifndef js_HeapAPI_h
 #define js_HeapAPI_h
 
+#include "mozilla/Atomics.h"
+
 #include <limits.h>
 #include <type_traits>
 
@@ -332,19 +334,26 @@ inline bool operator!=(const JS::GCCellPtr& ptr1, const JS::GCCellPtr& ptr2) {
 
 namespace js {
 namespace gc {
+
+// Mark bitmaps are atomic because they can be written by gray unmarking on the
+// main thread while read by sweeping on a background thread. The former does
+// not affect the result of the latter.
+using MarkBitmapWord = mozilla::Atomic<uintptr_t, mozilla::Relaxed>;
+
 namespace detail {
 
-static MOZ_ALWAYS_INLINE uintptr_t* GetGCThingMarkBitmap(const uintptr_t addr) {
+static MOZ_ALWAYS_INLINE MarkBitmapWord* GetGCThingMarkBitmap(
+    const uintptr_t addr) {
   // Note: the JIT pre-barrier trampolines inline this code. Update that
   // code too when making changes here!
   MOZ_ASSERT(addr);
   const uintptr_t bmap_addr = (addr & ~ChunkMask) | ChunkMarkBitmapOffset;
-  return reinterpret_cast<uintptr_t*>(bmap_addr);
+  return reinterpret_cast<MarkBitmapWord*>(bmap_addr);
 }
 
 static MOZ_ALWAYS_INLINE void GetGCThingMarkWordAndMask(const uintptr_t addr,
                                                         ColorBit colorBit,
-                                                        uintptr_t** wordp,
+                                                        MarkBitmapWord** wordp,
                                                         uintptr_t* maskp) {
   // Note: the JIT pre-barrier trampolines inline this code. Update that
   // code too when making changes here!
@@ -352,7 +361,7 @@ static MOZ_ALWAYS_INLINE void GetGCThingMarkWordAndMask(const uintptr_t addr,
   const size_t bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
                      static_cast<uint32_t>(colorBit);
   MOZ_ASSERT(bit < js::gc::ChunkMarkBitmapBits);
-  uintptr_t* bitmap = GetGCThingMarkBitmap(addr);
+  MarkBitmapWord* bitmap = GetGCThingMarkBitmap(addr);
   const uintptr_t nbits = sizeof(*bitmap) * CHAR_BIT;
   *maskp = uintptr_t(1) << (bit % nbits);
   *wordp = &bitmap[bit / nbits];
@@ -369,14 +378,16 @@ static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedGray(const Cell* cell) {
   MOZ_ASSERT(cell);
   MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
 
-  uintptr_t *grayWord, grayMask;
+  MarkBitmapWord* grayWord;
+  uintptr_t grayMask;
   js::gc::detail::GetGCThingMarkWordAndMask(
       uintptr_t(cell), js::gc::ColorBit::GrayOrBlackBit, &grayWord, &grayMask);
   if (!(*grayWord & grayMask)) {
     return false;
   }
 
-  uintptr_t *blackWord, blackMask;
+  MarkBitmapWord* blackWord;
+  uintptr_t blackMask;
   js::gc::detail::GetGCThingMarkWordAndMask(
       uintptr_t(cell), js::gc::ColorBit::BlackBit, &blackWord, &blackMask);
   return !(*blackWord & blackMask);

@@ -86,7 +86,7 @@ bool AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime,
   for (auto thingKind : AllAllocKinds()) {
     for (ArenaIter aiter(atomsZone, thingKind); !aiter.done(); aiter.next()) {
       Arena* arena = aiter.get();
-      uintptr_t* chunkWords = arena->chunk()->bitmap.arenaBits(arena);
+      MarkBitmapWord* chunkWords = arena->chunk()->bitmap.arenaBits(arena);
       bitmap.copyBitsFrom(arena->atomBitmapStart(), ArenaBitmapWords,
                           chunkWords);
     }
@@ -121,7 +121,7 @@ static void BitwiseOrIntoChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap) {
   for (auto thingKind : AllAllocKinds()) {
     for (ArenaIter aiter(atomsZone, thingKind); !aiter.done(); aiter.next()) {
       Arena* arena = aiter.get();
-      uintptr_t* chunkWords = arena->chunk()->bitmap.arenaBits(arena);
+      MarkBitmapWord* chunkWords = arena->chunk()->bitmap.arenaBits(arena);
       bitmap.bitwiseOrRangeInto(arena->atomBitmapStart(), ArenaBitmapWords,
                                 chunkWords);
     }
