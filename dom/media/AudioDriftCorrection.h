@@ -10,6 +10,8 @@
 
 namespace mozilla {
 
+extern LazyLogModule gMediaTrackGraphLog;
+
 /**
  * ClockDrift calculates the diverge of the source clock from the nominal
  * (provided) rate compared to the target clock, which is considered the master
@@ -60,30 +62,51 @@ class ClockDrift final {
    */
   void UpdateClock(int aSourceFrames, int aTargetFrames, int aBufferedFrames,
                    int aRemainingFrames) {
-    if ((mTargetClock * 1000 / mTargetRate) >= mAdjustmentIntervalMs ||
-        (mSourceClock * 1000 / mSourceRate) >= mAdjustmentIntervalMs) {
-      // The adjustment interval has passed on one side. Recalculate.
-      CalculateCorrection(aBufferedFrames);
-    } else if (aBufferedFrames < 2 * mSourceRate / 100 /*20ms*/ ||
-               aRemainingFrames < 2 * mSourceRate / 100 /*20ms*/) {
-      BufferedFramesCorrection(aBufferedFrames);
+    if (mSourceClock >= mSourceRate / 10 || mTargetClock >= mTargetRate / 10) {
+      // Only update the correction if 100ms has passed since last update.
+      if (aBufferedFrames < mDesiredBuffering * 4 / 10 /*40%*/ ||
+          aRemainingFrames < mDesiredBuffering * 4 / 10 /*40%*/) {
+        // We are getting close to the lower or upper bound of the internal
+        // buffer. Steer clear.
+        CalculateCorrection(0.9, aBufferedFrames, aRemainingFrames);
+      } else if ((mTargetClock * 1000 / mTargetRate) >= mAdjustmentIntervalMs ||
+                 (mSourceClock * 1000 / mSourceRate) >= mAdjustmentIntervalMs) {
+        // The adjustment interval has passed on one side. Recalculate.
+        CalculateCorrection(0.6, aBufferedFrames, aRemainingFrames);
+      }
     }
     mTargetClock += aTargetFrames;
     mSourceClock += aSourceFrames;
   }
 
  private:
-  void CalculateCorrection(int aBufferedFrames) {
+  /**
+   * aCalculationWeight is a percentage [0, 1] with which the calculated
+   * correction will be weighted. The existing correction will be weighted with
+   * 1 - aCalculationWeight. This gives some inertia to the speed at which the
+   * correction changes, for smoother changes.
+   */
+  void CalculateCorrection(float aCalculationWeight, int aBufferedFrames,
+                           int aRemainingFrames) {
     // We want to maintain the desired buffer
     int32_t bufferedFramesDiff = aBufferedFrames - mDesiredBuffering;
     int32_t resampledSourceClock =
         std::max(1, mSourceClock + bufferedFramesDiff);
     if (mTargetRate != mSourceRate) {
-      resampledSourceClock =
-          resampledSourceClock *
-          (static_cast<float>(mTargetRate) / static_cast<float>(mSourceRate));
+      resampledSourceClock *= static_cast<float>(mTargetRate) / mSourceRate;
     }
-    mCorrection = static_cast<float>(mTargetClock) / resampledSourceClock;
+
+    MOZ_LOG(gMediaTrackGraphLog, LogLevel::Verbose,
+            ("ClockDrift %p Calculated correction %.3f (with weight: %.1f -> "
+             "%.3f) (buffer: %d, desired: %d, remaining: %d)",
+             this, static_cast<float>(mTargetClock) / resampledSourceClock,
+             aCalculationWeight,
+             (1 - aCalculationWeight) * mCorrection +
+                 aCalculationWeight * mTargetClock / resampledSourceClock,
+             aBufferedFrames, mDesiredBuffering, aRemainingFrames));
+
+    mCorrection = (1 - aCalculationWeight) * mCorrection +
+                  aCalculationWeight * mTargetClock / resampledSourceClock;
 
     // Clamp to range [0.9, 1.1] to avoid distortion
     mCorrection = std::min(std::max(mCorrection, 0.9f), 1.1f);
@@ -91,22 +114,6 @@ class ClockDrift final {
     // Reset the counters to prepare for the next period.
     mTargetClock = 0;
     mSourceClock = 0;
-  }
-
-  void BufferedFramesCorrection(int aBufferedFrames) {
-    int32_t bufferedFramesDiff = aBufferedFrames - mDesiredBuffering;
-    int32_t resampledSourceClock =
-        std::max(1, mSourceRate + bufferedFramesDiff);
-    if (mTargetRate != mSourceRate) {
-      resampledSourceClock = resampledSourceClock *
-                             (static_cast<float>(mTargetRate) / mSourceRate);
-    }
-    MOZ_ASSERT(mTargetRate > resampledSourceClock);
-    mPreviousCorrection = mCorrection;
-    mCorrection +=
-        static_cast<float>(mTargetRate) / resampledSourceClock - 1.0f;
-    // Clamp to range [0.9, 1.1] to avoid distortion
-    mCorrection = std::min(std::max(mCorrection, 0.9f), 1.1f);
   }
 
  public:
