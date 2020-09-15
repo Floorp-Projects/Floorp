@@ -58,12 +58,14 @@ class ClockDrift final {
    * In addition to that, the correction is clamped to 10% to avoid sound
    * distortion so the result will be in [0.9, 1.1].
    */
-  void UpdateClock(int aSourceFrames, int aTargetFrames, int aBufferedFrames) {
+  void UpdateClock(int aSourceFrames, int aTargetFrames, int aBufferedFrames,
+                   int aRemainingFrames) {
     if ((mTargetClock * 1000 / mTargetRate) >= mAdjustmentIntervalMs ||
         (mSourceClock * 1000 / mSourceRate) >= mAdjustmentIntervalMs) {
       // The adjustment interval has passed on one side. Recalculate.
       CalculateCorrection(aBufferedFrames);
-    } else if (aBufferedFrames < 2 * mSourceRate / 100 /*20ms*/) {
+    } else if (aBufferedFrames < 2 * mSourceRate / 100 /*20ms*/ ||
+               aRemainingFrames < 2 * mSourceRate / 100 /*20ms*/) {
       BufferedFramesCorrection(aBufferedFrames);
     }
     mTargetClock += aTargetFrames;
@@ -177,7 +179,8 @@ class AudioDriftCorrection final {
       mResampler.AppendInput(aInput);
     }
     mClockDrift.UpdateClock(aInput.GetDuration(), aOutputFrames,
-                            mResampler.InputDuration());
+                            mResampler.InputDuration(),
+                            mResampler.InputRemainingDuration());
     TrackRate receivingRate = mTargetRate * mClockDrift.GetCorrection();
     // Update resampler's rate if there is a new correction.
     mResampler.UpdateOutRate(receivingRate);

@@ -69,6 +69,10 @@ class DynamicResampler final {
    * Return the number of frames stored in the internal input buffer.
    */
   uint32_t InFramesBuffered(int aChannelIndex) const;
+  /**
+   * Return the number of frames left to store in the internal input buffer.
+   */
+  uint32_t InFramesLeftToBuffer(int aChannelIndex) const;
 
   /*
    * Resampler as much frame is needed from the internal input buffer to the
@@ -359,10 +363,15 @@ class AudioResampler final {
    * the channel count of the chunks.
    */
   void AppendInput(const AudioSegment& aInSegment);
-  /*
-   * Get the duration of internal input buffer in frames.
+  /**
+   * Get the duration of the internal input buffer in frames.
    */
   int InputDuration() const;
+  /**
+   * Get the duration of the remaining space in the internal input buffer in
+   * frames.
+   */
+  int InputRemainingDuration() const;
 
   /*
    * Reguest `aOutFrames` of audio in the output sample rate. The internal
