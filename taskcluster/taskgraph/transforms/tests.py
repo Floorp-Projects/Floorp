@@ -36,14 +36,15 @@ import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import match_run_on_projects, keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
-from taskgraph.util.schema import resolve_keyed_by, OptimizationSchema
 from taskgraph.util.templates import merge
 from taskgraph.util.treeherder import split_symbol, join_symbol
 from taskgraph.util.platforms import platform_family
 from taskgraph.util.schema import (
+    resolve_keyed_by,
     optionally_keyed_by,
     Schema,
 )
+from taskgraph.optimize.schema import OptimizationSchema
 from taskgraph.util.chunking import (
     chunk_manifests,
     get_runtimes,
