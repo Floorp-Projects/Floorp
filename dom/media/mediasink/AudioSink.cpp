@@ -68,6 +68,7 @@ AudioSink::AudioSink(AbstractThread* aThread,
       mFramesParsed(0),
       mOutputRate(DecideAudioPlaybackSampleRate(aInfo)),
       mOutputChannels(DecideAudioPlaybackChannels(aInfo)),
+      mAudibilityMonitor(mOutputRate, 2.0),
       mAudioQueue(aAudioQueue)
   { }
 
@@ -316,7 +317,9 @@ void AudioSink::Errored() {
 void AudioSink::CheckIsAudible(const AudioData* aData) {
   MOZ_ASSERT(aData);
 
-  bool isAudible = aData->IsAudible();
+  mAudibilityMonitor.ProcessAudioData(aData);
+  bool isAudible = mAudibilityMonitor.RecentlyAudible();
+
   if (isAudible != mIsAudioDataAudible) {
     mIsAudioDataAudible = isAudible;
     mAudibleEvent.Notify(mIsAudioDataAudible);
