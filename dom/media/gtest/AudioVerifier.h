@@ -29,6 +29,13 @@ class AudioVerifier {
     }
   }
 
+  void AppendDataInterleaved(const Sample* aBuffer, uint32_t aFrames,
+                             uint32_t aChannels) {
+    for (uint32_t i = 0; i < aFrames * aChannels; i += aChannels) {
+      CheckSample(aBuffer[i]);
+    }
+  }
+
   uint32_t EstimatedFreq() const {
     if (mTotalFramesSoFar == PreSilenceSamples()) {
       return 0;
