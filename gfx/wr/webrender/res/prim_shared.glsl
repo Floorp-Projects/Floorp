@@ -289,7 +289,7 @@ vec4 dither(vec4 color) {
 
 vec4 sample_gradient(HIGHP_FS_ADDRESS int address, float offset, float gradient_repeat) {
     // Modulo the offset if the gradient repeats.
-    float x = mix(offset, fract(offset), gradient_repeat);
+    float x = offset - floor(offset) * gradient_repeat;
 
     // Calculate the color entry index to use for this offset:
     //     offsets < 0 use the first color entry, 0
@@ -299,22 +299,21 @@ vec4 sample_gradient(HIGHP_FS_ADDRESS int address, float offset, float gradient_
 
     // TODO(gw): In the future we might consider making the size of the
     // LUT vary based on number / distribution of stops in the gradient.
-    const int GRADIENT_ENTRIES = 128;
-    x = 1.0 + x * float(GRADIENT_ENTRIES);
+    // Ensure we don't fetch outside the valid range of the LUT.
+    const float GRADIENT_ENTRIES = 128.0;
+    x = clamp(1.0 + x * GRADIENT_ENTRIES, 0.0, 1.0 + GRADIENT_ENTRIES);
 
     // Calculate the texel to index into the gradient color entries:
     //     floor(x) is the gradient color entry index
     //     fract(x) is the linear filtering factor between start and end
-    int lut_offset = 2 * int(floor(x));     // There is a [start, end] color per entry.
+    float entry_index = floor(x);
+    float entry_fract = x - entry_index;
 
-    // Ensure we don't fetch outside the valid range of the LUT.
-    lut_offset = clamp(lut_offset, 0, 2 * (GRADIENT_ENTRIES + 1));
-
-    // Fetch the start and end color.
-    vec4 texels[2] = fetch_from_gpu_cache_2(address + lut_offset);
+    // Fetch the start and end color. There is a [start, end] color per entry.
+    vec4 texels[2] = fetch_from_gpu_cache_2(address + 2 * int(entry_index));
 
     // Finally interpolate and apply dithering
-    return dither(mix(texels[0], texels[1], fract(x)));
+    return dither(mix(texels[0], texels[1], entry_fract));
 }
 
 #endif //WR_FRAGMENT_SHADER
