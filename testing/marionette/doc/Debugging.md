@@ -53,8 +53,6 @@ whenever the `WebDriver:GetPageSource` command is called:
 
 	GeckoDriver.prototype.getPageSource = async function() {
 	  debugger;
-	  const win = assert.open(this.getCurrentWindow());
-	  await this._handleUserPrompts();
 	  …
 	}
 

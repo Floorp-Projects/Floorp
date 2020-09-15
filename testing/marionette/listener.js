@@ -48,6 +48,7 @@ const contentId = content.docShell.browsingContext.id;
 
 const curContainer = {
   _frame: null,
+  _parentFrame: null,
   shadowRoot: null,
 
   get frame() {
@@ -56,9 +57,13 @@ const curContainer = {
 
   set frame(frame) {
     this._frame = frame;
-
-    this.id = this._frame.browsingContext.id;
+    this._parentFrame = frame.parent;
+    this.id = frame.browsingContext.id;
     this.shadowRoot = null;
+  },
+
+  get parentFrame() {
+    return this._parentFrame;
   },
 };
 
@@ -896,7 +901,7 @@ function switchToShadowRoot(el) {
  * top most is the current frame then no action will happen.
  */
 function switchToParentFrame(msg) {
-  curContainer.frame = curContainer.frame.parent;
+  curContainer.frame = curContainer.parentFrame;
 
   sendSyncMessage("Marionette:switchedToFrame", {
     browsingContextId: curContainer.id,
