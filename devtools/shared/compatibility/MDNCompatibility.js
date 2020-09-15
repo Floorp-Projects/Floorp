@@ -12,20 +12,13 @@ const _SUPPORT_STATE = {
   UNSUPPORTED_PREFIX_NEEDED: "UNSUPPORTED_PREFIX_NEEDED",
 };
 
-const _ISSUE_TYPE = {
-  CSS_PROPERTY: "CSS_PROPERTY",
-  CSS_PROPERTY_ALIASES: "CSS_PROPERTY_ALIASES",
-};
+const { COMPATIBILITY_ISSUE_TYPE } = require("devtools/shared/constants");
 
 /**
  * A class with methods used to query the MDN compatibility data for CSS properties and
  * HTML nodes and attributes for specific browsers and versions.
  */
 class MDNCompatibility {
-  static get ISSUE_TYPE() {
-    return _ISSUE_TYPE;
-  }
-
   /**
    * Constructor.
    *
@@ -491,8 +484,8 @@ class MDNCompatibility {
       }
 
       const type = summary.aliases
-        ? _ISSUE_TYPE.CSS_PROPERTY_ALIASES
-        : _ISSUE_TYPE.CSS_PROPERTY;
+        ? COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY_ALIASES
+        : COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY;
       issues.push(this._toIssue(summary, type));
     }
 
