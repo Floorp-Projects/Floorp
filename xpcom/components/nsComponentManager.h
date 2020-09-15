@@ -9,7 +9,6 @@
 
 #include "nsXPCOM.h"
 
-#include "xpcom-private.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIMemoryReporter.h"

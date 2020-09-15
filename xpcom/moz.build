@@ -40,7 +40,6 @@ TEST_DIRS += [
 
 CONFIGURE_DEFINE_FILES += [
     'xpcom-config.h',
-    'xpcom-private.h',
 ]
 
 EXPORTS += [
