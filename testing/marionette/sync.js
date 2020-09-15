@@ -51,20 +51,6 @@ function executeSoon(func) {
 }
 
 /**
- * @callback Condition
- *
- * @param {function(*)} resolve
- *     To be called when the condition has been met.  Will return the
- *     resolved value.
- * @param {function} reject
- *     To be called when the condition has not been met.  Will cause
- *     the condition to be revaluated or time out.
- *
- * @return {*}
- *     The value from calling ``resolve``.
- */
-
-/**
  * Runs a Promise-like function off the main thread until it is resolved
  * through ``resolve`` or ``rejected`` callbacks.  The function is
  * guaranteed to be run at least once, irregardless of the timeout.
