@@ -61,6 +61,7 @@ const PREFS_WHITELIST = [
   "browser.tabs.",
   "browser.urlbar.",
   "browser.zoom.",
+  "doh-rollout.",
   "dom.",
   "extensions.checkCompatibility",
   "extensions.formautofill.",
