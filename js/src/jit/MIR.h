@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <initializer_list>
 
+#include "builtin/ModuleObject.h"
 #include "jit/AtomicOp.h"
 #include "jit/BaselineIC.h"
 #include "jit/FixedList.h"

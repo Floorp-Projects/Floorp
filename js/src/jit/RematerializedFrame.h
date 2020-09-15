@@ -12,11 +12,13 @@
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
 #include "js/UniquePtr.h"
-#include "vm/EnvironmentObject.h"
 #include "vm/JSFunction.h"
 #include "vm/Stack.h"
 
 namespace js {
+
+class CallObject;
+
 namespace jit {
 
 // RematerializedFrame: An optimized frame that has been rematerialized with
