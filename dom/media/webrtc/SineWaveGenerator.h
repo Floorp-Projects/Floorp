@@ -19,15 +19,21 @@ class SineWaveGenerator {
   static const int bytesPerSample = sizeof(Sample);
   static const int millisecondsPerSecond = PR_MSEC_PER_SEC;
 
-  explicit SineWaveGenerator(uint32_t aSampleRate, uint32_t aFrequency)
-      : mTotalLength(aSampleRate / aFrequency), mReadLength(0) {
+  /* If more than 1 channel, generated samples are interleaved. */
+  SineWaveGenerator(uint32_t aSampleRate, uint32_t aFrequency,
+                    uint32_t aChannels = 1)
+      : mTotalLength(aSampleRate * aChannels / aFrequency), mReadLength(0) {
+    MOZ_ASSERT(aChannels >= 1);
     // If we allow arbitrary frequencies, there's no guarantee we won't get
     // rounded here We could include an error term and adjust for it in
     // generation; not worth the trouble
     // MOZ_ASSERT(mTotalLength * aFrequency == aSampleRate);
     mAudioBuffer = MakeUnique<Sample[]>(mTotalLength);
-    for (uint32_t i = 0; i < mTotalLength; ++i) {
-      mAudioBuffer[i] = Amplitude() * sin(2 * M_PI * i / mTotalLength);
+    for (uint32_t i = 0; i < aSampleRate / aFrequency; ++i) {
+      for (uint32_t j = 0; j < aChannels; ++j) {
+        mAudioBuffer[i * aChannels + j] =
+            Amplitude() * sin(2 * M_PI * i * aChannels / mTotalLength);
+      }
     }
   }
 

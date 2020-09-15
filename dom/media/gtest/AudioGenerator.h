@@ -24,6 +24,7 @@ class AudioGenerator {
         mGenerator(aSampleRate, aFrequency) {}
 
   void Generate(mozilla::AudioSegment& aSegment, const uint32_t& aSamples) {
+    SetInterleaved(false);
     CheckedInt<size_t> bufferSize(sizeof(Sample));
     bufferSize *= aSamples;
     RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
@@ -37,6 +38,28 @@ class AudioGenerator {
                           PRINCIPAL_HANDLE_NONE);
   }
 
+  void GenerateInterleaved(Sample* aBuffer, const uint32_t& aFrames) {
+    SetInterleaved(true);
+    mGenerator.generate(aBuffer, aFrames * mChannels);
+  }
+
+  void SetInterleaved(bool aInterleaved) {
+    if (aInterleaved == mInterleaved) {
+      return;
+    }
+    mInterleaved = aInterleaved;
+    if (mInterleaved) {
+      TrackTicks offset = Offset();
+      mGenerator =
+          SineWaveGenerator<Sample>(mSampleRate, mFrequency, mChannels);
+      mGenerator.SetOffset(offset * mChannels);
+    } else {
+      TrackTicks offset = Offset();
+      mGenerator = SineWaveGenerator<Sample>(mSampleRate, mFrequency);
+      mGenerator.SetOffset(offset / mChannels);
+    }
+  }
+
   void SetOffset(TrackTicks aFrames) { mGenerator.SetOffset(aFrames); }
 
   TrackTicks Offset() const { return mGenerator.Offset(); }
@@ -48,6 +71,7 @@ class AudioGenerator {
   const uint32_t mFrequency;
 
  private:
+  bool mInterleaved = false;
   mozilla::SineWaveGenerator<Sample> mGenerator;
 };
 
