@@ -232,6 +232,11 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   // Hooks for subclasses to call to get the intrinsic width and height.
   uint32_t NaturalWidth();
   uint32_t NaturalHeight();
+  /**
+   * Get width and height of the current request, using given image request if
+   * attributes are unset.
+   */
+  MOZ_CAN_RUN_SCRIPT mozilla::CSSIntSize GetWidthHeightForImage();
 
   /**
    * Create a promise and queue a microtask which will ensure the current
