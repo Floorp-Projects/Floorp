@@ -14,12 +14,13 @@
 // Runs UpdateClock() and checks that the reported correction level doesn't
 // change for enough time to trigger a correction update on the first
 // following UpdateClock(). Returns the first reported correction level.
-static float RunUntilCorrectionUpdate(ClockDrift& aC, int aSource, int aTarget,
-                                      int aBuffering, int aSaturation,
-                                      int aSourceOffset = 0,
-                                      int aTargetOffset = 0) {
+static float RunUntilCorrectionUpdate(ClockDrift& aC, uint32_t aSource,
+                                      uint32_t aTarget, uint32_t aBuffering,
+                                      uint32_t aSaturation,
+                                      uint32_t aSourceOffset = 0,
+                                      uint32_t aTargetOffset = 0) {
   Maybe<float> correction;
-  for (int s = aSourceOffset, t = aTargetOffset;
+  for (uint32_t s = aSourceOffset, t = aTargetOffset;
        s < aC.mSourceRate && t < aC.mTargetRate; s += aSource, t += aTarget) {
     aC.UpdateClock(aSource, aTarget, aBuffering, aSaturation);
     if (correction) {
@@ -35,7 +36,7 @@ static float RunUntilCorrectionUpdate(ClockDrift& aC, int aSource, int aTarget,
 TEST(TestClockDrift, Basic)
 {
   // Keep buffered frames to the wanted level in order to not affect that test.
-  const int buffered = 5 * 480;
+  const uint32_t buffered = 5 * 480;
 
   ClockDrift c(48000, 48000, buffered);
   EXPECT_EQ(c.GetCorrection(), 1.0);
@@ -56,7 +57,7 @@ TEST(TestClockDrift, Basic)
 TEST(TestClockDrift, BasicResampler)
 {
   // Keep buffered frames to the wanted level in order to not affect that test.
-  const int buffered = 5 * 240;
+  const uint32_t buffered = 5 * 240;
 
   ClockDrift c(24000, 48000, buffered);
 
@@ -147,7 +148,7 @@ TEST(TestClockDrift, BufferedInputWithResampling)
 TEST(TestClockDrift, Clamp)
 {
   // Keep buffered frames to the wanted level in order to not affect that test.
-  const int buffered = 5 * 480;
+  const uint32_t buffered = 5 * 480;
 
   ClockDrift c(48000, 48000, buffered);
 
@@ -166,7 +167,7 @@ TEST(TestClockDrift, Clamp)
 TEST(TestClockDrift, SmallDiff)
 {
   // Keep buffered frames to the wanted level in order to not affect that test.
-  const int buffered = 5 * 480;
+  const uint32_t buffered = 5 * 480;
 
   ClockDrift c(48000, 48000, buffered);
 
@@ -187,7 +188,7 @@ TEST(TestClockDrift, SmallBufferedFrames)
   ClockDrift c(48000, 48000, 5 * 480);
 
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
-  for (int i = 0; i < 10; ++i) {
+  for (uint32_t i = 0; i < 10; ++i) {
     c.UpdateClock(480, 480, 5 * 480, 5 * 480);
   }
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
@@ -206,7 +207,7 @@ void printAudioSegment(const AudioSegment& segment) {
   for (AudioSegment::ConstChunkIterator iter(segment); !iter.IsEnded();
        iter.Next()) {
     const AudioChunk& c = *iter;
-    for (int i = 0; i < c.GetDuration(); ++i) {
+    for (uint32_t i = 0; i < c.GetDuration(); ++i) {
       if (c.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
         printf("%f\n", c.ChannelData<float>()[0][i]);
       } else {
@@ -217,7 +218,7 @@ void printAudioSegment(const AudioSegment& segment) {
 }
 
 template <class T>
-AudioChunk CreateAudioChunk(uint32_t aFrames, int aChannels,
+AudioChunk CreateAudioChunk(uint32_t aFrames, uint32_t aChannels,
                             AudioSampleFormat aSampleFormat);
 
 void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
@@ -237,7 +238,7 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
   // Run for some time: 3 * 1050 = 3150 iterations
-  for (int j = 0; j < 3; ++j) {
+  for (uint32_t j = 0; j < 3; ++j) {
     // apply some drift
     if (j % 2 == 0) {
       sourceFrames =
@@ -249,7 +250,7 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
 
     // 10.5 seconds, allows for at least 10 correction changes, to stabilize
     // around the desired buffer.
-    for (int n = 0; n < 1050; ++n) {
+    for (uint32_t n = 0; n < 1050; ++n) {
       // Create the input (sine tone)
       AudioSegment inSegment;
       tone.Generate(inSegment, sourceFrames);
@@ -291,7 +292,7 @@ TEST(TestAudioDriftCorrection, Basic)
   testAudioCorrection(23458, 25113);
 }
 
-void testMonoToStereoInput(int aSourceRate, int aTargetRate) {
+void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
   const uint32_t frequency = 100;
   const uint32_t sampleRateTransmitter = aSourceRate;
   const uint32_t sampleRateReceiver = aTargetRate;
@@ -307,7 +308,7 @@ void testMonoToStereoInput(int aSourceRate, int aTargetRate) {
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
   // Run for some time: 6 * 250 = 1500 iterations
-  for (int j = 0; j < 6; ++j) {
+  for (uint32_t j = 0; j < 6; ++j) {
     // apply some drift
     if (j % 2 == 0) {
       sourceFrames = sampleRateTransmitter / 100 + 10;
@@ -315,7 +316,7 @@ void testMonoToStereoInput(int aSourceRate, int aTargetRate) {
       sourceFrames = sampleRateTransmitter / 100 - 10;
     }
 
-    for (int n = 0; n < 250; ++n) {
+    for (uint32_t n = 0; n < 250; ++n) {
       // Create the input (sine tone) of two chunks.
       AudioSegment inSegment;
       monoTone.Generate(inSegment, sourceFrames / 2);
@@ -362,7 +363,7 @@ TEST(TestAudioDriftCorrection, NotEnoughFrames)
   AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
-  for (int i = 0; i < 7; ++i) {
+  for (uint32_t i = 0; i < 7; ++i) {
     // Input is something small, 10 frames here, in order to dry out fast,
     // after 4 iterations
     AudioChunk chunk = CreateAudioChunk<float>(10, 1, AUDIO_FORMAT_FLOAT32);
@@ -388,7 +389,7 @@ TEST(TestAudioDriftCorrection, CrashInAudioResampler)
   AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
-  for (int i = 0; i < 100; ++i) {
+  for (uint32_t i = 0; i < 100; ++i) {
     AudioChunk chunk = CreateAudioChunk<float>(sampleRateTransmitter / 1000, 1,
                                                AUDIO_FORMAT_FLOAT32);
     AudioSegment inSegment;

@@ -38,8 +38,8 @@ class ClockDrift final {
   /**
    * Provide the nominal source and the target sample rate.
    */
-  ClockDrift(int32_t aSourceRate, int32_t aTargetRate,
-             int32_t aDesiredBuffering)
+  ClockDrift(uint32_t aSourceRate, uint32_t aTargetRate,
+             uint32_t aDesiredBuffering)
       : mSourceRate(aSourceRate),
         mTargetRate(aTargetRate),
         mDesiredBuffering(aDesiredBuffering) {}
@@ -60,8 +60,8 @@ class ClockDrift final {
    * In addition to that, the correction is clamped to 10% to avoid sound
    * distortion so the result will be in [0.9, 1.1].
    */
-  void UpdateClock(int aSourceFrames, int aTargetFrames, int aBufferedFrames,
-                   int aRemainingFrames) {
+  void UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
+                   uint32_t aBufferedFrames, uint32_t aRemainingFrames) {
     if (mSourceClock >= mSourceRate / 10 || mTargetClock >= mTargetRate / 10) {
       // Only update the correction if 100ms has passed since last update.
       if (aBufferedFrames < mDesiredBuffering * 4 / 10 /*40%*/ ||
@@ -86,19 +86,19 @@ class ClockDrift final {
    * 1 - aCalculationWeight. This gives some inertia to the speed at which the
    * correction changes, for smoother changes.
    */
-  void CalculateCorrection(float aCalculationWeight, int aBufferedFrames,
-                           int aRemainingFrames) {
+  void CalculateCorrection(float aCalculationWeight, uint32_t aBufferedFrames,
+                           uint32_t aRemainingFrames) {
     // We want to maintain the desired buffer
-    int32_t bufferedFramesDiff = aBufferedFrames - mDesiredBuffering;
-    int32_t resampledSourceClock =
-        std::max(1, mSourceClock + bufferedFramesDiff);
+    uint32_t bufferedFramesDiff = aBufferedFrames - mDesiredBuffering;
+    uint32_t resampledSourceClock =
+        std::max(1u, mSourceClock + bufferedFramesDiff);
     if (mTargetRate != mSourceRate) {
       resampledSourceClock *= static_cast<float>(mTargetRate) / mSourceRate;
     }
 
     MOZ_LOG(gMediaTrackGraphLog, LogLevel::Verbose,
             ("ClockDrift %p Calculated correction %.3f (with weight: %.1f -> "
-             "%.3f) (buffer: %d, desired: %d, remaining: %d)",
+             "%.3f) (buffer: %u, desired: %u, remaining: %u)",
              this, static_cast<float>(mTargetClock) / resampledSourceClock,
              aCalculationWeight,
              (1 - aCalculationWeight) * mCorrection +
@@ -117,16 +117,16 @@ class ClockDrift final {
   }
 
  public:
-  const int32_t mSourceRate;
-  const int32_t mTargetRate;
-  const int32_t mAdjustmentIntervalMs = 1000;
-  const int32_t mDesiredBuffering;
+  const uint32_t mSourceRate;
+  const uint32_t mTargetRate;
+  const uint32_t mAdjustmentIntervalMs = 1000;
+  const uint32_t mDesiredBuffering;
 
  private:
   float mCorrection = 1.0;
 
-  int32_t mSourceClock = 0;
-  int32_t mTargetClock = 0;
+  uint32_t mSourceClock = 0;
+  uint32_t mTargetClock = 0;
 };
 
 /**
@@ -150,7 +150,7 @@ class ClockDrift final {
  */
 class AudioDriftCorrection final {
  public:
-  AudioDriftCorrection(int32_t aSourceRate, int32_t aTargetRate)
+  AudioDriftCorrection(uint32_t aSourceRate, uint32_t aTargetRate)
       : mDesiredBuffering(
             std::max(5, Preferences::GetInt("media.clockdrift.buffering", 50)) *
             aSourceRate / 1000),
@@ -168,7 +168,7 @@ class AudioDriftCorrection final {
    * AudioSegment will be returned. Not thread-safe.
    */
   AudioSegment RequestFrames(const AudioSegment& aInput,
-                             int32_t aOutputFrames) {
+                             uint32_t aOutputFrames) {
     // Very important to go first since the Dynamic will get the sample format
     // from the chunk.
     if (aInput.GetDuration()) {
@@ -193,8 +193,8 @@ class AudioDriftCorrection final {
   // Only accessible from the same thread that is driving RequestFrames().
   uint32_t CurrentBuffering() const { return mResampler.InputDuration(); }
 
-  const int32_t mDesiredBuffering;
-  const int32_t mTargetRate;
+  const uint32_t mDesiredBuffering;
+  const uint32_t mTargetRate;
 
  private:
   ClockDrift mClockDrift;
