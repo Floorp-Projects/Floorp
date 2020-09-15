@@ -13,7 +13,10 @@
 
 TEST(TestClockDrift, Basic)
 {
-  ClockDrift c(48000, 48000);
+  // Keep buffered frames to the wanted level in order to not affect that test.
+  const int buffered = 5 * 480;
+
+  ClockDrift c(48000, 48000, buffered);
   EXPECT_EQ(c.GetCorrection(), 1.0);
 
   // Keep buffered frames to the wanted level in order to not affect that test.
@@ -43,7 +46,10 @@ TEST(TestClockDrift, Basic)
 
 TEST(TestClockDrift, BasicResampler)
 {
-  ClockDrift c(24000, 48000);
+  // Keep buffered frames to the wanted level in order to not affect that test.
+  const int buffered = 5 * 240;
+
+  ClockDrift c(24000, 48000, buffered);
   for (int i = 0; i < 100; ++i) {
     c.UpdateClock(240, 480, 5 * 240);
     EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
@@ -76,7 +82,7 @@ TEST(TestClockDrift, BasicResampler)
 
 TEST(TestClockDrift, BufferedInput)
 {
-  ClockDrift c(48000, 48000);
+  ClockDrift c(48000, 48000, 5 * 480);
   EXPECT_EQ(c.GetCorrection(), 1.0);
 
   for (int i = 0; i < 100; ++i) {
@@ -110,7 +116,7 @@ TEST(TestClockDrift, BufferedInput)
 
 TEST(TestClockDrift, BufferedInputWithResampling)
 {
-  ClockDrift c(24000, 48000);
+  ClockDrift c(24000, 48000, 5 * 240);
   EXPECT_EQ(c.GetCorrection(), 1.0);
 
   for (int i = 0; i < 100; ++i) {
@@ -144,7 +150,10 @@ TEST(TestClockDrift, BufferedInputWithResampling)
 
 TEST(TestClockDrift, Clamp)
 {
-  ClockDrift c(48000, 48000);
+  // Keep buffered frames to the wanted level in order to not affect that test.
+  const int buffered = 5 * 480;
+
+  ClockDrift c(48000, 48000, buffered);
 
   for (int i = 0; i < 100; ++i) {
     c.UpdateClock(480, 480 + 2 * 48, 5 * 480);  // +20%
@@ -160,7 +169,10 @@ TEST(TestClockDrift, Clamp)
 
 TEST(TestClockDrift, SmallDiff)
 {
-  ClockDrift c(48000, 48000);
+  // Keep buffered frames to the wanted level in order to not affect that test.
+  const int buffered = 5 * 480;
+
+  ClockDrift c(48000, 48000, buffered);
 
   for (int i = 0; i < 100; ++i) {
     c.UpdateClock(480 + 4, 480, 5 * 480);
@@ -185,7 +197,7 @@ TEST(TestClockDrift, SmallDiff)
 
 TEST(TestClockDrift, SmallBufferedFrames)
 {
-  ClockDrift c(48000, 48000);
+  ClockDrift c(48000, 48000, 5 * 480);
 
   EXPECT_FLOAT_EQ(c.GetCorrection(), 1.0);
   c.UpdateClock(480, 480, 5 * 480);
