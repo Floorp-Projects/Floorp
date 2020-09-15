@@ -249,8 +249,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   void DidSet(FieldIndex<I>, T&& aOldValue) {}
   void DidSet(FieldIndex<IDX_UserActivationState>);
 
-  uint64_t mInnerWindowId;
-  uint64_t mOuterWindowId;
+  const uint64_t mInnerWindowId;
+  const uint64_t mOuterWindowId;
   RefPtr<BrowsingContext> mBrowsingContext;
 
   // --- NEVER CHANGE `mChildren` DIRECTLY! ---
