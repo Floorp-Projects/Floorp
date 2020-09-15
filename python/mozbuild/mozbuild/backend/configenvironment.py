@@ -36,7 +36,6 @@ class BuildConfig(object):
         self.topsrcdir = None
         self.topobjdir = None
         self.defines = {}
-        self.non_global_defines = []
         self.substs = {}
         self.files = []
         self.mozconfig = None
@@ -95,12 +94,10 @@ class ConfigEnvironment(object):
         the top object directory.
       - defines is a dict filled from AC_DEFINE and AC_DEFINE_UNQUOTED in
         autoconf.
-      - non_global_defines are a list of names appearing in defines above
-        that are not meant to be exported in ACDEFINES (see below)
       - substs is a dict filled from AC_SUBST in autoconf.
 
     ConfigEnvironment automatically defines one additional substs variable
-    from all the defines not appearing in non_global_defines:
+    from all the defines:
       - ACDEFINES contains the defines in the form -DNAME=VALUE, for use on
         preprocessor command lines. The order in which defines were given
         when creating the ConfigEnvironment is preserved.
@@ -121,13 +118,12 @@ class ConfigEnvironment(object):
     """
 
     def __init__(self, topsrcdir, topobjdir, defines=None,
-                 non_global_defines=None, substs=None, source=None, mozconfig=None):
+                 substs=None, source=None, mozconfig=None):
 
         if not source:
             source = mozpath.join(topobjdir, 'config.status')
         self.source = source
         self.defines = ReadOnlyDict(defines or {})
-        self.non_global_defines = non_global_defines or []
         self.substs = dict(substs or {})
         self.topsrcdir = mozpath.abspath(topsrcdir)
         self.topobjdir = mozpath.abspath(topobjdir)
@@ -150,8 +146,7 @@ class ConfigEnvironment(object):
             self.import_suffix = self.dll_suffix
         self.bin_suffix = self.substs.get('BIN_SUFFIX', '')
 
-        global_defines = [name for name in self.defines
-                          if name not in self.non_global_defines]
+        global_defines = [name for name in self.defines]
         self.substs["ACDEFINES"] = ' '.join(
             [
                 '-D%s=%s' % (name, shell_quote(self.defines[name]).replace('$', '$$'))
@@ -190,8 +185,7 @@ class ConfigEnvironment(object):
     @memoized_property
     def acdefines(self):
         acdefines = dict((name, self.defines[name])
-                         for name in self.defines
-                         if name not in self.non_global_defines)
+                         for name in self.defines)
         return ReadOnlyDict(acdefines)
 
     @staticmethod
@@ -199,7 +193,7 @@ class ConfigEnvironment(object):
         config = BuildConfig.from_config_status(path)
 
         return ConfigEnvironment(config.topsrcdir, config.topobjdir,
-                                 config.defines, config.non_global_defines, config.substs, path)
+                                 config.defines, config.substs, path)
 
 
 class PartialConfigDict(object):
@@ -314,7 +308,7 @@ class PartialConfigEnvironment(object):
     environment.
 
     The PartialConfigEnvironment automatically defines one additional subst variable
-    from all the defines not appearing in non_global_defines:
+    from all the defines:
       - ACDEFINES contains the defines in the form -DNAME=VALUE, for use on
         preprocessor command lines. The order in which defines were given
         when creating the ConfigEnvironment is preserved.
@@ -337,7 +331,6 @@ class PartialConfigEnvironment(object):
 
         global_defines = [
             name for name in config['defines']
-            if name not in config['non_global_defines']
         ]
         acdefines = ' '.join(['-D%s=%s' % (name,
                                            shell_quote(config['defines'][name]).replace('$', '$$'))
