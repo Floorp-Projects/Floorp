@@ -16,6 +16,8 @@
 namespace js {
 namespace jit {
 
+class ICEntry;
+
 // [SMDOC] CacheIR Health Rating
 //
 // The goal of CacheIR health rating is to make the costlier
