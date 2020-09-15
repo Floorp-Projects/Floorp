@@ -153,6 +153,12 @@ nsPrinterWin::GetName(nsAString& aName) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPrinterWin::GetSystemName(nsAString& aName) {
+  aName.Assign(mName);
+  return NS_OK;
+}
+
 bool nsPrinterWin::SupportsDuplex() const {
   return ::DeviceCapabilitiesW(mName.get(), nullptr, DC_DUPLEX, nullptr,
                                nullptr) == 1;

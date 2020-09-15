@@ -31,7 +31,15 @@ interface nsIPrinterList : nsISupports
    * Returns a promise that resolves to the printer of a given name, or is
    * rejected if there is no such printer.
    */
-  [implicit_jscontext] Promise getNamedPrinter(in AString aPrinterName);
+  [implicit_jscontext] Promise getPrinterByName(in AString aPrinterName);
+
+  /**
+   * Returns a promise that resolves to the printer of a given system name, or
+   * is rejected if there is no such printer.
+   * This may be more efficient than using getNamedPrinter, but requires the
+   * caller to know the system name of the printer they want to find.
+   */
+  [implicit_jscontext] Promise getPrinterBySystemName(in AString aPrinterName);
 
   /**
    * Returns a promise that resolves to the printer of the given name, or

@@ -20,6 +20,7 @@
 class nsPrinterCUPS final : public nsPrinterBase {
  public:
   NS_IMETHOD GetName(nsAString& aName) override;
+  NS_IMETHOD GetSystemName(nsAString& aName) override;
   PrintSettingsInitializer DefaultSettings() const final;
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
