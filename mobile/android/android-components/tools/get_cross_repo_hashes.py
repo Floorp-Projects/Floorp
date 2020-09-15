@@ -60,15 +60,23 @@ to get valid hashes between the major repositories:
 
 In the future, we hope to automate step 1.""".format(script_name=SCRIPT_NAME)
 
+# For a-c, we deliberately choose a component that's unlikely to be renamed or go away.
+TEMPLATE_POM_URL_AC_NIGHTLY="https://nightly.maven.mozilla.org/maven2/org/mozilla/components/support-base/{version}/support-base-{version}.pom"
 TEMPLATE_NIGHTLY_POM="https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-nightly-arm64-v8a/{version}/geckoview-nightly-arm64-v8a-{version}.pom"
 INDENT= '  '
 
+# We get the ac version from a published POM.xml; the ac hash wasn't (roughly) available before this version.
+VERSION_MIN_AC_NIGHTLY='59.0.20200914093656'
+VERSION_MIN_AC_NIGHTLY_BUGFIX=VERSION_MIN_AC_NIGHTLY.split('.')[2]
+
+PATH_AC_VERSION=os.path.join('buildSrc', 'src', 'main', 'java', 'AndroidComponents.kt')
 GV_VERSION_PATH=os.path.join('buildSrc', 'src', 'main', 'java', 'Gecko.kt')
 
 class Mode(Enum):
     Default = 1
     Nightly_version = 2
 
+### SECTION: USAGE AND ARGS ###
 def print_usage(exit=False):
     print(USAGE, file=sys.stderr)
     if exit: sys.exit(1)
@@ -76,6 +84,10 @@ def print_usage(exit=False):
 def maybe_display_usage():
     if len(sys.argv) >= 2 and (sys.argv[1] == '--help' or sys.argv[1] == '-h'):
         print_usage(exit=True)
+
+def print_err_and_exit(msg):
+    print(msg, file=sys.stderr)
+    sys.exit(1)
 
 def validate_args():
     if len(sys.argv) <= 1:
@@ -87,20 +99,24 @@ def validate_args():
     gv_nightly_version = sys.argv[2]
     major = gv_nightly_version[:gv_nightly_version.find('.')]
     if int(major) < 71:  # it may actually be some intermediate v70 that the hash was added.
-        print('ERROR: GV versions below 71 do not have an m-c hash associated with their POM. Aborting...', file=sys.stderr)
-        sys.exit(1)
+        print_err_and_exit('ERROR: GV versions below 71 do not have an m-c hash associated with their POM. Aborting...')
 
     return Mode.Nightly_version, gv_nightly_version
 
-def get_pom(gv_nightly_version):
-    url = TEMPLATE_NIGHTLY_POM.format(version=gv_nightly_version)
+### SECTION: UTILITIES ###
+def extract_str_inside_quotes(str_with_quotes):
+    """Takes a line like 'const val x = "abc"' and returns abc"""
+    s = str_with_quotes
+    return s[s.find('"') + 1:s.rfind('"')]
+
+def fetch_pom(url):
     try:
         res = urlopen(url)  # throws if not success.
     except HTTPError as e:
         raise Exception('unable to fetch POM from...\n' + INDENT + url) from e
     return res.read(), url
 
-def get_mc_hash_from_pom(pom_str, debug_pom_url = None):
+def get_hash_from_pom(pom_str, debug_pom_url = None):
     # XML libraries are open to vulnerabilities so we parse by hand.
     # Expected format (one line): <tag>d4e11195e39888686d843a146a893eb0ebf38224</tag>
     mc_hash = 0
@@ -114,15 +130,42 @@ def get_mc_hash_from_pom(pom_str, debug_pom_url = None):
         raise Exception('mc hash could not be found in pom.xml from...\n' + INDENT + str(debug_pom_url))
     return mc_hash
 
+### SECTION: fenix -> ac ###
+def validate_ac_version(ac_version):
+    bugfix_version = ac_version.split('.')[2]
+    is_nightly_url = len(bugfix_version) > 4 # we assume we'll never exceed 9k bug fix releases for a release version 🤞
+    if not is_nightly_url:
+        raise NotImplementedError('AC release versions not yet implemented: try using a nightly ac. Attempted to fetch version {}.'.format(ac_version))
+
+    if int(bugfix_version) < int(VERSION_MIN_AC_NIGHTLY_BUGFIX):
+        raise Exception('Found AC nightly version {} is too old: use version {} or newer (e.g. use a newer version of fenix).'.format(ac_version, VERSION_MIN_AC_NIGHTLY))
+
+def fenix_checkout_to_ac_version(fenix_path):
+    ac_version_path = os.path.join(fenix_path, PATH_AC_VERSION)
+    with open(ac_version_path) as f:
+        for line in f:
+            stripped = line.strip()
+
+            # Expected format: const val VERSION = "58.0.20200910190642"
+            if not stripped.startswith('const val VERSION = "'): continue
+            return extract_str_inside_quotes(stripped)
+    raise Exception('Unable to find ac version from fenix repository file "{}". This is likely a bug where the file path or format has changed.'.format(ac_version_path))
+
+def fenix_checkout_to_ac_hash(fenix_path):
+    ac_version = fenix_checkout_to_ac_version(fenix_path)
+    validate_ac_version(ac_version)
+
+    pom_url = TEMPLATE_POM_URL_AC_NIGHTLY.format(version=ac_version)
+    pom, debug_pom_url = fetch_pom(pom_url)
+    return get_hash_from_pom(pom, debug_pom_url)
+
+### SECTION: ac -> mc ###
 def get_mc_hash_from_gv_nightly(gv_nightly_version):
-    pom, debug_pom_url = get_pom(gv_nightly_version)
-    return get_mc_hash_from_pom(pom, debug_pom_url)
+    pom_url = TEMPLATE_NIGHTLY_POM.format(version=gv_nightly_version)
+    pom, debug_pom_url = fetch_pom(pom_url)
+    return get_hash_from_pom(pom, debug_pom_url)
 
 def get_gv_versions_from_ac_checkout(ac_root):
-    def get_version_from_line(line):
-        # Expected format: `const val nightly_version = "82.0.20200907094115"`
-        return line[line.find('"') + 1:line.rfind('"')]
-
     release_version = None
     beta_version = None
     nightly_version = None
@@ -131,14 +174,17 @@ def get_gv_versions_from_ac_checkout(ac_root):
     with open(gv_version_path) as f:
         for line in f:
             stripped = line.strip()
+
+            # Expected format: `const val nightly_version = "82.0.20200907094115"`
             if stripped.startswith('const val nightly_version = "'):
-                nightly_version = get_version_from_line(line)
+                nightly_version = extract_str_inside_quotes(line)
             elif stripped.startswith('const val beta_version = "'):
-                beta_version = get_version_from_line(line)
+                beta_version = extract_str_inside_quotes(line)
             elif stripped.startswith('const val release_version = "'):
-                release_version = get_version_from_line(line)
+                release_version = extract_str_inside_quotes(line)
     return release_version, beta_version, nightly_version
 
+### SECTION: MAIN ###
 def main_mode_default():
     # fenix checkout -> ac hash
     print('fenix checkout -> ac hash')
