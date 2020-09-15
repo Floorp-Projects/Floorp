@@ -676,6 +676,52 @@ class PerftestOutput(object):
 
         return subtests, vals
 
+    def parseUnityWebGLOutput(self, test):
+        """
+        Example output (this is one page cycle):
+
+        {'name': 'raptor-unity-webgl-firefox',
+         'type': 'benchmark',
+         'measurements': {
+            'unity-webgl': [
+                [
+                    '[{"benchmark":"Mandelbrot GPU","result":1035361},...}]'
+                ]
+            ]
+         },
+         'lower_is_better': False,
+         'unit': 'score'
+        }
+        """
+        _subtests = {}
+        data = test["measurements"]["unity-webgl"]
+        for page_cycle in data:
+            data = json.loads(page_cycle[0])
+            for item in data:
+                # for each pagecycle, build a list of subtests and append all related replicates
+                sub = item["benchmark"]
+                if sub not in _subtests.keys():
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].append(item["result"])
+
+        vals = []
+        subtests = []
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
+
 
 class RaptorOutput(PerftestOutput):
     """class for raptor output"""
@@ -1224,52 +1270,6 @@ class RaptorOutput(PerftestOutput):
 
         return subtests, vals
 
-    def parseUnityWebGLOutput(self, test):
-        """
-        Example output (this is one page cycle):
-
-        {'name': 'raptor-unity-webgl-firefox',
-         'type': 'benchmark',
-         'measurements': {
-            'unity-webgl': [
-                [
-                    '[{"benchmark":"Mandelbrot GPU","result":1035361},...}]'
-                ]
-            ]
-         },
-         'lower_is_better': False,
-         'unit': 'score'
-        }
-        """
-        _subtests = {}
-        data = test["measurements"]["unity-webgl"]
-        for page_cycle in data:
-            data = json.loads(page_cycle[0])
-            for item in data:
-                # for each pagecycle, build a list of subtests and append all related replicates
-                sub = item["benchmark"]
-                if sub not in _subtests.keys():
-                    # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {
-                        "unit": test["subtest_unit"],
-                        "alertThreshold": float(test["alert_threshold"]),
-                        "lowerIsBetter": test["subtest_lower_is_better"],
-                        "name": sub,
-                        "replicates": [],
-                    }
-                _subtests[sub]["replicates"].append(item["result"])
-
-        vals = []
-        subtests = []
-        names = _subtests.keys()
-        names.sort(reverse=True)
-        for name in names:
-            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
-            subtests.append(_subtests[name])
-            vals.append([_subtests[name]["value"], name])
-
-        return subtests, vals
-
     def parseAssortedDomOutput(self, test):
         # each benchmark 'index' becomes a subtest; each pagecycle / iteration
         # of the test has multiple values
@@ -1515,6 +1515,8 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseAresSixOutput(test)
                 if any("youtube-playback" in key for key in test["measurements"].keys()):
                     subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
+                if "unity-webgl" in test["name"]:
+                    subtests, vals = self.parseUnityWebGLOutput(test)
 
                 suite["subtests"] = subtests
                 # summarize results for both benchmark type tests

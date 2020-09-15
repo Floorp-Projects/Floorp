@@ -347,6 +347,29 @@ browsertime-speedometer-mobile:
             - --browsertime
             - --test=speedometer
 
+browsertime-unity-webgl-mobile:
+    description: "Browsertime Unity WebGL on Android"
+    apps: ["geckoview", "refbrow", "fenix"]
+    treeherder-symbol: Btime(ugl)
+    run-on-projects:
+        by-app:
+            geckoview:
+                by-test-platform:
+                    android-hw-.*(?<!-shippable)/opt: []
+                    android-hw-p2-.*api-16/pgo: []
+                    android-hw-p2-.*api-16-shippable/opt: []
+                    android-hw-(?!p2-.*api-16)/pgo: ['trunk', 'mozilla-beta']
+                    android-hw-(?!p2-.*api-16)-shippable/opt: ['trunk', 'mozilla-beta']
+                    default: ['mozilla-central', 'mozilla-beta']
+            default: []
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=unity-webgl
+    fetches:
+        fetch:
+            - unity-webgl
+
 browsertime-power:
     description: "Browsertime Power Usage Tests on Android"
     apps: ["geckoview", "fenix", "refbrow"]

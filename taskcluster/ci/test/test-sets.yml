@@ -594,6 +594,7 @@ android-hw-aarch64-browsertime:
     - browsertime-tp6m-profiling
     - browsertime-speedometer-mobile
     - browsertime-youtube-playback-mobile
+    - browsertime-unity-webgl-mobile
 
 android-hw-arm7-browsertime:
     - browsertime-power
@@ -602,6 +603,7 @@ android-hw-arm7-browsertime:
     - browsertime-tp6m-profiling
     - browsertime-speedometer-mobile
     - browsertime-youtube-playback-mobile
+    - browsertime-unity-webgl-mobile
 
 linux-tsan-tests:
     - mochitest-plain
