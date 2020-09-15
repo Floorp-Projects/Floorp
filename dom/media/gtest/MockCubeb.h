@@ -191,16 +191,24 @@ class MockCubebStream {
     return CUBEB_OK;
   }
 
-  cubeb_devid GetInputDeviceID() { return mInputDeviceID; }
-  cubeb_devid GetOutputDeviceID() { return mOutputDeviceID; }
+  cubeb_devid GetInputDeviceID() const { return mInputDeviceID; }
+  cubeb_devid GetOutputDeviceID() const { return mOutputDeviceID; }
+
+  uint32_t InputChannels() const { return mAudioGenerator.mChannels; }
+  uint32_t InputSampleRate() const { return mAudioGenerator.mSampleRate; }
+  uint32_t InputFrequency() const { return mAudioGenerator.mFrequency; }
 
   void GoFaster() { mFastMode = true; }
   void DontGoFaster() { mFastMode = false; }
   void ForceError() { mForceErrorState = true; }
-  void VerifyOutput() { mVerifyOutput = true; }
 
   MediaEventSource<uint32_t>& FramesProcessedEvent() {
     return mFramesProcessedEvent;
+  }
+
+  MediaEventSource<Tuple<uint64_t, uint32_t, uint32_t>>&
+  OutputVerificationEvent() {
+    return mOutputVerificationEvent;
   }
 
   MediaEventSource<void>& ErrorForcedEvent() { return mErrorForcedEvent; }
@@ -244,17 +252,9 @@ class MockCubebStream {
       std::this_thread::sleep_for(std::chrono::milliseconds(
           mFastMode ? 0 : NUM_OF_FRAMES * 1000 / sampleRate));
     }
-    if (mVerifyOutput) {
-      // This is an async, in case of failure the result will appear in the
-      // next test. TODO: make it wait till the results are in place.
-      EXPECT_EQ(mAudioVerifier.EstimatedFreq(), mAudioGenerator.mFrequency);
-      EXPECT_GE(mAudioVerifier.PreSilenceSamples(),
-                static_cast<uint32_t>(NUM_OF_FRAMES));
-      // Waveform may start after the beginning. In this case, there is a gap
-      // at the beginning and the end which is counted as discontinuity.
-      EXPECT_GE(mAudioVerifier.CountDiscontinuities(), 0U);
-      EXPECT_LE(mAudioVerifier.CountDiscontinuities(), 2U);
-    }
+    mOutputVerificationEvent.Notify(MakeTuple(
+        mAudioVerifier.PreSilenceSamples(), mAudioVerifier.EstimatedFreq(),
+        mAudioVerifier.CountDiscontinuities()));
   }
 
  public:
@@ -286,11 +286,12 @@ class MockCubebStream {
 
   std::atomic_bool mFastMode{false};
   std::atomic_bool mForceErrorState{false};
-  std::atomic_bool mVerifyOutput{false};
   AudioGenerator<AudioDataValue> mAudioGenerator;
   AudioVerifier<AudioDataValue> mAudioVerifier;
 
   MediaEventProducer<uint32_t> mFramesProcessedEvent;
+  MediaEventProducer<Tuple<uint64_t, uint32_t, uint32_t>>
+      mOutputVerificationEvent;
   MediaEventProducer<void> mErrorForcedEvent;
 };
 

@@ -310,7 +310,6 @@ TEST(TestAudioTrackGraph, SourceTrack)
   auto p = Invoke([&] { return graph->NotifyWhenDeviceStarted(sourceTrack); });
   MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream->mHasInput);
-  stream->VerifyOutput();
   Unused << WaitFor(p);
 
   // Wait for a second worth of audio data.
@@ -337,7 +336,19 @@ TEST(TestAudioTrackGraph, SourceTrack)
     sourceTrack->Destroy();
   });
 
-  WaitFor(cubeb->StreamDestroyEvent());
+  uint32_t inputFrequency = stream->InputFrequency();
+  uint64_t preSilenceSamples;
+  uint32_t estimatedFreq;
+  uint32_t nrDiscontinuities;
+  Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
+      WaitFor(stream->OutputVerificationEvent());
+
+  EXPECT_EQ(estimatedFreq, inputFrequency);
+  EXPECT_GE(preSilenceSamples, static_cast<uint32_t>(NUM_OF_FRAMES));
+  // Waveform may start after the beginning. In this case, there is a gap
+  // at the beginning and the end which is counted as discontinuity.
+  EXPECT_GE(nrDiscontinuities, 0U);
+  EXPECT_LE(nrDiscontinuities, 2U);
 }
 
 TEST(TestAudioTrackGraph, CrossGraphPort)
