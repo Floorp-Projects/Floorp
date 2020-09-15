@@ -146,12 +146,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // After the parent document has been fully cloned, a new frameloader will be
   // created for the cloned iframe, and `FinishStaticClone` will be called on
   // it, which will clone the inner document of the source nsFrameLoader.
-  //
-  // The `aCloneDocShell` and `aCloneDocument` outparameters will be filled with
-  // the values from the newly cloned subframe.
   nsresult FinishStaticClone(nsFrameLoader* aStaticCloneOf,
-                             nsIDocShell** aCloneDocShell,
-                             Document** aCloneDocument);
+                             bool* aOutHasInProcessPrintCallbacks);
 
   // WebIDL methods
 

@@ -55,7 +55,7 @@
 #include "mozilla/SegmentedVector.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include <bitset>  // for member
+#include <bitset>                // for member
 #include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
 
 // XXX We need to include this here to ensure that DefaultDeleter for Servo
@@ -2830,8 +2830,14 @@ class Document : public nsINode,
    * and replace the cloned resources).
    *
    * @param aCloneContainer The container for the clone document.
+   * @param aContentViewer The viewer for the clone document. Must be the viewer
+   *                       of aCloneContainer, but callers must have a reference
+   *                       to it already and ensure it's not null.
+   * @param aOutHasInProcessPrintCallbacks Self-descriptive.
    */
-  already_AddRefed<Document> CreateStaticClone(nsIDocShell* aCloneContainer);
+  already_AddRefed<Document> CreateStaticClone(
+      nsIDocShell* aCloneContainer, nsIContentViewer* aContentViewer,
+      bool* aOutHasInProcessPrintCallbacks);
 
   /**
    * If this document is a static clone, this returns the original
@@ -3934,7 +3940,6 @@ class Document : public nsINode,
     RefPtr<nsFrameLoaderOwner> mElement;
     RefPtr<nsFrameLoader> mStaticCloneOf;
   };
-  nsTArray<PendingFrameStaticClone> TakePendingFrameStaticClones();
   void AddPendingFrameStaticClone(nsFrameLoaderOwner* aElement,
                                   nsFrameLoader* aStaticCloneOf);
 
