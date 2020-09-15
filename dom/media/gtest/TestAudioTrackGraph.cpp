@@ -453,12 +453,12 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
   uint32_t partnerRate = partnerStream->InputSampleRate();
 
   uint64_t preSilenceSamples;
-  uint32_t estimatedFreq;
+  float estimatedFreq;
   uint32_t nrDiscontinuities;
   Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
       WaitFor(partnerStream->OutputVerificationEvent());
 
-  EXPECT_NEAR(estimatedFreq, inputFrequency, 10);
+  EXPECT_NEAR(estimatedFreq, inputFrequency / aDriftFactor, 5);
   EXPECT_GE(preSilenceSamples, partnerRate / 100 /* 10ms */);
   EXPECT_LE(nrDiscontinuities, 2U);
 }

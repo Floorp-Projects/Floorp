@@ -171,7 +171,7 @@ class MockCubebStream {
     return mFramesProcessedEvent;
   }
 
-  MediaEventSource<Tuple<uint64_t, uint32_t, uint32_t>>&
+  MediaEventSource<Tuple<uint64_t, float, uint32_t>>&
   OutputVerificationEvent() {
     return mOutputVerificationEvent;
   }
@@ -247,8 +247,7 @@ class MockCubebStream {
   AudioVerifier<AudioDataValue> mAudioVerifier;
 
   MediaEventProducer<uint32_t> mFramesProcessedEvent;
-  MediaEventProducer<Tuple<uint64_t, uint32_t, uint32_t>>
-      mOutputVerificationEvent;
+  MediaEventProducer<Tuple<uint64_t, float, uint32_t>> mOutputVerificationEvent;
   MediaEventProducer<void> mErrorForcedEvent;
 };
 
