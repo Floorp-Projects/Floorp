@@ -33,7 +33,7 @@ class ScreenshotGrabberImpl final {
   explicit ScreenshotGrabberImpl(const IntSize& aBufferSize);
   ~ScreenshotGrabberImpl();
 
-  void GrabScreenshot(Window& aWindow);
+  void GrabScreenshot(Window& aWindow, const IntSize& aWindowSize);
   void ProcessQueue();
 
  private:
@@ -67,13 +67,13 @@ ScreenshotGrabber::ScreenshotGrabber() = default;
 ScreenshotGrabber::~ScreenshotGrabber() = default;
 
 void ScreenshotGrabber::MaybeGrabScreenshot(
-    profiler_screenshots::Window& aWindow) {
+    profiler_screenshots::Window& aWindow, const IntSize& aWindowSize) {
   if (ProfilerScreenshots::IsEnabled()) {
     if (!mImpl) {
       mImpl = MakeUnique<profiler_screenshots::ScreenshotGrabberImpl>(
           ProfilerScreenshots::ScreenshotSize());
     }
-    mImpl->GrabScreenshot(aWindow);
+    mImpl->GrabScreenshot(aWindow, aWindowSize);
   } else if (mImpl) {
     Destroy();
   }
@@ -143,8 +143,10 @@ RefPtr<RenderSource> ScreenshotGrabberImpl::ScaleDownWindowRenderSourceToSize(
   return nullptr;
 }
 
-void ScreenshotGrabberImpl::GrabScreenshot(Window& aWindow) {
-  RefPtr<RenderSource> windowRenderSource = aWindow.GetWindowContents();
+void ScreenshotGrabberImpl::GrabScreenshot(Window& aWindow,
+                                           const IntSize& aWindowSize) {
+  RefPtr<RenderSource> windowRenderSource =
+      aWindow.GetWindowContents(aWindowSize);
 
   if (!windowRenderSource) {
     PROFILER_MARKER_UNTYPED(
@@ -154,7 +156,7 @@ void ScreenshotGrabberImpl::GrabScreenshot(Window& aWindow) {
     return;
   }
 
-  Size windowSize(windowRenderSource->Size());
+  Size windowSize(aWindowSize);
   float scale = std::min(mBufferSize.width / windowSize.width,
                          mBufferSize.height / windowSize.height);
   IntSize scaledSize = IntSize::Round(windowSize * scale);

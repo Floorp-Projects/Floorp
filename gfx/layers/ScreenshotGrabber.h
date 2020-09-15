@@ -46,7 +46,8 @@ class ScreenshotGrabber final {
   // AsyncReadbackBuffer. The AsyncReadbackBuffer is not mapped into main
   // memory until the second call to MaybeProcessQueue() after this call to
   // MaybeGrabScreenshot().
-  void MaybeGrabScreenshot(profiler_screenshots::Window& aWindow);
+  void MaybeGrabScreenshot(profiler_screenshots::Window& aWindow,
+                           const gfx::IntSize& aWindowSize);
 
   // Map the contents of any outstanding AsyncReadbackBuffers from previous
   // composites into main memory and submit each screenshot to the profiler.
@@ -71,7 +72,8 @@ namespace profiler_screenshots {
 
 class Window {
  public:
-  virtual already_AddRefed<RenderSource> GetWindowContents() = 0;
+  virtual already_AddRefed<RenderSource> GetWindowContents(
+      const gfx::IntSize& aWindowSize) = 0;
   virtual already_AddRefed<DownscaleTarget> CreateDownscaleTarget(
       const gfx::IntSize& aSize) = 0;
   virtual already_AddRefed<AsyncReadbackBuffer> CreateAsyncReadbackBuffer(

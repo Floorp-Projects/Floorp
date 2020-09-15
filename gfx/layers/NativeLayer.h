@@ -10,6 +10,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/layers/ScreenshotGrabber.h"
 
 #include "GLTypes.h"
 #include "nsISupportsImpl.h"
@@ -30,7 +31,6 @@ namespace layers {
 class NativeLayer;
 class NativeLayerCA;
 class NativeLayerRootSnapshotter;
-class ScreenshotGrabber;
 class SurfacePoolHandle;
 
 // NativeLayerRoot and NativeLayer allow building up a flat layer "tree" of
@@ -76,7 +76,7 @@ class NativeLayerRoot {
 // Holds a strong reference to the NativeLayerRoot that created it.
 // On Mac, this owns a GLContext, which wants to be created and destroyed on the
 // same thread.
-class NativeLayerRootSnapshotter {
+class NativeLayerRootSnapshotter : public profiler_screenshots::Window {
  public:
   virtual ~NativeLayerRootSnapshotter() = default;
 
@@ -92,12 +92,6 @@ class NativeLayerRootSnapshotter {
   virtual bool ReadbackPixels(const gfx::IntSize& aReadbackSize,
                               gfx::SurfaceFormat aReadbackFormat,
                               const Range<uint8_t>& aReadbackBuffer) = 0;
-
-  // Calls aScreenshotGrabber->MaybeGrabScreenshot(), to allow capturing the
-  // composited result as profiler screenshots.
-  virtual void MaybeGrabProfilerScreenshot(
-      ScreenshotGrabber* aScreenshotGrabber,
-      const gfx::IntSize& aWindowSize) = 0;
 };
 
 // Represents a native layer. Native layers, such as CoreAnimation layers on
