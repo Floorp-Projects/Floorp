@@ -4444,6 +4444,9 @@ pref("dom.clients.openwindow_favors_same_process", true);
   pref("toolkit.aboutPerformance.showInternals", true);
 #endif
 
+// If `true`, about:processes shows thread information.
+pref("toolkit.aboutProcesses.showThreads", false);
+
 // When a crash happens, whether to include heap regions of the crash context
 // in the minidump. Enabled by default on nightly and aurora.
 #ifdef RELEASE_OR_BETA
