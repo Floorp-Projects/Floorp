@@ -111,8 +111,9 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
 
   aSettings->GetScaling(&data->scaling());
 
-  aSettings->GetPrintBGColors(&data->printBGColors());
-  aSettings->GetPrintBGImages(&data->printBGImages());
+  data->printBGColors() = aSettings->GetPrintBGColors();
+  data->printBGImages() = aSettings->GetPrintBGImages();
+
   aSettings->GetPrintRange(&data->printRange());
 
   aSettings->GetTitle(data->title());
@@ -733,17 +734,15 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveBGColors) {
-    if (NS_SUCCEEDED(aPS->GetPrintBGColors(&b))) {
-      DUMP_BOOL(kWriteStr, kPrintBGColors, b);
-      Preferences::SetBool(GetPrefName(kPrintBGColors, aPrinterName), b);
-    }
+    b = aPS->GetPrintBGColors();
+    DUMP_BOOL(kWriteStr, kPrintBGColors, b);
+    Preferences::SetBool(GetPrefName(kPrintBGColors, aPrinterName), b);
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveBGImages) {
-    if (NS_SUCCEEDED(aPS->GetPrintBGImages(&b))) {
-      DUMP_BOOL(kWriteStr, kPrintBGImages, b);
-      Preferences::SetBool(GetPrefName(kPrintBGImages, aPrinterName), b);
-    }
+    b = aPS->GetPrintBGImages();
+    DUMP_BOOL(kWriteStr, kPrintBGImages, b);
+    Preferences::SetBool(GetPrefName(kPrintBGImages, aPrinterName), b);
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveReversed) {
