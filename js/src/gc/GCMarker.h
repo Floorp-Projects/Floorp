@@ -11,6 +11,7 @@
 #include "mozilla/Unused.h"
 
 #include "ds/OrderedHashTable.h"
+#include "gc/Barrier.h"
 #include "js/SliceBudget.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
