@@ -7,9 +7,9 @@
 
 namespace mozilla {
 
-DynamicResampler::DynamicResampler(uint32_t aInRate, uint32_t aOutRate,
+DynamicResampler::DynamicResampler(int aInRate, int aOutRate,
                                    uint32_t aPreBufferFrames)
-    : mInRate(aInRate), mPreBufferFrames(aPreBufferFrames), mOutRate(aOutRate) {
+    : mInRate(aInRate), mOutRate(aOutRate), mPreBufferFrames(aPreBufferFrames) {
   MOZ_ASSERT(aInRate);
   MOZ_ASSERT(aOutRate);
   UpdateResampler(mOutRate, STEREO);
@@ -35,13 +35,13 @@ void DynamicResampler::SetSampleFormat(AudioSampleFormat aFormat) {
 }
 
 bool DynamicResampler::Resample(float* aOutBuffer, uint32_t* aOutFrames,
-                                uint32_t aChannelIndex) {
+                                int aChannelIndex) {
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_FLOAT32);
   return ResampleInternal(aOutBuffer, aOutFrames, aChannelIndex);
 }
 
 bool DynamicResampler::Resample(int16_t* aOutBuffer, uint32_t* aOutFrames,
-                                uint32_t aChannelIndex) {
+                                int aChannelIndex) {
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_S16);
   return ResampleInternal(aOutBuffer, aOutFrames, aChannelIndex);
 }
@@ -49,7 +49,7 @@ bool DynamicResampler::Resample(int16_t* aOutBuffer, uint32_t* aOutFrames,
 void DynamicResampler::ResampleInternal(const float* aInBuffer,
                                         uint32_t* aInFrames, float* aOutBuffer,
                                         uint32_t* aOutFrames,
-                                        uint32_t aChannelIndex) {
+                                        int aChannelIndex) {
   MOZ_ASSERT(mResampler);
   MOZ_ASSERT(mChannels);
   MOZ_ASSERT(mInRate);
@@ -62,6 +62,7 @@ void DynamicResampler::ResampleInternal(const float* aInBuffer,
   MOZ_ASSERT(aOutFrames);
   MOZ_ASSERT(*aOutFrames > 0);
 
+  MOZ_ASSERT(aChannelIndex >= 0);
   MOZ_ASSERT(aChannelIndex <= mChannels);
 
 #ifdef DEBUG
@@ -76,7 +77,7 @@ void DynamicResampler::ResampleInternal(const int16_t* aInBuffer,
                                         uint32_t* aInFrames,
                                         int16_t* aOutBuffer,
                                         uint32_t* aOutFrames,
-                                        uint32_t aChannelIndex) {
+                                        int aChannelIndex) {
   MOZ_ASSERT(mResampler);
   MOZ_ASSERT(mChannels);
   MOZ_ASSERT(mInRate);
@@ -89,6 +90,7 @@ void DynamicResampler::ResampleInternal(const int16_t* aInBuffer,
   MOZ_ASSERT(aOutFrames);
   MOZ_ASSERT(*aOutFrames > 0);
 
+  MOZ_ASSERT(aChannelIndex >= 0);
   MOZ_ASSERT(aChannelIndex <= mChannels);
 
 #ifdef DEBUG
@@ -99,7 +101,7 @@ void DynamicResampler::ResampleInternal(const int16_t* aInBuffer,
   MOZ_ASSERT(rv == RESAMPLER_ERR_SUCCESS);
 }
 
-void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
+void DynamicResampler::UpdateResampler(int aOutRate, int aChannels) {
   MOZ_ASSERT(aOutRate);
   MOZ_ASSERT(aChannels);
 
@@ -117,9 +119,9 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
       if ((mSampleFormat == AUDIO_FORMAT_S16 ||
            mSampleFormat == AUDIO_FORMAT_FLOAT32) &&
           mChannels == STEREO) {
-        // The mono channel is always up to date. When we are going from mono
+        // The mono channel is allways up to date. When we are going from mono
         // to stereo upmix the mono to stereo channel
-        uint32_t bufferedDuration = mInternalInBuffer[0].AvailableRead();
+        int bufferedDuration = mInternalInBuffer[0].AvailableRead();
         mInternalInBuffer[1].Clear();
         if (bufferedDuration) {
           mInternalInBuffer[1].Write(mInternalInBuffer[0], bufferedDuration);
@@ -133,10 +135,10 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
     // upmix or downmix, for now just clear but it has to be updated
     // because allocates and this is executed in audio thread.
     mInternalInBuffer.Clear();
-    for (uint32_t i = 0; i < mChannels; ++i) {
-      // Pre-allocate something big, twice the pre-buffer, or at least 100ms.
-      AudioRingBuffer* b = mInternalInBuffer.AppendElement(
-          sizeof(float) * std::max(2 * mPreBufferFrames, mInRate / 10));
+    for (int i = 0; i < mChannels; ++i) {
+      // Pre-allocate something big, 100ms of audio.
+      AudioRingBuffer* b =
+          mInternalInBuffer.AppendElement(sizeof(float) * mInRate / 10);
       if (mSampleFormat != AUDIO_FORMAT_SILENCE) {
         // In ctor this update is not needed
         b->SetSampleFormat(mSampleFormat);
@@ -163,7 +165,7 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
 
 void DynamicResampler::WarmUpResampler(bool aSkipLatency) {
   MOZ_ASSERT(mInputTail.Length());
-  for (uint32_t i = 0; i < mChannels; ++i) {
+  for (int i = 0; i < mChannels; ++i) {
     if (!mInputTail[i].Length()) {
       continue;
     }
@@ -204,7 +206,7 @@ void DynamicResampler::AppendInput(const nsTArray<const int16_t*>& aInBuffer,
 }
 
 bool DynamicResampler::EnoughInFrames(uint32_t aOutFrames,
-                                      uint32_t aChannelIndex) const {
+                                      int aChannelIndex) const {
   if (mInRate == mOutRate) {
     return InFramesBuffered(aChannelIndex) >= aOutFrames;
   }
@@ -218,7 +220,7 @@ bool DynamicResampler::EnoughInFrames(uint32_t aOutFrames,
 }
 
 bool DynamicResampler::CanResample(uint32_t aOutFrames) const {
-  for (uint32_t i = 0; i < mChannels; ++i) {
+  for (int i = 0; i < mChannels; ++i) {
     if (!EnoughInFrames(aOutFrames, i)) {
       return false;
     }
@@ -230,34 +232,28 @@ void DynamicResampler::AppendInputSilence(const uint32_t aInFrames) {
   MOZ_ASSERT(aInFrames);
   MOZ_ASSERT(mChannels);
   MOZ_ASSERT(mInternalInBuffer.Length() >= (uint32_t)mChannels);
-  for (uint32_t i = 0; i < mChannels; ++i) {
+  for (int i = 0; i < mChannels; ++i) {
     mInternalInBuffer[i].WriteSilence(aInFrames);
   }
 }
 
-uint32_t DynamicResampler::InFramesBuffered(uint32_t aChannelIndex) const {
+uint32_t DynamicResampler::InFramesBuffered(int aChannelIndex) const {
   MOZ_ASSERT(mChannels);
+  MOZ_ASSERT(aChannelIndex >= 0);
   MOZ_ASSERT(aChannelIndex <= mChannels);
-  MOZ_ASSERT(aChannelIndex <= mInternalInBuffer.Length());
+  MOZ_ASSERT((uint32_t)aChannelIndex <= mInternalInBuffer.Length());
   return mInternalInBuffer[aChannelIndex].AvailableRead();
 }
 
-uint32_t DynamicResampler::InFramesLeftToBuffer(uint32_t aChannelIndex) const {
-  MOZ_ASSERT(mChannels);
-  MOZ_ASSERT(aChannelIndex <= mChannels);
-  MOZ_ASSERT(aChannelIndex <= mInternalInBuffer.Length());
-  return mInternalInBuffer[aChannelIndex].AvailableWrite();
-}
-
-AudioChunkList::AudioChunkList(uint32_t aTotalDuration, uint32_t aChannels) {
-  uint32_t numOfChunks = aTotalDuration / mChunkCapacity;
+AudioChunkList::AudioChunkList(int aTotalDuration, int aChannels) {
+  int numOfChunks = aTotalDuration / mChunkCapacity;
   if (aTotalDuration % mChunkCapacity) {
     ++numOfChunks;
   }
   CreateChunks(numOfChunks, aChannels);
 }
 
-void AudioChunkList::CreateChunks(uint32_t aNumOfChunks, uint32_t aChannels) {
+void AudioChunkList::CreateChunks(int aNumOfChunks, int aChannels) {
   MOZ_ASSERT(!mChunks.Length());
   MOZ_ASSERT(aNumOfChunks);
   MOZ_ASSERT(aChannels);
@@ -270,20 +266,20 @@ void AudioChunkList::CreateChunks(uint32_t aNumOfChunks, uint32_t aChannels) {
     AutoTArray<const float*, STEREO> bufferPtrs;
     bufferPtrs.AppendElements(aChannels);
 
-    for (uint32_t i = 0; i < aChannels; ++i) {
+    for (int i = 0; i < aChannels; ++i) {
       float* ptr = buffer[i].AppendElements(mChunkCapacity);
       bufferPtrs[i] = ptr;
     }
 
     chunk.mBuffer = new mozilla::SharedChannelArrayBuffer(std::move(buffer));
     chunk.mChannelData.AppendElements(aChannels);
-    for (uint32_t i = 0; i < aChannels; ++i) {
+    for (int i = 0; i < aChannels; ++i) {
       chunk.mChannelData[i] = bufferPtrs[i];
     }
   }
 }
 
-void AudioChunkList::UpdateToMonoOrStereo(uint32_t aChannels) {
+void AudioChunkList::UpdateToMonoOrStereo(int aChannels) {
   MOZ_ASSERT(mChunks.Length());
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_S16 ||
              mSampleFormat == AUDIO_FORMAT_FLOAT32);
@@ -339,9 +335,9 @@ AudioChunk& AudioChunkList::GetNext() {
   return chunk;
 }
 
-void AudioChunkList::Update(uint32_t aChannels) {
+void AudioChunkList::Update(int aChannels) {
   MOZ_ASSERT(mChunks.Length());
-  if (mChunks[0].ChannelCount() == aChannels) {
+  if (mChunks[0].ChannelCount() == (uint32_t)aChannels) {
     return;
   }
 
@@ -351,12 +347,12 @@ void AudioChunkList::Update(uint32_t aChannels) {
     return;
   }
 
-  uint32_t numOfChunks = mChunks.Length();
+  int numOfChunks = static_cast<int>(mChunks.Length());
   mChunks.ClearAndRetainStorage();
   CreateChunks(numOfChunks, aChannels);
 }
 
-AudioResampler::AudioResampler(uint32_t aInRate, uint32_t aOutRate,
+AudioResampler::AudioResampler(int aInRate, int aOutRate,
                                uint32_t aPreBufferFrames)
     : mResampler(aInRate, aOutRate, aPreBufferFrames),
       mOutputChunks(aOutRate / 10, STEREO) {}
@@ -415,11 +411,11 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames) {
     return segment;
   }
 
-  uint32_t totalFrames = aOutFrames;
+  int totalFrames = aOutFrames;
   while (totalFrames) {
     MOZ_ASSERT(totalFrames > 0);
     AudioChunk& chunk = mOutputChunks.GetNext();
-    uint32_t outFrames = std::min(totalFrames, mOutputChunks.ChunkCapacity());
+    int outFrames = std::min(totalFrames, mOutputChunks.ChunkCapacity());
     totalFrames -= outFrames;
 
     for (uint32_t i = 0; i < chunk.ChannelCount(); ++i) {
@@ -439,7 +435,7 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames) {
                                 &outFramesUsed, i);
         MOZ_ASSERT(rv);
       }
-      MOZ_ASSERT(outFramesUsed == outFrames);
+      MOZ_ASSERT(outFramesUsed == (uint32_t)outFrames);
       chunk.mDuration = outFrames;
     }
 
@@ -452,23 +448,17 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames) {
   return segment;
 }
 
-void AudioResampler::Update(uint32_t aOutRate, uint32_t aChannels) {
+void AudioResampler::Update(int aOutRate, int aChannels) {
   mResampler.UpdateResampler(aOutRate, aChannels);
   mOutputChunks.Update(aChannels);
 }
 
-uint32_t AudioResampler::InputDuration() const {
+int AudioResampler::InputDuration() const {
   if (!mIsSampleFormatSet) {
-    return mResampler.mPreBufferFrames;
+    return 0;
   }
-  return mResampler.InFramesBuffered(0);
-}
-
-uint32_t AudioResampler::InputRemainingDuration() const {
-  if (!mIsSampleFormatSet) {
-    return mResampler.mPreBufferFrames;
-  }
-  return mResampler.InFramesLeftToBuffer(0);
+  MOZ_ASSERT((int)mResampler.InFramesBuffered(0) >= 0);
+  return (int)mResampler.InFramesBuffered(0);
 }
 
 }  // namespace mozilla

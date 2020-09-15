@@ -22,7 +22,7 @@ namespace mozilla {
  */
 class AudioRingBuffer final {
  public:
-  explicit AudioRingBuffer(uint32_t aSizeInBytes);
+  explicit AudioRingBuffer(int aSizeInBytes);
   ~AudioRingBuffer();
 
   /**
@@ -34,57 +34,55 @@ class AudioRingBuffer final {
   /**
    * Write `aBuffer.Length()` number of samples when the format is float.
    */
-  uint32_t Write(const Span<const float>& aBuffer);
+  int Write(const Span<const float>& aBuffer);
 
   /**
    * Write `aBuffer.Length()` number of samples when the format is short.
    */
-  uint32_t Write(const Span<const int16_t>& aBuffer);
+  int Write(const Span<const int16_t>& aBuffer);
 
   /**
    * Write `aSamples` number of samples from `aBuffer`. Note the `aBuffer` does
    * not change.
    */
-  uint32_t Write(const AudioRingBuffer& aBuffer, uint32_t aSamples);
+  int Write(const AudioRingBuffer& aBuffer, int aSamples);
 
   /**
    * Write `aSamples` number of zeros.
    */
-  uint32_t WriteSilence(uint32_t aSamples);
+  int WriteSilence(int aSamples);
 
   /**
    * Read `aBuffer.Length()` number of samples when the format is float.
    */
-  uint32_t Read(const Span<float>& aBuffer);
+  int Read(const Span<float>& aBuffer);
 
   /**
    * Read `aBuffer.Length()` number of samples when the format is short.
    */
-  uint32_t Read(const Span<int16_t>& aBuffer);
+  int Read(const Span<int16_t>& aBuffer);
 
   /**
    * Read the internal buffer without extra copies when sample format is float.
    * Check also the RingBuffer::ReadNoCopy() for more details.
    */
-  uint32_t ReadNoCopy(
-      std::function<uint32_t(const Span<const float>&)>&& aCallable);
+  int ReadNoCopy(std::function<int(const Span<const float>&)>&& aCallable);
 
   /**
    * Read the internal buffer without extra copies when sample format is short.
    * Check also the RingBuffer::ReadNoCopy() for more details.
    */
-  uint32_t ReadNoCopy(
-      std::function<uint32_t(const Span<const int16_t>&)>&& aCallable);
+  int ReadNoCopy(std::function<int(const Span<const int16_t>&)>&& aCallable);
 
   /**
    * Remove `aSamples` number of samples.
    */
-  uint32_t Discard(uint32_t aSamples);
+  int Discard(int aSamples);
 
   /**
    * Remove all available samples.
    */
-  uint32_t Clear();
+  int Clear();
 
   /**
    * Return true if the buffer is full.
@@ -99,12 +97,12 @@ class AudioRingBuffer final {
   /**
    * Return the number of samples available for writing.
    */
-  uint32_t AvailableWrite() const;
+  int AvailableWrite() const;
 
   /**
    * Return the number of samples available for reading.
    */
-  uint32_t AvailableRead() const;
+  int AvailableRead() const;
 
  private:
   class AudioRingBufferPrivate;
