@@ -116,6 +116,22 @@ class StopInputProcessing : public ControlMessage {
 };
 
 }  // namespace
+
+/*
+ * The set of tests here are a bit special. In part because they're async and
+ * depends on the graph thread to function. In part because they depend on main
+ * thread stable state to send messages to the graph.
+ *
+ * Any message sent from the main thread to the graph through the graph's
+ * various APIs are scheduled to run in stable state. Stable state occurs after
+ * a task in the main thread eventloop has run to completion.
+ *
+ * Since gtests are generally sync and on main thread, calling into the graph
+ * may schedule a stable state runnable but with no task in the eventloop to
+ * trigger stable state. Therefore care must be taken to always call into the
+ * graph from a task, typically via InvokeAsync or a dispatch to main thread.
+ */
+
 TEST(TestAudioTrackGraph, DifferentDeviceIDs)
 {
   MockCubeb* cubeb = new MockCubeb();
