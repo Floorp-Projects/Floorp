@@ -14,7 +14,6 @@
 using namespace std::chrono_literals;
 using namespace mozilla;
 
-const long NUM_OF_FRAMES = 512;
 const uint32_t NUM_OF_CHANNELS = 2;
 
 #ifdef LOG
@@ -223,13 +222,19 @@ class MockCubebStream {
 
   void ThreadFunction() {
     while (!mStreamStop) {
+      // The drift factor affects the callback interval, while the callback
+      // always contains 10ms of audio frames.
+      const uint32_t audioIntervalMs = 10;
+      const uint32_t nrFrames = static_cast<uint32_t>(
+          (mHasOutput ? mOutputParams.rate : mInputParams.rate) *
+          audioIntervalMs / 1000);
       if (mInputParams.rate) {
-        mAudioGenerator.GenerateInterleaved(mInputBuffer, NUM_OF_FRAMES);
+        mAudioGenerator.GenerateInterleaved(mInputBuffer, nrFrames);
       }
       cubeb_stream* stream = reinterpret_cast<cubeb_stream*>(this);
-      long outframes = mDataCallback(
-          stream, mUserPtr, mInputParams.rate ? mInputBuffer : nullptr,
-          mOutputParams.rate ? mOutputBuffer : nullptr, NUM_OF_FRAMES);
+      long outframes =
+          mDataCallback(stream, mUserPtr, mHasInput ? mInputBuffer : nullptr,
+                        mHasOutput ? mOutputBuffer : nullptr, nrFrames);
 
       mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
                                            NUM_OF_CHANNELS);
@@ -238,7 +243,7 @@ class MockCubebStream {
         mFramesProcessedEvent.Notify(outframes);
       }
 
-      if (outframes < NUM_OF_FRAMES) {
+      if (outframes < nrFrames) {
         mStateCallback(stream, mUserPtr, CUBEB_STATE_DRAINED);
         break;
       }
@@ -272,8 +277,8 @@ class MockCubebStream {
   // Signal to the audio thread that stream is stopped.
   std::atomic_bool mStreamStop{true};
   // The audio buffer used on data callback.
-  AudioDataValue mOutputBuffer[NUM_OF_CHANNELS * NUM_OF_FRAMES] = {};
-  AudioDataValue mInputBuffer[NUM_OF_CHANNELS * NUM_OF_FRAMES] = {};
+  AudioDataValue mOutputBuffer[NUM_OF_CHANNELS * 1920] = {};
+  AudioDataValue mInputBuffer[NUM_OF_CHANNELS * 1920] = {};
   // The audio callback
   cubeb_data_callback mDataCallback = nullptr;
   // The stream state callback
@@ -580,7 +585,7 @@ static int cubeb_mock_stream_set_volume(cubeb_stream* stream, float volume) {
 
 int cubeb_mock_get_min_latency(cubeb* context, cubeb_stream_params params,
                                uint32_t* latency_ms) {
-  *latency_ms = NUM_OF_FRAMES;
+  *latency_ms = 10;
   return CUBEB_OK;
 }
 
