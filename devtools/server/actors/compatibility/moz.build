@@ -5,8 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'dataset',
+    'lib',
 ]
+
+DevToolsModules(
+    'compatibility.js',
+)
 
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'Inspector: Compatibility')
