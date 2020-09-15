@@ -134,6 +134,8 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvDefaultClearColor(
       compositor->SetDefaultClearColor(
           gfx::DeviceColor::UnusualFromARGB(aColor));
     }
+  } else if (state && state->mWrBridge) {
+    state->mWrBridge->SetClearColor(gfx::DeviceColor::UnusualFromARGB(aColor));
   }
 
   return IPC_OK();

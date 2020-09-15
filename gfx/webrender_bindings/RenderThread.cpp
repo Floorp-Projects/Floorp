@@ -406,6 +406,29 @@ void RenderThread::WakeUp(wr::WindowId aWindowId) {
   }
 }
 
+void RenderThread::SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor) {
+  if (mHasShutdown) {
+    return;
+  }
+
+  if (!IsInRenderThread()) {
+    Loop()->PostTask(NewRunnableMethod<wr::WindowId, wr::ColorF>(
+        "wr::RenderThread::SetClearColor", this, &RenderThread::SetClearColor,
+        aWindowId, aColor));
+    return;
+  }
+
+  if (IsDestroyed(aWindowId)) {
+    return;
+  }
+
+  auto it = mRenderers.find(aWindowId);
+  MOZ_ASSERT(it != mRenderers.end());
+  if (it != mRenderers.end()) {
+    wr_renderer_set_clear_color(it->second->GetRenderer(), aColor);
+  }
+}
+
 void RenderThread::RunEvent(wr::WindowId aWindowId,
                             UniquePtr<RendererEvent> aEvent) {
   if (!IsInRenderThread()) {

@@ -530,6 +530,10 @@ void WebRenderAPI::SetBatchingLookback(uint32_t aCount) {
   wr_api_set_batching_lookback(mDocHandle, aCount);
 }
 
+void WebRenderAPI::SetClearColor(const gfx::DeviceColor& aColor) {
+  RenderThread::Get()->SetClearColor(mId, ToColorF(aColor));
+}
+
 void WebRenderAPI::Pause() {
   class PauseEvent : public RendererEvent {
    public:

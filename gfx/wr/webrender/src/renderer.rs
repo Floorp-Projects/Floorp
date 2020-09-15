@@ -2926,6 +2926,10 @@ impl Renderer {
         self.device.optimal_pbo_stride().num_bytes(format).get()
     }
 
+    pub fn set_clear_color(&mut self, color: Option<ColorF>) {
+        self.clear_color = color;
+    }
+
     pub fn flush_pipeline_info(&mut self) -> PipelineInfo {
         mem::replace(&mut self.pipeline_info, PipelineInfo::default())
     }
