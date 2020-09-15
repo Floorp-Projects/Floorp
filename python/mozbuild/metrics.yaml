@@ -7,12 +7,10 @@
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
-mach:
-  command:
+mozbuild:
+  compiler:
     type: string
-    description: >
-      The name of the mach command that was invoked, such as "build",
-      "doc", or "try".
+    description: The compiler type in use (CC_TYPE), such as "clang" or "gcc".
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053
@@ -24,29 +22,9 @@ mach:
     expires: never
     send_in_pings:
       - usage
-  argv:
-    type: string_list
-    description: >
-      Parameters provided to mach. Absolute paths are sanitized to be relative
-      to one of a few key base paths, such as the "$topsrcdir", "$topobjdir",
-      or "$HOME". For example: "/home/mozilla/dev/firefox/python/mozbuild"
-      would be replaced with "$topsrcdir/python/mozbuild".
-      If a valid replacement base path cannot be found, the path is replaced
-      with "<path omitted>".
-    lifetime: application
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
-    notification_emails:
-      - build-telemetry@mozilla.com
-      - mhentges@mozilla.com
-    expires: never
-    send_in_pings:
-      - usage
-  success:
+  artifact:
     type: boolean
-    description: True if the mach invocation succeeded.
+    description: True if `--enable-artifact-builds`.
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053
@@ -58,9 +36,9 @@ mach:
     expires: never
     send_in_pings:
       - usage
-  duration:
-    type: timespan
-    description: How long it took for the command to complete.
+  debug:
+    type: boolean
+    description: True if `--enable-debug`.
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053
@@ -72,11 +50,9 @@ mach:
     expires: never
     send_in_pings:
       - usage
-
-mach.system:
-  cpu_brand:
-    type: string
-    description: CPU brand string from CPUID.
+  opt:
+    type: boolean
+    description: True if `--enable-optimize`.
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053
@@ -88,9 +64,9 @@ mach.system:
     expires: never
     send_in_pings:
       - usage
-  logical_cores:
-    type: counter
-    description: Number of logical CPU cores present.
+  ccache:
+    type: boolean
+    description: True if `--with-ccache`.
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053
@@ -102,9 +78,9 @@ mach.system:
     expires: never
     send_in_pings:
       - usage
-  physical_cores:
-    type: counter
-    description: Number of physical CPU cores present.
+  sccache:
+    type: boolean
+    description: True if ccache in use is sccache.
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053
@@ -116,15 +92,28 @@ mach.system:
     expires: never
     send_in_pings:
       - usage
-  memory:
-    type: memory_distribution
-    memory_unit: gigabyte
-    description: Amount of system memory.
+  icecream:
+    type: boolean
+    description: True if icecream in use.
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34
+    notification_emails:
+      - build-telemetry@mozilla.com
+      - mhentges@mozilla.com
+    expires: never
+    send_in_pings:
+      - usage
+  clobber:
+    type: boolean
+    description: True if the build was a clobber/full build.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1526072
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1526072#c15
     notification_emails:
       - build-telemetry@mozilla.com
       - mhentges@mozilla.com
