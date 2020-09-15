@@ -20204,11 +20204,11 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     this.data.fieldValue = this.data.buttonValue = null;
     const fieldParent = params.dict.get("Parent");
 
-    if ((0, _primitives.isDict)(fieldParent) && fieldParent.has("V")) {
+    if ((0, _primitives.isDict)(fieldParent)) {
+      this.parent = params.dict.getRaw("Parent");
       const fieldParentValue = fieldParent.get("V");
 
       if ((0, _primitives.isName)(fieldParentValue)) {
-        this.parent = params.dict.getRaw("Parent");
         this.data.fieldValue = this._decodeFormValue(fieldParentValue);
       }
     }
