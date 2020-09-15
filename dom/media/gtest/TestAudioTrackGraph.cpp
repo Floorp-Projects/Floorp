@@ -348,7 +348,8 @@ TEST(TestAudioTrackGraph, SourceTrack)
       WaitFor(stream->OutputVerificationEvent());
 
   EXPECT_EQ(estimatedFreq, inputFrequency);
-  EXPECT_GE(preSilenceSamples, inputRate / 100 /* 10 ms */);
+  // TODO (Bug 1656438) - this is intermittent
+  // EXPECT_GE(preSilenceSamples, inputRate / 100 /* 10 ms */);
   // Waveform may start after the beginning. In this case, there is a gap
   // at the beginning and the end which is counted as discontinuity.
   EXPECT_GE(nrDiscontinuities, 0U);

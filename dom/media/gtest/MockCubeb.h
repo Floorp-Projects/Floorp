@@ -183,14 +183,14 @@ class MockCubebStream {
       return;
     }
 
-    const uint32_t nrFrames = static_cast<uint32_t>(
+    const long nrFrames = static_cast<uint32_t>(
         (mHasOutput ? mOutputParams.rate : mInputParams.rate) * mDriftFactor *
         10 / PR_MSEC_PER_SEC);
     if (mInputParams.rate) {
       mAudioGenerator.GenerateInterleaved(mInputBuffer, nrFrames);
     }
     cubeb_stream* stream = reinterpret_cast<cubeb_stream*>(this);
-    long outframes =
+    const long outframes =
         mDataCallback(stream, mUserPtr, mHasInput ? mInputBuffer : nullptr,
                       mHasOutput ? mOutputBuffer : nullptr, nrFrames);
 
