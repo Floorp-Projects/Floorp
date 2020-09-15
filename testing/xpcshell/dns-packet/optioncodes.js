@@ -17,6 +17,7 @@ exports.toString = function (type) {
     case 12: return 'PADDING'
     case 13: return 'CHAIN'
     case 14: return 'KEY_TAG'
+    case 15: return 'EDNS_ERROR'
     case 26946: return 'DEVICEID'
   }
   if (type < 0) {
@@ -48,6 +49,7 @@ exports.toCode = function (name) {
     case 'PADDING': return 12
     case 'CHAIN': return 13
     case 'KEY_TAG': return 14
+    case 'EDNS_ERROR': return 15
     case 'DEVICEID': return 26946
     case 'OPTION_65535': return 65535
   }
