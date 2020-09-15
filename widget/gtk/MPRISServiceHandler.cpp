@@ -302,7 +302,7 @@ bool MPRISServiceHandler::Open() {
   gchar serviceName[256];
 
   InitIdentity();
-  SprintfLiteral(serviceName, DBUS_MRPIS_SERVICE_NAME ".instance%d", getpid());
+  SprintfLiteral(serviceName, DBUS_MPRIS_SERVICE_NAME ".instance%d", getpid());
   mOwnerId =
       g_bus_own_name(G_BUS_TYPE_SESSION, serviceName,
                      // Enter a waiting queue until this service name is free
@@ -332,7 +332,7 @@ MPRISServiceHandler::~MPRISServiceHandler() {
 
 void MPRISServiceHandler::Close() {
   gchar serviceName[256];
-  SprintfLiteral(serviceName, DBUS_MRPIS_SERVICE_NAME ".instance%d", getpid());
+  SprintfLiteral(serviceName, DBUS_MPRIS_SERVICE_NAME ".instance%d", getpid());
 
   OnNameLost(mConnection, serviceName);
 
@@ -732,7 +732,7 @@ GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
 }
 
 void MPRISServiceHandler::EmitEvent(mozilla::dom::MediaControlKey aKey) const {
-  for (auto& listener : mListeners) {
+  for (const auto& listener : mListeners) {
     listener->OnActionPerformed(mozilla::dom::MediaControlAction(aKey));
   }
 }
