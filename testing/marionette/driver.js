@@ -391,15 +391,18 @@ GeckoDriver.prototype.getActor = function(options = {}) {
  * @param {Context=} options.context
  *     Context (content or chrome) for which to retrieve the browsing context.
  *     Defaults to the current one.
+ * @param {boolean=} options.parent
+ *     If set to true return the window's parent browsing context,
+ *     otherwise the one from the currently selected frame. Defaults to false.
  * @param {boolean=} options.top
- *     If set to true use the window's top-level browsing context,
+ *     If set to true return the window's top-level browsing context,
  *     otherwise the one from the currently selected frame. Defaults to false.
  *
  * @return {BrowsingContext}
  *     The browsing context.
  */
 GeckoDriver.prototype.getBrowsingContext = function(options = {}) {
-  const { context = this.context, top = false } = options;
+  const { context = this.context, parent = false, top = false } = options;
 
   let browsingContext = null;
   if (context === Context.Chrome) {
@@ -408,11 +411,13 @@ GeckoDriver.prototype.getBrowsingContext = function(options = {}) {
     browsingContext = this.contentBrowsingContext;
   }
 
+  if (browsingContext && parent) {
+    browsingContext = browsingContext.parent;
+  }
+
   if (browsingContext && top) {
     browsingContext = browsingContext.top;
   }
-
-  logger.trace(`Using browsing context ${browsingContext?.id}`);
 
   return browsingContext;
 };
@@ -990,11 +995,13 @@ GeckoDriver.prototype.getContext = function() {
  *     Return value from the script, or null which signifies either the
  *     JavaScript notion of null or undefined.
  *
+ * @throws {JavaScriptError}
+ *     If an {@link Error} was thrown whilst evaluating the script.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
  * @throws {ScriptTimeoutError}
  *     If the script was interrupted due to reaching the session's
  *     script timeout.
- * @throws {JavaScriptError}
- *     If an {@link Error} was thrown whilst evaluating the script.
  */
 GeckoDriver.prototype.executeScript = async function(cmd) {
   let { script, args } = cmd.parameters;
@@ -1055,11 +1062,13 @@ GeckoDriver.prototype.executeScript = async function(cmd) {
  *     Return value from the script, or null which signifies either the
  *     JavaScript notion of null or undefined.
  *
+ * @throws {JavaScriptError}
+ *     If an Error was thrown whilst evaluating the script.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
  * @throws {ScriptTimeoutError}
  *     If the script was interrupted due to reaching the session's
  *     script timeout.
- * @throws {JavaScriptError}
- *     If an Error was thrown whilst evaluating the script.
  */
 GeckoDriver.prototype.executeAsyncScript = async function(cmd) {
   let { script, args } = cmd.parameters;
@@ -1087,7 +1096,7 @@ GeckoDriver.prototype.execute_ = async function(
     async = false,
   } = {}
 ) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   assert.string(script, pprint`Expected "script" to be a string: ${script}`);
@@ -1166,16 +1175,16 @@ GeckoDriver.prototype.execute_ = async function(
  * @param {string} url
  *     URL to navigate to.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.navigateTo = async function(cmd) {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ context: Context.Content, top: true }));
   await this._handleUserPrompts();
 
   let validURL;
@@ -1219,7 +1228,7 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getCurrentUrl = async function() {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   const url = await this._getCurrentURL();
@@ -1238,15 +1247,23 @@ GeckoDriver.prototype.getCurrentUrl = async function() {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getTitle = async function() {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   return this.title;
 };
 
-/** Gets the current type of the window. */
+/**
+ * Gets the current type of the window.
+ *
+ * @return {string}
+ *     Type of window
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
+ */
 GeckoDriver.prototype.getWindowType = function() {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
 
   return this.windowType;
 };
@@ -1259,17 +1276,18 @@ GeckoDriver.prototype.getWindowType = function() {
  *     active document.
  *
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getPageSource = async function() {
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   switch (this.context) {
     case Context.Chrome:
-      let s = new win.XMLSerializer();
+      const win = this.getCurrentWindow();
+      const s = new win.XMLSerializer();
       return s.serializeToString(win.document);
 
     case Context.Content:
@@ -1284,16 +1302,16 @@ GeckoDriver.prototype.getPageSource = async function() {
  * Cause the browser to traverse one step backward in the joint history
  * of the current browsing context.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.goBack = async function() {
   assert.content(this.context);
-  assert.open(this.curBrowser);
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   const browsingContext = this.getBrowsingContext({ context: Context.Content });
@@ -1312,16 +1330,16 @@ GeckoDriver.prototype.goBack = async function() {
  * Cause the browser to traverse one step forward in the joint history
  * of the current browsing context.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.goForward = async function() {
   assert.content(this.context);
-  assert.open(this.curBrowser);
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   const browsingContext = this.getBrowsingContext({ context: Context.Content });
@@ -1340,16 +1358,16 @@ GeckoDriver.prototype.goForward = async function() {
  * Causes the browser to reload the page in current top-level browsing
  * context.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.refresh = async function() {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   // We need to move to the top frame before navigating
@@ -1406,7 +1424,7 @@ GeckoDriver.prototype.getIdForBrowser = function(browser) {
  *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.getWindowHandle = function() {
-  assert.open(this.curBrowser);
+  assert.open(this.getBrowsingContext({ context: Context.Content, top: true }));
 
   return this.curBrowser.curFrameId.toString();
 };
@@ -1443,7 +1461,7 @@ GeckoDriver.prototype.getWindowHandles = function() {
  *     Internal browsing context reference not found
  */
 GeckoDriver.prototype.getChromeWindowHandle = function() {
-  assert.open(this.getCurrentWindow({ context: Context.Chrome }));
+  assert.open(this.getBrowsingContext({ context: Context.Chrome, top: true }));
 
   for (let i in this.browsers) {
     if (this.curBrowser == this.browsers[i]) {
@@ -1482,7 +1500,7 @@ GeckoDriver.prototype.getChromeWindowHandles = function() {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getWindowRect = async function() {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   return this.curBrowser.rect;
@@ -1511,20 +1529,21 @@ GeckoDriver.prototype.getWindowRect = async function() {
  *     Object with `x` and `y` coordinates and `width` and `height`
  *     dimensions.
  *
- * @throws {UnsupportedOperationError}
- *     Not applicable to application.
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not applicable to application.
  */
 GeckoDriver.prototype.setWindowRect = async function(cmd) {
   assert.firefox();
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   let { x, y, width, height } = cmd.parameters;
 
+  const win = this.getCurrentWindow();
   switch (WindowState.from(win.windowState)) {
     case WindowState.Fullscreen:
       await exitFullscreen(win);
@@ -1711,18 +1730,20 @@ GeckoDriver.prototype.setWindowHandle = async function(
  * of the current browsing context.
  *
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.switchToParentFrame = async function() {
-  assert.open(this.getCurrentWindow());
-  await this._handleUserPrompts();
+  let browsingContext = this.getBrowsingContext();
+  if (browsingContext && !browsingContext.parent) {
+    return;
+  }
+
+  browsingContext = assert.open(browsingContext?.parent);
 
   if (MarionettePrefs.useActors) {
-    const { browsingContext } = await this.getActor().switchToParentFrame();
     this.contentBrowsingContext = browsingContext;
-
     return;
   }
 
@@ -1741,19 +1762,19 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
  *     If both element and id are not defined, switch to top-level frame.
  *
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.switchToFrame = async function(cmd) {
   const { element: el, focus = false, id } = cmd.parameters;
 
-  assert.open(this.getCurrentWindow());
-  await this._handleUserPrompts();
-
   if (typeof id == "number") {
     assert.unsignedShort(id, `Expected id to be unsigned short, got ${id}`);
   }
+
+  assert.open(this.getBrowsingContext({ top: id == null && el == null }));
+  await this._handleUserPrompts();
 
   // Bug 1495063: Elements should be passed as WebElement reference
   let byFrame;
@@ -1852,7 +1873,7 @@ GeckoDriver.prototype.setTimeouts = function(cmd) {
 
 /** Single tap. */
 GeckoDriver.prototype.singleTap = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
 
   let { id, x, y } = cmd.parameters;
   let webEl = WebElement.fromUUID(id, this.context);
@@ -1875,19 +1896,19 @@ GeckoDriver.prototype.singleTap = async function(cmd) {
  * @param {Array.<?>} actions
  *     Array of objects that each represent an action sequence.
  *
- * @throws {UnsupportedOperationError}
- *     Not yet available in current context.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not yet available in current context.
  */
 GeckoDriver.prototype.performActions = async function(cmd) {
   assert.content(
     this.context,
     "Command 'performActions' is not yet available in chrome context"
   );
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let actions = cmd.parameters.actions;
@@ -1897,16 +1918,16 @@ GeckoDriver.prototype.performActions = async function(cmd) {
 /**
  * Release all the keys and pointer buttons that are currently depressed.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.releaseActions = async function() {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   await this.listener.releaseActions();
@@ -1922,15 +1943,15 @@ GeckoDriver.prototype.releaseActions = async function() {
  * @return {number}
  *     Last touch ID.
  *
- * @throws {UnsupportedOperationError}
- *     Not applicable to application.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not applicable to application.
  */
 GeckoDriver.prototype.actionChain = async function(cmd) {
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let { chain, nextId } = cmd.parameters;
@@ -1944,7 +1965,7 @@ GeckoDriver.prototype.actionChain = async function(cmd) {
       return this.legacyactions.dispatchActions(
         chain,
         nextId,
-        { frame: win },
+        { frame: this.getCurrentWindow() },
         this.curBrowser.seenEls
       );
 
@@ -1964,16 +1985,16 @@ GeckoDriver.prototype.actionChain = async function(cmd) {
  *     the middle array represents a collection of events for each
  *     finger, and the outer array represents all fingers.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.multiAction = async function(cmd) {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let { value, max_length } = cmd.parameters; // eslint-disable-line camelcase
@@ -1989,7 +2010,7 @@ GeckoDriver.prototype.multiAction = async function(cmd) {
  *     Value the client is looking for.
  *
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
@@ -2000,7 +2021,7 @@ GeckoDriver.prototype.findElement = async function(cmd) {
     throw new error.InvalidSelectorError(`Strategy not supported: ${using}`);
   }
 
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let startNode;
@@ -2020,7 +2041,7 @@ GeckoDriver.prototype.findElement = async function(cmd) {
 
   switch (this.context) {
     case Context.Chrome:
-      let container = { frame: win };
+      let container = { frame: this.getCurrentWindow() };
       if (opts.startNode) {
         opts.startNode = this.curBrowser.seenEls.get(opts.startNode);
       }
@@ -2042,6 +2063,9 @@ GeckoDriver.prototype.findElement = async function(cmd) {
  *     Indicates which search method to use.
  * @param {string} value
  *     Value the client is looking for.
+ *
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
  */
 GeckoDriver.prototype.findElements = async function(cmd) {
   const { element: el, using, value } = cmd.parameters;
@@ -2050,7 +2074,7 @@ GeckoDriver.prototype.findElements = async function(cmd) {
     throw new error.InvalidSelectorError(`Strategy not supported: ${using}`);
   }
 
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let startNode;
@@ -2070,7 +2094,7 @@ GeckoDriver.prototype.findElements = async function(cmd) {
 
   switch (this.context) {
     case Context.Chrome:
-      let container = { frame: win };
+      let container = { frame: this.getCurrentWindow() };
       if (startNode) {
         opts.startNode = this.curBrowser.seenEls.get(opts.startNode);
       }
@@ -2092,19 +2116,19 @@ GeckoDriver.prototype.findElements = async function(cmd) {
  *     Active element of the current browsing context's document
  *     element, if the document element is non-null.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
- * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
- * @throws {UnexpectedAlertOpenError}
- *     A modal dialog is open, blocking this operation.
  * @throws {NoSuchElementError}
  *     If the document does not have an active element, i.e. if
  *     its document element has been deleted.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
+ * @throws {UnexpectedAlertOpenError}
+ *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.getActiveElement = async function() {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   return this.listener.getActiveElement();
@@ -2121,12 +2145,12 @@ GeckoDriver.prototype.getActiveElement = async function() {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.clickElement = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2175,12 +2199,12 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementAttribute = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   const id = assert.string(cmd.parameters.id);
@@ -2220,12 +2244,12 @@ GeckoDriver.prototype.getElementAttribute = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementProperty = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   const id = assert.string(cmd.parameters.id);
@@ -2264,12 +2288,12 @@ GeckoDriver.prototype.getElementProperty = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementText = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2305,12 +2329,12 @@ GeckoDriver.prototype.getElementText = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementTagName = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2343,12 +2367,12 @@ GeckoDriver.prototype.getElementTagName = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.isElementDisplayed = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2383,12 +2407,12 @@ GeckoDriver.prototype.isElementDisplayed = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementValueOfCssProperty = async function(cmd) {
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2397,9 +2421,10 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(cmd) {
 
   switch (this.context) {
     case Context.Chrome:
-      let el = this.curBrowser.seenEls.get(webEl);
-      let sty = win.document.defaultView.getComputedStyle(el);
-      return sty.getPropertyValue(prop);
+      const win = this.getCurrentWindow();
+      const el = this.curBrowser.seenEls.get(webEl);
+      const style = win.document.defaultView.getComputedStyle(el);
+      return style.getPropertyValue(prop);
 
     case Context.Content:
       return this.listener.getElementValueOfCssProperty(webEl, prop);
@@ -2423,12 +2448,12 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.isElementEnabled = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2462,12 +2487,12 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.isElementSelected = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2493,12 +2518,12 @@ GeckoDriver.prototype.isElementSelected = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementRect = async function(cmd) {
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2506,8 +2531,9 @@ GeckoDriver.prototype.getElementRect = async function(cmd) {
 
   switch (this.context) {
     case Context.Chrome:
-      let el = this.curBrowser.seenEls.get(webEl);
-      let rect = el.getBoundingClientRect();
+      const win = this.getCurrentWindow();
+      const el = this.curBrowser.seenEls.get(webEl);
+      const rect = el.getBoundingClientRect();
       return {
         x: rect.x + win.pageXOffset,
         y: rect.y + win.pageYOffset,
@@ -2536,12 +2562,12 @@ GeckoDriver.prototype.getElementRect = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference `id` is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.sendKeysToElement = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2576,12 +2602,12 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd) {
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.clearElement = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let id = assert.string(cmd.parameters.id);
@@ -2617,10 +2643,12 @@ GeckoDriver.prototype.clearElement = async function(cmd) {
  *     If <var>id</var> is not a string.
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>id</var> is unknown.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
  */
 GeckoDriver.prototype.switchToShadowRoot = async function(cmd) {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
 
   let id = cmd.parameters.id;
   let webEl = null;
@@ -2638,19 +2666,19 @@ GeckoDriver.prototype.switchToShadowRoot = async function(cmd) {
  * @param {Map.<string, (string|number|boolean)> cookie
  *     Cookie object.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
- * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
- * @throws {UnexpectedAlertOpenError}
- *     A modal dialog is open, blocking this operation.
  * @throws {InvalidCookieDomainError}
  *     If <var>cookie</var> is for a different domain than the active
  *     document's host.
+ * @throws {NoSuchWindowError}
+ *     Bbrowsing context has been discarded.
+ * @throws {UnexpectedAlertOpenError}
+ *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.addCookie = async function(cmd) {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let { protocol, hostname } = await this._getCurrentURL();
@@ -2671,16 +2699,16 @@ GeckoDriver.prototype.addCookie = async function(cmd) {
  * This is the equivalent of calling <code>document.cookie</code> and
  * parsing the result.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.getCookies = async function() {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let { hostname, pathname } = await this._getCurrentURL();
@@ -2690,16 +2718,16 @@ GeckoDriver.prototype.getCookies = async function() {
 /**
  * Delete all cookies that are visible to a document.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.deleteAllCookies = async function() {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let { hostname, pathname } = await this._getCurrentURL();
@@ -2711,16 +2739,16 @@ GeckoDriver.prototype.deleteAllCookies = async function() {
 /**
  * Delete a cookie by name.
  *
- * @throws {UnsupportedOperationError}
- *     Not available in current context.
  * @throws {NoSuchWindowError}
- *     Top-level browsing context has been discarded.
+ *     Browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in current context.
  */
 GeckoDriver.prototype.deleteCookie = async function(cmd) {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let { hostname, pathname } = await this._getCurrentURL();
@@ -2748,9 +2776,12 @@ GeckoDriver.prototype.deleteCookie = async function(cmd) {
  *
  * @return {Object.<string, string>}
  *     Handle and type of the new browsing context.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.newWindow = async function(cmd) {
-  assert.open(this.getCurrentWindow({ context: Context.Content }));
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   let focus = false;
@@ -2826,7 +2857,7 @@ GeckoDriver.prototype.newWindow = async function(cmd) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.close = async function() {
-  assert.open(this.getCurrentWindow({ context: Context.Content }));
+  assert.open(this.getBrowsingContext({ context: Context.Content, top: true }));
   await this._handleUserPrompts();
 
   let nwins = 0;
@@ -2863,10 +2894,13 @@ GeckoDriver.prototype.close = async function() {
  *
  * @return {Array.<string>}
  *     Unique chrome window handles of remaining chrome windows.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.closeChromeWindow = async function() {
   assert.firefox();
-  assert.open(this.getCurrentWindow({ context: Context.Chrome }));
+  assert.open(this.getBrowsingContext({ context: Context.Chrome, top: true }));
 
   let nwins = 0;
 
@@ -2956,9 +2990,12 @@ GeckoDriver.prototype.deleteSession = function() {
  *     If <var>hash</var> is false, PNG image encoded as Base64 encoded
  *     string.  If <var>hash</var> is true, hex digest of the SHA-256
  *     hash of the Base64 encoded string.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.takeScreenshot = async function(cmd) {
-  let win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   let { id, full, hash, scroll } = cmd.parameters;
@@ -2971,6 +3008,8 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
 
   // Only consider full screenshot if no element has been specified
   full = webEl ? false : full;
+
+  const win = this.getCurrentWindow();
 
   let rect;
   switch (this.context) {
@@ -3027,10 +3066,15 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
  * Will return one of the valid primary orientation values
  * portrait-primary, landscape-primary, portrait-secondary, or
  * landscape-secondary.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.getScreenOrientation = function() {
   assert.fennec();
-  let win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
+
+  const win = this.getCurrentWindow();
 
   return win.screen.mozOrientation;
 };
@@ -3045,10 +3089,13 @@ GeckoDriver.prototype.getScreenOrientation = function() {
  * Valid orientations are "portrait" and "landscape", which fall
  * back to "portrait-primary" and "landscape-primary" respectively,
  * and "portrait-secondary" as well as "landscape-secondary".
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.setScreenOrientation = function(cmd) {
   assert.fennec();
-  let win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
 
   const ors = [
     "portrait",
@@ -3066,6 +3113,7 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd) {
     throw new error.InvalidArgumentError(`Unknown screen orientation: ${or}`);
   }
 
+  const win = this.getCurrentWindow();
   if (!win.screen.mozLockOrientation(mozOr)) {
     throw new error.WebDriverError(`Unable to set screen orientation: ${or}`);
   }
@@ -3082,18 +3130,19 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd) {
  * @return {Object.<string, number>}
  *     Window rect and window state.
  *
- * @throws {UnsupportedOperationError}
- *     Not available for current application.
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available for current application.
  */
 GeckoDriver.prototype.minimizeWindow = async function() {
   assert.firefox();
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
+  const win = this.getCurrentWindow();
   switch (WindowState.from(win.windowState)) {
     case WindowState.Fullscreen:
       await exitFullscreen(win);
@@ -3134,18 +3183,19 @@ GeckoDriver.prototype.minimizeWindow = async function() {
  * @return {Object.<string, number>}
  *     Window rect.
  *
- * @throws {UnsupportedOperationError}
- *     Not available for current application.
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available for current application.
  */
 GeckoDriver.prototype.maximizeWindow = async function() {
   assert.firefox();
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
+  const win = this.getCurrentWindow();
   switch (WindowState.from(win.windowState)) {
     case WindowState.Fullscreen:
       await exitFullscreen(win);
@@ -3185,18 +3235,19 @@ GeckoDriver.prototype.maximizeWindow = async function() {
  * @return {Map.<string, number>}
  *     Window rect.
  *
- * @throws {UnsupportedOperationError}
- *     Not available for current application.
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available for current application.
  */
 GeckoDriver.prototype.fullscreenWindow = async function() {
   assert.firefox();
-  const win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
+  const win = this.getCurrentWindow();
   switch (WindowState.from(win.windowState)) {
     case WindowState.Maximized:
     case WindowState.Minimized:
@@ -3225,14 +3276,18 @@ GeckoDriver.prototype.fullscreenWindow = async function() {
 /**
  * Dismisses a currently displayed tab modal, or returns no such alert if
  * no modal is displayed.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.dismissDialog = async function() {
-  let win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   this._checkIfAlertIsPresent();
 
-  let dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
+  const win = this.getCurrentWindow();
+  const dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
 
-  let { button0, button1 } = this.dialog.ui;
+  const { button0, button1 } = this.dialog.ui;
   (button1 ? button1 : button0).click();
 
   await dialogClosed;
@@ -3242,14 +3297,18 @@ GeckoDriver.prototype.dismissDialog = async function() {
 /**
  * Accepts a currently displayed tab modal, or returns no such alert if
  * no modal is displayed.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.acceptDialog = async function() {
-  let win = assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   this._checkIfAlertIsPresent();
 
-  let dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
+  const win = this.getCurrentWindow();
+  const dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
 
-  let { button0 } = this.dialog.ui;
+  const { button0 } = this.dialog.ui;
   button0.click();
 
   await dialogClosed;
@@ -3259,9 +3318,12 @@ GeckoDriver.prototype.acceptDialog = async function() {
 /**
  * Returns the message shown in a currently displayed modal, or returns
  * a no such alert error if no modal is currently displayed.
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.getTextFromDialog = function() {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   this._checkIfAlertIsPresent();
 
   return this.dialog.ui.infoBody.textContent;
@@ -3282,12 +3344,14 @@ GeckoDriver.prototype.getTextFromDialog = function() {
  *     If the current user prompt is an alert or confirm.
  * @throws {NoSuchAlertError}
  *     If there is no current user prompt.
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  * @throws {UnsupportedOperationError}
  *     If the current user prompt is something other than an alert,
  *     confirm, or a prompt.
  */
 GeckoDriver.prototype.sendKeysToDialog = async function(cmd) {
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   this._checkIfAlertIsPresent();
 
   let text = assert.string(cmd.parameters.text);
@@ -3685,10 +3749,13 @@ GeckoDriver.prototype.teardownReftest = function() {
  *
  * @return {string}
  *     Base64 encoded PDF representing printed document
+ *
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.print = async function(cmd) {
   assert.content(this.context);
-  assert.open(this.getCurrentWindow());
+  assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
   const settings = print.addDefaultSettings(cmd.parameters);

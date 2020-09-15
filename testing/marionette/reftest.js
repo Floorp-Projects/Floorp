@@ -95,7 +95,8 @@ reftest.Runner = class {
   setup(urlCount, screenshotMode, isPrint = false) {
     this.isPrint = isPrint;
 
-    this.parentWindow = assert.open(this.driver.getCurrentWindow());
+    assert.open(this.driver.getBrowsingContext({ top: true }));
+    this.parentWindow = this.driver.getCurrentWindow();
 
     this.screenshotMode =
       SCREENSHOT_MODE[screenshotMode] || SCREENSHOT_MODE.unexpected;
