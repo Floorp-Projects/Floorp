@@ -37,6 +37,7 @@ using mozilla::DefaultXDisplay;
 #include "nsAttrName.h"
 #include "nsIFocusManager.h"
 #include "nsFocusManager.h"
+#include "nsIProtocolHandler.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDocShell.h"
 #include "ImageContainer.h"
@@ -423,18 +424,37 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
       (PopupBlocker::PopupControlState)blockPopups);
 
   // if security checks (in particular CheckLoadURIWithPrincipal) needs
-  // to be skipped we are creating a contentPrincipal to make sure
-  // that security check succeeds. Please note that we do not want to
-  // fall back to using the systemPrincipal, because that would also
-  // bypass ContentPolicy checks which should still be enforced.
+  // to be skipped we are creating a contentPrincipal from the target URI
+  // to make sure that security checks succeed.
+  // Please note that we do not want to fall back to using the
+  // systemPrincipal, because that would also bypass ContentPolicy checks
+  // which should still be enforced.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   if (!aDoCheckLoadURIChecks) {
     mozilla::OriginAttributes attrs =
         BasePrincipal::Cast(content->NodePrincipal())->OriginAttributesRef();
     triggeringPrincipal = BasePrincipal::CreateContentPrincipal(uri, attrs);
   } else {
-    triggeringPrincipal =
-        NullPrincipal::CreateWithInheritedAttributes(content->NodePrincipal());
+    bool useParentContentPrincipal = false;
+    nsCOMPtr<nsINetUtil> netUtil = do_GetNetUtil();
+    // For protocols loadable by anyone, it doesn't matter what principal
+    // we use for the security check. However, for external URIs, we check
+    // whether the browsing context in which they load can be accessed by
+    // the triggering principal that is doing the loading, to avoid certain
+    // types of spoofing attacks. In this case, the load would never be
+    // allowed with the newly minted null principal, when all the plugin is
+    // trying to do is load a URL in its own browsing context. So we use
+    // the content principal of the plugin's node in this case.
+    netUtil->ProtocolHasFlags(uri,
+                              nsIProtocolHandler::URI_LOADABLE_BY_ANYONE |
+                                  nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+                              &useParentContentPrincipal);
+    if (useParentContentPrincipal) {
+      triggeringPrincipal = content->NodePrincipal();
+    } else {
+      triggeringPrincipal = NullPrincipal::CreateWithInheritedAttributes(
+          content->NodePrincipal());
+    }
   }
 
   nsCOMPtr<nsIContentSecurityPolicy> csp = content->GetCsp();
