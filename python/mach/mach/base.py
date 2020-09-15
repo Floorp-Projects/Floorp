@@ -4,13 +4,13 @@
 
 from __future__ import absolute_import, unicode_literals
 
-from mach.telemetry import Telemetry
+from mach.telemetry import NoopTelemetry
 
 
 class CommandContext(object):
     """Holds run-time state so it can easily be passed to command providers."""
     def __init__(self, cwd=None, settings=None, log_manager=None, commands=None,
-                 telemetry=Telemetry.as_noop(), **kwargs):
+                 telemetry=NoopTelemetry(False), **kwargs):
         self.cwd = cwd
         self.settings = settings
         self.log_manager = log_manager

@@ -62,8 +62,6 @@ class MachRegistrar(object):
 
     @classmethod
     def _instance(_, handler, context, **kwargs):
-        cls = handler.cls
-
         if context is None:
             raise ValueError('Expected a non-None context.')
 
@@ -72,7 +70,7 @@ class MachRegistrar(object):
             prerun(context, handler, args=kwargs)
 
         context.handler = handler
-        return cls(context, handler.virtualenv_name)
+        return handler.create_instance(context, handler.virtualenv_name)
 
     @classmethod
     def _fail_conditions(_, handler, instance):
