@@ -66,13 +66,12 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   // the Web IDL bindings.
 
   bool LoadingEnabled() const { return mLoadingEnabled; }
-  int16_t ImageBlockingStatus() const { return mImageBlockingStatus; }
   void AddObserver(imgINotificationObserver* aObserver);
   void RemoveObserver(imgINotificationObserver* aObserver);
   already_AddRefed<imgIRequest> GetRequest(int32_t aRequestType,
                                            mozilla::ErrorResult& aError);
   int32_t GetRequestType(imgIRequest* aRequest, mozilla::ErrorResult& aError);
-  already_AddRefed<nsIURI> GetCurrentURI(mozilla::ErrorResult& aError);
+  already_AddRefed<nsIURI> GetCurrentURI();
   already_AddRefed<nsIURI> GetCurrentRequestFinalURI();
   void ForceReload(bool aNotify, mozilla::ErrorResult& aError);
 
@@ -566,7 +565,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    */
   uint32_t mRequestGeneration;
 
-  int16_t mImageBlockingStatus;
   bool mLoadingEnabled : 1;
 
   /**

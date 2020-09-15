@@ -65,14 +65,6 @@ interface nsIImageLoadingContent : imgINotificationObserver
   [notxpcom, nostdcall] void setLoadingEnabled(in boolean aEnabled);
 
   /**
-   * Returns the image blocking status (@see nsIContentPolicy).  This
-   * will always be an nsIContentPolicy REJECT_* status for cases when
-   * the image was blocked.  This status always refers to the
-   * CURRENT_REQUEST load.
-   */
-  [notxpcom, nostdcall] readonly attribute short imageBlockingStatus;
-
-  /**
    * Used to register an image decoder observer.  Typically, this will
    * be a proxy for a frame that wants to paint the image.
    * Notifications from ongoing image loads will be passed to all
@@ -104,15 +96,6 @@ interface nsIImageLoadingContent : imgINotificationObserver
   [noscript] imgIRequest getRequest(in long aRequestType);
 
   /**
-   * Call this function when the request was blocked by any of the
-   * security policies enforced.
-   *
-   * @param aContentDecision the decision returned from nsIContentPolicy
-   *                         (any of the types REJECT_*)
-   */
-  [notxpcom, nostdcall] void setBlockedRequest(in int16_t aContentDecision);
-
-  /**
    * Used to notify the image loading content node that a frame has been
    * created.
    */
@@ -142,7 +125,7 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * Otherwise, returns the last URI that this content tried to load, or
    * null if there haven't been any such attempts.
    */
-  [noscript] readonly attribute nsIURI currentURI;
+  [noscript, infallible] readonly attribute nsIURI currentURI;
 
   /**
    * loadImageWithChannel allows data from an existing channel to be

@@ -46,8 +46,6 @@ function onLoad() {
       iframe.getBoundingClientRect();
 
       ok(img2.matches(":-moz-broken"), "should match ':-moz-broken' selector");
-      is(img.imageBlockingStatus, Ci.nsIContentPolicy.REJECT_SERVER,
-         "imageBlockingStatues should be REJECT_SERVER.");
 
       img2.src = "https://test.invalid";
       doc.body.appendChild(img2);
@@ -70,8 +68,6 @@ function onLoad() {
       ok(true, "img3 shouldn't be loaded");
 
       ok(img3.matches(":-moz-broken"), "should match ':-moz-broken' selector");
-      is(img3.imageBlockingStatus, Ci.nsIContentPolicy.REJECT_TYPE,
-         "imageBlockingStatues should be REJECT_TYPE.");
 
       SimpleTest.finish();
     }).catch((e) => {

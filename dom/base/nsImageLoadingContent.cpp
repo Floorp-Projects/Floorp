@@ -96,7 +96,6 @@ nsImageLoadingContent::nsImageLoadingContent()
       mObserverList(nullptr),
       mOutstandingDecodePromises(0),
       mRequestGeneration(0),
-      mImageBlockingStatus(nsIContentPolicy::ACCEPT),
       mLoadingEnabled(true),
       mIsImageStateForced(false),
       mLoading(false),
@@ -547,10 +546,6 @@ void nsImageLoadingContent::MaybeForceSyncDecoding(
   }
 }
 
-int16_t nsImageLoadingContent::GetImageBlockingStatus() {
-  return ImageBlockingStatus();
-}
-
 static void ReplayImageStatus(imgIRequest* aRequest,
                               imgINotificationObserver* aObserver) {
   if (!aRequest) {
@@ -910,8 +905,7 @@ nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
   return result.StealNSResult();
 }
 
-already_AddRefed<nsIURI> nsImageLoadingContent::GetCurrentURI(
-    ErrorResult& aError) {
+already_AddRefed<nsIURI> nsImageLoadingContent::GetCurrentURI() {
   nsCOMPtr<nsIURI> uri;
   if (mCurrentRequest) {
     mCurrentRequest->GetURI(getter_AddRefs(uri));
@@ -925,10 +919,8 @@ already_AddRefed<nsIURI> nsImageLoadingContent::GetCurrentURI(
 NS_IMETHODIMP
 nsImageLoadingContent::GetCurrentURI(nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aURI);
-
-  ErrorResult result;
-  *aURI = GetCurrentURI(result).take();
-  return result.StealNSResult();
+  *aURI = GetCurrentURI().take();
+  return NS_OK;
 }
 
 already_AddRefed<nsIURI> nsImageLoadingContent::GetCurrentRequestFinalURI() {
@@ -936,7 +928,6 @@ already_AddRefed<nsIURI> nsImageLoadingContent::GetCurrentRequestFinalURI() {
   if (mCurrentRequest) {
     mCurrentRequest->GetFinalURI(getter_AddRefs(uri));
   }
-
   return uri.forget();
 }
 
@@ -1107,11 +1098,8 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
   // instead? (It seems we only check ShouldLoadImages in HTMLImageElement,
   // which seems wrong...)
   if (aDocument->IsLoadedAsData() && !aDocument->IsStaticDocument()) {
-    // This is the only codepath on which we can reach SetBlockedRequest while
-    // our pending request exists.  Just clear it out here if we do have one.
+    // Clear our pending request if we do have one.
     ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DiscardImages));
-
-    SetBlockedRequest(nsIContentPolicy::REJECT_REQUEST);
 
     FireEvent(u"error"_ns);
     FireEvent(u"loadend"_ns);
@@ -1120,9 +1108,9 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
 
   // URI equality check.
   //
-  // We skip the equality check if our current image was blocked, since in that
+  // We skip the equality check if we don't have a current image, since in that
   // case we really do want to try loading again.
-  if (!aForce && NS_CP_ACCEPTED(mImageBlockingStatus)) {
+  if (!aForce && mCurrentRequest) {
     nsCOMPtr<nsIURI> currentURI;
     GetCurrentURI(getter_AddRefs(currentURI));
     bool equal;
@@ -1211,9 +1199,6 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
     // know what we tried (and failed) to load.
     if (!mCurrentRequest) {
       mCurrentURI = aNewURI;
-      if (mImageBlockingStatus == nsIContentPolicy::ACCEPT) {
-        mImageBlockingStatus = nsIContentPolicy::REJECT_REQUEST;
-      }
     }
 
     FireEvent(u"error"_ns);
@@ -1332,9 +1317,7 @@ void nsImageLoadingContent::UpdateImageState(bool aNotify) {
 
   // If we were blocked, we're broken, so are we if we don't have an image
   // request at all or the image has errored.
-  if (mImageBlockingStatus != nsIContentPolicy::ACCEPT) {
-    mBroken = true;
-  } else if (!mCurrentRequest) {
+  if (!mCurrentRequest) {
     if (!mLazyLoading) {
       // In case of non-lazy loading, no current request means error, since we
       // weren't disabled or suppressed
@@ -1452,34 +1435,8 @@ RefPtr<imgRequestProxy>& nsImageLoadingContent::PrepareNextRequest(
                                    : PrepareCurrentRequest(aImageLoadType);
 }
 
-void nsImageLoadingContent::SetBlockedRequest(int16_t aContentDecision) {
-  // If this is not calling from LoadImage, for example, from ServiceWorker,
-  // bail out.
-  if (!mIsStartingImageLoad) {
-    return;
-  }
-
-  // Sanity
-  MOZ_ASSERT(!NS_CP_ACCEPTED(aContentDecision), "Blocked but not?");
-
-  // We should never have a pending request after we got blocked.
-  MOZ_ASSERT(!mPendingRequest, "mPendingRequest should be null.");
-
-  if (HaveSize(mCurrentRequest)) {
-    // PreparePendingRequest set mPendingRequestFlags, now since we've decided
-    // to block it, we reset it back to 0.
-    mPendingRequestFlags = 0;
-  } else {
-    mImageBlockingStatus = aContentDecision;
-  }
-}
-
 RefPtr<imgRequestProxy>& nsImageLoadingContent::PrepareCurrentRequest(
     ImageLoadType aImageLoadType) {
-  // Blocked images go through SetBlockedRequest, which is a separate path. For
-  // everything else, we're unblocked.
-  mImageBlockingStatus = nsIContentPolicy::ACCEPT;
-
   // Get rid of anything that was there previously.
   ClearCurrentRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DiscardImages));
 
