@@ -84,6 +84,8 @@
   direction: ltr;
   text-align: left;
   resize: none;
+  color: var(--theme-body-color);
+  background-color: var(--theme-sidebar-background);
 }
 
 /* Styles related to JSONPreview */
