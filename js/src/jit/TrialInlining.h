@@ -8,6 +8,7 @@
 #define jit_TrialInlining_h
 
 #include "jit/CacheIR.h"
+#include "jit/ICStubSpace.h"
 #include "vm/BytecodeLocation.h"
 
 /*
@@ -34,6 +35,9 @@
 
 namespace js {
 namespace jit {
+
+class ICEntry;
+class ICScript;
 
 /*
  * An InliningRoot is owned by a JitScript. In turn, it owns the set
