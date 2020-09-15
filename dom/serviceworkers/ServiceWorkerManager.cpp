@@ -1719,8 +1719,8 @@ void ServiceWorkerManager::LoadRegistration(
     if (uri->SchemeIs("moz-extension")) {
       const auto& cacheName = aRegistration.cacheName();
       serviceWorkerScriptCache::PurgeCache(principal, cacheName);
+      return;
     }
-    return;
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
