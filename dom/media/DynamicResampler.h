@@ -181,16 +181,18 @@ class DynamicResampler final {
 
   void WarmUpResampler(bool aSkipLatency);
 
+ public:
+  const int mInRate;
+  const uint32_t mPreBufferFrames;
+
  private:
   int mChannels = 0;
-  const int mInRate;
   int mOutRate;
 
   AutoTArray<AudioRingBuffer, STEREO> mInternalInBuffer;
 
   SpeexResamplerState* mResampler = nullptr;
   AudioSampleFormat mSampleFormat = AUDIO_FORMAT_SILENCE;
-  const uint32_t mPreBufferFrames;
 
   class TailBuffer {
    public:
