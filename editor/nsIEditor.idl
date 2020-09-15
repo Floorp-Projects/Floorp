@@ -114,7 +114,7 @@ interface nsIEditor  : nsISupports
   /**
    * the MimeType of the document
    */
-  attribute string contentsMIMEType;
+  attribute AString contentsMIMEType;
 
   /** Returns true if we have a document that is not marked read-only */
   readonly attribute boolean isDocumentEditable;

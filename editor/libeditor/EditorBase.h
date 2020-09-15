@@ -2495,7 +2495,7 @@ class EditorBase : public nsIEditor,
   enum Tristate { eTriUnset, eTriFalse, eTriTrue };
 
   // MIME type of the doc we are editing.
-  nsCString mContentMIMEType;
+  nsString mContentMIMEType;
 
   RefPtr<mozInlineSpellChecker> mInlineSpellChecker;
   // Reference to text services document for mInlineSpellChecker.
