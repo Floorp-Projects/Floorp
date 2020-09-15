@@ -82,12 +82,12 @@ format:
               name: public/code-review/clang-format.diff
               path: /builds/worker/clang-format.diff
 
-civet:
+external:
     description: Run static-analysis (clang-tidy) on C/C++ patches with external checks
     attributes:
         code-review: false
     treeherder:
-        symbol: cpp(clang-civet)
+        symbol: cpp(clang-tidy-external)
     run:
         cwd: '{checkout}'
         command: >-
@@ -95,7 +95,7 @@ civet:
             ./mach --log-no-times static-analysis check --checks="-*,mozilla-civet-*" --outgoing --output $HOME/clang-tidy.json --format json
     fetches:
         toolchain:
-            - linux64-civet-tidy
+            - linux-clang-tidy-external
     worker:
         artifacts:
             - type: file
