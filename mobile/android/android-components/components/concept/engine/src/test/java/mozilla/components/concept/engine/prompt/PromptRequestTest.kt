@@ -161,17 +161,19 @@ class PromptRequestTest {
         confirmRequest.onConfirmNegativeButton(true)
         confirmRequest.onConfirmNeutralButton(true)
 
-        val onConfirmLogin: () -> Unit = {}
-        val onDismissLogin: (Login) -> Unit = {}
+        val onLoginDismiss: () -> Unit = {}
+        val onLoginConfirm: (Login) -> Unit = {}
 
         val login = Login(null, "origin", username = "username", password = "password")
-        val loginSaveRequest = PromptRequest.SaveLoginPrompt(0, listOf(login), onConfirmLogin, onDismissLogin)
+        val loginSaveRequest =
+            PromptRequest.SaveLoginPrompt(0, listOf(login), onLoginDismiss, onLoginConfirm)
         assertEquals(loginSaveRequest.logins, listOf(login))
         assertEquals(loginSaveRequest.hint, 0)
         loginSaveRequest.onConfirm(login)
         loginSaveRequest.onDismiss()
 
-        val loginSelectRequest = PromptRequest.SelectLoginPrompt(listOf(login), onConfirmLogin, onDismissLogin)
+        val loginSelectRequest =
+            PromptRequest.SelectLoginPrompt(listOf(login), onLoginDismiss, onLoginConfirm)
         assertEquals(loginSelectRequest.logins, listOf(login))
         loginSelectRequest.onConfirm(login)
         loginSelectRequest.onDismiss()

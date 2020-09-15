@@ -216,7 +216,8 @@ class PromptFeature private constructor(
 
     private val filePicker = FilePicker(container, store, customTabId, onNeedToRequestPermissions)
 
-    private val loginPicker =
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal var loginPicker =
         loginPickerView?.let { LoginPicker(store, it, onManageLogins, customTabId) }
 
     override val onNeedToRequestPermissions
@@ -226,6 +227,7 @@ class PromptFeature private constructor(
      * Starts observing the selected session to listen for prompt requests
      * and displays a dialog when needed.
      */
+    @Suppress("ComplexMethod")
     override fun start() {
         promptAbuserDetector.resetJSAlertAbuseState()
 
@@ -243,6 +245,10 @@ class PromptFeature private constructor(
                             onPromptRequested(state)
                         } else if (!it.loading) {
                             promptAbuserDetector.resetJSAlertAbuseState()
+                        } else if (it.loading) {
+                            if (activePromptRequest is SelectLoginPrompt) {
+                                loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
+                            }
                         }
                         activePromptRequest = it.promptRequest
                     }
