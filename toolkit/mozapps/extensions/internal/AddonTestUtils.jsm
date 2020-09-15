@@ -1492,14 +1492,22 @@ var AddonTestUtils = {
    * @param {string} event
    *        The name of the AddonListener event handler method for which
    *        an event is expected.
+   * @param {function} checkFn [optional]
+   *        A function to check if this is the right event. Should return true
+   *        for the event that it wants, false otherwise. Will be passed
+   *        all the relevant arguments.
+   *        If not passed, any event will do to resolve the promise.
    * @returns {Promise<Array>}
    *        Resolves to an array containing the event handler's
    *        arguments the first time it is called.
    */
-  promiseAddonEvent(event) {
+  promiseAddonEvent(event, checkFn) {
     return new Promise(resolve => {
       let listener = {
         [event](...args) {
+          if (typeof checkFn == "function" && !checkFn(...args)) {
+            return;
+          }
           AddonManager.removeAddonListener(listener);
           resolve(args);
         },
