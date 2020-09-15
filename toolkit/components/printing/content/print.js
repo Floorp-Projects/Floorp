@@ -246,6 +246,7 @@ var PrintEventHandler = {
     this._updatePrintPreviewTask = createDeferredTask(async () => {
       await initialPreviewDone;
       await this._updatePrintPreview();
+      document.dispatchEvent(new CustomEvent("preview-updated"));
     }, 0);
 
     document.dispatchEvent(
@@ -913,6 +914,9 @@ var PrintSettingsViewProxy = {
             p => p.name != PrintUtils.SAVE_TO_PDF_PRINTER
           )?.value
         );
+
+      case "numCopies":
+        return this.get(target, "willSaveToFile") ? 1 : target.numCopies;
     }
     return target[name];
   },
