@@ -877,22 +877,29 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
                            &targetURIIsUIResource);
   NS_ENSURE_SUCCESS(rv, rv);
   if (targetURIIsUIResource) {
+    // ALLOW_CHROME is a flag that we pass on all loads _except_ docshell
+    // loads (since docshell loads run the loaded content with its origin
+    // principal). We are effectively allowing resource:// and chrome://
+    // URIs to load as long as they are content accessible and as long
+    // they're not loading it as a document.
     if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME) {
-      // Allow a URI_IS_UI_RESOURCE source to link to a URI_IS_UI_RESOURCE
-      // target if ALLOW_CHROME is set.
-      //
-      // ALLOW_CHROME is a flag that we pass on all loads _except_ docshell
-      // loads (since docshell loads run the loaded content with its origin
-      // principal). So we're effectively allowing resource://, chrome://,
-      // and moz-icon:// source URIs to load resource://, chrome://, and
-      // moz-icon:// files, so long as they're not loading it as a document.
-      bool sourceIsUIResource;
+      bool sourceIsUIResource = false;
       rv = NS_URIChainHasFlags(aSourceBaseURI,
                                nsIProtocolHandler::URI_IS_UI_RESOURCE,
                                &sourceIsUIResource);
       NS_ENSURE_SUCCESS(rv, rv);
       if (sourceIsUIResource) {
-        return NS_OK;
+        // TODO Bug 1654488: Remove pref in CheckLoadURIFlags which
+        // allows all UI resources to load
+        if (StaticPrefs::
+                security_caps_allow_uri_is_ui_resource_in_checkloaduriflags()) {
+          return NS_OK;
+        }
+        // Special case for moz-icon URIs loaded by a local resources like
+        // e.g. chrome: or resource:
+        if (targetScheme.EqualsLiteral("moz-icon")) {
+          return NS_OK;
+        }
       }
 
       if (targetScheme.EqualsLiteral("resource")) {
