@@ -1337,6 +1337,9 @@ void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
   }
 
   nsISHistory* shistory = GetSessionHistory();
+  if (!shistory) {
+    return;
+  }
   int32_t index = 0;
   shistory->GetIndex(&index);
   int32_t length = shistory->GetCount();
