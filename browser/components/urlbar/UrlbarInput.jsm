@@ -938,6 +938,15 @@ class UrlbarInput {
     // confusing the user, we always enforce it when a result changes our value.
     this.setPageProxyState("invalid", true);
 
+    // A previous result may have previewed search mode. If we don't expect that
+    // we might stay in a search mode of some kind, exit it now.
+    if (
+      this.searchMode?.isPreview &&
+      result?.payload.keywordOffer != UrlbarUtils.KEYWORD_OFFER.SHOW
+    ) {
+      this.setSearchMode({});
+    }
+
     if (!result) {
       // This happens when there's no selection, for example when moving to the
       // one-offs search settings button, or to the input field when Top Sites
@@ -957,6 +966,20 @@ class UrlbarInput {
       } else if (result.autofill) {
         let { value, selectionStart, selectionEnd } = result.autofill;
         this._autofillValue(value, selectionStart, selectionEnd);
+      } else if (
+        result.payload.keywordOffer == UrlbarUtils.KEYWORD_OFFER.SHOW
+      ) {
+        // Enter search mode without starting a query. This will just preview
+        // search mode.
+        let enteredSearchMode = this.maybePromoteKeywordToSearchMode({
+          result,
+          checkValue: false,
+          startQuery: false,
+        });
+        if (!enteredSearchMode) {
+          this._setValue(this._getValueFromResult(result), true);
+          this.setSearchMode({});
+        }
       } else {
         // If the url is trimmed but it's invalid (for example it has an unknown
         // single word host, or an unknown domain suffix), trimming
@@ -1046,7 +1069,11 @@ class UrlbarInput {
       firstResult.heuristic &&
       firstResult.payload.keyword &&
       !firstResult.payload.keywordOffer &&
-      this.maybePromoteKeywordToSearchMode(firstResult, false)
+      this.maybePromoteKeywordToSearchMode({
+        result: firstResult,
+        entry: "typed",
+        checkValue: false,
+      })
     ) {
       return true;
     }
@@ -1145,6 +1172,18 @@ class UrlbarInput {
     };
 
     if (this.searchMode) {
+      // The user started a search from search mode preview so we're now in
+      // regular search mode. We `delete` instead of setting to null for easier
+      // testing. If this is our first query for this search mode, we record
+      // search mode entry in telemetry.
+      if (this.searchMode.isPreview) {
+        delete this.searchMode.isPreview;
+        try {
+          BrowserUsageTelemetry.recordSearchMode(this.searchMode);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      }
       options.searchMode = this.searchMode;
       if (this.searchMode.source) {
         options.sources = [this.searchMode.source];
@@ -1345,6 +1384,10 @@ class UrlbarInput {
       } else {
         this.searchMode.entry = entry;
       }
+
+      // We always preview search mode before entering it. We enter full search
+      // mode once a query is started.
+      this.searchMode.isPreview = true;
       this.toggleAttribute("searchmode", true);
       // Clear autofill.
       if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
@@ -1359,13 +1402,6 @@ class UrlbarInput {
         this.window.gBrowser.selectedBrowser,
         this.searchMode
       );
-
-      // Record search mode entry in telemetry.
-      try {
-        BrowserUsageTelemetry.recordSearchMode(this.searchMode);
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
     } else {
       this.removeAttribute("searchmode");
       this._searchModesByBrowser.delete(this.window.gBrowser.selectedBrowser);
@@ -1571,30 +1607,41 @@ class UrlbarInput {
    * Enters search mode and starts a new search if appropriate for the given
    * result.  See also _searchModeForResult.
    *
-   * @param {UrlbarResult} result
-   *   The currently selected urlbar result.
-   * @param {boolean} checkValue
+   * @param {string} entry
+   *   The search mode entry point. See setSearchMode documentation for details.
+   * @param {UrlbarResult} [result]
+   *   The result to promote. Defaults to the currently selected result.
+   * @param {boolean} [checkValue]
    *   If true, the trimmed input value must equal the result's keyword in order
    *   to enter search mode.
+   * @param {boolean} [startQuery]
+   *   If true, start a query after entering search mode. Defaults to true.
    * @returns {boolean}
    *   True if we entered search mode and false if not.
    */
-  maybePromoteKeywordToSearchMode(
+  maybePromoteKeywordToSearchMode({
+    entry,
     result = this._resultForCurrentValue,
-    checkValue = true
-  ) {
-    if (checkValue && this.value.trim() != result.payload.keyword?.trim()) {
+    checkValue = true,
+    startQuery = true,
+  }) {
+    if (
+      !result ||
+      (checkValue && this.value.trim() != result.payload.keyword?.trim())
+    ) {
       return false;
     }
 
-    let searchMode = this._searchModeForResult(result, "typed");
+    let searchMode = this._searchModeForResult(result, entry);
     if (!searchMode) {
       return false;
     }
 
     this.setSearchMode(searchMode);
     this._setValue(result.payload.query?.trimStart() || "", false);
-    this.startQuery({ allowAutofill: false });
+    if (startQuery) {
+      this.startQuery({ allowAutofill: false });
+    }
     return true;
   }
 
@@ -2442,6 +2489,12 @@ class UrlbarInput {
       this.value = this._focusUntrimmedValue;
     }
     this._focusUntrimmedValue = null;
+
+    // We exit previewed search mode on blur since the result previewing it is
+    // implictly unselected.
+    if (this.searchMode?.isPreview) {
+      this.setSearchMode({});
+    }
 
     this.formatValue();
     this._resetSearchState();
