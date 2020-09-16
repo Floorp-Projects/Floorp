@@ -100,6 +100,11 @@ PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
     return PaintFragment{};
   }
 
+  bool oldActiveState = aDocShell->GetIsActive();
+  if (!oldActiveState) {
+    aDocShell->SetIsActive(true);
+  }
+
   // Flush any pending notifications
   nsContentUtils::FlushLayoutForTree(aDocShell->GetWindow());
 
@@ -132,6 +137,10 @@ PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
     RefPtr<PresShell> presShell = presContext->PresShell();
     Unused << presShell->RenderDocument(r, renderDocFlags, aBackgroundColor,
                                         thebes);
+  }
+
+  if (!oldActiveState) {
+    aDocShell->SetIsActive(false);
   }
 
   if (!recorder->mOutputStream.mValid) {

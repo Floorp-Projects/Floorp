@@ -620,8 +620,6 @@ Capture.prototype = {
       return;
     }
 
-    aBrowser.docShellIsActive = true;
-
     // The requested page has loaded or stopped/aborted, so capture the page
     // soon but first let it settle in case of in-page redirects
     await new Promise(resolve => {
@@ -648,9 +646,7 @@ Capture.prototype = {
         },
         true
       );
-      aBrowser.docShellIsActive = false;
     } catch (ex) {
-      aBrowser.docShellIsActive = false;
       this._done(
         aBrowser,
         null,
