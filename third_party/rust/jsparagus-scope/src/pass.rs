@@ -23,7 +23,7 @@ pub struct ScopePassResult<'alloc> {
     pub function_declarations: HashMap<ScriptStencilIndex, &'alloc Function<'alloc>>,
     pub function_stencil_indices: AssociatedData<ScriptStencilIndex>,
     pub function_declaration_properties: FunctionDeclarationPropertyMap,
-    pub functions: ScriptStencilList,
+    pub scripts: ScriptStencilList,
     pub error: Option<ScopeBuildError>,
 }
 
@@ -53,7 +53,7 @@ impl<'alloc> From<ScopePass<'alloc>> for ScopePassResult<'alloc> {
             scope_data_map,
             function_stencil_indices,
             function_declaration_properties,
-            functions,
+            scripts,
             error,
         } = pass.builder.into();
         ScopePassResult {
@@ -61,7 +61,7 @@ impl<'alloc> From<ScopePass<'alloc>> for ScopePassResult<'alloc> {
             function_declarations: pass.function_declarations,
             function_stencil_indices,
             function_declaration_properties,
-            functions,
+            scripts,
             error,
         }
     }
@@ -196,7 +196,7 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
         // FIXME: Call self.builder.on_function_name
 
         self.enter_getter(ast);
-        self.visit_property_name(&ast.property_name);
+        self.visit_class_element_name(&ast.property_name);
 
         // FIXME: Pass something that points `()` part of getter.
         self.builder.on_getter_parameter(ast);
@@ -214,7 +214,7 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
         // FIXME: Call self.builder.on_function_name
 
         self.enter_setter(ast);
-        self.visit_property_name(&ast.property_name);
+        self.visit_class_element_name(&ast.property_name);
 
         // FIXME: Pass something that points `(param)` part of setter,
         // including `(` and `)`.

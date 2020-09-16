@@ -3878,10 +3878,10 @@ impl<'alloc> AstBuilder<'alloc> {
         self.alloc_with(|| ArrowExpressionBody::FunctionBody(body.unbox()))
     }
 
-    // MethodDefinition : PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
+    // MethodDefinition : ClassElementName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
     pub fn method_definition(
         &mut self,
-        name: arena::Box<'alloc, PropertyName<'alloc>>,
+        name: arena::Box<'alloc, ClassElementName<'alloc>>,
         param_open_token: arena::Box<'alloc, Token>,
         mut params: arena::Box<'alloc, FormalParameters<'alloc>>,
         param_close_token: arena::Box<'alloc, Token>,
@@ -3911,11 +3911,11 @@ impl<'alloc> AstBuilder<'alloc> {
         }))
     }
 
-    // MethodDefinition : `get` PropertyName `(` `)` `{` FunctionBody `}`
+    // MethodDefinition : `get` ClassElementName `(` `)` `{` FunctionBody `}`
     pub fn getter(
         &self,
         get_token: arena::Box<'alloc, Token>,
-        name: arena::Box<'alloc, PropertyName<'alloc>>,
+        name: arena::Box<'alloc, ClassElementName<'alloc>>,
         body_open_token: arena::Box<'alloc, Token>,
         mut body: arena::Box<'alloc, FunctionBody<'alloc>>,
         body_close_token: arena::Box<'alloc, Token>,
@@ -3931,11 +3931,11 @@ impl<'alloc> AstBuilder<'alloc> {
         })
     }
 
-    // MethodDefinition : `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
+    // MethodDefinition : `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
     pub fn setter(
         &mut self,
         set_token: arena::Box<'alloc, Token>,
-        name: arena::Box<'alloc, PropertyName<'alloc>>,
+        name: arena::Box<'alloc, ClassElementName<'alloc>>,
         param_open_token: arena::Box<'alloc, Token>,
         mut parameter: arena::Box<'alloc, Parameter<'alloc>>,
         param_close_token: arena::Box<'alloc, Token>,
@@ -3963,11 +3963,11 @@ impl<'alloc> AstBuilder<'alloc> {
         }))
     }
 
-    // GeneratorMethod : `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
+    // GeneratorMethod : `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
     pub fn generator_method(
         &mut self,
         generator_token: arena::Box<'alloc, Token>,
-        name: arena::Box<'alloc, PropertyName<'alloc>>,
+        name: arena::Box<'alloc, ClassElementName<'alloc>>,
         param_open_token: arena::Box<'alloc, Token>,
         mut params: arena::Box<'alloc, FormalParameters<'alloc>>,
         param_close_token: arena::Box<'alloc, Token>,
@@ -4029,11 +4029,11 @@ impl<'alloc> AstBuilder<'alloc> {
         })
     }
 
-    // AsyncGeneratorMethod ::= "async" "*" PropertyName "(" UniqueFormalParameters ")" "{" AsyncGeneratorBody "}"
+    // AsyncGeneratorMethod ::= "async" "*" ClassElementName "(" UniqueFormalParameters ")" "{" AsyncGeneratorBody "}"
     pub fn async_generator_method(
         &mut self,
         async_token: arena::Box<'alloc, Token>,
-        name: arena::Box<'alloc, PropertyName<'alloc>>,
+        name: arena::Box<'alloc, ClassElementName<'alloc>>,
         param_open_token: arena::Box<'alloc, Token>,
         mut params: arena::Box<'alloc, FormalParameters<'alloc>>,
         param_close_token: arena::Box<'alloc, Token>,
@@ -4244,11 +4244,11 @@ impl<'alloc> AstBuilder<'alloc> {
         self.alloc_with(|| self.new_vec())
     }
 
-    // AsyncMethod : `async` PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+    // AsyncMethod : `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
     pub fn async_method(
         &mut self,
         async_token: arena::Box<'alloc, Token>,
-        name: arena::Box<'alloc, PropertyName<'alloc>>,
+        name: arena::Box<'alloc, ClassElementName<'alloc>>,
         param_open_token: arena::Box<'alloc, Token>,
         mut params: arena::Box<'alloc, FormalParameters<'alloc>>,
         param_close_token: arena::Box<'alloc, Token>,

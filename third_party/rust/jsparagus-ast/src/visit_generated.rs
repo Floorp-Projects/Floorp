@@ -4682,7 +4682,7 @@ pub trait Pass<'alloc> {
 
     fn visit_method(&mut self, ast: &'alloc Method<'alloc>) {
         self.enter_method(ast);
-        self.visit_property_name(&ast.name);
+        self.visit_class_element_name(&ast.name);
         self.visit_formal_parameters(&ast.params);
         self.visit_function_body(&ast.body);
         self.leave_method(ast);
@@ -4696,7 +4696,7 @@ pub trait Pass<'alloc> {
 
     fn visit_getter(&mut self, ast: &'alloc Getter<'alloc>) {
         self.enter_getter(ast);
-        self.visit_property_name(&ast.property_name);
+        self.visit_class_element_name(&ast.property_name);
         self.visit_function_body(&ast.body);
         self.leave_getter(ast);
     }
@@ -4709,7 +4709,7 @@ pub trait Pass<'alloc> {
 
     fn visit_setter(&mut self, ast: &'alloc Setter<'alloc>) {
         self.enter_setter(ast);
-        self.visit_property_name(&ast.property_name);
+        self.visit_class_element_name(&ast.property_name);
         self.visit_parameter(&ast.param);
         self.visit_function_body(&ast.body);
         self.leave_setter(ast);

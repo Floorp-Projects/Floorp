@@ -132,7 +132,7 @@ macro_rules! using_opcode_database {
                 (FunCall, fun_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC),
                 (CallIgnoresRv, call_ignores_rv, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC),
                 (SpreadCall, spread_call, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_IC),
-                (OptimizeSpreadCall, optimize_spread_call, NULL, 1, 1, 2, JOF_BYTE),
+                (OptimizeSpreadCall, optimize_spread_call, NULL, 1, 1, 2, JOF_BYTE|JOF_IC),
                 (Eval, eval, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC),
                 (SpreadEval, spread_eval, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC),
                 (StrictEval, strict_eval, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC),
