@@ -319,6 +319,7 @@ var PKT_SAVED_OVERLAY = function(options) {
           .parent()
           .hasClass("token-input-input-token")
       ) {
+        $(".pkt_ext_subshell").hide(); // hide recs when tag input begins
         e.stopImmediatePropagation();
       }
     });
@@ -516,7 +517,26 @@ var PKT_SAVED_OVERLAY = function(options) {
   };
   this.renderItemRecs = function(data) {
     if (data && data.recommendations && data.recommendations.length) {
+      // URL encode and append raw image source for Thumbor + CDN
+      data.recommendations = data.recommendations.map(rec => {
+        // Using array notation because there is a key titled `1` (`images` is an object)
+        let rawSource = rec?.item?.top_image_url || rec?.item?.images["1"]?.src;
+
+        rec.item.encodedThumbURL = rawSource
+          ? encodeURIComponent(rawSource)
+          : null;
+
+        return rec;
+      });
+
       $(".pkt_ext_item_recs").append(Handlebars.templates.item_recs(data));
+
+      // Resize popover to accomodate recs:
+      thePKT_SAVED.sendMessage("resizePanel", {
+        width: 350,
+        height: this.premiumStatus ? 535 : 424, // TODO: Dynamic height based on number of recs
+      });
+
       $(".pkt_ext_item_recs_link").click(function(e) {
         e.preventDefault();
         thePKT_SAVED.sendMessage("openTabWithPocketUrl", {
@@ -615,7 +635,12 @@ PKT_SAVED_OVERLAY.prototype = {
   createPremiumFunctionality() {
     if (this.premiumStatus && !$(".pkt_ext_suggestedtag_detail").length) {
       this.premiumDetailsAdded = true;
-      $("body").append(Handlebars.templates.saved_premiumshell(this.dictJSON));
+
+      // Append shell for suggested tags
+      $("body .pkt_ext_subshell").prepend(
+        Handlebars.templates.saved_premiumshell(this.dictJSON)
+      );
+
       $(".pkt_ext_initload").append(
         Handlebars.templates.saved_premiumextras(this.dictJSON)
       );
