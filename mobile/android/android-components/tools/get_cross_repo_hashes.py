@@ -158,6 +158,9 @@ def ac_checkout_to_gv_versions(ac_root):
                 beta_version = extract_str_inside_quotes(line)
             elif stripped.startswith('const val release_version = "'):
                 release_version = extract_str_inside_quotes(line)
+
+        if not nightly_version or not beta_version or not release_version:
+            raise Exception('Unable to find gv versions from ac repository file "{}". This is likely a bug where the file path or format has changed.'.format(gv_version_path))
     return release_version, beta_version, nightly_version
 
 def ac_checkout_to_mc_hash(ac_root):
