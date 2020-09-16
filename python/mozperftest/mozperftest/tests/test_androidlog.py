@@ -59,10 +59,10 @@ def test_android_log(*mocked):
             "android-app-name": "org.mozilla.fenix",
             "androidlog": True,
             "output": output,
+            "tests": [EXAMPLE_TEST],
         }
 
         mach_cmd, metadata, env = get_running_env(**args)
-        env.set_arg("tests", [EXAMPLE_TEST])
 
         with env.layers[SYSTEM] as sys, env.layers[TEST] as andro:
             metadata = andro(sys(metadata))

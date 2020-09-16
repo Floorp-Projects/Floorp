@@ -15,6 +15,22 @@ job-defaults:
     require-build:
         win64-shippable/opt: build-win64-shippable/opt
 
+try:
+    description: Run ./mach perftest on windows
+    treeherder:
+        symbol: perftest(win)
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.exe python/mozperftest/mozperftest/runner.py
+            --on-try
+            --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox.exe
+            --flavor desktop-browser
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver.exe
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/node.exe
+            --output $MOZ_FETCHES_DIR/../artifacts
+
 domcount:
     description: Run DOM test
     treeherder:

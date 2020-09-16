@@ -57,9 +57,12 @@ def plain_display(taskfile):
 
     with open(taskfile) as f:
         tasklist = [line.strip() for line in f]
-    script_name = tasklist[0].split(" ")[-1]
+
+    tags, script_name, __, location = tasklist[0].split(" ")
+    script_path = Path(SRC_ROOT, location, script_name).resolve()
+
     for ob in get_test_objects():
-        if ob["path"].endswith(script_name):
+        if ob["path"] == str(script_path):
             print(ScriptInfo(ob["path"]))
             return
 
