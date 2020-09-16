@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   MarionettePrefs: "chrome://marionette/content/prefs.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 const ELEMENT_NODE = 1;
 const MAX_STRING_LENGTH = 250;
