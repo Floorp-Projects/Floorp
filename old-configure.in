@@ -1968,9 +1968,9 @@ WINNT|Darwin|OpenBSD)
 ;;
 Linux)
     case $CPU_ARCH in
-        x86_64|x86)
+        x86_64|x86|arm|aarch64)
         ;;
-        # Linux sandbox is only available on x86 and x86_64.
+        # Linux sandbox is only available on x86{,_64} and arm{,64}.
         *)
             MOZ_SANDBOX=
         ;;
