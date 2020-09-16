@@ -457,14 +457,13 @@ class ParserAtomsTable {
   // been tested.
   JS::Result<const ParserAtom*, OOM&> addEntry(
       JSContext* cx, AddPtr& addPtr, UniquePtr<ParserAtomEntry> entry);
+  JS::Result<const ParserAtom*, OOM&> internLatin1Seq(
+      JSContext* cx, AddPtr& addPtr, const Latin1Char* latin1Ptr,
+      uint32_t length);
   template <typename AtomCharT, typename SeqCharT>
   JS::Result<const ParserAtom*, OOM&> internChar16Seq(
-      JSContext* cx, AddPtr& add, InflatedChar16Sequence<SeqCharT> seq,
+      JSContext* cx, AddPtr& addPtr, InflatedChar16Sequence<SeqCharT> seq,
       uint32_t length);
-
-  template <typename CharT>
-  JS::Result<const ParserAtom*, OOM&> lookupOrInternChar16Seq(
-      JSContext* cx, InflatedChar16Sequence<CharT> seq);
 
  public:
   JS::Result<const ParserAtom*, OOM&> internAscii(JSContext* cx,
