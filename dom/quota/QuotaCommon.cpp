@@ -157,11 +157,26 @@ nsDependentCSubstring GetLeafName(const nsACString& aPath) {
 
 void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
               const nsACString& aSourceFile, int32_t aSourceLine) {
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+  nsAutoCString extraInfosString;
+
+  const auto* const extraInfos = ScopedLogExtraInfo::GetExtraInfoMap();
+  if (extraInfos) {
+    for (const auto& item : *extraInfos) {
+      extraInfosString.Append(", "_ns + nsDependentCString(item.first) +
+                              "="_ns + item.second);
+    }
+  }
+#endif
+
 #ifdef DEBUG
-  NS_DebugBreak(NS_DEBUG_WARNING, nsAutoCString(aModule + " failure"_ns).get(),
-                nsPromiseFlatCString(aExpr).get(),
-                nsPromiseFlatCString(GetLeafName(aSourceFile)).get(),
-                aSourceLine);
+  NS_DebugBreak(
+      NS_DEBUG_WARNING, nsAutoCString(aModule + " failure"_ns).get(),
+      (extraInfosString.IsEmpty() ? nsPromiseFlatCString(aExpr)
+                                  : static_cast<const nsCString&>(nsAutoCString(
+                                        aExpr + extraInfosString)))
+          .get(),
+      nsPromiseFlatCString(GetLeafName(aSourceFile)).get(), aSourceLine);
 #endif
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
@@ -170,7 +185,8 @@ void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
   if (console) {
     NS_ConvertUTF8toUTF16 message(aModule + " failure: '"_ns + aExpr +
                                   "', file "_ns + GetLeafName(aSourceFile) +
-                                  ", line "_ns + GetIntCString(aSourceLine));
+                                  ", line "_ns + GetIntCString(aSourceLine) +
+                                  extraInfosString);
 
     // The concatenation above results in a message like:
     // QuotaManager failure: 'EXP', file XYZ, line N)

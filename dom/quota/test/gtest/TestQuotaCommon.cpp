@@ -1153,3 +1153,63 @@ TEST(QuotaCommon_CollectWhileTest, ConditionFailsOnSecondExecution)
   MOZ_RELEASE_ASSERT(1 == bodyExecutions);
   MOZ_RELEASE_ASSERT(2 == conditionExecutions);
 }
+
+TEST(QuotaCommon_ScopedLogExtraInfo, AddAndRemove)
+{
+  static constexpr auto text = "foo"_ns;
+
+  {
+    const auto extraInfo =
+        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+    const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+    EXPECT_NE(nullptr, extraInfoMap);
+
+    EXPECT_EQ(text, extraInfoMap->at(ScopedLogExtraInfo::kTagQuery));
+#endif
+  }
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+  const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+  EXPECT_NE(nullptr, extraInfoMap);
+
+  EXPECT_EQ(0u, extraInfoMap->count(ScopedLogExtraInfo::kTagQuery));
+#endif
+}
+
+TEST(QuotaCommon_ScopedLogExtraInfo, Nested)
+{
+  static constexpr auto text = "foo"_ns;
+  static constexpr auto nestedText = "bar"_ns;
+
+  {
+    const auto extraInfo =
+        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+    const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+    EXPECT_NE(nullptr, extraInfoMap);
+#endif
+
+    {
+      const auto extraInfo =
+          ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, nestedText};
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+      EXPECT_EQ(nestedText, extraInfoMap->at(ScopedLogExtraInfo::kTagQuery));
+#endif
+    }
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+    EXPECT_EQ(text, extraInfoMap->at(ScopedLogExtraInfo::kTagQuery));
+#endif
+  }
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+  const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+  EXPECT_NE(nullptr, extraInfoMap);
+
+  EXPECT_EQ(0u, extraInfoMap->count(ScopedLogExtraInfo::kTagQuery));
+#endif
+}
