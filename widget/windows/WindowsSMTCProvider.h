@@ -79,7 +79,7 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   bool SetThumbnail(const nsAString& aUrl);
   void ClearThumbnail();
 
-  nsresult UpdateThumbnailOnMainThread(const nsAString& aUrl);
+  bool UpdateThumbnail(const nsAString& aUrl);
   void CancelPendingStoreAsyncOperation() const;
 
   bool mInitialized = false;
