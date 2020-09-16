@@ -396,5 +396,5 @@ tasks.register("testToolsDir", Exec) {
     group = "verification"
     description = "Run tests in the tools/ directory."
     workingDir = "tools"
-    commandLine = ["python3", "test_get_cross_repo_hashes.py"]
+    commandLine = ["python3", "test_list_compatible_dependency_versions.py"]
 }
