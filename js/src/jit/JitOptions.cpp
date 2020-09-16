@@ -170,6 +170,17 @@ DefaultJitOptions::DefaultJitOptions() {
   // are considered for trial inlining.
   SET_DEFAULT(trialInliningWarmUpThreshold, 500);
 
+  // The initial warm-up count for ICScripts created by trial inlining.
+  //
+  // Note: the difference between trialInliningInitialWarmUpCount and
+  // trialInliningWarmUpThreshold must be:
+  //
+  // * Small enough to allow inlining multiple levels deep before the outer
+  //   script reaches its normalIonWarmUpThreshold.
+  //
+  // * Greater than inliningEntryThreshold or no scripts can be inlined.
+  SET_DEFAULT(trialInliningInitialWarmUpCount, 250);
+
   // How many invocations or loop iterations are needed before functions
   // are compiled with the Ion compiler at OptimizationLevel::Normal.
   // Duplicated in all.js - ensure both match.
@@ -331,6 +342,7 @@ void DefaultJitOptions::setFastWarmUp() {
   baselineInterpreterWarmUpThreshold = 4;
   baselineJitWarmUpThreshold = 10;
   trialInliningWarmUpThreshold = 14;
+  trialInliningInitialWarmUpCount = 12;
   normalIonWarmUpThreshold = 30;
   fullIonWarmUpThreshold = 65;
 
@@ -344,6 +356,7 @@ void DefaultJitOptions::setWarpEnabled(bool enable) {
   typeInference = !enable;
   warpBuilder = enable;
   disableOptimizationLevels = enable;
+  normalIonWarmUpThreshold = enable ? 1500 : 1000;
 #endif
 }
 
