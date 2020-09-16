@@ -3281,12 +3281,13 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
     } else {
       MOZ_ASSERT(kind == CallKind::Scripted);
 
-      // TODO: if wrappedTarget->constructorNeedsUninitializedThis(), use an
-      // uninitialized-lexical constant as |this|. To do this we need to either
-      // store a new flag in the GuardSpecificFunction CacheIR/MIR instructions
-      // or we could add a new op similar to MetaTwoByte.
-
-      if (!thisArg->isCreateThisWithTemplate()) {
+      if (thisArg->isCreateThisWithTemplate()) {
+        // We have already updated |this| using MetaTwoByte.
+      } else if (flags.needsUninitializedThis()) {
+        MConstant* uninit = constant(MagicValue(JS_UNINITIALIZED_LEXICAL));
+        thisArg->setImplicitlyUsedUnchecked();
+        callInfo_->setThis(uninit);
+      } else {
         // Note: guard against Value loop phis similar to the Native case above.
         MOZ_ASSERT_IF(!thisArg->isPhi(),
                       thisArg->type() == MIRType::MagicIsConstructing);

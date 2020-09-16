@@ -66,6 +66,8 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                         Register scratch2, bool isJitCall);
   void createThis(Register argcReg, Register calleeReg, Register scratch,
                   CallFlags flags);
+  template <typename T>
+  void storeThis(const T& newThis, Register argcReg, CallFlags flags);
   void updateReturnValue();
 
   enum class NativeCallType { Native, ClassHook };
