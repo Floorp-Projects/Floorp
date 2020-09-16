@@ -30,7 +30,7 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
     return true;
   }
 
-  const uint32_t MAX_INLINING_DEPTH = 5;
+  const uint32_t MAX_INLINING_DEPTH = 4;
   if (icScript->depth() > MAX_INLINING_DEPTH) {
     return true;
   }
@@ -215,6 +215,13 @@ bool TrialInliner::shouldInline(JSFunction* target, ICStub* stub,
           "Inlining candidate JSOp::%s: callee script %s:%u:%u",
           CodeName(loc.getOp()), target->nonLazyScript()->filename(),
           target->nonLazyScript()->lineno(), target->nonLazyScript()->column());
+
+  // Don't inline (direct) recursive calls. This still allows recursion if
+  // called through another function (f => g => f).
+  if (script_ == target->nonLazyScript()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: recursion");
+    return false;
+  }
 
   uint32_t entryCount = stub->getEnteredCount();
   if (entryCount < JitOptions.inliningEntryThreshold) {
