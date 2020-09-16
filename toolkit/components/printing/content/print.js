@@ -671,10 +671,10 @@ var PrintEventHandler = {
     switch (marginSize) {
       case "minimum":
         return {
-          marginTop: (paper || this.defaultSettings).unwriteableMarginTop,
-          marginLeft: (paper || this.defaultSettings).unwriteableMarginLeft,
-          marginBottom: (paper || this.defaultSettings).unwriteableMarginBottom,
-          marginRight: (paper || this.defaultSettings).unwriteableMarginRight,
+          marginTop: paper.unwriteableMarginTop,
+          marginLeft: paper.unwriteableMarginLeft,
+          marginBottom: paper.unwriteableMarginBottom,
+          marginRight: paper.unwriteableMarginRight,
         };
       case "none":
         return {
@@ -683,13 +683,27 @@ var PrintEventHandler = {
           marginBottom: 0,
           marginRight: 0,
         };
-      default:
+      default: {
+        let minimum = this.getMarginPresets("minimum", paper);
         return {
-          marginTop: this.defaultSettings.marginTop,
-          marginLeft: this.defaultSettings.marginLeft,
-          marginBottom: this.defaultSettings.marginBottom,
-          marginRight: this.defaultSettings.marginRight,
+          marginTop: Math.max(
+            minimum.marginTop,
+            this.defaultSettings.marginTop
+          ),
+          marginRight: Math.max(
+            minimum.marginRight,
+            this.defaultSettings.marginRight
+          ),
+          marginBottom: Math.max(
+            minimum.marginBottom,
+            this.defaultSettings.marginBottom
+          ),
+          marginLeft: Math.max(
+            minimum.marginLeft,
+            this.defaultSettings.marginLeft
+          ),
         };
+      }
     }
   },
 };
@@ -886,6 +900,34 @@ var PrintSettingsViewProxy = {
         return paperName && this.availablePaperSizes[paperName];
       }
 
+      case "marginPresets":
+        let paperSize = this.get(target, "currentPaper");
+        return {
+          none: PrintEventHandler.getMarginPresets("none", paperSize),
+          minimum: PrintEventHandler.getMarginPresets("minimum", paperSize),
+          default: PrintEventHandler.getMarginPresets("default", paperSize),
+        };
+
+      case "marginOptions": {
+        let allMarginPresets = this.get(target, "marginPresets");
+        let uniqueMargins = new Set();
+        let marginsEnabled = {};
+        for (let name of ["none", "default", "minimum"]) {
+          let {
+            marginTop,
+            marginLeft,
+            marginBottom,
+            marginRight,
+          } = allMarginPresets[name];
+          let key = [marginTop, marginLeft, marginBottom, marginRight].join(
+            ","
+          );
+          marginsEnabled[name] = !uniqueMargins.has(key);
+          uniqueMargins.add(key);
+        }
+        return marginsEnabled;
+      }
+
       case "margins":
         let marginSettings = {
           marginTop: target.marginTop,
@@ -893,13 +935,10 @@ var PrintSettingsViewProxy = {
           marginBottom: target.marginBottom,
           marginRight: target.marginRight,
         };
-        // see if they match the minimum first
-        let paperSize = this.get(target, "currentPaper");
-        for (let presetName of ["minimum", "none"]) {
-          let marginPresets = PrintEventHandler.getMarginPresets(
-            presetName,
-            paperSize
-          );
+        // see if they match the none and then minimum margin values
+        let allMarginPresets = this.get(target, "marginPresets");
+        for (let presetName of ["none", "minimum"]) {
+          let marginPresets = allMarginPresets[presetName];
           if (
             Object.keys(marginSettings).every(
               name =>
@@ -1183,6 +1222,27 @@ class ColorModePicker extends PrintSettingSelect {
   }
 }
 customElements.define("color-mode-select", ColorModePicker, {
+  extends: "select",
+});
+
+class MarginsPicker extends PrintSettingSelect {
+  update(settings) {
+    // Re-evaluate which margin options should be enabled whenever the printer or paper changes
+    if (
+      settings.paperName !== this._paperName ||
+      settings.printerName !== this._printerName
+    ) {
+      let enabledMargins = settings.marginOptions;
+      for (let option of this.options) {
+        option.hidden = !enabledMargins[option.value];
+      }
+      this._paperName = settings.paperName;
+      this._printerName = settings.printerName;
+    }
+    super.update(settings);
+  }
+}
+customElements.define("margins-select", MarginsPicker, {
   extends: "select",
 });
 
