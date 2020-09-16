@@ -29,8 +29,11 @@ macro_rules! fatalln {
 
 #[no_mangle]
 pub unsafe extern "C" fn new_remote_agent_handler(result: *mut *const nsICommandLineHandler) {
-    let handler: RefPtr<RemoteAgentHandler> = RemoteAgentHandler::new().unwrap();
-    RefPtr::new(handler.coerce::<nsICommandLineHandler>()).forget(&mut *result);
+    if let Ok(handler) = RemoteAgentHandler::new() {
+        RefPtr::new(handler.coerce::<nsICommandLineHandler>()).forget(&mut *result);
+    } else {
+        *result = std::ptr::null();
+    }
 }
 
 #[derive(xpcom)]
