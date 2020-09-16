@@ -4036,8 +4036,9 @@ void Http2Session::CreateTunnel(nsHttpTransaction* trans,
   // transaction so that an auth created by the connect can be mappped
   // to the correct security callbacks
 
+  RefPtr<nsHttpConnectionInfo> clone(ci->Clone());
   RefPtr<SpdyConnectTransaction> connectTrans = new SpdyConnectTransaction(
-      ci, aCallbacks, trans->Caps(), trans, this, false);
+      clone, aCallbacks, trans->Caps(), trans, this, false);
   DebugOnly<bool> rv =
       AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false,
                 false, nullptr);
@@ -4563,8 +4564,9 @@ void Http2Session::CreateWebsocketStream(
   nsHttpConnectionInfo* ci = aOriginalTransaction->ConnectionInfo();
   MOZ_ASSERT(ci);
 
+  RefPtr<nsHttpConnectionInfo> clone(ci->Clone());
   RefPtr<SpdyConnectTransaction> connectTrans = new SpdyConnectTransaction(
-      ci, aCallbacks, trans->Caps(), trans, this, true);
+      clone, aCallbacks, trans->Caps(), trans, this, true);
   DebugOnly<bool> rv =
       AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false,
                 false, nullptr);
