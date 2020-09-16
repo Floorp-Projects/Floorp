@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebElement: "chrome://marionette/content/element.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
 const DEFAULT_CONTEXT_MENU_DELAY = 750; // ms

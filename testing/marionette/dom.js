@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://marionette/content/log.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 /**
  * The ``EventTarget`` for web elements can be used to observe DOM
