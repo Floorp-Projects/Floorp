@@ -9106,37 +9106,31 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
 
 // Remember the template object associated with any script being called
 // as a constructor, for later use during Ion compilation.
-bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
-                                                   MutableHandleObject result,
-                                                   bool* skipAttach) {
-  MOZ_ASSERT(!*skipAttach);
-
+ScriptedThisResult CallIRGenerator::getThisForScripted(
+    HandleFunction calleeFunc, MutableHandleObject result) {
   // Some constructors allocate their own |this| object.
   if (calleeFunc->constructorNeedsUninitializedThis()) {
-    return true;
+    return ScriptedThisResult::UninitializedThis;
   }
 
-  // Only attach a stub if the newTarget is a function that already has a
-  // prototype and we can look it up without causing side effects.
+  // Only attach a stub if the newTarget is a function with a
+  // nonconfigurable prototype.
   RootedValue protov(cx_);
   RootedObject newTarget(cx_, &newTarget_.toObject());
   if (!newTarget->is<JSFunction>() ||
       !newTarget->as<JSFunction>().hasNonConfigurablePrototypeDataProperty()) {
-    trackAttached(IRGenerator::NotAttached);
-    *skipAttach = true;
-    return true;
+    return ScriptedThisResult::NoAction;
   }
+
   if (!GetPropertyPure(cx_, newTarget, NameToId(cx_->names().prototype),
                        protov.address())) {
-    // Can't purely lookup function prototype
-    trackAttached(IRGenerator::NotAttached);
-    *skipAttach = true;
-    return true;
+    // The lazy prototype property hasn't been resolved yet.
+    MOZ_ASSERT(newTarget->as<JSFunction>().needsPrototypeProperty());
+    return ScriptedThisResult::TemporarilyUnoptimizable;
   }
 
   if (!protov.isObject()) {
-    *skipAttach = true;
-    return true;
+    return ScriptedThisResult::NoAction;
   }
 
   {
@@ -9145,27 +9139,28 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
     ObjectGroup* group = ObjectGroup::defaultNewGroup(cx_, &PlainObject::class_,
                                                       proto, newTarget);
     if (!group) {
-      return false;
+      cx_->clearPendingException();
+      return ScriptedThisResult::NoAction;
     }
 
     AutoSweepObjectGroup sweep(group);
     if (group->newScript(sweep) && !group->newScript(sweep)->analyzed()) {
-      // Function newScript has not been analyzed
-      trackAttached(IRGenerator::NotAttached);
-      *skipAttach = true;
-      return true;
+      // The new script analysis has not been done on this function.
+      // Don't attach until after the analysis has been done.
+      return ScriptedThisResult::TemporarilyUnoptimizable;
     }
   }
 
   PlainObject* thisObject =
       CreateThisForFunction(cx_, calleeFunc, newTarget, TenuredObject);
   if (!thisObject) {
-    return false;
+    cx_->clearPendingException();
+    return ScriptedThisResult::NoAction;
   }
 
   MOZ_ASSERT(thisObject->nonCCWRealm() == calleeFunc->realm());
   result.set(thisObject);
-  return true;
+  return ScriptedThisResult::TemplateObject;
 }
 
 AttachDecision CallIRGenerator::tryAttachCallScripted(
@@ -9214,19 +9209,18 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   }
 
   RootedObject templateObj(cx_);
-  bool skipAttach = false;
-  if (isConstructing && isSpecialized &&
-      !getTemplateObjectForScripted(calleeFunc, &templateObj, &skipAttach)) {
-    cx_->clearPendingException();
-    return AttachDecision::NoAction;
-  }
-  if (skipAttach) {
-    return AttachDecision::TemporarilyUnoptimizable;
-  }
-
-  if (isConstructing && isSpecialized &&
-      calleeFunc->constructorNeedsUninitializedThis()) {
-    flags.setNeedsUninitializedThis();
+  if (isConstructing && isSpecialized) {
+    switch (getThisForScripted(calleeFunc, &templateObj)) {
+      case ScriptedThisResult::TemplateObject:
+        break;
+      case ScriptedThisResult::UninitializedThis:
+        flags.setNeedsUninitializedThis();
+        break;
+      case ScriptedThisResult::TemporarilyUnoptimizable:
+        return AttachDecision::TemporarilyUnoptimizable;
+      case ScriptedThisResult::NoAction:
+        return AttachDecision::NoAction;
+    }
   }
 
   // Load argc.
@@ -9238,16 +9232,18 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
 
   if (isSpecialized) {
+    MOZ_ASSERT_IF(isConstructing,
+                  templateObj || flags.needsUninitializedThis());
+
     // Ensure callee matches this stub's callee
     emitCalleeGuard(calleeObjId, calleeFunc);
     if (templateObj) {
       // Call metaScriptedTemplateObject before emitting the call, so that Warp
       // can use this template object before transpiling the call.
-      MOZ_ASSERT(!flags.needsUninitializedThis());
       if (JitOptions.warpBuilder) {
         // Emit guards to ensure the newTarget's .prototype property is what we
-        // expect. Note that getTemplateObjectForScripted checked newTarget is a
-        // function with a non-configurable .prototype data property.
+        // expect. Note that getThisForScripted checked newTarget is a function
+        // with a non-configurable .prototype data property.
         JSFunction* newTarget = &newTarget_.toObject().as<JSFunction>();
         Shape* shape = newTarget->lookupPure(cx_->names().prototype);
         MOZ_ASSERT(shape);
