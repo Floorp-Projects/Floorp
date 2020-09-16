@@ -5,6 +5,8 @@
 from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
 
+import os
+
 
 class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
     def setUp(self):
@@ -24,6 +26,14 @@ class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
         )
 
     def test_registered_service_worker_after_restart(self):
+        # Wait the registered service worker to be stored in the Firefox profile
+        # before restarting the instance to prevent intermittent failures
+        # (Bug 1665184).
+        Wait(self.marionette, timeout=10).until(
+            lambda _: self.profile_serviceworker_txt_exists,
+            message="Wait service workers to be stored in the profile"
+        )
+
         # Quit and start a new session to simulate a full browser restart
         # (`self.marionette.restart(clean=False, in_app=True)` seems to not
         # be enough to simulate this scenario, because the service workers
@@ -37,6 +47,10 @@ class ServiceWorkerAtStartupTestCase(MarionetteTestCase):
             message="Wait the service worker to be registered after restart"
         )
         self.assertTrue(self.is_service_worker_registered)
+
+    @property
+    def profile_serviceworker_txt_exists(self):
+        return "serviceworker.txt" in os.listdir(self.marionette.profile_path)
 
     @property
     def is_service_worker_registered(self):
