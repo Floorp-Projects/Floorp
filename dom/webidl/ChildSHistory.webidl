@@ -31,10 +31,10 @@ interface ChildSHistory {
   /**
    * Getter for the legacy nsISHistory implementation.
    *
-   * This getter _will be going away_, but is needed while we finish
-   * implementing all of the APIs which we will need in the content
-   * process on ChildSHistory.
+   * legacySHistory has been deprecated. Don't use it, but instead handle
+   * the interaction with nsISHistory in the parent process.
    */
+  [Throws]
   readonly attribute nsISHistory legacySHistory;
 
   /**

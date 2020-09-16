@@ -33,10 +33,10 @@
       for (let eventType of LISTEN_EVENTS) {
         gBrowser.removeEventListener(eventType, eventListener, true);
       }
-     
+
       // Work around bug 467960
       var history = gBrowser.webNavigation.sessionHistory;
-      history.legacySHistory.PurgeHistory(history.count);
+      history.legacySHistory.purgeHistory(history.count);
 
       window.close();
       window.arguments[0].SimpleTest.finish();
@@ -47,7 +47,7 @@
       for (let eventType of LISTEN_EVENTS) {
         gBrowser.addEventListener(eventType, eventListener, true);
       }
-             
+
       gTestsIterator = testsIterator();
       nextTest();
     }

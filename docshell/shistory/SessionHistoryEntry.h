@@ -250,6 +250,8 @@ class SessionHistoryEntry : public nsISHEntry {
   static SessionHistoryEntry* GetByLoadId(uint64_t aLoadId);
   static void RemoveLoadId(uint64_t aLoadId);
 
+  const nsTArray<RefPtr<SessionHistoryEntry>>& Children() { return mChildren; }
+
  private:
   friend struct LoadingSessionHistoryInfo;
   virtual ~SessionHistoryEntry();
