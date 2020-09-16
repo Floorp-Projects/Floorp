@@ -6,7 +6,7 @@ use api::{
     ColorF, ColorU, ExtendMode, GradientStop,
     PremultipliedColorF, LineOrientation,
 };
-use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
+use api::units::{LayoutPoint, LayoutRect, LayoutSize, LayoutVector2D};
 use crate::scene_building::IsVisible;
 use euclid::approxeq::ApproxEq;
 use crate::frame_builder::FrameBuildingState;
@@ -230,6 +230,25 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
     }
 }
 
+fn get_gradient_opacity(
+    prim_rect: LayoutRect,
+    stretch_size: LayoutSize,
+    tile_spacing: LayoutSize,
+    stops_opacity: PrimitiveOpacity,
+) -> PrimitiveOpacity {
+    // If the coverage of the gradient extends to or beyond
+    // the primitive rect, then the opacity can be determined
+    // by the colors of the stops. If we have tiling / spacing
+    // then we just assume the gradient is translucent for now.
+    // (In the future we could consider segmenting in some cases).
+    let stride = stretch_size + tile_spacing;
+    if stride.width >= prim_rect.size.width && stride.height >= prim_rect.size.height {
+        stops_opacity
+    } else {
+        PrimitiveOpacity::translucent()
+    }
+}
+
 impl LinearGradientTemplate {
     /// Update the GPU cache for a given primitive template. This may be called multiple
     /// times per frame, by each primitive reference that refers to this interned
@@ -273,20 +292,12 @@ impl LinearGradientTemplate {
             );
         }
 
-        self.opacity = {
-            // If the coverage of the gradient extends to or beyond
-            // the primitive rect, then the opacity can be determined
-            // by the colors of the stops. If we have tiling / spacing
-            // then we just assume the gradient is translucent for now.
-            // (In the future we could consider segmenting in some cases).
-            let stride = self.stretch_size + self.tile_spacing;
-            if stride.width >= self.common.prim_rect.size.width &&
-               stride.height >= self.common.prim_rect.size.height {
-                self.stops_opacity
-            } else {
-               PrimitiveOpacity::translucent()
-            }
-        }
+        self.opacity = get_gradient_opacity(
+            self.common.prim_rect,
+            self.stretch_size,
+            self.tile_spacing,
+            self.stops_opacity,
+        );
     }
 }
 
@@ -511,7 +522,12 @@ impl RadialGradientTemplate {
             );
         }
 
-        self.opacity = PrimitiveOpacity::translucent();
+        self.opacity = get_gradient_opacity(
+            self.common.prim_rect,
+            self.stretch_size,
+            self.tile_spacing,
+            self.stops_opacity,
+        );
     }
 }
 
@@ -725,7 +741,12 @@ impl ConicGradientTemplate {
             );
         }
 
-        self.opacity = PrimitiveOpacity::translucent();
+        self.opacity = get_gradient_opacity(
+            self.common.prim_rect,
+            self.stretch_size,
+            self.tile_spacing,
+            self.stops_opacity,
+        );
     }
 }
 
