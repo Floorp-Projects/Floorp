@@ -361,6 +361,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     }
 
     private volatile ICodecCallbacks mCallbacks;
+    private GeckoSurface mSurface;
     private AsyncCodec mCodec;
     private InputProcessor mInputProcessor;
     private OutputProcessor mOutputProcessor;
@@ -430,6 +431,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             mSamplePool = new SamplePool(name, renderToSurface);
             if (renderToSurface) {
                 mIsTunneledPlaybackSupported = mCodec.isTunneledPlaybackSupported(mime);
+                mSurface = surface; // Take ownership of surface.
             }
             if (DEBUG) {
                 Log.d(LOGTAG, codec.toString() + " created. Render to surface?" + renderToSurface);
@@ -651,5 +653,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         mSamplePool = null;
         mCallbacks.asBinder().unlinkToDeath(this, 0);
         mCallbacks = null;
+        if (mSurface != null) {
+            mSurface.release();
+            mSurface = null;
+        }
     }
 }
