@@ -455,8 +455,7 @@ TEST(ResultExtensions_ToResultInvoke, nsCOMPtr_NS_IMETHOD_bool_Result)
   ASSERT_TRUE(ToResultInvoke(file, &nsIFile::Equals, file).isOk());
 }
 
-TEST(ResultExtensions_ToResultInvoke,
-     RawPtr_AbstractClass_MemberFunction_NoInput_Macro)
+TEST(ResultExtensions_ToResultInvoke, RawPtr_AbstractClass_MemberFunction_Macro)
 {
   nsCOMPtr<nsIFile> file = MakeAndAddRef<nsLocalFile>();
   auto* filePtr = file.get();
@@ -465,4 +464,17 @@ TEST(ResultExtensions_ToResultInvoke,
   static_assert(std::is_same_v<decltype(valOrErr), Result<bool, nsresult>>);
   ASSERT_TRUE(valOrErr.isOk());
   ASSERT_EQ(true, valOrErr.unwrap());
+}
+
+TEST(ResultExtensions_ToResultInvoke,
+     RawPtr_AbstractClass_MemberFunction_NoInput_Macro_Typed)
+{
+  nsCOMPtr<nsIFile> file = MakeAndAddRef<nsLocalFile>();
+  auto* filePtr = file.get();
+
+  auto valOrErr = MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, filePtr, Clone);
+  static_assert(
+      std::is_same_v<decltype(valOrErr), Result<nsCOMPtr<nsIFile>, nsresult>>);
+  ASSERT_TRUE(valOrErr.isOk());
+  ASSERT_NE(nullptr, valOrErr.unwrap());
 }
