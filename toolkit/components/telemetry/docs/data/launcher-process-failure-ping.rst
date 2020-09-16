@@ -48,10 +48,7 @@ Structure:
         // The line number of the source file where the error was raised
         "source_line": <int>,
         // The HRESULT error code of the error that was raised
-        "hresult": <int>,
-        // First sixteen bytes of a function that we failed to hook (Nightly-only).
-        // This field is added only on detour failures.
-        "detour_orig_bytes": <string>
+        "hresult": <int>
       },
       "security": {
         // A list of names of installed antivirus products
@@ -90,7 +87,6 @@ Structure:
 Version History
 ~~~~~~~~~~~~~~~
 
-- Firefox 82: Added ``detour_orig_bytes`` (`bug 1588245 <https://bugzilla.mozilla.org/show_bug.cgi?id=1588245>`_).
 - Firefox 82: Added ``process_type`` (`bug 1630444 <https://bugzilla.mozilla.org/show_bug.cgi?id=1630444>`_).
 - Firefox 71: Added ``is_admin_without_uac`` (`bug 1567605 <https://bugzilla.mozilla.org/show_bug.cgi?id=1567605>`_).
 - Firefox 67: Initial release (`bug 1460433 <https://bugzilla.mozilla.org/show_bug.cgi?id=1460433>`_).

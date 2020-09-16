@@ -128,10 +128,6 @@ class WindowsDllDetourPatcher final
   using PrimitiveT = WindowsDllDetourPatcherPrimitive<MMPolicyT>;
   Maybe<DetourFlags> mFlags;
 
-#if defined(NIGHTLY_BUILD)
-  Maybe<DetourError> mLastError;
-#endif  // defined(NIGHTLY_BUILD)
-
  public:
   template <typename... Args>
   explicit WindowsDllDetourPatcher(Args&&... aArgs)
@@ -143,10 +139,6 @@ class WindowsDllDetourPatcher final
   WindowsDllDetourPatcher(WindowsDllDetourPatcher&&) = delete;
   WindowsDllDetourPatcher& operator=(const WindowsDllDetourPatcher&) = delete;
   WindowsDllDetourPatcher& operator=(WindowsDllDetourPatcher&&) = delete;
-
-#if defined(NIGHTLY_BUILD)
-  const Maybe<DetourError>& GetLastError() const { return mLastError; }
-#endif  // defined(NIGHTLY_BUILD)
 
   void Clear() {
     if (!this->mVMPolicy.ShouldUnhookUponDestruction()) {
@@ -906,29 +898,17 @@ class WindowsDllDetourPatcher final
       return;
     }
 
-    auto clearInstanceOnFailure = MakeScopeExit([this, aOutTramp, &tramp,
-                                                 &origBytes]() -> void {
+    auto clearInstanceOnFailure = MakeScopeExit([aOutTramp, &tramp]() -> void {
       // *aOutTramp is not set until CreateTrampoline has completed
       // successfully, so we can use that to check for success.
       if (*aOutTramp) {
         return;
       }
 
-      // Clear the instance pointer so that we don't try to reset a
-      // nonexistent hook.
+      // Clear the instance pointer so that we don't try to reset a nonexistent
+      // hook.
       tramp.Rewind();
       tramp.WriteEncodedPointer(nullptr);
-
-#if defined(NIGHTLY_BUILD)
-      origBytes.Rewind();
-      mLastError = Some(DetourError());
-      size_t bytesToCapture = std::min(
-          ArrayLength(mLastError->mOrigBytes),
-          static_cast<size_t>(PrimitiveT::GetWorstCaseRequiredBytesToPatch()));
-      for (size_t i = 0; i < bytesToCapture; ++i) {
-        mLastError->mOrigBytes[i] = origBytes[i];
-      }
-#endif  // defined(NIGHTLY_BUILD)
     });
 
     tramp.WritePointer(origBytes.AsEncodedPtr());
