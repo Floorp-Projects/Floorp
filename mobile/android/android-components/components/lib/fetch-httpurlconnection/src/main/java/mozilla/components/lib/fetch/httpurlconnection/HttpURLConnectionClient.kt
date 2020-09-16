@@ -4,6 +4,7 @@
 
 package mozilla.components.lib.fetch.httpurlconnection
 
+import mozilla.components.concept.fetch.BuildConfig
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
@@ -32,6 +33,7 @@ class HttpURLConnectionClient : Client() {
 
         val connection = (URL(request.url).openConnection() as HttpURLConnection)
 
+        connection.setRequestProperty("User-Agent", "MozacFetch/${BuildConfig.LIBRARY_VERSION}")
         connection.setupWith(request)
         connection.addHeadersFrom(request, defaultHeaders = defaultHeaders)
         connection.addBodyFrom(request)
