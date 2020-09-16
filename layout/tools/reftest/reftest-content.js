@@ -235,25 +235,29 @@ function doPrintMode(contentRootElement) {
 }
 
 function setupPrintMode() {
-   var PSSVC =
-       Cc[PRINTSETTINGS_CONTRACTID].getService(Ci.nsIPrintSettingsService);
-   var ps = PSSVC.newPrintSettings;
-   ps.paperWidth = 5;
-   ps.paperHeight = 3;
+    var PSSVC =
+        Cc[PRINTSETTINGS_CONTRACTID].getService(Ci.nsIPrintSettingsService);
+    var ps = PSSVC.newPrintSettings;
+    ps.paperWidth = 5;
+    ps.paperHeight = 3;
 
-   // Override any os-specific unwriteable margins
-   ps.unwriteableMarginTop = 0;
-   ps.unwriteableMarginLeft = 0;
-   ps.unwriteableMarginBottom = 0;
-   ps.unwriteableMarginRight = 0;
+    // Override any os-specific unwriteable margins
+    ps.unwriteableMarginTop = 0;
+    ps.unwriteableMarginLeft = 0;
+    ps.unwriteableMarginBottom = 0;
+    ps.unwriteableMarginRight = 0;
 
-   ps.headerStrLeft = "";
-   ps.headerStrCenter = "";
-   ps.headerStrRight = "";
-   ps.footerStrLeft = "";
-   ps.footerStrCenter = "";
-   ps.footerStrRight = "";
-   docShell.contentViewer.setPageModeForTesting(/* aPageMode */ true, ps);
+    ps.headerStrLeft = "";
+    ps.headerStrCenter = "";
+    ps.headerStrRight = "";
+    ps.footerStrLeft = "";
+    ps.footerStrCenter = "";
+    ps.footerStrRight = "";
+
+    ps.printBGColors = true;
+    ps.printBGImages = true;
+
+    docShell.contentViewer.setPageModeForTesting(/* aPageMode */ true, ps);
 }
 
 // Message the parent process to ask it to print the current page to a PDF file.

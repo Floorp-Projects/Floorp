@@ -132,12 +132,12 @@ interface nsIPrintSettings : nsISupports
   /**
    * Makes a new copy
    */
-    nsIPrintSettings clone();
+  nsIPrintSettings clone();
 
   /**
    * Assigns the internal values from the "in" arg to the current object
    */
-    void assign(in nsIPrintSettings aPS);
+  void assign(in nsIPrintSettings aPS);
 
   /**
    * Data Members
@@ -177,8 +177,8 @@ interface nsIPrintSettings : nsISupports
   attribute double  unwriteableMarginRight;
 
   attribute double  scaling;      /* values 0.0 - 1.0 */
-  attribute boolean printBGColors; /* Print Background Colors */
-  attribute boolean printBGImages; /* Print Background Images */
+  [infallible] attribute boolean printBGColors; /* Print Background Colors */
+  [infallible] attribute boolean printBGImages; /* Print Background Images */
 
   attribute short   printRange;
 

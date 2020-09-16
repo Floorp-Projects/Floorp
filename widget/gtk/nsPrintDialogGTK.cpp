@@ -379,13 +379,11 @@ nsresult nsPrintDialogWidgetGTK::ImportSettings(nsIPrintSettings* aNSSettings) {
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(shrink_to_fit_toggle),
                                geckoBool);
 
-  aNSSettings->GetPrintBGColors(&geckoBool);
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(print_bg_colors_toggle),
-                               geckoBool);
+                               aNSSettings->GetPrintBGColors());
 
-  aNSSettings->GetPrintBGImages(&geckoBool);
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(print_bg_images_toggle),
-                               geckoBool);
+                               aNSSettings->GetPrintBGImages());
 
   gtk_print_unix_dialog_set_settings(GTK_PRINT_UNIX_DIALOG(dialog), settings);
   gtk_print_unix_dialog_set_page_setup(GTK_PRINT_UNIX_DIALOG(dialog), setup);
