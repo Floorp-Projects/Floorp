@@ -407,9 +407,7 @@ add_task(async function() {
       tests.forEach(test => {
         let { input, headers } = test;
         if (input === "PERFORMANCE_ENTRIES") {
-          input = content.wrappedJSObject.performance.getEntriesByType(
-            "navigation"
-          );
+          input = content.wrappedJSObject.performance.getEntries();
         }
         content.wrappedJSObject.doConsoleTable(input, headers);
       });

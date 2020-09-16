@@ -1240,10 +1240,10 @@ void nsRefreshDriver::RestoreNormalRefresh() {
   mCompletedTransaction = mOutstandingTransactionId = mNextTransactionId;
 }
 
-TimeStamp nsRefreshDriver::MostRecentRefresh(bool aEnsureTimerStarted) const {
+TimeStamp nsRefreshDriver::MostRecentRefresh() const {
   // In case of stylo traversal, we have already activated the refresh driver in
   // RestyleManager::ProcessPendingRestyles().
-  if (aEnsureTimerStarted && !ServoStyleSet::IsInServoTraversal()) {
+  if (!ServoStyleSet::IsInServoTraversal()) {
     const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted();
   }
 

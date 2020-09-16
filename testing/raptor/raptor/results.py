@@ -411,10 +411,14 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         # bt to raptor names
         conversion = (
             ("fnbpaint", "firstPaint"),
-            ("fcp", ["paintTiming", "first-contentful-paint"]),
+            ("fcp", "timeToContentfulPaint"),
             ("dcf", "timeToDomContentFlushed"),
             ("loadtime", "loadEventEnd"),
         )
+
+        chrome_raptor_conversion = {
+            "timeToContentfulPaint": ["paintTiming", "first-contentful-paint"]
+        }
 
         def _get_raptor_val(mdict, mname, retval=False):
             # gets the measurement requested, returns the value
@@ -520,13 +524,12 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     if self.app and "fennec" in self.app.lower() and bt == "fcp":
                         continue
 
-                    # FCP uses a different path to get the timing, so we need to do
-                    # some checks here
-                    if bt == "fcp" and not _get_raptor_val(
+                    # chrome currently uses different names (and locations) for some metrics
+                    if raptor in chrome_raptor_conversion and _get_raptor_val(
                         raw_result["browserScripts"][0]["timings"],
-                        raptor,
+                        chrome_raptor_conversion[raptor],
                     ):
-                        continue
+                        raptor = chrome_raptor_conversion[raptor]
 
                     # XXX looping several times in the list, could do better
                     for cycle in raw_result["browserScripts"]:
