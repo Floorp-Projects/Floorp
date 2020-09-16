@@ -237,7 +237,7 @@ class BrowserToolbarView(
     fun setScrollFlags(shouldDisableScroll: Boolean = false) {
         when (settings.toolbarPosition) {
             ToolbarPosition.BOTTOM -> {
-                if (settings.isDynamicToolbarEnabled) {
+                if (settings.isDynamicToolbarEnabled && !isPwaTab) {
                     (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
                         behavior = BrowserToolbarBottomBehavior(view.context, null)
                     }
