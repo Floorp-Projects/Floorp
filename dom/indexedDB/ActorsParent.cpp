@@ -677,6 +677,21 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
   return NS_OK;
 }
 
+Result<nsCOMPtr<mozIStorageStatement>, nsresult>
+CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
+                                    const nsACString& aStatementString) {
+  IDB_TRY_VAR(auto stmt,
+              ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+                  std::mem_fn(&mozIStorageConnection::CreateStatement),
+                  aConnection, aStatementString));
+
+  IDB_TRY_VAR(const DebugOnly<bool> hasResult,
+              MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+  MOZ_ASSERT(hasResult);
+
+  return stmt;
+}
+
 nsresult SetJournalMode(mozIStorageConnection& aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -685,23 +700,12 @@ nsresult SetJournalMode(mozIStorageConnection& aConnection) {
   constexpr auto journalModeQueryStart = "PRAGMA journal_mode = "_ns;
   constexpr auto journalModeWAL = "wal"_ns;
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = aConnection.CreateStatement(
-      journalModeQueryStart + journalModeWAL, getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(hasResult);
+  IDB_TRY_VAR(const auto stmt,
+              CreateAndExecuteSingleStepStatement(
+                  aConnection, journalModeQueryStart + journalModeWAL));
 
   nsCString journalMode;
-  rv = stmt->GetUTF8String(0, journalMode);
+  nsresult rv = stmt->GetUTF8String(0, journalMode);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1034,14 +1038,8 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 #endif
 
     if (kSQLitePageSizeOverride && !newDatabase) {
-      IDB_TRY_VAR(const auto stmt,
-                  ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-                      std::mem_fn(&mozIStorageConnection::CreateStatement),
-                      connection, "PRAGMA page_size;"_ns));
-
-      IDB_TRY_VAR(const bool hasResult,
-                  MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-      MOZ_ASSERT(hasResult);
+      IDB_TRY_VAR(const auto stmt, CreateAndExecuteSingleStepStatement(
+                                       *connection, "PRAGMA page_size;"_ns));
 
       IDB_TRY_VAR(const int32_t pageSize,
                   MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
@@ -1053,13 +1051,8 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
             connection->ExecuteSimpleSQL("PRAGMA journal_mode = DELETE;"_ns));
 
         IDB_TRY_VAR(const auto stmt,
-                    ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-                        std::mem_fn(&mozIStorageConnection::CreateStatement),
-                        connection, "PRAGMA journal_mode;"_ns));
-
-        IDB_TRY_VAR(const bool hasResult,
-                    MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-        MOZ_ASSERT(hasResult);
+                    CreateAndExecuteSingleStepStatement(
+                        *connection, "PRAGMA journal_mode;"_ns));
 
         IDB_TRY_VAR(
             const auto journalMode,
@@ -14752,20 +14745,9 @@ nsresult DatabaseMaintenance::CheckIntegrity(mozIStorageConnection& aConnection,
   // First do a full integrity_check. Scope statements tightly here because
   // later operations require zero live statements.
   {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = aConnection.CreateStatement("PRAGMA integrity_check(1);"_ns,
-                                     getter_AddRefs(stmt));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(hasResult);
+    IDB_TRY_VAR(const auto stmt,
+                CreateAndExecuteSingleStepStatement(
+                    aConnection, "PRAGMA integrity_check(1);"_ns));
 
     nsString result;
     rv = stmt->GetString(0, result);
@@ -14783,20 +14765,8 @@ nsresult DatabaseMaintenance::CheckIntegrity(mozIStorageConnection& aConnection,
   {
     int32_t foreignKeysWereEnabled;
     {
-      nsCOMPtr<mozIStorageStatement> stmt;
-      rv = aConnection.CreateStatement("PRAGMA foreign_keys;"_ns,
-                                       getter_AddRefs(stmt));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      bool hasResult;
-      rv = stmt->ExecuteStep(&hasResult);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      MOZ_ASSERT(hasResult);
+      IDB_TRY_VAR(const auto stmt, CreateAndExecuteSingleStepStatement(
+                                       aConnection, "PRAGMA foreign_keys;"_ns));
 
       rv = stmt->GetInt32(0, &foreignKeysWereEnabled);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -14881,22 +14851,10 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
                                     /* aCommitOnComplete */ false);
 
   // Check to see when we last vacuumed this database.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  rv = aConnection.CreateStatement(
-      "SELECT last_vacuum_time, last_vacuum_size "
-      "FROM database;"_ns,
-      getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(hasResult);
+  IDB_TRY_VAR(const auto stmt, CreateAndExecuteSingleStepStatement(
+                                   aConnection,
+                                   "SELECT last_vacuum_time, last_vacuum_size "
+                                   "FROM database;"_ns));
 
   PRTime lastVacuumTime;
   rv = stmt->GetInt64(0, &lastVacuumTime);
@@ -14939,37 +14897,32 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
     return rv;
   }
 
-  // Calculate the percentage of the database pages that are not in contiguous
-  // order.
-  rv = aConnection.CreateStatement(
-      "SELECT SUM(__ts1__.pageno != __ts2__.pageno + 1) * 100.0 / COUNT(*) "
-      "FROM __temp_stats__ AS __ts1__, __temp_stats__ AS __ts2__ "
-      "WHERE __ts1__.name = __ts2__.name "
-      "AND __ts1__.rowid = __ts2__.rowid + 1;"_ns,
-      getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  {  // Calculate the percentage of the database pages that are not in
+     // contiguous
+    // order.
+    IDB_TRY_VAR(
+        const auto stmt,
+        CreateAndExecuteSingleStepStatement(
+            aConnection,
+            "SELECT SUM(__ts1__.pageno != __ts2__.pageno + 1) * 100.0 / "
+            "COUNT(*) "
+            "FROM __temp_stats__ AS __ts1__, __temp_stats__ AS __ts2__ "
+            "WHERE __ts1__.name = __ts2__.name "
+            "AND __ts1__.rowid = __ts2__.rowid + 1;"_ns));
 
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    int32_t percentUnordered;
+    rv = stmt->GetInt32(0, &percentUnordered);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-  MOZ_ASSERT(hasResult);
+    MOZ_ASSERT(percentUnordered >= 0);
+    MOZ_ASSERT(percentUnordered <= 100);
 
-  int32_t percentUnordered;
-  rv = stmt->GetInt32(0, &percentUnordered);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(percentUnordered >= 0);
-  MOZ_ASSERT(percentUnordered <= 100);
-
-  if (percentUnordered >= kPercentUnorderedThreshold) {
-    *aMaintenanceAction = MaintenanceAction::FullVacuum;
-    return NS_OK;
+    if (percentUnordered >= kPercentUnorderedThreshold) {
+      *aMaintenanceAction = MaintenanceAction::FullVacuum;
+      return NS_OK;
+    }
   }
 
   // Don't try a full vacuum if the file hasn't grown by 10%.
@@ -14986,62 +14939,48 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
     return NS_OK;
   }
 
-  // See if there are any free pages that we can reclaim.
-  rv = aConnection.CreateStatement("PRAGMA freelist_count;"_ns,
-                                   getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  {  // See if there are any free pages that we can reclaim.
+    IDB_TRY_VAR(const auto stmt, CreateAndExecuteSingleStepStatement(
+                                     aConnection, "PRAGMA freelist_count;"_ns));
+
+    int32_t freelistCount;
+    rv = stmt->GetInt32(0, &freelistCount);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(freelistCount >= 0);
+
+    // If we have too many free pages then we should try an incremental
+    // vacuum. If that causes too much fragmentation then we'll try a full
+    // vacuum later.
+    if (freelistCount > kMaxFreelistThreshold) {
+      *aMaintenanceAction = MaintenanceAction::IncrementalVacuum;
+      return NS_OK;
+    }
   }
 
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  {  // Calculate the percentage of unused bytes on pages in the database.
+    IDB_TRY_VAR(
+        const auto stmt,
+        CreateAndExecuteSingleStepStatement(
+            aConnection,
+            "SELECT SUM(unused) * 100.0 / SUM(pgsize) FROM __temp_stats__;"_ns));
+
+    int32_t percentUnused;
+    rv = stmt->GetInt32(0, &percentUnused);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(percentUnused >= 0);
+    MOZ_ASSERT(percentUnused <= 100);
+
+    *aMaintenanceAction = percentUnused >= kPercentUnusedThreshold
+                              ? MaintenanceAction::FullVacuum
+                              : MaintenanceAction::IncrementalVacuum;
   }
 
-  MOZ_ASSERT(hasResult);
-
-  int32_t freelistCount;
-  rv = stmt->GetInt32(0, &freelistCount);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(freelistCount >= 0);
-
-  // If we have too many free pages then we should try an incremental vacuum. If
-  // that causes too much fragmentation then we'll try a full vacuum later.
-  if (freelistCount > kMaxFreelistThreshold) {
-    *aMaintenanceAction = MaintenanceAction::IncrementalVacuum;
-    return NS_OK;
-  }
-
-  // Calculate the percentage of unused bytes on pages in the database.
-  rv = aConnection.CreateStatement(
-      "SELECT SUM(unused) * 100.0 / SUM(pgsize) FROM __temp_stats__;"_ns,
-      getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(hasResult);
-
-  int32_t percentUnused;
-  rv = stmt->GetInt32(0, &percentUnused);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(percentUnused >= 0);
-  MOZ_ASSERT(percentUnused <= 100);
-
-  *aMaintenanceAction = percentUnused >= kPercentUnusedThreshold
-                            ? MaintenanceAction::FullVacuum
-                            : MaintenanceAction::IncrementalVacuum;
   return NS_OK;
 }
 
