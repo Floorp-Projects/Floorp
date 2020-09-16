@@ -9230,6 +9230,11 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
     return AttachDecision::TemporarilyUnoptimizable;
   }
 
+  if (isConstructing && isSpecialized &&
+      calleeFunc->constructorNeedsUninitializedThis()) {
+    flags.setNeedsUninitializedThis();
+  }
+
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
@@ -9244,6 +9249,7 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
     if (templateObj) {
       // Call metaScriptedTemplateObject before emitting the call, so that Warp
       // can use this template object before transpiling the call.
+      MOZ_ASSERT(!flags.needsUninitializedThis());
       if (JitOptions.warpBuilder) {
         // Emit guards to ensure the newTarget's .prototype property is what we
         // expect. Note that getTemplateObjectForScripted checked newTarget is a
