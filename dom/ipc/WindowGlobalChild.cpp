@@ -627,6 +627,16 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
   JSActorDidDestroy();
 }
 
+bool WindowGlobalChild::SameOriginWithTop() {
+  nsGlobalWindowInner* topWindow =
+      WindowContext()->TopWindowContext()->GetInnerWindow();
+  if (!topWindow) {
+    return false;
+  }
+  return mWindowGlobal == topWindow ||
+         mDocumentPrincipal->Equals(topWindow->GetPrincipal());
+}
+
 WindowGlobalChild::~WindowGlobalChild() {
   MOZ_ASSERT(!gWindowGlobalChildById ||
              !gWindowGlobalChildById->Contains(InnerWindowId()));

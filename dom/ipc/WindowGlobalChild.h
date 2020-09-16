@@ -107,6 +107,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   // Called when a new document is loaded in this WindowGlobalChild.
   void OnNewDocument(Document* aNewDocument);
 
+  bool SameOriginWithTop();
+
   nsISupports* GetParentObject();
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
