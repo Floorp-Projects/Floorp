@@ -250,14 +250,16 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
     }
 
     if (fd != AT_FDCWD && path[0] != '/') {
-      SANDBOX_LOG_ERROR("unsupported fd-relative fstatat(%d, \"%s\", %p, %d)",
+      SANDBOX_LOG_ERROR("unsupported fd-relative fstatat(%d, \"%s\", %p, 0x%x)",
                         fd, path, buf, flags);
       return BlockedSyscallTrap(aArgs, nullptr);
     }
-    if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT)) != 0) {
-      SANDBOX_LOG_ERROR("unsupported flags %d in fstatat(%d, \"%s\", %p, %d)",
-                        (flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT)), fd,
-                        path, buf, flags);
+
+    int badFlags = flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT);
+    if (badFlags != 0) {
+      SANDBOX_LOG_ERROR(
+          "unsupported flags 0x%x in fstatat(%d, \"%s\", %p, 0x%x)", badFlags,
+          fd, path, buf, flags);
       return BlockedSyscallTrap(aArgs, nullptr);
     }
     return (flags & AT_SYMLINK_NOFOLLOW) == 0 ? broker->Stat(path, buf)
@@ -521,7 +523,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 
         // Thread synchronization
       case __NR_futex:
-        // FIXME: This could be more restrictive....
+        // FIXME(bug 1441993): This could be more restrictive.
         return Allow();
 
         // Asynchronous I/O
