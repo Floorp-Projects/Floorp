@@ -537,10 +537,8 @@ bool WarpBuilder::buildInlinePrologue() {
   }
 
   // Initialize local slots.
-  if (info().nlocals() > 0) {
-    for (uint32_t i = 0; i < info().nlocals(); i++) {
-      current->initSlot(info().localSlot(i), undef);
-    }
+  for (uint32_t i = 0; i < info().nlocals(); i++) {
+    current->initSlot(info().localSlot(i), undef);
   }
 
   MOZ_ASSERT(current->entryResumePoint()->stackDepth() == info().totalSlots());

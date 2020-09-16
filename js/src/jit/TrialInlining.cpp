@@ -24,7 +24,7 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
 
   RootedScript script(cx, frame->script());
   ICScript* icScript = frame->icScript();
-  bool isRecursive = !!icScript->inliningRoot();
+  bool isRecursive = icScript->depth() > 0;
 
   if (!script->canIonCompile()) {
     return true;
@@ -293,7 +293,7 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
   MOZ_ASSERT(result->numICEntries() == targetScript->numICEntries());
 
   JitSpew(JitSpew_WarpTrialInlining,
-          "Outer ICScript: %p Inner ICScript: %p pcOffset: %u\n", icScript_,
+          "Outer ICScript: %p Inner ICScript: %p pcOffset: %u", icScript_,
           result, pcOffset);
 
   return result;
