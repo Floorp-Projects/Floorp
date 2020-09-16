@@ -1234,7 +1234,37 @@
         this._remoteWebNavigation._canGoBack = false;
         this._remoteWebNavigation._canGoForward = false;
       }
+
       try {
+        if (lazyPrefs.sessionHistoryInParent) {
+          let sessionHistory = this.browsingContext?.sessionHistory;
+          if (!sessionHistory) {
+            return;
+          }
+
+          // place the entry at current index at the end of the history list, so it won't get removed
+          if (sessionHistory.index < sessionHistory.count - 1) {
+            let indexEntry = sessionHistory.getEntryAtIndex(
+              sessionHistory.index
+            );
+            sessionHistory.addEntry(indexEntry, true);
+          }
+
+          let purge = sessionHistory.count;
+          if (
+            this.browsingContext.currentWindowGlobal.documentURI !=
+            "about:blank"
+          ) {
+            --purge; // Don't remove the page the user's staring at from shistory
+          }
+
+          if (purge > 0) {
+            sessionHistory.purgeHistory(purge);
+          }
+
+          return;
+        }
+
         this.sendMessageToActor(
           "Browser:PurgeSessionHistory",
           {},

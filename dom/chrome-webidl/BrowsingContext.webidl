@@ -122,6 +122,8 @@ interface BrowsingContext {
    * under the new browser element.
    */
   [SetterThrows] attribute unsigned long long browserId;
+
+  readonly attribute ChildSHistory? childSessionHistory;
 };
 
 BrowsingContext includes LoadContextMixin;

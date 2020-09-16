@@ -723,6 +723,10 @@ class BrowserParent final : public PBrowserParent,
     mSuspendedProgressEvents = true;
   }
 
+  bool CanCancelContentJS(nsIRemoteTab::NavigationType aNavigationType,
+                          int32_t aNavigationIndex,
+                          nsIURI* aNavigationURI) const;
+
  protected:
   friend BrowserBridgeParent;
   friend BrowserHost;
