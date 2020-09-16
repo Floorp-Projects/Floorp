@@ -7,6 +7,7 @@ package org.mozilla.fenix.components.metrics
 import android.content.Context
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
@@ -21,6 +22,7 @@ import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.Tip
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
+import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
 import java.util.Locale
@@ -121,6 +123,8 @@ sealed class Event {
     object NotificationMediaPlay : Event()
     object NotificationMediaPause : Event()
     object TopSiteOpenDefault : Event()
+    object TopSiteOpenFrecent : Event()
+    object TopSiteOpenPinned : Event()
     object TopSiteOpenInNewTab : Event()
     object TopSiteOpenInPrivateTab : Event()
     object TopSiteRemoved : Event()
@@ -190,6 +194,16 @@ sealed class Event {
     object MasterPasswordMigrationDisplayed : Event()
 
     // Interaction events with extras
+
+    data class TopSiteSwipeCarousel(val page: Int) : Event() {
+        override val extras: Map<TopSites.swipeCarouselKeys, String>?
+            get() = hashMapOf(TopSites.swipeCarouselKeys.page to page.toString())
+    }
+
+    data class TopSiteLongPress(val type: TopSite.Type) : Event() {
+        override val extras: Map<TopSites.longPressKeys, String>?
+            get() = hashMapOf(TopSites.longPressKeys.type to type.name)
+    }
 
     data class ProgressiveWebAppForeground(val timeForegrounded: Long) : Event() {
         override val extras: Map<ProgressiveWebApp.foregroundKeys, String>?

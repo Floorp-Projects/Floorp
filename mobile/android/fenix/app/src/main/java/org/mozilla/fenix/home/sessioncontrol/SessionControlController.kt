@@ -98,7 +98,7 @@ interface SessionControlController {
     /**
      * @see [TopSiteInteractor.onSelectTopSite]
      */
-    fun handleSelectTopSite(url: String, isDefault: Boolean)
+    fun handleSelectTopSite(url: String, type: TopSite.Type)
 
     /**
      * @see [OnboardingInteractor.onStartBrowsingClicked]
@@ -302,11 +302,14 @@ class DefaultSessionControlController(
         metrics.track(Event.CollectionRenamePressed)
     }
 
-    override fun handleSelectTopSite(url: String, isDefault: Boolean) {
+    override fun handleSelectTopSite(url: String, type: TopSite.Type) {
         metrics.track(Event.TopSiteOpenInNewTab)
-        if (isDefault) {
-            metrics.track(Event.TopSiteOpenDefault)
+        when (type) {
+            TopSite.Type.DEFAULT -> metrics.track(Event.TopSiteOpenDefault)
+            TopSite.Type.FRECENT -> metrics.track(Event.TopSiteOpenFrecent)
+            TopSite.Type.PINNED -> metrics.track(Event.TopSiteOpenPinned)
         }
+
         if (url == SupportUtils.POCKET_TRENDING_URL) {
             metrics.track(Event.PocketTopSiteClicked)
         }

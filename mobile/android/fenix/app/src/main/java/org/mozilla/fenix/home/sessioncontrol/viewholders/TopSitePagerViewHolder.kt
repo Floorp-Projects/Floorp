@@ -11,6 +11,8 @@ import androidx.viewpager2.widget.ViewPager2
 import kotlinx.android.synthetic.main.component_top_sites_pager.view.*
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSitesPagerAdapter
 
@@ -21,10 +23,16 @@ class TopSitePagerViewHolder(
 
     private val topSitesPagerAdapter = TopSitesPagerAdapter(interactor)
     private val pageIndicator = view.page_indicator
+    private var currentPage = 0
 
     private val topSitesPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
+            if (currentPage != position) {
+                pageIndicator.context.components.analytics.metrics.track(Event.TopSiteSwipeCarousel(position))
+            }
+
             pageIndicator.setSelection(position)
+            currentPage = position
         }
     }
 

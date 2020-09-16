@@ -18,6 +18,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
 import org.junit.Rule
@@ -279,7 +280,7 @@ class DefaultSessionControlControllerTest {
     fun handleSelectDefaultTopSite() {
         val topSiteUrl = "mozilla.org"
 
-        controller.handleSelectTopSite(topSiteUrl, true)
+        controller.handleSelectTopSite(topSiteUrl, TopSite.Type.DEFAULT)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenDefault) }
         verify {
@@ -296,7 +297,7 @@ class DefaultSessionControlControllerTest {
     fun handleSelectNonDefaultTopSite() {
         val topSiteUrl = "mozilla.org"
 
-        controller.handleSelectTopSite(topSiteUrl, false)
+        controller.handleSelectTopSite(topSiteUrl, TopSite.Type.FRECENT)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify {
             tabsUseCases.addTab.invoke(

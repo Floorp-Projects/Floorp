@@ -14,10 +14,10 @@ import kotlinx.android.synthetic.main.top_site_item.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.feature.top.sites.TopSite.Type.DEFAULT
 import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import mozilla.components.feature.top.sites.TopSite.Type.PINNED
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
@@ -32,10 +32,12 @@ class TopSiteItemViewHolder(
 
     init {
         top_site_item.setOnClickListener {
-            interactor.onSelectTopSite(topSite.url, topSite.type === DEFAULT)
+            interactor.onSelectTopSite(topSite.url, topSite.type)
         }
 
         top_site_item.setOnLongClickListener {
+            it.context.components.analytics.metrics.track(Event.TopSiteLongPress(topSite.type))
+
             val topSiteMenu = TopSiteItemMenu(view.context, topSite.type != FRECENT) { item ->
                 when (item) {
                     is TopSiteItemMenu.Item.OpenInPrivateTab -> interactor.onOpenInPrivateTabClicked(

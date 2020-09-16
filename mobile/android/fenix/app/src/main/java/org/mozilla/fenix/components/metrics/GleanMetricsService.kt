@@ -517,6 +517,12 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TopSiteOpenDefault -> EventWrapper<NoExtraKeys>(
             { TopSites.openDefault.record(it) }
         )
+        is Event.TopSiteOpenFrecent -> EventWrapper<NoExtraKeys>(
+            { TopSites.openFrecency.record(it) }
+        )
+        is Event.TopSiteOpenPinned -> EventWrapper<NoExtraKeys>(
+            { TopSites.openPinned.record(it) }
+        )
         is Event.TopSiteOpenInNewTab -> EventWrapper<NoExtraKeys>(
             { TopSites.openInNewTab.record(it) }
         )
@@ -525,6 +531,14 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.TopSiteRemoved -> EventWrapper<NoExtraKeys>(
             { TopSites.remove.record(it) }
+        )
+        is Event.TopSiteLongPress -> EventWrapper(
+            { TopSites.longPress.record(it) },
+            { TopSites.longPressKeys.valueOf(it) }
+        )
+        is Event.TopSiteSwipeCarousel -> EventWrapper(
+            { TopSites.swipeCarousel.record(it) },
+            { TopSites.swipeCarouselKeys.valueOf(it) }
         )
         is Event.SupportTapped -> EventWrapper<NoExtraKeys>(
             { AboutPage.supportTapped.record(it) }

@@ -42,6 +42,6 @@ class TopSiteItemViewHolderTest {
         TopSiteItemViewHolder(view, interactor).bind(pocket)
 
         view.top_site_item.performClick()
-        verify { interactor.onSelectTopSite("https://getpocket.com", isDefault = true) }
+        verify { interactor.onSelectTopSite("https://getpocket.com", TopSite.Type.DEFAULT) }
     }
 }

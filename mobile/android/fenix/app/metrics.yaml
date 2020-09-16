@@ -3195,6 +3195,66 @@ top_sites:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-11-15"
+  open_frecency:
+    type: event
+    description: |
+      A user opened a frecency top site
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/14565
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/15136
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-03-15"
+  open_pinned:
+    type: event
+    description: |
+      A user opened a pinned top site
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/14565
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/15136
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-03-15"
+  swipe_carousel:
+    type: event
+    description: |
+      A user swiped to change the page of the top sites carousel
+    extra_keys:
+      page:
+        description: |
+          The page number the carousel is now on
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/14565
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/15136
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-03-15"
+  long_press:
+    type: event
+    description: |
+      A user long pressed on a top site
+    extra_keys:
+      type:
+        description: |
+          The type of top site. Options are: "FRECENCY," "DEFAULT," or "PINNED."
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/14565
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/15136
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-03-15"
   open_in_new_tab:
     type: event
     description: |
