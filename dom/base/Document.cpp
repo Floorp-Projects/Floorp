@@ -6117,11 +6117,10 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
     SetPreferredStyleSheetSet(aData);
   }
 
-  if (aHeaderField == nsGkAtoms::refresh) {
-    // We get into this code before we have a script global yet, so get to
-    // our container via mDocumentContainer.
-    nsCOMPtr<nsIRefreshURI> refresher(mDocumentContainer);
-    if (refresher) {
+  if (aHeaderField == nsGkAtoms::refresh && !IsStaticDocument()) {
+    // We get into this code before we have a script global yet, so get to our
+    // container via mDocumentContainer.
+    if (nsCOMPtr<nsIRefreshURI> refresher = mDocumentContainer.get()) {
       // Note: using mDocumentURI instead of mBaseURI here, for consistency
       // (used to just use the current URI of our webnavigation, but that
       // should really be the same thing).  Note that this code can run

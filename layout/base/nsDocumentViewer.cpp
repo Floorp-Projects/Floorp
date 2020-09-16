@@ -401,13 +401,6 @@ class nsDocumentViewer final : public nsIContentViewer,
 
   void InvalidatePotentialSubDocDisplayItem();
 
-#ifdef NS_PRINTING
-  // Called when the DocViewer is notified that the state
-  // of Printing or PP has changed
-  void SetIsPrintingInDocShellTree(nsIDocShellTreeItem* aParentNode,
-                                   bool aIsPrintingOrPP, bool aStartAtTop);
-#endif  // NS_PRINTING
-
   // Whether we should attach to the top level widget. This is true if we
   // are sharing/recycling a single base widget and not creating multiple
   // child widgets.
@@ -431,7 +424,6 @@ class nsDocumentViewer final : public nsIContentViewer,
   // class, please make the ownership explicit (pinkerton, scc).
 
   WeakPtr<nsDocShell> mContainer;  // it owns me!
-  nsWeakPtr mTopContainerWhilePrinting;
   RefPtr<nsDeviceContext> mDeviceContext;  // We create and own this baby
 
   // the following six items are explicitly in this order
@@ -3588,49 +3580,6 @@ nsDocumentViewer::GetPrintPreviewNumPages(int32_t* aPrintPreviewNumPages) {
 //----------------------------------------------------------------------------------
 // Walks the document tree and tells each DocShell whether Printing/PP is
 // happening
-void nsDocumentViewer::SetIsPrintingInDocShellTree(
-    nsIDocShellTreeItem* aParentNode, bool aIsPrintingOrPP, bool aStartAtTop) {
-  nsCOMPtr<nsIDocShellTreeItem> parentItem(aParentNode);
-
-  // find top of "same parent" tree
-  if (aStartAtTop) {
-    if (aIsPrintingOrPP) {
-      while (parentItem) {
-        nsCOMPtr<nsIDocShellTreeItem> parent;
-        parentItem->GetInProcessSameTypeParent(getter_AddRefs(parent));
-        if (!parent) {
-          break;
-        }
-        parentItem = parent;
-      }
-      mTopContainerWhilePrinting = do_GetWeakReference(parentItem);
-    } else {
-      parentItem = do_QueryReferent(mTopContainerWhilePrinting);
-    }
-  }
-
-  // Check to see if the DocShell's ContentViewer is printing/PP
-  nsCOMPtr<nsIDocShell> viewerContainer = do_QueryInterface(parentItem);
-  if (viewerContainer) {
-    viewerContainer->SetIsPrinting(aIsPrintingOrPP);
-  }
-
-  if (!aParentNode) {
-    return;
-  }
-
-  // Traverse children to see if any of them are printing.
-  int32_t n;
-  aParentNode->GetInProcessChildCount(&n);
-  for (int32_t i = 0; i < n; i++) {
-    nsCOMPtr<nsIDocShellTreeItem> child;
-    aParentNode->GetInProcessChildAt(i, getter_AddRefs(child));
-    NS_ASSERTION(child, "child isn't nsIDocShell");
-    if (child) {
-      SetIsPrintingInDocShellTree(child, aIsPrintingOrPP, false);
-    }
-  }
-}
 #endif  // NS_PRINTING
 
 bool nsDocumentViewer::ShouldAttachToTopLevel() {
@@ -3678,21 +3627,6 @@ bool nsDocumentViewer::GetIsPrinting() const {
 }
 
 //------------------------------------------------------------
-// Notification from the PrintJob of the current Printing status
-void nsDocumentViewer::SetIsPrinting(bool aIsPrinting) {
-#ifdef NS_PRINTING
-  // Set all the docShells in the docshell tree to be printing.
-  // that way if anyone of them tries to "navigate" it can't
-  nsCOMPtr<nsIDocShell> docShell(mContainer);
-  if (docShell || !aIsPrinting) {
-    SetIsPrintingInDocShellTree(docShell, aIsPrinting, true);
-  } else {
-    NS_WARNING("Did you close a window before printing?");
-  }
-#endif
-}
-
-//------------------------------------------------------------
 // The PrintJob holds the current value
 // this called from inside the DocViewer.
 // XXX it always returns false for subdocuments
@@ -3707,15 +3641,6 @@ bool nsDocumentViewer::GetIsPrintPreview() const {
 //------------------------------------------------------------
 // Notification from the PrintJob of the current PP status
 void nsDocumentViewer::SetIsPrintPreview(bool aIsPrintPreview) {
-#ifdef NS_PRINTING
-  // Set all the docShells in the docshell tree to be printing.
-  // that way if anyone of them tries to "navigate" it can't
-  nsCOMPtr<nsIDocShell> docShell(mContainer);
-  if (docShell || !aIsPrintPreview) {
-    SetIsPrintingInDocShellTree(docShell, aIsPrintPreview, true);
-  }
-#endif
-
   // Protect against pres shell destruction running scripts.
   nsAutoScriptBlocker scriptBlocker;
 
