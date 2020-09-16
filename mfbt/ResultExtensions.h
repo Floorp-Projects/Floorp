@@ -297,8 +297,9 @@ auto ToResultInvoke(const SmartPtr<const T>& aObj,
 #endif
 
 // Macro version of ToResultInvoke for member functions. The macro has the
-// advantage of not requiring spelling out the type name, at the expense of
-// having a non-standard syntax. It can be used like this:
+// advantage of not requiring spelling out the member function's declarator type
+// name, at the expense of having a non-standard syntax. It can be used like
+// this:
 //
 //     nsCOMPtr<nsIFile> file;
 //     auto existsOrErr = MOZ_TO_RESULT_INVOKE(file, Exists);
@@ -306,6 +307,19 @@ auto ToResultInvoke(const SmartPtr<const T>& aObj,
   ::mozilla::ToResultInvoke(                                             \
       (obj), &::mozilla::detail::DerefedType<decltype(obj)>::methodname, \
       ##__VA_ARGS__)
+
+// Macro version of ToResultInvoke for member functions, where the result type
+// does not match the output parameter type. The macro has the advantage of not
+// requiring spelling out the member function's declarator type name, at the
+// expense of having a non-standard syntax. It can be used like this:
+//
+//     nsCOMPtr<nsIFile> file;
+//     auto existsOrErr = MOZ_TO_RESULT_INVOKE(nsCOMPtr<nsIFile>, file, Clone);
+#define MOZ_TO_RESULT_INVOKE_TYPED(resultType, obj, methodname, ...)   \
+  ::mozilla::ToResultInvoke<resultType>(                               \
+      ::std::mem_fn(                                                   \
+          &::mozilla::detail::DerefedType<decltype(obj)>::methodname), \
+      (obj), ##__VA_ARGS__)
 
 }  // namespace mozilla
 
