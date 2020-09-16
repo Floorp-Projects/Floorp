@@ -1110,7 +1110,7 @@ ArrowFormalParameters[Yield, Await] :
 
 @returns MethodDefinition
 MethodDefinition[Yield, Await] :
-  PropertyName[?Yield, ?Await] `(` UniqueFormalParameters[~Yield, ~Await] `)` `{` FunctionBody[~Yield, ~Await] `}`
+  ClassElementName[?Yield, ?Await] `(` UniqueFormalParameters[~Yield, ~Await] `)` `{` FunctionBody[~Yield, ~Await] `}`
     => method_definition($0, $1, $2, $3, $4, $5, $6)
   GeneratorMethod[?Yield, ?Await]
     => $0
@@ -1118,9 +1118,9 @@ MethodDefinition[Yield, Await] :
     => $0
   AsyncGeneratorMethod[?Yield, ?Await]
     => $0
-  `get` PropertyName[?Yield, ?Await] `(` `)` `{` FunctionBody[~Yield, ~Await] `}`
+  `get` ClassElementName[?Yield, ?Await] `(` `)` `{` FunctionBody[~Yield, ~Await] `}`
     => getter($0, $1, $4, $5, $6)
-  `set` PropertyName[?Yield, ?Await] `(` PropertySetParameterList `)` `{` FunctionBody[~Yield, ~Await] `}`
+  `set` ClassElementName[?Yield, ?Await] `(` PropertySetParameterList `)` `{` FunctionBody[~Yield, ~Await] `}`
     => setter($0, $1, $2, $3, $4, $5, $6, $7)
 
 @returns Parameter
@@ -1131,7 +1131,7 @@ PropertySetParameterList :
 
 @returns MethodDefinition
 GeneratorMethod[Yield, Await] :
-  `*` PropertyName[?Yield, ?Await] `(` UniqueFormalParameters[+Yield, ~Await] `)` `{` GeneratorBody `}`
+  `*` ClassElementName[?Yield, ?Await] `(` UniqueFormalParameters[+Yield, ~Await] `)` `{` GeneratorBody `}`
     => generator_method($0, $1, $2, $3, $4, $5, $6, $7)
 
 @returns Statement
@@ -1163,7 +1163,7 @@ YieldExpression[In, Await] :
 
 @returns MethodDefinition
 AsyncGeneratorMethod[Yield, Await] :
-  `async` [no LineTerminator here] `*` PropertyName[?Yield, ?Await] `(` UniqueFormalParameters[+Yield, +Await] `)` `{` AsyncGeneratorBody `}`
+  `async` [no LineTerminator here] `*` ClassElementName[?Yield, ?Await] `(` UniqueFormalParameters[+Yield, +Await] `)` `{` AsyncGeneratorBody `}`
     => async_generator_method($0, $2, $3, $4, $5, $6, $7, $8)
 
 @returns Statement

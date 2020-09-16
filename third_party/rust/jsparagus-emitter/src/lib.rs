@@ -37,7 +37,7 @@ pub fn emit<'alloc>(
         function_declarations,
         function_stencil_indices,
         function_declaration_properties,
-        functions,
+        scripts,
         error,
     } = scope::generate_scope_data(ast);
 
@@ -57,7 +57,7 @@ pub fn emit<'alloc>(
         function_declarations,
         function_stencil_indices,
         function_declaration_properties,
-        functions,
+        scripts,
     );
     ast_emitter::emit_program(ast, options, compilation_info)
 }
@@ -100,8 +100,7 @@ mod tests {
         )
         .expect("Should work!");
 
-        let script_data_index: usize = result
-            .top_level_script
+        let script_data_index: usize = result.scripts[0]
             .immutable_script_data
             .expect("Top level script should have ImmutableScriptData")
             .into();

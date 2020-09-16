@@ -231,6 +231,18 @@ pub struct SourceExtent {
 }
 
 impl SourceExtent {
+    fn new() -> Self {
+        Self {
+            source_start: 0,
+            source_end: 0,
+            to_string_start: 0,
+            to_string_end: 0,
+
+            lineno: 0,
+            column: 0,
+        }
+    }
+
     pub fn top_level_script(length: u32, lineno: u32, column: u32) -> Self {
         Self {
             source_start: 0,
@@ -315,6 +327,22 @@ pub struct ScriptStencil {
 }
 
 impl ScriptStencil {
+    fn empty_top_level_script() -> Self {
+        Self {
+            immutable_flags: ImmutableScriptFlags::new(),
+            gcthings: Vec::new(),
+            immutable_script_data: None,
+            extent: SourceExtent::new(),
+            fun_name: None,
+            fun_nargs: 0,
+            fun_flags: FunctionFlags::empty(),
+            lazy_function_enclosing_scope_index: None,
+            is_standalone_function: false,
+            was_function_emitted: false,
+            is_singleton_function: false,
+        }
+    }
+
     pub fn top_level_script(
         gcthings: Vec<GCThing>,
         immutable_script_data: ImmutableScriptDataIndex,
@@ -513,6 +541,12 @@ impl ScriptStencilList {
         }
     }
 
+    pub fn new_with_empty_top_level() -> Self {
+        Self {
+            scripts: vec![ScriptStencil::empty_top_level_script()],
+        }
+    }
+
     pub fn push(&mut self, script: ScriptStencil) -> ScriptStencilIndex {
         let index = self.scripts.len();
         self.scripts.push(script);
@@ -525,6 +559,10 @@ impl ScriptStencilList {
 
     pub fn get_mut<'a>(&'a mut self, index: ScriptStencilIndex) -> &'a mut ScriptStencil {
         &mut self.scripts[usize::from(index)]
+    }
+
+    pub fn set_top_level(&mut self, top_level: ScriptStencil) {
+        self.scripts[0] = top_level;
     }
 }
 
