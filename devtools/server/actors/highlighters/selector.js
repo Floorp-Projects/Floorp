@@ -69,9 +69,6 @@ SelectorHighlighter.prototype = {
   _accumulateHighlighter: async function(node, options) {
     const highlighter = new BoxModelHighlighter(this.highlighterEnv);
     await highlighter.ready;
-    if (options.fill) {
-      highlighter.regionFill[options.region || "border"] = options.fill;
-    }
 
     highlighter.show(node, options);
     this._highlighters.push(highlighter);
