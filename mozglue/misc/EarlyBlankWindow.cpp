@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/glue/Debug.h"
+#include "mozilla/WindowsDpiAwareness.h"
 #include "mozilla/WindowsVersion.h"
 
 namespace mozilla {
@@ -58,12 +59,6 @@ typedef int(WINAPI* StretchDIBitsProc)(HDC, int, int, int, int, int, int, int,
 StretchDIBitsProc sStretchDIBits = NULL;
 typedef HBRUSH(WINAPI* CreateSolidBrushProc)(COLORREF);
 CreateSolidBrushProc sCreateSolidBrush = NULL;
-
-#if WINVER < 0x0605
-WINUSERAPI DPI_AWARENESS_CONTEXT WINAPI GetThreadDpiAwarenessContext();
-WINUSERAPI BOOL WINAPI AreDpiAwarenessContextsEqual(DPI_AWARENESS_CONTEXT,
-                                                    DPI_AWARENESS_CONTEXT);
-#endif /* WINVER < 0x0605 */
 
 static uint32_t sWindowWidth;
 static uint32_t sWindowHeight;

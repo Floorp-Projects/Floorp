@@ -36,6 +36,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WindowsDpiAwareness.h"
 
 /**
  * NS_INLINE_DECL_IUNKNOWN_REFCOUNTING should be used for defining and
@@ -76,35 +77,6 @@
 class nsWindow;
 class nsWindowBase;
 struct KeyPair;
-
-#if !defined(DPI_AWARENESS_CONTEXT_DECLARED) && \
-    !defined(DPI_AWARENESS_CONTEXT_UNAWARE)
-
-DECLARE_HANDLE(DPI_AWARENESS_CONTEXT);
-
-typedef enum DPI_AWARENESS {
-  DPI_AWARENESS_INVALID = -1,
-  DPI_AWARENESS_UNAWARE = 0,
-  DPI_AWARENESS_SYSTEM_AWARE = 1,
-  DPI_AWARENESS_PER_MONITOR_AWARE = 2
-} DPI_AWARENESS;
-
-#  define DPI_AWARENESS_CONTEXT_UNAWARE ((DPI_AWARENESS_CONTEXT)-1)
-#  define DPI_AWARENESS_CONTEXT_SYSTEM_AWARE ((DPI_AWARENESS_CONTEXT)-2)
-#  define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE ((DPI_AWARENESS_CONTEXT)-3)
-
-#  define DPI_AWARENESS_CONTEXT_DECLARED
-#endif  // (DPI_AWARENESS_CONTEXT_DECLARED)
-
-#if WINVER < 0x0605
-WINUSERAPI DPI_AWARENESS_CONTEXT WINAPI GetThreadDpiAwarenessContext();
-WINUSERAPI BOOL WINAPI AreDpiAwarenessContextsEqual(DPI_AWARENESS_CONTEXT,
-                                                    DPI_AWARENESS_CONTEXT);
-#endif /* WINVER < 0x0605 */
-typedef DPI_AWARENESS_CONTEXT(WINAPI* SetThreadDpiAwarenessContextProc)(
-    DPI_AWARENESS_CONTEXT);
-typedef BOOL(WINAPI* EnableNonClientDpiScalingProc)(HWND);
-typedef int(WINAPI* GetSystemMetricsForDpiProc)(int, UINT);
 
 namespace mozilla {
 enum class PointerCapabilities : uint8_t;
