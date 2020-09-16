@@ -525,6 +525,20 @@ var PrintEventHandler = {
     if (sourceBrowsingContext) {
       sourceWinId = sourceBrowsingContext.currentWindowGlobal.outerWindowId;
     }
+
+    const isFirstCall = !this.printInitiationTime;
+    if (isFirstCall) {
+      let params = new URLSearchParams(location.search);
+      this.printInitiationTime = parseInt(
+        params.get("printInitiationTime"),
+        10
+      );
+      const elapsed = Date.now() - this.printInitiationTime;
+      Services.telemetry
+        .getHistogramById("PRINT_INIT_TO_PLATFORM_SENT_SETTINGS_MS")
+        .add(elapsed);
+    }
+
     // This resolves with a PrintPreviewSuccessInfo dictionary.  That also has
     // a `sheetCount` property available which we should use (bug 1662331).
     let {
@@ -562,6 +576,13 @@ var PrintEventHandler = {
     let stack = this.previewBrowser.parentElement;
     stack.removeAttribute("rendering");
     document.body.removeAttribute("rendering");
+
+    if (isFirstCall) {
+      const elapsed = Date.now() - this.printInitiationTime;
+      Services.telemetry
+        .getHistogramById("PRINT_INIT_TO_PREVIEW_DOC_SHOWN_MS")
+        .add(elapsed);
+    }
   },
 
   getSourceBrowsingContext() {
