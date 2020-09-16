@@ -86,7 +86,7 @@ def print_usage(exit=False):
     if exit: sys.exit(1)
 
 def maybe_display_usage():
-    if len(sys.argv) >= 2 and (sys.argv[1] == '--help' or sys.argv[1] == '-h'):
+    if '--help' in sys.argv or '-h' in sys.argv:
         print_usage(exit=True)
 
 def validate_args():
