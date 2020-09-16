@@ -2513,7 +2513,7 @@
 # soon as they are fetched.
 - name: dom.script_loader.external_scripts.speculative_omt_parse.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Speculatively compile non parser inserted scripts
