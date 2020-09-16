@@ -8499,6 +8499,12 @@
   value: false
   mirror: always
 
+# Whether to check for NAT64 using the system resolver
+- name: network.connectivity-service.nat64-check
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
