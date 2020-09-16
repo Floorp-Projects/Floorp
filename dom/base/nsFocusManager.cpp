@@ -4674,9 +4674,19 @@ void nsFocusManager::GetFocusInSelection(nsPIDOMWindowOuter* aWindow,
   } while (selectionNode && selectionNode != endSelectionNode);
 }
 
+static void MaybeUnlockPointer(BrowsingContext* aCurrentFocusedContext) {
+  nsCOMPtr<Document> pointerLockedDoc =
+      do_QueryReferent(EventStateManager::sPointerLockedDoc);
+  if (pointerLockedDoc &&
+      !nsContentUtils::IsInPointerLockContext(aCurrentFocusedContext)) {
+    Document::UnlockPointer();
+  }
+}
+
 class PointerUnlocker : public Runnable {
  public:
   PointerUnlocker() : mozilla::Runnable("PointerUnlocker") {
+    MOZ_ASSERT(XRE_IsParentProcess());
     MOZ_ASSERT(!PointerUnlocker::sActiveUnlocker);
     PointerUnlocker::sActiveUnlocker = this;
   }
@@ -4694,11 +4704,7 @@ class PointerUnlocker : public Runnable {
     NS_ENSURE_STATE(nsFocusManager::GetFocusManager());
     nsPIDOMWindowOuter* focused =
         nsFocusManager::GetFocusManager()->GetFocusedWindow();
-    nsCOMPtr<Document> pointerLockedDoc =
-        do_QueryReferent(EventStateManager::sPointerLockedDoc);
-    if (pointerLockedDoc && !nsContentUtils::IsInPointerLockContext(focused)) {
-      Document::UnlockPointer();
-    }
+    MaybeUnlockPointer(focused ? focused->GetBrowsingContext() : nullptr);
     return NS_OK;
   }
 
@@ -4787,6 +4793,7 @@ void nsFocusManager::SetActiveBrowsingContextInContent(
   }
   mActiveBrowsingContextInContentSetFromOtherProcess = false;
   mActiveBrowsingContextInContent = aContext;
+  MaybeUnlockPointer(aContext);
 }
 
 void nsFocusManager::SetActiveBrowsingContextFromOtherProcess(
@@ -4804,6 +4811,7 @@ void nsFocusManager::SetActiveBrowsingContextFromOtherProcess(
   }
   mActiveBrowsingContextInContentSetFromOtherProcess = true;
   mActiveBrowsingContextInContent = aContext;
+  MaybeUnlockPointer(aContext);
 }
 
 void nsFocusManager::UnsetActiveBrowsingContextFromOtherProcess(
@@ -4812,6 +4820,7 @@ void nsFocusManager::UnsetActiveBrowsingContextFromOtherProcess(
   MOZ_ASSERT(aContext);
   if (mActiveBrowsingContextInContent == aContext) {
     mActiveBrowsingContextInContent = nullptr;
+    MaybeUnlockPointer(nullptr);
   }
 }
 
@@ -4824,10 +4833,15 @@ BrowsingContext* nsFocusManager::GetActiveBrowsingContextInChrome() {
   return mActiveBrowsingContextInChrome;
 }
 
+static bool IsInPointerLockContext(nsPIDOMWindowOuter* aWin) {
+  return nsContentUtils::IsInPointerLockContext(
+      aWin ? aWin->GetBrowsingContext() : nullptr);
+}
+
 void nsFocusManager::SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow) {
-  if (!PointerUnlocker::sActiveUnlocker &&
-      nsContentUtils::IsInPointerLockContext(mFocusedWindow) &&
-      !nsContentUtils::IsInPointerLockContext(aWindow)) {
+  if (XRE_IsParentProcess() && !PointerUnlocker::sActiveUnlocker &&
+      IsInPointerLockContext(mFocusedWindow) &&
+      !IsInPointerLockContext(aWindow)) {
     nsCOMPtr<nsIRunnable> runnable = new PointerUnlocker();
     NS_DispatchToCurrentThread(runnable);
   }
