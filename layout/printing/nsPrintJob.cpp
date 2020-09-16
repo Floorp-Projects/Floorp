@@ -306,13 +306,6 @@ static nsresult EnsureSettingsHasPrinterNameSet(
   // Mac doesn't support retrieving a printer list.
   return NS_OK;
 #else
-#  if defined(MOZ_X11)
-  // On Linux, last-used printer name should be requested on the parent side.
-  // Unless we are in the parent, we ignore this function
-  if (!XRE_IsParentProcess()) {
-    return NS_OK;
-  }
-#  endif
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
   // See if aPrintSettings already has a printer
