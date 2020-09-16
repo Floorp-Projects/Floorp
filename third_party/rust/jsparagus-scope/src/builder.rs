@@ -2430,7 +2430,7 @@ pub struct FunctionScriptStencilBuilder {
     ///   * map from Function AST node (`function_stencil_indices`)
     ///   * enclosing script/function, to list inner functions
     function_stencil_indices: AssociatedData<ScriptStencilIndex>,
-    functions: ScriptStencilList,
+    scripts: ScriptStencilList,
 
     /// The stack of functions that the current context is in.
     ///
@@ -2441,9 +2441,11 @@ pub struct FunctionScriptStencilBuilder {
 
 impl FunctionScriptStencilBuilder {
     fn new() -> Self {
+        let scripts = ScriptStencilList::new_with_empty_top_level();
+
         Self {
             function_stencil_indices: AssociatedData::new(),
-            functions: ScriptStencilList::new(),
+            scripts,
             function_stack: Vec::new(),
         }
     }
@@ -2483,7 +2485,7 @@ impl FunctionScriptStencilBuilder {
             FunctionFlags::interpreted(syntax_kind),
             enclosing_scope_index,
         );
-        let index = self.functions.push(function_stencil);
+        let index = self.scripts.push(function_stencil);
         self.function_stencil_indices.insert(fun, index);
 
         match self.maybe_current_mut() {
@@ -2524,7 +2526,7 @@ impl FunctionScriptStencilBuilder {
     /// Returns a immutable reference to the innermost function. None otherwise.
     fn maybe_current<'a>(&'a self) -> Option<&'a ScriptStencil> {
         let maybe_index = self.function_stack.last();
-        maybe_index.map(move |index| self.functions.get(*index))
+        maybe_index.map(move |index| self.scripts.get(*index))
     }
 
     /// Returns a immutable reference to the current function.
@@ -2536,7 +2538,7 @@ impl FunctionScriptStencilBuilder {
     /// Returns a mutable reference to the innermost function. None otherwise.
     fn maybe_current_mut<'a>(&'a mut self) -> Option<&'a mut ScriptStencil> {
         let maybe_index = self.function_stack.last().cloned();
-        maybe_index.map(move |index| self.functions.get_mut(index))
+        maybe_index.map(move |index| self.scripts.get_mut(index))
     }
 
     /// Returns a mutable reference to the current function.
@@ -3460,7 +3462,7 @@ pub struct ScopeDataMapAndScriptStencilList {
     pub scope_data_map: ScopeDataMap,
     pub function_stencil_indices: AssociatedData<ScriptStencilIndex>,
     pub function_declaration_properties: FunctionDeclarationPropertyMap,
-    pub functions: ScriptStencilList,
+    pub scripts: ScriptStencilList,
     pub error: Option<ScopeBuildError>,
 }
 
@@ -3474,7 +3476,7 @@ impl From<ScopeDataMapBuilder> for ScopeDataMapAndScriptStencilList {
             ),
             function_stencil_indices: builder.function_stencil_builder.function_stencil_indices,
             function_declaration_properties: builder.function_declaration_properties,
-            functions: builder.function_stencil_builder.functions,
+            scripts: builder.function_stencil_builder.scripts,
             error: builder.error,
         }
     }

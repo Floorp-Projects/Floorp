@@ -837,7 +837,7 @@ pub struct ExportLocalSpecifier {
 
 #[derive(Debug, PartialEq)]
 pub struct Method<'alloc> {
-    pub name: PropertyName<'alloc>,
+    pub name: ClassElementName<'alloc>,
     pub is_async: bool,
     pub is_generator: bool,
     pub params: FormalParameters<'alloc>,
@@ -847,14 +847,14 @@ pub struct Method<'alloc> {
 
 #[derive(Debug, PartialEq)]
 pub struct Getter<'alloc> {
-    pub property_name: PropertyName<'alloc>,
+    pub property_name: ClassElementName<'alloc>,
     pub body: FunctionBody<'alloc>,
     pub loc: SourceLocation,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Setter<'alloc> {
-    pub property_name: PropertyName<'alloc>,
+    pub property_name: ClassElementName<'alloc>,
     pub param: Parameter<'alloc>,
     pub body: FunctionBody<'alloc>,
     pub loc: SourceLocation,
