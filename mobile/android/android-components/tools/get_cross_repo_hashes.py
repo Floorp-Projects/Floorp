@@ -8,10 +8,10 @@
 Potential script improvements:
 - (later) Support more than nightly
 - (later) Would this be more usable as a website?
-  Would require automating extraction of a-c hash
-  from Fenix apk or other mechanism
 
 Fragile assumptions in implementation:
+- Hard-coded path: AndroidComponents.kt
+- Hard-coded format: AndroidComponents.kt
 - Hard-coded path: Gecko.kt
 - Hard-coded format: Gecko.kt
 - Hard-coded format: POM XML
@@ -36,26 +36,7 @@ Purpose: when building across repositories, e.g. fenix with a local a-c,
 sometimes the build will fail with errors unrelated to your changes because of
 a version mismatch: there were breaking changes in the dependency repository
 that are not represented in the dependent repository. This script aims to
-address that.
-
-At present, this script is only partially automated. Here are instructions
-to get valid hashes between the major repositories:
-
-1) fenix checkout -> a-c hash
-    build & install Fenix, hit 3-dot -> Settings -> About Firefox Nightly
-    and read hash at the end of the "AC:" line
-    OR
-    after building a release build, visit `mozilla.components.Build` from your
-    Fenix repo in Android Studio and go-to-definition on `gitHash`
-
-2) a-c checkout (current) -> GV Nightly version
-    AUTOMATED: run this script
-
-3) GV nightly version -> mozilla-central hash
-    AUTOMATED: run this script
-    Use `--gv-nightly` to override with a custom version.
-
-In the future, we hope to automate step 1.""".format(script_name=SCRIPT_NAME)
+address that.""".format(script_name=SCRIPT_NAME)
 
 INDENT= '  '
 INDENT2=INDENT * 2
