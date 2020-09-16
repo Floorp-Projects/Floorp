@@ -7109,13 +7109,6 @@
     mirror: always
 #endif
 
-#if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
--   name: media.ffmpeg.low-latency.enabled
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-#endif
-
 #ifdef MOZ_WMF
 
 -   name: media.wmf.enabled
