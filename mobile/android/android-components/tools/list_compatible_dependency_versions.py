@@ -4,7 +4,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """A script to help build fenix with a local ac or ac with a local GV without
-build errors. See USAGE for details.
+build errors. See USAGE and script output for details.
 
 This script has some fragile hard-coded bits: these are documented in the
 test file.
@@ -23,26 +23,16 @@ from urllib.request import urlopen
 SCRIPT_NAME=os.path.basename(__file__)
 SCRIPT_DIR=os.path.dirname(os.path.realpath(__file__))
 
-USAGE="""usage: ./{script_name} [-h] [--help] fenix_path|--no-fenix
-  fenix_path: a path to a local fenix repository; see also --no-fenix
-  --no-fenix: disables mapping a fenix checkout -> ac hash; see also fenix_path
+USAGE="""usage: ./{script_name} path-to-fenix-repository
 
+For secondary use cases:
+  --no-fenix: pass instead of path-to-fenix-repository to disable fenix functionality
   --help, -h: prints this information and exits.
-
-Example:
-  ./{script_name} ../fenix
 
 When building across repositories, e.g. fenix with a local a-c, sometimes the
 build will fail with errors unrelated to your changes because of a version
 mismatch: e.g. there were breaking changes in ac that are not represented in
-fenix. This script will print information to help fix these build errors.
-
-This script will return a mapping of:
-  - The current fenix checkout -> an ac commit that will build cleanly
-  - The current ac checkout -> a GV commit that will build cleanly
-
-If you check out the suggested changesets, the builds are expected to be in
-sync and build cleanly.
+fenix. This script will print changeset information to help fix these build errors.
 
 Does the script work correctly? Is it intuitive?
 Please send feedback to @mcomella.""".format(script_name=SCRIPT_NAME)
@@ -75,7 +65,7 @@ def maybe_display_usage():
 def validate_args():
     if len(sys.argv) != 2: # argv[0] == script invocation.
         # We intentionally require one or the other to ensure folks are opting in to the chosen behavior.
-        raise Exception('expected one argument: fenix_path | --no-fenix. See usage above.')
+        raise Exception('expected one argument: path-to-fenix-repository or --no-fenix. See usage above.')
 
     if sys.argv[1] == '--no-fenix':
         return None, True
