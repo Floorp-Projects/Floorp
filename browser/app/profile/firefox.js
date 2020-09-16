@@ -2257,12 +2257,8 @@ pref("devtools.netmonitor.features.webSockets", true);
 // netmonitor audit
 pref("devtools.netmonitor.audits.slow", 500);
 
-// Enable the EventSource Inspector in Nightly.
-#if defined(NIGHTLY_BUILD)
-  pref("devtools.netmonitor.features.serverSentEvents", true);
-#else
-  pref("devtools.netmonitor.features.serverSentEvents", false);
-#endif
+// Enable the EventSource Inspector
+pref("devtools.netmonitor.features.serverSentEvents", true);
 
 // Enable the Storage Inspector
 pref("devtools.storage.enabled", true);
