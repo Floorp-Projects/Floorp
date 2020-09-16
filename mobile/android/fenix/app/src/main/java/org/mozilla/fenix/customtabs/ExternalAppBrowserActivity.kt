@@ -44,7 +44,7 @@ open class ExternalAppBrowserActivity : HomeActivity() {
         customTabSessionId: String?
     ): NavDirections? {
         if (customTabSessionId == null) {
-            finish()
+            finishAndRemoveTask()
             return null
         }
 

@@ -89,7 +89,7 @@ class CustomTabsIntegration(
         menuItemIndex = START_OF_MENU_ITEMS_INDEX,
         window = activity.window,
         shareListener = { onItemTapped.invoke(ToolbarMenu.Item.Share) },
-        closeListener = { activity.finish() }
+        closeListener = { activity.finishAndRemoveTask() }
     )
 
     override fun start() = feature.start()

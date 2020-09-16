@@ -58,10 +58,10 @@ class ExternalAppBrowserActivityTest {
 
         var directions = activity.getNavDirections(BrowserDirection.FromGlobal, "id")
         assertNotNull(directions)
-        verify(exactly = 0) { activity.finish() }
+        verify(exactly = 0) { activity.finishAndRemoveTask() }
 
         directions = activity.getNavDirections(BrowserDirection.FromGlobal, null)
         assertNull(directions)
-        verify { activity.finish() }
+        verify { activity.finishAndRemoveTask() }
     }
 }
