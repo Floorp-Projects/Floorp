@@ -21,19 +21,10 @@ Performance tests from the 'browser/base/content/test' folder.
 perftest_browser_xhtml_dom.js
 =============================
 
-Measures the size of the DOM
+:owner: Browser Front-end team
+:name: Dom-size
 
-| Owner: Browser Front-end team
-| Test Name: Dom-size
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures the size of the DOM**
 
 
 
@@ -44,127 +35,64 @@ Performance tests from the 'network/test/perf' folder.
 perftest_http3_cloudflareblog.js
 ================================
 
-User-journey live site test for cloudflare blog.
+:owner: Network Team
+:name: cloudflare
 
-| Owner: Network Team
-| Test Name: cloudflare
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**User-journey live site test for cloudflare blog.**
 
 
 perftest_http3_facebook_scroll.js
 =================================
 
-Measures the number of requests per second after a scroll.
+:owner: Network Team
+:name: facebook-scroll
 
-| Owner: Network Team
-| Test Name: facebook-scroll
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures the number of requests per second after a scroll.**
 
 
 perftest_http3_google_image.js
 ==============================
 
-Measures the number of images per second after a scroll.
+:owner: Network Team
+:name: g-image
 
-| Owner: Network Team
-| Test Name: g-image
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures the number of images per second after a scroll.**
 
 
 perftest_http3_google_search.js
 ===============================
 
-User-journey live site test for google search
+:owner: Network Team
+:name: g-search
 
-| Owner: Network Team
-| Test Name: g-search
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**User-journey live site test for google search**
 
 
 perftest_http3_lucasquicfetch.js
 ================================
 
-Measures the amount of time it takes to load a set of images.
+:owner: Network Team
+:name: lq-fetch
 
-| Owner: Network Team
-| Test Name: lq-fetch
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures the amount of time it takes to load a set of images.**
 
 
 perftest_http3_youtube_watch.js
 ===============================
 
-Measures quality of the video being played.
+:owner: Network Team
+:name: youtube-noscroll
 
-| Owner: Network Team
-| Test Name: youtube-noscroll
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures quality of the video being played.**
 
 
 perftest_http3_youtube_watch_scroll.js
 ======================================
 
-Measures quality of the video being played.
+:owner: Network Team
+:name: youtube-scroll
 
-| Owner: Network Team
-| Test Name: youtube-scroll
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures quality of the video being played.**
 
 
 
@@ -175,182 +103,86 @@ Performance tests from the 'testing/performance' folder.
 perftest_bbc_link.js
 ====================
 
-Measures time to load BBC homepage
+:owner: Performance Team
+:name: BBC Link
 
-| Owner: Performance Team
-| Test Name: BBC Link
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures time to load BBC homepage**
 
 
 perftest_facebook.js
 ====================
 
-Measures time to log in to Facebook
+:owner: Performance Team
+:name: Facebook
 
-| Owner: Performance Team
-| Test Name: Facebook
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures time to log in to Facebook**
 
 
 perftest_jsconf_cold.js
 =======================
 
-Measures time to load JSConf page (cold)
+:owner: Performance Team
+:name: JSConf (cold)
 
-| Owner: Performance Team
-| Test Name: JSConf (cold)
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures time to load JSConf page (cold)**
 
 
 perftest_jsconf_warm.js
 =======================
 
-Measures time to load JSConf page (warm)
+:owner: Performance Team
+:name: JSConf (warm)
 
-| Owner: Performance Team
-| Test Name: JSConf (warm)
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures time to load JSConf page (warm)**
 
 
 perftest_politico_link.js
 =========================
 
-Measures time to load Politico homepage
+:owner: Performance Team
+:name: Politico Link
 
-| Owner: Performance Team
-| Test Name: Politico Link
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures time to load Politico homepage**
 
 
 perftest_android_view.js
 ========================
 
-Measures cold process view time
+:owner: Performance Team
+:name: VIEW
 
-| Owner: Performance Team
-| Test Name: VIEW
-| Usage:
+**Measures cold process view time**
 
-::
-
-  ./mach perftest testing/performance/perftest_android_view.js
-  --android-install-apk ~/fenix.v2.fennec-nightly.2020.04.22-arm32.apk
-  --hooks testing/performance/hooks_android_view.py --android-app-name
-  org.mozilla.fenix --perfherder-metrics processLaunchToNavStart
-
-| Description:
-
-This test launches the appropriate android app, simulating a opening a
-link through VIEW intent workflow. The application is launched with
-the intent action android.intent.action.VIEW loading a trivially
-simple website. The reported metric is the time from process start to
-navigationStart, reported as processLaunchToNavStart
+This test launches the appropriate android app, simulating a opening a link through VIEW intent workflow. The application is launched with the intent action android.intent.action.VIEW loading a trivially simple website. The reported metric is the time from process start to navigationStart, reported as processLaunchToNavStart
 
 
 perftest_youtube_link.js
 ========================
 
-Measures time to load YouTube video
+:owner: Performance Team
+:name: YouTube Link
 
-| Owner: Performance Team
-| Test Name: YouTube Link
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures time to load YouTube video**
 
 
 perftest_android_main.js
 ========================
 
-Measures the time from process start until the Fenix main activity
-(HomeActivity) reports Fully Drawn
+:owner: Performance Team
+:name: main
 
-| Owner: Performance Team
-| Test Name: main
-| Usage:
+**Measures the time from process start until the Fenix main activity (HomeActivity) reports Fully Drawn**
 
-::
-
-  ./mach perftest testing/performance/perftest_android_main.js --android
-  --flavor mobile-browser --hooks
-  testing/performance/hooks_home_activity.py --perfherder
-  --android-app-name org.mozilla.fenix --android-activity .App
-  --android-install-apk ~/Downloads/fenix.apk --android-clear-logcat
-  --android-capture-logcat logcat --androidlog-first-timestamp ".*Start
-  proc.*org.mozilla.fenix.*.App.*" --androidlog-second-timestamp
-  ".*Fully drawn.*org.mozilla.fenix.*" --androidlog-subtest-name "MAIN"
-  --androidlog
-
-| Description:
-
-This test launches Fenix to its main activity (HomeActivity). The
-application logs "Fully Drawn" when the activity is drawn. Using the
-android log transformer we measure the time from process start to this
-event.
+This test launches Fenix to its main activity (HomeActivity). The application logs "Fully Drawn" when the activity is drawn. Using the android log transformer we measure the time from process start to this event.
 
 
 perftest_pageload.js
 ====================
 
-Measures time to load mozilla page
+:owner: Performance Team
+:name: pageload
 
-| Owner: Performance Team
-| Test Name: pageload
-| Usage:
-
-::
-
-  N/A
-
-| Description:
-
-N/A
+**Measures time to load mozilla page**
 
 
 

@@ -19,6 +19,23 @@ job-defaults:
     require-build:
         macosx64-shippable/opt: build-macosx64-shippable/opt
 
+try:
+    description: Run ./mach perftest on macOs
+    treeherder:
+        symbol: perftest(macos)
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            --on-try
+            --browsertime-binary ${MOZ_FETCHES_DIR}/target.dmg
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/bin/node
+            --flavor desktop-browser
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts
+
 domcount:
     description: Run DOM test on macOS
     treeherder:
