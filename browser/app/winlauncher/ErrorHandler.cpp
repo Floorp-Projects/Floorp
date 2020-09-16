@@ -579,21 +579,6 @@ static bool PrepPing(const PingThreadContext& aContext, const std::wstring& aId,
 
   aJson.IntProperty("source_line", aContext.mLauncherError.mLine);
   aJson.IntProperty("hresult", aContext.mLauncherError.mError.AsHResult());
-
-#  if defined(NIGHTLY_BUILD)
-  if (aContext.mLauncherError.mDetourError.isSome()) {
-    static const char* kHexMap = "0123456789abcdef";
-    char hexStr[sizeof(mozilla::DetourError::mOrigBytes) * 2 + 1];
-    int cnt = 0;
-    for (uint8_t byte : aContext.mLauncherError.mDetourError->mOrigBytes) {
-      hexStr[cnt++] = kHexMap[(byte >> 4) & 0x0f];
-      hexStr[cnt++] = kHexMap[byte & 0x0f];
-    }
-    hexStr[cnt] = 0;
-    aJson.StringProperty("detour_orig_bytes", hexStr);
-  }
-#  endif  // defined(NIGHTLY_BUILD)
-
   aJson.EndObject();
 
 #  if !defined(__MINGW32__)
