@@ -15,3 +15,20 @@ pub use nsstring::{nsACString, nsAString, nsCString, nsString};
 pub use nserror::{nsresult, NS_ERROR_NO_INTERFACE, NS_OK};
 
 pub use std::ops::Deref;
+
+/// Helper method used by the xpcom codegen, it is not public API or meant for
+/// calling outside of that context.
+///
+/// Takes a reference to the `this` pointer received from XPIDL, and offsets and
+/// casts it to a reference to the concrete rust `struct` type, `U`.
+///
+/// `vtable_index` is the index, and therefore the offset in pointers, of the
+/// vtable for `T` in `U`.
+///
+/// A reference to `this` is taken, instead of taking `*const T` by value, to use
+/// as a lifetime bound, such that the returned `&U` reference has a bounded
+/// lifetime when used to call the implementation method.
+#[inline]
+pub unsafe fn transmute_from_vtable_ptr<'a, T, U>(this: &'a *const T, vtable_index: usize) -> &'a U {
+    &*((*this as *const *const ()).sub(vtable_index) as *const U)
+}
