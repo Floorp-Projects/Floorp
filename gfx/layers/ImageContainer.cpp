@@ -665,9 +665,16 @@ already_AddRefed<gfx::SourceSurface> PlanarYCbCrImage::GetAsSourceSurface() {
   return surface.forget();
 }
 
+PlanarYCbCrImage::~PlanarYCbCrImage() {
+  NS_ReleaseOnMainThread("PlanarYCbCrImage::mSourceSurface",
+                         mSourceSurface.forget());
+}
+
 NVImage::NVImage() : Image(nullptr, ImageFormat::NV_IMAGE), mBufferSize(0) {}
 
-NVImage::~NVImage() = default;
+NVImage::~NVImage() {
+  NS_ReleaseOnMainThread("NVImage::mSourceSurface", mSourceSurface.forget());
+}
 
 IntSize NVImage::GetSize() const { return mSize; }
 
@@ -683,13 +690,13 @@ already_AddRefed<SourceSurface> NVImage::GetAsSourceSurface() {
   // logics in PlanarYCbCrImage::GetAsSourceSurface().
   const int bufferLength = mData.mYSize.height * mData.mYStride +
                            mData.mCbCrSize.height * mData.mCbCrSize.width * 2;
-  auto* buffer = new uint8_t[bufferLength];
+  UniquePtr<uint8_t[]> buffer(new uint8_t[bufferLength]);
 
   Data aData = mData;
   aData.mCbCrStride = aData.mCbCrSize.width;
   aData.mCbSkip = 0;
   aData.mCrSkip = 0;
-  aData.mYChannel = buffer;
+  aData.mYChannel = buffer.get();
   aData.mCbChannel = aData.mYChannel + aData.mYSize.height * aData.mYStride;
   aData.mCrChannel =
       aData.mCbChannel + aData.mCbCrSize.height * aData.mCbCrStride;
@@ -734,9 +741,6 @@ already_AddRefed<SourceSurface> NVImage::GetAsSourceSurface() {
                          mapping.GetStride());
 
   mSourceSurface = surface;
-
-  // Release the temporary buffer.
-  delete[] buffer;
 
   return surface.forget();
 }
@@ -788,8 +792,8 @@ bool NVImage::SetData(const Data& aData) {
 
 const NVImage::Data* NVImage::GetData() const { return &mData; }
 
-UniquePtr<uint8_t> NVImage::AllocateBuffer(uint32_t aSize) {
-  UniquePtr<uint8_t> buffer(new uint8_t[aSize]);
+UniquePtr<uint8_t[]> NVImage::AllocateBuffer(uint32_t aSize) {
+  UniquePtr<uint8_t[]> buffer(new uint8_t[aSize]);
   return buffer;
 }
 
@@ -806,7 +810,10 @@ SourceSurfaceImage::SourceSurfaceImage(gfx::SourceSurface* aSourceSurface)
       mSourceSurface(aSourceSurface),
       mTextureFlags(TextureFlags::DEFAULT) {}
 
-SourceSurfaceImage::~SourceSurfaceImage() = default;
+SourceSurfaceImage::~SourceSurfaceImage() {
+  NS_ReleaseOnMainThread("SourceSurfaceImage::mSourceSurface",
+                         mSourceSurface.forget());
+}
 
 TextureClient* SourceSurfaceImage::GetTextureClient(
     KnowsCompositor* aKnowsCompositor) {

@@ -47,7 +47,7 @@ class SharedRGBImage : public Image {
   gfx::IntSize mSize;
   RefPtr<ImageClient> mCompositable;
   RefPtr<TextureClient> mTextureClient;
-  nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
+  RefPtr<gfx::SourceSurface> mSourceSurface;
 };
 
 }  // namespace layers
