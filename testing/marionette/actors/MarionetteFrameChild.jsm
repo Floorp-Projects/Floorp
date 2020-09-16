@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  atom: "chrome://marionette/content/atom.js",
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   evaluate: "chrome://marionette/content/evaluate.js",
@@ -82,15 +81,6 @@ class MarionetteFrameChild extends JSWindowActorChild {
           break;
         case "MarionetteFrameParent:getElementProperty":
           result = await this.getElementProperty(data);
-          break;
-        case "MarionetteFrameParent:getElementTagName":
-          result = await this.getElementTagName(data);
-          break;
-        case "MarionetteFrameParent:getElementText":
-          result = await this.getElementText(data);
-          break;
-        case "MarionetteFrameParent:getElementValueOfCssProperty":
-          result = await this.getElementValueOfCssProperty(data);
           break;
         case "MarionetteFrameParent:switchToFrame":
           result = await this.switchToFrame(data);
@@ -176,35 +166,6 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const el = this.seenEls.get(webEl);
 
     return typeof el[name] != "undefined" ? el[name] : null;
-  }
-
-  /**
-   * Get the tagName for the given element.
-   */
-  async getElementTagName(options = {}) {
-    const { webEl } = options;
-    const el = this.seenEls.get(webEl);
-    return el.tagName.toLowerCase();
-  }
-
-  /**
-   * Get the text content for the given element.
-   */
-  async getElementText(options = {}) {
-    const { webEl } = options;
-    const el = this.seenEls.get(webEl);
-    return atom.getElementText(el, this.content);
-  }
-
-  /**
-   * Get the value of a css property for the given element.
-   */
-  async getElementValueOfCssProperty(options = {}) {
-    const { name, webEl } = options;
-    const el = this.seenEls.get(webEl);
-
-    const style = this.content.getComputedStyle(el);
-    return style.getPropertyValue(name);
   }
 
   /**
