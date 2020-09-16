@@ -13,6 +13,108 @@
 
 using namespace mozilla::a11y;
 
+@interface MOXRootGroup : MOXAccessibleBase {
+  MOXWebAreaAccessible* mParent;
+}
+
+// override
+- (id)initWithParent:(MOXWebAreaAccessible*)parent;
+
+// override
+- (NSString*)moxRole;
+
+// override
+- (NSString*)moxRoleDescription;
+
+// override
+- (id<mozAccessible>)moxParent;
+
+// override
+- (NSArray*)moxChildren;
+
+// override
+- (NSString*)moxIdentifier;
+
+// override
+- (id)moxHitTest:(NSPoint)point;
+
+// override
+- (NSValue*)moxPosition;
+
+// override
+- (NSValue*)moxSize;
+
+// override
+- (BOOL)disableChild:(id)child;
+
+// override
+- (void)expire;
+
+// override
+- (BOOL)isExpired;
+
+@end
+
+@implementation MOXRootGroup
+
+- (id)initWithParent:(MOXWebAreaAccessible*)parent {
+  // The parent is always a MOXWebAreaAccessible
+  mParent = parent;
+  return [super init];
+}
+
+- (NSString*)moxRole {
+  return NSAccessibilityGroupRole;
+}
+
+- (NSString*)moxRoleDescription {
+  return NSAccessibilityRoleDescription(NSAccessibilityGroupRole, nil);
+}
+
+- (id<mozAccessible>)moxParent {
+  return mParent;
+}
+
+- (NSArray*)moxChildren {
+  // Reparent the children of the web area here.
+  return [mParent rootGroupChildren];
+}
+
+- (NSString*)moxIdentifier {
+  // This is mostly for testing purposes to assert that this is the generated
+  // root group.
+  return @"root-group";
+}
+
+- (id)moxHitTest:(NSPoint)point {
+  return [mParent moxHitTest:point];
+}
+
+- (NSValue*)moxPosition {
+  return [mParent moxPosition];
+}
+
+- (NSValue*)moxSize {
+  return [mParent moxSize];
+}
+
+- (BOOL)disableChild:(id)child {
+  return NO;
+}
+
+- (void)expire {
+  mParent = nil;
+  [super expire];
+}
+
+- (BOOL)isExpired {
+  MOZ_ASSERT((mParent == nil) == mIsExpired);
+
+  return [super isExpired];
+}
+
+@end
+
 @implementation MOXWebAreaAccessible
 
 - (NSURL*)moxURL {
@@ -110,6 +212,50 @@ using namespace mozilla::a11y;
   }
 
   [super handleAccessibleEvent:eventType];
+}
+
+- (NSArray*)rootGroupChildren {
+  // This method is meant to expose the doc's children to the root group.
+  return [super moxChildren];
+}
+
+- (NSArray*)moxUnignoredChildren {
+  if (id rootGroup = [self rootGroup]) {
+    return @[ [self rootGroup] ];
+  }
+
+  // There is no root group, expose the children here directly.
+  return [super moxUnignoredChildren];
+}
+
+- (id)rootGroup {
+  NSArray* children = [super moxUnignoredChildren];
+  if ([children count] == 1 &&
+      [[[children firstObject] moxUnignoredChildren] count] != 0) {
+    // We only need a root group if our document has multiple children or one
+    // child that is a leaf.
+    return nil;
+  }
+
+  if (!mRootGroup) {
+    mRootGroup = [[MOXRootGroup alloc] initWithParent:self];
+  }
+
+  return mRootGroup;
+}
+
+- (void)expire {
+  [mRootGroup expire];
+  [super expire];
+}
+
+- (void)dealloc {
+  // This object can only be dealoced after the gecko accessible wrapper
+  // reference is released, and that happens after expire is called.
+  MOZ_ASSERT([self isExpired]);
+  [mRootGroup release];
+
+  [super dealloc];
 }
 
 @end
