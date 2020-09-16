@@ -119,7 +119,13 @@ class ResultImplementationNullIsOkBase {
   using ErrorStorageType = typename UnusedZero<E>::StorageType;
 
   static constexpr auto kNullValue = UnusedZero<E>::nullValue;
-  static inline const auto kMovedFromMarker = UnusedZero<E>::defaultValue;
+
+  // This is static function rather than a static data member in order to avoid
+  // that gcc emits lots of static constructors. It may be changed to a static
+  // constexpr data member with C++20.
+  static inline auto GetMovedFromMarker() {
+    return UnusedZero<E>::GetDefaultValue();
+  }
 
   static_assert(std::is_trivially_copyable_v<ErrorStorageType>);
   static_assert(kNullValue == decltype(kNullValue)(0));
@@ -154,7 +160,7 @@ class ResultImplementationNullIsOkBase {
       if (isOk()) {
         new (mValue.first().addr()) V(std::move(*aOther.mValue.first().addr()));
         aOther.mValue.first().addr()->~V();
-        aOther.mValue.second() = kMovedFromMarker;
+        aOther.mValue.second() = GetMovedFromMarker();
       }
     }
   }
@@ -170,7 +176,7 @@ class ResultImplementationNullIsOkBase {
       if (isOk()) {
         new (mValue.first().addr()) V(std::move(*aOther.mValue.first().addr()));
         aOther.mValue.first().addr()->~V();
-        aOther.mValue.second() = kMovedFromMarker;
+        aOther.mValue.second() = GetMovedFromMarker();
       }
     }
     return *this;
@@ -322,8 +328,13 @@ struct UnusedZero<T&> {
 
   static constexpr bool value = true;
 
-  static inline StorageType const defaultValue =
-      reinterpret_cast<StorageType>(~ptrdiff_t(0));
+  // This is static function rather than a static data member in order to avoid
+  // that gcc emits lots of static constructors. It may be changed to a static
+  // constexpr data member using bit_cast with C++20.
+  static inline StorageType GetDefaultValue() {
+    return reinterpret_cast<StorageType>(~ptrdiff_t(0));
+  }
+
   static constexpr StorageType nullValue = nullptr;
 
   static constexpr const T& Inspect(StorageType aValue) {
@@ -338,7 +349,7 @@ struct UnusedZero<T&> {
 
  private:
   static constexpr void AssertValid(StorageType aValue) {
-    MOZ_ASSERT(aValue != defaultValue);
+    MOZ_ASSERT(aValue != GetDefaultValue());
   }
 };
 
