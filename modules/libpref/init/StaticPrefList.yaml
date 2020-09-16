@@ -3709,12 +3709,6 @@
   value: 0
   mirror: always
 
-# temporary pref to work around a problem (bug 1663562)
-- name: font.size.inflation.skipmaybereflowwithwebrender
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # This setting corresponds to a global text zoom setting affecting
 # all content that is not already subject to font size inflation.
 # It is interpreted as a percentage value that is applied on top
