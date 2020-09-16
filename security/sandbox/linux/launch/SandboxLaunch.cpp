@@ -499,7 +499,9 @@ static int CloneCallee(void* aPtr) {
 // we don't currently support sandboxing under valgrind.
 MOZ_NEVER_INLINE MOZ_ASAN_BLACKLIST static pid_t DoClone(int aFlags,
                                                          jmp_buf* aCtx) {
-  uint8_t miniStack[PTHREAD_STACK_MIN];
+  static constexpr size_t kStackAlignment = 16;
+  uint8_t miniStack[PTHREAD_STACK_MIN]
+      __attribute__((aligned(kStackAlignment)));
 #ifdef __hppa__
   void* stackPtr = miniStack;
 #else
