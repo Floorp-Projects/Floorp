@@ -600,7 +600,7 @@ const tests = [
       fireInputEvent: true,
     });
 
-    while (win.gURLBar.searchMode?.engineName != "Test") {
+    while (win.gURLBar.untrimmedValue != "@test") {
       EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
@@ -1241,7 +1241,7 @@ const tests = [
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     });
-    while (win.gURLBar.searchMode?.engineName != "Google") {
+    while (win.gURLBar.untrimmedValue != "@google") {
       EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
     let element = UrlbarTestUtils.getSelectedRow(win);

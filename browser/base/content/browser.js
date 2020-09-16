@@ -4135,11 +4135,9 @@ const BrowserSearch = {
     if (delayUpdate && !gURLBar.value) {
       // Delays changing the URL Bar placeholder until the user is not going to be
       // seeing it, e.g. when there is a value entered in the bar, or if there is
-      // a tab switch to a tab which has a url loaded. We delay the update until
-      // the user is out of search mode since an alternative placeholder is used
-      // in search mode.
+      // a tab switch to a tab which has a url loaded.
       let placeholderUpdateListener = () => {
-        if (gURLBar.value && !gURLBar.searchMode) {
+        if (gURLBar.value) {
           // By the time the user has switched, they may have changed the engine
           // again, so we need to call this function again but with the
           // new engine name.
