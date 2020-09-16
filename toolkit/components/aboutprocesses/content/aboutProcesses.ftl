@@ -11,12 +11,40 @@ about-processes-column-name = Name
 about-processes-column-memory-resident = Memory
 about-processes-column-cpu-total = CPU
 
-## Individual cells
+## Process names
+## Variables:
+##    $pid (String) The process id of this process, assigned by the OS.
+##    $origin (String) The domain name for this process.
+##    $type (String) The raw type for this process. Used for unknown processes.
 
-# The main process
+about-processes-browser-process-name = { -brand-short-name } (process { $pid })
+about-processes-web-process-name = Web (process { $pid }, shared)
+about-processes-webIsolated-process-name = Web (process { $pid }) for { $origin }
+about-processes-webLargeAllocation = Web (process { $pid }, large) for { $origin }
+about-processes-withCoopCoep-process-name = Web (process { $pid }, cross-origin isolated) for { $origin }
+about-processes-file-process-name = Files (process { $pid })
+about-processes-extension-process-name = Extensions (process { $pid })
+about-processes-privilegedabout-process-name = About (process { $pid })
+about-processes-plugin-process-name = Plugins (process { $pid })
+about-processes-privilegedmozilla-process-name = Web (process { $pid }) for { -vendor-short-name } sites
+about-processes-gmpPlugin-process-name = Gecko Media Plugins (process { $pid })
+about-processes-gpu-process-name = GPU (process { $pid })
+about-processes-vr-process-name = VR (process { $pid })
+about-processes-rdd-process-name = Data Decoder (process { $pid })
+about-processes-socket-process-name = Network (process { $pid })
+about-processes-remoteSandboxBroker-process-name = Remote Sandbox Broker (process { $pid })
+about-processes-forkServer-process-name = Fork Server (process { $pid })
+about-processes-preallocated-process-name = Preallocated (process { $pid })
+about-processes-unknown-process-name = Other ({$ type }, process { $pid })
+
+
+# Process
 # Variables:
-#    $pid (String) The process id of this process, assigned by the OS.
-about-processes-browser-name = { -brand-short-name } (process { $pid })
+#   $name (String) The name assigned to the process.
+#   $pid (String) The process id of this process, assigned by the OS.
+about-processes-process-name = Process { $pid }: { $name }
+
+## Details within processes
 
 # Single-line summary of threads
 # Variables:
@@ -31,11 +59,6 @@ about-processes-thread-summary = Threads ({ $number })
 #   $tid (String) The thread id of this thread, assigned by the OS.
 about-processes-thread-name = Thread { $tid }: { $name }
 
-# Process
-# Variables:
-#   $name (String) The name assigned to the process.
-#   $pid (String) The process id of this process, assigned by the OS.
-about-processes-process-name = Process { $pid }: { $name }
 
 # Extension
 # Variables:

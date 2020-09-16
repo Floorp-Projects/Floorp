@@ -231,6 +231,37 @@ function testMemory(string, total, delta, assumptions) {
   );
 }
 
+function extractProcessDetails(row) {
+  let children = row.children;
+  let memoryResidentContent = children[1].textContent;
+  let cpuContent = children[2].textContent;
+  let fluentArgs = document.l10n.getAttributes(children[0].children[0]).args;
+  let process = {
+    memoryResidentContent,
+    cpuContent,
+    pidContent: fluentArgs.pid,
+    typeContent: fluentArgs.type,
+    threads: null,
+  };
+  let threadDetailsRow = row.nextSibling;
+  while (threadDetailsRow) {
+    if (threadDetailsRow.classList.contains("thread-summary")) {
+      break;
+    }
+    threadDetailsRow = threadDetailsRow.nextSibling;
+  }
+  if (!threadDetailsRow) {
+    return process;
+  }
+  process.threads = {
+    row: threadDetailsRow,
+    numberContent: document.l10n.getAttributes(
+      threadDetailsRow.children[0].children[1]
+    ).args.number,
+  };
+  return process;
+}
+
 add_task(async function testAboutProcesses() {
   info("Setting up about:processes");
 
@@ -260,10 +291,9 @@ add_task(async function testAboutProcesses() {
 
     // Keep informing about:processes that `tabHung` is hung.
     // Note: this is a background task, do not `await` it.
-    let isProcessHangDetected = false;
     let fakeProcessHangMonitor = async function() {
       for (let i = 0; i < 100; ++i) {
-        if (isProcessHangDetected || !tabHung.linkedBrowser) {
+        if (!tabHung.linkedBrowser) {
           // Let's stop spamming as soon as we can.
           return;
         }
@@ -298,133 +328,136 @@ add_task(async function testAboutProcesses() {
     });
 
     info("Looking at the contents of about:processes");
-    // Find the row for the browser process.
-    let row = tbody.firstChild;
-    while (row) {
-      if (row.process && row.process.type == "browser") {
-        break;
+    let processesToBeFound = [
+      // The browser process.
+      {
+        name: "browser",
+        type: ["browser"],
+        predicate: row => row.process.type == "browser",
+      },
+      // The hung process.
+      {
+        name: "hung",
+        type: ["web", "webIsolated"],
+        predicate: row =>
+          row.classList.contains("hung") && row.classList.contains("process"),
+      },
+      // Any non-hung process
+      {
+        name: "hung",
+        type: ["web", "webIsolated"],
+        predicate: row =>
+          !row.classList.contains("hung") &&
+          row.classList.contains("process") &&
+          row.process.type == "web",
+      },
+    ];
+    for (let finder of processesToBeFound) {
+      info(`Running sanity tests on ${finder.name}`);
+      let row = tbody.firstChild;
+      while (row) {
+        if (finder.predicate(row)) {
+          break;
+        }
+        row = row.nextSibling;
       }
-      row = row.nextSibling;
-    }
+      Assert.ok(row, `found a table row for ${finder.name}`);
+      let {
+        memoryResidentContent,
+        cpuContent,
+        pidContent,
+        typeContent,
+        threads,
+      } = extractProcessDetails(row);
 
-    Assert.ok(row, "found a table row for the browser");
-    let children = row.children;
-    let memoryResidentContent = children[1].textContent;
-    let cpuContent = children[2].textContent;
-    let pidContent = document.l10n.getAttributes(children[0].children[0]).args
-      .pid;
-
-    info("Sanity checks: pid");
-    let pid = Number.parseInt(pidContent);
-    Assert.ok(pid > 0, `Checking pid ${pidContent}`);
-    Assert.equal(pid, row.process.pid);
-
-    info("Sanity checks: memory resident");
-    testMemory(
-      memoryResidentContent,
-      row.process.totalResidentUniqueSize,
-      row.process.deltaResidentUniqueSize,
-      HARDCODED_ASSUMPTIONS_PROCESS
-    );
-
-    info("Sanity checks: CPU (Total)");
-    testCpu(
-      cpuContent,
-      row.process.totalCpu,
-      row.process.slopeCpu,
-      HARDCODED_ASSUMPTIONS_PROCESS
-    );
-
-    let threadDetailsRow = row.nextSibling;
-    while (threadDetailsRow) {
-      if (threadDetailsRow.classList.contains("thread-summary")) {
-        break;
-      }
-      threadDetailsRow = threadDetailsRow.nextSibling;
-    }
-    if (!showThreads) {
-      Assert.equal(
-        threadDetailsRow,
-        null,
-        "In hidden threads mode, we shouldn't have any thread summary"
-      );
-    } else {
-      let numberOfThreadsContent = document.l10n.getAttributes(
-        threadDetailsRow.children[0].children[1]
-      ).args.number;
-
-      info("Sanity checks: number of threads");
-      let numberOfThreads = Number.parseInt(numberOfThreadsContent);
+      info("Sanity checks: type");
       Assert.ok(
-        numberOfThreads >= HARDCODED_ASSUMPTIONS_PROCESS.minimalNumberOfThreads
-      );
-      Assert.ok(
-        numberOfThreads <= HARDCODED_ASSUMPTIONS_PROCESS.maximalNumberOfThreads
-      );
-      Assert.equal(numberOfThreads, row.process.threads.length);
-
-      info("Testing that we can open the list of threads");
-      let twisty = threadDetailsRow.getElementsByClassName("twisty")[0];
-      twisty.click();
-      Assert.equal(
-        numberOfThreads,
-        tbody.getElementsByClassName("thread").length,
-        "Displayed number of threads is correct"
+        finder.type.includes(typeContent),
+        `Type ${typeContent} should be one of ${finder.type}`
       );
 
-      let numberOfThreadsFound = 0;
-      for (
-        let threadRow = threadDetailsRow.nextSibling;
-        threadRow && threadRow.classList.contains("thread");
-        threadRow = threadRow.nextSibling
-      ) {
-        let children = threadRow.children;
-        let cpuContent = children[2].textContent;
-        let tidContent = document.l10n.getAttributes(children[0].children[0])
-          .args.tid;
-        ++numberOfThreadsFound;
+      info("Sanity checks: pid");
+      let pid = Number.parseInt(pidContent);
+      Assert.ok(pid > 0, `Checking pid ${pidContent}`);
+      Assert.equal(pid, row.process.pid);
 
-        info("Sanity checks: tid");
-        let tid = Number.parseInt(tidContent);
-        Assert.notEqual(tid, 0, "The tid should be set");
-        Assert.equal(tid, threadRow.thread.tid, "Displayed tid is correct");
+      info("Sanity checks: memory resident");
+      testMemory(
+        memoryResidentContent,
+        row.process.totalResidentUniqueSize,
+        row.process.deltaResidentUniqueSize,
+        HARDCODED_ASSUMPTIONS_PROCESS
+      );
 
-        info("Sanity checks: CPU (User and Kernel)");
-        testCpu(
-          cpuContent,
-          threadRow.thread.totalCpu,
-          threadRow.thread.slopeCpu,
-          HARDCODED_ASSUMPTIONS_THREAD
+      info("Sanity checks: CPU (Total)");
+      testCpu(
+        cpuContent,
+        row.process.totalCpu,
+        row.process.slopeCpu,
+        HARDCODED_ASSUMPTIONS_PROCESS
+      );
+
+      if (!showThreads) {
+        Assert.equal(
+          threads,
+          null,
+          "In hidden threads mode, we shouldn't have any thread summary"
+        );
+      } else {
+        info("Sanity checks: number of threads");
+        let numberOfThreads = Number.parseInt(threads.numberContent);
+        Assert.ok(
+          numberOfThreads >=
+            HARDCODED_ASSUMPTIONS_PROCESS.minimalNumberOfThreads
+        );
+        Assert.ok(
+          numberOfThreads <=
+            HARDCODED_ASSUMPTIONS_PROCESS.maximalNumberOfThreads
+        );
+        Assert.equal(numberOfThreads, row.process.threads.length);
+
+        info("Testing that we can open the list of threads");
+        let twisty = threads.row.getElementsByClassName("twisty")[0];
+        twisty.click();
+        let numberOfThreadsFound = 0;
+        for (
+          let threadRow = threads.row.nextSibling;
+          threadRow && threadRow.classList.contains("thread");
+          threadRow = threadRow.nextSibling
+        ) {
+          let children = threadRow.children;
+          let cpuContent = children[2].textContent;
+          let tidContent = document.l10n.getAttributes(children[0].children[0])
+            .args.tid;
+          ++numberOfThreadsFound;
+
+          info("Sanity checks: tid");
+          let tid = Number.parseInt(tidContent);
+          Assert.notEqual(tid, 0, "The tid should be set");
+          Assert.equal(tid, threadRow.thread.tid, "Displayed tid is correct");
+
+          info("Sanity checks: CPU (User and Kernel)");
+          testCpu(
+            cpuContent,
+            threadRow.thread.totalCpu,
+            threadRow.thread.slopeCpu,
+            HARDCODED_ASSUMPTIONS_THREAD
+          );
+        }
+        Assert.equal(
+          numberOfThreads,
+          numberOfThreadsFound,
+          "Found as many threads as expected"
         );
       }
-      Assert.equal(
-        numberOfThreads,
-        numberOfThreadsFound,
-        "Found as many threads as expected"
-      );
     }
 
-    info("Ensuring that the hung process is marked as hung");
-    let isOneNonHungProcessDetected = false;
-    for (let row of tbody.getElementsByClassName("process")) {
-      if (row.classList.contains("hung")) {
-        if (row.process.childID == hungChildID) {
-          isProcessHangDetected = true;
-        }
-      } else {
-        isOneNonHungProcessDetected = true;
-      }
-      if (isProcessHangDetected && isOneNonHungProcessDetected) {
-        break;
-      }
+    info("Additional sanity check for all processes");
+    for (let row of document.getElementsByClassName("process")) {
+      let { pidContent, typeContent } = extractProcessDetails(row);
+      Assert.equal(typeContent, row.process.type);
+      Assert.equal(Number.parseInt(pidContent), row.process.pid);
     }
-
-    Assert.ok(isProcessHangDetected, "We have found our hung process");
-    Assert.ok(
-      isOneNonHungProcessDetected,
-      "We have found at least one non-hung process"
-    );
-
     BrowserTestUtils.removeTab(tabAboutProcesses);
     BrowserTestUtils.removeTab(tabHung);
   }
