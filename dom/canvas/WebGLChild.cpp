@@ -6,12 +6,15 @@
 #include "WebGLChild.h"
 
 #include "ClientWebGLContext.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "WebGLMethodDispatcher.h"
 
 namespace mozilla {
 namespace dom {
 
-WebGLChild::WebGLChild(ClientWebGLContext& context) : mContext(&context) {}
+WebGLChild::WebGLChild(ClientWebGLContext& context)
+    : mContext(&context),
+      mDefaultCmdsShmemSize(StaticPrefs::webgl_out_of_process_shmem_size()) {}
 
 WebGLChild::~WebGLChild() { (void)Send__delete__(this); }
 
@@ -21,11 +24,9 @@ void WebGLChild::ActorDestroy(ActorDestroyReason why) {
 
 // -
 
-static constexpr size_t kDefaultCmdsShmemSize = 100 * 1000;
-
 Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(const size_t size) {
   if (!mPendingCmdsShmem) {
-    size_t capacity = kDefaultCmdsShmemSize;
+    size_t capacity = mDefaultCmdsShmemSize;
     if (capacity < size) {
       capacity = size;
     }

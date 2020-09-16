@@ -34,6 +34,7 @@ struct FlushedCmdInfo final {
 
 class WebGLChild final : public PWebGLChild, public SupportsWeakPtr {
   const WeakPtr<ClientWebGLContext> mContext;
+  const size_t mDefaultCmdsShmemSize;
   webgl::RaiiShmem mPendingCmdsShmem;
   size_t mPendingCmdsPos = 0;
   FlushedCmdInfo mFlushedCmdInfo;

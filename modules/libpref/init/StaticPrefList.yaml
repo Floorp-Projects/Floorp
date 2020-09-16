@@ -9937,6 +9937,11 @@
   value: false
   mirror: always
 
+- name: webgl.out-of-process.shmem-size
+  type: RelaxedAtomicUint32
+  value: 10000 # 10KB
+  mirror: always
+
 - name: webgl.power-preference-override
   type: RelaxedAtomicInt32
   value: 0
