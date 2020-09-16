@@ -2443,11 +2443,11 @@ pref("devtools.debugger.features.async-live-stacks", false);
 pref("devtools.popup.disable_autohide", false);
 
 // Visibility switch preference for the WhatsNew panel.
-pref("devtools.whatsnew.enabled", true);
+pref("devtools.whatsnew.enabled", false);
 
 // Temporary preference to fully disable the WhatsNew panel on any target.
 // Should be removed in https://bugzilla.mozilla.org/show_bug.cgi?id=1596037
-pref("devtools.whatsnew.feature-enabled", true);
+pref("devtools.whatsnew.feature-enabled", false);
 
 // Part of the Overflow Debugging project
 // Here's the meta bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1529280
