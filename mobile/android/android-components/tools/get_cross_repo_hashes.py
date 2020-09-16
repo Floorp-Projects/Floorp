@@ -27,11 +27,9 @@ from urllib.request import urlopen
 SCRIPT_NAME=os.path.basename(__file__)
 SCRIPT_DIR=os.path.dirname(os.path.realpath(__file__))
 
-USAGE="""usage: ./{script_name} [-h] [--help] [--gv-nightly <version>]
+USAGE="""usage: ./{script_name} [-h] [--help]
   (no args): maps the currently checked out ac revision to a valid mc
              revision.
-  --gv-nightly: disables default behavior and maps the given GV nightly version
-                to a valid mc version.
   --help, -h: prints this information and exits.
 
 
@@ -76,10 +74,6 @@ PATH_AC_ROOT=os.path.join(SCRIPT_DIR, '..')
 PATH_AC_VERSION=os.path.join('buildSrc', 'src', 'main', 'java', 'AndroidComponents.kt')
 PATH_GV_VERSION=os.path.join('buildSrc', 'src', 'main', 'java', 'Gecko.kt')
 
-class Mode(Enum):
-    Default = 1
-    Nightly_version = 2
-
 ### SECTION: USAGE AND ARGS ###
 def print_usage(exit=False):
     print(USAGE, file=sys.stderr)
@@ -88,17 +82,6 @@ def print_usage(exit=False):
 def maybe_display_usage():
     if '--help' in sys.argv or '-h' in sys.argv:
         print_usage(exit=True)
-
-def validate_args():
-    if len(sys.argv) <= 1:
-        return Mode.Default, None
-
-    if sys.argv[1] != '--gv-nightly':
-        raise Exception('unknown argument ' + sys.argv[1])
-
-    gv_nightly_version = sys.argv[2]
-    validate_gv_nightly_version(gv_nightly_version)
-    return Mode.Nightly_version, gv_nightly_version
 
 ### SECTION: UTILITIES ###
 def extract_str_inside_quotes(str_with_quotes):
@@ -194,8 +177,7 @@ def ac_checkout_to_mc_hash(ac_root):
     return mc_hash, releasev, betav, nightlyv
 
 ### SECTION: MAIN ###
-def main_mode_default():
-    # fenix checkout -> ac hash
+def main_repo_to_hash():
     print('fenix checkout -> ac hash')
     print(INDENT + 'must be done manually. See --help for instructions')
     print(INDENT + 'WARNING: if a different ac revision is found in fenix than')
@@ -212,15 +194,9 @@ def main_mode_default():
     print(INDENT2 + 'GV beta:    ' + betav)
     print(INDENT2 + 'GV release: ' + releasev)
 
-def main_mode_nightly(gv_nightly_version):
-    mc_hash = gv_nightly_version_to_mc_hash(gv_nightly_version)
-    print(mc_hash.decode('utf-8'))
-
 def main():
     maybe_display_usage()
-    mode, gv_nightly_version = validate_args()
-    if mode == Mode.Default: main_mode_default()
-    elif mode == Mode.Nightly_version: main_mode_nightly(gv_nightly_version)
+    main_repo_to_hash()
 
 if __name__ == '__main__':
     try:
