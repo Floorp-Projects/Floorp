@@ -440,10 +440,6 @@ devtools.jar:
     content/application/src/components/service-workers/Worker.css (application/src/components/service-workers/Worker.css)
     content/application/src/components/ui/UIButton.css (application/src/components/ui/UIButton.css)
 
-    # WhatsNew panel
-    content/whats-new/index.html (whats-new/index.html)
-    content/whats-new/src/whats-new.css (whats-new/src/whats-new.css)
-
     # about:profiling
     skin/aboutprofiling.css (themes/aboutprofiling.css)
     content/performance-new/aboutprofiling/initializer.js (performance-new/aboutprofiling/initializer.js)
