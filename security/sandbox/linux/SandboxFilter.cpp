@@ -319,6 +319,110 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
                                               : broker->LStat(path, buf);
   }
 
+  static intptr_t ChmodAtTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto fd = static_cast<int>(aArgs.args[0]);
+    auto path = reinterpret_cast<const char*>(aArgs.args[1]);
+    auto mode = static_cast<mode_t>(aArgs.args[2]);
+    auto flags = static_cast<int>(aArgs.args[3]);
+    if (fd != AT_FDCWD && path[0] != '/') {
+      SANDBOX_LOG_ERROR("unsupported fd-relative chmodat(%d, \"%s\", 0%o, %d)",
+                        fd, path, mode, flags);
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    if (flags != 0) {
+      SANDBOX_LOG_ERROR("unsupported flags in chmodat(%d, \"%s\", 0%o, %d)", fd,
+                        path, mode, flags);
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    return broker->Chmod(path, mode);
+  }
+
+  static intptr_t LinkAtTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto fd = static_cast<int>(aArgs.args[0]);
+    auto path = reinterpret_cast<const char*>(aArgs.args[1]);
+    auto fd2 = static_cast<int>(aArgs.args[2]);
+    auto path2 = reinterpret_cast<const char*>(aArgs.args[3]);
+    auto flags = static_cast<int>(aArgs.args[4]);
+    if ((fd != AT_FDCWD && path[0] != '/') ||
+        (fd2 != AT_FDCWD && path2[0] != '/')) {
+      SANDBOX_LOG_ERROR(
+          "unsupported fd-relative linkat(%d, \"%s\", %d, \"%s\", 0x%x)", fd,
+          path, fd2, path2, flags);
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    if (flags != 0) {
+      SANDBOX_LOG_ERROR(
+          "unsupported flags in linkat(%d, \"%s\", %d, \"%s\", 0x%x)", fd, path,
+          fd2, path2, flags);
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    return broker->Link(path, path2);
+  }
+
+  static intptr_t SymlinkAtTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    auto fd2 = static_cast<int>(aArgs.args[1]);
+    auto path2 = reinterpret_cast<const char*>(aArgs.args[2]);
+    if (fd2 != AT_FDCWD && path2[0] != '/') {
+      SANDBOX_LOG_ERROR("unsupported fd-relative symlinkat(\"%s\", %d, \"%s\")",
+                        path, fd2, path2);
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    return broker->Symlink(path, path2);
+  }
+
+  static intptr_t RenameAtTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto fd = static_cast<int>(aArgs.args[0]);
+    auto path = reinterpret_cast<const char*>(aArgs.args[1]);
+    auto fd2 = static_cast<int>(aArgs.args[2]);
+    auto path2 = reinterpret_cast<const char*>(aArgs.args[3]);
+    if ((fd != AT_FDCWD && path[0] != '/') ||
+        (fd2 != AT_FDCWD && path2[0] != '/')) {
+      SANDBOX_LOG_ERROR(
+          "unsupported fd-relative renameat(%d, \"%s\", %d, \"%s\")", fd, path,
+          fd2, path2);
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    return broker->Rename(path, path2);
+  }
+
+  static intptr_t MkdirAtTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto fd = static_cast<int>(aArgs.args[0]);
+    auto path = reinterpret_cast<const char*>(aArgs.args[1]);
+    auto mode = static_cast<mode_t>(aArgs.args[2]);
+    if (fd != AT_FDCWD && path[0] != '/') {
+      SANDBOX_LOG_ERROR("unsupported fd-relative mkdirat(%d, \"%s\", 0%o)", fd,
+                        path, mode);
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    return broker->Mkdir(path, mode);
+  }
+
+  static intptr_t UnlinkAtTrap(ArgsRef aArgs, void* aux) {
+    auto broker = static_cast<SandboxBrokerClient*>(aux);
+    auto fd = static_cast<int>(aArgs.args[0]);
+    auto path = reinterpret_cast<const char*>(aArgs.args[1]);
+    auto flags = static_cast<int>(aArgs.args[2]);
+    if (fd != AT_FDCWD && path[0] != '/') {
+      SANDBOX_LOG_ERROR("unsupported fd-relative unlinkat(%d, \"%s\", 0x%x)",
+                        fd, path, flags);
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    int badFlags = flags & ~AT_REMOVEDIR;
+    if (badFlags != 0) {
+      SANDBOX_LOG_ERROR("unsupported flags 0x%x in unlinkat(%d, \"%s\", 0x%x)",
+                        badFlags, fd, path, flags);
+      return BlockedSyscallTrap(aArgs, nullptr);
+    }
+    return (flags & AT_REMOVEDIR) == 0 ? broker->Unlink(path)
+                                       : broker->Rmdir(path);
+  }
+
   static intptr_t ReadlinkAtTrap(ArgsRef aArgs, void* aux) {
     auto broker = static_cast<SandboxBrokerClient*>(aux);
     auto fd = static_cast<int>(aArgs.args[0]);
@@ -481,6 +585,18 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         // We don't have broker support yet so claim it does not exist.
         case __NR_statx:
           return Error(ENOSYS);
+        case __NR_fchmodat:
+          return Trap(ChmodAtTrap, mBroker);
+        case __NR_linkat:
+          return Trap(LinkAtTrap, mBroker);
+        case __NR_mkdirat:
+          return Trap(MkdirAtTrap, mBroker);
+        case __NR_symlinkat:
+          return Trap(SymlinkAtTrap, mBroker);
+        case __NR_renameat:
+          return Trap(RenameAtTrap, mBroker);
+        case __NR_unlinkat:
+          return Trap(UnlinkAtTrap, mBroker);
         case __NR_readlinkat:
           return Trap(ReadlinkAtTrap, mBroker);
       }
@@ -1056,6 +1172,12 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         case __NR_openat:
         case __NR_faccessat:
         CASES_FOR_fstatat:
+        case __NR_fchmodat:
+        case __NR_linkat:
+        case __NR_mkdirat:
+        case __NR_symlinkat:
+        case __NR_renameat:
+        case __NR_unlinkat:
         case __NR_readlinkat:
           return Allow();
       }
