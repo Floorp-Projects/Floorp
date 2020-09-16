@@ -11,8 +11,7 @@ const {
   BoxModelHighlighter,
 } = require("devtools/server/actors/highlighters/box-model");
 
-// How many maximum nodes can be highlighted at the same time by the
-// SelectorHighlighter
+// How many maximum nodes can be highlighted at the same time by the SelectorHighlighter
 const MAX_HIGHLIGHTED_ELEMENTS = 100;
 
 /**
@@ -27,13 +26,16 @@ function SelectorHighlighter(highlighterEnv) {
 
 SelectorHighlighter.prototype = {
   /**
-   * Show BoxModelHighlighter on each node that matches that provided selector.
-   * @param {DOMNode} node A context node that is used to get the document on
-   * which querySelectorAll should be executed. This node will NOT be
-   * highlighted.
-   * @param {Object} options Should at least contain the 'selector' option, a
-   * string that will be used in querySelectorAll. On top of this, all of the
-   * valid options to BoxModelHighlighter.show are also valid here.
+   * Show a BoxModelHighlighter on each node that matches a given selector.
+   *
+   * @param {DOMNode} node
+   *        A context node used to get the document element on which to run
+   *        querySelectorAll(). This node will not be highlighted.
+   * @param {Object} options
+   *        Configuration options for SelectorHighlighter.
+   *        All of the options for BoxModelHighlighter.show() are also valid here.
+   * @param {String} options.selector
+   *        Required. CSS selector used with querySelectorAll() to find matching elements.
    */
   show: async function(node, options = {}) {
     this.hide();
@@ -46,29 +48,35 @@ SelectorHighlighter.prototype = {
     try {
       nodes = [...node.ownerDocument.querySelectorAll(options.selector)];
     } catch (e) {
-      // It's fine if the provided selector is invalid, nodes will be an empty
-      // array.
+      // It's fine if the provided selector is invalid, `nodes` will be an empty array.
     }
 
+    // Prevent passing the `selector` option to BoxModelHighlighter
     delete options.selector;
 
-    let i = 0;
-    const highlighters = [];
-    for (const matchingNode of nodes) {
-      if (i++ >= MAX_HIGHLIGHTED_ELEMENTS) {
-        break;
-      }
-
-      highlighters.push(this._accumulateHighlighter(matchingNode, options));
+    const promises = [];
+    for (let i = 0; i < Math.min(nodes.length, MAX_HIGHLIGHTED_ELEMENTS); i++) {
+      promises.push(this._showHighlighter(nodes[i], options));
     }
 
-    await Promise.all(highlighters);
+    await Promise.all(promises);
     return true;
   },
 
-  _accumulateHighlighter: async function(node, options) {
+  /**
+   * Create an instance of BoxModelHighlighter, wait for it to be ready
+   * (see CanvasFrameAnonymousContentHelper.initialize()),
+   * then show the highlighter on the given node with the given configuration options.
+   *
+   * @param  {DOMNode} node
+   *         Node to be highlighted
+   * @param  {Object} options
+   *         Configuration options for the BoxModelHighlighter
+   * @return {Promise} Promise that resolves when the BoxModelHighlighter is ready
+   */
+  _showHighlighter: async function(node, options) {
     const highlighter = new BoxModelHighlighter(this.highlighterEnv);
-    await highlighter.ready;
+    await highlighter.isReady;
 
     highlighter.show(node, options);
     this._highlighters.push(highlighter);
