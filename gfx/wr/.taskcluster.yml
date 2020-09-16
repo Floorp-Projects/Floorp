@@ -42,7 +42,7 @@ tasks:
       $if: should_run
       then:
         # For the docker-worker tasks, the Docker image used
-        # (staktrace/webrender-test:debian-v6) was created using the Dockerfile in
+        # (staktrace/webrender-test:debian-v7) was created using the Dockerfile in
         # ci-scripts/docker-image.
         #
         # The docker image may need to be updated over time if the set of required
@@ -61,7 +61,7 @@ tasks:
           deadline: {$fromNow: '1 day'}
           payload:
             maxRunTime: 7200
-            image: 'staktrace/webrender-test:debian-v6'
+            image: 'staktrace/webrender-test:debian-v7'
             env:
               RUST_BACKTRACE: 'full'
               RUSTFLAGS: '--deny warnings'
@@ -75,6 +75,8 @@ tasks:
                 git clone ${repo_url} webrender && cd webrender &&
                 git checkout ${sha} &&
                 servo-tidy &&
+                ci-scripts/install-meson.sh &&
+                export PATH=$PATH:$PWD/meson &&
                 ci-scripts/linux-release-tests.sh
           routes:
             - "index.project.webrender.ci.${login}.${branch}.linux-release"
@@ -88,7 +90,7 @@ tasks:
           deadline: {$fromNow: '1 day'}
           payload:
             maxRunTime: 7200
-            image: 'staktrace/webrender-test:debian-v6'
+            image: 'staktrace/webrender-test:debian-v7'
             env:
               RUST_BACKTRACE: 'full'
               RUSTFLAGS: '--deny warnings'
@@ -102,6 +104,8 @@ tasks:
                 git clone ${repo_url} webrender && cd webrender &&
                 git checkout ${sha} &&
                 servo-tidy &&
+                ci-scripts/install-meson.sh &&
+                export PATH=$PATH:$PWD/meson &&
                 ci-scripts/linux-debug-tests.sh
           routes:
             - "index.project.webrender.ci.${login}.${branch}.linux-debug"

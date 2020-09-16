@@ -38,7 +38,7 @@ popd
 # reason we need to add clang/bin to the path here, we should be able to
 # instead set LLVM_CONFIG=no to disable llvmpipe, but that might impact
 # other parts of the build.
-export PATH="${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/cctools/bin:${MOZ_FETCHES_DIR}/llvm-dsymutil/bin:${MOZ_FETCHES_DIR}/wrench-deps/meson/bin:${PATH}"
+export PATH="${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/cctools/bin:${MOZ_FETCHES_DIR}/llvm-dsymutil/bin:${MOZ_FETCHES_DIR}/wrench-deps/meson:${PATH}"
 
 # The x86_64-darwin11-ld linker from cctools requires libraries provided
 # by clang, so we need to set LD_LIBRARY_PATH for that to work.
