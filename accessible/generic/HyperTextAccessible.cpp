@@ -490,7 +490,6 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
         switch (aAmount) {
           case eSelectLine:
           case eSelectEndLine:
-          case eSelectParagraph:
             // Ask a text leaf next (if not empty) to the bullet for an offset
             // since list item may be multiline.
             return nextOffset < CharacterCount()
@@ -552,13 +551,11 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
   uint32_t hyperTextOffset = DOMPointToOffset(
       pos.mResultContent, pos.mContentOffset, aDirection == eDirNext);
 
-  if ((fallBackToSelectEndLine || aAmount == eSelectParagraph) &&
-      IsLineEndCharAt(hyperTextOffset)) {
+  if (fallBackToSelectEndLine && IsLineEndCharAt(hyperTextOffset)) {
     // We used eSelectEndLine, but the caller requested eSelectLine.
-    // Or, we were asked for the paragraph.
-    // If there's a '\n' at the end of the line, eSelectEndLine and
-    // eSelectParagraph will stop on it rather than after it. This is not what
-    // we want, since the caller wants the next line, not the same line.
+    // If there's a '\n' at the end of the line, eSelectEndLine will stop
+    // on it rather than after it. This is not what we want, since the caller
+    // wants the next line, not the same line.
     ++hyperTextOffset;
   }
 
@@ -568,8 +565,7 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
     if (hyperTextOffset == CharacterCount()) return 0;
 
     // PeekOffset stops right before bullet so return 0 to workaround it.
-    if (IsHTMLListItem() &&
-        (aAmount == eSelectBeginLine || aAmount == eSelectParagraph) &&
+    if (IsHTMLListItem() && aAmount == eSelectBeginLine &&
         hyperTextOffset > 0) {
       Accessible* prevOffsetChild = GetChildAtOffset(hyperTextOffset - 1);
       if (prevOffsetChild == AsHTMLListItem()->Bullet()) return 0;
@@ -652,11 +648,6 @@ void HyperTextAccessible::TextBeforeOffset(int32_t aOffset,
                                            nsAString& aText) {
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
-
-  if (aBoundaryType == nsIAccessibleText::BOUNDARY_PARAGRAPH) {
-    // Not supported, bail out with empty text.
-    return;
-  }
 
   index_t convertedOffset = ConvertMagicOffset(aOffset);
   if (!convertedOffset.IsValid() || convertedOffset > CharacterCount()) {
@@ -783,41 +774,6 @@ void HyperTextAccessible::TextAtOffset(int32_t aOffset,
       *aEndOffset = FindLineBoundary(adjustedOffset, eThisLineEnd);
       TextSubstring(*aStartOffset, *aEndOffset, aText);
       break;
-
-    case nsIAccessibleText::BOUNDARY_PARAGRAPH: {
-      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
-        adjustedOffset = AdjustCaretOffset(adjustedOffset);
-      }
-
-      if (IsLineEndCharAt(adjustedOffset)) {
-        // Layout gives us different results for a paragraph with line breaks.
-        // For the text, we get the text, for the line break, we get the text
-        // with the line break included. We adjust for the former case in
-        // FindOffset. However, querying on the whitespace also gives us text
-        // from the next chunk, which is never what we want. So, adjust the
-        // offset to make sure we always get the text with the '\n' included.
-        if (IsLineEndCharAt(adjustedOffset - 1)) {
-          // However, if the character before this is also a line break, we
-          // want this to be only '\n'. In addition, layout would still
-          // give us the text of the next chunk here, too, which is still
-          // not what we want, either.
-          *aStartOffset = adjustedOffset;
-          *aEndOffset = adjustedOffset + 1;
-          TextSubstring(*aStartOffset, *aEndOffset, aText);
-          break;
-        }
-
-        // We're on a non-line-end character, adjust the offset and
-        // calculate the paragraph text and offsets as usual.
-        adjustedOffset--;
-      }
-
-      *aStartOffset =
-          FindOffset(adjustedOffset, eDirPrevious, eSelectParagraph);
-      *aEndOffset = FindOffset(adjustedOffset, eDirNext, eSelectParagraph);
-      TextSubstring(*aStartOffset, *aEndOffset, aText);
-      break;
-    }
   }
 }
 
@@ -828,11 +784,6 @@ void HyperTextAccessible::TextAfterOffset(int32_t aOffset,
                                           nsAString& aText) {
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
-
-  if (aBoundaryType == nsIAccessibleText::BOUNDARY_PARAGRAPH) {
-    // Not supported, bail out with empty text.
-    return;
-  }
 
   index_t convertedOffset = ConvertMagicOffset(aOffset);
   if (!convertedOffset.IsValid() || convertedOffset > CharacterCount()) {
