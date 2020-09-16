@@ -694,7 +694,7 @@ CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
 
 template <typename StepFunc>
 mozilla::Result<mozilla::Ok, nsresult> CollectWhileHasResult(
-    mozIStorageStatement& aStmt, const StepFunc& aStepFunc) {
+    mozIStorageStatement& aStmt, StepFunc&& aStepFunc) {
   return CollectWhile(
       [&aStmt]() -> Result<bool, nsresult> {
         IDB_TRY_VAR(auto hasResult, MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep));
@@ -15590,64 +15590,45 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     return rv;
   }
 
-  DatabaseConnection::CachedStatement deleteStmt;
-  IndexDataValuesAutoArray indexValues;
-
   DebugOnly<uint32_t> resultCountDEBUG = 0;
 
-  bool hasResult;
-  while (NS_SUCCEEDED(rv = selectStmt->ExecuteStep(&hasResult)) && hasResult) {
-    if (!singleRowOnly) {
-      rv = objectStoreKey.SetFromStatement(&*selectStmt, 1);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+  IDB_TRY(CollectWhileHasResult(
+      *selectStmt,
+      [singleRowOnly, aObjectStoreId, &objectStoreKey, &aConnection,
+       &resultCountDEBUG, indexValues = IndexDataValuesAutoArray{},
+       deleteStmt = DatabaseConnection::CachedStatement{}](
+          auto& selectStmt) mutable -> Result<mozilla::Ok, nsresult> {
+        if (!singleRowOnly) {
+          IDB_TRY(objectStoreKey.SetFromStatement(&selectStmt, 1));
 
-      indexValues.ClearAndRetainStorage();
-    }
+          indexValues.ClearAndRetainStorage();
+        }
 
-    rv = ReadCompressedIndexDataValues(*selectStmt, 0, indexValues);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        IDB_TRY(ReadCompressedIndexDataValues(selectStmt, 0, indexValues));
+        IDB_TRY(
+            DeleteIndexDataTableRows(aConnection, objectStoreKey, indexValues));
 
-    rv = DeleteIndexDataTableRows(aConnection, objectStoreKey, indexValues);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        if (deleteStmt) {
+          MOZ_ALWAYS_SUCCEEDS(deleteStmt->Reset());
+        } else {
+          IDB_TRY_VAR(deleteStmt,
+                      aConnection->GetCachedStatement(
+                          "DELETE FROM object_data "
+                          "WHERE object_store_id = :"_ns +
+                          kStmtParamNameObjectStoreId + " AND key = :"_ns +
+                          kStmtParamNameKey + ";"_ns));
+        }
 
-    if (deleteStmt) {
-      MOZ_ALWAYS_SUCCEEDS(deleteStmt->Reset());
-    } else {
-      IDB_TRY_VAR(deleteStmt,
-                  aConnection->GetCachedStatement(
-                      "DELETE FROM object_data "
-                      "WHERE object_store_id = :"_ns +
-                      kStmtParamNameObjectStoreId + " AND key = :"_ns +
-                      kStmtParamNameKey + ";"_ns));
-    }
+        IDB_TRY(deleteStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                            aObjectStoreId));
+        IDB_TRY(
+            objectStoreKey.BindToStatement(&*deleteStmt, kStmtParamNameKey));
+        IDB_TRY(deleteStmt->Execute());
 
-    rv = deleteStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                     aObjectStoreId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        resultCountDEBUG++;
 
-    rv = objectStoreKey.BindToStatement(&*deleteStmt, kStmtParamNameKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = deleteStmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    resultCountDEBUG++;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return mozilla::Ok{};
+      }));
 
   MOZ_ASSERT_IF(singleRowOnly, resultCountDEBUG <= 1);
 
@@ -17080,101 +17061,78 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
     return rv;
   }
 
-  Maybe<nsTHashtable<nsUint64HashKey>> usedIds;
-  Maybe<nsTHashtable<nsStringHashKey>> usedNames;
-
   IndexOrObjectStoreId lastObjectStoreId = 0;
 
-  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    IndexOrObjectStoreId objectStoreId;
-    rv = stmt->GetInt64(0, &objectStoreId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  IDB_TRY(CollectWhileHasResult(
+      *stmt,
+      [&lastObjectStoreId, &objectStores,
+       usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
+       usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
+          auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        IDB_TRY_VAR(const IndexOrObjectStoreId objectStoreId,
+                    MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
 
-    if (!usedIds) {
-      usedIds.emplace();
-    }
+        if (!usedIds) {
+          usedIds.emplace();
+        }
 
-    if (NS_WARN_IF(objectStoreId <= 0) ||
-        NS_WARN_IF(usedIds.ref().Contains(objectStoreId))) {
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+        IDB_TRY(OkIf(objectStoreId > 0), Err(NS_ERROR_FILE_CORRUPTED));
+        IDB_TRY(OkIf(!usedIds.ref().Contains(objectStoreId)),
+                Err(NS_ERROR_FILE_CORRUPTED));
 
-    if (NS_WARN_IF(!usedIds.ref().PutEntry(objectStoreId, fallible))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+        IDB_TRY(OkIf(usedIds.ref().PutEntry(objectStoreId, fallible)),
+                Err(NS_ERROR_OUT_OF_MEMORY));
 
-    nsString name;
-    rv = stmt->GetString(2, name);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        nsString name;
+        IDB_TRY(stmt.GetString(2, name));
 
-    if (!usedNames) {
-      usedNames.emplace();
-    }
+        if (!usedNames) {
+          usedNames.emplace();
+        }
 
-    if (NS_WARN_IF(usedNames.ref().Contains(name))) {
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+        IDB_TRY(OkIf(!usedNames.ref().Contains(name)),
+                Err(NS_ERROR_FILE_CORRUPTED));
 
-    if (NS_WARN_IF(!usedNames.ref().PutEntry(name, fallible))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+        IDB_TRY(OkIf(usedNames.ref().PutEntry(name, fallible)),
+                Err(NS_ERROR_OUT_OF_MEMORY));
 
-    RefPtr<FullObjectStoreMetadata> metadata = new FullObjectStoreMetadata();
-    metadata->mCommonMetadata.id() = objectStoreId;
-    metadata->mCommonMetadata.name() = name;
+        RefPtr<FullObjectStoreMetadata> metadata =
+            new FullObjectStoreMetadata();
+        metadata->mCommonMetadata.id() = objectStoreId;
+        metadata->mCommonMetadata.name() = name;
 
-    int32_t columnType;
-    rv = stmt->GetTypeOfIndex(3, &columnType);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        IDB_TRY_VAR(const int32_t columnType,
+                    MOZ_TO_RESULT_INVOKE(stmt, GetTypeOfIndex, 3));
 
-    if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
-      metadata->mCommonMetadata.keyPath() = KeyPath(0);
-    } else {
-      MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_TEXT);
+        if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
+          metadata->mCommonMetadata.keyPath() = KeyPath(0);
+        } else {
+          MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_TEXT);
 
-      nsString keyPathSerialization;
-      rv = stmt->GetString(3, keyPathSerialization);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          nsString keyPathSerialization;
+          IDB_TRY(stmt.GetString(3, keyPathSerialization));
 
-      metadata->mCommonMetadata.keyPath() =
-          KeyPath::DeserializeFromString(keyPathSerialization);
-      if (NS_WARN_IF(!metadata->mCommonMetadata.keyPath().IsValid())) {
-        return NS_ERROR_FILE_CORRUPTED;
-      }
-    }
+          metadata->mCommonMetadata.keyPath() =
+              KeyPath::DeserializeFromString(keyPathSerialization);
+          IDB_TRY(OkIf(metadata->mCommonMetadata.keyPath().IsValid()),
+                  Err(NS_ERROR_FILE_CORRUPTED));
+        }
 
-    int64_t nextAutoIncrementId;
-    rv = stmt->GetInt64(1, &nextAutoIncrementId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        IDB_TRY_VAR(const int64_t nextAutoIncrementId,
+                    MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
 
-    metadata->mCommonMetadata.autoIncrement() = !!nextAutoIncrementId;
-    metadata->mNextAutoIncrementId = nextAutoIncrementId;
-    metadata->mCommittedAutoIncrementId = nextAutoIncrementId;
+        metadata->mCommonMetadata.autoIncrement() = !!nextAutoIncrementId;
+        metadata->mNextAutoIncrementId = nextAutoIncrementId;
+        metadata->mCommittedAutoIncrementId = nextAutoIncrementId;
 
-    if (NS_WARN_IF(
-            !objectStores.Put(objectStoreId, std::move(metadata), fallible))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+        IDB_TRY(OkIf(objectStores.Put(objectStoreId, std::move(metadata),
+                                      fallible)),
+                Err(NS_ERROR_OUT_OF_MEMORY));
 
-    lastObjectStoreId = std::max(lastObjectStoreId, objectStoreId);
-  }
+        lastObjectStoreId = std::max(lastObjectStoreId, objectStoreId);
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  usedIds.reset();
-  usedNames.reset();
+        return mozilla::Ok{};
+      }));
 
   // Load index information
   rv = aConnection.CreateStatement(
@@ -17189,142 +17147,114 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
   IndexOrObjectStoreId lastIndexId = 0;
 
-  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    IndexOrObjectStoreId objectStoreId;
-    rv = stmt->GetInt64(1, &objectStoreId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  IDB_TRY(CollectWhileHasResult(
+      *stmt,
+      [&lastIndexId, &objectStores, &aConnection,
+       usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
+       usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
+          auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        IDB_TRY_VAR(const IndexOrObjectStoreId objectStoreId,
+                    MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
 
-    RefPtr<FullObjectStoreMetadata> objectStoreMetadata;
-    if (NS_WARN_IF(!objectStores.Get(objectStoreId,
-                                     getter_AddRefs(objectStoreMetadata)))) {
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+        RefPtr<FullObjectStoreMetadata> objectStoreMetadata;
+        IDB_TRY(OkIf(objectStores.Get(objectStoreId,
+                                      getter_AddRefs(objectStoreMetadata))),
+                Err(NS_ERROR_OUT_OF_MEMORY));
 
-    MOZ_ASSERT(objectStoreMetadata->mCommonMetadata.id() == objectStoreId);
+        MOZ_ASSERT(objectStoreMetadata->mCommonMetadata.id() == objectStoreId);
 
-    IndexOrObjectStoreId indexId;
-    rv = stmt->GetInt64(0, &indexId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        IndexOrObjectStoreId indexId;
+        IDB_TRY(stmt.GetInt64(0, &indexId));
 
-    if (!usedIds) {
-      usedIds.emplace();
-    }
+        if (!usedIds) {
+          usedIds.emplace();
+        }
 
-    if (NS_WARN_IF(indexId <= 0) ||
-        NS_WARN_IF(usedIds.ref().Contains(indexId))) {
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+        IDB_TRY(OkIf(indexId > 0), Err(NS_ERROR_FILE_CORRUPTED));
+        IDB_TRY(OkIf(!usedIds.ref().Contains(indexId)),
+                Err(NS_ERROR_FILE_CORRUPTED));
 
-    if (NS_WARN_IF(!usedIds.ref().PutEntry(indexId, fallible))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+        IDB_TRY(OkIf(usedIds.ref().PutEntry(indexId, fallible)),
+                Err(NS_ERROR_OUT_OF_MEMORY));
 
-    nsString name;
-    rv = stmt->GetString(2, name);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        nsString name;
+        IDB_TRY(stmt.GetString(2, name));
 
-    nsAutoString hashName;
-    hashName.AppendInt(indexId);
-    hashName.Append(':');
-    hashName.Append(name);
+        nsAutoString hashName;
+        hashName.AppendInt(indexId);
+        hashName.Append(':');
+        hashName.Append(name);
 
-    if (!usedNames) {
-      usedNames.emplace();
-    }
+        if (!usedNames) {
+          usedNames.emplace();
+        }
 
-    if (NS_WARN_IF(usedNames.ref().Contains(hashName))) {
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+        IDB_TRY(OkIf(!usedNames.ref().Contains(hashName)),
+                Err(NS_ERROR_FILE_CORRUPTED));
 
-    if (NS_WARN_IF(!usedNames.ref().PutEntry(hashName, fallible))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+        IDB_TRY(OkIf(usedNames.ref().PutEntry(hashName, fallible)),
+                Err(NS_ERROR_OUT_OF_MEMORY));
 
-    RefPtr<FullIndexMetadata> indexMetadata = new FullIndexMetadata();
-    indexMetadata->mCommonMetadata.id() = indexId;
-    indexMetadata->mCommonMetadata.name() = name;
+        RefPtr<FullIndexMetadata> indexMetadata = new FullIndexMetadata();
+        indexMetadata->mCommonMetadata.id() = indexId;
+        indexMetadata->mCommonMetadata.name() = name;
 
 #ifdef DEBUG
-    {
-      int32_t columnType;
-      rv = stmt->GetTypeOfIndex(3, &columnType);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      MOZ_ASSERT(columnType != mozIStorageStatement::VALUE_TYPE_NULL);
-    }
+        {
+          int32_t columnType;
+          nsresult rv = stmt.GetTypeOfIndex(3, &columnType);
+          MOZ_ASSERT(NS_SUCCEEDED(rv));
+          MOZ_ASSERT(columnType != mozIStorageStatement::VALUE_TYPE_NULL);
+        }
 #endif
 
-    nsString keyPathSerialization;
-    rv = stmt->GetString(3, keyPathSerialization);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        nsString keyPathSerialization;
+        IDB_TRY(stmt.GetString(3, keyPathSerialization));
 
-    indexMetadata->mCommonMetadata.keyPath() =
-        KeyPath::DeserializeFromString(keyPathSerialization);
-    if (NS_WARN_IF(!indexMetadata->mCommonMetadata.keyPath().IsValid())) {
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+        indexMetadata->mCommonMetadata.keyPath() =
+            KeyPath::DeserializeFromString(keyPathSerialization);
+        IDB_TRY(OkIf(indexMetadata->mCommonMetadata.keyPath().IsValid()),
+                Err(NS_ERROR_FILE_CORRUPTED));
 
-    int32_t scratch;
-    rv = stmt->GetInt32(4, &scratch);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        int32_t scratch;
+        IDB_TRY(stmt.GetInt32(4, &scratch));
 
-    indexMetadata->mCommonMetadata.unique() = !!scratch;
+        indexMetadata->mCommonMetadata.unique() = !!scratch;
 
-    rv = stmt->GetInt32(5, &scratch);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        IDB_TRY(stmt.GetInt32(5, &scratch));
 
-    indexMetadata->mCommonMetadata.multiEntry() = !!scratch;
+        indexMetadata->mCommonMetadata.multiEntry() = !!scratch;
 
-    const bool localeAware = !stmt->IsNull(6);
-    if (localeAware) {
-      rv = stmt->GetUTF8String(6, indexMetadata->mCommonMetadata.locale());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+        const bool localeAware = !stmt.IsNull(6);
+        if (localeAware) {
+          IDB_TRY(
+              stmt.GetUTF8String(6, indexMetadata->mCommonMetadata.locale()));
 
-      rv = stmt->GetInt32(7, &scratch);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          IDB_TRY(stmt.GetInt32(7, &scratch));
 
-      indexMetadata->mCommonMetadata.autoLocale() = !!scratch;
+          indexMetadata->mCommonMetadata.autoLocale() = !!scratch;
 
-      // Update locale-aware indexes if necessary
-      const nsCString& indexedLocale = indexMetadata->mCommonMetadata.locale();
-      const bool& isAutoLocale = indexMetadata->mCommonMetadata.autoLocale();
-      nsCString systemLocale = IndexedDatabaseManager::GetLocale();
-      if (!systemLocale.IsEmpty() && isAutoLocale &&
-          !indexedLocale.EqualsASCII(systemLocale.get())) {
-        rv = UpdateLocaleAwareIndex(aConnection, indexMetadata->mCommonMetadata,
-                                    systemLocale);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          // Update locale-aware indexes if necessary
+          const nsCString& indexedLocale =
+              indexMetadata->mCommonMetadata.locale();
+          const bool& isAutoLocale =
+              indexMetadata->mCommonMetadata.autoLocale();
+          nsCString systemLocale = IndexedDatabaseManager::GetLocale();
+          if (!systemLocale.IsEmpty() && isAutoLocale &&
+              !indexedLocale.EqualsASCII(systemLocale.get())) {
+            IDB_TRY(UpdateLocaleAwareIndex(
+                aConnection, indexMetadata->mCommonMetadata, systemLocale));
+          }
         }
-      }
-    }
 
-    if (NS_WARN_IF(!objectStoreMetadata->mIndexes.Put(
-            indexId, std::move(indexMetadata), fallible))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+        IDB_TRY(OkIf(objectStoreMetadata->mIndexes.Put(
+                    indexId, std::move(indexMetadata), fallible)),
+                Err(NS_ERROR_OUT_OF_MEMORY));
 
-    lastIndexId = std::max(lastIndexId, indexId);
-  }
+        lastIndexId = std::max(lastIndexId, indexId);
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return mozilla::Ok{};
+      }));
 
   if (NS_WARN_IF(lastObjectStoreId == INT64_MAX) ||
       NS_WARN_IF(lastIndexId == INT64_MAX)) {
@@ -17366,69 +17296,50 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
     return rv;
   }
 
-  nsCOMPtr<mozIStorageStatement> writeStmt;
-  bool needCreateWriteQuery = true;
-  bool hasResult;
-  while (NS_SUCCEEDED((rv = readStmt->ExecuteStep(&hasResult))) && hasResult) {
-    if (needCreateWriteQuery) {
-      needCreateWriteQuery = false;
-      nsCString writeQuery =
-          "UPDATE "_ns + indexTable + "SET value_locale = :"_ns +
-          kStmtParamNameValueLocale + " WHERE index_id = :"_ns +
-          kStmtParamNameIndexId + " AND value = :"_ns + kStmtParamNameValue +
-          " AND object_data_key = :"_ns + kStmtParamNameObjectDataKey;
-      rv = aConnection.CreateStatement(writeQuery, getter_AddRefs(writeStmt));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
+  IDB_TRY(CollectWhileHasResult(
+      *readStmt,
+      [&aConnection, &indexTable, &aIndexMetadata, &aLocale,
+       writeStmt = nsCOMPtr<mozIStorageStatement>{}](
+          auto& readStmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        if (!writeStmt) {
+          IDB_TRY_VAR(
+              writeStmt,
+              ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+                  std::mem_fn(&mozIStorageConnection::CreateStatement),
+                  aConnection,
+                  "UPDATE "_ns + indexTable + "SET value_locale = :"_ns +
+                      kStmtParamNameValueLocale + " WHERE index_id = :"_ns +
+                      kStmtParamNameIndexId + " AND value = :"_ns +
+                      kStmtParamNameValue + " AND object_data_key = :"_ns +
+                      kStmtParamNameObjectDataKey));
+        }
 
-    mozStorageStatementScoper scoper(writeStmt);
-    rv = writeStmt->BindInt64ByName(kStmtParamNameIndexId, aIndexMetadata.id());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        mozStorageStatementScoper scoper(writeStmt);
+        IDB_TRY(writeStmt->BindInt64ByName(kStmtParamNameIndexId,
+                                           aIndexMetadata.id()));
 
-    Key oldKey, objectStorePosition;
-    rv = oldKey.SetFromStatement(readStmt, 0);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        Key oldKey, objectStorePosition;
+        IDB_TRY(oldKey.SetFromStatement(&readStmt, 0));
+        IDB_TRY(oldKey.BindToStatement(writeStmt, kStmtParamNameValue));
 
-    rv = oldKey.BindToStatement(writeStmt, kStmtParamNameValue);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        auto result = oldKey.ToLocaleAwareKey(aLocale);
+        if (!result.Is(Ok)) {
+          return Err(NS_WARN_IF(result.Is(SpecialValues::Exception))
+                         ? result.AsException().StealNSResult()
+                         : NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+        }
+        const auto newSortKey = result.Unwrap();
 
-    auto result = oldKey.ToLocaleAwareKey(aLocale);
-    if (!result.Is(Ok)) {
-      return NS_WARN_IF(result.Is(SpecialValues::Exception))
-                 ? result.AsException().StealNSResult()
-                 : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-    }
-    const auto newSortKey = result.Unwrap();
+        IDB_TRY(
+            newSortKey.BindToStatement(writeStmt, kStmtParamNameValueLocale));
+        IDB_TRY(objectStorePosition.SetFromStatement(&readStmt, 1));
+        IDB_TRY(objectStorePosition.BindToStatement(
+            writeStmt, kStmtParamNameObjectDataKey));
 
-    rv = newSortKey.BindToStatement(writeStmt, kStmtParamNameValueLocale);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        IDB_TRY(writeStmt->Execute());
 
-    rv = objectStorePosition.SetFromStatement(readStmt, 1);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = objectStorePosition.BindToStatement(writeStmt,
-                                             kStmtParamNameObjectDataKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = writeStmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
+        return mozilla::Ok{};
+      }));
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
@@ -20140,119 +20051,93 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  DatabaseConnection::CachedStatement deleteIndexRowStmt;
-  DatabaseConnection::CachedStatement nullIndexDataValuesStmt;
-
   Key lastObjectStoreKey;
   IndexDataValuesAutoArray lastIndexValues;
 
-  bool hasResult;
-  while (NS_SUCCEEDED(rv = selectStmt->ExecuteStep(&hasResult)) && hasResult) {
-    // We always need the index key to delete the index row.
-    Key indexKey;
-    rv = indexKey.SetFromStatement(&*selectStmt, 0);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  IDB_TRY(CollectWhileHasResult(
+      *selectStmt,
+      [this, &aConnection, &lastObjectStoreKey, &lastIndexValues,
+       deleteIndexRowStmt = DatabaseConnection::CachedStatement{},
+       nullIndexDataValuesStmt = DatabaseConnection::CachedStatement{}](
+          auto& selectStmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        // We always need the index key to delete the index row.
+        Key indexKey;
+        IDB_TRY(indexKey.SetFromStatement(&selectStmt, 0));
 
-    if (NS_WARN_IF(indexKey.IsUnset())) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+        IDB_TRY(OkIf(!indexKey.IsUnset()), Err(NS_ERROR_FILE_CORRUPTED),
+                IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
-    // Don't call |lastObjectStoreKey.BindToStatement()| directly because we
-    // don't want to copy the same key multiple times.
-    const uint8_t* objectStoreKeyData;
-    uint32_t objectStoreKeyDataLength;
-    rv = selectStmt->GetSharedBlob(1, &objectStoreKeyDataLength,
-                                   &objectStoreKeyData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        // Don't call |lastObjectStoreKey.BindToStatement()| directly because we
+        // don't want to copy the same key multiple times.
+        const uint8_t* objectStoreKeyData;
+        uint32_t objectStoreKeyDataLength;
+        IDB_TRY(selectStmt.GetSharedBlob(1, &objectStoreKeyDataLength,
+                                         &objectStoreKeyData));
 
-    if (NS_WARN_IF(!objectStoreKeyDataLength)) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_FILE_CORRUPTED;
-    }
+        IDB_TRY(OkIf(objectStoreKeyDataLength), Err(NS_ERROR_FILE_CORRUPTED),
+                IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
-    nsDependentCString currentObjectStoreKeyBuffer(
-        reinterpret_cast<const char*>(objectStoreKeyData),
-        objectStoreKeyDataLength);
-    if (currentObjectStoreKeyBuffer != lastObjectStoreKey.GetBuffer()) {
-      // We just walked to the next object store key.
-      if (!lastObjectStoreKey.IsUnset()) {
-        // Before we move on to the next key we need to update the previous
-        // key's index_data_values column.
-        rv = RemoveReferencesToIndex(aConnection, lastObjectStoreKey,
-                                     lastIndexValues);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
+        const nsDependentCString currentObjectStoreKeyBuffer(
+            reinterpret_cast<const char*>(objectStoreKeyData),
+            objectStoreKeyDataLength);
+        if (currentObjectStoreKeyBuffer != lastObjectStoreKey.GetBuffer()) {
+          // We just walked to the next object store key.
+          if (!lastObjectStoreKey.IsUnset()) {
+            // Before we move on to the next key we need to update the previous
+            // key's index_data_values column.
+            IDB_TRY(RemoveReferencesToIndex(aConnection, lastObjectStoreKey,
+                                            lastIndexValues));
+          }
 
-      // Save the object store key.
-      lastObjectStoreKey = Key(currentObjectStoreKeyBuffer);
+          // Save the object store key.
+          lastObjectStoreKey = Key(currentObjectStoreKeyBuffer);
 
-      // And the |index_data_values| row if this isn't the only index.
-      if (!mIsLastIndex) {
-        lastIndexValues.ClearAndRetainStorage();
-        rv = ReadCompressedIndexDataValues(*selectStmt, 2, lastIndexValues);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          // And the |index_data_values| row if this isn't the only index.
+          if (!mIsLastIndex) {
+            lastIndexValues.ClearAndRetainStorage();
+            IDB_TRY(
+                ReadCompressedIndexDataValues(selectStmt, 2, lastIndexValues));
+
+            IDB_TRY(OkIf(!lastIndexValues.IsEmpty()),
+                    Err(NS_ERROR_FILE_CORRUPTED),
+                    IDB_REPORT_INTERNAL_ERR_LAMBDA);
+          }
         }
 
-        if (NS_WARN_IF(lastIndexValues.IsEmpty())) {
-          IDB_REPORT_INTERNAL_ERR();
-          return NS_ERROR_FILE_CORRUPTED;
+        // Now delete the index row.
+        if (deleteIndexRowStmt) {
+          MOZ_ALWAYS_SUCCEEDS(deleteIndexRowStmt->Reset());
+        } else {
+          IDB_TRY_VAR(
+              deleteIndexRowStmt,
+              aConnection->GetCachedStatement(
+                  mUnique ? "DELETE FROM unique_index_data "
+                            "WHERE index_id = :"_ns +
+                                kStmtParamNameIndexId + " AND value = :"_ns +
+                                kStmtParamNameValue + ";"_ns
+                          : "DELETE FROM index_data "
+                            "WHERE index_id = :"_ns +
+                                kStmtParamNameIndexId + " AND value = :"_ns +
+                                kStmtParamNameValue +
+                                " AND object_data_key = :"_ns +
+                                kStmtParamNameObjectDataKey + ";"_ns));
         }
-      }
-    }
 
-    // Now delete the index row.
-    if (deleteIndexRowStmt) {
-      MOZ_ALWAYS_SUCCEEDS(deleteIndexRowStmt->Reset());
-    } else {
-      IDB_TRY_VAR(
-          deleteIndexRowStmt,
-          aConnection->GetCachedStatement(
-              mUnique
-                  ? "DELETE FROM unique_index_data "
-                    "WHERE index_id = :"_ns +
-                        kStmtParamNameIndexId + " AND value = :"_ns +
-                        kStmtParamNameValue + ";"_ns
-                  : "DELETE FROM index_data "
-                    "WHERE index_id = :"_ns +
-                        kStmtParamNameIndexId + " AND value = :"_ns +
-                        kStmtParamNameValue + " AND object_data_key = :"_ns +
-                        kStmtParamNameObjectDataKey + ";"_ns));
-    }
+        IDB_TRY(deleteIndexRowStmt->BindInt64ByName(kStmtParamNameIndexId,
+                                                    mIndexId));
 
-    rv = deleteIndexRowStmt->BindInt64ByName(kStmtParamNameIndexId, mIndexId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        IDB_TRY(indexKey.BindToStatement(&*deleteIndexRowStmt,
+                                         kStmtParamNameValue));
 
-    rv = indexKey.BindToStatement(&*deleteIndexRowStmt, kStmtParamNameValue);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        if (!mUnique) {
+          IDB_TRY(lastObjectStoreKey.BindToStatement(
+              &*deleteIndexRowStmt, kStmtParamNameObjectDataKey));
+        }
 
-    if (!mUnique) {
-      rv = lastObjectStoreKey.BindToStatement(&*deleteIndexRowStmt,
-                                              kStmtParamNameObjectDataKey);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
+        IDB_TRY(deleteIndexRowStmt->Execute());
 
-    rv = deleteIndexRowStmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return mozilla::Ok{};
+      }));
 
   // Take care of the last key.
   if (!lastObjectStoreKey.IsUnset()) {
@@ -21177,23 +21062,22 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
     }
   }
 
-  bool hasResult;
-  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    IDB_TRY_VAR(auto cloneInfo, GetStructuredCloneReadInfoFromStatement(
-                                    &*stmt, 1, 0, mDatabase->GetFileManager()));
+  IDB_TRY(CollectWhileHasResult(
+      *stmt,
+      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        IDB_TRY_VAR(auto cloneInfo,
+                    GetStructuredCloneReadInfoFromStatement(
+                        &stmt, 1, 0, mDatabase->GetFileManager()));
 
-    if (cloneInfo.HasPreprocessInfo()) {
-      mPreprocessInfoCount++;
-    }
+        if (cloneInfo.HasPreprocessInfo()) {
+          mPreprocessInfoCount++;
+        }
 
-    if (NS_WARN_IF(!mResponse.EmplaceBack(fallible, std::move(cloneInfo)))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
+        IDB_TRY(OkIf(mResponse.EmplaceBack(fallible, std::move(cloneInfo))),
+                Err(NS_ERROR_OUT_OF_MEMORY));
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return mozilla::Ok{};
+      }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
@@ -21337,22 +21221,15 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
     }
   }
 
-  bool hasResult;
-  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    Key* key = mResponse.AppendElement(fallible);
-    if (NS_WARN_IF(!key)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  IDB_TRY(CollectWhileHasResult(
+      *stmt,
+      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        Key* const key = mResponse.AppendElement(fallible);
+        IDB_TRY(OkIf(key), Err(NS_ERROR_OUT_OF_MEMORY));
+        IDB_TRY(key->SetFromStatement(&stmt, 0));
 
-    rv = key->SetFromStatement(&*stmt, 0);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return mozilla::Ok{};
+      }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
@@ -21725,24 +21602,23 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  bool hasResult;
-  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    IDB_TRY_VAR(auto cloneInfo, GetStructuredCloneReadInfoFromStatement(
-                                    &*stmt, 1, 0, mDatabase->GetFileManager()));
+  IDB_TRY(CollectWhileHasResult(
+      *stmt,
+      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        IDB_TRY_VAR(auto cloneInfo,
+                    GetStructuredCloneReadInfoFromStatement(
+                        &stmt, 1, 0, mDatabase->GetFileManager()));
 
-    if (cloneInfo.HasPreprocessInfo()) {
-      IDB_WARNING("Preprocessing for indexes not yet implemented!");
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
+        if (cloneInfo.HasPreprocessInfo()) {
+          IDB_WARNING("Preprocessing for indexes not yet implemented!");
+          return Err(NS_ERROR_NOT_IMPLEMENTED);
+        }
 
-    if (NS_WARN_IF(!mResponse.EmplaceBack(fallible, std::move(cloneInfo)))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
+        IDB_TRY(OkIf(mResponse.EmplaceBack(fallible, std::move(cloneInfo))),
+                Err(NS_ERROR_OUT_OF_MEMORY));
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return mozilla::Ok{};
+      }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
@@ -21865,22 +21741,15 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  bool hasResult;
-  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    Key* key = mResponse.AppendElement(fallible);
-    if (NS_WARN_IF(!key)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  IDB_TRY(CollectWhileHasResult(
+      *stmt,
+      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
+        Key* const key = mResponse.AppendElement(fallible);
+        IDB_TRY(OkIf(key), Err(NS_ERROR_OUT_OF_MEMORY));
+        IDB_TRY(key->SetFromStatement(&stmt, 0));
 
-    rv = key->SetFromStatement(&*stmt, 0);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        return mozilla::Ok{};
+      }));
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
