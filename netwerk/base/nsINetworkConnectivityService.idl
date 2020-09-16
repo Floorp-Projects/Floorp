@@ -25,8 +25,6 @@ interface nsINetworkConnectivityService : nsISupports
   readonly attribute nsINetworkConnectivityService_ConnectivityState DNSv4;
   [infallible]
   readonly attribute nsINetworkConnectivityService_ConnectivityState DNSv6;
-  [infallible]
-  readonly attribute nsINetworkConnectivityService_ConnectivityState NAT64;
 
   /* If connecting to IPv4/v6 works on the current network */
   [infallible]
