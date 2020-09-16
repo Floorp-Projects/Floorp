@@ -490,6 +490,7 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
         switch (aAmount) {
           case eSelectLine:
           case eSelectEndLine:
+          case eSelectParagraph:
             // Ask a text leaf next (if not empty) to the bullet for an offset
             // since list item may be multiline.
             return nextOffset < CharacterCount()
@@ -565,7 +566,8 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
     if (hyperTextOffset == CharacterCount()) return 0;
 
     // PeekOffset stops right before bullet so return 0 to workaround it.
-    if (IsHTMLListItem() && aAmount == eSelectBeginLine &&
+    if (IsHTMLListItem() &&
+        (aAmount == eSelectBeginLine || aAmount == eSelectParagraph) &&
         hyperTextOffset > 0) {
       Accessible* prevOffsetChild = GetChildAtOffset(hyperTextOffset - 1);
       if (prevOffsetChild == AsHTMLListItem()->Bullet()) return 0;
