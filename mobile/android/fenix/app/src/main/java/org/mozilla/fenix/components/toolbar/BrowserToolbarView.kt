@@ -23,6 +23,7 @@ import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.view.*
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
@@ -76,6 +77,9 @@ class BrowserToolbarView(
         .findViewById(R.id.toolbar)
 
     val toolbarIntegration: ToolbarIntegration
+
+    private val isPwaTab: Boolean
+        get() = customTabSession?.customTabConfig?.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP
 
     init {
         val isCustomTabSession = customTabSession != null
@@ -208,6 +212,10 @@ class BrowserToolbarView(
     }
 
     fun expand() {
+        // expand only for normal tabs and custom tabs not for PWA
+        if (isPwaTab) {
+            return
+        }
         when (settings.toolbarPosition) {
             ToolbarPosition.BOTTOM -> {
                 (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
