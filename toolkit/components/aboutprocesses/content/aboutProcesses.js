@@ -483,15 +483,26 @@ var View = {
           image = "chrome://mozapps/skin/extensions/extension.svg";
           break;
         default:
-          // If available, pick the first favicon.
-          if (data.windows) {
-            for (let win of data.windows) {
-              if (win.tab) {
-                image = win.tab.tab.getAttribute("image");
-              }
-              if (image) {
-                break;
-              }
+          // If all favicons match, pick the shared favicon.
+          // Otherwise, pick a default icon.
+          // If some tabs have no favicon, we ignore them.
+          for (let win of data.windows || []) {
+            if (!win.tab) {
+              continue;
+            }
+            let favicon = win.tab.tab.getAttribute("image");
+            if (!favicon) {
+              // No favicon here, let's ignore the tab.
+            } else if (!image) {
+              // Let's pick a first favicon.
+              // We'll remove it later if we find conflicting favicons.
+              image = favicon;
+            } else if (image == favicon) {
+              // So far, no conflict, keep the favicon.
+            } else {
+              // Conflicting favicons, fallback to default.
+              image = null;
+              break;
             }
           }
           if (!image) {
