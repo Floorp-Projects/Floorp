@@ -46,7 +46,9 @@ class ICScript;
 class InliningRoot {
  public:
   explicit InliningRoot(JSContext* cx, JSScript* owningScript)
-      : owningScript_(owningScript), inlinedScripts_(cx) {}
+      : owningScript_(owningScript),
+        inlinedScripts_(cx),
+        totalBytecodeSize_(owningScript->length()) {}
 
   FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
 
@@ -62,10 +64,17 @@ class InliningRoot {
 
   JSScript* owningScript() const { return owningScript_; }
 
+  size_t totalBytecodeSize() const { return totalBytecodeSize_; }
+
+  void addToTotalBytecodeSize(size_t size) { totalBytecodeSize_ += size; }
+
  private:
   FallbackICStubSpace fallbackStubSpace_ = {};
   HeapPtr<JSScript*> owningScript_;
   js::Vector<js::UniquePtr<ICScript>> inlinedScripts_;
+
+  // Bytecode size of outer script and all inlined scripts.
+  size_t totalBytecodeSize_;
 };
 
 class InlinableCallData {
