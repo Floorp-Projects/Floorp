@@ -88,7 +88,11 @@ public class VideoCaptureDeviceInfoAndroid {
               i++;
           }
           device.frontFacing = enumerator.isFrontFacing(camera);
-          allDevices.add(device);
+          if (device.frontFacing) {
+            allDevices.add(0, device);
+          } else {
+            allDevices.add(device);
+          }
       }
 
       return allDevices.toArray(new CaptureCapabilityAndroid[0]);
