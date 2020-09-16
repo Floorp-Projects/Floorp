@@ -1066,7 +1066,10 @@
     }
 
     get currentIndex() {
-      return this.view ? this.view.selection.currentIndex : -1;
+      if (this.view && this.view.selection) {
+        return this.view.selection.currentIndex;
+      }
+      return -1;
     }
 
     set keepCurrentInView(val) {
