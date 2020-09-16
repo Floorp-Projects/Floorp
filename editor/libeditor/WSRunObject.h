@@ -403,6 +403,14 @@ class MOZ_STACK_CLASS WSRunScanner final {
       const Element* aEditingHost);
 
   /**
+   * GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries() returns
+   * extended range if range boundaries of aRange are in invisible white-spaces.
+   */
+  static EditorDOMRange
+  GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
+      const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange);
+
+  /**
    * GetPrecedingBRElementUnlessVisibleContentFound() scans a `<br>` element
    * backward, but stops scanning it if the scanner finds visible character
    * or something.  In other words, this method ignores only invisible
