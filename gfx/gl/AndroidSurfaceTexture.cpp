@@ -155,7 +155,7 @@ class GLBlitterSupport final
   using Base::DisposeNative;
   using Base::GetNative;
 
-  static java::GeckoSurfaceTexture::NativeGLBlitHelper::LocalRef Create(
+  static java::GeckoSurfaceTexture::NativeGLBlitHelper::LocalRef NativeCreate(
       jint sourceTextureHandle, jni::Object::Param targetSurface, jint width,
       jint height) {
     AndroidNativeWindow win(java::GeckoSurface::Ref::From(targetSurface));
