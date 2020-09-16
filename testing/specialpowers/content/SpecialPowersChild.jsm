@@ -2141,6 +2141,10 @@ class SpecialPowersChild extends JSWindowActorChild {
       sendMessage(...args) {
         sp.sendAsyncMessage("SPExtensionMessage", { id, args });
       },
+
+      grantActiveTab(tabId) {
+        sp.sendAsyncMessage("SPExtensionGrantActiveTab", { id, tabId });
+      },
     };
 
     this.sendAsyncMessage("SPLoadExtension", { ext, id });
