@@ -959,12 +959,6 @@ class MOZ_STACK_CLASS WSRunScanner final {
       if (!trailingWhiteSpaceRange.IsPositioned()) {
         return trailingWhiteSpaceRange;
       }
-      // XXX Why don't we need to treat new trailing white-spaces are invisible
-      //     when the trailing white-spaces are only the content in current
-      //     line?
-      if (trailingWhiteSpaceRange != InvisibleLeadingWhiteSpaceRangeRef()) {
-        return EditorDOMRange();
-      }
       // If the point is before the trailing white-spaces, the new line won't
       // start with leading white-spaces.
       if (aPointToSplit.IsBefore(trailingWhiteSpaceRange.StartRef())) {
@@ -1007,12 +1001,6 @@ class MOZ_STACK_CLASS WSRunScanner final {
           InvisibleLeadingWhiteSpaceRangeRef();
       if (!leadingWhiteSpaceRange.IsPositioned()) {
         return leadingWhiteSpaceRange;
-      }
-      // XXX Why don't we need to treat new leading white-spaces are invisible
-      //     when the leading white-spaces are only the content in current
-      //     line?
-      if (leadingWhiteSpaceRange != InvisibleTrailingWhiteSpaceRangeRef()) {
-        return EditorDOMRange();
       }
       // If the point equals or is after the leading white-spaces, the line
       // will end without trailing white-spaces.

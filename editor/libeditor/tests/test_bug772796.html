@@ -144,8 +144,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
     /** Test for Bug 772796 **/
 
     SimpleTest.waitForExplicitFinish();
-    SimpleTest.expectAssertions(13); // assertion in WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces()
-
     SimpleTest.waitForFocus(function() {
       var sel = window.getSelection();
       var theEdit = document.getElementById("editable");
