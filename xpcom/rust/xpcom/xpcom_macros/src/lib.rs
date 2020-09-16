@@ -142,7 +142,7 @@
 
 use lazy_static::lazy_static;
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, format_ident, ToTokens};
+use quote::{format_ident, quote, ToTokens};
 use std::collections::{HashMap, HashSet};
 use syn::punctuated::Punctuated;
 use syn::{
@@ -319,10 +319,8 @@ fn get_fields(di: &DeriveInput) -> Result<&Punctuated<Field, Token![,]>, syn::Er
             fields: Fields::Named(ref named),
             ..
         }) => Ok(&named.named),
-        _ => {
-            bail!(@(di), "The initializer struct must be a standard named \
-                          value struct definition")
-        }
+        _ => bail!(@(di), "The initializer struct must be a standard named \
+                          value struct definition"),
     }
 }
 
@@ -347,9 +345,10 @@ fn gen_real_struct(
     });
 
     let fields = get_fields(init)?;
+    let (impl_generics, _, where_clause) = init.generics.split_for_impl();
     Ok(parse_quote! {
        #[repr(C)]
-       #vis struct #name {
+       #vis struct #name #impl_generics #where_clause {
            #(#bases,)*
            __refcnt: #refcnt_ty,
            #fields
@@ -360,17 +359,24 @@ fn gen_real_struct(
 /// Generates the `extern "system"` methods which are actually included in the
 /// VTable for the given interface.
 ///
-/// These methods attempt to invoke the `recover_self` method to translate from
-/// the passed-in raw pointer to the actual `&self` value, and it is expected to
-/// be in scope.
-fn gen_vtable_methods(iface: &Interface) -> Result<TokenStream, syn::Error> {
+/// `idx` must be the offset in pointers of the pointer to this vtable in the
+/// struct `real`. This is soundness-critical, as it will be used to offset
+/// pointers received from xpcom back to the concrete implementation.
+fn gen_vtable_methods(
+    real: &DeriveInput,
+    iface: &Interface,
+    vtable_index: usize,
+) -> Result<TokenStream, syn::Error> {
     let base_ty = format_ident!("{}", iface.name);
 
     let base_methods = if let Some(base) = iface.base() {
-        gen_vtable_methods(base)?
+        gen_vtable_methods(real, base, vtable_index)?
     } else {
         quote! {}
     };
+
+    let ty_name = &real.ident;
+    let (impl_generics, ty_generics, where_clause) = real.generics.split_for_impl();
 
     let mut method_defs = Vec::new();
     for method in iface.methods()? {
@@ -388,9 +394,12 @@ fn gen_vtable_methods(iface: &Interface) -> Result<TokenStream, syn::Error> {
 
         let name = format_ident!("{}", method.name);
         method_defs.push(quote! {
-            unsafe extern "system" fn #name (this: *const #base_ty, #(#params)*) -> #ret {
-                let lt = ();
-                recover_self(this, &lt).#name(#(#args)*)
+            unsafe extern "system" fn #name #impl_generics (
+                this: *const #base_ty, #(#params)*
+            ) -> #ret #where_clause {
+                let this: &#ty_name #ty_generics =
+                    ::xpcom::reexports::transmute_from_vtable_ptr(&this, #vtable_index);
+                this.#name(#(#args)*)
             }
         });
     }
@@ -403,24 +412,26 @@ fn gen_vtable_methods(iface: &Interface) -> Result<TokenStream, syn::Error> {
 
 /// Generates the VTable for a given base interface. This assumes that the
 /// implementations of each of the `extern "system"` methods are in scope.
-fn gen_inner_vtable(iface: &Interface) -> Result<TokenStream, syn::Error> {
+fn gen_inner_vtable(real: &DeriveInput, iface: &Interface) -> Result<TokenStream, syn::Error> {
     let vtable_ty = format_ident!("{}VTable", iface.name);
 
     // Generate the vtable for the base interface.
     let base_vtable = if let Some(base) = iface.base() {
-        let vt = gen_inner_vtable(base)?;
+        let vt = gen_inner_vtable(real, base)?;
         quote! {__base: #vt,}
     } else {
         quote! {}
     };
 
     // Include each of the method definitions for this interface.
+    let (_, ty_generics, _) = real.generics.split_for_impl();
+    let turbofish = ty_generics.as_turbofish();
     let vtable_init = iface
         .methods()?
         .into_iter()
         .map(|method| {
             let name = format_ident!("{}", method.name);
-            quote! { #name : #name , }
+            quote! { #name : #name #turbofish, }
         })
         .collect::<Vec<_>>();
 
@@ -430,40 +441,30 @@ fn gen_inner_vtable(iface: &Interface) -> Result<TokenStream, syn::Error> {
     }))
 }
 
-fn gen_root_vtable(name: &Ident, base: &Interface) -> Result<TokenStream, syn::Error> {
+fn gen_root_vtable(real: &DeriveInput, base: &Interface, idx: usize) -> Result<TokenStream, syn::Error> {
     let field = format_ident!("__base_{}", base.name);
     let vtable_ty = format_ident!("{}VTable", base.name);
-    let methods = gen_vtable_methods(base)?;
-    let value = gen_inner_vtable(base)?;
+
+    let (impl_generics, ty_generics, where_clause) = real.generics.split_for_impl();
+    let turbofish = ty_generics.as_turbofish();
+
+    let methods = gen_vtable_methods(real, base, idx)?;
+    let vtable = gen_inner_vtable(real, base)?;
 
     // Define the `recover_self` method. This performs an offset calculation to
     // recover a pointer to the original struct from a pointer to the given
     // VTable field.
     Ok(quote! {#field: {
-        // NOTE: The &'a () dummy lifetime parameter is useful as it easily
-        // allows the caller to limit the lifetime of the returned parameter
-        // to a local lifetime, preventing the calling of methods with
-        // receivers like `&'static self`.
-        #[inline]
-        unsafe fn recover_self<'a, T>(this: *const T, _: &'a ()) -> &'a #name {
-            // Calculate the offset of the field in our struct.
-            // XXX: Should we use the fact that our type is #[repr(C)] to avoid
-            // this?
-            let base = 0x1000;
-            let member = &(*(0x1000 as *const #name)).#field
-                as *const _ as usize;
-            let off = member - base;
-
-            // Offset the pointer by that offset.
-            &*((this as usize - off) as *const #name)
-        }
-
         // The method implementations which will be used to build the vtable.
         #methods
 
-        // The actual VTable definition.
-        static VTABLE: #vtable_ty = #value;
-        &VTABLE
+        // The actual VTable definition. This is in a separate method in order
+        // to allow it to be generic.
+        #[inline]
+        fn get_vtable #impl_generics () -> &'static #vtable_ty #where_clause {
+            &#vtable
+        }
+        get_vtable #turbofish ()
     },})
 }
 
@@ -474,7 +475,7 @@ fn gen_root_vtable(name: &Ident, base: &Interface) -> Result<TokenStream, syn::E
 fn gen_casts(
     seen: &mut HashSet<&'static str>,
     iface: &Interface,
-    name: &Ident,
+    real: &DeriveInput,
     coerce_name: &Ident,
     vtable_field: &Ident,
 ) -> Result<(TokenStream, TokenStream), syn::Error> {
@@ -484,7 +485,7 @@ fn gen_casts(
 
     // Generate the cast implementations for the base interfaces.
     let (base_qi, base_coerce) = if let Some(base) = iface.base() {
-        gen_casts(seen, base, name, coerce_name, vtable_field)?
+        gen_casts(seen, base, real, coerce_name, vtable_field)?
     } else {
         (quote! {}, quote! {})
     };
@@ -506,11 +507,13 @@ fn gen_casts(
     };
 
     // Add an implementation of the `*Coerce` trait for the base interface.
+    let name = &real.ident;
+    let (impl_generics, ty_generics, where_clause) = real.generics.split_for_impl();
     let coerce = quote! {
         #base_coerce
 
-        impl #coerce_name for ::xpcom::interfaces::#base_name {
-            fn coerce_from(v: &#name) -> &Self {
+        impl #impl_generics #coerce_name #ty_generics for ::xpcom::interfaces::#base_name #where_clause {
+            fn coerce_from(v: &#name #ty_generics) -> &Self {
                 unsafe {
                     // Get the address of the VTable field. This should be a
                     // pointer to a pointer to a vtable, which we can then cast
@@ -526,17 +529,52 @@ fn gen_casts(
     Ok((qi, coerce))
 }
 
+fn check_generics(generics: &syn::Generics) -> Result<(), syn::Error> {
+    for param in &generics.params {
+        let tp = match param {
+            syn::GenericParam::Type(tp) => tp,
+            syn::GenericParam::Lifetime(lp) => bail!(
+                @(lp),
+                "Cannot #[derive(xpcom)] on types with lifetime parameters. \
+                Implementors of XPCOM interfaces must not contain non-'static \
+                lifetimes.",
+            ),
+            // XXX: Once const generics become stable, it may be as simple as
+            // removing this bail! to support them.
+            syn::GenericParam::Const(cp) => {
+                bail!(@(cp), "Cannot #[derive(xpcom)] on types with const generics.")
+            }
+        };
+
+        let mut static_lt = false;
+        for bound in &tp.bounds {
+            match bound {
+                syn::TypeParamBound::Lifetime(lt) if lt.ident == "static" => {
+                    static_lt = true;
+                    break;
+                }
+                _ => {}
+            }
+        }
+
+        if !static_lt {
+            bail!(
+                @(param),
+                "Every generic parameter for xpcom implementation must have a \
+                'static lifetime bound declared in the generics. Implicit \
+                lifetime bounds or lifetime bounds in where clauses are not \
+                detected by the macro and will be ignored. \
+                Implementors of XPCOM interfaces must not contain non-'static \
+                lifetimes.",
+            );
+        }
+    }
+    Ok(())
+}
+
 /// The root xpcom procedural macro definition.
 fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
-    if !init.generics.params.is_empty() || !init.generics.where_clause.is_none() {
-        bail!(
-            "Cannot #[derive(xpcom)] on a generic type, due to \
-             rust limitations. It is not possible to instantiate \
-             a static with a generic type parameter, meaning that \
-             generic types cannot have their VTables instantiated \
-             correctly."
-        )
-    }
+    check_generics(&init.generics)?;
 
     let bases = get_bases(&init.attrs)?;
     if bases.is_empty() {
@@ -576,8 +614,8 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
 
     // Generate a VTable for each of the base interfaces.
     let mut vtables = Vec::new();
-    for base in &bases {
-        vtables.push(gen_root_vtable(name, base)?);
+    for (idx, base) in bases.iter().enumerate() {
+        vtables.push(gen_root_vtable(&real, base, idx)?);
     }
 
     // Generate the field initializers for the final struct, moving each field
@@ -597,7 +635,7 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
         let (qi, coerce) = gen_casts(
             &mut seen,
             base,
-            name,
+            &real,
             &coerce_name,
             &format_ident!("__base_{}", base.name),
         )?;
@@ -605,12 +643,13 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
         coerce_impl.push(coerce);
     }
 
+    let (impl_generics, ty_generics, where_clause) = real.generics.split_for_impl();
     Ok(quote! {
         #real
 
-        impl #name {
+        impl #impl_generics #name #ty_generics #where_clause {
             /// This method is used for
-            fn allocate(__init: #name_init) -> ::xpcom::RefPtr<Self> {
+            fn allocate(__init: #name_init #ty_generics) -> ::xpcom::RefPtr<Self> {
                 #[allow(unused_imports)]
                 use ::xpcom::*;
                 #[allow(unused_imports)]
@@ -619,6 +658,10 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
                 use ::xpcom::reexports::{
                     libc, nsACString, nsAString, nsCString, nsString, nsresult
                 };
+
+                // Helper for asserting that for all instantiations, this
+                // object has the 'static lifetime.
+                fn xpcom_types_must_be_static<T: 'static>(t: &T) {}
 
                 unsafe {
                     // NOTE: This is split into multiple lines to make the
@@ -629,6 +672,7 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
                         #(#inits)*
                     };
                     let boxed = ::std::boxed::Box::new(value);
+                    xpcom_types_must_be_static(&*boxed);
                     let raw = ::std::boxed::Box::into_raw(boxed);
                     ::xpcom::RefPtr::from_raw(raw).unwrap()
                 }
@@ -643,7 +687,7 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
             #vis unsafe fn Release(&self) -> ::xpcom::interfaces::nsrefcnt {
                 let new = self.__refcnt.dec();
                 if new == 0 {
-                    // XXX: dealloc
+                    // dealloc
                     ::std::boxed::Box::from_raw(self as *const Self as *mut Self);
                 }
                 new
@@ -668,12 +712,12 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
             /// Perform a QueryInterface call on this object, attempting to
             /// dynamically cast it to the requested interface type. Returns
             /// Some(RefPtr<T>) if the cast succeeded, and None otherwise.
-            #vis fn query_interface<T: ::xpcom::XpCom>(&self) ->
-                ::std::option::Option<::xpcom::RefPtr<T>>
+            #vis fn query_interface<XPCOM_InterfaceType: ::xpcom::XpCom>(&self)
+                -> ::std::option::Option<::xpcom::RefPtr<XPCOM_InterfaceType>>
             {
-                let mut ga = ::xpcom::GetterAddrefs::<T>::new();
+                let mut ga = ::xpcom::GetterAddrefs::<XPCOM_InterfaceType>::new();
                 unsafe {
-                    if self.QueryInterface(&T::IID, ga.void_ptr()).succeeded() {
+                    if self.QueryInterface(&XPCOM_InterfaceType::IID, ga.void_ptr()).succeeded() {
                         ga.refptr()
                     } else {
                         None
@@ -683,8 +727,8 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
 
             /// Coerce this type safely to any of the interfaces which it
             /// implements without `AddRef`ing it.
-            #vis fn coerce<T: #coerce_name>(&self) -> &T {
-                T::coerce_from(self)
+            #vis fn coerce<XPCOM_InterfaceType: #coerce_name #ty_generics>(&self) -> &XPCOM_InterfaceType {
+                XPCOM_InterfaceType::coerce_from(self)
             }
         }
 
@@ -696,15 +740,15 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
         /// rather acts as a trait bound and implementation for the `coerce`
         /// methods.
         #[doc(hidden)]
-        #vis trait #coerce_name {
+        #vis trait #coerce_name #impl_generics #where_clause {
             /// Convert a value of the `#[derive(xpcom)]` type into the
             /// implementing interface type.
-            fn coerce_from(v: &#name) -> &Self;
+            fn coerce_from(v: &#name #ty_generics) -> &Self;
         }
 
         #(#coerce_impl)*
 
-        unsafe impl ::xpcom::RefCounted for #name {
+        unsafe impl #impl_generics ::xpcom::RefCounted for #name #ty_generics #where_clause {
             unsafe fn addref(&self) {
                 self.AddRef();
             }
