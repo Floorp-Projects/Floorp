@@ -2652,17 +2652,11 @@ bool nsPIDOMWindowInner::IsCurrentInnerWindow() const {
 }
 
 bool nsPIDOMWindowInner::IsFullyActive() const {
-  WindowContext* currentContext = GetWindowContext();
-  if (!currentContext) {
+  WindowContext* wc = GetWindowContext();
+  if (!wc || wc->IsDiscarded() || wc->IsCached()) {
     return false;
   }
-  do {
-    if (currentContext->IsDiscarded() || currentContext->IsCached()) {
-      return false;
-    }
-  } while ((currentContext = currentContext->GetParentWindowContext()));
-
-  return true;
+  return GetBrowsingContext()->AncestorsAreCurrent();
 }
 
 void nsPIDOMWindowInner::SetAudioCapture(bool aCapture) {
