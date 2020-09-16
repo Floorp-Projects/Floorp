@@ -950,12 +950,13 @@ nsresult ContentChild::ProvideWindowCommon(
   MOZ_ALWAYS_SUCCEEDS(browsingContext->SetRemoteSubframes(useRemoteSubframes));
   MOZ_ALWAYS_SUCCEEDS(browsingContext->SetOriginAttributes(
       aOpenWindowInfo->GetOriginAttributes()));
-  browsingContext->EnsureAttached();
 
-  browsingContext->SetPendingInitialization(true);
+  browsingContext->InitPendingInitialization(true);
   auto unsetPending = MakeScopeExit([browsingContext]() {
-    browsingContext->SetPendingInitialization(false);
+    Unused << browsingContext->SetPendingInitialization(false);
   });
+
+  browsingContext->EnsureAttached();
 
   // The initial about:blank document we generate within the nsDocShell will
   // almost certainly be replaced at some point. Unfortunately, getting the
@@ -1073,6 +1074,7 @@ nsresult ContentChild::ProvideWindowCommon(
       MOZ_DIAGNOSTIC_ASSERT(browsingContext->GetOpenerId() == 0);
     } else {
       MOZ_DIAGNOSTIC_ASSERT(browsingContext->HadOriginalOpener());
+      MOZ_DIAGNOSTIC_ASSERT(browsingContext->GetOpenerId() == parent->Id());
     }
 
     // Unfortunately we don't get a window unless we've shown the frame.  That's

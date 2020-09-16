@@ -8584,6 +8584,12 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(targetContext, rv);
 
+  // If our target BrowsingContext is still pending initialization, ignore the
+  // navigation request targeting it.
+  if (NS_WARN_IF(targetContext->GetPendingInitialization())) {
+    return NS_OK;
+  }
+
   aLoadState->SetTargetBrowsingContext(targetContext);
   //
   // Transfer the load to the target BrowsingContext... Clear the window target
@@ -9001,7 +9007,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     MOZ_ASSERT(false, "InternalLoad needs a valid triggeringPrincipal");
     return NS_ERROR_FAILURE;
   }
-  if (mBrowsingContext->PendingInitialization()) {
+  if (NS_WARN_IF(mBrowsingContext->GetPendingInitialization())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

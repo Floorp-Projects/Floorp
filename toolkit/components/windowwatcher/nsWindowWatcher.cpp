@@ -676,6 +676,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
+  // If our target BrowsingContext is still pending initialization, ignore the
+  // navigation request targeting it.
+  if (newBC && NS_WARN_IF(newBC->GetPendingInitialization())) {
+    return NS_ERROR_ABORT;
+  }
+
   // no extant window? make a new one.
 
   // If no parent, consider it chrome when running in the parent process.
