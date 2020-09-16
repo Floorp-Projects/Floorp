@@ -307,20 +307,20 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internLatin1(
 }
 
 JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internUtf8(
-    JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t length) {
+    JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte) {
   // If source text is ASCII, then the length of the target char buffer
   // is the same as the length of the UTF8 input.  Convert it to a Latin1
   // encoded string on the heap.
-  UTF8Chars utf8(utf8Ptr, length);
+  UTF8Chars utf8(utf8Ptr, nbyte);
   if (FindSmallestEncoding(utf8) == JS::SmallestEncoding::ASCII) {
     // As ascii strings are a subset of Latin1 strings, and each encoding
     // unit is the same size, we can reliably cast this `Utf8Unit*`
     // to a `Latin1Char*`.
     const Latin1Char* latin1Ptr = reinterpret_cast<const Latin1Char*>(utf8Ptr);
-    return internLatin1(cx, latin1Ptr, length);
+    return internLatin1(cx, latin1Ptr, nbyte);
   }
 
-  InflatedChar16Sequence<mozilla::Utf8Unit> seq(utf8Ptr, length);
+  InflatedChar16Sequence<mozilla::Utf8Unit> seq(utf8Ptr, nbyte);
 
   // Otherwise, slowpath lookup/interning path that identifies the
   // proper target encoding.
