@@ -45,3 +45,31 @@ addAccessibleTask(`hello<br>world`, async (browser, accDoc) => {
   );
   // we have a trailing space here due to bug 1577028
 });
+
+addAccessibleTask(
+  `<p id="p">hello, this is a test</p>`,
+  async (browser, accDoc) => {
+    let p = getNativeInterface(accDoc, "p");
+    let textLeaf = p.getAttributeValue("AXChildren")[0];
+    ok(textLeaf, "paragraph has a text leaf");
+
+    let str = textLeaf.getParameterizedAttributeValue(
+      "AXStringForRange",
+      NSRange(3, 6)
+    );
+
+    is(str, "lo, this ", "AXStringForRange matches.");
+
+    let smallBounds = textLeaf.getParameterizedAttributeValue(
+      "AXBoundsForRange",
+      NSRange(3, 6)
+    );
+
+    let largeBounds = textLeaf.getParameterizedAttributeValue(
+      "AXBoundsForRange",
+      NSRange(3, 8)
+    );
+
+    ok(smallBounds.size[0] < largeBounds.size[0], "longer range is wider");
+  }
+);
