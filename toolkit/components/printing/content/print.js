@@ -423,7 +423,9 @@ var PrintEventHandler = {
     Services.prefs.setStringPref("print_printer", settings.printerName);
 
     try {
-      this.settings.showPrintProgress = true;
+      // The print progress dialog is causing an uncaught exception in tests.
+      // Only show it to users.
+      settings.showPrintProgress = !Cu.isInAutomation;
       let bc = this.previewBrowser.browsingContext;
       await this._doPrint(bc, settings);
     } catch (e) {
