@@ -186,3 +186,12 @@ preference = "apz.allow_zooming"
 type = "boolean"
 bug-numbers = [1245183]
 is-public = true
+
+[js-warp]
+title = "experimental-features-js-warp"
+description = "experimental-features-js-warp-description"
+restart-required = true
+preference = "javascript.options.warp"
+type = "boolean"
+bug-numbers = [1613592]
+is-public = true
