@@ -317,6 +317,13 @@ bool ICScript::hasInlinedChild(uint32_t pcOffset) {
   return false;
 }
 
+void JitScript::resetWarmUpCount(uint32_t count) {
+  icScript_.resetWarmUpCount(count);
+  if (hasInliningRoot()) {
+    inliningRoot()->resetWarmUpCounts(count);
+  }
+}
+
 void JitScript::ensureProfileString(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(cx->runtime()->geckoProfiler().enabled());
 
