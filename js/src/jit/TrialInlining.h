@@ -58,6 +58,7 @@ class InliningRoot {
   uint32_t numInlinedScripts() const { return inlinedScripts_.length(); }
 
   void purgeOptimizedStubs(Zone* zone);
+  void resetWarmUpCounts(uint32_t count);
 
   JSScript* owningScript() const { return owningScript_; }
 

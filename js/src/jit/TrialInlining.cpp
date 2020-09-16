@@ -412,5 +412,11 @@ void InliningRoot::purgeOptimizedStubs(Zone* zone) {
   }
 }
 
+void InliningRoot::resetWarmUpCounts(uint32_t count) {
+  for (auto& inlinedScript : inlinedScripts_) {
+    inlinedScript->resetWarmUpCount(count);
+  }
+}
+
 }  // namespace jit
 }  // namespace js

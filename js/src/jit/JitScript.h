@@ -112,6 +112,8 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   InliningRoot* inliningRoot() const { return inliningRoot_; }
   uint32_t depth() const { return depth_; }
 
+  void resetWarmUpCount(uint32_t count) { warmUpCount_ = count; }
+
   static constexpr size_t offsetOfFirstStub(uint32_t entryIndex) {
     return sizeof(ICScript) + entryIndex * sizeof(ICEntry) +
            ICEntry::offsetOfFirstStub();
@@ -559,7 +561,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   uint32_t warmUpCount() const { return icScript_.warmUpCount_; }
   void incWarmUpCount(uint32_t amount) { icScript_.warmUpCount_ += amount; }
-  void resetWarmUpCount(uint32_t count) { icScript_.warmUpCount_ = count; }
+  void resetWarmUpCount(uint32_t count);
 
 #ifdef DEBUG
   void printTypes(JSContext* cx, HandleScript script);
