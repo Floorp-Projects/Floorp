@@ -1330,6 +1330,9 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
     if (!callVMNonOp<Fn, DoTrialInlining>()) {
       return false;
     }
+    // Reload registers potentially clobbered by the call.
+    masm.loadPtr(frame.addressOfICScript(), scriptReg);
+    masm.load32(warmUpCounterAddr, countReg);
     masm.bind(&noTrialInlining);
   }
 
@@ -1350,13 +1353,22 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   masm.branch32(Assembler::LessThan, countReg, Imm32(warmUpThreshold), &done);
 
   if (JitOptions.warpBuilder) {
-    // Load the JitScript* in scriptReg.
-    masm.movePtr(ImmPtr(script->jitScript()), scriptReg);
+    // Don't trigger Ion compilations from trial-inlined scripts.
+    Address depthAddr(scriptReg, ICScript::offsetOfDepth());
+    masm.branch32(Assembler::NotEqual, depthAddr, Imm32(0), &done);
+
+    // Load the IonScript* in scriptReg. We can load this from the ICScript*
+    // because it must be an outer ICScript embedded in the JitScript.
+    constexpr int32_t offset = -int32_t(JitScript::offsetOfICScript()) +
+                               int32_t(JitScript::offsetOfIonScript());
+    masm.loadPtr(Address(scriptReg, offset), scriptReg);
+  } else {
+    // Load the IonScript* in scriptReg.
+    masm.loadPtr(Address(scriptReg, JitScript::offsetOfIonScript()), scriptReg);
   }
 
   // Do nothing if Ion is already compiling this script off-thread or if Ion has
   // been disabled for this script.
-  masm.loadPtr(Address(scriptReg, JitScript::offsetOfIonScript()), scriptReg);
   masm.branchPtr(Assembler::Equal, scriptReg, ImmPtr(IonCompilingScriptPtr),
                  &done);
   masm.branchPtr(Assembler::Equal, scriptReg, ImmPtr(IonDisabledScriptPtr),
