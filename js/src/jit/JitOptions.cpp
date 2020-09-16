@@ -330,12 +330,12 @@ void DefaultJitOptions::setEagerIonCompilation() {
 void DefaultJitOptions::setFastWarmUp() {
   baselineInterpreterWarmUpThreshold = 4;
   baselineJitWarmUpThreshold = 10;
-  trialInliningWarmUpThreshold = 16;
-  normalIonWarmUpThreshold = 25;
-  fullIonWarmUpThreshold = 55;
+  trialInliningWarmUpThreshold = 14;
+  normalIonWarmUpThreshold = 30;
+  fullIonWarmUpThreshold = 65;
 
-  inliningEntryThreshold = 0;
-  smallFunctionMaxBytecodeLength = INT32_MAX;
+  inliningEntryThreshold = 2;
+  smallFunctionMaxBytecodeLength = 2000;
 }
 
 void DefaultJitOptions::setWarpEnabled(bool enable) {
