@@ -677,32 +677,6 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
   return NS_OK;
 }
 
-Result<nsCOMPtr<mozIStorageStatement>, nsresult>
-CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
-                                    const nsACString& aStatementString) {
-  IDB_TRY_VAR(auto stmt,
-              ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-                  std::mem_fn(&mozIStorageConnection::CreateStatement),
-                  aConnection, aStatementString));
-
-  IDB_TRY_VAR(const DebugOnly<bool> hasResult,
-              MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-  MOZ_ASSERT(hasResult);
-
-  return stmt;
-}
-
-template <typename StepFunc>
-mozilla::Result<mozilla::Ok, nsresult> CollectWhileHasResult(
-    mozIStorageStatement& aStmt, StepFunc&& aStepFunc) {
-  return CollectWhile(
-      [&aStmt]() -> Result<bool, nsresult> {
-        IDB_TRY_VAR(auto hasResult, MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep));
-        return hasResult;
-      },
-      [&aStmt, &aStepFunc] { return aStepFunc(aStmt); });
-}
-
 nsresult SetJournalMode(mozIStorageConnection& aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -711,12 +685,23 @@ nsresult SetJournalMode(mozIStorageConnection& aConnection) {
   constexpr auto journalModeQueryStart = "PRAGMA journal_mode = "_ns;
   constexpr auto journalModeWAL = "wal"_ns;
 
-  IDB_TRY_VAR(const auto stmt,
-              CreateAndExecuteSingleStepStatement(
-                  aConnection, journalModeQueryStart + journalModeWAL));
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = aConnection.CreateStatement(
+      journalModeQueryStart + journalModeWAL, getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(hasResult);
 
   nsCString journalMode;
-  nsresult rv = stmt->GetUTF8String(0, journalMode);
+  rv = stmt->GetUTF8String(0, journalMode);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -864,32 +849,6 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
   return connection.extract();
 }
 
-// Returns true if a given nsIFile exists and is a directory. Returns false if
-// it doesn't exist. Returns an error if it exists, but is not a directory, or
-// any other error occurs.
-Result<bool, nsresult> ExistsAsDirectory(nsIFile& aDirectory) {
-  IDB_TRY_VAR(const bool exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
-
-  if (exists) {
-    IDB_TRY_VAR(const bool isDirectory,
-                MOZ_TO_RESULT_INVOKE(aDirectory, IsDirectory));
-
-    IDB_TRY(OkIf(isDirectory), Err(NS_ERROR_FAILURE));
-  }
-
-  return exists;
-}
-
-constexpr nsresult mapNoDeviceSpaceError(nsresult aRv) {
-  if (aRv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
-    // mozstorage translates SQLITE_FULL to
-    // NS_ERROR_FILE_NO_DEVICE_SPACE, which we know better as
-    // NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR.
-    return NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
-  }
-  return aRv;
-}
-
 Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult>
 CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
                         const nsAString& aName, const nsACString& aOrigin,
@@ -900,16 +859,20 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 
   AUTO_PROFILER_LABEL("CreateStorageConnection", DOM);
 
+  bool exists;
+
   IDB_TRY_VAR(auto dbFileUrl, GetDatabaseFileURL(aDBFile, aDirectoryLockId));
 
-  IDB_TRY_VAR(
-      const auto storageService,
-      ToResultGet<nsCOMPtr<mozIStorageService>>(
-          MOZ_SELECT_OVERLOAD(do_GetService), MOZ_STORAGE_SERVICE_CONTRACTID));
+  nsresult rv;
+  nsCOMPtr<mozIStorageService> ss =
+      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
 
   IDB_TRY_VAR(
       auto connection,
-      OpenDatabaseAndHandleBusy(*storageService, *dbFileUrl, aTelemetryId)
+      OpenDatabaseAndHandleBusy(*ss, *dbFileUrl, aTelemetryId)
           .map([](auto connection) -> nsCOMPtr<mozIStorageConnection> {
             return std::move(connection).unwrapBasePtr();
           })
@@ -929,36 +892,64 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     // XXX Shouldn't we also update quota usage?
 
     // Nuke the database file.
-    IDB_TRY(aDBFile.Remove(false));
-    IDB_TRY_VAR(const bool existsAsDirectory, ExistsAsDirectory(aFMDirectory));
-
-    if (existsAsDirectory) {
-      IDB_TRY(aFMDirectory.Remove(true));
+    rv = aDBFile.Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
     }
 
-    IDB_TRY_VAR(connection, OpenDatabaseAndHandleBusy(
-                                *storageService, *dbFileUrl, aTelemetryId));
+    rv = aFMDirectory.Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
+    }
+
+    if (exists) {
+      bool isDirectory;
+      rv = aFMDirectory.IsDirectory(&isDirectory);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+      if (NS_WARN_IF(!isDirectory)) {
+        IDB_REPORT_INTERNAL_ERR();
+        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      }
+
+      rv = aFMDirectory.Remove(true);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+    }
+
+    IDB_TRY_VAR(connection,
+                OpenDatabaseAndHandleBusy(*ss, *dbFileUrl, aTelemetryId));
   }
 
-  IDB_TRY(SetDefaultPragmas(*connection));
-  IDB_TRY(connection->EnableModule("filesystem"_ns));
+  rv = SetDefaultPragmas(*connection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  rv = connection->EnableModule("filesystem"_ns);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
 
   // Check to make sure that the database schema is correct.
-  IDB_TRY_VAR(const int32_t schemaVersion,
-              MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion));
+  int32_t schemaVersion;
+  rv = connection->GetSchemaVersion(&schemaVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
 
   // Unknown schema will fail origin initialization too.
-  IDB_TRY(
-      OkIf(schemaVersion || !aName.IsVoid()),
-      Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR), [](const auto&) {
-        IDB_WARNING("Unable to open IndexedDB database, schema is not set!");
-      });
+  if (!schemaVersion && aName.IsVoid()) {
+    IDB_WARNING("Unable to open IndexedDB database, schema is not set!");
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
 
-  IDB_TRY(
-      OkIf(schemaVersion <= kSQLiteSchemaVersion),
-      Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR), [](const auto&) {
-        IDB_WARNING("Unable to open IndexedDB database, schema is too high!");
-      });
+  if (schemaVersion > kSQLiteSchemaVersion) {
+    IDB_WARNING("Unable to open IndexedDB database, schema is too high!");
+    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
 
   bool journalModeSet = false;
 
@@ -968,25 +959,37 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     if (newDatabase) {
       // Set the page size first.
       if (kSQLitePageSizeOverride) {
-        IDB_TRY(connection->ExecuteSimpleSQL(nsPrintfCString(
-            "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)));
+        rv = connection->ExecuteSimpleSQL(nsPrintfCString(
+            "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
       }
 
       // We have to set the auto_vacuum mode before opening a transaction.
-      IDB_TRY((MOZ_TO_RESULT_INVOKE(
-                   connection, ExecuteSimpleSQL,
+      rv = connection->ExecuteSimpleSQL(
 #ifdef IDB_MOBILE
-                   // Turn on full auto_vacuum mode to reclaim disk space on
-                   // mobile devices (at the cost of some COMMIT speed).
-                   "PRAGMA auto_vacuum = FULL;"_ns
+          // Turn on full auto_vacuum mode to reclaim disk space on mobile
+          // devices (at the cost of some COMMIT speed).
+          "PRAGMA auto_vacuum = FULL;"_ns
 #else
-                   // Turn on incremental auto_vacuum mode on desktop builds.
-                   "PRAGMA auto_vacuum = INCREMENTAL;"_ns
+          // Turn on incremental auto_vacuum mode on desktop builds.
+          "PRAGMA auto_vacuum = INCREMENTAL;"_ns
 #endif
-                   )
-                   .mapErr(mapNoDeviceSpaceError)));
+      );
+      if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
+        // mozstorage translates SQLITE_FULL to NS_ERROR_FILE_NO_DEVICE_SPACE,
+        // which we know better as NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR.
+        rv = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
 
-      IDB_TRY(SetJournalMode(*connection));
+      rv = SetJournalMode(*connection);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
 
       journalModeSet = true;
     } else {
@@ -1004,33 +1007,53 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
         connection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     if (newDatabase) {
-      IDB_TRY(CreateTables(*connection));
-
-      {
-        DebugOnly<int32_t> schemaVersion;
-        MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
-        MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
+      rv = CreateTables(*connection);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
       }
 
+      MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
+      MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
+
+      nsCOMPtr<mozIStorageStatement> stmt;
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      IDB_TRY_VAR(
-          const auto stmt,
-          ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-              std::mem_fn(&mozIStorageConnection::CreateStatement), connection,
-              "INSERT INTO database (name, origin) "
-              "VALUES (:name, :origin)"_ns));
+      nsresult rv = connection->CreateStatement(
+          "INSERT INTO database (name, origin) "
+          "VALUES (:name, :origin)"_ns,
+          getter_AddRefs(stmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
 
-      IDB_TRY(stmt->BindStringByIndex(0, aName));
-      IDB_TRY(stmt->BindUTF8StringByIndex(1, aOrigin));
-      IDB_TRY(stmt->Execute());
+      rv = stmt->BindStringByIndex(0, aName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      rv = stmt->BindUTF8StringByIndex(1, aOrigin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      rv = stmt->Execute();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
     } else {
       IDB_TRY_VAR(vacuumNeeded, MaybeUpgradeSchema(*connection, schemaVersion,
                                                    aFMDirectory, aOrigin));
     }
 
-    IDB_TRY(MOZ_TO_RESULT_INVOKE(transaction, Commit)
-                .mapErr(mapNoDeviceSpaceError));
+    rv = transaction.Commit();
+    if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
+      // mozstorage translates SQLITE_FULL to NS_ERROR_FILE_NO_DEVICE_SPACE,
+      // which we know better as NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR.
+      rv = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
+    }
 
 #ifdef DEBUG
     if (!newDatabase) {
@@ -1049,32 +1072,63 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 #endif
 
     if (kSQLitePageSizeOverride && !newDatabase) {
-      IDB_TRY_VAR(const auto stmt, CreateAndExecuteSingleStepStatement(
-                                       *connection, "PRAGMA page_size;"_ns));
+      nsCOMPtr<mozIStorageStatement> stmt;
+      rv = connection->CreateStatement("PRAGMA page_size;"_ns,
+                                       getter_AddRefs(stmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
 
-      IDB_TRY_VAR(const int32_t pageSize,
-                  MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
+      bool hasResult;
+      rv = stmt->ExecuteStep(&hasResult);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      MOZ_ASSERT(hasResult);
+
+      int32_t pageSize;
+      rv = stmt->GetInt32(0, &pageSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
       MOZ_ASSERT(pageSize >= 512 && pageSize <= 65536);
 
       if (kSQLitePageSizeOverride != uint32_t(pageSize)) {
         // We must not be in WAL journal mode to change the page size.
-        IDB_TRY(
-            connection->ExecuteSimpleSQL("PRAGMA journal_mode = DELETE;"_ns));
+        rv = connection->ExecuteSimpleSQL("PRAGMA journal_mode = DELETE;"_ns);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
 
-        IDB_TRY_VAR(const auto stmt,
-                    CreateAndExecuteSingleStepStatement(
-                        *connection, "PRAGMA journal_mode;"_ns));
+        rv = connection->CreateStatement("PRAGMA journal_mode;"_ns,
+                                         getter_AddRefs(stmt));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
 
-        IDB_TRY_VAR(
-            const auto journalMode,
-            ToResultInvoke<nsCString>(
-                std::mem_fn(&mozIStorageStatement::GetUTF8String), stmt, 0));
+        rv = stmt->ExecuteStep(&hasResult);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
+
+        MOZ_ASSERT(hasResult);
+
+        nsCString journalMode;
+        rv = stmt->GetUTF8String(0, journalMode);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
 
         if (journalMode.EqualsLiteral("delete")) {
           // Successfully set to rollback journal mode so changing the page size
           // is possible with a VACUUM.
-          IDB_TRY(connection->ExecuteSimpleSQL(nsPrintfCString(
-              "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)));
+          rv = connection->ExecuteSimpleSQL(nsPrintfCString(
+              "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride));
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return Err(rv);
+          }
 
           // We will need to VACUUM in order to change the page size.
           vacuumNeeded = true;
@@ -1087,41 +1141,66 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     }
 
     if (vacuumNeeded) {
-      IDB_TRY(connection->ExecuteSimpleSQL("VACUUM;"_ns));
+      rv = connection->ExecuteSimpleSQL("VACUUM;"_ns);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
     }
 
     if (newDatabase || vacuumNeeded) {
       if (journalModeSet) {
         // Make sure we checkpoint to get an accurate file size.
-        IDB_TRY(
-            connection->ExecuteSimpleSQL("PRAGMA wal_checkpoint(FULL);"_ns));
+        rv = connection->ExecuteSimpleSQL("PRAGMA wal_checkpoint(FULL);"_ns);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
       }
 
-      IDB_TRY_VAR(const int64_t fileSize,
-                  MOZ_TO_RESULT_INVOKE(aDBFile, GetFileSize));
+      int64_t fileSize;
+      rv = aDBFile.GetFileSize(&fileSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
       MOZ_ASSERT(fileSize > 0);
 
       PRTime vacuumTime = PR_Now();
       MOZ_ASSERT(vacuumTime);
 
+      nsCOMPtr<mozIStorageStatement> vacuumTimeStmt;
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      IDB_TRY_VAR(
-          const auto vacuumTimeStmt,
-          ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-              std::mem_fn(&mozIStorageConnection::CreateStatement), connection,
-              "UPDATE database "
-              "SET last_vacuum_time = :time"
-              ", last_vacuum_size = :size;"_ns));
+      rv = connection->CreateStatement(
+          "UPDATE database "
+          "SET last_vacuum_time = :time"
+          ", last_vacuum_size = :size;"_ns,
+          getter_AddRefs(vacuumTimeStmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
 
-      IDB_TRY(vacuumTimeStmt->BindInt64ByIndex(0, vacuumTime));
-      IDB_TRY(vacuumTimeStmt->BindInt64ByIndex(1, fileSize));
-      IDB_TRY(vacuumTimeStmt->Execute());
+      rv = vacuumTimeStmt->BindInt64ByIndex(0, vacuumTime);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      rv = vacuumTimeStmt->BindInt64ByIndex(1, fileSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
+
+      rv = vacuumTimeStmt->Execute();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
     }
   }
 
   if (!journalModeSet) {
-    IDB_TRY(SetJournalMode(*connection));
+    rv = SetJournalMode(*connection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
+    }
   }
 
   return WrapMovingNotNullUnchecked(std::move(connection));
@@ -1255,8 +1334,8 @@ class DatabaseConnection final {
     return mUpdateRefcountFunction;
   }
 
-  mozilla::Result<CachedStatement, nsresult> GetCachedStatement(
-      const nsACString& aQuery);
+  nsresult GetCachedStatement(const nsACString& aQuery,
+                              CachedStatement* aCachedStatement);
 
   template <typename BindFunctor>
   nsresult ExecuteCachedStatement(const nsACString& aQuery,
@@ -1341,12 +1420,8 @@ class DatabaseConnection::CachedStatement final {
 #endif
 
  public:
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
   CachedStatement();
   ~CachedStatement();
-#else
-  CachedStatement() = default;
-#endif
 
   void AssertIsOnConnectionThread() const {
 #ifdef DEBUG
@@ -1368,26 +1443,8 @@ class DatabaseConnection::CachedStatement final {
 
  private:
   // Only called by DatabaseConnection.
-  CachedStatement(DatabaseConnection* aConnection,
-                  nsCOMPtr<mozIStorageStatement> aStatement);
-
- public:
-#if defined(NS_BUILD_REFCNT_LOGGING)
-  CachedStatement(CachedStatement&& aOther)
-      : mStatement(std::move(aOther.mStatement)),
-        mScoper(std::move(aOther.mScoper))
-#  ifdef DEBUG
-        ,
-        mDEBUGConnection(aOther.mDEBUGConnection)
-#  endif
-  {
-    MOZ_COUNT_CTOR(DatabaseConnection::CachedStatement);
-  }
-#else
-  CachedStatement(CachedStatement&&) = default;
-#endif
-
-  CachedStatement& operator=(CachedStatement&&) = default;
+  void Assign(DatabaseConnection* aConnection,
+              nsCOMPtr<mozIStorageStatement> aStatement);
 
   // No funny business allowed.
   CachedStatement(const CachedStatement&) = delete;
@@ -5891,6 +5948,22 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
   return NS_OK;
 }
 
+// Returns true if a given nsIFile exists and is a directory. Returns false if
+// it doesn't exist. Returns an error if it exists, but is not a directory, or
+// any other error occurs.
+Result<bool, nsresult> ExistsAsDirectory(nsIFile& aDirectory) {
+  IDB_TRY_VAR(const bool exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
+
+  if (exists) {
+    IDB_TRY_VAR(const bool isDirectory,
+                MOZ_TO_RESULT_INVOKE(aDirectory, IsDirectory));
+
+    IDB_TRY(OkIf(isDirectory), Err(NS_ERROR_FAILURE));
+  }
+
+  return exists;
+}
+
 // CreateMarkerFile and RemoveMarkerFile are a pair of functions to indicate
 // whether having removed all the files successfully. The marker file should
 // be checked before executing the next operation or initialization.
@@ -7047,17 +7120,27 @@ nsresult DatabaseConnection::Init() {
   MOZ_ASSERT(!mInReadTransaction);
   MOZ_ASSERT(!mInWriteTransaction);
 
-  IDB_TRY(ExecuteCachedStatement("BEGIN;"_ns));
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement("BEGIN;"_ns, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   mInReadTransaction = true;
 
   return NS_OK;
 }
 
-Result<DatabaseConnection::CachedStatement, nsresult>
-DatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
+nsresult DatabaseConnection::GetCachedStatement(
+    const nsACString& aQuery, CachedStatement* aCachedStatement) {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(!aQuery.IsEmpty());
+  MOZ_ASSERT(aCachedStatement);
   MOZ_ASSERT(mStorageConnection);
 
   AUTO_PROFILER_LABEL("DatabaseConnection::GetCachedStatement", DOM);
@@ -7078,24 +7161,34 @@ DatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
 
       NS_WARNING(error.get());
 #endif
-      return Err(rv);
+      return rv;
     }
 
     mCachedStatements.Put(aQuery, stmt);
   }
 
-  return CachedStatement{this, std::move(stmt)};
+  aCachedStatement->Assign(this, std::move(stmt));
+  return NS_OK;
 }
 
 template <typename BindFunctor>
 nsresult DatabaseConnection::ExecuteCachedStatement(
     const nsACString& aQuery, const BindFunctor& aBindFunctor) {
-  const auto queryInfo =
-      ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement(aQuery, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  IDB_TRY_VAR(const auto stmt, GetCachedStatement(aQuery));
-  IDB_TRY(aBindFunctor(*stmt));
-  IDB_TRY(stmt->Execute());
+  rv = aBindFunctor(*stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -7140,7 +7233,11 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
   // error handling for Execute only. If only Execute can produce
   // NS_ERROR_STORAGE_BUSY, we could actually use ExecuteCachedStatement and
   // simplify this.
-  IDB_TRY_VAR(const auto beginStmt, GetCachedStatement("BEGIN IMMEDIATE;"_ns));
+  CachedStatement beginStmt;
+  rv = GetCachedStatement("BEGIN IMMEDIATE;"_ns, &beginStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   rv = beginStmt->Execute();
   if (rv == NS_ERROR_STORAGE_BUSY) {
@@ -7200,7 +7297,11 @@ void DatabaseConnection::RollbackWriteTransaction() {
     return;
   }
 
-  IDB_TRY_VAR(const auto stmt, GetCachedStatement("ROLLBACK;"_ns), QM_VOID);
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement("ROLLBACK;"_ns, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   // This may fail if SQLite already rolled back the transaction so ignore any
   // errors.
@@ -7290,8 +7391,11 @@ nsresult DatabaseConnection::RollbackSavepoint() {
 
   mUpdateRefcountFunction->RollbackSavepoint();
 
-  IDB_TRY_VAR(const auto stmt,
-              GetCachedStatement("ROLLBACK TO "_ns SAVEPOINT_CLAUSE));
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement("ROLLBACK TO "_ns SAVEPOINT_CLAUSE, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // This may fail if SQLite already rolled back the savepoint so ignore any
   // errors.
@@ -7359,8 +7463,15 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
   CachedStatement rollbackStmt;
   CachedStatement beginStmt;
   if (aNeedsCheckpoint || freelistCount) {
-    IDB_TRY_VAR(rollbackStmt, GetCachedStatement("ROLLBACK;"_ns), QM_VOID);
-    IDB_TRY_VAR(beginStmt, GetCachedStatement("BEGIN;"_ns), QM_VOID);
+    rv = GetCachedStatement("ROLLBACK;"_ns, &rollbackStmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    rv = GetCachedStatement("BEGIN;"_ns, &beginStmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
 
     // Release the connection's normal transaction. It's possible that it could
     // fail, but that isn't a problem here.
@@ -7430,25 +7541,36 @@ nsresult DatabaseConnection::ReclaimFreePagesWhileIdle(
   stmtString.AppendLiteral(");");
 
   // Make all the statements we'll need up front.
-  IDB_TRY_VAR(const auto incrementalVacuumStmt, GetCachedStatement(stmtString));
+  CachedStatement incrementalVacuumStmt;
+  nsresult rv = GetCachedStatement(stmtString, &incrementalVacuumStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  IDB_TRY_VAR(const auto beginImmediateStmt,
-              GetCachedStatement("BEGIN IMMEDIATE;"_ns));
+  CachedStatement beginImmediateStmt;
+  rv = GetCachedStatement("BEGIN IMMEDIATE;"_ns, &beginImmediateStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  IDB_TRY_VAR(const auto commitStmt, GetCachedStatement("COMMIT;"_ns));
+  CachedStatement commitStmt;
+  rv = GetCachedStatement("COMMIT;"_ns, &commitStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (aNeedsCheckpoint) {
     // Freeing pages is a journaled operation, so it will require additional WAL
     // space. However, we're idle and are about to checkpoint anyway, so doing a
     // RESTART checkpoint here should allow us to reuse any existing space.
-    nsresult rv = CheckpointInternal(CheckpointMode::Restart);
+    rv = CheckpointInternal(CheckpointMode::Restart);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
   // Start the write transaction.
-  nsresult rv = beginImmediateStmt->Execute();
+  rv = beginImmediateStmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7514,8 +7636,10 @@ nsresult DatabaseConnection::GetFreelistCount(CachedStatement& aCachedStatement,
   nsresult rv;
 
   if (!aCachedStatement) {
-    IDB_TRY_VAR(aCachedStatement,
-                GetCachedStatement("PRAGMA freelist_count;"_ns));
+    rv = GetCachedStatement("PRAGMA freelist_count;"_ns, &aCachedStatement);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   bool hasResult;
@@ -7654,11 +7778,10 @@ nsresult DatabaseConnection::GetFileSize(const nsAString& aPath,
   return NS_OK;
 }
 
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
 DatabaseConnection::CachedStatement::CachedStatement()
-#  ifdef DEBUG
+#ifdef DEBUG
     : mDEBUGConnection(nullptr)
-#  endif
+#endif
 {
   AssertIsOnConnectionThread();
 
@@ -7670,7 +7793,6 @@ DatabaseConnection::CachedStatement::~CachedStatement() {
 
   MOZ_COUNT_DTOR(DatabaseConnection::CachedStatement);
 }
-#endif
 
 DatabaseConnection::CachedStatement::operator bool() const {
   AssertIsOnConnectionThread();
@@ -7699,27 +7821,25 @@ void DatabaseConnection::CachedStatement::Reset() {
   }
 }
 
-DatabaseConnection::CachedStatement::CachedStatement(
-    DatabaseConnection* aConnection, nsCOMPtr<mozIStorageStatement> aStatement)
-    : mStatement(std::move(aStatement))
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-      ,
-      mScoper(mStatement
-                  ? Maybe<mozStorageStatementScoper>{std::in_place, mStatement}
-                  : Nothing{})
-#  ifdef DEBUG
-      ,
-      mDEBUGConnection(aConnection)
-#  endif
-#endif
-{
+void DatabaseConnection::CachedStatement::Assign(
+    DatabaseConnection* aConnection,
+    nsCOMPtr<mozIStorageStatement> aStatement) {
 #ifdef DEBUG
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
+  MOZ_ASSERT_IF(mDEBUGConnection, mDEBUGConnection == aConnection);
+
+  mDEBUGConnection = aConnection;
 #endif
   AssertIsOnConnectionThread();
 
-  MOZ_COUNT_CTOR(DatabaseConnection::CachedStatement);
+  mScoper.reset();
+
+  mStatement = std::move(aStatement);
+
+  if (mStatement) {
+    mScoper.emplace(mStatement);
+  }
 }
 
 DatabaseConnection::AutoSavepoint::AutoSavepoint()
@@ -8116,10 +8236,14 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
   if (!mUpdateStatement) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_TRY_VAR(mUpdateStatement, connection->GetCachedStatement(
-                                      "UPDATE file "
-                                      "SET refcount = refcount + :delta "
-                                      "WHERE id = :id"_ns));
+    rv = connection->GetCachedStatement(
+        "UPDATE file "
+        "SET refcount = refcount + :delta "
+        "WHERE id = :id"_ns,
+        &mUpdateStatement);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   mozStorageStatementScoper updateScoper(&*mUpdateStatement);
@@ -8149,10 +8273,14 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
     if (!mSelectStatement) {
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      IDB_TRY_VAR(mSelectStatement,
-                  connection->GetCachedStatement("SELECT id "
-                                                 "FROM file "
-                                                 "WHERE id = :id"_ns));
+      rv = connection->GetCachedStatement(
+          "SELECT id "
+          "FROM file "
+          "WHERE id = :id"_ns,
+          &mSelectStatement);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     mozStorageStatementScoper selectScoper(&*mSelectStatement);
@@ -8180,9 +8308,12 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
   if (!mInsertStatement) {
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_TRY_VAR(mInsertStatement,
-                connection->GetCachedStatement(
-                    "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns));
+    rv = connection->GetCachedStatement(
+        "INSERT INTO file (id, refcount) VALUES(:id, :delta)"_ns,
+        &mInsertStatement);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   mozStorageStatementScoper insertScoper(&*mInsertStatement);
@@ -12672,8 +12803,12 @@ nsresult FileManager::Init(nsIFile* aDirectory,
                   std::mem_fn(&mozIStorageConnection::CreateStatement),
                   aConnection, "SELECT id, refcount FROM file"_ns));
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt, [this](auto& stmt) -> Result<mozilla::Ok, nsresult> {
+  IDB_TRY(CollectWhile(
+      [&stmt]() -> Result<bool, nsresult> {
+        IDB_TRY_VAR(auto hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+        return hasResult;
+      },
+      [&stmt, this]() -> Result<mozilla::Ok, nsresult> {
         IDB_TRY_VAR(const int64_t id, MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
         IDB_TRY_VAR(const int32_t dbRefCnt,
                     MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 1));
@@ -12888,12 +13023,16 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
       IDB_TRY(stmt->BindStringByIndex(0, path));
 
-      IDB_TRY(CollectWhileHasResult(
-          *stmt,
-          [&aDirectory,
-           &journalDirectory](auto& stmt) -> Result<mozilla::Ok, nsresult> {
+      IDB_TRY(CollectWhile(
+          [&stmt]() -> Result<bool, nsresult> {
+            IDB_TRY_VAR(auto hasResult,
+                        MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+            return hasResult;
+          },
+          [&stmt, &aDirectory,
+           &journalDirectory]() -> Result<mozilla::Ok, nsresult> {
             nsString name;
-            IDB_TRY(stmt.GetString(0, name));
+            IDB_TRY(stmt->GetString(0, name));
 
             nsresult rv;
             name.ToInteger64(&rv);
@@ -12901,7 +13040,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
               return mozilla::Ok{};
             }
 
-            int32_t flag = stmt.AsInt32(1);
+            int32_t flag = stmt->AsInt32(1);
 
             if (!flag) {
               IDB_TRY_VAR(const auto file,
@@ -14738,9 +14877,20 @@ nsresult DatabaseMaintenance::CheckIntegrity(mozIStorageConnection& aConnection,
   // First do a full integrity_check. Scope statements tightly here because
   // later operations require zero live statements.
   {
-    IDB_TRY_VAR(const auto stmt,
-                CreateAndExecuteSingleStepStatement(
-                    aConnection, "PRAGMA integrity_check(1);"_ns));
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = aConnection.CreateStatement("PRAGMA integrity_check(1);"_ns,
+                                     getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool hasResult;
+    rv = stmt->ExecuteStep(&hasResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(hasResult);
 
     nsString result;
     rv = stmt->GetString(0, result);
@@ -14758,8 +14908,20 @@ nsresult DatabaseMaintenance::CheckIntegrity(mozIStorageConnection& aConnection,
   {
     int32_t foreignKeysWereEnabled;
     {
-      IDB_TRY_VAR(const auto stmt, CreateAndExecuteSingleStepStatement(
-                                       aConnection, "PRAGMA foreign_keys;"_ns));
+      nsCOMPtr<mozIStorageStatement> stmt;
+      rv = aConnection.CreateStatement("PRAGMA foreign_keys;"_ns,
+                                       getter_AddRefs(stmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      bool hasResult;
+      rv = stmt->ExecuteStep(&hasResult);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      MOZ_ASSERT(hasResult);
 
       rv = stmt->GetInt32(0, &foreignKeysWereEnabled);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -14844,10 +15006,22 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
                                     /* aCommitOnComplete */ false);
 
   // Check to see when we last vacuumed this database.
-  IDB_TRY_VAR(const auto stmt, CreateAndExecuteSingleStepStatement(
-                                   aConnection,
-                                   "SELECT last_vacuum_time, last_vacuum_size "
-                                   "FROM database;"_ns));
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = aConnection.CreateStatement(
+      "SELECT last_vacuum_time, last_vacuum_size "
+      "FROM database;"_ns,
+      getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(hasResult);
 
   PRTime lastVacuumTime;
   rv = stmt->GetInt64(0, &lastVacuumTime);
@@ -14890,32 +15064,37 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
     return rv;
   }
 
-  {  // Calculate the percentage of the database pages that are not in
-     // contiguous
-    // order.
-    IDB_TRY_VAR(
-        const auto stmt,
-        CreateAndExecuteSingleStepStatement(
-            aConnection,
-            "SELECT SUM(__ts1__.pageno != __ts2__.pageno + 1) * 100.0 / "
-            "COUNT(*) "
-            "FROM __temp_stats__ AS __ts1__, __temp_stats__ AS __ts2__ "
-            "WHERE __ts1__.name = __ts2__.name "
-            "AND __ts1__.rowid = __ts2__.rowid + 1;"_ns));
+  // Calculate the percentage of the database pages that are not in contiguous
+  // order.
+  rv = aConnection.CreateStatement(
+      "SELECT SUM(__ts1__.pageno != __ts2__.pageno + 1) * 100.0 / COUNT(*) "
+      "FROM __temp_stats__ AS __ts1__, __temp_stats__ AS __ts2__ "
+      "WHERE __ts1__.name = __ts2__.name "
+      "AND __ts1__.rowid = __ts2__.rowid + 1;"_ns,
+      getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-    int32_t percentUnordered;
-    rv = stmt->GetInt32(0, &percentUnordered);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-    MOZ_ASSERT(percentUnordered >= 0);
-    MOZ_ASSERT(percentUnordered <= 100);
+  MOZ_ASSERT(hasResult);
 
-    if (percentUnordered >= kPercentUnorderedThreshold) {
-      *aMaintenanceAction = MaintenanceAction::FullVacuum;
-      return NS_OK;
-    }
+  int32_t percentUnordered;
+  rv = stmt->GetInt32(0, &percentUnordered);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(percentUnordered >= 0);
+  MOZ_ASSERT(percentUnordered <= 100);
+
+  if (percentUnordered >= kPercentUnorderedThreshold) {
+    *aMaintenanceAction = MaintenanceAction::FullVacuum;
+    return NS_OK;
   }
 
   // Don't try a full vacuum if the file hasn't grown by 10%.
@@ -14932,48 +15111,62 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
     return NS_OK;
   }
 
-  {  // See if there are any free pages that we can reclaim.
-    IDB_TRY_VAR(const auto stmt, CreateAndExecuteSingleStepStatement(
-                                     aConnection, "PRAGMA freelist_count;"_ns));
-
-    int32_t freelistCount;
-    rv = stmt->GetInt32(0, &freelistCount);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(freelistCount >= 0);
-
-    // If we have too many free pages then we should try an incremental
-    // vacuum. If that causes too much fragmentation then we'll try a full
-    // vacuum later.
-    if (freelistCount > kMaxFreelistThreshold) {
-      *aMaintenanceAction = MaintenanceAction::IncrementalVacuum;
-      return NS_OK;
-    }
+  // See if there are any free pages that we can reclaim.
+  rv = aConnection.CreateStatement("PRAGMA freelist_count;"_ns,
+                                   getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  {  // Calculate the percentage of unused bytes on pages in the database.
-    IDB_TRY_VAR(
-        const auto stmt,
-        CreateAndExecuteSingleStepStatement(
-            aConnection,
-            "SELECT SUM(unused) * 100.0 / SUM(pgsize) FROM __temp_stats__;"_ns));
-
-    int32_t percentUnused;
-    rv = stmt->GetInt32(0, &percentUnused);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(percentUnused >= 0);
-    MOZ_ASSERT(percentUnused <= 100);
-
-    *aMaintenanceAction = percentUnused >= kPercentUnusedThreshold
-                              ? MaintenanceAction::FullVacuum
-                              : MaintenanceAction::IncrementalVacuum;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
+  MOZ_ASSERT(hasResult);
+
+  int32_t freelistCount;
+  rv = stmt->GetInt32(0, &freelistCount);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(freelistCount >= 0);
+
+  // If we have too many free pages then we should try an incremental vacuum. If
+  // that causes too much fragmentation then we'll try a full vacuum later.
+  if (freelistCount > kMaxFreelistThreshold) {
+    *aMaintenanceAction = MaintenanceAction::IncrementalVacuum;
+    return NS_OK;
+  }
+
+  // Calculate the percentage of unused bytes on pages in the database.
+  rv = aConnection.CreateStatement(
+      "SELECT SUM(unused) * 100.0 / SUM(pgsize) FROM __temp_stats__;"_ns,
+      getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(hasResult);
+
+  int32_t percentUnused;
+  rv = stmt->GetInt32(0, &percentUnused);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(percentUnused >= 0);
+  MOZ_ASSERT(percentUnused <= 100);
+
+  *aMaintenanceAction = percentUnused >= kPercentUnusedThreshold
+                            ? MaintenanceAction::FullVacuum
+                            : MaintenanceAction::IncrementalVacuum;
   return NS_OK;
 }
 
@@ -15373,27 +15566,34 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
 
     if (stmt) {
       stmt.Reset();
+    } else if (info.mUnique) {
+      rv = aConnection->GetCachedStatement(
+          "INSERT INTO unique_index_data "
+          "(index_id, value, object_store_id, "
+          "object_data_key, value_locale) "
+          "VALUES (:"_ns +
+              kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue +
+              ", :"_ns + kStmtParamNameObjectStoreId + ", :"_ns +
+              kStmtParamNameObjectDataKey + ", :"_ns +
+              kStmtParamNameValueLocale + ");"_ns,
+          &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else {
-      IDB_TRY_VAR(
-          stmt,
-          aConnection->GetCachedStatement(
-              info.mUnique
-                  ? "INSERT INTO unique_index_data "
-                    "(index_id, value, object_store_id, "
-                    "object_data_key, value_locale) "
-                    "VALUES (:"_ns +
-                        kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue +
-                        ", :"_ns + kStmtParamNameObjectStoreId + ", :"_ns +
-                        kStmtParamNameObjectDataKey + ", :"_ns +
-                        kStmtParamNameValueLocale + ");"_ns
-                  : "INSERT OR IGNORE INTO index_data "
-                    "(index_id, value, object_data_key, "
-                    "object_store_id, value_locale) "
-                    "VALUES (:"_ns +
-                        kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue +
-                        ", :"_ns + kStmtParamNameObjectDataKey + ", :"_ns +
-                        kStmtParamNameObjectStoreId + ", :"_ns +
-                        kStmtParamNameValueLocale + ");"_ns));
+      rv = aConnection->GetCachedStatement(
+          "INSERT OR IGNORE INTO index_data "
+          "(index_id, value, object_data_key, "
+          "object_store_id, value_locale) "
+          "VALUES (:"_ns +
+              kStmtParamNameIndexId + ", :"_ns + kStmtParamNameValue +
+              ", :"_ns + kStmtParamNameObjectDataKey + ", :"_ns +
+              kStmtParamNameObjectStoreId + ", :"_ns +
+              kStmtParamNameValueLocale + ");"_ns,
+          &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     rv = stmt->BindInt64ByName(kStmtParamNameIndexId, info.mIndexId);
@@ -15475,18 +15675,25 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
 
     if (stmt) {
       stmt.Reset();
+    } else if (indexValue.mUnique) {
+      rv = aConnection->GetCachedStatement(
+          "DELETE FROM unique_index_data WHERE index_id = :"_ns +
+              kStmtParamNameIndexId + " AND value = :"_ns +
+              kStmtParamNameValue + ";"_ns,
+          &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else {
-      IDB_TRY_VAR(
-          stmt,
-          aConnection->GetCachedStatement(
-              indexValue.mUnique
-                  ? "DELETE FROM unique_index_data WHERE index_id = :"_ns +
-                        kStmtParamNameIndexId + " AND value = :"_ns +
-                        kStmtParamNameValue + ";"_ns
-                  : "DELETE FROM index_data WHERE index_id = :"_ns +
-                        kStmtParamNameIndexId + " AND value = :"_ns +
-                        kStmtParamNameValue + " AND object_data_key = :"_ns +
-                        kStmtParamNameObjectDataKey + ";"_ns));
+      rv = aConnection->GetCachedStatement(
+          "DELETE FROM index_data WHERE index_id = :"_ns +
+              kStmtParamNameIndexId + " AND value = :"_ns +
+              kStmtParamNameValue + " AND object_data_key = :"_ns +
+              kStmtParamNameObjectDataKey + ";"_ns,
+          &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     rv = stmt->BindInt64ByName(kStmtParamNameIndexId, indexValue.mIndexId);
@@ -15543,13 +15750,16 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
   DatabaseConnection::CachedStatement selectStmt;
 
   if (singleRowOnly) {
-    IDB_TRY_VAR(selectStmt,
-                aConnection->GetCachedStatement("SELECT index_data_values "
-                                                "FROM object_data "
-                                                "WHERE object_store_id = :"_ns +
-                                                kStmtParamNameObjectStoreId +
-                                                " AND key = :"_ns +
-                                                kStmtParamNameKey + ";"_ns));
+    rv = aConnection->GetCachedStatement(
+        "SELECT index_data_values "
+        "FROM object_data "
+        "WHERE object_store_id = :"_ns +
+            kStmtParamNameObjectStoreId + " AND key = :"_ns +
+            kStmtParamNameKey + ";"_ns,
+        &selectStmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     objectStoreKey = aKeyRange.ref().lower();
 
@@ -15561,11 +15771,14 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     const auto keyRangeClause =
         MaybeGetBindingClauseForKeyRange(aKeyRange, kColumnNameKey);
 
-    IDB_TRY_VAR(selectStmt,
-                aConnection->GetCachedStatement(
-                    "SELECT index_data_values, "_ns + kColumnNameKey +
-                    " FROM object_data WHERE object_store_id = :"_ns +
-                    kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns));
+    rv = aConnection->GetCachedStatement(
+        "SELECT index_data_values, "_ns + kColumnNameKey +
+            " FROM object_data WHERE object_store_id = :"_ns +
+            kStmtParamNameObjectStoreId + keyRangeClause + ";"_ns,
+        &selectStmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     if (aKeyRange.isSome()) {
       rv = BindKeyRangeToStatement(aKeyRange.ref(), &*selectStmt);
@@ -15580,45 +15793,67 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     return rv;
   }
 
+  DatabaseConnection::CachedStatement deleteStmt;
+  IndexDataValuesAutoArray indexValues;
+
   DebugOnly<uint32_t> resultCountDEBUG = 0;
 
-  IDB_TRY(CollectWhileHasResult(
-      *selectStmt,
-      [singleRowOnly, aObjectStoreId, &objectStoreKey, &aConnection,
-       &resultCountDEBUG, indexValues = IndexDataValuesAutoArray{},
-       deleteStmt = DatabaseConnection::CachedStatement{}](
-          auto& selectStmt) mutable -> Result<mozilla::Ok, nsresult> {
-        if (!singleRowOnly) {
-          IDB_TRY(objectStoreKey.SetFromStatement(&selectStmt, 1));
+  bool hasResult;
+  while (NS_SUCCEEDED(rv = selectStmt->ExecuteStep(&hasResult)) && hasResult) {
+    if (!singleRowOnly) {
+      rv = objectStoreKey.SetFromStatement(&*selectStmt, 1);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-          indexValues.ClearAndRetainStorage();
-        }
+      indexValues.ClearAndRetainStorage();
+    }
 
-        IDB_TRY(ReadCompressedIndexDataValues(selectStmt, 0, indexValues));
-        IDB_TRY(
-            DeleteIndexDataTableRows(aConnection, objectStoreKey, indexValues));
+    rv = ReadCompressedIndexDataValues(*selectStmt, 0, indexValues);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        if (deleteStmt) {
-          MOZ_ALWAYS_SUCCEEDS(deleteStmt->Reset());
-        } else {
-          IDB_TRY_VAR(deleteStmt,
-                      aConnection->GetCachedStatement(
-                          "DELETE FROM object_data "
-                          "WHERE object_store_id = :"_ns +
-                          kStmtParamNameObjectStoreId + " AND key = :"_ns +
-                          kStmtParamNameKey + ";"_ns));
-        }
+    rv = DeleteIndexDataTableRows(aConnection, objectStoreKey, indexValues);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        IDB_TRY(deleteStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                            aObjectStoreId));
-        IDB_TRY(
-            objectStoreKey.BindToStatement(&*deleteStmt, kStmtParamNameKey));
-        IDB_TRY(deleteStmt->Execute());
+    if (deleteStmt) {
+      MOZ_ALWAYS_SUCCEEDS(deleteStmt->Reset());
+    } else {
+      rv = aConnection->GetCachedStatement(
+          "DELETE FROM object_data "
+          "WHERE object_store_id = :"_ns +
+              kStmtParamNameObjectStoreId + " AND key = :"_ns +
+              kStmtParamNameKey + ";"_ns,
+          &deleteStmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
 
-        resultCountDEBUG++;
+    rv = deleteStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                     aObjectStoreId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        return mozilla::Ok{};
-      }));
+    rv = objectStoreKey.BindToStatement(&*deleteStmt, kStmtParamNameKey);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = deleteStmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    resultCountDEBUG++;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   MOZ_ASSERT_IF(singleRowOnly, resultCountDEBUG <= 1);
 
@@ -15688,15 +15923,19 @@ nsresult DatabaseOperationBase::ObjectStoreHasIndexes(
   MOZ_ASSERT(aObjectStoreId);
   MOZ_ASSERT(aHasIndexes);
 
-  IDB_TRY_VAR(const auto stmt,
-              aConnection->GetCachedStatement("SELECT id "
-                                              "FROM object_store_index "
-                                              "WHERE object_store_id = :"_ns +
-                                              kStmtParamNameObjectStoreId +
-                                              kOpenLimit + "1;"_ns));
+  DatabaseConnection::CachedStatement stmt;
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
+  nsresult rv = aConnection->GetCachedStatement(
+      "SELECT id "
+      "FROM object_store_index "
+      "WHERE object_store_id = :"_ns +
+          kStmtParamNameObjectStoreId + kOpenLimit + "1;"_ns,
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -17051,78 +17290,101 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
     return rv;
   }
 
+  Maybe<nsTHashtable<nsUint64HashKey>> usedIds;
+  Maybe<nsTHashtable<nsStringHashKey>> usedNames;
+
   IndexOrObjectStoreId lastObjectStoreId = 0;
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [&lastObjectStoreId, &objectStores,
-       usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
-       usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
-          auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
-        IDB_TRY_VAR(const IndexOrObjectStoreId objectStoreId,
-                    MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
+  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    IndexOrObjectStoreId objectStoreId;
+    rv = stmt->GetInt64(0, &objectStoreId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        if (!usedIds) {
-          usedIds.emplace();
-        }
+    if (!usedIds) {
+      usedIds.emplace();
+    }
 
-        IDB_TRY(OkIf(objectStoreId > 0), Err(NS_ERROR_FILE_CORRUPTED));
-        IDB_TRY(OkIf(!usedIds.ref().Contains(objectStoreId)),
-                Err(NS_ERROR_FILE_CORRUPTED));
+    if (NS_WARN_IF(objectStoreId <= 0) ||
+        NS_WARN_IF(usedIds.ref().Contains(objectStoreId))) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
 
-        IDB_TRY(OkIf(usedIds.ref().PutEntry(objectStoreId, fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+    if (NS_WARN_IF(!usedIds.ref().PutEntry(objectStoreId, fallible))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-        nsString name;
-        IDB_TRY(stmt.GetString(2, name));
+    nsString name;
+    rv = stmt->GetString(2, name);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        if (!usedNames) {
-          usedNames.emplace();
-        }
+    if (!usedNames) {
+      usedNames.emplace();
+    }
 
-        IDB_TRY(OkIf(!usedNames.ref().Contains(name)),
-                Err(NS_ERROR_FILE_CORRUPTED));
+    if (NS_WARN_IF(usedNames.ref().Contains(name))) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
 
-        IDB_TRY(OkIf(usedNames.ref().PutEntry(name, fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+    if (NS_WARN_IF(!usedNames.ref().PutEntry(name, fallible))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-        RefPtr<FullObjectStoreMetadata> metadata =
-            new FullObjectStoreMetadata();
-        metadata->mCommonMetadata.id() = objectStoreId;
-        metadata->mCommonMetadata.name() = name;
+    RefPtr<FullObjectStoreMetadata> metadata = new FullObjectStoreMetadata();
+    metadata->mCommonMetadata.id() = objectStoreId;
+    metadata->mCommonMetadata.name() = name;
 
-        IDB_TRY_VAR(const int32_t columnType,
-                    MOZ_TO_RESULT_INVOKE(stmt, GetTypeOfIndex, 3));
+    int32_t columnType;
+    rv = stmt->GetTypeOfIndex(3, &columnType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
-          metadata->mCommonMetadata.keyPath() = KeyPath(0);
-        } else {
-          MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_TEXT);
+    if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
+      metadata->mCommonMetadata.keyPath() = KeyPath(0);
+    } else {
+      MOZ_ASSERT(columnType == mozIStorageStatement::VALUE_TYPE_TEXT);
 
-          nsString keyPathSerialization;
-          IDB_TRY(stmt.GetString(3, keyPathSerialization));
+      nsString keyPathSerialization;
+      rv = stmt->GetString(3, keyPathSerialization);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-          metadata->mCommonMetadata.keyPath() =
-              KeyPath::DeserializeFromString(keyPathSerialization);
-          IDB_TRY(OkIf(metadata->mCommonMetadata.keyPath().IsValid()),
-                  Err(NS_ERROR_FILE_CORRUPTED));
-        }
+      metadata->mCommonMetadata.keyPath() =
+          KeyPath::DeserializeFromString(keyPathSerialization);
+      if (NS_WARN_IF(!metadata->mCommonMetadata.keyPath().IsValid())) {
+        return NS_ERROR_FILE_CORRUPTED;
+      }
+    }
 
-        IDB_TRY_VAR(const int64_t nextAutoIncrementId,
-                    MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
+    int64_t nextAutoIncrementId;
+    rv = stmt->GetInt64(1, &nextAutoIncrementId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        metadata->mCommonMetadata.autoIncrement() = !!nextAutoIncrementId;
-        metadata->mNextAutoIncrementId = nextAutoIncrementId;
-        metadata->mCommittedAutoIncrementId = nextAutoIncrementId;
+    metadata->mCommonMetadata.autoIncrement() = !!nextAutoIncrementId;
+    metadata->mNextAutoIncrementId = nextAutoIncrementId;
+    metadata->mCommittedAutoIncrementId = nextAutoIncrementId;
 
-        IDB_TRY(OkIf(objectStores.Put(objectStoreId, std::move(metadata),
-                                      fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+    if (NS_WARN_IF(
+            !objectStores.Put(objectStoreId, std::move(metadata), fallible))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-        lastObjectStoreId = std::max(lastObjectStoreId, objectStoreId);
+    lastObjectStoreId = std::max(lastObjectStoreId, objectStoreId);
+  }
 
-        return mozilla::Ok{};
-      }));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  usedIds.reset();
+  usedNames.reset();
 
   // Load index information
   rv = aConnection.CreateStatement(
@@ -17137,114 +17399,142 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
   IndexOrObjectStoreId lastIndexId = 0;
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [&lastIndexId, &objectStores, &aConnection,
-       usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
-       usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
-          auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
-        IDB_TRY_VAR(const IndexOrObjectStoreId objectStoreId,
-                    MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
+  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    IndexOrObjectStoreId objectStoreId;
+    rv = stmt->GetInt64(1, &objectStoreId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        RefPtr<FullObjectStoreMetadata> objectStoreMetadata;
-        IDB_TRY(OkIf(objectStores.Get(objectStoreId,
-                                      getter_AddRefs(objectStoreMetadata))),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+    RefPtr<FullObjectStoreMetadata> objectStoreMetadata;
+    if (NS_WARN_IF(!objectStores.Get(objectStoreId,
+                                     getter_AddRefs(objectStoreMetadata)))) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
 
-        MOZ_ASSERT(objectStoreMetadata->mCommonMetadata.id() == objectStoreId);
+    MOZ_ASSERT(objectStoreMetadata->mCommonMetadata.id() == objectStoreId);
 
-        IndexOrObjectStoreId indexId;
-        IDB_TRY(stmt.GetInt64(0, &indexId));
+    IndexOrObjectStoreId indexId;
+    rv = stmt->GetInt64(0, &indexId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        if (!usedIds) {
-          usedIds.emplace();
-        }
+    if (!usedIds) {
+      usedIds.emplace();
+    }
 
-        IDB_TRY(OkIf(indexId > 0), Err(NS_ERROR_FILE_CORRUPTED));
-        IDB_TRY(OkIf(!usedIds.ref().Contains(indexId)),
-                Err(NS_ERROR_FILE_CORRUPTED));
+    if (NS_WARN_IF(indexId <= 0) ||
+        NS_WARN_IF(usedIds.ref().Contains(indexId))) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
 
-        IDB_TRY(OkIf(usedIds.ref().PutEntry(indexId, fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+    if (NS_WARN_IF(!usedIds.ref().PutEntry(indexId, fallible))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-        nsString name;
-        IDB_TRY(stmt.GetString(2, name));
+    nsString name;
+    rv = stmt->GetString(2, name);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        nsAutoString hashName;
-        hashName.AppendInt(indexId);
-        hashName.Append(':');
-        hashName.Append(name);
+    nsAutoString hashName;
+    hashName.AppendInt(indexId);
+    hashName.Append(':');
+    hashName.Append(name);
 
-        if (!usedNames) {
-          usedNames.emplace();
-        }
+    if (!usedNames) {
+      usedNames.emplace();
+    }
 
-        IDB_TRY(OkIf(!usedNames.ref().Contains(hashName)),
-                Err(NS_ERROR_FILE_CORRUPTED));
+    if (NS_WARN_IF(usedNames.ref().Contains(hashName))) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
 
-        IDB_TRY(OkIf(usedNames.ref().PutEntry(hashName, fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+    if (NS_WARN_IF(!usedNames.ref().PutEntry(hashName, fallible))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-        RefPtr<FullIndexMetadata> indexMetadata = new FullIndexMetadata();
-        indexMetadata->mCommonMetadata.id() = indexId;
-        indexMetadata->mCommonMetadata.name() = name;
+    RefPtr<FullIndexMetadata> indexMetadata = new FullIndexMetadata();
+    indexMetadata->mCommonMetadata.id() = indexId;
+    indexMetadata->mCommonMetadata.name() = name;
 
 #ifdef DEBUG
-        {
-          int32_t columnType;
-          nsresult rv = stmt.GetTypeOfIndex(3, &columnType);
-          MOZ_ASSERT(NS_SUCCEEDED(rv));
-          MOZ_ASSERT(columnType != mozIStorageStatement::VALUE_TYPE_NULL);
-        }
+    {
+      int32_t columnType;
+      rv = stmt->GetTypeOfIndex(3, &columnType);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      MOZ_ASSERT(columnType != mozIStorageStatement::VALUE_TYPE_NULL);
+    }
 #endif
 
-        nsString keyPathSerialization;
-        IDB_TRY(stmt.GetString(3, keyPathSerialization));
+    nsString keyPathSerialization;
+    rv = stmt->GetString(3, keyPathSerialization);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        indexMetadata->mCommonMetadata.keyPath() =
-            KeyPath::DeserializeFromString(keyPathSerialization);
-        IDB_TRY(OkIf(indexMetadata->mCommonMetadata.keyPath().IsValid()),
-                Err(NS_ERROR_FILE_CORRUPTED));
+    indexMetadata->mCommonMetadata.keyPath() =
+        KeyPath::DeserializeFromString(keyPathSerialization);
+    if (NS_WARN_IF(!indexMetadata->mCommonMetadata.keyPath().IsValid())) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
 
-        int32_t scratch;
-        IDB_TRY(stmt.GetInt32(4, &scratch));
+    int32_t scratch;
+    rv = stmt->GetInt32(4, &scratch);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        indexMetadata->mCommonMetadata.unique() = !!scratch;
+    indexMetadata->mCommonMetadata.unique() = !!scratch;
 
-        IDB_TRY(stmt.GetInt32(5, &scratch));
+    rv = stmt->GetInt32(5, &scratch);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        indexMetadata->mCommonMetadata.multiEntry() = !!scratch;
+    indexMetadata->mCommonMetadata.multiEntry() = !!scratch;
 
-        const bool localeAware = !stmt.IsNull(6);
-        if (localeAware) {
-          IDB_TRY(
-              stmt.GetUTF8String(6, indexMetadata->mCommonMetadata.locale()));
+    const bool localeAware = !stmt->IsNull(6);
+    if (localeAware) {
+      rv = stmt->GetUTF8String(6, indexMetadata->mCommonMetadata.locale());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-          IDB_TRY(stmt.GetInt32(7, &scratch));
+      rv = stmt->GetInt32(7, &scratch);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-          indexMetadata->mCommonMetadata.autoLocale() = !!scratch;
+      indexMetadata->mCommonMetadata.autoLocale() = !!scratch;
 
-          // Update locale-aware indexes if necessary
-          const nsCString& indexedLocale =
-              indexMetadata->mCommonMetadata.locale();
-          const bool& isAutoLocale =
-              indexMetadata->mCommonMetadata.autoLocale();
-          nsCString systemLocale = IndexedDatabaseManager::GetLocale();
-          if (!systemLocale.IsEmpty() && isAutoLocale &&
-              !indexedLocale.EqualsASCII(systemLocale.get())) {
-            IDB_TRY(UpdateLocaleAwareIndex(
-                aConnection, indexMetadata->mCommonMetadata, systemLocale));
-          }
+      // Update locale-aware indexes if necessary
+      const nsCString& indexedLocale = indexMetadata->mCommonMetadata.locale();
+      const bool& isAutoLocale = indexMetadata->mCommonMetadata.autoLocale();
+      nsCString systemLocale = IndexedDatabaseManager::GetLocale();
+      if (!systemLocale.IsEmpty() && isAutoLocale &&
+          !indexedLocale.EqualsASCII(systemLocale.get())) {
+        rv = UpdateLocaleAwareIndex(aConnection, indexMetadata->mCommonMetadata,
+                                    systemLocale);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
         }
+      }
+    }
 
-        IDB_TRY(OkIf(objectStoreMetadata->mIndexes.Put(
-                    indexId, std::move(indexMetadata), fallible)),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+    if (NS_WARN_IF(!objectStoreMetadata->mIndexes.Put(
+            indexId, std::move(indexMetadata), fallible))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-        lastIndexId = std::max(lastIndexId, indexId);
+    lastIndexId = std::max(lastIndexId, indexId);
+  }
 
-        return mozilla::Ok{};
-      }));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (NS_WARN_IF(lastObjectStoreId == INT64_MAX) ||
       NS_WARN_IF(lastIndexId == INT64_MAX)) {
@@ -17286,50 +17576,69 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
     return rv;
   }
 
-  IDB_TRY(CollectWhileHasResult(
-      *readStmt,
-      [&aConnection, &indexTable, &aIndexMetadata, &aLocale,
-       writeStmt = nsCOMPtr<mozIStorageStatement>{}](
-          auto& readStmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
-        if (!writeStmt) {
-          IDB_TRY_VAR(
-              writeStmt,
-              ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-                  std::mem_fn(&mozIStorageConnection::CreateStatement),
-                  aConnection,
-                  "UPDATE "_ns + indexTable + "SET value_locale = :"_ns +
-                      kStmtParamNameValueLocale + " WHERE index_id = :"_ns +
-                      kStmtParamNameIndexId + " AND value = :"_ns +
-                      kStmtParamNameValue + " AND object_data_key = :"_ns +
-                      kStmtParamNameObjectDataKey));
-        }
+  nsCOMPtr<mozIStorageStatement> writeStmt;
+  bool needCreateWriteQuery = true;
+  bool hasResult;
+  while (NS_SUCCEEDED((rv = readStmt->ExecuteStep(&hasResult))) && hasResult) {
+    if (needCreateWriteQuery) {
+      needCreateWriteQuery = false;
+      nsCString writeQuery =
+          "UPDATE "_ns + indexTable + "SET value_locale = :"_ns +
+          kStmtParamNameValueLocale + " WHERE index_id = :"_ns +
+          kStmtParamNameIndexId + " AND value = :"_ns + kStmtParamNameValue +
+          " AND object_data_key = :"_ns + kStmtParamNameObjectDataKey;
+      rv = aConnection.CreateStatement(writeQuery, getter_AddRefs(writeStmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
 
-        mozStorageStatementScoper scoper(writeStmt);
-        IDB_TRY(writeStmt->BindInt64ByName(kStmtParamNameIndexId,
-                                           aIndexMetadata.id()));
+    mozStorageStatementScoper scoper(writeStmt);
+    rv = writeStmt->BindInt64ByName(kStmtParamNameIndexId, aIndexMetadata.id());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        Key oldKey, objectStorePosition;
-        IDB_TRY(oldKey.SetFromStatement(&readStmt, 0));
-        IDB_TRY(oldKey.BindToStatement(writeStmt, kStmtParamNameValue));
+    Key oldKey, objectStorePosition;
+    rv = oldKey.SetFromStatement(readStmt, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        auto result = oldKey.ToLocaleAwareKey(aLocale);
-        if (!result.Is(Ok)) {
-          return Err(NS_WARN_IF(result.Is(SpecialValues::Exception))
-                         ? result.AsException().StealNSResult()
-                         : NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-        }
-        const auto newSortKey = result.Unwrap();
+    rv = oldKey.BindToStatement(writeStmt, kStmtParamNameValue);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        IDB_TRY(
-            newSortKey.BindToStatement(writeStmt, kStmtParamNameValueLocale));
-        IDB_TRY(objectStorePosition.SetFromStatement(&readStmt, 1));
-        IDB_TRY(objectStorePosition.BindToStatement(
-            writeStmt, kStmtParamNameObjectDataKey));
+    auto result = oldKey.ToLocaleAwareKey(aLocale);
+    if (!result.Is(Ok)) {
+      return NS_WARN_IF(result.Is(SpecialValues::Exception))
+                 ? result.AsException().StealNSResult()
+                 : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+    }
+    const auto newSortKey = result.Unwrap();
 
-        IDB_TRY(writeStmt->Execute());
+    rv = newSortKey.BindToStatement(writeStmt, kStmtParamNameValueLocale);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        return mozilla::Ok{};
-      }));
+    rv = objectStorePosition.SetFromStatement(readStmt, 1);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = objectStorePosition.BindToStatement(writeStmt,
+                                             kStmtParamNameObjectDataKey);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = writeStmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
@@ -18646,10 +18955,14 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
       } else {
         // The parameter names are not used, parameters are bound by index only
         // locally in the same function.
-        IDB_TRY_VAR(stmt, connection->GetCachedStatement(
-                              "UPDATE object_store "
-                              "SET auto_increment = :auto_increment WHERE id "
-                              "= :object_store_id;"_ns));
+        rv = connection->GetCachedStatement(
+            "UPDATE object_store "
+            "SET auto_increment = :auto_increment WHERE id "
+            "= :object_store_id;"_ns,
+            &stmt);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
 
       rv = stmt->BindInt64ByIndex(1, metadata->mCommonMetadata.id());
@@ -18705,9 +19018,9 @@ void TransactionBase::CommitOp::AssertForeignKeyConsistency(
   mTransaction->AssertIsOnConnectionThread();
   MOZ_ASSERT(mTransaction->GetMode() != IDBTransaction::Mode::ReadOnly);
 
-  IDB_DEBUG_TRY_VAR(const auto pragmaStmt,
-                    aConnection->GetCachedStatement("PRAGMA foreign_keys;"_ns),
-                    QM_VOID);
+  DatabaseConnection::CachedStatement pragmaStmt;
+  MOZ_ALWAYS_SUCCEEDS(
+      aConnection->GetCachedStatement("PRAGMA foreign_keys;"_ns, &pragmaStmt));
 
   bool hasResult;
   MOZ_ALWAYS_SUCCEEDS(pragmaStmt->ExecuteStep(&hasResult));
@@ -18719,9 +19032,9 @@ void TransactionBase::CommitOp::AssertForeignKeyConsistency(
 
   MOZ_ASSERT(foreignKeysEnabled, "Database doesn't have foreign keys enabled!");
 
-  IDB_DEBUG_TRY_VAR(
-      const auto checkStmt,
-      aConnection->GetCachedStatement("PRAGMA foreign_key_check;"_ns), QM_VOID);
+  DatabaseConnection::CachedStatement checkStmt;
+  MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
+      "PRAGMA foreign_key_check;"_ns, &checkStmt));
 
   MOZ_ALWAYS_SUCCEEDS(checkStmt->ExecuteStep(&hasResult));
 
@@ -19102,12 +19415,14 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // Make sure that we're not creating an object store with the same name as
     // another that already exists. This should be impossible because we should
     // have thrown an error long before now...
+    DatabaseConnection::CachedStatement stmt;
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(
-                                           "SELECT name "
-                                           "FROM object_store "
-                                           "WHERE name = :name;"_ns));
+    MOZ_ALWAYS_SUCCEEDS(
+        aConnection->GetCachedStatement("SELECT name "
+                                        "FROM object_store "
+                                        "WHERE name = :name;"_ns,
+                                        &stmt));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mMetadata.name()));
 
@@ -19194,8 +19509,9 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #ifdef DEBUG
   {
     // Make sure |mIsLastObjectStore| is telling the truth.
-    IDB_DEBUG_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(
-                                           "SELECT id FROM object_store;"_ns));
+    DatabaseConnection::CachedStatement stmt;
+    MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
+        "SELECT id FROM object_store;"_ns, &stmt));
 
     bool foundThisObjectStore = false;
     bool foundOtherObjectStore = false;
@@ -19371,13 +19687,14 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // Make sure that we're not renaming an object store with the same name as
     // another that already exists. This should be impossible because we should
     // have thrown an error long before now...
+    DatabaseConnection::CachedStatement stmt;
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_VAR(const auto stmt,
-                      aConnection->GetCachedStatement(
-                          "SELECT name "
-                          "FROM object_store "
-                          "WHERE name = :name AND id != :id;"_ns));
+    MOZ_ALWAYS_SUCCEEDS(
+        aConnection->GetCachedStatement("SELECT name "
+                                        "FROM object_store "
+                                        "WHERE name = :name AND id != :id;"_ns,
+                                        &stmt));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mNewName));
 
@@ -19554,14 +19871,14 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // Make sure that we're not creating an index with the same name and object
     // store as another that already exists. This should be impossible because
     // we should have thrown an error long before now...
+    DatabaseConnection::CachedStatement stmt;
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_VAR(
-        const auto stmt,
-        aConnection->GetCachedStatement(
-            "SELECT name "
-            "FROM object_store_index "
-            "WHERE object_store_id = :object_store_id AND name = :name;"_ns));
+    MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
+        "SELECT name "
+        "FROM object_store_index "
+        "WHERE object_store_id = :object_store_id AND name = :name;"_ns,
+        &stmt));
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
     MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(1, mMetadata.name()));
 
@@ -19862,16 +20179,19 @@ nsresult DeleteIndexOp::RemoveReferencesToIndex(
   if (mIsLastIndex) {
     // There is no need to parse the previous entry in the index_data_values
     // column if this is the last index. Simply set it to NULL.
-    IDB_TRY_VAR(const auto stmt,
-                aConnection->GetCachedStatement("UPDATE object_data "
-                                                "SET index_data_values = NULL "
-                                                "WHERE object_store_id = :"_ns +
-                                                kStmtParamNameObjectStoreId +
-                                                " AND key = :"_ns +
-                                                kStmtParamNameKey + ";"_ns));
+    DatabaseConnection::CachedStatement stmt;
+    nsresult rv = aConnection->GetCachedStatement(
+        "UPDATE object_data "
+        "SET index_data_values = NULL "
+        "WHERE object_store_id = :"_ns +
+            kStmtParamNameObjectStoreId + " AND key = :"_ns +
+            kStmtParamNameKey + ";"_ns,
+        &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-    nsresult rv =
-        stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
+    rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -19931,13 +20251,14 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #ifdef DEBUG
   {
     // Make sure |mIsLastIndex| is telling the truth.
+    DatabaseConnection::CachedStatement stmt;
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_VAR(const auto stmt,
-                      aConnection->GetCachedStatement(
-                          "SELECT id "
-                          "FROM object_store_index "
-                          "WHERE object_store_id = :object_store_id;"_ns));
+    MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
+        "SELECT id "
+        "FROM object_store_index "
+        "WHERE object_store_id = :object_store_id;"_ns,
+        &stmt));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
 
@@ -19980,53 +20301,66 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
+  DatabaseConnection::CachedStatement selectStmt;
+
   // mozStorage warns that these statements trigger a sort operation but we
   // don't care because this is a very rare call and we expect it to be slow.
   // The cost of having an index on this field is too high.
-  IDB_TRY_VAR(
-      const auto selectStmt,
-      aConnection->GetCachedStatement(
-          mUnique
-              ? (mIsLastIndex
-                     ? "/* do not warn (bug someone else) */ "
-                       "SELECT value, object_data_key "
-                       "FROM unique_index_data "
-                       "WHERE index_id = :"_ns +
-                           kStmtParamNameIndexId +
-                           " ORDER BY object_data_key ASC;"_ns
-                     : "/* do not warn (bug out) */ "
-                       "SELECT unique_index_data.value, "
-                       "unique_index_data.object_data_key, "
-                       "object_data.index_data_values "
-                       "FROM unique_index_data "
-                       "JOIN object_data "
-                       "ON unique_index_data.object_data_key = object_data.key "
-                       "WHERE unique_index_data.index_id = :"_ns +
-                           kStmtParamNameIndexId +
-                           " AND object_data.object_store_id = :"_ns +
-                           kStmtParamNameObjectStoreId +
-                           " ORDER BY unique_index_data.object_data_key ASC;"_ns)
-              : (mIsLastIndex
-                     ? "/* do not warn (bug me not) */ "
-                       "SELECT value, object_data_key "
-                       "FROM index_data "
-                       "WHERE index_id = :"_ns +
-                           kStmtParamNameIndexId +
-                           " AND object_store_id = :"_ns +
-                           kStmtParamNameObjectStoreId +
-                           " ORDER BY object_data_key ASC;"_ns
-                     : "/* do not warn (bug off) */ "
-                       "SELECT index_data.value, "
-                       "index_data.object_data_key, "
-                       "object_data.index_data_values "
-                       "FROM index_data "
-                       "JOIN object_data "
-                       "ON index_data.object_data_key = object_data.key "
-                       "WHERE index_data.index_id = :"_ns +
-                           kStmtParamNameIndexId +
-                           " AND object_data.object_store_id = :"_ns +
-                           kStmtParamNameObjectStoreId +
-                           " ORDER BY index_data.object_data_key ASC;"_ns)));
+  if (mUnique) {
+    if (mIsLastIndex) {
+      rv = aConnection->GetCachedStatement(
+          "/* do not warn (bug someone else) */ "
+          "SELECT value, object_data_key "
+          "FROM unique_index_data "
+          "WHERE index_id = :"_ns +
+              kStmtParamNameIndexId + " ORDER BY object_data_key ASC;"_ns,
+          &selectStmt);
+    } else {
+      rv = aConnection->GetCachedStatement(
+          "/* do not warn (bug out) */ "
+          "SELECT unique_index_data.value, "
+          "unique_index_data.object_data_key, "
+          "object_data.index_data_values "
+          "FROM unique_index_data "
+          "JOIN object_data "
+          "ON unique_index_data.object_data_key = object_data.key "
+          "WHERE unique_index_data.index_id = :"_ns +
+              kStmtParamNameIndexId +
+              " AND object_data.object_store_id = :"_ns +
+              kStmtParamNameObjectStoreId +
+              " ORDER BY unique_index_data.object_data_key ASC;"_ns,
+          &selectStmt);
+    }
+  } else {
+    if (mIsLastIndex) {
+      rv = aConnection->GetCachedStatement(
+          "/* do not warn (bug me not) */ "
+          "SELECT value, object_data_key "
+          "FROM index_data "
+          "WHERE index_id = :"_ns +
+              kStmtParamNameIndexId + " AND object_store_id = :"_ns +
+              kStmtParamNameObjectStoreId + " ORDER BY object_data_key ASC;"_ns,
+          &selectStmt);
+    } else {
+      rv = aConnection->GetCachedStatement(
+          "/* do not warn (bug off) */ "
+          "SELECT index_data.value, "
+          "index_data.object_data_key, "
+          "object_data.index_data_values "
+          "FROM index_data "
+          "JOIN object_data "
+          "ON index_data.object_data_key = object_data.key "
+          "WHERE index_data.index_id = :"_ns +
+              kStmtParamNameIndexId +
+              " AND object_data.object_store_id = :"_ns +
+              kStmtParamNameObjectStoreId +
+              " ORDER BY index_data.object_data_key ASC;"_ns,
+          &selectStmt);
+    }
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   rv = selectStmt->BindInt64ByName(kStmtParamNameIndexId, mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -20041,93 +20375,125 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
+  DatabaseConnection::CachedStatement deleteIndexRowStmt;
+  DatabaseConnection::CachedStatement nullIndexDataValuesStmt;
+
   Key lastObjectStoreKey;
   IndexDataValuesAutoArray lastIndexValues;
 
-  IDB_TRY(CollectWhileHasResult(
-      *selectStmt,
-      [this, &aConnection, &lastObjectStoreKey, &lastIndexValues,
-       deleteIndexRowStmt = DatabaseConnection::CachedStatement{},
-       nullIndexDataValuesStmt = DatabaseConnection::CachedStatement{}](
-          auto& selectStmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
-        // We always need the index key to delete the index row.
-        Key indexKey;
-        IDB_TRY(indexKey.SetFromStatement(&selectStmt, 0));
+  bool hasResult;
+  while (NS_SUCCEEDED(rv = selectStmt->ExecuteStep(&hasResult)) && hasResult) {
+    // We always need the index key to delete the index row.
+    Key indexKey;
+    rv = indexKey.SetFromStatement(&*selectStmt, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        IDB_TRY(OkIf(!indexKey.IsUnset()), Err(NS_ERROR_FILE_CORRUPTED),
-                IDB_REPORT_INTERNAL_ERR_LAMBDA);
+    if (NS_WARN_IF(indexKey.IsUnset())) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_FILE_CORRUPTED;
+    }
 
-        // Don't call |lastObjectStoreKey.BindToStatement()| directly because we
-        // don't want to copy the same key multiple times.
-        const uint8_t* objectStoreKeyData;
-        uint32_t objectStoreKeyDataLength;
-        IDB_TRY(selectStmt.GetSharedBlob(1, &objectStoreKeyDataLength,
-                                         &objectStoreKeyData));
+    // Don't call |lastObjectStoreKey.BindToStatement()| directly because we
+    // don't want to copy the same key multiple times.
+    const uint8_t* objectStoreKeyData;
+    uint32_t objectStoreKeyDataLength;
+    rv = selectStmt->GetSharedBlob(1, &objectStoreKeyDataLength,
+                                   &objectStoreKeyData);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        IDB_TRY(OkIf(objectStoreKeyDataLength), Err(NS_ERROR_FILE_CORRUPTED),
-                IDB_REPORT_INTERNAL_ERR_LAMBDA);
+    if (NS_WARN_IF(!objectStoreKeyDataLength)) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_FILE_CORRUPTED;
+    }
 
-        const nsDependentCString currentObjectStoreKeyBuffer(
-            reinterpret_cast<const char*>(objectStoreKeyData),
-            objectStoreKeyDataLength);
-        if (currentObjectStoreKeyBuffer != lastObjectStoreKey.GetBuffer()) {
-          // We just walked to the next object store key.
-          if (!lastObjectStoreKey.IsUnset()) {
-            // Before we move on to the next key we need to update the previous
-            // key's index_data_values column.
-            IDB_TRY(RemoveReferencesToIndex(aConnection, lastObjectStoreKey,
-                                            lastIndexValues));
-          }
+    nsDependentCString currentObjectStoreKeyBuffer(
+        reinterpret_cast<const char*>(objectStoreKeyData),
+        objectStoreKeyDataLength);
+    if (currentObjectStoreKeyBuffer != lastObjectStoreKey.GetBuffer()) {
+      // We just walked to the next object store key.
+      if (!lastObjectStoreKey.IsUnset()) {
+        // Before we move on to the next key we need to update the previous
+        // key's index_data_values column.
+        rv = RemoveReferencesToIndex(aConnection, lastObjectStoreKey,
+                                     lastIndexValues);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      }
 
-          // Save the object store key.
-          lastObjectStoreKey = Key(currentObjectStoreKeyBuffer);
+      // Save the object store key.
+      lastObjectStoreKey = Key(currentObjectStoreKeyBuffer);
 
-          // And the |index_data_values| row if this isn't the only index.
-          if (!mIsLastIndex) {
-            lastIndexValues.ClearAndRetainStorage();
-            IDB_TRY(
-                ReadCompressedIndexDataValues(selectStmt, 2, lastIndexValues));
-
-            IDB_TRY(OkIf(!lastIndexValues.IsEmpty()),
-                    Err(NS_ERROR_FILE_CORRUPTED),
-                    IDB_REPORT_INTERNAL_ERR_LAMBDA);
-          }
+      // And the |index_data_values| row if this isn't the only index.
+      if (!mIsLastIndex) {
+        lastIndexValues.ClearAndRetainStorage();
+        rv = ReadCompressedIndexDataValues(*selectStmt, 2, lastIndexValues);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
         }
 
-        // Now delete the index row.
-        if (deleteIndexRowStmt) {
-          MOZ_ALWAYS_SUCCEEDS(deleteIndexRowStmt->Reset());
-        } else {
-          IDB_TRY_VAR(
-              deleteIndexRowStmt,
-              aConnection->GetCachedStatement(
-                  mUnique ? "DELETE FROM unique_index_data "
-                            "WHERE index_id = :"_ns +
-                                kStmtParamNameIndexId + " AND value = :"_ns +
-                                kStmtParamNameValue + ";"_ns
-                          : "DELETE FROM index_data "
-                            "WHERE index_id = :"_ns +
-                                kStmtParamNameIndexId + " AND value = :"_ns +
-                                kStmtParamNameValue +
-                                " AND object_data_key = :"_ns +
-                                kStmtParamNameObjectDataKey + ";"_ns));
+        if (NS_WARN_IF(lastIndexValues.IsEmpty())) {
+          IDB_REPORT_INTERNAL_ERR();
+          return NS_ERROR_FILE_CORRUPTED;
         }
+      }
+    }
 
-        IDB_TRY(deleteIndexRowStmt->BindInt64ByName(kStmtParamNameIndexId,
-                                                    mIndexId));
+    // Now delete the index row.
+    if (deleteIndexRowStmt) {
+      MOZ_ALWAYS_SUCCEEDS(deleteIndexRowStmt->Reset());
+    } else {
+      if (mUnique) {
+        rv = aConnection->GetCachedStatement(
+            "DELETE FROM unique_index_data "
+            "WHERE index_id = :"_ns +
+                kStmtParamNameIndexId + " AND value = :"_ns +
+                kStmtParamNameValue + ";"_ns,
+            &deleteIndexRowStmt);
+      } else {
+        rv = aConnection->GetCachedStatement(
+            "DELETE FROM index_data "
+            "WHERE index_id = :"_ns +
+                kStmtParamNameIndexId + " AND value = :"_ns +
+                kStmtParamNameValue + " AND object_data_key = :"_ns +
+                kStmtParamNameObjectDataKey + ";"_ns,
+            &deleteIndexRowStmt);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
 
-        IDB_TRY(indexKey.BindToStatement(&*deleteIndexRowStmt,
-                                         kStmtParamNameValue));
+    rv = deleteIndexRowStmt->BindInt64ByName(kStmtParamNameIndexId, mIndexId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        if (!mUnique) {
-          IDB_TRY(lastObjectStoreKey.BindToStatement(
-              &*deleteIndexRowStmt, kStmtParamNameObjectDataKey));
-        }
+    rv = indexKey.BindToStatement(&*deleteIndexRowStmt, kStmtParamNameValue);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-        IDB_TRY(deleteIndexRowStmt->Execute());
+    if (!mUnique) {
+      rv = lastObjectStoreKey.BindToStatement(&*deleteIndexRowStmt,
+                                              kStmtParamNameObjectDataKey);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
 
-        return mozilla::Ok{};
-      }));
+    rv = deleteIndexRowStmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // Take care of the last key.
   if (!lastObjectStoreKey.IsUnset()) {
@@ -20183,15 +20549,16 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // Make sure that we're not renaming an index with the same name as another
     // that already exists. This should be impossible because we should have
     // thrown an error long before now...
+    DatabaseConnection::CachedStatement stmt;
     // The parameter names are not used, parameters are bound by index only
     // locally in the same function.
-    IDB_DEBUG_TRY_VAR(const auto stmt,
-                      aConnection->GetCachedStatement(
-                          "SELECT name "
-                          "FROM object_store_index "
-                          "WHERE object_store_id = :object_store_id "
-                          "AND name = :name "
-                          "AND id != :id;"_ns));
+    MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
+        "SELECT name "
+        "FROM object_store_index "
+        "WHERE object_store_id = :object_store_id "
+        "AND name = :name "
+        "AND id != :id;"_ns,
+        &stmt));
 
     MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
 
@@ -20463,16 +20830,20 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
   }
 #endif
 
-  IDB_TRY_VAR(const auto indexValuesStmt,
-              aConnection->GetCachedStatement("SELECT index_data_values "
-                                              "FROM object_data "
-                                              "WHERE object_store_id = :"_ns +
-                                              kStmtParamNameObjectStoreId +
-                                              " AND key = :"_ns +
-                                              kStmtParamNameKey + ";"_ns));
+  DatabaseConnection::CachedStatement indexValuesStmt;
+  nsresult rv = aConnection->GetCachedStatement(
+      "SELECT index_data_values "
+      "FROM object_data "
+      "WHERE object_store_id = :"_ns +
+          kStmtParamNameObjectStoreId + " AND key = :"_ns + kStmtParamNameKey +
+          ";"_ns,
+      &indexValuesStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv = indexValuesStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                                 mParams.objectStoreId());
+  rv = indexValuesStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                                        mParams.objectStoreId());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -20647,17 +21018,21 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   // specified we should never have a collision and so it shouldn't matter
   // if we allow overwrite or not. By not allowing overwrite we raise
   // detectable errors rather than corrupting data.
+  DatabaseConnection::CachedStatement stmt;
   const auto optReplaceDirective =
       (!mOverwrite || keyUnset) ? ""_ns : "OR REPLACE "_ns;
-  IDB_TRY_VAR(const auto stmt,
-              aConnection->GetCachedStatement(
-                  "INSERT "_ns + optReplaceDirective +
-                  "INTO object_data "
-                  "(object_store_id, key, file_ids, data) "
-                  "VALUES (:"_ns +
-                  kStmtParamNameObjectStoreId + ", :"_ns + kStmtParamNameKey +
-                  ", :"_ns + kStmtParamNameFileIds + ", :"_ns +
-                  kStmtParamNameData + ");"_ns));
+  rv = aConnection->GetCachedStatement(
+      "INSERT "_ns + optReplaceDirective +
+          "INTO object_data "
+          "(object_store_id, key, file_ids, data) "
+          "VALUES (:"_ns +
+          kStmtParamNameObjectStoreId + ", :"_ns + kStmtParamNameKey +
+          ", :"_ns + kStmtParamNameFileIds + ", :"_ns + kStmtParamNameData +
+          ");"_ns,
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, osid);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -21037,10 +21412,13 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
       kStmtParamNameObjectStoreId + keyRangeClause + " ORDER BY key ASC"_ns +
       limitClause;
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(query));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(query, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
+  rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21052,22 +21430,23 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
     }
   }
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
-        IDB_TRY_VAR(auto cloneInfo,
-                    GetStructuredCloneReadInfoFromStatement(
-                        &stmt, 1, 0, mDatabase->GetFileManager()));
+  bool hasResult;
+  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    IDB_TRY_VAR(auto cloneInfo, GetStructuredCloneReadInfoFromStatement(
+                                    &*stmt, 1, 0, mDatabase->GetFileManager()));
 
-        if (cloneInfo.HasPreprocessInfo()) {
-          mPreprocessInfoCount++;
-        }
+    if (cloneInfo.HasPreprocessInfo()) {
+      mPreprocessInfoCount++;
+    }
 
-        IDB_TRY(OkIf(mResponse.EmplaceBack(fallible, std::move(cloneInfo))),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+    if (NS_WARN_IF(!mResponse.EmplaceBack(fallible, std::move(cloneInfo)))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
 
-        return mozilla::Ok{};
-      }));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
@@ -21196,10 +21575,13 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
       kStmtParamNameObjectStoreId + keyRangeClause + " ORDER BY key ASC"_ns +
       limitClause;
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(query));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(query, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
+  rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21211,15 +21593,22 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
     }
   }
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
-        Key* const key = mResponse.AppendElement(fallible);
-        IDB_TRY(OkIf(key), Err(NS_ERROR_OUT_OF_MEMORY));
-        IDB_TRY(key->SetFromStatement(&stmt, 0));
+  bool hasResult;
+  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    Key* key = mResponse.AppendElement(fallible);
+    if (NS_WARN_IF(!key)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-        return mozilla::Ok{};
-      }));
+    rv = key->SetFromStatement(&*stmt, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
@@ -21418,10 +21807,14 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
       "WHERE object_store_id = :"_ns +
       kStmtParamNameObjectStoreId + keyRangeClause;
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(query));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(query, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                      mParams.objectStoreId());
+  rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+                             mParams.objectStoreId());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21577,10 +21970,14 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       "WHERE index_id = :"_ns +
       kStmtParamNameIndexId + keyRangeClause + limitClause;
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(query));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(query, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
-                                      mMetadata->mCommonMetadata.id());
+  rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
+                             mMetadata->mCommonMetadata.id());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21592,23 +21989,24 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
-        IDB_TRY_VAR(auto cloneInfo,
-                    GetStructuredCloneReadInfoFromStatement(
-                        &stmt, 1, 0, mDatabase->GetFileManager()));
+  bool hasResult;
+  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    IDB_TRY_VAR(auto cloneInfo, GetStructuredCloneReadInfoFromStatement(
+                                    &*stmt, 1, 0, mDatabase->GetFileManager()));
 
-        if (cloneInfo.HasPreprocessInfo()) {
-          IDB_WARNING("Preprocessing for indexes not yet implemented!");
-          return Err(NS_ERROR_NOT_IMPLEMENTED);
-        }
+    if (cloneInfo.HasPreprocessInfo()) {
+      IDB_WARNING("Preprocessing for indexes not yet implemented!");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
-        IDB_TRY(OkIf(mResponse.EmplaceBack(fallible, std::move(cloneInfo))),
-                Err(NS_ERROR_OUT_OF_MEMORY));
+    if (NS_WARN_IF(!mResponse.EmplaceBack(fallible, std::move(cloneInfo)))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
 
-        return mozilla::Ok{};
-      }));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
@@ -21716,10 +22114,14 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       indexTable + "WHERE index_id = :"_ns + kStmtParamNameIndexId +
       keyRangeClause + limitClause;
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(query));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(query, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
-                                      mMetadata->mCommonMetadata.id());
+  rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
+                             mMetadata->mCommonMetadata.id());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21731,15 +22133,22 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  IDB_TRY(CollectWhileHasResult(
-      *stmt,
-      [this](auto& stmt) mutable -> mozilla::Result<mozilla::Ok, nsresult> {
-        Key* const key = mResponse.AppendElement(fallible);
-        IDB_TRY(OkIf(key), Err(NS_ERROR_OUT_OF_MEMORY));
-        IDB_TRY(key->SetFromStatement(&stmt, 0));
+  bool hasResult;
+  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    Key* key = mResponse.AppendElement(fallible);
+    if (NS_WARN_IF(!key)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-        return mozilla::Ok{};
-      }));
+    rv = key->SetFromStatement(&*stmt, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
@@ -21795,10 +22204,14 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       indexTable + "WHERE index_id = :"_ns + kStmtParamNameIndexId +
       keyRangeClause;
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(query));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(query, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
-                                      mMetadata->mCommonMetadata.id());
+  rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
+                             mMetadata->mCommonMetadata.id());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22246,10 +22659,13 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStore>::DoDatabaseWork(
                                kOpenLimit +
                                ToAutoCString(1 + GetCursor().mMaxExtraCount);
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(firstQuery));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId);
+  rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22294,10 +22710,13 @@ nsresult OpenOpHelper<IDBCursorType::ObjectStoreKey>::DoDatabaseWork(
   const nsCString firstQuery =
       queryStart + keyRangeClause + directionClause + kOpenLimit + "1"_ns;
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(firstQuery));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv =
-      stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId);
+  rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22384,9 +22803,13 @@ nsresult OpenOpHelper<IDBCursorType::Index>::DoDatabaseWork(
                                kOpenLimit +
                                ToAutoCString(1 + GetCursor().mMaxExtraCount);
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(firstQuery));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId);
+  rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22471,9 +22894,13 @@ nsresult OpenOpHelper<IDBCursorType::IndexKey>::DoDatabaseWork(
   const nsCString firstQuery =
       queryStart + keyRangeClause + directionClause + kOpenLimit + "1"_ns;
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(firstQuery));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsresult rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId);
+  rv = stmt->BindInt64ByName(kStmtParamNameId, GetCursor().mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22622,12 +23049,17 @@ nsresult Cursor<CursorType>::ContinueOp::DoDatabaseWork(
   // at all.
   const uint32_t maxExtraCount = hasContinueKey ? 0 : mCursor->mMaxExtraCount;
 
-  IDB_TRY_VAR(const auto stmt, aConnection->GetCachedStatement(
-                                   mCursor->mContinueQueries->GetContinueQuery(
-                                       hasContinueKey, hasContinuePrimaryKey)));
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(
+      mCursor->mContinueQueries->GetContinueQuery(hasContinueKey,
+                                                  hasContinuePrimaryKey),
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // Bind limit.
-  nsresult rv = stmt->BindUTF8StringByName(
+  rv = stmt->BindUTF8StringByName(
       kStmtParamNameLimit,
       ToAutoCString(advanceCount + mCursor->mMaxExtraCount));
   if (NS_WARN_IF(NS_FAILED(rv))) {
