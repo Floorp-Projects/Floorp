@@ -488,8 +488,9 @@ this.tabs = class extends ExtensionAPI {
 
           const tab = tabManager.wrapTab(window.tab);
           await tabListener.awaitTabReady(tab.nativeTab);
+          const zoom = window.windowUtils.fullZoom;
 
-          return tab.capture(context, options);
+          return tab.capture(context, zoom, options);
         },
 
         async executeScript(tabId, details) {
