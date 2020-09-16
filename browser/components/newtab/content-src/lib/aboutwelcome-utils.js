@@ -102,6 +102,7 @@ export const DEFAULT_WELCOME_CONTENT = {
         subtitle: { string_id: "onboarding-multistage-import-subtitle" },
         tiles: {
           type: "topsites",
+          showTitles: true,
         },
         primary_button: {
           label: {
