@@ -10,11 +10,7 @@
 
 using namespace mozilla::a11y;
 
-@class MOXRootGroup;
-
-@interface MOXWebAreaAccessible : mozAccessible {
-  MOXRootGroup* mRootGroup;
-}
+@interface MOXWebAreaAccessible : mozAccessible
 // overrides
 - (NSURL*)moxURL;
 
@@ -30,29 +26,19 @@ using namespace mozilla::a11y;
 // override
 - (NSNumber*)moxUIElementCountForSearchPredicate:(NSDictionary*)searchPredicate;
 
-// override
-- (NSArray*)moxUnignoredChildren;
-
-// override
+// overrides
 - (void)handleAccessibleEvent:(uint32_t)eventType;
-
-// override
-- (void)dealloc;
-
-- (NSArray*)rootGroupChildren;
-
-- (id)rootGroup;
 
 @end
 
 @interface MOXSearchInfo : NSObject {
-  // The MOX accessible of the web area, we need a reference
+  // The gecko accessible of the web area, we need a reference
   // to set the pivot's root. This is a weak ref.
-  MOXWebAreaAccessible* mWebArea;
+  AccessibleOrProxy mWebArea;
 
-  // The MOX accessible we should start searching from.
+  // The gecko accessible we should start searching from.
   // This is a weak ref.
-  MOXAccessibleBase* mStartElem;
+  AccessibleOrProxy mStartElem;
 
   // The amount of matches we should return
   int mResultLimit;
@@ -68,9 +54,7 @@ using namespace mozilla::a11y;
 }
 
 - (id)initWithParameters:(NSDictionary*)params
-                 andRoot:(MOXWebAreaAccessible*)root;
-
-- (AccessibleOrProxy)startGeckoAccessible;
+                 andRoot:(mozilla::a11y::AccessibleOrProxy)root;
 
 - (NSMutableArray*)getMatchesForRule:(PivotRule&)rule;
 
