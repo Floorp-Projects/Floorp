@@ -94,6 +94,7 @@ void BrowsingContextGroup::EnsureHostProcess(ContentParent* aProcess) {
 
 void BrowsingContextGroup::RemoveHostProcess(ContentParent* aProcess) {
   MOZ_DIAGNOSTIC_ASSERT(aProcess);
+  MOZ_DIAGNOSTIC_ASSERT(aProcess->GetRemoteType() != PREALLOC_REMOTE_TYPE);
   auto entry = mHosts.Lookup(aProcess->GetRemoteType());
   if (entry && entry.Data() == aProcess) {
     entry.Remove();
@@ -118,6 +119,7 @@ static void CollectContextInitializers(
 void BrowsingContextGroup::Subscribe(ContentParent* aProcess) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(aProcess && !aProcess->IsLaunching());
+  MOZ_DIAGNOSTIC_ASSERT(aProcess->GetRemoteType() != PREALLOC_REMOTE_TYPE);
 
   // Check if we're already subscribed to this process.
   if (!mSubscribers.EnsureInserted(aProcess)) {
@@ -164,6 +166,7 @@ void BrowsingContextGroup::Subscribe(ContentParent* aProcess) {
 
 void BrowsingContextGroup::Unsubscribe(ContentParent* aProcess) {
   MOZ_DIAGNOSTIC_ASSERT(aProcess);
+  MOZ_DIAGNOSTIC_ASSERT(aProcess->GetRemoteType() != PREALLOC_REMOTE_TYPE);
   mSubscribers.RemoveEntry(aProcess);
   aProcess->RemoveBrowsingContextGroup(this);
 
