@@ -10,78 +10,117 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-  SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForExplicitFinish();
 
-  /**
-   * Test for Bug 1375833. It tests for 2 things in a normal reload -
-   * 1. Static frame history should not be dropped.
-   * 2. In a reload, docshell would parse the reloaded root document and
-   *    genearate new child docshells, and then use the child offset
-   */
+    /**
+     * Test for Bug 1375833. It tests for 2 things in a normal reload -
+     * 1. Static frame history should not be dropped.
+     * 2. In a reload, docshell would parse the reloaded root document and
+     *    genearate new child docshells, and then use the child offset
+     */
 
-  let testWin = window.open("file_bug1375833.html");
-  let count = 0;
-  let webNav, shistory;
-  let frameDocShellId;
-  window.addEventListener("message", e => {
-    switch (count++) {
-    case 0:
-      ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
+    let testWin = window.open("file_bug1375833.html");
+    let count = 0;
+    let webNav, shistory;
+    let frameDocShellId;
+    let chromeScript = null;
+    if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+      chromeScript = SpecialPowers.loadChromeScript(() => {
+        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-      webNav = SpecialPowers.wrap(testWin)
-               .docShell
-               .QueryInterface(SpecialPowers.Ci.nsIWebNavigation);
-      shistory = webNav.sessionHistory;
-      is(shistory.count, 2, "check history length");
-      is(shistory.index, 1, "check history index");
+        function doSend(message, fn) {
+          try {
+            // eslint-disable-next-line no-undef
+            sendAsyncMessage(message, {success: true, value: fn()});
+          } catch(_) {
+            // eslint-disable-next-line no-undef
+            sendAsyncMessage(message, {success: false});
+          }
+        }
 
-      frameDocShellId = String(getFrameDocShell().historyID);
-      ok(frameDocShellId, "sanity check for docshell ID");
-
-      testWin.location.reload();
-      break;
-    case 1:
-      ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
-      is(shistory.count, 4, "check history length");
-      is(shistory.index, 3, "check history index");
-
-      let newFrameDocShellId = String(getFrameDocShell().historyID);
-      ok(newFrameDocShellId, "sanity check for docshell ID");
-      is(newFrameDocShellId, frameDocShellId, "check docshell ID remains after reload");
-
-      let entry = shistory.legacySHistory.getEntryAtIndex(shistory.index);
-      let frameEntry = entry.GetChildAt(0);
-      is(String(frameEntry.docshellID), frameDocShellId, "check newly added shentry uses the same docshell ID");
-
-      webNav.goBack();
-      break;
-    case 2:
-      ok(e.data.endsWith("file_bug1375833-frame1.html"), "check location");
-      is(shistory.count, 4, "check history length");
-      is(shistory.index, 2, "check history index");
-
-      webNav.goBack();
-      break;
-    case 3:
-      ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
-      is(shistory.count, 4, "check history length");
-      is(shistory.index, 1, "check history index");
-
-      webNav.goBack();
-      break;
-    case 4:
-      ok(e.data.endsWith("file_bug1375833-frame1.html"), "check location");
-      is(shistory.count, 4, "check history length");
-      is(shistory.index, 0, "check history index");
-
-      testWin.close();
-      SimpleTest.finish();
+        // eslint-disable-next-line no-undef
+        addMessageListener("test1", index => {
+          doSend("test1", () => {
+            let win = Services.wm.getMostRecentWindow("navigator:browser");
+            let sessionHistory = win.gBrowser.selectedBrowser.browsingContext.sessionHistory;
+            let entry = shistory.getEntryAtIndex(sessionHistory.index);
+            let frameEntry = entry.GetChildAt(0);
+            return String(frameEntry.docshellID);
+          })
+        });
+      });
     }
-  });
 
-  function getFrameDocShell() {
-    return SpecialPowers.wrap(testWin.window[0]).docShell;
-  }
+    window.addEventListener("message", async e => {
+      switch (count++) {
+        case 0:
+          ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
+
+          webNav = SpecialPowers.wrap(testWin)
+                                .docShell
+                                .QueryInterface(SpecialPowers.Ci.nsIWebNavigation);
+          shistory = webNav.sessionHistory;
+          is(shistory.count, 2, "check history length");
+          is(shistory.index, 1, "check history index");
+
+          frameDocShellId = String(getFrameDocShell().historyID);
+          ok(frameDocShellId, "sanity check for docshell ID");
+
+          testWin.location.reload();
+          break;
+        case 1:
+          ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
+          is(shistory.count, 4, "check history length");
+          is(shistory.index, 3, "check history index");
+
+          let newFrameDocShellId = String(getFrameDocShell().historyID);
+          ok(newFrameDocShellId, "sanity check for docshell ID");
+          is(newFrameDocShellId, frameDocShellId, "check docshell ID remains after reload");
+
+          if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+            let entry = shistory.legacySHistory.getEntryAtIndex(shistory.index);
+            let frameEntry = entry.GetChildAt(0);
+            is(String(frameEntry.docshellID), frameDocShellId, "check newly added shentry uses the same docshell ID");
+          } else {
+            let p = chromeScript.promiseOneMessage("test1");
+            chromeScript.sendAsyncMessage("test1", shistory.index);
+            let result = await p;
+            ok(result.success, "legacySHistory worked around ok");
+            is(result.value, frameDocShellId, "check newly added shentry uses the same docshell ID");
+          }
+
+          webNav.goBack();
+          break;
+        case 2:
+          ok(e.data.endsWith("file_bug1375833-frame1.html"), "check location");
+          is(shistory.count, 4, "check history length");
+          is(shistory.index, 2, "check history index");
+
+          webNav.goBack();
+          break;
+        case 3:
+          ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
+          is(shistory.count, 4, "check history length");
+          is(shistory.index, 1, "check history index");
+
+          webNav.goBack();
+          break;
+        case 4:
+          ok(e.data.endsWith("file_bug1375833-frame1.html"), "check location");
+          is(shistory.count, 4, "check history length");
+          is(shistory.index, 0, "check history index");
+
+          if (chromeScript) {
+            chromeScript.destroy();
+          }
+          testWin.close();
+          SimpleTest.finish();
+      }
+    });
+
+    function getFrameDocShell() {
+      return SpecialPowers.wrap(testWin.window[0]).docShell;
+    }
 
   </script>
 </head>
