@@ -391,3 +391,10 @@ tasks.register("githubLintDetektDetails", GithubDetailsTask) {
 
 - [Detekt Results]({reportsUrl}/detekt.html)"""
 }
+
+tasks.register("testToolsDir", Exec) {
+    group = "verification"
+    description = "Run tests in the tools/ directory."
+    workingDir = "tools"
+    commandLine = ["python3", "test_get_cross_repo_hashes.py"]
+}

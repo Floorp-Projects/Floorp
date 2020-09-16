@@ -3,18 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-"""See USAGE for details.
+"""A script to help build fenix with a local ac or ac with a local GV.
+See USAGE for details.
+
+This script has some fragile hard-coded bits: these are documented in the
+test file.
 
 Potential script improvements:
-- (later) Support more than nightly
+- (later) Support more than AC nightly builds and GV nightly builds
 - (later) Would this be more usable as a website?
-
-Fragile assumptions in implementation:
-- Hard-coded path: AndroidComponents.kt
-- Hard-coded format: AndroidComponents.kt
-- Hard-coded path: Gecko.kt
-- Hard-coded format: Gecko.kt
-- Hard-coded format: POM XML
 """
 
 import os
