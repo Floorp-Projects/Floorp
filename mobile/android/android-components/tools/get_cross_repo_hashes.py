@@ -6,7 +6,6 @@
 """See USAGE for details.
 
 Potential script improvements:
-- AUTOMATE: fenix check out -> a-c hash
 - (later) Support more than nightly
 - (later) Would this be more usable as a website?
   Would require automating extraction of a-c hash
@@ -27,11 +26,11 @@ from urllib.request import urlopen
 SCRIPT_NAME=os.path.basename(__file__)
 SCRIPT_DIR=os.path.dirname(os.path.realpath(__file__))
 
-USAGE="""usage: ./{script_name} [-h] [--help]
-  (no args): maps the currently checked out ac revision to a valid mc
-             revision.
-  --help, -h: prints this information and exits.
+USAGE="""usage: ./{script_name} [-h] [--help] fenix_path|--no-fenix
+  fenix_path: a path to a local fenix repository; see also --no-fenix
+  --no-fenix: disables mapping a fenix checkout -> ac hash; see also fenix_path
 
+  --help, -h: prints this information and exits.
 
 Purpose: when building across repositories, e.g. fenix with a local a-c,
 sometimes the build will fail with errors unrelated to your changes because of
@@ -82,6 +81,16 @@ def print_usage(exit=False):
 def maybe_display_usage():
     if '--help' in sys.argv or '-h' in sys.argv:
         print_usage(exit=True)
+
+def validate_args():
+    if len(sys.argv) != 2: # argv[0] == script invocation.
+        # We intentionally require one or the other to ensure folks are opting in to the chosen behavior.
+        raise Exception('expected one argument: fenix_path | --no-fenix. See usage above.')
+
+    if sys.argv[1] == '--no-fenix':
+        return None, True
+    else:
+        return sys.argv[1], False
 
 ### SECTION: UTILITIES ###
 def extract_str_inside_quotes(str_with_quotes):
@@ -137,7 +146,8 @@ def fenix_checkout_to_ac_hash(fenix_path):
 
     pom_url = TEMPLATE_POM_URL_AC_NIGHTLY.format(version=ac_version)
     pom, debug_pom_url = fetch_pom(pom_url)
-    return get_hash_from_pom(pom, debug_pom_url)
+    ac_hash = get_hash_from_pom(pom, debug_pom_url)
+    return ac_hash, ac_version
 
 ### SECTION: ac -> mc ###
 def validate_gv_nightly_version(version):
@@ -177,15 +187,18 @@ def ac_checkout_to_mc_hash(ac_root):
     return mc_hash, releasev, betav, nightlyv
 
 ### SECTION: MAIN ###
-def main_repo_to_hash():
-    print('fenix checkout -> ac hash')
-    print(INDENT + 'must be done manually. See --help for instructions')
-    print(INDENT + 'WARNING: if a different ac revision is found in fenix than')
-    print(INDENT + 'the currently checked out one, this script will likely need')
-    print(INDENT + 'to be rerun after the new revision is checked out')
+def main_repo_to_hash(fenix_path, is_no_fenix_passed):
+    header = 'fenix_checkout -> ac hash'
+    if is_no_fenix_passed:
+        print('Skipping {}'.format(header))
+    else:
+        ac_hash, ac_version = fenix_checkout_to_ac_hash(fenix_path)
+        print(header)
+        print(INDENT + ac_hash.decode('utf-8'))
+        print(INDENT + 'derived from:')
+        print(INDENT2 + 'ac version: {}'.format(ac_version))
     print()
 
-    # ac checkout -> mc hash
     mc_hash, releasev, betav, nightlyv, = ac_checkout_to_mc_hash(PATH_AC_ROOT)
     print('ac checkout -> mc hash')
     print(INDENT + mc_hash.decode('utf-8'))
@@ -196,7 +209,8 @@ def main_repo_to_hash():
 
 def main():
     maybe_display_usage()
-    main_repo_to_hash()
+    fenix_path, is_no_fenix_passed = validate_args()
+    main_repo_to_hash(fenix_path, is_no_fenix_passed)
 
 if __name__ == '__main__':
     try:
