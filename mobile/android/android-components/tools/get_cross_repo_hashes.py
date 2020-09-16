@@ -72,6 +72,7 @@ VERSION_MIN_AC_NIGHTLY='59.0.20200914093656'
 VERSION_MIN_AC_NIGHTLY_BUGFIX=VERSION_MIN_AC_NIGHTLY.split('.')[2]
 VERSION_MIN_GV_NIGHTLY_MAJOR='71' # it may actually be some intermediate v70 that the hash was added.
 
+PATH_AC_ROOT=os.path.join(SCRIPT_DIR, '..')
 PATH_AC_VERSION=os.path.join('buildSrc', 'src', 'main', 'java', 'AndroidComponents.kt')
 PATH_GV_VERSION=os.path.join('buildSrc', 'src', 'main', 'java', 'Gecko.kt')
 
@@ -186,8 +187,7 @@ def ac_checkout_to_gv_versions(ac_root):
     return release_version, beta_version, nightly_version
 
 def ac_checkout_to_mc_hash(ac_root):
-    gv_version_path = os.path.join(SCRIPT_DIR, '..')
-    releasev, betav, nightlyv = ac_checkout_to_gv_versions(gv_version_path)
+    releasev, betav, nightlyv = ac_checkout_to_gv_versions(ac_root)
 
     validate_gv_nightly_version(nightlyv)
     mc_hash = gv_nightly_version_to_mc_hash(nightlyv)
@@ -204,7 +204,7 @@ def main_mode_default():
     print()
 
     # ac checkout -> mc hash
-    mc_hash, releasev, betav, nightlyv, = ac_checkout_to_mc_hash('.')
+    mc_hash, releasev, betav, nightlyv, = ac_checkout_to_mc_hash(PATH_AC_ROOT)
     print('ac checkout -> mc hash')
     print(INDENT + mc_hash.decode('utf-8'))
     print(INDENT + 'derived from:')
