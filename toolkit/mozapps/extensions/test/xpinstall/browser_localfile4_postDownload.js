@@ -2,13 +2,12 @@
 // Tests installing an add-on from a local file with file origins disabled.
 // This should be blocked by the origin allowed check.
 function test() {
-  // prompt prior to download
-  SpecialPowers.pushPrefEnv({
-    set: [["extensions.postDownloadThirdPartyPrompt", false]],
-  });
-
   Harness.installBlockedCallback = allow_blocked;
   Harness.installsCompletedCallback = finish_test;
+  // Prevent the Harness from ending the test on download cancel.
+  Harness.downloadCancelledCallback = () => {
+    return false;
+  };
   Harness.setup();
 
   // Disable local file install, installing by file referrer should be blocked.
