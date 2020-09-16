@@ -210,7 +210,7 @@ class BrowserToolbarView(
     fun expand() {
         when (settings.toolbarPosition) {
             ToolbarPosition.BOTTOM -> {
-                (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
+                (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
                     // behavior can be null if the "Scroll to hide toolbar" setting is toggled off.
                     (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(view)
                 }
