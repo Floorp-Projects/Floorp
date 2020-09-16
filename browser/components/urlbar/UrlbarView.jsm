@@ -372,6 +372,7 @@ class UrlbarView {
   clear() {
     this._rows.textContent = "";
     this.panel.setAttribute("noresults", "true");
+    this._selectElement(null, { updateInput: false });
   }
 
   /**
@@ -1377,8 +1378,11 @@ class UrlbarView {
     this._setAccessibleFocus(setAccessibleFocus && item);
     this._selectedElement = item;
 
+    let result = item?.closest(".urlbarView-row")?.result;
     if (updateInput) {
-      this.input.setValueFromResult(item?.result);
+      this.input.setValueFromResult(result);
+    } else {
+      this.input.setResultForCurrentValue(result);
     }
   }
 
