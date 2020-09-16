@@ -17,7 +17,6 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   await selectNode("#test1", inspector);
-  await getRuleViewSelectorHighlighterIcon(view, "element", 1);
   await elementStyleInherit(inspector, view);
 });
 
