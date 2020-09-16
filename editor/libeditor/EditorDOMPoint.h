@@ -1100,7 +1100,7 @@ class EditorDOMRangeBase final {
   }
   template <typename OtherRangeType>
   bool operator!=(const OtherRangeType& aOther) const {
-    return *this == aOther;
+    return !(*this == aOther);
   }
 
   EditorDOMRangeInTexts GetAsInTexts() const {
