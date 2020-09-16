@@ -32,6 +32,17 @@ function IsLinux() {
            !navigator.appVersion.includes("Android");
 }
 
+function IsWindows() {
+    var os = "";
+
+    try {
+        os = Cc["@mozilla.org/xre/app-info;1"]
+          .getService(SpecialPowers.Ci.nsIXULRuntime).OS;
+    } catch (e) {}
+
+    return os.indexOf("WINNT") == 0;
+}
+
 function IsAzureSkia() {
   var enabled = false;
 
@@ -5664,9 +5675,10 @@ g.addColorStop(0, 'rgba(255,255,0, 0)');
 g.addColorStop(1, 'rgba(0,0,255, 1)');
 ctx.fillStyle = g;
 ctx.fillRect(0, 0, 100, 50);
-isPixel(ctx, 25,25, 191,191,63,63, 3);
-isPixel(ctx, 50,25, 127,127,127,127, 3);
-isPixel(ctx, 75,25, 63,63,191,191, 3);
+// Following tests fail on Windows hardware (datacenter and local laptops), see bug 1657707
+if (!IsWindows()) isPixel(ctx, 25,25, 191,191,63,63, 3);
+if (!IsWindows()) isPixel(ctx, 50,25, 127,127,127,127, 3);
+if (!IsWindows()) isPixel(ctx, 75,25, 63,63,191,191, 3);
 
 
 }

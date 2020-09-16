@@ -55,6 +55,10 @@ mochitest-plain:
     schedules-component: mochitest-plain
     loopback-video: true
     tier: default
+    virtualization:
+        by-test-platform:
+            windows10-64.*: hardware
+            default: virtual
     variants:
         by-test-platform:
             linux1804-64/opt: ['fission-xorigin']
@@ -228,7 +232,10 @@ mochitest-plain-gpu:
     fission-run-on-projects: []
     fission-tier: 2
     tier: default
-    virtualization: virtual-with-gpu
+    virtualization:
+        by-test-platform:
+            windows10-64.*: hardware
+            default: virtual-with-gpu
     e10s: true
     mozharness:
         mochitest-flavor: plain
@@ -249,7 +256,10 @@ mochitest-chrome-gpu:
     fission-run-on-projects: []
     fission-tier: 2
     tier: default
-    virtualization: virtual-with-gpu
+    virtualization:
+        by-test-platform:
+            windows10-64.*: hardware
+            default: virtual-with-gpu
     e10s: true
     run-on-projects:
         by-test-platform:
