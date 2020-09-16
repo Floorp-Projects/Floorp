@@ -2303,6 +2303,10 @@ GeckoDriver.prototype.getElementText = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().getElementText(webEl);
+  }
+
   switch (this.context) {
     case Context.Chrome:
       // for chrome, we look at text nodes, and any node with a "label" field

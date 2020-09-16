@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  atom: "chrome://marionette/content/atom.js",
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   evaluate: "chrome://marionette/content/evaluate.js",
@@ -84,6 +85,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
           break;
         case "MarionetteFrameParent:getElementTagName":
           result = await this.getElementTagName(data);
+          break;
+        case "MarionetteFrameParent:getElementText":
+          result = await this.getElementText(data);
           break;
         case "MarionetteFrameParent:getElementValueOfCssProperty":
           result = await this.getElementValueOfCssProperty(data);
@@ -181,6 +185,15 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const { webEl } = options;
     const el = this.seenEls.get(webEl);
     return el.tagName.toLowerCase();
+  }
+
+  /**
+   * Get the text content for the given element.
+   */
+  async getElementText(options = {}) {
+    const { webEl } = options;
+    const el = this.seenEls.get(webEl);
+    return atom.getElementText(el, this.content);
   }
 
   /**
