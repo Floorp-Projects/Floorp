@@ -11,12 +11,7 @@ server.registerPathHandler("/dummy", (request, response) => {
 add_task(async function test_userContextId_webrequest() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: [
-        "webRequest",
-        "webRequestBlocking",
-        "<all_urls>",
-        "cookies",
-      ],
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
     },
     background() {
       browser.webRequest.onBeforeRequest.addListener(
@@ -25,38 +20,6 @@ add_task(async function test_userContextId_webrequest() {
             details.cookieStoreId,
             "firefox-container-2",
             "cookieStoreId is set"
-          );
-          browser.test.notifyPass("webRequest");
-        },
-        { urls: ["<all_urls>"] },
-        ["blocking"]
-      );
-    },
-  });
-  await extension.startup();
-
-  let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/dummy",
-    { userContextId: 2 }
-  );
-  await extension.awaitFinish("webRequest");
-
-  await extension.unload();
-  await contentPage.close();
-});
-
-add_task(async function test_userContextId_webrequest_nopermission() {
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
-    },
-    background() {
-      browser.webRequest.onBeforeRequest.addListener(
-        async details => {
-          browser.test.assertEq(
-            details.cookieStoreId,
-            undefined,
-            "cookieStoreId not set, requires cookies permission"
           );
           browser.test.notifyPass("webRequest");
         },

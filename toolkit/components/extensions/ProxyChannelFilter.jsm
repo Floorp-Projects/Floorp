@@ -309,7 +309,7 @@ class ProxyChannelFilter {
 
       ...extraData,
     };
-    if (originAttributes && this.extension.hasPermission("cookies")) {
+    if (originAttributes) {
       data.cookieStoreId = getCookieStoreIdForOriginAttributes(
         originAttributes
       );
