@@ -160,9 +160,9 @@ var UrlbarUtils = {
   // when the user picks them.  Depending on the use case, a keyword offer can
   // visually show or hide the keyword itself in its result.  For example,
   // typing "@" by itself will show keyword offers for all engines with @
-  // aliases, and those results will preview their search modes. When a keyword
-  // offer is a heuristic -- like an autofilled @  alias -- usually it hides
-  // its keyword since the user is already typing it.
+  // aliases, and those results will visually show their keywords -- @google,
+  // @bing, etc.  When a keyword offer is a heuristic -- like an autofilled @
+  // alias -- usually it hides its keyword since the user is already typing it.
   KEYWORD_OFFER: {
     SHOW: 1,
     HIDE: 2,
