@@ -207,7 +207,7 @@ class DefaultAddonUpdater(
     ) {
         logger.info("onUpdatePermissionRequest $current")
 
-        val shouldGrantWithoutPrompt = Addon.localizePermissions(newPermissions).isEmpty()
+        val shouldGrantWithoutPrompt = Addon.localizePermissions(newPermissions, applicationContext).isEmpty()
         val shouldShowNotification =
                 updateStatusStorage.isPreviouslyAllowed(applicationContext, updated.id) || shouldGrantWithoutPrompt
 
@@ -306,7 +306,7 @@ class DefaultAddonUpdater(
 
     @VisibleForTesting
     internal fun createContentText(newPermissions: List<String>): String {
-        val validNewPermissions = Addon.localizePermissions(newPermissions)
+        val validNewPermissions = Addon.localizePermissions(newPermissions, applicationContext)
 
         val string = if (validNewPermissions.size == 1) {
             R.string.mozac_feature_addons_updater_notification_content_singular
@@ -317,7 +317,7 @@ class DefaultAddonUpdater(
         var permissionIndex = 1
         val permissionsText =
                 validNewPermissions.joinToString(separator = "\n") {
-                "${permissionIndex++}-${applicationContext.getString(it)}"
+                "${permissionIndex++}-$it"
             }
         return "$contentText:\n $permissionsText"
     }

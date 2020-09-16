@@ -37,9 +37,7 @@ class PermissionsDetailsActivity : AppCompatActivity(), View.OnClickListener {
     private fun bindPermissions(addon: Addon) {
         val recyclerView = findViewById<RecyclerView>(R.id.add_ons_permissions)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        val sortedPermissions = addon.translatePermissions().map { stringId ->
-            getString(stringId)
-        }.sorted()
+        val sortedPermissions = addon.translatePermissions(this).sorted()
         recyclerView.adapter = AddonPermissionsAdapter(sortedPermissions)
     }
 

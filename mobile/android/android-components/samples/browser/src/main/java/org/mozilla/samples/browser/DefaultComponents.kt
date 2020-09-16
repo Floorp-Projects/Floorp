@@ -177,7 +177,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         AddonCollectionProvider(
             applicationContext,
             client,
-            collectionName = "3204bb44a6ef44d39ee34917f28055",
+            collectionName = "83a9cccfe6e24a34bd7b155ff9ee32",
             maxCacheAgeInMinutes = DAY_IN_MINUTES
         )
     }

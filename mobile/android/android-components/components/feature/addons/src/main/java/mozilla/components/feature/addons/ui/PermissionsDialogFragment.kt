@@ -183,12 +183,11 @@ class PermissionsDialogFragment : AppCompatDialogFragment() {
     internal fun buildPermissionsText(): String {
         var permissionsText =
             getString(R.string.mozac_feature_addons_permissions_dialog_subtitle) + "\n\n"
-        val permissions = addon.translatePermissions()
+        val permissions = addon.translatePermissions(requireContext())
 
         permissions.forEachIndexed { index, item ->
             val brakeLine = if (index + 1 != permissions.size) "\n\n" else ""
-            val permissionText = requireContext().getString(item)
-            permissionsText += "• $permissionText $brakeLine"
+            permissionsText += "• $item $brakeLine"
         }
         return permissionsText
     }
