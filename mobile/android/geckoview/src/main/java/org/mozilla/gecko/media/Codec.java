@@ -312,14 +312,12 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
         private synchronized void onRelease(final Sample sample, final boolean render) {
             final Output output = mSentOutputs.poll();
-            if (output == null) {
-                if (DEBUG) {
-                    Log.d(LOGTAG, sample + " already released");
-                }
-                return;
+            if (output != null) {
+                mCodec.releaseOutputBuffer(output.index, render);
+                mSamplePool.recycleOutput(output.sample);
+            } else if (DEBUG) {
+                Log.d(LOGTAG, sample + " already released");
             }
-            mCodec.releaseOutputBuffer(output.index, render);
-            mSamplePool.recycleOutput(output.sample);
 
             sample.dispose();
         }
