@@ -328,4 +328,42 @@ void StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
   aAttributes.SetPartitionKey(aFirstPartyURI);
 }
 
+// static
+bool StoragePrincipalHelper::GetOriginAttributesForHSTS(
+    nsIChannel* aChannel, OriginAttributes& aAttributes) {
+  if (!GetOriginAttributesForNetworkState(aChannel, aAttributes)) {
+    return false;
+  }
+
+  if (aAttributes.mPartitionKey.IsEmpty() ||
+      aAttributes.mPartitionKey[0] != '(') {
+    return true;
+  }
+
+  nsAString::const_iterator start, end;
+  aAttributes.mPartitionKey.BeginReading(start);
+  aAttributes.mPartitionKey.EndReading(end);
+
+  MOZ_DIAGNOSTIC_ASSERT(*start == '(');
+  start++;
+
+  nsAString::const_iterator iter(start);
+  bool ok = FindCharInReadable(',', iter, end);
+  MOZ_DIAGNOSTIC_ASSERT(ok);
+
+  nsAutoString scheme;
+  scheme.Assign(Substring(start, iter));
+
+  if (!scheme.EqualsLiteral("https")) {
+    return true;
+  }
+
+  nsAutoString key;
+  key.AssignLiteral("(http");
+  key.Append(Substring(iter, end));
+  aAttributes.SetPartitionKey(key);
+
+  return true;
+}
+
 }  // namespace mozilla
