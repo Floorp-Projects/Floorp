@@ -118,7 +118,13 @@ BEETMOVER_ACTION_SCOPES = {
 
 
 """Known balrog actions."""
-BALROG_ACTIONS = ('submit-locale', 'submit-toplevel', 'schedule')
+BALROG_ACTIONS = (
+    'submit-locale',
+    'submit-toplevel',
+    'schedule',
+    'v2-submit-locale',
+    'v2-submit-toplevel'
+)
 
 """Map balrog scope aliases to sets of projects.
 

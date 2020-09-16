@@ -116,7 +116,7 @@ def make_task_description(config, jobs):
             'worker': {
                 'implementation': 'balrog',
                 'upstream-artifacts': upstream_artifacts,
-                'balrog-action': 'submit-locale',
+                'balrog-action': 'v2-submit-locale',
                 'suffixes': ['', '-No-WNP'] if job.get('update-no-wnp') else [''],
             },
             'dependencies': {'beetmover': dep_job.label},
