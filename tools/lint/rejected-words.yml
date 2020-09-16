@@ -443,6 +443,7 @@ avoid-blacklist-and-whitelist:
         - toolkit/mozapps/extensions/test/xpinstall/browser_doorhanger_installs.js
         - toolkit/mozapps/extensions/test/xpinstall/browser_localfile3.js
         - toolkit/mozapps/extensions/test/xpinstall/browser_localfile4.js
+        - toolkit/mozapps/extensions/test/xpinstall/browser_localfile4_postDownload.js
         - toolkit/mozapps/extensions/test/xpinstall/browser_whitelist.js
         - toolkit/mozapps/extensions/test/xpinstall/head.js
         - toolkit/xre/nsAppRunner.cpp
