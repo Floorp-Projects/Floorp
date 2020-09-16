@@ -361,6 +361,7 @@ bool TrialInliner::tryInlining() {
       case JSOp::CallIter:
       case JSOp::FunCall:
       case JSOp::New:
+      case JSOp::SuperCall:
         if (!maybeInlineCall(icScript_->icEntry(icIndex), loc)) {
           return false;
         }
