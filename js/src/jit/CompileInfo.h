@@ -170,6 +170,7 @@ class CompileInfo {
         hadOverflowBailout_(script->hadOverflowBailout()),
         hadFrequentBailouts_(script->hadFrequentBailouts()),
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
+        isDerivedClassConstructor_(script->isDerivedClassConstructor()),
         inlineScriptTree_(inlineScriptTree) {
     MOZ_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOp::LoopHead);
 
@@ -462,6 +463,8 @@ class CompileInfo {
   bool hadFrequentBailouts() const { return hadFrequentBailouts_; }
   bool mayReadFrameArgsDirectly() const { return mayReadFrameArgsDirectly_; }
 
+  bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
+
  private:
   unsigned nimplicit_;
   unsigned nargs_;
@@ -485,6 +488,8 @@ class CompileInfo {
   bool hadFrequentBailouts_;
 
   bool mayReadFrameArgsDirectly_;
+
+  bool isDerivedClassConstructor_;
 
   InlineScriptTree* inlineScriptTree_;
 

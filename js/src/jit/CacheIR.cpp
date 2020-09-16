@@ -9142,6 +9142,7 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
   }
 
   if (!protov.isObject()) {
+    *skipAttach = true;
     return true;
   }
 

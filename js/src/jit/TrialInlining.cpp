@@ -360,6 +360,7 @@ bool TrialInliner::tryInlining() {
       case JSOp::CallIgnoresRv:
       case JSOp::CallIter:
       case JSOp::FunCall:
+      case JSOp::New:
         if (!maybeInlineCall(icScript_->icEntry(icIndex), loc)) {
           return false;
         }
