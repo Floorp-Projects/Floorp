@@ -275,8 +275,6 @@ using namespace mozilla::a11y;
   } else {
     mStartElem = root;
   }
-  MOZ_ASSERT(!mStartElem.IsNull(),
-             "Performing search with null gecko accessible!");
 
   mWebArea = root;
 
