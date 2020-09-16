@@ -55,7 +55,11 @@ SharedRGBImage::SharedRGBImage(ImageClient* aCompositable)
   MOZ_COUNT_CTOR(SharedRGBImage);
 }
 
-SharedRGBImage::~SharedRGBImage() { MOZ_COUNT_DTOR(SharedRGBImage); }
+SharedRGBImage::~SharedRGBImage() {
+  MOZ_COUNT_DTOR(SharedRGBImage);
+  NS_ReleaseOnMainThread("SharedRGBImage::mSourceSurface",
+                         mSourceSurface.forget());
+}
 
 bool SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
   static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
