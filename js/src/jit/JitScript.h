@@ -120,6 +120,7 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   static constexpr Offset offsetOfWarmUpCount() {
     return offsetof(ICScript, warmUpCount_);
   }
+  static constexpr Offset offsetOfDepth() { return offsetof(ICScript, depth_); }
 
   static constexpr Offset offsetOfICEntries() { return sizeof(ICScript); }
   uint32_t numICEntries() const {
