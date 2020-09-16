@@ -124,7 +124,10 @@ class UrlbarResult {
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         switch (this.payload.keywordOffer) {
           case UrlbarUtils.KEYWORD_OFFER.SHOW:
-            return [this.payload.keyword, this.payloadHighlights.keyword];
+            if (!UrlbarPrefs.get("update2")) {
+              return [this.payload.keyword, this.payloadHighlights.keyword];
+            }
+          // Fall through.
           case UrlbarUtils.KEYWORD_OFFER.HIDE:
             return ["", []];
         }
