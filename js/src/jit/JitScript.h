@@ -344,6 +344,9 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
     // inlined into another script. This is cleared when the script's type
     // information or caches are cleared.
     bool ionCompiledOrInlined : 1;
+
+    // True if this script entered Ion via OSR at a loop header.
+    bool hadIonOSR : 1;
   };
   Flags flags_ = {};  // Zero-initialize flags.
 
@@ -417,6 +420,9 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   void setIonCompiledOrInlined() { flags_.ionCompiledOrInlined = true; }
   void clearIonCompiledOrInlined() { flags_.ionCompiledOrInlined = false; }
   bool ionCompiledOrInlined() const { return flags_.ionCompiledOrInlined; }
+
+  void setHadIonOSR() { flags_.hadIonOSR = true; }
+  bool hadIonOSR() const { return flags_.hadIonOSR; }
 
   RecompileInfoVector* maybeInlinedCompilations(
       const js::AutoSweepJitScript& sweep) {
