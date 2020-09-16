@@ -1516,6 +1516,7 @@
   shared: false
   transpile: true
   cost_estimate: 3
+  custom_writer: true
   args:
     callee: ObjId
     argc: Int32Id
@@ -1551,6 +1552,7 @@
   shared: false
   transpile: true
   cost_estimate: 4
+  custom_writer: true
   args:
     callee: ObjId
     argc: Int32Id
