@@ -15,6 +15,7 @@
   skin/classic/mozapps/extensions/category-available.svg     (../../shared/extensions/category-available.svg)
   skin/classic/mozapps/extensions/extension.svg              (../../shared/extensions/extension.svg)
   skin/classic/mozapps/extensions/recommended.svg            (../../shared/extensions/recommended.svg)
+  skin/classic/mozapps/extensions/line.svg                   (../../shared/extensions/line.svg)
 #ifndef ANDROID
   skin/classic/mozapps/extensions/rating-star.svg            (../../shared/extensions/rating-star.svg)
 #endif
