@@ -83,7 +83,8 @@ using namespace dom;
 #define kInsertCookie "_moz_Insert Here_moz_"
 
 // some little helpers
-static bool FindIntegerAfterString(const char* aLeadingString, nsCString& aCStr,
+static bool FindIntegerAfterString(const char* aLeadingString,
+                                   const nsCString& aCStr,
                                    int32_t& foundNumber);
 static void RemoveFragComments(nsCString& aStr);
 
@@ -1175,7 +1176,7 @@ nsresult HTMLEditor::PrepareHTMLTransferable(nsITransferable** aTransferable) {
   return NS_OK;
 }
 
-bool FindIntegerAfterString(const char* aLeadingString, nsCString& aCStr,
+bool FindIntegerAfterString(const char* aLeadingString, const nsCString& aCStr,
                             int32_t& foundNumber) {
   // first obtain offsets from cfhtml str
   int32_t numFront = aCStr.Find(aLeadingString);
@@ -1213,7 +1214,8 @@ void RemoveFragComments(nsCString& aStr) {
   }
 }
 
-nsresult HTMLEditor::ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,
+nsresult HTMLEditor::ParseCFHTML(const nsCString& aCfhtml,
+                                 char16_t** aStuffToPaste,
                                  char16_t** aCfcontext) {
   // First obtain offsets from cfhtml str.
   int32_t startHTML, endHTML, startFragment, endFragment;
