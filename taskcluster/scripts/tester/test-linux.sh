@@ -73,10 +73,24 @@ fi
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
+if [ $MOZ_ENABLE_WAYLAND ]; then
+  NEED_XVFB=true
+fi
+
 # make sure artifact directories exist
 mkdir -p "$WORKSPACE/logs"
 mkdir -p "$WORKING_DIR/artifacts/public"
 mkdir -p "$WORKSPACE/build/blobber_upload_dir"
+
+cleanup_mutter() {
+    local mutter_pids=`ps aux | grep 'mutter --wayland' | grep -v grep | awk '{print $2}'`
+    if [ "$mutter_pids" != "" ]; then
+        echo "Killing the following Mutter processes: $mutter_pids"
+        sudo kill $mutter_pids
+    else
+        echo "No Mutter processes to kill"
+    fi
+}
 
 cleanup() {
     local rv=$?
@@ -86,6 +100,9 @@ cleanup() {
     fi
     if $NEED_XVFB; then
         cleanup_xvfb
+    fi
+    if [ $MOZ_ENABLE_WAYLAND ]; then
+        cleanup_mutter
     fi
     exit $rv
 }
@@ -138,6 +155,10 @@ if $NEED_XVFB; then
     # note that this file is not available when run under native-worker
     . $HOME/scripts/xvfb.sh
     start_xvfb '1600x1200x24' 0
+    if [ $MOZ_ENABLE_WAYLAND ]; then
+        mutter --wayland &
+        export WAYLAND_DISPLAY=wayland-0
+    fi
 fi
 
 if $START_VNC; then
@@ -151,7 +172,13 @@ if $NEED_WINDOW_MANAGER; then
         echo DESKTOP_SESSION=ubuntu > $HOME/.xsessionrc
     elif [ $DISTRIBUTION == "Ubuntu" ] && [ $RELEASE == "18.04" ]; then
         echo export DESKTOP_SESSION=gnome > $HOME/.xsessionrc
-        echo export XDG_SESSION_TYPE=x11 >> $HOME/.xsessionrc
+        echo export XDG_CURRENT_DESKTOP=GNOME > $HOME/.xsessionrc
+        if [ $MOZ_ENABLE_WAYLAND ]; then
+            echo export XDG_SESSION_TYPE=wayland >> $HOME/.xsessionrc
+            echo export XDG_RUNTIME_DIR=/run/user/$(id -u) >> $HOME/.xsessionrc
+        else
+            echo export XDG_SESSION_TYPE=x11 >> $HOME/.xsessionrc
+        fi
     else
         :
     fi
