@@ -30,6 +30,9 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
     return true;
   }
 
+  // Baseline shouldn't attempt trial inlining in scripts that are too large.
+  MOZ_ASSERT(script->length() <= JitOptions.ionMaxScriptSize);
+
   const uint32_t MAX_INLINING_DEPTH = 4;
   if (icScript->depth() > MAX_INLINING_DEPTH) {
     return true;
@@ -218,15 +221,23 @@ bool TrialInliner::shouldInline(JSFunction* target, ICStub* stub,
 
   // Don't inline (direct) recursive calls. This still allows recursion if
   // called through another function (f => g => f).
-  if (script_ == target->nonLazyScript()) {
+  JSScript* targetScript = target->nonLazyScript();
+  if (script_ == targetScript) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: recursion");
     return false;
   }
 
   // Don't inline if the callee has a loop that was hot enough to enter Warp
   // via OSR. This helps prevent getting stuck in Baseline code for a long time.
-  if (target->nonLazyScript()->jitScript()->hadIonOSR()) {
+  if (targetScript->jitScript()->hadIonOSR()) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: had OSR");
+    return false;
+  }
+
+  // Ensure the total bytecode size does not exceed ionMaxScriptSize.
+  size_t newTotalSize = root_->totalBytecodeSize() + targetScript->length();
+  if (newTotalSize > JitOptions.ionMaxScriptSize) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: total size too big");
     return false;
   }
 
@@ -237,9 +248,9 @@ bool TrialInliner::shouldInline(JSFunction* target, ICStub* stub,
     return false;
   }
 
-  if (!JitOptions.isSmallFunction(target->nonLazyScript())) {
+  if (!JitOptions.isSmallFunction(targetScript)) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: Length is %u (maximum %u)",
-            unsigned(target->nonLazyScript()->length()),
+            unsigned(targetScript->length()),
             unsigned(JitOptions.smallFunctionMaxBytecodeLength));
     return false;
   }
@@ -302,6 +313,8 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
     return nullptr;
   }
   MOZ_ASSERT(result->numICEntries() == targetScript->numICEntries());
+
+  root_->addToTotalBytecodeSize(targetScript->length());
 
   JitSpew(JitSpew_WarpTrialInlining,
           "Outer ICScript: %p Inner ICScript: %p pcOffset: %u", icScript_,
