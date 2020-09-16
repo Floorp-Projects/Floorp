@@ -1944,6 +1944,12 @@ class SpecialPowersChild extends JSWindowActorChild {
     return debugsvc.assertionCount;
   }
 
+  /**
+   * @param arg one of the following:
+   *            - A URI string.
+   *            - A document node.
+   *            - A dictionary including a URL (`url`) and origin attributes (`attr`).
+   */
   _getPrincipalFromArg(arg) {
     let principal;
     let secMan = Services.scriptSecurityManager;
@@ -1992,6 +1998,13 @@ class SpecialPowersChild extends JSWindowActorChild {
     await this.sendQuery("SPPermissionManager", msg);
   }
 
+  /**
+   * @param type see nsIPermissionsManager::testPermissionFromPrincipal.
+   * @param arg one of the following:
+   *            - A URI string.
+   *            - A document node.
+   *            - A dictionary including a URL (`url`) and origin attributes (`attr`).
+   */
   async removePermission(type, arg) {
     let principal = this._getPrincipalFromArg(arg);
     if (principal.isSystemPrincipal) {
