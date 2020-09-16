@@ -3440,6 +3440,69 @@ EditorDOMRange WSRunScanner::GetRangeForDeletingBlockElementBoundaries(
   return range;
 }
 
+// static
+EditorDOMRange
+WSRunScanner::GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
+    const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange) {
+  MOZ_ASSERT(aRange.IsPositionedAndValid());
+  MOZ_ASSERT(aRange.EndRef().IsSetAndValid());
+  MOZ_ASSERT(aRange.StartRef().IsSetAndValid());
+
+  const Element* editingHost = aHTMLEditor.GetActiveEditingHost();
+
+  EditorDOMRange result;
+  TextFragmentData textFragmentDataAtStart(aRange.StartRef(), editingHost);
+  const EditorDOMRangeInTexts invisibleLeadingWhiteSpacesAtStart =
+      textFragmentDataAtStart.GetNonCollapsedRangeInTexts(
+          textFragmentDataAtStart.InvisibleLeadingWhiteSpaceRangeRef());
+  if (invisibleLeadingWhiteSpacesAtStart.IsPositioned() &&
+      !invisibleLeadingWhiteSpacesAtStart.Collapsed()) {
+    MOZ_ASSERT(invisibleLeadingWhiteSpacesAtStart.StartRef().EqualsOrIsBefore(
+        aRange.StartRef()));
+    result.SetStart(invisibleLeadingWhiteSpacesAtStart.StartRef());
+  } else {
+    const EditorDOMRangeInTexts invisibleTrailingWhiteSpacesAtStart =
+        textFragmentDataAtStart.GetNonCollapsedRangeInTexts(
+            textFragmentDataAtStart.InvisibleTrailingWhiteSpaceRangeRef());
+    if (invisibleTrailingWhiteSpacesAtStart.IsPositioned() &&
+        !invisibleTrailingWhiteSpacesAtStart.Collapsed()) {
+      MOZ_ASSERT(
+          invisibleTrailingWhiteSpacesAtStart.StartRef().EqualsOrIsBefore(
+              aRange.StartRef()));
+      result.SetStart(invisibleTrailingWhiteSpacesAtStart.StartRef());
+    }
+  }
+  if (!result.StartRef().IsSet()) {
+    result.SetStart(aRange.StartRef());
+  }
+
+  TextFragmentData textFragmentDataAtEnd(aRange.EndRef(), editingHost);
+  const EditorDOMRangeInTexts invisibleLeadingWhiteSpacesAtEnd =
+      textFragmentDataAtEnd.GetNonCollapsedRangeInTexts(
+          textFragmentDataAtEnd.InvisibleTrailingWhiteSpaceRangeRef());
+  if (invisibleLeadingWhiteSpacesAtEnd.IsPositioned() &&
+      !invisibleLeadingWhiteSpacesAtEnd.Collapsed()) {
+    MOZ_ASSERT(aRange.EndRef().EqualsOrIsBefore(
+        invisibleLeadingWhiteSpacesAtEnd.EndRef()));
+    result.SetEnd(invisibleLeadingWhiteSpacesAtEnd.EndRef());
+  } else {
+    const EditorDOMRangeInTexts invisibleLeadingWhiteSpacesAtEnd =
+        textFragmentDataAtEnd.GetNonCollapsedRangeInTexts(
+            textFragmentDataAtEnd.InvisibleLeadingWhiteSpaceRangeRef());
+    if (invisibleLeadingWhiteSpacesAtEnd.IsPositioned() &&
+        !invisibleLeadingWhiteSpacesAtEnd.Collapsed()) {
+      MOZ_ASSERT(aRange.EndRef().EqualsOrIsBefore(
+          invisibleLeadingWhiteSpacesAtEnd.EndRef()));
+      result.SetEnd(invisibleLeadingWhiteSpacesAtEnd.EndRef());
+    }
+  }
+  if (!result.EndRef().IsSet()) {
+    result.SetEnd(aRange.EndRef());
+  }
+  MOZ_ASSERT(result.IsPositionedAndValid());
+  return result;
+}
+
 /******************************************************************************
  * Utilities for other things.
  ******************************************************************************/

@@ -2446,6 +2446,10 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
                                  nsIEditor::EStripWrappers aStripWrappers,
                                  AutoRangeArray& aRangesToDelete,
                                  SelectionWasCollapsed aSelectionWasCollapsed);
+  nsresult ComputeRangesToDeleteNonCollapsedRanges(
+      const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
+      SelectionWasCollapsed aSelectionWasCollapsed) const;
 
   /**
    * HandleDeleteTextAroundCollapsedRanges() handles deletion of collapsed
@@ -2577,7 +2581,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
    */
   bool ExtendRangeToIncludeInvisibleNodes(
       const HTMLEditor& aHTMLEditor, const nsFrameSelection* aFrameSelection,
-      nsRange& aRange);
+      nsRange& aRange) const;
 
   /**
    * ShouldDeleteHRElement() checks whether aHRElement should be deleted
@@ -2872,6 +2876,59 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       return EditActionResult(NS_ERROR_NOT_INITIALIZED);
     }
 
+    nsresult ComputeRangesToDelete(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete,
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
+        const {
+      switch (mMode) {
+        case Mode::JoinCurrentBlock:
+        case Mode::JoinOtherBlock:
+        case Mode::DeleteBRElement:
+          MOZ_ASSERT_UNREACHABLE(
+              "This mode should be handled in the other "
+              "ComputeRangesToDelete()");
+          return NS_ERROR_UNEXPECTED;
+        case Mode::JoinBlocksInSameParent: {
+          nsresult rv = ComputeRangesToJoinBlockElementsInSameParent(
+              aHTMLEditor, aDirectionAndAmount, aStripWrappers,
+              aRangesToDelete);
+          NS_WARNING_ASSERTION(
+              NS_SUCCEEDED(rv),
+              "AutoBlockElementsJoiner::"
+              "ComputeRangesToJoinBlockElementsInSameParent() failed");
+          return rv;
+        }
+        case Mode::DeleteContentInRanges: {
+          nsresult rv = ComputeRangesToDeleteContentInRanges(
+              aHTMLEditor, aDirectionAndAmount, aStripWrappers,
+              aRangesToDelete);
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                               "AutoBlockElementsJoiner::"
+                               "ComputeRangesToDeleteContentInRanges() failed");
+          return rv;
+        }
+        case Mode::DeleteNonCollapsedRanges: {
+          nsresult rv = ComputeRangesToDeleteNonCollapsedRanges(
+              aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete,
+              aSelectionWasCollapsed);
+          NS_WARNING_ASSERTION(
+              NS_SUCCEEDED(rv),
+              "AutoBlockElementsJoiner::"
+              "ComputeRangesToDeleteNonCollapsedRanges() failed");
+          return rv;
+        }
+        case Mode::NotInitialized:
+          MOZ_ASSERT_UNREACHABLE(
+              "Call ComputeRangesToDelete() after calling a preparation "
+              "method");
+          return NS_ERROR_NOT_INITIALIZED;
+      }
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+
     nsIContent* GetLeafContentInOtherBlockElement() const {
       MOZ_ASSERT(mMode == Mode::JoinOtherBlock);
       return mLeafContentInOtherBlock;
@@ -2906,6 +2963,11 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
                                   nsIEditor::EDirection aDirectionAndAmount,
                                   nsIEditor::EStripWrappers aStripWrappers,
                                   AutoRangeArray& aRangesToDelete);
+    nsresult ComputeRangesToJoinBlockElementsInSameParent(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete) const;
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult DeleteBRElement(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         const EditorDOMPoint& aCaretPoint);
@@ -2915,12 +2977,24 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         nsIEditor::EStripWrappers aStripWrappers,
         AutoRangeArray& aRangesToDelete);
+    nsresult ComputeRangesToDeleteContentInRanges(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete) const;
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
     HandleDeleteNonCollapsedRanges(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         nsIEditor::EStripWrappers aStripWrappers,
         AutoRangeArray& aRangesToDelete,
         AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed);
+    nsresult ComputeRangesToDeleteNonCollapsedRanges(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete,
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
+        const;
 
     /**
      * JoinNodesDeepWithTransaction() joins aLeftNode and aRightNode "deeply".
@@ -3408,7 +3482,13 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
     }
   }
 
-  return NS_OK;
+  nsresult rv = ComputeRangesToDeleteNonCollapsedRanges(
+      aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete,
+      selectionWasCollapsed);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "AutoDeleteRangesHandler::"
+                       "ComputeRangesToDeleteNonCollapsedRanges() failed");
+  return rv;
 }
 
 EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
@@ -4794,6 +4874,74 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   return result;
 }
 
+nsresult
+HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteNonCollapsedRanges(
+    const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers, AutoRangeArray& aRangesToDelete,
+    AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
+    const {
+  MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
+
+  if (NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->StartRef().IsSet()) ||
+      NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->EndRef().IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aRangesToDelete.Ranges().Length() == 1) {
+    nsFrameSelection* frameSelection =
+        aHTMLEditor.SelectionRefPtr()->GetFrameSelection();
+    if (NS_WARN_IF(!frameSelection)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!ExtendRangeToIncludeInvisibleNodes(aHTMLEditor, frameSelection,
+                                            aRangesToDelete.FirstRangeRef())) {
+      NS_WARNING(
+          "AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes() "
+          "failed");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  if (!aHTMLEditor.IsPlaintextEditor()) {
+    EditorDOMRange firstRange(aRangesToDelete.FirstRangeRef());
+    EditorDOMRange extendedRange = WSRunScanner::
+        GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
+            aHTMLEditor, EditorDOMRange(aRangesToDelete.FirstRangeRef()));
+    if (firstRange != extendedRange) {
+      nsresult rv = aRangesToDelete.FirstRangeRef()->SetStartAndEnd(
+          extendedRange.StartRef().ToRawRangeBoundary(),
+          extendedRange.EndRef().ToRawRangeBoundary());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("nsRange::SetStartAndEnd() failed");
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+
+  Element* startCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
+      *aRangesToDelete.FirstRangeRef()->GetStartContainer());
+  Element* endCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
+      *aRangesToDelete.FirstRangeRef()->GetEndContainer());
+
+  if (startCiteNode && !endCiteNode) {
+    aDirectionAndAmount = nsIEditor::eNext;
+  } else if (!startCiteNode && endCiteNode) {
+    aDirectionAndAmount = nsIEditor::ePrevious;
+  }
+
+  AutoBlockElementsJoiner joiner(*this);
+  if (!joiner.PrepareToDeleteNonCollapsedRanges(aHTMLEditor, aRangesToDelete)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = joiner.ComputeRangesToDelete(aHTMLEditor, aDirectionAndAmount,
+                                             aStripWrappers, aRangesToDelete,
+                                             aSelectionWasCollapsed);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "AutoBlockElementsJoiner::ComputeRangesToDelete() failed");
+  return rv;
+}
+
 EditActionResult
 HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
     HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
@@ -4953,6 +5101,29 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   return true;
 }
 
+nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
+    ComputeRangesToDeleteContentInRanges(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete) const {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
+  MOZ_ASSERT(mMode == Mode::DeleteContentInRanges);
+  MOZ_ASSERT(mLeftContent);
+  MOZ_ASSERT(mLeftContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetStartContainer()
+                 ->IsInclusiveDescendantOf(mLeftContent));
+  MOZ_ASSERT(mRightContent);
+  MOZ_ASSERT(mRightContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetEndContainer()
+                 ->IsInclusiveDescendantOf(mRightContent));
+
+  return NS_OK;
+}
+
 EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     DeleteContentInRanges(HTMLEditor& aHTMLEditor,
                           nsIEditor::EDirection aDirectionAndAmount,
@@ -5001,6 +5172,30 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
                        "AutoDeleteRangesHandler::"
                        "DeleteUnnecessaryNodesAndCollapseSelection() failed");
   return EditActionHandled(rv);
+}
+
+nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
+    ComputeRangesToJoinBlockElementsInSameParent(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete) const {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
+  MOZ_ASSERT(mMode == Mode::JoinBlocksInSameParent);
+  MOZ_ASSERT(mLeftContent);
+  MOZ_ASSERT(mLeftContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetStartContainer()
+                 ->IsInclusiveDescendantOf(mLeftContent));
+  MOZ_ASSERT(mRightContent);
+  MOZ_ASSERT(mRightContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetEndContainer()
+                 ->IsInclusiveDescendantOf(mRightContent));
+  MOZ_ASSERT(mLeftContent->GetParentNode() == mRightContent->GetParentNode());
+
+  return NS_OK;
 }
 
 EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
@@ -5137,6 +5332,30 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
       return rv;
     }
   }
+  return NS_OK;
+}
+
+nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
+    ComputeRangesToDeleteNonCollapsedRanges(
+        const HTMLEditor& aHTMLEditor,
+        nsIEditor::EDirection aDirectionAndAmount,
+        nsIEditor::EStripWrappers aStripWrappers,
+        AutoRangeArray& aRangesToDelete,
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
+        const {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(!aRangesToDelete.IsCollapsed());
+  MOZ_ASSERT(mLeftContent);
+  MOZ_ASSERT(mLeftContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetStartContainer()
+                 ->IsInclusiveDescendantOf(mLeftContent));
+  MOZ_ASSERT(mRightContent);
+  MOZ_ASSERT(mRightContent->IsElement());
+  MOZ_ASSERT(aRangesToDelete.FirstRangeRef()
+                 ->GetEndContainer()
+                 ->IsInclusiveDescendantOf(mRightContent));
+
   return NS_OK;
 }
 
@@ -10214,7 +10433,7 @@ size_t HTMLEditor::CollectChildren(
 
 bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
     const HTMLEditor& aHTMLEditor, const nsFrameSelection* aFrameSelection,
-    nsRange& aRange) {
+    nsRange& aRange) const {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(!aRange.Collapsed());
   MOZ_ASSERT(aRange.IsPositioned());
