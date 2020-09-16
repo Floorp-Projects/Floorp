@@ -587,17 +587,18 @@ nsresult nsHttpChannel::OnBeforeConnect() {
     nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
         this, getter_AddRefs(resultPrincipal));
   }
-  OriginAttributes originAttributes;
-  if (!StoragePrincipalHelper::GetOriginAttributesForNetworkState(
-          this, originAttributes)) {
-    return NS_ERROR_FAILURE;
-  }
 
   // At this point it is no longer possible to call
   // HttpBaseChannel::UpgradeToSecure.
   mUpgradableToSecure = false;
   bool shouldUpgrade = mUpgradeToSecure;
   if (mURI->SchemeIs("http")) {
+    OriginAttributes originAttributes;
+    if (!StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+            this, originAttributes)) {
+      return NS_ERROR_FAILURE;
+    }
+
     if (!shouldUpgrade) {
       // Make sure http channel is released on main thread.
       // See bug 1539148 for details.
@@ -2274,7 +2275,7 @@ nsresult nsHttpChannel::ProcessSingleSecurityHeader(
     // Process header will now discard the headers itself if the channel
     // wasn't secure (whereas before it had to be checked manually)
     OriginAttributes originAttributes;
-    if (NS_WARN_IF(!StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+    if (NS_WARN_IF(!StoragePrincipalHelper::GetOriginAttributesForHSTS(
             this, originAttributes))) {
       return NS_ERROR_FAILURE;
     }
