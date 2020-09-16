@@ -21,11 +21,6 @@ add_task(async function() {
 
   const testActor = await getTestActorWithoutToolbox(tab);
   const inspector = await clickOnInspectMenuItem(testActor, "span");
-  await getRuleViewSelectorHighlighterIcon(
-    inspector.getPanel("ruleview").view,
-    "element",
-    3
-  );
 
   checkRuleViewContent(inspector.getPanel("ruleview").view);
 });
