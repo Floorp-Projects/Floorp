@@ -9116,13 +9116,6 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
     return true;
   }
 
-  // Don't allocate a template object for super() calls as Ion doesn't support
-  // super() yet.
-  bool isSuper = op_ == JSOp::SuperCall || op_ == JSOp::SpreadSuperCall;
-  if (isSuper) {
-    return true;
-  }
-
   // Only attach a stub if the newTarget is a function that already has a
   // prototype and we can look it up without causing side effects.
   RootedValue protov(cx_);
@@ -9302,8 +9295,8 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
                                                  MutableHandleObject res) {
   AutoRealm ar(cx_, calleeFunc);
 
-  // Don't allocate a template object for super() calls as Ion doesn't support
-  // super() yet.
+  // Don't allocate a template object for super() calls as Ion doesn't inline
+  // native super().
   bool isSuper = op_ == JSOp::SuperCall || op_ == JSOp::SpreadSuperCall;
   if (isSuper) {
     return true;
