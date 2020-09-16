@@ -6629,20 +6629,19 @@ Document* nsContentUtils::GetRootDocument(Document* aDoc) {
 }
 
 /* static */
-bool nsContentUtils::IsInPointerLockContext(nsPIDOMWindowOuter* aWin) {
-  if (!aWin) {
+bool nsContentUtils::IsInPointerLockContext(BrowsingContext* aContext) {
+  if (!aContext) {
     return false;
   }
 
   nsCOMPtr<Document> pointerLockedDoc =
       do_QueryReferent(EventStateManager::sPointerLockedDoc);
-  if (!pointerLockedDoc || !pointerLockedDoc->GetWindow()) {
+  if (!pointerLockedDoc || !pointerLockedDoc->GetBrowsingContext()) {
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> lockTop =
-      pointerLockedDoc->GetWindow()->GetInProcessScriptableTop();
-  nsCOMPtr<nsPIDOMWindowOuter> top = aWin->GetInProcessScriptableTop();
+  BrowsingContext* lockTop = pointerLockedDoc->GetBrowsingContext()->Top();
+  BrowsingContext* top = aContext->Top();
 
   return top == lockTop;
 }
