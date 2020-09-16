@@ -204,9 +204,11 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
                                      const WarpInlinedCall* snapshot,
                                      CallInfo& callInfo);
 
-  MDefinition* patchInlinedReturns(CallInfo& callInfo, MIRGraphReturns& exits,
+  MDefinition* patchInlinedReturns(CompileInfo* calleeCompileInfo,
+                                   CallInfo& callInfo, MIRGraphReturns& exits,
                                    MBasicBlock* returnBlock);
-  MDefinition* patchInlinedReturn(CallInfo& callInfo, MBasicBlock* exit,
+  MDefinition* patchInlinedReturn(CompileInfo* calleeCompileInfo,
+                                  CallInfo& callInfo, MBasicBlock* exit,
                                   MBasicBlock* returnBlock);
 
 #define BUILD_OP(OP, ...) MOZ_MUST_USE bool build_##OP(BytecodeLocation loc);
