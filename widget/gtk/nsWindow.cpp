@@ -5609,8 +5609,9 @@ void nsWindow::UpdateTitlebarTransparencyBitmap() {
   NS_ASSERTION(mTransparencyBitmapForTitlebar,
                "Transparency bitmap is already used to draw window shape");
 
-  if (!mDrawInTitlebar || (mBounds.width == mTransparencyBitmapWidth &&
-                           mBounds.height == mTransparencyBitmapHeight)) {
+  if (!mGdkWindow || !mDrawInTitlebar ||
+      (mBounds.width == mTransparencyBitmapWidth &&
+       mBounds.height == mTransparencyBitmapHeight)) {
     return;
   }
 
