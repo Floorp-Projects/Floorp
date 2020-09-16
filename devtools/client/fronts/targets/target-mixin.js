@@ -647,13 +647,17 @@ function TargetMixin(parentClass) {
         }
       }
 
-      for (let [, front] of this.fronts) {
-        // If a Front with an async initialize method is still being instantiated,
-        // we should wait for completion before trying to destroy it.
-        if (front instanceof Promise) {
-          front = await front;
+      for (let [name, front] of this.fronts) {
+        try {
+          // If a Front with an async initialize method is still being instantiated,
+          // we should wait for completion before trying to destroy it.
+          if (front instanceof Promise) {
+            front = await front;
+          }
+          front.destroy();
+        } catch (e) {
+          console.warn("Error while destroying front:", name, e);
         }
-        front.destroy();
       }
 
       this._teardownRemoteListeners();
