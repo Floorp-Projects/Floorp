@@ -448,28 +448,25 @@ class ParserAtomsTable {
     InnerAddPtr& inner() { return atomOrAdd.as<InnerAddPtr>(); }
   };
 
-  JS::Result<const ParserAtom*, OOM&> addEntry(
-      JSContext* cx, AddPtr& addPtr, UniquePtr<ParserAtomEntry> entry);
-
-  template <typename AtomCharT, typename SeqCharT>
-  JS::Result<const ParserAtom*, OOM&> internChar16Seq(
-      JSContext* cx, AddPtr& add, InflatedChar16Sequence<SeqCharT> seq,
-      uint32_t length);
-
   // Look up a sequence pointer for add.  Returns either the found
   // parser-atom pointer, or and AddPtr to insert into the entry-set.
   template <typename CharT>
   AddPtr lookupForAdd(JSContext* cx, InflatedChar16Sequence<CharT> seq);
+
+  // Internal APIs for interning to the table after well-known atoms cases have
+  // been tested.
+  JS::Result<const ParserAtom*, OOM&> addEntry(
+      JSContext* cx, AddPtr& addPtr, UniquePtr<ParserAtomEntry> entry);
+  template <typename AtomCharT, typename SeqCharT>
+  JS::Result<const ParserAtom*, OOM&> internChar16Seq(
+      JSContext* cx, AddPtr& add, InflatedChar16Sequence<SeqCharT> seq,
+      uint32_t length);
 
   template <typename CharT>
   JS::Result<const ParserAtom*, OOM&> lookupOrInternChar16Seq(
       JSContext* cx, InflatedChar16Sequence<CharT> seq);
 
  public:
-  JS::Result<const ParserAtom*, OOM&> internChar16(JSContext* cx,
-                                                   const char16_t* char16Ptr,
-                                                   uint32_t length);
-
   JS::Result<const ParserAtom*, OOM&> internAscii(JSContext* cx,
                                                   const char* asciiPtr,
                                                   uint32_t length);
@@ -480,6 +477,10 @@ class ParserAtomsTable {
 
   JS::Result<const ParserAtom*, OOM&> internUtf8(
       JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte);
+
+  JS::Result<const ParserAtom*, OOM&> internChar16(JSContext* cx,
+                                                   const char16_t* char16Ptr,
+                                                   uint32_t length);
 
   JS::Result<const ParserAtom*, OOM&> internJSAtom(
       JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom);
