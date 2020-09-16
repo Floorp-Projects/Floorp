@@ -48,6 +48,8 @@ namespace js {
 namespace frontend {
 
 class ParserAtom;
+class ParserAtomEntry;
+class WellKnownParserAtoms;
 
 }  // namespace frontend
 
@@ -1267,6 +1269,11 @@ class LittleEndianChars {
 };
 
 class StaticStrings {
+  // NOTE: The WellKnownParserAtoms rely on these tables and may need to be
+  //       update if these tables are changed.
+  friend class js::frontend::ParserAtomEntry;
+  friend class js::frontend::WellKnownParserAtoms;
+
  private:
   /* Bigger chars cannot be in a length-2 string. */
   static const size_t SMALL_CHAR_LIMIT = 128U;
@@ -1403,11 +1410,18 @@ class StaticStrings {
 
   static const SmallCharArray toSmallCharArray;
 
-  MOZ_ALWAYS_INLINE JSAtom* getLength2(char16_t c1, char16_t c2) {
+  static MOZ_ALWAYS_INLINE size_t getLength2Index(char16_t c1, char16_t c2) {
     MOZ_ASSERT(fitsInSmallChar(c1));
     MOZ_ASSERT(fitsInSmallChar(c2));
-    size_t index = (size_t(toSmallCharArray[c1]) << 6) + toSmallCharArray[c2];
+    return (size_t(toSmallCharArray[c1]) << 6) + toSmallCharArray[c2];
+  }
+
+  MOZ_ALWAYS_INLINE JSAtom* getLength2FromIndex(size_t index) {
     return length2StaticTable[index];
+  }
+
+  MOZ_ALWAYS_INLINE JSAtom* getLength2(char16_t c1, char16_t c2) {
+    return getLength2FromIndex(getLength2Index(c1, c2));
   }
 };
 
