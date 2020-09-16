@@ -44,7 +44,7 @@ templates['saved_premiumshell'] = template({"compiler":[6,">= 2.0.0-beta.1"],"ma
 
   return "<div class=\"pkt_ext_suggestedtag_detail pkt_ext_suggestedtag_detail_loading\">\n    <h4>"
     + this.escapeExpression(((helper = (helper = helpers.suggestedtags || (depth0 != null ? depth0.suggestedtags : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0,{"name":"suggestedtags","hash":{},"data":data}) : helper)))
-    + "</h4>\n    <div class=\"pkt_ext_loadingspinner\"><div></div></div>\n    <ul class=\"pkt_ext_cf\">\n    </ul>\n</div>";
+    + "</h4>\n    <div class=\"pkt_ext_loadingspinner\"><div></div></div>\n    <ul class=\"pkt_ext_cf\">\n    </ul>\n</div>\n";
 },"useData":true});
 templates['saved_shell'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
@@ -63,7 +63,7 @@ templates['saved_shell'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":fun
     + alias3(((helper = (helper = helpers.addtags || (depth0 != null ? depth0.addtags : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"addtags","hash":{},"data":data}) : helper)))
     + "\">\n        </div>\n        <a href=\"#\" class=\"pkt_ext_btn pkt_ext_btn_disabled\">"
     + alias3(((helper = (helper = helpers.save || (depth0 != null ? depth0.save : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"save","hash":{},"data":data}) : helper)))
-    + "</a>\n    </div>\n    <p class=\"pkt_ext_edit_msg\"></p>\n    <p class=\"pkt_ext_item_recs\"></p>\n</div>\n";
+    + "</a>\n    </div>\n    <p class=\"pkt_ext_edit_msg\"></p>\n</div>\n\n<div class=\"pkt_ext_subshell\">\n    <div class=\"pkt_ext_item_recs\"></div>\n</div>\n";
 },"useData":true});
 templates['saved_tmplogin'] = template({"1":function(depth0,helpers,partials,data) {
     return "        <button id=\"pkt_ext_tmp_account_signup\" class=\"pkt_ext_button pkt_ext_blue_button\">\n            <span class=\"pkt_ext_save_title_wrapper pkt_ext_ffx_icon\">\n                <span class=\"pkt_ext_logo_action_copy\">Login with Firefox</span>\n            </span>\n        </button>\n";
@@ -301,14 +301,24 @@ templates['item_recs'] = template({"1":function(depth0,helpers,partials,data) {
 
   return "    <li>\n      <a href=\""
     + alias2(alias1(((stack1 = (depth0 != null ? depth0.item : depth0)) != null ? stack1.resolved_url : stack1), depth0))
-    + "\" class=\"pkt_ext_item_recs_link\" target=\"_blank\">"
+    + "\" class=\"pkt_ext_item_recs_link\" target=\"_blank\">\n\n"
+    + ((stack1 = helpers['if'].call(depth0,((stack1 = (depth0 != null ? depth0.item : depth0)) != null ? stack1.encodedThumbURL : stack1),{"name":"if","hash":{},"fn":this.program(2, data, 0),"inverse":this.noop,"data":data})) != null ? stack1 : "")
+    + "\n        <p class=\"rec-title\">"
     + alias2(alias1(((stack1 = (depth0 != null ? depth0.item : depth0)) != null ? stack1.title : stack1), depth0))
-    + "</a>\n    </li>\n";
+    + "</p>\n        <p class=\"rec-source\">"
+    + alias2(alias1(((stack1 = ((stack1 = (depth0 != null ? depth0.item : depth0)) != null ? stack1.domain_metadata : stack1)) != null ? stack1.name : stack1), depth0))
+    + "</p>\n      </a>\n    </li>\n";
+},"2":function(depth0,helpers,partials,data) {
+    var stack1;
+
+  return "        <img class=\"rec-thumb\" src=\"https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/"
+    + this.escapeExpression(this.lambda(((stack1 = (depth0 != null ? depth0.item : depth0)) != null ? stack1.encodedThumbURL : stack1), depth0))
+    + "\" />\n";
 },"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
     var stack1;
 
-  return "<ul>\n"
+  return "<hr/>\n\n<header>\n  <h4>Similar Stories</h4>\n  <a target=\"_blank\" href=\"https://getpocket.com/story_recommendations_learn_more\">Learn More</a>\n</header>\n\n<ol>\n"
     + ((stack1 = helpers.each.call(depth0,(depth0 != null ? depth0.recommendations : depth0),{"name":"each","hash":{},"fn":this.program(1, data, 0),"inverse":this.noop,"data":data})) != null ? stack1 : "")
-    + "</ul>\n";
+    + "</ol>\n";
 },"useData":true});
 })();

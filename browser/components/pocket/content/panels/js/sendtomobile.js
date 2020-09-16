@@ -2,7 +2,7 @@
 
 var PKT_SENDTOMOBILE = (function() {
   var width = 350;
-  var ctaHeight = 200;
+  var ctaHeight = 200; // iframe height
   var confirmHeight = 275;
   var premDetailsHeight = 110;
   var email = null;
