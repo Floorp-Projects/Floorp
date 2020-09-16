@@ -34,7 +34,7 @@
       for (let eventType of LISTEN_EVENTS) {
         gBrowser.removeEventListener(eventType, eventListener, true);
       }
-    
+
       window.close();
       window.arguments[0].SimpleTest.finish();
     }
@@ -45,7 +45,7 @@
       for (let eventType of LISTEN_EVENTS) {
         gBrowser.addEventListener(eventType, eventListener, true);
       }
-      
+
       gTestsIterator = testsIterator();
       nextTest();
     }
@@ -58,10 +58,16 @@
     }
 
     function doTest() {
-      var history = gBrowser.webNavigation.sessionHistory;
+      let history;
+      if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+        history = gBrowser.browsingContext.sessionHistory;
+      } else {
+        history = gBrowser.webNavigation.sessionHistory.legacySHistory;
+      }
+
       if (history.count == gExpected.length) {
         for (var i=0; i<history.count; i++) {
-          var shEntry = history.legacySHistory.getEntryAtIndex(i).
+          var shEntry = history.getEntryAtIndex(i).
                           QueryInterface(Ci.nsISHEntry);
           is(!!shEntry.contentViewer, gExpected[i], "content viewer "+i+", test "+gTestCount);
         }
@@ -73,9 +79,9 @@
             if (j == i)
               continue;
 
-            let shentry1 = history.legacySHistory.getEntryAtIndex(i)
+            let shentry1 = history.getEntryAtIndex(i)
                                   .QueryInterface(Ci.nsISHEntry);
-            let shentry2 = history.legacySHistory.getEntryAtIndex(j)
+            let shentry2 = history.getEntryAtIndex(j)
                                   .QueryInterface(Ci.nsISHEntry);
             ok(!shentry1.sharesDocumentWith(shentry2),
                'Test ' + gTestCount + ': shentry[' + i + "] shouldn't " +

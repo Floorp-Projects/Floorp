@@ -9,7 +9,28 @@ const gExpectedHistory = {
   entries: [],
 };
 
-function get_remote_history(browser) {
+async function get_remote_history(browser) {
+  if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    let sessionHistory = browser.browsingContext?.sessionHistory;
+    if (!sessionHistory) {
+      return null;
+    }
+
+    let result = {
+      index: sessionHistory.index,
+      entries: [],
+    };
+
+    for (let i = 0; i < sessionHistory.count; i++) {
+      let entry = sessionHistory.getEntryAtIndex(i);
+      result.entries.push({
+        uri: entry.URI.spec,
+        title: entry.title,
+      });
+    }
+    return result;
+  }
+
   return SpecialPowers.spawn(browser, [], () => {
     let webNav = content.docShell.QueryInterface(Ci.nsIWebNavigation);
     let sessionHistory = webNav.sessionHistory;

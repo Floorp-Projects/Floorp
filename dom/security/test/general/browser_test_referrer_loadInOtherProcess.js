@@ -28,6 +28,45 @@ var checkResult = async function(isRemote, browserKey, uri) {
     "browser.permanentKey should be correct"
   );
 
+  if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    let sessionHistory =
+      gBrowser.selectedBrowser.browsingContext.sessionHistory;
+    let entry = sessionHistory.getEntryAtIndex(sessionHistory.count - 1);
+    let args = { uri, referrerInfo: deReferrerInfo, isRemote };
+    Assert.equal(entry.URI.spec, args.uri, "Uri should be correct");
+
+    // Main process like about:mozilla does not trigger the real network request.
+    // So we don't store referrerInfo in sessionHistory in that case.
+    // Besides, the referrerInfo stored in sessionHistory was computed, we only
+    // check pre-computed things.
+    if (args.isRemote) {
+      let resultReferrerInfo = entry.referrerInfo;
+      let expectedReferrerInfo = E10SUtils.deserializeReferrerInfo(
+        args.referrerInfo
+      );
+
+      Assert.equal(
+        resultReferrerInfo.originalReferrer.spec,
+        expectedReferrerInfo.originalReferrer.spec,
+        "originalReferrer should be correct"
+      );
+      Assert.equal(
+        resultReferrerInfo.sendReferrer,
+        expectedReferrerInfo.sendReferrer,
+        "sendReferrer should be correct"
+      );
+      Assert.equal(
+        resultReferrerInfo.referrerPolicy,
+        expectedReferrerInfo.referrerPolicy,
+        "referrerPolicy should be correct"
+      );
+    } else {
+      Assert.equal(entry.referrerInfo, null, "ReferrerInfo should be correct");
+    }
+
+    return;
+  }
+
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ uri, referrerInfo: deReferrerInfo, isRemote }],
