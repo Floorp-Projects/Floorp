@@ -82,6 +82,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:getElementProperty":
           result = await this.getElementProperty(data);
           break;
+        case "MarionetteFrameParent:getElementValueOfCssProperty":
+          result = await this.getElementValueOfCssProperty(data);
+          break;
         case "MarionetteFrameParent:switchToFrame":
           result = await this.switchToFrame(data);
           break;
@@ -166,6 +169,17 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const el = this.seenEls.get(webEl);
 
     return typeof el[name] != "undefined" ? el[name] : null;
+  }
+
+  /**
+   * Get the value of a css property for the given element.
+   */
+  async getElementValueOfCssProperty(options = {}) {
+    const { name, webEl } = options;
+    const el = this.seenEls.get(webEl);
+
+    const style = this.content.getComputedStyle(el);
+    return style.getPropertyValue(name);
   }
 
   /**
