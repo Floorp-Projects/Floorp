@@ -67,16 +67,19 @@ class SessionStorage(
             return true
         }
 
-        if (state.selectedTabId != null) {
-            requireNotNull(state.selectedTab) {
-                "Selected session must exist"
-            }
+        val stateToPersist = if (state.selectedTabId != null && state.selectedTab == null) {
+            // Needs investigation to figure out and prevent cause:
+            // https://github.com/mozilla-mobile/android-components/issues/8417
+            logger.error("Selected tab ID set, but tab with matching ID not found. Clearing selection.")
+            state.copy(selectedTabId = null)
+        } else {
+            state
         }
 
         return synchronized(sessionFileLock) {
             try {
                 val file = getFileForEngine(context, engine)
-                stateSerializer.write(state, file)
+                stateSerializer.write(stateToPersist, file)
             } catch (e: OutOfMemoryError) {
                 crashReporting?.submitCaughtException(e)
                 logger.error("Failed to save state to disk due to OutOfMemoryError", e)

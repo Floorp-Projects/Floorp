@@ -157,17 +157,6 @@ class SessionStorageTest {
         assertNull(restoredSnapshot)
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun `Should throw when saving illegal state`() {
-        val engine = mock(Engine::class.java)
-        `when`(engine.name()).thenReturn("gecko")
-
-        val storage = SessionStorage(testContext, engine)
-        val session = Session("http://mozilla.org")
-        val state = BrowserState(selectedTabId = "invalid", tabs = listOf(session.toTabSessionState()))
-        storage.save(state)
-    }
-
     @Test
     fun `AutoSave - when going to background`() {
         runBlocking {
@@ -691,6 +680,43 @@ class SessionStorageTest {
         assertEquals("Work", second.session.contextId)
         assertNotNull(second.readerState)
         assertTrue(second.readerState!!.active)
+    }
+
+    @Test
+    fun `Saving state with selected tab id for a tab that does not exist`() {
+        val state = BrowserState(
+            tabs = listOf(
+                createTab(url = "https://www.mozilla.org", id = "mozilla"),
+                createTab(url = "https://getpocket.com", id = "pocket")
+            ),
+            selectedTabId = "Does Not Exist"
+        )
+
+        val engineSessionState = object : EngineSessionState {
+            override fun toJSON() = JSONObject()
+            override fun writeTo(writer: JsonWriter) {
+                writer.beginObject()
+                writer.endObject()
+            }
+        }
+
+        val engine: Engine = mock()
+        `when`(engine.name()).thenReturn("gecko")
+        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
+        `when`(engine.createSessionState(any())).thenReturn(engineSessionState)
+
+        val storage = SessionStorage(testContext, engine)
+        val persisted = storage.save(state)
+        assertTrue(persisted)
+
+        // Read it back
+        val restoredSnapshot = storage.restore()
+        assertNotNull(restoredSnapshot!!)
+
+        assertEquals(SessionManager.NO_SELECTION, restoredSnapshot.selectedSessionIndex)
+        assertEquals(2, restoredSnapshot.sessions.size)
+        assertEquals("https://www.mozilla.org", restoredSnapshot.sessions[0].session.url)
+        assertEquals("https://getpocket.com", restoredSnapshot.sessions[1].session.url)
     }
 }
 
