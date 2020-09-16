@@ -38,5 +38,5 @@ rustc-dist-toolchain:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-rust-cross-1.41
+            - linux64-rust-cross
             - linux64-sccache
