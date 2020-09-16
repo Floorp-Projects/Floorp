@@ -70,13 +70,13 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
       aChildProcess, intcpt, "NtMapViewOfSection",
       &freestanding::patched_NtMapViewOfSection);
   if (!ok) {
-    return LAUNCHER_ERROR_GENERIC();
+    return LAUNCHER_ERROR_GENERIC_WITH_DETOUR_ERROR(intcpt.GetLastError());
   }
 
   ok = freestanding::stub_LdrLoadDll.SetDetour(
       aChildProcess, intcpt, "LdrLoadDll", &freestanding::patched_LdrLoadDll);
   if (!ok) {
-    return LAUNCHER_ERROR_GENERIC();
+    return LAUNCHER_ERROR_GENERIC_WITH_DETOUR_ERROR(intcpt.GetLastError());
   }
 
   // Because aChildProcess has just been created in a suspended state, its
