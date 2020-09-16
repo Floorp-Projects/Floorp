@@ -5,8 +5,16 @@
   onload = function() {
     // window.print() is special until after the load event is finished firing.
     setTimeout(function() {
-      // This one should block until we're done printing.
+      // This fires a timer which would trigger a navigation and prevent the
+      // test from completing if it happens during window.print().
+      let meta = document.createElement("meta");
+      meta.setAttribute("http-equiv", "refresh");
+      meta.setAttribute("content", "0; url=/unlikely-to-be-found");
+      document.head.appendChild(meta);
+      // This one should block until we're done printing, and block the
+      // navigation too.
       window.print();
+      meta.remove();
       document.body.insertAdjacentHTML('beforeend', `<div id="after-first-print">After first print</div>`);
 
       let canvas = document.getElementById("canvas");
