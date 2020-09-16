@@ -13,108 +13,6 @@
 
 using namespace mozilla::a11y;
 
-@interface MOXRootGroup : MOXAccessibleBase {
-  MOXWebAreaAccessible* mParent;
-}
-
-// override
-- (id)initWithParent:(MOXWebAreaAccessible*)parent;
-
-// override
-- (NSString*)moxRole;
-
-// override
-- (NSString*)moxRoleDescription;
-
-// override
-- (id<mozAccessible>)moxParent;
-
-// override
-- (NSArray*)moxChildren;
-
-// override
-- (NSString*)moxIdentifier;
-
-// override
-- (id)moxHitTest:(NSPoint)point;
-
-// override
-- (NSValue*)moxPosition;
-
-// override
-- (NSValue*)moxSize;
-
-// override
-- (BOOL)disableChild:(id)child;
-
-// override
-- (void)expire;
-
-// override
-- (BOOL)isExpired;
-
-@end
-
-@implementation MOXRootGroup
-
-- (id)initWithParent:(MOXWebAreaAccessible*)parent {
-  // The parent is always a MOXWebAreaAccessible
-  mParent = parent;
-  return [super init];
-}
-
-- (NSString*)moxRole {
-  return NSAccessibilityGroupRole;
-}
-
-- (NSString*)moxRoleDescription {
-  return NSAccessibilityRoleDescription(NSAccessibilityGroupRole, nil);
-}
-
-- (id<mozAccessible>)moxParent {
-  return mParent;
-}
-
-- (NSArray*)moxChildren {
-  // Reparent the children of the web area here.
-  return [mParent rootGroupChildren];
-}
-
-- (NSString*)moxIdentifier {
-  // This is mostly for testing purposes to assert that this is the generated
-  // root group.
-  return @"root-group";
-}
-
-- (id)moxHitTest:(NSPoint)point {
-  return [mParent moxHitTest:point];
-}
-
-- (NSValue*)moxPosition {
-  return [mParent moxPosition];
-}
-
-- (NSValue*)moxSize {
-  return [mParent moxSize];
-}
-
-- (BOOL)disableChild:(id)child {
-  return NO;
-}
-
-- (void)expire {
-  mParent = nil;
-  [super expire];
-}
-
-- (BOOL)isExpired {
-  MOZ_ASSERT((mParent == nil) == mIsExpired);
-
-  return [super isExpired];
-}
-
-@end
-
 @implementation MOXWebAreaAccessible
 
 - (NSURL*)moxURL {
@@ -176,8 +74,8 @@ using namespace mozilla::a11y;
   // reference to the web area (mGeckoAccessible) to use as
   // a start element if one is not specified.
   MOXSearchInfo* search =
-      [[MOXSearchInfo alloc] initWithParameters:searchPredicate andRoot:self];
-
+      [[MOXSearchInfo alloc] initWithParameters:searchPredicate
+                                        andRoot:mGeckoAccessible];
   return [search performSearch];
 }
 
@@ -214,56 +112,11 @@ using namespace mozilla::a11y;
   [super handleAccessibleEvent:eventType];
 }
 
-- (NSArray*)rootGroupChildren {
-  // This method is meant to expose the doc's children to the root group.
-  return [super moxChildren];
-}
-
-- (NSArray*)moxUnignoredChildren {
-  if (id rootGroup = [self rootGroup]) {
-    return @[ [self rootGroup] ];
-  }
-
-  // There is no root group, expose the children here directly.
-  return [super moxUnignoredChildren];
-}
-
-- (id)rootGroup {
-  NSArray* children = [super moxUnignoredChildren];
-  if ([children count] == 1 &&
-      [[[children firstObject] moxUnignoredChildren] count] != 0) {
-    // We only need a root group if our document has multiple children or one
-    // child that is a leaf.
-    return nil;
-  }
-
-  if (!mRootGroup) {
-    mRootGroup = [[MOXRootGroup alloc] initWithParent:self];
-  }
-
-  return mRootGroup;
-}
-
-- (void)expire {
-  [mRootGroup expire];
-  [super expire];
-}
-
-- (void)dealloc {
-  // This object can only be dealoced after the gecko accessible wrapper
-  // reference is released, and that happens after expire is called.
-  MOZ_ASSERT([self isExpired]);
-  [mRootGroup release];
-
-  [super dealloc];
-}
-
 @end
 
 @implementation MOXSearchInfo
 
-- (id)initWithParameters:(NSDictionary*)params
-                 andRoot:(MOXWebAreaAccessible*)root {
+- (id)initWithParameters:(NSDictionary*)params andRoot:(AccessibleOrProxy)root {
   if (id searchKeyParam = [params objectForKey:@"AXSearchKey"]) {
     mSearchKeys = [searchKeyParam isKindOfClass:[NSString class]]
                       ? @[ searchKeyParam ]
@@ -271,7 +124,7 @@ using namespace mozilla::a11y;
   }
 
   if (id startElemParam = [params objectForKey:@"AXStartElement"]) {
-    mStartElem = startElemParam;
+    mStartElem = [startElemParam geckoAccessible];
   } else {
     mStartElem = root;
   }
@@ -289,24 +142,12 @@ using namespace mozilla::a11y;
   return [super init];
 }
 
-- (AccessibleOrProxy)startGeckoAccessible {
-  if ([mStartElem isKindOfClass:[mozAccessible class]]) {
-    return [static_cast<mozAccessible*>(mStartElem) geckoAccessible];
-  }
-
-  // If it isn't a mozAccessible, it doesn't have a gecko accessible
-  // this is most likely the root group. Use the gecko doc as the start
-  // accessible.
-  return [mWebArea geckoAccessible];
-}
-
 - (NSMutableArray*)getMatchesForRule:(PivotRule&)rule {
   int resultLimit = mResultLimit;
   NSMutableArray* matches = [[NSMutableArray alloc] init];
-  Pivot p = Pivot([mWebArea geckoAccessible]);
-  AccessibleOrProxy geckoStartAcc = [self startGeckoAccessible];
-  AccessibleOrProxy match = mSearchForward ? p.Next(geckoStartAcc, rule)
-                                           : p.Prev(geckoStartAcc, rule);
+  Pivot p = Pivot(mWebArea);
+  AccessibleOrProxy match =
+      mSearchForward ? p.Next(mStartElem, rule) : p.Prev(mStartElem, rule);
   while (!match.IsNull() && resultLimit != 0) {
     // we use mResultLimit != 0 to capture the case where mResultLimit is -1
     // when it is set from the params dictionary. If that's true, we want
@@ -326,81 +167,52 @@ using namespace mozilla::a11y;
 }
 
 - (NSArray*)performSearch {
-  AccessibleOrProxy geckoStartAcc = [self startGeckoAccessible];
   NSMutableArray* matches = [[NSMutableArray alloc] init];
   for (id key in mSearchKeys) {
     if ([key isEqualToString:@"AXAnyTypeSearchKey"]) {
-      RotorAllRule rule = mImmediateDescendantsOnly
-                              ? RotorAllRule(geckoStartAcc)
-                              : RotorAllRule();
-
-      if (mSearchForward) {
-        if ([mStartElem isKindOfClass:[MOXWebAreaAccessible class]]) {
-          if (id rootGroup =
-                  [static_cast<MOXWebAreaAccessible*>(mStartElem) rootGroup]) {
-            // Moving forward from web area, rootgroup; if it exists, is next.
-            [matches addObject:rootGroup];
-            if (mResultLimit == 1) {
-              // Found one match, continue in search keys for block.
-              continue;
-            }
-          }
-        } else if (mImmediateDescendantsOnly &&
-                   [mStartElem isKindOfClass:[MOXRootGroup class]]) {
-          // Moving forward from root group. If we don't match descendants,
-          // there is no match. Continue.
-          continue;
-        }
-      } else if (!mSearchForward &&
-                 [mStartElem isKindOfClass:[MOXRootGroup class]]) {
-        // Moving backward from root group. Web area is next.
-        [matches addObject:[mStartElem moxParent]];
-        if (mResultLimit == 1) {
-          // Found one match, continue in search keys for block.
-          continue;
-        }
-      }
+      RotorAllRule rule =
+          mImmediateDescendantsOnly ? RotorAllRule(mStartElem) : RotorAllRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXHeadingSearchKey"]) {
       RotorHeadingRule rule = mImmediateDescendantsOnly
-                                  ? RotorHeadingRule(geckoStartAcc)
+                                  ? RotorHeadingRule(mStartElem)
                                   : RotorHeadingRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXArticleSearchKey"]) {
       RotorArticleRule rule = mImmediateDescendantsOnly
-                                  ? RotorArticleRule(geckoStartAcc)
+                                  ? RotorArticleRule(mStartElem)
                                   : RotorArticleRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXTableSearchKey"]) {
       RotorTableRule rule = mImmediateDescendantsOnly
-                                ? RotorTableRule(geckoStartAcc)
+                                ? RotorTableRule(mStartElem)
                                 : RotorTableRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXLandmarkSearchKey"]) {
       RotorLandmarkRule rule = mImmediateDescendantsOnly
-                                   ? RotorLandmarkRule(geckoStartAcc)
+                                   ? RotorLandmarkRule(mStartElem)
                                    : RotorLandmarkRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXButtonSearchKey"]) {
       RotorButtonRule rule = mImmediateDescendantsOnly
-                                 ? RotorButtonRule(geckoStartAcc)
+                                 ? RotorButtonRule(mStartElem)
                                  : RotorButtonRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXControlSearchKey"]) {
       RotorControlRule rule = mImmediateDescendantsOnly
-                                  ? RotorControlRule(geckoStartAcc)
+                                  ? RotorControlRule(mStartElem)
                                   : RotorControlRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }

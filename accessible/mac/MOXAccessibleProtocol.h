@@ -205,9 +205,6 @@
 // AXColumnHeaderUIElements
 - (NSArray* _Nullable)moxColumnHeaderUIElements;
 
-// AXIdentifier
-- (NSString* _Nullable)moxIdentifier;
-
 // Math Attributes
 
 // AXMathRootRadicand

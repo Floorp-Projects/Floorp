@@ -295,15 +295,6 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   }
 
   id nativeParent = GetNativeFromGeckoAccessible(parent);
-  if (parent.Role() == roles::DOCUMENT &&
-      [nativeParent respondsToSelector:@selector(rootGroup)]) {
-    // Before returning a WebArea as parent, check to see if
-    // there is a generated root group that is an intermediate container.
-    if (id<mozAccessible> rootGroup = [nativeParent rootGroup]) {
-      nativeParent = rootGroup;
-    }
-  }
-
   if (!nativeParent && mGeckoAccessible.IsAccessible()) {
     // Return native of root accessible if we have no direct parent.
     // XXX: need to return a sensible fallback in proxy case as well

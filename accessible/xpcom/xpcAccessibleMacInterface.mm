@@ -217,14 +217,6 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
              strcmp([(NSValue*)aObj objCType], @encode(NSRange)) == 0) {
     NSRange range = [(NSValue*)aObj rangeValue];
     return NSObjectToJsValue(@[ @(range.location), @(range.length) ], aCx, aResult);
-  } else if ([aObj isKindOfClass:[NSValue class]] &&
-             strcmp([(NSValue*)aObj objCType], @encode(NSRect)) == 0) {
-    NSRect rect = [(NSValue*)aObj rectValue];
-    return NSObjectToJsValue(@{
-      @"origin" : [NSValue valueWithPoint:rect.origin],
-      @"size" : [NSValue valueWithSize:rect.size]
-    },
-                             aCx, aResult);
   } else if ([aObj isKindOfClass:[NSArray class]]) {
     NSArray* objArr = (NSArray*)aObj;
 
