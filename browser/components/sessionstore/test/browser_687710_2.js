@@ -38,7 +38,36 @@ var state = {
 add_task(async function test() {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await promiseTabState(tab, state);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+      function compareEntries(i, j, history) {
+        let e1 = history.getEntryAtIndex(i);
+        let e2 = history.getEntryAtIndex(j);
+
+        ok(e1.sharesDocumentWith(e2), `${i} should share doc with ${j}`);
+        is(e1.childCount, e2.childCount, `Child count mismatch (${i}, ${j})`);
+
+        for (let c = 0; c < e1.childCount; c++) {
+          let c1 = e1.GetChildAt(c);
+          let c2 = e2.GetChildAt(c);
+
+          ok(
+            c1.sharesDocumentWith(c2),
+            `Cousins should share documents. (${i}, ${j}, ${c})`
+          );
+        }
+      }
+
+      let history = docShell.sessionHistory.legacySHistory;
+
+      is(history.count, 2, "history.count");
+      for (let i = 0; i < history.count; i++) {
+        for (let j = 0; j < history.count; j++) {
+          compareEntries(i, j, history);
+        }
+      }
+    });
+  } else {
     function compareEntries(i, j, history) {
       let e1 = history.getEntryAtIndex(i);
       let e2 = history.getEntryAtIndex(j);
@@ -57,9 +86,7 @@ add_task(async function test() {
       }
     }
 
-    let history = docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsISHistory);
+    let history = tab.linkedBrowser.browsingContext.sessionHistory;
 
     is(history.count, 2, "history.count");
     for (let i = 0; i < history.count; i++) {
@@ -67,7 +94,7 @@ add_task(async function test() {
         compareEntries(i, j, history);
       }
     }
-  });
+  }
 
   ss.setBrowserState(stateBackup);
 });

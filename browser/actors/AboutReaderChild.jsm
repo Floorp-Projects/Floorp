@@ -54,17 +54,24 @@ class AboutReaderChild extends JSWindowActorChild {
           // Get the article data and cache it in the parent process. The reader mode
           // page will retrieve it when it has loaded.
           let article = await this._articlePromise;
-          await this.sendQuery("Reader:CacheArticle", article);
-          ReaderMode.enterReaderMode(this.docShell, this.contentWindow);
+          this.sendAsyncMessage("Reader:EnterReaderMode", article);
         } else {
           this._isLeavingReaderableReaderMode = this.isReaderableAboutReader;
-          ReaderMode.leaveReaderMode(this.docShell, this.contentWindow);
+          this.sendAsyncMessage("Reader:LeaveReaderMode", {});
         }
         break;
 
       case "Reader:PushState":
         this.updateReaderButton(!!(message.data && message.data.isArticle));
         break;
+      case "Reader:EnterReaderMode": {
+        ReaderMode.enterReaderMode(this.docShell, this.contentWindow);
+        break;
+      }
+      case "Reader:LeaveReaderMode": {
+        ReaderMode.leaveReaderMode(this.docShell, this.contentWindow);
+        break;
+      }
     }
 
     // Forward the message to the reader if it has been created.

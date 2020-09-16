@@ -6329,10 +6329,11 @@ bool nsGlobalWindowOuter::IsOnlyTopLevelDocumentInSHistory() {
   // Disabled since IsFrame() is buggy in Fission
   // MOZ_ASSERT(mBrowsingContext->IsTop());
 
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-  NS_ENSURE_TRUE(webNav, false);
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    return mBrowsingContext->GetIsSingleToplevelInHistory();
+  }
 
-  RefPtr<ChildSHistory> csh = webNav->GetSessionHistory();
+  RefPtr<ChildSHistory> csh = nsDocShell::Cast(mDocShell)->GetSessionHistory();
   if (csh && csh->LegacySHistory()) {
     return csh->LegacySHistory()->IsEmptyOrHasEntriesForSingleTopLevelPage();
   }

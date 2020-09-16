@@ -236,6 +236,10 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                                             nsISHEntry* aOldEntry,
                                             nsISHEntry* aNewEntry);
 
+  // Update the root browsing context state when adding, removing or
+  // replacing entries.
+  void UpdateRootBrowsingContextState();
+
  protected:
   bool mHasOngoingUpdate;
   bool mIsRemote;

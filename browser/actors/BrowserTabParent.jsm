@@ -11,7 +11,8 @@ const { BrowserWindowTracker } = ChromeUtils.import(
 
 class BrowserTabParent extends JSWindowActorParent {
   receiveMessage(message) {
-    let browser = this.manager.browsingContext.embedderElement;
+    let browsingContext = this.manager.browsingContext;
+    let browser = browsingContext.embedderElement;
     if (!browser) {
       return; // Can happen sometimes if browser is being destroyed
     }
@@ -31,6 +32,10 @@ class BrowserTabParent extends JSWindowActorParent {
       }
 
       case "Browser:LoadURI": {
+        if (gBrowser.sessionHistoryInParent) {
+          message.data.historyIndex =
+            browsingContext.sessionHistory.requestedIndex;
+        }
         gBrowser.ownerGlobal.RedirectLoad(browser, message.data);
         break;
       }

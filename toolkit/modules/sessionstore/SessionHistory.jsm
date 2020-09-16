@@ -365,7 +365,7 @@ var SessionHistoryInternal = {
    */
   restore(history, tabData) {
     if (history.count > 0) {
-      history.PurgeHistory(history.count);
+      history.purgeHistory(history.count);
     }
 
     let idMap = { used: {} };
