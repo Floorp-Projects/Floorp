@@ -7094,16 +7094,8 @@ nsresult DatabaseConnection::ExecuteCachedStatement(
       ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
 
   IDB_TRY_VAR(const auto stmt, GetCachedStatement(aQuery));
-
-  nsresult rv = aBindFunctor(*stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(aBindFunctor(*stmt));
+  IDB_TRY(stmt->Execute());
 
   return NS_OK;
 }
