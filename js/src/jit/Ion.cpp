@@ -1693,6 +1693,10 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     script->ionScript()->setRecompiling();
   }
 
+  if (osrPc) {
+    script->jitScript()->setHadIonOSR();
+  }
+
   WarpSnapshot* snapshot = nullptr;
   if (JitOptions.warpBuilder) {
     AbortReasonOr<WarpSnapshot*> result =
