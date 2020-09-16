@@ -1688,6 +1688,12 @@ class MOZ_RAII OptimizeSpreadCallIRGenerator : public IRGenerator {
 };
 
 enum class StringChar { CodeAt, At };
+enum class ScriptedThisResult {
+  NoAction,
+  TemporarilyUnoptimizable,
+  UninitializedThis,
+  TemplateObject
+};
 
 class MOZ_RAII CallIRGenerator : public IRGenerator {
  private:
@@ -1701,9 +1707,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   PropertyTypeCheckInfo typeCheckInfo_;
   BaselineCacheIRStubKind cacheIRStubKind_;
 
-  bool getTemplateObjectForScripted(HandleFunction calleeFunc,
-                                    MutableHandleObject result,
-                                    bool* skipAttach);
+  ScriptedThisResult getThisForScripted(HandleFunction calleeFunc,
+                                        MutableHandleObject result);
   bool getTemplateObjectForNative(HandleFunction calleeFunc,
                                   MutableHandleObject result);
 

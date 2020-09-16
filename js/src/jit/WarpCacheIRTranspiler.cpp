@@ -3419,9 +3419,9 @@ bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
       MOZ_ASSERT(flags.isConstructing());
 
       // We call maybeCreateThis to update |this|, but inlined constructors
-      // never need a VM call. CallIRGenerator::getTemplateObjectForScripted
-      // ensures that we don't attach a specialized stub unless we have a
-      // template object or know that the constructor needs uninitialized this.
+      // never need a VM call. CallIRGenerator::getThisForScripted ensures that
+      // we don't attach a specialized stub unless we have a template object or
+      // know that the constructor needs uninitialized this.
       MOZ_ALWAYS_FALSE(maybeCreateThis(callee, flags, CallKind::Scripted));
       mozilla::DebugOnly<MDefinition*> thisArg = callInfo_->thisArg();
       MOZ_ASSERT(thisArg->isCreateThisWithTemplate() ||
