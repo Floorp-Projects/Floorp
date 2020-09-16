@@ -12,7 +12,6 @@ from pathlib import Path
 
 from mozperftest.utils import install_package
 from mozperftest.test.noderunner import NodeRunner
-from mozperftest.script import ScriptInfo
 
 
 BROWSERTIME_SRC_ROOT = Path(__file__).parent
@@ -134,20 +133,13 @@ class BrowsertimeRunner(NodeRunner):
 
     def setup(self):
         """Install browsertime and visualmetrics.py prerequisites and the Node.js package."""
+
         node = self.get_arg("node")
         if node is not None:
             os.environ["NODEJS"] = node
 
         super(BrowsertimeRunner, self).setup()
         install_url = self.get_arg("install-url")
-
-        tests = self.get_arg("tests", [])
-        if len(tests) != 1:
-            # we don't support auto-discovery (no test passed) or multiple
-            # tests here yet.
-            raise NotImplementedError()
-
-        self._test_script = ScriptInfo(tests[0])
 
         # installing Python deps on the fly
         for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
@@ -296,6 +288,7 @@ class BrowsertimeRunner(NodeRunner):
         return args_list
 
     def run(self, metadata):
+        self._test_script = metadata.script
         self.setup()
         cycles = self.get_arg("cycles", 1)
         for cycle in range(1, cycles + 1):

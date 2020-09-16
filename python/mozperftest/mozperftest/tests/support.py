@@ -8,6 +8,7 @@ from pathlib import Path
 from mozperftest.metadata import Metadata
 from mozperftest.environment import MachEnvironment
 from mozperftest.hooks import Hooks
+from mozperftest.script import ScriptInfo
 
 
 HERE = Path(__file__).parent
@@ -61,8 +62,13 @@ def get_running_env(**kwargs):
     }
     mach_args.update(kwargs)
     hooks = Hooks(mach_cmd, mach_args.pop("hooks", None))
+    tests = mach_args.get("tests", [])
+    if len(tests) > 0:
+        script = ScriptInfo(tests[0])
+    else:
+        script = None
     env = MachEnvironment(mach_cmd, hooks=hooks, **mach_args)
-    metadata = Metadata(mach_cmd, env, "desktop-browser")
+    metadata = Metadata(mach_cmd, env, "desktop-browser", script)
     return mach_cmd, metadata, env
 
 
