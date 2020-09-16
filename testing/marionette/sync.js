@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   truncate: "chrome://marionette/content/format.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 const { TYPE_ONE_SHOT, TYPE_REPEATING_SLACK } = Ci.nsITimer;
 

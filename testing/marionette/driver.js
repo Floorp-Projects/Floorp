@@ -54,7 +54,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WindowState: "chrome://marionette/content/browser.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const APP_ID_FIREFOX = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
