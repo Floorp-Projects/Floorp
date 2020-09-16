@@ -15,12 +15,12 @@
 // calls. We'll intercept those and handle them in the stat functions
 // but must be sure to use the right structure layout.
 
-#if defined(__NR_stat64)
+#if defined(__NR_stat64) || defined(__NR_fstatat64)
 typedef struct stat64 statstruct;
 #  define statsyscall stat64
 #  define lstatsyscall lstat64
 #  define fstatsyscall fstat64
-#elif defined(__NR_stat)
+#elif defined(__NR_stat) || defined(__NR_newfstatat)
 typedef struct stat statstruct;
 #  define statsyscall stat
 #  define lstatsyscall lstat
