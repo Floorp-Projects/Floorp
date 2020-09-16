@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import sys
 
 from mozboot.base import BaseBootstrapper
+from mozfile import which
 
 
 class FreeBSDBootstrapper(BaseBootstrapper):
@@ -37,10 +38,10 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'yasm',
         ]
 
-        if not self.which('as'):
+        if not which('as'):
             self.packages.append('binutils')
 
-        if not self.which('unzip'):
+        if not which('unzip'):
             self.packages.append('unzip')
 
     def pkg_install(self, *packages):

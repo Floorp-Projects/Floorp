@@ -13,6 +13,7 @@ import sys
 import subprocess
 import time
 from distutils.version import LooseVersion
+from mozfile import which
 
 # NOTE: This script is intended to be run with a vanilla Python install.  We
 # have to rely on the standard library instead of Python 2+3 helpers like
@@ -359,7 +360,7 @@ class Bootstrapper(object):
         # required to open the repo.
         (checkout_type, checkout_root) = current_firefox_checkout(
             env=self.instance._hg_cleanenv(load_hgrc=True),
-            hg=self.instance.which('hg'))
+            hg=which('hg'))
         self.instance.validate_environment(checkout_root)
         self.instance.ensure_mach_environment(checkout_root)
 
@@ -389,10 +390,10 @@ class Bootstrapper(object):
                 configure_hg = self.hg_configure
 
             if configure_hg:
-                configure_mercurial(self.instance.which('hg'), state_dir)
+                configure_mercurial(which('hg'), state_dir)
 
         # Offer to configure Git, if the current checkout or repo type is Git.
-        elif self.instance.which('git') and checkout_type == 'git':
+        elif which('git') and checkout_type == 'git':
             should_configure_git = False
             if not self.instance.no_interactive:
                 should_configure_git = self.instance.prompt_yesno(prompt=CONFIGURE_GIT)
@@ -401,19 +402,18 @@ class Bootstrapper(object):
                 should_configure_git = self.hg_configure
 
             if should_configure_git:
-                configure_git(self.instance.which('git'),
-                              self.instance.which('git-cinnabar'),
+                configure_git(which('git'), which('git-cinnabar'),
                               state_dir, checkout_root)
 
         self.check_telemetry_opt_in(state_dir)
         self.maybe_install_private_packages_or_exit(state_dir, checkout_root)
 
         print(FINISHED % name)
-        if not (self.instance.which('rustc') and self.instance._parse_version('rustc')
+        if not (which('rustc') and self.instance._parse_version('rustc')
                 >= MODERN_RUST_VERSION):
             print("To build %s, please restart the shell (Start a new terminal window)" % name)
 
-        if not self.instance.which("moz-phab"):
+        if not which('moz-phab'):
             print(MOZ_PHAB_ADVERTISE)
 
         self._output_mozconfig(application, mozconfig_builder)
