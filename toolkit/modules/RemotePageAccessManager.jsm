@@ -119,7 +119,7 @@ let RemotePageAccessManager = {
         "OpenSearchPreferences",
         "SearchHandoff",
       ],
-      RPMSendQuery: ["ShouldShowSearchBanner"],
+      RPMSendQuery: ["ShouldShowSearchBanner", "ShouldShowVPNPromo"],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
       RPMGetFormatURLPref: [
