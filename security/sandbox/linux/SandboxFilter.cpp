@@ -643,17 +643,14 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         return Allow();
 
         // Asynchronous I/O
-      case __NR_epoll_create1:
-      case __NR_epoll_create:
-      case __NR_epoll_wait:
-      case __NR_epoll_pwait:
+      CASES_FOR_epoll_create:
+      CASES_FOR_epoll_wait:
       case __NR_epoll_ctl:
-      case __NR_ppoll:
-      case __NR_poll:
+      CASES_FOR_poll:
         return Allow();
 
         // Used when requesting a crash dump.
-      case __NR_pipe:
+      CASES_FOR_pipe:
         return Allow();
 
         // Metadata of opened files
@@ -1223,7 +1220,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 #endif
 
       CASES_FOR_select:
-      case __NR_pselect6:
         return Allow();
 
       CASES_FOR_getdents:
@@ -1316,7 +1312,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_times:
         return Allow();
 
-      case __NR_dup2:  // See ConnectTrapCommon
+      CASES_FOR_dup2:  // See ConnectTrapCommon
         return Allow();
 
       CASES_FOR_getuid:
