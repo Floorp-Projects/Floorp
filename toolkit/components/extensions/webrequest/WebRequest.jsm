@@ -248,7 +248,7 @@ const OPTIONAL_PROPERTIES = [
   "responseSize",
 ];
 
-function serializeRequestData(eventName, extension) {
+function serializeRequestData(eventName) {
   let data = {
     requestId: this.requestId,
     url: this.url,
@@ -262,13 +262,8 @@ function serializeRequestData(eventName, extension) {
     parentFrameId: this.parentFrameId,
     incognito: this.incognito,
     thirdParty: this.thirdParty,
+    cookieStoreId: this.cookieStoreId,
   };
-
-  if (extension) {
-    if (extension.hasPermission("cookies")) {
-      data.cookieStoreId = this.cookieStoreId;
-    }
-  }
 
   if (MAYBE_CACHED_EVENTS.has(eventName)) {
     data.fromCache = !!this.fromCache;
