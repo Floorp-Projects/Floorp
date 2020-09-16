@@ -1062,12 +1062,14 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
       if (currentTexFwd && currentTexFwd != aForwarder->GetTextureForwarder()) {
         gfxCriticalError()
             << "Attempt to move a texture to a different channel CF.";
+        MOZ_ASSERT_UNREACHABLE("unexpected to be called");
         return false;
       }
       if (currentFwd && currentFwd->GetCompositorBackendType() !=
                             aForwarder->GetCompositorBackendType()) {
         gfxCriticalError()
             << "Attempt to move a texture to different compositor backend.";
+        MOZ_ASSERT_UNREACHABLE("unexpected to be called");
         return false;
       }
       if (ShadowLayerForwarder* forwarder = aForwarder->AsLayerForwarder()) {
