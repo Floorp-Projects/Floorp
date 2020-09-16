@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 59.0.0-SNAPSHOT (In Development)
+# 60.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v58.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/119?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v59.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/120?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
+
+# 59.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v58.0.0...v59.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/119?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v59.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v59.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v59.0.0/buildSrc/src/main/java/Config.kt)
 
 * **feature-downloads**
   * 🚒 Bug fixed [issue #8354](https://github.com/mozilla-mobile/android-components/issues/8354) Do not restart FAILED downloads.
