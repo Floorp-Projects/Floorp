@@ -1106,13 +1106,6 @@ class SpecialPowersParent extends JSWindowActorParent {
         return undefined;
       }
 
-      case "SPExtensionGrantActiveTab": {
-        let { id, tabId } = aMessage.data;
-        let { tabManager } = this._extensions.get(id);
-        tabManager.addActiveTabPermission(tabManager.get(tabId).nativeTab);
-        return undefined;
-      }
-
       case "SPUnloadExtension": {
         let id = aMessage.data.id;
         let extension = this._extensions.get(id);
