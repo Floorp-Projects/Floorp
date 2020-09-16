@@ -24,7 +24,7 @@ clang-dist-toolchain:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-clang-9
+            - linux64-clang
             - linux64-sccache
 
 rustc-dist-toolchain:
