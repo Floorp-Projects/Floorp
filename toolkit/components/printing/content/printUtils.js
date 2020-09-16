@@ -162,18 +162,10 @@ var PrintUtils = {
    *        The BrowsingContext of the window to print.
    * @param aExistingPreviewBrowser
    *        An existing browser created for printing from window.print().
-   * @param aPrintInitiationTime
-   *        The time the print was initiated (typically by the user) as obtained
-   *        from `Date.now()`.  That is, the initiation time as the number of
-   *        milliseconds since January 1, 1970.
    * @return promise resolving when the dialog is open, rejected if the preview
    *         fails.
    */
-  async _openTabModalPrint(
-    aBrowsingContext,
-    aExistingPreviewBrowser,
-    aPrintInitiationTime
-  ) {
+  async _openTabModalPrint(aBrowsingContext, aExistingPreviewBrowser) {
     let sourceBrowser = aBrowsingContext.top.embedderElement;
     let previewBrowser = this.getPreviewBrowser(sourceBrowser);
     if (previewBrowser) {
@@ -194,7 +186,7 @@ var PrintUtils = {
     });
     let dialogBox = gBrowser.getTabDialogBox(sourceBrowser);
     return dialogBox.open(
-      `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}&printInitiationTime=${aPrintInitiationTime}`,
+      `chrome://global/content/print.html?browsingContextId=${aBrowsingContext.id}`,
       { features: "resizable=no", sizeTo: "available" },
       args
     );
@@ -214,7 +206,6 @@ var PrintUtils = {
    *        createBrowser in order for the child process to clone into it.
    */
   startPrintWindow(aBrowsingContext, aOpenWindowInfo) {
-    const printInitiationTime = Date.now();
     let browser = null;
     if (aOpenWindowInfo) {
       browser = document.createXULElement("browser");
@@ -245,11 +236,7 @@ var PrintUtils = {
       !PRINT_ALWAYS_SILENT &&
       (!aOpenWindowInfo || aOpenWindowInfo.isForPrintPreview)
     ) {
-      this._openTabModalPrint(
-        aBrowsingContext,
-        browser,
-        printInitiationTime
-      ).catch(() => {});
+      this._openTabModalPrint(aBrowsingContext, browser).catch(() => {});
       return browser;
     }
 
@@ -357,11 +344,7 @@ var PrintUtils = {
    */
   printPreview(aListenerObj) {
     if (PRINT_TAB_MODAL) {
-      return this._openTabModalPrint(
-        gBrowser.selectedBrowser.browsingContext,
-        /* aExistingPreviewBrowser = */ undefined,
-        Date.now()
-      );
+      return this._openTabModalPrint(gBrowser.selectedBrowser.browsingContext);
     }
 
     // If we already have a toolbar someone is calling printPreview() to get us
