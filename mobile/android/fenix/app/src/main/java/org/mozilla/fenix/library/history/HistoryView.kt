@@ -12,8 +12,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import kotlinx.android.synthetic.main.component_history.*
 import kotlinx.android.synthetic.main.component_history.view.*
+import kotlinx.android.synthetic.main.recently_closed_nav_item.*
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.library.LibraryPageView
 import org.mozilla.fenix.library.SelectionInteractor
 import org.mozilla.fenix.theme.ThemeManager
@@ -164,6 +166,19 @@ class HistoryView(
     fun updateEmptyState(userHasHistory: Boolean) {
         history_list.isVisible = userHasHistory
         history_empty_view.isVisible = !userHasHistory
+        recently_closed_nav_empty.apply {
+            setOnClickListener {
+                interactor.onRecentlyClosedClicked()
+            }
+            val numRecentTabs = view.context.components.core.store.state.closedTabs.size
+            recently_closed_tabs_description.text = String.format(
+                view.context.getString(
+                    if (numRecentTabs == 1)
+                        R.string.recently_closed_tab else R.string.recently_closed_tabs
+                ), numRecentTabs
+            )
+            isVisible = !userHasHistory
+        }
         if (!userHasHistory) {
             history_empty_view.announceForAccessibility(context.getString(R.string.history_empty_message))
         }
