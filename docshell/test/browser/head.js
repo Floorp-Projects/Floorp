@@ -198,3 +198,56 @@ function assertBackForwardState(canGoBack, canGoForward) {
     } disabled`
   );
 }
+
+class SHListener {
+  static NewEntry = 0;
+  static Reload = 1;
+  static GotoIndex = 2;
+  static Purge = 3;
+  static ReplaceEntry = 4;
+  static async waitForHistory(history, event) {
+    return new Promise(resolve => {
+      let listener = {
+        OnHistoryNewEntry: () => {},
+        OnHistoryReload: () => {
+          return true;
+        },
+        OnHistoryGotoIndex: () => {},
+        OnHistoryPurge: () => {},
+        OnHistoryReplaceEntry: () => {},
+
+        QueryInterface: ChromeUtils.generateQI([
+          "nsISHistoryListener",
+          "nsISupportsWeakReference",
+        ]),
+      };
+
+      function finish() {
+        history.removeSHistoryListener(listener);
+        resolve();
+      }
+      switch (event) {
+        case this.NewEntry:
+          listener.OnHistoryNewEntry = finish;
+          break;
+        case this.Reload:
+          listener.OnHistoryReload = () => {
+            finish();
+            return true;
+          };
+          break;
+        case this.GotoIndex:
+          listener.OnHistoryGotoIndex = finish;
+          break;
+        case this.Purge:
+          listener.OnHistoryPurge = finish;
+          break;
+        case this.ReplaceEntry:
+          listener.OnHistoryReplaceEntry = finish;
+          break;
+      }
+
+      history.addSHistoryListener(listener);
+    });
+  }
+}

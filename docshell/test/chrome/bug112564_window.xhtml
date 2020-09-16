@@ -35,8 +35,13 @@
       }
 
       // Work around bug 467960
-      var history = gBrowser.webNavigation.sessionHistory;
-      history.legacySHistory.purgeHistory(history.count);
+      if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+        let history = gBrowser.browsingContext.sessionHistory;
+        history.purgeHistory(history.count);
+      } else {
+        let history = gBrowser.webNavigation.sessionHistory;
+        history.legacySHistory.purgeHistory(history.count);
+      }
 
       window.close();
       window.arguments[0].SimpleTest.finish();
