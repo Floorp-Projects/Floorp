@@ -174,6 +174,10 @@ let runTests = t.step_func_done(function() {
   }, "Inserted null characters are findable");
 
   testFindable(false, "ab", `a<br>b`, "<br> forces a break even if there's no whitespace in between");
+
+  testFindable(true, "history.kafka", `
+    <code>database.history&#8203;.kafka.bootstrap.servers</code>
+  `, "ZWSP should be ignored");
 });
 
 window.onload = function() {
