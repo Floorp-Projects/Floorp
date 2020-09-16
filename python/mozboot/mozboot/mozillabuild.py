@@ -147,9 +147,6 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         BaseBootstrapper.__init__(self, no_interactive=no_interactive,
                                   no_system_changes=no_system_changes)
 
-    def which(self, name, *extra_search_dirs):
-        return BaseBootstrapper.which(self, name + '.exe', *extra_search_dirs)
-
     def validate_environment(self, srcdir):
         if self.application.startswith('mobile_android'):
             print('WARNING!!! Building Firefox for Android on Windows is not '
