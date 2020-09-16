@@ -849,6 +849,32 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
   return connection.extract();
 }
 
+// Returns true if a given nsIFile exists and is a directory. Returns false if
+// it doesn't exist. Returns an error if it exists, but is not a directory, or
+// any other error occurs.
+Result<bool, nsresult> ExistsAsDirectory(nsIFile& aDirectory) {
+  IDB_TRY_VAR(const bool exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
+
+  if (exists) {
+    IDB_TRY_VAR(const bool isDirectory,
+                MOZ_TO_RESULT_INVOKE(aDirectory, IsDirectory));
+
+    IDB_TRY(OkIf(isDirectory), Err(NS_ERROR_FAILURE));
+  }
+
+  return exists;
+}
+
+constexpr nsresult mapNoDeviceSpaceError(nsresult aRv) {
+  if (aRv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
+    // mozstorage translates SQLITE_FULL to
+    // NS_ERROR_FILE_NO_DEVICE_SPACE, which we know better as
+    // NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR.
+    return NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
+  }
+  return aRv;
+}
+
 Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult>
 CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
                         const nsAString& aName, const nsACString& aOrigin,
@@ -859,20 +885,16 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 
   AUTO_PROFILER_LABEL("CreateStorageConnection", DOM);
 
-  bool exists;
-
   IDB_TRY_VAR(auto dbFileUrl, GetDatabaseFileURL(aDBFile, aDirectoryLockId));
 
-  nsresult rv;
-  nsCOMPtr<mozIStorageService> ss =
-      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(
+      const auto storageService,
+      ToResultGet<nsCOMPtr<mozIStorageService>>(
+          MOZ_SELECT_OVERLOAD(do_GetService), MOZ_STORAGE_SERVICE_CONTRACTID));
 
   IDB_TRY_VAR(
       auto connection,
-      OpenDatabaseAndHandleBusy(*ss, *dbFileUrl, aTelemetryId)
+      OpenDatabaseAndHandleBusy(*storageService, *dbFileUrl, aTelemetryId)
           .map([](auto connection) -> nsCOMPtr<mozIStorageConnection> {
             return std::move(connection).unwrapBasePtr();
           })
@@ -892,64 +914,36 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     // XXX Shouldn't we also update quota usage?
 
     // Nuke the database file.
-    rv = aDBFile.Remove(false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
+    IDB_TRY(aDBFile.Remove(false));
+    IDB_TRY_VAR(const bool existsAsDirectory, ExistsAsDirectory(aFMDirectory));
+
+    if (existsAsDirectory) {
+      IDB_TRY(aFMDirectory.Remove(true));
     }
 
-    rv = aFMDirectory.Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
-
-    if (exists) {
-      bool isDirectory;
-      rv = aFMDirectory.IsDirectory(&isDirectory);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-      if (NS_WARN_IF(!isDirectory)) {
-        IDB_REPORT_INTERNAL_ERR();
-        return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-      }
-
-      rv = aFMDirectory.Remove(true);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-    }
-
-    IDB_TRY_VAR(connection,
-                OpenDatabaseAndHandleBusy(*ss, *dbFileUrl, aTelemetryId));
+    IDB_TRY_VAR(connection, OpenDatabaseAndHandleBusy(
+                                *storageService, *dbFileUrl, aTelemetryId));
   }
 
-  rv = SetDefaultPragmas(*connection);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
-
-  rv = connection->EnableModule("filesystem"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY(SetDefaultPragmas(*connection));
+  IDB_TRY(connection->EnableModule("filesystem"_ns));
 
   // Check to make sure that the database schema is correct.
-  int32_t schemaVersion;
-  rv = connection->GetSchemaVersion(&schemaVersion);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Err(rv);
-  }
+  IDB_TRY_VAR(const int32_t schemaVersion,
+              MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion));
 
   // Unknown schema will fail origin initialization too.
-  if (!schemaVersion && aName.IsVoid()) {
-    IDB_WARNING("Unable to open IndexedDB database, schema is not set!");
-    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  IDB_TRY(
+      OkIf(schemaVersion || !aName.IsVoid()),
+      Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR), [](const auto&) {
+        IDB_WARNING("Unable to open IndexedDB database, schema is not set!");
+      });
 
-  if (schemaVersion > kSQLiteSchemaVersion) {
-    IDB_WARNING("Unable to open IndexedDB database, schema is too high!");
-    return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  IDB_TRY(
+      OkIf(schemaVersion <= kSQLiteSchemaVersion),
+      Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR), [](const auto&) {
+        IDB_WARNING("Unable to open IndexedDB database, schema is too high!");
+      });
 
   bool journalModeSet = false;
 
@@ -959,37 +953,25 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     if (newDatabase) {
       // Set the page size first.
       if (kSQLitePageSizeOverride) {
-        rv = connection->ExecuteSimpleSQL(nsPrintfCString(
-            "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
+        IDB_TRY(connection->ExecuteSimpleSQL(nsPrintfCString(
+            "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)));
       }
 
       // We have to set the auto_vacuum mode before opening a transaction.
-      rv = connection->ExecuteSimpleSQL(
+      IDB_TRY((MOZ_TO_RESULT_INVOKE(
+                   connection, ExecuteSimpleSQL,
 #ifdef IDB_MOBILE
-          // Turn on full auto_vacuum mode to reclaim disk space on mobile
-          // devices (at the cost of some COMMIT speed).
-          "PRAGMA auto_vacuum = FULL;"_ns
+                   // Turn on full auto_vacuum mode to reclaim disk space on
+                   // mobile devices (at the cost of some COMMIT speed).
+                   "PRAGMA auto_vacuum = FULL;"_ns
 #else
-          // Turn on incremental auto_vacuum mode on desktop builds.
-          "PRAGMA auto_vacuum = INCREMENTAL;"_ns
+                   // Turn on incremental auto_vacuum mode on desktop builds.
+                   "PRAGMA auto_vacuum = INCREMENTAL;"_ns
 #endif
-      );
-      if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
-        // mozstorage translates SQLITE_FULL to NS_ERROR_FILE_NO_DEVICE_SPACE,
-        // which we know better as NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR.
-        rv = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+                   )
+                   .mapErr(mapNoDeviceSpaceError)));
 
-      rv = SetJournalMode(*connection);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+      IDB_TRY(SetJournalMode(*connection));
 
       journalModeSet = true;
     } else {
@@ -1007,53 +989,33 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
         connection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     if (newDatabase) {
-      rv = CreateTables(*connection);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
+      IDB_TRY(CreateTables(*connection));
+
+      {
+        DebugOnly<int32_t> schemaVersion;
+        MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
+        MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
       }
 
-      MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
-      MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
-
-      nsCOMPtr<mozIStorageStatement> stmt;
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      nsresult rv = connection->CreateStatement(
-          "INSERT INTO database (name, origin) "
-          "VALUES (:name, :origin)"_ns,
-          getter_AddRefs(stmt));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+      IDB_TRY_VAR(
+          const auto stmt,
+          ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+              std::mem_fn(&mozIStorageConnection::CreateStatement), connection,
+              "INSERT INTO database (name, origin) "
+              "VALUES (:name, :origin)"_ns));
 
-      rv = stmt->BindStringByIndex(0, aName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      rv = stmt->BindUTF8StringByIndex(1, aOrigin);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      rv = stmt->Execute();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+      IDB_TRY(stmt->BindStringByIndex(0, aName));
+      IDB_TRY(stmt->BindUTF8StringByIndex(1, aOrigin));
+      IDB_TRY(stmt->Execute());
     } else {
       IDB_TRY_VAR(vacuumNeeded, MaybeUpgradeSchema(*connection, schemaVersion,
                                                    aFMDirectory, aOrigin));
     }
 
-    rv = transaction.Commit();
-    if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
-      // mozstorage translates SQLITE_FULL to NS_ERROR_FILE_NO_DEVICE_SPACE,
-      // which we know better as NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR.
-      rv = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+    IDB_TRY(MOZ_TO_RESULT_INVOKE(transaction, Commit)
+                .mapErr(mapNoDeviceSpaceError));
 
 #ifdef DEBUG
     if (!newDatabase) {
@@ -1072,63 +1034,43 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 #endif
 
     if (kSQLitePageSizeOverride && !newDatabase) {
-      nsCOMPtr<mozIStorageStatement> stmt;
-      rv = connection->CreateStatement("PRAGMA page_size;"_ns,
-                                       getter_AddRefs(stmt));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+      IDB_TRY_VAR(const auto stmt,
+                  ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+                      std::mem_fn(&mozIStorageConnection::CreateStatement),
+                      connection, "PRAGMA page_size;"_ns));
 
-      bool hasResult;
-      rv = stmt->ExecuteStep(&hasResult);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
+      IDB_TRY_VAR(const bool hasResult,
+                  MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
       MOZ_ASSERT(hasResult);
 
-      int32_t pageSize;
-      rv = stmt->GetInt32(0, &pageSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
+      IDB_TRY_VAR(const int32_t pageSize,
+                  MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
       MOZ_ASSERT(pageSize >= 512 && pageSize <= 65536);
 
       if (kSQLitePageSizeOverride != uint32_t(pageSize)) {
         // We must not be in WAL journal mode to change the page size.
-        rv = connection->ExecuteSimpleSQL("PRAGMA journal_mode = DELETE;"_ns);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
+        IDB_TRY(
+            connection->ExecuteSimpleSQL("PRAGMA journal_mode = DELETE;"_ns));
 
-        rv = connection->CreateStatement("PRAGMA journal_mode;"_ns,
-                                         getter_AddRefs(stmt));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
+        IDB_TRY_VAR(const auto stmt,
+                    ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+                        std::mem_fn(&mozIStorageConnection::CreateStatement),
+                        connection, "PRAGMA journal_mode;"_ns));
 
-        rv = stmt->ExecuteStep(&hasResult);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
-
+        IDB_TRY_VAR(const bool hasResult,
+                    MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
         MOZ_ASSERT(hasResult);
 
-        nsCString journalMode;
-        rv = stmt->GetUTF8String(0, journalMode);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
+        IDB_TRY_VAR(
+            const auto journalMode,
+            ToResultInvoke<nsCString>(
+                std::mem_fn(&mozIStorageStatement::GetUTF8String), stmt, 0));
 
         if (journalMode.EqualsLiteral("delete")) {
           // Successfully set to rollback journal mode so changing the page size
           // is possible with a VACUUM.
-          rv = connection->ExecuteSimpleSQL(nsPrintfCString(
-              "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride));
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return Err(rv);
-          }
+          IDB_TRY(connection->ExecuteSimpleSQL(nsPrintfCString(
+              "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)));
 
           // We will need to VACUUM in order to change the page size.
           vacuumNeeded = true;
@@ -1141,66 +1083,41 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     }
 
     if (vacuumNeeded) {
-      rv = connection->ExecuteSimpleSQL("VACUUM;"_ns);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+      IDB_TRY(connection->ExecuteSimpleSQL("VACUUM;"_ns));
     }
 
     if (newDatabase || vacuumNeeded) {
       if (journalModeSet) {
         // Make sure we checkpoint to get an accurate file size.
-        rv = connection->ExecuteSimpleSQL("PRAGMA wal_checkpoint(FULL);"_ns);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return Err(rv);
-        }
+        IDB_TRY(
+            connection->ExecuteSimpleSQL("PRAGMA wal_checkpoint(FULL);"_ns));
       }
 
-      int64_t fileSize;
-      rv = aDBFile.GetFileSize(&fileSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
+      IDB_TRY_VAR(const int64_t fileSize,
+                  MOZ_TO_RESULT_INVOKE(aDBFile, GetFileSize));
       MOZ_ASSERT(fileSize > 0);
 
       PRTime vacuumTime = PR_Now();
       MOZ_ASSERT(vacuumTime);
 
-      nsCOMPtr<mozIStorageStatement> vacuumTimeStmt;
       // The parameter names are not used, parameters are bound by index only
       // locally in the same function.
-      rv = connection->CreateStatement(
-          "UPDATE database "
-          "SET last_vacuum_time = :time"
-          ", last_vacuum_size = :size;"_ns,
-          getter_AddRefs(vacuumTimeStmt));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+      IDB_TRY_VAR(
+          const auto vacuumTimeStmt,
+          ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
+              std::mem_fn(&mozIStorageConnection::CreateStatement), connection,
+              "UPDATE database "
+              "SET last_vacuum_time = :time"
+              ", last_vacuum_size = :size;"_ns));
 
-      rv = vacuumTimeStmt->BindInt64ByIndex(0, vacuumTime);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      rv = vacuumTimeStmt->BindInt64ByIndex(1, fileSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
-
-      rv = vacuumTimeStmt->Execute();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Err(rv);
-      }
+      IDB_TRY(vacuumTimeStmt->BindInt64ByIndex(0, vacuumTime));
+      IDB_TRY(vacuumTimeStmt->BindInt64ByIndex(1, fileSize));
+      IDB_TRY(vacuumTimeStmt->Execute());
     }
   }
 
   if (!journalModeSet) {
-    rv = SetJournalMode(*connection);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Err(rv);
-    }
+    IDB_TRY(SetJournalMode(*connection));
   }
 
   return WrapMovingNotNullUnchecked(std::move(connection));
@@ -5968,22 +5885,6 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
   }
 
   return NS_OK;
-}
-
-// Returns true if a given nsIFile exists and is a directory. Returns false if
-// it doesn't exist. Returns an error if it exists, but is not a directory, or
-// any other error occurs.
-Result<bool, nsresult> ExistsAsDirectory(nsIFile& aDirectory) {
-  IDB_TRY_VAR(const bool exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
-
-  if (exists) {
-    IDB_TRY_VAR(const bool isDirectory,
-                MOZ_TO_RESULT_INVOKE(aDirectory, IsDirectory));
-
-    IDB_TRY(OkIf(isDirectory), Err(NS_ERROR_FAILURE));
-  }
-
-  return exists;
 }
 
 // CreateMarkerFile and RemoveMarkerFile are a pair of functions to indicate
