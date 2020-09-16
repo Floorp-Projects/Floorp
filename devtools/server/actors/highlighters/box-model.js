@@ -107,12 +107,6 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     );
     this.isReady = this.markup.initialize();
 
-    /**
-     * Optionally customize each region's fill color by adding an entry to the
-     * regionFill property: `highlighter.regionFill.margin = "red";
-     */
-    this.regionFill = {};
-
     this.onPageHide = this.onPageHide.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
 
@@ -526,12 +520,6 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       const boxType = BOX_MODEL_REGIONS[i];
       const nextBoxType = BOX_MODEL_REGIONS[i + 1];
       const box = this.getElement(boxType);
-
-      if (this.regionFill[boxType]) {
-        box.setAttribute("style", "fill:" + this.regionFill[boxType]);
-      } else {
-        box.setAttribute("style", "");
-      }
 
       // Highlight all quads for this region by setting the "d" attribute of the
       // corresponding <path>.
