@@ -1673,6 +1673,11 @@ void ContentParent::AssertNotInPool() {
         !sBrowserContentParents->Contains(mRemoteType) ||
         !sBrowserContentParents->Get(mRemoteType)->Contains(this) ||
         !sCanLaunchSubprocesses);  // aka in shutdown - avoid timing issues
+
+    for (auto& group : mGroups) {
+      MOZ_RELEASE_ASSERT(group.GetKey()->GetHostProcess(mRemoteType) != this,
+                         "still a host process for one of our groups?");
+    }
   }
 }
 
@@ -1932,6 +1937,10 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   a11y::AccessibleWrap::ReleaseContentProcessIdFor(ChildID());
+#endif
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  AssertNotInPool();
 #endif
 
   // As this process is going away, ensure that every BrowsingContext hosted by
@@ -2492,6 +2501,9 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mIsInputPriorityEventEnabled(false),
       mIsInPool(false),
       mHangMonitorActor(nullptr) {
+  MOZ_DIAGNOSTIC_ASSERT(!IsForJSPlugin(),
+                        "XXX(nika): How are we creating a JSPlugin?");
+
   // Insert ourselves into the global linked list of ContentParent objects.
   if (!sContentParents) {
     sContentParents = MakeUnique<LinkedList<ContentParent>>();
