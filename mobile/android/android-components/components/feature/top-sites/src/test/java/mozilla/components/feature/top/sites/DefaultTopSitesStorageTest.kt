@@ -266,37 +266,48 @@ class DefaultTopSitesStorageTest {
             createdAt = 1,
             type = TopSite.Type.DEFAULT
         )
-        val pinnedSite = TopSite(
+        val pinnedSite1 = TopSite(
             id = 2,
             title = "Wikipedia",
             url = "https://wikipedia.com",
             createdAt = 2,
             type = TopSite.Type.PINNED
         )
+        val pinnedSite2 = TopSite(
+            id = 3,
+            title = "Example",
+            url = "https://example.com",
+            createdAt = 3,
+            type = TopSite.Type.PINNED
+        )
         whenever(pinnedSitesStorage.getPinnedSites()).thenReturn(
             listOf(
                 defaultSiteFirefox,
-                pinnedSite
+                pinnedSite1,
+                pinnedSite2
             )
         )
 
         val frecentSiteWithNoTitle = TopFrecentSiteInfo("https://mozilla.com", "")
         val frecentSiteFirefox = TopFrecentSiteInfo("https://firefox.com", "Firefox")
-        val frecentSite = TopFrecentSiteInfo("https://getpocket.com", "Pocket")
+        val frecentSite1 = TopFrecentSiteInfo("https://getpocket.com", "Pocket")
+        val frecentSite2 = TopFrecentSiteInfo("https://www.example.com", "Example")
         whenever(historyStorage.getTopFrecentSites(anyInt())).thenReturn(
             listOf(
                 frecentSiteWithNoTitle,
                 frecentSiteFirefox,
-                frecentSite
+                frecentSite1,
+                frecentSite2
             )
         )
 
         val topSites = defaultTopSitesStorage.getTopSites(5, true)
-        assertEquals(4, topSites.size)
+        assertEquals(5, topSites.size)
         assertEquals(defaultSiteFirefox, topSites[0])
-        assertEquals(pinnedSite, topSites[1])
-        assertEquals(frecentSiteWithNoTitle.toTopSite(), topSites[2])
-        assertEquals(frecentSite.toTopSite(), topSites[3])
+        assertEquals(pinnedSite1, topSites[1])
+        assertEquals(pinnedSite2, topSites[2])
+        assertEquals(frecentSiteWithNoTitle.toTopSite(), topSites[3])
+        assertEquals(frecentSite1.toTopSite(), topSites[4])
         assertEquals("mozilla.com", frecentSiteWithNoTitle.toTopSite().title)
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
     }

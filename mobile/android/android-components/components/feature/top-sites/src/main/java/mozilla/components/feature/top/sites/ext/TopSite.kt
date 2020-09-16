@@ -5,6 +5,7 @@
 package mozilla.components.feature.top.sites.ext
 
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.support.utils.URLStringUtils
 
 /**
  * Returns true if the given url is in the list top site and false otherwise.
@@ -13,7 +14,8 @@ import mozilla.components.feature.top.sites.TopSite
  */
 fun List<TopSite>.hasUrl(url: String): Boolean {
     for (topSite in this) {
-        if (topSite.url == url) {
+        // Strip the https/http and WWW prefixes from the urls.
+        if (URLStringUtils.toDisplayUrl(topSite.url) == URLStringUtils.toDisplayUrl(url)) {
             return true
         }
     }
