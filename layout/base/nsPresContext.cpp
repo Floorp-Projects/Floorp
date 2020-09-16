@@ -90,7 +90,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceTiming.h"
-#include "mozilla/dom/PerformancePaintTiming.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "MobileViewportManager.h"
 #include "mozilla/dom/ImageTracker.h"
@@ -191,7 +190,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mInflationDisabledForShrinkWrap(false),
       mInteractionTimeEnabled(true),
       mHasPendingInterrupt(false),
-      mHasEverBuiltInvisibleText(false),
       mPendingInterruptFromTest(false),
       mInterruptsEnabled(false),
       mSendAfterPaintToContent(false),
@@ -2399,26 +2397,10 @@ void nsPresContext::NotifyContentfulPaint() {
         ->PostDOMEvent();
 #endif
     mHadContentfulPaint = true;
-    if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
-      mFirstContentfulPaintTransactionId =
-          Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
-      if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
-        if (Performance* perf = innerWindow->GetPerformance()) {
-          TimeStamp nowTime =
-              rootPresContext->RefreshDriver()->MostRecentRefresh(
-                  /* aEnsureTimerStarted */ false);
-          MOZ_ASSERT(
-              !nowTime.IsNull(),
-              "Most recent refresh timestamp should exist since we are in "
-              "a refresh driver tick");
-          MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
-                     "We should only notify contentful paint during refresh "
-                     "driver ticks");
-          RefPtr<PerformancePaintTiming> paintTiming =
-              new PerformancePaintTiming(perf, u"first-contentful-paint"_ns,
-                                         nowTime);
-          perf->SetFCPTimingEntry(paintTiming);
-        }
+    if (IsRootContentDocument()) {
+      if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
+        mFirstContentfulPaintTransactionId =
+            Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
       }
     }
   }
