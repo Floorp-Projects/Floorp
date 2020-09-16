@@ -402,33 +402,76 @@ var View = {
 
     // Column: Name
     {
-      let elt;
-      if (data.type == "browser") {
-        elt = this._addCell(row, {
-          fluentName: "about-processes-browser-name",
-          fluentArgs: {
-            pid:
-              "" + data.pid /* Make sure that this number is not localized */,
-          },
-          classes: ["type", "favicon"],
-        });
-      } else {
-        let name = data.title;
-        if (name) {
-          name = `${name} (${data.type})`;
-        } else {
-          name = data.origin ? `${data.origin} (${data.type})` : data.type;
-        }
-        elt = this._addCell(row, {
-          fluentName: "about-processes-process-name",
-          fluentArgs: {
-            name,
-            pid:
-              "" + data.pid /* Make sure that this number is not localized */,
-          },
-          classes: ["type", "favicon"],
-        });
+      let fluentName;
+      switch (data.type) {
+        case "web":
+          fluentName = "about-processes-web-process-name";
+          break;
+        case "webIsolated":
+          fluentName = "about-processes-webIsolated-process-name";
+          break;
+        case "webLargeAllocation":
+          fluentName = "about-processes-webLargeAllocation-process-name";
+          break;
+        case "file":
+          fluentName = "about-processes-file-process-name";
+          break;
+        case "extension":
+          fluentName = "about-processes-extension-process-name";
+          break;
+        case "privilegedabout":
+          fluentName = "about-processes-privilegedabout-process-name";
+          break;
+        case "withCoopCoep":
+          fluentName = "about-processes-withCoopCoep-process-name";
+          break;
+        case "browser":
+          fluentName = "about-processes-browser-process-name";
+          break;
+        case "plugin":
+          fluentName = "about-processes-plugin-process-name";
+          break;
+        case "gmpPlugin":
+          fluentName = "about-processes-gmpPlugin-process-name";
+          break;
+        case "gpu":
+          fluentName = "about-processes-gpu-process-name";
+          break;
+        case "vr":
+          fluentName = "about-processes-vr-process-name";
+          break;
+        case "rdd":
+          fluentName = "about-processes-rdd-process-name";
+          break;
+        case "socket":
+          fluentName = "about-processes-socket-process-name";
+          break;
+        case "remoteSandboxBroker":
+          fluentName = "about-processes-remoteSandboxBroker-process-name";
+          break;
+        case "forkServer":
+          fluentName = "about-processes-forkServer-process-name";
+          break;
+        case "preallocated":
+          fluentName = "about-processes-preallocated-process-name";
+          break;
+        // The following are probably not going to show up for users
+        // but let's handle the case anyway to avoid heisenoranges
+        // during tests in case of a leftover process from a previous
+        // test.
+        default:
+          fluentName = "about-processes-unknown-process-name";
+          break;
       }
+      let elt = this._addCell(row, {
+        fluentName,
+        fluentArgs: {
+          pid: "" + data.pid, // Make sure that this number is not localized
+          origin: data.origin,
+          type: data.type,
+        },
+        classes: ["type", "favicon"],
+      });
 
       let image;
       switch (data.type) {
