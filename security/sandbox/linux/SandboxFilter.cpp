@@ -1094,11 +1094,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 #  endif
       case __NR_fchownat:
         return Error(EPERM);
-
-        // For ORBit called by GConf (on some systems) to get proxy
-        // settings.  Can remove when bug 1325242 happens in some form.
-      case __NR_utime:
-        return Error(EPERM);
 #endif
 
       CASES_FOR_select:
