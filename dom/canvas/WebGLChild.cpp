@@ -41,15 +41,18 @@ Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(const size_t size) {
     mPendingCmdsShmem = std::move(shmem);
     mPendingCmdsPos = 0;
   }
-
   const auto range = mPendingCmdsShmem.ByteRange();
 
-  const auto remaining =
-      Range<uint8_t>{range.begin() + mPendingCmdsPos, range.end()};
-  if (size > remaining.length()) {
+  auto itr = range.begin() + mPendingCmdsPos;
+  const auto offset = AlignmentOffset(kUniversalAlignment, itr.get());
+  mPendingCmdsPos += offset;
+  const auto required = mPendingCmdsPos + size;
+  if (required > range.length()) {
     FlushPendingCmds();
     return AllocPendingCmdBytes(size);
   }
+  itr = range.begin() + mPendingCmdsPos;
+  const auto remaining = Range<uint8_t>{itr, range.end()};
   mPendingCmdsPos += size;
   return Some(Range<uint8_t>{remaining.begin(), remaining.begin() + size});
 }
