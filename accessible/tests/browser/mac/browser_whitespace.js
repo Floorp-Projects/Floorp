@@ -13,29 +13,33 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 addAccessibleTask(`hello<br>world`, async (browser, accDoc) => {
   let doc = accDoc.nativeInterface.QueryInterface(Ci.nsIAccessibleMacInterface);
   let docChildren = doc.getAttributeValue("AXChildren");
-  is(docChildren.length, 2, "The document contains two children");
+  is(docChildren.length, 1, "The document contains a root group");
+
+  let rootGroup = docChildren[0];
+  let children = rootGroup.getAttributeValue("AXChildren");
+  is(docChildren.length, 1, "The root group contains 2 children");
 
   // verify first child is correct
   is(
-    docChildren[0].getAttributeValue("AXRole"),
+    children[0].getAttributeValue("AXRole"),
     "AXStaticText",
     "First child is a text node"
   );
   is(
-    docChildren[0].getAttributeValue("AXValue"),
+    children[0].getAttributeValue("AXValue"),
     "hello",
     "First child is hello text"
   );
 
   // verify second child is correct
   is(
-    docChildren[1].getAttributeValue("AXRole"),
+    children[1].getAttributeValue("AXRole"),
     "AXStaticText",
     "Second child is a text node"
   );
 
   is(
-    docChildren[1].getAttributeValue("AXValue"),
+    children[1].getAttributeValue("AXValue"),
     "world ",
     "Second child is world text"
   );
