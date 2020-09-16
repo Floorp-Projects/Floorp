@@ -443,8 +443,8 @@ class nsHttpChannel final : public HttpBaseChannel,
       HttpTransactionShell* aTransWithStickyConn,
       const std::function<nsresult(nsHttpChannel*, nsresult)>&
           aContinueOnStopRequestFunc);
-  [[nodiscard]] nsresult DoConnect(
-      HttpTransactionShell* aTransWithStickyConn = nullptr);
+  [[nodiscard]] MOZ_NEVER_INLINE nsresult
+  DoConnect(HttpTransactionShell* aTransWithStickyConn = nullptr);
   [[nodiscard]] nsresult DoConnectActual(
       HttpTransactionShell* aTransWithStickyConn);
   [[nodiscard]] nsresult ContinueOnStopRequestAfterAuthRetry(
