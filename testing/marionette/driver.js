@@ -2423,6 +2423,10 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(cmd) {
   let prop = assert.string(cmd.parameters.propertyName);
   let webEl = WebElement.fromUUID(id, this.context);
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().getElementValueOfCssProperty(webEl, prop);
+  }
+
   switch (this.context) {
     case Context.Chrome:
       const win = this.getCurrentWindow();
