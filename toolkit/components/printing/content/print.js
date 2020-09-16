@@ -194,9 +194,15 @@ var PrintEventHandler = {
       this.updateSettings(e.detail)
     );
     document.addEventListener("cancel-print", () => this.cancelPrint());
-    document.addEventListener("open-system-dialog", () => {
+    document.addEventListener("open-system-dialog", async () => {
       // This file in only used if pref print.always_print_silent is false, so
       // no need to check that here.
+
+      // Disable elements of form while waiting to initialize
+      for (let element of document.querySelector("#print").elements) {
+        element.disabled = true;
+      }
+      await window._initialized;
 
       // Use our settings to prepopulate the system dialog.
       // The system print dialog won't recognize our internal save-to-pdf
@@ -399,6 +405,8 @@ var PrintEventHandler = {
         return;
       }
     }
+
+    await window._initialized;
 
     // This seems like it should be handled automatically but it isn't.
     Services.prefs.setStringPref("print_printer", settings.printerName);
