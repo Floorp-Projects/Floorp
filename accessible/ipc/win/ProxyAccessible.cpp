@@ -460,6 +460,8 @@ static IA2TextBoundaryType GetIA2TextBoundary(
       return IA2_TEXT_BOUNDARY_WORD;
     case nsIAccessibleText::BOUNDARY_LINE_START:
       return IA2_TEXT_BOUNDARY_LINE;
+    case nsIAccessibleText::BOUNDARY_PARAGRAPH:
+      return IA2_TEXT_BOUNDARY_PARAGRAPH;
     default:
       MOZ_CRASH();
   }
