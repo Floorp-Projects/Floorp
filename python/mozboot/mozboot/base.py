@@ -848,10 +848,9 @@ class BaseBootstrapper(object):
         jdk_bin_dir = None
         if 'JAVA_HOME' in os.environ:
             # Search JAVA_HOME if it is set as it's finer grained than looking at PATH.
-            possible_jarsigner_path = os.path.join(os.environ['JAVA_HOME'], 'bin', 'jarsigner')
-            if (os.path.isfile(possible_jarsigner_path)
-                    and os.access(possible_jarsigner_path, os.X_OK)):
-                jdk_bin_dir = os.path.dirname(os.path.realpath(possible_jarsigner_path))
+            possible_jarsigner_path = os.path.join(os.environ['JAVA_HOME'], 'bin')
+            if which('jarsigner', path=possible_jarsigner_path):
+                jdk_bin_dir = os.path.realpath(possible_jarsigner_path)
         else:
             # Search the path if JAVA_HOME is not set.
             jarsigner = which('jarsigner')
@@ -859,7 +858,8 @@ class BaseBootstrapper(object):
 
             if jarsigner and java:
                 jdk_bin_dir = os.path.dirname(os.path.realpath(jarsigner))
-                if os.path.realpath(java) != os.path.realpath(os.path.join(jdk_bin_dir, 'java')):
+                if (os.path.realpath(java) !=
+                    os.path.realpath(which('java', path=jdk_bin_dir))):
                     # This can happen on Ubuntu if "update-alternatives" has been
                     # manually overridden once for either "java" or "jarsigner".
                     raise Exception('The "java" and "jarsigner" binaries on the PATH are '
@@ -870,7 +870,7 @@ class BaseBootstrapper(object):
             raise Exception('You need to have Java Development Kit version 1.8 installed. '
                             'Please install it from https://adoptopenjdk.net/?variant=openjdk8')
 
-        java = os.path.join(jdk_bin_dir, 'java')
+        java = which('java', path=jdk_bin_dir)
         try:
             output = subprocess.check_output([java,
                                               '-XshowSettings:properties',
