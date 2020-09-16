@@ -376,8 +376,12 @@ bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
 }
 
 bool TrialInliner::tryInlining() {
-  uint32_t icIndex = 0;
-  for (BytecodeLocation loc : AllBytecodesIterable(script_)) {
+  uint32_t numICEntries = icScript_->numICEntries();
+  BytecodeLocation startLoc = script_->location();
+
+  for (uint32_t icIndex = 0; icIndex < numICEntries; icIndex++) {
+    const ICEntry& entry = icScript_->icEntry(icIndex);
+    BytecodeLocation loc = startLoc + BytecodeLocationOffset(entry.pcOffset());
     JSOp op = loc.getOp();
     switch (op) {
       case JSOp::Call:
@@ -386,15 +390,12 @@ bool TrialInliner::tryInlining() {
       case JSOp::FunCall:
       case JSOp::New:
       case JSOp::SuperCall:
-        if (!maybeInlineCall(icScript_->icEntry(icIndex), loc)) {
+        if (!maybeInlineCall(entry, loc)) {
           return false;
         }
         break;
       default:
         break;
-    }
-    if (loc.opHasIC()) {
-      icIndex++;
     }
   }
 
