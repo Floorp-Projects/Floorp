@@ -1860,6 +1860,14 @@
     sameRealm: BoolImm
     nargsAndFlags: RawWordField
 
+- name: CallDOMGetterResult
+  shared: false
+  transpile: false
+  cost_estimate: 4
+  args:
+    obj: ObjId
+    jitInfo: RawPointerField
+
 - name: ProxyGetResult
   shared: false
   transpile: true

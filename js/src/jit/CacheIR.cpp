@@ -225,15 +225,15 @@ GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, HandleScript script,
       resultFlags_(resultFlags),
       preliminaryObjectAction_(PreliminaryObjectAction::None) {}
 
-static void EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderOp,
+static void EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderId,
                                NativeObject* holder, Shape* shape) {
   if (holder->isFixedSlot(shape->slot())) {
-    writer.loadFixedSlotResult(holderOp,
+    writer.loadFixedSlotResult(holderId,
                                NativeObject::getFixedSlotOffset(shape->slot()));
   } else {
     size_t dynamicSlotOffset =
         holder->dynamicSlotIndex(shape->slot()) * sizeof(Value);
-    writer.loadDynamicSlotResult(holderOp, dynamicSlotOffset);
+    writer.loadDynamicSlotResult(holderId, dynamicSlotOffset);
   }
 }
 
@@ -1065,6 +1065,54 @@ static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
   EmitCallGetterResultNoGuards(cx, writer, obj, holder, shape, receiverId);
 }
 
+static bool CanAttachDOMGetter(JSContext* cx, HandleObject obj,
+                               HandleShape shape, ICState::Mode mode) {
+  if (!JitOptions.warpBuilder) {
+    return false;
+  }
+
+  if (mode != ICState::Mode::Specialized) {
+    return false;
+  }
+
+  JSFunction* getter = &shape->getterValue().toObject().as<JSFunction>();
+  if (!getter->hasJitInfo()) {
+    return false;
+  }
+
+  if (cx->realm() != getter->realm()) {
+    return false;
+  }
+
+  const JSJitInfo* jitInfo = getter->jitInfo();
+  if (jitInfo->type() != JSJitInfo::Getter) {
+    return false;
+  }
+
+  const JSClass* clasp = obj->getClass();
+  if (!clasp->isDOMClass() || clasp->isProxy()) {
+    return false;
+  }
+
+  DOMInstanceClassHasProtoAtDepth instanceChecker =
+      cx->runtime()->DOMcallbacks->instanceClassMatchesProto;
+  return instanceChecker(clasp, jitInfo->protoID, jitInfo->depth);
+}
+
+static void EmitCallDOMGetterResult(JSContext* cx, CacheIRWriter& writer,
+                                    JSObject* obj, JSObject* holder,
+                                    Shape* shape, ObjOperandId objId) {
+  // Note: this relies on EmitCallGetterResultGuards emitting a shape guard
+  // for specialized stubs.
+  // The shape guard ensures the receiver's Class is valid for this DOM getter.
+  EmitCallGetterResultGuards(writer, obj, holder, shape, objId,
+                             ICState::Mode::Specialized);
+
+  JSFunction* getter = &shape->getterValue().toObject().as<JSFunction>();
+  writer.callDOMGetterResult(objId, getter->jitInfo());
+  writer.typeMonitorResult();
+}
+
 void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
                                                      jsid id,
                                                      bool handleMissing) {
@@ -1130,6 +1178,14 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
     case CanAttachNativeGetter: {
       MOZ_ASSERT(!idempotent());
       maybeEmitIdGuard(id);
+
+      if (!isSuper() && CanAttachDOMGetter(cx_, obj, shape, mode_)) {
+        EmitCallDOMGetterResult(cx_, writer, obj, holder, shape, objId);
+
+        trackAttached("DOMGetter");
+        return AttachDecision::Attach;
+      }
+
       EmitCallGetterResult(cx_, writer, obj, holder, shape, objId, receiverId,
                            mode_);
 

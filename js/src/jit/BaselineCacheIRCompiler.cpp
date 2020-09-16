@@ -609,6 +609,34 @@ bool BaselineCacheIRCompiler::emitCallNativeGetterResult(
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitCallDOMGetterResult(ObjOperandId objId,
+                                                      uint32_t jitInfoOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  Address jitInfoAddr(stubAddress(jitInfoOffset));
+
+  AutoScratchRegister scratch(allocator, masm);
+
+  allocator.discardStack(masm);
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  // Load the JSJitInfo in the scratch register.
+  masm.loadPtr(jitInfoAddr, scratch);
+
+  masm.Push(obj);
+  masm.Push(scratch);
+
+  using Fn =
+      bool (*)(JSContext*, const JSJitInfo*, HandleObject, MutableHandleValue);
+  callVM<Fn, CallDOMGetter>(masm);
+
+  stubFrame.leave(masm);
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitProxyGetResult(ObjOperandId objId,
                                                  uint32_t idOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
