@@ -223,6 +223,13 @@ bool TrialInliner::shouldInline(JSFunction* target, ICStub* stub,
     return false;
   }
 
+  // Don't inline if the callee has a loop that was hot enough to enter Warp
+  // via OSR. This helps prevent getting stuck in Baseline code for a long time.
+  if (target->nonLazyScript()->jitScript()->hadIonOSR()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: had OSR");
+    return false;
+  }
+
   uint32_t entryCount = stub->getEnteredCount();
   if (entryCount < JitOptions.inliningEntryThreshold) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: Entry count is %u (minimum %u)",
