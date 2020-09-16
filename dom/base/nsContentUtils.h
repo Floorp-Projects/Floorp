@@ -2444,10 +2444,12 @@ class nsContentUtils {
   static Document* GetRootDocument(Document* aDoc);
 
   /**
-   * Returns true if aWin and the current pointer lock document
-   * have common scriptable top window.
+   * Returns true if aContext and the current pointer lock document
+   * have common top BrowsingContext.
+   * Note that this method returns true only if caller is in the same process
+   * as pointer lock document.
    */
-  static bool IsInPointerLockContext(nsPIDOMWindowOuter* aWin);
+  static bool IsInPointerLockContext(mozilla::dom::BrowsingContext* aContext);
 
   static void GetShiftText(nsAString& text);
   static void GetControlText(nsAString& text);
