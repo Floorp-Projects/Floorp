@@ -2623,6 +2623,18 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
 
   stub->maybeInvalidateWarp(cx, invalidationScript);
 
+  switch (stub->trialInliningState()) {
+    case TrialInliningState::Initial:
+    case TrialInliningState::Candidate:
+      stub->setTrialInliningState(writer.trialInliningState());
+      break;
+    case TrialInliningState::Inlined:
+      stub->setTrialInliningState(TrialInliningState::Failure);
+      break;
+    case TrialInliningState::Failure:
+      break;
+  }
+
   switch (stubKind) {
     case BaselineCacheIRStubKind::Regular: {
       auto newStub = new (newStubMem) ICCacheIR_Regular(code, stubInfo);

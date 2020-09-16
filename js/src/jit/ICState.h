@@ -12,6 +12,15 @@
 namespace js {
 namespace jit {
 
+// Used to track trial inlining status for a Baseline IC.
+// See also setTrialInliningState below.
+enum class TrialInliningState : uint8_t {
+  Initial = 0,
+  Candidate,
+  Inlined,
+  Failure,
+};
+
 // ICState stores information about a Baseline or Ion IC.
 class ICState {
  public:
@@ -27,6 +36,9 @@ class ICState {
 
  private:
   uint32_t mode_ : 2;
+
+  // The TrialInliningState for a Baseline IC.
+  uint32_t trialInliningState_ : 2;
 
   // Whether WarpOracle created a snapshot based on stubs attached to this
   // Baseline IC.
@@ -100,6 +112,7 @@ class ICState {
   }
   void reset() {
     setMode(Mode::Specialized);
+    trialInliningState_ = uint32_t(TrialInliningState::Initial);
     usedByTranspiler_ = false;
     numOptimizedStubs_ = 0;
     numFailures_ = 0;
@@ -132,6 +145,39 @@ class ICState {
   void clearUsedByTranspiler() { usedByTranspiler_ = false; }
   void setUsedByTranspiler() { usedByTranspiler_ = true; }
   bool usedByTranspiler() const { return usedByTranspiler_; }
+
+  TrialInliningState trialInliningState() const {
+    return TrialInliningState(trialInliningState_);
+  }
+  void setTrialInliningState(TrialInliningState state) {
+#ifdef DEBUG
+    // Moving to the Failure state is always valid. The other states should
+    // happen in this order:
+    //
+    //   Initial -> Candidate -> Inlined
+    //
+    // This ensures we perform trial inlining at most once per IC site.
+    if (state != TrialInliningState::Failure) {
+      switch (trialInliningState()) {
+        case TrialInliningState::Initial:
+          MOZ_ASSERT(state == TrialInliningState::Candidate);
+          break;
+        case TrialInliningState::Candidate:
+          MOZ_ASSERT(state == TrialInliningState::Candidate ||
+                     state == TrialInliningState::Inlined);
+          break;
+        case TrialInliningState::Inlined:
+        case TrialInliningState::Failure:
+          MOZ_CRASH("Inlined and Failure can only change to Failure");
+          break;
+      }
+    }
+#endif
+
+    trialInliningState_ = uint32_t(state);
+    MOZ_ASSERT(trialInliningState() == state,
+               "TrialInliningState must fit in bitfield");
+  }
 };
 
 }  // namespace jit
