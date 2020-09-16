@@ -40,13 +40,30 @@ class RangeConsumerView final : public webgl::ConsumerView<RangeConsumerView> {
     (void)Remaining();  // assert size non-negative
   }
 
-  QueueStatus ReadObject(size_t*, size_t, void* const src, const size_t size) {
-    const auto remaining = Remaining();
-    if (size > remaining) return QueueStatus::kTooSmall;
+  void AlignTo(const size_t alignment) {
+    const auto offset = AlignmentOffset(alignment, mSrcItr.get());
+    if (offset > Remaining()) {
+      mSrcItr = mSrcEnd;
+      return;
+    }
+    mSrcItr += offset;
+  }
 
-    memcpy(src, mSrcItr.get(), size);
-    mSrcItr += size;
-    return QueueStatus::kSuccess;
+  template <typename T>
+  Maybe<Range<const T>> ReadRange(const size_t elemCount) {
+    AlignTo(alignof(T));
+
+    constexpr auto elemSize = sizeof(T);
+    const auto byteSizeChecked = CheckedInt<size_t>(elemCount) * elemSize;
+    MOZ_RELEASE_ASSERT(byteSizeChecked.isValid());
+    const auto& byteSize = byteSizeChecked.value();
+
+    const auto remaining = Remaining();
+    if (byteSize > remaining) return {};
+
+    const auto begin = reinterpret_cast<const T*>(mSrcItr.get());
+    mSrcItr += byteSize;
+    return Some(Range<const T>{begin, elemCount});
   }
 };
 
@@ -61,9 +78,16 @@ class SizeOnlyProducerView final
  public:
   SizeOnlyProducerView() : ProducerView(this, 0, nullptr) {}
 
-  QueueStatus WriteObject(size_t, size_t*, const void*, const size_t size) {
-    mRequiredSize += size;
-    return QueueStatus::kSuccess;
+  template <typename T>
+  void WriteFromRange(const Range<const T>& src) {
+    constexpr auto alignment = alignof(T);
+    const size_t byteSize = ByteSize(src);
+    // printf_stderr("SizeOnlyProducerView: @%zu +%zu\n", alignment, byteSize);
+
+    const auto offset = AlignmentOffset(alignment, mRequiredSize);
+    mRequiredSize += offset;
+
+    mRequiredSize += byteSize;
   }
 
   const auto& RequiredSize() const { return mRequiredSize; }
@@ -72,26 +96,35 @@ class SizeOnlyProducerView final
 // -
 
 class RangeProducerView final : public webgl::ProducerView<RangeProducerView> {
-  RangedPtr<uint8_t> mDestItr;
+  const RangedPtr<uint8_t> mDestBegin;
   const RangedPtr<uint8_t> mDestEnd;
+  RangedPtr<uint8_t> mDestItr;
 
  public:
   auto Remaining() const { return *MaybeAs<size_t>(mDestEnd - mDestItr); }
 
   explicit RangeProducerView(const Range<uint8_t> range)
       : ProducerView(this, 0, nullptr),
-        mDestItr(range.begin()),
-        mDestEnd(range.end()) {
+        mDestBegin(range.begin()),
+        mDestEnd(range.end()),
+        mDestItr(mDestBegin) {
     (void)Remaining();  // assert size non-negative
   }
 
-  QueueStatus WriteObject(size_t, size_t*, const void* const src,
-                          const size_t size) {
-    MOZ_ASSERT(size <= Remaining());
+  template <typename T>
+  void WriteFromRange(const Range<const T>& src) {
+    constexpr auto alignment = alignof(T);
+    const size_t byteSize = ByteSize(src);
+    // printf_stderr("RangeProducerView: @%zu +%zu\n", alignment, byteSize);
 
-    memcpy(mDestItr.get(), src, size);
-    mDestItr += size;
-    return QueueStatus::kSuccess;
+    const auto offset = AlignmentOffset(alignment, mDestItr.get());
+    mDestItr += offset;
+
+    MOZ_ASSERT(byteSize <= Remaining());
+    if (byteSize) {
+      memcpy(mDestItr.get(), src.begin().get(), byteSize);
+    }
+    mDestItr += byteSize;
   }
 };
 
