@@ -680,6 +680,19 @@ DevToolsClient.prototype = {
       activeRequestsToReject = activeRequestsToReject.concat(request);
     });
     activeRequestsToReject.forEach(request => reject("active", request));
+
+    // Also purge protocol.js requests
+    const fronts = this.getAllFronts();
+
+    for (const front of fronts) {
+      if (!front.isDestroyed() && front.actorID.startsWith(prefix)) {
+        // Call Front.purgeRequestsForDestroy instead of Front.destroy in order to flush requests
+        // and nullify front.actorID immediately, even if Front.destroy is overloaded
+        // by an async function which would otherwise be able to try emitting new request
+        // after the purge.
+        front.purgeRequestsForDestroy();
+      }
+    }
   },
 
   /**
@@ -708,23 +721,7 @@ DevToolsClient.prototype = {
     });
 
     // protocol.js
-    // Use a Set because some fronts (like domwalker) seem to have multiple parents.
-    const fronts = new Set();
-    const poolsToVisit = [...this._pools];
-
-    // With protocol.js, each front can potentially have it's own pools containing child
-    // fronts, forming a tree.  Descend through all the pools to locate all child fronts.
-    while (poolsToVisit.length) {
-      const pool = poolsToVisit.shift();
-      // `_pools` contains either Front's or Pool's, we only want to collect Fronts here.
-      // Front inherits from Pool which exposes `poolChildren`.
-      if (pool instanceof Front) {
-        fronts.add(pool);
-      }
-      for (const child of pool.poolChildren()) {
-        poolsToVisit.push(child);
-      }
-    }
+    const fronts = this.getAllFronts();
 
     // For each front, wait for its requests to settle
     for (const front of fronts) {
@@ -748,6 +745,27 @@ DevToolsClient.prototype = {
         // Repeat, more requests may have started in response to those we just waited for
         return this.waitForRequestsToSettle();
       });
+  },
+
+  getAllFronts() {
+    // Use a Set because some fronts (like domwalker) seem to have multiple parents.
+    const fronts = new Set();
+    const poolsToVisit = [...this._pools];
+
+    // With protocol.js, each front can potentially have its own pools containing child
+    // fronts, forming a tree.  Descend through all the pools to locate all child fronts.
+    while (poolsToVisit.length) {
+      const pool = poolsToVisit.shift();
+      // `_pools` contains either Fronts or Pools, we only want to collect Fronts here.
+      // Front inherits from Pool which exposes `poolChildren`.
+      if (pool instanceof Front) {
+        fronts.add(pool);
+      }
+      for (const child of pool.poolChildren()) {
+        poolsToVisit.push(child);
+      }
+    }
+    return fronts;
   },
 
   /**

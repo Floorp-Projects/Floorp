@@ -83,9 +83,12 @@ function testAttachRemovedTab() {
       deferred.reject();
     });
 
+    const { actorID } = gTab2Front;
     gTab2Front.reconfigure({}).then(null, error => {
       ok(
-        error.message.includes("noSuchActor"),
+        error.message.includes(
+          `Connection closed, pending request to ${actorID}, type reconfigure failed`
+        ),
         "Actor is gone since the tab was removed."
       );
       deferred.resolve();
