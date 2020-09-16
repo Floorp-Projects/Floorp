@@ -1125,19 +1125,30 @@ void nsLookAndFeel::EnsureInit() {
   mFieldText = GDK_RGBA_TO_NS_RGBA(color);
 
   // Selected text and background
-  style = GetStyleContext(MOZ_GTK_TEXT_VIEW_TEXT_SELECTION);
-  gtk_style_context_get_background_color(
-      style,
-      static_cast<GtkStateFlags>(GTK_STATE_FLAG_FOCUSED |
-                                 GTK_STATE_FLAG_SELECTED),
-      &color);
-  mTextSelectedBackground = GDK_RGBA_TO_NS_RGBA(color);
-  gtk_style_context_get_color(
-      style,
-      static_cast<GtkStateFlags>(GTK_STATE_FLAG_FOCUSED |
-                                 GTK_STATE_FLAG_SELECTED),
-      &color);
-  mTextSelectedText = GDK_RGBA_TO_NS_RGBA(color);
+  {
+    GtkStyleContext* selectionStyle =
+        GetStyleContext(MOZ_GTK_TEXT_VIEW_TEXT_SELECTION);
+    auto GrabSelectionColors = [&](GtkStyleContext* style) {
+      gtk_style_context_get_background_color(
+          style,
+          static_cast<GtkStateFlags>(GTK_STATE_FLAG_FOCUSED |
+                                     GTK_STATE_FLAG_SELECTED),
+          &color);
+      mTextSelectedBackground = GDK_RGBA_TO_NS_RGBA(color);
+      gtk_style_context_get_color(
+          style,
+          static_cast<GtkStateFlags>(GTK_STATE_FLAG_FOCUSED |
+                                     GTK_STATE_FLAG_SELECTED),
+          &color);
+      mTextSelectedText = GDK_RGBA_TO_NS_RGBA(color);
+    };
+    GrabSelectionColors(selectionStyle);
+    if (mTextSelectedBackground == mTextSelectedText) {
+      // Some old distros/themes don't properly use the .selection style, so
+      // fall back to the regular text view style.
+      GrabSelectionColors(style);
+    }
+  }
 
   // Button text color
   style = GetStyleContext(MOZ_GTK_BUTTON);
