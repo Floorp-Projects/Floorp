@@ -491,4 +491,33 @@ enum AXTextStateChangeType {
   return nil;
 }
 
+- (NSString*)moxStringForRange:(NSValue*)range {
+  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+
+  NSRange r = [range rangeValue];
+  GeckoTextMarkerRange textMarkerRange(mGeckoAccessible);
+  textMarkerRange.mStart.mOffset += r.location;
+  textMarkerRange.mEnd.mOffset =
+      textMarkerRange.mStart.mOffset + r.location + r.length;
+
+  return textMarkerRange.Text();
+}
+
+- (NSAttributedString*)moxAttributedStringForRange:(NSValue*)range {
+  return [[[NSAttributedString alloc]
+      initWithString:[self moxStringForRange:range]] autorelease];
+}
+
+- (NSValue*)moxBoundsForRange:(NSValue*)range {
+  MOZ_ASSERT(!mGeckoAccessible.IsNull());
+
+  NSRange r = [range rangeValue];
+  GeckoTextMarkerRange textMarkerRange(mGeckoAccessible);
+
+  textMarkerRange.mStart.mOffset += r.location;
+  textMarkerRange.mEnd.mOffset = textMarkerRange.mStart.mOffset + r.length;
+
+  return textMarkerRange.Bounds();
+}
+
 @end
