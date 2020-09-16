@@ -17,7 +17,7 @@ job-defaults:
     worker-type: balrog
     worker:
         implementation: balrog
-        balrog-action: submit-toplevel
+        balrog-action: v2-submit-toplevel
         require-mirrors: true
         archive-domain:
             by-release-level:

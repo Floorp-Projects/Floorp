@@ -1052,7 +1052,7 @@ def build_balrog_payload(config, task, task_def):
     if 'b' in release_config['version']:
         beta_number = release_config['version'].split('b')[-1]
 
-    if worker['balrog-action'] == 'submit-locale':
+    if worker['balrog-action'] == 'submit-locale' or worker['balrog-action'] == 'v2-submit-locale':
         task_def['payload'] = {
             'upstreamArtifacts':  worker['upstream-artifacts'],
             'suffixes': worker['suffixes'],
@@ -1079,7 +1079,8 @@ def build_balrog_payload(config, task, task_def):
                      'complete-mar-bouncer-product-pattern'):
             if prop in worker:
                 task_def['payload'][prop.replace('-', '_')] = worker[prop]
-        if worker['balrog-action'] == 'submit-toplevel':
+        if worker['balrog-action'] == 'submit-toplevel' or \
+                worker['balrog-action'] == 'v2-submit-toplevel':
             task_def['payload'].update({
                 'app_version': release_config['appVersion'],
                 'archive_domain': worker['archive-domain'],
