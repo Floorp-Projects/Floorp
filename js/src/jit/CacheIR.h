@@ -297,10 +297,12 @@ class CallFlags {
 
   CallFlags() = default;
   explicit CallFlags(ArgFormat format) : argFormat_(format) {}
-  CallFlags(bool isConstructing, bool isSpread, bool isSameRealm = false)
+  CallFlags(bool isConstructing, bool isSpread, bool isSameRealm = false,
+            bool needsUninitializedThis = false)
       : argFormat_(isSpread ? Spread : Standard),
         isConstructing_(isConstructing),
-        isSameRealm_(isSameRealm) {}
+        isSameRealm_(isSameRealm),
+        needsUninitializedThis_(needsUninitializedThis) {}
 
   ArgFormat getArgFormat() const { return argFormat_; }
   bool isConstructing() const {
@@ -309,6 +311,9 @@ class CallFlags {
     return isConstructing_;
   }
   bool isSameRealm() const { return isSameRealm_; }
+
+  bool needsUninitializedThis() const { return needsUninitializedThis_; }
+  void setNeedsUninitializedThis() { needsUninitializedThis_ = true; }
 
   uint8_t toByte() const {
     // See CacheIRReader::callFlags()
@@ -320,6 +325,9 @@ class CallFlags {
     if (isSameRealm()) {
       value |= CallFlags::IsSameRealm;
     }
+    if (needsUninitializedThis()) {
+      value |= CallFlags::NeedsUninitializedThis;
+    }
     return value;
   }
 
@@ -327,6 +335,7 @@ class CallFlags {
   ArgFormat argFormat_ = ArgFormat::Unknown;
   bool isConstructing_ = false;
   bool isSameRealm_ = false;
+  bool needsUninitializedThis_ = false;
 
   // Used for encoding/decoding
   static const uint8_t ArgFormatBits = 4;
@@ -334,6 +343,7 @@ class CallFlags {
   static_assert(LastArgFormat <= ArgFormatMask, "Not enough arg format bits");
   static const uint8_t IsConstructing = 1 << 5;
   static const uint8_t IsSameRealm = 1 << 6;
+  static const uint8_t NeedsUninitializedThis = 1 << 7;
 
   friend class CacheIRReader;
   friend class CacheIRWriter;
@@ -1071,13 +1081,17 @@ class MOZ_RAII CacheIRReader {
         CallFlags::ArgFormat(encoded & CallFlags::ArgFormatMask);
     bool isConstructing = encoded & CallFlags::IsConstructing;
     bool isSameRealm = encoded & CallFlags::IsSameRealm;
+    bool needsUninitializedThis = encoded & CallFlags::NeedsUninitializedThis;
+    MOZ_ASSERT_IF(needsUninitializedThis, isConstructing);
     switch (format) {
       case CallFlags::Unknown:
         MOZ_CRASH("Unexpected call flags");
       case CallFlags::Standard:
-        return CallFlags(isConstructing, /*isSpread =*/false, isSameRealm);
+        return CallFlags(isConstructing, /*isSpread =*/false, isSameRealm,
+                         needsUninitializedThis);
       case CallFlags::Spread:
-        return CallFlags(isConstructing, /*isSpread =*/true, isSameRealm);
+        return CallFlags(isConstructing, /*isSpread =*/true, isSameRealm,
+                         needsUninitializedThis);
       default:
         // The existing non-standard argument formats (FunCall and FunApply)
         // can't be constructors and have no support for isSameRealm.
