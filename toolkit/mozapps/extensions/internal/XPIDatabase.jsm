@@ -936,7 +936,7 @@ AddonWrapper = class {
     return null;
   }
 
-  get isRecommended() {
+  get recommendationStates() {
     let addon = addonFor(this);
     let state = addon.recommendationState;
     if (
@@ -946,9 +946,13 @@ AddonWrapper = class {
       addon.isCorrectlySigned &&
       !this.temporarilyInstalled
     ) {
-      return state.states.includes("recommended");
+      return state.states;
     }
-    return false;
+    return [];
+  }
+
+  get isRecommended() {
+    return this.recommendationStates.includes("recommended");
   }
 
   get applyBackgroundUpdates() {

@@ -3158,6 +3158,11 @@ class AddonCard extends HTMLElement {
     // Hide the more options button if it's empty.
     moreOptionsButton.hidden = this.options.visibleItems.length === 0;
 
+    // Ensure all badges are initially hidden.
+    for (let node of card.querySelectorAll(".addon-badge")) {
+      node.hidden = true;
+    }
+
     // Set the private browsing badge visibility.
     if (
       !allowPrivateBrowsingByDefault &&
@@ -3172,10 +3177,15 @@ class AddonCard extends HTMLElement {
       });
     }
 
-    // Show the recommended badge if needed.
-    card.querySelector(
-      ".addon-badge-recommended"
-    ).hidden = !addon.isRecommended;
+    // Show the recommended badges if needed.
+    // Plugins don't have recommendationStates, so ensure a default.
+    let states = addon.recommendationStates || [];
+    for (let badgeName of states) {
+      let badge = card.querySelector(`.addon-badge-${badgeName}`);
+      if (badge) {
+        badge.hidden = false;
+      }
+    }
 
     // Update description.
     card.querySelector(".addon-description").textContent = addon.description;
