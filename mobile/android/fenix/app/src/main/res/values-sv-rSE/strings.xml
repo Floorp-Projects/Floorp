@@ -330,6 +330,8 @@
     <string name="preferences_search_browsing_history">Sök webbläsarhistorik</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Sök bokmärken</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Sök i synkroniserade flikar</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontoinställningar</string>
 

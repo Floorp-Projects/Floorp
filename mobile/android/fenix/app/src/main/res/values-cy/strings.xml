@@ -267,6 +267,8 @@
     <string name="preferences_open_links_in_a_private_tab">Agor dolen mewn tab preifat</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Caniatáu lluniau sgrin o fewn pori preifat</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Os fydd yn cael ei ganiatáu, bydd tabiau preifat hefyd yn weladwy pan fydd sawl ap ar agor</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ychwanegu llwybr byr pori preifat</string>
     <!-- Preference for accessibility -->
@@ -287,6 +289,8 @@
     <string name="preferences_theme">Thema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Cartref</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Ystumiau</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Cyfaddasu</string>
     <!-- Preference description for banner about signing in -->
@@ -324,6 +328,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Gosodiadau cyfrif</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Awtogwblhau URLau</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Agor dolenni mewn apiau</string>
 
@@ -460,6 +466,16 @@
     <string name="preference_auto_battery_theme">Gosodwyd gan yr Arbedwr Batri</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Dilyn thema’r ddyfais</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Tynnu i adnewyddu</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Sgrolio i guddio’r bar offer</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Llusgo’r bar offer i’r ochr i newid tabiau</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Llusgo’r bar offer i fyny i agor tabiau</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1050,7 +1066,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Rydych wedi eich mewngofnodi fel %s ar borwr Firefox arall ar y ffôn hwn. Hoffech chi fewngofnodi gyda’r cyfrif hwn?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Rydych wedi mewngofnodi fel %s ar borwr Firefox arall ar y ddyfais hon. Hoffech chi fewngofnodi gyda’r cyfrif hwn?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Iawn, mewngofnodwch fi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1295,7 +1311,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="add_to_homescreen_text_placeholder">Enw llwybr byr</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Gallwch ychwanegu’r wefan hon yn hawdd i sgrin Cartref eich ffôn. Byddwch yn cael mynediad ar unwaith a phori’n gyflymach gyda phrofiad tebyg i ap.</string>
+    <string name="add_to_homescreen_description_2">Gallwch ychwanegu’r wefan hon yn hawdd i sgrin Cartref eich ffôn i gael mynediad ar unwaith a phori’n gyflymach gyda phrofiad tebyg i ap.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Mewngofnodion a chyfrineiriau</string>
@@ -1366,8 +1382,12 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copïo’r cyfrinair</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Clirio’r cyfrinair</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copïo’r enw defnyddiwr</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Clirio’r enw defnyddiwr</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copïo’r wefan</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1522,7 +1542,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="saved_login_duplicate">Mae mewngofnod gyda’r enw defnyddiwr yna eisoes yn bodoli</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Cysylltu dyfais arall</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ail-ddilyswch, os gwelwch yn dda.</string>
@@ -1543,7 +1563,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Wedi cyrraedd terfyn nifer eich hoff wefannau</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">I ychwanegu hoff wefan newydd, tynnwch un. Pwyswch y wefan yn hir a dewis tynnu.</string>
+    <string name="top_sites_max_limit_content_2">I ychwanegu hoff wefan newydd, tynnwch un. Pwyswch a dal y wefan a dewis tynnu.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Iawn, Wedi deall!</string>
 
@@ -1553,7 +1573,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Tynnu</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Cael y gorau o %s.</string>
 
@@ -1561,4 +1581,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="no_collections_header1">Casglwch y pethau sy’n bwysig i chi</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Grwpiwch chwiliadau, gwefannau a thabiau tebyg ar gyfer mynediad cyflym yn y dyfodol.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Rydych wedi eich mewngofnodi fel %s ar borwr Firefox arall ar y ffôn hwn. Hoffech chi fewngofnodi gyda’r cyfrif hwn?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Gallwch ychwanegu’r wefan hon yn hawdd i sgrin Cartref eich ffôn. Byddwch yn cael mynediad ar unwaith a phori’n gyflymach gyda phrofiad tebyg i ap.</string>
+
+    </resources>

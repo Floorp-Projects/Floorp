@@ -278,6 +278,8 @@
     <string name="preferences_open_links_in_a_private_tab">Открывать ссылки в приватной вкладке</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Разрешить скриншоты при приватном просмотре</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">В случае, если разрешено, приватные вкладки будут видны при просмотре нескольких приложений</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Добавить ярлык приватного просмотра</string>
     <!-- Preference for accessibility -->
@@ -337,6 +339,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Настройки Аккаунта</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Автозаполнение URL</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Открывать ссылки в приложениях</string>
 
@@ -475,6 +479,16 @@
     <string name="preference_auto_battery_theme">Учитывать режим экономии батареи</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Использовать тему устройства</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Потяните, чтобы обновить</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Прокрутите страницу, чтобы скрыть панель инструментов</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Проведите в сторону по панели инструментов, чтобы переключить вкладки</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Проведите вверх по панели инструментов, чтобы открыть вкладки</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1583,6 +1597,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Достигнут лимит топа сайтов</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Чтобы добавить новый сайт в топ, удалите другой. Нажмите и удерживайте карточку с сайтом, затем откройте меню и нажмите удалить.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, понятно</string>
 
@@ -1592,7 +1608,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Убрать</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Получите максимум от %s.</string>
 

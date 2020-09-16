@@ -336,6 +336,8 @@
     <string name="preferences_search_browsing_history">방문 기록 검색</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">북마크 검색</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">동기화된 탭 검색</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">계정 설정</string>
 
@@ -447,7 +449,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">동기화 시작하기</string>
+    <string name="preferences_sync">Sync 켜기</string>
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">데스크톱 Firefox에서 페어링 코드를 스캔하세요</string>
     <!-- Preference for account login -->

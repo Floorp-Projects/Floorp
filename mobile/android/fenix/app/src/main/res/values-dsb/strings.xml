@@ -326,6 +326,8 @@
     <string name="preferences_search_browsing_history">Pśeglědowańsku historiju pśepytaś</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Cytańske znamjenja pśepytaś</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Synchronizěrowane rejtarki pytaś</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontowe nastajenja</string>
     <!-- Preference for enabling url autocomplete-->

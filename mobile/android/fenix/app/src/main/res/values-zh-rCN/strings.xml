@@ -278,7 +278,7 @@
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">允许在隐私浏览中截屏</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-    <string name="preferences_screenshots_in_private_mode_disclaimer">若允许，隐私标签页将在多应用切换时可见</string>
+    <string name="preferences_screenshots_in_private_mode_disclaimer">若允许，隐私标签页内容将在多任务切换界面可见</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">添加隐私浏览快捷方式</string>
     <!-- Preference for accessibility -->

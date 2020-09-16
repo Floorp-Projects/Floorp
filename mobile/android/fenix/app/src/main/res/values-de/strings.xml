@@ -331,6 +331,8 @@
     <string name="preferences_search_browsing_history">Browser-Chronik durchsuchen</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Lesezeichen durchsuchen</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Synchronisierte Tabs durchsuchen</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontoeinstellungen</string>
 

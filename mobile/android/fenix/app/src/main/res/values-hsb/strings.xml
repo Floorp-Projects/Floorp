@@ -326,6 +326,8 @@
     <string name="preferences_search_browsing_history">Přehladowanska historija pytanja</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Zapołožki přepytać</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Synchronizowane rajtarki pytać</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontowe nastajenja</string>
     <!-- Preference for enabling url autocomplete-->

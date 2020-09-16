@@ -437,7 +437,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Zapnite si synchronizáciu</string>
+    <string name="preferences_sync">Zapnúť synchronizáciu</string>
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">Naskenujte párovací kód zobrazený vo Firefoxe na počítači</string>
     <!-- Preference for account login -->

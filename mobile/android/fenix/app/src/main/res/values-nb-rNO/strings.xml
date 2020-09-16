@@ -329,6 +329,8 @@
     <string name="preferences_search_browsing_history">Søk i nettleserhistorikk</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Søk i bokmerker</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Søk i synkroniserte faner</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Kontoinnstillinger</string>
     <!-- Preference for enabling url autocomplete-->

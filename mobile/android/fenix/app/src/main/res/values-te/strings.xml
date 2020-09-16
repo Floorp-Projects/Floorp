@@ -461,6 +461,10 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">పరికరపు అలంకారాన్ని అనుసరించు</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">రిఫ్రెష్ చేయడానికి లాగండి</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">సెషనులు</string>
@@ -1380,8 +1384,12 @@
     <string name="logins_site_copied">సైటు క్లిప్‌బోర్డుకి కాపీ అయ్యింది</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">సంకేతపదాన్ని కాపీచెయ్యి</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">సంకేతపదాన్ని తుడిచివేయి</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">వాడుకరి పేరుని కాపీచెయ్యి</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">వాడుకరి పేరుని తుడిచివేయి</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">సైటును కాపీచెయ్యి</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
