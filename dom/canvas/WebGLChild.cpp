@@ -62,9 +62,11 @@ void WebGLChild::FlushPendingCmds() {
   mFlushedCmdInfo.flushes += 1;
   mFlushedCmdInfo.flushedCmdBytes += byteSize;
 
-  printf_stderr("[WebGLChild] Flushed %zu bytes. (%zu over %zu flushes)\n",
-                byteSize, mFlushedCmdInfo.flushedCmdBytes,
-                mFlushedCmdInfo.flushes);
+  if (gl::GLContext::ShouldSpew()) {
+    printf_stderr("[WebGLChild] Flushed %zu bytes. (%zu over %zu flushes)\n",
+                  byteSize, mFlushedCmdInfo.flushedCmdBytes,
+                  mFlushedCmdInfo.flushes);
+  }
 }
 
 // -
