@@ -89,6 +89,9 @@ class WindowProxyHolder;
   FIELD(Name, nsString)                                                      \
   FIELD(Closed, bool)                                                        \
   FIELD(IsActive, bool)                                                      \
+  /* If true, we're within the nested event loop in window.open, and this    \
+   * context may not be used as the target of a load */                      \
+  FIELD(PendingInitialization, bool)                                         \
   FIELD(OpenerPolicy, nsILoadInfo::CrossOriginOpenerPolicy)                  \
   /* Current opener for the BrowsingContext. Weak reference */               \
   FIELD(OpenerId, uint64_t)                                                  \
@@ -624,8 +627,13 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   RefPtr<SessionStorageManager> GetSessionStorageManager();
 
-  bool PendingInitialization() const { return mPendingInitialization; };
-  void SetPendingInitialization(bool aVal) { mPendingInitialization = aVal; };
+  // Set PendingInitialization on this BrowsingContext before the context has
+  // been attached.
+  void InitPendingInitialization(bool aPendingInitialization) {
+    MOZ_ASSERT(!EverAttached());
+    mFields.SetWithoutSyncing<IDX_PendingInitialization>(
+        aPendingInitialization);
+  }
 
   const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   nsresult SetOriginAttributes(const OriginAttributes& aAttrs);
@@ -839,6 +847,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_UseErrorPages>, const bool& aUseErrorPages,
               ContentParent* aSource);
 
+  bool CanSet(FieldIndex<IDX_PendingInitialization>, bool aNewValue,
+              ContentParent* aSource);
+
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {
     return true;
@@ -926,10 +937,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // This is true if the BrowsingContext was out of process, but is now in
   // process, and might have remote window proxies that need to be cleaned up.
   bool mDanglingRemoteOuterProxies : 1;
-
-  // If true, the docShell has not been fully initialized, and may not be used
-  // as the target of a load.
-  bool mPendingInitialization : 1;
 
   // True if this BrowsingContext has been embedded in a element in this
   // process.
