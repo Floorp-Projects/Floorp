@@ -86,6 +86,7 @@ struct DefaultJitOptions {
   uint32_t baselineInterpreterWarmUpThreshold;
   uint32_t baselineJitWarmUpThreshold;
   uint32_t trialInliningWarmUpThreshold;
+  uint32_t trialInliningInitialWarmUpCount;
   uint32_t normalIonWarmUpThreshold;
   uint32_t fullIonWarmUpThreshold;
   uint32_t regexpWarmUpThreshold;
