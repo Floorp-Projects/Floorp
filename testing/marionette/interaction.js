@@ -20,11 +20,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   event: "chrome://marionette/content/event.js",
+  Log: "chrome://marionette/content/log.js",
   pprint: "chrome://marionette/content/format.js",
   TimedPromise: "chrome://marionette/content/sync.js",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
+
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 /** XUL elements that support disabled attribute. */
 const DISABLED_ATTRIBUTE_SUPPORTED_XUL = new Set([
@@ -121,6 +124,7 @@ interaction.clickElement = async function(
   } else if (specCompat) {
     await webdriverClickElement(el, a11y);
   } else {
+    logger.trace(`Using non spec-compatible element click`);
     await seleniumClickElement(el, a11y);
   }
 };
