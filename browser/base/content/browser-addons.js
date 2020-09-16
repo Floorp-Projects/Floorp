@@ -588,6 +588,17 @@ var gXPInstallObserver = {
         break;
       }
       case "addon-install-blocked": {
+        // Dismiss the progress notification.  Note that this is bad if
+        // there are multiple simultaneous installs happening, see
+        // bug 1329884 for a longer explanation.
+        let progressNotification = PopupNotifications.getNotification(
+          "addon-progress",
+          browser
+        );
+        if (progressNotification) {
+          progressNotification.remove();
+        }
+
         let hasHost = !!options.displayURI;
         if (hasHost) {
           messageString = gNavigatorBundle.getFormattedString(
@@ -663,6 +674,9 @@ var gXPInstallObserver = {
                 install.cancel();
               }
             }
+            if (installInfo.cancel) {
+              installInfo.cancel();
+            }
           },
         };
         let neverAllowAction = {
@@ -682,6 +696,9 @@ var gXPInstallObserver = {
               if (install.state != AddonManager.STATE_CANCELLED) {
                 install.cancel();
               }
+            }
+            if (installInfo.cancel) {
+              installInfo.cancel();
             }
           },
         };
