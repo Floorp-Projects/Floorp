@@ -142,7 +142,7 @@ class Refcountable<UniquePtr<T>> : public UniquePtr<T> {
 /* Async shutdown helpers
  */
 
-RefPtr<nsIAsyncShutdownClient> GetShutdownBarrier();
+nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier();
 
 class ShutdownBlocker : public nsIAsyncShutdownBlocker {
  public:
