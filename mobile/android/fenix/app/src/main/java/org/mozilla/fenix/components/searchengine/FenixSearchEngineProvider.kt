@@ -33,7 +33,8 @@ import java.util.Locale
 open class FenixSearchEngineProvider(
     private val context: Context
 ) : SearchEngineProvider, CoroutineScope by CoroutineScope(Job() + Dispatchers.IO) {
-    private val locationService: LocationService = if (Config.channel.isDebug) {
+    private val shouldMockMLS = Config.channel.isDebug || BuildConfig.MLS_TOKEN.isNullOrEmpty()
+    private val locationService: LocationService = if (shouldMockMLS) {
         LocationService.dummy()
     } else {
         MozillaLocationService(
