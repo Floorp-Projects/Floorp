@@ -17,20 +17,16 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { view } = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
-  ok(
-    !view.selectorHighlighter,
-    "No selectorhighlighter exist in the rule-view"
+  const activeHighlighter = inspector.highlighters.getActiveHighlighter(
+    inspector.highlighters.TYPES.SELECTOR
   );
+  ok(!activeHighlighter, "No selector highlighter is active");
 
   info("Clicking on a selector icon");
-  const icon = await getRuleViewSelectorHighlighterIcon(view, "body, p, td");
+  const { highlighter, isShown } = await clickSelectorIcon(view, "body, p, td");
 
-  const onToggled = view.once("ruleview-selectorhighlighter-toggled");
-  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  const isVisible = await onToggled;
-
-  ok(view.selectorHighlighter, "The selectorhighlighter instance was created");
-  ok(isVisible, "The toggle event says the highlighter is visible");
+  ok(highlighter, "The selector highlighter instance was created");
+  ok(isShown, "The selector highlighter was shown");
 });
