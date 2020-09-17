@@ -48,6 +48,9 @@ class Optional;
     }                                                \
   }
 
+/**
+ * See <https://html.spec.whatwg.org/multipage/dnd.html#datatransfer>.
+ */
 class DataTransfer final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DATATRANSFER_IID)
