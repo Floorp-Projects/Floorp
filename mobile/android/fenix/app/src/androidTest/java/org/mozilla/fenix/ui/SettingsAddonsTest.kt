@@ -1,5 +1,6 @@
 package org.mozilla.fenix.ui
 
+import android.view.View
 import androidx.test.espresso.IdlingRegistry
 import org.mozilla.fenix.helpers.TestAssetHelper
 
@@ -11,12 +12,12 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.Rule
 import org.junit.Before
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
+import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -30,6 +31,7 @@ class SettingsAddonsTest {
 
     private lateinit var mockWebServer: MockWebServer
     private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
+    private var addonContainerIdlingResource: ViewVisibilityIdlingResource? = null
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
@@ -48,6 +50,10 @@ class SettingsAddonsTest {
 
         if (addonsListIdlingResource != null) {
             IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
+        }
+
+        if (addonContainerIdlingResource != null) {
+            IdlingRegistry.getInstance().unregister(addonContainerIdlingResource!!)
         }
     }
 
@@ -89,7 +95,6 @@ class SettingsAddonsTest {
         }
     }
 
-    @Ignore("Failing intermittently on Firebase: https://github.com/mozilla-mobile/fenix/issues/13829")
     // Opens the addons settings menu, installs an addon, then uninstalls
     @Test
     fun verifyAddonsCanBeUninstalled() {
@@ -107,8 +112,13 @@ class SettingsAddonsTest {
             clickInstallAddon(addonName)
             acceptInstallAddon()
             verifyDownloadAddonPrompt(addonName, activityTestRule)
+            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
         }.openDetailedMenuForAddon(addonName) {
-            verifyCurrentAddonMenu()
+            addonContainerIdlingResource = ViewVisibilityIdlingResource(
+                activityTestRule.activity.findViewById(R.id.addon_container),
+                View.VISIBLE
+            )
+            IdlingRegistry.getInstance().register(addonContainerIdlingResource!!)
         }.removeAddon {
         }
     }
