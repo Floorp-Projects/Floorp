@@ -10015,6 +10015,12 @@
   value: true
   mirror: always
 
+# Whether to pause the compositor when a native window is minimized.
+- name: widget.pause-compositor-when-minimized
+  type: bool
+  value: true
+  mirror: always
+
 #ifdef MOZ_WAYLAND
 #ifdef NIGHTLY_BUILD
 # Keep those pref hidden on non-nightly builds to avoid people accidentally
