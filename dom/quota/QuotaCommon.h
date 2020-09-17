@@ -861,6 +861,72 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
                                            int32_t aSourceLine);
 #endif
 
+// XXX Since this uses thread_local, we currently disable it on android, see Bug
+// 1324316
+#if (defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)) && \
+    !defined(MOZ_WIDGET_ANDROID)
+#  define QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+#endif
+
+struct MOZ_STACK_CLASS ScopedLogExtraInfo {
+  static constexpr const char kTagQuery[] = "query";
+
+#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+  using ScopedLogExtraInfoMap = std::map<const char*, nsCString>;
+
+  template <size_t N>
+  ScopedLogExtraInfo(const char (&aTag)[N], const nsACString& aExtraInfo)
+      : mTag{aTag} {
+    AddInfo(aTag, aExtraInfo);
+  }
+
+  ~ScopedLogExtraInfo() {
+    if (mTag) {
+      if (mPreviousValue.IsEmpty()) {
+        sInfos.erase(mTag);
+      } else {
+        sInfos.find(mTag)->second = mPreviousValue;
+      }
+    }
+  }
+
+  ScopedLogExtraInfo(ScopedLogExtraInfo&& aOther)
+      : mTag(aOther.mTag), mPreviousValue(std::move(aOther.mPreviousValue)) {
+    aOther.mTag = nullptr;
+  }
+  ScopedLogExtraInfo& operator=(ScopedLogExtraInfo&& aOther) = delete;
+
+  ScopedLogExtraInfo(const ScopedLogExtraInfo&) = delete;
+  ScopedLogExtraInfo& operator=(const ScopedLogExtraInfo&) = delete;
+
+  static const ScopedLogExtraInfoMap* GetExtraInfoMap() { return &sInfos; }
+
+ private:
+  const char* mTag;
+  nsCString mPreviousValue;
+
+  inline static thread_local ScopedLogExtraInfoMap sInfos;
+
+  void AddInfo(const char* aTag, const nsACString& aExtraInfo) {
+    auto foundIt = sInfos.find(aTag);
+
+    if (foundIt != sInfos.end()) {
+      mPreviousValue = std::move(foundIt->second);
+      foundIt->second = aExtraInfo;
+    } else {
+      sInfos.emplace(aTag, aExtraInfo);
+    }
+  }
+
+#else
+  template <size_t N>
+  ScopedLogExtraInfo(const char (&aTag)[N], const nsACString& aExtraInfo) {}
+
+  // user-defined to silence unused variable warnings
+  ~ScopedLogExtraInfo() {}
+#endif
+};
+
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
 #  define QM_META_HANDLE_ERROR(module)                                     \
     MOZ_COLD inline void HandleError(                                      \

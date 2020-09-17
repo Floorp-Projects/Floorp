@@ -7095,6 +7095,9 @@ DatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
 template <typename BindFunctor>
 nsresult DatabaseConnection::ExecuteCachedStatement(
     const nsACString& aQuery, const BindFunctor& aBindFunctor) {
+  const auto queryInfo =
+      ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
+
   IDB_TRY_VAR(const auto stmt, GetCachedStatement(aQuery));
 
   nsresult rv = aBindFunctor(*stmt);
