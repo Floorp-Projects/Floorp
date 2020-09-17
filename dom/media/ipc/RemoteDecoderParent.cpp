@@ -153,6 +153,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvFlush(
       mManagerThread, __func__,
       [self, resolver = std::move(aResolver)](
           MediaDataDecoder::FlushPromise::ResolveOrRejectValue&& aValue) {
+        self->ReleaseUsedShmems();
         if (aValue.IsReject()) {
           resolver(aValue.RejectValue());
         } else {
@@ -171,6 +172,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvDrain(
       mManagerThread, __func__,
       [self, this, resolver = std::move(aResolver)](
           MediaDataDecoder::DecodePromise::ResolveOrRejectValue&& aValue) {
+        ReleaseUsedShmems();
         if (!self->CanRecv()) {
           // Avoid unnecessarily creating shmem objects later.
           return;
@@ -200,6 +202,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvShutdown(
         [self, resolver = std::move(aResolver)](
             const ShutdownPromise::ResolveOrRejectValue& aValue) {
           MOZ_ASSERT(aValue.IsResolve());
+          self->ReleaseUsedShmems();
           resolver(true);
         });
   }
