@@ -432,6 +432,9 @@ class WellKnownParserAtoms {
 
   bool init(JSContext* cx);
 
+  // Maximum length of any well known atoms. This can be increased if needed.
+  static constexpr size_t MaxWellKnownLength = 32;
+
   template <typename CharT>
   const ParserAtom* lookupChar16Seq(
       const SpecificParserAtomLookup<CharT>& lookup) const;
