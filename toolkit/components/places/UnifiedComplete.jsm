@@ -530,7 +530,7 @@ function Search(
   // the consumer requested search mode, we should use the full string to avoid
   // ignoring valid tokens.
   this._searchTokens =
-    !queryContext || queryContext.shouldFilterRestrictionTokens
+    !queryContext || queryContext.restrictToken
       ? this.filterTokens(tokens)
       : tokens;
 

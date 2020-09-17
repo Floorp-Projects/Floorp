@@ -69,17 +69,20 @@ var UrlbarTestUtils = {
   /**
    * Waits to a search to be complete.
    * @param {object} win The window containing the urlbar
-   * @param {number} count The number of expected searches to wait for.
    * @returns {Promise} Resolved when done.
    */
-  async promiseSearchComplete(win, count = 1) {
-    let promise = this.promisePopupOpen(win, () => {}).then(
-      () => win.gURLBar.lastQueryContextPromise
-    );
-    if (--count > 0) {
-      promise = promise.then(() => this.promiseSearchComplete(win, count));
+  async promiseSearchComplete(win) {
+    let waitForQuery = () => {
+      return this.promisePopupOpen(win, () => {}).then(
+        () => win.gURLBar.lastQueryContextPromise
+      );
+    };
+    let context = await waitForQuery();
+    if (win.gURLBar.searchMode) {
+      // Search mode may start a second query.
+      context = await waitForQuery();
     }
-    return promise;
+    return context;
   },
 
   /**

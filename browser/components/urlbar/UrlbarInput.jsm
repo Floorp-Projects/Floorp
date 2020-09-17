@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
@@ -1440,7 +1441,7 @@ class UrlbarInput {
       // shortcut to honor historical behaviour.
       this.setSearchMode({
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        engineName: Services.search.defaultEngine.name,
+        engineName: UrlbarSearchUtils.getDefaultEngine(this.isPrivate).name,
         entry: "shortcut",
       });
       this.search("");
@@ -2444,6 +2445,11 @@ class UrlbarInput {
         break;
       case UrlbarTokenizer.RESTRICT.OPENPAGE:
         searchMode = { source: UrlbarUtils.RESULT_SOURCE.TABS };
+        break;
+      case UrlbarTokenizer.RESTRICT.SEARCH:
+        searchMode = {
+          engineName: UrlbarSearchUtils.getDefaultEngine(this.isPrivate).name,
+        };
         break;
       default:
         // If result.originalEngine is set, then the user is Alt+Tabbing
