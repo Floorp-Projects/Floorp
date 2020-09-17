@@ -1771,7 +1771,7 @@ nsresult HTMLEditor::InsertFromTransferable(nsITransferable* aTransferable,
   return NS_OK;
 }
 
-static void GetStringFromDataTransfer(DataTransfer* aDataTransfer,
+static void GetStringFromDataTransfer(const DataTransfer* aDataTransfer,
                                       const nsAString& aType, int32_t aIndex,
                                       nsString& aOutputString) {
   nsCOMPtr<nsIVariant> variant;
@@ -1788,7 +1788,7 @@ static void GetStringFromDataTransfer(DataTransfer* aDataTransfer,
   nsContentUtils::PlatformToDOMLineBreaks(aOutputString);
 }
 
-nsresult HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
+nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
                                             int32_t aIndex,
                                             Document* aSourceDoc,
                                             const EditorDOMPoint& aDroppedAt,

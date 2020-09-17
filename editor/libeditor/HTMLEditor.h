@@ -4172,9 +4172,10 @@ class HTMLEditor final : public TextEditor,
    * InsertFromDataTransfer() is called only when user drops data into
    * this editor.  Don't use this method for other purposes.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertFromDataTransfer(
-      dom::DataTransfer* aDataTransfer, int32_t aIndex, Document* aSourceDoc,
-      const EditorDOMPoint& aDroppedAt, bool aDoDeleteSelection);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InsertFromDataTransfer(const dom::DataTransfer* aDataTransfer, int32_t aIndex,
+                         Document* aSourceDoc, const EditorDOMPoint& aDroppedAt,
+                         bool aDoDeleteSelection);
 
   bool HavePrivateHTMLFlavor(nsIClipboard* clipboard);
 
