@@ -2,6 +2,8 @@
 #define MOCKCUBEB_H_
 
 #include "AudioDeviceInfo.h"
+#include "AudioGenerator.h"
+#include "AudioVerifier.h"
 #include "nsTArray.h"
 
 #include <thread>
@@ -145,12 +147,23 @@ class MockCubebStream {
         mDataCallback(aDataCallback),
         mStateCallback(aStateCallback),
         mUserPtr(aUserPtr),
-        mSampleRate(aInputStreamParams ? aInputStreamParams->rate
-                                       : aOutputStreamParams->rate),
         mInputDeviceID(aInputDevice),
-        mOutputDeviceID(aOutputDevice) {
+        mOutputDeviceID(aOutputDevice),
+        mAudioGenerator(NUM_OF_CHANNELS,
+                        aInputStreamParams ? aInputStreamParams->rate
+                                           : aOutputStreamParams->rate,
+                        100 /* aFrequency */),
+        mAudioVerifier(aInputStreamParams ? aInputStreamParams->rate
+                                          : aOutputStreamParams->rate,
+                       100 /* aFrequency */) {
     LOG("MockCubeb(%p) StreamInit: Input id = %p, Output id = %p", this,
         mInputDeviceID, mOutputDeviceID);
+    if (aInputStreamParams) {
+      mInputParams = *aInputStreamParams;
+    }
+    if (aOutputStreamParams) {
+      mOutputParams = *aOutputStreamParams;
+    }
   }
 
   ~MockCubebStream() { assert(!mFakeAudioThread); }
@@ -179,6 +192,7 @@ class MockCubebStream {
   cubeb_devid GetOutputDeviceID() { return mOutputDeviceID; }
 
   void ForceError() { mForceErrorState = true; }
+  void VerifyOutput() { mVerifyOutput = true; }
 
  private:
   // Simulates the audio thread. The thread is created at Start anda destroyed
@@ -189,9 +203,17 @@ class MockCubebStream {
 
   void ThreadFunction() {
     while (!mStreamStop) {
+      if (mInputParams.rate) {
+        mAudioGenerator.GenerateInterleaved(mInputBuffer, NUM_OF_FRAMES);
+      }
       cubeb_stream* stream = reinterpret_cast<cubeb_stream*>(this);
-      long outframes = mDataCallback(stream, mUserPtr, nullptr, mOutputBuffer,
-                                     NUM_OF_FRAMES);
+      long outframes = mDataCallback(
+          stream, mUserPtr, mInputParams.rate ? mInputBuffer : nullptr,
+          mOutputParams.rate ? mOutputBuffer : nullptr, NUM_OF_FRAMES);
+
+      mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
+                                           NUM_OF_CHANNELS);
+
       if (outframes < NUM_OF_FRAMES) {
         mStateCallback(stream, mUserPtr, CUBEB_STATE_DRAINED);
         break;
@@ -200,8 +222,21 @@ class MockCubebStream {
         mStateCallback(stream, mUserPtr, CUBEB_STATE_ERROR);
         break;
       }
+      uint32_t sampleRate(mInputParams.rate ? mInputParams.rate
+                                            : mOutputParams.rate);
       std::this_thread::sleep_for(
-          std::chrono::milliseconds(NUM_OF_FRAMES * 1000 / mSampleRate));
+          std::chrono::milliseconds(NUM_OF_FRAMES * 1000 / sampleRate));
+    }
+    if (mVerifyOutput) {
+      // This is an async, in case of failure the result will appear in the
+      // next test. TODO: make it wait till the results are in place.
+      EXPECT_EQ(mAudioVerifier.EstimatedFreq(), mAudioGenerator.mFrequency);
+      EXPECT_GE(mAudioVerifier.PreSilenceSamples(),
+                static_cast<uint32_t>(NUM_OF_FRAMES));
+      // Waveform may start after the beginning. In this case, there is a gap
+      // at the beginning and the end which is counted as discontinuity.
+      EXPECT_GE(mAudioVerifier.CountDiscontinuities(), 0U);
+      EXPECT_LE(mAudioVerifier.CountDiscontinuities(), 2U);
     }
   }
 
@@ -214,20 +249,26 @@ class MockCubebStream {
   // Signal to the audio thread that stream is stopped.
   std::atomic_bool mStreamStop{true};
   // The audio buffer used on data callback.
-  float mOutputBuffer[NUM_OF_CHANNELS * NUM_OF_FRAMES];
+  AudioDataValue mOutputBuffer[NUM_OF_CHANNELS * NUM_OF_FRAMES] = {};
+  AudioDataValue mInputBuffer[NUM_OF_CHANNELS * NUM_OF_FRAMES] = {};
   // The audio callback
   cubeb_data_callback mDataCallback = nullptr;
   // The stream state callback
   cubeb_state_callback mStateCallback = nullptr;
   // Stream's user data
   void* mUserPtr = nullptr;
-  // The stream sample rate
-  uint32_t mSampleRate = 0;
+  // The stream params
+  cubeb_stream_params mOutputParams = {};
+  cubeb_stream_params mInputParams = {};
   /* Device IDs */
   cubeb_devid mInputDeviceID;
   cubeb_devid mOutputDeviceID;
 
   std::atomic_bool mForceErrorState{false};
+
+  std::atomic_bool mVerifyOutput{false};
+  AudioGenerator<AudioDataValue> mAudioGenerator;
+  AudioVerifier<AudioDataValue> mAudioVerifier;
 };
 
 // This class has two facets: it is both a fake cubeb backend that is intended
