@@ -5,6 +5,7 @@
 package mozilla.components.lib.fetch.okhttp
 
 import android.content.Context
+import mozilla.components.concept.fetch.BuildConfig
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
@@ -38,6 +39,7 @@ class OkHttpClient(
         val requestClient = client.rebuildFor(request, context)
 
         val requestBuilder = createRequestBuilderWithBody(request)
+        requestBuilder.addHeader("User-Agent", "MozacFetch/${BuildConfig.LIBRARY_VERSION}")
         requestBuilder.addHeadersFrom(request, defaultHeaders = defaultHeaders)
 
         if (!request.useCaches) {

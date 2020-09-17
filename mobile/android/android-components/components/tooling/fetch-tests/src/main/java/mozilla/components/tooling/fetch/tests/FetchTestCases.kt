@@ -179,24 +179,6 @@ abstract class FetchTestCases {
     }
 
     @Test
-    open fun get200WithUserAgent() {
-        withServerResponding(
-            MockResponse()
-        ) { client ->
-            val response = client.fetch(Request(rootUrl()))
-            assertEquals(200, response.status)
-
-            val request = takeRequest()
-            val names = request.headers.names()
-
-            assertTrue(names.contains("User-Agent"))
-
-            val userAgent = request.headers.get("User-Agent")
-            assertTrue(userAgent!!.startsWith("MozacFetch/"))
-        }
-    }
-
-    @Test
     open fun get200WithGzippedBody() {
         withServerResponding(
             MockResponse()

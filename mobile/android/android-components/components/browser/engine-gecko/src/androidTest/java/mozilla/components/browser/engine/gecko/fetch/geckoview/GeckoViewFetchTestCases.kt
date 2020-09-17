@@ -43,12 +43,6 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
 
     @Test
     @UiThreadTest
-    override fun get200WithUserAgent() {
-        super.get200WithUserAgent()
-    }
-
-    @Test
-    @UiThreadTest
     override fun get200WithDuplicatedCacheControlRequestHeaders() {
         super.get200WithDuplicatedCacheControlRequestHeaders()
     }

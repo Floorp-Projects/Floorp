@@ -167,13 +167,6 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
     }
 
     @Test
-    override fun get200WithUserAgent() {
-        mockRequest(mapOf("User-Agent" to "MozacFetch/"))
-        mockResponse(200)
-        super.get200WithUserAgent()
-    }
-
-    @Test
     override fun get302FollowRedirects() {
         mockResponse(200)
 
