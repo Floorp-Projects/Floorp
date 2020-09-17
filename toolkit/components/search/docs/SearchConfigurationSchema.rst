@@ -488,7 +488,6 @@ Example:
 
 This would result in the order: ``engine2@ext, engine1@ext, engine3@ext``.
 
-=============
 Region Params
 =============
 
