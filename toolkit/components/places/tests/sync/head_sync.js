@@ -66,7 +66,7 @@ const MobileBookmarksTitle = "mobile";
 
 function run_test() {
   let bufLog = Log.repository.getLogger("Sync.Engine.Bookmarks.Mirror");
-  bufLog.level = Log.Level.All;
+  bufLog.level = Log.Level.Error;
 
   let sqliteLog = Log.repository.getLogger("Sqlite");
   sqliteLog.level = Log.Level.Error;
