@@ -32,7 +32,6 @@ class WindowGlobalChild;
 [ptr] native nsPresContextPtr(nsPresContext);
 [ptr] native nsViewPtr(nsView);
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
-[ref] native nsIContentViewerTArray(nsTArray<nsCOMPtr<nsIContentViewer> >);
 [ptr] native Encoding(const mozilla::Encoding);
 [ptr] native PresShellPtr(mozilla::PresShell);
 [ptr] native WindowGlobalChildPtr(mozilla::dom::WindowGlobalChild);
@@ -287,12 +286,6 @@ interface nsIContentViewer : nsISupports
    */
   void getContentSizeConstrained(in long maxWidth, in long maxHeight,
                                  out long width, out long height);
-
-  /**
-   * Append |this| and all of its descendants to the given array,
-   * in depth-first pre-order traversal.
-   */
-  [noscript] void appendSubtree(in nsIContentViewerTArray array);
 
   /**
    * Instruct the refresh driver to discontinue painting until further
