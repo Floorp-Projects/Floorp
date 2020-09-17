@@ -2775,7 +2775,7 @@ static bool EmitConversionWithType(FunctionCompiler& f, ValType operandType,
 static bool EmitTruncate(FunctionCompiler& f, ValType operandType,
                          ValType resultType, bool isUnsigned,
                          bool isSaturating) {
-  MDefinition* input;
+  MDefinition* input = nullptr;
   if (!f.iter().readConversion(operandType, resultType, &input)) {
     return false;
   }
@@ -2789,8 +2789,8 @@ static bool EmitTruncate(FunctionCompiler& f, ValType operandType,
   }
   if (resultType == ValType::I32) {
     if (f.env().isAsmJS()) {
-      if (input->type() == MIRType::Double ||
-          input->type() == MIRType::Float32) {
+      if (input && (input->type() == MIRType::Double ||
+                    input->type() == MIRType::Float32)) {
         f.iter().setResult(f.unary<MWasmBuiltinTruncateToInt32>(input));
       } else {
         f.iter().setResult(f.unary<MTruncateToInt32>(input));
