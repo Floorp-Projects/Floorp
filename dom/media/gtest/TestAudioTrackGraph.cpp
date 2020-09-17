@@ -117,6 +117,15 @@ class StopInputProcessing : public ControlMessage {
   void Run() override { mInputProcessing->Stop(); }
 };
 
+class GoFaster : public ControlMessage {
+  MockCubeb* mCubeb;
+
+ public:
+  explicit GoFaster(MockCubeb* aCubeb)
+      : ControlMessage(nullptr), mCubeb(aCubeb) {}
+  void Run() override { mCubeb->GoFaster(); }
+};
+
 }  // namespace
 
 /*
@@ -315,8 +324,13 @@ TEST(TestAudioTrackGraph, SourceTrack)
   EXPECT_TRUE(stream->mHasInput);
   Unused << WaitFor(p);
 
-  // Wait for a second worth of audio data.
-  cubeb->GoFaster();
+  // Wait for a second worth of audio data. GoFaster is dispatched through a
+  // ControlMessage so that it is called in the first audio driver iteration.
+  // Otherwise the audio driver might be going very fast while the fallback
+  // system clock driver is still in an iteration.
+  DispatchFunction([&] {
+    sourceTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
+  });
   uint32_t totalFrames = 0;
   WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
     totalFrames += aFrames;
@@ -348,7 +362,15 @@ TEST(TestAudioTrackGraph, SourceTrack)
       WaitFor(stream->OutputVerificationEvent());
 
   EXPECT_EQ(estimatedFreq, inputFrequency);
-  EXPECT_GE(preSilenceSamples, inputRate / 100 /* 10 ms */);
+  std::cerr << "PreSilence: " << preSilenceSamples << std::endl;
+  // We buffer 128 frames in passthrough mode. See AudioInputProcessing::Pull.
+  EXPECT_GE(preSilenceSamples, 128U);
+  // If the fallback system clock driver is doing a graph iteration before the
+  // first audio driver iteration comes in, that iteration is ignored and
+  // results in zeros. It takes one fallback driver iteration *after* the audio
+  // driver has started to complete the switch, *usually* resulting two
+  // 10ms-iterations of silence; sometimes only one.
+  EXPECT_LE(preSilenceSamples, 128U + 2 * inputRate / 100 /* 2*10ms */);
   // Waveform may start after the beginning. In this case, there is a gap
   // at the beginning and the end which is counted as discontinuity.
   EXPECT_GE(nrDiscontinuities, 0U);
@@ -356,7 +378,7 @@ TEST(TestAudioTrackGraph, SourceTrack)
 }
 
 void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
-                        float aDriftFactor) {
+                        float aDriftFactor, uint32_t aBufferMs = 50) {
   std::cerr << "TestCrossGraphPort input: " << aInputRate
             << ", output: " << aOutputRate << ", driftFactor: " << aDriftFactor
             << std::endl;
@@ -424,8 +446,14 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
 
   partnerStream->SetDriftFactor(aDriftFactor);
 
-  cubeb->GoFaster();
+  // Wait for a second worth of audio data. GoFaster is dispatched through a
+  // ControlMessage so that it is called in the first audio driver iteration.
+  // Otherwise the audio driver might be going very fast while the fallback
+  // system clock driver is still in an iteration.
   // Wait for 3s worth of audio data on the receiver stream.
+  DispatchFunction([&] {
+    sourceTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
+  });
   uint32_t totalFrames = 0;
   WaitUntil(partnerStream->FramesProcessedEvent(), [&](uint32_t aFrames) {
     totalFrames += aFrames;
@@ -459,7 +487,10 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
       WaitFor(partnerStream->OutputVerificationEvent());
 
   EXPECT_NEAR(estimatedFreq, inputFrequency / aDriftFactor, 5);
-  EXPECT_GE(preSilenceSamples, partnerRate / 100 /* 10ms */);
+  uint32_t expectedPreSilence =
+      static_cast<uint32_t>(partnerRate * aDriftFactor / 1000 * aBufferMs);
+  uint32_t margin = partnerRate / 20 /* +/- 50ms */;
+  EXPECT_NEAR(preSilenceSamples, expectedPreSilence, margin);
   EXPECT_LE(nrDiscontinuities, 2U);
 }
 
@@ -485,12 +516,13 @@ TEST(TestAudioTrackGraph, CrossGraphPort)
 TEST(TestAudioTrackGraph, CrossGraphPortLargeBuffer)
 {
   const int32_t oldBuffering = Preferences::GetInt(DRIFT_BUFFERING_PREF);
-  Preferences::SetInt(DRIFT_BUFFERING_PREF, 5000);
+  const int32_t longBuffering = 5000;
+  Preferences::SetInt(DRIFT_BUFFERING_PREF, longBuffering);
 
-  TestCrossGraphPort(44100, 44100, 1.02);
-  TestCrossGraphPort(48000, 44100, 1.08);
-  TestCrossGraphPort(44100, 48000, 0.95);
-  TestCrossGraphPort(52110, 17781, 0.92);
+  TestCrossGraphPort(44100, 44100, 1.02, longBuffering);
+  TestCrossGraphPort(48000, 44100, 1.08, longBuffering);
+  TestCrossGraphPort(44100, 48000, 0.95, longBuffering);
+  TestCrossGraphPort(52110, 17781, 0.92, longBuffering);
 
   Preferences::SetInt(DRIFT_BUFFERING_PREF, oldBuffering);
 }
