@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * 🚒 Bug fixed [issue #8431](https://github.com/mozilla-mobile/android-components/issues/8431) update `Session.trackerBlockingEnabled` and `SessionState#trackingProtection#enabled` with the initial tracking protection state.
+
 # 59.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v58.0.0...v59.0.0)

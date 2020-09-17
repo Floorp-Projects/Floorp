@@ -223,14 +223,31 @@ class GeckoEngineSession(
             policy.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
 
         geckoSession.settings.useTrackingProtection = shouldBlockContent && enabled
-        notifyAtLeastOneObserver {
-            // We now register engine observers in a middleware using a dedicated
-            // store thread. Since this notification can be delayed until an observer
-            // is registered we switch to the main scope to make sure we're not notifying
-            // on the store thread.
-            MainScope().launch {
-                onTrackerBlockingEnabledChange(enabled)
-            }
+        etpEnabled = enabled
+        notifyObservers {
+            onTrackerBlockingEnabledChange(this, enabled)
+        }
+    }
+
+    // This is a temporary solution to address
+    // https://github.com/mozilla-mobile/android-components/issues/8431
+    // until we eventually delete [EngineObserver] then this will not be needed.
+    private var etpEnabled: Boolean? = null
+
+    override fun register(observer: Observer) {
+        super.register(observer)
+        etpEnabled?.let { enabled ->
+            onTrackerBlockingEnabledChange(observer, enabled)
+        }
+    }
+
+    private fun onTrackerBlockingEnabledChange(observer: Observer, enabled: Boolean) {
+        // We now register engine observers in a middleware using a dedicated
+        // store thread. Since this notification can be delayed until an observer
+        // is registered we switch to the main scope to make sure we're not notifying
+        // on the store thread.
+        MainScope().launch {
+            observer.onTrackerBlockingEnabledChange(enabled)
         }
     }
 

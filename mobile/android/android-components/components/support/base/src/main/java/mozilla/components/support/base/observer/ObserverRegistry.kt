@@ -25,7 +25,7 @@ import java.util.WeakHashMap
  * ObserverRegistry is thread-safe.
  */
 @Suppress("TooManyFunctions")
-class ObserverRegistry<T> : Observable<T> {
+open class ObserverRegistry<T> : Observable<T> {
     private val observers = mutableSetOf<T>()
     private val lifecycleObservers = WeakHashMap<T, LifecycleBoundObserver<T>>()
     private val viewObservers = WeakHashMap<T, ViewBoundObserver<T>>()
@@ -39,7 +39,7 @@ class ObserverRegistry<T> : Observable<T> {
      * @param observer the observer to register.
      */
     @Synchronized
-    override fun register(observer: T) {
+    open override fun register(observer: T) {
         observers.add(observer)
 
         while (!queuedNotifications.isEmpty()) {
