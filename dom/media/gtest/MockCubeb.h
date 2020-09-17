@@ -11,9 +11,7 @@
 #include <atomic>
 #include <chrono>
 
-using namespace std::chrono_literals;
-using namespace mozilla;
-
+namespace mozilla {
 const uint32_t NUM_OF_CHANNELS = 2;
 
 #ifdef LOG
@@ -720,5 +718,6 @@ void AddDevices(MockCubeb* mock, uint32_t device_count,
     mock->AddDevice(device);
   }
 }
+}  // namespace mozilla
 
 #endif  // MOCKCUBEB_H_
