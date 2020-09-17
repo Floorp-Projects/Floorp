@@ -71,7 +71,7 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
   SizeDouble paperSize{8.5 * 72.0, 11.0 * 72.0};
   gfx::MarginDouble margin;
   int resolution = 0;
-  bool color = false;
+  bool color = true;
 
   nsTArray<uint8_t> devmodeWStorage;
   bool success = WithDefaultDevMode(
@@ -105,8 +105,10 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
 
         // Using Y to match existing code for print scaling calculations.
         resolution = GetDeviceCaps(printerDc, LOGPIXELSY);
-        color =
-            (devmode->dmFields & DM_COLOR) && devmode->dmColor == DMCOLOR_COLOR;
+        if (devmode->dmFields & DM_COLOR) {
+          // See comment for PrintSettingsInitializer.mPrintInColor
+          color = devmode->dmColor != DMCOLOR_MONOCHROME;
+        }
         return true;
       });
 
