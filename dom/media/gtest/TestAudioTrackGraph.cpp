@@ -277,9 +277,11 @@ TEST(TestAudioTrackGraph, SourceTrack)
         AbstractThread::GetCurrent(),
         [&](uint32_t aFrames) { totalFrames += aFrames; });
     stream->VerifyOutput();
+    stream->GoFaster();
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>([&] {
       return totalFrames > static_cast<uint32_t>(primary->GraphRate());
     });
+    stream->DontGoFaster();
     onFrames.Disconnect();
   }
 
@@ -406,9 +408,11 @@ TEST(TestAudioTrackGraph, CrossGraphPort)
     MediaEventListener onFrames = stream->FramesProcessedEvent().Connect(
         AbstractThread::GetCurrent(),
         [&](uint32_t aFrames) { totalFrames += aFrames; });
+    stream->GoFaster();
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>([&] {
       return totalFrames > static_cast<uint32_t>(primary->GraphRate() / 2);
     });
+    stream->DontGoFaster();
     onFrames.Disconnect();
   }
 

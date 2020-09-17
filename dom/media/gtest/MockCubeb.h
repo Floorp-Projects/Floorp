@@ -192,6 +192,8 @@ class MockCubebStream {
   cubeb_devid GetInputDeviceID() { return mInputDeviceID; }
   cubeb_devid GetOutputDeviceID() { return mOutputDeviceID; }
 
+  void GoFaster() { mFastMode = true; }
+  void DontGoFaster() { mFastMode = false; }
   void ForceError() { mForceErrorState = true; }
   void VerifyOutput() { mVerifyOutput = true; }
 
@@ -231,8 +233,8 @@ class MockCubebStream {
       }
       uint32_t sampleRate(mInputParams.rate ? mInputParams.rate
                                             : mOutputParams.rate);
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(NUM_OF_FRAMES * 1000 / sampleRate));
+      std::this_thread::sleep_for(std::chrono::milliseconds(
+          mFastMode ? 0 : NUM_OF_FRAMES * 1000 / sampleRate));
     }
     if (mVerifyOutput) {
       // This is an async, in case of failure the result will appear in the
@@ -271,8 +273,8 @@ class MockCubebStream {
   cubeb_devid mInputDeviceID;
   cubeb_devid mOutputDeviceID;
 
+  std::atomic_bool mFastMode{false};
   std::atomic_bool mForceErrorState{false};
-
   std::atomic_bool mVerifyOutput{false};
   AudioGenerator<AudioDataValue> mAudioGenerator;
   AudioVerifier<AudioDataValue> mAudioVerifier;
