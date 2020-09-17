@@ -578,16 +578,64 @@ function waitForStyleModification(inspector) {
 }
 
 /**
- * Click on the selector icon
- * @param {DOMNode} icon
- * @param {CSSRuleView} view
+ * Click on the icon next to the selector of a CSS rule in the Rules view
+ * to toggle the selector highlighter. If a selector highlighter is not already visible
+ * for the given selector, wait for it to be shown. Otherwise, wait for it to be hidden.
+ *
+ * @param {CssRuleView} view
+ *        The instance of the Rules view
+ * @param {String} selectorText
+ *        The selector of the CSS rule to look for
+ * @param {Number} index
+ *        If there are more CSS rules with the same selector, use this index
+ *        to determine which one should be retrieved. Defaults to 0 (first)
  */
-async function clickSelectorIcon(icon, view) {
-  const onToggled = view.once("ruleview-selectorhighlighter-toggled");
-  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  await onToggled;
-}
+async function clickSelectorIcon(view, selectorText, index = 0) {
+  const { inspector } = view;
+  const rule = getRuleViewRule(view, selectorText, index);
 
+  // The icon element is created in response to an async operation.
+  // Wait until the expected node shows up in the DOM. (Bug 1664511)
+  info(`Waiting for icon to be available for selector: ${selectorText}`);
+  const icon = await waitFor(() => {
+    return rule.querySelector(".js-toggle-selector-highlighter");
+  });
+
+  // Grab the actual selector associated with the matched icon.
+  // For inline styles, the CSS rule with the "element" selector actually points to
+  // a generated unique selector, for example: "div:nth-child(1)".
+  // The selector highlighter is invoked with this unique selector.
+  // Continuing to use selectorText ("element") would fail some of the checks below.
+  const selector = icon.dataset.selector;
+
+  const {
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
+
+  // If there is an active selector highlighter, get its configuration options.
+  // Will be undefined if there isn't an active selector highlighter.
+  const options = inspector.highlighters.getOptionsForActiveHighlighter(
+    inspector.highlighters.TYPES.SELECTOR
+  );
+
+  // If there is already a highlighter visible for this selector,
+  // wait for hidden event. Otherwise, wait for shown event.
+  const waitForEvent =
+    options?.selector === selector
+      ? waitForHighlighterTypeHidden(inspector.highlighters.TYPES.SELECTOR)
+      : waitForHighlighterTypeShown(inspector.highlighters.TYPES.SELECTOR);
+
+  // Boolean flag whether we waited for a highlighter shown event
+  const waitedForShown = options?.selector !== selector;
+
+  info(`Click the icon for selector: ${selectorText}`);
+  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
+
+  // Promise resolves with event data from either highlighter shown or hidden event.
+  const data = await waitForEvent;
+  return { ...data, isShown: waitedForShown };
+}
 /**
  * Toggle one of the checkboxes inside the class-panel. Resolved after the DOM mutation
  * has been recorded.
