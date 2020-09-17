@@ -2651,6 +2651,30 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
                                    // fall it back again.
   }
 
+  /**
+   * ComputeRangesToDeleteRangesWithTransaction() computes target ranges
+   * which will be called by `EditorBase::DeleteRangesWithTransaction()`.
+   * TODO: We should not use it for consistency with each deletion handler
+   *       in this and nested classes.
+   */
+  nsresult ComputeRangesToDeleteRangesWithTransaction(
+      const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers,
+      AutoRangeArray& aRangesToDelete) const;
+
+  nsresult FallbackToComputeRangesToDeleteRangesWithTransaction(
+      const HTMLEditor& aHTMLEditor, AutoRangeArray& aRangesToDelete) const {
+    MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+    MOZ_ASSERT(CanFallbackToDeleteRangesWithTransaction(aRangesToDelete));
+    nsresult rv = ComputeRangesToDeleteRangesWithTransaction(
+        aHTMLEditor, mOriginalDirectionAndAmount, mOriginalStripWrappers,
+        aRangesToDelete);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "AutoDeleteRangesHandler::"
+                         "ComputeRangesToDeleteRangesWithTransaction() failed");
+    return rv;
+  }
+
   class MOZ_STACK_CLASS AutoBlockElementsJoiner final {
    public:
     AutoBlockElementsJoiner() = delete;
@@ -3435,8 +3459,13 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
         // XXX In this case, do we need to modify the range again?
         return NS_SUCCESS_DOM_NO_OPERATION;
       }
-      // aRangesToDelete must select some haracters, a word or the line.
-      return NS_OK;
+      nsresult rv = FallbackToComputeRangesToDeleteRangesWithTransaction(
+          aHTMLEditor, aRangesToDelete);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "AutoDeleteRangesHandler::"
+          "FallbackToComputeRangesToDeleteRangesWithTransaction() failed");
+      return rv;
     }
 
     if (aRangesToDelete.IsCollapsed()) {
@@ -4551,17 +4580,21 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   if (HTMLEditor::NodesInDifferentTableElements(*mLeftContent,
                                                 *mRightContent)) {
-    if (!mDeleteRangesHandler->CanFallbackToDeleteRangesWithTransaction(
+    if (!mDeleteRangesHandlerConst.CanFallbackToDeleteRangesWithTransaction(
             aRangesToDelete)) {
       nsresult rv = aRangesToDelete.Collapse(aCaretPoint);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "AutoRangeArray::Collapse() failed");
       return rv;
     }
-    // TODO: In this case, HandleDeleteAtOtherBlockBoundary() may fall it
-    //       back to `DeleteRangesWithTransaction()` so that we need
-    //       `ComputTargetRangesToDelete()` for it.
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = mDeleteRangesHandlerConst
+                      .FallbackToComputeRangesToDeleteRangesWithTransaction(
+                          aHTMLEditor, aRangesToDelete);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoDeleteRangesHandler::"
+        "FallbackToComputeRangesToDeleteRangesWithTransaction() failed");
+    return rv;
   }
 
   AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
@@ -5721,6 +5754,186 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
                        "AutoDeleteRangesHandler::"
                        "DeleteParentBlocksWithTransactionIfEmpty() failed");
   return rv;
+}
+
+nsresult
+HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
+    const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers,
+    AutoRangeArray& aRangesToDelete) const {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+  MOZ_ASSERT(!aRangesToDelete.Ranges().IsEmpty());
+
+  EditorBase::HowToHandleCollapsedRange howToHandleCollapsedRange =
+      EditorBase::HowToHandleCollapsedRangeFor(aDirectionAndAmount);
+  if (NS_WARN_IF(aRangesToDelete.IsCollapsed() &&
+                 howToHandleCollapsedRange ==
+                     EditorBase::HowToHandleCollapsedRange::Ignore)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto extendRangeToSelectCharacterForward =
+      [](nsRange& aRange, const EditorRawDOMPointInText& aCaretPoint) -> void {
+    const nsTextFragment& textFragment =
+        aCaretPoint.ContainerAsText()->TextFragment();
+    if (!textFragment.GetLength()) {
+      return;
+    }
+    if (textFragment.IsHighSurrogateFollowedByLowSurrogateAt(
+            aCaretPoint.Offset())) {
+      DebugOnly<nsresult> rvIgnored = aRange.SetStartAndEnd(
+          aCaretPoint.ContainerAsText(), aCaretPoint.Offset(),
+          aCaretPoint.ContainerAsText(), aCaretPoint.Offset() + 2);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "nsRange::SetStartAndEnd() failed");
+      return;
+    }
+    DebugOnly<nsresult> rvIgnored = aRange.SetStartAndEnd(
+        aCaretPoint.ContainerAsText(), aCaretPoint.Offset(),
+        aCaretPoint.ContainerAsText(), aCaretPoint.Offset() + 1);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "nsRange::SetStartAndEnd() failed");
+  };
+  auto extendRangeToSelectCharacterBackward =
+      [](nsRange& aRange, const EditorRawDOMPointInText& aCaretPoint) -> void {
+    if (aCaretPoint.IsStartOfContainer()) {
+      return;
+    }
+    const nsTextFragment& textFragment =
+        aCaretPoint.ContainerAsText()->TextFragment();
+    if (!textFragment.GetLength()) {
+      return;
+    }
+    if (textFragment.IsLowSurrogateFollowingHighSurrogateAt(
+            aCaretPoint.Offset() - 1)) {
+      DebugOnly<nsresult> rvIgnored = aRange.SetStartAndEnd(
+          aCaretPoint.ContainerAsText(), aCaretPoint.Offset() - 2,
+          aCaretPoint.ContainerAsText(), aCaretPoint.Offset());
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "nsRange::SetStartAndEnd() failed");
+      return;
+    }
+    DebugOnly<nsresult> rvIgnored = aRange.SetStartAndEnd(
+        aCaretPoint.ContainerAsText(), aCaretPoint.Offset() - 1,
+        aCaretPoint.ContainerAsText(), aCaretPoint.Offset());
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "nsRange::SetStartAndEnd() failed");
+  };
+
+  for (OwningNonNull<nsRange>& range : aRangesToDelete.Ranges()) {
+    // If it's not collapsed, `DeleteRangeTransaction::Create()` will be called
+    // with it and `DeleteRangeTransaction` won't modify the range.
+    if (!range->Collapsed()) {
+      continue;
+    }
+
+    if (howToHandleCollapsedRange ==
+        EditorBase::HowToHandleCollapsedRange::Ignore) {
+      continue;
+    }
+
+    // In the other cases, `EditorBase::CreateTransactionForCollapsedRange()`
+    // will handle the collapsed range.
+    EditorRawDOMPoint caretPoint(range->StartRef());
+    if (howToHandleCollapsedRange ==
+            EditorBase::HowToHandleCollapsedRange::ExtendBackward &&
+        caretPoint.IsStartOfContainer()) {
+      nsIContent* previousEditableContent =
+          aHTMLEditor.GetPreviousEditableNode(*caretPoint.GetContainer());
+      if (!previousEditableContent) {
+        continue;
+      }
+      if (!previousEditableContent->IsText()) {
+        IgnoredErrorResult ignoredError;
+        range->SelectNode(*previousEditableContent, ignoredError);
+        NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                             "nsRange::SelectNode() failed");
+        continue;
+      }
+
+      extendRangeToSelectCharacterBackward(
+          range,
+          EditorRawDOMPointInText::AtEndOf(*previousEditableContent->AsText()));
+      continue;
+    }
+
+    if (howToHandleCollapsedRange ==
+            EditorBase::HowToHandleCollapsedRange::ExtendForward &&
+        caretPoint.IsEndOfContainer()) {
+      nsIContent* nextEditableContent =
+          aHTMLEditor.GetNextEditableNode(*caretPoint.GetContainer());
+      if (!nextEditableContent) {
+        continue;
+      }
+
+      if (!nextEditableContent->IsText()) {
+        IgnoredErrorResult ignoredError;
+        range->SelectNode(*nextEditableContent, ignoredError);
+        NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                             "nsRange::SelectNode() failed");
+        continue;
+      }
+
+      extendRangeToSelectCharacterForward(
+          range, EditorRawDOMPointInText(nextEditableContent->AsText(), 0));
+      continue;
+    }
+
+    if (caretPoint.IsInTextNode()) {
+      if (howToHandleCollapsedRange ==
+          EditorBase::HowToHandleCollapsedRange::ExtendBackward) {
+        extendRangeToSelectCharacterBackward(
+            range, EditorRawDOMPointInText(caretPoint.ContainerAsText(),
+                                           caretPoint.Offset()));
+        continue;
+      }
+      extendRangeToSelectCharacterForward(
+          range, EditorRawDOMPointInText(caretPoint.ContainerAsText(),
+                                         caretPoint.Offset()));
+      continue;
+    }
+
+    nsIContent* editableContent =
+        howToHandleCollapsedRange ==
+                EditorBase::HowToHandleCollapsedRange::ExtendBackward
+            ? aHTMLEditor.GetPreviousEditableNode(caretPoint)
+            : aHTMLEditor.GetNextEditableNode(caretPoint);
+    if (!editableContent) {
+      continue;
+    }
+    while (editableContent && editableContent->IsCharacterData() &&
+           !editableContent->Length()) {
+      editableContent =
+          howToHandleCollapsedRange ==
+                  EditorBase::HowToHandleCollapsedRange::ExtendBackward
+              ? aHTMLEditor.GetPreviousEditableNode(*editableContent)
+              : aHTMLEditor.GetNextEditableNode(*editableContent);
+    }
+    if (!editableContent) {
+      continue;
+    }
+
+    if (!editableContent->IsText()) {
+      IgnoredErrorResult ignoredError;
+      range->SelectNode(*editableContent, ignoredError);
+      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                           "nsRange::SelectNode() failed");
+      continue;
+    }
+
+    if (howToHandleCollapsedRange ==
+        EditorBase::HowToHandleCollapsedRange::ExtendBackward) {
+      extendRangeToSelectCharacterBackward(
+          range, EditorRawDOMPointInText::AtEndOf(*editableContent->AsText()));
+      continue;
+    }
+    extendRangeToSelectCharacterForward(
+        range, EditorRawDOMPointInText(editableContent->AsText(), 0));
+    continue;
+  }
+
+  return NS_OK;
 }
 
 template <typename EditorDOMPointType>
