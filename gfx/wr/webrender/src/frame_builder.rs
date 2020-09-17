@@ -66,6 +66,7 @@ pub struct FrameBuilderConfig {
     pub gpu_supports_fast_clears: bool,
     pub gpu_supports_advanced_blend: bool,
     pub advanced_blend_is_coherent: bool,
+    pub gpu_supports_render_target_partial_update: bool,
     pub batch_lookback_count: usize,
     pub background_color: Option<ColorF>,
     pub compositor_kind: CompositorKind,
