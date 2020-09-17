@@ -219,7 +219,7 @@ class ProviderTopSites extends UrlbarProvider {
             ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
               title: site.title,
               keyword: site.title,
-              keywordOffer: UrlbarUtils.KEYWORD_OFFER.SHOW,
+              keywordOffer: UrlbarUtils.KEYWORD_OFFER.HIDE,
               engine: engine.name,
               query: "",
               icon: site.favicon,

@@ -644,11 +644,6 @@ let BrowserUsageTelemetry = {
    *   details.
    */
   recordSearchMode(searchMode) {
-    // Search mode preview is not search mode. Recording it would just create
-    // noise.
-    if (searchMode.isPreview) {
-      return;
-    }
     let scalarKey;
     if (searchMode.engineName) {
       let engine = Services.search.getEngineByName(searchMode.engineName);
