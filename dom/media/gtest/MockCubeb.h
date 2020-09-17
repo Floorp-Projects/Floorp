@@ -191,7 +191,7 @@ class MockCubebStream {
       mAudioGenerator.GenerateInterleaved(mInputBuffer, nrFrames);
     }
     cubeb_stream* stream = reinterpret_cast<cubeb_stream*>(this);
-    long outframes =
+    const long outframes =
         mDataCallback(stream, mUserPtr, mHasInput ? mInputBuffer : nullptr,
                       mHasOutput ? mOutputBuffer : nullptr, nrFrames);
 
