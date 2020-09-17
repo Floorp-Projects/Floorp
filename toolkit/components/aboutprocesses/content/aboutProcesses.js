@@ -1040,20 +1040,14 @@ var Control = {
       let order;
       switch (this._sortColumn) {
         case "column-name":
-          order = a.name.localeCompare(b.name);
+          order = a.name.localeCompare(b.name) || a.pid - b.pid;
           break;
         case "column-cpu-total":
           order = b.totalCpu - a.totalCpu;
-          if (order == 0) {
-            order = b.totalCpu - a.totalCpu;
-          }
           break;
 
-        case "column-cpu-threads":
         case "column-memory-resident":
-        case "column-type":
         case "column-pid":
-        case "column-twisty":
         case null:
           order = b.tid - a.tid;
           break;
@@ -1073,40 +1067,24 @@ var Control = {
         case "column-pid":
           order = b.pid - a.pid;
           break;
-        case "column-type":
-          order = String(a.origin).localeCompare(b.origin);
-          if (order == 0) {
-            order = String(a.type).localeCompare(b.type);
-          }
-          break;
         case "column-name":
-          order = String(a.name).localeCompare(b.name);
+          order =
+            String(a.origin).localeCompare(b.origin) ||
+            String(a.type).localeCompare(b.type) ||
+            a.pid - b.pid;
           break;
         case "column-cpu-total":
           order = b.totalCpu - a.totalCpu;
-          if (order == 0) {
-            order = b.totalCpu - a.totalCpu;
-          }
-          break;
-        case "column-cpu-threads":
-          order = b.threads.length - a.threads.length;
           break;
         case "column-memory-resident":
           order = b.totalResidentUniqueSize - a.totalResidentUniqueSize;
           break;
-        case "column-twisty":
         case null:
           // Default order: classify processes by group.
-          order = a.displayRank - b.displayRank;
-          if (order == 0) {
+          order =
+            a.displayRank - b.displayRank ||
             // Other processes are ordered by origin.
-            order = String(a.name).localeCompare(b.name);
-            if (order == 0) {
-              // If we're running without Fission, many processes will have
-              // the same origin, so differenciate with CPU use.
-              order = b.slopeCpuUser - a.slopeCpuUser;
-            }
-          }
+            String(a.origin).localeCompare(b.origin);
           break;
         default:
           throw new Error("Unsupported order: " + this._sortColumn);
@@ -1119,13 +1097,10 @@ var Control = {
   },
   _sortDOMWindows(windows) {
     return windows.sort((a, b) => {
-      let order = a.displayRank - b.displayRank;
-      if (order == 0) {
-        order = a.documentTitle.localeCompare(b.documentTitle);
-      }
-      if (order == 0) {
-        order = a.documentURI.spec.localeCompare(b.documentURI.spec);
-      }
+      let order =
+        a.displayRank - b.displayRank ||
+        a.documentTitle.localeCompare(b.documentTitle) ||
+        a.documentURI.spec.localeCompare(b.documentURI.spec);
       if (!this._sortAscendent) {
         order = -order;
       }
