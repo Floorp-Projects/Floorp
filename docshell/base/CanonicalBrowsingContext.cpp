@@ -303,6 +303,12 @@ void CanonicalBrowsingContext::SwapHistoryEntries(nsISHEntry* aOldEntry,
   }
 }
 
+void CanonicalBrowsingContext::AddLoadingSessionHistoryEntry(
+    uint64_t aLoadId, SessionHistoryEntry* aEntry) {
+  Unused << SetHistoryID(aEntry->DocshellID());
+  mLoadingEntries.AppendElement(LoadingSessionHistoryEntry{aLoadId, aEntry});
+}
+
 UniquePtr<LoadingSessionHistoryInfo>
 CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
@@ -311,7 +317,6 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       aLoadState->GetLoadingSessionHistoryInfo();
   if (existingLoadingInfo) {
     entry = SessionHistoryEntry::GetByLoadId(existingLoadingInfo->mLoadId);
-    Unused << SetHistoryID(entry->DocshellID());
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
     entry->SetDocshellID(GetHistoryID());
@@ -324,11 +329,12 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     loadingInfo = MakeUnique<LoadingSessionHistoryInfo>(*existingLoadingInfo);
   } else {
     loadingInfo = MakeUnique<LoadingSessionHistoryInfo>(entry);
+    mLoadingEntries.AppendElement(
+        LoadingSessionHistoryEntry{loadingInfo->mLoadId, entry});
   }
 
   MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(loadingInfo->mLoadId) == entry);
-  mLoadingEntries.AppendElement(
-      LoadingSessionHistoryEntry{loadingInfo->mLoadId, entry});
+
   return loadingInfo;
 }
 

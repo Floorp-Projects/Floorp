@@ -1839,6 +1839,12 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   loadState->SetLoadIsFromSessionHistory(mRequestedIndex, Length(),
                                          loadingFromActiveEntry);
 
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aFrameEntry);
+    aFrameBC->Canonical()->AddLoadingSessionHistoryEntry(
+        loadState->GetLoadingSessionHistoryInfo()->mLoadId, she);
+  }
+
   nsCOMPtr<nsIURI> originalURI = aFrameEntry->GetOriginalURI();
   loadState->SetOriginalURI(originalURI);
 
