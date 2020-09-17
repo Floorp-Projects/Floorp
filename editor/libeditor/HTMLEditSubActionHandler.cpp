@@ -4956,6 +4956,23 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteNonCollapsedRanges(
     }
   }
 
+  if (aRangesToDelete.FirstRangeRef()->GetStartContainer() ==
+      aRangesToDelete.FirstRangeRef()->GetEndContainer()) {
+    if (!aRangesToDelete.FirstRangeRef()->Collapsed()) {
+      nsresult rv = ComputeRangesToDeleteRangesWithTransaction(
+          aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction("
+          ") failed");
+      return rv;
+    }
+    // `DeleteUnnecessaryNodesAndCollapseSelection()` may delete parent
+    // elements, but it does not affect computing target ranges.  Therefore,
+    // we don't need to touch aRangesToDelete in this case.
+    return NS_OK;
+  }
+
   Element* startCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
       *aRangesToDelete.FirstRangeRef()->GetStartContainer());
   Element* endCiteNode = aHTMLEditor.GetMostAncestorMailCiteElement(
