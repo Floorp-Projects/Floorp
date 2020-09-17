@@ -53,20 +53,21 @@ class ClockDrift final {
    * Update the available source frames, target frames, and the current
    * buffering, in every iteration. If the condition are met a new correction is
    * calculated. A new correction is calculated in the following cases:
-   *   1. Every 100 iterations which mean every 100 calls of this method.
-   *   2. Every time we run out of buffered frames (less than 2ms).
+   *   1. Every mAdjustmentIntervalMs milliseconds (1000ms).
+   *   2. Every time we run low on buffered frames (less than 20ms).
    * In addition to that, the correction is clamped to 10% to avoid sound
    * distortion so the result will be in [0.9, 1.1].
    */
-  void UpdateClock(int aSourceClock, int aTargetClock, int aBufferedFrames) {
-    if (mIterations == mAdjustementWindow) {
+  void UpdateClock(int aSourceFrames, int aTargetFrames, int aBufferedFrames) {
+    if ((mTargetClock * 1000 / mTargetRate) >= mAdjustmentIntervalMs ||
+        (mSourceClock * 1000 / mSourceRate) >= mAdjustmentIntervalMs) {
+      // The adjustment interval has passed on one side. Recalculate.
       CalculateCorrection(aBufferedFrames);
     } else if (aBufferedFrames < 2 * mSourceRate / 100 /*20ms*/) {
       BufferedFramesCorrection(aBufferedFrames);
     }
-    mTargetClock += aTargetClock;
-    mSourceClock += aSourceClock;
-    ++mIterations;
+    mTargetClock += aTargetFrames;
+    mSourceClock += aSourceFrames;
   }
 
  private:
@@ -94,7 +95,6 @@ class ClockDrift final {
     mPreviousCorrection = mCorrection;
 
     // Reset the counters to preper for the new period.
-    mIterations = 0;
     mTargetClock = 0;
     mSourceClock = 0;
   }
@@ -117,16 +117,15 @@ class ClockDrift final {
  public:
   const int32_t mSourceRate;
   const int32_t mTargetRate;
+  const int32_t mAdjustmentIntervalMs = 1000;
   const int32_t mDesiredBuffering;
 
  private:
   float mCorrection = 1.0;
   float mPreviousCorrection = 1.0;
-  const int32_t mAdjustementWindow = 100;
 
   int32_t mSourceClock = 0;
   int32_t mTargetClock = 0;
-  int32_t mIterations = 0;
 };
 
 /**
