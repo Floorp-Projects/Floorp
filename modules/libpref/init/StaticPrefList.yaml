@@ -9933,7 +9933,7 @@
 
 - name: webgl.out-of-process.shmem-size
   type: RelaxedAtomicUint32
-  value: 10000 # 10KB
+  value: 100000 # 100KB
   mirror: always
 
 - name: webgl.power-preference-override
