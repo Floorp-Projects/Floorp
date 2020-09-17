@@ -5,8 +5,7 @@
 package mozilla.components.browser.state.state.content
 
 import android.os.Environment
-import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+import mozilla.components.concept.fetch.Response
 import java.util.UUID
 
 /**
@@ -26,10 +25,10 @@ import java.util.UUID
  * @property id The unique identifier of this download.
  * @property private Indicates if the download was created from a private session.
  * @property createdTime A timestamp when the download was created.
- * @
+ * @property response A response object associated with this request, when provided can be
+ * used instead of performing a manual a download.
  */
 @Suppress("Deprecation")
-@Parcelize
 data class DownloadState(
     val url: String,
     val fileName: String? = null,
@@ -44,8 +43,9 @@ data class DownloadState(
     val id: String = UUID.randomUUID().toString(),
     val sessionId: String? = null,
     val private: Boolean = false,
-    val createdTime: Long = System.currentTimeMillis()
-) : Parcelable {
+    val createdTime: Long = System.currentTimeMillis(),
+    val response: Response? = null
+) {
     val filePath: String get() =
         Environment.getExternalStoragePublicDirectory(destinationDirectory).path + "/" + fileName
 

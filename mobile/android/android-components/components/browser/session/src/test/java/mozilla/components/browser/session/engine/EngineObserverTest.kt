@@ -28,6 +28,7 @@ import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.fetch.Response
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
@@ -700,7 +701,7 @@ class EngineObserverTest {
     @Test
     fun `onExternalResource will update the store`() {
         val store = BrowserStore()
-
+        val response = mock<Response>()
         val sessionManager = SessionManager(engine = mock(), store = store)
 
         val session = Session("https://www.mozilla.org", id = "test-tab").also {
@@ -715,7 +716,8 @@ class EngineObserverTest {
                 userAgent = "userAgent",
                 contentType = "text/plain",
                 isPrivate = true,
-                contentLength = 100L)
+                contentLength = 100L,
+                response = response)
 
         store.waitUntilIdle()
 
@@ -727,6 +729,7 @@ class EngineObserverTest {
         assertEquals("text/plain", tab.content.download?.contentType)
         assertEquals(100L, tab.content.download?.contentLength)
         assertEquals(true, tab.content.download?.private)
+        assertEquals(response, tab.content.download?.response)
     }
 
     @Test

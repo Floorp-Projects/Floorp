@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-state**
+  * ⚠️ **This is a breaking change**: `DownloadState` doesn't support [Parcelable](https://developer.android.com/reference/android/os/Parcelable) anymore.
+
 * **feature-downloads**
   * 🚒 Bug fixed [issue #8585](https://github.com/mozilla-mobile/android-components/issues/8585) fixed regression files not been added to the downloads database system.
   * 🌟 Added new use cases for removing individual downloads (`removeDownload`) and all downloads (`removeAllDownloads`).

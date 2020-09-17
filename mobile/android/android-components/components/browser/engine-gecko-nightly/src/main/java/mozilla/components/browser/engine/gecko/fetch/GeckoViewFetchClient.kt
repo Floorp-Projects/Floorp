@@ -103,7 +103,6 @@ private fun WebRequest.Builder.addBodyFrom(request: Request): WebRequest.Builder
     return this
 }
 
-@VisibleForTesting
 internal fun WebResponse.toResponse(isBlobUri: Boolean): Response {
     val headers = translateHeaders(this)
     // We use the same API for blobs and HTTP requests, but blobs won't receive a status code.

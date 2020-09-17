@@ -607,7 +607,7 @@ abstract class AbstractFetchDownloadService : Service() {
         }
 
         val request = Request(download.url.sanitizeURL(), headers = headers, cookiePolicy = cookiePolicy)
-        val response = httpClient.fetch(request)
+        val response = download.response ?: httpClient.fetch(request)
         logger.debug("Fetching download for ${currentDownloadJobState.state.id} ")
 
         // If we are resuming a download and the response does not contain a CONTENT_RANGE

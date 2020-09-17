@@ -27,7 +27,6 @@ android {
 
 dependencies {
     implementation project(':support-ktx')
-
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.androidx_annotation
     implementation Dependencies.kotlin_coroutines
@@ -37,6 +36,7 @@ dependencies {
     api project(':support-base')
     api project(':browser-errorpages')
     api project(':concept-storage')
+    api project(':concept-fetch')
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit

@@ -69,14 +69,17 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.isNull
 import org.mockito.Mock
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.doCallRealMethod
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.never
+import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.MockitoAnnotations.initMocks
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
@@ -1026,6 +1029,36 @@ class AbstractFetchDownloadServiceTest {
         verify(client, times(2)).fetch(providedRequest.capture())
 
         assertEquals(Request.CookiePolicy.INCLUDE, providedRequest.value.cookiePolicy)
+    }
+
+    @Test
+    fun `performDownload - use the download response when available`() {
+        val responseFromDownloadState = mock<Response>()
+        val responseFromClient = mock<Response>()
+        val download = DownloadState("https://example.com/file.txt", "file.txt", response = responseFromDownloadState)
+        val downloadJob = DownloadJobState(state = download, status = DOWNLOADING)
+
+        doReturn(404).`when`(responseFromDownloadState).status
+        doReturn(responseFromClient).`when`(client).fetch(any())
+
+        service.performDownload(downloadJob)
+
+        verify(responseFromDownloadState, atLeastOnce()).status
+        verifyZeroInteractions(client)
+    }
+
+    @Test
+    fun `performDownload - use the client response when the download response NOT available`() {
+        val responseFromClient = mock<Response>()
+        val download = spy(DownloadState("https://example.com/file.txt", "file.txt", response = null))
+        val downloadJob = DownloadJobState(state = download, status = DOWNLOADING)
+
+        doReturn(404).`when`(responseFromClient).status
+        doReturn(responseFromClient).`when`(client).fetch(any())
+
+        service.performDownload(downloadJob)
+
+        verify(responseFromClient, atLeastOnce()).status
     }
 
     @Test

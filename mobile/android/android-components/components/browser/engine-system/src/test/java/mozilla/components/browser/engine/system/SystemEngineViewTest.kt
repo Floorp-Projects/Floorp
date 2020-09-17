@@ -70,6 +70,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.content.blocking.Tracker
+import mozilla.components.concept.fetch.Response
 import java.io.StringReader
 
 @RunWith(AndroidJUnit4::class)
@@ -442,7 +443,8 @@ class SystemEngineViewTest {
                 contentType: String?,
                 cookie: String?,
                 userAgent: String?,
-                isPrivate: Boolean
+                isPrivate: Boolean,
+                response: Response?
             ) {
                 assertEquals("https://download.mozilla.org", url)
                 assertEquals("image.png", fileName)

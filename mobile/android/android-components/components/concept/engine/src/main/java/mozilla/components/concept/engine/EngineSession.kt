@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.fetch.Response
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 
@@ -133,6 +134,8 @@ abstract class EngineSession(
          * @param cookie The cookie related to request.
          * @param userAgent The user agent of the engine.
          * @param isPrivate Indicates if the download was requested from a private session.
+         * @param response A response object associated with this request, when provided can be
+         * used instead of performing a manual a download.
          */
         @Suppress("LongParameterList")
         fun onExternalResource(
@@ -142,7 +145,8 @@ abstract class EngineSession(
             contentType: String? = null,
             cookie: String? = null,
             userAgent: String? = null,
-            isPrivate: Boolean = false
+            isPrivate: Boolean = false,
+            response: Response? = null
         ) = Unit
 
         /**

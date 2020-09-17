@@ -35,6 +35,7 @@ import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.state.Store
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.ktx.android.net.isInScope
@@ -203,7 +204,8 @@ internal class EngineObserver(
         contentType: String?,
         cookie: String?,
         userAgent: String?,
-        isPrivate: Boolean
+        isPrivate: Boolean,
+        response: Response?
     ) {
         // We want to avoid negative contentLength values
         // For more info see https://bugzilla.mozilla.org/show_bug.cgi?id=1632594
@@ -217,7 +219,8 @@ internal class EngineObserver(
             INITIATED,
             userAgent,
             Environment.DIRECTORY_DOWNLOADS,
-            private = isPrivate
+            private = isPrivate,
+            response = response
         )
 
         store?.dispatch(ContentAction.UpdateDownloadAction(

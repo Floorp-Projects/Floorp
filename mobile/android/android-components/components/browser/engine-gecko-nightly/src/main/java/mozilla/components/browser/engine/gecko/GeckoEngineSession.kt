@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import mozilla.components.browser.engine.gecko.fetch.toResponse
 import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
@@ -30,6 +31,9 @@ import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_DISPOSITION
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
@@ -39,7 +43,9 @@ import mozilla.components.support.ktx.kotlin.isExtensionUrl
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import mozilla.components.support.utils.DownloadUtils
 import org.json.JSONObject
+import org.mozilla.geckoview.WebResponse
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
@@ -744,15 +750,30 @@ class GeckoEngineSession(
             notifyObservers { onFullScreenChange(fullScreen) }
         }
 
-        override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
-            notifyObservers {
-                onExternalResource(
-                        url = response.uri,
-                        contentLength = response.contentLength,
-                        contentType = response.contentType,
-                        fileName = response.filename,
-                        isPrivate = privateMode
+        override fun onExternalResponse(session: GeckoSession, webResponse: WebResponse) {
+            with(webResponse) {
+                val contentType = headers[CONTENT_TYPE]?.trim()
+                val contentLength = headers[CONTENT_LENGTH]?.trim()?.toLong()
+                val contentDisposition = headers[CONTENT_DISPOSITION]?.trim()
+                val url = uri
+                val fileName = DownloadUtils.guessFileName(
+                    contentDisposition,
+                    destinationDirectory = null,
+                    url = url,
+                    mimeType = contentType
                 )
+                val response = webResponse.toResponse(isBlobUri = url.startsWith("blob:"))
+
+                notifyObservers {
+                    onExternalResource(
+                            url = url,
+                            contentLength = contentLength,
+                            contentType = contentType,
+                            fileName = fileName,
+                            response = response,
+                            isPrivate = privateMode
+                    )
+                }
             }
         }
 

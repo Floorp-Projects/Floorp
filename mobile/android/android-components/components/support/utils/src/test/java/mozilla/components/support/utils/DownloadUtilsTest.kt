@@ -106,6 +106,13 @@ class DownloadUtilsTest {
         assertEquals("file.txt", DownloadUtils.guessFileName(null, null, "http://example.com/file.txt", "text/html"))
     }
 
+    @Test
+    fun sanitizeMimeType() {
+        assertEquals("application/pdf", DownloadUtils.sanitizeMimeType("application/pdf; qs=0.001"))
+        assertEquals("application/pdf", DownloadUtils.sanitizeMimeType("application/pdf"))
+        assertEquals(null, DownloadUtils.sanitizeMimeType(null))
+    }
+
     companion object {
         private val CONTENT_DISPOSITION_TYPES = listOf("attachment", "inline")
 

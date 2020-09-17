@@ -29,6 +29,8 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.fetch.Headers
+import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
@@ -39,6 +41,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.test.ReflectionUtils
+import mozilla.components.support.test.argumentCaptor
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -61,6 +64,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
+import org.mozilla.geckoview.WebResponse
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
@@ -73,7 +77,6 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_NO
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
-import org.mozilla.geckoview.MockWebResponseInfo
 import org.mozilla.geckoview.SessionFinder
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
@@ -271,24 +274,27 @@ class GeckoEngineSessionTest {
         val observer: EngineSession.Observer = mock()
         engineSession.register(observer)
 
-        val info: GeckoSession.WebResponseInfo = MockWebResponseInfo(
-            uri = "https://download.mozilla.org",
-            contentLength = 42,
-            contentType = "image/png",
-            filename = "image.png"
-        )
+        val response = WebResponse.Builder("https://download.mozilla.org/image.png")
+            .addHeader(Headers.Names.CONTENT_TYPE, "image/png")
+            .addHeader(Headers.Names.CONTENT_LENGTH, "42")
+            .body(mock())
+            .build()
 
+        val captor = argumentCaptor<Response>()
         captureDelegates()
-        contentDelegate.value.onExternalResponse(mock(), info)
+        contentDelegate.value.onExternalResponse(mock(), response)
 
         verify(observer).onExternalResource(
-            url = "https://download.mozilla.org",
-            fileName = "image.png",
-            contentLength = 42,
-            contentType = "image/png",
-            isPrivate = true,
-            userAgent = null,
-            cookie = null)
+            url = eq("https://download.mozilla.org/image.png"),
+            fileName = eq("image.png"),
+            contentLength = eq(42),
+            contentType = eq("image/png"),
+            userAgent = eq(null),
+            cookie = eq(null),
+            isPrivate = eq(true),
+            response = captor.capture()
+        )
+        assertNotNull(captor.value)
     }
 
     @Test

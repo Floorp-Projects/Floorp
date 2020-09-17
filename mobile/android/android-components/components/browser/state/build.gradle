@@ -33,6 +33,10 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':support-ktx')
 
+    // We expose this as API because we are using Response in our public API and do not want every
+    // consumer to have to manually import "concept-fetch".
+    api project(':concept-fetch')
+
     implementation Dependencies.androidx_browser
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.kotlin_stdlib
