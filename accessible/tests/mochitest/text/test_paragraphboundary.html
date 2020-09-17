@@ -34,6 +34,13 @@
       testTextAtOffset("link", BOUNDARY_PARAGRAPH,
       [[0, 2, "bc", 0, 2]]);
 
+      // Test a list and list item
+      testTextAtOffset("ul", BOUNDARY_PARAGRAPH,
+      [[0, 0, kEmbedChar, 0, 1],
+      [1, 2, kEmbedChar, 1, 2]]);
+      testTextAtOffset("li1", BOUNDARY_PARAGRAPH,
+      [[0, 3, "• a", 0, 3]]);
+
       SimpleTest.finish();
     }
 
@@ -60,5 +67,6 @@
   </div>
   <p id="forced_wrap" style="width: 1px; word-break: break-all;">ab</p>
   <p id="pWithLink">a<a id="link" href="https://example.com/">bc</a>d</p>
+  <ul id="ul"><li id="li1">a</li><li>b</li></ul>
 </body>
 </html>
