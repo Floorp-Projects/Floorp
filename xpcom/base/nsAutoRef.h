@@ -34,11 +34,10 @@ class nsReturningRef;
  * The publicly available methods are the public methods on this class and its
  * public base classes |nsAutoRefBase<T>| and |nsSimpleRef<T>|.
  *
- * For ref-counted resources see also |nsCountedRef<T>|.
  * For function return values see |nsReturnRef<T>|.
  *
  * For each class |T|, |nsAutoRefTraits<T>| or |nsSimpleRef<T>| must be
- * specialized to use |nsAutoRef<T>| and |nsCountedRef<T>|.
+ * specialized to use |nsAutoRef<T>|.
  *
  * @param T  A class identifying the type of reference held by the
  *           |nsAutoRef<T>| and the unique set methods for managing references
@@ -143,8 +142,6 @@ class nsAutoRef : public nsAutoRefBase<T> {
   //
   // For raw references, use |own| to indicate intention to have the
   // resource released.
-  //
-  // Or, to create another owner of the same reference, use an nsCountedRef.
 
   ThisClass& operator=(const nsReturningRef<T>& aReturning) {
     BaseClass::steal(aReturning.mReturnRef);
@@ -194,79 +191,6 @@ class nsAutoRef : public nsAutoRefBase<T> {
  private:
   // No copy constructor
   explicit nsAutoRef(ThisClass& aRefToSteal);
-};
-
-/**
- * template <class T> class nsCountedRef
- *
- * A class that creates (adds) a new reference to a resource on construction
- * or assignment and releases on destruction.
- *
- * This class is similar to nsAutoRef<T> and inherits its methods, but also
- * provides copy construction and assignment operators that enable more than
- * one concurrent reference to the same resource.
- *
- * Specialize |nsAutoRefTraits<T>| or |nsSimpleRef<T>| to use this.  This
- * class assumes that the resource itself counts references and so can only be
- * used when |T| represents a reference-counting resource.
- */
-
-template <class T>
-class nsCountedRef : public nsAutoRef<T> {
- protected:
-  typedef nsCountedRef<T> ThisClass;
-  typedef nsAutoRef<T> BaseClass;
-  typedef nsSimpleRef<T> SimpleRef;
-  typedef typename BaseClass::RawRef RawRef;
-
- public:
-  nsCountedRef() = default;
-
-  // Construction and assignment from a another nsCountedRef
-  // or a raw ref copies and increments the ref count.
-  nsCountedRef(const ThisClass& aRefToCopy) {
-    SimpleRef::operator=(aRefToCopy);
-    SafeAddRef();
-  }
-  ThisClass& operator=(const ThisClass& aRefToCopy) {
-    if (this == &aRefToCopy) {
-      return *this;
-    }
-
-    this->SafeRelease();
-    SimpleRef::operator=(aRefToCopy);
-    SafeAddRef();
-    return *this;
-  }
-
-  // Implicit conversion from another smart ref argument (to a raw ref) is
-  // accepted here because construction and assignment safely creates a new
-  // reference without interfering with the reference to copy.
-  explicit nsCountedRef(RawRef aRefToCopy) : BaseClass(aRefToCopy) {
-    SafeAddRef();
-  }
-  ThisClass& operator=(RawRef aRefToCopy) {
-    this->own(aRefToCopy);
-    SafeAddRef();
-    return *this;
-  }
-
-  // Construction and assignment from an nsReturnRef function return value,
-  // which expects to give up ownership, transfers ownership.
-  explicit nsCountedRef(const nsReturningRef<T>& aReturning)
-      : BaseClass(aReturning) {}
-  ThisClass& operator=(const nsReturningRef<T>& aReturning) {
-    BaseClass::operator=(aReturning);
-    return *this;
-  }
-
- protected:
-  // Increase the reference count if there is a resource.
-  void SafeAddRef() {
-    if (this->HaveResource()) {
-      this->AddRef(this->get());
-    }
-  }
 };
 
 /**
@@ -342,7 +266,7 @@ class nsReturningRef {
  * template <class T> class nsAutoRefTraits
  *
  * A class describing traits of references managed by the default
- * |nsSimpleRef<T>| implementation and thus |nsAutoRef<T>| and |nsCountedRef|.
+ * |nsSimpleRef<T>| implementation and thus |nsAutoRef<T>|.
  * The default |nsSimpleRef<T> is suitable for resources with handles that
  * have a void value.  (If there is no such void value for a handle,
  * specialize |nsSimpleRef<T>|.)
@@ -377,12 +301,6 @@ class nsReturningRef {
  *     // Specializations must define Release() to properly finalize the
  *     // handle to a non-void custom-deleted or reference-counted resource.
  *     static void Release(RawRef aRawRef);
- *
- *     // For reference-counted resources, if |nsCountedRef<T>| is to be used,
- *     // specializations must define AddRef to increment the reference count
- *     // held by a non-void handle.
- *     // (AddRef() is not necessary for |nsAutoRef<T>|.)
- *     static void AddRef(RawRef aRawRef);
  * };
  *
  * See nsPointerRefTraits for example specializations for simple pointer
@@ -435,13 +353,10 @@ class nsPointerRefTraits {
  * there is an associated resource and (if so) get its raw handle.
  *
  * A default implementation is suitable for resources with handles that have a
- * void value.  This is not intended for direct use but used by |nsAutoRef<T>|
- * and thus |nsCountedRef<T>|.
+ * void value.  This is not intended for direct use but used by |nsAutoRef<T>|.
  *
  * Specialize this class if there is no particular void value for the resource
  * handle.  A specialized implementation must also provide Release(RawRef),
- * and, if |nsCountedRef<T>| is required, AddRef(RawRef), as described in
- * nsAutoRefTraits<T>.
  */
 
 template <class T>
