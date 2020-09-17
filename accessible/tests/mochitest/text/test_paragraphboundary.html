@@ -28,6 +28,17 @@
       testTextAtOffset("forced_wrap", BOUNDARY_PARAGRAPH,
       [[0, 2, "ab", 0, 2]]);
 
+      // Test paragraphs with a few line breaks.
+      testTextAtOffset("forced_br", BOUNDARY_PARAGRAPH,
+      [[0, 1, "a\n", 0, 2],  // a and br treated as a paragraph
+       [2, 3, "b\n", 2, 4],  // b treated as a paragraph, excl 2nd line break
+       [4, 4, "\n", 4, 5],  // second br treated as a separate paragraph
+       [5, 6, "c", 5, 6]]);  // Last paragraph treated as usual
+      testTextAtOffset("br_at_beginning", BOUNDARY_PARAGRAPH,
+      [[0, 0, "\n", 0, 1],  // br treated as a separate paragraph
+       [1, 2, "a\n", 1, 3],  // a and br treated as a paragraph
+       [3, 4, "b", 3, 4]]);  // b treated as last paragraph
+
       // Test a paragraph with an embedded link.
       testTextAtOffset("pWithLink", BOUNDARY_PARAGRAPH,
       [[0, 3, "a" + kEmbedChar + "d", 0, 3]]);
@@ -66,6 +77,8 @@
     <p>hello again</p>
   </div>
   <p id="forced_wrap" style="width: 1px; word-break: break-all;">ab</p>
+  <p id="forced_br">a<br>b<br><br>c</p>
+  <p id="br_at_beginning"><br>a<br>b</p>
   <p id="pWithLink">a<a id="link" href="https://example.com/">bc</a>d</p>
   <ul id="ul"><li id="li1">a</li><li>b</li></ul>
 </body>

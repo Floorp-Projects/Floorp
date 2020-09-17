@@ -552,11 +552,13 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
   uint32_t hyperTextOffset = DOMPointToOffset(
       pos.mResultContent, pos.mContentOffset, aDirection == eDirNext);
 
-  if (fallBackToSelectEndLine && IsLineEndCharAt(hyperTextOffset)) {
+  if ((fallBackToSelectEndLine || aAmount == eSelectParagraph) &&
+      IsLineEndCharAt(hyperTextOffset)) {
     // We used eSelectEndLine, but the caller requested eSelectLine.
-    // If there's a '\n' at the end of the line, eSelectEndLine will stop
-    // on it rather than after it. This is not what we want, since the caller
-    // wants the next line, not the same line.
+    // Or, we were asked for the paragraph.
+    // If there's a '\n' at the end of the line, eSelectEndLine and
+    // eSelectParagraph will stop on it rather than after it. This is not what
+    // we want, since the caller wants the next line, not the same line.
     ++hyperTextOffset;
   }
 
@@ -785,6 +787,30 @@ void HyperTextAccessible::TextAtOffset(int32_t aOffset,
     case nsIAccessibleText::BOUNDARY_PARAGRAPH: {
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
         adjustedOffset = AdjustCaretOffset(adjustedOffset);
+      }
+
+      if (IsLineEndCharAt(adjustedOffset)) {
+        // Layout gives us different results for a paragraph with line breaks.
+        // For the text, we get the text, for the line break, we get the text
+        // with the line break included. We adjust for the former case in
+        // FindOffset. However, querying on the whitespace also gives us text
+        // from the next chunk, which is never what we want. So, adjust the
+        // offset to make sure we always get the text with the '\n' included.
+        if (adjustedOffset == 0 || IsLineEndCharAt(adjustedOffset - 1)) {
+          // However, if the line break is at the start of the enclosing
+          // paragraph, or the character before this is also a line break, we
+          // want this to be only '\n'. In addition, layout would still
+          // give us the text of the next chunk here, too, which is still
+          // not what we want, either.
+          *aStartOffset = adjustedOffset;
+          *aEndOffset = adjustedOffset + 1;
+          TextSubstring(*aStartOffset, *aEndOffset, aText);
+          break;
+        }
+
+        // We're on a non-line-end character, adjust the offset and
+        // calculate the paragraph text and offsets as usual.
+        adjustedOffset--;
       }
 
       *aStartOffset =
