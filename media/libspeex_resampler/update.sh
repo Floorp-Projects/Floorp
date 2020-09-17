@@ -26,3 +26,4 @@ patch -p3 < set-skip-frac.patch
 patch -p3 < hugemem.patch
 patch -p3 < remove-empty-asm-clobber.patch
 patch -p3 < set-rate-overflow-no-return.patch
+patch -p3 < integer-halving.patch

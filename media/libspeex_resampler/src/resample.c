@@ -479,7 +479,7 @@ static int resampler_basic_interpolate_single(SpeexResamplerState *st, spx_uint3
       }
 
       cubic_coef(frac, interp);
-      sum = MULT16_32_Q15(interp[0],SHR32(accum[0], 1)) + MULT16_32_Q15(interp[1],SHR32(accum[1], 1)) + MULT16_32_Q15(interp[2],SHR32(accum[2], 1)) + MULT16_32_Q15(interp[3],SHR32(accum[3], 1));
+      sum = MULT16_32_Q15(interp[0],accum[0]) + MULT16_32_Q15(interp[1],accum[1]) + MULT16_32_Q15(interp[2],accum[2]) + MULT16_32_Q15(interp[3],accum[3]);
       sum = SATURATE32PSHR(sum, 15, 32767);
 #ifdef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
       } else {
