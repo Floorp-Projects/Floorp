@@ -491,10 +491,10 @@ def split_bugbug_arg(arg, substrategies):
 
     Many bugbug based optimizations require passing an empty dict by reference
     to communicate to downstream strategies. This function passes the provided
-    arg to the first strategies and a shared empty dict to last two (bugbug
-    based) strategies.
+    arg to the first strategies and an empty dict to last (bugbug based)
+    strategy.
     """
-    return [arg] * (len(substrategies) - 2) + [{}] * 2
+    return [arg] * (len(substrategies) - 1) + [{}]
 
 
 # Trigger registration in sibling modules.
