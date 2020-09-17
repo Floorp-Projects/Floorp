@@ -224,6 +224,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void AddLoadingSessionHistoryEntry(uint64_t aLoadId,
                                      SessionHistoryEntry* aEntry);
 
+  void GetLoadingSessionHistoryInfoFromParent(
+      Maybe<LoadingSessionHistoryInfo>& aLoadingInfo, int32_t* aRequestedIndex,
+      int32_t* aLength);
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
