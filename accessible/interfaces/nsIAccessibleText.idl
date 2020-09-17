@@ -13,7 +13,7 @@ interface nsIArray;
 interface nsIPersistentProperties;
 interface nsIAccessibleTextRange;
 
-[scriptable, builtinclass, uuid(93ad2ca1-f12b-4ab9-a793-95d9fa9d1774)]
+[scriptable, builtinclass, uuid(a4cc7576-45bb-44c5-b347-d9cb3ca4de9f)]
 interface nsIAccessibleText : nsISupports
 {
   // In parameters for character offsets:
@@ -29,6 +29,7 @@ interface nsIAccessibleText : nsISupports
   const AccessibleTextBoundary BOUNDARY_SENTENCE_END = 4;  // don't use, deprecated
   const AccessibleTextBoundary BOUNDARY_LINE_START = 5;
   const AccessibleTextBoundary BOUNDARY_LINE_END = 6;
+  const AccessibleTextBoundary BOUNDARY_PARAGRAPH = 7;
 
   /**
    * The current current caret offset.
