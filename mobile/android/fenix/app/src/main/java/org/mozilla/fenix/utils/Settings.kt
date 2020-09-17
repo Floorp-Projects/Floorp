@@ -60,7 +60,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         private const val ALLOWED_INT = 2
         private const val CFR_COUNT_CONDITION_FOCUS_INSTALLED = 1
         private const val CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED = 3
-        private const val MIN_DAYS_SINCE_FEEDBACK_PROMPT = 120
 
         const val ONE_DAY_MS = 60 * 60 * 24 * 1000L
         const val ONE_WEEK_MS = 60 * 60 * 24 * 7 * 1000L
@@ -763,6 +762,24 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var shouldShowVoiceSearch by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_voice_search),
+        default = true
+    )
+
+    /**
+     * Used in [SearchDialogFragment.kt], [SearchFragment.kt] (deprecated), and [PairFragment.kt]
+     * to see if we need to check for camera permissions before using the QR code scanner.
+     */
+    var shouldShowCameraPermissionPrompt by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_camera_permissions_needed),
+        default = true
+    )
+
+    /**
+     * Sets the state of permissions that have been checked, where [false] denotes already checked
+     * and [true] denotes needing to check. See [shouldShowCameraPermissionPrompt].
+     */
+    var setCameraPermissionNeededState by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_camera_permissions_needed),
         default = true
     )
 

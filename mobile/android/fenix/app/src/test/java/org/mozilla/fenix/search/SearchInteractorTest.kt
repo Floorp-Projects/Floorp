@@ -106,4 +106,13 @@ class SearchInteractorTest {
             searchController.handleExistingSessionSelected(session)
         }
     }
+
+    @Test
+    fun onCameraPermissionsNeeded() {
+        interactor.onCameraPermissionsNeeded()
+
+        verify {
+            searchController.handleCameraPermissionsNeeded()
+        }
+    }
 }

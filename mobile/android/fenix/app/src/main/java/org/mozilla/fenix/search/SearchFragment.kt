@@ -26,7 +26,6 @@ import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.search_suggestions_hint.view.*
@@ -51,7 +50,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -67,7 +65,6 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     private lateinit var toolbarView: ToolbarView
     private lateinit var awesomeBarView: AwesomeBarView
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
-    private var permissionDidUpdate = false
     private lateinit var searchStore: SearchFragmentStore
     private lateinit var searchInteractor: SearchInteractor
 
@@ -202,62 +199,26 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         search_scan_button.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
 
         qrFeature.set(
-            QrFeature(
-                requireContext(),
-                fragmentManager = parentFragmentManager,
-                onNeedToRequestPermissions = { permissions ->
-                    requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
-                },
-                onScanResult = { result ->
-                    search_scan_button.isChecked = false
-                    activity?.let {
-                        AlertDialog.Builder(it).apply {
-                            val spannable = resources.getSpanned(
-                                R.string.qr_scanner_confirmation_dialog_message,
-                                getString(R.string.app_name) to StyleSpan(BOLD),
-                                result to StyleSpan(ITALIC)
-                            )
-                            setMessage(spannable)
-                            setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
-                                requireComponents.analytics.metrics.track(Event.QRScannerNavigationDenied)
-                                dialog.cancel()
-                                resetFocus()
-                            }
-                            setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
-                                requireComponents.analytics.metrics.track(Event.QRScannerNavigationAllowed)
-                                (activity as HomeActivity)
-                                    .openToBrowserAndLoad(
-                                        searchTermOrURL = result,
-                                        newTab = searchStore.state.tabId == null,
-                                        from = BrowserDirection.FromSearch
-                                    )
-                                dialog.dismiss()
-                                resetFocus()
-                            }
-                            create()
-                        }.show()
-                        requireComponents.analytics.metrics.track(Event.QRScannerPromptDisplayed)
-                    }
-                }),
+            createQrFeature(),
             owner = this,
             view = view
         )
 
         view.search_scan_button.setOnClickListener {
-            toolbarView.view.clearFocus()
-
-            val cameraPermissionsDenied = PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(
-                    getPreferenceKey(R.string.pref_key_camera_permissions),
-                    false
-                )
-
-            if (cameraPermissionsDenied) {
-                searchInteractor.onCameraPermissionsNeeded()
-            } else {
+            if (requireContext().settings().shouldShowCameraPermissionPrompt) {
                 requireComponents.analytics.metrics.track(Event.QRScannerOpened)
                 qrFeature.get()?.scan(R.id.container)
+            } else {
+                if (requireContext().isPermissionGranted(Manifest.permission.CAMERA)) {
+                    requireComponents.analytics.metrics.track(Event.QRScannerOpened)
+                    qrFeature.get()?.scan(R.id.container)
+                } else {
+                    searchInteractor.onCameraPermissionsNeeded()
+                }
             }
+            view.hideKeyboard()
+            search_scan_button.isChecked = false
+            requireContext().settings().setCameraPermissionNeededState = false
         }
 
         view.search_engines_shortcut_button.setOnClickListener {
@@ -322,6 +283,47 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         startPostponedEnterTransition()
     }
 
+    private fun createQrFeature(): QrFeature {
+        return QrFeature(
+            requireContext(),
+            fragmentManager = parentFragmentManager,
+            onNeedToRequestPermissions = { permissions ->
+                requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
+            },
+            onScanResult = { result ->
+                search_scan_button.isChecked = false
+                activity?.let {
+                    AlertDialog.Builder(it).apply {
+                        val spannable = resources.getSpanned(
+                            R.string.qr_scanner_confirmation_dialog_message,
+                            getString(R.string.app_name) to StyleSpan(BOLD),
+                            result to StyleSpan(ITALIC)
+                        )
+                        setMessage(spannable)
+                        setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
+                            requireComponents.analytics.metrics.track(Event.QRScannerNavigationDenied)
+                            dialog.cancel()
+                            resetFocus()
+                        }
+                        setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
+                            requireComponents.analytics.metrics.track(Event.QRScannerNavigationAllowed)
+                            (activity as HomeActivity)
+                                .openToBrowserAndLoad(
+                                    searchTermOrURL = result,
+                                    newTab = searchStore.state.tabId == null,
+                                    from = BrowserDirection.FromSearch
+                                )
+                            dialog.dismiss()
+                            resetFocus()
+                        }
+                        create()
+                    }.show()
+                    requireComponents.analytics.metrics.track(Event.QRScannerPromptDisplayed)
+                }
+            }
+        )
+    }
+
     private fun updateToolbarContentDescription(searchState: SearchFragmentState) {
         val urlView = toolbarView.view
             .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
@@ -352,16 +354,11 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             searchStore.dispatch(SearchFragmentAction.UpdateShortcutsAvailability(areShortcutsAvailable))
         }
 
-        if (!permissionDidUpdate) {
-            toolbarView.view.edit.focus()
-        }
-
         updateClipboardSuggestion(
             searchStore.state,
             requireComponents.clipboardHandler.url
         )
 
-        permissionDidUpdate = false
         hideToolbar()
     }
 
@@ -423,22 +420,8 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         when (requestCode) {
             REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
                 it.onPermissionsResult(permissions, grantResults)
-
-                context?.let { context: Context ->
-                    if (context.isPermissionGranted(Manifest.permission.CAMERA)) {
-                        permissionDidUpdate = true
-                        PreferenceManager.getDefaultSharedPreferences(context)
-                            .edit().putBoolean(
-                                getPreferenceKey(R.string.pref_key_camera_permissions), false
-                            ).apply()
-                    } else {
-                        PreferenceManager.getDefaultSharedPreferences(context)
-                            .edit().putBoolean(
-                                getPreferenceKey(R.string.pref_key_camera_permissions), true
-                            ).apply()
-                        resetFocus()
-                    }
-                }
+                resetFocus()
+                requireContext().settings().setCameraPermissionNeededState = false
             }
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
