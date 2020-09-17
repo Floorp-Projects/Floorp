@@ -56,10 +56,19 @@ const ExperimentAPI = {
   /**
    * Lookup feature in active experiments and return status.
    * @param {string} featureId Feature to lookup
+   * @param {boolean} defaultValue
    * @returns {boolean}
    */
-  isFeatureEnabled(featureId) {
-    return this._store.getFeature(featureId)?.enabled;
+  isFeatureEnabled(featureId, defaultValue) {
+    try {
+      const featureConfig = this._store.getFeature(featureId);
+      if (featureConfig && featureConfig.enabled !== undefined) {
+        return featureConfig.enabled;
+      }
+    } catch (e) {
+      Cu.reportError(e);
+    }
+    return defaultValue;
   },
 
   /**
