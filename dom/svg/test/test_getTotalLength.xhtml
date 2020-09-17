@@ -25,17 +25,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1474284
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function expectValue(id, expected) {
-  isfuzzy(document.getElementById(id).getTotalLength(),
-          expected, expected * 0.02,
-          `getTotalLength() on element id="${id}" returned the wrong value`);
-}
-
 function run() {
-  expectValue("path1", 55.19);
+  isfuzzy(document.getElementById("path1").getTotalLength(),
+          55.19, 0.02,
+          'getTotalLength() on element id="path1" returned the wrong value');
 
   let r1 = document.getElementById("r1");
-  is(r1.getTotalLength(), 200, "getTotalLength() should work for display:none element");
+  is(r1.getTotalLength(), 200, "getTotalLength() should work for non-rendered element");
+
+  let r2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  r2.setAttribute("width", 200);
+  r2.setAttribute("height", 300);
+  is(r2.getTotalLength(), 1000, "getTotalLength() should work for a rect element not in the document");
+
+  let c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  c.setAttribute("r", 200);
+  isfuzzy(c.getTotalLength(), 2 * Math.PI * 200, 0.2, "getTotalLength() should work for a circle element not in the document");
+
+  let e = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+  e.setAttribute("rx", 200);
+  e.setAttribute("ry", 200);
+  isfuzzy(e.getTotalLength(), 2 * Math.PI * 200, 0.2, "getTotalLength() should work for an ellipse element not in the document");
 
   SimpleTest.finish();
 }
