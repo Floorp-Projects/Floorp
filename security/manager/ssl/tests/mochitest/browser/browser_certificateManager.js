@@ -7,15 +7,12 @@ const TEST_CERT_BASE64 =
   "MIICrjCCAZagAwIBAgIUe5lVOMkAlJoPQkmZ7fbJgzf2GqQwDQYJKoZIhvcNAQEEBQAwDTELMAkGA1UEAwwCY2EwIhgPMjAxODExMjcwMDAwMDBaGA8yMDIxMDIwNDAwMDAwMFowETEPMA0GA1UEAwwGbWQ1LWVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuohRqESOFtZB/W62iAY2ED08E9nq5DVKtOz1aFdsJHvBxyWo4NgfvbGcBptuGobya+KvWnVramRxCHqlWqdFh/cc1SScAn7NQ/weadA4ICmTqyDDSeTbuUzCa2wO7RWCD/F+rWkasdMCOosqQe6ncOAPDY39ZgsrsCSSpH25iGF5kLFXkD3SO8XguEgfqDfTiEPvJxbYVbdmWqp+ApAvOnsQgAYkzBxsl62WYVu34pYSwHUxowyR3bTK9/ytHSXTCe+5Fw6naOGzey8ib2njtIqVYR3uJtYlnauRCE42yxwkBCy/Fosv5fGPmRcxuLP+SSP6clHEMdUDrNoYCjXtjQIDAQABMA0GCSqGSIb3DQEBBAUAA4IBAQCYTPM+SoIBQ6eGd95zKrfbd0mvgDmLML/gkiGrgyw8Q1nyYzjlXP6WTf+5FoFgOxWwKYaqAa3uDoNgN5TaapxC9WQB0gE4JKbughSbNZb+MsiAYVciPlHBVkrjU4YcRus2J/J/fkx6v+PFohY99LZNi2IgUwhnt15CnWLIXb8FUlN/pjRVq8J2AKD2uj7I3SkBB3gQ9c7ELtvn6z22zMgAYA5uKVKyUjXKX4A67hZUoash6APIl0qQQiQKQLuwJ8nKYo3scrQ8DXdSiF99ufjrYY+bXgV8i7EnvX+qj2CELKw3xtkqOgeBTAR2dOw03LiiYKwWUydtXtRyKHRHoLze";
 
 async function checkServerCertificates(win, expectedValues = []) {
-  let listItems = win.document
-    .getElementById("serverList")
-    .querySelectorAll("richlistitem");
-
-  Assert.equal(
-    listItems.length,
-    expectedValues.length,
-    "should have the expected number of server certificates"
-  );
+  await TestUtils.waitForCondition(() => {
+    return (
+      win.document.getElementById("serverList").itemChildren.length ==
+      expectedValues.length
+    );
+  }, `Expected to have ${expectedValues.length} but got ${win.document.getElementById("serverList").itemChildren.length}`);
 
   let labels = win.document
     .getElementById("serverList")
@@ -167,10 +164,6 @@ add_task(async function test_cert_manager_server_tab() {
 
   await deleteOverride(win, 2);
 
-  await TestUtils.waitForCondition(() => {
-    return win.document.getElementById("serverList").itemChildren.length == 1;
-  });
-
   await checkServerCertificates(win, [
     {
       hostPort: "example.com:9999",
@@ -181,4 +174,6 @@ add_task(async function test_cert_manager_server_tab() {
 
   win.document.getElementById("certmanager").acceptDialog();
   await BrowserTestUtils.windowClosed(win);
+
+  certOverrideService.clearAllOverrides();
 });
