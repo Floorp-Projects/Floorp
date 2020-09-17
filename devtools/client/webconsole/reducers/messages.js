@@ -534,23 +534,27 @@ function messages(
         ),
       };
 
-    case constants.NETWORK_MESSAGE_UPDATE:
+    case constants.NETWORK_MESSAGES_UPDATE:
       const updatedState = {
         ...state,
         // Update messagesById since the nested object of message might be changed.
-        messagesById: new Map(messagesById).set(
-          action.message.id,
-          action.message
-        ),
+        messagesById: new Map(messagesById),
         networkMessagesUpdateById: {
           ...networkMessagesUpdateById,
-          [action.message.id]: action.message,
         },
       };
+      let firstNetworkError = null;
+      for (const message of action.messages) {
+        updatedState.messagesById.set(message.id, message);
+        updatedState.networkMessagesUpdateById[message.id] = message;
+        if (!firstNetworkError && isMessageNetworkError(message)) {
+          firstNetworkError = message;
+        }
+      }
 
       // If the request status code is a 4XX or 5XX, then we may have to display the
       // message (as an error).
-      if (isMessageNetworkError(action.message)) {
+      if (firstNetworkError) {
         return setVisibleMessages({
           messagesState: updatedState,
           filtersState,

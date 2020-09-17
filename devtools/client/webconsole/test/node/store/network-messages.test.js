@@ -37,7 +37,7 @@ describe("Network message reducer:", () => {
     packet.actor = "message1";
     updatePacket.actor = "message1";
     dispatch(actions.messagesAdd([packet]));
-    dispatch(actions.networkMessageUpdate(updatePacket, null));
+    dispatch(actions.networkMessageUpdates([updatePacket], null));
   });
 
   describe("networkMessagesUpdateById", () => {
