@@ -11,6 +11,16 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **concept-engine**
+  * Added `MediaSession` for the media session API.
+
+* **browser-engine-gecko(-nightly)**
+  * Added `GeckoMediaSessionController` and `GeckoMediaSessionDelegate` for the media session API.
+
+* **browser-state**
+  * Added `MediaSessionState` to `SessionState`.
+  * Added `MediaSessionAction` to `BrowserAction`.
+
 # 62.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v61.0.0...v62.0.0)

@@ -18,6 +18,7 @@ import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.LastAccessAction
+import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
@@ -52,6 +53,7 @@ internal object BrowserStateReducer {
             is TrackingProtectionAction -> TrackingProtectionStateReducer.reduce(state, action)
             is WebExtensionAction -> WebExtensionReducer.reduce(state, action)
             is MediaAction -> MediaReducer.reduce(state, action)
+            is MediaSessionAction -> MediaSessionReducer.reduce(state, action)
             is DownloadAction -> DownloadStateReducer.reduce(state, action)
             is SearchAction -> SearchReducer.reduce(state, action)
             is CrashAction -> CrashReducer.reduce(state, action)

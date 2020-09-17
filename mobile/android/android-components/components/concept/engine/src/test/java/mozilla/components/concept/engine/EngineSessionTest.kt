@@ -26,6 +26,7 @@ import org.mockito.Mockito.verifyZeroInteractions
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.concept.engine.history.HistoryItem
+import mozilla.components.concept.engine.mediasession.MediaSession
 import java.lang.reflect.Modifier
 
 class EngineSessionTest {
@@ -43,6 +44,11 @@ class EngineSessionTest {
 
         val mediaAdded: Media = mock()
         val mediaRemoved: Media = mock()
+        var mediaSessionController: MediaSession.Controller = mock()
+        val mediaSessionMetadata: MediaSession.Metadata = mock()
+        val mediaSessionFeature: MediaSession.Feature = mock()
+        val mediaSessionPositionState: MediaSession.PositionState = mock()
+        val mediaSessionElementMetadata: MediaSession.ElementMetadata = mock()
         val tracker = Tracker("tracker")
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
@@ -67,6 +73,14 @@ class EngineSessionTest {
         session.notifyInternalObservers { onWindowRequest(windowRequest) }
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
+        session.notifyInternalObservers { onMediaActivated(mediaSessionController) }
+        session.notifyInternalObservers { onMediaDeactivated() }
+        session.notifyInternalObservers { onMediaMetadataChanged(mediaSessionMetadata) }
+        session.notifyInternalObservers { onMediaFeatureChanged(mediaSessionFeature) }
+        session.notifyInternalObservers { onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING) }
+        session.notifyInternalObservers { onMediaPositionStateChanged(mediaSessionPositionState) }
+        session.notifyInternalObservers { onMediaMuteChanged(true) }
+        session.notifyInternalObservers { onMediaFullscreenChanged(true, mediaSessionElementMetadata) }
         session.notifyInternalObservers { onCrash() }
         session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true) }
         session.notifyInternalObservers { onLaunchIntentRequest("https://www.mozilla.org", null) }
@@ -94,6 +108,14 @@ class EngineSessionTest {
         verify(observer).onWindowRequest(windowRequest)
         verify(observer).onMediaAdded(mediaAdded)
         verify(observer).onMediaRemoved(mediaRemoved)
+        verify(observer).onMediaActivated(mediaSessionController)
+        verify(observer).onMediaDeactivated()
+        verify(observer).onMediaMetadataChanged(mediaSessionMetadata)
+        verify(observer).onMediaFeatureChanged(mediaSessionFeature)
+        verify(observer).onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING)
+        verify(observer).onMediaPositionStateChanged(mediaSessionPositionState)
+        verify(observer).onMediaMuteChanged(true)
+        verify(observer).onMediaFullscreenChanged(true, mediaSessionElementMetadata)
         verify(observer).onCrash()
         verify(observer).onLoadRequest("https://www.mozilla.org", true, true)
         verify(observer).onLaunchIntentRequest("https://www.mozilla.org", null)
@@ -139,6 +161,11 @@ class EngineSessionTest {
 
         val mediaAdded: Media = mock()
         val mediaRemoved: Media = mock()
+        var mediaSessionController: MediaSession.Controller = mock()
+        val mediaSessionMetadata: MediaSession.Metadata = mock()
+        val mediaSessionFeature: MediaSession.Feature = mock()
+        val mediaSessionPositionState: MediaSession.PositionState = mock()
+        val mediaSessionElementMetadata: MediaSession.ElementMetadata = mock()
 
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
         session.notifyInternalObservers { onProgress(100) }
@@ -159,6 +186,14 @@ class EngineSessionTest {
         session.notifyInternalObservers { onWindowRequest(windowRequest) }
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
+        session.notifyInternalObservers { onMediaActivated(mediaSessionController) }
+        session.notifyInternalObservers { onMediaDeactivated() }
+        session.notifyInternalObservers { onMediaMetadataChanged(mediaSessionMetadata) }
+        session.notifyInternalObservers { onMediaFeatureChanged(mediaSessionFeature) }
+        session.notifyInternalObservers { onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING) }
+        session.notifyInternalObservers { onMediaPositionStateChanged(mediaSessionPositionState) }
+        session.notifyInternalObservers { onMediaMuteChanged(true) }
+        session.notifyInternalObservers { onMediaFullscreenChanged(true, mediaSessionElementMetadata) }
         session.notifyInternalObservers { onCrash() }
         session.notifyInternalObservers { onLoadRequest("https://www.mozilla.org", true, true) }
         session.notifyInternalObservers { onLaunchIntentRequest("https://www.firefox.com", null) }
@@ -202,6 +237,14 @@ class EngineSessionTest {
         verify(observer, never()).onWindowRequest(otherWindowRequest)
         verify(observer, never()).onMediaAdded(mediaAdded)
         verify(observer, never()).onMediaRemoved(mediaRemoved)
+        verify(observer, never()).onMediaActivated(mediaSessionController)
+        verify(observer, never()).onMediaDeactivated()
+        verify(observer, never()).onMediaMetadataChanged(mediaSessionMetadata)
+        verify(observer, never()).onMediaFeatureChanged(mediaSessionFeature)
+        verify(observer, never()).onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING)
+        verify(observer, never()).onMediaPositionStateChanged(mediaSessionPositionState)
+        verify(observer, never()).onMediaMuteChanged(true)
+        verify(observer, never()).onMediaFullscreenChanged(true, mediaSessionElementMetadata)
         verify(observer, never()).onLoadRequest("https://www.mozilla.org", false, true)
         verify(observer, never()).onLaunchIntentRequest("https://www.firefox.com", null)
         verifyNoMoreInteractions(observer)
@@ -243,6 +286,12 @@ class EngineSessionTest {
 
         session.unregisterObservers()
 
+        var mediaSessionController: MediaSession.Controller = mock()
+        val mediaSessionMetadata: MediaSession.Metadata = mock()
+        val mediaSessionFeature: MediaSession.Feature = mock()
+        val mediaSessionPositionState: MediaSession.PositionState = mock()
+        val mediaSessionElementMetadata: MediaSession.ElementMetadata = mock()
+
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
@@ -260,6 +309,14 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onWindowRequest(windowRequest) }
+        session.notifyInternalObservers { onMediaActivated(mediaSessionController) }
+        session.notifyInternalObservers { onMediaDeactivated() }
+        session.notifyInternalObservers { onMediaMetadataChanged(mediaSessionMetadata) }
+        session.notifyInternalObservers { onMediaFeatureChanged(mediaSessionFeature) }
+        session.notifyInternalObservers { onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING) }
+        session.notifyInternalObservers { onMediaPositionStateChanged(mediaSessionPositionState) }
+        session.notifyInternalObservers { onMediaMuteChanged(true) }
+        session.notifyInternalObservers { onMediaFullscreenChanged(true, mediaSessionElementMetadata) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -295,6 +352,14 @@ class EngineSessionTest {
         verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onWindowRequest(otherWindowRequest)
+        verify(observer, never()).onMediaActivated(mediaSessionController)
+        verify(observer, never()).onMediaDeactivated()
+        verify(observer, never()).onMediaMetadataChanged(mediaSessionMetadata)
+        verify(observer, never()).onMediaFeatureChanged(mediaSessionFeature)
+        verify(observer, never()).onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING)
+        verify(observer, never()).onMediaPositionStateChanged(mediaSessionPositionState)
+        verify(observer, never()).onMediaMuteChanged(true)
+        verify(observer, never()).onMediaFullscreenChanged(true, mediaSessionElementMetadata)
         verify(otherObserver, never()).onLocationChange("https://www.firefox.com")
         verify(otherObserver, never()).onProgress(100)
         verify(otherObserver, never()).onLoadingStateChange(false)
@@ -312,6 +377,14 @@ class EngineSessionTest {
         verify(otherObserver, never()).onContentPermissionRequest(otherPermissionRequest)
         verify(otherObserver, never()).onCancelContentPermissionRequest(otherPermissionRequest)
         verify(otherObserver, never()).onWindowRequest(otherWindowRequest)
+        verify(otherObserver, never()).onMediaActivated(mediaSessionController)
+        verify(otherObserver, never()).onMediaDeactivated()
+        verify(otherObserver, never()).onMediaMetadataChanged(mediaSessionMetadata)
+        verify(otherObserver, never()).onMediaFeatureChanged(mediaSessionFeature)
+        verify(otherObserver, never()).onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING)
+        verify(otherObserver, never()).onMediaPositionStateChanged(mediaSessionPositionState)
+        verify(otherObserver, never()).onMediaMuteChanged(true)
+        verify(otherObserver, never()).onMediaFullscreenChanged(true, mediaSessionElementMetadata)
     }
 
     @Test
@@ -348,6 +421,12 @@ class EngineSessionTest {
 
         session.close()
 
+        var mediaSessionController: MediaSession.Controller = mock()
+        val mediaSessionMetadata: MediaSession.Metadata = mock()
+        val mediaSessionFeature: MediaSession.Feature = mock()
+        val mediaSessionPositionState: MediaSession.PositionState = mock()
+        val mediaSessionElementMetadata: MediaSession.ElementMetadata = mock()
+
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
@@ -365,6 +444,14 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onWindowRequest(otherWindowRequest) }
+        session.notifyInternalObservers { onMediaActivated(mediaSessionController) }
+        session.notifyInternalObservers { onMediaDeactivated() }
+        session.notifyInternalObservers { onMediaMetadataChanged(mediaSessionMetadata) }
+        session.notifyInternalObservers { onMediaFeatureChanged(mediaSessionFeature) }
+        session.notifyInternalObservers { onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING) }
+        session.notifyInternalObservers { onMediaPositionStateChanged(mediaSessionPositionState) }
+        session.notifyInternalObservers { onMediaMuteChanged(true) }
+        session.notifyInternalObservers { onMediaFullscreenChanged(true, mediaSessionElementMetadata) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -400,6 +487,14 @@ class EngineSessionTest {
         verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onWindowRequest(otherWindowRequest)
+        verify(observer, never()).onMediaActivated(mediaSessionController)
+        verify(observer, never()).onMediaDeactivated()
+        verify(observer, never()).onMediaMetadataChanged(mediaSessionMetadata)
+        verify(observer, never()).onMediaFeatureChanged(mediaSessionFeature)
+        verify(observer, never()).onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING)
+        verify(observer, never()).onMediaPositionStateChanged(mediaSessionPositionState)
+        verify(observer, never()).onMediaMuteChanged(true)
+        verify(observer, never()).onMediaFullscreenChanged(true, mediaSessionElementMetadata)
         verifyNoMoreInteractions(observer)
     }
 
@@ -412,6 +507,11 @@ class EngineSessionTest {
         val emptyBitmap = spy(Bitmap::class.java)
         val observer = mock(EngineSession.Observer::class.java)
         val tracker = Tracker("tracker")
+        var mediaSessionController: MediaSession.Controller = mock()
+        val mediaSessionMetadata: MediaSession.Metadata = mock()
+        val mediaSessionFeature: MediaSession.Feature = mock()
+        val mediaSessionPositionState: MediaSession.PositionState = mock()
+        val mediaSessionElementMetadata: MediaSession.ElementMetadata = mock()
         session.register(observer)
 
         otherSession.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
@@ -432,6 +532,14 @@ class EngineSessionTest {
         otherSession.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
         otherSession.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         otherSession.notifyInternalObservers { onWindowRequest(windowRequest) }
+        otherSession.notifyInternalObservers { onMediaActivated(mediaSessionController) }
+        otherSession.notifyInternalObservers { onMediaDeactivated() }
+        otherSession.notifyInternalObservers { onMediaMetadataChanged(mediaSessionMetadata) }
+        otherSession.notifyInternalObservers { onMediaFeatureChanged(mediaSessionFeature) }
+        otherSession.notifyInternalObservers { onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING) }
+        otherSession.notifyInternalObservers { onMediaPositionStateChanged(mediaSessionPositionState) }
+        otherSession.notifyInternalObservers { onMediaMuteChanged(true) }
+        otherSession.notifyInternalObservers { onMediaFullscreenChanged(true, mediaSessionElementMetadata) }
         verify(observer, never()).onLocationChange("https://www.mozilla.org")
         verify(observer, never()).onProgress(25)
         verify(observer, never()).onLoadingStateChange(true)
@@ -449,6 +557,14 @@ class EngineSessionTest {
         verify(observer, never()).onContentPermissionRequest(permissionRequest)
         verify(observer, never()).onCancelContentPermissionRequest(permissionRequest)
         verify(observer, never()).onWindowRequest(windowRequest)
+        verify(observer, never()).onMediaActivated(mediaSessionController)
+        verify(observer, never()).onMediaDeactivated()
+        verify(observer, never()).onMediaMetadataChanged(mediaSessionMetadata)
+        verify(observer, never()).onMediaFeatureChanged(mediaSessionFeature)
+        verify(observer, never()).onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING)
+        verify(observer, never()).onMediaPositionStateChanged(mediaSessionPositionState)
+        verify(observer, never()).onMediaMuteChanged(true)
+        verify(observer, never()).onMediaFullscreenChanged(true, mediaSessionElementMetadata)
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
         session.notifyInternalObservers { onProgress(25) }
@@ -467,6 +583,14 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onWindowRequest(windowRequest) }
+        session.notifyInternalObservers { onMediaActivated(mediaSessionController) }
+        session.notifyInternalObservers { onMediaDeactivated() }
+        session.notifyInternalObservers { onMediaMetadataChanged(mediaSessionMetadata) }
+        session.notifyInternalObservers { onMediaFeatureChanged(mediaSessionFeature) }
+        session.notifyInternalObservers { onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING) }
+        session.notifyInternalObservers { onMediaPositionStateChanged(mediaSessionPositionState) }
+        session.notifyInternalObservers { onMediaMuteChanged(true) }
+        session.notifyInternalObservers { onMediaFullscreenChanged(true, mediaSessionElementMetadata) }
         verify(observer, times(1)).onLocationChange("https://www.mozilla.org")
         verify(observer, times(1)).onProgress(25)
         verify(observer, times(1)).onLoadingStateChange(true)
@@ -484,6 +608,14 @@ class EngineSessionTest {
         verify(observer, times(1)).onContentPermissionRequest(permissionRequest)
         verify(observer, times(1)).onCancelContentPermissionRequest(permissionRequest)
         verify(observer, times(1)).onWindowRequest(windowRequest)
+        verify(observer, times(1)).onMediaActivated(mediaSessionController)
+        verify(observer, times(1)).onMediaDeactivated()
+        verify(observer, times(1)).onMediaMetadataChanged(mediaSessionMetadata)
+        verify(observer, times(1)).onMediaFeatureChanged(mediaSessionFeature)
+        verify(observer, times(1)).onMediaPlaybackStateChanged(MediaSession.PlaybackState.PLAYING)
+        verify(observer, times(1)).onMediaPositionStateChanged(mediaSessionPositionState)
+        verify(observer, times(1)).onMediaMuteChanged(true)
+        verify(observer, times(1)).onMediaFullscreenChanged(true, mediaSessionElementMetadata)
         verifyNoMoreInteractions(observer)
     }
 

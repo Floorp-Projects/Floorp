@@ -25,6 +25,7 @@ import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
+import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
@@ -36,6 +37,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -696,6 +698,206 @@ class EngineObserverTest {
 
         assertNull(store.state.media.elements["test-tab"])
         verify(media2).unregister(any())
+    }
+
+    @Test
+    fun `media session state is null by default`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        store.waitUntilIdle()
+        assertNull(observedMediaSessionState)
+    }
+
+    @Test
+    fun `onMediaActivated will update the store`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+        val mediaSessionController: MediaSession.Controller = mock()
+
+        observer.onMediaActivated(mediaSessionController)
+        store.waitUntilIdle()
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        assertNotNull(observedMediaSessionState)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+    }
+
+    @Test
+    fun `onMediaDeactivated will update the store`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+
+        observer.onMediaDeactivated()
+        store.waitUntilIdle()
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        assertNull(observedMediaSessionState)
+    }
+
+    @Test
+    fun `onMediaMetadataChanged will update the store`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+        val mediaSessionController: MediaSession.Controller = mock()
+        val metaData: MediaSession.Metadata = mock()
+
+        observer.onMediaActivated(mediaSessionController)
+        store.waitUntilIdle()
+        observer.onMediaMetadataChanged(metaData)
+        store.waitUntilIdle()
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        assertNotNull(observedMediaSessionState)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(metaData, observedMediaSessionState?.metadata)
+    }
+
+    @Test
+    fun `onMediaPlaybackStateChanged will update the store`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+        val mediaSessionController: MediaSession.Controller = mock()
+        val playbackState: MediaSession.PlaybackState = mock()
+
+        observer.onMediaActivated(mediaSessionController)
+        store.waitUntilIdle()
+        observer.onMediaPlaybackStateChanged(playbackState)
+        store.waitUntilIdle()
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        assertNotNull(observedMediaSessionState)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(playbackState, observedMediaSessionState?.playbackState)
+    }
+
+    @Test
+    fun `onMediaFeatureChanged will update the store`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+        val mediaSessionController: MediaSession.Controller = mock()
+        val features: MediaSession.Feature = mock()
+
+        observer.onMediaActivated(mediaSessionController)
+        store.waitUntilIdle()
+        observer.onMediaFeatureChanged(features)
+        store.waitUntilIdle()
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        assertNotNull(observedMediaSessionState)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(features, observedMediaSessionState?.features)
+    }
+
+    @Test
+    fun `onMediaPositionStateChanged will update the store`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+        val mediaSessionController: MediaSession.Controller = mock()
+        val positionState: MediaSession.PositionState = mock()
+
+        observer.onMediaActivated(mediaSessionController)
+        store.waitUntilIdle()
+        observer.onMediaPositionStateChanged(positionState)
+        store.waitUntilIdle()
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        assertNotNull(observedMediaSessionState)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(positionState, observedMediaSessionState?.positionState)
+    }
+
+    @Test
+    fun `onMediaMuteChanged will update the store`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+        val mediaSessionController: MediaSession.Controller = mock()
+
+        observer.onMediaActivated(mediaSessionController)
+        store.waitUntilIdle()
+        observer.onMediaMuteChanged(true)
+        store.waitUntilIdle()
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        assertNotNull(observedMediaSessionState)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(true, observedMediaSessionState?.muted)
+    }
+
+    @Test
+    fun `onMediaFullscreenChanged will update the store`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+        val mediaSessionController: MediaSession.Controller = mock()
+        val elementMetadata: MediaSession.ElementMetadata = mock()
+
+        observer.onMediaActivated(mediaSessionController)
+        store.waitUntilIdle()
+        observer.onMediaFullscreenChanged(true, elementMetadata)
+        store.waitUntilIdle()
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        assertNotNull(observedMediaSessionState)
+        assertEquals(mediaSessionController, observedMediaSessionState?.controller)
+        assertEquals(true, observedMediaSessionState?.fullscreen)
+        assertEquals(elementMetadata, observedMediaSessionState?.elementMetadata)
+    }
+
+    @Test
+    fun `updates are ignored when media sessoin is deactivated`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+        val elementMetadata: MediaSession.ElementMetadata = mock()
+
+        observer.onMediaFullscreenChanged(true, elementMetadata)
+        store.waitUntilIdle()
+
+        val observedMediaSessionState = store.state.findTab(session.id)?.mediaSessionState
+        assertNull(observedMediaSessionState)
+
+        observer.onMediaMuteChanged(true)
+        store.waitUntilIdle()
+        assertNull(observedMediaSessionState)
     }
 
     @Test

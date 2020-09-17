@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
+import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
@@ -84,6 +85,66 @@ abstract class EngineSession(
 
         fun onMediaAdded(media: Media) = Unit
         fun onMediaRemoved(media: Media) = Unit
+
+        /**
+         * Notify that the given media session has become active.
+         *
+         * @param mediaSessionController The associated [MediaSession.Controller].
+         */
+        fun onMediaActivated(mediaSessionController: MediaSession.Controller) = Unit
+
+        /**
+         * Notify that the given media session has become inactive.
+         * Inactive media sessions can not be controlled.
+         */
+        fun onMediaDeactivated() = Unit
+
+        /**
+         * Notify on updated metadata.
+         *
+         * @param metadata The updated [MediaSession.Metadata].
+         */
+        fun onMediaMetadataChanged(metadata: MediaSession.Metadata) = Unit
+
+        /**
+         * Notify on updated supported features.
+         *
+         * @param features A combination of [MediaSession.Feature].
+         */
+        fun onMediaFeatureChanged(features: MediaSession.Feature) = Unit
+
+        /**
+         * Notify that playback has changed for the given media session.
+         *
+         * @param playbackState The updated [MediaSession.PlaybackState].
+         */
+        fun onMediaPlaybackStateChanged(playbackState: MediaSession.PlaybackState) = Unit
+
+        /**
+         * Notify on updated position state.
+         *
+         * @param positionState The updated [MediaSession.PositionState].
+         */
+        fun onMediaPositionStateChanged(positionState: MediaSession.PositionState) = Unit
+
+        /**
+         * Notify changed audio mute state.
+         *
+         * @param muted True if audio of this media session is muted.
+         */
+        fun onMediaMuteChanged(muted: Boolean) = Unit
+
+        /**
+         * Notify on changed fullscreen state.
+         *
+         * @param fullscreen True when this media session in in fullscreen mode.
+         * @param elementMetadata An instance of [MediaSession.ElementMetadata], if enabled.
+         */
+        fun onMediaFullscreenChanged(
+            fullscreen: Boolean,
+            elementMetadata: MediaSession.ElementMetadata?
+        ) = Unit
+
         fun onWebAppManifestLoaded(manifest: WebAppManifest) = Unit
         fun onCrash() = Unit
         fun onProcessKilled() = Unit

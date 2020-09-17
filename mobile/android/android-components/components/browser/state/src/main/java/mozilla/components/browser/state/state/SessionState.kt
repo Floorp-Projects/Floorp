@@ -13,6 +13,7 @@ package mozilla.components.browser.state.state
  * @property engineState the [EngineState] of this session.
  * @property extensionState a map of extension id and web extension states
  * specific to this [SessionState].
+ * @property mediaSessionState the [MediaSessionState] of this session.
  * @property contextId the session context ID of the session. The session context ID specifies the
  * contextual identity to use for the session's cookie store.
  * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Work_with_contextual_identities
@@ -29,6 +30,7 @@ interface SessionState {
     val trackingProtection: TrackingProtectionState
     val engineState: EngineState
     val extensionState: Map<String, WebExtensionState>
+    val mediaSessionState: MediaSessionState?
     val contextId: String?
     val source: Source
 
@@ -42,6 +44,7 @@ interface SessionState {
         trackingProtection: TrackingProtectionState = this.trackingProtection,
         engineState: EngineState = this.engineState,
         extensionState: Map<String, WebExtensionState> = this.extensionState,
+        mediaSessionState: MediaSessionState? = this.mediaSessionState,
         contextId: String? = this.contextId
     ): SessionState
 

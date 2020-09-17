@@ -30,6 +30,7 @@ data class TabSessionState(
     override val trackingProtection: TrackingProtectionState = TrackingProtectionState(),
     override val engineState: EngineState = EngineState(),
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
+    override val mediaSessionState: MediaSessionState? = null,
     override val contextId: String? = null,
     override val source: SessionState.Source = SessionState.Source.NONE,
     val parentId: String? = null,
@@ -43,6 +44,7 @@ data class TabSessionState(
         trackingProtection: TrackingProtectionState,
         engineState: EngineState,
         extensionState: Map<String, WebExtensionState>,
+        mediaSessionState: MediaSessionState?,
         contextId: String?
     ): SessionState = copy(
         id = id,
@@ -50,6 +52,7 @@ data class TabSessionState(
         trackingProtection = trackingProtection,
         engineState = engineState,
         extensionState = extensionState,
+        mediaSessionState = mediaSessionState,
         contextId = contextId
     )
 }

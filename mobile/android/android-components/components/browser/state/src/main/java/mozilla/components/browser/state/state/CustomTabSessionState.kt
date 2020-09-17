@@ -16,6 +16,7 @@ import java.util.UUID
  * @property config the [CustomTabConfig] used to create this custom tab.
  * @property extensionState a map of web extension ids and extensions, that contains the overridden
  * values for this tab.
+ * @property mediaSessionState the [MediaSessionState] of this session.
  * @property contextId the session context ID of this custom tab.
  */
 data class CustomTabSessionState(
@@ -25,6 +26,7 @@ data class CustomTabSessionState(
     val config: CustomTabConfig,
     override val engineState: EngineState = EngineState(),
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
+    override val mediaSessionState: MediaSessionState? = null,
     override val contextId: String? = null,
     override val source: SessionState.Source = SessionState.Source.CUSTOM_TAB
 ) : SessionState {
@@ -35,6 +37,7 @@ data class CustomTabSessionState(
         trackingProtection: TrackingProtectionState,
         engineState: EngineState,
         extensionState: Map<String, WebExtensionState>,
+        mediaSessionState: MediaSessionState?,
         contextId: String?
     ) = copy(
         id = id,
@@ -42,6 +45,7 @@ data class CustomTabSessionState(
         trackingProtection = trackingProtection,
         engineState = engineState,
         extensionState = extensionState,
+        mediaSessionState = mediaSessionState,
         contextId = contextId
     )
 }
