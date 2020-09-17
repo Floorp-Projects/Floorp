@@ -2012,6 +2012,35 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetter(
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitCallDOMSetter(ObjOperandId objId,
+                                                uint32_t jitInfoOffset,
+                                                ValOperandId rhsId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  Address jitInfoAddr(stubAddress(jitInfoOffset));
+
+  AutoScratchRegister scratch(allocator, masm);
+
+  allocator.discardStack(masm);
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  // Load the JSJitInfo in the scratch register.
+  masm.loadPtr(jitInfoAddr, scratch);
+
+  masm.Push(val);
+  masm.Push(obj);
+  masm.Push(scratch);
+
+  using Fn = bool (*)(JSContext*, const JSJitInfo*, HandleObject, HandleValue);
+  callVM<Fn, CallDOMSetter>(masm);
+
+  stubFrame.leave(masm);
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitCallSetArrayLength(ObjOperandId objId,
                                                      bool strict,
                                                      ValOperandId rhsId) {
