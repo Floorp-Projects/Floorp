@@ -130,6 +130,7 @@ using mozilla::PermissionDelegateHandler::DelegatedPermissionList from "mozilla/
 using refcounted class nsILayoutHistoryState from "nsILayoutHistoryState.h";
 using class mozilla::dom::SessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 using nsPoint from "mozilla/GfxMessageUtils.h";
+using struct mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 
 union ChromeRegistryItem
 {
@@ -943,6 +944,9 @@ parent:
 
     async SessionHistoryEntryStoreWindowNameInContiguousEntries(MaybeDiscardedBrowsingContext aContext,
                                                                 nsString aName);
+
+    async GetLoadingSessionHistoryInfoFromParent(MaybeDiscardedBrowsingContext aContext)
+        returns (LoadingSessionHistoryInfo? aLoadingInfo, int32_t aRequestedIndex, int32_t aLength);
 
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
