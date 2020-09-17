@@ -11,6 +11,8 @@
 #  include <stdio.h>
 #endif
 
+#include "jit/Label.h"
+
 namespace {
 struct AutoLockPerfMap;
 }
