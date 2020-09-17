@@ -78,8 +78,9 @@ class BrowserToolbarView(
 
     val toolbarIntegration: ToolbarIntegration
 
-    private val isPwaTab: Boolean
-        get() = customTabSession?.customTabConfig?.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP
+    private val isPwaTabOrTwaTab: Boolean
+        get() = customTabSession?.customTabConfig?.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP ||
+                customTabSession?.customTabConfig?.externalAppType == ExternalAppType.TRUSTED_WEB_ACTIVITY
 
     init {
         val isCustomTabSession = customTabSession != null
@@ -212,8 +213,8 @@ class BrowserToolbarView(
     }
 
     fun expand() {
-        // expand only for normal tabs and custom tabs not for PWA
-        if (isPwaTab) {
+        // expand only for normal tabs and custom tabs not for PWA or TWA
+        if (isPwaTabOrTwaTab) {
             return
         }
         when (settings.toolbarPosition) {
@@ -237,7 +238,7 @@ class BrowserToolbarView(
     fun setScrollFlags(shouldDisableScroll: Boolean = false) {
         when (settings.toolbarPosition) {
             ToolbarPosition.BOTTOM -> {
-                if (settings.isDynamicToolbarEnabled && !isPwaTab) {
+                if (settings.isDynamicToolbarEnabled && !isPwaTabOrTwaTab) {
                     (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
                         behavior = BrowserToolbarBottomBehavior(view.context, null)
                     }
