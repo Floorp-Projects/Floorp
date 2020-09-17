@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "mozAccessible.h"
-#include "Pivot.h"
 
 using namespace mozilla::a11y;
 
@@ -18,17 +17,14 @@ using namespace mozilla::a11y;
 // overrides
 - (NSURL*)moxURL;
 
-// overrides
+// override
 - (NSNumber*)moxLoaded;
 
-// overrides
+// override
 - (NSNumber*)moxLoadingProgress;
 
 // override
-- (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate;
-
-// override
-- (NSNumber*)moxUIElementCountForSearchPredicate:(NSDictionary*)searchPredicate;
+- (NSArray*)moxLinkUIElements;
 
 // override
 - (NSArray*)moxUnignoredChildren;
@@ -45,37 +41,44 @@ using namespace mozilla::a11y;
 
 @end
 
-@interface MOXSearchInfo : NSObject {
-  // The MOX accessible of the web area, we need a reference
-  // to set the pivot's root. This is a weak ref.
-  MOXWebAreaAccessible* mWebArea;
-
-  // The MOX accessible we should start searching from.
-  // This is a weak ref.
-  MOXAccessibleBase* mStartElem;
-
-  // The amount of matches we should return
-  int mResultLimit;
-
-  // The array of search keys to use during this search
-  NSMutableArray* mSearchKeys;
-
-  // Set to YES if we should search forward, NO if backward
-  BOOL mSearchForward;
-
-  // Set to YES if we should match on immediate descendants only, NO otherwise
-  BOOL mImmediateDescendantsOnly;
+@interface MOXRootGroup : MOXAccessibleBase {
+  MOXWebAreaAccessible* mParent;
 }
 
-- (id)initWithParameters:(NSDictionary*)params
-                 andRoot:(MOXWebAreaAccessible*)root;
+// override
+- (id)initWithParent:(MOXWebAreaAccessible*)parent;
 
-- (AccessibleOrProxy)startGeckoAccessible;
+// override
+- (NSString*)moxRole;
 
-- (NSMutableArray*)getMatchesForRule:(PivotRule&)rule;
+// override
+- (NSString*)moxRoleDescription;
 
-- (NSArray*)performSearch;
+// override
+- (id<mozAccessible>)moxParent;
 
-- (void)dealloc;
+// override
+- (NSArray*)moxChildren;
+
+// override
+- (NSString*)moxIdentifier;
+
+// override
+- (id)moxHitTest:(NSPoint)point;
+
+// override
+- (NSValue*)moxPosition;
+
+// override
+- (NSValue*)moxSize;
+
+// override
+- (BOOL)disableChild:(id)child;
+
+// override
+- (void)expire;
+
+// override
+- (BOOL)isExpired;
 
 @end
