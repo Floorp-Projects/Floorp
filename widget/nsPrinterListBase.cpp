@@ -109,37 +109,19 @@ NS_IMETHODIMP nsPrinterListBase::GetFallbackPaperList(JSContext* aCx,
 nsTArray<RefPtr<nsPaper>> nsPrinterListBase::FallbackPaperList() const {
 #define mm *72.0 / 25.4
 #define in *72.0
-
-#ifdef MOZ_WIDGET_GTK
-  // For GTK we want to use the PWG standardized names.
+  // As paper IDs, we use the PWG standardized names.
   static const mozilla::PaperInfo kPapers[] = {
-      {u"iso_a5"_ns, {148 mm, 210 mm}, Some(MarginDouble{})},
-      {u"iso_a4"_ns, {210 mm, 297 mm}, Some(MarginDouble{})},
-      {u"iso_a3"_ns, {297 mm, 420 mm}, Some(MarginDouble{})},
-      {u"iso_b5"_ns, {176 mm, 250 mm}, Some(MarginDouble{})},
-      {u"iso_b4"_ns, {250 mm, 353 mm}, Some(MarginDouble{})},
-      {u"jis_b5"_ns, {182 mm, 257 mm}, Some(MarginDouble{})},
-      {u"jis_b4"_ns, {257 mm, 364 mm}, Some(MarginDouble{})},
-      {u"na_letter"_ns, {8.5 in, 11 in}, Some(MarginDouble{})},
-      {u"na_legal"_ns, {8.5 in, 14 in}, Some(MarginDouble{})},
-      {u"na_ledger"_ns, {11 in, 17 in}, Some(MarginDouble{})},
+      {u"iso_a5"_ns, u"A5"_ns, {148 mm, 210 mm}, Some(MarginDouble{})},
+      {u"iso_a4"_ns, u"A4"_ns, {210 mm, 297 mm}, Some(MarginDouble{})},
+      {u"iso_a3"_ns, u"A3"_ns, {297 mm, 420 mm}, Some(MarginDouble{})},
+      {u"iso_b5"_ns, u"B5"_ns, {176 mm, 250 mm}, Some(MarginDouble{})},
+      {u"iso_b4"_ns, u"B4"_ns, {250 mm, 353 mm}, Some(MarginDouble{})},
+      {u"jis_b5"_ns, u"JIS-B5"_ns, {182 mm, 257 mm}, Some(MarginDouble{})},
+      {u"jis_b4"_ns, u"JIS-B4"_ns, {257 mm, 364 mm}, Some(MarginDouble{})},
+      {u"na_letter"_ns, u"US Letter"_ns, {8.5 in, 11 in}, Some(MarginDouble{})},
+      {u"na_legal"_ns, u"US Legal"_ns, {8.5 in, 14 in}, Some(MarginDouble{})},
+      {u"na_ledger"_ns, u"Tabloid"_ns, {11 in, 17 in}, Some(MarginDouble{})},
   };
-#else
-  // Otherwise we want to use the localized name versions.
-  static const mozilla::PaperInfo kPapers[] = {
-      {u"A5"_ns, {148 mm, 210 mm}, Some(MarginDouble{})},
-      {u"A4"_ns, {210 mm, 297 mm}, Some(MarginDouble{})},
-      {u"A3"_ns, {297 mm, 420 mm}, Some(MarginDouble{})},
-      {u"B5"_ns, {176 mm, 250 mm}, Some(MarginDouble{})},
-      {u"B4"_ns, {250 mm, 353 mm}, Some(MarginDouble{})},
-      {u"JIS-B5"_ns, {182 mm, 257 mm}, Some(MarginDouble{})},
-      {u"JIS-B4"_ns, {257 mm, 364 mm}, Some(MarginDouble{})},
-      {u"US Letter"_ns, {8.5 in, 11 in}, Some(MarginDouble{})},
-      {u"US Legal"_ns, {8.5 in, 14 in}, Some(MarginDouble{})},
-      {u"Tabloid"_ns, {11 in, 17 in}, Some(MarginDouble{})},
-  };
-#endif  // MOZ_WIDGET_GTK
-
 #undef mm
 #undef in
 

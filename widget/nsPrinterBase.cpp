@@ -150,7 +150,8 @@ NS_IMETHODIMP nsPrinterBase::GetPaperList(JSContext* aCx,
                                      &nsPrinterBase::PaperList);
 }
 
-void nsPrinterBase::QueryMarginsForPaper(Promise& aPromise, short aPaperId) {
+void nsPrinterBase::QueryMarginsForPaper(Promise& aPromise,
+                                         const nsString& aPaperId) {
   return SpawnPrintBackgroundTask(*this, aPromise, "MarginsForPaper"_ns,
                                   &nsPrinterBase::GetMarginsForPaper, aPaperId);
 }

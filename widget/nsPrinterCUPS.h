@@ -27,7 +27,7 @@ class nsPrinterCUPS final : public nsPrinterBase {
   bool SupportsMonochrome() const final;
   bool SupportsCollation() const final;
   nsTArray<mozilla::PaperInfo> PaperList() const final;
-  MarginDouble GetMarginsForPaper(short) const final {
+  MarginDouble GetMarginsForPaper(nsString aPaperId) const final {
     MOZ_ASSERT_UNREACHABLE(
         "The CUPS API requires us to always get the margin when fetching the "
         "paper list so there should be no need to query it separately");
