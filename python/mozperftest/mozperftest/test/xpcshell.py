@@ -71,7 +71,7 @@ class XPCShell(Layer):
         self.topsrcdir = mach_cmd.topsrcdir
 
     def setup(self):
-        self.mach_cmd.activate_virtualenv()
+        pass
 
     def run(self, metadata):
         test = Path(metadata.script["filename"])
