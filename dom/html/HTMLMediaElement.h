@@ -1319,23 +1319,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   WatchManager<HTMLMediaElement> mWatchManager;
 
-  // Update the silence range of the audio track when the audible status of
-  // silent audio track changes or seeking to the new position where the audio
-  // track is silent.
-  void UpdateAudioTrackSilenceRange(bool aAudible);
-
-  // When silent audio track becomes audible or seeking to new place, we would
-  // end the current silence range and accumulate it to the total silence
-  // proportion of audio track and update current silence range.
-  void AccumulateAudioTrackSilence();
-
-  // True when the media element's audio track is containing silence now.
-  bool IsAudioTrackCurrentlySilent() const;
-
-  // Calculate the audio track silence proportion and then report the telemetry
-  // result. we would report the result when decoder is destroyed.
-  void ReportAudioTrackSilenceProportionTelemetry();
-
   // When the play is not allowed, dispatch related events which are used for
   // testing or changing control UI.
   void DispatchEventsWhenPlayWasNotAllowed();
@@ -1491,17 +1474,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // True if the audio track is not silent.
   bool mIsAudioTrackAudible = false;
-
-  // Used to mark the start of the silence range of audio track.
-  double mAudioTrackSilenceStartedTime = 0.0;
-
-  // Save all the silence ranges, all ranges would be normalized. That means
-  // intervals won't overlap or touch each other.
-  media::TimeIntervals mSilenceTimeRanges;
-
-  // True if we have calculated silence range before SeekEnd(). This attribute
-  // would be reset after seeking completed.
-  bool mHasAccumulatedSilenceRangeBeforeSeekEnd = false;
 
   enum MutedReasons {
     MUTED_BY_CONTENT = 0x01,
