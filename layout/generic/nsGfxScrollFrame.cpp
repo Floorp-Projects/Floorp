@@ -4487,6 +4487,16 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
     aOrigin = ScrollOrigin::Other;
   }
   bool isGenericOrigin = (aOrigin == ScrollOrigin::Other);
+
+  bool askApzToDoTheScroll = false;
+  if ((aSnap != nsIScrollableFrame::ENABLE_SNAP || !NeedsScrollSnap()) &&
+      gfxPlatform::UseDesktopZoomingScrollbars() &&
+      nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
+      !nsLayoutUtils::ShouldDisableApzForElement(mOuter->GetContent()) &&
+      (WantAsyncScroll() || mZoomableByAPZ)) {
+    askApzToDoTheScroll = true;
+  }
+
   switch (aUnit) {
     case ScrollUnit::DEVICE_PIXELS: {
       nscoord appUnitsPerDevPixel =
@@ -4516,29 +4526,32 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
       break;
     }
     case ScrollUnit::WHOLE: {
-      nsPoint pos = GetScrollPosition();
-      AdjustForWholeDelta(aDelta.x, &pos.x);
-      AdjustForWholeDelta(aDelta.y, &pos.y);
-      if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
-        GetSnapPointForDestination(aUnit, mDestination, pos);
+      if (askApzToDoTheScroll) {
+        MOZ_ASSERT(aDelta.x >= -1 && aDelta.x <= 1 && aDelta.y >= -1 &&
+                   aDelta.y <= 1);
+        deltaMultiplier = GetScrollRangeForUserInputEvents().Size();
+        break;
+      } else {
+        nsPoint pos = GetScrollPosition();
+        AdjustForWholeDelta(aDelta.x, &pos.x);
+        AdjustForWholeDelta(aDelta.y, &pos.y);
+        if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
+          GetSnapPointForDestination(aUnit, mDestination, pos);
+        }
+        ScrollTo(pos, aMode, ScrollOrigin::Other);
+        // 'this' might be destroyed here
+        if (aOverflow) {
+          *aOverflow = nsIntPoint(0, 0);
+        }
+        return;
       }
-      ScrollTo(pos, aMode, ScrollOrigin::Other);
-      // 'this' might be destroyed here
-      if (aOverflow) {
-        *aOverflow = nsIntPoint(0, 0);
-      }
-      return;
     }
     default:
       NS_ERROR("Invalid scroll mode");
       return;
   }
 
-  if ((aSnap != nsIScrollableFrame::ENABLE_SNAP || !NeedsScrollSnap()) &&
-      gfxPlatform::UseDesktopZoomingScrollbars() &&
-      nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
-      !nsLayoutUtils::ShouldDisableApzForElement(mOuter->GetContent()) &&
-      (WantAsyncScroll() || mZoomableByAPZ)) {
+  if (askApzToDoTheScroll) {
     nsPoint delta(
         NSCoordSaturatingNonnegativeMultiply(aDelta.x, deltaMultiplier.width),
         NSCoordSaturatingNonnegativeMultiply(aDelta.y, deltaMultiplier.height));
