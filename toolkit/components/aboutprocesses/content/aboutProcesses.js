@@ -283,7 +283,7 @@ var State = {
       type: cur.type,
       origin: cur.origin || "",
       threads: null,
-      displayRank: Control._getDisplayGroupRank(cur.type),
+      displayRank: Control._getDisplayGroupRank(cur),
       windows: this._getDOMWindows(cur),
       // If this process has an unambiguous title, store it here.
       title: null,
@@ -1114,23 +1114,40 @@ var Control = {
   // Then comes web content (rank 1).
   // Then come special processes (minus preallocated) (rank 2).
   // Then come preallocated processes (rank 3).
-  _getDisplayGroupRank(type) {
+  _getDisplayGroupRank(data) {
+    const RANK_BROWSER = 0;
+    const RANK_WEB_CONTENT = 1;
+    const RANK_UTILITY = 2;
+    const RANK_PREALLOCATED = 3;
+    let type = data.type;
     switch (type) {
       // Browser comes first.
       case "browser":
-        return 0;
+        return RANK_BROWSER;
       // Web content comes next.
-      case "web":
       case "webIsolated":
       case "webLargeAllocation":
       case "withCoopCoep":
-        return 1;
+        return RANK_WEB_CONTENT;
       // Preallocated processes come last.
       case "preallocated":
-        return 3;
+        return RANK_PREALLOCATED;
+      // "web" is special, as it could be one of:
+      // - web content currently loading/unloading/...
+      // - a preallocated process.
+      case "web":
+        if (data.windows.length >= 1) {
+          return RANK_WEB_CONTENT;
+        }
+        // For the time being, we do not display DOM workers
+        // (and there's no API to get information on them).
+        // Once the blockers for bug 1663737 have landed, we'll be able
+        // to find out whether this process has DOM workers. If so, we'll
+        // count this process as a content process.
+        return RANK_PREALLOCATED;
       // Other special processes before preallocated.
       default:
-        return 2;
+        return RANK_UTILITY;
     }
   },
 };
