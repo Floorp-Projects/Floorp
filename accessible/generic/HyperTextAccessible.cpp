@@ -649,6 +649,11 @@ void HyperTextAccessible::TextBeforeOffset(int32_t aOffset,
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
+  if (aBoundaryType == nsIAccessibleText::BOUNDARY_PARAGRAPH) {
+    // Not supported, bail out with empty text.
+    return;
+  }
+
   index_t convertedOffset = ConvertMagicOffset(aOffset);
   if (!convertedOffset.IsValid() || convertedOffset > CharacterCount()) {
     NS_ERROR("Wrong in offset!");
@@ -774,6 +779,18 @@ void HyperTextAccessible::TextAtOffset(int32_t aOffset,
       *aEndOffset = FindLineBoundary(adjustedOffset, eThisLineEnd);
       TextSubstring(*aStartOffset, *aEndOffset, aText);
       break;
+
+    case nsIAccessibleText::BOUNDARY_PARAGRAPH: {
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+        adjustedOffset = AdjustCaretOffset(adjustedOffset);
+      }
+
+      *aStartOffset =
+          FindOffset(adjustedOffset, eDirPrevious, eSelectParagraph);
+      *aEndOffset = FindOffset(adjustedOffset, eDirNext, eSelectParagraph);
+      TextSubstring(*aStartOffset, *aEndOffset, aText);
+      break;
+    }
   }
 }
 
@@ -784,6 +801,11 @@ void HyperTextAccessible::TextAfterOffset(int32_t aOffset,
                                           nsAString& aText) {
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
+
+  if (aBoundaryType == nsIAccessibleText::BOUNDARY_PARAGRAPH) {
+    // Not supported, bail out with empty text.
+    return;
+  }
 
   index_t convertedOffset = ConvertMagicOffset(aOffset);
   if (!convertedOffset.IsValid() || convertedOffset > CharacterCount()) {
