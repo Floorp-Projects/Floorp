@@ -93,6 +93,28 @@ void WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF) {
 // Short-hand for DispatchToCurrentThread with a method with arguments
 #define DispatchMethod(t, m, args...) \
   NS_DispatchToCurrentThread(NewRunnableMethod(__func__, t, m, ##args))
+
+/*
+ * Common ControlMessages
+ */
+class StartInputProcessing : public ControlMessage {
+  RefPtr<AudioInputProcessing> mInputProcessing;
+
+ public:
+  explicit StartInputProcessing(AudioInputProcessing* aInputProcessing)
+      : ControlMessage(nullptr), mInputProcessing(aInputProcessing) {}
+  void Run() override { mInputProcessing->Start(); }
+};
+
+class StopInputProcessing : public ControlMessage {
+  RefPtr<AudioInputProcessing> mInputProcessing;
+
+ public:
+  explicit StopInputProcessing(AudioInputProcessing* aInputProcessing)
+      : ControlMessage(nullptr), mInputProcessing(aInputProcessing) {}
+  void Run() override { mInputProcessing->Stop(); }
+};
+
 }  // namespace
 TEST(TestAudioTrackGraph, DifferentDeviceIDs)
 {
@@ -309,32 +331,8 @@ TEST(TestAudioTrackGraph, SourceTrack)
 
   sourceTrack->AddListener(pullListener);
 
-  class StartStopListener : public ControlMessage {
-   public:
-    enum StartStop { Start, Stop };
-
-    StartStopListener(AudioInputProcessing* aInputProcessing, StartStop aAction)
-        : ControlMessage(nullptr),
-          mInputProcessing(aInputProcessing),
-          mAction(aAction) {}
-
-    void Run() override {
-      if (mAction == StartStopListener::Start) {
-        mInputProcessing->Start();
-      } else if (mAction == StartStopListener::Stop) {
-        mInputProcessing->Stop();
-      } else {
-        MOZ_CRASH("Invalid enum value");
-      }
-    }
-
-   protected:
-    RefPtr<AudioInputProcessing> mInputProcessing;
-    StartStop mAction;
-  };
-
   sourceTrack->GraphImpl()->AppendMessage(
-      MakeUnique<StartStopListener>(listener, StartStopListener::Start));
+      MakeUnique<StartInputProcessing>(listener));
   sourceTrack->SetPullingEnabled(true);
   // Device id does not matter. Ignore.
   sourceTrack->OpenAudioInput((void*)1, listener);
@@ -376,7 +374,7 @@ TEST(TestAudioTrackGraph, SourceTrack)
     outputTrack->Destroy();
     port->Destroy();
     sourceTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StartStopListener>(listener, StartStopListener::Stop));
+        MakeUnique<StopInputProcessing>(listener));
     sourceTrack->RemoveListener(pullListener);
     sourceTrack->SetPullingEnabled(false);
     Maybe<CubebUtils::AudioDeviceID> id =
@@ -441,32 +439,8 @@ TEST(TestAudioTrackGraph, CrossGraphPort)
 
   sourceTrack->AddListener(pullListener);
 
-  class StartStopListener : public ControlMessage {
-   public:
-    enum StartStop { Start, Stop };
-
-    StartStopListener(AudioInputProcessing* aInputProcessing, StartStop aAction)
-        : ControlMessage(nullptr),
-          mInputProcessing(aInputProcessing),
-          mAction(aAction) {}
-
-    void Run() override {
-      if (mAction == StartStopListener::Start) {
-        mInputProcessing->Start();
-      } else if (mAction == StartStopListener::Stop) {
-        mInputProcessing->Stop();
-      } else {
-        MOZ_CRASH("Invalid enum value");
-      }
-    }
-
-   protected:
-    RefPtr<AudioInputProcessing> mInputProcessing;
-    StartStop mAction;
-  };
-
   sourceTrack->GraphImpl()->AppendMessage(
-      MakeUnique<StartStopListener>(listener, StartStopListener::Start));
+      MakeUnique<StartInputProcessing>(listener));
   sourceTrack->SetPullingEnabled(true);
   // Device id does not matter ignore.
   sourceTrack->OpenAudioInput((void*)1, listener);
@@ -508,7 +482,7 @@ TEST(TestAudioTrackGraph, CrossGraphPort)
     transmitter->Destroy();
     port->Destroy();
     sourceTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StartStopListener>(listener, StartStopListener::Stop));
+        MakeUnique<StopInputProcessing>(listener));
     sourceTrack->RemoveListener(pullListener);
     sourceTrack->SetPullingEnabled(false);
     Maybe<CubebUtils::AudioDeviceID> id =
