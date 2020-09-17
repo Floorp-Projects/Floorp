@@ -245,6 +245,8 @@ class SessionHistoryEntry : public nsISHEntry {
 
   const nsID& DocshellID() const;
 
+  void SetIsDynamicallyAdded(bool aDynamic);
+
   // Get an entry based on LoadingSessionHistoryInfo's mLoadId. Parent process
   // only.
   static SessionHistoryEntry* GetByLoadId(uint64_t aLoadId);

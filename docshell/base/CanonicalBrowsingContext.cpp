@@ -309,6 +309,42 @@ void CanonicalBrowsingContext::AddLoadingSessionHistoryEntry(
   mLoadingEntries.AppendElement(LoadingSessionHistoryEntry{aLoadId, aEntry});
 }
 
+void CanonicalBrowsingContext::GetLoadingSessionHistoryInfoFromParent(
+    Maybe<LoadingSessionHistoryInfo>& aLoadingInfo, int32_t* aRequestedIndex,
+    int32_t* aLength) {
+  *aRequestedIndex = -1;
+  *aLength = 0;
+
+  nsISHistory* shistory = GetSessionHistory();
+  if (!shistory || !GetParent()) {
+    return;
+  }
+
+  SessionHistoryEntry* parentSHE =
+      GetParent()->Canonical()->GetActiveSessionHistoryEntry();
+  if (parentSHE) {
+    int32_t index = -1;
+    for (BrowsingContext* sibling : GetParent()->Children()) {
+      ++index;
+      if (sibling == this) {
+        nsCOMPtr<nsISHEntry> shEntry;
+        parentSHE->GetChildSHEntryIfHasNoDynamicallyAddedChild(
+            index, getter_AddRefs(shEntry));
+        nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(shEntry);
+        if (she) {
+          aLoadingInfo.emplace(she);
+          mLoadingEntries.AppendElement(LoadingSessionHistoryEntry{
+              aLoadingInfo.value().mLoadId, she.get()});
+          *aRequestedIndex = shistory->GetRequestedIndex();
+          *aLength = shistory->GetCount();
+          Unused << SetHistoryID(she->DocshellID());
+        }
+        break;
+      }
+    }
+  }
+}
+
 UniquePtr<LoadingSessionHistoryInfo>
 CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     nsDocShellLoadState* aLoadState, nsIChannel* aChannel) {
@@ -320,6 +356,7 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
     entry->SetDocshellID(GetHistoryID());
+    entry->SetIsDynamicallyAdded(GetCreatedDynamically());
     entry->SetForInitialLoad(true);
   }
   MOZ_DIAGNOSTIC_ASSERT(entry);
@@ -383,9 +420,16 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
         //       is one, need to figure out if that makes sense here (peterv
         //       doesn't think it would).
         if (loadFromSessionHistory) {
-          oldActiveEntry->SyncTreesForSubframeNavigation(newActiveEntry, Top(),
-                                                         this);
+          if (oldActiveEntry) {
+            // oldActiveEntry is null if we're loading iframes from session
+            // history while also parent page is loading from session history.
+            // In that case there isn't anything to sync.
+            oldActiveEntry->SyncTreesForSubframeNavigation(newActiveEntry,
+                                                           Top(), this);
+          }
           mActiveEntry = newActiveEntry;
+          // FIXME UpdateIndex() here may update index too early (but even the
+          //       old implementation seems to have similar issues).
           shistory->UpdateIndex();
         } else if (oldActiveEntry) {
           // AddChildSHEntryHelper does update the index of the session history!
@@ -413,6 +457,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
 
       return;
     }
+    // XXX Should the loading entries before [i] be removed?
   }
   // FIXME Should we throw an error if we don't find an entry for
   // aSessionHistoryEntryId?

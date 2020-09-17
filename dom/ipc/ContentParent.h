@@ -1342,6 +1342,10 @@ class ContentParent final
   RecvSessionHistoryEntryStoreWindowNameInContiguousEntries(
       const MaybeDiscarded<BrowsingContext>& aContext, const nsString& aName);
 
+  mozilla::ipc::IPCResult RecvGetLoadingSessionHistoryInfoFromParent(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      GetLoadingSessionHistoryInfoFromParentResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvSetActiveSessionHistoryEntryForTop(
       const MaybeDiscarded<BrowsingContext>& aContext,
       const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,
