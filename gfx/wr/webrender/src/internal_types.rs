@@ -461,6 +461,9 @@ impl TextureUpdateList {
     pub fn push_reset(&mut self, id: CacheTextureId, info: TextureCacheAllocInfo) {
         self.debug_assert_coalesced(id);
 
+        // Drop any unapplied updates to the to-be-freed texture.
+        self.updates.remove(&id);
+
         // Coallesce this realloc into a previous alloc or realloc, if available.
         if let Some(cur) = self.allocations.iter_mut().find(|x| x.id == id) {
             match cur.kind {
