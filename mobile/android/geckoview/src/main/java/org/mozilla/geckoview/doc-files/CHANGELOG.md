@@ -30,11 +30,14 @@ exclude: true
 - Added [`RepostConfirmPrompt`][82.4] to prompt the user for cofirmation before
   resending POST requests.
   ([bug 1659073]({{bugzilla}}1659073))
+- Removed `Parcelable` support in `GeckoSession`. Use [`ProgressDelegate#onSessionStateChange`][68.29] and [`ProgressDelegate#restoreState`][82.5] instead.
+  ([bug 1650108]({{bugzilla}}1650108))
   
 [82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.WebResponseInfo-
 [82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-
 [82.3]: {{javadoc_uri}}/Image.html
 [82.4]: {{javadoc_uri}}/GeckoSession.PromptDelegate.RepostConfirmPrompt.html
+[82.5]: {{javadoc_uri}}/GeckoSession.html#restoreState-org.mozilla.geckoview.GeckoSession.SessionState-
 
 ## v81
 - Added `cookiePurging` to [`ContentBlocking.Settings.Builder`][81.1] and `getCookiePurging` and `setCookiePurging`
@@ -793,4 +796,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: b2f304bfc18a9b3ce4bbe4cc12bc31be42f6fde8
+[api-version]: b75e10652f129f9fd9414e3c94cac91203a99927
