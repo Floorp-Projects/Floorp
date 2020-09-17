@@ -18,23 +18,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "separatePrivateDefaultUIEnabled",
-  "browser.search.separatePrivateDefault.ui.enabled",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "separatePrivateDefault",
-  "browser.search.separatePrivateDefault",
-  false
-);
 
 /**
  * Class used to create the provider.
@@ -71,7 +58,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
    */
   isActive(queryContext) {
     return (
-      separatePrivateDefaultUIEnabled &&
+      UrlbarSearchUtils.separatePrivateDefaultUIEnabled &&
       !queryContext.isPrivate &&
       queryContext.tokens.length
     );
@@ -108,7 +95,8 @@ class ProviderPrivateSearch extends UrlbarProvider {
       ? Services.search.getEngineByName(queryContext.searchMode.engineName)
       : await Services.search.getDefaultPrivate();
     let isPrivateEngine =
-      separatePrivateDefault && engine != (await Services.search.getDefault());
+      UrlbarSearchUtils.separatePrivateDefault &&
+      engine != (await Services.search.getDefault());
     this.logger.info(`isPrivateEngine: ${isPrivateEngine}`);
 
     // This is a delay added before returning results, to avoid flicker.

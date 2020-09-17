@@ -67,7 +67,6 @@ add_task(async function setup() {
 
 async function AssertNoPrivateResult(win) {
   let count = await UrlbarTestUtils.getResultCount(win);
-  Assert.ok(count > 0, "Sanity check result count");
   for (let i = 0; i < count; ++i) {
     let result = await UrlbarTestUtils.getDetailsOfResultAt(win, i);
     Assert.ok(
@@ -356,6 +355,7 @@ add_task(async function test_restrict() {
     value: UrlbarTokenizer.RESTRICT.SEARCH + " ",
   });
   await AssertNoPrivateResult(window);
+  await UrlbarTestUtils.exitSearchMode(window);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,

@@ -13,6 +13,9 @@
 
 var EXPORTED_SYMBOLS = ["UrlbarSearchUtils"];
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
@@ -27,6 +30,18 @@ class SearchUtils {
       "nsIObserver",
       "nsISupportsWeakReference",
     ]);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "separatePrivateDefaultUIEnabled",
+      "browser.search.separatePrivateDefault.ui.enabled",
+      false
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "separatePrivateDefault",
+      "browser.search.separatePrivateDefault",
+      false
+    );
   }
 
   /**
@@ -89,6 +104,14 @@ class SearchUtils {
       }
     }
     return tokenAliasEngines;
+  }
+
+  getDefaultEngine(isPrivate = false) {
+    return this.separatePrivateDefaultUIEnabled &&
+      this.separatePrivateDefault &&
+      isPrivate
+      ? Services.search.defaultPrivateEngine
+      : Services.search.defaultEngine;
   }
 
   async _initInternal() {
