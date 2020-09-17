@@ -62,7 +62,7 @@ class SelectorHighlighter extends PureComponent {
 
     return dom.span({
       className:
-        "ruleview-selectorhighlighter" +
+        "ruleview-selectorhighlighter js-toggle-selector-highlighter" +
         (highlightedSelector && highlightedSelector === uniqueSelector
           ? " highlighted"
           : ""),
