@@ -473,6 +473,21 @@ bool WarpCacheIRTranspiler::emitCallDOMGetterResult(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitCallDOMSetter(ObjOperandId objId,
+                                              uint32_t jitInfoOffset,
+                                              ValOperandId rhsId) {
+  MDefinition* obj = getOperand(objId);
+  const JSJitInfo* jitInfo = jitInfoStubField(jitInfoOffset);
+  MDefinition* value = getOperand(rhsId);
+
+  MOZ_ASSERT(jitInfo->type() == JSJitInfo::Setter);
+  auto* set =
+      MSetDOMProperty::New(alloc(), jitInfo->setter, DOMObjectKind::Native,
+                           (JS::Realm*)mirGen().realm->realmPtr(), obj, value);
+  addEffectful(set);
+  return resumeAfter(set);
+}
+
 bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
                                                           uint32_t nameOffset,
                                                           bool handleMissing) {
