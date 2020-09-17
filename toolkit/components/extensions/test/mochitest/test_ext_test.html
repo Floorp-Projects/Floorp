@@ -94,6 +94,11 @@ function testScript() {
     },
   };
   browser.test.assertEq(obj, obj, "obj with dynamic toString()");
+  browser.test.assertThrows(
+    () => { throw new Error("dummy"); },
+    /dummy2/,
+    "intentional failure"
+  );
   browser.test.sendMessage("Ran test at", location.protocol);
   browser.test.sendMessage("This is the last browser.test call");
 }
@@ -140,6 +145,7 @@ function verifyTestResults(results, shortName, expectedProtocol) {
     ["test-eq", false, "[object HTMLDivElement]", "true", "false"],
 
     ["test-eq", true, "obj with dynamic toString()", "[object Object]", "[object Object]"],
+    ["test-result", false, "Function threw, expecting error to match /dummy2/, got \"dummy\": intentional failure"],
 
     ["test-message", "Ran test at", expectedProtocol],
     ["test-message", "This is the last browser.test call"],

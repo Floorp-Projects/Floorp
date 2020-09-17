@@ -86,7 +86,7 @@ const toSource = value => {
   }
 
   try {
-    return String(value.toSource());
+    return String(value);
   } catch (e) {
     return "<unknown>";
   }
@@ -230,7 +230,7 @@ this.test = class extends ExtensionAPI {
               errorMatches(error, expectedError, context),
               `Function threw, expecting error to match ${toSource(
                 expectedError
-              )}got ${errorMessage}${msg}`
+              )}, got ${errorMessage}${msg}`
             );
           }
         },
