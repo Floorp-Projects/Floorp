@@ -21,6 +21,7 @@
 #include "PDMFactory.h"
 #include "RemoteDecoderManagerChild.h"
 #include "RemoteDecoderManagerParent.h"
+#include "RemoteImageHolder.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/layers/ImageClient.h"
@@ -73,95 +74,16 @@ RemoteVideoDecoderChild::RemoteVideoDecoderChild(bool aRecreatedOnCrash)
     : RemoteDecoderChild(aRecreatedOnCrash),
       mBufferRecycleBin(new BufferRecycleBin) {}
 
-RefPtr<mozilla::layers::Image> RemoteVideoDecoderChild::DeserializeImage(
-    const SurfaceDescriptorBuffer& aSdBuffer, const IntSize& aPicSize) {
-  MOZ_ASSERT(aSdBuffer.desc().type() == BufferDescriptor::TYCbCrDescriptor);
-  if (aSdBuffer.desc().type() != BufferDescriptor::TYCbCrDescriptor) {
-    return nullptr;
-  }
-  const YCbCrDescriptor& descriptor = aSdBuffer.desc().get_YCbCrDescriptor();
-
-  uint8_t* buffer = nullptr;
-  const MemoryOrShmem& memOrShmem = aSdBuffer.data();
-  switch (memOrShmem.type()) {
-    case MemoryOrShmem::Tuintptr_t:
-      buffer = reinterpret_cast<uint8_t*>(memOrShmem.get_uintptr_t());
-      break;
-    case MemoryOrShmem::TShmem:
-      buffer = memOrShmem.get_Shmem().get<uint8_t>();
-      break;
-    default:
-      MOZ_ASSERT(false, "Unknown MemoryOrShmem type");
-  }
-  if (!buffer) {
-    return nullptr;
-  }
-
-  PlanarYCbCrData pData;
-  pData.mYSize = descriptor.ySize();
-  pData.mYStride = descriptor.yStride();
-  pData.mCbCrSize = descriptor.cbCrSize();
-  pData.mCbCrStride = descriptor.cbCrStride();
-  // default mYSkip, mCbSkip, mCrSkip because not held in YCbCrDescriptor
-  pData.mYSkip = pData.mCbSkip = pData.mCrSkip = 0;
-  // default mPicX, mPicY because not held in YCbCrDescriptor
-  pData.mPicX = pData.mPicY = 0;
-  pData.mPicSize = aPicSize;
-  pData.mStereoMode = descriptor.stereoMode();
-  pData.mColorDepth = descriptor.colorDepth();
-  pData.mYUVColorSpace = descriptor.yUVColorSpace();
-  pData.mYChannel = ImageDataSerializer::GetYChannel(buffer, descriptor);
-  pData.mCbChannel = ImageDataSerializer::GetCbChannel(buffer, descriptor);
-  pData.mCrChannel = ImageDataSerializer::GetCrChannel(buffer, descriptor);
-
-  // images coming from AOMDecoder are RecyclingPlanarYCbCrImages.
-  RefPtr<RecyclingPlanarYCbCrImage> image =
-      new RecyclingPlanarYCbCrImage(mBufferRecycleBin);
-  bool setData = image->CopyData(pData);
-  MOZ_ASSERT(setData);
-
-  switch (memOrShmem.type()) {
-    case MemoryOrShmem::Tuintptr_t:
-      delete[] reinterpret_cast<uint8_t*>(memOrShmem.get_uintptr_t());
-      break;
-    case MemoryOrShmem::TShmem:
-      // Memory buffer will be recycled by the parent automatically.
-      break;
-    default:
-      MOZ_ASSERT(false, "Unknown MemoryOrShmem type");
-  }
-
-  if (!setData) {
-    return nullptr;
-  }
-
-  return image;
-}
-
 MediaResult RemoteVideoDecoderChild::ProcessOutput(
-    const DecodedOutputIPDL& aDecodedData) {
+    DecodedOutputIPDL&& aDecodedData) {
   AssertOnManagerThread();
-  MOZ_ASSERT(aDecodedData.type() ==
-             DecodedOutputIPDL::TArrayOfRemoteVideoDataIPDL);
+  MOZ_ASSERT(aDecodedData.type() == DecodedOutputIPDL::TArrayOfRemoteVideoData);
 
-  const nsTArray<RemoteVideoDataIPDL>& arrayData =
-      aDecodedData.get_ArrayOfRemoteVideoDataIPDL();
+  nsTArray<RemoteVideoData>& arrayData =
+      aDecodedData.get_ArrayOfRemoteVideoData()->Array();
 
   for (auto&& data : arrayData) {
-    RefPtr<Image> image;
-    if (data.sd().type() == SurfaceDescriptor::TSurfaceDescriptorBuffer) {
-      image = DeserializeImage(data.sd().get_SurfaceDescriptorBuffer(),
-                               data.frameSize());
-    } else {
-      // The Image here creates a TextureData object that takes ownership
-      // of the SurfaceDescriptor, and is responsible for making sure that
-      // it gets deallocated.
-      SurfaceDescriptorRemoteDecoder remoteSD =
-          static_cast<const SurfaceDescriptorGPUVideo&>(data.sd());
-      remoteSD.source() = Some(GetManager()->GetSource());
-      image = new GPUVideoImage(GetManager(), remoteSD, data.frameSize());
-    }
-
+    RefPtr<Image> image = data.image().TransferToImage(mBufferRecycleBin);
     RefPtr<VideoData> video = VideoData::CreateFromImage(
         data.display(), data.base().offset(), data.base().time(),
         data.base().duration(), image, data.base().keyframe(),
@@ -324,13 +246,13 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
     DecodedOutputIPDL& aDecodedData) {
   MOZ_ASSERT(OnManagerThread());
 
-  nsTArray<RemoteVideoDataIPDL> array;
-
   // If the video decoder bridge has shut down, stop.
   if (mKnowsCompositor && !mKnowsCompositor->GetTextureForwarder()) {
-    aDecodedData = std::move(array);
+    aDecodedData = MakeRefPtr<ArrayOfRemoteVideoData>();
     return NS_OK;
   }
+
+  nsTArray<RemoteVideoData> array;
 
   for (const auto& data : aData) {
     MOZ_ASSERT(data->mType == MediaData::Type::VIDEO_DATA,
@@ -358,6 +280,10 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
           texture->InitIPDLActor(mKnowsCompositor);
           texture->SetAddedToCompositableClient();
         }
+        // TODO. It would be more elegant if RemoteVideoData took ownership of
+        // this image instead and let it handle deletion should the image be
+        // unused. Right now it requires a manual
+        // StoreImage/DeallocateSurfaceDescriptorGPUVideo combo.
         sd = mParent->StoreImage(video->mImage, texture);
         size = texture->GetSize();
       }
@@ -388,15 +314,19 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
       size = image->GetSize();
     }
 
-    RemoteVideoDataIPDL output(
+    RemoteVideoData output(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
                       data->mDuration, data->mKeyframe),
-        video->mDisplay, size, sd, video->mFrameID);
+        video->mDisplay,
+        RemoteImageHolder(XRE_IsGPUProcess() ? VideoBridgeSource::GpuProcess
+                                             : VideoBridgeSource::RddProcess,
+                          size, sd),
+        video->mFrameID);
 
-    array.AppendElement(output);
+    array.AppendElement(std::move(output));
   }
 
-  aDecodedData = std::move(array);
+  aDecodedData = MakeRefPtr<ArrayOfRemoteVideoData>(std::move(array));
 
   return NS_OK;
 }

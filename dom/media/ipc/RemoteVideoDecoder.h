@@ -28,12 +28,9 @@ class RemoteVideoDecoderChild : public RemoteDecoderChild {
                        const CreateDecoderParams::OptionSet& aOptions,
                        const layers::TextureFactoryIdentifier* aIdentifier);
 
-  MediaResult ProcessOutput(const DecodedOutputIPDL& aDecodedData) override;
+  MediaResult ProcessOutput(DecodedOutputIPDL&& aDecodedData) override;
 
  private:
-  RefPtr<mozilla::layers::Image> DeserializeImage(
-      const SurfaceDescriptorBuffer& sdBuffer, const IntSize& aPicSize);
-
   RefPtr<mozilla::layers::BufferRecycleBin> mBufferRecycleBin;
 };
 
