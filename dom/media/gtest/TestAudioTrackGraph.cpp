@@ -247,25 +247,25 @@ TEST(TestAudioTrackGraph, ErrorStateCrash)
       MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr,
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr);
 
-  // Dummy track to make graph rolling. Add it and remove it to remove the
-  // graph from the global hash table and let it shutdown.
-  RefPtr<SourceMediaTrack> dummySource =
-      graph->CreateSourceTrack(MediaSegment::AUDIO);
+  RefPtr<SourceMediaTrack> dummySource;
+  auto started = Invoke([&] {
+    // Dummy track to make graph rolling. Add it and remove it to remove the
+    // graph from the global hash table and let it shutdown.
+    dummySource = graph->CreateSourceTrack(MediaSegment::AUDIO);
+    return graph->NotifyWhenDeviceStarted(dummySource);
+  });
 
-  RefPtr<GenericPromise> p = graph->NotifyWhenDeviceStarted(dummySource);
+  MockCubebStream* stream = WaitFor(cubeb->StreamInitEvent());
+  Result<bool, nsresult> rv = WaitFor(started);
+  EXPECT_TRUE(rv.unwrapOr(false));
 
-  GMPTestMonitor mon;
+  // Force a cubeb state_callback error and see that we don't crash.
+  DispatchFunction([&] { stream->ForceError(); });
+  WaitFor(stream->ErrorForcedEvent());
 
-  p->Then(GetMainThreadSerialEventTarget(), __func__,
-          [&mon, dummySource, cubeb]() {
-            cubeb->CurrentStream()->ForceError();
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            // Test has finished, destroy the track to shutdown the MTG.
-            dummySource->Destroy();
-            mon.SetFinished();
-          });
-
-  mon.AwaitFinished();
+  // Test has finished, destroy the track to shut down the MTG.
+  DispatchMethod(dummySource, &SourceMediaTrack::Destroy);
+  WaitFor(cubeb->StreamDestroyEvent());
 }
 
 TEST(TestAudioTrackGraph, SourceTrack)
