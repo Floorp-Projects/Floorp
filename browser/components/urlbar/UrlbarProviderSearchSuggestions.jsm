@@ -270,10 +270,8 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       engine = Services.search.getEngineByName(
         queryContext.searchMode.engineName
       );
-    } else if (queryContext.isPrivate) {
-      engine = Services.search.defaultPrivateEngine;
     } else {
-      engine = Services.search.defaultEngine;
+      engine = UrlbarSearchUtils.getDefaultEngine(queryContext.isPrivate);
     }
 
     if (!engine) {
