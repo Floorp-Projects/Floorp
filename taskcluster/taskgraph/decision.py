@@ -76,7 +76,6 @@ PER_PROJECT_PARAMETERS = {
     'autoland': {
         'optimize_strategies': 'taskgraph.optimize:project.autoland',
         'target_tasks_method': 'autoland_tasks',
-        'test_manifest_loader': 'bugbug',  # Remove this line to disable "manifest scheduling".
     },
 
     'mozilla-central': {
