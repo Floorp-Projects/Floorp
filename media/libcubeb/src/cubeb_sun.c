@@ -362,8 +362,8 @@ sun_stream_stop(cubeb_stream * s)
 static void
 sun_stream_destroy(cubeb_stream * s)
 {
-  sun_stream_stop(s);
   pthread_mutex_destroy(&s->mutex);
+  sun_stream_stop(s);
   if (s->play.fd != -1) {
     close(s->play.fd);
   }
@@ -666,7 +666,7 @@ sun_stream_get_latency(cubeb_stream * s, uint32_t * latency)
 #else
   cubeb_stream_params params;
 
-  params.rate = s->play.info.play.sample_rate;
+  params.rate = stream->play.info.play.sample_rate;
 
   return sun_get_min_latency(NULL, params, latency);
 #endif
