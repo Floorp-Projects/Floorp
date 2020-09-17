@@ -97,13 +97,11 @@ def config_status(config):
     sanitized_config = {}
     sanitized_config['substs'] = {
         k: sanitize_config(v) for k, v in six.iteritems(config)
-        if k not in ('DEFINES', 'non_global_defines', 'TOPSRCDIR', 'TOPOBJDIR',
-                     'CONFIG_STATUS_DEPS')
+        if k not in ('DEFINES', 'TOPSRCDIR', 'TOPOBJDIR', 'CONFIG_STATUS_DEPS')
     }
     sanitized_config['defines'] = {
         k: sanitize_config(v) for k, v in six.iteritems(config['DEFINES'])
     }
-    sanitized_config['non_global_defines'] = config['non_global_defines']
     sanitized_config['topsrcdir'] = config['TOPSRCDIR']
     sanitized_config['topobjdir'] = config['TOPOBJDIR']
     sanitized_config['mozconfig'] = config.get('MOZCONFIG')
@@ -127,7 +125,7 @@ def config_status(config):
             fh.write('%s = ' % k)
             write_indented_repr(fh, v)
         fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
-                 "'non_global_defines', 'substs', 'mozconfig']")
+                 "'substs', 'mozconfig']")
 
         if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
             fh.write(textwrap.dedent('''

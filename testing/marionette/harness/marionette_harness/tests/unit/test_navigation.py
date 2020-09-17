@@ -705,7 +705,7 @@ class TestRefresh(BaseNavigationTestCase):
             self.marionette.refresh()
 
 
-class TestTLSNavigation(MarionetteTestCase):
+class TestTLSNavigation(BaseNavigationTestCase):
     insecure_tls = {"acceptInsecureCerts": True}
     secure_tls = {"acceptInsecureCerts": False}
 
@@ -720,6 +720,7 @@ class TestTLSNavigation(MarionetteTestCase):
     def tearDown(self):
         try:
             self.marionette.delete_session()
+            self.marionette.start_session()
         except:
             pass
 

@@ -23,6 +23,7 @@ class PhabricatorCommandProvider(MachCommandBase):
     )
     def install_moz_phab(self, force=False):
         import logging
+        import os
         import shutil
         import subprocess
         import sys
@@ -58,16 +59,16 @@ class PhabricatorCommandProvider(MachCommandBase):
             or sys.platform.startswith("dragonfly")
             or sys.platform.startswith("freebsd")
         ):
-            # On all Linux and BSD distros we default to a user installation.
-            command.append("--user")
+            # On all Linux and BSD distros we consider doing a user installation.
+            platform_prefers_user_install = True
 
         elif sys.platform.startswith("darwin"):
             # On MacOS we require brew or ports, which work better without --user.
-            pass
+            platform_prefers_user_install = False
 
         elif sys.platform.startswith("win32") or sys.platform.startswith("msys"):
             # Likewise for Windows we assume a system level install is preferred.
-            pass
+            platform_prefers_user_install = False
 
         else:
             # Unsupported, default to --user.
@@ -75,9 +76,15 @@ class PhabricatorCommandProvider(MachCommandBase):
                 logging.WARNING,
                 "unsupported_platform",
                 {},
-                "Unsupported platform (%s), assuming per-user installation."
+                "Unsupported platform (%s), assuming per-user installation is "
+                "preferred."
                 % sys.platform,
             )
+            platform_prefers_user_install = True
+
+        if platform_prefers_user_install and not os.environ.get('VIRTUAL_ENV'):
+            # Virtual environments don't see user packages, so only perform a user
+            # installation if we're not within one.
             command.append("--user")
 
         self.log(logging.INFO, "run", {}, "Installing moz-phab")

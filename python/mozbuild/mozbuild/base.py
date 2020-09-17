@@ -375,10 +375,6 @@ class MozbuildObject(ProcessExecutionMixin):
         return self.config_environment.defines
 
     @property
-    def non_global_defines(self):
-        return self.config_environment.non_global_defines
-
-    @property
     def substs(self):
         return self.config_environment.substs
 
@@ -858,7 +854,7 @@ class MachCommandBase(MozbuildObject):
     without having to change everything that inherits from it.
     """
 
-    def __init__(self, context, virtualenv_name=None):
+    def __init__(self, context, virtualenv_name=None, metrics=None):
         # Attempt to discover topobjdir through environment detection, as it is
         # more reliable than mozconfig when cwd is inside an objdir.
         topsrcdir = context.topdir
@@ -905,6 +901,7 @@ class MachCommandBase(MozbuildObject):
             virtualenv_name=virtualenv_name)
 
         self._mach_context = context
+        self.metrics = metrics
 
         # Incur mozconfig processing so we have unified error handling for
         # errors. Otherwise, the exceptions could bubble back to mach's error

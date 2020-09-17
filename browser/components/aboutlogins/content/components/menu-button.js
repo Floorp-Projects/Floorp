@@ -77,8 +77,11 @@ export default class MenuButton extends HTMLElement {
               detail: linkTrackingSource,
             })
           );
+
+          // Bug 1645365: Only hide the menu when the buttons are clicked
+          // So that the menu isn't closed when non-buttons (e.g. separators, paddings) are clicked
+          this._hideMenu();
         }
-        this._hideMenu();
         break;
       }
       case "keydown": {

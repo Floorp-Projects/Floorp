@@ -221,8 +221,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         bool hasParameterExprs = function.has_parameter_exprs;
         bool needsEnvironment = function.non_positional_formal_start;
-        FunctionIndex functionIndex =
-            FunctionIndex(function.function_index + 1);
+        FunctionIndex functionIndex = FunctionIndex(function.function_index);
         bool isArrow = function.is_arrow;
 
         ScopeIndex enclosingIndex(function.enclosing);
@@ -367,7 +366,7 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
       }
       case SmooshGCThing::Tag::Function: {
         gcThings.infallibleAppend(
-            mozilla::AsVariant(FunctionIndex(item.AsFunction() + 1)));
+            mozilla::AsVariant(FunctionIndex(item.AsFunction())));
         break;
       }
       case SmooshGCThing::Tag::Scope: {
@@ -410,7 +409,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   script.immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
                                 options.nonSyntacticScope);
 
-  if (&smooshScript == &result.top_level_script) {
+  if (&smooshScript == &result.scripts.data[0]) {
     script.immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce,
                                   options.isRunOnce);
     script.immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
@@ -553,25 +552,17 @@ bool Smoosh::compileGlobalScriptToStencil(JSContext* cx,
     return false;
   }
 
-  if (!compilationInfo.stencil.scriptData.reserve(result.functions.len + 1)) {
+  if (!compilationInfo.stencil.scriptData.reserve(result.scripts.len)) {
     js::ReportOutOfMemory(cx);
     return false;
   }
 
-  compilationInfo.stencil.scriptData.infallibleEmplaceBack();
-
-  if (!ConvertScriptStencil(
-          cx, result, result.top_level_script, allAtoms, compilationInfo,
-          compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex])) {
-    return false;
-  }
-
-  for (size_t i = 0; i < result.functions.len; i++) {
+  for (size_t i = 0; i < result.scripts.len; i++) {
     compilationInfo.stencil.scriptData.infallibleEmplaceBack();
 
-    if (!ConvertScriptStencil(cx, result, result.functions.data[i], allAtoms,
+    if (!ConvertScriptStencil(cx, result, result.scripts.data[i], allAtoms,
                               compilationInfo,
-                              compilationInfo.stencil.scriptData[i + 1])) {
+                              compilationInfo.stencil.scriptData[i])) {
       return false;
     }
   }

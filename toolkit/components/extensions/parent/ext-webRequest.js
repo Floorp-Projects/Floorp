@@ -23,7 +23,7 @@ function registerEvent(
   remoteTab = null
 ) {
   let listener = async data => {
-    let event = data.serialize(eventName, extension);
+    let event = data.serialize(eventName);
     if (data.registerTraceableChannel) {
       // If this is a primed listener, no tabParent was passed in here,
       // but the convert() callback later in this function will be called

@@ -141,6 +141,13 @@ class Marshaller {
   }
 };
 
+template <typename T>
+inline Range<T> AsRange(T* const begin, T* const end) {
+  const auto size = MaybeAs<size_t>(end - begin);
+  MOZ_RELEASE_ASSERT(size);
+  return {begin, *size};
+}
+
 /**
  * Used to give QueueParamTraits a way to write to the Producer without
  * actually altering it, in case the transaction fails.
@@ -158,16 +165,22 @@ class ProducerView {
         mWrite(aWrite),
         mStatus(QueueStatus::kSuccess) {}
 
+  template <typename T>
+  QueueStatus WriteFromRange(const Range<const T>& src) {
+    if (!mStatus) return mStatus;
+    mProducer->WriteFromRange(src);
+    return mStatus;
+  }
   /**
    * Copy bytes from aBuffer to the producer if there is enough room.
    * aBufferSize must not be 0.
    */
-  inline QueueStatus Write(const uint8_t* begin, const uint8_t* end);
-
   template <typename T>
   inline QueueStatus Write(const T* begin, const T* end) {
-    return Write(reinterpret_cast<const uint8_t*>(begin),
-                 reinterpret_cast<const uint8_t*>(end));
+    MOZ_RELEASE_ASSERT(begin <= end);
+    if (!mStatus) return mStatus;
+    WriteFromRange(AsRange(begin, end));
+    return mStatus;
   }
 
   template <typename T>
@@ -214,12 +227,31 @@ class ConsumerView {
    * Read bytes from the consumer if there is enough data.  aBuffer may
    * be null (in which case the data is skipped)
    */
-  inline QueueStatus Read(uint8_t* begin, uint8_t* end);
-
   template <typename T>
-  inline QueueStatus Read(T* begin, T* end) {
-    return Read(reinterpret_cast<uint8_t*>(begin),
-                reinterpret_cast<uint8_t*>(end));
+  inline QueueStatus Read(T* const destBegin, T* const destEnd) {
+    MOZ_ASSERT(destBegin);
+    MOZ_RELEASE_ASSERT(destBegin <= destEnd);
+    if (!mStatus) return mStatus;
+
+    const auto dest = AsRange(destBegin, destEnd);
+    const auto view = ReadRange<T>(dest.length());
+    if (!view) return mStatus;
+    const auto byteSize = ByteSize(dest);
+    if (byteSize) {
+      memcpy(dest.begin().get(), view->begin().get(), byteSize);
+    }
+    return mStatus;
+  }
+
+  /// Return a view wrapping the shmem.
+  template <typename T>
+  inline Maybe<Range<const T>> ReadRange(const size_t elemCount) {
+    if (!mStatus) return {};
+    const auto view = mConsumer->template ReadRange<T>(elemCount);
+    if (!view) {
+      mStatus = QueueStatus::kTooSmall;
+    }
+    return view;
   }
 
   template <typename T>
@@ -248,29 +280,6 @@ class ConsumerView {
   size_t mWrite;
   QueueStatus mStatus;
 };
-
-template <typename T>
-QueueStatus ProducerView<T>::Write(const uint8_t* const begin,
-                                   const uint8_t* const end) {
-  MOZ_ASSERT(begin <= end);
-  if (!mStatus) return mStatus;
-  if (begin < end) {
-    MOZ_ASSERT(begin);
-    mStatus = mProducer->WriteObject(mRead, mWrite, begin, end - begin);
-  }
-  return mStatus;
-}
-
-template <typename T>
-QueueStatus ConsumerView<T>::Read(uint8_t* const begin, uint8_t* const end) {
-  MOZ_ASSERT(begin <= end);
-  if (!mStatus) return mStatus;
-  if (begin < end) {
-    MOZ_ASSERT(begin);
-    mStatus = mConsumer->ReadObject(mRead, mWrite, begin, end - begin);
-  }
-  return mStatus;
-}
 
 // ---------------------------------------------------------------
 

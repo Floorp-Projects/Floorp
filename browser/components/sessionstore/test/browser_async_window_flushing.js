@@ -122,7 +122,7 @@ add_task(async function test_remove_uninteresting_window() {
     docShell.setCurrentURI(Services.io.newURI("about:blank"));
 
     let { sessionHistory } = docShell.QueryInterface(Ci.nsIWebNavigation);
-    sessionHistory.legacySHistory.PurgeHistory(sessionHistory.count);
+    sessionHistory.legacySHistory.purgeHistory(sessionHistory.count);
   });
 
   // Once this windowClosed Promise resolves, we should have finished

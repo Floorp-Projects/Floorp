@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   modal: "chrome://marionette/content/modal.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "uuidgen",

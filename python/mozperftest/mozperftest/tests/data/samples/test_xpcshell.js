@@ -15,6 +15,9 @@ add_task(async function dummy_test() {
   await true;
 });
 
+var anotherVar = {
+  something: "cool"
+};
 
 var perfMetadata = {
   owner: "Performance Testing Team",
@@ -24,8 +27,13 @@ var perfMetadata = {
   This is a longer description of the test perhaps including information
   about how it should be run locally or links to relevant information.
   `,
-  usage: "explains how to use it",
   supportedBrowsers: ["Firefox"],
   supportedPlatforms: ["Desktop"],
+  options: {
+      default: {perfherder: true},
+      linux: {perfherder_metrics: "name:speed,unit:bps_lin"},
+      mac: {perfherder_metrics: "name:speed,unit:bps_mac"},
+      win: {perfherder_metrics: "name:speed,unit:bps_win"},
+      wat: {},
+  }
 };
-

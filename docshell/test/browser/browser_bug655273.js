@@ -14,21 +14,41 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http://example.com" },
     async function(browser) {
-      await SpecialPowers.spawn(browser, [], async function() {
-        let cw = content;
-        let oldTitle = cw.document.title;
-        ok(oldTitle, "Content window should initially have a title.");
-        cw.history.pushState("", "", "new_page");
+      if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+        await SpecialPowers.spawn(browser, [], async function() {
+          let cw = content;
+          let oldTitle = cw.document.title;
+          ok(oldTitle, "Content window should initially have a title.");
+          cw.history.pushState("", "", "new_page");
 
-        let shistory = cw.docShell.QueryInterface(Ci.nsIWebNavigation)
-          .sessionHistory;
+          let shistory = cw.docShell.QueryInterface(Ci.nsIWebNavigation)
+            .sessionHistory;
 
-        is(
-          shistory.legacySHistory.getEntryAtIndex(shistory.index).title,
-          oldTitle,
-          "SHEntry title after pushstate."
-        );
+          is(
+            shistory.legacySHistory.getEntryAtIndex(shistory.index).title,
+            oldTitle,
+            "SHEntry title after pushstate."
+          );
+        });
+
+        return;
+      }
+
+      let bc = browser.browsingContext;
+      let oldTitle = browser.browsingContext.currentWindowGlobal.documentTitle;
+      ok(oldTitle, "Content window should initially have a title.");
+      SpecialPowers.spawn(browser, [], async function() {
+        content.history.pushState("", "", "new_page");
       });
+
+      let shistory = bc.sessionHistory;
+      await SHListener.waitForHistory(shistory, SHListener.NewEntry);
+
+      is(
+        shistory.getEntryAtIndex(shistory.index).title,
+        oldTitle,
+        "SHEntry title after pushstate."
+      );
     }
   );
 });

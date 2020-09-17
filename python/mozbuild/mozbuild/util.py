@@ -29,6 +29,9 @@ from io import (BytesIO, StringIO)
 
 import six
 
+MOZBUILD_METRICS_PATH = os.path.abspath(
+    os.path.join(__file__, '..', '..', 'metrics.yaml'))
+
 if sys.platform == 'win32':
     _kernel32 = ctypes.windll.kernel32
     _FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x2000

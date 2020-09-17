@@ -6,6 +6,8 @@ import re
 import textwrap
 from pathlib import Path
 from enum import Enum
+import io
+import traceback
 
 import esprima
 
@@ -20,10 +22,11 @@ METADATA = [
     ("name", True),
     ("description", True),
     ("longDescription", False),
-    ("usage", False),
+    ("options", False),
     ("supportedBrowsers", False),
     ("supportedPlatforms", False),
     ("filename", True),
+    ("tags", False),
 ]
 
 
@@ -31,15 +34,8 @@ _INFO = """\
 %(filename)s
 %(filename_underline)s
 
-%(description)s
-
-Owner: %(owner)s
-Test Name: %(name)s
-Usage:
-%(usage)s
-
-Description:
-%(longDescription)s
+:owner: %(owner)s
+:name: %(name)s
 """
 
 
@@ -58,6 +54,16 @@ class ParseError(Exception):
         super().__init__(f"Cannot parse {script}")
         self.script = script
         self.exception = exception
+
+    def __str__(self):
+        output = io.StringIO()
+        traceback.print_exception(
+            type(self.exception),
+            self.exception,
+            self.exception.__traceback__,
+            file=output,
+        )
+        return f"{self.args[0]}\n{output.getvalue()}"
 
 
 class ScriptType(Enum):
@@ -83,7 +89,7 @@ class ScriptInfo(defaultdict):
                 raise MissingFieldError(path, field)
 
     def _parse_file(self, path):
-        self.script = Path(path)
+        self.script = Path(path).resolve()
         self["filename"] = str(self.script)
         self.script_type = ScriptType.browsertime
         with self.script.open() as f:
@@ -136,40 +142,93 @@ class ScriptInfo(defaultdict):
             # now scanning the properties
             self.scan_properties(stmt.expression.right.properties)
 
+    def parse_value(self, value):
+        if value.type == "Identifier":
+            return value.name
+
+        if value.type == "Literal":
+            return value.value
+
+        if value.type == "TemplateLiteral":
+            # ugly
+            value = value.quasis[0].value.cooked.replace("\n", " ")
+            return re.sub(r"\s+", " ", value).strip()
+
+        if value.type == "ArrayExpression":
+            return [self.parse_value(e) for e in value.elements]
+
+        if value.type == "ObjectExpression":
+            elements = {}
+            for prop in value.properties:
+                sub_name, sub_value = self.parse_property(prop)
+                elements[sub_name] = sub_value
+            return elements
+
+        raise ValueError(value.type)
+
+    def parse_property(self, property):
+        return property.key.name, self.parse_value(property.value)
+
     def scan_properties(self, properties):
         for prop in properties:
-            if prop.value.type == "Identifier":
-                value = prop.value.name
-            elif prop.value.type == "Literal":
-                value = prop.value.value
-            elif prop.value.type == "TemplateLiteral":
-                # ugly
-                value = prop.value.quasis[0].value.cooked.replace("\n", " ")
-                value = re.sub(r"\s+", " ", value).strip()
-            elif prop.value.type == "ArrayExpression":
-                value = [e.value for e in prop.value.elements]
-            else:
-                raise ValueError(prop.value.type)
-
-            self[prop.key.name] = value
+            name, value = self.parse_property(prop)
+            self[name] = value
 
     def __str__(self):
         """Used to generate docs."""
+
+        def _render(value, level=0):
+            if not isinstance(value, (list, tuple, dict)):
+                if not isinstance(value, str):
+                    value = str(value)
+                # line wrapping
+                return "\n".join(textwrap.wrap(value, break_on_hyphens=False))
+
+            # options
+            if isinstance(value, dict):
+                if level > 0:
+                    return ",".join([f"{k}:{v}" for k, v in value.items()])
+
+                res = []
+                for key, val in value.items():
+                    if isinstance(val, bool):
+                        res.append(f" --{key.replace('_', '-')}")
+                    else:
+                        val = _render(val, level + 1)
+                        res.append(f" --{key.replace('_', '-')} {val}")
+
+                return "\n".join(res)
+
+            # simple flat list
+            return ", ".join([_render(v, level + 1) for v in value])
+
+        options = ""
         d = defaultdict(lambda: "N/A")
         for field, value in self.items():
+            if field == "longDescription":
+                continue
             if field == "filename":
                 d[field] = self.script.name
                 continue
-
-            # line wrapping
-            if isinstance(value, str):
-                value = "\n".join(textwrap.wrap(value, break_on_hyphens=False))
-            elif isinstance(value, list):
-                value = ", ".join(value)
-            d[field] = value
+            if field == "options":
+                for plat in "default", "linux", "mac", "win":
+                    if plat not in value:
+                        continue
+                    options += (
+                        f"{plat.capitalize()} options:\n\n{_render(value[plat])}\n\n"
+                    )
+            else:
+                d[field] = _render(value)
 
         d["filename_underline"] = "=" * len(d["filename"])
-        return _INFO % d
+        info = _INFO % d
+        if "tags" in self:
+            info += f":tags: {','.join(self['tags'])}\n"
+        info += f"\n**{self['description']}**\n"
+        if "longDescription" in self:
+            info += f"\n{self['longDescription']}\n"
+        info += options
+        return info
 
     def __missing__(self, key):
         return "N/A"
@@ -177,3 +236,15 @@ class ScriptInfo(defaultdict):
     @classmethod
     def detect_type(cls, path):
         return cls(path).script_type
+
+    def update_args(self, **args):
+        """Updates arguments with options from the script."""
+        from mozperftest.utils import simple_platform
+
+        # Order of precedence:
+        #   cli options > platform options > default options
+        options = self.get("options", {})
+        result = options.get("default", {})
+        result.update(options.get(simple_platform(), {}))
+        result.update(args)
+        return result

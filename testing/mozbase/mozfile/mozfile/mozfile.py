@@ -396,7 +396,8 @@ def tree(directory, sort_key=lambda x: x.lower()):
     return "\n".join(retval)
 
 
-def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None):
+def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None,
+          extra_search_dirs=()):
     """A wrapper around `shutil.which` to make the behavior on Windows
     consistent with other platforms.
 
@@ -413,6 +414,9 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None):
     is an `exts` argument that only has an effect on Windows. This is used to
     set a custom value for PATHEXT and is formatted as a list of file
     extensions.
+
+    extra_search_dirs is a convenience argument. If provided, the strings in
+    the sequence will be appended to the END of the given `path`.
     """
     try:
         from shutil import which as shutil_which
@@ -421,6 +425,12 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None):
 
     if isinstance(path, (list, tuple)):
         path = os.pathsep.join(path)
+
+    if not path:
+        path = os.environ.get('PATH', os.defpath)
+
+    if extra_search_dirs:
+        path = os.pathsep.join([path] + list(extra_search_dirs))
 
     if sys.platform != "win32":
         return shutil_which(cmd, mode=mode, path=path)

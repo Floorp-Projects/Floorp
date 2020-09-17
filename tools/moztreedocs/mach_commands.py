@@ -18,11 +18,13 @@ import uuid
 from functools import partial
 from pprint import pprint
 
+from mach.registrar import Registrar
 from mozbuild.base import MachCommandBase
 from mach.decorators import (
     Command,
     CommandArgument,
     CommandProvider,
+    SubCommand,
 )
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -398,6 +400,30 @@ class Documentation(MachCommandBase):
 
         unique_link = BASE_LINK + unique_id + "/index.html"
         print("Uploaded documentation can be accessed here " + unique_link)
+
+    @SubCommand(
+        "doc",
+        "mach-telemetry",
+        description="Generate documentation from Glean metrics.yaml files",
+    )
+    def generate_telemetry_docs(self):
+        args = [
+            "glean_parser",
+            "translate",
+            "-f",
+            "markdown",
+            "-o",
+            os.path.join(topsrcdir, "python/mach/docs/"),
+            os.path.join(topsrcdir, "python/mach/pings.yaml"),
+            os.path.join(topsrcdir, "python/mach/metrics.yaml"),
+        ]
+        metrics_paths = [
+            handler.metrics_path
+            for handler in Registrar.command_handlers.values()
+            if handler.metrics_path is not None
+        ]
+        args.extend([os.path.join(self.topsrcdir, path) for path in set(metrics_paths)])
+        subprocess.check_output(args)
 
     def check_jsdoc(self):
         try:

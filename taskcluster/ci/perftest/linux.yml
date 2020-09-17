@@ -18,6 +18,21 @@ job-defaults:
     require-build:
         linux64-shippable/opt: build-linux64-shippable/opt
 
+try:
+    description: Run ./mach perftest on Linux
+    treeherder:
+        symbol: perftest(linux)
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.8 python/mozperftest/mozperftest/runner.py
+            --on-try
+            --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
+            --flavor desktop-browser
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --output $MOZ_FETCHES_DIR/../artifacts
+
 domcount:
     description: Run DOM test
     treeherder:

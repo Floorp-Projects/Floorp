@@ -3709,12 +3709,6 @@
   value: 0
   mirror: always
 
-# temporary pref to work around a problem (bug 1663562)
-- name: font.size.inflation.skipmaybereflowwithwebrender
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # This setting corresponds to a global text zoom setting affecting
 # all content that is not already subject to font size inflation.
 # It is interpreted as a percentage value that is applied on top
@@ -7109,13 +7103,6 @@
     mirror: always
 #endif
 
-#if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
--   name: media.ffmpeg.low-latency.enabled
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-#endif
-
 #ifdef MOZ_WMF
 
 -   name: media.wmf.enabled
@@ -9942,6 +9929,11 @@
 - name: webgl.out-of-process
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+- name: webgl.out-of-process.shmem-size
+  type: RelaxedAtomicUint32
+  value: 10000 # 10KB
   mirror: always
 
 - name: webgl.power-preference-override

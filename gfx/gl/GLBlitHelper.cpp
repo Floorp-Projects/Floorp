@@ -982,44 +982,16 @@ bool GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
   }
 
   const char* fragBody;
-  GLenum internalFormats[3] = {0, 0, 0};
-  GLenum unpackFormats[3] = {0, 0, 0};
-  GLenum unpackTypes[3] = {LOCAL_GL_UNSIGNED_BYTE, LOCAL_GL_UNSIGNED_BYTE,
-                           LOCAL_GL_UNSIGNED_BYTE};
   switch (planes) {
     case 1:
       fragBody = kFragBody_RGBA;
-      internalFormats[0] = LOCAL_GL_RGBA;
-      unpackFormats[0] = LOCAL_GL_RGBA;
       break;
     case 2:
       fragBody = kFragBody_NV12;
-      if (mGL->Version() >= 300) {
-        internalFormats[0] = LOCAL_GL_R8;
-        unpackFormats[0] = LOCAL_GL_RED;
-        internalFormats[1] = LOCAL_GL_RG8;
-        unpackFormats[1] = LOCAL_GL_RG;
-      } else {
-        internalFormats[0] = LOCAL_GL_LUMINANCE;
-        unpackFormats[0] = LOCAL_GL_LUMINANCE;
-        internalFormats[1] = LOCAL_GL_LUMINANCE_ALPHA;
-        unpackFormats[1] = LOCAL_GL_LUMINANCE_ALPHA;
-      }
       pYuvArgs = &yuvArgs;
       break;
     case 3:
       fragBody = kFragBody_PlanarYUV;
-      if (mGL->Version() >= 300) {
-        internalFormats[0] = LOCAL_GL_R8;
-        unpackFormats[0] = LOCAL_GL_RED;
-      } else {
-        internalFormats[0] = LOCAL_GL_LUMINANCE;
-        unpackFormats[0] = LOCAL_GL_LUMINANCE;
-      }
-      internalFormats[1] = internalFormats[0];
-      internalFormats[2] = internalFormats[0];
-      unpackFormats[1] = unpackFormats[0];
-      unpackFormats[2] = unpackFormats[0];
       pYuvArgs = &yuvArgs;
       break;
     default:
@@ -1029,11 +1001,6 @@ bool GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
 
   if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
     fragBody = kFragBody_CrYCb;
-    // APPLE_rgb_422 adds RGB_RAW_422_APPLE for `internalFormat`, but only RGB
-    // seems to work?
-    internalFormats[0] = LOCAL_GL_RGB;
-    unpackFormats[0] = LOCAL_GL_RGB_422_APPLE;
-    unpackTypes[0] = LOCAL_GL_UNSIGNED_SHORT_8_8_APPLE;
     pYuvArgs = &yuvArgs;
   }
 
@@ -1042,23 +1009,14 @@ bool GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
     mGL->fBindTexture(texTarget, texs[p]);
     mGL->TexParams_SetClampNoMips(texTarget);
 
-    const auto width = iosurf->GetDevicePixelWidth(p);
-    const auto height = iosurf->GetDevicePixelHeight(p);
-    auto err = iosurf->CGLTexImageIOSurface2D(
-        cglContext, texTarget, internalFormats[p], width, height,
-        unpackFormats[p], unpackTypes[p], p);
+    auto err = iosurf->CGLTexImageIOSurface2D(mGL, cglContext, p);
     if (err) {
-      const nsPrintfCString errStr(
-          "CGLTexImageIOSurface2D(context, target, 0x%04x,"
-          " %u, %u, 0x%04x, 0x%04x, iosurfPtr, %u) -> %i",
-          internalFormats[p], uint32_t(width), uint32_t(height),
-          unpackFormats[p], unpackTypes[p], p, err);
-      gfxCriticalError() << errStr.get() << " (iosurf format: " << formatStr
-                         << ")";
       return false;
     }
 
     if (p == 0) {
+      const auto width = iosurf->GetDevicePixelWidth(p);
+      const auto height = iosurf->GetDevicePixelHeight(p);
       baseArgs.texMatrix0 = SubRectMat3(0, 0, width, height);
       yuvArgs.texMatrix1 = SubRectMat3(0, 0, width / 2.0, height / 2.0);
     }

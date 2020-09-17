@@ -112,6 +112,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   BaseScript* baseScriptStubField(uint32_t offset) {
     return reinterpret_cast<BaseScript*>(readStubWord(offset));
   }
+  const JSJitInfo* jitInfoStubField(uint32_t offset) {
+    return reinterpret_cast<const JSJitInfo*>(readStubWord(offset));
+  }
   const void* rawPointerField(uint32_t offset) {
     return reinterpret_cast<const void*>(readStubWord(offset));
   }
@@ -438,6 +441,36 @@ bool WarpCacheIRTranspiler::emitCallSetArrayLength(ObjOperandId objId,
   addEffectful(ins);
 
   return resumeAfter(ins);
+}
+
+bool WarpCacheIRTranspiler::emitCallDOMGetterResult(ObjOperandId objId,
+                                                    uint32_t jitInfoOffset) {
+  MDefinition* obj = getOperand(objId);
+  const JSJitInfo* jitInfo = jitInfoStubField(jitInfoOffset);
+
+  MInstruction* ins;
+  if (jitInfo->isAlwaysInSlot) {
+    ins = MGetDOMMember::New(alloc(), jitInfo, obj, nullptr, nullptr);
+  } else {
+    // TODO(post-Warp): realms, guard operands (movable?).
+    ins = MGetDOMProperty::New(alloc(), jitInfo, DOMObjectKind::Native,
+                               (JS::Realm*)mirGen().realm->realmPtr(), obj,
+                               nullptr, nullptr);
+  }
+
+  if (!ins) {
+    return false;
+  }
+
+  if (ins->isEffectful()) {
+    addEffectful(ins);
+    pushResult(ins);
+    return resumeAfter(ins);
+  }
+
+  add(ins);
+  pushResult(ins);
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,

@@ -14,9 +14,8 @@ add_task(async function() {
     browser
   ) {
     // At this point, we haven't set gHistoryMaxSize to 0, and it is still 50 (default value).
-    await ContentTask.spawn(browser, null, () => {
-      var sh = content.window.docShell.QueryInterface(Ci.nsIWebNavigation)
-        .sessionHistory.legacySHistory;
+    if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+      let sh = browser.browsingContext.sessionHistory;
       is(
         sh.count,
         1,
@@ -27,7 +26,22 @@ add_task(async function() {
         0,
         "Shistory's current index should be 0 because we haven't purged history yet"
       );
-    });
+    } else {
+      await ContentTask.spawn(browser, null, () => {
+        var sh = content.window.docShell.QueryInterface(Ci.nsIWebNavigation)
+          .sessionHistory.legacySHistory;
+        is(
+          sh.count,
+          1,
+          "We should have entry in session history because we haven't changed gHistoryMaxSize to be 0 yet"
+        );
+        is(
+          sh.index,
+          0,
+          "Shistory's current index should be 0 because we haven't purged history yet"
+        );
+      });
+    }
 
     var loadPromise = BrowserTestUtils.browserLoaded(browser, false, URL2);
     // If we set the pref at the beginning of this page, then when we launch a child process
@@ -49,12 +63,19 @@ add_task(async function() {
     browser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
     await promise;
 
-    await ContentTask.spawn(browser, null, () => {
-      var sh = content.window.docShell.QueryInterface(Ci.nsIWebNavigation)
-        .sessionHistory.legacySHistory;
+    if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+      let sh = browser.browsingContext.sessionHistory;
       is(sh.count, 0, "We should not save any entries in session history");
       is(sh.index, -1);
       is(sh.requestedIndex, -1);
-    });
+    } else {
+      await ContentTask.spawn(browser, null, () => {
+        var sh = content.window.docShell.QueryInterface(Ci.nsIWebNavigation)
+          .sessionHistory.legacySHistory;
+        is(sh.count, 0, "We should not save any entries in session history");
+        is(sh.index, -1);
+        is(sh.requestedIndex, -1);
+      });
+    }
   });
 });

@@ -17,6 +17,7 @@ except ImportError:
 from distutils.version import StrictVersion
 
 from mozboot.base import BaseBootstrapper
+from mozfile import which
 
 HOMEBREW_BOOTSTRAP = 'https://raw.githubusercontent.com/Homebrew/install/master/install'
 XCODE_APP_STORE = 'macappstore://itunes.apple.com/app/id497799835?mt=12'
@@ -233,7 +234,7 @@ class OSXBootstrapper(BaseBootstrapper):
         # developer preview releases of Xcode, which can be installed into
         # paths like /Applications/Xcode5-DP6.app.
         elif self.os_version >= StrictVersion('10.7'):
-            select = self.which('xcode-select')
+            select = which('xcode-select')
             try:
                 output = subprocess.check_output([select, '--print-path'],
                                                  stderr=subprocess.STDOUT)
@@ -262,7 +263,7 @@ class OSXBootstrapper(BaseBootstrapper):
                                              stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             if b'license' in e.output:
-                xcodebuild = self.which('xcodebuild')
+                xcodebuild = which('xcodebuild')
                 try:
                     subprocess.check_output([xcodebuild, '-license'],
                                             stderr=subprocess.STDOUT)
@@ -299,7 +300,7 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def _ensure_homebrew_found(self):
         if not hasattr(self, 'brew'):
-            self.brew = self.which('brew')
+            self.brew = which('brew')
         # Earlier code that checks for valid package managers ensures
         # which('brew') is found.
         assert self.brew is not None
@@ -404,7 +405,7 @@ class OSXBootstrapper(BaseBootstrapper):
         return android.generate_mozconfig('macosx', artifact_mode=artifact_mode)
 
     def _ensure_macports_packages(self, packages):
-        self.port = self.which('port')
+        self.port = which('port')
         assert self.port is not None
 
         installed = set(
@@ -485,7 +486,7 @@ class OSXBootstrapper(BaseBootstrapper):
         '''
         installed = []
         for name, cmd in PACKAGE_MANAGER.items():
-            if self.which(cmd) is not None:
+            if which(cmd) is not None:
                 installed.append(name)
 
         active_name, active_cmd = None, None
@@ -511,7 +512,7 @@ class OSXBootstrapper(BaseBootstrapper):
         # /usr/bin. If it doesn't come before /usr/bin, we'll pick up system
         # packages before package manager installed packages and the build may
         # break.
-        p = self.which(active_cmd)
+        p = which(active_cmd)
         if not p:
             print(PACKAGE_MANAGER_BIN_MISSING % active_cmd)
             sys.exit(1)

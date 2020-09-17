@@ -990,6 +990,24 @@ inline auto MakeRangeAbv(const T& abv)
   return {abv.Data(), abv.Length()};
 }
 
+// -
+
+constexpr auto kUniversalAlignment = alignof(std::max_align_t);
+
+template <typename T>
+inline size_t AlignmentOffset(const size_t alignment, const T posOrPtr) {
+  MOZ_ASSERT(alignment);
+  const auto begin = reinterpret_cast<uintptr_t>(posOrPtr);
+  const auto wholeMultiples = (begin + (alignment - 1)) / alignment;
+  const auto aligned = wholeMultiples * alignment;
+  return aligned - begin;
+}
+
+template <typename T>
+inline size_t ByteSize(const Range<T>& range) {
+  return range.length() * sizeof(T);
+}
+
 Maybe<Range<const uint8_t>> GetRangeFromView(const dom::ArrayBufferView& view,
                                              GLuint elemOffset,
                                              GLuint elemCountOverride);

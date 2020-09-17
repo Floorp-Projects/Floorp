@@ -126,6 +126,9 @@ interface WindowGlobalChild {
   // embedder is in a different process.
   readonly attribute boolean isProcessRoot;
 
+  // Is this WindowGlobalChild same-origin with `window.top`?
+  readonly attribute boolean sameOriginWithTop;
+
   readonly attribute WindowGlobalParent? parentActor; // in-process only
 
   static WindowGlobalChild? getByInnerWindowId(unsigned long long innerWIndowId);

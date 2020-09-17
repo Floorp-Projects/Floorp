@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebElementEventTarget: "chrome://marionette/content/dom.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 /** @namespace */
 this.browser = {};

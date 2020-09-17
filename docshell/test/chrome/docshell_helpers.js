@@ -448,8 +448,17 @@ function pageEventListener(event) {
  */
 function finish() {
   // Work around bug 467960.
-  var history = TestWindow.getBrowser().webNavigation.sessionHistory;
-  history.legacySHistory.PurgeHistory(history.count);
+  let history;
+  if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    history = TestWindow.getBrowser().browsingContext?.sessionHistory;
+  } else {
+    history = TestWindow.getBrowser().webNavigation.sessionHistory
+      .legacySHistory;
+  }
+
+  if (history) {
+    history.purgeHistory(history.count);
+  }
 
   // If the test changed the value of max_total_viewers via a call to
   // enableBFCache(), then restore it now.

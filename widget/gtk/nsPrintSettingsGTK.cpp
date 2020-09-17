@@ -479,7 +479,7 @@ NS_IMETHODIMP
 nsPrintSettingsGTK::GetPaperName(nsAString& aPaperName) {
   const gchar* name =
       gtk_paper_size_get_name(gtk_page_setup_get_paper_size(mPageSetup));
-  CopyUTF8toUTF16(MakeStringSpan(name), aPaperName);
+  CopyUTF8toUTF16(mozilla::MakeStringSpan(name), aPaperName);
   return NS_OK;
 }
 NS_IMETHODIMP

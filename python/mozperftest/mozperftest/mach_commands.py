@@ -11,7 +11,15 @@ from mach.decorators import CommandProvider, Command, CommandArgument
 from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
 
 
-_TRY_PLATFORMS = {"g5": "perftest-android-hw-g5", "p2": "perftest-android-hw-p2"}
+_TRY_PLATFORMS = {
+    "g5": "perftest-android-hw-g5",
+    "p2": "perftest-android-hw-p2",
+    "linux": "perftest-linux-try",
+    "mac": "perftest-macosx-try",
+    "win": "perftest-windows-try",
+}
+
+
 HERE = os.path.dirname(__file__)
 
 
@@ -23,6 +31,9 @@ def get_perftest_parser():
 
 @CommandProvider
 class Perftest(MachCommandBase):
+    def get_parser(self):
+        return self.run_perftest._mach_command._parser
+
     @Command(
         "perftest",
         category="testing",
@@ -31,11 +42,65 @@ class Perftest(MachCommandBase):
         parser=get_perftest_parser,
     )
     def run_perftest(self, **kwargs):
+        # original parser that brought us there
+        original_parser = self.get_parser()
+
         from pathlib import Path
+
+        # user selection with fuzzy UI
+        from mozperftest.utils import ON_TRY
+        from mozperftest.script import ScriptInfo, ScriptType, ParseError
+
+        if not ON_TRY and kwargs.get("tests", []) == []:
+            from moztest.resolve import TestResolver
+            from mozperftest.fzf.fzf import select
+
+            resolver = self._spawn(TestResolver)
+            test_objects = list(resolver.resolve_tests(paths=None, flavor="perftest"))
+
+            def full_path(selection):
+                __, script_name, __, location = selection.split(" ")
+                return str(
+                    Path(
+                        self.topsrcdir.rstrip(os.sep),
+                        location.strip(os.sep),
+                        script_name,
+                    )
+                )
+
+            kwargs["tests"] = [full_path(s) for s in select(test_objects)]
+
+            if kwargs["tests"] == []:
+                print("\nNo selection. Bye!")
+                return
+
+        if len(kwargs["tests"]) > 1:
+            print("\nSorry no support yet for multiple local perftest")
+            return
+
+        sel = "\n".join(kwargs["tests"])
+        print("\nGood job! Best selection.\n%s" % sel)
+
+        # if the script is xpcshell, we can force the flavor here
+        # XXX on multi-selection,  what happens if we have seeveral flavors?
+        try:
+            script_info = ScriptInfo(kwargs["tests"][0])
+        except ParseError as e:
+            if e.exception is IsADirectoryError:
+                script_info = None
+            else:
+                raise
+        else:
+            if script_info.script_type == ScriptType.xpcshell:
+                kwargs["flavor"] = script_info.script_type.name
+            else:
+                # we set the value only if not provided (so "mobile-browser"
+                # can be picked)
+                if "flavor" not in kwargs:
+                    kwargs["flavor"] = "desktop-browser"
 
         push_to_try = kwargs.pop("push_to_try", False)
         if push_to_try:
-
             sys.path.append(str(Path(self.topsrcdir, "tools", "tryselect")))
 
             from tryselect.push import push_to_try
@@ -48,10 +113,11 @@ class Perftest(MachCommandBase):
                 raise NotImplementedError("%r not supported yet" % platform)
 
             perftest_parameters = {}
-            parser = get_perftest_parser()()
-            for name, value in kwargs.items():
+            args = script_info.update_args(**original_parser.get_user_args(kwargs))
+
+            for name, value in args.items():
                 # ignore values that are set to default
-                if parser.get_default(name) == value:
+                if original_parser.get_default(name) == value:
                     continue
                 perftest_parameters[name] = value
 
@@ -67,50 +133,12 @@ class Perftest(MachCommandBase):
             push_to_try("perftest", "perftest", try_task_config=task_config)
             return
 
-        # user selection with fuzzy UI
-        from mozperftest.utils import ON_TRY
-
-        if not ON_TRY and kwargs.get("tests", []) == []:
-            from moztest.resolve import TestResolver
-            from mozperftest.fzf.fzf import select
-            from mozperftest.script import ScriptInfo, ScriptType
-
-            resolver = self._spawn(TestResolver)
-            test_objects = list(resolver.resolve_tests(paths=None, flavor="perftest"))
-
-            def full_path(s):
-                relative = s.split()[-1].lstrip(os.sep)
-                return str(Path(self.topsrcdir, relative))
-
-            kwargs["tests"] = [full_path(s) for s in select(test_objects)]
-
-            if kwargs["tests"] == []:
-                print("\nNo selection. Bye!")
-                return
-
-            if len(kwargs["tests"]) > 1:
-                print("\nSorry no support yet for multiple local perftest")
-                return
-
-            sel = "\n".join(kwargs["tests"])
-            print("\nGood job! Best selection.\n%s" % sel)
-
-            # if the script is xpcshell, we can force the flavor here
-            script_type = ScriptInfo.detect_type(kwargs["tests"][0])
-            if script_type == ScriptType.xpcshell:
-                kwargs["flavor"] = script_type.name
-            else:
-                # we set the value only if not provided (so "mobile-browser"
-                # can be picked)
-                if "flavor" not in kwargs:
-                    kwargs["flavor"] = "desktop-browser"
-
         # run locally
         MachCommandBase.activate_virtualenv(self)
 
         from mozperftest.runner import run_tests
 
-        run_tests(mach_cmd=self, **kwargs)
+        run_tests(self, kwargs, original_parser.get_user_args(kwargs))
 
         print("\nFirefox. Fast For Good.\n")
 

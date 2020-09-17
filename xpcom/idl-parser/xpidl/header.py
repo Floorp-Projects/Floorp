@@ -348,6 +348,12 @@ iface_prolog = """ {
 
 """
 
+iface_scriptable = """\
+  /* Used by ToJSValue to check which scriptable interface is implemented. */
+  using ScriptableInterfaceType = %(name)s;
+
+"""
+
 iface_epilog = """};
 
   NS_DEFINE_STATIC_IID_ACCESSOR(%(name)s, %(defname)s_IID)
@@ -504,6 +510,9 @@ def write_interface(iface, fd):
     if iface.base:
         fd.write(" : public %s" % iface.base)
     fd.write(iface_prolog % names)
+
+    if iface.attributes.scriptable:
+        fd.write(iface_scriptable % names)
 
     for key, group in itertools.groupby(iface.members, key=type):
         if key == xpidl.ConstMember:

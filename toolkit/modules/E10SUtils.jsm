@@ -71,6 +71,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/uriloader/external-protocol-service;1",
   "nsIExternalProtocolService"
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "sessionHistoryInParent",
+  "fission.sessionHistoryInParent",
+  false
+);
 
 function getAboutModule(aURL) {
   // Needs to match NS_GetAboutModuleName
@@ -1059,23 +1065,33 @@ var E10SUtils = {
   ) {
     const actor = aDocShell.domWindow.windowGlobalChild.getActor("BrowserTab");
 
+    let loadOptions = {
+      uri: aURI.spec,
+      flags: aFlags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+      referrerInfo: this.serializeReferrerInfo(aReferrerInfo),
+      triggeringPrincipal: this.serializePrincipal(
+        aTriggeringPrincipal ||
+          Services.scriptSecurityManager.createNullPrincipal({})
+      ),
+      csp: aCsp ? this.serializeCSP(aCsp) : null,
+    };
     // Retarget the load to the correct process
-    let sessionHistory = aDocShell.QueryInterface(Ci.nsIWebNavigation)
-      .sessionHistory;
+    if (sessionHistoryInParent) {
+      let sessionHistory = aDocShell.QueryInterface(Ci.nsIWebNavigation)
+        .sessionHistory;
+      actor.sendAsyncMessage("Browser:LoadURI", {
+        loadOptions,
+        historyIndex: sessionHistory.legacySHistory.requestedIndex,
+      });
+    } else {
+      // If we can't access legacySHistory, session history in the
+      // parent is enabled. Browser:LoadURI knows about this and will
+      // act accordingly.
+      actor.sendAsyncMessage("Browser:LoadURI", {
+        loadOptions,
+      });
+    }
 
-    actor.sendAsyncMessage("Browser:LoadURI", {
-      loadOptions: {
-        uri: aURI.spec,
-        flags: aFlags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-        referrerInfo: this.serializeReferrerInfo(aReferrerInfo),
-        triggeringPrincipal: this.serializePrincipal(
-          aTriggeringPrincipal ||
-            Services.scriptSecurityManager.createNullPrincipal({})
-        ),
-        csp: aCsp ? this.serializeCSP(aCsp) : null,
-      },
-      historyIndex: sessionHistory.legacySHistory.requestedIndex,
-    });
     return false;
   },
 

@@ -69,12 +69,6 @@ def format_header():
     return FZF_HEADER.format(shortcuts=", ".join(shortcuts), t=terminal)
 
 
-def autodetect(path):
-    from mozperftest.script import ScriptInfo
-
-    return ScriptInfo.detect_type(path).name
-
-
 def select(test_objects):
     mozbuild_dir = Path(Path.home(), ".mozbuild")
     os.makedirs(str(mozbuild_dir), exist_ok=True)
@@ -84,9 +78,19 @@ def select(test_objects):
         f.write(json.dumps(test_objects))
 
     def _display(task):
-        flavor = autodetect(task["path"])
-        path = task["path"].replace(str(SRC_ROOT), "")
-        return f"[{flavor}] {path}"
+        from mozperftest.script import ScriptInfo
+
+        path = Path(task["path"])
+        script_info = ScriptInfo(str(path))
+        flavor = script_info.script_type.name
+        if flavor == "browsertime":
+            flavor = "bt"
+        tags = script_info.get("tags", [])
+
+        location = str(path.parent).replace(str(SRC_ROOT), "").strip("/")
+        if len(tags) > 0:
+            return f"[{flavor}][{','.join(tags)}] {path.name} in {location}"
+        return f"[{flavor}] {path.name} in {location}"
 
     candidate_tasks = [_display(t) for t in test_objects]
     fzf_bin = find_executable("fzf", str(Path(get_state_dir(), "fzf", "bin")))

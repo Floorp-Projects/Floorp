@@ -320,11 +320,11 @@ nsresult HTMLEditor::RefreshGrabberInternal() {
   if (!grabberStyledElement) {
     return NS_OK;
   }
-  rv = SetAnonymousElementPositionWithTransaction(
+  rv = SetAnonymousElementPositionWithoutTransaction(
       *grabberStyledElement, mPositionedObjectX + 12, mPositionedObjectY - 14);
   if (NS_FAILED(rv)) {
     NS_WARNING(
-        "HTMLEditor::SetAnonymousElementPositionWithTransaction() failed");
+        "HTMLEditor::SetAnonymousElementPositionWithoutTransaction() failed");
     return rv;
   }
   if (NS_WARN_IF(grabberStyledElement != mGrabber.get())) {
@@ -449,32 +449,30 @@ nsresult HTMLEditor::StartMoving() {
   if (RefPtr<nsStyledElement> positioningShadowStyledElement =
           nsStyledElement::FromNode(mPositioningShadow.get())) {
     nsresult rv;
-    rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(
+    rv = mCSSEditUtils->SetCSSPropertyPixelsWithoutTransaction(
         *positioningShadowStyledElement, *nsGkAtoms::width,
         mPositionedObjectWidth);
     if (rv == NS_ERROR_EDITOR_DESTROYED) {
       NS_WARNING(
-          "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::width) "
-          "destroyed the editor");
+          "CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction("
+          "nsGkAtoms::width) destroyed the editor");
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::width) "
-        "failed, but ignored");
-    rv = mCSSEditUtils->SetCSSPropertyPixelsWithTransaction(
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction("
+                         "nsGkAtoms::width) failed, but ignored");
+    rv = mCSSEditUtils->SetCSSPropertyPixelsWithoutTransaction(
         *positioningShadowStyledElement, *nsGkAtoms::height,
         mPositionedObjectHeight);
     if (rv == NS_ERROR_EDITOR_DESTROYED) {
       NS_WARNING(
-          "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::height)"
-          " destroyed the editor");
+          "CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction("
+          "nsGkAtoms::height) destroyed the editor");
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "CSSEditUtils::SetCSSPropertyPixelsWithTransaction(nsGkAtoms::height) "
-        "failed, but ignored");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction("
+                         "nsGkAtoms::height) failed, but ignored");
   }
 
   mIsMoving = true;

@@ -48,21 +48,6 @@ linux64-rust-nightly:
             '--target', 'i686-unknown-linux-gnu',
         ]
 
-linux64-rust-cross-1.41:
-    description: "rust repack with macos and windows cross support"
-    treeherder:
-        symbol: TL(rust-cross-1.41)
-    run:
-        arguments: [
-            '--channel', '1.41.1',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-apple-darwin',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-            '--target', 'aarch64-pc-windows-msvc',
-        ]
-
 linux64-rust-cross-1.43:
     description: "rust repack with macos and windows cross support"
     treeherder:

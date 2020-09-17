@@ -28,7 +28,6 @@ DIRS += [
     'styleeditor',
     'themes',
     'webconsole',
-    'whats-new',
 ]
 
 JAR_MANIFESTS += ['jar.mn']

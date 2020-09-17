@@ -316,9 +316,6 @@ def post_old_configure(raw_config):
     for k, v in iteritems(dict(raw_config['defines'])):
         set_old_configure_define(k, v)
 
-    set_old_configure_config('non_global_defines',
-                             raw_config['non_global_defines'])
-
 
 # Assuming no other option is declared after this function, handle the
 # env options that were injected by mozconfig_options by creating dummy

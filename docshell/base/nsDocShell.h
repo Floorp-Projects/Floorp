@@ -519,6 +519,10 @@ class nsDocShell final : public nsDocLoader,
 
   bool IsOSHE(nsISHEntry* aEntry) const { return mOSHE == aEntry; }
 
+  mozilla::dom::ChildSHistory* GetSessionHistory() {
+    return mBrowsingContext->GetChildSessionHistory();
+  }
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
@@ -636,6 +640,10 @@ class nsDocShell final : public nsDocLoader,
       const mozilla::Maybe<bool>& aScrollRestorationIsManual,
       nsIStructuredCloneContainer* aData, bool aURIWasModified);
 
+  nsresult AddChildSHEntry(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
+                           int32_t aChildOffset, uint32_t aLoadType,
+                           bool aCloneChildren);
+
   nsresult AddChildSHEntryToParent(nsISHEntry* aNewEntry, int32_t aChildOffset,
                                    bool aCloneChildren);
 
@@ -650,10 +658,6 @@ class nsDocShell final : public nsDocLoader,
   // the same as in docshell
   void SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
                                   const Maybe<nsISHEntry*>& aOSHE);
-
-  mozilla::dom::ChildSHistory* GetSessionHistory() {
-    return mBrowsingContext->GetChildSessionHistory();
-  }
 
   static nsresult ReloadDocument(
       nsDocShell* aDocShell, mozilla::dom::Document* aDocument,

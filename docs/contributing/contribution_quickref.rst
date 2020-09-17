@@ -82,8 +82,7 @@ To run it:
 
      $ ./mach run
 
-`More
-information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build/Linux_and_MacOS_build_preparation>`__
+:ref:`More information about Linux <Building Firefox On Linux>` / :ref:`More information about MacOS <Building Firefox On MacOS>`
 
 
 To write a patch

@@ -8179,6 +8179,7 @@ static bool WasmLoop(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static constexpr uint32_t DOM_OBJECT_SLOT = 0;
+static constexpr uint32_t DOM_OBJECT_SLOT2 = 1;
 
 static const JSClass* GetDomClass();
 
@@ -9590,6 +9591,17 @@ static bool dom_set_x(JSContext* cx, HandleObject obj, void* self,
   return true;
 }
 
+static bool dom_get_slot(JSContext* cx, HandleObject obj, void* self,
+                         JSJitGetterCallArgs args) {
+  MOZ_ASSERT(JS::GetClass(obj) == GetDomClass());
+  MOZ_ASSERT(self == DOM_PRIVATE_VALUE);
+
+  Value v = JS::GetReservedSlot(obj, DOM_OBJECT_SLOT2);
+  MOZ_ASSERT(v.toInt32() == 42);
+  args.rval().set(v);
+  return true;
+}
+
 static bool dom_get_global(JSContext* cx, HandleObject obj, void* self,
                            JSJitGetterCallArgs args) {
   MOZ_ASSERT(JS::GetClass(obj) == GetDomClass());
@@ -9661,6 +9673,22 @@ static const JSJitInfo dom_x_setterinfo = {
     0                           /* slotIndex */
 };
 
+static const JSJitInfo dom_slot_getterinfo = {
+    {(JSJitGetterOp)dom_get_slot},
+    {0}, /* protoID */
+    {0}, /* depth */
+    JSJitInfo::Getter,
+    JSJitInfo::AliasNone, /* aliasSet */
+    JSVAL_TYPE_INT32,     /* returnType */
+    false,                /* isInfallible. False in setters. */
+    true,                 /* isMovable */
+    true,                 /* isEliminatable */
+    true,                 /* isAlwaysInSlot */
+    false,                /* isLazilyCachedInSlot */
+    false,                /* isTypedMethod */
+    DOM_OBJECT_SLOT2      /* slotIndex */
+};
+
 // Note: this getter uses AliasEverything and is marked as fallible and
 // non-movable (1) to prevent Ion from getting too clever optimizing it and
 // (2) it's nice to have a few different kinds of getters in the shell.
@@ -9716,6 +9744,8 @@ static const JSPropertySpec dom_props[] = {
     JSPropertySpec::nativeAccessors("x", JSPROP_ENUMERATE, dom_genericGetter,
                                     &dom_x_getterinfo, dom_genericSetter,
                                     &dom_x_setterinfo),
+    JSPropertySpec::nativeAccessors("slot", JSPROP_ENUMERATE, dom_genericGetter,
+                                    &dom_slot_getterinfo),
     JSPropertySpec::nativeAccessors("global", JSPROP_ENUMERATE,
                                     dom_genericGetter, &dom_global_getterinfo,
                                     dom_genericSetter, &dom_global_setterinfo),
@@ -9804,6 +9834,7 @@ static bool dom_genericMethod(JSContext* cx, unsigned argc, JS::Value* vp) {
 static void InitDOMObject(HandleObject obj) {
   JS::SetReservedSlot(obj, DOM_OBJECT_SLOT,
                       PrivateValue(const_cast<void*>(DOM_PRIVATE_VALUE)));
+  JS::SetReservedSlot(obj, DOM_OBJECT_SLOT2, Int32Value(42));
 }
 
 static JSObject* GetDOMPrototype(JSContext* cx, JSObject* global) {

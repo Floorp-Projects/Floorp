@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   pprint: "chrome://marionette/content/format.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 this.print = {
   maxScaleValue: 2.0,

@@ -61,6 +61,7 @@ IPCResult WebGLParent::RecvDispatchCommands(Shmem&& rawShmem,
   auto view = webgl::RangeConsumerView{cmdsBytes};
 
   while (true) {
+    view.AlignTo(kUniversalAlignment);
     size_t id = 0;
     const auto status = view.ReadParam(&id);
     if (status != QueueStatus::kSuccess) break;

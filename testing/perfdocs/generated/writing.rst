@@ -1,5 +1,58 @@
-Writing a browsertime test
-==========================
+Performance scripts
+===================
+
+Performance scripts are programs that drive the browser to run a specific
+benchmark (like a page load or a lower level call) and produce metrics.
+
+We support two flavors right now in `perftest` (but it's easy to add
+new ones):
+
+- **xpcshell** a classical xpcshell test, turned into a performance test
+- **browsertime** a browsertime script, which runs a full browser and controls
+  it via a Selenium client.
+
+In order to qualify as performance tests, both flavors require metadata.
+
+For our supported flavors that are both Javascript modules, those are
+provided in a `perfMetadata` mapping variable in the module, or in
+the `module.exports` variable when using Node.
+
+This is the list of fields:
+
+- **owner**: name of the owner (person or team) [mandatory]
+- **author**: author of the test
+- **name**: name of the test [mandatory]
+- **description**: short description [mandatory]
+- **longDescription**: longer description
+- **options**: options used to run the test
+- **supportedBrowsers**: list of supported browsers (or "Any")
+- **supportedPlatforms**: list of supported platforms (or "Any")
+- **tags** a list of tags that describe the test
+
+Tests are registered using tests manifests and the **PERFTESTS_MANIFESTS**
+variable in `moz.build` files - it's good practice to name this file
+`perftest.ini`.
+
+Example of such a file: https://searchfox.org/mozilla-central/source/testing/performance/perftest.ini
+
+
+xpcshell
+--------
+
+`xpcshell` tests are plain xpcshell tests, with two more things:
+
+- the `perfMetadata` variable, as described in the previous section
+- calls to `info("perfMetrics", ...)` to send metrics to the `perftest` framework.
+
+Here's an example of such a metrics call::
+
+    # compute some speed metrics
+    let speed = 12345;
+    info("perfMetrics", { speed });
+
+
+Browsertime
+-----------
 
 With the browsertime layer, performance scenarios are Node modules that
 implement at least one async function that will be called by the framework once
@@ -78,16 +131,6 @@ Below is an example of a test that visits the BBC homepage and clicks on a link.
 Besides the `test` function, scripts can implement a `setUp` and a `tearDown` function to run
 some code before and after the test. Those functions will be called just once, whereas
 the `test` function might be called several times (through the `iterations` option)
-
-You must also provide metadata information about the test:
-
-- **owner**: name of the owner (person or team)
-- **name**: name of the test
-- **description**: short description
-- **longDescription**: longer description
-- **usage**: options used to run the test
-- **supportedBrowsers**: list of supported browsers (or "Any")
-- **supportedPlatforms**: list of supported platforms (or "Any")
 
 
 Hooks

@@ -38,6 +38,9 @@ class JSJitGetterCallArgs : protected JS::MutableHandle<JS::Value> {
   explicit JSJitGetterCallArgs(JS::Rooted<JS::Value>* rooted)
       : JS::MutableHandle<JS::Value>(rooted) {}
 
+  explicit JSJitGetterCallArgs(JS::MutableHandle<JS::Value> handle)
+      : JS::MutableHandle<JS::Value>(handle) {}
+
   JS::MutableHandle<JS::Value> rval() { return *this; }
 };
 

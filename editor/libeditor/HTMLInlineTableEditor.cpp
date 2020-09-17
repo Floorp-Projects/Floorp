@@ -427,11 +427,12 @@ nsresult HTMLEditor::RefreshInlineTableEditingUIInternal() {
     if (!buttonStyledElement) {
       return NS_OK;
     }
-    nsresult rv = SetAnonymousElementPositionWithTransaction(
+    nsresult rv = SetAnonymousElementPositionWithoutTransaction(
         *buttonStyledElement, aNewX, aNewY);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::SetAnonymousElementPositionWithTransaction() failed");
+          "HTMLEditor::SetAnonymousElementPositionWithoutTransaction() "
+          "failed");
       return rv;
     }
     return NS_WARN_IF(buttonStyledElement != aButtonElement.get())

@@ -848,8 +848,8 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       }
     }
 
-    // a '\n' between CJ characters is ignored
     if (pindex != (mFindBackward ? patLen : 0) && c != patc && !inWhitespace) {
+      // A non-matching '\n' between CJ characters is ignored
       if (c == '\n' && t2b && IS_CJ_CHAR(prevCharInMatch)) {
         int32_t nindex = findex + incr;
         if (mFindBackward ? (nindex >= 0) : (nindex < fragLen)) {
@@ -857,6 +857,11 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
             continue;
           }
         }
+      }
+
+      // We also ignore ZWSP and other default-ignorable characters.
+      if (IsDefaultIgnorable(c)) {
+        continue;
       }
     }
 

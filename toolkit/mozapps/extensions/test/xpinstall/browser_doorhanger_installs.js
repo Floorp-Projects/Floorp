@@ -373,6 +373,10 @@ var TESTS = [
   },
 
   async function test_blockedInstall() {
+    SpecialPowers.pushPrefEnv({
+      set: [["extensions.postDownloadThirdPartyPrompt", false]],
+    });
+
     let notificationPromise = waitForNotification("addon-install-blocked");
     let triggers = encodeURIComponent(
       JSON.stringify({
@@ -403,6 +407,7 @@ var TESTS = [
     let dialogPromise = waitForInstallDialog();
     // Click on Allow
     EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+
     // Notification should have changed to progress notification
     ok(PopupNotifications.isPanelOpen, "Notification should still be open");
     notification = panel.childNodes[0];
@@ -431,6 +436,105 @@ var TESTS = [
     await addon.uninstall();
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  },
+
+  async function test_blockedPostDownload() {
+    SpecialPowers.pushPrefEnv({
+      set: [["extensions.postDownloadThirdPartyPrompt", true]],
+    });
+
+    let notificationPromise = waitForNotification("addon-install-blocked");
+    let triggers = encodeURIComponent(
+      JSON.stringify({
+        XPI: "amosigned.xpi",
+      })
+    );
+    BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TESTROOT + "installtrigger.html?" + triggers
+    );
+    let panel = await notificationPromise;
+
+    let notification = panel.childNodes[0];
+    is(
+      notification.button.label,
+      "Continue to Installation",
+      "Should have seen the right button"
+    );
+    let message = panel.ownerDocument.getElementById(
+      "addon-install-blocked-message"
+    );
+    is(
+      message.textContent,
+      "You are attempting to install an add-on from example.com. Make sure you trust this site before continuing.",
+      "Should have seen the right message"
+    );
+
+    let dialogPromise = waitForInstallDialog();
+    // Click on Allow
+    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+
+    let installDialog = await dialogPromise;
+
+    notificationPromise = acceptAppMenuNotificationWhenShown(
+      "addon-installed",
+      "amosigned-xpi@tests.mozilla.org"
+    );
+
+    installDialog.button.click();
+    await notificationPromise;
+
+    let installs = await AddonManager.getAllInstalls();
+    is(installs.length, 0, "Should be no pending installs");
+
+    let addon = await AddonManager.getAddonByID(
+      "amosigned-xpi@tests.mozilla.org"
+    );
+    await addon.uninstall();
+
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    await SpecialPowers.popPrefEnv();
+  },
+
+  async function test_recommendedPostDownload() {
+    // recommended.xpi is dev root signed
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ["extensions.postDownloadThirdPartyPrompt", true],
+        ["xpinstall.signatures.dev-root", true],
+      ],
+    });
+
+    let triggers = encodeURIComponent(
+      JSON.stringify({
+        XPI: "recommended.xpi",
+      })
+    );
+    BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TESTROOT + "installtrigger.html?" + triggers
+    );
+
+    let installDialog = await waitForInstallDialog();
+
+    let notificationPromise = acceptAppMenuNotificationWhenShown(
+      "addon-installed",
+      "recommended-xpi@tests.mozilla.orgs"
+    );
+
+    installDialog.button.click();
+    await notificationPromise;
+
+    let installs = await AddonManager.getAllInstalls();
+    is(installs.length, 0, "Should be no pending installs");
+
+    let addon = await AddonManager.getAddonByID(
+      "recommended-xpi@tests.mozilla.orgs"
+    );
+    await addon.uninstall();
+
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    await SpecialPowers.popPrefEnv();
   },
 
   async function test_permaBlockInstall() {

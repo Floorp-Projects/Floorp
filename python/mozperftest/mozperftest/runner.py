@@ -88,7 +88,7 @@ def _setup_path():
             sys.path.insert(0, str(path))
 
 
-def run_tests(mach_cmd, **kwargs):
+def run_tests(mach_cmd, kwargs, client_args):
     """This tests runner can be used directly via main or via Mach.
 
     When the --on-try option is used, the test runner looks at the
@@ -106,8 +106,10 @@ def run_tests(mach_cmd, **kwargs):
     from mozperftest.utils import build_test_list
     from mozperftest import MachEnvironment, Metadata
     from mozperftest.hooks import Hooks
+    from mozperftest.script import ScriptInfo
 
-    hooks = Hooks(mach_cmd, kwargs.pop("hooks", None))
+    hooks_file = kwargs.pop("hooks", None)
+    hooks = Hooks(mach_cmd, hooks_file)
     verbose = kwargs.get("verbose", False)
     log_level = logging.DEBUG if verbose else logging.INFO
 
@@ -123,33 +125,39 @@ def run_tests(mach_cmd, **kwargs):
 
     try:
         hooks.run("before_iterations", kwargs)
+        tests, tmp_dir = build_test_list(kwargs["tests"])
 
-        for iteration in range(kwargs.get("test_iterations", 1)):
-            flavor = kwargs["flavor"]
-            kwargs["tests"], tmp_dir = build_test_list(
-                kwargs["tests"], randomized=flavor != "doc"
-            )
-            try:
-                # XXX this doc is specific to browsertime scripts
-                # maybe we want to move it
-                if flavor == "doc":
-                    from mozperftest.script import ScriptInfo
+        for test in tests:
+            script = ScriptInfo(test)
 
-                    for test in kwargs["tests"]:
-                        print(ScriptInfo(test))
-                    return
+            # update the arguments with options found in the script, if any
+            args = script.update_args(**client_args)
+            # XXX this should be the default pool for update_args
+            for key, value in kwargs.items():
+                if key not in args:
+                    args[key] = value
 
-                env = MachEnvironment(mach_cmd, hooks=hooks, **kwargs)
-                metadata = Metadata(mach_cmd, env, flavor)
-                hooks.run("before_runs", env)
+            # update the hooks, or use a copy of the general one
+            script_hooks = Hooks(mach_cmd, args.pop("hooks", hooks_file))
+
+            flavor = args["flavor"]
+            if flavor == "doc":
+                print(script)
+                continue
+
+            for iteration in range(args.get("test_iterations", 1)):
                 try:
-                    with env.frozen() as e:
-                        e.run(metadata)
+                    env = MachEnvironment(mach_cmd, hooks=script_hooks, **args)
+                    metadata = Metadata(mach_cmd, env, flavor, script)
+                    script_hooks.run("before_runs", env)
+                    try:
+                        with env.frozen() as e:
+                            e.run(metadata)
+                    finally:
+                        script_hooks.run("after_runs", env)
                 finally:
-                    hooks.run("after_runs", env)
-            finally:
-                if tmp_dir is not None:
-                    shutil.rmtree(tmp_dir)
+                    if tmp_dir is not None:
+                        shutil.rmtree(tmp_dir)
     finally:
         hooks.cleanup()
 
@@ -195,8 +203,9 @@ def main(argv=sys.argv[1:]):
 
     mach_cmd = MachCommandBase(config)
     parser = PerftestArgumentParser(description="vanilla perftest")
-    args = parser.parse_args(args=argv)
-    run_tests(mach_cmd, **dict(args._get_kwargs()))
+    args = dict(vars(parser.parse_args(args=argv)))
+    user_args = parser.get_user_args(args)
+    run_tests(mach_cmd, args, user_args)
 
 
 if __name__ == "__main__":

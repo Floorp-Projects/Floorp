@@ -26,6 +26,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Region: "resource://gre/modules/Region.jsm",
+});
+
 // We only show the private search banner once per browser session.
 let gSearchBannerShownThisSession;
 
@@ -142,6 +146,14 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
       case "SearchBannerDismissed": {
         Services.prefs.setIntPref(SHOWN_PREF, MAX_SEARCH_BANNER_SHOW_COUNT);
         break;
+      }
+      case "ShouldShowVPNPromo": {
+        const homeRegion = Region.home || "";
+        const currentRegion = Region.current || "";
+        return (
+          homeRegion.toLowerCase() !== "cn" &&
+          currentRegion.toLowerCase() !== "cn"
+        );
       }
     }
 

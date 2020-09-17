@@ -10,7 +10,8 @@
 #include "gfxPlatformFontList.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/mozalloc.h"
-#include "nsAutoRef.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
 
 #include <fontconfig/fontconfig.h>
@@ -27,21 +28,34 @@ namespace mozilla {
 namespace dom {
 class SystemFontListEntry;
 };
-};  // namespace mozilla
 
 template <>
-class nsAutoRefTraits<FcPattern> : public nsPointerRefTraits<FcPattern> {
+class RefPtrTraits<FcPattern> {
  public:
   static void Release(FcPattern* ptr) { FcPatternDestroy(ptr); }
   static void AddRef(FcPattern* ptr) { FcPatternReference(ptr); }
 };
 
 template <>
-class nsAutoRefTraits<FcConfig> : public nsPointerRefTraits<FcConfig> {
+class RefPtrTraits<FcConfig> {
  public:
   static void Release(FcConfig* ptr) { FcConfigDestroy(ptr); }
   static void AddRef(FcConfig* ptr) { FcConfigReference(ptr); }
 };
+
+template <>
+class DefaultDelete<FcFontSet> {
+ public:
+  void operator()(FcFontSet* aPtr) { FcFontSetDestroy(aPtr); }
+};
+
+template <>
+class DefaultDelete<FcObjectSet> {
+ public:
+  void operator()(FcObjectSet* aPtr) { FcObjectSetDestroy(aPtr); }
+};
+
+};  // namespace mozilla
 
 // The names for the font entry and font classes should really
 // the common 'Fc' abbreviation but the gfxPangoFontGroup code already
@@ -100,7 +114,7 @@ class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
                                  nsTArray<uint8_t>& aBuffer) override;
 
   // pattern for a single face of a family
-  nsCountedRef<FcPattern> mFontPattern;
+  RefPtr<FcPattern> mFontPattern;
 
   // FTFace - initialized when needed
   RefPtr<mozilla::gfx::SharedFTFace> mFTFace;
@@ -185,7 +199,7 @@ class gfxFontconfigFontFamily final : public gfxFontFamily {
   // helper for FilterForFontList
   bool SupportsLangGroup(nsAtom* aLangGroup) const;
 
-  nsTArray<nsCountedRef<FcPattern>> mFontPatterns;
+  nsTArray<RefPtr<FcPattern>> mFontPatterns;
 
   bool mContainsAppFonts;
   bool mHasNonScalableFaces;
@@ -211,7 +225,7 @@ class gfxFontconfigFont final : public gfxFT2FontBase {
  private:
   virtual ~gfxFontconfigFont();
 
-  nsCountedRef<FcPattern> mPattern;
+  RefPtr<FcPattern> mPattern;
 };
 
 class gfxFcPlatformFontList final : public gfxPlatformFontList {
@@ -336,8 +350,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
 
   // to avoid enumerating all fonts, maintain a mapping of local font
   // names to family
-  nsBaseHashtable<nsCStringHashKey, nsCountedRef<FcPattern>, FcPattern*>
-      mLocalNames;
+  nsBaseHashtable<nsCStringHashKey, RefPtr<FcPattern>, FcPattern*> mLocalNames;
 
   // caching generic/lang ==> font family list
   nsClassHashtable<nsCStringHashKey, PrefFontList> mGenericMappings;
@@ -352,7 +365,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
       mFcSubstituteCache;
 
   nsCOMPtr<nsITimer> mCheckFontUpdatesTimer;
-  nsCountedRef<FcConfig> mLastConfig;
+  RefPtr<FcConfig> mLastConfig;
 
   // By default, font prefs under Linux are set to simply lookup
   // via fontconfig the appropriate font for serif/sans-serif/monospace.

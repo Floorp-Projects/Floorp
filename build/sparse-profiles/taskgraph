@@ -65,6 +65,7 @@ path:.cron.yml
 
 # for the wrench-deps toolchain task
 path:gfx/wr/Cargo.lock
+path:gfx/wr/ci-scripts/
 
 # for the wgpu-deps toolchain task
 path:gfx/wgpu/Cargo.lock

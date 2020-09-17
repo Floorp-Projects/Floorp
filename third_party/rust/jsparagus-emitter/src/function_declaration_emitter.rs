@@ -15,7 +15,7 @@ impl LazyFunctionEmitter {
     pub fn emit(self, emitter: &mut AstEmitter) -> GCThingIndex {
         emitter
             .compilation_info
-            .functions
+            .scripts
             .get_mut(self.stencil_index)
             .set_function_emitted();
         emitter.emit.get_function_gcthing_index(self.stencil_index)

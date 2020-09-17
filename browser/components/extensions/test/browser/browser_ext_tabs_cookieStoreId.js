@@ -244,3 +244,30 @@ add_task(async function userContext_disabled() {
   await extension.unload();
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function tabs_query_cookiestoreid_nocookiepermission() {
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      let tab = await browser.tabs.create({});
+      browser.test.assertEq(
+        "firefox-default",
+        tab.cookieStoreId,
+        "Expecting cookieStoreId for new tab"
+      );
+      let query = await browser.tabs.query({
+        index: tab.index,
+        cookieStoreId: tab.cookieStoreId,
+      });
+      browser.test.assertEq(
+        "firefox-default",
+        query[0].cookieStoreId,
+        "Expecting cookieStoreId for new tab through browser.tabs.query"
+      );
+      await browser.tabs.remove(tab.id);
+      browser.test.sendMessage("done");
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});

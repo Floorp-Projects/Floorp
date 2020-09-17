@@ -457,9 +457,13 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
     requests Glean to send the collected data.
     """
 
+    from mach.telemetry import MACH_METRICS_PATH
     from mozbuild.telemetry import get_cpu_brand, get_psutil_stats
 
-    system_metrics = telemetry.metrics.mach.system
+    mach_metrics = telemetry.metrics(MACH_METRICS_PATH)
+    mach_metrics.mach.duration.stop()
+    mach_metrics.mach.success.set(success)
+    system_metrics = mach_metrics.mach.system
     system_metrics.cpu_brand.set(get_cpu_brand())
 
     has_psutil, logical_cores, physical_cores, memory_total = get_psutil_stats()
@@ -470,9 +474,6 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
         if memory_total is not None:
             system_metrics.memory.accumulate(int(
                 math.ceil(float(memory_total) / (1024 * 1024 * 1024))))
-
-    telemetry.metrics.mach.duration.stop()
-    telemetry.metrics.mach.success.set(success)
     telemetry.submit(is_bootstrap)
 
 

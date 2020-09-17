@@ -8,6 +8,9 @@
 var EXPORTED_SYMBOLS = ["AboutReaderParent"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -18,6 +21,13 @@ ChromeUtils.defineModuleGetter(
   this,
   "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "sessionHistoryInParent",
+  "fission.sessionHistoryInParent",
+  false
 );
 
 const gStringBundle = Services.strings.createBundle(
@@ -95,8 +105,13 @@ class AboutReaderParent extends JSWindowActorParent {
 
   async receiveMessage(message) {
     switch (message.name) {
-      case "Reader:CacheArticle": {
+      case "Reader:EnterReaderMode": {
         gCachedArticles.set(message.data.url, message.data);
+        this.enterReaderMode(message.data.url);
+        break;
+      }
+      case "Reader:LeaveReaderMode": {
+        this.leaveReaderMode();
         break;
       }
       case "Reader:GetCachedArticle": {
@@ -244,6 +259,43 @@ class AboutReaderParent extends JSWindowActorParent {
         actor.sendAsyncMessage("Reader:ToggleReaderMode", {});
       }
     }
+  }
+
+  hasReaderModeEntryAtOffset(url, offset) {
+    if (sessionHistoryInParent) {
+      let browsingContext = this.browsingContext;
+      if (browsingContext.childSessionHistory.canGo(offset)) {
+        let shistory = browsingContext.sessionHistory;
+        let nextEntry = shistory.getEntryAtIndex(shistory.index + offset);
+        let nextURL = nextEntry.URI.spec;
+        return nextURL && (nextURL == url || !url);
+      }
+    }
+
+    return false;
+  }
+
+  enterReaderMode(url) {
+    let readerURL = "about:reader?url=" + encodeURIComponent(url);
+    if (this.hasReaderModeEntryAtOffset(readerURL, +1)) {
+      let browsingContext = this.browsingContext;
+      browsingContext.childSessionHistory.go(+1);
+      return;
+    }
+
+    this.sendAsyncMessage("Reader:EnterReaderMode", {});
+  }
+
+  leaveReaderMode() {
+    let browsingContext = this.browsingContext;
+    let url = browsingContext.currentWindowGlobal.documentURI.spec;
+    let originalURL = ReaderMode.getOriginalUrl(url);
+    if (this.hasReaderModeEntryAtOffset(originalURL, -1)) {
+      browsingContext.childSessionHistory.go(-1);
+      return;
+    }
+
+    this.sendAsyncMessage("Reader:LeaveReaderMode", {});
   }
 
   /**

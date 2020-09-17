@@ -33,6 +33,8 @@ pref("extensions.checkCompatibility.temporaryThemeOverride_minAppVersion", "29.0
 
 pref("extensions.webextPermissionPrompts", true);
 pref("extensions.webextOptionalPermissionPrompts", true);
+// If enabled, install origin permission verification happens after addons are downloaded.
+pref("extensions.postDownloadThirdPartyPrompt", true);
 
 // Preferences for AMO integration
 pref("extensions.getAddons.cache.enabled", true);
@@ -440,9 +442,7 @@ pref("browser.search.widget.inNavBar", false);
 
 // Enables display of the options for the user using a separate default search
 // engine in private browsing mode.
-#ifdef NIGHTLY_BUILD
-  pref("browser.search.separatePrivateDefault.ui.enabled", true);
-#endif
+pref("browser.search.separatePrivateDefault.ui.enabled", false);
 // The maximum amount of times the private default banner is shown.
 pref("browser.search.separatePrivateDefault.ui.banner.max", 0);
 
@@ -2257,12 +2257,8 @@ pref("devtools.netmonitor.features.webSockets", true);
 // netmonitor audit
 pref("devtools.netmonitor.audits.slow", 500);
 
-// Enable the EventSource Inspector in Nightly.
-#if defined(NIGHTLY_BUILD)
-  pref("devtools.netmonitor.features.serverSentEvents", true);
-#else
-  pref("devtools.netmonitor.features.serverSentEvents", false);
-#endif
+// Enable the EventSource Inspector
+pref("devtools.netmonitor.features.serverSentEvents", true);
 
 // Enable the Storage Inspector
 pref("devtools.storage.enabled", true);
@@ -2453,13 +2449,6 @@ pref("devtools.debugger.features.async-live-stacks", false);
 // This is currently not exposed by any UI to avoid making
 // about:devtools-toolbox tabs unusable by mistake.
 pref("devtools.popup.disable_autohide", false);
-
-// Visibility switch preference for the WhatsNew panel.
-pref("devtools.whatsnew.enabled", true);
-
-// Temporary preference to fully disable the WhatsNew panel on any target.
-// Should be removed in https://bugzilla.mozilla.org/show_bug.cgi?id=1596037
-pref("devtools.whatsnew.feature-enabled", true);
 
 // Part of the Overflow Debugging project
 // Here's the meta bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1529280

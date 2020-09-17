@@ -87,7 +87,7 @@ interface nsISHistory: nsISupports
    * @throws                  <code>NS_ERROR_FAILURE</code> numEntries is
    *                          invalid or out of bounds with the size of history.
    */
-  void PurgeHistory(in long aNumEntries);
+  void purgeHistory(in long aNumEntries);
 
   /**
    * Called to register a listener for the session history component.
@@ -255,7 +255,7 @@ interface nsISHistory: nsISupports
    * Collect docshellIDs from aEntry's children and remove those
    * entries from history.
    *
-   * @param aEntry           Children docshellID's will be collected from 
+   * @param aEntry           Children docshellID's will be collected from
    *                         this entry and passed to RemoveEntries as aIDs.
   */
   [noscript, notxpcom]
@@ -265,7 +265,7 @@ interface nsISHistory: nsISupports
   void Reload(in unsigned long aReloadFlags);
 
   [notxpcom] void EnsureCorrectEntryAtCurrIndex(in nsISHEntry aEntry);
-  
+
   [notxpcom] void EvictContentViewersOrReplaceEntry(in nsISHEntry aNewSHEntry, in bool aReplace);
 
   nsISHEntry createEntry();

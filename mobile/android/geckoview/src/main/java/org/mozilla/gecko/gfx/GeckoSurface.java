@@ -64,12 +64,22 @@ public final class GeckoSurface extends Surface {
     @Override
     public void writeToParcel(final Parcel out, final int flags) {
         super.writeToParcel(out, flags);
+        if ((flags & Parcelable.PARCELABLE_WRITE_RETURN_VALUE) == 0) {
+            // GeckoSurface can be passed across processes as a return value or
+            // an argument, and should always tranfers its ownership (move) to
+            // the receiver of parcel. On the other hand, Surface is moved only
+            // when passed as a return value and releases itself when corresponding
+            // write flags is provided. (See Surface.writeToParcel().)
+            // The superclass method must be called here to ensure the local instance
+            // is truely forgotten.
+            super.release();
+        }
+        mOwned = false;
+
         out.writeInt(mHandle);
         out.writeByte((byte) (mIsSingleBuffer ? 1 : 0));
         out.writeByte((byte) (mIsAvailable ? 1 : 0));
         out.writeInt(mMyPid);
-
-        mOwned = false;
     }
 
     @Override

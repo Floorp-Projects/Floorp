@@ -100,6 +100,10 @@ class CSSEditUtils final {
   }
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetCSSPropertyPixelsWithTransaction(
       nsStyledElement& aStyledElement, nsAtom& aProperty, int32_t aIntValue);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SetCSSPropertyPixelsWithoutTransaction(nsStyledElement& aStyledElement,
+                                         const nsAtom& aProperty,
+                                         int32_t aIntValue);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSPropertyWithTransaction(
       nsStyledElement& aStyledElement, nsAtom& aProperty,
       const nsAString& aPropertyValue) {

@@ -98,4 +98,13 @@
 // override
 - (NSString*)moxLabel;
 
+// override
+- (NSString*)moxStringForRange:(NSValue*)range;
+
+// override
+- (NSAttributedString*)moxAttributedStringForRange:(NSValue*)range;
+
+// override
+- (NSValue*)moxBoundsForRange:(NSValue*)range;
+
 @end

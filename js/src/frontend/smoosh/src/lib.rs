@@ -347,8 +347,7 @@ pub struct SmooshResult {
     scopes: CVec<SmooshScopeData>,
     regexps: CVec<SmooshRegExpItem>,
 
-    top_level_script: SmooshScriptStencil,
-    functions: CVec<SmooshScriptStencil>,
+    scripts: CVec<SmooshScriptStencil>,
     script_data_list: CVec<SmooshImmutableScriptData>,
 
     all_atoms: *mut c_void,
@@ -376,27 +375,7 @@ impl SmooshResult {
             scopes: CVec::empty(),
             regexps: CVec::empty(),
 
-            top_level_script: SmooshScriptStencil {
-                immutable_flags: 0,
-                gcthings: CVec::empty(),
-                immutable_script_data: COption::None,
-                extent: SmooshSourceExtent {
-                    source_start: 0,
-                    source_end: 0,
-                    to_string_start: 0,
-                    to_string_end: 0,
-                    lineno: 0,
-                    column: 0,
-                },
-                fun_name: COption::None,
-                fun_nargs: 0,
-                fun_flags: 0,
-                lazy_function_enclosing_scope_index: COption::None,
-                is_standalone_function: false,
-                was_function_emitted: false,
-                is_singleton_function: false,
-            },
-            functions: CVec::empty(),
+            scripts: CVec::empty(),
             script_data_list: CVec::empty(),
 
             all_atoms: std::ptr::null_mut(),
@@ -533,11 +512,9 @@ pub unsafe extern "C" fn smoosh_run(
             let scopes = convert_scopes(result.scopes, &mut scope_index_map);
             let regexps = CVec::from(result.regexps.into_iter().map(|x| x.into()).collect());
 
-            let top_level_script = convert_script(result.top_level_script, &scope_index_map);
-
-            let functions = CVec::from(
+            let scripts = CVec::from(
                 result
-                    .functions
+                    .scripts
                     .into_iter()
                     .map(|x| convert_script(x, &scope_index_map))
                     .collect(),
@@ -571,8 +548,7 @@ pub unsafe extern "C" fn smoosh_run(
                 scopes,
                 regexps,
 
-                top_level_script,
-                functions,
+                scripts,
                 script_data_list,
 
                 all_atoms: opaque_all_atoms,
@@ -721,9 +697,7 @@ pub unsafe extern "C" fn smoosh_free(result: SmooshResult) {
     let _ = result.scopes.into();
     let _ = result.regexps.into();
 
-    free_script(result.top_level_script);
-
-    for fun in result.functions.into() {
+    for fun in result.scripts.into() {
         free_script(fun);
     }
 

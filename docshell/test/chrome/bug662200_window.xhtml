@@ -14,7 +14,7 @@
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
   <script type="application/javascript"><![CDATA[
     Services.prefs.setBoolPref("browser.navigation.requireUserInteraction", false);
-  
+
     // Define the generator-iterator for the tests.
     var tests = testIterator();
 
@@ -26,7 +26,7 @@
     }
 
     ////
-    // Generator function for test steps for bug 662200:  
+    // Generator function for test steps for bug 662200:
     // Description goes here.
     //
     function* testIterator()
@@ -40,13 +40,13 @@
       };
       doPageNavigation(navData);
       yield undefined;
-      
+
       // Load the second test page.
       navData = {
         eventsToListenFor: ["pageshow", "pagehide"],
-        expectedEvents: [ {type: "pagehide", 
+        expectedEvents: [ {type: "pagehide",
                            title: "A"},
-                          {type: "pageshow", 
+                          {type: "pageshow",
                            title: "B"} ],
         onNavComplete: nextTest
       }
@@ -61,9 +61,9 @@
       // Load the third test page.
       navData = {
         eventsToListenFor: ["pageshow", "pagehide"],
-        expectedEvents: [ {type: "pagehide", 
+        expectedEvents: [ {type: "pagehide",
                            title: "B"},
-                          {type: "pageshow", 
+                          {type: "pageshow",
                            title: "C"} ],
         onNavComplete: nextTest
       };
@@ -74,14 +74,14 @@
                            0, 0, 0, 0, 0, false, false, false, false, 0, null);
       link.dispatchEvent(event);
       yield undefined;
-      
+
       // Go back.
       navData = {
         back: true,
         eventsToListenFor: ["pageshow", "pagehide"],
-        expectedEvents: [ {type: "pagehide", 
+        expectedEvents: [ {type: "pagehide",
                            title: "C"},
-                          {type: "pageshow", 
+                          {type: "pageshow",
                            title: "B"} ],
         onNavComplete: nextTest
       };
@@ -89,14 +89,19 @@
       yield undefined;
 
       var docshell = TestWindow.getWindow().docShell;
-      var shistory = docshell.sessionHistory.legacySHistory;
+      let shistory;
+      if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+        shistory = docshell.browsingContext.sessionHistory;
+      } else {
+        shistory = docshell.sessionHistory.legacySHistory;
+      }
 
       // Reload.
       navData = {
         eventsToListenFor: ["pageshow", "pagehide"],
-        expectedEvents: [ {type: "pagehide", 
+        expectedEvents: [ {type: "pagehide",
                            title: "B"},
-                          {type: "pageshow", 
+                          {type: "pageshow",
                            title: "B"} ],
         onNavComplete: nextTest
       };
@@ -117,7 +122,7 @@
       // Tell the framework the test is finished.
       finish();
     }
-    
+
   ]]></script>
 
   <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>

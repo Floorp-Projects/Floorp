@@ -275,6 +275,8 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
       mMapLock("APZCMapLock"),
       mRetainedTouchIdentifier(-1),
       mInScrollbarTouchDrag(false),
+      mCurrentMousePosition(ScreenPoint(),
+                            "APZCTreeManager::mCurrentMousePosition"),
       mApzcTreeLog("apzctree"),
       mTestDataLock("APZTestDataLock"),
       mDPI(160.0) {
@@ -1483,7 +1485,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       MouseInput& mouseInput = aEvent.AsMouseInput();
       mouseInput.mHandledByAPZ = true;
 
-      mCurrentMousePosition = mouseInput.mOrigin;
+      SetCurrentMousePosition(mouseInput.mOrigin);
 
       bool startsDrag = DragTracker::StartsDrag(mouseInput);
       if (startsDrag) {
@@ -3332,7 +3334,13 @@ ParentLayerToScreenMatrix4x4 APZCTreeManager::GetApzcToGeckoTransform(
 }
 
 ScreenPoint APZCTreeManager::GetCurrentMousePosition() const {
-  return mCurrentMousePosition;
+  auto pos = mCurrentMousePosition.Lock();
+  return pos.ref();
+}
+
+void APZCTreeManager::SetCurrentMousePosition(const ScreenPoint& aNewPos) {
+  auto pos = mCurrentMousePosition.Lock();
+  pos.ref() = aNewPos;
 }
 
 already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetZoomableTarget(
