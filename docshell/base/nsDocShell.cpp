@@ -8656,6 +8656,12 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   // buttons.
   SetHistoryEntryAndUpdateBC(Some<nsISHEntry*>(aLoadState->SHEntry()),
                              Nothing());
+  UniquePtr<mozilla::dom::LoadingSessionHistoryInfo> oldLoadingEntry;
+  mLoadingEntry.swap(oldLoadingEntry);
+  if (aLoadState->GetLoadingSessionHistoryInfo()) {
+    mLoadingEntry = MakeUnique<LoadingSessionHistoryInfo>(
+        *aLoadState->GetLoadingSessionHistoryInfo());
+  }
 
   // Set the doc's URI according to the new history entry's URI.
   RefPtr<Document> doc = GetDocument();
@@ -8787,6 +8793,26 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       SetCacheKeyOnHistoryEntry(mOSHE, cacheKey);
     }
   }
+  if (StaticPrefs::fission_sessionHistoryInParent() && mLoadingEntry) {
+    mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
+    nsID changeID = {};
+    if (XRE_IsParentProcess()) {
+      mBrowsingContext->Canonical()->SessionHistoryCommit(
+          mLoadingEntry->mLoadId, changeID);
+    } else {
+      RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
+      if (rootSH) {
+        // This is a load from session history, so we can update
+        // index and length immediately.
+        rootSH->SetIndexAndLength(mLoadingEntry->mRequestedIndex,
+                                  mLoadingEntry->mSessionHistoryLength,
+                                  changeID);
+      }
+      ContentChild* cc = ContentChild::GetSingleton();
+      mozilla::Unused << cc->SendHistoryCommit(
+          mBrowsingContext, mLoadingEntry->mLoadId, changeID);
+    }
+  }
 
   /* Set the title for the SH entry for this target url so that
    * SH menus in go/back/forward buttons won't be empty for this.
@@ -8801,6 +8827,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
    * while same document navigation was initiated.
    */
   SetHistoryEntryAndUpdateBC(Some<nsISHEntry*>(oldLSHE), Nothing());
+  mLoadingEntry.swap(oldLoadingEntry);
 
   /* Set the title for the Global History entry for this anchor url.
    */
