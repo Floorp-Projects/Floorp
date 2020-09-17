@@ -349,12 +349,22 @@ add_task(async function nonHeuristicAliases() {
     window,
     tokenEngines.length - 1
   );
-  // Key down to select each result in turn.  The urlbar value should be set to
-  // each alias, and each should be highlighted.
+  // Key down to select each result in turn.  The urlbar should preview search
+  // mode for each engine.
   for (let { tokenAliases } of tokenEngines) {
     let alias = tokenAliases[0];
+    let engineName = (await UrlbarSearchUtils.engineForAlias(alias)).name;
     EventUtils.synthesizeKey("KEY_ArrowDown");
-    assertHighlighted(true, alias);
+    let expectedSearchMode = {
+      engineName,
+      entry: "keywordoffer",
+      isPreview: true,
+    };
+    if (UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)) {
+      expectedSearchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
+    }
+    await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);
+    Assert.ok(!gURLBar.value, "The Urlbar should be empty.");
   }
 
   await UrlbarTestUtils.promisePopupClose(window, () =>
