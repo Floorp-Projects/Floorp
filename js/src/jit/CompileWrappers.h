@@ -42,6 +42,7 @@ class CompileRuntime {
   const PropertyName* emptyString();
   const StaticStrings& staticStrings();
   const WellKnownSymbols& wellKnownSymbols();
+  const JSClass* maybeWindowProxyClass();
 
   const void* mainContextPtr();
   uint32_t* addressOfTenuredAllocCount();

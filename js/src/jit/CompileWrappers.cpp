@@ -57,6 +57,10 @@ const WellKnownSymbols& CompileRuntime::wellKnownSymbols() {
   return *runtime()->wellKnownSymbols;
 }
 
+const JSClass* CompileRuntime::maybeWindowProxyClass() {
+  return runtime()->maybeWindowProxyClass();
+}
+
 const void* CompileRuntime::mainContextPtr() {
   return runtime()->mainContextFromAnyThread();
 }

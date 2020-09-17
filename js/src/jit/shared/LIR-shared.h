@@ -8299,6 +8299,18 @@ class LGuardTagNotEqual : public LInstructionHelper<0, 2, 0> {
   const LAllocation* rhs() { return getOperand(1); }
 };
 
+class LLoadWrapperTarget : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(LoadWrapperTarget)
+
+  explicit LLoadWrapperTarget(const LAllocation& object)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, object);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+};
+
 template <size_t NumDefs>
 class LIonToWasmCallBase : public LVariadicInstruction<NumDefs, 2> {
   using Base = LVariadicInstruction<NumDefs, 2>;
