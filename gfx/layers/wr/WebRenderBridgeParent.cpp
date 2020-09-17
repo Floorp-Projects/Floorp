@@ -1552,10 +1552,9 @@ void WebRenderBridgeParent::MaybeCaptureScreenPixels() {
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
     PTextureParent* aTexture, bool* aNeedsYFlip) {
   *aNeedsYFlip = false;
-  if (mDestroyed) {
+  if (mDestroyed || mPaused) {
     return IPC_OK();
   }
-  MOZ_ASSERT(!mPaused);
 
   // This function should only get called in the root WRBP. If this function
   // gets called in a non-root WRBP, we will set mForceRendering in this WRBP
