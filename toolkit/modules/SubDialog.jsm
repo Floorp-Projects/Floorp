@@ -922,6 +922,15 @@ class SubDialogManager {
   }
 
   /**
+   * Hides the dialog stack for a specific browser.
+   * @param aBrowser - The browser associated with the tab dialog.
+   */
+  hideDialog(aBrowser) {
+    aBrowser.removeAttribute("tabDialogShowing");
+    this._dialogStack.hidden = true;
+  }
+
+  /**
    * Abort open dialogs.
    * @param {function} [filterFn] - Function which should return true for
    * dialogs that should be aborted and false for dialogs that should remain
@@ -992,6 +1001,7 @@ class SubDialogManager {
       this._topDialog._prevActiveElement?.focus();
       this._topDialog._overlay.setAttribute("topmost", true);
       this._topDialog._addDialogEventListeners(false);
+      this._dialogStack.hidden = false;
     } else {
       // We have closed the last dialog, do cleanup.
       this._topLevelPrevActiveElement.focus();
