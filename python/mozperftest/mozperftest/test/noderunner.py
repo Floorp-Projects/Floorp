@@ -25,7 +25,6 @@ class NodeRunner(Layer):
 
     def setup(self):
         """Install the Node.js package."""
-        self.mach_cmd.activate_virtualenv()
         self.verify_node_install()
 
     def node(self, args):
