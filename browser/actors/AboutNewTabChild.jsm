@@ -13,6 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { ExperimentAPI } = ChromeUtils.import(
+  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -23,7 +26,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "SEPARATE_ABOUT_WELCOME",
+  "isAboutWelcomePrefEnabled",
   "browser.aboutwelcome.enabled",
   false
 );
@@ -34,7 +37,9 @@ class AboutNewTabChild extends JSWindowActorChild {
       // If the separate about:welcome page is enabled, we can skip all of this,
       // since that mode doesn't load any of the Activity Stream bits.
       if (
-        SEPARATE_ABOUT_WELCOME &&
+        isAboutWelcomePrefEnabled &&
+        // about:welcome should be enabled by default if no experiment exists.
+        ExperimentAPI.isFeatureEnabled("aboutwelcome", true) &&
         this.contentWindow.location.pathname.includes("welcome")
       ) {
         return;
