@@ -654,15 +654,14 @@ Result<mozilla::Ok, nsresult> CollectEachFileEntry(
   AssertIsOnIOThread();
 
   QM_TRY_VAR(const auto entries,
-             ToResultInvoke<nsCOMPtr<nsIDirectoryEnumerator>>(
-                 std::mem_fn(&nsIFile::GetDirectoryEntries), aDirectory));
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
+                                        aDirectory, GetDirectoryEntries));
 
   return CollectEach(
       [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
-        QM_TRY_VAR(
-            const auto file,
-            ToResultInvoke<nsCOMPtr<nsIFile>>(
-                std::mem_fn(&nsIDirectoryEnumerator::GetNextFile), entries));
+        QM_TRY_VAR(const auto file,
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
+                                              GetNextFile));
 
         return file;
       },
@@ -2576,8 +2575,8 @@ nsresult CreateDirectoryMetadata(nsIFile& aDirectory, int64_t aTimestamp,
 
   MOZ_ASSERT(groupPrefix == originPrefix);
 
-  QM_TRY_VAR(auto file, ToResultInvoke<nsCOMPtr<nsIFile>>(
-                            std::mem_fn(&nsIFile::Clone), &aDirectory));
+  QM_TRY_VAR(auto file,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone));
 
   QM_TRY(file->Append(nsLiteralString(METADATA_TMP_FILE_NAME)));
 
@@ -2609,8 +2608,8 @@ nsresult CreateDirectoryMetadata2(nsIFile& aDirectory, int64_t aTimestamp,
                                   const nsACString& aOrigin) {
   AssertIsOnIOThread();
 
-  QM_TRY_VAR(auto file, ToResultInvoke<nsCOMPtr<nsIFile>>(
-                            std::mem_fn(&nsIFile::Clone), &aDirectory));
+  QM_TRY_VAR(auto file,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone));
 
   QM_TRY(file->Append(nsLiteralString(METADATA_V2_TMP_FILE_NAME)));
 
@@ -2653,8 +2652,8 @@ Result<nsCOMPtr<nsIBinaryInputStream>, nsresult> GetBinaryInputStream(
     nsIFile& aDirectory, const nsAString& aFilename) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  QM_TRY_VAR(auto file, ToResultInvoke<nsCOMPtr<nsIFile>>(
-                            std::mem_fn(&nsIFile::Clone), aDirectory));
+  QM_TRY_VAR(auto file,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, aDirectory, Clone));
 
   QM_TRY(file->Append(aFilename));
 
@@ -4883,19 +4882,14 @@ nsresult QuotaManager::GetDirectoryMetadata2(
              MOZ_TO_RESULT_INVOKE(binaryStream, Read32));
   Unused << reservedData2;
 
-  QM_TRY_VAR(
-      const auto suffix,
-      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
-                                binaryStream));
+  QM_TRY_VAR(const auto suffix,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, binaryStream, ReadCString));
 
-  QM_TRY_VAR(auto group, ToResultInvoke<nsCString>(
-                             std::mem_fn(&nsIBinaryInputStream::ReadCString),
-                             binaryStream));
+  QM_TRY_VAR(auto group,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, binaryStream, ReadCString));
 
-  QM_TRY_VAR(
-      const auto origin,
-      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
-                                binaryStream));
+  QM_TRY_VAR(const auto origin,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, binaryStream, ReadCString));
 
   // Currently unused (used to be isApp).
   QM_TRY_VAR(const bool dummy, MOZ_TO_RESULT_INVOKE(binaryStream, ReadBoolean));
@@ -6366,9 +6360,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
                           MOZ_STORAGE_SERVICE_CONTRACTID));
 
   QM_TRY_VAR(auto connection,
-             ToResultInvoke<nsCOMPtr<mozIStorageConnection>>(
-                 std::mem_fn(&mozIStorageService::OpenUnsharedDatabase), ss,
-                 storageFile)
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
+                                        OpenUnsharedDatabase, storageFile)
                  .orElse(ErrToOkOrErr<NS_ERROR_FILE_CORRUPTED, nullptr,
                                       nsCOMPtr<mozIStorageConnection>>));
 
@@ -6376,11 +6369,9 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     // Nuke the database file.
     QM_TRY(storageFile->Remove(false));
 
-    // TODO: Can we simplify this syntax ?
     QM_TRY_VAR(connection,
-               ToResultInvoke<nsCOMPtr<mozIStorageConnection>>(
-                   std::mem_fn(&mozIStorageService::OpenUnsharedDatabase), ss,
-                   storageFile));
+               MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
+                                          OpenUnsharedDatabase, storageFile));
   }
 
   // We want extra durability for this important file.
@@ -6561,13 +6552,12 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
         if (insertStmt) {
           MOZ_ALWAYS_SUCCEEDS(insertStmt->Reset());
         } else {
-          // TODO: Can we simplify this syntax ?
-          QM_TRY_VAR(insertStmt,
-                     ToResultInvoke<nsCOMPtr<mozIStorageStatement>>(
-                         std::mem_fn(&mozIStorageConnection::CreateStatement),
-                         connection,
-                         nsLiteralCString("INSERT INTO repository (id, name) "
-                                          "VALUES (:id, :name)")));
+          QM_TRY_VAR(
+              insertStmt,
+              MOZ_TO_RESULT_INVOKE_TYPED(
+                  nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
+                  nsLiteralCString("INSERT INTO repository (id, name) "
+                                   "VALUES (:id, :name)")));
         }
 
         QM_TRY(insertStmt->BindInt32ByName("id"_ns, persistenceType));
@@ -10401,15 +10391,11 @@ nsresult StorageOperationBase::GetDirectoryMetadata(nsIFile* aDirectory,
   QM_TRY_VAR(const uint64_t timestamp,
              MOZ_TO_RESULT_INVOKE(binaryStream, Read64));
 
-  QM_TRY_VAR(
-      const auto group,
-      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
-                                binaryStream));
+  QM_TRY_VAR(const auto group,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, binaryStream, ReadCString));
 
-  QM_TRY_VAR(
-      const auto origin,
-      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
-                                binaryStream));
+  QM_TRY_VAR(const auto origin,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, binaryStream, ReadCString));
 
   Nullable<bool> isApp;
   bool value;
@@ -10449,20 +10435,14 @@ nsresult StorageOperationBase::GetDirectoryMetadata2(
              MOZ_TO_RESULT_INVOKE(binaryStream, Read32));
   Unused << reservedData2;
 
-  QM_TRY_VAR(
-      const auto suffix,
-      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
-                                binaryStream));
+  QM_TRY_VAR(const auto suffix,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, binaryStream, ReadCString));
 
-  QM_TRY_VAR(
-      const auto group,
-      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
-                                binaryStream));
+  QM_TRY_VAR(const auto group,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, binaryStream, ReadCString));
 
-  QM_TRY_VAR(
-      const auto origin,
-      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
-                                binaryStream));
+  QM_TRY_VAR(const auto origin,
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCString, binaryStream, ReadCString));
 
   QM_TRY_VAR(const bool isApp, MOZ_TO_RESULT_INVOKE(binaryStream, ReadBoolean));
 
@@ -10529,8 +10509,7 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
         specURL->Origin(originNoSuffix);
 
         QM_TRY_VAR(const auto baseDomain,
-                   ToResultInvoke<nsCString>(std::mem_fn(&MozURL::BaseDomain),
-                                             specURL));
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsCString, specURL, BaseDomain));
 
         ContentPrincipalInfo contentPrincipalInfo;
         contentPrincipalInfo.attrs() = originProps.mAttrs;
@@ -11094,9 +11073,8 @@ nsresult RepositoryOperationBase::ProcessRepository() {
   QM_TRY(CollectEachFileEntry(
       *mDirectory,
       [](const auto& originFile) -> Result<mozilla::Ok, nsresult> {
-        QM_TRY_VAR(const auto leafName,
-                   ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetLeafName),
-                                            originFile));
+        QM_TRY_VAR(const auto leafName, MOZ_TO_RESULT_INVOKE_TYPED(
+                                            nsString, originFile, GetLeafName));
 
         // Unknown files during upgrade are allowed. Just warn if we find
         // them.
@@ -11154,9 +11132,8 @@ nsresult RepositoryOperationBase::MaybeUpgradeClients(
   QM_TRY(CollectEachFileEntry(
       *aOriginProps.mDirectory,
       [](const auto& file) -> Result<mozilla::Ok, nsresult> {
-        QM_TRY_VAR(
-            const auto leafName,
-            ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetLeafName), file));
+        QM_TRY_VAR(const auto leafName,
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
 
         if (!IsOriginMetadata(leafName) && !IsTempMetadata(leafName)) {
           UNKNOWN_FILE_WARNING(leafName);
@@ -11166,9 +11143,8 @@ nsresult RepositoryOperationBase::MaybeUpgradeClients(
       },
       [quotaManager, &aMethod,
        &self = *this](const auto& dir) -> Result<mozilla::Ok, nsresult> {
-        QM_TRY_VAR(
-            const auto leafName,
-            ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetLeafName), dir));
+        QM_TRY_VAR(const auto leafName,
+                   MOZ_TO_RESULT_INVOKE_TYPED(nsString, dir, GetLeafName));
 
         QM_TRY_VAR(
             const bool removed,
@@ -11474,8 +11450,8 @@ nsresult UpgradeStorageFrom0_0To1_0Helper::ProcessOriginDirectory(
                                   aOriginProps.mGroup, aOriginProps.mOrigin));
 
   QM_TRY_VAR(const auto oldName,
-             ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetLeafName),
-                                      aOriginProps.mDirectory));
+             MOZ_TO_RESULT_INVOKE_TYPED(nsString, aOriginProps.mDirectory,
+                                        GetLeafName));
 
   nsAutoCString originSanitized(aOriginProps.mOrigin);
   SanitizeOriginString(originSanitized);
@@ -11500,8 +11476,8 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveMorgueDirectory(
   // directories as part of this upgrade.
 
   QM_TRY_VAR(auto morgueDir,
-             ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::Clone),
-                                               aOriginProps.mDirectory));
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>,
+                                        aOriginProps.mDirectory, Clone));
 
   QM_TRY(morgueDir->Append(u"morgue"_ns));
 
@@ -11584,8 +11560,8 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeStripObsoleteOriginAttributes(
                                   aOriginProps.mGroup, aOriginProps.mOrigin));
 
   QM_TRY_VAR(auto newFile,
-             ToResultInvoke<nsCOMPtr<nsIFile>>(std::mem_fn(&nsIFile::GetParent),
-                                               aOriginProps.mDirectory));
+             MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>,
+                                        aOriginProps.mDirectory, GetParent));
 
   QM_TRY(newFile->Append(newLeafName));
 
