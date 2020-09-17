@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "mozAccessible.h"
+#include "Pivot.h"
 
 using namespace mozilla::a11y;
 
@@ -17,14 +18,17 @@ using namespace mozilla::a11y;
 // overrides
 - (NSURL*)moxURL;
 
-// override
+// overrides
 - (NSNumber*)moxLoaded;
 
-// override
+// overrides
 - (NSNumber*)moxLoadingProgress;
 
 // override
-- (NSArray*)moxLinkUIElements;
+- (NSArray*)moxUIElementsForSearchPredicate:(NSDictionary*)searchPredicate;
+
+// override
+- (NSNumber*)moxUIElementCountForSearchPredicate:(NSDictionary*)searchPredicate;
 
 // override
 - (NSArray*)moxUnignoredChildren;
@@ -41,44 +45,37 @@ using namespace mozilla::a11y;
 
 @end
 
-@interface MOXRootGroup : MOXAccessibleBase {
-  MOXWebAreaAccessible* mParent;
+@interface MOXSearchInfo : NSObject {
+  // The MOX accessible of the web area, we need a reference
+  // to set the pivot's root. This is a weak ref.
+  MOXWebAreaAccessible* mWebArea;
+
+  // The MOX accessible we should start searching from.
+  // This is a weak ref.
+  MOXAccessibleBase* mStartElem;
+
+  // The amount of matches we should return
+  int mResultLimit;
+
+  // The array of search keys to use during this search
+  NSMutableArray* mSearchKeys;
+
+  // Set to YES if we should search forward, NO if backward
+  BOOL mSearchForward;
+
+  // Set to YES if we should match on immediate descendants only, NO otherwise
+  BOOL mImmediateDescendantsOnly;
 }
 
-// override
-- (id)initWithParent:(MOXWebAreaAccessible*)parent;
+- (id)initWithParameters:(NSDictionary*)params
+                 andRoot:(MOXWebAreaAccessible*)root;
 
-// override
-- (NSString*)moxRole;
+- (AccessibleOrProxy)startGeckoAccessible;
 
-// override
-- (NSString*)moxRoleDescription;
+- (NSMutableArray*)getMatchesForRule:(PivotRule&)rule;
 
-// override
-- (id<mozAccessible>)moxParent;
+- (NSArray*)performSearch;
 
-// override
-- (NSArray*)moxChildren;
-
-// override
-- (NSString*)moxIdentifier;
-
-// override
-- (id)moxHitTest:(NSPoint)point;
-
-// override
-- (NSValue*)moxPosition;
-
-// override
-- (NSValue*)moxSize;
-
-// override
-- (BOOL)disableChild:(id)child;
-
-// override
-- (void)expire;
-
-// override
-- (BOOL)isExpired;
+- (void)dealloc;
 
 @end

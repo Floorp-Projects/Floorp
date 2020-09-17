@@ -56,33 +56,6 @@ class RotorControlRule final : public PivotRule {
   AccessibleOrProxy mDirectDescendantsFrom;
 };
 
-class RotorLinkRule : public PivotRule {
- public:
-  explicit RotorLinkRule();
-  explicit RotorLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
-
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-
- protected:
-  AccessibleOrProxy mDirectDescendantsFrom;
-};
-
-class RotorVisitedLinkRule final : public RotorLinkRule {
- public:
-  explicit RotorVisitedLinkRule();
-  explicit RotorVisitedLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
-
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-};
-
-class RotorUnvisitedLinkRule final : public RotorLinkRule {
- public:
-  explicit RotorUnvisitedLinkRule();
-  explicit RotorUnvisitedLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
-
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-};
-
 /**
  * This rule matches all accessibles, filtering out non-direct
  * descendants if necessary.
