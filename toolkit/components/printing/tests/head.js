@@ -1,5 +1,4 @@
 const PRINT_DOCUMENT_URI = "chrome://global/content/print.html";
-const { MockFilePicker } = SpecialPowers;
 
 class PrintHelper {
   static async withTestPage(testFn) {
@@ -176,11 +175,5 @@ class PrintHelper {
 
   awaitAnimationFrame() {
     return new Promise(resolve => this.win.requestAnimationFrame(resolve));
-  }
-
-  mockFilePicker(file) {
-    MockFilePicker.init(window);
-    MockFilePicker.setFiles([file]);
-    registerCleanupFunction(() => MockFilePicker.cleanup());
   }
 }
