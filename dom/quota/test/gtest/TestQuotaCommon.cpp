@@ -784,6 +784,226 @@ TEST(QuotaCommon_DebugTryVar, Failure)
 #endif
 }
 
+TEST(QuotaCommon_TryReturn, Success)
+{
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+    QM_TRY_RETURN((Result<int32_t, nsresult>{42}));
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+}
+
+TEST(QuotaCommon_TryReturn, Success_WithCleanup)
+{
+  bool tryReturnCleanupRan = false;
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&tryReturnCleanupRan,
+              &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+    QM_TRY_RETURN(
+        (Result<int32_t, nsresult>{42}), QM_PROPAGATE,
+        [&tryReturnCleanupRan](const auto&) { tryReturnCleanupRan = true; });
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_FALSE(tryReturnCleanupRan);
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+}
+
+TEST(QuotaCommon_TryReturn, Failure_PropagateErr)
+{
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+    QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_TryReturn, Failure_CustomErr)
+{
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+    QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
+                  Err(NS_ERROR_UNEXPECTED));
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_UNEXPECTED);
+}
+
+TEST(QuotaCommon_TryReturn, Failure_WithCleanup)
+{
+  bool tryReturnCleanupRan = false;
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&tryReturnCleanupRan,
+              &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+    QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}),
+                  QM_PROPAGATE, [&tryReturnCleanupRan](const auto& result) {
+                    EXPECT_TRUE(result.isErr());
+                    EXPECT_EQ(result.inspectErr(), NS_ERROR_FAILURE);
+
+                    tryReturnCleanupRan = true;
+                  });
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_TRUE(tryReturnCleanupRan);
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_TryReturn, SameLine)
+{
+  // clang-format off
+  auto res1 = []() -> Result<int32_t, nsresult> { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }(); auto res2 = []() -> Result<int32_t, nsresult> { QM_TRY_RETURN((Result<int32_t, nsresult>{42})); }();
+  // clang-format on
+
+  EXPECT_TRUE(res1.isOk());
+  EXPECT_EQ(res1.unwrap(), 42);
+  EXPECT_TRUE(res2.isOk());
+  EXPECT_EQ(res2.unwrap(), 42);
+}
+
+TEST(QuotaCommon_TryReturn, NestingMadness_Success)
+{
+  bool nestedTryReturnDidNotReturn = false;
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&nestedTryReturnDidNotReturn,
+              &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+    QM_TRY_RETURN(
+        ([&nestedTryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+          QM_TRY_RETURN((Result<int32_t, nsresult>{42}));
+
+          nestedTryReturnDidNotReturn = true;
+        }()));
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_FALSE(nestedTryReturnDidNotReturn);
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+}
+
+TEST(QuotaCommon_TryReturn, NestingMadness_Failure)
+{
+  bool nestedTryReturnDidNotReturn = false;
+  bool tryReturnDidNotReturn = false;
+
+  auto res = [&nestedTryReturnDidNotReturn,
+              &tryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+    QM_TRY_RETURN(
+        ([&nestedTryReturnDidNotReturn]() -> Result<int32_t, nsresult> {
+          QM_TRY_RETURN((Result<int32_t, nsresult>{Err(NS_ERROR_FAILURE)}));
+
+          nestedTryReturnDidNotReturn = true;
+        }()));
+
+    tryReturnDidNotReturn = true;
+  }();
+
+  EXPECT_FALSE(nestedTryReturnDidNotReturn);
+  EXPECT_FALSE(tryReturnDidNotReturn);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
+}
+
+TEST(QuotaCommon_DebugTryReturn, Success)
+{
+  bool debugTryReturnBodyRan = false;
+  bool debugTryReturnDidNotReturn = false;
+
+  auto res = [
+#ifdef DEBUG
+                 &debugTryReturnBodyRan, &debugTryReturnDidNotReturn
+#else
+                 &debugTryReturnDidNotReturn
+#endif
+  ]() -> Result<int32_t, nsresult> {
+    QM_DEBUG_TRY_RETURN(
+        ([&debugTryReturnBodyRan]() -> Result<int32_t, nsresult> {
+          debugTryReturnBodyRan = true;
+
+          return 42;
+        }()));
+
+    debugTryReturnDidNotReturn = true;
+
+    return 42;
+  }();
+
+#ifdef DEBUG
+  EXPECT_TRUE(debugTryReturnBodyRan);
+  EXPECT_FALSE(debugTryReturnDidNotReturn);
+#else
+  EXPECT_FALSE(debugTryReturnBodyRan);
+  EXPECT_TRUE(debugTryReturnDidNotReturn);
+#endif
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+}
+
+TEST(QuotaCommon_DebugTryReturn, Failure)
+{
+  bool debugTryReturnBodyRan = false;
+  bool debugTryReturnDidNotReturn = false;
+
+  auto res = [
+#ifdef DEBUG
+                 &debugTryReturnBodyRan, &debugTryReturnDidNotReturn
+#else
+                 &debugTryReturnDidNotReturn
+#endif
+  ]() -> Result<int32_t, nsresult> {
+    QM_DEBUG_TRY_RETURN(
+        ([&debugTryReturnBodyRan]() -> Result<int32_t, nsresult> {
+          debugTryReturnBodyRan = true;
+
+          return Err(NS_ERROR_FAILURE);
+        }()));
+
+    debugTryReturnDidNotReturn = true;
+
+    return 42;
+  }();
+
+#ifdef DEBUG
+  EXPECT_TRUE(debugTryReturnBodyRan);
+  EXPECT_FALSE(debugTryReturnDidNotReturn);
+  EXPECT_TRUE(res.isErr());
+  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
+#else
+  EXPECT_FALSE(debugTryReturnBodyRan);
+  EXPECT_TRUE(debugTryReturnDidNotReturn);
+  EXPECT_TRUE(res.isOk());
+  EXPECT_EQ(res.unwrap(), 42);
+#endif
+}
+
 TEST(QuotaCommon_Fail, ReturnValue)
 {
   bool failDidNotReturn = false;
