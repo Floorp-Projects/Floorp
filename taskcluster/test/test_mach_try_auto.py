@@ -55,6 +55,25 @@ def test_only_important_manifests(params, full_task_graph, filter_tasks):
 
 
 @pytest.mark.parametrize(
+    "func,min_expected",
+    (
+        pytest.param(
+            lambda t: (
+                t.kind == "test"
+                and t.attributes["unittest_suite"] == "mochitest-browser-chrome"
+            ),
+            5,
+            id="mochitest-browser-chrome",
+        ),
+    ),
+)
+def test_tasks_are_scheduled(optimized_task_graph, filter_tasks, func, min_expected):
+    """Ensure the specified tasks are scheduled on mozilla-central."""
+    tasks = [t.label for t in filter_tasks(optimized_task_graph, func)]
+    assert len(tasks) >= min_expected
+
+
+@pytest.mark.parametrize(
     "func",
     (
         pytest.param(
@@ -69,7 +88,6 @@ def test_only_important_manifests(params, full_task_graph, filter_tasks):
         pytest.param(
             lambda t: t.kind == "build-signing",
             id="no build-signing",
-            marks=pytest.mark.xfail,
         ),
         pytest.param(
             lambda t: t.kind == "upload-symbols",
