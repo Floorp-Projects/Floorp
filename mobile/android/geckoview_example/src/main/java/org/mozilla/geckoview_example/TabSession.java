@@ -41,36 +41,4 @@ public class TabSession extends GeckoSession {
     public void onLocationChange(@NonNull String uri) {
         mUri = uri;
     }
-
-    @Override // Parcelable
-    @UiThread
-    public void writeToParcel(final Parcel out, final int flags) {
-        super.writeToParcel(out, flags);
-        out.writeString(mTitle);
-        out.writeString(mUri);
-    }
-
-    // AIDL code may call readFromParcel even though it's not part of Parcelable.
-    @UiThread
-    public void readFromParcel(final @NonNull Parcel source) {
-        super.readFromParcel(source);
-        mTitle = source.readString();
-        mUri = source.readString();
-    }
-
-    public static final Creator<GeckoSession> CREATOR = new Creator<GeckoSession>() {
-        @Override
-        @UiThread
-        public TabSession createFromParcel(final Parcel in) {
-            final TabSession session = new TabSession();
-            session.readFromParcel(in);
-            return session;
-        }
-
-        @Override
-        @UiThread
-        public TabSession[] newArray(final int size) {
-            return new TabSession[size];
-        }
-    };
 }

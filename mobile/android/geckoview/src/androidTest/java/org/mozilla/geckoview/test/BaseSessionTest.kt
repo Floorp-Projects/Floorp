@@ -111,10 +111,6 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     inline fun GeckoSession.toParcel(lambda: (Parcel) -> Unit) {
         val parcel = Parcel.obtain()
         try {
-            // Bug 1650108: Remove this
-            @Suppress("DEPRECATION")
-            this.writeToParcel(parcel, 0)
-
             val pos = parcel.dataPosition()
             parcel.setDataPosition(0)
 
