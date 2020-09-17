@@ -10,7 +10,6 @@
 #include "gtest/gtest.h"
 
 #include "CrossGraphPort.h"
-#include "GMPTestMonitor.h"
 #include "MediaEngineWebRTCAudio.h"
 #include "MockCubeb.h"
 
