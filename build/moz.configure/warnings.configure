@@ -218,14 +218,6 @@ check_and_add_gcc_warning('-Wno-gnu-zero-variadic-macro-arguments')
 # Make it an error to be missing function declarations.
 check_and_add_gcc_warning('-Werror=implicit-function-declaration')
 
-# Disable a warning with gcc 7. See bug 1320656
-# We are far from using C++17 and the impact of the warning will be
-# limited to a potential public ABI.
-# Currently only affecting js/
-check_and_add_gcc_warning('-Wno-noexcept-type', cxx_compiler,
-                          when=depends(build_project)
-                          (lambda build_project: build_project == 'js'))
-
 # New in clang 11. We can't really do anything about this warning.
 check_and_add_gcc_warning('-Wno-psabi')
 
