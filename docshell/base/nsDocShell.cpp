@@ -2637,12 +2637,21 @@ void nsDocShell::StoreWindowNameToSHEntries() {
         mOSHE, [&](nsISHEntry* aEntry) { aEntry->SetName(name); });
   }
 
-  // Ask parent process to store the name in entries.
   if (StaticPrefs::fission_sessionHistoryInParent()) {
-    mozilla::Unused
-        << ContentChild::GetSingleton()
-               ->SendSessionHistoryEntryStoreWindowNameInContiguousEntries(
-                   mBrowsingContext, name);
+    if (XRE_IsParentProcess()) {
+      SessionHistoryEntry* entry =
+          mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
+      if (entry) {
+        nsSHistory::WalkContiguousEntries(
+            entry, [&](nsISHEntry* aEntry) { aEntry->SetName(name); });
+      }
+    } else {
+      // Ask parent process to store the name in entries.
+      mozilla::Unused
+          << ContentChild::GetSingleton()
+                 ->SendSessionHistoryEntryStoreWindowNameInContiguousEntries(
+                     mBrowsingContext, name);
+    }
   }
 }
 
