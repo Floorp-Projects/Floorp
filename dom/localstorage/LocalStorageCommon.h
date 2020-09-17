@@ -210,6 +210,18 @@
 #  define LS_DEBUG_TRY_VAR(...)
 #endif
 
+// LocalStorage equivalents of QM_TRY_RETURN and QM_DEBUG_TRY_RETURN.
+#define LS_TRY_RETURN_GLUE(...)                                             \
+  QM_TRY_RETURN_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
+                     ##__VA_ARGS__)
+#define LS_TRY_RETURN(...) LS_TRY_RETURN_GLUE(__VA_ARGS__)
+
+#ifdef DEBUG
+#  define LS_DEBUG_TRY_RETURN(...) LS_TRY_RETURN(__VA_ARGS__)
+#else
+#  define LS_DEBUG_TRY_RETURN(...)
+#endif
+
 // LocalStorage equivalents of QM_FAIL and QM_DEBUG_FAIL.
 #define LS_FAIL_GLUE(...) \
   QM_FAIL_META(mozilla::dom::localstorage, ##__VA_ARGS__)
