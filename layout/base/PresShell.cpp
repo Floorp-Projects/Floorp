@@ -11123,6 +11123,23 @@ void PresShell::MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty) {
   }
 }
 
+static void AppendSubtree(nsIDocShell* aDocShell,
+                          nsTArray<nsCOMPtr<nsIContentViewer>>& aArray) {
+  if (nsCOMPtr<nsIContentViewer> cv = aDocShell->GetContentViewer()) {
+    aArray.AppendElement(cv);
+  }
+
+  int32_t n = aDocShell->GetInProcessChildCount();
+  for (int32_t i = 0; i < n; i++) {
+    nsCOMPtr<nsIDocShellTreeItem> childItem;
+    aDocShell->GetInProcessChildAt(i, getter_AddRefs(childItem));
+    if (childItem) {
+      nsCOMPtr<nsIDocShell> child(do_QueryInterface(childItem));
+      AppendSubtree(child, aArray);
+    }
+  }
+}
+
 void PresShell::MaybeReflowForInflationScreenSizeChange() {
   nsPresContext* pc = GetPresContext();
   const bool fontInflationWasEnabled = FontSizeInflationEnabled();
@@ -11137,13 +11154,8 @@ void PresShell::MaybeReflowForInflationScreenSizeChange() {
     return;
   }
   if (nsCOMPtr<nsIDocShell> docShell = pc->GetDocShell()) {
-    nsCOMPtr<nsIContentViewer> cv;
-    docShell->GetContentViewer(getter_AddRefs(cv));
-    if (!cv) {
-      return;
-    }
     nsTArray<nsCOMPtr<nsIContentViewer>> array;
-    cv->AppendSubtree(array);
+    AppendSubtree(docShell, array);
     for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
       nsCOMPtr<nsIContentViewer> cv = array[i];
       if (RefPtr<PresShell> descendantPresShell = cv->GetPresShell()) {
