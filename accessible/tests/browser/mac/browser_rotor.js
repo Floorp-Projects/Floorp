@@ -4,6 +4,15 @@
 
 "use strict";
 
+/* import-globals-from ../../mochitest/states.js */
+loadScripts({ name: "states.js", dir: MOCHITESTS_DIR });
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
+
 /**
  * Test rotor with heading
  */
@@ -864,6 +873,125 @@ addAccessibleTask(
       controls[2].getAttributeValue("AXRole"),
       "Found correct tree"
     );
+  }
+);
+
+/**
+ * Test rotor with links
+ */
+addAccessibleTask(
+  `
+  <a href="" id="empty">empty link</a>
+  <a href="http://www.example.com/" id="href">Example link</a>
+  <a id="noHref">link without href</a>
+  `,
+  async (browser, accDoc) => {
+    let searchPred = {
+      AXSearchKey: "AXLinkSearchKey",
+      AXImmediateDescendants: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    let linkCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(2, linkCount, "Found two links");
+
+    let links = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    const empty = getNativeInterface(accDoc, "empty");
+    const href = getNativeInterface(accDoc, "href");
+
+    is(
+      empty.getAttributeValue("AXTitle"),
+      links[0].getAttributeValue("AXTitle"),
+      "Found correct first link"
+    );
+    is(
+      href.getAttributeValue("AXTitle"),
+      links[1].getAttributeValue("AXTitle"),
+      "Found correct second link"
+    );
+
+    // unvisited links
+
+    searchPred = {
+      AXSearchKey: "AXUnvisitedLinkSearchKey",
+      AXImmediateDescendants: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    linkCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    is(2, linkCount, "Found two links");
+
+    links = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    is(
+      empty.getAttributeValue("AXTitle"),
+      links[0].getAttributeValue("AXTitle"),
+      "Found correct first link"
+    );
+    is(
+      href.getAttributeValue("AXTitle"),
+      links[1].getAttributeValue("AXTitle"),
+      "Found correct second link"
+    );
+
+    // visited links
+
+    let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "href");
+
+    await PlacesTestUtils.addVisits(["http://www.example.com/"]);
+
+    await stateChanged;
+
+    searchPred = {
+      AXSearchKey: "AXVisitedLinkSearchKey",
+      AXImmediateDescendants: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    linkCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(1, linkCount, "Found one link");
+
+    links = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    is(
+      href.getAttributeValue("AXTitle"),
+      links[0].getAttributeValue("AXTitle"),
+      "Found correct visited link"
+    );
+
+    // Ensure history is cleared before running again
+    await PlacesUtils.history.clear();
   }
 );
 
