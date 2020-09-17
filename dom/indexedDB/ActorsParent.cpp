@@ -692,6 +692,17 @@ CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
   return stmt;
 }
 
+template <typename StepFunc>
+mozilla::Result<mozilla::Ok, nsresult> CollectWhileHasResult(
+    mozIStorageStatement& aStmt, const StepFunc& aStepFunc) {
+  return CollectWhile(
+      [&aStmt]() -> Result<bool, nsresult> {
+        IDB_TRY_VAR(auto hasResult, MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep));
+        return hasResult;
+      },
+      [&aStmt, &aStepFunc] { return aStepFunc(aStmt); });
+}
+
 nsresult SetJournalMode(mozIStorageConnection& aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -12671,12 +12682,8 @@ nsresult FileManager::Init(nsIFile* aDirectory,
                   std::mem_fn(&mozIStorageConnection::CreateStatement),
                   aConnection, "SELECT id, refcount FROM file"_ns));
 
-  IDB_TRY(CollectWhile(
-      [&stmt]() -> Result<bool, nsresult> {
-        IDB_TRY_VAR(auto hasResult, MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-        return hasResult;
-      },
-      [&stmt, this]() -> Result<mozilla::Ok, nsresult> {
+  IDB_TRY(CollectWhileHasResult(
+      *stmt, [this](auto& stmt) -> Result<mozilla::Ok, nsresult> {
         IDB_TRY_VAR(const int64_t id, MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
         IDB_TRY_VAR(const int32_t dbRefCnt,
                     MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 1));
@@ -12891,16 +12898,12 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
       IDB_TRY(stmt->BindStringByIndex(0, path));
 
-      IDB_TRY(CollectWhile(
-          [&stmt]() -> Result<bool, nsresult> {
-            IDB_TRY_VAR(auto hasResult,
-                        MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
-            return hasResult;
-          },
-          [&stmt, &aDirectory,
-           &journalDirectory]() -> Result<mozilla::Ok, nsresult> {
+      IDB_TRY(CollectWhileHasResult(
+          *stmt,
+          [&aDirectory,
+           &journalDirectory](auto& stmt) -> Result<mozilla::Ok, nsresult> {
             nsString name;
-            IDB_TRY(stmt->GetString(0, name));
+            IDB_TRY(stmt.GetString(0, name));
 
             nsresult rv;
             name.ToInteger64(&rv);
@@ -12908,7 +12911,7 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
               return mozilla::Ok{};
             }
 
-            int32_t flag = stmt->AsInt32(1);
+            int32_t flag = stmt.AsInt32(1);
 
             if (!flag) {
               IDB_TRY_VAR(const auto file,
