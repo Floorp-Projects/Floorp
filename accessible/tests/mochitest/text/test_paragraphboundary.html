@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Paragraph boundary getText* functions tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript">
+    function doTest() {
+      // First, test the contentEditable.
+      testTextAtOffset("ce", BOUNDARY_PARAGRAPH,
+      [[0, 0, kEmbedChar, 0, 1],
+      [1, 2, kEmbedChar, 1, 2]]);
+
+      // Now, test each paragraph.
+      var ID = getNode("ce").firstElementChild;
+      testTextAtOffset(ID, BOUNDARY_PARAGRAPH,
+                       [[0, 15, "hello my friend", 0, 15]]);
+      ID = getNode("ce").lastElementChild;
+      testTextAtOffset(ID, BOUNDARY_PARAGRAPH,
+                       [[0, 11, "hello again", 0, 11]]);
+
+      // Test a paragraph whose line forcefully wraps.
+      testTextAtOffset("forced_wrap", BOUNDARY_PARAGRAPH,
+      [[0, 2, "ab", 0, 2]]);
+
+      // Test a paragraph with an embedded link.
+      testTextAtOffset("pWithLink", BOUNDARY_PARAGRAPH,
+      [[0, 3, "a" + kEmbedChar + "d", 0, 3]]);
+      testTextAtOffset("link", BOUNDARY_PARAGRAPH,
+      [[0, 2, "bc", 0, 2]]);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="getTextAtOffset for paragraph boundaries"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1520779">
+    Bug 1520779
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  
+  <div id="ce" contenteditable="true">
+    <p>hello my friend</p>
+    <p>hello again</p>
+  </div>
+  <p id="forced_wrap" style="width: 1px; word-break: break-all;">ab</p>
+  <p id="pWithLink">a<a id="link" href="https://example.com/">bc</a>d</p>
+</body>
+</html>
