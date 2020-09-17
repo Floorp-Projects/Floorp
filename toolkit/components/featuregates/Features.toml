@@ -78,16 +78,6 @@ type = "boolean"
 bug-numbers = [1520690]
 is-public = {default = false, nightly = true}
 
-[media-session-api]
-title = "experimental-features-media-session-api"
-description = "experimental-features-media-session-api-description"
-description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1112032"}
-restart-required = false
-preference = "dom.media.mediasession.enabled"
-type = "boolean"
-bug-numbers = [1112032]
-is-public = {default = false, nightly = true}
-
 [devtools-color-scheme-simulation]
 title = "experimental-features-devtools-color-scheme-simulation"
 description = "experimental-features-devtools-color-scheme-simulation-description"
