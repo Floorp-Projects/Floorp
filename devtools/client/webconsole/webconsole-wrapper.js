@@ -208,25 +208,8 @@ class WebConsoleWrapper {
     store.dispatch(actions.privateMessagesClear());
   }
 
-  dispatchMessageUpdate(message) {
-    // network-message-updated will emit when all the update message arrives.
-    // Since we can't ensure the order of the network update, we check
-    // that message.updates has all we need.
-    // Note that 'requestPostData' is sent only for POST requests, so we need
-    // to count with that.
-    const NUMBER_OF_NETWORK_UPDATE = 8;
-
-    let expectedLength = NUMBER_OF_NETWORK_UPDATE;
-    if (message.updates.includes("responseCache")) {
-      expectedLength++;
-    }
-    if (message.updates.includes("requestPostData")) {
-      expectedLength++;
-    }
-
-    if (message.updates.length === expectedLength) {
-      this.batchedMessageUpdates(message);
-    }
+  dispatchMessagesUpdate(messages) {
+    this.batchedMessagesUpdates(messages);
   }
 
   dispatchSidebarClose() {
@@ -262,9 +245,11 @@ class WebConsoleWrapper {
     }
   }
 
-  batchedMessageUpdates(message) {
-    this.queuedMessageUpdates.push(message);
-    this.setTimeoutIfNeeded();
+  batchedMessagesUpdates(messages) {
+    if (messages.length > 0) {
+      this.queuedMessageUpdates.push(...messages);
+      this.setTimeoutIfNeeded();
+    }
   }
 
   batchedRequestUpdates(message) {
@@ -273,8 +258,10 @@ class WebConsoleWrapper {
   }
 
   batchedMessagesAdd(messages) {
-    this.queuedMessageAdds = this.queuedMessageAdds.concat(messages);
-    this.setTimeoutIfNeeded();
+    if (messages.length > 0) {
+      this.queuedMessageAdds.push(...messages);
+      this.setTimeoutIfNeeded();
+    }
   }
 
   requestData(id, type) {

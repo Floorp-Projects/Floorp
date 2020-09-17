@@ -371,6 +371,7 @@ class WebConsoleUI {
     if (!this.hud) {
       return;
     }
+    const messages = [];
     for (const resource of resources) {
       const { TYPES } = this.hud.resourceWatcher;
       // Ignore messages forwarded from content processes if we're in fission browser toolbox.
@@ -402,18 +403,38 @@ class WebConsoleUI {
         }
       }
 
-      this.wrapper.dispatchMessageAdd(resource);
+      messages.push(resource);
     }
+    this.wrapper.dispatchMessagesAdd(messages);
   }
 
   _onResourceUpdated(updates) {
+    const messages = [];
     for (const { resource } of updates) {
       if (
         resource.resourceType == this.hud.resourceWatcher.TYPES.NETWORK_EVENT
       ) {
-        this.wrapper.dispatchMessageUpdate(resource);
+        // network-message-updated will emit when all the update message arrives.
+        // Since we can't ensure the order of the network update, we check
+        // that message.updates has all we need.
+        // Note that 'requestPostData' is sent only for POST requests, so we need
+        // to count with that.
+        const NUMBER_OF_NETWORK_UPDATE = 8;
+
+        let expectedLength = NUMBER_OF_NETWORK_UPDATE;
+        if (resource.updates.includes("responseCache")) {
+          expectedLength++;
+        }
+        if (resource.updates.includes("requestPostData")) {
+          expectedLength++;
+        }
+
+        if (resource.updates.length === expectedLength) {
+          messages.push(resource);
+        }
       }
     }
+    this.wrapper.dispatchMessagesUpdate(messages);
   }
 
   /**
