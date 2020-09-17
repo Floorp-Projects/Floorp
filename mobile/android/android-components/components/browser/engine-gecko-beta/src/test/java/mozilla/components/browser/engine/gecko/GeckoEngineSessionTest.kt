@@ -1152,6 +1152,37 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `changes to enableTrackingProtection will be notified to all new observers`() {
+        whenever(runtime.settings).thenReturn(mock())
+        whenever(runtime.settings.contentBlocking).thenReturn(mock())
+        val session = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        val observers = mutableListOf<EngineSession.Observer>()
+        val policy = TrackingProtectionPolicy.strict()
+
+        for (x in 1..5) {
+            observers.add(spy(object : EngineSession.Observer {}))
+        }
+
+        session.enableTrackingProtection(policy)
+
+        observers.forEach { session.register(it) }
+
+        observers.forEach {
+            verify(it).onTrackerBlockingEnabledChange(true)
+        }
+
+        observers.forEach { session.unregister(it) }
+
+        session.enableTrackingProtection(policy.forPrivateSessionsOnly())
+
+        observers.forEach { session.register(it) }
+
+        observers.forEach {
+            verify(it).onTrackerBlockingEnabledChange(false)
+        }
+    }
+
+    @Test
     fun safeBrowsingCategoriesAreAligned() {
         assertEquals(GeckoSafeBrowsing.NONE, SafeBrowsingPolicy.NONE.id)
         assertEquals(GeckoSafeBrowsing.MALWARE, SafeBrowsingPolicy.MALWARE.id)
