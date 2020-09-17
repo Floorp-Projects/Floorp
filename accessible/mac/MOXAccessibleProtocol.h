@@ -127,9 +127,6 @@
 // AXURL
 - (NSURL* _Nullable)moxURL;
 
-// AXLinkUIElements
-- (NSArray* _Nullable)moxLinkUIElements;
-
 // AXPopupValue
 - (NSString* _Nullable)moxPopupValue;
 
