@@ -26,6 +26,19 @@ fn total_sync_changes() -> i64 {
     unsafe { NS_NavBookmarksTotalSyncChanges() }
 }
 
+// Return all the non-root-roots as a 'sql set' (ie, suitable for use in an
+// IN statement)
+fn user_roots_as_sql_set() -> String {
+    format!(
+        "('{0}', '{1}', '{2}', '{3}', '{4}')",
+        dogear::MENU_GUID,
+        dogear::MOBILE_GUID,
+        dogear::TAGS_GUID,
+        dogear::TOOLBAR_GUID,
+        dogear::UNFILED_GUID
+    )
+}
+
 pub struct Store<'s> {
     db: &'s mut Conn,
     driver: &'s Driver,
@@ -79,15 +92,11 @@ impl<'s> Store<'s> {
              ) AND NOT EXISTS(
                SELECT 1 FROM moz_bookmarks b
                JOIN moz_bookmarks p ON p.id = b.parent
-               WHERE b.guid IN ('{1}', '{2}', '{3}', '{4}', '{5}') AND
-                     p.guid <> '{0}'
+               WHERE b.guid IN {user_roots} AND
+                     p.guid <> '{root}'
              )",
-            dogear::ROOT_GUID,
-            dogear::MENU_GUID,
-            dogear::MOBILE_GUID,
-            dogear::TAGS_GUID,
-            dogear::TOOLBAR_GUID,
-            dogear::UNFILED_GUID,
+            root = dogear::ROOT_GUID,
+            user_roots = user_roots_as_sql_set(),
         ))?;
         let has_valid_roots = match statement.step()? {
             Some(row) => row.get_by_index::<i64>(0)? == 1,
@@ -891,18 +900,33 @@ fn apply_remote_items(db: &Conn, driver: &Driver, controller: &AbortController) 
                 /* The last modified date should always be newer than the date
                    added, so we pick the newer of the two here. */
                 MAX(lastModifiedMicroseconds, remoteDateAddedMicroseconds),
-                {}, 0
+                {syncStatusNormal}, 0
          FROM itemsToApply
          WHERE 1
          ON CONFLICT(id) DO UPDATE SET
            title = excluded.title,
            dateAdded = excluded.dateAdded,
            lastModified = excluded.lastModified,
+           syncStatus = {syncStatusNormal},
+           syncChangeCounter = 0,
            /* It's important that we update the URL *after* removing old keywords
               and *before* inserting new ones, so that the above DELETEs select
               the correct affected items. */
            fk = excluded.fk",
-        nsINavBookmarksService::SYNC_STATUS_NORMAL
+        syncStatusNormal = nsINavBookmarksService::SYNC_STATUS_NORMAL
+    ))?;
+    // The roots are never in `itemsToApply` but still need to (well, at least
+    // *should*) have a syncStatus of NORMAL after a reconcilliation. The
+    // ROOT_GUID doesn't matter in practice, but we include it to be consistent.
+    db.exec(format!(
+        "UPDATE moz_bookmarks SET
+            syncStatus={syncStatusNormal}
+         WHERE guid IN {user_roots} OR
+               guid = '{root}'
+               ",
+        syncStatusNormal = nsINavBookmarksService::SYNC_STATUS_NORMAL,
+        root = dogear::ROOT_GUID,
+        user_roots = user_roots_as_sql_set(),
     ))?;
 
     // Flag frecencies for recalculation. This is a multi-index OR that uses the
