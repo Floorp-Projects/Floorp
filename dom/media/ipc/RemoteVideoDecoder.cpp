@@ -263,12 +263,13 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
                "Decoded video must output a layer::Image to "
                "be used with RemoteDecoderParent");
 
+    RefPtr<TextureClient> texture;
     SurfaceDescriptor sd;
     IntSize size;
+    bool needStorage = false;
 
     if (mKnowsCompositor) {
-      RefPtr<TextureClient> texture =
-          video->mImage->GetTextureClient(mKnowsCompositor);
+      texture = video->mImage->GetTextureClient(mKnowsCompositor);
 
       if (!texture) {
         texture = ImageClient::CreateTextureClientForImage(video->mImage,
@@ -280,11 +281,10 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
           texture->InitIPDLActor(mKnowsCompositor);
           texture->SetAddedToCompositableClient();
         }
-        // TODO. It would be more elegant if RemoteVideoData took ownership of
-        // this image instead and let it handle deletion should the image be
-        // unused. Right now it requires a manual
-        // StoreImage/DeallocateSurfaceDescriptorGPUVideo combo.
-        sd = mParent->StoreImage(video->mImage, texture);
+        needStorage = true;
+        SurfaceDescriptorRemoteDecoder remoteSD;
+        texture->GetSurfaceDescriptorRemoteDecoder(&remoteSD);
+        sd = remoteSD;
         size = texture->GetSize();
       }
     }
@@ -292,6 +292,7 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
     // If failed to create a GPU accelerated surface descriptor, fall back to
     // copying frames via shmem.
     if (!IsSurfaceDescriptorValid(sd)) {
+      needStorage = false;
       PlanarYCbCrImage* image = video->mImage->AsPlanarYCbCrImage();
       if (!image) {
         return MediaResult(NS_ERROR_UNEXPECTED,
@@ -314,11 +315,18 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
       size = image->GetSize();
     }
 
+    if (needStorage) {
+      MOZ_ASSERT(sd.type() != SurfaceDescriptor::TSurfaceDescriptorBuffer);
+      mParent->StoreImage(static_cast<const SurfaceDescriptorGPUVideo&>(sd),
+                          video->mImage, texture);
+    }
+
     RemoteVideoData output(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
                       data->mDuration, data->mKeyframe),
         video->mDisplay,
-        RemoteImageHolder(XRE_IsGPUProcess() ? VideoBridgeSource::GpuProcess
+        RemoteImageHolder(mParent,
+                          XRE_IsGPUProcess() ? VideoBridgeSource::GpuProcess
                                              : VideoBridgeSource::RddProcess,
                           size, sd),
         video->mFrameID);
