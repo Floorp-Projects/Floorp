@@ -19,7 +19,6 @@ class FOG final : public nsIFOG {
 
  private:
   ~FOG() = default;
-  void Shutdown();
 };
 
 };  // namespace mozilla
