@@ -32,6 +32,18 @@
 #  define SDB_DEBUG_TRY_VAR(...)
 #endif
 
+// SimpleDB equivalents of QM_TRY_RETURN and QM_DEBUG_TRY_RETURN.
+#define SDB_TRY_RETURN_GLUE(...)                                        \
+  QM_TRY_RETURN_META(mozilla::dom::simpledb, MOZ_UNIQUE_VAR(tryResult), \
+                     ##__VA_ARGS__)
+#define SDB_TRY_RETURN(...) SDB_TRY_RETURN_GLUE(__VA_ARGS__)
+
+#ifdef DEBUG
+#  define SDB_DEBUG_TRY_RETURN(...) SDB_TRY_RETURN(__VA_ARGS__)
+#else
+#  define SDB_DEBUG_TRY_RETURN(...)
+#endif
+
 // SimpleDB equivalents of QM_FAIL and QM_DEBUG_FAIL.
 #define SDB_FAIL_GLUE(...) QM_FAIL_META(mozilla::dom::simpledb, ##__VA_ARGS__)
 #define SDB_FAIL(...) SDB_FAIL_GLUE(__VA_ARGS__)
