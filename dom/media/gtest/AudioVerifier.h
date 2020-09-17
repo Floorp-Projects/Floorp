@@ -22,9 +22,15 @@ class AudioVerifier {
     for (AudioSegment::ConstChunkIterator iter(segment); !iter.IsEnded();
          iter.Next()) {
       const AudioChunk& c = *iter;
-      const Sample* buffer = c.ChannelData<Sample>()[0];
-      for (int i = 0; i < c.GetDuration(); ++i) {
-        CheckSample(buffer[i]);
+      if (c.IsNull()) {
+        for (int i = 0; i < c.GetDuration(); ++i) {
+          CheckSample(0);
+        }
+      } else {
+        const Sample* buffer = c.ChannelData<Sample>()[0];
+        for (int i = 0; i < c.GetDuration(); ++i) {
+          CheckSample(buffer[i]);
+        }
       }
     }
   }
