@@ -332,6 +332,8 @@
     <string name="preferences_search_browsing_history">Navigatiegeschiedenis doorzoeken</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Bladwijzers doorzoeken</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Gesynchroniseerde tabbladen doorzoeken</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Accountinstellingen</string>
 

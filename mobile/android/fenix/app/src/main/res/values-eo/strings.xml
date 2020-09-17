@@ -286,6 +286,8 @@
     <string name="preferences_theme">Etoso</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Eka paĝo</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gestoj</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personecigi</string>
     <!-- Preference description for banner about signing in -->
@@ -320,8 +322,12 @@
     <string name="preferences_search_browsing_history">Serĉi en retuma historio</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Serĉi legosignojn</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Serĉi spegulitajn langetojn</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Agordoj de konto</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Aŭtomate kompletigi retadresojn</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Malfermi ligilojn per programoj</string>
 
@@ -1056,10 +1062,6 @@
     <string name="onboarding_account_sign_in_header">Komenci speguli legosignojn, pasvortojn kaj aliajn aferojn per via konto de Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Pli da informo</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Vi komencis seancon kiel %s en alia retumilo Firefox en tiu ĉi poŝaparato. Ĉu vi ŝatus komenci seancon per tiu konto?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Jes, komenci seancon</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1303,9 +1305,6 @@ en la reto kaj kion vi dividas kun ni.</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nomo de ŝparvojo</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Vi povas facile aldoni tiun ĉi retejon al la hejmpaĝo de via telefono, por havi tujan aliron kaj retumi pli rapide per kvazaŭprograma sperto.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Legitimiloj kaj pasvortoj</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1375,8 +1374,12 @@ en la reto kaj kion vi dividas kun ni.</string>
     <string name="logins_site_copied">Retejo kopiita al tondujo</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopii pasvorton</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Viŝi pasvorton</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopii nomon de uzanto</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Viŝi nomon de uzanto</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopii retejon</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1533,7 +1536,7 @@ en la reto kaj kion vi dividas kun ni.</string>
     <string name="saved_login_duplicate">Jam ekzistas legitimilo kun tiu nomo de uzanto</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Konekti alian aparaton</string>
 
     <!-- Text displayed asking user to re-authenticate -->
@@ -1554,7 +1557,7 @@ en la reto kaj kion vi dividas kun ni.</string>
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Maksimuma nombro de plej vizititaj retejoj atingita</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Por aldoni novan plej vizititan retejon, forigu alian. Premu longe la forigotan retejon kaj elekti forigi.</string>
+    <string name="top_sites_max_limit_content_2">Por aldoni novan plej vizititan retejon, forigu alian. Longe premu la forigotan retejon kaj elektu forigi.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">En ordo, mi komprenis</string>
 
@@ -1564,7 +1567,7 @@ en la reto kaj kion vi dividas kun ni.</string>
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Forigi</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Eltiru la maksimumon el %s.</string>
 
@@ -1572,4 +1575,9 @@ en la reto kaj kion vi dividas kun ni.</string>
     <string name="no_collections_header1">Kolekti la aferojn kiu gravas por vi</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Grupigi similajn serĉojn, retejojn kaj langetojn por pli rapida posta aliro.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Vi komencis seancon kiel %s en alia retumilo Firefox en tiu ĉi poŝaparato. Ĉu vi ŝatus komenci seancon per tiu konto?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Vi povas facile aldoni tiun ĉi retejon al la hejmpaĝo de via telefono, por havi tujan aliron kaj retumi pli rapide per kvazaŭprograma sperto.</string>
+
     </resources>

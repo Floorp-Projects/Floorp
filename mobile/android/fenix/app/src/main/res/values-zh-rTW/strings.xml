@@ -331,6 +331,8 @@
     <string name="preferences_search_browsing_history">搜尋瀏覽紀錄</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">搜尋書籤</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">搜尋同步的分頁</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">帳號設定</string>
 

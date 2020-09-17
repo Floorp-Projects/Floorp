@@ -326,6 +326,8 @@
     <string name="preferences_search_browsing_history">Pesquisar no histórico de navegação</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Pesquisar nos favoritos</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Pesquisar em abas sincronizadas</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Configurações da conta</string>
     <!-- Preference for enabling url autocomplete-->

@@ -332,6 +332,8 @@
     <string name="preferences_search_browsing_history">閲覧履歴を検索する</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">ブックマークを検索する</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">同期したタブを検索</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">アカウント設定</string>
 

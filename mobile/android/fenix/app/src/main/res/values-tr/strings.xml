@@ -326,6 +326,8 @@
     <string name="preferences_search_browsing_history">Gezinti geçmişinde ara</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Yer imlerinde ara</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Eşitlenmiş sekmelerde ara</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Hesap ayarları</string>
 

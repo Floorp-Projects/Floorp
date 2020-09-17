@@ -478,6 +478,8 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Закрыць</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Нядаўна закрытыя карткі</string>
     <!-- Option in library to open Recently Closed Tabs page -->
     <string name="recently_closed_show_full_history">Паказаць усю гісторыю</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
@@ -1229,6 +1231,9 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Бібліятэкі, якімі мы карыстаемся</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Меню адладкі: %1$d націсканняў да ўключэння</string>
     <string name="about_debug_menu_toast_done">Меню адладкі ўключана</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
@@ -1527,4 +1532,6 @@
     <string name="no_collections_header1">Збірайце важныя для вас рэчы</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Групуйце падобныя пошукі, сайты і карткі для хуткага доступу.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Вы ўвайшлі як %s у іншым браўзеры Firefox на гэтым тэлефоне. Ці хочаце аўтарызавацца з дапамогай гэтага ўліковага запісу?</string>
     </resources>

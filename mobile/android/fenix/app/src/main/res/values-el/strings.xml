@@ -1048,6 +1048,10 @@
     <string name="onboarding_account_sign_in_header">Ξεκινήστε το συγχρονισμό σελιδοδεικτών, κωδικών πρόσβασης και άλλων δεδομένων με το λογαριασμό Firefox σας.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Μάθετε περισσότερα</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Έχετε συνδεθεί ως %s από άλλο πρόγραμμα περιήγησης Firefox σε αυτή τη συσκευή. Θέλετε να συνδεθείτε με αυτό το λογαριασμό;</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Ναι, σύνδεση</string>
     <!-- text for the automatic sign-in button while signing in is in process -->

@@ -335,6 +335,8 @@
     <string name="preferences_search_browsing_history">搜索浏览历史</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">搜索书签</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">搜索受同步的标签页</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">账户设置</string>
 

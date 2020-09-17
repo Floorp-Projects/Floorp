@@ -271,6 +271,8 @@
     <string name="preferences_open_links_in_a_private_tab">Ouvrir les liens dans un onglet privé</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Autoriser les captures d’écran pendant la navigation privée</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Si autorisé, les onglets privés seront également visibles lorsque plusieurs applications sont ouvertes</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ajouter un raccourci pour la navigation privée</string>
     <!-- Preference for accessibility -->
@@ -291,6 +293,8 @@
     <string name="preferences_theme">Thème</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Accueil</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Mouvements</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personnaliser</string>
     <!-- Preference description for banner about signing in -->
@@ -325,9 +329,13 @@
     <string name="preferences_search_browsing_history">Rechercher dans l’historique de navigation</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Rechercher dans les marque-pages</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Rechercher dans les onglets synchronisés</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Paramètres du compte</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Compléter automatiquement les URL</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Ouvrir les liens dans des applications</string>
 
@@ -469,6 +477,9 @@
     <string name="preference_auto_battery_theme">Défini par l’économie d’énergie de la batterie</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Suivre le thème de l’appareil</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Masquer la barre d’outils au défilement</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1086,7 +1097,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Vous êtes connecté·e en tant que %s sur un autre navigateur Firefox avec ce téléphone. Voulez-vous vous connecter avec ce compte ?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Vous êtes connecté·e en tant que %s sur un autre navigateur Firefox avec cet appareil. Voulez-vous vous connecter avec ce compte ?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Oui, connectez-moi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1331,7 +1342,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="add_to_homescreen_text_placeholder">Nom du raccourci</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Vous pouvez facilement ajouter ce site à l’écran d’accueil de votre téléphone pour y avoir accès directement et naviguer plus rapidement, comme si vous utilisiez une application.</string>
+    <string name="add_to_homescreen_description_2">Vous pouvez facilement ajouter ce site à l’écran d’accueil de votre appareil pour y avoir accès directement et naviguer plus rapidement, comme si vous utilisiez une application.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Identifiants et mots de passe</string>
@@ -1401,8 +1412,12 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="logins_site_copied">Site copié dans le presse-papiers</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copier le mot de passe</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Effacer le mot de passe</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copier le nom d’utilisateur</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Effacer le nom d’utilisateur</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copier le site</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1557,7 +1572,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="saved_login_duplicate">Un identifiant avec ce nom d’utilisateur existe déjà</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Connectez un autre appareil.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Veuillez vous authentifier à nouveau.</string>
@@ -1577,7 +1592,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Nombre maximal de sites atteint</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Pour ajouter un nouveau site principal, supprimez-en un autre. Faites un appui long sur le site et sélectionnez supprimer.</string>
+    <string name="top_sites_max_limit_content_2">Pour ajouter un nouveau site principal, supprimez-en un autre. Faites un appui long sur le site et sélectionnez supprimer.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">J’ai compris</string>
 
@@ -1587,7 +1602,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Supprimer</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Tirez le meilleur parti de %s.</string>
 
@@ -1595,4 +1610,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="no_collections_header1">Rassemblez ce qui compte pour vous</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Regroupez des recherches, des sites et des onglets similaires pour y accéder rapidement plus tard.</string>
-</resources>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Vous êtes connecté·e en tant que %s sur un autre navigateur Firefox avec ce téléphone. Voulez-vous vous connecter avec ce compte ?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Vous pouvez facilement ajouter ce site à l’écran d’accueil de votre téléphone pour y avoir accès directement et naviguer plus rapidement, comme si vous utilisiez une application.</string>
+
+    </resources>

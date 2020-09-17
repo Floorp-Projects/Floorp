@@ -321,6 +321,8 @@
     <string name="preferences_search_browsing_history">חיפוש בהיסטוריית הגלישה</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">חיפוש בסימניות</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">חיפוש בלשוניות מסונכרנות</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">הגדרות חשבון</string>
 
