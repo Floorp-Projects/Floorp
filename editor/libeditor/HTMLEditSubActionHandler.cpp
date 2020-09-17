@@ -5176,7 +5176,13 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
                  ->GetEndContainer()
                  ->IsInclusiveDescendantOf(mRightContent));
 
-  return NS_OK;
+  nsresult rv =
+      mDeleteRangesHandlerConst.ComputeRangesToDeleteRangesWithTransaction(
+         aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "AutoDeleteRangesHandler::"
+                       "ComputeRangesToDeleteRangesWithTransaction() failed");
+  return rv;
 }
 
 EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
@@ -5250,7 +5256,13 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
                  ->IsInclusiveDescendantOf(mRightContent));
   MOZ_ASSERT(mLeftContent->GetParentNode() == mRightContent->GetParentNode());
 
-  return NS_OK;
+  nsresult rv =
+      mDeleteRangesHandlerConst.ComputeRangesToDeleteRangesWithTransaction(
+          aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "AutoDeleteRangesHandler::"
+                       "ComputeRangesToDeleteRangesWithTransaction() failed");
+  return rv;
 }
 
 EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
