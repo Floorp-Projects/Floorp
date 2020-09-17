@@ -53,6 +53,9 @@ class JSJitSetterCallArgs : protected JS::MutableHandle<JS::Value> {
   explicit JSJitSetterCallArgs(const JS::CallArgs& args)
       : JS::MutableHandle<JS::Value>(args[0]) {}
 
+  explicit JSJitSetterCallArgs(JS::Rooted<JS::Value>* rooted)
+      : JS::MutableHandle<JS::Value>(rooted) {}
+
   JS::MutableHandle<JS::Value> operator[](unsigned i) {
     MOZ_ASSERT(i == 0);
     return *this;

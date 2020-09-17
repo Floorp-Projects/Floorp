@@ -1440,6 +1440,15 @@
     sameRealm: BoolImm
     nargsAndFlags: RawWordField
 
+- name: CallDOMSetter
+  shared: false
+  transpile: false
+  cost_estimate: 4
+  args:
+    obj: ObjId
+    jitInfo: RawPointerField
+    rhs: ValId
+
 - name: CallSetArrayLength
   shared: false
   transpile: true
