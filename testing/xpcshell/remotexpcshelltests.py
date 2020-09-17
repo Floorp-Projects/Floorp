@@ -140,15 +140,14 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.xpcshell = posixpath.join(self.remoteBinDir, "xpcw")
         self.headJSPath = posixpath.join(self.remoteScriptsDir, 'head.js')
         self.httpdJSPath = posixpath.join(self.remoteComponentsDir, 'httpd.js')
-        self.httpdManifest = posixpath.join(self.remoteComponentsDir, 'httpd.manifest')
         self.testingModulesDir = self.remoteModulesDir
         self.testharnessdir = self.remoteScriptsDir
         xpcsCmd = xpcshell.XPCShellTestThread.buildXpcsCmd(self)
         # remove "-g <dir> -a <dir>" and replace with remote alternatives
         del xpcsCmd[1:5]
         if self.options['localAPK']:
-            xpcsCmd.insert(3, '--greomni')
-            xpcsCmd.insert(4, self.remoteAPK)
+            xpcsCmd.insert(1, '--greomni')
+            xpcsCmd.insert(2, self.remoteAPK)
         else:
             xpcsCmd.insert(1, '-g')
             xpcsCmd.insert(2, self.remoteBinDir)
@@ -445,11 +444,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
         local = os.path.join(self.localBin, "components/httpd.js")
         remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.js")
-        self.device.push(local, remoteFile)
-        self.device.chmod(remoteFile)
-
-        local = os.path.join(self.localBin, "components/httpd.manifest")
-        remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.manifest")
         self.device.push(local, remoteFile)
         self.device.chmod(remoteFile)
 

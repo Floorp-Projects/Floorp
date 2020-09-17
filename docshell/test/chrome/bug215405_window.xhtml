@@ -37,8 +37,13 @@
     function finish() {
       gBrowser.removeEventListener("pageshow", eventListener, true);
       // Work around bug 467960
-      var history = gBrowser.webNavigation.sessionHistory;
-      history.legacySHistory.PurgeHistory(history.count);
+      if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+        var history = gBrowser.browsingContext.sessionHistory;
+        history.purgeHistory(history.count);
+      } else {
+        var history = gBrowser.webNavigation.sessionHistory;
+        history.legacySHistory.purgeHistory(history.count);
+      }
 
       window.close();
       window.arguments[0].SimpleTest.finish();
@@ -47,7 +52,7 @@
     function onLoad(e) {
       gBrowser = document.getElementById("content");
       gBrowser.addEventListener("pageshow", eventListener, true);
-       
+
       gTestsIterator = testsIterator();
       nextTest();
     }
@@ -79,7 +84,7 @@
       var scrollToX = gBrowser.contentWindow.scrollMaxX;
       var scrollToY = gBrowser.contentWindow.scrollMaxY;
       gBrowser.contentWindow.scrollBy(scrollToX, scrollToY);
-      
+
       // Save the scroll position for future comparison
       scrollX = gBrowser.contentWindow.scrollX;
       scrollY = gBrowser.contentWindow.scrollY;
@@ -109,7 +114,7 @@
       var formValue = gBrowser.contentDocument.getElementById("inp").value;
       isnot(formValue, text, testName + " form value incorrectly restored");
 
-    
+
       // https no-cache
       testName = "[nocache]";
 
@@ -129,7 +134,7 @@
       scrollToX = gBrowser.contentWindow.scrollMaxX;
       scrollToY = gBrowser.contentWindow.scrollMaxY;
       gBrowser.contentWindow.scrollBy(scrollToX, scrollToY);
-      
+
       // Save the scroll position for future comparison
       scrollX = gBrowser.contentWindow.scrollX;
       scrollY = gBrowser.contentWindow.scrollY;
@@ -155,7 +160,7 @@
          " vertical axis scroll position not correctly restored");
       var formValue = gBrowser.contentDocument.getElementById("inp").value;
       is(formValue, text, testName + " form value not correctly restored");
-      
+
       Services.prefs.clearUserPref("browser.navigation.requireUserInteraction");
       finish();
     }

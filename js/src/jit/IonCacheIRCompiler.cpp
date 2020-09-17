@@ -1069,6 +1069,30 @@ bool IonCacheIRCompiler::emitCallNativeGetterResult(
   return true;
 }
 
+bool IonCacheIRCompiler::emitCallDOMGetterResult(ObjOperandId objId,
+                                                 uint32_t jitInfoOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoSaveLiveRegisters save(*this);
+  AutoOutputRegister output(*this);
+
+  Register obj = allocator.useRegister(masm, objId);
+
+  const JSJitInfo* info = rawWordStubField<const JSJitInfo*>(jitInfoOffset);
+
+  allocator.discardStack(masm);
+  prepareVMCall(masm, save);
+
+  masm.Push(obj);
+  masm.Push(ImmPtr(info));
+
+  using Fn =
+      bool (*)(JSContext*, const JSJitInfo*, HandleObject, MutableHandleValue);
+  callVM<Fn, jit::CallDOMGetter>(masm);
+
+  masm.storeCallResultValue(output);
+  return true;
+}
+
 bool IonCacheIRCompiler::emitProxyGetResult(ObjOperandId objId,
                                             uint32_t idOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

@@ -76,20 +76,21 @@ pub unsafe extern "C" fn Rust_ImplementRunnableInRust(
     #[derive(xpcom)]
     #[xpimplements(nsIRunnable)]
     #[refcnt = "atomic"]
-    struct InitMyRunnable {
-        it_worked: *mut bool,
+    struct InitRunnableFn<F: Fn() + 'static> {
+        run: F,
     }
 
-    impl MyRunnable {
+    impl<F: Fn() + 'static> RunnableFn<F> {
         unsafe fn Run(&self) -> nsresult {
-            *self.it_worked = true;
+            (self.run)();
             NS_OK
         }
     }
 
-    // Create my runnable type, and forget it into the outparameter!
-    let my_runnable = MyRunnable::allocate(InitMyRunnable {
-        it_worked: it_worked,
+    let my_runnable = RunnableFn::allocate(InitRunnableFn {
+        run: move || {
+            *it_worked = true;
+        },
     });
     my_runnable
         .query_interface::<interfaces::nsIRunnable>()

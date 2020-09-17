@@ -125,7 +125,7 @@ class SessionHistoryListener extends Handler {
     // a delay.
     this.mm.docShell
       .QueryInterface(Ci.nsIWebNavigation)
-      .sessionHistory.legacySHistory.addSHistoryListener(this);
+      .sessionHistory.legacySHistory.addSHistoryListener(this); // OK in non-geckoview
 
     let webProgress = this.mm.docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
@@ -160,7 +160,7 @@ class SessionHistoryListener extends Handler {
     let sessionHistory = this.mm.docShell.QueryInterface(Ci.nsIWebNavigation)
       .sessionHistory;
     if (sessionHistory) {
-      sessionHistory.legacySHistory.removeSHistoryListener(this);
+      sessionHistory.legacySHistory.removeSHistoryListener(this); // OK in non-geckoview
     }
   }
 

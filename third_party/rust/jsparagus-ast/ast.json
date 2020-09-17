@@ -570,7 +570,7 @@
   },
   "Method": {
     "_type": "struct",
-    "name": "PropertyName",
+    "name": "ClassElementName",
     "is_async": "bool",
     "is_generator": "bool",
     "params": "FormalParameters",
@@ -578,12 +578,12 @@
   },
   "Getter": {
     "_type": "struct",
-    "property_name": "PropertyName",
+    "property_name": "ClassElementName",
     "body": "FunctionBody"
   },
   "Setter": {
     "_type": "struct",
-    "property_name": "PropertyName",
+    "property_name": "ClassElementName",
     "param": "Parameter",
     "body": "FunctionBody"
   },

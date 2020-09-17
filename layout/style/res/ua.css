@@ -133,6 +133,7 @@
 /* https://drafts.csswg.org/css-lists-3/#ua-stylesheet */
 *|*::marker {
   text-align: end;
+  text-transform: none;
   unicode-bidi: isolate;
   font-variant-numeric: tabular-nums;
 }

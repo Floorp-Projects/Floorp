@@ -54,7 +54,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WindowState: "chrome://marionette/content/browser.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const APP_ID_FIREFOX = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
@@ -2303,6 +2303,10 @@ GeckoDriver.prototype.getElementText = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().getElementText(webEl);
+  }
+
   switch (this.context) {
     case Context.Chrome:
       // for chrome, we look at text nodes, and any node with a "label" field
@@ -2343,6 +2347,10 @@ GeckoDriver.prototype.getElementTagName = async function(cmd) {
 
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
+
+  if (MarionettePrefs.useActors) {
+    return this.getActor().getElementTagName(webEl);
+  }
 
   switch (this.context) {
     case Context.Chrome:
@@ -2422,6 +2430,10 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let prop = assert.string(cmd.parameters.propertyName);
   let webEl = WebElement.fromUUID(id, this.context);
+
+  if (MarionettePrefs.useActors) {
+    return this.getActor().getElementValueOfCssProperty(webEl, prop);
+  }
 
   switch (this.context) {
     case Context.Chrome:

@@ -432,6 +432,8 @@ static already_AddRefed<nsDocShellLoadState> CreateLoadInfo(
 void CanonicalBrowsingContext::NotifyOnHistoryReload(
     bool& aCanReload, Maybe<RefPtr<nsDocShellLoadState>>& aLoadState,
     Maybe<bool>& aReloadActiveEntry) {
+  MOZ_DIAGNOSTIC_ASSERT(!aLoadState);
+
   nsISHistory* shistory = GetSessionHistory();
   shistory->NotifyOnHistoryReload(&aCanReload);
   if (!aCanReload) {

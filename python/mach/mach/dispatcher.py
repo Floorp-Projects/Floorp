@@ -258,7 +258,8 @@ class CommandAction(argparse.Action):
                 # out for the current context or not. Condition functions can be
                 # applied to the command's decorator.
                 if handler.conditions:
-                    instance = handler.cls(self._context, handler.virtualenv_name)
+                    instance = handler.create_instance(self._context,
+                                                       handler.virtualenv_name)
 
                     is_filtered = False
                     for c in handler.conditions:

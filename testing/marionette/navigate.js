@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   truncate: "chrome://marionette/content/format.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 // Timeouts used to check if a new navigation has been initiated.
 const TIMEOUT_BEFOREUNLOAD_EVENT = 200;

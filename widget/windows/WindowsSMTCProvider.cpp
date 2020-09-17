@@ -596,6 +596,8 @@ void WindowsSMTCProvider::LoadImage(const char* aImageData,
       [this, self = RefPtr<WindowsSMTCProvider>(this),
        aImageUrl = nsString(mProcessingUrl)](
           IAsyncOperation<unsigned int>* aAsyncOp, AsyncStatus aStatus) {
+        MOZ_ASSERT(NS_IsMainThread());
+
         if (aStatus != AsyncStatus::Completed) {
           LOG("Asynchronous operation is not completed");
           return E_ABORT;
@@ -609,9 +611,8 @@ void WindowsSMTCProvider::LoadImage(const char* aImageData,
           return hr;
         }
 
-        nsresult rv = UpdateThumbnailOnMainThread(aImageUrl);
-        if (NS_FAILED(rv)) {
-          LOG("Failed to dispatch a task to thumbnail update");
+        if (!UpdateThumbnail(aImageUrl)) {
+          LOG("Failed to update thumbnail");
         }
 
         // If an error occurs above:
@@ -689,34 +690,31 @@ void WindowsSMTCProvider::ClearThumbnail() {
   mThumbnailUrl = EmptyString();
 }
 
-nsresult WindowsSMTCProvider::UpdateThumbnailOnMainThread(
-    const nsAString& aUrl) {
-  return NS_DispatchToMainThread(
-      media::NewRunnableFrom([this, self = RefPtr<WindowsSMTCProvider>(this),
-                              aImageUrl = nsString(aUrl)] {
-        if (!IsOpened()) {
-          LOG("Abort the thumbnail update: SMTC is closed");
-          return NS_OK;
-        }
+bool WindowsSMTCProvider::UpdateThumbnail(const nsAString& aUrl) {
+  MOZ_ASSERT(NS_IsMainThread());
 
-        if (aImageUrl != mProcessingUrl) {
-          LOG("Abort the thumbnail update: The image from %s is out of date",
-              NS_ConvertUTF16toUTF8(aImageUrl).get());
-          return NS_OK;
-        }
+  if (!IsOpened()) {
+    LOG("Abort the thumbnail update: SMTC is closed");
+    return false;
+  }
 
-        mProcessingUrl = EmptyString();
+  if (aUrl != mProcessingUrl) {
+    LOG("Abort the thumbnail update: The image from %s is out of date",
+        NS_ConvertUTF16toUTF8(aUrl).get());
+    return false;
+  }
 
-        if (!SetThumbnail(aImageUrl)) {
-          LOG("Failed to update thumbnail");
-          return NS_OK;
-        }
+  mProcessingUrl = EmptyString();
 
-        MOZ_ASSERT(mThumbnailUrl == aImageUrl);
-        LOG("The thumbnail is updated to the image from: %s",
-            NS_ConvertUTF16toUTF8(mThumbnailUrl).get());
-        return NS_OK;
-      }));
+  if (!SetThumbnail(aUrl)) {
+    LOG("Failed to update thumbnail");
+    return false;
+  }
+
+  MOZ_ASSERT(mThumbnailUrl == aUrl);
+  LOG("The thumbnail is updated to the image from: %s",
+      NS_ConvertUTF16toUTF8(mThumbnailUrl).get());
+  return true;
 }
 
 void WindowsSMTCProvider::CancelPendingStoreAsyncOperation() const {

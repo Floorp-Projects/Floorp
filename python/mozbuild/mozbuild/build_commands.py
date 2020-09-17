@@ -15,7 +15,7 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase
-from mozbuild.util import ensure_subprocess_env
+from mozbuild.util import ensure_subprocess_env, MOZBUILD_METRICS_PATH
 from mozbuild.mozconfig import MozconfigLoader
 import mozpack.path as mozpath
 
@@ -30,7 +30,7 @@ OF THE TREE CAN RESULT IN BAD TREE STATE. USE AT YOUR OWN RISK.
 '''.strip()
 
 
-@CommandProvider
+@CommandProvider(metrics_path=MOZBUILD_METRICS_PATH)
 class Build(MachCommandBase):
     """Interface to build the tree."""
 
@@ -122,6 +122,7 @@ class Build(MachCommandBase):
 
         driver = self._spawn(BuildDriver)
         return driver.build(
+            self.metrics,
             what=what,
             jobs=jobs,
             directory=directory,
@@ -143,6 +144,7 @@ class Build(MachCommandBase):
         driver = self._spawn(BuildDriver)
 
         return driver.configure(
+            self.metrics,
             options=options,
             buildstatus_messages=buildstatus_messages,
             line_handler=line_handler)

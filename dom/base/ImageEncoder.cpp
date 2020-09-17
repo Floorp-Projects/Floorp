@@ -37,9 +37,7 @@ class SurfaceHelper : public Runnable {
   // It retrieves a SourceSurface reference and convert color format on main
   // thread and passes DataSourceSurface to caller thread.
   NS_IMETHOD Run() override {
-    // It guarantees the reference will be released on main thread.
-    nsCountedRef<nsMainThreadSourceSurfaceRef> surface;
-    surface.own(mImage->GetAsSourceSurface().take());
+    RefPtr<gfx::SourceSurface> surface = mImage->GetAsSourceSurface();
 
     if (surface->GetFormat() == gfx::SurfaceFormat::B8G8R8A8) {
       mDataSourceSurface = surface->GetDataSurface();
@@ -47,6 +45,9 @@ class SurfaceHelper : public Runnable {
       mDataSourceSurface = gfxUtils::CopySurfaceToDataSourceSurfaceWithFormat(
           surface, gfx::SurfaceFormat::B8G8R8A8);
     }
+
+    // It guarantees the reference will be released on main thread.
+    NS_ReleaseOnMainThread("SurfaceHelper::surface", surface.forget());
     return NS_OK;
   }
 

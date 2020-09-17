@@ -57,6 +57,8 @@ const PREF_TYPES = {
 let prefUndoStack = [];
 let inPrefEnvOp = false;
 
+let permissionUndoStack = [];
+
 function doPrefEnvOp(fn) {
   if (inPrefEnvOp) {
     throw new Error(
@@ -151,22 +153,6 @@ class SpecialPowersParent extends JSWindowActorParent {
       observe(aSubject, aTopic, aData) {
         var msg = { aData };
         switch (aTopic) {
-          case "perm-changed":
-            var permission = aSubject.QueryInterface(Ci.nsIPermission);
-
-            // specialPowersAPI will consume this value, and it is used as a
-            // fake permission, but only type will be used.
-            //
-            // We need to ensure that it looks the same as a real permission,
-            // so we fake these properties.
-            msg.permission = {
-              principal: {
-                originAttributes: {},
-              },
-              type: permission.type,
-            };
-            this._self.sendAsyncMessage("specialpowers-" + aTopic, msg);
-            return;
           case "csp-on-violate-policy":
             // the subject is either an nsIURI or an nsISupportsCString
             let subject = null;
@@ -608,6 +594,103 @@ class SpecialPowersParent extends JSWindowActorParent {
     }
   }
 
+  _permOp(perm) {
+    switch (perm.op) {
+      case "add":
+        Services.perms.addFromPrincipal(
+          perm.principal,
+          perm.type,
+          perm.permission,
+          perm.expireType,
+          perm.expireTime
+        );
+        break;
+      case "remove":
+        Services.perms.removeFromPrincipal(perm.principal, perm.type);
+        break;
+      default:
+        throw new Error(`Unexpected permission op: ${perm.op}`);
+    }
+  }
+
+  pushPermissions(inPermissions) {
+    let pendingPermissions = [];
+    let cleanupPermissions = [];
+
+    for (let permission of inPermissions) {
+      let { principal } = permission;
+      if (principal.isSystemPrincipal) {
+        continue;
+      }
+
+      let originalValue = Services.perms.testPermissionFromPrincipal(
+        principal,
+        permission.type
+      );
+
+      let perm = permission.allow;
+      if (typeof perm === "boolean") {
+        perm = Ci.nsIPermissionManager[perm ? "ALLOW_ACTION" : "DENY_ACTION"];
+      }
+
+      if (permission.remove) {
+        perm = Ci.nsIPermissionManager.UNKNOWN_ACTION;
+      }
+
+      if (originalValue == perm) {
+        continue;
+      }
+
+      let todo = {
+        op: "add",
+        type: permission.type,
+        permission: perm,
+        value: perm,
+        principal,
+        expireType:
+          typeof permission.expireType === "number" ? permission.expireType : 0, // default: EXPIRE_NEVER
+        expireTime:
+          typeof permission.expireTime === "number" ? permission.expireTime : 0,
+      };
+
+      var cleanupTodo = Object.assign({}, todo);
+
+      if (permission.remove) {
+        todo.op = "remove";
+      }
+
+      pendingPermissions.push(todo);
+
+      if (originalValue == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
+        cleanupTodo.op = "remove";
+      } else {
+        cleanupTodo.value = originalValue;
+        cleanupTodo.permission = originalValue;
+      }
+      cleanupPermissions.push(cleanupTodo);
+    }
+
+    permissionUndoStack.push(cleanupPermissions);
+
+    for (let perm of pendingPermissions) {
+      this._permOp(perm);
+    }
+  }
+
+  popPermissions() {
+    if (permissionUndoStack.length) {
+      for (let perm of permissionUndoStack.pop()) {
+        this._permOp(perm);
+      }
+    }
+  }
+
+  flushPermissions() {
+    while (permissionUndoStack.length) {
+      this.popPermissions();
+    }
+  }
+
   _spawnChrome(task, args, caller, imports) {
     let sb = new SpecialPowersSandbox(
       null,
@@ -740,6 +823,15 @@ class SpecialPowersParent extends JSWindowActorParent {
       case "FlushPrefEnv":
         return this.flushPrefEnv();
 
+      case "PushPermissions":
+        return this.pushPermissions(aMessage.data);
+
+      case "PopPermissions":
+        return this.popPermissions();
+
+      case "FlushPermissions":
+        return this.flushPermissions();
+
       case "SPPrefService": {
         let prefs = Services.prefs;
         let prefType = aMessage.json.prefType.toUpperCase();
@@ -815,31 +907,21 @@ class SpecialPowersParent extends JSWindowActorParent {
       }
 
       case "SPPermissionManager": {
-        let msg = aMessage.json;
-        let principal = msg.principal;
-
+        let msg = aMessage.data;
         switch (msg.op) {
           case "add":
-            Services.perms.addFromPrincipal(
-              principal,
-              msg.type,
-              msg.permission,
-              msg.expireType,
-              msg.expireTime
-            );
-            break;
           case "remove":
-            Services.perms.removeFromPrincipal(principal, msg.type);
+            this._permOp(msg);
             break;
           case "has":
             let hasPerm = Services.perms.testPermissionFromPrincipal(
-              principal,
+              msg.principal,
               msg.type
             );
             return hasPerm == Ci.nsIPermissionManager.ALLOW_ACTION;
           case "test":
             let testPerm = Services.perms.testPermissionFromPrincipal(
-              principal,
+              msg.principal,
               msg.type
             );
             return testPerm == msg.value;

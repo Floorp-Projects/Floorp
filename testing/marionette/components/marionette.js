@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TCPListener: "chrome://marionette/content/server.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

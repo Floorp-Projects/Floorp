@@ -1498,6 +1498,24 @@ bool CallNativeGetter(JSContext* cx, HandleFunction callee,
   return true;
 }
 
+bool CallDOMGetter(JSContext* cx, const JSJitInfo* info, HandleObject obj,
+                   MutableHandleValue result) {
+  MOZ_ASSERT(info->type() == JSJitInfo::Getter);
+  MOZ_ASSERT(obj->isNative());
+  MOZ_ASSERT(obj->getClass()->isDOMClass());
+
+#ifdef DEBUG
+  DOMInstanceClassHasProtoAtDepth instanceChecker =
+      cx->runtime()->DOMcallbacks->instanceClassMatchesProto;
+  MOZ_ASSERT(instanceChecker(obj->getClass(), info->protoID, info->depth));
+#endif
+
+  // Loading DOM_OBJECT_SLOT, which must be the first slot.
+  JS::Value val = JS::GetReservedSlot(obj, 0);
+  JSJitGetterOp getter = info->getter;
+  return getter(cx, obj, val.toPrivate(), JSJitGetterCallArgs(result));
+}
+
 bool CallNativeSetter(JSContext* cx, HandleFunction callee, HandleObject obj,
                       HandleValue rhs) {
   AutoRealm ar(cx, callee);

@@ -48,6 +48,12 @@ class PrintHelper {
   async withClosingFn(closeFn) {
     let { dialog } = this;
     await closeFn();
+    if (this.dialog) {
+      await TestUtils.waitForCondition(
+        () => !this.dialog,
+        "Wait for dialog to close"
+      );
+    }
     await dialog._closingPromise;
   }
 
@@ -55,19 +61,50 @@ class PrintHelper {
     await this.withClosingFn(() => this.dialog.close());
   }
 
-  assertDialogHidden() {
+  assertDialogClosed() {
     is(this._dialogs.length, 0, "There are no print dialogs");
   }
 
-  assertDialogVisible() {
+  assertDialogOpen() {
     is(this._dialogs.length, 1, "There is one print dialog");
-    BrowserTestUtils.is_visible(this.dialog._box, "The dialog is visible");
+    ok(BrowserTestUtils.is_visible(this.dialog._box), "The dialog is visible");
+  }
+
+  assertDialogHidden() {
+    is(this._dialogs.length, 1, "There is one print dialog");
+    ok(BrowserTestUtils.is_hidden(this.dialog._box), "The dialog is hidden");
+  }
+
+  async setupMockPrint() {
+    if (this.resolveShowSystemDialog) {
+      throw new Error("Print already mocked");
+    }
+
+    // Create some Promises that we can resolve/reject from the test.
+    let showSystemDialogPromise = new Promise((resolve, reject) => {
+      this.resolveShowSystemDialog = resolve;
+      this.rejectShowSystemDialog = () => {
+        reject(Components.Exception("", Cr.NS_ERROR_ABORT));
+      };
+    });
+    let printPromise = new Promise((resolve, reject) => {
+      this.resolvePrint = resolve;
+      this.rejectPrint = reject;
+    });
+
+    // Mock PrintEventHandler with our Promises.
+    this.win.PrintEventHandler._showPrintDialog = () => showSystemDialogPromise;
+    this.win.PrintEventHandler._doPrint = () => printPromise;
   }
 
   get _tabDialogBox() {
     return this.sourceBrowser.ownerGlobal.gBrowser.getTabDialogBox(
       this.sourceBrowser
     );
+  }
+
+  get _tabDialogBoxManager() {
+    return this._tabDialogBox.getManager();
   }
 
   get _dialogs() {

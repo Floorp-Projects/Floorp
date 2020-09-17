@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebElement: "chrome://marionette/content/element.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 const ARGUMENTS = "__webDriverArguments";
 const CALLBACK = "__webDriverCallback";

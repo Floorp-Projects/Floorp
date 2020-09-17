@@ -76,6 +76,7 @@ namespace jit {
   _(BoxBoxableValue, js::wasm::BoxBoxableValue)                                \
   _(BoxNonStrictThis, js::BoxNonStrictThis)                                    \
   _(BuiltinObjectOperation, js::BuiltinObjectOperation)                        \
+  _(CallDOMGetter, js::jit::CallDOMGetter)                                     \
   _(CallNativeGetter, js::jit::CallNativeGetter)                               \
   _(CallNativeSetter, js::jit::CallNativeSetter)                               \
   _(CharCodeAt, js::jit::CharCodeAt)                                           \

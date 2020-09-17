@@ -6,14 +6,32 @@ from __future__ import print_function, absolute_import
 
 import os
 import sys
+
+import six
 from mock import Mock
 
-from mozboot.util import get_state_dir
+from mozboot.util import get_state_dir, get_mach_virtualenv_binary
 from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
 from mozbuild.telemetry import filter_args
+import mozpack.path
+
+MACH_METRICS_PATH = os.path.abspath(os.path.join(__file__, '..', '..', 'metrics.yaml'))
 
 
-class Telemetry(object):
+class NoopTelemetry(object):
+    def __init__(self, failed_glean_import):
+        self._failed_glean_import = failed_glean_import
+
+    def metrics(self, metrics_path):
+        return Mock()
+
+    def submit(self, is_bootstrap):
+        if self._failed_glean_import and not is_bootstrap:
+            print("Glean could not be found, so telemetry will not be reported. "
+                  "You may need to run |mach bootstrap|.", file=sys.stderr)
+
+
+class GleanTelemetry(object):
     """Records and sends Telemetry using Glean.
 
     Metrics are defined in python/mozbuild/metrics.yaml.
@@ -23,56 +41,64 @@ class Telemetry(object):
     Glean isn't available. This allows consumers to report telemetry without having
     to guard against incompatible environments.
     """
-    def __init__(self, metrics, pings, failed_glean_import):
-        self.metrics = metrics
-        self._pings = pings
-        self._failed_glean_import = failed_glean_import
+    def __init__(self, ):
+        self._metrics_cache = {}
 
-    def submit(self, is_bootstrap):
-        self._pings.usage.submit()
+    def metrics(self, metrics_path):
+        if metrics_path not in self._metrics_cache:
+            from glean import load_metrics
+            metrics = load_metrics(metrics_path)
+            self._metrics_cache[metrics_path] = metrics
 
-        if self._failed_glean_import and not is_bootstrap:
-            print("Glean could not be found, so telemetry will not be reported. "
-                  "You may need to run |mach bootstrap|.", file=sys.stderr)
+        return self._metrics_cache[metrics_path]
 
-    @classmethod
-    def as_noop(cls, failed_glean_import=False):
-        return cls(Mock(), Mock(), failed_glean_import)
-
-    @classmethod
-    def from_environment(cls, settings):
-        """Creates and configures a Telemetry instance based on system details.
-
-        If telemetry isn't enabled, the current interpreter isn't Python 3, or Glean
-        can't be imported, then a "mock" telemetry instance is returned that doesn't
-        set or record any data. This allows consumers to optimistically set metrics
-        data without needing to specifically handle the case where the current system
-        doesn't support it.
-        """
-        # Glean is not compatible with Python 2
-        if not (sys.version_info >= (3, 0) and is_applicable_telemetry_environment()):
-            return cls.as_noop()
-
-        try:
-            from glean import Glean, load_metrics, load_pings
-        except ImportError:
-            return cls.as_noop(failed_glean_import=True)
-
+    def submit(self, _):
         from pathlib import Path
-
-        Glean.initialize(
-            'mozilla.mach',
-            'Unknown',
-            is_telemetry_enabled(settings),
-            data_dir=Path(get_state_dir()) / 'glean',
-        )
-        from pathlib import Path
-        metrics = load_metrics(Path(__file__).parent.parent / 'metrics.yaml')
+        from glean import load_pings
         pings = load_pings(Path(__file__).parent.parent / 'pings.yaml')
-        return cls(metrics, pings, False)
+        pings.usage.submit()
 
 
-def report_invocation_metrics(metrics, command):
+def create_telemetry_from_environment(settings):
+    """Creates and a Telemetry instance based on system details.
+
+    If telemetry isn't enabled, the current interpreter isn't Python 3, or Glean
+    can't be imported, then a "mock" telemetry instance is returned that doesn't
+    set or record any data. This allows consumers to optimistically set telemetry
+    data without needing to specifically handle the case where the current system
+    doesn't support it.
+    """
+
+    is_mach_virtualenv = (mozpack.path.normpath(sys.executable) ==
+                          mozpack.path.normpath(get_mach_virtualenv_binary(py2=six.PY2)))
+
+    if not (is_applicable_telemetry_environment()
+            # Glean is not compatible with Python 2
+            and sys.version_info >= (3, 0)
+            # If not using the mach virtualenv (e.g.: bootstrap uses native python)
+            # then we can't guarantee that the glean package that we import is a
+            # compatible version. Therefore, don't use glean.
+            and is_mach_virtualenv):
+        return NoopTelemetry(False)
+
+    try:
+        from glean import Glean
+    except ImportError:
+        return NoopTelemetry(True)
+
+    from pathlib import Path
+
+    Glean.initialize(
+        'mozilla.mach',
+        'Unknown',
+        is_telemetry_enabled(settings),
+        data_dir=Path(get_state_dir()) / 'glean',
+    )
+    return GleanTelemetry()
+
+
+def report_invocation_metrics(telemetry, command):
+    metrics = telemetry.metrics(MACH_METRICS_PATH)
     metrics.mach.command.set(command)
     metrics.mach.duration.start()
 

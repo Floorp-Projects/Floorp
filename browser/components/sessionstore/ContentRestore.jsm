@@ -238,7 +238,6 @@ ContentRestoreInternal.prototype = {
     this._tabData = null;
 
     let webNavigation = this.docShell.QueryInterface(Ci.nsIWebNavigation);
-    let history = webNavigation.sessionHistory.legacySHistory;
 
     // Listen for the tab to finish loading.
     this.restoreTabContentStarted(finishCallback, removeListenerCallback);
@@ -330,6 +329,7 @@ ContentRestoreInternal.prototype = {
         if (this._shistoryInParent) {
           reloadSHistoryCallback();
         } else {
+          let history = webNavigation.sessionHistory.legacySHistory;
           history.reloadCurrentEntry();
         }
       } else {

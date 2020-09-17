@@ -9045,6 +9045,10 @@ class TabDialogBox {
     }
     return browser;
   }
+
+  getManager() {
+    return this._dialogManager;
+  }
 }
 
 TabDialogBox.prototype.QueryInterface = ChromeUtils.generateQI([

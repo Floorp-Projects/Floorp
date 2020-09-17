@@ -56,11 +56,10 @@ def running_env(**kw):
 
 @mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTests)
 def test_xpcshell_metrics(*mocked):
-    mach_cmd, metadata, env = running_env()
+    mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_XPCSHELL_TEST)])
 
     sys = env.layers[SYSTEM]
     xpcshell = env.layers[TEST]
-    env.set_arg("tests", [str(EXAMPLE_XPCSHELL_TEST)])
 
     try:
         with sys as s, xpcshell as x:
@@ -79,10 +78,9 @@ def test_xpcshell_metrics(*mocked):
 
 @mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTestsFail)
 def test_xpcshell_metrics_fail(*mocked):
-    mach_cmd, metadata, env = running_env()
+    mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_XPCSHELL_TEST)])
     sys = env.layers[SYSTEM]
     xpcshell = env.layers[TEST]
-    env.set_arg("tests", [str(EXAMPLE_XPCSHELL_TEST)])
 
     try:
         with sys as s, xpcshell as x, pytest.raises(XPCShellTestError):
@@ -109,11 +107,12 @@ def test_xpcshell_perfherder_on_try(*mocked):
 
 
 def _test_xpcshell_perfherder(*mocked):
-    mach_cmd, metadata, env = running_env(perfherder=True, xpcshell_cycles=10)
+    mach_cmd, metadata, env = running_env(
+        perfherder=True, xpcshell_cycles=10, tests=[str(EXAMPLE_XPCSHELL_TEST)]
+    )
 
     sys = env.layers[SYSTEM]
     xpcshell = env.layers[TEST]
-    env.set_arg("tests", [str(EXAMPLE_XPCSHELL_TEST)])
     metrics = env.layers[METRICS]
 
     with temp_file() as output:

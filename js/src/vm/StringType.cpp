@@ -1252,7 +1252,13 @@ constexpr Latin1Char StaticStrings::fromSmallChar(SmallChar c) {
   if (c < 36) {
     return c + 'a' - 10;
   }
-  return c + 'A' - 36;
+  if (c < 62) {
+    return c + 'A' - 36;
+  }
+  if (c == 62) {
+    return '$';
+  }
+  return '_';
 }
 
 constexpr StaticStrings::SmallChar StaticStrings::toSmallChar(uint32_t c) {
@@ -1264,6 +1270,12 @@ constexpr StaticStrings::SmallChar StaticStrings::toSmallChar(uint32_t c) {
   }
   if (mozilla::IsAsciiUppercaseAlpha(c)) {
     return c - 'A' + 36;
+  }
+  if (c == '$') {
+    return 62;
+  }
+  if (c == '_') {
+    return 63;
   }
   return StaticStrings::INVALID_SMALL_CHAR;
 }

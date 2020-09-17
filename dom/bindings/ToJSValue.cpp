@@ -94,5 +94,27 @@ bool ToJSValue(JSContext* aCx, const WindowProxyHolder& aArgument,
   return true;
 }
 
+// Static assertion tests for the `binding_detail::ScriptableInterfaceType`
+// helper template, used by `ToJSValue`.
+namespace binding_detail {
+static_assert(std::is_same_v<ScriptableInterfaceType<nsISupports>, nsISupports>,
+              "nsISupports works with ScriptableInterfaceType");
+static_assert(
+    std::is_same_v<ScriptableInterfaceType<nsIGlobalObject>, nsISupports>,
+    "non-scriptable interfaces get a fallback");
+static_assert(std::is_same_v<ScriptableInterfaceType<nsIObserver>, nsIObserver>,
+              "scriptable interfaces should get the correct type");
+static_assert(std::is_same_v<ScriptableInterfaceType<nsIRunnable>, nsIRunnable>,
+              "scriptable interfaces should get the correct type");
+class SingleScriptableInterface : public nsIObserver {};
+static_assert(
+    std::is_same_v<ScriptableInterfaceType<SingleScriptableInterface>,
+                   nsIObserver>,
+    "Concrete type with one scriptable interface picks the correct interface");
+class MultiScriptableInterface : public nsIObserver, public nsIRunnable {};
+static_assert(std::is_same_v<ScriptableInterfaceType<MultiScriptableInterface>,
+                             nsISupports>,
+              "Concrete type with multiple scriptable interfaces falls back");
+}  // namespace binding_detail
 }  // namespace dom
 }  // namespace mozilla

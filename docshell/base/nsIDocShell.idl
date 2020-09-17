@@ -703,18 +703,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   void makeEditable(in boolean inWaitForUriLoad);
 
-
-  /**
-   * Add a Child SHEntry for a frameset page, given the child's loadtype.
-   * If aCloneChildren is true, then aCloneReference's children will be
-   * cloned onto aHistoryEntry.
-   */
-  void addChildSHEntry(in nsISHEntry aCloneReference,
-                       in nsISHEntry aHistoryEntry,
-                       in long aChildOffset,
-                       in unsigned long aLoadType,
-                       in boolean aCloneChilden);
-
   /**
    * Set when an iframe/frame is added dynamically.
    */

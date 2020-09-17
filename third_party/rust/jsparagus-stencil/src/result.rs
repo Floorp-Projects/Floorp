@@ -10,8 +10,7 @@ pub struct EmitResult<'alloc> {
     pub scopes: Vec<ScopeData>,
     pub regexps: Vec<RegExpItem>,
 
-    pub top_level_script: ScriptStencil,
-    pub functions: Vec<ScriptStencil>,
+    pub scripts: Vec<ScriptStencil>,
     pub script_data_list: Vec<ImmutableScriptData>,
 }
 
@@ -21,8 +20,7 @@ impl<'alloc> EmitResult<'alloc> {
         slices: Vec<&'alloc str>,
         scopes: Vec<ScopeData>,
         regexps: Vec<RegExpItem>,
-        top_level_script: ScriptStencil,
-        functions: Vec<ScriptStencil>,
+        scripts: Vec<ScriptStencil>,
         script_data_list: Vec<ImmutableScriptData>,
     ) -> Self {
         Self {
@@ -30,8 +28,7 @@ impl<'alloc> EmitResult<'alloc> {
             slices,
             scopes,
             regexps,
-            top_level_script,
-            functions,
+            scripts,
             script_data_list,
         }
     }
