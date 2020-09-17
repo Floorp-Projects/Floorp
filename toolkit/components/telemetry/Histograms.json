@@ -1133,7 +1133,7 @@
   "GPU_PROCESS_CRASH_FALLBACKS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "cpearce@mozilla.com", "gsquelart@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "gsquelart@mozilla.com"],
     "expires_in_version": "70",
     "bug_numbers": [1338011],
     "kind": "enumerated",
@@ -14909,7 +14909,6 @@
     "products": ["firefox"],
     "alert_emails": [
       "alwu@mozilla.com",
-      "cpearce@mozilla.com",
       "nohlmeier@mozilla.com",
       "padenot@mozilla.com"
     ],
@@ -14940,7 +14939,6 @@
     "products": ["firefox", "fennec"],
     "alert_emails": [
       "alwu@mozilla.com",
-      "cpearce@mozilla.com",
       "padenot@mozilla.com",
       "ktomlinson@mozilla.com"
     ],
@@ -14956,7 +14954,6 @@
     "products": ["firefox", "fennec"],
     "alert_emails": [
       "alwu@mozilla.com",
-      "cpearce@mozilla.com",
       "nohlmeier@mozilla.com"
     ],
     "expires_in_version": "72",
