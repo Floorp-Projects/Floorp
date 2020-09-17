@@ -2774,16 +2774,6 @@ nsDocumentViewer::SetHintCharset(const Encoding* aEncoding) {
   CallChildren(childFn);
 }
 
-NS_IMETHODIMP nsDocumentViewer::AppendSubtree(
-    nsTArray<nsCOMPtr<nsIContentViewer>>& aArray) {
-  aArray.AppendElement(this);
-  auto childFn = [&aArray](nsDocumentViewer* aChild) {
-    aChild->AppendSubtree(aArray);
-  };
-  CallChildren(childFn);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDocumentViewer::PausePainting() {
   CallChildren([](nsDocumentViewer* aChild) { aChild->PausePainting(); });
