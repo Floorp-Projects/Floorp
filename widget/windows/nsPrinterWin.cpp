@@ -112,7 +112,8 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
 
 template <class T>
 static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
-                                            WORD aCapabilityID) {
+                                            WORD aCapabilityID,
+                                            size_t aCount = 0) {
   nsTArray<T> caps;
 
   // We only want to access printer drivers in the parent process.
@@ -120,15 +121,25 @@ static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
     return caps;
   }
 
-  // Passing nullptr as the port here seems to work. Given that we would have to
-  // OpenPrinter with just the name anyway to get the port that makes sense.
-  // Also, the printer set-up seems to stop you from having two printers with
-  // the same name.
-  // Note: this (and the call below) are blocking calls, which could be slow.
-  int count = ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID,
-                                    nullptr, nullptr);
-  if (count <= 0) {
-    return caps;
+  // Both the call to get the size and the call to actually populate the array
+  // are relatively expensive, so as sometimes the lengths of the arrays that we
+  // retrieve depend on each other we allow a count to be passed in to save the
+  // first call. As we allocate double the count anyway this should allay any
+  // safety worries.
+  int count;
+  if (aCount) {
+    count = aCount;
+  } else {
+    // Passing nullptr as the port here seems to work. Given that we would have
+    // to OpenPrinter with just the name anyway to get the port that makes
+    // sense. Also, the printer set-up seems to stop you from having two
+    // printers with the same name. Note: this (and the call below) are blocking
+    // calls, which could be slow.
+    count = ::DeviceCapabilitiesW(aPrinterName, nullptr, aCapabilityID, nullptr,
+                                  nullptr);
+    if (count <= 0) {
+      return caps;
+    }
   }
 
   // As DeviceCapabilitiesW doesn't take a size, there is a greater risk of the
@@ -198,16 +209,17 @@ bool nsPrinterWin::SupportsCollation() const {
 }
 
 nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
-  // Paper names are returned in 64 long character buffers.
-  auto paperNames =
-      GetDeviceCapabilityArray<Array<wchar_t, 64>>(mName.get(), DC_PAPERNAMES);
-
   // Paper IDs are returned as WORDs.
   auto paperIds = GetDeviceCapabilityArray<WORD>(mName.get(), DC_PAPERS);
 
+  // Paper names are returned in 64 long character buffers.
+  auto paperNames = GetDeviceCapabilityArray<Array<wchar_t, 64>>(
+      mName.get(), DC_PAPERNAMES, paperIds.Length());
+
   // Paper sizes are returned as POINT structs with a tenth of a millimeter as
   // the unit.
-  auto paperSizes = GetDeviceCapabilityArray<POINT>(mName.get(), DC_PAPERSIZE);
+  auto paperSizes = GetDeviceCapabilityArray<POINT>(mName.get(), DC_PAPERSIZE,
+                                                    paperIds.Length());
 
   // Check that we have papers and that the array lengths match.
   if (!paperNames.Length() || paperNames.Length() != paperIds.Length() ||
