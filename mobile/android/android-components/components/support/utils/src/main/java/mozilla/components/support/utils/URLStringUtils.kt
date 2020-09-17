@@ -94,9 +94,10 @@ object URLStringUtils {
 
     /**
      * Generates a shorter version of the provided URL for display purposes by stripping it of
-     * https/http and/or WWW prefixes when applicable.
+     * https/http and/or WWW prefixes and/or trailing slash when applicable.
      */
-    fun toDisplayUrl(originalUrl: CharSequence) = maybeStripUrlProtocol(originalUrl)
+    fun toDisplayUrl(originalUrl: CharSequence) =
+        maybeStripTrailingSlash(maybeStripUrlProtocol(originalUrl))
 
     private fun maybeStripUrlProtocol(url: CharSequence): CharSequence {
         var noPrefixUrl = url
@@ -112,5 +113,9 @@ object URLStringUtils {
         return if (url.toString().startsWith(WWW)) {
             url.toString().replaceFirst(WWW, "")
         } else url
+    }
+
+    private fun maybeStripTrailingSlash(url: CharSequence): CharSequence {
+        return url.trimEnd('/')
     }
 }
