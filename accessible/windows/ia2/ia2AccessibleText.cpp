@@ -437,8 +437,9 @@ AccessibleTextBoundary ia2AccessibleText::GetGeckoTextBoundary(
       return nsIAccessibleText::BOUNDARY_WORD_START;
     case IA2_TEXT_BOUNDARY_LINE:
       return nsIAccessibleText::BOUNDARY_LINE_START;
+    case IA2_TEXT_BOUNDARY_PARAGRAPH:
+      return nsIAccessibleText::BOUNDARY_PARAGRAPH;
     // case IA2_TEXT_BOUNDARY_SENTENCE:
-    // case IA2_TEXT_BOUNDARY_PARAGRAPH:
     // XXX: not implemented
     default:
       return -1;
