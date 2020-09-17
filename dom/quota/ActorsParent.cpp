@@ -2518,7 +2518,7 @@ void GetJarPrefix(bool aInIsolatedMozBrowser, nsACString& aJarPrefix) {
   aJarPrefix.Append('+');
 }
 
-nsresult CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
+nsresult CreateDirectoryMetadata(nsIFile& aDirectory, int64_t aTimestamp,
                                  const nsACString& aSuffix,
                                  const nsACString& aGroup,
                                  const nsACString& aOrigin) {
@@ -2527,10 +2527,8 @@ nsresult CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
   OriginAttributes groupAttributes;
 
   nsCString groupNoSuffix;
-  bool ok = groupAttributes.PopulateFromOrigin(aGroup, groupNoSuffix);
-  if (!ok) {
-    return NS_ERROR_FAILURE;
-  }
+  QM_TRY(OkIf(groupAttributes.PopulateFromOrigin(aGroup, groupNoSuffix)),
+         NS_ERROR_FAILURE);
 
   nsCString groupPrefix;
   GetJarPrefix(groupAttributes.mInIsolatedMozBrowser, groupPrefix);
@@ -2540,10 +2538,8 @@ nsresult CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
   OriginAttributes originAttributes;
 
   nsCString originNoSuffix;
-  ok = originAttributes.PopulateFromOrigin(aOrigin, originNoSuffix);
-  if (!ok) {
-    return NS_ERROR_FAILURE;
-  }
+  QM_TRY(OkIf(originAttributes.PopulateFromOrigin(aOrigin, originNoSuffix)),
+         NS_ERROR_FAILURE);
 
   nsCString originPrefix;
   GetJarPrefix(originAttributes.mInIsolatedMozBrowser, originPrefix);
@@ -2552,142 +2548,75 @@ nsresult CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
 
   MOZ_ASSERT(groupPrefix == originPrefix);
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aDirectory->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(auto file, ToResultInvoke<nsCOMPtr<nsIFile>>(
+                            std::mem_fn(&nsIFile::Clone), &aDirectory));
 
-  rv = file->Append(nsLiteralString(METADATA_TMP_FILE_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(file->Append(nsLiteralString(METADATA_TMP_FILE_NAME)));
 
   QM_TRY_VAR(auto stream, GetBinaryOutputStream(*file, kTruncateFileFlag));
 
   MOZ_ASSERT(stream);
 
-  rv = stream->Write64(aTimestamp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->Write64(aTimestamp));
 
-  rv = stream->WriteStringZ(group.get());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->WriteStringZ(group.get()));
 
-  rv = stream->WriteStringZ(origin.get());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->WriteStringZ(origin.get()));
 
   // Currently unused (used to be isApp).
-  rv = stream->WriteBoolean(false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->WriteBoolean(false));
 
-  rv = stream->Flush();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->Flush());
 
-  rv = stream->Close();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->Close());
 
-  rv = file->RenameTo(nullptr, nsLiteralString(METADATA_FILE_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(file->RenameTo(nullptr, nsLiteralString(METADATA_FILE_NAME)));
 
   return NS_OK;
 }
 
-nsresult CreateDirectoryMetadata2(nsIFile* aDirectory, int64_t aTimestamp,
+nsresult CreateDirectoryMetadata2(nsIFile& aDirectory, int64_t aTimestamp,
                                   bool aPersisted, const nsACString& aSuffix,
                                   const nsACString& aGroup,
                                   const nsACString& aOrigin) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aDirectory->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(auto file, ToResultInvoke<nsCOMPtr<nsIFile>>(
+                            std::mem_fn(&nsIFile::Clone), &aDirectory));
 
-  rv = file->Append(nsLiteralString(METADATA_V2_TMP_FILE_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(file->Append(nsLiteralString(METADATA_V2_TMP_FILE_NAME)));
 
   QM_TRY_VAR(auto stream, GetBinaryOutputStream(*file, kTruncateFileFlag));
 
   MOZ_ASSERT(stream);
 
-  rv = stream->Write64(aTimestamp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->Write64(aTimestamp));
 
-  rv = stream->WriteBoolean(aPersisted);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->WriteBoolean(aPersisted));
 
   // Reserved data 1
-  rv = stream->Write32(0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->Write32(0));
 
   // Reserved data 2
-  rv = stream->Write32(0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->Write32(0));
 
   // The suffix isn't used right now, but we might need it in future. It's
   // a bit of redundancy we can live with given how painful is to upgrade
   // metadata files.
-  rv = stream->WriteStringZ(PromiseFlatCString(aSuffix).get());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->WriteStringZ(PromiseFlatCString(aSuffix).get()));
 
-  rv = stream->WriteStringZ(PromiseFlatCString(aGroup).get());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->WriteStringZ(PromiseFlatCString(aGroup).get()));
 
-  rv = stream->WriteStringZ(PromiseFlatCString(aOrigin).get());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->WriteStringZ(PromiseFlatCString(aOrigin).get()));
 
   // Currently unused (used to be isApp).
-  rv = stream->WriteBoolean(false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->WriteBoolean(false));
 
-  rv = stream->Flush();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->Flush());
 
-  rv = stream->Close();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(stream->Close());
 
-  rv = file->RenameTo(nullptr, nsLiteralString(METADATA_V2_FILE_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(file->RenameTo(nullptr, nsLiteralString(METADATA_V2_FILE_NAME)));
 
   return NS_OK;
 }
@@ -4912,65 +4841,48 @@ nsresult QuotaManager::GetDirectoryMetadata2(
              GetBinaryInputStream(*aDirectory,
                                   nsLiteralString(METADATA_V2_FILE_NAME)));
 
-  uint64_t timestamp;
-  QM_TRY(binaryStream->Read64(&timestamp));
+  QM_TRY_VAR(const uint64_t timestamp,
+             MOZ_TO_RESULT_INVOKE(binaryStream, Read64));
 
-  bool persisted;
-  nsresult rv = binaryStream->ReadBoolean(&persisted);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const bool persisted,
+             MOZ_TO_RESULT_INVOKE(binaryStream, ReadBoolean));
 
-  uint32_t reservedData1;
-  rv = binaryStream->Read32(&reservedData1);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const bool reservedData1,
+             MOZ_TO_RESULT_INVOKE(binaryStream, Read32));
+  Unused << reservedData1;
 
-  uint32_t reservedData2;
-  rv = binaryStream->Read32(&reservedData2);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const bool reservedData2,
+             MOZ_TO_RESULT_INVOKE(binaryStream, Read32));
+  Unused << reservedData2;
 
-  nsCString suffix;
-  rv = binaryStream->ReadCString(suffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(
+      const auto suffix,
+      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
+                                binaryStream));
 
-  nsCString group;
-  QM_TRY(binaryStream->ReadCString(group));
+  QM_TRY_VAR(auto group, ToResultInvoke<nsCString>(
+                             std::mem_fn(&nsIBinaryInputStream::ReadCString),
+                             binaryStream));
 
-  nsCString origin;
-  QM_TRY(binaryStream->ReadCString(origin));
+  QM_TRY_VAR(
+      const auto origin,
+      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
+                                binaryStream));
 
   // Currently unused (used to be isApp).
-  bool dummy;
-  rv = binaryStream->ReadBoolean(&dummy);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const bool dummy, MOZ_TO_RESULT_INVOKE(binaryStream, ReadBoolean));
+  Unused << dummy;
 
-  rv = binaryStream->Close();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(binaryStream->Close());
 
   bool updated;
-  rv = MaybeUpdateGroupForOrigin(origin, group, updated);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(MaybeUpdateGroupForOrigin(origin, group, updated));
 
   if (updated) {
     // Only overwriting .metadata-v2 (used to overwrite .metadata too) to reduce
     // I/O.
-    rv = CreateDirectoryMetadata2(aDirectory, timestamp, persisted, suffix,
-                                  group, origin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QM_TRY(CreateDirectoryMetadata2(*aDirectory, timestamp, persisted, suffix,
+                                    group, origin));
   }
 
   *aTimestamp = timestamp;
@@ -6844,7 +6756,7 @@ nsresult QuotaManager::EnsurePersistentOriginIsInitialized(
     timestamp = PR_Now();
 
     // Only creating .metadata-v2 to reduce IO.
-    rv = CreateDirectoryMetadata2(directory, timestamp,
+    rv = CreateDirectoryMetadata2(*directory, timestamp,
                                   /* aPersisted */ true, aSuffix, aGroup,
                                   aOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6915,7 +6827,7 @@ nsresult QuotaManager::EnsureTemporaryOriginIsInitialized(
                                /* aPersisted */ false, timestamp);
 
     // Only creating .metadata-v2 to reduce IO.
-    rv = CreateDirectoryMetadata2(directory, timestamp,
+    rv = CreateDirectoryMetadata2(*directory, timestamp,
                                   /* aPersisted */ false, aSuffix, aGroup,
                                   aOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -10129,7 +10041,7 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
       timestamp = PR_Now();
     }
 
-    rv = CreateDirectoryMetadata2(directory, timestamp, /* aPersisted */ true,
+    rv = CreateDirectoryMetadata2(*directory, timestamp, /* aPersisted */ true,
                                   mSuffix, mGroup, mOriginScope.GetOrigin());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -10565,10 +10477,7 @@ nsresult StorageOperationBase::RemoveObsoleteOrigin(
       "origin!",
       NS_ConvertUTF16toUTF8(aOriginProps.mLeafName).get());
 
-  nsresult rv = aOriginProps.mDirectory->Remove(/* recursive */ true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(aOriginProps.mDirectory->Remove(/* recursive */ true));
 
   return NS_OK;
 }
@@ -11478,7 +11387,7 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
   nsresult rv;
 
   if (mPersistent) {
-    rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
+    rv = CreateDirectoryMetadata(*aOriginProps.mDirectory,
                                  aOriginProps.mTimestamp, aOriginProps.mSuffix,
                                  aOriginProps.mGroup, aOriginProps.mOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -11539,7 +11448,7 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
       }
     }
   } else if (aOriginProps.mNeedsRestore) {
-    rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
+    rv = CreateDirectoryMetadata(*aOriginProps.mDirectory,
                                  aOriginProps.mTimestamp, aOriginProps.mSuffix,
                                  aOriginProps.mGroup, aOriginProps.mOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -11601,11 +11510,11 @@ nsresult UpgradeStorageFrom0_0To1_0Helper::ProcessOriginDirectory(
 
   if (aOriginProps.mNeedsRestore) {
     QM_TRY(CreateDirectoryMetadata(
-        aOriginProps.mDirectory, aOriginProps.mTimestamp, aOriginProps.mSuffix,
+        *aOriginProps.mDirectory, aOriginProps.mTimestamp, aOriginProps.mSuffix,
         aOriginProps.mGroup, aOriginProps.mOrigin));
   }
 
-  QM_TRY(CreateDirectoryMetadata2(aOriginProps.mDirectory,
+  QM_TRY(CreateDirectoryMetadata2(*aOriginProps.mDirectory,
                                   aOriginProps.mTimestamp,
                                   /* aPersisted */ false, aOriginProps.mSuffix,
                                   aOriginProps.mGroup, aOriginProps.mOrigin));
@@ -11711,11 +11620,11 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeStripObsoleteOriginAttributes(
     return false;
   }
 
-  QM_TRY(CreateDirectoryMetadata(aOriginProps.mDirectory,
+  QM_TRY(CreateDirectoryMetadata(*aOriginProps.mDirectory,
                                  aOriginProps.mTimestamp, aOriginProps.mSuffix,
                                  aOriginProps.mGroup, aOriginProps.mOrigin));
 
-  QM_TRY(CreateDirectoryMetadata2(aOriginProps.mDirectory,
+  QM_TRY(CreateDirectoryMetadata2(*aOriginProps.mDirectory,
                                   aOriginProps.mTimestamp,
                                   /* aPersisted */ false, aOriginProps.mSuffix,
                                   aOriginProps.mGroup, aOriginProps.mOrigin));
@@ -11797,13 +11706,13 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::ProcessOriginDirectory(
 
   if (aOriginProps.mNeedsRestore) {
     QM_TRY(CreateDirectoryMetadata(
-        aOriginProps.mDirectory, aOriginProps.mTimestamp, aOriginProps.mSuffix,
+        *aOriginProps.mDirectory, aOriginProps.mTimestamp, aOriginProps.mSuffix,
         aOriginProps.mGroup, aOriginProps.mOrigin));
   }
 
   if (aOriginProps.mNeedsRestore2) {
     QM_TRY(CreateDirectoryMetadata2(
-        aOriginProps.mDirectory, aOriginProps.mTimestamp,
+        *aOriginProps.mDirectory, aOriginProps.mTimestamp,
         /* aPersisted */ false, aOriginProps.mSuffix, aOriginProps.mGroup,
         aOriginProps.mOrigin));
   }
@@ -11851,13 +11760,13 @@ nsresult UpgradeStorageFrom2_0To2_1Helper::ProcessOriginDirectory(
 
   if (aOriginProps.mNeedsRestore) {
     QM_TRY(CreateDirectoryMetadata(
-        aOriginProps.mDirectory, aOriginProps.mTimestamp, aOriginProps.mSuffix,
+        *aOriginProps.mDirectory, aOriginProps.mTimestamp, aOriginProps.mSuffix,
         aOriginProps.mGroup, aOriginProps.mOrigin));
   }
 
   if (aOriginProps.mNeedsRestore2) {
     QM_TRY(CreateDirectoryMetadata2(
-        aOriginProps.mDirectory, aOriginProps.mTimestamp,
+        *aOriginProps.mDirectory, aOriginProps.mTimestamp,
         /* aPersisted */ false, aOriginProps.mSuffix, aOriginProps.mGroup,
         aOriginProps.mOrigin));
   }
@@ -11905,13 +11814,13 @@ nsresult UpgradeStorageFrom2_1To2_2Helper::ProcessOriginDirectory(
 
   if (aOriginProps.mNeedsRestore) {
     QM_TRY(CreateDirectoryMetadata(
-        aOriginProps.mDirectory, aOriginProps.mTimestamp, aOriginProps.mSuffix,
+        *aOriginProps.mDirectory, aOriginProps.mTimestamp, aOriginProps.mSuffix,
         aOriginProps.mGroup, aOriginProps.mOrigin));
   }
 
   if (aOriginProps.mNeedsRestore2) {
     QM_TRY(CreateDirectoryMetadata2(
-        aOriginProps.mDirectory, aOriginProps.mTimestamp,
+        *aOriginProps.mDirectory, aOriginProps.mTimestamp,
         /* aPersisted */ false, aOriginProps.mSuffix, aOriginProps.mGroup,
         aOriginProps.mOrigin));
   }
@@ -11965,10 +11874,10 @@ nsresult RestoreDirectoryMetadata2Helper::ProcessOriginDirectory(
   AssertIsOnIOThread();
 
   // We don't have any approach to restore aPersisted, so reset it to false.
-  nsresult rv =
-      CreateDirectoryMetadata2(aOriginProps.mDirectory, aOriginProps.mTimestamp,
-                               /* aPersisted */ false, aOriginProps.mSuffix,
-                               aOriginProps.mGroup, aOriginProps.mOrigin);
+  nsresult rv = CreateDirectoryMetadata2(
+      *aOriginProps.mDirectory, aOriginProps.mTimestamp,
+      /* aPersisted */ false, aOriginProps.mSuffix, aOriginProps.mGroup,
+      aOriginProps.mOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
