@@ -2404,9 +2404,9 @@ void MediaTrack::AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime,
   }
 
   TrackTime time = aCurrentTime - mStartTime;
-  // Only prune if there is a reasonable chunk (50ms @ 48kHz) to forget, so we
-  // don't spend too much time pruning segments.
-  const TrackTime minChunkSize = 2400;
+  // Only prune if there is a reasonable chunk (50ms) to forget, so we don't
+  // spend too much time pruning segments.
+  const TrackTime minChunkSize = mSampleRate * 50 / 1000;
   if (time < mForgottenTime + minChunkSize) {
     return;
   }
