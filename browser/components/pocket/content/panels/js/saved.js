@@ -516,7 +516,7 @@ var PKT_SAVED_OVERLAY = function(options) {
     }
   };
   this.renderItemRecs = function(data) {
-    if (data?.recommendations?.length) {
+    if (data && data.recommendations && data.recommendations.length) {
       // URL encode and append raw image source for Thumbor + CDN
       data.recommendations = data.recommendations.map(rec => {
         // Using array notation because there is a key titled `1` (`images` is an object)
@@ -529,10 +529,6 @@ var PKT_SAVED_OVERLAY = function(options) {
         return rec;
       });
 
-      // This is the ML model used to recommend the story.
-      // Right now this value is the same for all three items returned together,
-      // so we can just use the first item's value for all.
-      const model = data.recommendations[0].experiment;
       $(".pkt_ext_item_recs").append(Handlebars.templates.item_recs(data));
 
       // Resize popover to accomodate recs:
@@ -543,12 +539,9 @@ var PKT_SAVED_OVERLAY = function(options) {
 
       $(".pkt_ext_item_recs_link").click(function(e) {
         e.preventDefault();
-        const url = $(this).attr("href");
-        const position = $(".pkt_ext_item_recs_link").index(this);
         thePKT_SAVED.sendMessage("openTabWithPocketUrl", {
-          url,
-          model,
-          position,
+          url: $(this).attr("href"),
+          activate: true,
         });
         myself.closePopup();
       });
