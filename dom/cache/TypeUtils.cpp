@@ -6,8 +6,10 @@
 
 #include "mozilla/dom/cache/TypeUtils.h"
 
+#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
+#include "mozilla/dom/CacheStorageBinding.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/Request.h"
@@ -19,16 +21,15 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PFileDescriptorSetChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/StaticPrefs_extensions.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
+#include "nsHttp.h"
 #include "nsIIPCSerializableInputStream.h"
-#include "nsQueryObject.h"
 #include "nsPromiseFlatString.h"
+#include "nsQueryObject.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsURLParsers.h"
-#include "nsCRT.h"
-#include "nsHttp.h"
 
 namespace mozilla {
 namespace dom {
@@ -243,6 +244,12 @@ void TypeUtils::ToCacheQueryParams(CacheQueryParams& aOut,
   aOut.ignoreSearch() = aIn.mIgnoreSearch;
   aOut.ignoreMethod() = aIn.mIgnoreMethod;
   aOut.ignoreVary() = aIn.mIgnoreVary;
+}
+
+// static
+void TypeUtils::ToCacheQueryParams(CacheQueryParams& aOut,
+                                   const MultiCacheQueryOptions& aIn) {
+  ToCacheQueryParams(aOut, static_cast<const CacheQueryOptions&>(aIn));
   aOut.cacheNameSet() = aIn.mCacheName.WasPassed();
   if (aOut.cacheNameSet()) {
     aOut.cacheName() = aIn.mCacheName.Value();
