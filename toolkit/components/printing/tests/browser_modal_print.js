@@ -12,11 +12,11 @@ function assertExpectedPrintPage(helper) {
 
 add_task(async function testModalPrintDialog() {
   await PrintHelper.withTestPage(async helper => {
-    helper.assertDialogHidden();
+    helper.assertDialogClosed();
 
     await helper.startPrint();
 
-    helper.assertDialogVisible();
+    helper.assertDialogOpen();
 
     // Check that we're printing the right page.
     assertExpectedPrintPage(helper);
@@ -26,26 +26,26 @@ add_task(async function testModalPrintDialog() {
       EventUtils.synthesizeKey("VK_ESCAPE", {}, helper.win);
     });
 
-    helper.assertDialogHidden();
+    helper.assertDialogClosed();
   });
 });
 
 add_task(async function testPrintMultiple() {
   await PrintHelper.withTestPage(async helper => {
-    helper.assertDialogHidden();
+    helper.assertDialogClosed();
 
     // First print as usual.
     await helper.startPrint();
-    helper.assertDialogVisible();
+    helper.assertDialogOpen();
     assertExpectedPrintPage(helper);
 
     // Trigger the command a few more times, verify the overlay still exists.
     await helper.startPrint();
-    helper.assertDialogVisible();
+    helper.assertDialogOpen();
     await helper.startPrint();
-    helper.assertDialogVisible();
+    helper.assertDialogOpen();
     await helper.startPrint();
-    helper.assertDialogVisible();
+    helper.assertDialogOpen();
 
     // Verify it's still the correct page.
     assertExpectedPrintPage(helper);
@@ -57,9 +57,9 @@ add_task(async function testPrintMultiple() {
 
 add_task(async function testCancelButton() {
   await PrintHelper.withTestPage(async helper => {
-    helper.assertDialogHidden();
+    helper.assertDialogClosed();
     await helper.startPrint();
-    helper.assertDialogVisible();
+    helper.assertDialogOpen();
 
     let cancelButton = helper.doc.querySelector("button[name=cancel]");
     ok(cancelButton, "Got the cancel button");
@@ -67,15 +67,15 @@ add_task(async function testCancelButton() {
       EventUtils.synthesizeMouseAtCenter(cancelButton, {}, helper.win)
     );
 
-    helper.assertDialogHidden();
+    helper.assertDialogClosed();
   });
 });
 
 add_task(async function testTabOrder() {
   await PrintHelper.withTestPage(async helper => {
-    helper.assertDialogHidden();
+    helper.assertDialogClosed();
     await helper.startPrint();
-    helper.assertDialogVisible();
+    helper.assertDialogOpen();
 
     const printerPicker = helper.doc.getElementById("printer-picker");
     is(
@@ -127,6 +127,6 @@ add_task(async function testTabOrder() {
       EventUtils.synthesizeKey("VK_ESCAPE", {});
     });
 
-    helper.assertDialogHidden();
+    helper.assertDialogClosed();
   });
 });

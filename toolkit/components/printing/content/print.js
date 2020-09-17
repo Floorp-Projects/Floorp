@@ -198,11 +198,22 @@ var PrintEventHandler = {
       // This file in only used if pref print.always_print_silent is false, so
       // no need to check that here.
 
-      // Disable elements of form while waiting to initialize
-      for (let element of document.querySelector("#print").elements) {
-        element.disabled = true;
+      if (document.body.getAttribute("rendering")) {
+        // Disable elements of form while waiting to initialize
+        for (let element of document.querySelector("#print").elements) {
+          element.disabled = true;
+        }
+        await window._initialized;
       }
-      await window._initialized;
+
+      // Hide the dialog box before opening system dialog
+      // We cannot close the window yet because the browsing context for the
+      // print preview browser is needed to print the page.
+      let sourceBrowser = this.getSourceBrowsingContext().top.embedderElement;
+      let dialogBoxManager = gBrowser
+        .getTabDialogBox(sourceBrowser)
+        .getManager();
+      dialogBoxManager.hideDialog(sourceBrowser);
 
       // Use our settings to prepopulate the system dialog.
       // The system print dialog won't recognize our internal save-to-pdf
@@ -225,7 +236,7 @@ var PrintEventHandler = {
           "printing.dialog_opened_via_preview_tm",
           1
         );
-        PRINTPROMPTSVC.showPrintDialog(window, settings);
+        await this._showPrintDialog(PRINTPROMPTSVC, window, settings);
       } catch (e) {
         if (e.result == Cr.NS_ERROR_ABORT) {
           Services.telemetry.scalarAdd(
@@ -237,7 +248,7 @@ var PrintEventHandler = {
         }
         throw e;
       }
-      this.print(settings);
+      await this.print(settings);
     });
 
     await this.refreshSettings(selectedPrinter.value);
@@ -414,10 +425,7 @@ var PrintEventHandler = {
     try {
       this.settings.showPrintProgress = true;
       let bc = this.previewBrowser.browsingContext;
-      await bc.top.embedderElement.print(
-        bc.currentWindowGlobal.outerWindowId,
-        settings
-      );
+      await this._doPrint(bc, settings);
     } catch (e) {
       Cu.reportError(e);
     }
@@ -705,6 +713,26 @@ var PrintEventHandler = {
         };
       }
     }
+  },
+
+  /**
+   * Prints the window. This method has been abstracted into a helper for
+   * testing purposes.
+   */
+  _doPrint(aBrowsingContext, aSettings) {
+    return aBrowsingContext.top.embedderElement.print(
+      aBrowsingContext.currentWindowGlobal.outerWindowId,
+      aSettings
+    );
+  },
+
+  /**
+   * Shows the system dialog. This method has been abstracted into a helper for
+   * testing purposes. The showPrintDialog() call blocks until the dialog is
+   * closed, so we mark it as async to allow us to reject from the test.
+   */
+  async _showPrintDialog(aPrintingPromptService, aWindow, aSettings) {
+    return aPrintingPromptService.showPrintDialog(aWindow, aSettings);
   },
 };
 

@@ -105,3 +105,52 @@ add_task(async function test_tabdialogbox_close_on_content_nav() {
     ok(true, "Dialog should close for cross origin navigation by the content.");
   });
 });
+
+/**
+ * Hides a dialog stack and tests that behavior doesn't change. Ensures
+ * navigation triggered by web content still closes all dialogs.
+ */
+add_task(async function test_tabdialogbox_hide() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function(
+    browser
+  ) {
+    // Open a dialog and wait for it to be ready
+    let dialogBox = gBrowser.getTabDialogBox(browser);
+    let dialogBoxManager = dialogBox.getManager();
+    let closedPromises = [
+      dialogBox.open(TEST_DIALOG_PATH),
+      dialogBox.open(TEST_DIALOG_PATH),
+    ];
+
+    let dialogs = dialogBox._dialogManager._dialogs;
+
+    is(
+      dialogBox._dialogManager._dialogs.length,
+      2,
+      "Dialog manager has two dialogs."
+    );
+
+    info("Waiting for dialogs to open.");
+    await Promise.all(dialogs.map(dialog => dialog._dialogReady));
+
+    is(dialogBoxManager._dialogStack.hidden, false, "Dialog stack is showing");
+
+    dialogBoxManager.hideDialog(browser);
+
+    is(
+      dialogBoxManager._dialogs.length,
+      2,
+      "Dialog manager still has two dialogs."
+    );
+
+    is(dialogBoxManager._dialogStack.hidden, true, "Dialog stack is hidden");
+
+    // Navigate to a different page
+    BrowserTestUtils.loadURI(browser, "https://example.org");
+
+    info("Waiting for dialogs to close.");
+    await closedPromises;
+
+    ok(true, "All open dialogs should still close on navigation");
+  });
+});

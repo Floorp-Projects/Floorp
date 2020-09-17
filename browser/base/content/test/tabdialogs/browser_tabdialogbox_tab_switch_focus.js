@@ -9,7 +9,6 @@ const TEST_DIALOG_PATH = TEST_ROOT_CHROME + "subdialog.xhtml";
 /**
  * Tests that tab dialogs are focused when switching tabs.
  */
-
 add_task(async function test_tabdialogbox_tab_switch_focus() {
   // Open 3 tabs
   let tabPromises = [];
@@ -68,6 +67,59 @@ add_task(async function test_tabdialogbox_tab_switch_focus() {
     tabs[2].linkedBrowser,
     "Top level browser is focused"
   );
+
+  // Cleanup
+  tabs.forEach(tab => {
+    BrowserTestUtils.removeTab(tab);
+  });
+});
+
+/**
+ * Tests that other dialogs are still visible if one dialog is hidden.
+ */
+add_task(async function test_tabdialogbox_tab_switch_hidden() {
+  // Open 2 tabs
+  let tabPromises = [];
+  for (let i = 0; i < 2; i += 1) {
+    tabPromises.push(
+      BrowserTestUtils.openNewForegroundTab(
+        gBrowser,
+        "http://example.com",
+        true
+      )
+    );
+  }
+
+  // Wait for tabs to be ready
+  let tabs = await Promise.all(tabPromises);
+
+  // Open subdialog in tabs
+  let dialogs = [];
+  let dialogBox, dialogBoxManager, browser;
+  for (let i = 0; i < 2; i += 1) {
+    dialogBox = gBrowser.getTabDialogBox(tabs[i].linkedBrowser);
+    browser = tabs[i].linkedBrowser;
+    dialogBox.open(TEST_DIALOG_PATH);
+    dialogBoxManager = dialogBox.getManager();
+    dialogs.push(dialogBoxManager._topDialog);
+  }
+
+  // Wait for dialogs to be ready
+  await Promise.all([dialogs[0]._dialogReady, dialogs[1]._dialogReady]);
+
+  // Hide the top dialog
+  dialogBoxManager.hideDialog(browser);
+
+  is(dialogBoxManager._dialogStack.hidden, true, "Dialog stack is hidden");
+
+  // Switch to first tab
+  await BrowserTestUtils.switchTab(gBrowser, tabs[0]);
+
+  // Check the dialog stack is showing in first tab
+  dialogBoxManager = gBrowser
+    .getTabDialogBox(tabs[0].linkedBrowser)
+    .getManager();
+  is(dialogBoxManager._dialogStack.hidden, false, "Dialog stack is showing");
 
   // Cleanup
   tabs.forEach(tab => {
