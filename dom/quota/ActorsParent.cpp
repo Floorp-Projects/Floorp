@@ -647,6 +647,34 @@ nsresult SaveLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
 }
 */
 
+template <typename FileFunc, typename DirectoryFunc>
+Result<mozilla::Ok, nsresult> CollectEachFileEntry(
+    nsIFile& aDirectory, const FileFunc& aFileFunc,
+    const DirectoryFunc& aDirectoryFunc) {
+  AssertIsOnIOThread();
+
+  QM_TRY_VAR(const auto entries,
+             ToResultInvoke<nsCOMPtr<nsIDirectoryEnumerator>>(
+                 std::mem_fn(&nsIFile::GetDirectoryEntries), aDirectory));
+
+  return CollectEach(
+      [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
+        QM_TRY_VAR(
+            const auto file,
+            ToResultInvoke<nsCOMPtr<nsIFile>>(
+                std::mem_fn(&nsIDirectoryEnumerator::GetNextFile), entries));
+
+        return file;
+      },
+      [&aFileFunc, &aDirectoryFunc](
+          const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
+        QM_TRY_VAR(const bool isDirectory,
+                   MOZ_TO_RESULT_INVOKE(file, IsDirectory));
+
+        return isDirectory ? aDirectoryFunc(file) : aFileFunc(file);
+      });
+}
+
 /******************************************************************************
  * Quota manager class declarations
  ******************************************************************************/
@@ -10370,23 +10398,18 @@ nsresult StorageOperationBase::GetDirectoryMetadata(nsIFile* aDirectory,
       auto binaryStream,
       GetBinaryInputStream(*aDirectory, nsLiteralString(METADATA_FILE_NAME)));
 
-  uint64_t timestamp;
-  nsresult rv = binaryStream->Read64(&timestamp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const uint64_t timestamp,
+             MOZ_TO_RESULT_INVOKE(binaryStream, Read64));
 
-  nsCString group;
-  rv = binaryStream->ReadCString(group);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(
+      const auto group,
+      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
+                                binaryStream));
 
-  nsCString origin;
-  rv = binaryStream->ReadCString(origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(
+      const auto origin,
+      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
+                                binaryStream));
 
   Nullable<bool> isApp;
   bool value;
@@ -10411,53 +10434,37 @@ nsresult StorageOperationBase::GetDirectoryMetadata2(
              GetBinaryInputStream(*aDirectory,
                                   nsLiteralString(METADATA_V2_FILE_NAME)));
 
-  uint64_t timestamp;
-  nsresult rv = binaryStream->Read64(&timestamp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const uint64_t timestamp,
+             MOZ_TO_RESULT_INVOKE(binaryStream, Read64));
 
-  bool persisted;
-  rv = binaryStream->ReadBoolean(&persisted);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const bool persisted,
+             MOZ_TO_RESULT_INVOKE(binaryStream, ReadBoolean));
+  Unused << persisted;
 
-  uint32_t reservedData1;
-  rv = binaryStream->Read32(&reservedData1);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const bool reservedData1,
+             MOZ_TO_RESULT_INVOKE(binaryStream, Read32));
+  Unused << reservedData1;
 
-  uint32_t reservedData2;
-  rv = binaryStream->Read32(&reservedData2);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const bool reservedData2,
+             MOZ_TO_RESULT_INVOKE(binaryStream, Read32));
+  Unused << reservedData2;
 
-  nsCString suffix;
-  rv = binaryStream->ReadCString(suffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(
+      const auto suffix,
+      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
+                                binaryStream));
 
-  nsCString group;
-  rv = binaryStream->ReadCString(group);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(
+      const auto group,
+      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
+                                binaryStream));
 
-  nsCString origin;
-  rv = binaryStream->ReadCString(origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(
+      const auto origin,
+      ToResultInvoke<nsCString>(std::mem_fn(&nsIBinaryInputStream::ReadCString),
+                                binaryStream));
 
-  bool isApp;
-  rv = binaryStream->ReadBoolean(&isApp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY_VAR(const bool isApp, MOZ_TO_RESULT_INVOKE(binaryStream, ReadBoolean));
 
   aTimestamp = timestamp;
   aSuffix = suffix;
@@ -10485,8 +10492,6 @@ nsresult StorageOperationBase::RemoveObsoleteOrigin(
 nsresult StorageOperationBase::ProcessOriginDirectories() {
   AssertIsOnIOThread();
   MOZ_ASSERT(!mOriginProps.IsEmpty());
-
-  nsresult rv;
 
 #ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
   nsTArray<PrincipalInfo> principalInfos;
@@ -10523,11 +10528,9 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
         nsCString originNoSuffix;
         specURL->Origin(originNoSuffix);
 
-        nsCString baseDomain;
-        rv = specURL->BaseDomain(baseDomain);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        QM_TRY_VAR(const auto baseDomain,
+                   ToResultInvoke<nsCString>(std::mem_fn(&MozURL::BaseDomain),
+                                             specURL));
 
         ContentPrincipalInfo contentPrincipalInfo;
         contentPrincipalInfo.attrs() = originProps.mAttrs;
@@ -10567,21 +10570,18 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
 
   // Don't try to upgrade obsolete origins, remove them right after we detect
   // them.
-  for (auto& originProps : mOriginProps) {
+  for (const auto& originProps : mOriginProps) {
     if (originProps.mType == OriginProps::eObsolete) {
       MOZ_ASSERT(originProps.mSuffix.IsEmpty());
       MOZ_ASSERT(originProps.mGroup.IsEmpty());
       MOZ_ASSERT(originProps.mOrigin.IsEmpty());
 
-      rv = RemoveObsoleteOrigin(originProps);
+      QM_TRY(RemoveObsoleteOrigin(originProps));
     } else {
       MOZ_ASSERT(!originProps.mGroup.IsEmpty());
       MOZ_ASSERT(!originProps.mOrigin.IsEmpty());
 
-      rv = ProcessOriginDirectory(originProps);
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      QM_TRY(ProcessOriginDirectory(originProps));
     }
   }
 
@@ -11088,79 +11088,55 @@ void OriginParser::HandleTrailingSeparator() {
 nsresult RepositoryOperationBase::ProcessRepository() {
   AssertIsOnIOThread();
 
-  DebugOnly<bool> exists;
-  MOZ_ASSERT(NS_SUCCEEDED(mDirectory->Exists(&exists)));
+  QM_DEBUG_TRY_VAR(const bool exists, MOZ_TO_RESULT_INVOKE(mDirectory, Exists));
   MOZ_ASSERT(exists);
 
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  nsresult rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(CollectEachFileEntry(
+      *mDirectory,
+      [](const auto& originFile) -> Result<mozilla::Ok, nsresult> {
+        QM_TRY_VAR(const auto leafName,
+                   ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetLeafName),
+                                            originFile));
 
-  while (true) {
-    nsCOMPtr<nsIFile> originDir;
-    rv = entries->GetNextFile(getter_AddRefs(originDir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        // Unknown files during upgrade are allowed. Just warn if we find
+        // them.
+        if (!IsOSMetadata(leafName)) {
+          UNKNOWN_FILE_WARNING(leafName);
+        }
 
-    if (!originDir) {
-      break;
-    }
+        return mozilla::Ok{};
+      },
+      [&self = *this](const auto& originDir) -> Result<mozilla::Ok, nsresult> {
+        // XXX: Use QM_TRY.
+        OriginProps originProps;
+        nsresult rv = originProps.Init(originDir);
+        // Bypass invalid origins while upgrading
+        if (NS_WARN_IF(originProps.mType == OriginProps::eInvalid)) {
+          return mozilla::Ok{};
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return Err(rv);
+        }
 
-    bool isDirectory;
-    rv = originDir->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        if (originProps.mType != OriginProps::eObsolete) {
+          QM_TRY_VAR(
+              const bool removed,
+              MOZ_TO_RESULT_INVOKE(self, PrepareOriginDirectory, originProps));
+          if (removed) {
+            return mozilla::Ok{};
+          }
+        }
 
-    if (!isDirectory) {
-      nsString leafName;
-      rv = originDir->GetLeafName(leafName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+        self.mOriginProps.AppendElement(std::move(originProps));
 
-      // Unknown files during upgrade are allowed. Just warn if we find them.
-      if (!IsOSMetadata(leafName)) {
-        UNKNOWN_FILE_WARNING(leafName);
-      }
-      continue;
-    }
-
-    OriginProps originProps;
-    rv = originProps.Init(originDir);
-    // Bypass invalid origins while upgrading
-    if (NS_WARN_IF(originProps.mType == OriginProps::eInvalid)) {
-      continue;
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (originProps.mType != OriginProps::eObsolete) {
-      bool removed;
-      rv = PrepareOriginDirectory(originProps, &removed);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      if (removed) {
-        continue;
-      }
-    }
-
-    mOriginProps.AppendElement(std::move(originProps));
-  }
+        return mozilla::Ok{};
+      }));
 
   if (mOriginProps.IsEmpty()) {
     return NS_OK;
   }
 
-  rv = ProcessOriginDirectories();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(ProcessOriginDirectories());
 
   return NS_OK;
 }
@@ -11175,68 +11151,46 @@ nsresult RepositoryOperationBase::MaybeUpgradeClients(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  nsresult rv =
-      aOriginProps.mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  QM_TRY(CollectEachFileEntry(
+      *aOriginProps.mDirectory,
+      [](const auto& file) -> Result<mozilla::Ok, nsresult> {
+        QM_TRY_VAR(
+            const auto leafName,
+            ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetLeafName), file));
 
-  while (true) {
-    nsCOMPtr<nsIFile> file;
-    rv = entries->GetNextFile(getter_AddRefs(file));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        if (!IsOriginMetadata(leafName) && !IsTempMetadata(leafName)) {
+          UNKNOWN_FILE_WARNING(leafName);
+        }
 
-    if (!file) {
-      break;
-    }
+        return mozilla::Ok{};
+      },
+      [quotaManager, &aMethod,
+       &self = *this](const auto& dir) -> Result<mozilla::Ok, nsresult> {
+        QM_TRY_VAR(
+            const auto leafName,
+            ToResultInvoke<nsString>(std::mem_fn(&nsIFile::GetLeafName), dir));
 
-    bool isDirectory;
-    rv = file->IsDirectory(&isDirectory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        QM_TRY_VAR(
+            const bool removed,
+            MOZ_TO_RESULT_INVOKE(self, PrepareClientDirectory, dir, leafName));
+        if (removed) {
+          return mozilla::Ok{};
+        }
 
-    nsString leafName;
-    rv = file->GetLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        Client::Type clientType;
+        bool ok = Client::TypeFromText(leafName, clientType, fallible);
+        if (!ok) {
+          UNKNOWN_FILE_WARNING(leafName);
+          return mozilla::Ok{};
+        }
 
-    if (!isDirectory) {
-      // Unknown files during upgrade are allowed. Just warn if we find them.
-      if (!IsOriginMetadata(leafName) && !IsTempMetadata(leafName)) {
-        UNKNOWN_FILE_WARNING(leafName);
-      }
-      continue;
-    }
+        Client* client = quotaManager->GetClient(clientType);
+        MOZ_ASSERT(client);
 
-    bool removed;
-    rv = PrepareClientDirectory(file, leafName, removed);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    if (removed) {
-      continue;
-    }
+        QM_TRY((client->*aMethod)(dir));
 
-    Client::Type clientType;
-    bool ok = Client::TypeFromText(leafName, clientType, fallible);
-    if (!ok) {
-      UNKNOWN_FILE_WARNING(leafName);
-      continue;
-    }
-
-    Client* client = quotaManager->GetClient(clientType);
-    MOZ_ASSERT(client);
-
-    rv = (client->*aMethod)(file);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
+        return mozilla::Ok{};
+      }));
 
   return NS_OK;
 }
