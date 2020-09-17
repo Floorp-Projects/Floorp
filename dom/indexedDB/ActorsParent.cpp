@@ -7047,12 +7047,7 @@ nsresult DatabaseConnection::Init() {
   MOZ_ASSERT(!mInReadTransaction);
   MOZ_ASSERT(!mInWriteTransaction);
 
-  IDB_TRY_VAR(const auto stmt, GetCachedStatement("BEGIN;"_ns));
-
-  nsresult rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(ExecuteCachedStatement("BEGIN;"_ns));
 
   mInReadTransaction = true;
 
