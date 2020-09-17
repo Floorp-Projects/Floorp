@@ -106,7 +106,7 @@ class SearchSettings {
         throw new Error("no engine in the file");
       }
     } catch (ex) {
-      logConsole.error("get: Error reading settings file:", ex);
+      logConsole.warn("get: No settings file exists, new profile?", ex);
       json = {};
     }
     if (json.metaData) {
