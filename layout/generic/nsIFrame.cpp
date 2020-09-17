@@ -3180,12 +3180,12 @@ void nsIFrame::BuildDisplayListForStackingContext(
   bool inTransform = aBuilder->IsInTransform();
   if (isTransformed) {
     prerenderInfo = nsDisplayTransform::ShouldPrerenderTransformedContent(
-        aBuilder, this, &dirtyRect);
+        aBuilder, this, &visibleRect);
 
     switch (prerenderInfo.mDecision) {
       case nsDisplayTransform::PrerenderDecision::Full:
       case nsDisplayTransform::PrerenderDecision::Partial:
-        visibleRect = dirtyRect;
+        dirtyRect = visibleRect;
         break;
       case nsDisplayTransform::PrerenderDecision::No: {
         // If we didn't prerender an animated frame in a preserve-3d context,
