@@ -523,34 +523,6 @@ function getRuleViewSelector(view, selectorText) {
 }
 
 /**
- * Get a reference to the selectorhighlighter icon DOM element corresponding to
- * a given selector in the rule-view
- *
- * @param {CssRuleView} view
- *        The instance of the rule-view panel
- * @param {String} selectorText
- *        The selector in the rule-view to look for
- * @param {Number} index
- *        If there are more than 1 rule with the same selector, use this index
- *        to determine which one should be retrieved. Defaults to 0
- * @return {DOMNode} The selectorhighlighter icon DOM element
- */
-var getRuleViewSelectorHighlighterIcon = async function(
-  view,
-  selectorText,
-  index = 0
-) {
-  const rule = getRuleViewRule(view, selectorText, index);
-
-  const editor = rule._ruleEditor;
-  if (!editor.uniqueSelector) {
-    await once(editor, "selector-icon-created");
-  }
-
-  return rule.querySelector(".ruleview-selectorhighlighter");
-};
-
-/**
  * Get a rule-link from the rule-view given its index
  *
  * @param {CssRuleView} view

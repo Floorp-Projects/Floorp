@@ -20,31 +20,22 @@ add_task(async function() {
   const { inspector, view } = await openRuleView();
   await selectNode("p", inspector);
 
-  ok(
-    !view.selectorHighlighter,
-    "No selectorhighlighter exist in the rule-view"
-  );
-
   await testSelectorHighlight(view, "p");
-  await testEditSelector(view, "body");
+  await testEditSelector(inspector, view, "body");
   await testSelectorHighlight(view, "body");
 });
 
-async function testSelectorHighlight(view, name) {
+async function testSelectorHighlight(view, selector) {
   info("Test creating selector highlighter");
 
   info("Clicking on a selector icon");
-  const icon = await getRuleViewSelectorHighlighterIcon(view, name);
+  const { highlighter, isShown } = await clickSelectorIcon(view, selector);
 
-  const onToggled = view.once("ruleview-selectorhighlighter-toggled");
-  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  const isVisible = await onToggled;
-
-  ok(view.selectorHighlighter, "The selectorhighlighter instance was created");
-  ok(isVisible, "The toggle event says the highlighter is visible");
+  ok(highlighter, "The selector highlighter instance was created");
+  ok(isShown, "The selector highlighter was shown");
 }
 
-async function testEditSelector(view, name) {
+async function testEditSelector(inspector, view, name) {
   info("Test editing existing selector fields");
 
   const ruleEditor = getRuleViewRuleEditor(view, 1);
@@ -58,18 +49,22 @@ async function testEditSelector(view, name) {
     "The selector editor got focused"
   );
 
-  info("Waiting for rule view to update");
-  const onToggled = view.once("ruleview-selectorhighlighter-toggled");
+  const onRuleViewChanged = view.once("ruleview-changed");
+  const { waitForHighlighterTypeHidden } = getHighlighterTestHelpers(inspector);
+  const onSelectorHighlighterHidden = waitForHighlighterTypeHidden(
+    inspector.highlighters.TYPES.SELECTOR
+  );
 
   info("Entering a new selector name and committing");
   editor.input.value = name;
   EventUtils.synthesizeKey("KEY_Enter");
 
-  const isVisible = await onToggled;
-
-  ok(
-    !view.highlighters.selectorHighlighterShown,
-    "The selectorHighlighterShown instance was removed"
+  info("Waiting for Rules view to update");
+  await onRuleViewChanged;
+  await onSelectorHighlighterHidden;
+  const highlighter = inspector.highlighters.getActiveHighlighter(
+    inspector.highlighters.TYPES.SELECTOR
   );
-  ok(!isVisible, "The toggle event says the highlighter is not visible");
+
+  ok(!highlighter, "The highlighter instance was removed");
 }
