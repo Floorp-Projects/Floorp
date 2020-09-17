@@ -81,7 +81,7 @@ const DB_TITLE_LENGTH_MAX = 4096;
 
 // The current mirror database schema version. Bump for migrations, then add
 // migration code to `migrateMirrorSchema`.
-const MIRROR_SCHEMA_VERSION = 8;
+const MIRROR_SCHEMA_VERSION = 7;
 
 const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
 
@@ -1513,15 +1513,6 @@ async function migrateMirrorSchema(db, currentSchemaVersion) {
   if (currentSchemaVersion < 7) {
     await db.execute(`CREATE INDEX IF NOT EXISTS mirror.structurePositions ON
                       structure(parentGuid, position)`);
-  }
-  if (currentSchemaVersion < 8) {
-    // Not really a "schema" update, but addresses the defect from bug 1635859.
-    // In short, every bookmark with a corresponding entry in the mirror should
-    // have syncStatus = NORMAL.
-    await db.execute(`UPDATE moz_bookmarks AS b
-                      SET syncStatus = ${PlacesUtils.bookmarks.SYNC_STATUS.NORMAL}
-                      WHERE EXISTS (SELECT 1 FROM mirror.items
-                                    WHERE guid = b.guid)`);
   }
 }
 
