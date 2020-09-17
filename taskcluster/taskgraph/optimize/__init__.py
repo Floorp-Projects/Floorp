@@ -564,9 +564,7 @@ class project(object):
                 # The actual test strategy applied to regular pushes.
                 Any(
                     'skip-unless-schedules',
-                    'bugbug-reduced-manifests-fallback',
-                    'platform-disperse',
-                    split_args=split_bugbug_arg,
+                    'bugbug-reduced-fallback',
                 ),
             ),
         ),
