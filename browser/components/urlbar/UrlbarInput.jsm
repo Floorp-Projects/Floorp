@@ -922,11 +922,15 @@ class UrlbarInput {
 
   /**
    * Called by the view when moving through results with the keyboard, and when
-   * picking a result.
+   * picking a result.  This sets the input value to the value of the result and
+   * invalidates the pageproxystate.  It also sets the result that is associated
+   * with the current input value.  If you need to set this result but don't
+   * want to also set the input value, then use setResultForCurrentValue.
    *
    * @param {UrlbarResult} [result]
    *   The result that was selected or picked, null if no result was selected.
-   * @param {Event} [event] The event that picked the result.
+   * @param {Event} [event]
+   *   The event that picked the result.
    * @returns {boolean}
    *   Whether the value has been canonized
    */
@@ -977,7 +981,7 @@ class UrlbarInput {
         this._setValue(this._getValueFromResult(result), allowTrim);
       }
     }
-    this._resultForCurrentValue = result;
+    this.setResultForCurrentValue(result);
 
     // The value setter clobbers the actiontype attribute, so update this after
     // that.
@@ -993,6 +997,21 @@ class UrlbarInput {
     }
 
     return !!canonizedUrl;
+  }
+
+  /**
+   * The input keeps track of the result associated with the current input
+   * value.  This result can be set by calling either setValueFromResult or this
+   * method.  Use this method when you need to set the result without also
+   * setting the input value.  This can be the case when either the selection is
+   * cleared and no other result becomes selected, or when the result is the
+   * heuristic and we don't want to modify the value the user is typing.
+   *
+   * @param {UrlbarResult} result
+   *   The result to associate with the current input value.
+   */
+  setResultForCurrentValue(result) {
+    this._resultForCurrentValue = result;
   }
 
   /**
@@ -1063,13 +1082,6 @@ class UrlbarInput {
       !this.value.endsWith(" ")
     ) {
       this._setValue(this.window.gBrowser.userTypedValue, false);
-    }
-
-    // Heuristic tip results do not set the Urlbar value.
-    if (firstResult.type == UrlbarUtils.RESULT_TYPE.TIP) {
-      this._resultForCurrentValue = null;
-    } else if (firstResult.heuristic) {
-      this._resultForCurrentValue = firstResult;
     }
 
     return false;
@@ -2291,6 +2303,7 @@ class UrlbarInput {
 
       this.select();
       this.window.goDoCommand("cmd_paste");
+      this.setResultForCurrentValue(null);
       this.handleCommand();
 
       this._suppressStartQuery = false;
@@ -2658,7 +2671,6 @@ class UrlbarInput {
 
     let canShowTopSites =
       !this.isPrivate && UrlbarPrefs.get("suggest.topsites");
-
     if (!this.view.isOpen) {
       this.view.clear();
     } else if (!value && !canShowTopSites) {

@@ -19,13 +19,18 @@ add_task(async function test() {
   );
 });
 
-function promiseGetIndex(browser) {
-  return SpecialPowers.spawn(browser, [], function() {
-    let shistory = docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsISHistory);
-    return shistory.index;
-  });
+async function promiseGetIndex(browser) {
+  if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    return SpecialPowers.spawn(browser, [], function() {
+      let shistory = docShell
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsISHistory);
+      return shistory.index;
+    });
+  }
+
+  let shistory = browser.browsingContext.sessionHistory;
+  return shistory.index;
 }
 
 let duplicate = async function(delta, msg, cb) {

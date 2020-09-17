@@ -49,6 +49,19 @@ Leveraging the `clang` toolchain compiler we now have support in the IDE for the
 
 **9.** Basic static-code analysis using `clang-tidy` and our list of enabled checkers. (This is still in progress not all checkers are supported by `clangd`)
 
+Clangd-specific Commands
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Clangd supports some commands that are specific to C/C++:
+
+.. code::
+
+    "clangd.switchheadersource"
+
+This command navigates from the currently open header file to its corresponding source file (if there is one), or vice versa.
+
+This command can be invoked from the command menu (activated via ``F1``), or using its keybinding of ``Alt+o`` (``Alt+cmd+o`` on Mac). The keybinding can also be customized in ``Keyboard Shortcuts``.
+
 Generating Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

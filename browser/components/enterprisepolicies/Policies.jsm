@@ -1308,7 +1308,14 @@ var Policies = {
 
   OfferToSaveLoginsDefault: {
     onBeforeUIStartup(manager, param) {
-      setDefaultPref("signon.rememberSignons", param);
+      let policies = Services.policies.getActivePolicies();
+      if ("OfferToSaveLogins" in policies) {
+        log.error(
+          `OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.`
+        );
+      } else {
+        setDefaultPref("signon.rememberSignons", param);
+      }
     },
   },
 

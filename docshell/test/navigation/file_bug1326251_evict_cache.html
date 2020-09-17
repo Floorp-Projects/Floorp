@@ -4,17 +4,22 @@
     <meta charset="utf-8">
     <title>Bug 1326251</title>
     <script>
-    SpecialPowers.Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+      SpecialPowers.Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-    // Evict bfcache and then go back.
-    async function evictCache() {
-      let shistory = SpecialPowers.wrap(window)
-                       .docShell
-                       .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
-                       .sessionHistory;
-      shistory.legacySHistory.evictAllContentViewers();
-      history.back();
-    }
+      // Evict bfcache and then go back.
+      async function evictCache() {
+        let shistory = SpecialPowers.wrap(window)
+                                    .docShell
+                                    .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
+                                    .sessionHistory;
+        if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+          shistory.legacySHistory.evictAllContentViewers();
+        } else {
+          opener.evictAllContentViewers();
+        }
+
+        history.back();
+      }
     </script>
   </head>
   <body onload="setTimeout(evictCache, 0);">

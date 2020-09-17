@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 import os
 import mozlog
 import copy
@@ -124,6 +124,7 @@ class PerftestArgumentParser(ArgumentParser):
             self.add_argument(name, **options)
 
         mozlog.commandline.add_logging_group(self)
+        self.set_by_user = []
 
     def parse_helper(self, args):
         for arg in args:
@@ -132,6 +133,31 @@ class PerftestArgumentParser(ArgumentParser):
             layer_exists = arg_part[1] and layer_name in Options.args
             if layer_exists:
                 args.append(layer_name)
+
+    def get_user_args(self, args):
+        # suppress args that were not provided by the user.
+        res = {}
+        for key, value in args.items():
+            if key not in self.set_by_user:
+                continue
+            res[key] = value
+        return res
+
+    def _parse_known_args(self, arg_strings, namespace):
+        # at this point, the namespace is filled with default values
+        # defined in the args
+
+        # let's parse what the user really gave us in the CLI
+        # in a new namespace
+        user_namespace, extras = super()._parse_known_args(arg_strings, Namespace())
+
+        self.set_by_user = list([name for name, value in user_namespace._get_kwargs()])
+
+        # we can now merge both
+        for key, value in user_namespace._get_kwargs():
+            setattr(namespace, key, value)
+
+        return namespace, extras
 
     def parse_args(self, args=None, namespace=None):
         self.parse_helper(args)

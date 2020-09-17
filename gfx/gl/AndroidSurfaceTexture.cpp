@@ -20,8 +20,6 @@ namespace gl {
 
 class AndroidSharedBlitGL final {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AndroidSharedBlitGL);
-
   explicit AndroidSharedBlitGL(const EGLNativeWindowType window) {
     StaticMutexAutoLock lock(sMutex);
 
@@ -37,6 +35,20 @@ class AndroidSharedBlitGL final {
     mTargetSurface = egl.fCreateWindowSurface(sContext->mConfig, window, 0);
 
     ++sInstanceCount;
+  }
+
+  ~AndroidSharedBlitGL() {
+    StaticMutexAutoLock lock(sMutex);
+
+    if (mTargetSurface != EGL_NO_SURFACE) {
+      const auto& egl = *(sContext->mEgl);
+      egl.fDestroySurface(mTargetSurface);
+    }
+
+    // Destroy shared GL context when no one uses it.
+    if (--sInstanceCount == 0) {
+      sContext = nullptr;
+    }
   }
 
   void Blit(layers::SurfaceTextureImage* img, const gfx::IntSize& imageSize) {
@@ -58,19 +70,6 @@ class AndroidSharedBlitGL final {
   }
 
  private:
-  ~AndroidSharedBlitGL() {
-    StaticMutexAutoLock lock(sMutex);
-
-    if (mTargetSurface != EGL_NO_SURFACE) {
-      const auto& egl = *(sContext->mEgl);
-      egl.fDestroySurface(mTargetSurface);
-    }
-
-    // Destroy shared GL context when no one uses it.
-    if (--sInstanceCount == 0) {
-      sContext = nullptr;
-    }
-  }
 
   static already_AddRefed<GLContextEGL> CreateContextImpl(bool aUseGles) {
     sMutex.AssertCurrentThreadOwns();
@@ -155,22 +154,22 @@ class GLBlitterSupport final
   using Base::DisposeNative;
   using Base::GetNative;
 
-  static java::GeckoSurfaceTexture::NativeGLBlitHelper::LocalRef Create(
+  static java::GeckoSurfaceTexture::NativeGLBlitHelper::LocalRef NativeCreate(
       jint sourceTextureHandle, jni::Object::Param targetSurface, jint width,
       jint height) {
     AndroidNativeWindow win(java::GeckoSurface::Ref::From(targetSurface));
     auto helper = java::GeckoSurfaceTexture::NativeGLBlitHelper::New();
     const auto& eglWindow = win.NativeWindow();
-    RefPtr<AndroidSharedBlitGL> gl = new AndroidSharedBlitGL(eglWindow);
     GLBlitterSupport::AttachNative(
-        helper, MakeUnique<GLBlitterSupport>(std::move(gl), sourceTextureHandle,
-                                             width, height));
+        helper,
+        MakeUnique<GLBlitterSupport>(MakeUnique<AndroidSharedBlitGL>(eglWindow),
+                                     sourceTextureHandle, width, height));
     return helper;
   }
 
-  GLBlitterSupport(RefPtr<AndroidSharedBlitGL>&& gl, jint sourceTextureHandle,
-                   jint width, jint height)
-      : mGl(gl),
+  GLBlitterSupport(UniquePtr<AndroidSharedBlitGL>&& gl,
+                   jint sourceTextureHandle, jint width, jint height)
+      : mGl(std::move(gl)),
         mSourceTextureHandle(sourceTextureHandle),
         mSize(width, height) {}
 
@@ -181,7 +180,7 @@ class GLBlitterSupport final
   }
 
  private:
-  const RefPtr<AndroidSharedBlitGL> mGl;
+  const UniquePtr<AndroidSharedBlitGL> mGl;
   const AndroidSurfaceTextureHandle mSourceTextureHandle;
   const gfx::IntSize mSize;
 };

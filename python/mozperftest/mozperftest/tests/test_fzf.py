@@ -20,23 +20,25 @@ class Fzf:
 
 @mock.patch("subprocess.Popen", new=Fzf)
 def test_select(*mocked):
-    test_objects = [{"path": str(EXAMPLE_TEST)}]
+    test_objects = [{"path": EXAMPLE_TEST}]
     selection = select(test_objects)
     assert len(selection) == 1
 
 
 def test_preview():
-    content = str(EXAMPLE_TEST)
-    test_objects = [{"path": content}]
+    content = Path(EXAMPLE_TEST)
+    line = f"[bt][sometag] {content.name} in {content.parent}"
+    test_objects = [{"path": str(content)}]
     cache = Path(Path.home(), ".mozbuild", ".perftestfuzzy")
     with cache.open("w") as f:
         f.write(json.dumps(test_objects))
 
-    with temp_file(content=content) as tasklist, silence() as out:
+    with temp_file(content=str(line)) as tasklist, silence() as out:
         main(args=["-t", tasklist])
 
-    out[0].seek(0)
-    assert "Owner: Performance Testing Team" in out[0].read()
+    stdout, __ = out
+    stdout.seek(0)
+    assert ":owner: Performance Testing Team" in stdout.read()
 
 
 if __name__ == "__main__":

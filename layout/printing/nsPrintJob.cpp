@@ -306,13 +306,6 @@ static nsresult EnsureSettingsHasPrinterNameSet(
   // Mac doesn't support retrieving a printer list.
   return NS_OK;
 #else
-#  if defined(MOZ_X11)
-  // On Linux, last-used printer name should be requested on the parent side.
-  // Unless we are in the parent, we ignore this function
-  if (!XRE_IsParentProcess()) {
-    return NS_OK;
-  }
-#  endif
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
   // See if aPrintSettings already has a printer
@@ -545,12 +538,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     // clear mPtrPreview so that code will use mPtr until that happens.
     mPrtPreview = nullptr;
 
-    // ensures docShell tree navigation in frozen
     SetIsPrintPreview(true);
   } else {
     mProgressDialogIsShown = false;
 
-    // ensures docShell tree navigation in frozen
     SetIsPrinting(true);
   }
 
@@ -2324,11 +2315,6 @@ void nsPrintJob::SetIsPrinting(bool aIsPrinting) {
   mIsDoingPrinting = aIsPrinting;
   if (aIsPrinting) {
     mHasEverPrinted = true;
-  }
-  // Calling SetIsPrinting while in print preview confuses the document viewer
-  // This is safe because we prevent exiting print preview while printing
-  if (!mCreatedForPrintPreview && mDocViewerPrint) {
-    mDocViewerPrint->SetIsPrinting(aIsPrinting);
   }
   if (mPrt && aIsPrinting) {
     mPrt->mPreparingForPrint = true;

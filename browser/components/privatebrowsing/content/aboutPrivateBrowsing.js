@@ -33,8 +33,16 @@ document.addEventListener("DOMContentLoaded", function() {
       .getElementById("private-browsing-vpn-link")
       .setAttribute("href", vpnPromoUrl);
   } else {
-    document.getElementById("private-browsing-vpn-banner").remove();
+    // If the link is undefined, remove the promo completely
+    document.querySelectorAll(".vpn-promo").forEach(vpnEl => vpnEl.remove());
   }
+
+  // Check ShouldShowVPNPromo
+  RPMSendQuery("ShouldShowVPNPromo", {}).then(shouldShow => {
+    if (!shouldShow) {
+      document.querySelectorAll(".vpn-promo").forEach(vpnEl => vpnEl.remove());
+    }
+  });
 
   // Set up the private search banner.
   const privateSearchBanner = document.getElementById("search-banner");

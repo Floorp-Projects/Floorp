@@ -45,6 +45,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
@@ -3400,7 +3401,19 @@ nsresult BrowserChild::CanCancelContentJS(
     return NS_OK;
   }
 
-  nsCOMPtr<nsISHistory> history = do_GetInterface(WebNavigation());
+  // If we have session history in the parent we've already performed
+  // the checks following, so we can return early.
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    *aCanCancel = true;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  nsCOMPtr<nsISHistory> history;
+  if (docShell) {
+    history = nsDocShell::Cast(docShell)->GetSessionHistory()->LegacySHistory();
+  }
+
   if (!history) {
     return NS_ERROR_FAILURE;
   }

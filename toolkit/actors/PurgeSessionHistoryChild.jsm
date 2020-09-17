@@ -31,7 +31,7 @@ class PurgeSessionHistoryChild extends JSWindowActorChild {
     }
 
     if (purge > 0) {
-      sessionHistory.legacySHistory.PurgeHistory(purge);
+      sessionHistory.legacySHistory.purgeHistory(purge);
     }
   }
 }

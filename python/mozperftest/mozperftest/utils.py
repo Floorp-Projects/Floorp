@@ -6,7 +6,6 @@ import contextlib
 from datetime import datetime, date, timedelta
 import sys
 import os
-import random
 from io import StringIO
 from redo import retry
 import requests
@@ -74,6 +73,17 @@ def silence(layer=None):
             print(stderr)
 
 
+def simple_platform():
+    plat = host_platform()
+
+    if plat.startswith("win"):
+        return "win"
+    elif plat.startswith("linux"):
+        return "linux"
+    else:
+        return "mac"
+
+
 def host_platform():
     is_64bits = sys.maxsize > 2 ** 32
 
@@ -86,7 +96,7 @@ def host_platform():
     elif sys.platform.startswith("darwin"):
         return "darwin"
 
-    raise ValueError("sys.platform is not yet supported: {}".format(sys.platform))
+    raise ValueError(f"platform not yet supported: {sys.platform}")
 
 
 class MachLogger:
@@ -144,7 +154,7 @@ def install_package(virtualenv_manager, package, ignore_failure=False):
     return False
 
 
-def build_test_list(tests, randomized=False):
+def build_test_list(tests):
     """Collects tests given a list of directories, files and URLs.
 
     Returns a tuple containing the list of tests found and a temp dir for tests
@@ -171,13 +181,7 @@ def build_test_list(tests, randomized=False):
         elif test.is_dir():
             for file in test.rglob("perftest_*.js"):
                 res.append(str(file))
-    if not randomized:
-        res.sort()
-    else:
-        # random shuffling is used to make sure
-        # we don't always run tests in the same order
-        random.shuffle(res)
-
+    res.sort()
     return res, temp_dir
 
 

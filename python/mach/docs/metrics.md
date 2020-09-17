@@ -27,7 +27,7 @@ This ping includes the [client id](https://mozilla.github.io/glean/book/user/pin
 
 The following metrics are added to the ping:
 
-| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefix/Data_Collection) |
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
 | --- | --- | --- | --- | --- | --- | --- |
 | mach.argv |[string_list](https://mozilla.github.io/glean/book/user/metrics/string_list.html) |Parameters provided to mach. Absolute paths are sanitized to be relative to one of a few key base paths, such as the "$topsrcdir", "$topobjdir", or "$HOME". For example: "/home/mozilla/dev/firefox/python/mozbuild" would be replaced with "$topsrcdir/python/mozbuild". If a valid replacement base path cannot be found, the path is replaced with "<path omitted>".  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34)||never | |
 | mach.command |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |The name of the mach command that was invoked, such as "build", "doc", or "try".  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1291053#c34)||never | |

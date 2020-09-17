@@ -10,8 +10,10 @@
 #include <QuartzCore/QuartzCore.h>
 #include "GLConsts.h"
 #include "GLContextCGL.h"
+#include "nsPrintfCString.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/gfx/Logging.h"
 
 using namespace mozilla;
 
@@ -486,8 +488,22 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(
     }
   }
 
-  return CGLTexImageIOSurface2D(ctx, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                                internalFormat, GetDevicePixelWidth(plane),
-                                GetDevicePixelHeight(plane), format, type,
-                                plane);
+  auto err =
+      CGLTexImageIOSurface2D(ctx, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+                             internalFormat, GetDevicePixelWidth(plane),
+                             GetDevicePixelHeight(plane), format, type, plane);
+  if (err) {
+    const auto formatChars = (const char*)&pixelFormat;
+    const char formatStr[] = {formatChars[3], formatChars[2], formatChars[1],
+                              formatChars[0], 0};
+    const nsPrintfCString errStr(
+        "CGLTexImageIOSurface2D(context, target, 0x%04x,"
+        " %u, %u, 0x%04x, 0x%04x, iosurfPtr, %u) -> %i",
+        internalFormat, uint32_t(GetDevicePixelWidth(plane)),
+        uint32_t(GetDevicePixelHeight(plane)), format, type,
+        (unsigned int)plane, err);
+    gfxCriticalError() << errStr.get() << " (iosurf format: " << formatStr
+                       << ")";
+  }
+  return err;
 }

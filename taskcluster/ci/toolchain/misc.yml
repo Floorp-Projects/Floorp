@@ -191,6 +191,7 @@ wrench-deps:
         sparse-profile: null
         resources:
             - 'gfx/wr/Cargo.lock'
+            - 'gfx/wr/ci-scripts/install-meson.sh'
         toolchain-artifact: public/build/wrench-deps.tar.bz2
     fetches:
         fetch:

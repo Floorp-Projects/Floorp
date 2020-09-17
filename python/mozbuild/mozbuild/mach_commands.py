@@ -34,6 +34,7 @@ from mozbuild.base import (
     MachCommandConditions as conditions,
     MozbuildObject,
 )
+from mozbuild.util import MOZBUILD_METRICS_PATH
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -174,7 +175,7 @@ class Doctor(MachCommandBase):
         return doctor.check_all()
 
 
-@CommandProvider
+@CommandProvider(metrics_path=MOZBUILD_METRICS_PATH)
 class Clobber(MachCommandBase):
     NO_AUTO_LOG = True
     CLOBBER_CHOICES = set(['objdir', 'python', 'gradle'])

@@ -16,7 +16,7 @@ pub struct CompilationInfo<'alloc> {
     pub function_declarations: HashMap<ScriptStencilIndex, &'alloc Function<'alloc>>,
     pub function_stencil_indices: AssociatedData<ScriptStencilIndex>,
     pub function_declaration_properties: FunctionDeclarationPropertyMap,
-    pub functions: ScriptStencilList,
+    pub scripts: ScriptStencilList,
     pub script_data_list: ImmutableScriptDataList,
 }
 
@@ -28,7 +28,7 @@ impl<'alloc> CompilationInfo<'alloc> {
         function_declarations: HashMap<ScriptStencilIndex, &'alloc Function<'alloc>>,
         function_stencil_indices: AssociatedData<ScriptStencilIndex>,
         function_declaration_properties: FunctionDeclarationPropertyMap,
-        functions: ScriptStencilList,
+        scripts: ScriptStencilList,
     ) -> Self {
         Self {
             atoms,
@@ -38,7 +38,7 @@ impl<'alloc> CompilationInfo<'alloc> {
             function_declarations,
             function_stencil_indices,
             function_declaration_properties,
-            functions,
+            scripts,
             script_data_list: ImmutableScriptDataList::new(),
         }
     }

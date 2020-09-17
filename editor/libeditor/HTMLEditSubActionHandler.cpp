@@ -3028,6 +3028,11 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
     DeleteNodesEntirelyInRangeButKeepTableStructure(
         HTMLEditor& aHTMLEditor, nsRange& aRange,
         AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed);
+    bool NeedsToJoinNodesAfterDeleteNodesEntirelyInRangeButKeepTableStructure(
+        const HTMLEditor& aHTMLEditor,
+        const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
+        const;
 
     /**
      * DeleteContentButKeepTableStructure() removes aContent if it's an element
@@ -5258,7 +5263,9 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   iter.AppendAllNodesToArray(arrayOfTopChildren);
 
   // Now that we have the list, delete non-table elements
-  bool join = true;
+  bool needsToJoinLater =
+      NeedsToJoinNodesAfterDeleteNodesEntirelyInRangeButKeepTableStructure(
+          aHTMLEditor, arrayOfTopChildren, aSelectionWasCollapsed);
   for (auto& content : arrayOfTopChildren) {
     // XXX After here, the child contents in the array may have been moved
     //     to somewhere or removed.  We should handle it.
@@ -5279,26 +5286,46 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         NS_SUCCEEDED(rv),
         "AutoBlockElementsJoiner::DeleteContentButKeepTableStructure() failed, "
         "but ignored");
-    // If something visible is deleted, no need to join.  Visible means
-    // all nodes except non-visible textnodes and breaks.
-    // XXX Odd.  Why do we check the visibility after removing the node
-    //     from the DOM tree?
-    if (!join || aSelectionWasCollapsed ==
-                     AutoDeleteRangesHandler::SelectionWasCollapsed::No) {
-      continue;
-    }
+  }
+  return needsToJoinLater;
+}
+
+bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
+    NeedsToJoinNodesAfterDeleteNodesEntirelyInRangeButKeepTableStructure(
+        const HTMLEditor& aHTMLEditor,
+        const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
+        const {
+  // If original selection was collapsed, we need always to join the nodes.
+  // XXX Why?
+  if (aSelectionWasCollapsed ==
+      AutoDeleteRangesHandler::SelectionWasCollapsed::No) {
+    return true;
+  }
+  // If something visible is deleted, no need to join.  Visible means
+  // all nodes except non-visible textnodes and breaks.
+  if (aArrayOfContents.IsEmpty()) {
+    return true;
+  }
+  for (const OwningNonNull<nsIContent>& content : aArrayOfContents) {
     if (content->IsText()) {
-      join = !aHTMLEditor.IsInVisibleTextFrames(*content->AsText());
+      if (aHTMLEditor.IsInVisibleTextFrames(*content->AsText())) {
+        return false;
+      }
       continue;
     }
+    // XXX If it's an element node, we should check whether it has visible
+    //     frames or not.
     if (!content->IsElement() ||
         aHTMLEditor.IsEmptyNode(*content->AsElement())) {
       continue;
     }
-    join = content->IsHTMLElement(nsGkAtoms::br) &&
-           !aHTMLEditor.IsVisibleBRElement(content);
+    if (!content->IsHTMLElement(nsGkAtoms::br) ||
+        aHTMLEditor.IsVisibleBRElement(content)) {
+      return false;
+    }
   }
-  return join;
+  return true;
 }
 
 nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::

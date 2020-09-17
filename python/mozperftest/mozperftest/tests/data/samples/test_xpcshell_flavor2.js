@@ -4,6 +4,10 @@
 
 "use strict";
 
+var anotherVar = {
+  something: "cool"
+};
+
 var perfMetadata = {
   owner: "Performance Testing Team",
   name: "Example",
@@ -12,12 +16,14 @@ var perfMetadata = {
   This is a longer description of the test perhaps including information
   about how it should be run locally or links to relevant information.
   `,
-  usage: `
-  ./mach perftest
-    python/mozperftest/mozperftest/tests/data/samples/test_xpcshell_flavor2.js
-  `,
   supportedBrowsers: ["Firefox"],
   supportedPlatforms: ["Desktop"],
+  options: {
+      default: {perfherder: true},
+      linux: {perfherder_metrics: "name:speed,unit:bps_lin"},
+      mac: {perfherder_metrics: "name:speed,unit:bps_mac"},
+      win: {perfherder_metrics: "name:speed,unit:bps_win"}
+  }
 };
 
 function run_next_test() {

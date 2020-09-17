@@ -12,7 +12,7 @@ addAccessibleTask(
   async (browser, accDoc) => {
     const searchPred = {
       AXSearchKey: "AXHeadingSearchKey",
-      AXImmediateDescendants: 1,
+      AXImmediateDescendantsOnly: 1,
       AXResultsLimit: -1,
       AXDirection: "AXDirectionNext",
     };
@@ -72,7 +72,7 @@ addAccessibleTask(
   async (browser, accDoc) => {
     const searchPred = {
       AXSearchKey: "AXArticleSearchKey",
-      AXImmediateDescendants: 1,
+      AXImmediateDescendantsOnly: 1,
       AXResultsLimit: -1,
       AXDirection: "AXDirectionNext",
     };
@@ -196,7 +196,7 @@ addAccessibleTask(
   async (browser, accDoc) => {
     const searchPred = {
       AXSearchKey: "AXTableSearchKey",
-      AXImmediateDescendants: 1,
+      AXImmediateDescendantsOnly: 1,
       AXResultsLimit: -1,
       AXDirection: "AXDirectionNext",
     };
@@ -272,7 +272,7 @@ addAccessibleTask(
   async (browser, accDoc) => {
     const searchPred = {
       AXSearchKey: "AXLandmarkSearchKey",
-      AXImmediateDescendants: 1,
+      AXImmediateDescendantsOnly: 1,
       AXResultsLimit: -1,
       AXDirection: "AXDirectionNext",
     };
@@ -348,7 +348,7 @@ addAccessibleTask(
   async (browser, accDoc) => {
     const searchPred = {
       AXSearchKey: "AXLandmarkSearchKey",
-      AXImmediateDescendants: 1,
+      AXImmediateDescendantsOnly: 1,
       AXResultsLimit: -1,
       AXDirection: "AXDirectionNext",
     };
@@ -412,7 +412,7 @@ addAccessibleTask(
   async (browser, accDoc) => {
     const searchPred = {
       AXSearchKey: "AXButtonSearchKey",
-      AXImmediateDescendants: 1,
+      AXImmediateDescendantsOnly: 1,
       AXResultsLimit: -1,
       AXDirection: "AXDirectionNext",
     };
@@ -863,6 +863,60 @@ addAccessibleTask(
       tree.getAttributeValue("AXRole"),
       controls[2].getAttributeValue("AXRole"),
       "Found correct tree"
+    );
+  }
+);
+
+/*
+ * Test AXAnyTypeSearchKey with root group
+ */
+addAccessibleTask(
+  `<h1 id="hello">hello</h1><br><h2 id="world">world</h2><br>goodbye`,
+  (browser, accDoc) => {
+    let searchPred = {
+      AXSearchKey: "AXAnyTypeSearchKey",
+      AXImmediateDescendantsOnly: 1,
+      AXResultsLimit: 1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    let results = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(results.length, 1, "One result for root group");
+    is(
+      results[0].getAttributeValue("AXIdentifier"),
+      "root-group",
+      "Is generated root group"
+    );
+
+    searchPred.AXStartElement = results[0];
+    results = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(results.length, 0, "No more results past root group");
+
+    searchPred.AXDirection = "AXDirectionPrevious";
+    results = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(results.length, 1, "WebArea is before root group");
+    is(
+      results[0].getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
     );
   }
 );

@@ -85,7 +85,7 @@ struct QueueParamTraits<RawBuffer<T>> {
     if (!status) return status;
     if (!hasData) return status;
 
-    status = view.Write(begin, begin + elemCount);
+    status = view.WriteFromRange(in.Data());
     return status;
   }
 
@@ -108,16 +108,10 @@ struct QueueParamTraits<RawBuffer<T>> {
       return QueueStatus::kSuccess;
     }
 
-    auto buffer = UniqueBuffer::Alloc(elemCount * sizeof(T));
-    if (!buffer) return QueueStatus::kOOMError;
-
-    using MutT = std::remove_cv_t<T>;
-    const auto begin = reinterpret_cast<MutT*>(buffer.get());
-    const auto range = Range<MutT>{begin, elemCount};
-
-    auto temp = RawBuffer<T>{range, std::move(buffer)};
-    *out = std::move(temp);
-    return view.Read(range.begin().get(), range.end().get());
+    auto data = view.template ReadRange<T>(elemCount);
+    if (!data) return QueueStatus::kTooSmall;
+    *out = std::move(RawBuffer<T>{*data});
+    return QueueStatus::kSuccess;
   }
 };
 
@@ -168,9 +162,10 @@ struct QueueParamTraits<std::string> {
 
   template <typename U>
   static QueueStatus Write(ProducerView<U>& aProducerView, const T& aArg) {
-    auto status = aProducerView.WriteParam(aArg.size());
+    const auto size = aArg.size();
+    auto status = aProducerView.WriteParam(size);
     if (!status) return status;
-    status = aProducerView.Write(aArg.data(), aArg.data() + aArg.size());
+    status = aProducerView.WriteFromRange(Range<const char>{aArg.data(), size});
     return status;
   }
 
@@ -180,12 +175,9 @@ struct QueueParamTraits<std::string> {
     auto status = aConsumerView.ReadParam(&size);
     if (!status) return status;
 
-    const UniqueBuffer temp = malloc(size);
-    const auto dest = static_cast<char*>(temp.get());
-    if (!dest) return QueueStatus::kFatalError;
-
-    status = aConsumerView.Read(dest, dest + size);
-    aArg->assign(dest, size);
+    const auto view = aConsumerView.template ReadRange<char>(size);
+    if (!view) return QueueStatus::kFatalError;
+    aArg->assign(view->begin().get(), size);
     return status;
   }
 };

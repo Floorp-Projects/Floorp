@@ -28,6 +28,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'EarlyBlankWindow.h',
         'StackWalk_windows.h',
         'TimeStamp_windows.h',
+        'WindowsDpiAwareness.h',
     ]
 
 SOURCES += [

@@ -46,13 +46,14 @@ pub fn emit_program<'alloc>(
         }
     };
 
+    compilation_info.scripts.set_top_level(script);
+
     Ok(EmitResult::new(
         compilation_info.atoms.into(),
         compilation_info.slices.into(),
         compilation_info.scope_data_map.into(),
         compilation_info.regexps.into(),
-        script,
-        compilation_info.functions.into(),
+        compilation_info.scripts.into(),
         compilation_info.script_data_list.into(),
     ))
 }
@@ -163,7 +164,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
 
         let name = self
             .compilation_info
-            .functions
+            .scripts
             .get(stencil_index)
             .fun_name()
             .expect("Function declaration should have name");

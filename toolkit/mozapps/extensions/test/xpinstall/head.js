@@ -412,8 +412,11 @@ var Harness = {
     );
     this.runningInstalls.splice(this.runningInstalls.indexOf(install), 1);
 
-    if (this.downloadCancelledCallback) {
-      this.downloadCancelledCallback(install);
+    if (
+      this.downloadCancelledCallback &&
+      this.downloadCancelledCallback(install) === false
+    ) {
+      return;
     }
     this.checkTestEnded();
   },

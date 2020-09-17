@@ -5232,6 +5232,46 @@ static void DispatchPrintEventToWindowTree(Document& aDoc,
   }
 }
 
+#ifdef NS_PRINTING
+static void SetIsPrintingInDocShellTree(nsIDocShellTreeItem* aParentNode,
+                                        bool aIsPrintingOrPP,
+                                        bool aStartAtTop = true) {
+  nsCOMPtr<nsIDocShellTreeItem> parentItem(aParentNode);
+
+  // find top of "same parent" tree
+  if (aStartAtTop) {
+    while (parentItem) {
+      nsCOMPtr<nsIDocShellTreeItem> parent;
+      parentItem->GetInProcessSameTypeParent(getter_AddRefs(parent));
+      if (!parent) {
+        break;
+      }
+      parentItem = parent;
+    }
+  }
+
+  if (nsCOMPtr<nsIDocShell> viewerContainer = do_QueryInterface(parentItem)) {
+    viewerContainer->SetIsPrinting(aIsPrintingOrPP);
+  }
+
+  if (!aParentNode) {
+    return;
+  }
+
+  // Traverse children to see if any of them are printing.
+  int32_t n;
+  aParentNode->GetInProcessChildCount(&n);
+  for (int32_t i = 0; i < n; i++) {
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    aParentNode->GetInProcessChildAt(i, getter_AddRefs(child));
+    NS_ASSERTION(child, "child isn't nsIDocShell");
+    if (child) {
+      SetIsPrintingInDocShellTree(child, aIsPrintingOrPP, false);
+    }
+  }
+}
+#endif
+
 void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
   if (!AreDialogsEnabled()) {
     // We probably want to keep throwing here; silently doing nothing is a bit
@@ -5270,6 +5310,11 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
   if (aError.Failed()) {
     return;
   }
+
+  nsCOMPtr<nsIDocShell> docShell = mDocShell;
+  SetIsPrintingInDocShellTree(docShell, true);
+  auto unset =
+      MakeScopeExit([&] { SetIsPrintingInDocShellTree(docShell, false); });
 
   const bool isPreview = StaticPrefs::print_tab_modal_enabled() &&
                          !StaticPrefs::print_always_print_silent();
@@ -6329,10 +6374,11 @@ bool nsGlobalWindowOuter::IsOnlyTopLevelDocumentInSHistory() {
   // Disabled since IsFrame() is buggy in Fission
   // MOZ_ASSERT(mBrowsingContext->IsTop());
 
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-  NS_ENSURE_TRUE(webNav, false);
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    return mBrowsingContext->GetIsSingleToplevelInHistory();
+  }
 
-  RefPtr<ChildSHistory> csh = webNav->GetSessionHistory();
+  RefPtr<ChildSHistory> csh = nsDocShell::Cast(mDocShell)->GetSessionHistory();
   if (csh && csh->LegacySHistory()) {
     return csh->LegacySHistory()->IsEmptyOrHasEntriesForSingleTopLevelPage();
   }

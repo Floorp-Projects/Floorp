@@ -2297,7 +2297,7 @@ impl BatchBuilder {
                 if image_instance.visible_tiles.is_empty() {
                     if cfg!(debug_assertions) {
                         match ctx.resource_cache.get_image_properties(request.key) {
-                            Some(ImageProperties { tiling: None, .. }) => (),
+                            Some(ImageProperties { tiling: None, .. }) | None => (),
                             other => panic!("Non-tiled image with no visible images detected! Properties {:?}", other),
                         }
                     }
