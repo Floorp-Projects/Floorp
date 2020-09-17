@@ -60,6 +60,11 @@ let configurationStub;
 add_task(async function setup() {
   SearchTestUtils.useMockIdleService();
   await AddonTestUtils.promiseStartupManager();
+
+  // This test purposely attempts to load a missing engine.
+  consoleAllowList.push(
+    "Could not load engine engine-missing@search.mozilla.org"
+  );
 });
 
 add_task(async function test_startup_with_missing() {
