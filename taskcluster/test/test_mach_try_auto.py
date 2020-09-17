@@ -69,6 +69,7 @@ def test_only_important_manifests(params, full_task_graph, filter_tasks):
         pytest.param(
             lambda t: t.kind == "build-signing",
             id="no build-signing",
+            marks=pytest.mark.xfail,
         ),
         pytest.param(
             lambda t: t.kind == "upload-symbols",
