@@ -4,6 +4,7 @@
 #include "AudioDeviceInfo.h"
 #include "AudioGenerator.h"
 #include "AudioVerifier.h"
+#include "MediaEventSource.h"
 #include "nsTArray.h"
 
 #include <thread>
@@ -194,6 +195,10 @@ class MockCubebStream {
   void ForceError() { mForceErrorState = true; }
   void VerifyOutput() { mVerifyOutput = true; }
 
+  MediaEventSource<uint32_t>& FramesProcessedEvent() {
+    return mFramesProcessedEvent;
+  }
+
  private:
   // Simulates the audio thread. The thread is created at Start anda destroyed
   // at Stop. At next StreamStart a new thread is created.
@@ -213,6 +218,8 @@ class MockCubebStream {
 
       mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
                                            NUM_OF_CHANNELS);
+
+      mFramesProcessedEvent.Notify(outframes);
 
       if (outframes < NUM_OF_FRAMES) {
         mStateCallback(stream, mUserPtr, CUBEB_STATE_DRAINED);
@@ -269,6 +276,8 @@ class MockCubebStream {
   std::atomic_bool mVerifyOutput{false};
   AudioGenerator<AudioDataValue> mAudioGenerator;
   AudioVerifier<AudioDataValue> mAudioVerifier;
+
+  MediaEventProducer<uint32_t> mFramesProcessedEvent;
 };
 
 // This class has two facets: it is both a fake cubeb backend that is intended
@@ -440,15 +449,22 @@ class MockCubeb {
         aOutputStreamParams, aDataCallback, aStateCallback, aUserPtr);
     *aStream = reinterpret_cast<cubeb_stream*>(mockStream);
     mCurrentMockStream = mockStream;
+    mStreamInitEvent.Notify(mockStream);
     return CUBEB_OK;
   }
 
   void StreamDestroy(cubeb_stream* aStream) {
+    mStreamDestroyEvent.Notify();
     MockCubebStream* mockStream = reinterpret_cast<MockCubebStream*>(aStream);
     delete mockStream;
   }
 
   MockCubebStream* CurrentStream() { return mCurrentMockStream; }
+
+  MediaEventSource<MockCubebStream*>& StreamInitEvent() {
+    return mStreamInitEvent;
+  }
+  MediaEventSource<void>& StreamDestroyEvent() { return mStreamDestroyEvent; }
 
  private:
   // This needs to have the exact same memory layout as a real cubeb backend.
@@ -475,6 +491,9 @@ class MockCubeb {
   // The latest cubeb stream. The init of a stream happens in a helper thread
   // inside Gecko so a synchronization method is needed.
   std::atomic<MockCubebStream*> mCurrentMockStream{nullptr};
+
+  MediaEventProducer<MockCubebStream*> mStreamInitEvent;
+  MediaEventProducer<void> mStreamDestroyEvent;
 };
 
 void cubeb_mock_destroy(cubeb* context) {
