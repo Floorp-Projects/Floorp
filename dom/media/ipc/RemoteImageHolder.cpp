@@ -93,19 +93,16 @@ already_AddRefed<layers::Image> RemoteImageHolder::TransferToImage(
   if (mSD.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer) {
     image = DeserializeImage(aBufferRecycleBin);
   } else {
-    RemoteDecoderManagerChild* manager =
-        mSource == VideoBridgeSource::GpuProcess
-            ? RemoteDecoderManagerChild::GetGPUProcessSingleton()
-            : RemoteDecoderManagerChild::GetRDDProcessSingleton();
     // The Image here creates a TextureData object that takes ownership
     // of the SurfaceDescriptor, and is responsible for making sure that
     // it gets deallocated.
     SurfaceDescriptorRemoteDecoder remoteSD =
         static_cast<const SurfaceDescriptorGPUVideo&>(mSD);
     remoteSD.source() = Some(mSource);
-    image = new GPUVideoImage(manager, remoteSD, mSize);
+    image = new GPUVideoImage(mManager, remoteSD, mSize);
   }
   mEmpty = true;
+  mManager = nullptr;
 
   return image.forget();
 }
@@ -115,10 +112,41 @@ RemoteImageHolder::~RemoteImageHolder() {
   // this image holder (the decoder could have been flushed). We don't need to
   // worry about Shmem based image as the Shmem will be automatically re-used
   // once the decoder is used again.
-  if (!mEmpty && !XRE_IsGPUProcess() && !XRE_IsRDDProcess() &&
+  if (!mEmpty && mManager &&
       mSD.type() != SurfaceDescriptor::TSurfaceDescriptorBuffer) {
-    RefPtr<Image> image = TransferToImage();
+    SurfaceDescriptorRemoteDecoder remoteSD =
+        static_cast<const SurfaceDescriptorGPUVideo&>(mSD);
+    mManager->DeallocateSurfaceDescriptor(remoteSD);
   }
+}
+
+/* static */ void ipc::IPDLParamTraits<RemoteImageHolder>::Write(
+    IPC::Message* aMsg, ipc::IProtocol* aActor, RemoteImageHolder&& aParam) {
+  WriteIPDLParam(aMsg, aActor, aParam.mSource);
+  WriteIPDLParam(aMsg, aActor, aParam.mSize);
+  WriteIPDLParam(aMsg, aActor, aParam.mSD);
+  WriteIPDLParam(aMsg, aActor, aParam.mEmpty);
+  // Empty this holder.
+  aParam.mEmpty = true;
+  aParam.mManager = nullptr;
+}
+
+/* static */ bool ipc::IPDLParamTraits<RemoteImageHolder>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, ipc::IProtocol* aActor,
+    RemoteImageHolder* aResult) {
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSource) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSize) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSD) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mEmpty)) {
+    return false;
+  }
+  if (!aResult->mEmpty) {
+    aResult->mManager =
+        aResult->mSource == VideoBridgeSource::GpuProcess
+            ? RemoteDecoderManagerChild::GetGPUProcessSingleton()
+            : RemoteDecoderManagerChild::GetRDDProcessSingleton();
+  }
+  return true;
 }
 
 }  // namespace mozilla

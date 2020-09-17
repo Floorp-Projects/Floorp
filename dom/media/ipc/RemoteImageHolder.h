@@ -16,20 +16,28 @@
 namespace mozilla {
 namespace layers {
 class BufferRecycleBin;
+class IGPUVideoSurfaceManager;
 }
 class RemoteImageHolder final {
   friend struct ipc::IPDLParamTraits<RemoteImageHolder>;
 
  public:
-  RemoteImageHolder() = default;
-  RemoteImageHolder(layers::VideoBridgeSource aSource,
+  RemoteImageHolder() = default;  // only required for the IPDL binding code,
+                                  // not used in practice.
+  RemoteImageHolder(layers::IGPUVideoSurfaceManager* aManager,
+                    layers::VideoBridgeSource aSource,
                     const gfx::IntSize& aSize,
                     const layers::SurfaceDescriptor& aSD)
-      : mSource(aSource), mSize(aSize), mSD(aSD), mEmpty(false) {}
+      : mSource(aSource),
+        mSize(aSize),
+        mSD(aSD),
+        mManager(aManager),
+        mEmpty(false) {}
   RemoteImageHolder(RemoteImageHolder&& aOther)
       : mSource(aOther.mSource),
         mSize(aOther.mSize),
         mSD(aOther.mSD),
+        mManager(aOther.mManager),
         mEmpty(aOther.mEmpty) {
     aOther.mEmpty = true;
   }
@@ -49,35 +57,17 @@ class RemoteImageHolder final {
   layers::VideoBridgeSource mSource = layers::VideoBridgeSource::GpuProcess;
   gfx::IntSize mSize;
   layers::SurfaceDescriptor mSD;
+  RefPtr<layers::IGPUVideoSurfaceManager> mManager;
   bool mEmpty = true;
 };
 
-namespace ipc {
 template <>
-struct IPDLParamTraits<mozilla::RemoteImageHolder> {
-  typedef mozilla::RemoteImageHolder paramType;
-
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.mSource);
-    WriteIPDLParam(aMsg, aActor, aParam.mSize);
-    WriteIPDLParam(aMsg, aActor, aParam.mSD);
-    WriteIPDLParam(aMsg, aActor, aParam.mEmpty);
-    aParam.mEmpty = true;
-  }
-
+struct ipc::IPDLParamTraits<RemoteImageHolder> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    RemoteImageHolder&& aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor, paramType* aResult) {
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSource) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSize) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSD) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mEmpty)) {
-      return false;
-    }
-    return true;
-  }
+                   IProtocol* aActor, RemoteImageHolder* aResult);
 };
-
-}  // namespace ipc
 
 }  // namespace mozilla
 
