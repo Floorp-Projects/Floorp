@@ -271,6 +271,8 @@ ARCHIVE_FILES = {
             'base': 'dist/bin/components',
             'patterns': [
                 'httpd.js',
+                'httpd.manifest',
+                'test_necko.xpt',
             ],
             'dest': 'bin/components',
         },
