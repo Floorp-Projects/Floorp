@@ -56,6 +56,9 @@ class AudioVerifier {
                                sin(2 * M_PI * mFrequency / mRate));
   }
 
+  bool PreSilenceEnded() const {
+    return mTotalFramesSoFar > mPreSilenceSamples;
+  }
   uint64_t PreSilenceSamples() const { return mPreSilenceSamples; }
   uint32_t CountDiscontinuities() const { return mDiscontinuitiesCount; }
 
