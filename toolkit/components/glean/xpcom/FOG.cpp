@@ -20,22 +20,16 @@ already_AddRefed<FOG> FOG::GetSingleton() {
   }
 
   gFOG = new FOG();
-  RunOnShutdown([&] {
-    gFOG->Shutdown();
-    gFOG = nullptr;
-  });
+  ClearOnShutdown(&gFOG);
   return do_AddRef(gFOG);
 }
 
 extern "C" {
 nsresult fog_init();
-void fog_shutdown();
 nsresult fog_set_log_pings(bool aEnableLogPings);
 nsresult fog_set_debug_view_tag(const nsACString* aDebugTag);
 nsresult fog_submit_ping(const nsACString* aPingName);
 }
-
-void FOG::Shutdown() { fog_shutdown(); }
 
 NS_IMETHODIMP
 FOG::InitializeFOG() { return fog_init(); }
