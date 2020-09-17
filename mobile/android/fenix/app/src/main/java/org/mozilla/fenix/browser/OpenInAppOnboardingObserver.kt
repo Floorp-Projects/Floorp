@@ -36,10 +36,12 @@ class OpenInAppOnboardingObserver(
         }
     }
 
+    @Suppress("ComplexCondition")
     override fun onLoadingStateChanged(session: Session, loading: Boolean) {
         val appLink = appLinksUseCases.appLinkRedirect
 
         if (!loading &&
+            !settings.openLinksInExternalApp &&
             settings.shouldShowOpenInAppBanner &&
             appLink(session.url).hasExternalApp()
         ) {
