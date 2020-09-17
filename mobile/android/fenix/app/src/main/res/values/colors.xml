@@ -35,7 +35,7 @@
     <color name="dark_grey_90_gradient_start">#FF15141A</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="synced_tabs_separator_light_theme">@color/photonLightGrey30</color>
-    <color name="top_site_title_text_light_theme">@color/photonLightGrey80</color>
+    <color name="top_site_title_text_light_theme">@color/photonDarkGrey10</color>
     <color name="collection_icon_color_violet_light_theme">#7542E5</color>
     <color name="collection_icon_color_blue_light_theme">#0250BB</color>
     <color name="collection_icon_color_pink_light_theme">#E31587</color>
@@ -103,7 +103,7 @@
     <color name="scrimStart_dark_theme">#F520123A</color>
     <color name="scrimEnd_dark_theme">#F515141A</color>
     <color name="synced_tabs_separator_dark_theme">@color/photonDarkGrey10</color>
-    <color name="top_site_title_text_dark_theme">@color/photonLightGrey90</color>
+    <color name="top_site_title_text_dark_theme">@color/photonLightGrey60</color>
     <color name="collection_icon_color_violet_dark_theme">#AB71FF</color>
     <color name="collection_icon_color_blue_dark_theme">#00B3F4</color>
     <color name="collection_icon_color_pink_dark_theme">#FF6BBA</color>
