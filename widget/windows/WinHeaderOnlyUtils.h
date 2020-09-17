@@ -204,6 +204,15 @@ class WindowsError final {
   HRESULT mHResult;
 };
 
+#if defined(NIGHTLY_BUILD)
+struct DetourError {
+  // We have a 16-bytes buffer, but only minimum bytes to detour per
+  // architecture are copied.  See CreateTrampoline in PatcherDetour.h.
+  uint8_t mOrigBytes[16];
+  DetourError() : mOrigBytes{} {}
+};
+#endif  // defined(NIGHTLY_BUILD)
+
 template <typename T>
 using WindowsErrorResult = Result<T, WindowsError>;
 
@@ -211,9 +220,21 @@ struct LauncherError {
   LauncherError(const char* aFile, int aLine, WindowsError aWin32Error)
       : mFile(aFile), mLine(aLine), mError(aWin32Error) {}
 
+#if defined(NIGHTLY_BUILD)
+  LauncherError(const char* aFile, int aLine, WindowsError aWin32Error,
+                const Maybe<DetourError>& aDetourError)
+      : mFile(aFile),
+        mLine(aLine),
+        mError(aWin32Error),
+        mDetourError(aDetourError) {}
+#endif  // defined(NIGHTLY_BUILD)
+
   const char* mFile;
   int mLine;
   WindowsError mError;
+#if defined(NIGHTLY_BUILD)
+  Maybe<DetourError> mDetourError;
+#endif  // defined(NIGHTLY_BUILD)
 
   bool operator==(const LauncherError& aOther) const {
     return mError == aOther.mError;
@@ -260,6 +281,16 @@ using LauncherVoidResultWithLineInfo = LauncherResultWithLineInfo<Ok>;
     ::mozilla::Err(::mozilla::LauncherError( \
         __FILE__, __LINE__, ::mozilla::WindowsError::CreateGeneric()))
 
+#  if defined(NIGHTLY_BUILD)
+#    define LAUNCHER_ERROR_GENERIC_WITH_DETOUR_ERROR(...)               \
+      ::mozilla::Err(::mozilla::LauncherError(                          \
+          __FILE__, __LINE__, ::mozilla::WindowsError::CreateGeneric(), \
+          __VA_ARGS__))
+#  else
+#    define LAUNCHER_ERROR_GENERIC_WITH_DETOUR_ERROR(...) \
+      LAUNCHER_ERROR_GENERIC()
+#  endif  // defined(NIGHTLY_BUILD)
+
 #  define LAUNCHER_ERROR_FROM_WIN32(err)     \
     ::mozilla::Err(::mozilla::LauncherError( \
         __FILE__, __LINE__, ::mozilla::WindowsError::FromWin32Error(err)))
@@ -284,6 +315,8 @@ using LauncherVoidResultWithLineInfo = LauncherResultWithLineInfo<Ok>;
 
 #  define LAUNCHER_ERROR_GENERIC() \
     ::mozilla::Err(::mozilla::WindowsError::CreateGeneric())
+
+#  define LAUNCHER_ERROR_GENERIC_WITH_DETOUR_ERROR(...) LAUNCHER_ERROR_GENERIC()
 
 #  define LAUNCHER_ERROR_FROM_WIN32(err) \
     ::mozilla::Err(::mozilla::WindowsError::FromWin32Error(err))
