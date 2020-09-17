@@ -45,7 +45,7 @@ class nsPrinterBase : public nsIPrinter {
   nsPrinterBase(const nsPrinterBase&) = delete;
   nsPrinterBase(nsPrinterBase&&) = delete;
 
-  void QueryMarginsForPaper(Promise&, short aPaperId);
+  void QueryMarginsForPaper(Promise&, const nsString& aPaperId);
 
   /**
    * Caches the argument by copying it into mPrintSettingsInitializer.
@@ -95,7 +95,7 @@ class nsPrinterBase : public nsIPrinter {
   virtual bool SupportsMonochrome() const = 0;
   virtual bool SupportsCollation() const = 0;
   virtual nsTArray<mozilla::PaperInfo> PaperList() const = 0;
-  virtual MarginDouble GetMarginsForPaper(short aPaperId) const = 0;
+  virtual MarginDouble GetMarginsForPaper(nsString aPaperId) const = 0;
 
  private:
   mozilla::EnumeratedArray<AsyncAttribute, AsyncAttribute::Last,

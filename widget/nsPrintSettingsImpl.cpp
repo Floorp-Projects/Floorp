@@ -67,7 +67,10 @@ void nsPrintSettings::InitWithInitializer(
   SetPrinterName(aSettings.mPrinter);
   SetPrintInColor(aSettings.mPrintInColor);
   SetResolution(aSettings.mResolution);
-  SetPaperName(aSettings.mPaperInfo.mName);
+  // The paper "name" used by nsPrintSettings is the non-localizable identifier
+  // exposed as "id" by the paper, not the potentially localized human-friendly
+  // "name", which could change, e.g. if the user changes their system locale.
+  SetPaperName(aSettings.mPaperInfo.mId);
   SetPaperWidth(aSettings.mPaperInfo.mSize.Width() * kInchesPerPoint);
   SetPaperHeight(aSettings.mPaperInfo.mSize.Height() * kInchesPerPoint);
   SetPaperSizeUnit(nsIPrintSettings::kPaperSizeInches);
