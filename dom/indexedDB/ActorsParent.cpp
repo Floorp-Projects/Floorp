@@ -8238,60 +8238,57 @@ ConnectionPool::~ConnectionPool() {
 // static
 void ConnectionPool::IdleTimerCallback(nsITimer* aTimer, void* aClosure) {
   MOZ_ASSERT(aTimer);
+  MOZ_ASSERT(aClosure);
 
   AUTO_PROFILER_LABEL("ConnectionPool::IdleTimerCallback", DOM);
 
-  auto* self = static_cast<ConnectionPool*>(aClosure);
-  MOZ_ASSERT(self);
-  MOZ_ASSERT(self->mIdleTimer);
-  MOZ_ASSERT(SameCOMIdentity(self->mIdleTimer, aTimer));
-  MOZ_ASSERT(!self->mTargetIdleTime.IsNull());
-  MOZ_ASSERT_IF(self->mIdleDatabases.IsEmpty(), !self->mIdleThreads.IsEmpty());
-  MOZ_ASSERT_IF(self->mIdleThreads.IsEmpty(), !self->mIdleDatabases.IsEmpty());
+  auto& self = *static_cast<ConnectionPool*>(aClosure);
+  MOZ_ASSERT(self.mIdleTimer);
+  MOZ_ASSERT(SameCOMIdentity(self.mIdleTimer, aTimer));
+  MOZ_ASSERT(!self.mTargetIdleTime.IsNull());
+  MOZ_ASSERT_IF(self.mIdleDatabases.IsEmpty(), !self.mIdleThreads.IsEmpty());
+  MOZ_ASSERT_IF(self.mIdleThreads.IsEmpty(), !self.mIdleDatabases.IsEmpty());
 
-  self->mTargetIdleTime = TimeStamp();
+  self.mTargetIdleTime = TimeStamp();
 
   // Cheat a little.
-  TimeStamp now = TimeStamp::NowLoRes() + TimeDuration::FromMilliseconds(500);
+  const TimeStamp now =
+      TimeStamp::NowLoRes() + TimeDuration::FromMilliseconds(500);
 
-  uint32_t index = 0;
+  // XXX Move this to ArrayAlgorithm.h?
+  const auto removeUntil = [](auto& array, auto&& cond) {
+    const auto begin = array.begin(), end = array.end();
+    array.RemoveElementsRange(
+        begin, std::find_if(begin, end, std::forward<decltype(cond)>(cond)));
+  };
 
-  for (uint32_t count = self->mIdleDatabases.Length(); index < count; index++) {
-    IdleDatabaseInfo& info = self->mIdleDatabases[index];
-
+  removeUntil(self.mIdleDatabases, [now, &self](const auto& info) {
     if (now >= info.mIdleTime) {
       if ((*info.mDatabaseInfo)->mIdle) {
-        self->PerformIdleDatabaseMaintenance(*info.mDatabaseInfo.ref());
+        self.PerformIdleDatabaseMaintenance(*info.mDatabaseInfo.ref());
       } else {
-        self->CloseDatabase(*info.mDatabaseInfo.ref());
+        self.CloseDatabase(*info.mDatabaseInfo.ref());
       }
-    } else {
-      break;
+
+      return false;
     }
-  }
 
-  if (index) {
-    self->mIdleDatabases.RemoveElementsAt(0, index);
+    return true;
+  });
 
-    index = 0;
-  }
-
-  for (uint32_t count = self->mIdleThreads.Length(); index < count; index++) {
-    IdleThreadInfo& info = self->mIdleThreads[index];
+  removeUntil(self.mIdleThreads, [now, &self](auto& info) {
     info.mThreadInfo.AssertValid();
 
     if (now >= info.mIdleTime) {
-      self->ShutdownThread(std::move(info.mThreadInfo));
-    } else {
-      break;
+      self.ShutdownThread(std::move(info.mThreadInfo));
+
+      return false;
     }
-  }
 
-  if (index) {
-    self->mIdleThreads.RemoveElementsAt(0, index);
-  }
+    return true;
+  });
 
-  self->AdjustIdleTimer();
+  self.AdjustIdleTimer();
 }
 
 Result<RefPtr<DatabaseConnection>, nsresult>
