@@ -1932,21 +1932,16 @@ void internal_DynamicScalarToIPC(
  * content processes.
  */
 void internal_BroadcastDefinitions(
-    const StaticMutexAutoLock& lock,
-    const nsTArray<DynamicScalarInfo>& scalarInfos) {
+    const nsTArray<DynamicScalarDefinition>& scalarDefs) {
   nsTArray<mozilla::dom::ContentParent*> parents;
   mozilla::dom::ContentParent::GetAll(parents);
   if (!parents.Length()) {
     return;
   }
 
-  // Convert the internal scalar representation to a stripped down IPC one.
-  nsTArray<DynamicScalarDefinition> ipcDefinitions;
-  internal_DynamicScalarToIPC(lock, scalarInfos, ipcDefinitions);
-
   // Broadcast the definitions to the other content processes.
   for (auto parent : parents) {
-    mozilla::Unused << parent->SendAddDynamicScalars(ipcDefinitions);
+    mozilla::Unused << parent->SendAddDynamicScalars(scalarDefs);
   }
 }
 
@@ -3474,14 +3469,19 @@ nsresult TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
   }
 
   // Register the dynamic definition on the parent process.
+  nsTArray<DynamicScalarDefinition> ipcDefinitions;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
     ::internal_RegisterScalars(locker, newScalarInfos);
 
-    // Propagate the registration to all the content-processes. Please note that
-    // this does not require to hold the mutex.
-    ::internal_BroadcastDefinitions(locker, newScalarInfos);
+    // Convert the internal scalar representation to a stripped down IPC one.
+    ::internal_DynamicScalarToIPC(locker, newScalarInfos, ipcDefinitions);
   }
+
+  // Propagate the registration to all the content-processes.
+  // Do not hold the mutex while calling IPC.
+  ::internal_BroadcastDefinitions(ipcDefinitions);
+
   return NS_OK;
 }
 
