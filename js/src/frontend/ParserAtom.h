@@ -326,6 +326,7 @@ class alignas(alignof(void*)) ParserAtomEntry {
   bool toNumber(JSContext* cx, double* result) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump() const;
   void dumpCharsNoQuote(js::GenericPrinter& out) const;
 #endif
 };
