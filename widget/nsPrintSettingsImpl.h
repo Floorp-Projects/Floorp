@@ -28,7 +28,10 @@ namespace mozilla {
 struct PrintSettingsInitializer {
   nsString mPrinter;
   PaperInfo mPaperInfo;
-  bool mPrintInColor = false;
+  // If we fail to obtain printer capabilities, being given the option to print
+  // in color to your monochrome printer is a lot less annoying than not being
+  // given the option to print in color to your color printer.
+  bool mPrintInColor = true;
   int mResolution = 0;
 #ifdef XP_WIN
   CopyableTArray<uint8_t> mDevmodeWStorage;
