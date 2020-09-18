@@ -49,6 +49,10 @@ AsyncImagePipelineManager::AsyncImagePipelineManager(
       mAsyncImageEpoch{0},
       mWillGenerateFrame(false),
       mDestroyed(false),
+#ifdef XP_WIN
+      mUseWebRenderDCompVideoOverlayWin(
+          gfx::gfxVars::UseWebRenderDCompVideoOverlayWin()),
+#endif
       mRenderSubmittedUpdatesLock("SubmittedUpdatesLock"),
       mLastCompletedFrameId(0) {
   MOZ_COUNT_CTOR(AsyncImagePipelineManager);
@@ -319,6 +323,18 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
     return;
   }
 
+#ifdef XP_WIN
+  // UseWebRenderDCompVideoOverlayWin() could be changed from true to false,
+  // when DCompVideoOverlay task is failed. In this case, DisplayItems need to
+  // be re-pushed to WebRender for disabling video overlay.
+  bool isChanged = mUseWebRenderDCompVideoOverlayWin !=
+                   gfx::gfxVars::UseWebRenderDCompVideoOverlayWin();
+  if (isChanged) {
+    mUseWebRenderDCompVideoOverlayWin =
+        gfx::gfxVars::UseWebRenderDCompVideoOverlayWin();
+  }
+#endif
+
   wr::Epoch epoch = GetNextImageEpoch();
 
   // We use a pipeline with a very small display list for each video element.
@@ -326,6 +342,13 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
   for (auto iter = mAsyncImagePipelines.Iter(); !iter.Done(); iter.Next()) {
     wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
     AsyncImagePipeline* pipeline = iter.UserData();
+
+#ifdef XP_WIN
+    if (isChanged) {
+      pipeline->mIsChanged = true;
+    }
+#endif
+
     // If aync image pipeline does not use ImageBridge, do not need to apply.
     if (!pipeline->mImageHost->GetAsyncRef()) {
       continue;
