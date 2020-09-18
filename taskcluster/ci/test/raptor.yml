@@ -657,7 +657,7 @@ raptor-youtube-playback-av1-sfr-firefox:
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
-            default: 1800
+            default: 2700
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-av1-sfr
@@ -675,7 +675,7 @@ raptor-youtube-playback-h264-sfr-firefox:
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
-            default: 1800
+            default: 2700
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-sfr
@@ -709,7 +709,7 @@ raptor-youtube-playback-vp9-sfr-firefox:
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
-            default: 1800
+            default: 2700
     limit-platforms:
         - android-hw-p2.*
     mozharness:
