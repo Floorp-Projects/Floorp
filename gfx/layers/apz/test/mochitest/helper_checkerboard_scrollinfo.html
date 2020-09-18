@@ -79,20 +79,7 @@ function* test(testDriver) {
     dump(`Scrolling scroller to ${y}\n`);
     scroller.scrollTo(0, y);
     yield waitForApzFlushedRepaints(testDriver);
-
-    utils.advanceTimeAndRefresh(0);
-    var data = utils.getCompositorAPZTestData();
-    //dump(JSON.stringify(data, null, 4));
-    var found = false;
-    for (apzcData of data.additionalData) {
-      if (apzcData.key == scrollerId) {
-        var checkerboarding = apzcData.value.split(',').includes("checkerboarding");
-        ok(!checkerboarding, `scroller is not checkerboarding at y=${y}`);
-        found = true;
-      }
-    }
-    ok(found, `Found the scroller in the APZ data at y=${y}`);
-    utils.restoreNormalRefresh();
+    assertNotCheckerboarded(utils, scrollerId, `At y=${y}`);
   }
 
   subtestDone();

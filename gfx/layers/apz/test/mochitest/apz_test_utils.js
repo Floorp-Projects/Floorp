@@ -1134,3 +1134,26 @@ function visualViewportAsZoomedRect() {
     z: vv.scale,
   };
 }
+
+// Pulls the latest compositor APZ test data and checks to see if the
+// scroller with id `scrollerId` was checkerboarding. It also ensures that
+// a scroller with id `scrollerId` was actually found in the test data.
+// This function requires that "apz.test.logging_enabled" be set to true,
+// in order for the test data to be logged.
+function assertNotCheckerboarded(utils, scrollerId, msgPrefix) {
+  utils.advanceTimeAndRefresh(0);
+  var data = utils.getCompositorAPZTestData();
+  //dump(JSON.stringify(data, null, 4));
+  var found = false;
+  for (apzcData of data.additionalData) {
+    if (apzcData.key == scrollerId) {
+      var checkerboarding = apzcData.value
+        .split(",")
+        .includes("checkerboarding");
+      ok(!checkerboarding, `${msgPrefix}: scroller is not checkerboarding`);
+      found = true;
+    }
+  }
+  ok(found, `${msgPrefix}: Found the scroller in the APZ data`);
+  utils.restoreNormalRefresh();
+}
