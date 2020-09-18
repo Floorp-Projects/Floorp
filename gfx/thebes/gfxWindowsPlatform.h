@@ -213,6 +213,7 @@ class gfxWindowsPlatform final : public gfxPlatform {
   void GetAcceleratedCompositorBackends(
       nsTArray<mozilla::layers::LayersBackend>& aBackends) override;
   nsTArray<uint8_t> GetPlatformCMSOutputProfileData() override;
+  void GetPlatformDisplayInfo(mozilla::widget::InfoObject& aObj) override;
 
   void ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData) override;
   void ImportContentDeviceData(

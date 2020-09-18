@@ -6,10 +6,17 @@
 #ifndef mozilla_gfx_thebes_DisplayConfigWindows_h
 #define mozilla_gfx_thebes_DisplayConfigWindows_h
 
+#include <utility>              // for std::pair
+#include "mozilla/gfx/Point.h"  // for IntSize
+#include "nsTArray.h"
+
 namespace mozilla {
 namespace gfx {
 
 extern bool HasScaledResolution();
+
+typedef nsTArray<std::pair<IntSize, IntSize>> ScaledResolutionSet;
+void GetScaledResolutions(ScaledResolutionSet& aRv);
 
 }  // namespace gfx
 }  // namespace mozilla
