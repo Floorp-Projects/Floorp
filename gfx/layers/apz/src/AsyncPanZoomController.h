@@ -333,6 +333,12 @@ class AsyncPanZoomController {
   void FlushActiveCheckerboardReport();
 
   /**
+   * See documentation on corresponding method in APZPublicUtils.h
+   */
+  static gfx::IntSize GetDisplayportAlignmentMultiplier(
+      const ScreenSize& aBaseSize);
+
+  /**
    * Recalculates the displayport. Ideally, this should paint an area bigger
    * than the composite-to dimensions so that when you scroll down, you don't
    * checkerboard immediately. This includes a bunch of logic, including

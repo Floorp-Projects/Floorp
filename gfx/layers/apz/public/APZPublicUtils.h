@@ -77,6 +77,17 @@ const ScreenMargin CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics, const ParentLayerPoint& aVelocity);
 
 /**
+ * Returns a width and height multiplier, each of which is a power of two
+ * between 1 and 8 inclusive. The multiplier is chosen based on the provided
+ * base size, such that multiplier is larger when the base size is larger.
+ * The exact details are somewhat arbitrary and tuned by hand.
+ * This function is intended to only be used with WebRender, because that is
+ * the codepath that wants to use a larger displayport alignment, because
+ * moving the displayport is relatively expensive with WebRender.
+ */
+gfx::IntSize GetDisplayportAlignmentMultiplier(const ScreenSize& aBaseSize);
+
+/**
  * This computes the min/max values to use for the mousewheel animation
  * duration. Normally this just comes from prefs but we are doing a gradual
  * migration of users from old values to new values so this encapsulates some
