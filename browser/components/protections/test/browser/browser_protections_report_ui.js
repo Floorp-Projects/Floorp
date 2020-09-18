@@ -31,7 +31,10 @@ const SQL = {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.contentblocking.database.enabled", true]],
+    set: [
+      ["browser.contentblocking.database.enabled", true],
+      ["browser.contentblocking.report.vpn.enabled", false],
+    ],
   });
 });
 
