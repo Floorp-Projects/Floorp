@@ -157,7 +157,7 @@ add_task(async function urlPort() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "ExAmple.com:8888/f",
-    fireInputEvents: true,
+    fireInputEvent: true,
   });
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.ok(details.autofill);
