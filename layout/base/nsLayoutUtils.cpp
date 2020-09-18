@@ -683,14 +683,14 @@ bool nsLayoutUtils::UsesAsyncScrolling(nsIFrame* aFrame) {
   return AsyncPanZoomEnabled(aFrame);
 }
 
-bool nsLayoutUtils::AsyncPanZoomEnabled(nsIFrame* aFrame) {
+bool nsLayoutUtils::AsyncPanZoomEnabled(const nsIFrame* aFrame) {
   // We use this as a shortcut, since if the compositor will never use APZ,
   // no widget will either.
   if (!gfxPlatform::AsyncPanZoomEnabled()) {
     return false;
   }
 
-  nsIFrame* frame = nsLayoutUtils::GetDisplayRootFrame(aFrame);
+  const nsIFrame* frame = nsLayoutUtils::GetDisplayRootFrame(aFrame);
   nsIWidget* widget = frame->GetNearestWidget();
   if (!widget) {
     return false;
@@ -7521,9 +7521,15 @@ bool nsLayoutUtils::IsPopup(const nsIFrame* aFrame) {
 
 /* static */
 nsIFrame* nsLayoutUtils::GetDisplayRootFrame(nsIFrame* aFrame) {
+  return const_cast<nsIFrame*>(
+      nsLayoutUtils::GetDisplayRootFrame(const_cast<const nsIFrame*>(aFrame)));
+}
+
+/* static */
+const nsIFrame* nsLayoutUtils::GetDisplayRootFrame(const nsIFrame* aFrame) {
   // We could use GetRootPresContext() here if the
   // NS_FRAME_IN_POPUP frame bit is set.
-  nsIFrame* f = aFrame;
+  const nsIFrame* f = aFrame;
   for (;;) {
     if (!f->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
       f = f->PresShell()->GetRootFrame();
