@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.7.59';
-const pdfjsBuild = 'e73354a32';
+const pdfjsVersion = '2.7.69';
+const pdfjsBuild = '26ae7ba2a';
 ;
 
 /***/ }),
@@ -1972,7 +1972,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.7.59',
+    apiVersion: '2.7.69',
     source: {
       data: source.data,
       url: source.url,
@@ -3897,9 +3897,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.7.59';
+const version = '2.7.69';
 exports.version = version;
-const build = 'e73354a32';
+const build = '26ae7ba2a';
 exports.build = build;
 
 /***/ }),
@@ -5138,8 +5138,8 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       }
     },
     endDrawing: function CanvasGraphics_endDrawing() {
-      if (this.current.activeSMask !== null) {
-        this.endSMaskGroup();
+      while (this.stateStack.length || this.current.activeSMask !== null) {
+        this.restore();
       }
 
       this.ctx.restore();
@@ -5299,7 +5299,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       groupCtx.clearRect(0, 0, groupCtx.canvas.width, groupCtx.canvas.height);
       groupCtx.restore();
     },
-    resumeSMaskGroup: function CanvasGraphics_endSMaskGroup() {
+    resumeSMaskGroup: function CanvasGraphics_resumeSMaskGroup() {
       var groupCtx = this.current.resumeSMaskCtx;
       var currentCtx = this.ctx;
       this.ctx = groupCtx;
@@ -5339,6 +5339,8 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
         this.ctx.restore();
         this.pendingClip = null;
         this._cachedGetSinglePixelWidth = null;
+      } else {
+        this.current.activeSMask = null;
       }
     },
     transform: function CanvasGraphics_transform(a, b, c, d, e, f) {
