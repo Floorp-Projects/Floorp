@@ -354,6 +354,16 @@ class ArgumentsObject : public NativeObject {
   }
 
   /*
+   * Test if an argument is forwarded, i.e. its actual value is stored in the
+   * CallObject and can't be directly read from |ArgumentsData::args|.
+   */
+  bool argIsForwarded(unsigned i) const {
+    MOZ_ASSERT(i < data()->numArgs);
+    const Value& v = data()->args[i];
+    return IsMagicScopeSlotValue(v);
+  }
+
+  /*
    * Attempt to speedily and efficiently access the i-th element of this
    * arguments object.  Return true if the element was speedily returned.
    * Return false if the element must be looked up more slowly using
