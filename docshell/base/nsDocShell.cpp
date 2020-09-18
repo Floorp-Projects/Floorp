@@ -5702,7 +5702,8 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
     MOZ_LOG(gSHLog, LogLevel::Debug, ("document %p Embed", this));
     mActiveEntry = nullptr;
     mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo> loadingEntry;
-    mActiveEntryIsLoadingFromSessionHistory = !!mLoadingEntry;
+    mActiveEntryIsLoadingFromSessionHistory =
+        mLoadingEntry && mLoadingEntry->mLoadIsFromSessionHistory;
     if (mLoadingEntry) {
       mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
       mLoadingEntry.swap(loadingEntry);
