@@ -8,6 +8,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SessionState
@@ -852,5 +854,93 @@ class SessionManagerMigrationTest {
 
         assertNull(store.state.tabs[0].engineState.engineSessionState)
         assertEquals(engineSession, store.state.tabs[0].engineState.engineSession)
+    }
+
+    @Test
+    fun `State in sync after removeNormalSessions`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        manager.add(Session("https://www.mozilla.org"))
+        manager.add(Session("https://getpocket.com", private = true))
+        manager.add(Session("https://www.theverge.com", private = true))
+        manager.add(Session("https://www.reddit.com/r/firefox/"))
+        manager.add(Session("https://github.com"))
+        manager.add(Session("https://twitch.tv", private = true))
+
+        assertEquals(6, manager.sessions.size)
+        assertEquals(3, manager.sessions.filter { !it.private }.size)
+        assertEquals(3, manager.sessions.filter { it.private }.size)
+
+        assertEquals(6, store.state.tabs.size)
+        assertEquals(3, store.state.normalTabs.size)
+        assertEquals(3, store.state.privateTabs.size)
+
+        manager.removeNormalSessions()
+
+        assertEquals(3, manager.sessions.size)
+        assertEquals(0, manager.sessions.filter { !it.private }.size)
+        assertEquals(3, manager.sessions.filter { it.private }.size)
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals(0, store.state.normalTabs.size)
+        assertEquals(3, store.state.privateTabs.size)
+
+        manager.sessions.filter { it.private }.let { privateTabs ->
+            assertEquals("https://getpocket.com", privateTabs[0].url)
+            assertEquals("https://www.theverge.com", privateTabs[1].url)
+            assertEquals("https://twitch.tv", privateTabs[2].url)
+        }
+
+        assertEquals("https://getpocket.com", store.state.privateTabs[0].content.url)
+        assertEquals("https://www.theverge.com", store.state.privateTabs[1].content.url)
+        assertEquals("https://twitch.tv", store.state.privateTabs[2].content.url)
+
+        assertNull(manager.selectedSession)
+        assertNull(store.state.selectedTabId)
+    }
+
+    @Test
+    fun `State in sync after removingPrivateSessions`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        manager.add(Session("https://www.mozilla.org"))
+        manager.add(Session("https://getpocket.com", private = true))
+        manager.add(Session("https://www.theverge.com", private = true))
+        manager.add(Session("https://www.reddit.com/r/firefox/"))
+        manager.add(Session("https://github.com"))
+        manager.add(Session("https://twitch.tv", private = true))
+
+        assertEquals(6, manager.sessions.size)
+        assertEquals(3, manager.sessions.filter { !it.private }.size)
+        assertEquals(3, manager.sessions.filter { it.private }.size)
+
+        assertEquals(6, store.state.tabs.size)
+        assertEquals(3, store.state.normalTabs.size)
+        assertEquals(3, store.state.privateTabs.size)
+
+        manager.removePrivateSessions()
+
+        assertEquals(3, manager.sessions.size)
+        assertEquals(3, manager.sessions.filter { !it.private }.size)
+        assertEquals(0, manager.sessions.filter { it.private }.size)
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals(3, store.state.normalTabs.size)
+        assertEquals(0, store.state.privateTabs.size)
+
+        manager.sessions.filter { !it.private }.let { tabs ->
+            assertEquals("https://www.mozilla.org", tabs[0].url)
+            assertEquals("https://www.reddit.com/r/firefox/", tabs[1].url)
+            assertEquals("https://github.com", tabs[2].url)
+        }
+
+        assertEquals("https://www.mozilla.org", store.state.normalTabs[0].content.url)
+        assertEquals("https://www.reddit.com/r/firefox/", store.state.normalTabs[1].content.url)
+        assertEquals("https://github.com", store.state.normalTabs[2].content.url)
+
+        assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
+        assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
     }
 }

@@ -14,6 +14,11 @@ permalink: /changelog/
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * 🚒 Bug fixed [issue #8431](https://github.com/mozilla-mobile/android-components/issues/8431) update `Session.trackerBlockingEnabled` and `SessionState#trackingProtection#enabled` with the initial tracking protection state.
+* **feature-tabs**
+  * Added `TabsUseCases.removeNormalTabs()` and `TabsUseCases.removePrivateTabs()`.
+  * ⚠️ **This is a breaking change**: Removed `TabsUseCases.removeAllTabsOfType()`.
+* **browser-session**
+  * Added `SessionManager.removeNormalSessions()` and `SessionManager.removePrivateSessions()`.
 
 # 59.0.0
 
@@ -25,7 +30,6 @@ permalink: /changelog/
 
 * **feature-downloads**
   * 🚒 Bug fixed [issue #8354](https://github.com/mozilla-mobile/android-components/issues/8354) Do not restart FAILED downloads.
-
 * **browser-tabstray**
   * Removed the `BrowserTabsTray` that was deprecated in previous releases.
 * **service-telemetry**
@@ -44,7 +48,6 @@ permalink: /changelog/
     * Handle ping registration off the main thread. This removes a potential blocking call ([#1132](https://github.com/mozilla/glean/pull/1132)).
 * **feature-syncedtabs**
   * Added support for indicators to synced tabs `AwesomeBar` suggestions.
-
 * **feature-addons**
   * ⚠️ **This is a breaking change**: The `Addon.translatePermissions` now requires a `context` object and returns a list of localized strings instead of a list of id string resources.
   * 🚒 Bug fixed [issue #8323](https://github.com/mozilla-mobile/android-components/issues/8323) Add-on permission dialog does not prompt for host permissions.
