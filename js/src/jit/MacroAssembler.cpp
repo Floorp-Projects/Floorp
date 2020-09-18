@@ -3469,10 +3469,9 @@ void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
   bind(&isBound);
   {
     // Load the length property of a bound function.
-    Address boundLength(
-        func, FunctionExtended::offsetOfExtendedSlot(BOUND_FUN_LENGTH_SLOT));
-    branchTestInt32(Assembler::NotEqual, boundLength, slowPath);
-    unboxInt32(boundLength, output);
+    Address boundLength(func,
+                        FunctionExtended::offsetOfBoundFunctionLengthSlot());
+    fallibleUnboxInt32(boundLength, output, slowPath);
     jump(&lengthLoaded);
   }
   bind(&isInterpreted);

@@ -1283,8 +1283,9 @@ bool JSFunction::getUnresolvedLength(JSContext* cx, HandleFunction fun,
   // Bound functions' length can have values up to MAX_SAFE_INTEGER, so
   // they're handled differently from other functions.
   if (fun->isBoundFunction()) {
-    MOZ_ASSERT(fun->getExtendedSlot(BOUND_FUN_LENGTH_SLOT).isNumber());
-    v.set(fun->getExtendedSlot(BOUND_FUN_LENGTH_SLOT));
+    constexpr auto lengthSlot = FunctionExtended::BOUND_FUNCTION_LENGTH_SLOT;
+    MOZ_ASSERT(fun->getExtendedSlot(lengthSlot).isNumber());
+    v.set(fun->getExtendedSlot(lengthSlot));
     return true;
   }
 
@@ -1496,7 +1497,8 @@ bool JSFunction::finishBoundFunctionInit(JSContext* cx, HandleFunction bound,
   }
 
   // 19.2.3.2 Function.prototype.bind, step 8.
-  bound->setExtendedSlot(BOUND_FUN_LENGTH_SLOT, NumberValue(length));
+  bound->setExtendedSlot(FunctionExtended::BOUND_FUNCTION_LENGTH_SLOT,
+                         NumberValue(length));
 
   MOZ_ASSERT(!bound->hasGuessedAtom());
 

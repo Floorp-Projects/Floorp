@@ -71,10 +71,6 @@
 // name for self-hosted builtins is stored.
 #define LAZY_FUNCTION_NAME_SLOT 0
 
-// Stores the length for bound functions, so the .length property doesn't need
-// to be resolved eagerly.
-#define BOUND_FUN_LENGTH_SLOT 1
-
 #define ITERATOR_SLOT_TARGET 0
 // Used for collection iterators.
 #define ITERATOR_SLOT_RANGE 1
