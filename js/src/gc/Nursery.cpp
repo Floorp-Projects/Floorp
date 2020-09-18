@@ -179,8 +179,6 @@ void js::NurseryDecommitTask::run(AutoLockHelperThreadState& lock) {
       continue;
     }
   }
-
-  setFinishing(lock);
 }
 
 void js::NurseryDecommitTask::decommitChunk(Chunk* chunk) {
