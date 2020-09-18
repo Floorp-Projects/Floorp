@@ -9,6 +9,7 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/layers/CompositionRecorder.h"
 #include "mozilla/layers/SurfacePool.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderThread.h"
@@ -20,6 +21,36 @@
 
 namespace mozilla {
 namespace wr {
+
+class RenderCompositorRecordedFrame final : public layers::RecordedFrame {
+ public:
+  RenderCompositorRecordedFrame(
+      const TimeStamp& aTimeStamp,
+      RefPtr<layers::profiler_screenshots::AsyncReadbackBuffer>&& aBuffer)
+      : RecordedFrame(aTimeStamp), mBuffer(aBuffer) {}
+
+  virtual already_AddRefed<gfx::DataSourceSurface> GetSourceSurface() override {
+    if (mSurface) {
+      return do_AddRef(mSurface);
+    }
+
+    gfx::IntSize size = mBuffer->Size();
+    mSurface = gfx::Factory::CreateDataSourceSurface(
+        size, gfx::SurfaceFormat::B8G8R8A8,
+        /* aZero = */ false);
+
+    if (!mBuffer->MapAndCopyInto(mSurface, size)) {
+      mSurface = nullptr;
+      return nullptr;
+    }
+
+    return do_AddRef(mSurface);
+  }
+
+ private:
+  RefPtr<layers::profiler_screenshots::AsyncReadbackBuffer> mBuffer;
+  RefPtr<gfx::DataSourceSurface> mSurface;
+};
 
 RenderCompositorNative::RenderCompositorNative(
     RefPtr<widget::CompositorWidget>&& aWidget, gl::GLContext* aGL)
@@ -124,6 +155,41 @@ bool RenderCompositorNative::MaybeReadback(
   }
 
   return success;
+}
+
+bool RenderCompositorNative::MaybeRecordFrame(
+    layers::CompositionRecorder& aRecorder) {
+  if (!ShouldUseNativeCompositor()) {
+    return false;
+  }
+
+  if (!mNativeLayerRootSnapshotter) {
+    mNativeLayerRootSnapshotter = mNativeLayerRoot->CreateSnapshotter();
+  }
+
+  if (!mNativeLayerRootSnapshotter) {
+    return true;
+  }
+
+  gfx::IntSize size = GetBufferSize().ToUnknownSize();
+  RefPtr<layers::profiler_screenshots::RenderSource> snapshot =
+      mNativeLayerRootSnapshotter->GetWindowContents(size);
+  if (!snapshot) {
+    return true;
+  }
+
+  RefPtr<layers::profiler_screenshots::AsyncReadbackBuffer> buffer =
+      mNativeLayerRootSnapshotter->CreateAsyncReadbackBuffer(size);
+  buffer->CopyFrom(snapshot);
+
+  RefPtr<layers::RecordedFrame> frame =
+      new RenderCompositorRecordedFrame(TimeStamp::Now(), std::move(buffer));
+  aRecorder.RecordFrame(frame);
+
+  // GetWindowContents might have changed the current context. Make sure our
+  // context is current again.
+  MakeCurrent();
+  return true;
 }
 
 bool RenderCompositorNative::MaybeGrabScreenshot(

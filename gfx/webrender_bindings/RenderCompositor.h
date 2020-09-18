@@ -20,6 +20,7 @@ class GLContext;
 }
 
 namespace layers {
+class CompositionRecorder;
 class SyncObjectHost;
 }  // namespace layers
 
@@ -135,6 +136,9 @@ class RenderCompositor {
                              const wr::ImageFormat& aReadbackFormat,
                              const Range<uint8_t>& aReadbackBuffer,
                              bool* aNeedsYFlip) {
+    return false;
+  }
+  virtual bool MaybeRecordFrame(layers::CompositionRecorder& aRecorder) {
     return false;
   }
   virtual bool MaybeGrabScreenshot(const gfx::IntSize& aWindowSize) {
