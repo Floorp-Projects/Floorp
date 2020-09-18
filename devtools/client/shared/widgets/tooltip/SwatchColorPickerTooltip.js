@@ -15,6 +15,7 @@ const { openDocLink } = require("devtools/client/shared/link");
 const {
   A11Y_CONTRAST_LEARN_MORE_LINK,
 } = require("devtools/client/accessibility/constants");
+loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
 
 loader.lazyRequireGetter(
   this,
@@ -91,6 +92,10 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     this._openDocLink = this._openDocLink.bind(this);
     this._onTooltipKeydown = this._onTooltipKeydown.bind(this);
     this.cssColor4 = supportsCssColor4ColorFunction();
+
+    // Selecting color by hovering on the spectrum widget could create a lot
+    // of requests. Throttle by 50ms to avoid this. See Bug 1665547.
+    this._selectColor = throttle(this._selectColor.bind(this), 50);
 
     this.tooltip.container.addEventListener("keydown", this._onTooltipKeydown);
   }
