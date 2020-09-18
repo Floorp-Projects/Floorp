@@ -20,6 +20,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
 static const double kTenthMMToPoint = 72.0 / 254.0;
+static const double kPointsPerInch = 72.0;
 
 nsPrinterWin::nsPrinterWin(const nsAString& aName) : mName(aName) {}
 
@@ -66,7 +67,6 @@ static bool WithDefaultDevMode(const nsString& aName,
 PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
   // Initialize to something reasonable, in case we fail to get usable data
   // from the devmode below.
-  nsString paperName(u"Letter");
   nsString paperIdString(u"1");  // DMPAPER_LETTER
   SizeDouble paperSize{8.5 * 72.0, 11.0 * 72.0};
   gfx::MarginDouble margin;
@@ -81,13 +81,6 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
         if (devmode->dmFields & DM_PAPERSIZE) {
           paperIdString.Truncate(0);
           paperIdString.AppendInt(devmode->dmPaperSize);
-          for (auto paperInfo : PaperList()) {
-            if (paperIdString.Equals(paperInfo.mId)) {
-              paperName.Assign(paperInfo.mName);
-              paperSize = paperInfo.mSize;
-              break;
-            }
-          }
         }
 
         nsAutoHDC printerDc(
@@ -97,14 +90,27 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
           return false;
         }
 
+        int pixelsPerInchY = ::GetDeviceCaps(printerDc, LOGPIXELSY);
+        int physicalHeight = ::GetDeviceCaps(printerDc, PHYSICALHEIGHT);
+        double heightInInches = double(physicalHeight) / pixelsPerInchY;
+        int pixelsPerInchX = ::GetDeviceCaps(printerDc, LOGPIXELSX);
+        int physicalWidth = ::GetDeviceCaps(printerDc, PHYSICALWIDTH);
+        double widthInches = double(physicalWidth) / pixelsPerInchX;
+        if (devmode->dmFields & DM_ORIENTATION &&
+            devmode->dmOrientation == DMORIENT_LANDSCAPE) {
+          std::swap(widthInches, heightInInches);
+        }
+        paperSize.SizeTo(widthInches * kPointsPerInch,
+                         heightInInches * kPointsPerInch);
+
         margin = WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
-        margin.top *= POINTS_PER_INCH_FLOAT;
-        margin.right *= POINTS_PER_INCH_FLOAT;
-        margin.bottom *= POINTS_PER_INCH_FLOAT;
-        margin.left *= POINTS_PER_INCH_FLOAT;
+        margin.top *= kPointsPerInch;
+        margin.right *= kPointsPerInch;
+        margin.bottom *= kPointsPerInch;
+        margin.left *= kPointsPerInch;
 
         // Using Y to match existing code for print scaling calculations.
-        resolution = GetDeviceCaps(printerDc, LOGPIXELSY);
+        resolution = pixelsPerInchY;
         if (devmode->dmFields & DM_COLOR) {
           // See comment for PrintSettingsInitializer.mPrintInColor
           color = devmode->dmColor != DMCOLOR_MONOCHROME;
@@ -116,6 +122,9 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
     return {};
   }
 
+  // We don't actually need the paper name in the settings because the
+  // paperIdString is used to look up the paper details in the front end.
+  nsString paperName;
   return PrintSettingsInitializer{
       mName, PaperInfo(paperIdString, paperName, paperSize, Some(margin)),
       color, resolution, std::move(devmodeWStorage)};
@@ -284,10 +293,10 @@ mozilla::gfx::MarginDouble nsPrinterWin::GetMarginsForPaper(
           return false;
         }
         margin = WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
-        margin.top *= POINTS_PER_INCH_FLOAT;
-        margin.right *= POINTS_PER_INCH_FLOAT;
-        margin.bottom *= POINTS_PER_INCH_FLOAT;
-        margin.left *= POINTS_PER_INCH_FLOAT;
+        margin.top *= kPointsPerInch;
+        margin.right *= kPointsPerInch;
+        margin.bottom *= kPointsPerInch;
+        margin.left *= kPointsPerInch;
         return true;
       });
 
