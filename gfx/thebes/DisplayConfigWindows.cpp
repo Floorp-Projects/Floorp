@@ -74,5 +74,27 @@ bool HasScaledResolution() {
   return false;
 }
 
+void GetScaledResolutions(ScaledResolutionSet& aRv) {
+  auto config = GetDisplayConfig();
+  if (config) {
+    for (auto& path : config->mPaths) {
+      auto& modes = config->mModes;
+      int targetModeIndex = path.targetInfo.modeInfoIdx;
+      int sourceModeIndex = path.sourceInfo.modeInfoIdx;
+
+      // Check if the source and target resolutions are different
+      IntSize src(modes[sourceModeIndex].sourceMode.width,
+                  modes[sourceModeIndex].sourceMode.height);
+      IntSize dst(
+          modes[targetModeIndex].targetMode.targetVideoSignalInfo.activeSize.cx,
+          modes[targetModeIndex]
+              .targetMode.targetVideoSignalInfo.activeSize.cy);
+      if (src != dst) {
+        aRv.AppendElement(std::pair<IntSize, IntSize>{src, dst});
+      }
+    }
+  }
+}
+
 }  // namespace gfx
 }  // namespace mozilla
