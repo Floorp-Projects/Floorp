@@ -68,8 +68,7 @@ fun CoroutineScope.allowUndo(
         }
 
         val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
-        val toolbarHeight = view.context.resources
-            .getDimensionPixelSize(R.dimen.browser_toolbar_height)
+        val toolbarHeight = view.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
 
         snackbar.view.updatePadding(
             bottom = if (

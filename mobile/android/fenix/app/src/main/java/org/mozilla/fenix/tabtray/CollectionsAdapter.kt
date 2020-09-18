@@ -8,10 +8,10 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.CheckedTextView
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.ContextCompat
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.updatePaddingRelative
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.support.ktx.android.util.dpToPx
+import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 
 internal class CollectionsAdapter(
@@ -36,15 +36,17 @@ internal class CollectionsAdapter(
 
     override fun onBindViewHolder(holder: CollectionItemViewHolder, position: Int) {
         if (position == 0) {
-            val displayMetrics = holder.textView.context.resources.displayMetrics
-            holder.textView.updatePaddingRelative(start = NEW_COLLECTION_PADDING_START.dpToPx(displayMetrics))
+            val resources = holder.textView.resources
+            holder.textView.updatePaddingRelative(
+                start = resources.getDimensionPixelSize(R.dimen.tab_tray_new_collection_padding_start)
+            )
             holder.textView.compoundDrawablePadding =
-                NEW_COLLECTION_DRAWABLE_PADDING.dpToPx(displayMetrics)
-            holder.textView.setCompoundDrawablesWithIntrinsicBounds(
-                ContextCompat.getDrawable(
+                resources.getDimensionPixelSize(R.dimen.tab_tray_new_collection_drawable_padding)
+            holder.textView.putCompoundDrawablesRelativeWithIntrinsicBounds(
+                start = AppCompatResources.getDrawable(
                     holder.textView.context,
                     R.drawable.ic_new
-                ), null, null, null
+                )
             )
         } else {
             holder.textView.isChecked = checkedPosition == position
@@ -65,9 +67,4 @@ internal class CollectionsAdapter(
     override fun getItemCount() = collections.size
 
     fun getSelectedCollection() = checkedPosition - 1
-
-    companion object {
-        private const val NEW_COLLECTION_PADDING_START = 24
-        private const val NEW_COLLECTION_DRAWABLE_PADDING = 28
-    }
 }

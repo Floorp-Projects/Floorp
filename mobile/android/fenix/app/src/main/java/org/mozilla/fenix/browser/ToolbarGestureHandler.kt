@@ -12,8 +12,6 @@ import android.graphics.PointF
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewConfiguration
-import androidx.annotation.Dimension
-import androidx.annotation.Dimension.DP
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.contains
 import androidx.core.graphics.toPoint
@@ -21,8 +19,8 @@ import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getRectWithScreenLocation
 import org.mozilla.fenix.ext.getWindowInsets
 import org.mozilla.fenix.ext.isKeyboardVisible
@@ -57,7 +55,8 @@ class ToolbarGestureHandler(
     private val windowWidth: Int
         get() = activity.resources.displayMetrics.widthPixels
 
-    private val previewOffset = PREVIEW_OFFSET.dpToPx(activity.resources.displayMetrics)
+    private val previewOffset =
+        activity.resources.getDimensionPixelSize(R.dimen.browser_fragment_gesture_preview_offset)
 
     private val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
     private val minimumFlingVelocity = ViewConfiguration.get(activity).scaledMinimumFlingVelocity
@@ -303,12 +302,6 @@ class ToolbarGestureHandler(
          * there is not tab available to switch to
          */
         private const val OVERSCROLL_HIDE_PERCENT = 0.20
-
-        /**
-         * The size of the gap between the tab preview and content layout.
-         */
-        @Dimension(unit = DP)
-        private const val PREVIEW_OFFSET = 48
 
         /**
          * Animation duration when switching to another tab

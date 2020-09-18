@@ -11,14 +11,13 @@ import androidx.appcompat.content.res.AppCompatResources
 import kotlinx.android.synthetic.main.list_element.*
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import mozilla.components.support.ktx.android.util.dpToFloat
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.view.ViewHolder
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
+import org.mozilla.fenix.utils.view.ViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 class TabInCollectionViewHolder(
@@ -42,7 +41,7 @@ class TabInCollectionViewHolder(
                     0,
                     view.width,
                     view.height,
-                    FAV_ICON_BORDER_RADIUS_IN_DP.dpToFloat(view.context.resources.displayMetrics)
+                    view.resources.getDimension(R.dimen.tab_tray_favicon_border_radius)
                 )
             }
         }

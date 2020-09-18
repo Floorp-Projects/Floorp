@@ -27,7 +27,6 @@ import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
-import mozilla.components.support.ktx.android.util.dpToFloat
 import mozilla.components.support.utils.URLStringUtils
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
@@ -111,7 +110,7 @@ class BrowserToolbarView(
             view.apply {
                 setScrollFlags()
 
-                elevation = TOOLBAR_ELEVATION.dpToFloat(resources.displayMetrics)
+                elevation = resources.getDimension(R.dimen.browser_fragment_toolbar_elevation)
 
                 if (!isCustomTabSession) {
                     display.setUrlBackground(getDrawable(R.drawable.search_url_background))

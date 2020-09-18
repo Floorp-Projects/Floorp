@@ -21,10 +21,12 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
 import mozilla.components.support.ktx.android.util.dpToPx
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -41,6 +43,9 @@ class ViewTest {
         mockkStatic("mozilla.components.support.ktx.android.util.DisplayMetricsKt")
         mockkStatic("org.mozilla.fenix.ext.ViewKt")
 
+        every { view.resources.getDimensionPixelSize(any()) } answers {
+            testContext.resources.getDimensionPixelSize(firstArg())
+        }
         every { view.resources.displayMetrics } returns displayMetrics
         every { view.parent } returns parent
         every { parent.touchDelegate = any() } just Runs
@@ -119,7 +124,7 @@ class ViewTest {
     @Config(sdk = [Build.VERSION_CODES.LOLLIPOP, Build.VERSION_CODES.LOLLIPOP_MR1])
     @Test
     fun `isKeyboardVisible returns false when the keyboard height is less than or equal to the minimum threshold`() {
-        val threshold = MINIMUM_KEYBOARD_HEIGHT.dpToPx(displayMetrics)
+        val threshold = testContext.resources.getDimensionPixelSize(R.dimen.minimum_keyboard_height)
 
         every { view.getKeyboardHeight() } returns threshold - 1
         assertEquals(false, view.isKeyboardVisible())
@@ -131,7 +136,7 @@ class ViewTest {
     @Config(sdk = [Build.VERSION_CODES.LOLLIPOP, Build.VERSION_CODES.LOLLIPOP_MR1])
     @Test
     fun `isKeyboardVisible returns true when the keyboard height is greater than the minimum threshold`() {
-        val threshold = MINIMUM_KEYBOARD_HEIGHT.dpToPx(displayMetrics)
+        val threshold = testContext.resources.getDimensionPixelSize(R.dimen.minimum_keyboard_height)
         every { view.getKeyboardHeight() } returns threshold + 1
 
         assertEquals(true, view.isKeyboardVisible())

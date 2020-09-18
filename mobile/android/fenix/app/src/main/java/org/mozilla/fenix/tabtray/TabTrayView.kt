@@ -42,7 +42,6 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.feature.syncedtabs.SyncedTabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.TabCounter.Companion.INFINITE_CHAR_PADDING_BOTTOM
@@ -429,15 +428,20 @@ class TabTrayView(
             )
         )
 
-        val displayMetrics = view.context.resources.displayMetrics
-
         view.handle.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            height =
-                if (multiselect) MULTISELECT_HANDLE_HEIGHT.dpToPx(displayMetrics) else NORMAL_HANDLE_HEIGHT.dpToPx(
-                    displayMetrics
-                )
-            topMargin = if (multiselect) 0.dpToPx(displayMetrics) else NORMAL_TOP_MARGIN.dpToPx(
-                displayMetrics
+            height = view.resources.getDimensionPixelSize(
+                if (multiselect) {
+                    R.dimen.tab_tray_multiselect_handle_height
+                } else {
+                    R.dimen.tab_tray_normal_handle_height
+                }
+            )
+            topMargin = view.resources.getDimensionPixelSize(
+                if (multiselect) {
+                    R.dimen.tab_tray_multiselect_handle_top_margin
+                } else {
+                    R.dimen.tab_tray_normal_handle_top_margin
+                }
             )
         }
 
@@ -524,7 +528,7 @@ class TabTrayView(
         val topOffset = if (landscape) {
             0
         } else {
-            view.context.resources.getDimension(R.dimen.tab_tray_top_offset).toInt()
+            view.resources.getDimensionPixelSize(R.dimen.tab_tray_top_offset)
         }
 
         behavior.setExpandedOffset(topOffset)
@@ -538,11 +542,11 @@ class TabTrayView(
         if (private) {
             fabView.new_tab_button.extend()
             fabView.new_tab_button.contentDescription =
-                view.context.resources.getString(R.string.add_private_tab)
+                view.context.getString(R.string.add_private_tab)
         } else {
             fabView.new_tab_button.shrink()
             fabView.new_tab_button.contentDescription =
-                view.context.resources.getString(R.string.add_tab)
+                view.context.getString(R.string.add_tab)
         }
     }
 
@@ -579,9 +583,6 @@ class TabTrayView(
         private const val EXPAND_AT_SIZE = 3
         private const val SLIDE_OFFSET = 0
         private const val SELECTION_DELAY = 500
-        private const val MULTISELECT_HANDLE_HEIGHT = 11
-        private const val NORMAL_HANDLE_HEIGHT = 3
-        private const val NORMAL_TOP_MARGIN = 8
         private const val NORMAL_HANDLE_PERCENT_WIDTH = 0.1F
     }
 }

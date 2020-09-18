@@ -18,7 +18,7 @@ class PrivateBrowsingDescriptionViewHolder(
 ) : RecyclerView.ViewHolder(view) {
 
     init {
-        val resources = view.context.resources
+        val resources = view.resources
         val appName = resources.getString(R.string.app_name)
         view.private_session_description.text = resources.getString(
             R.string.private_browsing_placeholder_description_2, appName

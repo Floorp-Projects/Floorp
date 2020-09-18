@@ -9,10 +9,13 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
+import androidx.annotation.AttrRes
+import androidx.annotation.Dimension
+import androidx.annotation.Dimension.DP
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToPx
 
-fun SpannableString.setTextSize(context: Context, textSize: Int) =
+fun SpannableString.setTextSize(context: Context, @Dimension(unit = DP) textSize: Int) =
     this.setSpan(
         AbsoluteSizeSpan(textSize.dpToPx(context.resources.displayMetrics)),
         0,
@@ -20,11 +23,9 @@ fun SpannableString.setTextSize(context: Context, textSize: Int) =
         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
     )
 
-fun SpannableString.setTextColor(context: Context, colorResId: Int) =
+fun SpannableString.setTextColor(context: Context, @AttrRes colorResId: Int) =
     this.setSpan(
-        ForegroundColorSpan(
-            context.getColorFromAttr(colorResId)
-        ),
+        ForegroundColorSpan(context.getColorFromAttr(colorResId)),
         0,
         this.length,
         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE

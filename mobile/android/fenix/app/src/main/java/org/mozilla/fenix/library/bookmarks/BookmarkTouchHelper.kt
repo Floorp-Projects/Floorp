@@ -72,7 +72,7 @@ class BookmarkTouchCallback(
             R.drawable.swipe_delete_background
         )!!
         val margin =
-            SwipeToDeleteCallback.MARGIN.dpToPx(recyclerView.context.resources.displayMetrics)
+            SwipeToDeleteCallback.MARGIN.dpToPx(recyclerView.resources.displayMetrics)
         val cellHeight = viewHolder.itemView.bottom - viewHolder.itemView.top
         val iconTop = viewHolder.itemView.top + (cellHeight - icon.intrinsicHeight) / 2
         val iconBottom = iconTop + icon.intrinsicHeight

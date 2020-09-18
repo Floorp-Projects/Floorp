@@ -80,7 +80,7 @@ class TouchCallback(
         val iconLeft: Int
         val iconRight: Int
         val margin =
-            SwipeToDeleteCallback.MARGIN.dpToPx(recyclerView.context.resources.displayMetrics)
+            SwipeToDeleteCallback.MARGIN.dpToPx(recyclerView.resources.displayMetrics)
         val iconWidth = icon.intrinsicWidth
         val iconHeight = icon.intrinsicHeight
         val cellHeight = itemView.bottom - itemView.top

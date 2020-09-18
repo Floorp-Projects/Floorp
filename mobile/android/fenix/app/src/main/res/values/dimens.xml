@@ -35,11 +35,12 @@
     <dimen name="phone_feature_label_recommended_text_size">14sp</dimen>
     <dimen name="site_permissions_exceptions_item_text_size">18sp</dimen>
     <dimen name="site_permissions_exceptions_item_height">56dp</dimen>
-    <dimen name="synced_tab_item_min_height">56dp</dimen>
     <dimen name="component_collection_creation_list_margin">16dp</dimen>
     <dimen name="exceptions_description_margin">12dp</dimen>
     <dimen name="preference_seek_bar_padding">16dp</dimen>
     <dimen name="custom_checkbox_alignment_margin">68dp</dimen>
+    <!--The assumed minimum height of the keyboard on Lollipop.-->
+    <dimen name="minimum_keyboard_height">100dp</dimen>
 
     <dimen name="context_menu_height">48dp</dimen>
     <dimen name="context_menu_x_offset">8dp</dimen>
@@ -81,8 +82,17 @@
     <!-- ETP Onboarding Popup -->
     <dimen name="etp_onboarding_popup_width">256dp</dimen>
 
-    <!-- Edit  Fragment  -->
+    <!-- Bookmark Edit Fragment  -->
     <dimen name="bookmark_edit_text_height">48dp</dimen>
+    <dimen name="bookmark_select_folder_indent">10dp</dimen>
+
+    <!-- Home Fragment -->
+    <dimen name="home_fragment_top_toolbar_header_margin">60dp</dimen>
+
+    <!-- Browser Fragment -->
+    <!--The size of the gap between the tab preview and content layout.-->
+    <dimen name="browser_fragment_gesture_preview_offset">48dp</dimen>
+    <dimen name="browser_fragment_toolbar_elevation">16dp</dimen>
 
     <!-- Search Fragment -->
     <dimen name="search_fragment_clipboard_item_height">56dp</dimen>
@@ -160,6 +170,13 @@
     <dimen name="tab_tray_top_offset">40dp</dimen>
     <dimen name="tab_tray_thumbnail_width">92dp</dimen>
     <dimen name="tab_tray_thumbnail_height">69dp</dimen>
+    <dimen name="tab_tray_favicon_border_radius">4dp</dimen>
+    <dimen name="tab_tray_multiselect_handle_height">11dp</dimen>
+    <dimen name="tab_tray_normal_handle_height">11dp</dimen>
+    <dimen name="tab_tray_multiselect_handle_top_margin">0dp</dimen>
+    <dimen name="tab_tray_normal_handle_top_margin">8dp</dimen>
+    <dimen name="tab_tray_new_collection_padding_start">24dp</dimen>
+    <dimen name="tab_tray_new_collection_drawable_padding">28dp</dimen>
 
     <!-- Saved Logins Fragment -->
     <dimen name="saved_logins_sort_menu_dropdown_chevron_icon_margin_start">10dp</dimen>
@@ -169,6 +186,12 @@
     <dimen name="saved_logins_item_padding">4dp</dimen>
     <dimen name="saved_logins_item_margin_start">16dp</dimen>
     <dimen name="saved_logins_item_margin_end">48dp</dimen>
+
+    <!-- Synced Tabs Fragment -->
+    <dimen name="synced_tabs_error_margin">20dp</dimen>
+
+    <!-- Account Settings Fragment  -->
+    <dimen name="account_settings_device_name_min_height">48dp</dimen>
 
     <!-- Top sites  -->
     <dimen name="top_sites_favicon_size">40dp</dimen>

@@ -9,11 +9,13 @@ import android.os.Build
 import android.view.TouchDelegate
 import android.view.View
 import androidx.annotation.Dimension
+import androidx.annotation.Dimension.DP
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.WindowInsetsCompat
 import mozilla.components.support.ktx.android.util.dpToPx
+import org.mozilla.fenix.R
 
-fun View.increaseTapArea(extraDps: Int) {
+fun View.increaseTapArea(@Dimension(unit = DP) extraDps: Int) {
     val dips = extraDps.dpToPx(resources.displayMetrics)
     val parent = this.parent as View
     parent.post {
@@ -73,7 +75,7 @@ fun View.isKeyboardVisible(): Boolean {
     val minimumKeyboardHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         0
     } else {
-        MINIMUM_KEYBOARD_HEIGHT.dpToPx(resources.displayMetrics)
+        resources.getDimensionPixelSize(R.dimen.minimum_keyboard_height)
     }
     return getKeyboardHeight() > minimumKeyboardHeight
 }

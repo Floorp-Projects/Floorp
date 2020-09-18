@@ -119,8 +119,7 @@ class FenixSnackbar private constructor(
 
             val callback = FenixSnackbarCallback(content)
             val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
-            val toolbarHeight = view.context.resources
-                .getDimensionPixelSize(R.dimen.browser_toolbar_height)
+            val toolbarHeight = view.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
 
             return FenixSnackbar(parent, content, callback, isError).also {
                 it.duration = durationOrAccessibleDuration

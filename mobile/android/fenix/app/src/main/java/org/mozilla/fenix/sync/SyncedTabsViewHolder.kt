@@ -17,7 +17,6 @@ import kotlinx.android.synthetic.main.view_synced_tabs_group.view.*
 import kotlinx.android.synthetic.main.view_synced_tabs_title.view.*
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
-import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.sync.SyncedTabsAdapter.AdapterItem
@@ -135,13 +134,8 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        val displayMetrics = itemView.context.resources.displayMetrics
-        val margin = ERROR_MARGIN.dpToPx(displayMetrics)
+        val margin = itemView.resources.getDimensionPixelSize(R.dimen.synced_tabs_error_margin)
         lp.setMargins(margin, margin, margin, 0)
         itemView.layoutParams = lp
-    }
-
-    companion object {
-        private const val ERROR_MARGIN = 20
     }
 }
