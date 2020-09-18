@@ -3296,6 +3296,17 @@
     "description": "Time to reuse an idle connection in HTTP3(ms); keyed by the transaction reusing an idle connection has succeeded or failed",
     "bug_numbers": [1655566]
   },
+  "HTTP3_TIMER_DELAYED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 50,
+    "description": "Time difference between setting timer value and actually firing the timer for calling neqo",
+    "bug_numbers": [1655566]
+  },
   "HTTP3_REQUEST_PER_CONN": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],

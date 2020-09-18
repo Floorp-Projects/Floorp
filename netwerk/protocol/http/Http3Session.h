@@ -197,9 +197,11 @@ class Http3Session final : public nsAHttpTransaction,
   // remember them put them into mReadyForWrite queue when 0RTT finishes.
   nsTArray<WeakPtr<Http3Stream>> mCannotDo0RTTStreams;
 
+  // The following variables are needed for telemetry.
   TimeStamp mConnectionIdleStart;
   TimeStamp mConnectionIdleEnd;
   Maybe<uint64_t> mFirstStreamIdReuseIdleConnection;
+  TimeStamp mTimerShouldTrigger;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);
