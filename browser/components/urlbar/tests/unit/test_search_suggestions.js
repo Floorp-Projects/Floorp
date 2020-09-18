@@ -188,7 +188,9 @@ add_task(async function disabled_urlbarSuggestions_withRestrictionToken() {
     matches: [
       makeSearchResult(context, {
         query: SEARCH_STRING,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarPrefs.get("update2")
+          ? UrlbarTokenizer.RESTRICT.SEARCH
+          : undefined,
         engineName: ENGINE_NAME,
         heuristic: true,
       }),
@@ -214,7 +216,9 @@ add_task(
       matches: [
         makeSearchResult(context, {
           query: SEARCH_STRING,
-          alias: UrlbarTokenizer.RESTRICT.SEARCH,
+          alias: UrlbarPrefs.get("update2")
+            ? UrlbarTokenizer.RESTRICT.SEARCH
+            : undefined,
           engineName: ENGINE_NAME,
           heuristic: true,
         }),
@@ -238,7 +242,9 @@ add_task(
       matches: [
         makeSearchResult(context, {
           query: SEARCH_STRING,
-          alias: UrlbarTokenizer.RESTRICT.SEARCH,
+          alias: UrlbarPrefs.get("update2")
+            ? UrlbarTokenizer.RESTRICT.SEARCH
+            : undefined,
           engineName: ENGINE_NAME,
           heuristic: true,
         }),
@@ -413,7 +419,9 @@ add_task(async function restrictToken() {
     matches: [
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarPrefs.get("update2")
+          ? UrlbarTokenizer.RESTRICT.SEARCH
+          : undefined,
         query: SEARCH_STRING,
         heuristic: true,
       }),
@@ -450,7 +458,9 @@ add_task(async function restrictToken() {
     matches: [
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarPrefs.get("update2")
+          ? UrlbarTokenizer.RESTRICT.SEARCH
+          : undefined,
         query: "",
         heuristic: true,
       }),
@@ -487,7 +497,9 @@ add_task(async function restrictToken() {
     matches: [
       makeSearchResult(context, {
         engineName: ENGINE_NAME,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarPrefs.get("update2")
+          ? UrlbarTokenizer.RESTRICT.SEARCH
+          : undefined,
         query: "h",
         heuristic: true,
       }),
