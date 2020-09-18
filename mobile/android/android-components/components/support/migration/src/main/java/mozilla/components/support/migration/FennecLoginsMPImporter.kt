@@ -19,13 +19,17 @@ class FennecLoginsMPImporter(
     private val logger = Logger("FennecLoginsMPImporter")
     private val key4DbPath: String = "${profile.path}/key4.db"
     private val signonsDbPath: String = "${profile.path}/signons.sqlite"
+    private val browserDbPath: String = "${profile.path}/browser.db"
 
     /**
      * @return 'true' if MP is detected, 'false' otherwise (and in case of any errors).
      */
     @Suppress("TooGenericExceptionCaught")
     fun hasMasterPassword(): Boolean {
-        return try {
+        return if (!isFennecInstallation(browserDbPath)) {
+            logger.info("Skipping MP check, not a Fennec install.")
+            false
+        } else try {
             // MP is set if default password doesn't work.
             !FennecLoginsMigration.isMasterPasswordValid(FennecLoginsMigration.DEFAULT_MASTER_PASSWORD, key4DbPath)
         } catch (e: Exception) {
