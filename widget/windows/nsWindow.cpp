@@ -601,6 +601,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mMouseInDraggableArea = false;
   mDestroyCalled = false;
   mIsEarlyBlankWindow = false;
+  mWasPreXulSkeletonUI = false;
   mResizable = false;
   mHasTaskbarIconBeenCreated = false;
   mMouseTransparent = false;
@@ -894,6 +895,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   if (aInitData->mWindowType == eWindowType_toplevel && !aParent) {
     mWnd = ConsumeEarlyBlankWindowHandle();
     if (mWnd) {
+      mWasPreXulSkeletonUI = true;
       ::SetWindowLongPtrW(mWnd, GWL_STYLE, style);
       ::SetWindowLongPtrW(mWnd, GWL_EXSTYLE, extendedStyle);
     }
@@ -8672,6 +8674,12 @@ void nsWindow::GetCompositorWidgetInitData(
 
 bool nsWindow::SynchronouslyRepaintOnResize() {
   return !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled();
+}
+
+void nsWindow::MaybeDispatchInitialFocusEvent() {
+  if (mWasPreXulSkeletonUI && ::GetActiveWindow() == mWnd) {
+    DispatchFocusToTopLevelWindow(true);
+  }
 }
 
 already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {
