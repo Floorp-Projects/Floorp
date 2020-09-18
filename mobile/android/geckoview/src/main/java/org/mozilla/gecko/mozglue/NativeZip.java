@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.mozglue;
 
-import android.support.annotation.Keep;
+import androidx.annotation.Keep;
 import org.mozilla.gecko.annotation.JNITarget;
 
 import java.io.InputStream;

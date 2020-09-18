@@ -1,6 +1,6 @@
 package org.mozilla.geckoview_example;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;

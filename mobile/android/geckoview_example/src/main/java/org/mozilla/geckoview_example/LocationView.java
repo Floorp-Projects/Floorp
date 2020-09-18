@@ -6,7 +6,7 @@
 package org.mozilla.geckoview_example;
 
 import android.content.Context;
-import android.support.v7.widget.AppCompatEditText;
+import androidx.appcompat.widget.AppCompatEditText;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;

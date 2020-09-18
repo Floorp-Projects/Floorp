@@ -42,9 +42,9 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.android.support:support-annotations:$support_library_version"
-    implementation "com.android.support:appcompat-v7:$support_library_version"
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation "androidx.annotation:annotation:1.0.0"
+    implementation "androidx.appcompat:appcompat:1.0.0"
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     testImplementation 'junit:junit:4.12'
     // Replace this with implementation "org.mozilla.geckoview:geckoview-${geckoviewChannel}:${geckoviewVersion}"
     implementation project(path: ':geckoview')

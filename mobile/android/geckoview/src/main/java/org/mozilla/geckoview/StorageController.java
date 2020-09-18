@@ -10,10 +10,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
 
-import android.support.annotation.AnyThread;
-import android.support.annotation.LongDef;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.AnyThread;
+import androidx.annotation.LongDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;

@@ -19,7 +19,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
-import android.support.annotation.AnyThread
+import androidx.annotation.AnyThread
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.util.Pair

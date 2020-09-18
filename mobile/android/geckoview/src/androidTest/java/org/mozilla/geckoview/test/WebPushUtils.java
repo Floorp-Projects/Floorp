@@ -6,8 +6,8 @@
 
 package org.mozilla.geckoview.test;
 
-import android.support.annotation.AnyThread;
-import android.support.annotation.Nullable;
+import androidx.annotation.AnyThread;
+import androidx.annotation.Nullable;
 import android.util.Base64;
 
 import java.math.BigInteger;
@@ -17,12 +17,10 @@ import java.security.KeyFactory;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPublicKey;
-import java.security.spec.ECFieldFp;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
-import java.security.spec.EllipticCurve;
 import java.security.spec.InvalidKeySpecException;
 
 /**

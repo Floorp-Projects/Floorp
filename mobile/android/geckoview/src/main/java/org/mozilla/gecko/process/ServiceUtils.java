@@ -9,7 +9,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /* package */ final class ServiceUtils {
     private static final String DEFAULT_ISOLATED_CONTENT_SERVICE_NAME_SUFFIX = "0";
