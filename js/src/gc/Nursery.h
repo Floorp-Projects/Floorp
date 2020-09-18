@@ -90,7 +90,7 @@ class NurseryDecommitTask : public GCParallelTask {
   void queueRange(size_t newCapacity, NurseryChunk& chunk,
                   const AutoLockHelperThreadState& lock);
 
-  void run() override;
+  void run(AutoLockHelperThreadState& lock) override;
   void decommitChunk(gc::Chunk* chunk);
   void decommitRange(AutoLockHelperThreadState& lock);
 

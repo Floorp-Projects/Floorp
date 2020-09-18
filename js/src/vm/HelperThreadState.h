@@ -480,19 +480,13 @@ class HelperThread {
       const AutoLockHelperThreadState& locked);
 };
 
-struct MOZ_RAII AutoSetHelperThreadContext {
+class MOZ_RAII AutoSetHelperThreadContext {
   JSContext* cx;
-  explicit AutoSetHelperThreadContext();
-  ~AutoSetHelperThreadContext() {
-    AutoLockHelperThreadState lock;
-    cx->tempLifoAlloc().releaseAll();
-    if (cx->shouldFreeUnusedMemory()) {
-      cx->tempLifoAlloc().freeAll();
-      cx->setFreeUnusedMemory(false);
-    }
-    cx->clearHelperThread(lock);
-    cx = nullptr;
-  }
+  AutoLockHelperThreadState& lock;
+
+ public:
+  explicit AutoSetHelperThreadContext(AutoLockHelperThreadState& lock);
+  ~AutoSetHelperThreadContext();
 };
 
 struct MOZ_RAII AutoSetContextRuntime {
@@ -557,7 +551,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   }
 
   void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
-  void runTask();
+  void runTask(AutoLockHelperThreadState& lock);
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_PARSE; }
 };
 

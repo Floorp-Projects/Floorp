@@ -165,27 +165,22 @@ Chunk* js::NurseryDecommitTask::popChunk(
   return chunk;
 }
 
-void js::NurseryDecommitTask::run() {
+void js::NurseryDecommitTask::run(AutoLockHelperThreadState& lock) {
   Chunk* chunk;
-
-  {
-    AutoLockHelperThreadState lock;
-
-    while ((chunk = popChunk(lock)) || partialChunk) {
-      if (chunk) {
-        AutoUnlockHelperThreadState unlock(lock);
-        decommitChunk(chunk);
-        continue;
-      }
-
-      if (partialChunk) {
-        decommitRange(lock);
-        continue;
-      }
+  while ((chunk = popChunk(lock)) || partialChunk) {
+    if (chunk) {
+      AutoUnlockHelperThreadState unlock(lock);
+      decommitChunk(chunk);
+      continue;
     }
 
-    setFinishing(lock);
+    if (partialChunk) {
+      decommitRange(lock);
+      continue;
+    }
   }
+
+  setFinishing(lock);
 }
 
 void js::NurseryDecommitTask::decommitChunk(Chunk* chunk) {
