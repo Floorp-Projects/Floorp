@@ -410,6 +410,13 @@ class GeckoWebViewProvider : IWebViewProvider {
                     geckoSession.loadUri(currentUrl)
                 }
 
+                override fun onKill(session: GeckoSession) {
+                    // Ensure the session that was killed is the same session we act on.
+                    geckoSession = session
+                    geckoSession.open(geckoRuntime!!)
+                    geckoSession.loadUri(currentUrl)
+                }
+
                 override fun onFocusRequest(geckoSession: GeckoSession) {}
 
                 override fun onCloseRequest(geckoSession: GeckoSession) {
