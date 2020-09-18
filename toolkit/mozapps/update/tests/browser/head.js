@@ -14,6 +14,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "DownloadUtils",
+  "resource://gre/modules/DownloadUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "UpdateListener",
   "resource://gre/modules/UpdateListener.jsm"
 );
@@ -783,6 +788,22 @@ function runAboutDialogUpdateTest(params, steps) {
                 " value should equal " +
                 data[resultName]
             );
+
+            // Check the download status text.  It should be something like,
+            // "1.4 of 1.4 KB".
+            let expectedText = DownloadUtils.getTransferTotal(
+              data[resultName] == gBadSizeResult ? 0 : patch.size,
+              patch.size
+            );
+            Assert.ok(
+              expectedText,
+              "Sanity check: Expected download status text should be non-empty"
+            );
+            Assert.equal(
+              aboutDialog.downloadStatus.textContent,
+              expectedText,
+              "Download status text should be correct"
+            );
           }
         }
       } else if (continueFile) {
@@ -976,6 +997,28 @@ function runAboutPrefsUpdateTest(params, steps) {
                 resultName +
                 " value should equal " +
                 data[resultName]
+            );
+
+            // Check the download status text.  It should be something like,
+            // "Downloading update — 1.4 of 1.4 KB".  We check only the second
+            // part to make sure that the downloaded size is updated correctly.
+            let actualText = await SpecialPowers.spawn(
+              tab.linkedBrowser,
+              [],
+              () => content.document.getElementById("downloading").textContent
+            );
+            let expectedSuffix = DownloadUtils.getTransferTotal(
+              data[resultName] == gBadSizeResult ? 0 : patch.size,
+              patch.size
+            );
+            Assert.ok(
+              expectedSuffix,
+              "Sanity check: Expected download status text should be non-empty"
+            );
+            Assert.ok(
+              actualText.endsWith(expectedSuffix),
+              "Download status text should end as expected: " +
+                JSON.stringify({ actualText, expectedSuffix })
             );
           }
         }
