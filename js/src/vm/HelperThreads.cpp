@@ -2307,6 +2307,12 @@ bool js::EnqueueOffThreadCompression(JSContext* cx,
   return true;
 }
 
+void js::StartHandlingCompressionsOnGC(JSRuntime* rt) {
+  AutoLockHelperThreadState lock;
+  HelperThreadState().startHandlingCompressionTasks(
+      lock, GlobalHelperThreadState::ScheduleCompressionTask::GC);
+}
+
 template <typename T>
 static void ClearCompressionTaskList(T& list, JSRuntime* runtime) {
   for (size_t i = 0; i < list.length(); i++) {
@@ -2363,6 +2369,15 @@ void js::AttachFinishedCompressions(JSRuntime* runtime,
       UniquePtr<SourceCompressionTask> compressionTask(std::move(finished[i]));
       HelperThreadState().remove(finished, &i);
       compressionTask->complete();
+    }
+  }
+}
+
+void js::SweepPendingCompressions(AutoLockHelperThreadState& lock) {
+  auto& pending = HelperThreadState().compressionPendingList(lock);
+  for (size_t i = 0; i < pending.length(); i++) {
+    if (pending[i]->shouldCancel()) {
+      HelperThreadState().remove(pending, &i);
     }
   }
 }
