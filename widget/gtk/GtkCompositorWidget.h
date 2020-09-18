@@ -76,15 +76,7 @@ class GtkCompositorWidget : public CompositorWidget,
   nsWindow* mWidget;
 
  private:
-  // Webrender can try to poll this while we're handling a window resize event.
-  // This read/write race is largely benign because it's fine if webrender and
-  // the window desync for a frame (leading to the page displaying
-  // larger/smaller than the window for a split second) -- nobody expects
-  // perfect rendering while resizing a window. This atomic doesn't change the
-  // fact that the window and content can display at different sizes, but it
-  // does make it Not Undefined Behaviour, and also ensures webrender only
-  // ever uses the old or new size, and not some weird synthesis of the two.
-  Atomic<LayoutDeviceIntSize> mClientSize;
+  LayoutDeviceIntSize mClientSize;
 
   WindowSurfaceProvider mProvider;
 
