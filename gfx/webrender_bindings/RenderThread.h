@@ -281,9 +281,9 @@ class RenderThread final {
 
   size_t RendererCount();
 
-  void SetCompositionRecorderForWindow(
-      wr::WindowId aWindowId,
-      UniquePtr<layers::WebRenderCompositionRecorder> aCompositionRecorder);
+  void BeginRecordingForWindow(wr::WindowId aWindowId,
+                               const TimeStamp& aRecordingStart,
+                               wr::PipelineId aRootPipelineId);
 
   void WriteCollectedFramesForWindow(wr::WindowId aWindowId);
 

@@ -652,32 +652,30 @@ void WebRenderAPI::ToggleCaptureSequence() {
   }
 }
 
-void WebRenderAPI::SetCompositionRecorder(
-    UniquePtr<layers::WebRenderCompositionRecorder> aRecorder) {
-  class SetCompositionRecorderEvent final : public RendererEvent {
+void WebRenderAPI::BeginRecording(const TimeStamp& aRecordingStart,
+                                  wr::PipelineId aRootPipelineId) {
+  class BeginRecordingEvent final : public RendererEvent {
    public:
-    explicit SetCompositionRecorderEvent(
-        UniquePtr<layers::WebRenderCompositionRecorder> aRecorder)
-        : mRecorder(std::move(aRecorder)) {
-      MOZ_COUNT_CTOR(SetCompositionRecorderEvent);
+    explicit BeginRecordingEvent(const TimeStamp& aRecordingStart,
+                                 wr::PipelineId aRootPipelineId)
+        : mRecordingStart(aRecordingStart), mRootPipelineId(aRootPipelineId) {
+      MOZ_COUNT_CTOR(BeginRecordingEvent);
     }
 
-    ~SetCompositionRecorderEvent() {
-      MOZ_COUNT_DTOR(SetCompositionRecorderEvent);
-    }
+    ~BeginRecordingEvent() { MOZ_COUNT_DTOR(BeginRecordingEvent); }
 
     void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
-      MOZ_ASSERT(mRecorder);
-
-      aRenderThread.SetCompositionRecorderForWindow(aWindowId,
-                                                    std::move(mRecorder));
+      aRenderThread.BeginRecordingForWindow(aWindowId, mRecordingStart,
+                                            mRootPipelineId);
     }
 
    private:
-    UniquePtr<layers::WebRenderCompositionRecorder> mRecorder;
+    TimeStamp mRecordingStart;
+    wr::PipelineId mRootPipelineId;
   };
 
-  auto event = MakeUnique<SetCompositionRecorderEvent>(std::move(aRecorder));
+  auto event =
+      MakeUnique<BeginRecordingEvent>(aRecordingStart, aRootPipelineId);
   RunOnRenderThread(std::move(event));
 }
 

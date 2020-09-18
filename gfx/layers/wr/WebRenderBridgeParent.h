@@ -300,8 +300,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   bool IsRootWebRenderBridgeParent() const;
   LayersId GetLayersId() const;
 
-  void SetCompositionRecorder(
-      UniquePtr<layers::WebRenderCompositionRecorder> aRecorder);
+  void BeginRecording(const TimeStamp& aRecordingStart);
 
   /**
    * Write the frames collected by the |WebRenderCompositionRecorder| to disk.

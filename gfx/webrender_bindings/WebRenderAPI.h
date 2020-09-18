@@ -279,22 +279,22 @@ class WebRenderAPI final {
 
   void ToggleCaptureSequence();
 
-  void SetCompositionRecorder(
-      UniquePtr<layers::WebRenderCompositionRecorder> aRecorder);
+  void BeginRecording(const TimeStamp& aRecordingStart,
+                      wr::PipelineId aRootPipelineId);
 
   typedef MozPromise<bool, nsresult, true> WriteCollectedFramesPromise;
   typedef MozPromise<layers::CollectedFrames, nsresult, true>
       GetCollectedFramesPromise;
 
   /**
-   * Write the frames collected by the |WebRenderCompositionRecorder| to disk.
+   * Write the frames collected since the call to BeginRecording() to disk.
    *
    * If there is not currently a recorder, this is a no-op.
    */
   RefPtr<WriteCollectedFramesPromise> WriteCollectedFrames();
 
   /**
-   * Return the frames collected by the |WebRenderCompositionRecorder| encoded
+   * Return the frames collected since the call to BeginRecording() encoded
    * as data URIs.
    *
    * If there is not currently a recorder, this is a no-op and the promise will

@@ -254,15 +254,17 @@ size_t RenderThread::RendererCount() {
   return mRenderers.size();
 }
 
-void RenderThread::SetCompositionRecorderForWindow(
-    wr::WindowId aWindowId,
-    UniquePtr<layers::WebRenderCompositionRecorder> aCompositionRecorder) {
+void RenderThread::BeginRecordingForWindow(wr::WindowId aWindowId,
+                                           const TimeStamp& aRecordingStart,
+                                           wr::PipelineId aRootPipelineId) {
   MOZ_ASSERT(IsInRenderThread());
   MOZ_ASSERT(GetRenderer(aWindowId));
   MOZ_ASSERT(mCompositionRecorders.find(aWindowId) ==
              mCompositionRecorders.end());
 
-  mCompositionRecorders[aWindowId] = std::move(aCompositionRecorder);
+  mCompositionRecorders[aWindowId] =
+      MakeUnique<layers::WebRenderCompositionRecorder>(aRecordingStart,
+                                                       aRootPipelineId);
 }
 
 void RenderThread::WriteCollectedFramesForWindow(wr::WindowId aWindowId) {
