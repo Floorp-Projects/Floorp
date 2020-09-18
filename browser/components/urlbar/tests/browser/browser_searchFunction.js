@@ -68,7 +68,10 @@ add_task(async function searchEngineAlias() {
 });
 
 // Calls search() with a restriction character.
-add_task(async function searchRestriction() {
+add_task(async function searchRestriction_legacy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", false]],
+  });
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () =>
     gURLBar.search(UrlbarTokenizer.RESTRICT.SEARCH)
@@ -79,6 +82,25 @@ add_task(async function searchRestriction() {
 
   assertOneOffButtonsVisible(false);
 
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
+add_task(async function searchRestriction() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+  gURLBar.blur();
+  await UrlbarTestUtils.promisePopupOpen(window, () =>
+    gURLBar.search(UrlbarTokenizer.RESTRICT.SEARCH)
+  );
+  ok(gURLBar.hasAttribute("focused"), "url bar is focused");
+  UrlbarTestUtils.assertSearchMode(window, {
+    engineName: UrlbarSearchUtils.getDefaultEngine().name,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    entry: "typed",
+  });
+  assertOneOffButtonsVisible(true);
+  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
   await UrlbarTestUtils.promisePopupClose(window);
 });
 

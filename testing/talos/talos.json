@@ -46,7 +46,10 @@
             "benchmark_zip": "jetstream.zip"
         },
         "svgr": {
-            "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "tsvg_static"]
+            "tests": ["tsvgx", "tsvgr_opacity", "tscrollx", "tsvg_static"]
+        },
+        "svgr_disabled_see_bug1651311": {
+            "tests": ["tart"]
         },
         "perf-reftest": {
             "tests": ["perf_reftest"]

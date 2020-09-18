@@ -150,15 +150,20 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
                      });
                  return;
                }
-               const auto& response = aValue.ResolveValue();
-               if (response.type() == DecodeResultIPDL::TMediaResult) {
-                 mDecodePromise.RejectIfExists(response.get_MediaResult(),
-                                               __func__);
+               if (mDecodePromise.IsEmpty()) {
+                 // We got flushed.
                  return;
                }
-               ProcessOutput(response.get_DecodedOutputIPDL());
-               mDecodePromise.ResolveIfExists(std::move(mDecodedData),
-                                              __func__);
+               auto response = std::move(aValue.ResolveValue());
+               if (response.type() == DecodeResultIPDL::TMediaResult &&
+                   NS_FAILED(response.get_MediaResult())) {
+                 mDecodePromise.Reject(response.get_MediaResult(), __func__);
+                 return;
+               }
+               if (response.type() == DecodeResultIPDL::TDecodedOutputIPDL) {
+                 ProcessOutput(std::move(response.get_DecodedOutputIPDL()));
+               }
+               mDecodePromise.Resolve(std::move(mDecodedData), __func__);
                mDecodedData = MediaDataDecoder::DecodedData();
              });
 
@@ -195,12 +200,19 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Drain() {
   SendDrain()->Then(
       mThread, __func__,
       [self, this](DecodeResultIPDL&& aResponse) {
-        if (aResponse.type() == DecodeResultIPDL::TMediaResult) {
-          mDrainPromise.RejectIfExists(aResponse.get_MediaResult(), __func__);
+        if (mDrainPromise.IsEmpty()) {
+          // We got flushed.
           return;
         }
-        ProcessOutput(aResponse.get_DecodedOutputIPDL());
-        mDrainPromise.ResolveIfExists(std::move(mDecodedData), __func__);
+        if (aResponse.type() == DecodeResultIPDL::TMediaResult &&
+            NS_FAILED(aResponse.get_MediaResult())) {
+          mDrainPromise.Reject(aResponse.get_MediaResult(), __func__);
+          return;
+        }
+        if (aResponse.type() == DecodeResultIPDL::TDecodedOutputIPDL) {
+          ProcessOutput(std::move(aResponse.get_DecodedOutputIPDL()));
+        }
+        mDrainPromise.Resolve(std::move(mDecodedData), __func__);
         mDecodedData = MediaDataDecoder::DecodedData();
       },
       [self](const mozilla::ipc::ResponseRejectReason& aReason) {

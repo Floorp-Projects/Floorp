@@ -33,7 +33,6 @@ dictionary CacheQueryOptions {
   boolean ignoreSearch = false;
   boolean ignoreMethod = false;
   boolean ignoreVary = false;
-  DOMString cacheName;
 };
 
 dictionary CacheBatchOperation {

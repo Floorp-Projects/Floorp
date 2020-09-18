@@ -6954,6 +6954,26 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryCacheKey(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+ContentParent::RecvGetLoadingSessionHistoryInfoFromParent(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    GetLoadingSessionHistoryInfoFromParentResolver&& aResolver) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  Maybe<LoadingSessionHistoryInfo> info;
+  int32_t requestedIndex = -1;
+  int32_t sessionHistoryLength = 0;
+  aContext.get_canonical()->GetLoadingSessionHistoryInfoFromParent(
+      info, &requestedIndex, &sessionHistoryLength);
+  aResolver(
+      Tuple<const mozilla::Maybe<LoadingSessionHistoryInfo>&, const int32_t&,
+            const int32_t&>(info, requestedIndex, sessionHistoryLength));
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntryForTop(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,

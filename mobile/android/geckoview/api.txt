@@ -638,7 +638,7 @@ package org.mozilla.geckoview {
     method @NonNull protected GeckoRuntimeSettings newSettings(@Nullable GeckoRuntimeSettings);
   }
 
-  public class GeckoSession implements Parcelable {
+  public class GeckoSession {
     ctor public GeckoSession();
     ctor public GeckoSession(@Nullable GeckoSessionSettings);
     method @UiThread @NonNull public GeckoDisplay acquireDisplay();
@@ -696,7 +696,6 @@ package org.mozilla.geckoview {
     method @AnyThread public void loadUri(@NonNull Uri, @Nullable Uri, int, @Nullable Map<String,String>);
     method @UiThread public void open(@NonNull GeckoRuntime);
     method @AnyThread public void purgeHistory();
-    method @Deprecated @AnyThread public void readFromParcel(@NonNull Parcel);
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
     method @AnyThread public void reload();
     method @AnyThread public void reload(int);
@@ -717,7 +716,6 @@ package org.mozilla.geckoview {
     method @UiThread public void setSelectionActionDelegate(@Nullable GeckoSession.SelectionActionDelegate);
     method @AnyThread public void stop();
     method @UiThread protected void setShouldPinOnScreen(boolean);
-    field @Deprecated public static final Parcelable.Creator<GeckoSession> CREATOR;
     field public static final int FINDER_DISPLAY_DIM_PAGE = 2;
     field public static final int FINDER_DISPLAY_DRAW_LINK_OUTLINE = 4;
     field public static final int FINDER_DISPLAY_HIGHLIGHT_ALL = 1;

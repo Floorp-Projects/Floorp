@@ -358,7 +358,11 @@ var PrintEventHandler = {
       this.viewSettings.printInColor = true;
     }
 
-    // See if the paperName needs to change
+    // See if the paperName needs to change.
+    // Note that paperName here is the internal paper ID, not the localizable,
+    // human-friendly name that is displayed in the user interface.
+    // XXX We should probably do an extensive renaming of s/paperName/paperId/
+    // throughout this code.
     let paperName = this.viewSettings.paperName;
     logger.debug("settings.paperName: ", paperName);
     logger.debug(
@@ -378,10 +382,10 @@ var PrintEventHandler = {
       // global flag for carrying the paper size over.
       paperName = Object.keys(PrintSettingsViewProxy.availablePaperSizes)[0];
       this._printerSettingsChangedFlags ^= this.settingFlags.paperName;
-    } else if (matchedPaper.name !== paperName) {
+    } else if (matchedPaper.id !== paperName) {
       // The exact paper name doesn't exist for this printer, update it
       flags |= this.settingFlags.paperName;
-      paperName = matchedPaper.name;
+      paperName = matchedPaper.id;
       logger.log(
         `Initial settings.paperName: "${this.viewSettings.paperName}" missing, using: ${paperName} instead`
       );
@@ -895,17 +899,18 @@ var PrintSettingsViewProxy = {
         ? MM_PER_POINT
         : INCHES_PER_POINT;
 
-    let papersByName = (printerInfo.availablePaperSizes = {});
+    let papersById = (printerInfo.availablePaperSizes = {});
     // Store a convenience reference
-    this.availablePaperSizes = papersByName;
+    this.availablePaperSizes = papersById;
 
     for (let paper of printerInfo.paperList) {
       paper.QueryInterface(Ci.nsIPaper);
       // Bug 1662239: I'm seeing multiple duplicate entries for each paper size
       // so ensure we have one entry per name
-      if (!papersByName[paper.name]) {
-        papersByName[paper.name] = {
+      if (!papersById[paper.id]) {
+        papersById[paper.id] = {
           paper,
+          id: paper.id,
           name: paper.name,
           // Prepare dimension values in the correct unit for the settings. Paper dimensions
           // are given in points, so we multiply with the units-per-pt to get dimensions
@@ -986,7 +991,7 @@ var PrintSettingsViewProxy = {
           .map(paper => {
             return {
               name: paper.name,
-              value: paper.name,
+              value: paper.id,
             };
           });
 
@@ -1047,16 +1052,18 @@ var PrintSettingsViewProxy = {
         break;
 
       case "paperName": {
-        let paperName = value;
-        let paperSize = this.availablePaperSizes[paperName];
+        let paperId = value;
+        let paperSize = this.availablePaperSizes[paperId];
         target.paperWidth = paperSize.width;
         target.paperHeight = paperSize.height;
-        target.paperData = paperSize.paperId;
+        if (+paperSize.id > 0) {
+          target.paperData = paperSize.id;
+        }
         target.unwriteableMarginTop = paperSize.unwriteableMarginTop;
         target.unwriteableMarginRight = paperSize.unwriteableMarginRight;
         target.unwriteableMarginBottom = paperSize.unwriteableMarginBottom;
         target.unwriteableMarginLeft = paperSize.unwriteableMarginLeft;
-        target.paperName = value;
+        target.paperName = paperSize.id;
         // pull new margin values for the new paperName
         this.set(target, "margins", this.get(target, "margins"));
         break;

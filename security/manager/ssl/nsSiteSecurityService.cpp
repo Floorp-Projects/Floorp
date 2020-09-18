@@ -7,7 +7,6 @@
 #include "PublicKeyPinningService.h"
 #include "ScopedNSSTypes.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Logging.h"
@@ -61,7 +60,7 @@ class SSSTokenizer final : public Tokenizer {
  public:
   explicit SSSTokenizer(const nsACString& source) : Tokenizer(source) {}
 
-  MOZ_MUST_USE bool ReadBool(/*out*/ bool& value) {
+  [[nodiscard]] bool ReadBool(/*out*/ bool& value) {
     uint8_t rawValue;
     if (!ReadInteger(&rawValue)) {
       return false;
@@ -75,7 +74,7 @@ class SSSTokenizer final : public Tokenizer {
     return true;
   }
 
-  MOZ_MUST_USE bool ReadState(/*out*/ SecurityPropertyState& state) {
+  [[nodiscard]] bool ReadState(/*out*/ SecurityPropertyState& state) {
     uint32_t rawValue;
     if (!ReadInteger(&rawValue)) {
       return false;
@@ -95,7 +94,7 @@ class SSSTokenizer final : public Tokenizer {
     return true;
   }
 
-  MOZ_MUST_USE bool ReadSource(/*out*/ SecurityPropertySource& source) {
+  [[nodiscard]] bool ReadSource(/*out*/ SecurityPropertySource& source) {
     uint32_t rawValue;
     if (!ReadInteger(&rawValue)) {
       return false;

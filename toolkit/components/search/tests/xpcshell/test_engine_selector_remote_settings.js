@@ -75,6 +75,12 @@ let getStub;
 add_task(async function setup() {
   const searchConfigSettings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
   getStub = sinon.stub(searchConfigSettings, "get");
+
+  // We expect this error from remove settings as we're invalidating the
+  // signature.
+  consoleAllowList.push("Invalid content signature (abc)");
+  // We also test returning an empty configuration.
+  consoleAllowList.push("Received empty search configuration");
 });
 
 add_task(async function test_selector_basic_get() {

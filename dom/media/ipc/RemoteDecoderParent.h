@@ -43,7 +43,6 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   virtual ~RemoteDecoderParent();
 
   bool OnManagerThread();
-  void Error(const MediaResult& aError);
 
   virtual MediaResult ProcessDecodedData(
       const MediaDataDecoder::DecodedData& aDatam,

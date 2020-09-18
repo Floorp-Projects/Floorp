@@ -55,24 +55,6 @@ const SEARCH_DEFAULT_UPDATE_INTERVAL = 7;
 // changes.
 const RECONFIG_IDLE_TIME_SEC = 5 * 60;
 
-/**
- * Wrapper for nsIPrefBranch::getComplexValue.
- * @param {string} prefName
- *   The name of the pref to get.
- * @param {*} defaultValue
- *   The value to return if the preference isn't found.
- * @returns {*}
- *   Returns either the preference value, or the default value.
- */
-function getLocalizedPref(prefName, defaultValue) {
-  try {
-    return Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString)
-      .data;
-  } catch (ex) {}
-
-  return defaultValue;
-}
-
 // nsISearchParseSubmissionResult
 function ParseSubmissionResult(
   engine,
@@ -2244,35 +2226,6 @@ SearchService.prototype = {
 
     // For privacy, we only collect the submission URL for default engines...
     let sendSubmissionURL = engine.isAppProvided;
-
-    // ... or engines sorted by default near the top of the list.
-    if (!sendSubmissionURL) {
-      let extras = Services.prefs.getChildList(
-        SearchUtils.BROWSER_SEARCH_PREF + "order.extra."
-      );
-
-      for (let prefName of extras) {
-        try {
-          if (engineData.name == Services.prefs.getCharPref(prefName)) {
-            sendSubmissionURL = true;
-            break;
-          }
-        } catch (e) {}
-      }
-
-      let i = 0;
-      while (!sendSubmissionURL) {
-        let prefName = `${SearchUtils.BROWSER_SEARCH_PREF}order.${++i}`;
-        let engineName = getLocalizedPref(prefName);
-        if (!engineName) {
-          break;
-        }
-        if (engineData.name == engineName) {
-          sendSubmissionURL = true;
-          break;
-        }
-      }
-    }
 
     if (!sendSubmissionURL) {
       // ... or engines that are the same domain as a default engine.

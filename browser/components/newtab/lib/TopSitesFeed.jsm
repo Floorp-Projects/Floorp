@@ -513,22 +513,50 @@ this.TopSitesFeed = class TopSitesFeed {
       if (this.shouldFilterSearchTile(link.hostname)) {
         continue;
       }
-      // Remove any defaults that have been blocked.
-      if (NewTabUtils.blockedLinks.isBlocked({ url: link.url })) {
-        continue;
-      }
+      let isBlocked = NewTabUtils.blockedLinks.isBlocked({
+        url: link.url,
+      });
       // Process %YYYYMMDDHH% tag in the URL.
+      let url_end;
+      let url_start;
       if (this._useRemoteSetting) {
+        [url_start, url_end] = link.url.split("%YYYYMMDDHH%");
+      }
+      if (typeof url_end === "string") {
         link = {
           ...link,
           // Save original URL without %YYYYMMDDHH% replaced so it can be
           // blocked properly.
           original_url: link.url,
-          url: link.url.replace("%YYYYMMDDHH%", yyyymmddhh),
+          url: url_start + yyyymmddhh + url_end,
         };
         if (link.url_urlbar) {
           link.url_urlbar = link.url_urlbar.replace("%YYYYMMDDHH%", yyyymmddhh);
         }
+        // Update frecent link that may have an unprocessed or old datetime
+        // tag. This list has only one entry per domain so we don't have
+        // to look for multiple entries here.
+        let frecentIndex = frecent.findIndex(
+          frecentLink =>
+            // Look for unprocessed datetime tag:
+            frecentLink.url === link.original_url ||
+            // Look for processed datetime tag:
+            (frecentLink.url.startsWith(url_start) &&
+              frecentLink.url.endsWith(url_end) &&
+              frecentLink.url.length === link.url.length)
+        );
+        if (frecentIndex > -1) {
+          if (isBlocked) {
+            frecent.splice(frecentIndex, 1);
+          } else {
+            frecent[frecentIndex].original_url = frecent[frecentIndex].url;
+            frecent[frecentIndex].url = link.url;
+          }
+        }
+      }
+      // Drop blocked default sites.
+      if (isBlocked) {
+        continue;
       }
       // If we've previously blocked a search shortcut, remove the default top site
       // that matches the hostname

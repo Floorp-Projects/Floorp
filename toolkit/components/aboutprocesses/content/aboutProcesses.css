@@ -184,7 +184,7 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
   background-color: var(--in-content-button-background-active);
 }
 
-#process-tbody > tr.process {
+#process-tbody > tr.process > td.type {
   font-weight: bold;
 }
 #process-tbody > tr.thread {

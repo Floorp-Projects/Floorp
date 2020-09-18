@@ -81,9 +81,7 @@ gfxMatrix SVGForeignObjectElement::PrependLocalTransformsTo(
   // our 'x' and 'y' attributes:
   float x, y;
 
-  if (GetPrimaryFrame()) {
-    SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y>(this, &x, &y);
-  } else {
+  if (!SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y>(this, &x, &y)) {
     // This function might be called for element in display:none subtree
     // (e.g. getScreenCTM), we fall back to use SVG attributes.
     const_cast<SVGForeignObjectElement*>(this)->GetAnimatedLengthValues(

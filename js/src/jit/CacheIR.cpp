@@ -1065,8 +1065,10 @@ static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
   EmitCallGetterResultNoGuards(cx, writer, obj, holder, shape, receiverId);
 }
 
-static bool CanAttachDOMGetter(JSContext* cx, HandleObject obj,
-                               HandleShape shape, ICState::Mode mode) {
+static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
+                                     HandleObject obj, HandleShape shape,
+                                     ICState::Mode mode) {
+  MOZ_ASSERT(type == JSJitInfo::Getter || type == JSJitInfo::Setter);
   if (!JitOptions.warpBuilder) {
     return false;
   }
@@ -1075,17 +1077,19 @@ static bool CanAttachDOMGetter(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  JSFunction* getter = &shape->getterValue().toObject().as<JSFunction>();
-  if (!getter->hasJitInfo()) {
+  Value v =
+      type == JSJitInfo::Getter ? shape->getterValue() : shape->setterValue();
+  JSFunction* fun = &v.toObject().as<JSFunction>();
+  if (!fun->hasJitInfo()) {
     return false;
   }
 
-  if (cx->realm() != getter->realm()) {
+  if (cx->realm() != fun->realm()) {
     return false;
   }
 
-  const JSJitInfo* jitInfo = getter->jitInfo();
-  if (jitInfo->type() != JSJitInfo::Getter) {
+  const JSJitInfo* jitInfo = fun->jitInfo();
+  if (jitInfo->type() != type) {
     return false;
   }
 
@@ -1179,7 +1183,8 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       MOZ_ASSERT(!idempotent());
       maybeEmitIdGuard(id);
 
-      if (!isSuper() && CanAttachDOMGetter(cx_, obj, shape, mode_)) {
+      if (!isSuper() &&
+          CanAttachDOMGetterSetter(cx_, JSJitInfo::Getter, obj, shape, mode_)) {
         EmitCallDOMGetterResult(cx_, writer, obj, holder, shape, objId);
 
         trackAttached("DOMGetter");
@@ -3916,6 +3921,16 @@ static void EmitCallSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
   writer.returnFromIC();
 }
 
+static void EmitCallDOMSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
+                                      Shape* shape, ObjOperandId objId,
+                                      ValOperandId rhsId) {
+  JSFunction* setter = &shape->setterValue().toObject().as<JSFunction>();
+  MOZ_ASSERT(cx->realm() == setter->realm());
+
+  writer.callDOMSetter(objId, setter->jitInfo(), rhsId);
+  writer.returnFromIC();
+}
+
 AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
                                                    ObjOperandId objId,
                                                    HandleId id,
@@ -3943,6 +3958,13 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
     }
   } else {
     writer.guardHasGetterSetter(objId, propShape);
+  }
+
+  if (CanAttachDOMGetterSetter(cx_, JSJitInfo::Setter, obj, propShape, mode_)) {
+    EmitCallDOMSetterNoGuards(cx_, writer, propShape, objId, rhsId);
+
+    trackAttached("DOMSetter");
+    return AttachDecision::Attach;
   }
 
   EmitCallSetterNoGuards(cx_, writer, obj, holder, propShape, objId, rhsId);

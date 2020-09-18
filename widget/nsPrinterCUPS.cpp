@@ -18,11 +18,12 @@ static constexpr Array<const char* const, 1> requestedAttributes{
     "cups-version"};
 
 static PaperInfo MakePaperInfo(const char* aName, const cups_size_t& aMedia) {
-  // XXX Do we actually have the guarantee that this is utf-8?
-  NS_ConvertUTF8toUTF16 name(aName ? aName : aMedia.media);
-  const double kPointsPerHundredthMillimeter = 0.0283465;
+  const double kPointsPerHundredthMillimeter = 72.0 / 2540.0;
+  // XXX Do we actually have the guarantee that these are utf-8?
+  NS_ConvertUTF8toUTF16 paperId(aMedia.media);  // internal paper name/ID
+  NS_ConvertUTF8toUTF16 paperName(aName);       // localized human-friendly name
   return PaperInfo(
-      name,
+      paperId, paperName,
       {aMedia.width * kPointsPerHundredthMillimeter,
        aMedia.length * kPointsPerHundredthMillimeter},
       Some(gfx::MarginDouble{aMedia.top * kPointsPerHundredthMillimeter,
@@ -154,8 +155,6 @@ void nsPrinterCUPS::GetPrinterName(nsAString& aName) const {
 
 const char* nsPrinterCUPS::LocalizeMediaName(http_t& aConnection,
                                              cups_size_t& aMedia) const {
-// We want to localize the name on macOS, but not on Linux.
-#ifdef XP_MACOSX
   // The returned string is owned by mPrinterInfo.
   // https://www.cups.org/doc/cupspm.html#cupsLocalizeDestMedia
   auto printerInfoLock = mPrinterInfoMutex.Lock();
@@ -163,9 +162,6 @@ const char* nsPrinterCUPS::LocalizeMediaName(http_t& aConnection,
   cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
   return mShim.cupsLocalizeDestMedia(&aConnection, mPrinter, printerInfo,
                                      CUPS_MEDIA_FLAGS_DEFAULT, &aMedia);
-#else
-  return nullptr;
-#endif
 }
 
 bool nsPrinterCUPS::SupportsDuplex() const {

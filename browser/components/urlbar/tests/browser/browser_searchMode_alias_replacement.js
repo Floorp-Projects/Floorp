@@ -104,8 +104,6 @@ add_task(async function trailingSpace() {
     window,
     value: ALIAS + " ",
   });
-  // Wait for the second new search that starts when search mode is entered.
-  await UrlbarTestUtils.promiseSearchComplete(window);
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: aliasEngine.name,
     entry: "typed",
@@ -125,7 +123,7 @@ add_task(async function trailingSpace_typed() {
 
   // We need to wait for two searches: The first enters search mode, the second
   // does the search in search mode.
-  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window, 2);
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
   EventUtils.synthesizeKey(" ");
   await searchPromise;
 
@@ -146,8 +144,6 @@ add_task(async function trailingSpace_query() {
     value: ALIAS + " query",
   });
 
-  // Wait for the second new search that starts when search mode is entered.
-  await UrlbarTestUtils.promiseSearchComplete(window);
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: aliasEngine.name,
     entry: "typed",

@@ -165,7 +165,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Content Viewer that is currently loaded for this DocShell.  This may
    * change as the underlying content changes.
    */
-  readonly attribute nsIContentViewer contentViewer;
+  [infallible] readonly attribute nsIContentViewer contentViewer;
 
   /**
    * Get the id of the outer window that is or will be in this docshell.

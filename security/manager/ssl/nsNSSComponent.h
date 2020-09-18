@@ -12,7 +12,6 @@
 #include "EnterpriseRoots.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
@@ -35,8 +34,8 @@ class nsITimer;
 namespace mozilla {
 namespace psm {
 
-MOZ_MUST_USE
-::already_AddRefed<mozilla::psm::SharedCertVerifier> GetDefaultCertVerifier();
+[[nodiscard]] ::already_AddRefed<mozilla::psm::SharedCertVerifier>
+GetDefaultCertVerifier();
 UniqueCERTCertList FindClientCertificatesWithPrivateKeys();
 
 }  // namespace psm

@@ -9270,8 +9270,9 @@
     "kind": "exponential",
     "n_buckets": 20,
     "high": 12742000,
-    "bug_numbers": [1637402],
+    "bug_numbers": [1637402, 1664723],
     "alert_emails": ["dharvey@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "The distance(m) between the the result of 2 services that detect the users location"
   },
   "TOUCH_ENABLED_DEVICE": {
@@ -9743,17 +9744,6 @@
     "kind": "enumerated",
     "n_values": 5,
     "description": "Counts the number of entries in the sample description box (stsd) for a track in an mp4. Recorded each time we process a track's metadata while parsing mp4s."
-  },
-  "MEDIACACHESTREAM_LENGTH_KB": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["jya@mozilla.com"],
-    "bug_numbers": [1369538, 1570634],
-    "expires_in_version": "74",
-    "kind": "linear",
-    "high": 520000,
-    "n_buckets": 66,
-    "description": "MediaCacheStream stream length size in KB; Either known size from the HTTP header if available, or otherwise the size actually downloaded. Recorded at every MediaCacheStream destruction."
   },
   "MEDIA_DECODING_PROCESS_CRASH": {
     "record_in_processes": ["content"],
@@ -12553,16 +12543,6 @@
     "description": "720p VP9 decode benchmark measurement in frames per second",
     "releaseChannelCollection": "opt-out"
   },
-  "MEDIA_PLAY_PROMISE_RESOLUTION": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "bug_numbers": [1453176],
-    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "72",
-    "kind": "categorical",
-    "labels": ["Resolved", "NotAllowedErr", "SrcNotSupportedErr", "PauseAbortErr", "AbortErr", "UnknownErr"],
-    "description": "Records whether promise returned by HTMLMediaElement.play() successfully resolved, or the error code which it was rejected with."
-  },
   "MEDIA_CODEC_USED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -14923,22 +14903,6 @@
     "high": 1000,
     "n_buckets": 50,
     "description": "WebRender render time in milliseconds"
-  },
-  "AUDIO_TRACK_SILENCE_PROPORTION": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": [
-      "alwu@mozilla.com",
-      "cpearce@mozilla.com",
-      "nohlmeier@mozilla.com"
-    ],
-    "expires_in_version": "74",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 10,
-    "bug_numbers": [1482259, 1570634],
-    "description": "In order to know how many silent audio track in the web comparing to other normal media, we record the silence proportion of audio track of media element. The range of value is from 0% - 100%.",
-    "releaseChannelCollection": "opt-out"
   },
   "WEB_AUDIO_BECOMES_AUDIBLE_TIME": {
     "record_in_processes": ["content"],

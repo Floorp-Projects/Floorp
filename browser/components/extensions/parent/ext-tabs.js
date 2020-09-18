@@ -948,8 +948,12 @@ this.tabs = class extends ExtensionAPI {
           let nativeTab = getTabOrActive(tabId);
           await tabListener.awaitTabReady(nativeTab);
 
+          let browser = nativeTab.linkedBrowser;
+          let window = browser.ownerGlobal;
+          let zoom = window.ZoomManager.getZoomForBrowser(browser);
+
           let tab = tabManager.wrapTab(nativeTab);
-          return tab.capture(context, options);
+          return tab.capture(context, zoom, options);
         },
 
         async captureVisibleTab(windowId, options) {
@@ -961,7 +965,10 @@ this.tabs = class extends ExtensionAPI {
           let tab = tabManager.wrapTab(window.gBrowser.selectedTab);
           await tabListener.awaitTabReady(tab.nativeTab);
 
-          return tab.capture(context, options);
+          let zoom = window.ZoomManager.getZoomForBrowser(
+            tab.nativeTab.linkedBrowser
+          );
+          return tab.capture(context, zoom, options);
         },
 
         async detectLanguage(tabId) {

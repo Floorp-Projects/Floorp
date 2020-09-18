@@ -19,7 +19,7 @@ interface CacheStorage {
   constructor(CacheStorageNamespace namespace, Principal principal);
 
   [NewObject]
-  Promise<Response> match(RequestInfo request, optional CacheQueryOptions options = {});
+  Promise<Response> match(RequestInfo request, optional MultiCacheQueryOptions options = {});
   [NewObject]
   Promise<boolean> has(DOMString cacheName);
   [NewObject]
@@ -28,6 +28,10 @@ interface CacheStorage {
   Promise<boolean> delete(DOMString cacheName);
   [NewObject]
   Promise<sequence<DOMString>> keys();
+};
+
+dictionary MultiCacheQueryOptions : CacheQueryOptions {
+  DOMString cacheName;
 };
 
 // chrome-only, gecko specific extension

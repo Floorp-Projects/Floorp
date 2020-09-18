@@ -121,7 +121,7 @@ interface nsIDocShellTreeItem : nsISupports
 	@deprecated: Prefer using `BrowsingContext::Children()`, as this count will
 	not include out-of-process iframes.
 	*/
-	[binaryname(InProcessChildCount)]
+	[binaryname(InProcessChildCount), infallible]
 	readonly attribute long childCount;
 
 	/*

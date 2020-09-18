@@ -76,10 +76,10 @@
 /**
  * There are multiple ways to handle unrecoverable conditions (note that the
  * patterns are put in reverse chronological order and only the first pattern
- * QM_TRY/QM_TRY_VAR/QM_FAIL should be used in new code):
+ * QM_TRY/QM_TRY_VAR/QM_TRY_RETURN/QM_FAIL should be used in new code):
  *
- * 1. Using QM_TRY/QM_TRY_VAR/QM_FAIL macros (Quota manager specific, defined
- *    below)
+ * 1. Using QM_TRY/QM_TRY_VAR/QM_TRY_RETURN/QM_FAIL macros (Quota manager
+ *    specific, defined below)
  *
  * Typical use cases:
  *
@@ -370,14 +370,18 @@
  *
  * 4. WARNING: Error: 'aFile.Exists(&exists)', file XYZ, line N
  *
+ * QM_TRY_RETURN is a supplementary macro for cases when the result's success
+ * value can be directly returned (instead of assigning to a variable as in the
+ * QM_TRY_VAR case).
+ *
  * QM_FAIL is a supplementary macro for cases when an error needs to be
  * returned without evaluating an expression. It's possible to write
  * QM_TRY(OkIf(false), NS_ERROR_FAILURE), but QM_FAIL(NS_ERROR_FAILURE) looks
  * more straightforward.
  *
- * It's highly recommended to use QM_TRY/QM_TRY_VAR/QM_FAIL in new code for
- * quota manager and quota clients. Existing code should be incrementally
- * converted as needed.
+ * It's highly recommended to use QM_TRY/QM_TRY_VAR/QM_TRY_RETURN/QM_FAIL in
+ * new code for quota manager and quota clients. Existing code should be
+ * incrementally converted as needed.
  *
  * QM_TRY_VOID/QM_TRY_VAR_VOID/QM_FAIL_VOID is not defined on purpose since
  * it's possible to use QM_TRY/QM_TRY_VAR/QM_FAIL even in void functions.
@@ -549,6 +553,81 @@
 #  define QM_DEBUG_TRY_VAR(...) QM_TRY_VAR(__VA_ARGS__)
 #else
 #  define QM_DEBUG_TRY_VAR(...)
+#endif
+
+// QM_TRY_RETURN_PROPAGATE_ERR, QM_TRY_RETURN_CUSTOM_RET_VAL,
+// QM_TRY_RETURN_CUSTOM_RET_VAL_WITH_CLEANUP and QM_TRY_RETURN_GLUE macros are
+// implementation details of QM_TRY_RETURN and shouldn't be used directly.
+
+// Handles the three arguments case when the error is propagated.
+#define QM_TRY_RETURN_PROPAGATE_ERR(ns, tryResult, expr) \
+  auto tryResult = (expr);                               \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                 \
+    ns::QM_HANDLE_ERROR(expr);                           \
+    return tryResult.propagateErr();                     \
+  }                                                      \
+  return tryResult.unwrap();
+
+// Handles the four arguments case when a custom return value needs to be
+// returned
+#define QM_TRY_RETURN_CUSTOM_RET_VAL(ns, tryResult, expr, customRetVal) \
+  auto tryResult = (expr);                                              \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                                \
+    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);         \
+    ns::QM_HANDLE_ERROR(expr);                                          \
+    return customRetVal;                                                \
+  }                                                                     \
+  return tryResult.unwrap();
+
+// Handles the five arguments case when a cleanup function needs to be called
+// before a custom return value is returned
+#define QM_TRY_RETURN_CUSTOM_RET_VAL_WITH_CLEANUP(ns, tryResult, expr,   \
+                                                  customRetVal, cleanup) \
+  auto tryResult = (expr);                                               \
+  if (MOZ_UNLIKELY(tryResult.isErr())) {                                 \
+    auto tryTempResult MOZ_MAYBE_UNUSED = std::move(tryResult);          \
+    ns::QM_HANDLE_ERROR(expr);                                           \
+    cleanup(tryTempResult);                                              \
+    return customRetVal;                                                 \
+  }                                                                      \
+  return tryResult.unwrap();
+
+// Chooses the final implementation macro for given argument count.
+// It can be used by other modules to define module specific error handling.
+// See also the comment for QM_TRY_META.
+#define QM_TRY_RETURN_META(...)                                           \
+  {                                                                       \
+    MOZ_ARG_7(, ##__VA_ARGS__,                                            \
+              QM_TRY_RETURN_CUSTOM_RET_VAL_WITH_CLEANUP(__VA_ARGS__),     \
+              QM_TRY_RETURN_CUSTOM_RET_VAL(__VA_ARGS__),                  \
+              QM_TRY_RETURN_PROPAGATE_ERR(__VA_ARGS__),                   \
+              QM_MISSING_ARGS(__VA_ARGS__), QM_MISSING_ARGS(__VA_ARGS__), \
+              QM_MISSING_ARGS(__VA_ARGS__))                               \
+  }
+
+// Specifies the namespace and generates unique variable name. This extra
+// internal macro (along with __COUNTER__) allows nesting of the final macro.
+#define QM_TRY_RETURN_GLUE(...)                                      \
+  QM_TRY_RETURN_META(mozilla::dom::quota, MOZ_UNIQUE_VAR(tryResult), \
+                     ##__VA_ARGS__)
+
+/**
+ * QM_TRY_RETURN(expr[, customRetVal, cleanup]) evaluates expr, which must
+ * produce a Result value. On success, the result's success value is returned.
+ * On error, it calls HandleError and an additional cleanup function (if the
+ * third argument was passed) and finally returns the error result or a custom
+ * return value (if the second argument was passed).
+ */
+#define QM_TRY_RETURN(...) QM_TRY_RETURN_GLUE(__VA_ARGS__)
+
+/**
+ * QM_DEBUG_TRY_RETURN works like QM_TRY_RETURN in debug builds, it has no
+ * effect in non-debug builds.
+ */
+#ifdef DEBUG
+#  define QM_DEBUG_TRY_RETURN(...) QM_TRY_RETURN(__VA_ARGS__)
+#else
+#  define QM_DEBUG_TRY_RETURN(...)
 #endif
 
 // QM_FAIL_RET_VAL and QM_FAIL_RET_VAL_WITH_CLEANUP macros are implementation

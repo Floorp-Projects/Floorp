@@ -256,7 +256,9 @@ export class WelcomeScreen extends React.PureComponent {
                     >
                       {icon ? "" : label && label[0].toUpperCase()}
                     </div>
-                    {label && <div className="host">{label}</div>}
+                    {this.props.content.tiles.showTitles && (
+                      <div className="host">{title || label}</div>
+                    )}
                   </div>
                 ))}
             </div>

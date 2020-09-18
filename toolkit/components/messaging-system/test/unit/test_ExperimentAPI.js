@@ -6,9 +6,6 @@ const { ExperimentAPI } = ChromeUtils.import(
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/MSTestUtils.jsm"
 );
-const { FileTestUtils } = ChromeUtils.import(
-  "resource://testing-common/FileTestUtils.jsm"
-);
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
@@ -112,6 +109,58 @@ add_task(async function test_getValue() {
     "should return undefined if the experiment is not found"
   );
 
+  sandbox.restore();
+});
+
+/**
+ * #isFeatureEnabled
+ */
+
+add_task(async function test_isFeatureEnabledDefault() {
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const FEATURE_ENABLED_DEFAULT = true;
+  const expected = ExperimentFakes.experiment("foo", {
+    branch: { slug: "treatment" },
+  });
+
+  await manager.onStartup();
+
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  manager.store.addExperiment(expected);
+
+  Assert.deepEqual(
+    ExperimentAPI.isFeatureEnabled("aboutwelcome", FEATURE_ENABLED_DEFAULT),
+    FEATURE_ENABLED_DEFAULT,
+    "should return enabled true as default"
+  );
+  sandbox.restore();
+});
+
+add_task(async function test_isFeatureEnabled() {
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const feature = {
+    featureId: "aboutwelcome",
+    enabled: false,
+    value: null,
+  };
+  const expected = ExperimentFakes.experiment("foo", {
+    branch: { slug: "treatment", feature },
+  });
+
+  await manager.onStartup();
+
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  manager.store.addExperiment(expected);
+
+  Assert.deepEqual(
+    ExperimentAPI.isFeatureEnabled("aboutwelcome", true),
+    feature.enabled,
+    "should return feature as disabled"
+  );
   sandbox.restore();
 });
 

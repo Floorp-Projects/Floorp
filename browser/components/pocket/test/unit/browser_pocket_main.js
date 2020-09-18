@@ -5,11 +5,7 @@
 function test_runner(test) {
   let testTask = async () => {
     // Before each
-    XPCOMUtils.defineLazyScriptGetter(
-      this,
-      "pktUI",
-      "chrome://pocket/content/main.js"
-    );
+    pktUI.initPrefs();
     const sandbox = sinon.createSandbox();
     try {
       await test({ sandbox });
@@ -28,6 +24,7 @@ test_runner(async function test_main_getAndShowRecsForItem_on({ sandbox }) {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.pocket.onSaveRecs", true]],
   });
+  pktUI.initPrefs();
   const getRecsForItemStub = sandbox.stub(pktApi, "getRecsForItem");
 
   pktUI.getAndShowRecsForItem(
@@ -47,6 +44,7 @@ test_runner(async function test_main_getAndShowRecsForItem_off({ sandbox }) {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.pocket.onSaveRecs", false]],
   });
+  pktUI.initPrefs();
   const getRecsForItemStub = sandbox.stub(pktApi, "getRecsForItem");
 
   pktUI.getAndShowRecsForItem(
@@ -68,6 +66,7 @@ test_runner(async function test_main_getAndShowRecsForItem_locale({ sandbox }) {
       ["extensions.pocket.onSaveRecs.locales", "de"],
     ],
   });
+  pktUI.initPrefs();
   const getRecsForItemStub = sandbox.stub(pktApi, "getRecsForItem");
 
   pktUI.getAndShowRecsForItem(

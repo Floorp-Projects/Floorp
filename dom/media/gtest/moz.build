@@ -15,7 +15,6 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    'AudioGenerator.cpp',
     'MockMediaResource.cpp',
     'TestAudioBuffers.cpp',
     'TestAudioCallbackDriver.cpp',
@@ -113,6 +112,7 @@ LOCAL_INCLUDES += [
     '/dom/media/mp4',
     '/dom/media/platforms',
     '/dom/media/platforms/agnostic',
+    '/dom/media/webrtc',
     '/security/certverifier',
 ]
 

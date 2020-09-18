@@ -31,8 +31,14 @@ nsPaper::nsPaper(nsPrinterBase& aPrinter, const mozilla::PaperInfo& aInfo)
 nsPaper::~nsPaper() = default;
 
 NS_IMETHODIMP
+nsPaper::GetId(nsAString& aId) {
+  aId = mInfo.mId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPaper::GetName(nsAString& aName) {
-  aName = mInfo.mName;
+  aName = mInfo.mName.IsEmpty() ? mInfo.mId : mInfo.mName;
   return NS_OK;
 }
 
@@ -69,7 +75,7 @@ nsPaper::GetUnwriteableMargin(JSContext* aCx, Promise** aPromise) {
     mMarginPromise->MaybeResolve(margin);
   } else {
     if (mPrinter) {
-      mPrinter->QueryMarginsForPaper(*mMarginPromise, mInfo.mPaperId);
+      mPrinter->QueryMarginsForPaper(*mMarginPromise, mInfo.mId);
     } else {
       MOZ_ASSERT_UNREACHABLE("common paper sizes should know their margins");
       mMarginPromise->MaybeRejectWithNotSupportedError("Margins unavailable");
@@ -77,11 +83,5 @@ nsPaper::GetUnwriteableMargin(JSContext* aCx, Promise** aPromise) {
   }
 
   promise.forget(aPromise);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPaper::GetPaperId(short* aPaperId) {
-  *aPaperId = mInfo.mPaperId;
   return NS_OK;
 }

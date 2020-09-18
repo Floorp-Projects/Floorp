@@ -1381,11 +1381,12 @@ impl Tile {
         }
 
         // Check if the selected composite mode supports dirty rect updates. For Draw composite
-        // mode, we can always update the content with smaller dirty rects. For native composite
-        // mode, we can only use dirty rects if the compositor supports partial surface updates.
+        // mode, we can always update the content with smaller dirty rects, unless there is a
+        // driver bug to workaround. For native composite mode, we can only use dirty rects if
+        // the compositor supports partial surface updates.
         let (supports_dirty_rects, supports_simple_prims) = match state.composite_state.compositor_kind {
             CompositorKind::Draw { .. } => {
-                (true, true)
+                (frame_context.config.gpu_supports_render_target_partial_update, true)
             }
             CompositorKind::Native { max_update_rects, .. } => {
                 (max_update_rects > 0, false)

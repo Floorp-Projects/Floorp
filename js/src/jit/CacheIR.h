@@ -31,6 +31,7 @@ enum class BaselineCacheIRStubKind;
 enum class InlinableNative : uint16_t;
 
 class ICStub;
+class ICScript;
 class Label;
 class MacroAssembler;
 
@@ -515,6 +516,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   static const size_t MaxStubDataSizeInBytes = 20 * sizeof(uintptr_t);
   bool tooLarge_;
 
+  // Assume this stub can't be trial inlined until we see a scripted call/inline
+  // instruction.
+  TrialInliningState trialInliningState_ = TrialInliningState::Failure;
+
   // Basic caching to avoid quadatic lookup behaviour in readStubFieldForIon.
   mutable uint32_t lastOffset_;
   mutable uint32_t lastIndex_;
@@ -701,6 +706,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   bool failed() const { return buffer_.oom() || tooLarge_; }
 
+  TrialInliningState trialInliningState() const { return trialInliningState_; }
+
   uint32_t numInputOperands() const { return numInputOperands_; }
   uint32_t numOperandIds() const { return nextOperandId_; }
   uint32_t numInstructions() const { return nextInstructionId_; }
@@ -881,6 +888,18 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
       return loadArgumentDynamicSlot_(argcId, slotIndex);
     }
     return loadArgumentFixedSlot_(slotIndex);
+  }
+
+  void callScriptedFunction(ObjOperandId callee, Int32OperandId argc,
+                            CallFlags flags) {
+    callScriptedFunction_(callee, argc, flags);
+    trialInliningState_ = TrialInliningState::Candidate;
+  }
+
+  void callInlinedFunction(ObjOperandId callee, Int32OperandId argc,
+                           ICScript* icScript, CallFlags flags) {
+    callInlinedFunction_(callee, argc, icScript, flags);
+    trialInliningState_ = TrialInliningState::Inlined;
   }
 
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,

@@ -715,6 +715,13 @@ class ICFallbackStub : public ICStub {
   void clearUsedByTranspiler() { state_.clearUsedByTranspiler(); }
   void setUsedByTranspiler() { state_.setUsedByTranspiler(); }
 
+  TrialInliningState trialInliningState() const {
+    return state_.trialInliningState();
+  }
+  void setTrialInliningState(TrialInliningState state) {
+    state_.setTrialInliningState(state);
+  }
+
   // If the transpiler optimized based on this IC, invalidate the script's Warp
   // code.
   void maybeInvalidateWarp(JSContext* cx, JSScript* script);

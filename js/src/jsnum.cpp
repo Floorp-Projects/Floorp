@@ -28,6 +28,7 @@
 #include "double-conversion/double-conversion.h"
 #include "frontend/CompilationInfo.h"  // frontend::CompilationInfo
 #include "frontend/ParserAtom.h"       // frontend::ParserAtom
+#include "jit/InlinableNatives.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #if !JS_HAS_INTL_API
@@ -1283,7 +1284,7 @@ static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
 
 static const JSFunctionSpec number_methods[] = {
     JS_FN(js_toSource_str, num_toSource, 0, 0),
-    JS_FN(js_toString_str, num_toString, 1, 0),
+    JS_INLINABLE_FN(js_toString_str, num_toString, 1, 0, NumberToString),
 #if JS_HAS_INTL_API
     JS_SELF_HOSTED_FN(js_toLocaleString_str, "Number_toLocaleString", 0, 0),
 #else

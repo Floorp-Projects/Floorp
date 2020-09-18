@@ -1079,7 +1079,7 @@ performance.time:
   load_event_start_no_preload:
     type: timing_distribution
     time_unit: millisecond
-    gecko_datapoint: TIME_TO_LOAD_EVENT_END_NO_PRELOAD_MS
+    gecko_datapoint: TIME_TO_LOAD_EVENT_START_NO_PRELOAD_MS
     description: >
       Time from navigationStart to [`loadEventStart`](https://www.w3.org/TR/
       navigation-timing/#dom-performancetiming-loadstart) as per the W3C

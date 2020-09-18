@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -30,16 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class ProviderHeuristicFallback extends UrlbarProvider {
   constructor() {
     super();
-
-    // The Set of local search mode keywords/restriction characters.  We use
-    // this to quickly look them up.
-    XPCOMUtils.defineLazyGetter(this, "_localSearchModeKeywords", () => {
-      return new Set(
-        [...UrlbarTokenizer.SEARCH_MODE_RESTRICT].map(
-          r => UrlbarTokenizer.RESTRICT[r]
-        )
-      );
-    });
   }
 
   /**
@@ -106,9 +97,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
           }) ||
             UrlbarTokenizer.REGEXP_COMMON_EMAIL.test(str))
         ) {
-          let searchResult = await this._defaultEngineSearchResult(
-            queryContext
-          );
+          let searchResult = this._engineSearchResult(queryContext);
           if (instance != this.queryInstance) {
             return;
           }
@@ -118,13 +107,13 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       return;
     }
 
-    result = this._localSearchModeKeywordResult(queryContext);
+    result = this._searchModeKeywordResult(queryContext);
     if (result) {
       addCallback(this, result);
       return;
     }
 
-    result = await this._defaultEngineSearchResult(queryContext);
+    result = this._engineSearchResult(queryContext);
     if (instance != this.queryInstance) {
       return;
     }
@@ -139,10 +128,13 @@ class ProviderHeuristicFallback extends UrlbarProvider {
   _matchUnknownUrl(queryContext) {
     // The user may have typed something like "word?" to run a search.  We
     // should not convert that to a URL.  We should also never convert actual
-    // URLs into URL results when search mode is active.
+    // URLs into URL results when search mode is active or a search mode
+    // restriction token was typed.
     if (
-      (queryContext.restrictSource &&
-        queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH) ||
+      queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH ||
+      UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(
+        queryContext.restrictToken?.value
+      ) ||
       queryContext.searchMode
     ) {
       return null;
@@ -236,7 +228,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     return result;
   }
 
-  _localSearchModeKeywordResult(queryContext) {
+  _searchModeKeywordResult(queryContext) {
     if (!UrlbarPrefs.get("update2")) {
       return null;
     }
@@ -246,26 +238,27 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     }
 
     let firstToken = queryContext.tokens[0].value;
-    if (!this._localSearchModeKeywords.has(firstToken)) {
+    if (!UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(firstToken)) {
       return null;
     }
 
-    // At this point, the search string starts with a local search mode token.
+    // At this point, the search string starts with a token that can be
+    // converted into search mode.
     // Now we need to determine what to do based on the remainder of the search
     // string.  If the remainder starts with a space, then we should enter
     // search mode, so we should continue below and create the result.
     // Otherwise, we should not enter search mode, and in that case, the search
     // string will look like one of the following:
     //
-    // * The search string ends with the local search mode token (e.g., the user
+    // * The search string ends with the restriction token (e.g., the user
     //   has typed only the token by itself, with no trailing spaces).
-    // * More tokens exist, but there's no space between the local search mode
+    // * More tokens exist, but there's no space between the restriction
     //   token and the following token.  This is possible because the tokenizer
     //   does not require spaces between a restriction token and the remainder
     //   of the search string.  In this case, we should not enter search mode.
     //
     // If we return null here and thereby do not enter search mode, then we'll
-    // continue on to _defaultEngineSearchResult, and the heuristic will be a
+    // continue on to _engineSearchResult, and the heuristic will be a
     // default engine search result.
     let query = UrlbarUtils.substringAfter(
       queryContext.searchString,
@@ -275,28 +268,31 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       return null;
     }
 
-    let result = new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.SEARCH,
-      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        query: [query.trimStart(), UrlbarUtils.HIGHLIGHT.NONE],
-        keyword: [firstToken, UrlbarUtils.HIGHLIGHT.NONE],
-      })
-    );
+    let result;
+    if (queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH) {
+      result = this._engineSearchResult(queryContext, firstToken);
+    } else {
+      result = new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+          query: [query.trimStart(), UrlbarUtils.HIGHLIGHT.NONE],
+          keyword: [firstToken, UrlbarUtils.HIGHLIGHT.NONE],
+        })
+      );
+    }
     result.heuristic = true;
     return result;
   }
 
-  async _defaultEngineSearchResult(queryContext) {
+  _engineSearchResult(queryContext, keyword = null) {
     let engine;
     if (queryContext.searchMode?.engineName) {
       engine = Services.search.getEngineByName(
         queryContext.searchMode.engineName
       );
-    } else if (queryContext.isPrivate) {
-      engine = Services.search.defaultPrivateEngine;
     } else {
-      engine = Services.search.defaultEngine;
+      engine = UrlbarSearchUtils.getDefaultEngine(queryContext.isPrivate);
     }
 
     if (!engine) {
@@ -325,8 +321,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
         icon: engine.iconURI?.spec,
         query: [query, UrlbarUtils.HIGHLIGHT.NONE],
-        // We're confident that there is no alias, since UnifiedComplete
-        // handles heuristic searches with aliases.
+        keyword: keyword ? [keyword, UrlbarUtils.HIGHLIGHT.NONE] : undefined,
       })
     );
   }

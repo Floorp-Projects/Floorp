@@ -509,9 +509,9 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
             backgroundColor: "transparent",
             backgroundImage: `url(${icon})`
           } : {}
-        }, icon ? "" : label && label[0].toUpperCase()), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }, icon ? "" : label && label[0].toUpperCase()), this.props.content.tiles.showTitles && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "host"
-        }, label))))) : null;
+        }, title || label))))) : null;
 
       case "theme":
         return this.props.content.tiles.data ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -891,7 +891,8 @@ const DEFAULT_WELCOME_CONTENT = {
         string_id: "onboarding-multistage-import-subtitle"
       },
       tiles: {
-        type: "topsites"
+        type: "topsites",
+        showTitles: true
       },
       primary_button: {
         label: {

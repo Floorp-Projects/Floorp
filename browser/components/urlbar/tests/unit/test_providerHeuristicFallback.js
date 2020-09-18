@@ -22,6 +22,8 @@ add_task(async function setup() {
     Services.prefs.clearUserPref(SUGGEST_PREF);
     Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
     Services.prefs.clearUserPref(PRIVATE_SEARCH_PREF);
+    Services.prefs.clearUserPref("keyword.enabled");
+    Services.prefs.clearUserPref("browser.urlbar.update2");
   });
   Services.search.setDefault(engine);
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
@@ -540,37 +542,60 @@ add_task(async function() {
   info(
     "Leading search-mode restriction tokens are removed from the search result."
   );
-  for (let restrict of UrlbarTokenizer.SEARCH_MODE_RESTRICT) {
-    let token = UrlbarTokenizer.RESTRICT[restrict];
+  for (let token of UrlbarTokenizer.SEARCH_MODE_RESTRICT) {
     query = `${token} query`;
     let expectedQuery = query.substring(2);
     context = createContext(query, { isPrivate: false });
     info(`Searching for "${query}", expecting "${expectedQuery}"`);
+    let payload = {
+      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      heuristic: true,
+      query: expectedQuery,
+      alias: token,
+    };
+    if (token == UrlbarTokenizer.RESTRICT.SEARCH) {
+      payload.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
+      payload.engineName = ENGINE_NAME;
+    }
     await check_results({
       context,
-      matches: [
-        makeSearchResult(context, {
-          source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          heuristic: true,
-          query: expectedQuery,
-          alias: token,
-          keywordOffer: UrlbarUtils.KEYWORD_OFFER.NONE,
-        }),
-      ],
+      matches: [makeSearchResult(context, payload)],
     });
   }
 
   info(
+    "Leading search-mode restriction tokens are removed from the search result with keyword.enabled = false."
+  );
+  Services.prefs.setBoolPref("keyword.enabled", false);
+  for (let token of UrlbarTokenizer.SEARCH_MODE_RESTRICT) {
+    query = `${token} query`;
+    let expectedQuery = query.substring(2);
+    context = createContext(query, { isPrivate: false });
+    info(`Searching for "${query}", expecting "${expectedQuery}"`);
+    let payload = {
+      source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      heuristic: true,
+      query: expectedQuery,
+      alias: token,
+    };
+    if (token == UrlbarTokenizer.RESTRICT.SEARCH) {
+      payload.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
+      payload.engineName = ENGINE_NAME;
+    }
+    await check_results({
+      context,
+      matches: [makeSearchResult(context, payload)],
+    });
+  }
+  Services.prefs.clearUserPref("keyword.enabled");
+
+  info(
     "Leading non-search-mode restriction tokens are not removed from the search result."
   );
-  for (let restrict of Object.keys(UrlbarTokenizer.RESTRICT)) {
-    if (
-      UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(restrict) ||
-      restrict == "SEARCH"
-    ) {
+  for (let token of Object.values(UrlbarTokenizer.RESTRICT)) {
+    if (UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(token)) {
       continue;
     }
-    let token = UrlbarTokenizer.RESTRICT[restrict];
     query = `${token} query`;
     let expectedQuery = query;
     context = createContext(query, { isPrivate: false });

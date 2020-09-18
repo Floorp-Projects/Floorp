@@ -2615,6 +2615,7 @@ impl Renderer {
             gpu_supports_fast_clears: options.gpu_supports_fast_clears,
             gpu_supports_advanced_blend: ext_blend_equation_advanced,
             advanced_blend_is_coherent: ext_blend_equation_advanced_coherent,
+            gpu_supports_render_target_partial_update: device.get_capabilities().supports_render_target_partial_update,
             batch_lookback_count: RendererOptions::BATCH_LOOKBACK_COUNT,
             background_color: options.clear_color,
             compositor_kind,
@@ -4450,7 +4451,12 @@ impl Renderer {
             self.set_blend(false, framebuffer_kind);
 
             let clear_color = target.clear_color.map(|c| c.to_array());
-            match target.alpha_batch_container.task_scissor_rect {
+            let scissor_rect = if self.device.get_capabilities().supports_render_target_partial_update {
+                target.alpha_batch_container.task_scissor_rect
+            } else {
+                None
+            };
+            match scissor_rect {
                 // If updating only a dirty rect within a picture cache target, the
                 // clear must also be scissored to that dirty region.
                 Some(r) if self.clear_caches_with_quads => {

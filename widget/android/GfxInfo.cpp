@@ -599,20 +599,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       }
       return NS_OK;
     }
-
-    if (aFeature == FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS) {
-      // Mali-G71 and G72 (and presumably others) are buggy when attempting
-      // to clear picture cache textures with a scissor rect set.
-      const bool isMaliGxx =
-          mGLStrings->Renderer().Find("Mali-G", /*ignoreCase*/ true) >= 0;
-      if (isMaliGxx) {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-        aFailureId = "FEATURE_FAILURE_BUG_1603515";
-      } else {
-        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
-      }
-      return NS_OK;
-    }
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(
