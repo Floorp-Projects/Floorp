@@ -28,6 +28,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/PresShell.h"
+#include "GRefPtr.h"
 
 #include "gfxXlibSurface.h"
 #include "gfxContext.h"
@@ -1897,7 +1898,7 @@ gboolean nsDragService::RunScheduledTask() {
   // We still reply appropriately to indicate that the drop will or didn't
   // succeeed.
   mTargetWidget = mTargetWindow->GetMozContainerWidget();
-  mTargetDragContext.steal(mPendingDragContext);
+  mTargetDragContext = std::move(mPendingDragContext);
 #ifdef MOZ_WAYLAND
   mTargetWaylandDragContext = std::move(mPendingWaylandDragContext);
 #endif
