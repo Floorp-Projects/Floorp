@@ -2138,7 +2138,7 @@
 # Media Session API
 - name: dom.media.mediasession.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Number of seconds of very quiet or silent audio before considering the audio
