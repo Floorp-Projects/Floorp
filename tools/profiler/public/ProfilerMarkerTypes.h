@@ -52,38 +52,6 @@ struct Budget {
   static void StreamJSONMarkerData(mozilla::JSONWriter& aWriter) {}
 };
 
-struct DOMEvent {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    // Note: DOMEventMarkerPayload wase originally a sub-class of
-    // TracingMarkerPayload, so it uses the same payload type.
-    // TODO: Change to its own distinct type, but this will require front-end
-    // changes.
-    return mozilla::MakeStringSpan("tracing");
-  }
-  static void StreamJSONMarkerData(
-      mozilla::JSONWriter& aWriter,
-      const mozilla::ProfilerString16View& aEventType,
-      const mozilla::TimeStamp& aEventTimeStamp,
-      const mozilla::ProfilerString8View& aTracingCategory) {
-    aWriter.StringProperty(
-        "eventType",
-        NS_ConvertUTF16toUTF8(aEventType.Data(), aEventType.Length()));
-    // Note: This is the event *creation* timestamp, which should be before the
-    // marker's own timestamp. It is used to compute the event processing
-    // latency.
-    mozilla::baseprofiler::WritePropertyTime(aWriter, "timeStamp",
-                                             aEventTimeStamp);
-    // TODO: This is from the old TracingMarkerPayload legacy, is it still
-    // needed, once the one location where DOMEvent is used has transitioned?
-    if (aTracingCategory.Length() != 0) {
-      // Note: This is *not* the MarkerCategory, it's a identifier used to
-      // combine pairs of markers. This should disappear after "set index" is
-      // implemented in bug 1661114.
-      aWriter.StringProperty("category", aTracingCategory);
-    }
-  }
-};
-
 struct Pref {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
     return mozilla::MakeStringSpan("PreferenceRead");
