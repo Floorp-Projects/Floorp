@@ -21,6 +21,9 @@ const gNetLinkSvc =
   Cc["@mozilla.org/network/network-link-service;1"].getService(
     Ci.nsINetworkLinkService
   );
+const gDNSService = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
 
 const gRequestNetworkingData = {
   http: gDashboard.requestHttpConnections,
@@ -104,6 +107,14 @@ function displayDns(data) {
     suffix_tbody.appendChild(row);
   }
   suffixParent.replaceChild(suffix_tbody, suffixContent);
+
+  let trr_url_tbody = document.createElement("tbody");
+  trr_url_tbody.id = "dns_trr_url";
+  let trr_url = document.createElement("tr");
+  trr_url.appendChild(col(gDNSService.currentTrrURI));
+  trr_url_tbody.appendChild(trr_url);
+  let prevURL = document.getElementById("dns_trr_url");
+  prevURL.parentNode.replaceChild(trr_url_tbody, prevURL);
 
   let cont = document.getElementById("dns_content");
   let parent = cont.parentNode;
@@ -274,9 +285,7 @@ function init() {
 
   let clearDNSCache = document.getElementById("clearDNSCache");
   clearDNSCache.addEventListener("click", function() {
-    Cc["@mozilla.org/network/dns-service;1"]
-      .getService(Ci.nsIDNSService)
-      .clearCache(true);
+    gDNSService.clearCache(true);
   });
 
   let setLogButton = document.getElementById("set-log-file-button");
