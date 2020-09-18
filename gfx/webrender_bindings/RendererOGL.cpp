@@ -22,6 +22,41 @@
 namespace mozilla {
 namespace wr {
 
+class RendererRecordedFrame final : public layers::RecordedFrame {
+ public:
+  RendererRecordedFrame(const TimeStamp& aTimeStamp, wr::Renderer* aRenderer,
+                        const wr::RecordedFrameHandle aHandle,
+                        const gfx::IntSize& aSize)
+      : RecordedFrame(aTimeStamp),
+        mRenderer(aRenderer),
+        mSize(aSize),
+        mHandle(aHandle) {}
+
+  already_AddRefed<gfx::DataSourceSurface> GetSourceSurface() override {
+    if (!mSurface) {
+      mSurface = gfx::Factory::CreateDataSourceSurface(
+          mSize, gfx::SurfaceFormat::B8G8R8A8, /* aZero = */ false);
+
+      gfx::DataSourceSurface::ScopedMap map(mSurface,
+                                            gfx::DataSourceSurface::WRITE);
+
+      if (!wr_renderer_map_recorded_frame(mRenderer, mHandle, map.GetData(),
+                                          map.GetStride() * mSize.height,
+                                          map.GetStride())) {
+        return nullptr;
+      }
+    }
+
+    return do_AddRef(mSurface);
+  }
+
+ private:
+  wr::Renderer* mRenderer;
+  RefPtr<gfx::DataSourceSurface> mSurface;
+  gfx::IntSize mSize;
+  wr::RecordedFrameHandle mHandle;
+};
+
 wr::WrExternalImage wr_renderer_lock_external_image(
     void* aObj, wr::ExternalImageId aId, uint8_t aChannelIndex,
     wr::ImageRendering aRendering) {
@@ -281,20 +316,67 @@ void RendererOGL::SetFrameStartTime(const TimeStamp& aTime) {
 }
 
 void RendererOGL::BeginRecording(const TimeStamp& aRecordingStart,
-                                 wr::PipelineId aPipelineId) {
+                                 wr::PipelineId aRootPipelineId) {
   MOZ_ASSERT(!mCompositionRecorder);
 
-  mCompositionRecorder = MakeUnique<layers::WebRenderCompositionRecorder>(
-      aRecordingStart, aPipelineId);
+  mRootPipelineId = aRootPipelineId;
+  mCompositionRecorder =
+      MakeUnique<layers::CompositionRecorder>(aRecordingStart);
 }
 
 void RendererOGL::MaybeRecordFrame(const WebRenderPipelineInfo* aPipelineInfo) {
   if (!mCompositionRecorder || !EnsureAsyncScreenshot()) {
     return;
   }
-  mCompositionRecorder->MaybeRecordFrame(mRenderer, aPipelineInfo);
+
+  if (!mRenderer || !aPipelineInfo || !DidPaintContent(aPipelineInfo)) {
+    return;
+  }
+
+  wr::RecordedFrameHandle handle{0};
+  gfx::IntSize size(0, 0);
+
+  if (wr_renderer_record_frame(mRenderer, wr::ImageFormat::BGRA8, &handle,
+                               &size.width, &size.height)) {
+    RefPtr<layers::RecordedFrame> frame =
+        new RendererRecordedFrame(TimeStamp::Now(), mRenderer, handle, size);
+
+    mCompositionRecorder->RecordFrame(frame);
+  }
 }
 
+bool RendererOGL::DidPaintContent(const WebRenderPipelineInfo* aFrameEpochs) {
+  const wr::WrPipelineInfo& info = aFrameEpochs->Raw();
+  bool didPaintContent = false;
+
+  // Check if a non-root pipeline has updated to a new epoch.
+  // We treat all non-root pipelines as "content" pipelines, even if they're
+  // not fed by content paints, such as videos (see bug 1665512).
+  for (const auto& epoch : info.epochs) {
+    const wr::PipelineId pipelineId = epoch.pipeline_id;
+
+    if (pipelineId == mRootPipelineId) {
+      continue;
+    }
+
+    const auto it = mContentPipelineEpochs.find(AsUint64(pipelineId));
+    if (it == mContentPipelineEpochs.end() || it->second != epoch.epoch) {
+      // This pipeline has updated since last render or has newly rendered.
+      didPaintContent = true;
+      mContentPipelineEpochs[AsUint64(pipelineId)] = epoch.epoch;
+    }
+  }
+
+  for (const auto& removedPipeline : info.removed_pipelines) {
+    const wr::PipelineId pipelineId = removedPipeline.pipeline_id;
+    if (pipelineId == mRootPipelineId) {
+      continue;
+    }
+    mContentPipelineEpochs.erase(AsUint64(pipelineId));
+  }
+
+  return didPaintContent;
+}
 void RendererOGL::WriteCollectedFrames() {
   if (!mCompositionRecorder) {
     MOZ_DIAGNOSTIC_ASSERT(
