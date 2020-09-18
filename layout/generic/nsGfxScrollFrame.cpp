@@ -4085,6 +4085,9 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
     // The display port of the root frame already factors in it's callback
     // transform, so subtract it out here, the GetCumulativeApzCallbackTransform
     // call below will add it back.
+    MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
+            ("RestrictToRootDisplayPort: Existing root displayport is %s\n",
+             Stringify(rootDisplayPort).c_str()));
     if (nsIContent* content = rootFrame->GetContent()) {
       if (void* property =
               content->GetProperty(nsGkAtoms::apzCallbackTransform)) {
@@ -4104,12 +4107,20 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
     // resolution into account, so we must.
     if (rootPresContext->IsRootContentDocument() &&
         rootFrame == rootPresShell->GetRootScrollFrame()) {
+      MOZ_LOG(
+          sDisplayportLog, LogLevel::Verbose,
+          ("RestrictToRootDisplayPort: Removing resolution %f from root "
+           "composition bounds %s\n",
+           rootPresShell->GetResolution(), Stringify(rootCompBounds).c_str()));
       rootCompBounds =
           rootCompBounds.RemoveResolution(rootPresShell->GetResolution());
     }
 
     rootDisplayPort = rootCompBounds;
   }
+  MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
+          ("RestrictToRootDisplayPort: Intermediate root displayport %s\n",
+           Stringify(rootDisplayPort).c_str()));
 
   // We want to convert the root display port from the
   // coordinate space of |rootFrame| to the coordinate space of
@@ -4124,8 +4135,14 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
   // TransformRect that includes the APZ callback transforms
   // directly.
   nsLayoutUtils::TransformRect(rootFrame, mOuter, rootDisplayPort);
+  MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
+          ("RestrictToRootDisplayPort: Transformed root displayport %s\n",
+           Stringify(rootDisplayPort).c_str()));
   rootDisplayPort += CSSPoint::ToAppUnits(
       nsLayoutUtils::GetCumulativeApzCallbackTransform(mOuter));
+  MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
+          ("RestrictToRootDisplayPort: Final root displayport %s\n",
+           Stringify(rootDisplayPort).c_str()));
 
   // We want to limit aDisplayportBase to be no larger than
   // rootDisplayPort on either axis, but we don't want to just
@@ -4158,6 +4175,11 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
              rootDisplayPort.YMost() < aDisplayportBase.YMost()) {
     rootDisplayPort.y = aDisplayportBase.y;
   }
+  MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
+          ("RestrictToRootDisplayPort: Root displayport translated to %s to "
+           "better enclose %s\n",
+           Stringify(rootDisplayPort).c_str(),
+           Stringify(aDisplayportBase).c_str()));
 
   // Now we can do the intersection
   return aDisplayportBase.Intersect(rootDisplayPort);
@@ -4190,10 +4212,24 @@ bool ScrollFrameHelper::DecideScrollableLayer(
         // scrollport.
         displayportBase = aVisibleRect->Intersect(mScrollPort);
 
+        mozilla::layers::ScrollableLayerGuid::ViewID viewID =
+            mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
+        if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Verbose)) {
+          nsLayoutUtils::FindIDFor(mOuter->GetContent(), &viewID);
+          MOZ_LOG(
+              sDisplayportLog, LogLevel::Verbose,
+              ("Scroll id %" PRIu64 " has visible rect %s, scroll port %s\n",
+               viewID, Stringify(aVisibleRect).c_str(),
+               Stringify(mScrollPort).c_str()));
+        }
+
         // Only restrict to the root displayport bounds if necessary,
         // as the required coordinate transformation is expensive.
         if (usingDisplayPort) {
           displayportBase = RestrictToRootDisplayPort(displayportBase);
+          MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
+                  ("Scroll id %" PRIu64 " has restricted base %s\n", viewID,
+                   Stringify(displayportBase).c_str()));
         }
         displayportBase -= mScrollPort.TopLeft();
       }

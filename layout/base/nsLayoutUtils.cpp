@@ -1409,11 +1409,18 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
   MOZ_ASSERT(hasDisplayPort);
 
   if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug)) {
+    mozilla::layers::ScrollableLayerGuid::ViewID viewID =
+        mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
+    nsLayoutUtils::FindIDFor(aContent, &viewID);
     if (!hadDisplayPort) {
-      mozilla::layers::ScrollableLayerGuid::ViewID viewID =
-          mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
-      nsLayoutUtils::FindIDFor(aContent, &viewID);
       MOZ_LOG(sDisplayportLog, LogLevel::Debug,
+              ("SetDisplayPortMargins %s on scrollId=%" PRIu64 ", newDp=%s\n",
+               Stringify(aMargins).c_str(), viewID,
+               Stringify(newDisplayPort).c_str()));
+    } else {
+      // Use verbose level logging for when an existing displayport got its
+      // margins updated.
+      MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
               ("SetDisplayPortMargins %s on scrollId=%" PRIu64 ", newDp=%s\n",
                Stringify(aMargins).c_str(), viewID,
                Stringify(newDisplayPort).c_str()));
@@ -1465,6 +1472,12 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
 
 void nsLayoutUtils::SetDisplayPortBase(nsIContent* aContent,
                                        const nsRect& aBase) {
+  if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Verbose)) {
+    ViewID viewId = FindOrCreateIDFor(aContent);
+    MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
+            ("Setting base rect %s for scrollId=%" PRIu64 "\n",
+             Stringify(aBase).c_str(), viewId));
+  }
   aContent->SetProperty(nsGkAtoms::DisplayPortBase, new nsRect(aBase),
                         nsINode::DeleteProperty<nsRect>);
 }
