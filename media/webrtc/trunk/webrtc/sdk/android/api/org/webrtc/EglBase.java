@@ -11,7 +11,7 @@
 package org.webrtc;
 
 import android.graphics.SurfaceTexture;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.view.Surface;
 import java.util.ArrayList;
 import javax.microedition.khronos.egl.EGL10;

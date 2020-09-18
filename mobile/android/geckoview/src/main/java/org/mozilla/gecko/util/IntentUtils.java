@@ -10,8 +10,8 @@ import android.annotation.TargetApi;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.CheckResult;
-import android.support.annotation.NonNull;
+import androidx.annotation.CheckResult;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.mozglue.SafeIntent;

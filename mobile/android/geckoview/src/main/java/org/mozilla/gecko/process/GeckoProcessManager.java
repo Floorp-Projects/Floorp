@@ -23,10 +23,10 @@ import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
-import android.support.v4.util.ArrayMap;
-import android.support.v4.util.ArraySet;
-import android.support.v4.util.SimpleArrayMap;
+import androidx.annotation.NonNull;
+import androidx.collection.ArrayMap;
+import androidx.collection.ArraySet;
+import androidx.collection.SimpleArrayMap;
 import android.util.Log;
 
 

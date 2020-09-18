@@ -12,10 +12,10 @@ import java.util.Map;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.v4.util.ArrayMap;
-import android.support.annotation.AnyThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.collection.ArrayMap;
+import androidx.annotation.AnyThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
