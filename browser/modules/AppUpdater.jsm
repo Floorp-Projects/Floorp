@@ -45,6 +45,10 @@ class AppUpdater {
       "@mozilla.org/updates/update-manager;1",
       "nsIUpdateManager"
     );
+    this.QueryInterface = ChromeUtils.generateQI([
+      "nsIProgressEventSink",
+      "nsIRequestObserver",
+    ]);
   }
 
   /**
