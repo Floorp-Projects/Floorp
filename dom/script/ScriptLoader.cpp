@@ -2314,6 +2314,8 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   // Save the runnable so it can be properly cleared during cancellation.
   aRequest->mRunnable = runnable.get();
+  auto signalOOM =
+      mozilla::MakeScopeExit([&aRequest]() { aRequest->mRunnable = nullptr; });
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
@@ -2357,6 +2359,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
+  signalOOM.release();
 
   aRequest->BlockOnload(mDocument);
 
