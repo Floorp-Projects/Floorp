@@ -185,6 +185,13 @@ using namespace mozilla::a11y;
                                   : RotorControlRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
+
+    if ([key isEqualToString:@"AXFrameSearchKey"]) {
+      RotorFrameRule rule = mImmediateDescendantsOnly
+                                ? RotorFrameRule(geckoStartAcc)
+                                : RotorFrameRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
   }
 
   return matches;
