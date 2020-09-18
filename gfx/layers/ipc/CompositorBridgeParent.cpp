@@ -2937,8 +2937,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvBeginRecording(
     mLayerManager->SetCompositionRecorder(
         MakeUnique<CompositionRecorder>(aRecordingStart));
   } else if (mWrBridge) {
-    mWrBridge->SetCompositionRecorder(MakeUnique<WebRenderCompositionRecorder>(
-        aRecordingStart, mWrBridge->PipelineId()));
+    mWrBridge->BeginRecording(aRecordingStart);
   }
 
   mHaveCompositionRecorder = true;
