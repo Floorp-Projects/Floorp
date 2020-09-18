@@ -69,7 +69,6 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     R.id.bookmarkAddFolderFragment,
                     AddBookmarkFolderFragmentDirections
                         .actionBookmarkAddFolderFragmentToBookmarkSelectFolderFragment(
-                            BookmarkRoot.Root.id,
                             true
                         )
                 )

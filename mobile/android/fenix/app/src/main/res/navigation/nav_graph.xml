@@ -298,10 +298,6 @@
         android:name="org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderFragment"
         android:label="@string/bookmark_select_folder_fragment_label"
         tools:layout="@layout/fragment_select_bookmark_folder">
-        <argument
-            android:name="folderGuid"
-            app:argType="string"
-            app:nullable="true" />
         <action
             android:id="@+id/action_bookmarkSelectFolderFragment_self"
             app:destination="@id/bookmarkSelectFolderFragment" />
