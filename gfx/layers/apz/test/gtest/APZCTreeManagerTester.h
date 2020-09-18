@@ -21,7 +21,7 @@
 class APZCTreeManagerTester : public APZCTesterBase {
  protected:
   virtual void SetUp() {
-    gfxPlatform::GetPlatform();
+    APZCTesterBase::SetUp();
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
 

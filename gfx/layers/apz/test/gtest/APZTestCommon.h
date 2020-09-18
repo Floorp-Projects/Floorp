@@ -385,6 +385,8 @@ class APZCTesterBase : public ::testing::Test {
  public:
   APZCTesterBase() { mcc = new NiceMock<MockContentControllerDelayed>(); }
 
+  virtual void SetUp() { gfxPlatform::GetPlatform(); }
+
   enum class PanOptions {
     None = 0,
     KeepFingerDown = 0x1,
