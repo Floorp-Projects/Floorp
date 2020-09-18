@@ -575,6 +575,7 @@ const AVAILABLE_UA_OVERRIDES = [
     /*
      * Bug 1563839 - rolb.santanderbank.com - Build UA override
      * Bug 1646791 - bancosantander.es - Re-add UA override.
+     * Bug 1665129 - *.gruposantander.es - Add wildcard domains.
      * WebCompat issue #33462 - https://webcompat.com/issues/33462
      * SuMo request - https://support.mozilla.org/es/questions/1291085
      *
@@ -589,6 +590,7 @@ const AVAILABLE_UA_OVERRIDES = [
     config: {
       matches: [
         "*://*.bancosantander.es/*",
+        "*://*.gruposantander.es/*",
         "*://*.santander.co.uk/*",
         "*://bob.santanderbank.com/*",
         "*://rolb.santanderbank.com/*",
