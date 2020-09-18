@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import mozfile
 from mach.decorators import CommandProvider, Command, CommandArgument
 from mozbuild.base import MachCommandBase
 
@@ -24,11 +25,10 @@ class PhabricatorCommandProvider(MachCommandBase):
     def install_moz_phab(self, force=False):
         import logging
         import os
-        import shutil
         import subprocess
         import sys
 
-        existing = shutil.which("moz-phab")
+        existing = mozfile.which("moz-phab")
         if existing and not force:
             self.log(
                 logging.ERROR,
@@ -41,7 +41,8 @@ class PhabricatorCommandProvider(MachCommandBase):
         # pip3 is part of Python since 3.4, however some distros choose to
         # remove core components from languages, so show a useful error message
         # if pip3 is missing.
-        if not shutil.which("pip3"):
+        pip3 = mozfile.which("pip3")
+        if not pip3:
             self.log(
                 logging.ERROR,
                 "pip3_not_installed",
@@ -51,7 +52,7 @@ class PhabricatorCommandProvider(MachCommandBase):
             )
             sys.exit(1)
 
-        command = ["pip3", "install", "--upgrade", "MozPhab"]
+        command = [pip3, "install", "--upgrade", "MozPhab"]
 
         if (
             sys.platform.startswith("linux")
