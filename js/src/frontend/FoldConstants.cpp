@@ -1238,19 +1238,22 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
         node->unsafeDecrementCount();
       } while (*next);
 
-      // Construct the concatenated atom.
-      const ParserAtom* combination =
-          info.compilationInfo.stencil.parserAtoms
-              .concatAtoms(info.cx,
-                           mozilla::Range(accum.begin(), accum.length()))
-              .unwrapOr(nullptr);
-      if (!combination) {
-        return false;
-      }
+      // Replace with concatenation if we multiple nodes.
+      if (accum.length() > 1) {
+        // Construct the concatenated atom.
+        const ParserAtom* combination =
+            info.compilationInfo.stencil.parserAtoms
+                .concatAtoms(info.cx,
+                             mozilla::Range(accum.begin(), accum.length()))
+                .unwrapOr(nullptr);
+        if (!combination) {
+          return false;
+        }
 
-      // Replace |current|'s string with the entire combination.
-      MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
-      (*current)->as<NameNode>().setAtom(combination);
+        // Replace |current|'s string with the entire combination.
+        MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
+        (*current)->as<NameNode>().setAtom(combination);
+      }
 
       // If we're out of nodes, we're done.
       if (!*next) {
