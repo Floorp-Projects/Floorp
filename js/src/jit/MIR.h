@@ -7652,6 +7652,34 @@ class MSetArrayLength : public MBinaryInstruction, public NoTypePolicy::Data {
   bool canRecoverOnBailout() const override { return isRecoveredOnBailout(); }
 };
 
+// Load the function length. Bails for functions with lazy scripts or a
+// resolved "length" property.
+class MFunctionLength : public MUnaryInstruction,
+                        public SingleObjectPolicy::Data {
+  explicit MFunctionLength(MDefinition* fun)
+      : MUnaryInstruction(classOpcode, fun) {
+    setResultType(MIRType::Int32);
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(FunctionLength)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, function))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    // Even though the "length" property is lazily resolved, it acts similar to
+    // a normal property load, so we can treat this operation like any other
+    // property read.
+    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                          AliasSet::DynamicSlot);
+  }
+};
+
 class MGetNextEntryForIterator
     : public MBinaryInstruction,
       public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>>::Data {

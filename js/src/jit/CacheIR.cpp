@@ -1972,6 +1972,14 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
+  // Length can be non-int32 for bound functions.
+  if (fun->isBoundFunction()) {
+    constexpr auto lengthSlot = FunctionExtended::BOUND_FUNCTION_LENGTH_SLOT;
+    if (!fun->getExtendedSlot(lengthSlot).isInt32()) {
+      return AttachDecision::NoAction;
+    }
+  }
+
   maybeEmitIdGuard(id);
   writer.guardClass(objId, GuardClassKind::JSFunction);
   writer.loadFunctionLengthResult(objId);
