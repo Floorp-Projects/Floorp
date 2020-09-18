@@ -3623,11 +3623,37 @@ void AsyncPanZoomController::ScaleWithFocus(float aScale,
                         (aFocus / aScale));
 }
 
+/*static*/
+gfx::IntSize AsyncPanZoomController::GetDisplayportAlignmentMultiplier(
+    const ScreenSize& aBaseSize) {
+  MOZ_ASSERT(gfxVars::UseWebRender());
+
+  IntSize multiplier(1, 1);
+  float baseWidth = aBaseSize.width;
+  while (baseWidth > 500) {
+    baseWidth /= 2;
+    multiplier.width *= 2;
+    if (multiplier.width >= 8) {
+      break;
+    }
+  }
+  float baseHeight = aBaseSize.height;
+  while (baseHeight > 500) {
+    baseHeight /= 2;
+    multiplier.height *= 2;
+    if (multiplier.height >= 8) {
+      break;
+    }
+  }
+  return multiplier;
+}
+
 /**
  * Enlarges the displayport along both axes based on the velocity.
  */
 static CSSSize CalculateDisplayPortSize(const CSSSize& aCompositionSize,
-                                        const CSSPoint& aVelocity) {
+                                        const CSSPoint& aVelocity,
+                                        const CSSToScreenScale2D& aDpPerCSS) {
   bool xIsStationarySpeed =
       fabsf(aVelocity.x) < StaticPrefs::apz_min_skate_speed();
   bool yIsStationarySpeed =
@@ -3645,6 +3671,28 @@ static CSSSize CalculateDisplayPortSize(const CSSSize& aCompositionSize,
 
   if (IsHighMemSystem() && !yIsStationarySpeed) {
     yMultiplier += StaticPrefs::apz_y_skate_highmem_adjust();
+  }
+
+  if (gfxVars::UseWebRender()) {
+    // Scale down the margin multipliers by the alignment multiplier because
+    // the alignment code will expand the displayport outward to the multiplied
+    // alignment. This is not necessary for correctness, but for performance;
+    // if we don't do this the displayport can end up much larger. The math here
+    // is actually just scaling the part of the multipler that is > 1, so that
+    // we never end up with xMultiplier or yMultiplier being less than 1 (that
+    // would result in a guaranteed checkerboarding situation). Note that the
+    // calculation doesn't cancel exactly the increased margin from applying
+    // the alignment multiplier, but this is simple and should provide
+    // reasonable behaviour in most cases.
+    IntSize alignmentMultipler =
+        AsyncPanZoomController::GetDisplayportAlignmentMultiplier(
+            aCompositionSize * aDpPerCSS);
+    if (xMultiplier > 1) {
+      xMultiplier = ((xMultiplier - 1) / alignmentMultipler.width) + 1;
+    }
+    if (yMultiplier > 1) {
+      yMultiplier = ((yMultiplier - 1) / alignmentMultipler.height) + 1;
+    }
   }
 
   return aCompositionSize * CSSSize(xMultiplier, yMultiplier);
@@ -3717,7 +3765,8 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
 
   // Calculate the displayport size based on how fast we're moving along each
   // axis.
-  CSSSize displayPortSize = CalculateDisplayPortSize(compositionSize, velocity);
+  CSSSize displayPortSize = CalculateDisplayPortSize(
+      compositionSize, velocity, aFrameMetrics.DisplayportPixelsPerCSSPixel());
 
   displayPortSize =
       ExpandDisplayPortToDangerZone(displayPortSize, aFrameMetrics);

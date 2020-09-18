@@ -847,11 +847,7 @@ static nsRect GetDisplayPortFromMarginsData(
   //   screen resolution; since this is what Layout does most of the time,
   //   this is a good approximation. A proper solution would involve moving
   //   the choosing of the resolution to display-list building time.
-  // We separate the alignment of the position and size of the displayport in
-  // order to allow moving by large increments with WebRender without enlarging
-  // the displayport.
-  ScreenSize posAlignment;
-  ScreenSize sizeAlignment;
+  ScreenSize alignment;
 
   PresShell* presShell = presContext->PresShell();
   MOZ_ASSERT(presShell);
@@ -859,101 +855,40 @@ static nsRect GetDisplayPortFromMarginsData(
   bool useWebRender = gfxVars::UseWebRender();
 
   if (presShell->IsDisplayportSuppressed()) {
-    posAlignment = ScreenSize(1, 1);
-    sizeAlignment = ScreenSize(1, 1);
+    alignment = ScreenSize(1, 1);
   } else if (useWebRender) {
-    // tscrollx is very sensitive to the size of the displayport. We could just
-    // accept the regression and change it to something larger if need be,
-    // however smaller displayports also means less CPU work for most stages in
-    // webrender so we generally want to avoid very large displayports.
-    float defaultAlignment = 128.0;
-    sizeAlignment = ScreenSize(defaultAlignment, defaultAlignment);
-
-    // With WebRender we benefit from updating the displaylist and scene less
-    // often during scrolling. For this we need to move the displayport less
-    // often which we achieve by using larger alignments for the displayport's
-    // position.
-
-    // If for whatever reason the displayport does not have margins, we aren't
-    // likely to be in a situation where moving in it large increments will
-    // be beneficial.
-    float xMargin = aMarginsData->mMargins.LeftRight();
-    float yMargin = aMarginsData->mMargins.TopBottom();
-    bool hasXMargins = xMargin > 1.0;
-    bool hasYMargins = yMargin > 1.0;
-
-    // We round the alignment to a multiple of 256 to avoid small fluctuations
-    // that would cause the displaylist to be re-built.
-    float multiple = 256.0;
-
-    if (hasXMargins) {
-      // Scale the alignment so that we never move by more than a quarter of the
-      // total unaligned displayport size. At most (1.0) we move by a screenful
-      // of content.
-      float w = screenRect.width;
-      float sx = fmin(1.0, (xMargin + w) / w * 0.25);
-      posAlignment.width =
-          fmax(defaultAlignment, multiple * round(sx * w / multiple));
-      // Margins are usually large (multiple times screenRect's size, see the
-      // apz.x_skate_size_multiplier pref), however it can be be small on
-      // occasions. If the alignment is larger than the margin on the right, we
-      // could end up snapping the displayport to the left too much and miss
-      // some content on the right. Since the size is aligned independently we
-      // can't be sure it will compensate so we ensure that the alignment is
-      // never larger than the margin. The snapping always rounds down so we
-      // don't need to check the left margin.
-      float rightMargin = fabs(aMarginsData->mMargins.right);
-      if (posAlignment.width > rightMargin) {
-        posAlignment.width -=
-            multiple * ceil((posAlignment.width - rightMargin) / multiple);
-      }
-    } else {
-      posAlignment.width = defaultAlignment;
-    }
-
-    if (hasYMargins) {
-      float h = screenRect.height;
-      float sy = fmin(1.0, (yMargin + h) / h * 0.25);
-      posAlignment.height =
-          fmax(defaultAlignment, multiple * round(sy * h / multiple));
-
-      float bottomMargin = fabs(aMarginsData->mMargins.bottom);
-      if (posAlignment.height > bottomMargin) {
-        posAlignment.height -=
-            multiple * ceil((posAlignment.height - bottomMargin) / multiple);
-      }
-    } else {
-      posAlignment.height = defaultAlignment;
-    }
+    // Moving the displayport is relatively expensive with WR so we use a larger
+    // alignment that causes the displayport to move less frequently. The
+    // alignment scales up with the size of the base rect so larger scrollframes
+    // use a larger alignment, but we clamp the alignment to a power of two
+    // between 128 and 1024 (inclusive).
+    // This naturally also increases the size of the displayport compared to
+    // always using a 128 alignment, so the displayport multipliers are also
+    // correspondingly smaller when WR is enabled to prevent the displayport
+    // from becoming too big.
+    IntSize multiplier =
+        apz::GetDisplayportAlignmentMultiplier(screenRect.Size());
+    alignment = ScreenSize(128 * multiplier.width, 128 * multiplier.height);
   } else if (StaticPrefs::layers_enable_tiles_AtStartup()) {
     // Don't align to tiles if they are too large, because we could expand
     // the displayport by a lot which can take more paint time. It's a tradeoff
     // though because if we don't align to tiles we have more waste on upload.
     IntSize tileSize = gfxVars::TileSize();
-    posAlignment = ScreenSize(std::min(256, tileSize.width),
-                              std::min(256, tileSize.height));
-    sizeAlignment = posAlignment;
+    alignment = ScreenSize(std::min(256, tileSize.width),
+                           std::min(256, tileSize.height));
   } else {
     // If we're not drawing with tiles then we need to be careful about not
     // hitting the max texture size and we only need 1 draw call per layer
     // so we can align to a smaller multiple.
-    posAlignment = ScreenSize(128, 128);
-    sizeAlignment = ScreenSize(128, 128);
+    alignment = ScreenSize(128, 128);
   }
 
   // Avoid division by zero.
-  if (posAlignment.width == 0) {
-    posAlignment.width = 128;
+  if (alignment.width == 0) {
+    alignment.width = 128;
   }
-  if (posAlignment.height == 0) {
-    posAlignment.height = 128;
-  }
-
-  if (sizeAlignment.width == 0) {
-    sizeAlignment.width = 128;
-  }
-  if (sizeAlignment.height == 0) {
-    sizeAlignment.height = 128;
+  if (alignment.height == 0) {
+    alignment.height = 128;
   }
 
   if (StaticPrefs::layers_enable_tiles_AtStartup() || useWebRender) {
@@ -973,9 +908,9 @@ static nsRect GetDisplayPortFromMarginsData(
     // Find the maximum size in screen pixels.
     int32_t maxSizeDevPx = presContext->AppUnitsToDevPixels(maxSizeAppUnits);
     int32_t maxWidthScreenPx = floor(double(maxSizeDevPx) * res.xScale) -
-                               MAX_ALIGN_ROUNDING * sizeAlignment.width;
+                               MAX_ALIGN_ROUNDING * alignment.width;
     int32_t maxHeightScreenPx = floor(double(maxSizeDevPx) * res.yScale) -
-                                MAX_ALIGN_ROUNDING * sizeAlignment.height;
+                                MAX_ALIGN_ROUNDING * alignment.height;
 
     // For each axis, inflate the margins up to the maximum size.
     const ScreenMargin& margins = aMarginsData->mMargins;
@@ -1009,16 +944,11 @@ static nsRect GetDisplayPortFromMarginsData(
       LayoutDevicePoint::FromAppUnits(scrollPos, auPerDevPixel) * res;
 
   // Align the display port.
-  // TODO(bug 1654836): we currently align the origin and independently align
-  // the size. a better approach would be to round out the endpoints of the
-  // unaligned display port.
   screenRect += scrollPosScreen;
-  float x = posAlignment.width * floor(screenRect.x / posAlignment.width);
-  float y = posAlignment.height * floor(screenRect.y / posAlignment.height);
-  float w =
-      sizeAlignment.width * ceil(screenRect.width / sizeAlignment.width + 1);
-  float h =
-      sizeAlignment.height * ceil(screenRect.height / sizeAlignment.height + 1);
+  float x = alignment.width * floor(screenRect.x / alignment.width);
+  float y = alignment.height * floor(screenRect.y / alignment.height);
+  float w = alignment.width * ceil(screenRect.width / alignment.width + 1);
+  float h = alignment.height * ceil(screenRect.height / alignment.height + 1);
   screenRect = ScreenRect(x, y, w, h);
   screenRect -= scrollPosScreen;
 
