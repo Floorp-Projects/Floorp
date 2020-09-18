@@ -87,7 +87,9 @@ class DefaultBrowserToolbarMenuController(
             is ToolbarMenu.Item.Back -> {
                 if (item.viewHistory) {
                     navController.navigate(
-                        BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment()
+                        BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(
+                            activeSessionId = customTabSession?.id
+                        )
                     )
                 } else {
                     sessionUseCases.goBack.invoke(currentSession)
@@ -96,7 +98,9 @@ class DefaultBrowserToolbarMenuController(
             is ToolbarMenu.Item.Forward -> {
                 if (item.viewHistory) {
                     navController.navigate(
-                        BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment()
+                        BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(
+                            activeSessionId = customTabSession?.id
+                        )
                     )
                 } else {
                     sessionUseCases.goForward.invoke(currentSession)

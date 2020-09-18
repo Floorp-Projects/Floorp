@@ -836,7 +836,12 @@
     <dialog
         android:id="@+id/tabHistoryDialogFragment"
         android:name="org.mozilla.fenix.tabhistory.TabHistoryDialogFragment"
-        tools:layout="@layout/fragment_tab_history_dialog" />
+        tools:layout="@layout/fragment_tab_history_dialog">
+        <argument
+            android:name="activeSessionId"
+            app:argType="string"
+            app:nullable="true" />
+    </dialog>
 
     <navigation
         android:id="@+id/site_permissions_exceptions_graph"

@@ -11,8 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tabhistory.*
-import mozilla.components.browser.state.selector.selectedTab
-import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.content.HistoryState
 import org.mozilla.fenix.R
 
 interface TabHistoryViewInteractor {
@@ -66,18 +65,16 @@ class TabHistoryView(
         tabHistoryRecyclerView.layoutManager = layoutManager
     }
 
-    fun updateState(state: BrowserState) {
-        state.selectedTab?.content?.history?.let { historyState ->
-            currentIndex = historyState.currentIndex
-            val items = historyState.items.mapIndexed { index, historyItem ->
-                TabHistoryItem(
-                    title = historyItem.title,
-                    url = historyItem.uri,
-                    index = index,
-                    isSelected = index == historyState.currentIndex
-                )
-            }
-            adapter.submitList(items)
+    fun updateState(historyState: HistoryState) {
+        currentIndex = historyState.currentIndex
+        val items = historyState.items.mapIndexed { index, historyItem ->
+            TabHistoryItem(
+                title = historyItem.title,
+                url = historyItem.uri,
+                index = index,
+                isSelected = index == currentIndex
+            )
         }
+        adapter.submitList(items)
     }
 }

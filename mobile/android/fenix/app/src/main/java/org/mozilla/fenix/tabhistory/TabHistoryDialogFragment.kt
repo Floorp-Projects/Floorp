@@ -12,10 +12,16 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.fragment_tab_history_dialog.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.lib.state.ext.consumeFrom
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 
 class TabHistoryDialogFragment : BottomSheetDialogFragment() {
@@ -24,6 +30,8 @@ class TabHistoryDialogFragment : BottomSheetDialogFragment() {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.BottomSheet)
     }
+
+    var customTabSessionId: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,9 +43,13 @@ class TabHistoryDialogFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        customTabSessionId = requireArguments().getString(EXTRA_SESSION_ID)
+
         val controller = DefaultTabHistoryController(
             navController = findNavController(),
-            goToHistoryIndexUseCase = requireComponents.useCases.sessionUseCases.goToHistoryIndex
+            goToHistoryIndexUseCase = requireComponents.useCases.sessionUseCases.goToHistoryIndex,
+            customTabId = customTabSessionId,
+            sessionManager = container.requireContext().components.core.sessionManager
         )
         val tabHistoryView = TabHistoryView(
             container = tabHistoryLayout,
@@ -45,12 +57,20 @@ class TabHistoryDialogFragment : BottomSheetDialogFragment() {
             interactor = TabHistoryInteractor(controller)
         )
 
-        consumeFrom(requireComponents.core.store) {
-            tabHistoryView.updateState(it)
+        requireComponents.core.store.flowScoped(viewLifecycleOwner) { flow ->
+            flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabSessionId)?.content?.history }
+                .ifChanged()
+                .collect { historyState ->
+                    tabHistoryView.updateState(historyState)
+                }
         }
     }
 
     private fun expand() {
         (dialog as BottomSheetDialog).behavior.state = BottomSheetBehavior.STATE_EXPANDED
+    }
+
+    companion object {
+        const val EXTRA_SESSION_ID = "activeSessionId"
     }
 }

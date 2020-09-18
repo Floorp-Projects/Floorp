@@ -5,13 +5,14 @@
 package org.mozilla.fenix.tabhistory
 
 import androidx.navigation.NavController
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import org.junit.Test
-import org.mozilla.fenix.R
 
 class TabHistoryControllerTest {
 
@@ -19,10 +20,12 @@ class TabHistoryControllerTest {
     private val sessionManager: SessionManager = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val sessionUseCases = SessionUseCases(store, sessionManager)
+
     private val goToHistoryIndexUseCase = sessionUseCases.goToHistoryIndex
     private val controller = DefaultTabHistoryController(
         navController = navController,
-        goToHistoryIndexUseCase = goToHistoryIndexUseCase
+        goToHistoryIndexUseCase = goToHistoryIndexUseCase,
+        sessionManager = sessionManager
     )
 
     private val currentItem = TabHistoryItem(
@@ -33,10 +36,31 @@ class TabHistoryControllerTest {
     )
 
     @Test
-    fun handleGoToHistoryIndex() {
+    fun handleGoToHistoryIndexNormalBrowsing() {
+        val session: Session = mockk(relaxed = true)
+        every { sessionManager.selectedSession } returns session
+
         controller.handleGoToHistoryItem(currentItem)
 
-        verify { navController.popBackStack(R.id.browserFragment, false) }
-        verify { goToHistoryIndexUseCase.invoke(currentItem.index) }
+        verify { navController.navigateUp() }
+        verify { goToHistoryIndexUseCase.invoke(currentItem.index, session) }
+    }
+
+    @Test
+    fun handleGoToHistoryIndexCustomTab() {
+        val customTabController = DefaultTabHistoryController(
+            navController = navController,
+            goToHistoryIndexUseCase = goToHistoryIndexUseCase,
+            customTabId = "custom-id",
+            sessionManager = sessionManager
+        )
+        val customTabSession: Session = mockk(relaxed = true)
+
+        every { sessionManager.findSessionById(any()) } returns customTabSession
+
+        customTabController.handleGoToHistoryItem(currentItem)
+
+        verify { navController.navigateUp() }
+        verify { goToHistoryIndexUseCase.invoke(currentItem.index, customTabSession) }
     }
 }

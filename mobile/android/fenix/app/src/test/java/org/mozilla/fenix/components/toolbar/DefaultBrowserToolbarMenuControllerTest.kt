@@ -137,7 +137,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         val controller = createController(scope = this)
         controller.handleToolbarItemInteraction(item)
 
-        val directions = BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment()
+        val directions = BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(null)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.BACK)) }
         verify { navController.navigate(directions) }
@@ -161,7 +161,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         val controller = createController(scope = this)
         controller.handleToolbarItemInteraction(item)
 
-        val directions = BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment()
+        val directions = BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(null)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.FORWARD)) }
         verify { navController.navigate(directions) }
