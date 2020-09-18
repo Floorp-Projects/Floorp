@@ -2148,6 +2148,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::NotDOMProxyGuard:
     case BailoutKind::NotArrayBufferMaybeSharedGuard:
     case BailoutKind::MegamorphicAccess:
+    case BailoutKind::ArgumentsObjectAccess:
     case BailoutKind::ArrayPopShift:
     case BailoutKind::ArraySlice:
     case BailoutKind::TagNotEqualGuard:

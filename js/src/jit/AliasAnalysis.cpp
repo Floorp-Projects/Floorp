@@ -167,6 +167,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::ThrowRuntimeLexicalError:
     case MDefinition::Opcode::GetArgumentsObjectArg:
     case MDefinition::Opcode::SetArgumentsObjectArg:
+    case MDefinition::Opcode::LoadArgumentsObjectArg:
     case MDefinition::Opcode::CreateThis:
     case MDefinition::Opcode::NewArrayDynamicLength:
     case MDefinition::Opcode::NewTypedArrayDynamicLength:

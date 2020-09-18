@@ -3711,6 +3711,16 @@ class MGetArgumentsObjectArg : public MUnaryInstruction,
 
   size_t argno() const { return argno_; }
 
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGetArgumentsObjectArg()) {
+      return false;
+    }
+    if (ins->toGetArgumentsObjectArg()->argno() != argno()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::Any);
   }
@@ -3733,6 +3743,32 @@ class MSetArgumentsObjectArg
 
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::Any);
+  }
+};
+
+// Load |arguments[index]| from a mapped or unmapped arguments object. Bails out
+// if any elements were overridden or deleted. Also bails out if the index is
+// out of bounds.
+class MLoadArgumentsObjectArg
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>>::Data {
+  MLoadArgumentsObjectArg(MDefinition* object, MDefinition* index)
+      : MBinaryInstruction(classOpcode, object, index) {
+    setResultType(MIRType::Value);
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(LoadArgumentsObjectArg)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, getArgsObject), (1, index))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::Any);
   }
 };
 
