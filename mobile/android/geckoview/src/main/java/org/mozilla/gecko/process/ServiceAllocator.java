@@ -16,7 +16,7 @@ import android.content.pm.ServiceInfo;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import java.util.BitSet;

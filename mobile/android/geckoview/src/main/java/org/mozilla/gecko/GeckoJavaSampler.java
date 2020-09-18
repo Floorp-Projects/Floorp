@@ -8,8 +8,8 @@ package org.mozilla.gecko;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Queue;
 import java.util.concurrent.Executors;

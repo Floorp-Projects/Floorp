@@ -12,7 +12,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.graphics.RectF;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 import android.view.KeyEvent;
 

@@ -6,7 +6,7 @@
 package org.mozilla.gecko.util;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import org.mozilla.gecko.GeckoThread;

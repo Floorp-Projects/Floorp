@@ -11,9 +11,9 @@ import org.mozilla.geckoview.GeckoSession.FinderFindFlags;
 import org.mozilla.geckoview.GeckoSession.FinderDisplayFlags;
 import org.mozilla.geckoview.GeckoSession.FinderResult;
 
-import android.support.annotation.AnyThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.AnyThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Pair;
 
 import java.util.Arrays;

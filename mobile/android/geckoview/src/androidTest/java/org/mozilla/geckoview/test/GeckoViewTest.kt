@@ -3,7 +3,7 @@ package org.mozilla.geckoview.test
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import android.support.v4.view.ViewCompat
+import androidx.core.view.ViewCompat
 import android.view.View
 
 import org.hamcrest.MatcherAssert.assertThat

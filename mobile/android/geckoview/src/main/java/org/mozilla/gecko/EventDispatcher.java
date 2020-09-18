@@ -17,7 +17,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
 
 import android.os.Handler;
-import android.support.annotation.AnyThread;
+import androidx.annotation.AnyThread;
 import android.util.Log;
 
 import java.util.ArrayDeque;

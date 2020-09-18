@@ -8,9 +8,9 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
-import android.support.annotation.AnyThread;
-import android.support.annotation.NonNull;
-import android.support.v4.util.ArrayMap;
+import androidx.annotation.AnyThread;
+import androidx.annotation.NonNull;
+import androidx.collection.ArrayMap;
 
 import java.nio.ByteBuffer;
 

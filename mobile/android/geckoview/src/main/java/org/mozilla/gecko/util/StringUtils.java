@@ -8,7 +8,7 @@ package org.mozilla.gecko.util;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.nio.charset.Charset;

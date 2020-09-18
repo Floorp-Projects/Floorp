@@ -6,7 +6,7 @@
 
 package org.mozilla.geckoview;
 
-import android.support.annotation.AnyThread;
+import androidx.annotation.AnyThread;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 

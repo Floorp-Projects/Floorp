@@ -6,7 +6,7 @@
 
 package org.mozilla.geckoview;
 
-import android.support.annotation.AnyThread;
+import androidx.annotation.AnyThread;
 
 /**
  * Used by a ContentDelegate to indicate what action to take on a slow script event.

@@ -10,7 +10,7 @@ import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.geckoview.BuildConfig;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Wrapper for nsIEventTarget, enabling seamless dispatch of java runnables to

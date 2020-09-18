@@ -10,7 +10,7 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
-import android.support.annotation.UiThread;
+import androidx.annotation.UiThread;
 import android.util.Log;
 
 /* package */ abstract class GeckoSessionHandler<Delegate>

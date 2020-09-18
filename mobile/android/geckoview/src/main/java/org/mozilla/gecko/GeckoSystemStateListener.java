@@ -15,7 +15,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.util.Log;
 import android.view.InputDevice;
 import org.mozilla.gecko.annotation.WrapForJNI;

@@ -6,8 +6,8 @@
 
 package org.mozilla.geckoview;
 
-import android.support.annotation.AnyThread;
-import android.support.annotation.NonNull;
+import androidx.annotation.AnyThread;
+import androidx.annotation.NonNull;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;

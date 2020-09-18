@@ -72,18 +72,9 @@ buildscript {
     }
 
     ext.kotlin_version = '1.3.41'
-    ext.support_library_version = '28.0.0'
-    ext.jacoco_version = '0.8.1'
-    ext.lifecycle_library_version = '1.1.1'
-
-    if (gradle.mozconfig.substs.MOZ_ANDROID_GOOGLE_PLAY_SERVICES) {
-        ext.google_play_services_version = '15.0.1'
-        ext.google_play_services_cast_version = '16.0.0'
-        ext.google_play_services_fido_version = '17.0.0'
-    }
 
     dependencies {
-        classpath 'org.mozilla.apilint:apilint:0.3.0'
+        classpath 'org.mozilla.apilint:apilint:0.3.1'
         classpath 'com.android.tools.build:gradle:3.4.2'
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.2'
         classpath 'org.apache.commons:commons-exec:1.3'

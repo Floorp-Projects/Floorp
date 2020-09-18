@@ -13,6 +13,8 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v83
+
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
   WebExtension notifications which don't have a `source` field.
@@ -32,6 +34,8 @@ exclude: true
   ([bug 1659073]({{bugzilla}}1659073))
 - Removed `Parcelable` support in `GeckoSession`. Use [`ProgressDelegate#onSessionStateChange`][68.29] and [`ProgressDelegate#restoreState`][82.5] instead.
   ([bug 1650108]({{bugzilla}}1650108))
+- ⚠️ Use AndroidX instead of the Android support library. For the public API this only changes
+  the thread and nullable annotation types.
   
 [82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.WebResponseInfo-
 [82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-
@@ -796,4 +800,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: b75e10652f129f9fd9414e3c94cac91203a99927
+[api-version]: 6c24e94d3aecdae9046cfab8ec8470d81f2a2c96
