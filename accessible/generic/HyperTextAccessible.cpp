@@ -789,6 +789,14 @@ void HyperTextAccessible::TextAtOffset(int32_t aOffset,
         adjustedOffset = AdjustCaretOffset(adjustedOffset);
       }
 
+      if (IsEmptyLastLineOffset(adjustedOffset)) {
+        // We are on the last line of a paragraph where there is no text.
+        // For example, in a textarea where a new line has just been inserted.
+        // In this case, return offsets for an empty line without text content.
+        *aStartOffset = *aEndOffset = adjustedOffset;
+        break;
+      }
+
       if (IsLineEndCharAt(adjustedOffset)) {
         // Layout gives us different results for a paragraph with line breaks.
         // For the text, we get the text, for the line break, we get the text
