@@ -95,18 +95,7 @@ function* test(testDriver) {
 
   yield waitForApzFlushedRepaints(testDriver);
 
-  var data = utils.getCompositorAPZTestData();
-  //dump(JSON.stringify(data, null, 4));
-
-  var found = false;
-  for (apzcData of data.additionalData) {
-    if (apzcData.key == subframeScrollId) {
-      var checkerboarding = apzcData.value.split(',').includes("checkerboarding");
-      ok(!checkerboarding, "subframe is not checkerboarding");
-      found = true;
-    }
-  }
-  ok(found, "Found the checkerboarding subframe");
+  assertNotCheckerboarded(utils, subframeScrollId, "Subframe");
 
   subtestDone();
 }
