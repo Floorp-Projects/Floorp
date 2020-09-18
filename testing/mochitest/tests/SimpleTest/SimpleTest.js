@@ -425,6 +425,7 @@ SimpleTest.record = function(condition, name, diag, stack, expected) {
   if (SimpleTest.expected == "fail") {
     if (!test.result) {
       SimpleTest.num_failed++;
+      test.result = !test.result;
     }
     successInfo = {
       status: "PASS",
