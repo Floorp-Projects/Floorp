@@ -16,7 +16,7 @@
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/layers/SyncObject.h"
-#include "mozilla/layers/WebRenderCompositionRecorder.h"
+#include "mozilla/layers/CompositionRecorder.h"
 #include "mozilla/Range.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/webrender/webrender_ffi.h"

@@ -18,7 +18,6 @@
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
 #include "mozilla/layers/PWebRenderBridgeParent.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
-#include "mozilla/layers/WebRenderCompositionRecorder.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
@@ -303,7 +302,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   void BeginRecording(const TimeStamp& aRecordingStart);
 
   /**
-   * Write the frames collected by the |WebRenderCompositionRecorder| to disk.
+   * Write the frames collected since the call to BeginRecording to disk.
    *
    * If there is not currently a recorder, this is a no-op.
    */
@@ -317,7 +316,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   void MaybeCaptureScreenPixels();
 #endif
   /**
-   * Return the frames collected by the |WebRenderCompositionRecorder| encoded
+   * Return the frames collected since the call to BeginRecording encoded
    * as data URIs.
    *
    * If there is not currently a recorder, this is a no-op and the promise will

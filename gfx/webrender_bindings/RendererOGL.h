@@ -124,10 +124,15 @@ class RendererOGL {
   bool EnsureAsyncScreenshot();
 
  protected:
+  /**
+   * Determine if any content pipelines updated, and update
+   * mContentPipelineEpochs.
+   */
+  bool DidPaintContent(const wr::WebRenderPipelineInfo* aFrameEpochs);
+
   RefPtr<RenderThread> mThread;
   UniquePtr<RenderCompositor> mCompositor;
-  UniquePtr<layers::WebRenderCompositionRecorder>
-      mCompositionRecorder;  // can be null
+  UniquePtr<layers::CompositionRecorder> mCompositionRecorder;  // can be null
   wr::Renderer* mRenderer;
   layers::CompositorBridgeParent* mBridge;
   wr::WindowId mWindowId;
@@ -136,6 +141,17 @@ class RendererOGL {
   bool mDisableNativeCompositor;
 
   RendererScreenshotGrabber mScreenshotGrabber;
+
+  // The id of the root WebRender pipeline.
+  //
+  // All other pipelines are considered content.
+  wr::PipelineId mRootPipelineId;
+
+  // A mapping of wr::PipelineId to the epochs when last they updated.
+  //
+  // We need to use uint64_t here since wr::PipelineId is not default
+  // constructable.
+  std::unordered_map<uint64_t, wr::Epoch> mContentPipelineEpochs;
 };
 
 }  // namespace wr
