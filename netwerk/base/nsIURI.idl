@@ -183,18 +183,7 @@ interface nsIURI : nsISupports
      * to GetScheme, thereby saving extra allocating and freeing. Returns true if
      * the schemes match (case ignored).
      */
-    boolean schemeIs(in string scheme);
-
-    /*
-     * Infallible version of SchemeIs for C++ callers.
-     */
-    %{C++
-     bool SchemeIs(const char* aScheme) {
-       bool ret;
-       mozilla::Unused << SchemeIs(aScheme, &ret);
-       return ret;
-     }
-    %}
+    [infallible] boolean schemeIs(in string scheme);
 
     /**
      * This method resolves a relative string into an absolute URI string,
