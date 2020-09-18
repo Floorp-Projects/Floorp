@@ -37,8 +37,9 @@
 
 #define V_FLOOD_COLOR       flat_varying_vec4_1
 
-// Normalized bounds of the source image in the texture.
-#define V_UV_BOUNDS         flat_varying_vec4_2
+// Normalized bounds of the source image in the texture, adjusted to avoid
+// sampling artifacts.
+#define V_UV_SAMPLE_BOUNDS  flat_varying_vec4_2
 
 #define V_COLOR_OFFSET      flat_varying_vec4_3
 
@@ -74,19 +75,18 @@ void blend_brush_vs(
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 
-    vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
+    vec2 inv_texture_size = vec2(1.0) / vec2(textureSize(sColor0, 0).xy);
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
     f = get_image_quad_uv(prim_user_data.x, f);
     vec2 uv = mix(uv0, uv1, f);
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
 
-    V_UV = uv / texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
+    V_UV = uv * inv_texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
     V_LAYER = res.layer;
     V_PERSPECTIVE = perspective_interpolate;
 
-    // TODO: The image shader treats this differently: deflate the rect by half a pixel on each side and
-    // clamp the uv in the frame shader. Does it make sense to do the same here?
-    V_UV_BOUNDS = vec4(uv0, uv1) / texture_size.xyxy;
+    V_UV_SAMPLE_BOUNDS = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) * inv_texture_size.xyxy;
+
     V_LOCAL_POS = vi.local_pos;
 
     float lumR = 0.2126;
@@ -270,6 +270,9 @@ vec4 ComponentTransfer(vec4 colora) {
 Fragment blend_brush_fs() {
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, V_PERSPECTIVE);
     vec2 uv = V_UV * perspective_divisor;
+    // Clamp the uvs to avoid sampling artifacts.
+    uv = clamp(uv, V_UV_SAMPLE_BOUNDS.xy, V_UV_SAMPLE_BOUNDS.zw);
+
     vec4 Cs = texture(sColor0, vec3(uv, V_LAYER));
 
     // Un-premultiply the input.
@@ -312,12 +315,11 @@ Fragment blend_brush_fs() {
             alpha = result.a;
     }
 
-    // Fail-safe to ensure that we don't sample outside the rendered
-    // portion of a blend source.
-    alpha *= min(point_inside_rect(uv, V_UV_BOUNDS.xy, V_UV_BOUNDS.zw),
-                 init_transform_fs(V_LOCAL_POS));
+    #ifdef WR_FEATURE_ALPHA_PASS
+        alpha *= init_transform_fs(V_LOCAL_POS);
+        // Pre-multiply the alpha into the output value.
+    #endif
 
-    // Pre-multiply the alpha into the output value.
     return Fragment(alpha * vec4(color, 1.0));
 }
 #endif
@@ -326,7 +328,7 @@ Fragment blend_brush_fs() {
 #undef V_UV
 #undef V_LOCAL_POS
 #undef V_FLOOD_COLOR
-#undef V_UV_BOUNDS
+#undef V_UV_SAMPLE_BOUNDS
 #undef V_COLOR_OFFSET
 #undef V_AMOUNT
 #undef V_LAYER
