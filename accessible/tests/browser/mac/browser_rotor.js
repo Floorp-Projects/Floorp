@@ -1048,3 +1048,61 @@ addAccessibleTask(
     );
   }
 );
+
+/**
+ * Test rotor with frames
+ */
+addAccessibleTask(
+  `
+  <iframe id="frame1" src="data:text/html,<h1>hello</h1>world"></iframe>
+  <iframe id="frame2" src="data:text/html,<iframe id='frame3' src='data:text/html,<h1>goodbye</h1>'>"></iframe>
+  `,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXFrameSearchKey",
+      AXImmediateDescendantsOnly: 0,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const frameCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(3, frameCount, "Found 3 frames");
+
+    // const frames = webArea.getParameterizedAttributeValue(
+    //   "AXUIElementsForSearchPredicate",
+    //   NSDictionary(searchPred)
+    // );
+
+    // const spin = getNativeInterface(accDoc, "spinbutton");
+    // const details = getNativeInterface(accDoc, "details");
+    // const tree = getNativeInterface(accDoc, "tree");
+
+    // is(
+    //   spin.getAttributeValue("AXRole"),
+    //   controls[0].getAttributeValue("AXRole"),
+    //   "Found correct spinbutton"
+    // );
+    // is(
+    //   details.getAttributeValue("AXRole"),
+    //   controls[1].getAttributeValue("AXRole"),
+    //   "Found correct details element"
+    // );
+    // is(
+    //   tree.getAttributeValue("AXRole"),
+    //   controls[2].getAttributeValue("AXRole"),
+    //   "Found correct tree"
+    // );
+  }
+);
