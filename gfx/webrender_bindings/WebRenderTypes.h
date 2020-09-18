@@ -39,13 +39,7 @@ namespace wr {
 typedef uintptr_t usize;
 
 typedef wr::WrWindowId WindowId;
-typedef wr::WrPipelineId PipelineId;
-typedef wr::WrDocumentId DocumentId;
 typedef wr::WrRemovedPipeline RemovedPipeline;
-typedef wr::WrImageKey ImageKey;
-typedef wr::WrFontKey FontKey;
-typedef wr::WrFontInstanceKey FontInstanceKey;
-typedef wr::WrEpoch Epoch;
 
 class RenderedFrameIdType {};
 typedef layers::BaseTransactionId<RenderedFrameIdType> RenderedFrameId;
