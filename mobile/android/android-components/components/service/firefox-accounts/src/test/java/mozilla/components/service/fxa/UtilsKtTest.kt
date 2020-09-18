@@ -5,6 +5,9 @@
 package mozilla.components.service.fxa
 
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.sync.AuthFlowUrl
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.ServiceResult
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.GlobalAccountManager
 import mozilla.components.support.test.eq
@@ -15,6 +18,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -185,5 +191,145 @@ class UtilsKtTest {
             throw FxaPanicException("dunno")
         }
         verifyZeroInteractions(accountManager)
+    }
+
+    @Test
+    fun `withRetries immediate success`() = runBlocking {
+        when (val res = withRetries(mock(), 3) { true }) {
+            is Result.Success -> assertTrue(res.value)
+            is Result.Failure -> fail()
+        }
+        when (val res = withRetries(mock(), 3) { "hello!" }) {
+            is Result.Success -> assertEquals("hello!", res.value)
+            is Result.Failure -> fail()
+        }
+        val eventual = SucceedOn(2, 42)
+        when (val res = withRetries(mock(), 3) { eventual.nullFailure() }) {
+            is Result.Success -> assertEquals(42, res.value)
+            is Result.Failure -> fail()
+        }
+    }
+
+    @Test
+    fun `withRetries immediate failure`() = runBlocking {
+        when (withRetries(mock(), 3) { false }) {
+            is Result.Success -> fail()
+            is Result.Failure -> {}
+        }
+        when (withRetries(mock(), 3) { null }) {
+            is Result.Success -> fail()
+            is Result.Failure -> {}
+        }
+    }
+
+    @Test
+    fun `withRetries eventual success`() = runBlocking {
+        val eventual = SucceedOn(2, true)
+        when (val res = withRetries(mock(), 5) { eventual.nullFailure() }) {
+            is Result.Success -> {
+                assertTrue(res.value!!)
+                assertEquals(2, eventual.attempts)
+            }
+            is Result.Failure -> fail()
+        }
+        val eventual2 = SucceedOn(2, "world!")
+        when (val res = withRetries(mock(), 3) { eventual2.nullFailure() }) {
+            is Result.Success -> {
+                assertEquals("world!", res.value)
+                assertEquals(2, eventual2.attempts)
+            }
+            is Result.Failure -> fail()
+        }
+    }
+
+    @Test
+    fun `withRetries eventual failure`() = runBlocking {
+        val eventual = SucceedOn(6, true)
+        when (withRetries(mock(), 5) { eventual.nullFailure() }) {
+            is Result.Success -> fail()
+            is Result.Failure -> {
+                assertEquals(5, eventual.attempts)
+            }
+        }
+        val eventual2 = SucceedOn(15, "hello!")
+        when (withRetries(mock(), 3) { eventual2.nullFailure() }) {
+            is Result.Success -> fail()
+            is Result.Failure -> {
+                assertEquals(3, eventual2.attempts)
+            }
+        }
+    }
+
+    @Test
+    fun `withServiceRetries immediate success`() = runBlocking {
+        when (withServiceRetries(mock(), 3, suspend { ServiceResult.Ok })) {
+            is ServiceResult.Ok -> {}
+            else -> fail()
+        }
+    }
+
+    @Test
+    fun `withServiceRetries generic failure keeps retrying`() = runBlocking {
+        // keeps retrying on generic error
+        val eventual = SucceedOn(0, ServiceResult.Ok, ServiceResult.OtherError)
+        when (withServiceRetries(mock(), 3) { eventual.reifiedFailure() }) {
+            is ServiceResult.Ok -> fail()
+            else -> {
+                assertEquals(3, eventual.attempts)
+            }
+        }
+    }
+
+    @Test
+    fun `withServiceRetries auth failure short circuit`() = runBlocking {
+        // keeps retrying on generic error
+        val eventual = SucceedOn(0, ServiceResult.Ok, ServiceResult.AuthError)
+        when (withServiceRetries(mock(), 3) { eventual.reifiedFailure() }) {
+            is ServiceResult.Ok -> fail()
+            else -> {
+                assertEquals(1, eventual.attempts)
+            }
+        }
+    }
+
+    @Test
+    fun `withServiceRetries eventual success`() = runBlocking {
+        val eventual = SucceedOn(3, ServiceResult.Ok, ServiceResult.OtherError)
+        when (withServiceRetries(mock(), 5) { eventual.reifiedFailure() }) {
+            is ServiceResult.Ok -> {
+                assertEquals(3, eventual.attempts)
+            }
+            else -> fail()
+        }
+    }
+
+    @Test
+    fun `as auth flow pairing`() = runBlocking {
+        val account: OAuthAccount = mock()
+        val authFlowUrl: AuthFlowUrl = mock()
+        `when`(account.beginPairingFlow("http://pairing.url", emptySet())).thenReturn(authFlowUrl)
+        verify(account, never()).beginOAuthFlow(emptySet())
+        assertEquals(authFlowUrl, "http://pairing.url".asAuthFlowUrl(account, emptySet()))
+    }
+
+    @Test
+    fun `as auth flow regular`() = runBlocking {
+        val account: OAuthAccount = mock()
+        val authFlowUrl: AuthFlowUrl = mock()
+        `when`(account.beginOAuthFlow(emptySet())).thenReturn(authFlowUrl)
+        verify(account, never()).beginPairingFlow(anyString(), eq(emptySet()))
+        assertEquals(authFlowUrl, null.asAuthFlowUrl(account, emptySet()))
+    }
+
+    private class SucceedOn<S>(private val successOn: Int, private val succeedWith: S, private val failWith: S? = null) {
+        var attempts = 0
+        fun nullFailure(): S? {
+            attempts += 1
+            return when {
+                successOn == 0 || attempts < successOn -> failWith
+                else -> succeedWith!!
+            }
+        }
+        fun reifiedFailure(): S = nullFailure()!!
     }
 }

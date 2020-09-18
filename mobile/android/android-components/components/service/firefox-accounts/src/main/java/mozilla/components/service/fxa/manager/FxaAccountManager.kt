@@ -49,6 +49,10 @@ import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.WorkManagerSyncManager
 import mozilla.components.service.fxa.sync.clearSyncState
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.service.fxa.Result
+import mozilla.components.service.fxa.asAuthFlowUrl
+import mozilla.components.service.fxa.withRetries
+import mozilla.components.service.fxa.withServiceRetries
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -599,13 +603,16 @@ open class FxaAccountManager(
                 } else {
                     null
                 }
-                when (val result = withRetries(MAX_NETWORK_RETRIES) { pairingUrl.asAuthFlowUrl() }) {
-                    is RetryResult.Success -> {
+                val result = withRetries(logger, MAX_NETWORK_RETRIES) {
+                    pairingUrl.asAuthFlowUrl(account, scopes)
+                }
+                when (result) {
+                    is Result.Success -> {
                         latestAuthState = result.value!!.state
                         oauthObservers.notifyObservers { onBeginOAuthFlow(result.value) }
                         null
                     }
-                    RetryResult.Failure -> {
+                    Result.Failure -> {
                         resetAccount()
                         oauthObservers.notifyObservers { onError() }
                         Event.Progress.FailedToBeginAuth
@@ -617,7 +624,7 @@ open class FxaAccountManager(
         ProgressState.CompletingAuthentication -> when (via) {
             Event.Progress.AccountRestored -> {
                 val authType = AuthType.Existing
-                when (withServiceRetries(MAX_NETWORK_RETRIES) { finalizeDevice(authType) }) {
+                when (withServiceRetries(logger, MAX_NETWORK_RETRIES) { finalizeDevice(authType) }) {
                     ServiceResult.Ok -> {
                         // This method can "fail" for a number of reasons:
                         // - auth problems are encountered. In that case, GlobalAccountManager.authError
@@ -642,15 +649,15 @@ open class FxaAccountManager(
             }
             is Event.Progress.AuthData -> {
                 val completeAuth = suspend {
-                    withRetries(MAX_NETWORK_RETRIES) {
+                    withRetries(logger, MAX_NETWORK_RETRIES) {
                         account.completeOAuthFlow(via.authData.code, via.authData.state)
                     }
                 }
                 val finalize = suspend {
-                    withRetries(MAX_NETWORK_RETRIES) { finalizeDevice(via.authData.authType) }
+                    withRetries(logger, MAX_NETWORK_RETRIES) { finalizeDevice(via.authData.authType) }
                 }
                 // If we can't 'complete', we won't run 'finalize' due to short-circuiting.
-                if (completeAuth() is RetryResult.Failure || finalize() is RetryResult.Failure) {
+                if (completeAuth() is Result.Failure || finalize() is Result.Failure) {
                     resetAccount()
                     Event.Progress.FailedToCompleteAuth
                 } else {
@@ -664,12 +671,12 @@ open class FxaAccountManager(
                     true -> AuthType.MigratedReuse
                     false -> AuthType.MigratedCopy
                 }
-                when (withRetries(MAX_NETWORK_RETRIES) { finalizeDevice(authType) }) {
-                    is RetryResult.Success -> {
+                when (withRetries(logger, MAX_NETWORK_RETRIES) { finalizeDevice(authType) }) {
+                    is Result.Success -> {
                         authenticationSideEffects(authType)
                         Event.Progress.CompletedAuthentication(authType)
                     }
-                    RetryResult.Failure -> {
+                    Result.Failure -> {
                         resetAccount()
                         Event.Progress.FailedToCompleteMigration
                     }
@@ -858,50 +865,6 @@ open class FxaAccountManager(
             if (!declinedEngines.contains(supportedEngine)) {
                 enginesStorage.setStatus(supportedEngine, true)
             }
-        }
-    }
-
-    private sealed class RetryResult<out T> {
-        internal data class Success<out T>(val value: T) : RetryResult<T>()
-        internal object Failure : RetryResult<Nothing>()
-    }
-
-    private suspend fun <T> withRetries(retryCount: Int, block: suspend () -> T): RetryResult<T> {
-        var attempt = 0
-        var res: T? = null
-        while (attempt < retryCount && (res == null || res == false)) {
-            attempt += 1
-            logger.info("attempt $attempt/$retryCount")
-            res = block()
-        }
-        return if (res == null || res == false) {
-            logger.warn("all attempts failed")
-            RetryResult.Failure
-        } else {
-            RetryResult.Success(res)
-        }
-    }
-
-    private suspend fun withServiceRetries(retryCount: Int, block: suspend () -> ServiceResult): ServiceResult {
-        var attempt = 0
-        do {
-            attempt += 1
-            logger.info("attempt $attempt/$retryCount")
-            when (val res = block()) {
-                ServiceResult.Ok, ServiceResult.AuthError -> return res
-                ServiceResult.OtherError -> {}
-            }
-        } while (attempt < retryCount)
-
-        logger.warn("all attempts failed")
-        return ServiceResult.OtherError
-    }
-
-    private suspend fun String?.asAuthFlowUrl(): AuthFlowUrl? {
-        return if (this != null) {
-            account.beginPairingFlow(this, scopes)
-        } else {
-            account.beginOAuthFlow(scopes)
         }
     }
 

@@ -31,6 +31,21 @@ typealias FxaUnauthorizedException = mozilla.appservices.fxaclient.FxaException.
 typealias FxaUnspecifiedException = mozilla.appservices.fxaclient.FxaException.Unspecified
 
 /**
+ * @return 'true' if this exception should be re-thrown and eventually crash the app.
+ */
+fun FxaException.shouldPropagate(): Boolean {
+    return when (this) {
+        // Throw on panics
+        is FxaPanicException -> true
+        // Don't throw for recoverable errors.
+        is FxaNetworkException, is FxaUnauthorizedException, is FxaUnspecifiedException -> false
+        // Throw on newly encountered exceptions.
+        // If they're actually recoverable and you see them in crash reports, update this check.
+        else -> true
+    }
+}
+
+/**
  * Exceptions related to the account manager.
  */
 sealed class AccountManagerException(message: String) : Exception(message) {
