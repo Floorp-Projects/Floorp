@@ -371,11 +371,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 view = view
             )
 
-            val shouldForwardToThirdParties =
-                PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
-                    context.getPreferenceKey(R.string.pref_key_external_download_manager), false
-                )
-
             val downloadFeature = DownloadsFeature(
                 context.applicationContext,
                 store = store,
@@ -387,7 +382,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     store,
                     DownloadService::class
                 ),
-                shouldForwardToThirdParties = { shouldForwardToThirdParties },
+                shouldForwardToThirdParties = {
+                    PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
+                        context.getPreferenceKey(R.string.pref_key_external_download_manager), false
+                    )
+                },
                 promptsStyling = DownloadsFeature.PromptsStyling(
                     gravity = Gravity.BOTTOM,
                     shouldWidthMatchParent = true,
