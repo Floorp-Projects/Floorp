@@ -212,7 +212,7 @@ var State = {
       let tab = tabFinder.get(win.outerWindowId);
       let addon =
         process.type == "extension"
-          ? WebExtensionPolicy.getByHostname(win.documentURI.host)
+          ? WebExtensionPolicy.getByURI(win.documentURI)
           : null;
       let displayRank;
       if (tab) {
@@ -593,6 +593,9 @@ var View = {
       fluentName = "about-processes-extension-name";
       if (data.addon) {
         name = data.addon.name;
+      } else if (data.documentURI.scheme == "about") {
+        // about: URLs don't have an host.
+        name = data.documentURI.spec;
       } else {
         name = data.documentURI.host;
       }
