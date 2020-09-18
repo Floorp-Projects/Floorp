@@ -24,6 +24,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/net/FileChannelParent.h"
 #include "mozilla/net/DNSRequestParent.h"
+#include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/net/ClassifierDummyChannelParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/net/RequestContextService.h"
@@ -551,6 +552,24 @@ mozilla::ipc::IPCResult NeckoParent::RecvCancelHTMLDNSPrefetch(
   nsHTMLDNSPrefetch::CancelPrefetch(hostname, isHttps, aOriginAttributes, flags,
                                     reason);
   return IPC_OK();
+}
+
+PChannelDiverterParent* NeckoParent::AllocPChannelDiverterParent(
+    const ChannelDiverterArgs& channel) {
+  return new ChannelDiverterParent();
+}
+
+mozilla::ipc::IPCResult NeckoParent::RecvPChannelDiverterConstructor(
+    PChannelDiverterParent* actor, const ChannelDiverterArgs& channel) {
+  auto parent = static_cast<ChannelDiverterParent*>(actor);
+  parent->Init(channel);
+  return IPC_OK();
+}
+
+bool NeckoParent::DeallocPChannelDiverterParent(
+    PChannelDiverterParent* parent) {
+  delete static_cast<ChannelDiverterParent*>(parent);
+  return true;
 }
 
 PTransportProviderParent* NeckoParent::AllocPTransportProviderParent() {
