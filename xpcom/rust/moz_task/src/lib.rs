@@ -7,10 +7,21 @@
 //! It also provides the Task trait and TaskRunnable struct,
 //! which make it easier to dispatch tasks to threads.
 
+#[macro_use]
+extern crate cstr;
 extern crate libc;
 extern crate nserror;
 extern crate nsstring;
 extern crate xpcom;
+
+mod event_loop;
+
+// Expose functions intended to be used only in gtest via this module.
+// We don't use a feature gate here to stop the need to compile all crates that
+// depend upon `moz_task` twice.
+pub mod gtest_only {
+    pub use event_loop::spin_event_loop_until;
+}
 
 use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsCString};
