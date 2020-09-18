@@ -327,8 +327,6 @@ class RenderThread final {
   RefPtr<layers::SurfacePool> mSurfacePool;
 
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
-  std::map<wr::WindowId, UniquePtr<layers::WebRenderCompositionRecorder>>
-      mCompositionRecorders;
 
   struct PendingFrameInfo {
     TimeStamp mStartTime;
