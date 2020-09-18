@@ -181,6 +181,14 @@ class MachCommands(MachCommandBase):
         if extra:
             os.environ['PYTEST_ADDOPTS'] += " " + " ".join(extra)
 
+        installed_requirements = set()
+        for test in tests:
+            if (test.get('requirements') and
+                test['requirements'] not in installed_requirements):
+                self.virtualenv_manager.install_pip_requirements(
+                    test['requirements'], quiet=True)
+                installed_requirements.add(test['requirements'])
+
         if exitfirst:
             sequential = tests
             os.environ['PYTEST_ADDOPTS'] += " -x"
@@ -233,9 +241,6 @@ class MachCommands(MachCommandBase):
 
     def _run_python_test(self, test):
         from mozprocess import ProcessHandler
-
-        if test.get('requirements'):
-            self.virtualenv_manager.install_pip_requirements(test['requirements'], quiet=True)
 
         output = []
 
