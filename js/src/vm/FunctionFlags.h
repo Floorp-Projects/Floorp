@@ -330,6 +330,10 @@ class FunctionFlags {
     }
     return flags;
   }
+
+  static FunctionFlags clearMutableflags(FunctionFlags flags) {
+    return FunctionFlags(flags.toRaw() & ~FunctionFlags::MUTABLE_FLAGS);
+  }
 };
 
 } /* namespace js */
