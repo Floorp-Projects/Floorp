@@ -57,14 +57,19 @@ add_task(async function switchToTab() {
     window,
     value: "% robots",
   });
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+
+  let index = UrlbarPrefs.get("update2") ? 0 : 1;
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
   Assert.equal(
     result.type,
     UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
     "Should have a switch tab result"
   );
 
-  let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+  let element = await UrlbarTestUtils.waitForAutocompleteResultAt(
+    window,
+    index
+  );
   is(
     await getResultText(element),
     "about: robots— Switch to Tab",

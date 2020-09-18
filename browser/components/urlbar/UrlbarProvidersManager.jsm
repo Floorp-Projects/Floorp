@@ -486,12 +486,15 @@ class Query {
       return;
     }
 
-    // When in search mode and the search string is empty, don't allow heuristic
-    // results since they don't make sense.
+    // In search mode, don't allow heuristic results in the following cases
+    // since they don't make sense:
+    //   * When the search string is empty, or
+    //   * In local search mode, except for autofill results
     if (
       result.heuristic &&
-      !this.context.trimmedSearchString &&
-      this.context.searchMode
+      this.context.searchMode &&
+      (!this.context.trimmedSearchString ||
+        (!this.context.searchMode.engineName && !result.autofill))
     ) {
       return;
     }

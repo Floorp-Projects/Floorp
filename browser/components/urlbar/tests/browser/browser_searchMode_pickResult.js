@@ -67,6 +67,10 @@ async function doPickResultTest(initialURL, searchString) {
     });
 
     // Arrow down to the bookmark result.
+    let firstResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+    if (!firstResult.heuristic) {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
     let foundResult = false;
     for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
