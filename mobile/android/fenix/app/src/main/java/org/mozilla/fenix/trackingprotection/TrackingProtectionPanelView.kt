@@ -149,9 +149,14 @@ class TrackingProtectionPanelView(
         }
     }
 
+    /**
+     * Checks whether the permission was allowed or blocked when they were last used based on
+     * visibility, where "..._loaded" titles correspond to "Allowed" permissions and the other
+     * corresponds to "Blocked" permissions for each category.
+     */
     private fun getLastUsedCategoryView(categoryTitle: String) = when (categoryTitle) {
         CROSS_SITE_TRACKING_COOKIES.name -> {
-            cross_site_tracking
+            if (cross_site_tracking.isGone) cross_site_tracking_loaded else cross_site_tracking
         }
         SOCIAL_MEDIA_TRACKERS.name -> {
             if (social_media_trackers.isGone) social_media_trackers_loaded else social_media_trackers
@@ -171,11 +176,14 @@ class TrackingProtectionPanelView(
     private fun updateCategoryVisibility() {
         cross_site_tracking.isGone =
             bucketedTrackers.get(CROSS_SITE_TRACKING_COOKIES, true).isEmpty()
-        social_media_trackers.isGone = bucketedTrackers.get(SOCIAL_MEDIA_TRACKERS, true).isEmpty()
+        social_media_trackers.isGone =
+            bucketedTrackers.get(SOCIAL_MEDIA_TRACKERS, true).isEmpty()
         fingerprinters.isGone = bucketedTrackers.get(FINGERPRINTERS, true).isEmpty()
         tracking_content.isGone = bucketedTrackers.get(TRACKING_CONTENT, true).isEmpty()
         cryptominers.isGone = bucketedTrackers.get(CRYPTOMINERS, true).isEmpty()
 
+        cross_site_tracking_loaded.isGone =
+            bucketedTrackers.get(CROSS_SITE_TRACKING_COOKIES, false).isEmpty()
         social_media_trackers_loaded.isGone =
             bucketedTrackers.get(SOCIAL_MEDIA_TRACKERS, false).isEmpty()
         fingerprinters_loaded.isGone = bucketedTrackers.get(FINGERPRINTERS, false).isEmpty()
@@ -189,6 +197,7 @@ class TrackingProtectionPanelView(
         cross_site_tracking.setOnClickListener(this)
         tracking_content.setOnClickListener(this)
         cryptominers.setOnClickListener(this)
+        cross_site_tracking_loaded.setOnClickListener(this)
         social_media_trackers_loaded.setOnClickListener(this)
         fingerprinters_loaded.setOnClickListener(this)
         tracking_content_loaded.setOnClickListener(this)
@@ -251,7 +260,7 @@ class TrackingProtectionPanelView(
         private fun getCategory(v: View) = when (v.id) {
             R.id.social_media_trackers, R.id.social_media_trackers_loaded -> SOCIAL_MEDIA_TRACKERS
             R.id.fingerprinters, R.id.fingerprinters_loaded -> FINGERPRINTERS
-            R.id.cross_site_tracking -> CROSS_SITE_TRACKING_COOKIES
+            R.id.cross_site_tracking, R.id.cross_site_tracking_loaded -> CROSS_SITE_TRACKING_COOKIES
             R.id.tracking_content, R.id.tracking_content_loaded -> TRACKING_CONTENT
             R.id.cryptominers, R.id.cryptominers_loaded -> CRYPTOMINERS
             else -> null
@@ -262,6 +271,7 @@ class TrackingProtectionPanelView(
          */
         private fun isLoaded(v: View) = when (v.id) {
             R.id.social_media_trackers_loaded,
+            R.id.cross_site_tracking_loaded,
             R.id.fingerprinters_loaded,
             R.id.tracking_content_loaded,
             R.id.cryptominers_loaded -> true

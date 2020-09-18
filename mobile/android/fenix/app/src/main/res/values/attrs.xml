@@ -72,7 +72,6 @@
     <declare-styleable name="TrackingProtectionCategory">
         <attr name="categoryItemTitle" format="reference" />
         <attr name="categoryItemDescription" format="reference" />
-        <attr name="categoryItemIcon" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="SwitchWithDescription">

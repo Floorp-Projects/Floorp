@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicyForSessionTypes
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -102,6 +103,6 @@ internal fun TrackingProtectionPolicyForSessionTypes.adaptPolicyToChannel(): Tra
         trackingCategories = trackingCategories,
         cookiePolicy = cookiePolicy,
         strictSocialTrackingProtection = strictSocialTrackingProtection,
-        cookiePurging = Config.channel.isNightlyOrDebug
+        cookiePurging = FeatureFlags.etpCookiePurging
     )
 }

@@ -19,6 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -96,5 +97,14 @@ class TrackingProtectionPanelViewTest {
 
         view.social_media_trackers_loaded.performClick()
         verify { interactor.openDetails(SOCIAL_MEDIA_TRACKERS, categoryBlocked = false) }
+    }
+
+    @Test
+    fun testCrossSiteTrackerClick() {
+        view.cross_site_tracking.performClick()
+        verify { interactor.openDetails(CROSS_SITE_TRACKING_COOKIES, categoryBlocked = true) }
+
+        view.cross_site_tracking_loaded.performClick()
+        verify { interactor.openDetails(CROSS_SITE_TRACKING_COOKIES, categoryBlocked = false) }
     }
 }

@@ -45,4 +45,9 @@ object FeatureFlags {
      * Enables swipe to delete in bookmarks
      */
     val bookmarkSwipeToDelete = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables ETP cookie purging
+     */
+    val etpCookiePurging = Config.channel.isNightlyOrDebug
 }
