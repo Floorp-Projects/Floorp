@@ -29,10 +29,20 @@
         ["apz.allow_zooming", true],
       ];
 
+      var no_multiplier_prefs = [
+        ...zoom_and_pan_prefs,
+        ["layers.low-precision-buffer", false],
+        ["apz.x_skate_size_multiplier", "0.0"],
+        ["apz.y_skate_size_multiplier", "0.0"],
+        ["apz.x_stationary_size_multiplier", "0.0"],
+        ["apz.y_stationary_size_multiplier", "0.0"],
+      ];
+
       var subtests = [
         { file: "helper_checkerboard_apzforcedisabled.html", prefs },
         { file: "helper_checkerboard_scrollinfo.html", prefs },
         { file: "helper_horizontal_checkerboard.html", "prefs": px_ratio_1_prefs },
+        { file: "helper_checkerboard_no_multiplier.html", "prefs": no_multiplier_prefs },
       ];
 
       let isWindows = navigator.platform.indexOf("Win") == 0;

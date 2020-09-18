@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta charset="utf-8">
+<title>Testcase for checkerboarding with displayport multipliers dropped to zero</title>
+<script type="application/javascript" src="apz_test_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<meta name="viewport" content="width=device-width"/>
+<style>
+body, html {
+    margin: 0;
+}
+</style>
+<body>
+ <div style="height: 5000px; background-color: green"></div>
+</body>
+<script type="application/javascript">
+function* test(testDriver) {
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  var scrollerId = utils.getViewId(document.scrollingElement);
+
+  // Zoom in a bunch
+  const scale = 3.0;
+  utils.setResolutionAndScaleTo(scale);
+
+  // And now we scroll the visual viewport to cover the range it has inside
+  // the layout viewport, plus a bit more so that we also cover the boundary
+  // case where the layout viewport has to move.
+  // At each scroll position, we make sure there's no checkerboarding.
+  // We advance the scroll position on each axis by 43 CSS pixels at a time,
+  // because 43 is a non-power-of-two/prime number and should give us reasonable
+  // coverage of different displayport tile alignment values. Making the
+  // increment too small increases runtime and too large might miss some
+  // alignment values so this seems like a good number.
+
+  function* scrollAndCheck(x, y) {
+    dump(`Scrolling visual viewport to ${x}, ${y}\n`);
+    utils.scrollToVisual(x, y, utils.UPDATE_TYPE_MAIN_THREAD, utils.SCROLL_MODE_INSTANT);
+    yield waitForApzFlushedRepaints(testDriver);
+    assertNotCheckerboarded(utils, scrollerId, `At ${x}, ${y}`);
+  }
+
+  let vv_scrollable_x = window.innerWidth - (window.innerWidth / scale);
+  for (var x = 0; x < vv_scrollable_x + 100; x += 43) {
+    yield* scrollAndCheck(x, 0);
+  }
+  ok(window.scrollX == 0, "Layout viewport couldn't move on the x-axis, page not scrollable that way");
+  let vv_scrollable_y = window.innerHeight - (window.innerHeight / scale);
+  for (var y = 0; y < vv_scrollable_y + 100; y += 43) {
+    yield* scrollAndCheck(0, y);
+  }
+  ok(window.scrollY > 0, `Layout viewport moved down to ${window.scrollY} on the y-axis`);
+
+  subtestDone();
+}
+waitUntilApzStable().then(runContinuation(test));
+</script>
