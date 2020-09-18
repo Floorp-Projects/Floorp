@@ -70,10 +70,6 @@
 using namespace mozilla::tasktracer;
 #endif
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
-
 namespace mozilla {
 
 using namespace dom;
@@ -1035,23 +1031,53 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
 
           nsCOMPtr<nsIDocShell> docShell;
           docShell = nsContentUtils::GetDocShellForEventTarget(aEvent->mTarget);
-          Maybe<uint64_t> innerWindowID;
+          MarkerInnerWindowId innerWindowId;
           if (nsCOMPtr<nsPIDOMWindowInner> inner =
                   do_QueryInterface(aEvent->mTarget->GetOwnerGlobal())) {
-            innerWindowID = Some(inner->WindowID());
+            innerWindowId = MarkerInnerWindowId{inner->WindowID()};
           }
-          PROFILER_ADD_MARKER_WITH_PAYLOAD(
-              "DOMEvent", DOM, DOMEventMarkerPayload,
-              (typeStr, aEvent->mTimeStamp, "DOMEvent", TRACING_INTERVAL_START,
-               innerWindowID));
+
+          struct DOMEventMarker {
+            static constexpr Span<const char> MarkerTypeName() {
+              // Note: DOMEventMarkerPayload was originally a sub-class of
+              // TracingMarkerPayload, so it uses the same payload type.
+              // TODO: Change to its own distinct type, but this will require
+              // front-end changes.
+              return MakeStringSpan("tracing");
+            }
+            static void StreamJSONMarkerData(
+                JSONWriter& aWriter, const ProfilerString16View& aEventType,
+                const TimeStamp& aEventTimeStamp) {
+              aWriter.StringProperty(
+                  "eventType", NS_ConvertUTF16toUTF8(aEventType.Data(),
+                                                     aEventType.Length()));
+              // Note: This is the event *creation* timestamp, which should be
+              // before the marker's own timestamp. It is used to compute the
+              // event processing latency.
+              baseprofiler::WritePropertyTime(aWriter, "timeStamp",
+                                              aEventTimeStamp);
+              // Note: This is *not* the MarkerCategory, it's a identifier
+              // used to combine pairs of markers. This should disappear after
+              // "set index" is implemented in bug 1661114.
+              aWriter.StringProperty("category", "DOMEvent");
+            }
+          };
+
+          profiler_add_marker<DOMEventMarker>(
+              "DOMEvent",
+              geckoprofiler::category::DOM.WithOptions(
+                  MarkerTiming::IntervalStart(),
+                  MarkerInnerWindowId(innerWindowId)),
+              typeStr, aEvent->mTimeStamp);
 
           EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
                                                        aCallback, cd);
 
-          PROFILER_ADD_MARKER_WITH_PAYLOAD(
-              "DOMEvent", DOM, DOMEventMarkerPayload,
-              (typeStr, aEvent->mTimeStamp, "DOMEvent", TRACING_INTERVAL_END,
-               innerWindowID));
+          profiler_add_marker<DOMEventMarker>(
+              "DOMEvent",
+              geckoprofiler::category::DOM.WithOptions(
+                  MarkerTiming::IntervalEnd(), std::move(innerWindowId)),
+              typeStr, aEvent->mTimeStamp);
         } else
 #endif
         {

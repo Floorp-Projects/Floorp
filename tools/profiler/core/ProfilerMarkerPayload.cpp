@@ -405,22 +405,6 @@ void LogMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("module", mModule);
 }
 
-ProfileBufferEntryWriter::Length
-DOMEventMarkerPayload::TagAndSerializationBytes() const {
-  return TracingMarkerPayload::TagAndSerializationBytes() +
-         ProfileBufferEntryWriter::SumBytes(mTimeStamp, mEventType);
-}
-
-void DOMEventMarkerPayload::SerializeTagAndPayload(
-    ProfileBufferEntryWriter& aEntryWriter) const {
-  static const DeserializerTag tag = TagForDeserializer(Deserialize);
-  // Let our parent class serialize our tag with its payload.
-  TracingMarkerPayload::SerializeTagAndPayload(tag, aEntryWriter);
-  // Then write our extra data.
-  aEntryWriter.WriteObject(mTimeStamp);
-  aEntryWriter.WriteObject(mEventType);
-}
-
 MediaSampleMarkerPayload::MediaSampleMarkerPayload(
     const int64_t aSampleStartTimeUs, const int64_t aSampleEndTimeUs)
     : mSampleStartTimeUs(aSampleStartTimeUs),
@@ -465,29 +449,6 @@ void MediaSampleMarkerPayload::StreamPayload(
   StreamCommonProps("MediaSample", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.IntProperty("sampleStartTimeUs", mSampleStartTimeUs);
   aWriter.IntProperty("sampleEndTimeUs", mSampleEndTimeUs);
-}
-
-// static
-UniquePtr<ProfilerMarkerPayload> DOMEventMarkerPayload::Deserialize(
-    ProfileBufferEntryReader& aEntryReader) {
-  ProfilerMarkerPayload::CommonProps props =
-      DeserializeCommonProps(aEntryReader);
-  const char* category = aEntryReader.ReadObject<const char*>();
-  TracingKind kind = aEntryReader.ReadObject<TracingKind>();
-  auto timeStamp = aEntryReader.ReadObject<TimeStamp>();
-  auto eventType = aEntryReader.ReadObject<nsString>();
-  return UniquePtr<ProfilerMarkerPayload>(new DOMEventMarkerPayload(
-      std::move(props), category, kind, timeStamp, std::move(eventType)));
-}
-
-void DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                          const TimeStamp& aProcessStartTime,
-                                          UniqueStacks& aUniqueStacks) const {
-  TracingMarkerPayload::StreamPayload(aWriter, aProcessStartTime,
-                                      aUniqueStacks);
-
-  WriteTime(aWriter, aProcessStartTime, mTimeStamp, "timeStamp");
-  aWriter.StringProperty("eventType", NS_ConvertUTF16toUTF8(mEventType));
 }
 
 ProfileBufferEntryWriter::Length PrefMarkerPayload::TagAndSerializationBytes()

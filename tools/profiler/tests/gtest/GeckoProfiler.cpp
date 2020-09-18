@@ -756,14 +756,6 @@ TEST(GeckoProfiler, Markers)
 
   // Other markers in alphabetical order of payload class names.
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD(
-      "DOMEventMarkerPayload marker", OTHER, DOMEventMarkerPayload,
-      (u"dom event"_ns, ts1, "category", TRACING_EVENT, mozilla::Nothing()));
-
-  MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::DOMEvent>(
-      "DOMEventMarkerPayload marker 2.0", geckoprofiler::category::OTHER,
-      u"dom event"_ns, ts1, "category"));
-
   {
     const char gcMajorJSON[] = "42";
     const auto len = strlen(gcMajorJSON);
@@ -897,10 +889,6 @@ TEST(GeckoProfiler, Markers)
   MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::Budget>(
       "Budget", geckoprofiler::category::OTHER));
 
-  MOZ_RELEASE_ASSERT(profiler_add_marker<geckoprofiler::markers::DOMEvent>(
-      "DOMEvent", geckoprofiler::category::OTHER, u"event"_ns, ts2,
-      "category"));
-
   SpliceableChunkedJSONWriter w;
   w.Start();
   EXPECT_TRUE(::profiler_stream_json_for_this_process(w));
@@ -947,8 +935,6 @@ TEST(GeckoProfiler, Markers)
     S_FileIOMarker2,
     S_FileIOMarkerPayloadOffMT,
     S_FileIOMarker2OffMT,
-    S_DOMEventMarkerPayload,
-    S_DOMEventMarker2,
     S_GCMajorMarkerPayload,
     S_GCMinorMarkerPayload,
     S_GCSliceMarkerPayload,
@@ -1337,25 +1323,6 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["source"], String, "source2");
                 EXPECT_EQ_JSON(payload["filename"], String, "filename2");
                 EXPECT_EQ_JSON(payload["threadId"], Int, 123);
-
-              } else if (nameString == "DOMEventMarkerPayload marker") {
-                EXPECT_EQ(state, S_DOMEventMarkerPayload);
-                state = State(S_DOMEventMarkerPayload + 1);
-                EXPECT_EQ(typeString, "tracing");
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["category"], String, "category");
-                EXPECT_TRUE(payload["interval"].isNull());
-                EXPECT_EQ_JSON(payload["timeStamp"], Double, ts1Double);
-                EXPECT_EQ_JSON(payload["eventType"], String, "dom event");
-
-              } else if (nameString == "DOMEventMarkerPayload marker 2.0") {
-                EXPECT_EQ(state, S_DOMEventMarker2);
-                state = State(S_DOMEventMarker2 + 1);
-                EXPECT_EQ(typeString, "tracing");
-                EXPECT_TRUE(payload["stack"].isNull());
-                EXPECT_EQ_JSON(payload["category"], String, "category");
-                EXPECT_EQ_JSON(payload["timeStamp"], Double, ts1Double);
-                EXPECT_EQ_JSON(payload["eventType"], String, "dom event");
 
               } else if (nameString == "GCMajorMarkerPayload marker") {
                 EXPECT_EQ(state, S_GCMajorMarkerPayload);
