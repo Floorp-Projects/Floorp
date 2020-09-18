@@ -2211,8 +2211,6 @@ MediaCacheStream::~MediaCacheStream() {
   LOG("MediaCacheStream::~MediaCacheStream(this=%p) "
       "MEDIACACHESTREAM_LENGTH_KB=%" PRIu32,
       this, lengthKb);
-  Telemetry::Accumulate(Telemetry::HistogramID::MEDIACACHESTREAM_LENGTH_KB,
-                        lengthKb);
 }
 
 bool MediaCacheStream::AreAllStreamsForResourceSuspended(AutoLock& aLock) {

@@ -15,9 +15,9 @@ TEST(TestDynamicResampler, SameRates_Float1)
 {
   const uint32_t in_frames = 100;
   const uint32_t out_frames = 100;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 44100;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 44100;
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
@@ -81,9 +81,9 @@ TEST(TestDynamicResampler, SameRates_Short1)
 {
   uint32_t in_frames = 2;
   uint32_t out_frames = 2;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 44100;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 44100;
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_S16);
@@ -126,9 +126,9 @@ TEST(TestDynamicResampler, SameRates_Float2)
 {
   uint32_t in_frames = 3;
   uint32_t out_frames = 2;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 44100;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 44100;
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
@@ -181,9 +181,9 @@ TEST(TestDynamicResampler, SameRates_Short2)
 {
   uint32_t in_frames = 3;
   uint32_t out_frames = 2;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 44100;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 44100;
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_S16);
@@ -236,9 +236,9 @@ TEST(TestDynamicResampler, SameRates_Float3)
 {
   uint32_t in_frames = 2;
   uint32_t out_frames = 3;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 44100;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 44100;
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
@@ -284,9 +284,9 @@ TEST(TestDynamicResampler, SameRates_Short3)
 {
   uint32_t in_frames = 2;
   uint32_t out_frames = 3;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 44100;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 44100;
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_S16);
@@ -332,9 +332,9 @@ TEST(TestDynamicResampler, UpdateOutRate_Float)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 20;
 
@@ -390,9 +390,9 @@ TEST(TestDynamicResampler, UpdateOutRate_Short)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 20;
 
@@ -448,15 +448,15 @@ TEST(TestDynamicResampler, BigRangeOutRates_Float)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 10;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 44100;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 44100;
   uint32_t pre_buffer = 20;
 
   DynamicResampler dr(in_rate, out_rate, pre_buffer);
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
-  const int in_capacity = 40;
+  const uint32_t in_capacity = 40;
   float in_ch1[in_capacity] = {};
   float in_ch2[in_capacity] = {};
   for (uint32_t i = 0; i < in_capacity; ++i) {
@@ -467,11 +467,11 @@ TEST(TestDynamicResampler, BigRangeOutRates_Float)
   in_buffer[0] = in_ch1;
   in_buffer[1] = in_ch2;
 
-  const int out_capacity = 1000;
+  const uint32_t out_capacity = 1000;
   float out_ch1[out_capacity] = {};
   float out_ch2[out_capacity] = {};
 
-  for (int rate = 10000; rate < 90000; ++rate) {
+  for (uint32_t rate = 10000; rate < 90000; ++rate) {
     out_rate = rate;
     dr.UpdateResampler(out_rate, channels);
     EXPECT_EQ(dr.GetOutRate(), out_rate);
@@ -479,7 +479,7 @@ TEST(TestDynamicResampler, BigRangeOutRates_Float)
     in_frames = 20;  // more than we need
     out_frames = in_frames * out_rate / in_rate;
     uint32_t expected_out_frames = out_frames;
-    for (int y = 0; y < 2; ++y) {
+    for (uint32_t y = 0; y < 2; ++y) {
       dr.AppendInput(in_buffer, in_frames);
       bool rv = dr.Resample(out_ch1, &out_frames, 0);
       EXPECT_TRUE(rv);
@@ -495,15 +495,15 @@ TEST(TestDynamicResampler, BigRangeOutRates_Short)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 10;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 44100;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 44100;
   uint32_t pre_buffer = 20;
 
   DynamicResampler dr(in_rate, out_rate, pre_buffer);
   dr.SetSampleFormat(AUDIO_FORMAT_S16);
 
-  const int in_capacity = 40;
+  const uint32_t in_capacity = 40;
   short in_ch1[in_capacity] = {};
   short in_ch2[in_capacity] = {};
   for (uint32_t i = 0; i < in_capacity; ++i) {
@@ -514,17 +514,17 @@ TEST(TestDynamicResampler, BigRangeOutRates_Short)
   in_buffer[0] = in_ch1;
   in_buffer[1] = in_ch2;
 
-  const int out_capacity = 1000;
+  const uint32_t out_capacity = 1000;
   short out_ch1[out_capacity] = {};
   short out_ch2[out_capacity] = {};
 
-  for (int rate = 10000; rate < 90000; ++rate) {
+  for (uint32_t rate = 10000; rate < 90000; ++rate) {
     out_rate = rate;
     dr.UpdateResampler(out_rate, channels);
     in_frames = 20;  // more than we need
     out_frames = in_frames * out_rate / in_rate;
     uint32_t expected_out_frames = out_frames;
-    for (int y = 0; y < 2; ++y) {
+    for (uint32_t y = 0; y < 2; ++y) {
       dr.AppendInput(in_buffer, in_frames);
       bool rv = dr.Resample(out_ch1, &out_frames, 0);
       EXPECT_TRUE(rv);
@@ -540,9 +540,9 @@ TEST(TestDynamicResampler, UpdateChannels_Float)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 10;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 48000;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 48000;
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
@@ -571,7 +571,7 @@ TEST(TestDynamicResampler, UpdateChannels_Float)
   // Add 3rd channel
   dr.UpdateResampler(out_rate, 3);
   EXPECT_EQ(dr.GetOutRate(), out_rate);
-  EXPECT_EQ(dr.GetChannels(), 3);
+  EXPECT_EQ(dr.GetChannels(), 3u);
 
   float in_ch3[10] = {};
   for (uint32_t i = 0; i < in_frames; ++i) {
@@ -603,7 +603,7 @@ TEST(TestDynamicResampler, UpdateChannels_Float)
 
   dr.UpdateResampler(out_rate, 4);
   EXPECT_EQ(dr.GetOutRate(), out_rate);
-  EXPECT_EQ(dr.GetChannels(), 4);
+  EXPECT_EQ(dr.GetChannels(), 4u);
   dr.AppendInput(in_buffer, in_frames);
 
   rv = dr.Resample(out_ch1, &out_frames, 0);
@@ -624,9 +624,9 @@ TEST(TestDynamicResampler, UpdateChannels_Short)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 10;
-  int channels = 2;
-  int in_rate = 44100;
-  int out_rate = 48000;
+  uint32_t channels = 2;
+  uint32_t in_rate = 44100;
+  uint32_t out_rate = 48000;
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_S16);
@@ -655,7 +655,7 @@ TEST(TestDynamicResampler, UpdateChannels_Short)
   // Add 3rd channel
   dr.UpdateResampler(out_rate, 3);
   EXPECT_EQ(dr.GetOutRate(), out_rate);
-  EXPECT_EQ(dr.GetChannels(), 3);
+  EXPECT_EQ(dr.GetChannels(), 3u);
 
   short in_ch3[10] = {};
   for (uint32_t i = 0; i < in_frames; ++i) {
@@ -688,7 +688,7 @@ TEST(TestDynamicResampler, UpdateChannels_Short)
 
   dr.UpdateResampler(out_rate, 4);
   EXPECT_EQ(dr.GetOutRate(), out_rate);
-  EXPECT_EQ(dr.GetChannels(), 4);
+  EXPECT_EQ(dr.GetChannels(), 4u);
   dr.AppendInput(in_buffer, in_frames);
 
   rv = dr.Resample(out_ch1, &out_frames, 0);
@@ -709,14 +709,14 @@ TEST(TestAudioChunkList, Basic1)
 {
   AudioChunkList list(256, 2);
   list.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
-  EXPECT_EQ(list.ChunkCapacity(), 128);
-  EXPECT_EQ(list.TotalCapacity(), 256);
+  EXPECT_EQ(list.ChunkCapacity(), 128u);
+  EXPECT_EQ(list.TotalCapacity(), 256u);
 
   AudioChunk& c1 = list.GetNext();
   float* c1_ch1 = c1.ChannelDataForWrite<float>(0);
   float* c1_ch2 = c1.ChannelDataForWrite<float>(1);
   EXPECT_EQ(c1.mBufferFormat, AUDIO_FORMAT_FLOAT32);
-  for (int i = 0; i < list.ChunkCapacity(); ++i) {
+  for (uint32_t i = 0; i < list.ChunkCapacity(); ++i) {
     c1_ch1[i] = c1_ch2[i] = 0.01f * static_cast<float>(i);
   }
   AudioChunk& c2 = list.GetNext();
@@ -728,7 +728,7 @@ TEST(TestAudioChunkList, Basic1)
   EXPECT_EQ(c1.mBuffer.get(), c3.mBuffer.get());
   float* c3_ch1 = c3.ChannelDataForWrite<float>(0);
   float* c3_ch2 = c3.ChannelDataForWrite<float>(1);
-  for (int i = 0; i < list.ChunkCapacity(); ++i) {
+  for (uint32_t i = 0; i < list.ChunkCapacity(); ++i) {
     EXPECT_FLOAT_EQ(c1_ch1[i], c3_ch1[i]);
     EXPECT_FLOAT_EQ(c1_ch2[i], c3_ch2[i]);
   }
@@ -738,14 +738,14 @@ TEST(TestAudioChunkList, Basic2)
 {
   AudioChunkList list(256, 2);
   list.SetSampleFormat(AUDIO_FORMAT_S16);
-  EXPECT_EQ(list.ChunkCapacity(), 256);
-  EXPECT_EQ(list.TotalCapacity(), 512);
+  EXPECT_EQ(list.ChunkCapacity(), 256u);
+  EXPECT_EQ(list.TotalCapacity(), 512u);
 
   AudioChunk& c1 = list.GetNext();
   EXPECT_EQ(c1.mBufferFormat, AUDIO_FORMAT_S16);
   short* c1_ch1 = c1.ChannelDataForWrite<short>(0);
   short* c1_ch2 = c1.ChannelDataForWrite<short>(1);
-  for (int i = 0; i < list.ChunkCapacity(); ++i) {
+  for (uint32_t i = 0; i < list.ChunkCapacity(); ++i) {
     c1_ch1[i] = c1_ch2[i] = static_cast<short>(i);
   }
   AudioChunk& c2 = list.GetNext();
@@ -761,7 +761,7 @@ TEST(TestAudioChunkList, Basic2)
   EXPECT_EQ(c1.mBuffer.get(), c5.mBuffer.get());
   short* c5_ch1 = c5.ChannelDataForWrite<short>(0);
   short* c5_ch2 = c5.ChannelDataForWrite<short>(1);
-  for (int i = 0; i < list.ChunkCapacity(); ++i) {
+  for (uint32_t i = 0; i < list.ChunkCapacity(); ++i) {
     EXPECT_EQ(c1_ch1[i], c5_ch1[i]);
     EXPECT_EQ(c1_ch2[i], c5_ch2[i]);
   }
@@ -771,8 +771,8 @@ TEST(TestAudioChunkList, Basic3)
 {
   AudioChunkList list(260, 2);
   list.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
-  EXPECT_EQ(list.ChunkCapacity(), 128);
-  EXPECT_EQ(list.TotalCapacity(), 256 + 128);
+  EXPECT_EQ(list.ChunkCapacity(), 128u);
+  EXPECT_EQ(list.TotalCapacity(), 256u + 128u);
 
   AudioChunk& c1 = list.GetNext();
   AudioChunk& c2 = list.GetNext();
@@ -787,8 +787,8 @@ TEST(TestAudioChunkList, Basic4)
 {
   AudioChunkList list(260, 2);
   list.SetSampleFormat(AUDIO_FORMAT_S16);
-  EXPECT_EQ(list.ChunkCapacity(), 256);
-  EXPECT_EQ(list.TotalCapacity(), 512 + 256);
+  EXPECT_EQ(list.ChunkCapacity(), 256u);
+  EXPECT_EQ(list.TotalCapacity(), 512u + 256u);
 
   AudioChunk& c1 = list.GetNext();
   AudioChunk& c2 = list.GetNext();
@@ -826,7 +826,7 @@ TEST(TestAudioChunkList, UpdateBetweenMonoAndStereo)
   AudioChunk& c1 = list.GetNext();
   float* c1_ch1 = c1.ChannelDataForWrite<float>(0);
   float* c1_ch2 = c1.ChannelDataForWrite<float>(1);
-  for (int i = 0; i < list.ChunkCapacity(); ++i) {
+  for (uint32_t i = 0; i < list.ChunkCapacity(); ++i) {
     c1_ch1[i] = c1_ch2[i] = 0.01f * static_cast<float>(i);
   }
 
@@ -839,7 +839,7 @@ TEST(TestAudioChunkList, UpdateBetweenMonoAndStereo)
 
   AudioChunk& c3 = list.GetNext();
   float* c3_ch1 = c3.ChannelDataForWrite<float>(0);
-  for (int i = 0; i < list.ChunkCapacity(); ++i) {
+  for (uint32_t i = 0; i < list.ChunkCapacity(); ++i) {
     EXPECT_FLOAT_EQ(c3_ch1[i], c1_ch1[i]);
   }
 
@@ -849,7 +849,7 @@ TEST(TestAudioChunkList, UpdateBetweenMonoAndStereo)
   EXPECT_EQ(static_cast<SharedChannelArrayBuffer<float>*>(c3.mBuffer.get())
                 ->mBuffers[0]
                 .Length(),
-            (uint32_t)list.ChunkCapacity());
+            list.ChunkCapacity());
 
   // Upmix to stereo
   list.Update(2);
@@ -861,18 +861,18 @@ TEST(TestAudioChunkList, UpdateBetweenMonoAndStereo)
   EXPECT_EQ(static_cast<SharedChannelArrayBuffer<float>*>(c5.mBuffer.get())
                 ->mBuffers[0]
                 .Length(),
-            (uint32_t)list.ChunkCapacity());
+            list.ChunkCapacity());
   EXPECT_EQ(static_cast<SharedChannelArrayBuffer<float>*>(c5.mBuffer.get())
                 ->mBuffers[1]
                 .Length(),
-            (uint32_t)list.ChunkCapacity());
+            list.ChunkCapacity());
 
   // Downmix to mono
   list.Update(1);
 
   AudioChunk& c7 = list.GetNext();
   float* c7_ch1 = c7.ChannelDataForWrite<float>(0);
-  for (int i = 0; i < list.ChunkCapacity(); ++i) {
+  for (uint32_t i = 0; i < list.ChunkCapacity(); ++i) {
     EXPECT_FLOAT_EQ(c7_ch1[i], c1_ch1[i]);
   }
 
@@ -882,7 +882,7 @@ TEST(TestAudioChunkList, UpdateBetweenMonoAndStereo)
   EXPECT_EQ(static_cast<SharedChannelArrayBuffer<float>*>(c7.mBuffer.get())
                 ->mBuffers[0]
                 .Length(),
-            (uint32_t)list.ChunkCapacity());
+            list.ChunkCapacity());
 }
 
 TEST(TestAudioChunkList, ConsumeAndForget)
@@ -909,7 +909,7 @@ TEST(TestAudioChunkList, ConsumeAndForget)
 }
 
 template <class T>
-AudioChunk CreateAudioChunk(uint32_t aFrames, int aChannels,
+AudioChunk CreateAudioChunk(uint32_t aFrames, uint32_t aChannels,
                             AudioSampleFormat aSampleFormat) {
   AudioChunk chunk;
   nsTArray<nsTArray<T>> buffer;
@@ -918,7 +918,7 @@ AudioChunk CreateAudioChunk(uint32_t aFrames, int aChannels,
   nsTArray<const T*> bufferPtrs;
   bufferPtrs.AppendElements(aChannels);
 
-  for (int i = 0; i < aChannels; ++i) {
+  for (uint32_t i = 0; i < aChannels; ++i) {
     T* ptr = buffer[i].AppendElements(aFrames);
     bufferPtrs[i] = ptr;
     for (uint32_t j = 0; j < aFrames; ++j) {
@@ -933,7 +933,7 @@ AudioChunk CreateAudioChunk(uint32_t aFrames, int aChannels,
   chunk.mBuffer = new mozilla::SharedChannelArrayBuffer(std::move(buffer));
   chunk.mBufferFormat = aSampleFormat;
   chunk.mChannelData.AppendElements(aChannels);
-  for (int i = 0; i < aChannels; ++i) {
+  for (uint32_t i = 0; i < aChannels; ++i) {
     chunk.mChannelData[i] = bufferPtrs[i];
   }
   chunk.mDuration = aFrames;
@@ -941,7 +941,7 @@ AudioChunk CreateAudioChunk(uint32_t aFrames, int aChannels,
 }
 
 template <class T>
-AudioSegment CreateAudioSegment(uint32_t aFrames, int aChannels,
+AudioSegment CreateAudioSegment(uint32_t aFrames, uint32_t aChannels,
                                 AudioSampleFormat aSampleFormat) {
   AudioSegment segment;
   AudioChunk chunk = CreateAudioChunk<T>(aFrames, aChannels, aSampleFormat);
@@ -953,9 +953,9 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 21;
 
@@ -999,9 +999,9 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 21;
 
@@ -1045,9 +1045,9 @@ TEST(TestAudioResampler, OutAudioSegmentFail_Float)
 {
   const uint32_t in_frames = 130;
   const uint32_t out_frames = 300;
-  int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 5;
 
@@ -1067,9 +1067,9 @@ TEST(TestAudioResampler, InAudioSegment_Float)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 10;
   AudioResampler dr(in_rate, out_rate, pre_buffer);
@@ -1087,7 +1087,7 @@ TEST(TestAudioResampler, InAudioSegment_Float)
   nsTArray<const float*> bufferPtrs;
   bufferPtrs.AppendElements(channels);
 
-  for (int i = 0; i < channels; ++i) {
+  for (uint32_t i = 0; i < channels; ++i) {
     float* ptr = buffer[i].AppendElements(5);
     bufferPtrs[i] = ptr;
     for (uint32_t j = 0; j < 5; ++j) {
@@ -1098,7 +1098,7 @@ TEST(TestAudioResampler, InAudioSegment_Float)
   chunk2.mBuffer = new mozilla::SharedChannelArrayBuffer(std::move(buffer));
   chunk2.mBufferFormat = AUDIO_FORMAT_FLOAT32;
   chunk2.mChannelData.AppendElements(channels);
-  for (int i = 0; i < channels; ++i) {
+  for (uint32_t i = 0; i < channels; ++i) {
     chunk2.mChannelData[i] = bufferPtrs[i];
   }
   chunk2.mDuration = in_frames / 2;
@@ -1121,9 +1121,9 @@ TEST(TestAudioResampler, InAudioSegment_Short)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 10;
   AudioResampler dr(in_rate, out_rate, pre_buffer);
@@ -1142,7 +1142,7 @@ TEST(TestAudioResampler, InAudioSegment_Short)
   nsTArray<const short*> bufferPtrs;
   bufferPtrs.AppendElements(channels);
 
-  for (int i = 0; i < channels; ++i) {
+  for (uint32_t i = 0; i < channels; ++i) {
     short* ptr = buffer[i].AppendElements(5);
     bufferPtrs[i] = ptr;
     for (uint32_t j = 0; j < 5; ++j) {
@@ -1153,7 +1153,7 @@ TEST(TestAudioResampler, InAudioSegment_Short)
   chunk2.mBuffer = new mozilla::SharedChannelArrayBuffer(std::move(buffer));
   chunk2.mBufferFormat = AUDIO_FORMAT_S16;
   chunk2.mChannelData.AppendElements(channels);
-  for (int i = 0; i < channels; ++i) {
+  for (uint32_t i = 0; i < channels; ++i) {
     chunk2.mChannelData[i] = bufferPtrs[i];
   }
   chunk2.mDuration = in_frames / 2;
@@ -1175,9 +1175,9 @@ TEST(TestAudioResampler, ChannelChange_MonoToStereo)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  // int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  // uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 0;
 
@@ -1205,9 +1205,9 @@ TEST(TestAudioResampler, ChannelChange_StereoToMono)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  // int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  // uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 0;
 
@@ -1235,9 +1235,9 @@ TEST(TestAudioResampler, ChannelChange_StereoToQuad)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  // int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  // uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 0;
 
@@ -1270,9 +1270,9 @@ TEST(TestAudioResampler, ChannelChange_QuadToStereo)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  // int channels = 2;
-  int in_rate = 24000;
-  int out_rate = 48000;
+  // uint32_t channels = 2;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   AudioResampler dr(in_rate, out_rate);
 
@@ -1303,8 +1303,8 @@ void printAudioSegment(const AudioSegment& segment);
 
 TEST(TestAudioResampler, ChannelChange_Discontinuity)
 {
-  int in_rate = 24000;
-  int out_rate = 48000;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   const float amplitude = 0.5;
   const float frequency = 200;
@@ -1312,20 +1312,20 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
   float time = 0.0;
   const float deltaTime = 1.0f / static_cast<float>(in_rate);
 
-  int in_frames = in_rate / 100;
-  int out_frames = out_rate / 100;
+  uint32_t in_frames = in_rate / 100;
+  uint32_t out_frames = out_rate / 100;
   AudioResampler dr(in_rate, out_rate);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames, 1, AUDIO_FORMAT_FLOAT32);
-  for (int i = 0; i < monoChunk.GetDuration(); ++i) {
+  for (uint32_t i = 0; i < monoChunk.GetDuration(); ++i) {
     double value = amplitude * sin(2 * M_PI * frequency * time + phase);
     monoChunk.ChannelDataForWrite<float>(0)[i] = static_cast<float>(value);
     time += deltaTime;
   }
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
-  for (int i = 0; i < stereoChunk.GetDuration(); ++i) {
+  for (uint32_t i = 0; i < stereoChunk.GetDuration(); ++i) {
     double value = amplitude * sin(2 * M_PI * frequency * time + phase);
     stereoChunk.ChannelDataForWrite<float>(0)[i] = static_cast<float>(value);
     if (stereoChunk.ChannelCount() == 2) {
@@ -1359,8 +1359,8 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
 
 TEST(TestAudioResampler, ChannelChange_Discontinuity2)
 {
-  int in_rate = 24000;
-  int out_rate = 48000;
+  uint32_t in_rate = 24000;
+  uint32_t out_rate = 48000;
 
   const float amplitude = 0.5;
   const float frequency = 200;
@@ -1368,20 +1368,20 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity2)
   float time = 0.0;
   const float deltaTime = 1.0f / static_cast<float>(in_rate);
 
-  int in_frames = in_rate / 100;
-  int out_frames = out_rate / 100;
+  uint32_t in_frames = in_rate / 100;
+  uint32_t out_frames = out_rate / 100;
   AudioResampler dr(in_rate, out_rate, 10);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames / 2, 1, AUDIO_FORMAT_FLOAT32);
-  for (int i = 0; i < monoChunk.GetDuration(); ++i) {
+  for (uint32_t i = 0; i < monoChunk.GetDuration(); ++i) {
     double value = amplitude * sin(2 * M_PI * frequency * time + phase);
     monoChunk.ChannelDataForWrite<float>(0)[i] = static_cast<float>(value);
     time += deltaTime;
   }
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames / 2, 2, AUDIO_FORMAT_FLOAT32);
-  for (int i = 0; i < stereoChunk.GetDuration(); ++i) {
+  for (uint32_t i = 0; i < stereoChunk.GetDuration(); ++i) {
     double value = amplitude * sin(2 * M_PI * frequency * time + phase);
     stereoChunk.ChannelDataForWrite<float>(0)[i] = static_cast<float>(value);
     if (stereoChunk.ChannelCount() == 2) {
@@ -1420,8 +1420,8 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity2)
 
 TEST(TestAudioResampler, ChannelChange_Discontinuity3)
 {
-  int in_rate = 48000;
-  int out_rate = 48000;
+  uint32_t in_rate = 48000;
+  uint32_t out_rate = 48000;
 
   const float amplitude = 0.5;
   const float frequency = 200;
@@ -1429,13 +1429,13 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity3)
   float time = 0.0;
   const float deltaTime = 1.0f / static_cast<float>(in_rate);
 
-  int in_frames = in_rate / 100;
-  int out_frames = out_rate / 100;
+  uint32_t in_frames = in_rate / 100;
+  uint32_t out_frames = out_rate / 100;
   AudioResampler dr(in_rate, out_rate, 10);
 
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
-  for (int i = 0; i < stereoChunk.GetDuration(); ++i) {
+  for (uint32_t i = 0; i < stereoChunk.GetDuration(); ++i) {
     double value = amplitude * sin(2 * M_PI * frequency * time + phase);
     stereoChunk.ChannelDataForWrite<float>(0)[i] = static_cast<float>(value);
     if (stereoChunk.ChannelCount() == 2) {

@@ -276,12 +276,16 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
     case GuardClassKind::DataView:
       classp = &DataViewObject::class_;
       break;
+    case GuardClassKind::WindowProxy:
+      classp = mirGen().runtime->maybeWindowProxyClass();
+      break;
     case GuardClassKind::JSFunction:
       classp = &JSFunction::class_;
       break;
     default:
       MOZ_CRASH("not yet supported");
   }
+  MOZ_ASSERT(classp);
 
   auto* ins = MGuardToClass::New(alloc(), def, classp);
   add(ins);
@@ -471,6 +475,21 @@ bool WarpCacheIRTranspiler::emitCallDOMGetterResult(ObjOperandId objId,
   add(ins);
   pushResult(ins);
   return true;
+}
+
+bool WarpCacheIRTranspiler::emitCallDOMSetter(ObjOperandId objId,
+                                              uint32_t jitInfoOffset,
+                                              ValOperandId rhsId) {
+  MDefinition* obj = getOperand(objId);
+  const JSJitInfo* jitInfo = jitInfoStubField(jitInfoOffset);
+  MDefinition* value = getOperand(rhsId);
+
+  MOZ_ASSERT(jitInfo->type() == JSJitInfo::Setter);
+  auto* set =
+      MSetDOMProperty::New(alloc(), jitInfo->setter, DOMObjectKind::Native,
+                           (JS::Realm*)mirGen().realm->realmPtr(), obj, value);
+  addEffectful(set);
+  return resumeAfter(set);
 }
 
 bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
@@ -3111,6 +3130,16 @@ bool WarpCacheIRTranspiler::emitLoadValueTruthyResult(ValOperandId inputId) {
 
   pushResult(result);
   return true;
+}
+
+bool WarpCacheIRTranspiler::emitLoadWrapperTarget(ObjOperandId objId,
+                                                  ObjOperandId resultId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MLoadWrapperTarget::New(alloc(), obj);
+  add(ins);
+
+  return defineOperand(resultId, ins);
 }
 
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,

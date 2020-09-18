@@ -1994,6 +1994,7 @@ dependencies = [
  "nserror",
  "nsstring",
  "prefs_parser",
+ "processtools",
  "profiler_helper",
  "remote",
  "rlbox_lucet_sandbox",
@@ -3823,6 +3824,16 @@ name = "procedural-masquerade"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f566249236c6ca4340f7ca78968271f0ed2b0f234007a61b66f9ecd0af09260"
+
+[[package]]
+name = "processtools"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "nserror",
+ "winapi 0.3.7",
+ "xpcom",
+]
 
 [[package]]
 name = "profiler_helper"

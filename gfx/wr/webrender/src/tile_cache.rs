@@ -333,12 +333,12 @@ impl TileCacheBuilder {
 
 // Helper fn to collect clip handles from a given clip chain.
 fn add_clips(
-    scroll_root: SpatialNodeIndex,
+    _scroll_root: SpatialNodeIndex,
     clip_chain_id: ClipChainId,
     prim_clips: &mut Vec<ClipInstance>,
     clip_store: &ClipStore,
     interners: &Interners,
-    spatial_tree: &SpatialTree,
+    _spatial_tree: &SpatialTree,
 ) {
     let mut current_clip_chain_id = clip_chain_id;
 
@@ -348,12 +348,15 @@ fn add_clips(
 
         let clip_node_data = &interners.clip[clip_chain_node.handle];
         if let ClipNodeKind::Rectangle = clip_node_data.clip_node_kind {
-            if spatial_tree.is_ancestor(
-                clip_chain_node.spatial_node_index,
-                scroll_root,
-            ) {
+            // TODO(gw): Disable this check temporarily as it causes a regression
+            //           to scrollbar drawing on mac, while I figure out the root
+            //           cause of the issue.
+            // if spatial_tree.is_ancestor(
+            //     clip_chain_node.spatial_node_index,
+            //     scroll_root,
+            // ) {
                 prim_clips.push(ClipInstance::new(clip_chain_node.handle, clip_chain_node.spatial_node_index));
-            }
+            // }
         }
 
         current_clip_chain_id = clip_chain_node.parent_clip_chain_id;

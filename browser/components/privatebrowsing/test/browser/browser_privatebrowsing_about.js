@@ -117,7 +117,7 @@ add_task(async function test_search_handoff_on_keydown() {
 
   // Expect two searches, one to enter search mode and then another in search
   // mode.
-  let searchPromise = UrlbarTestUtils.promiseSearchComplete(win, 2);
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
 
   await new Promise(r => EventUtils.synthesizeKey("f", {}, win, r));
   await SpecialPowers.spawn(tab, [], async function() {
@@ -243,7 +243,7 @@ add_task(async function test_search_handoff_on_paste() {
 
   // Expect two searches, one to enter search mode and then another in search
   // mode.
-  let searchPromise = UrlbarTestUtils.promiseSearchComplete(win, 2);
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
 
   await new Promise(r =>
     EventUtils.synthesizeKey("v", { accelKey: true }, win, r)

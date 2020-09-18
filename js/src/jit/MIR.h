@@ -12746,6 +12746,32 @@ class MLoadValueTag : public MUnaryInstruction, public BoxInputsPolicy::Data {
   }
 };
 
+// Load the target object from a proxy wrapper. The target is stored in the
+// proxy object's private slot.
+class MLoadWrapperTarget : public MUnaryInstruction,
+                           public SingleObjectPolicy::Data {
+  explicit MLoadWrapperTarget(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setResultType(MIRType::Object);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(LoadWrapperTarget)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  AliasSet getAliasSet() const override {
+    // Can't use |AliasSet::None| because the target changes on navigation.
+    // TODO: Investigate using a narrower or a custom alias set.
+    return AliasSet::Load(AliasSet::Any);
+  }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.

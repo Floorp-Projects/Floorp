@@ -67,7 +67,7 @@ class SearchSettings {
   /**
    * A reference to the search service so that we can save the engines list.
    */
-  _searchService;
+  _searchService = null;
 
   addObservers() {
     Services.obs.addObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
@@ -106,7 +106,7 @@ class SearchSettings {
         throw new Error("no engine in the file");
       }
     } catch (ex) {
-      logConsole.error("get: Error reading settings file:", ex);
+      logConsole.warn("get: No settings file exists, new profile?", ex);
       json = {};
     }
     if (json.metaData) {
@@ -136,6 +136,15 @@ class SearchSettings {
       this._batchTask.disarm();
     } else {
       let task = async () => {
+        if (
+          !this._searchService.isInitialized ||
+          this._searchService._reloadingEngines
+        ) {
+          // Re-arm the task as we don't want to save potentially incomplete
+          // information during the middle of (re-)initializing.
+          this._batchTask.arm();
+          return;
+        }
         logConsole.debug("batchTask: Invalidating engine settings");
         await this._write();
       };

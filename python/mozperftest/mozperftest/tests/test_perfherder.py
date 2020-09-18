@@ -38,6 +38,7 @@ def test_perfherder():
         "perfherder-stats": True,
         "perfherder-prefix": "",
         "perfherder-metrics": [metric_fields("firstPaint")],
+        "perfherder-timestamp": 1.0,
     }
 
     metrics, metadata, env = setup_env(options)
@@ -53,6 +54,7 @@ def test_perfherder():
     # Check some metadata
     assert output["application"]["name"] == "firefox"
     assert output["framework"]["name"] == "browsertime"
+    assert output["pushTimestamp"] == 1.0
 
     # Check some numbers in our data
     assert len(output["suites"]) == 1

@@ -31,6 +31,18 @@
 #  define CACHE_DEBUG_TRY_VAR(...)
 #endif
 
+// Cache equivalents of QM_TRY_RETURN and QM_DEBUG_TRY_RETURN.
+#define CACHE_TRY_RETURN_GLUE(...)                                   \
+  QM_TRY_RETURN_META(mozilla::dom::cache, MOZ_UNIQUE_VAR(tryResult), \
+                     ##__VA_ARGS__)
+#define CACHE_TRY_RETURN(...) CACHE_TRY_RETURN_GLUE(__VA_ARGS__)
+
+#ifdef DEBUG
+#  define CACHE_DEBUG_TRY_RETURN(...) CACHE_TRY_RETURN(__VA_ARGS__)
+#else
+#  define CACHE_DEBUG_TRY_RETURN(...)
+#endif
+
 // Cache equivalents of QM_FAIL and QM_DEBUG_FAIL.
 #define CACHE_FAIL_GLUE(...) QM_FAIL_META(mozilla::dom::cache, ##__VA_ARGS__)
 #define CACHE_FAIL(...) CACHE_FAIL_GLUE(__VA_ARGS__)

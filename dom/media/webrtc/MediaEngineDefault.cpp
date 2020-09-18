@@ -358,8 +358,8 @@ class AudioSourcePullListener : public MediaTrackListener {
                           uint32_t aFrequency)
       : mTrack(std::move(aTrack)),
         mPrincipalHandle(aPrincipalHandle),
-        mSineGenerator(
-            MakeUnique<SineWaveGenerator>(mTrack->mSampleRate, aFrequency)) {
+        mSineGenerator(MakeUnique<SineWaveGenerator<int16_t>>(
+            mTrack->mSampleRate, aFrequency)) {
     MOZ_COUNT_CTOR(AudioSourcePullListener);
   }
 
@@ -370,7 +370,7 @@ class AudioSourcePullListener : public MediaTrackListener {
 
   const RefPtr<SourceMediaTrack> mTrack;
   const PrincipalHandle mPrincipalHandle;
-  const UniquePtr<SineWaveGenerator> mSineGenerator;
+  const UniquePtr<SineWaveGenerator<int16_t>> mSineGenerator;
 };
 
 /**

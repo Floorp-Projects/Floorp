@@ -16,10 +16,10 @@
 
 #include "MockCubeb.h"
 
+using namespace mozilla;
 using IterationResult = GraphInterface::IterationResult;
 using ::testing::NiceMock;
 using ::testing::Return;
-using namespace mozilla;
 
 class MockGraphInterface : public GraphInterface {
   NS_DECL_THREADSAFE_ISUPPORTS

@@ -48,7 +48,7 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
   virtual ~RemoteDecoderChild() = default;
   void AssertOnManagerThread() const;
 
-  virtual MediaResult ProcessOutput(const DecodedOutputIPDL& aDecodedData) = 0;
+  virtual MediaResult ProcessOutput(DecodedOutputIPDL&& aDecodedData) = 0;
   virtual void RecordShutdownTelemetry(bool aForAbnormalShutdown) {}
 
   RefPtr<RemoteDecoderChild> mIPDLSelfRef;

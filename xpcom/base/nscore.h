@@ -223,7 +223,8 @@ struct UnusedZero<nsresult> {
 
   static constexpr bool value = true;
   static constexpr StorageType nullValue = NS_OK;
-  static constexpr StorageType defaultValue = NS_ERROR_FAILURE;
+
+  static constexpr StorageType GetDefaultValue() { return NS_ERROR_FAILURE; }
 
   static constexpr void AssertValid(StorageType aValue) {}
   static constexpr const nsresult& Inspect(const StorageType& aValue) {

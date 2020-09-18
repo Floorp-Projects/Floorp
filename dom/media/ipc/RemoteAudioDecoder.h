@@ -20,7 +20,7 @@ class RemoteAudioDecoderChild final : public RemoteDecoderChild {
   MediaResult InitIPDL(const AudioInfo& aAudioInfo,
                        const CreateDecoderParams::OptionSet& aOptions);
 
-  MediaResult ProcessOutput(const DecodedOutputIPDL& aDecodedData) override;
+  MediaResult ProcessOutput(DecodedOutputIPDL&& aDecodedData) override;
 };
 
 class RemoteAudioDecoderParent final : public RemoteDecoderParent {
