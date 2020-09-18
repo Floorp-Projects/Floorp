@@ -1782,19 +1782,20 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetCompressionTask(
 }
 
 void GlobalHelperThreadState::startHandlingCompressionTasks(
-    const AutoLockHelperThreadState& lock, ScheduleCompressionTask schedule) {
-  scheduleCompressionTasks(lock, schedule);
-}
+    ScheduleCompressionTask schedule, JSRuntime* maybeRuntime,
+    const AutoLockHelperThreadState& lock) {
+  MOZ_ASSERT((schedule == ScheduleCompressionTask::GC) ==
+             (maybeRuntime != nullptr));
 
-void GlobalHelperThreadState::scheduleCompressionTasks(
-    const AutoLockHelperThreadState& lock, ScheduleCompressionTask schedule) {
   auto& pending = compressionPendingList(lock);
 
   for (size_t i = 0; i < pending.length(); i++) {
-    if (pending[i]->shouldStart() || schedule != ScheduleCompressionTask::GC) {
+    UniquePtr<SourceCompressionTask>& task = pending[i];
+    if (schedule == ScheduleCompressionTask::API ||
+        (task->runtimeMatches(maybeRuntime) && task->shouldStart())) {
       // OOMing during appending results in the task not being scheduled
       // and deleted.
-      Unused << submitTask(std::move(pending[i]), lock);
+      Unused << submitTask(std::move(task), lock);
       remove(pending, &i);
     }
   }
@@ -2307,10 +2308,10 @@ bool js::EnqueueOffThreadCompression(JSContext* cx,
   return true;
 }
 
-void js::StartHandlingCompressionsOnGC(JSRuntime* rt) {
+void js::StartHandlingCompressionsOnGC(JSRuntime* runtime) {
   AutoLockHelperThreadState lock;
   HelperThreadState().startHandlingCompressionTasks(
-      lock, GlobalHelperThreadState::ScheduleCompressionTask::GC);
+      GlobalHelperThreadState::ScheduleCompressionTask::GC, runtime, lock);
 }
 
 template <typename T>
@@ -2390,7 +2391,7 @@ void js::RunPendingSourceCompressions(JSRuntime* runtime) {
   }
 
   HelperThreadState().startHandlingCompressionTasks(
-      lock, GlobalHelperThreadState::ScheduleCompressionTask::API);
+      GlobalHelperThreadState::ScheduleCompressionTask::API, nullptr, lock);
 
   // Wait until all tasks have started compression.
   while (!HelperThreadState().compressionWorklist(lock).empty()) {
