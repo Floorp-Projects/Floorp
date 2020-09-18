@@ -781,6 +781,38 @@ void Element::MozScrollSnap() {
   }
 }
 
+int32_t Element::ScrollTopMin() {
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (!sf) {
+    return 0;
+  }
+  return CSSPixel::FromAppUnits(sf->GetScrollRange().y).Rounded();
+}
+
+int32_t Element::ScrollTopMax() {
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (!sf) {
+    return 0;
+  }
+  return CSSPixel::FromAppUnits(sf->GetScrollRange().YMost()).Rounded();
+}
+
+int32_t Element::ScrollLeftMin() {
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (!sf) {
+    return 0;
+  }
+  return CSSPixel::FromAppUnits(sf->GetScrollRange().x).Rounded();
+}
+
+int32_t Element::ScrollLeftMax() {
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (!sf) {
+    return 0;
+  }
+  return CSSPixel::FromAppUnits(sf->GetScrollRange().XMost()).Rounded();
+}
+
 static nsSize GetScrollRectSizeForOverflowVisibleFrame(nsIFrame* aFrame) {
   if (!aFrame || aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     return nsSize(0, 0);

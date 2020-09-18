@@ -262,30 +262,7 @@ namespace mozilla {
 struct ActiveScrolledRoot {
   static already_AddRefed<ActiveScrolledRoot> CreateASRForFrame(
       const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame,
-      bool aIsRetained) {
-    nsIFrame* f = do_QueryFrame(aScrollableFrame);
-
-    RefPtr<ActiveScrolledRoot> asr;
-    if (aIsRetained) {
-      asr = f->GetProperty(ActiveScrolledRootCache());
-    }
-
-    if (!asr) {
-      asr = new ActiveScrolledRoot();
-
-      if (aIsRetained) {
-        RefPtr<ActiveScrolledRoot> ref = asr;
-        f->SetProperty(ActiveScrolledRootCache(), ref.forget().take());
-      }
-    }
-    asr->mParent = aParent;
-    asr->mScrollableFrame = aScrollableFrame;
-    asr->mViewId = Nothing();
-    asr->mDepth = aParent ? aParent->mDepth + 1 : 1;
-    asr->mRetained = aIsRetained;
-
-    return asr.forget();
-  }
+      bool aIsRetained);
 
   static const ActiveScrolledRoot* PickAncestor(
       const ActiveScrolledRoot* aOne, const ActiveScrolledRoot* aTwo) {
@@ -312,13 +289,7 @@ struct ActiveScrolledRoot {
    * Find the view ID (or generate a new one) for the content element
    * corresponding to the ASR.
    */
-  mozilla::layers::ScrollableLayerGuid::ViewID GetViewId() const {
-    if (!mViewId.isSome()) {
-      nsIContent* content = mScrollableFrame->GetScrolledFrame()->GetContent();
-      mViewId = Some(nsLayoutUtils::FindOrCreateIDFor(content));
-    }
-    return *mViewId;
-  }
+  mozilla::layers::ScrollableLayerGuid::ViewID GetViewId() const;
 
   RefPtr<const ActiveScrolledRoot> mParent;
   nsIScrollableFrame* mScrollableFrame;
@@ -329,12 +300,7 @@ struct ActiveScrolledRoot {
   ActiveScrolledRoot()
       : mScrollableFrame(nullptr), mDepth(0), mRetained(false) {}
 
-  ~ActiveScrolledRoot() {
-    if (mScrollableFrame && mRetained) {
-      nsIFrame* f = do_QueryFrame(mScrollableFrame);
-      f->RemoveProperty(ActiveScrolledRootCache());
-    }
-  }
+  ~ActiveScrolledRoot();
 
   static void DetachASR(ActiveScrolledRoot* aASR) {
     aASR->mParent = nullptr;

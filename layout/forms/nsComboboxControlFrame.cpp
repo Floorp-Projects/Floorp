@@ -1346,6 +1346,10 @@ nsIFrame* nsComboboxControlFrame::CreateFrameForDisplayNode() {
   return mDisplayFrame;
 }
 
+nsIScrollableFrame* nsComboboxControlFrame::GetScrollTargetFrame() {
+  return do_QueryFrame(mDropdownFrame);
+}
+
 void nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                          PostDestroyData& aPostDestroyData) {
   if (sFocused == this) {

@@ -102,9 +102,7 @@ class nsComboboxControlFrame final : public nsBlockFrame,
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
-  virtual nsIScrollableFrame* GetScrollTargetFrame() override {
-    return do_QueryFrame(mDropdownFrame);
-  }
+  virtual nsIScrollableFrame* GetScrollTargetFrame() override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;

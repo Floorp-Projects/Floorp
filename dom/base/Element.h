@@ -19,7 +19,6 @@
 #include "nsChangeHint.h"
 #include "nsContentUtils.h"
 #include "nsDOMAttributeMap.h"
-#include "nsIScrollableFrame.h"
 #include "nsRect.h"
 #include "Units.h"
 #include "mozilla/Attributes.h"
@@ -38,6 +37,7 @@
 class mozAutoDocUpdate;
 class nsIFrame;
 class nsIMozBrowserFrame;
+class nsIScrollableFrame;
 class nsIURI;
 class nsAttrValueOrString;
 class nsContentList;
@@ -75,6 +75,7 @@ struct ScrollIntoViewOptions;
 struct ScrollToOptions;
 struct FocusOptions;
 struct ShadowRootInit;
+struct ScrollOptions;
 class BooleanOrScrollIntoViewOptions;
 class DOMIntersectionObserver;
 class DOMMatrixReadOnly;
@@ -1331,34 +1332,10 @@ class Element : public FragmentOrElement {
   MOZ_CAN_RUN_SCRIPT int32_t ClientHeight() {
     return CSSPixel::FromAppUnits(GetClientAreaRect().Height()).Rounded();
   }
-  MOZ_CAN_RUN_SCRIPT int32_t ScrollTopMin() {
-    nsIScrollableFrame* sf = GetScrollFrame();
-    if (!sf) {
-      return 0;
-    }
-    return CSSPixel::FromAppUnits(sf->GetScrollRange().y).Rounded();
-  }
-  MOZ_CAN_RUN_SCRIPT int32_t ScrollTopMax() {
-    nsIScrollableFrame* sf = GetScrollFrame();
-    if (!sf) {
-      return 0;
-    }
-    return CSSPixel::FromAppUnits(sf->GetScrollRange().YMost()).Rounded();
-  }
-  MOZ_CAN_RUN_SCRIPT int32_t ScrollLeftMin() {
-    nsIScrollableFrame* sf = GetScrollFrame();
-    if (!sf) {
-      return 0;
-    }
-    return CSSPixel::FromAppUnits(sf->GetScrollRange().x).Rounded();
-  }
-  MOZ_CAN_RUN_SCRIPT int32_t ScrollLeftMax() {
-    nsIScrollableFrame* sf = GetScrollFrame();
-    if (!sf) {
-      return 0;
-    }
-    return CSSPixel::FromAppUnits(sf->GetScrollRange().XMost()).Rounded();
-  }
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollTopMin();
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollTopMax();
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollLeftMin();
+  MOZ_CAN_RUN_SCRIPT int32_t ScrollLeftMax();
 
   MOZ_CAN_RUN_SCRIPT double ClientHeightDouble() {
     return CSSPixel::FromAppUnits(GetClientAreaRect().Height());
