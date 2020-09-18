@@ -143,11 +143,10 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
        gHttpHandler->DefaultQpackTableSize(),
        gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
 
-  nsresult rv = NeqoHttp3Conn::Init(
-      aOrigin, aAlpnToken, selfAddrStr, peerAddrStr,
-      gHttpHandler->DefaultQpackTableSize(),
-      gHttpHandler->DefaultHttp3MaxBlockedStreams(),
-      gHttpHandler->Http3QlogDir(), getter_AddRefs(mHttp3Connection));
+  nsresult rv = NeqoHttp3Conn::Init(aOrigin, aAlpnToken, selfAddrStr, peerAddrStr,
+                                    gHttpHandler->DefaultQpackTableSize(),
+                                    gHttpHandler->DefaultHttp3MaxBlockedStreams(),
+                                    getter_AddRefs(mHttp3Connection));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -169,11 +168,12 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
       // Http3Session is still being initialized and ReportHttp3Connection
       // will try to dispatch transaction on this session therefore it
       // needs to be executed after the initializationg is done.
-      DebugOnly<nsresult> rv = NS_DispatchToCurrentThread(
-          NS_NewRunnableFunction("Http3Session::ReportHttp3Connection",
-                                 [self]() { self->ReportHttp3Connection(); }));
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "NS_DispatchToCurrentThread failed");
+      DebugOnly<nsresult> rv = NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+          "Http3Session::ReportHttp3Connection",
+          [self]() {
+            self->ReportHttp3Connection();
+          }));
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
     }
   }
   return NS_OK;
@@ -438,35 +438,36 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
       case Http3Event::Tag::ZeroRttRejected:
         LOG(("Http3Session::ProcessEvents - ZeroRttRejected"));
         if (mState == ZERORTT) {
-          mState = INITIALIZING;
-          Finish0Rtt(true);
+            mState = INITIALIZING;
+            Finish0Rtt(true);
         }
         break;
-      case Http3Event::Tag::ConnectionConnected: {
-        LOG(("Http3Session::ProcessEvents - ConnectionConnected"));
-        bool was0RTT = mState == ZERORTT;
-        mState = CONNECTED;
-        SetSecInfo();
-        mSocketControl->HandshakeCompleted();
-        if (was0RTT) {
-          Finish0Rtt(false);
-        }
-        nsTArray<uint8_t> token;
-        mHttp3Connection->GetResumptionToken(token);
-        if (!token.IsEmpty()) {
-          LOG(("Got a resumption token"));
-          nsAutoCString peerId;
-          mSocketControl->GetPeerId(peerId);
-          if (NS_FAILED(
-                  // Bug 1660080 tto get the proper expiration time for a token.
-                  SSLTokensCache::Put(peerId, token.Elements(), token.Length(),
-                                      mSocketControl, 1))) {
-            LOG(("Adding resumption token failed"));
+      case Http3Event::Tag::ConnectionConnected:
+        {
+          LOG(("Http3Session::ProcessEvents - ConnectionConnected"));
+          bool was0RTT = mState == ZERORTT;
+          mState = CONNECTED;
+          SetSecInfo();
+          mSocketControl->HandshakeCompleted();
+          if (was0RTT) {
+            Finish0Rtt(false);
           }
-        }
+          nsTArray<uint8_t> token;
+          mHttp3Connection->GetResumptionToken(token);
+          if (!token.IsEmpty()) {
+            LOG(("Got a resumption token"));
+            nsAutoCString peerId;
+            mSocketControl->GetPeerId(peerId);
+            if (NS_FAILED(
+                // Bug 1660080 tto get the proper expiration time for a token.
+                SSLTokensCache::Put(peerId, token.Elements(), token.Length(), mSocketControl, 1))) {
+              LOG(("Adding resumption token failed"));
+            }
+          }
 
-        ReportHttp3Connection();
-      } break;
+          ReportHttp3Connection();
+        }
+        break;
       case Http3Event::Tag::GoawayReceived:
         LOG(("Http3Session::ProcessEvents - GoawayReceived"));
         MOZ_ASSERT(!mGoawayReceived);
@@ -648,8 +649,8 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
 
   if (mState == ZERORTT) {
     if (!stream->Do0RTT()) {
-      LOG(("Http3Session %p will not get early data from Http3Stream %p", this,
-           stream));
+      LOG(("Http3Session %p will not get early data from Http3Stream %p",
+           this, stream));
       if (!mCannotDo0RTTStreams.Contains(stream)) {
         mCannotDo0RTTStreams.AppendElement(stream);
       }
@@ -1333,7 +1334,8 @@ bool Http3Session::JoinConnection(const nsACString& hostname, int32_t port) {
 bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
                                       bool justKidding) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  if (!mConnection || !CanSandData() || mShouldClose || mGoawayReceived) {
+  if (!mConnection || !CanSandData() || mShouldClose ||
+      mGoawayReceived) {
     return false;
   }
 
