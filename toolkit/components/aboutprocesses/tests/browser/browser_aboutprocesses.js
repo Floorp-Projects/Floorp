@@ -265,6 +265,24 @@ function extractProcessDetails(row) {
 add_task(async function testAboutProcesses() {
   info("Setting up about:processes");
 
+  // Install a test extension to also cover processes and sub-frames related to the
+  // extension process.
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: { gecko: { id: "test-aboutprocesses@mochi.test" } },
+    },
+    background() {
+      // Creates an about:blank iframe in the extension process to make sure that
+      // Bug 1665099 doesn't regress.
+      document.body.appendChild(document.createElement("iframe"));
+
+      this.browser.test.sendMessage("bg-page-loaded");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("bg-page-loaded");
+
   // Test twice, once without `showAllSubframes`, once with it.
   for (let showAllFrames of [false, true]) {
     Services.prefs.setBoolPref(
@@ -504,4 +522,6 @@ add_task(async function testAboutProcesses() {
   }
 
   Services.prefs.clearUserPref("toolkit.aboutProcesses.showThreads");
+
+  await extension.unload();
 });
