@@ -39,7 +39,9 @@ namespace net {
 ParentChannelListener::ParentChannelListener(
     nsIStreamListener* aListener,
     dom::CanonicalBrowsingContext* aBrowsingContext, bool aUsePrivateBrowsing)
-    : mNextListener(aListener), mBrowsingContext(aBrowsingContext) {
+    : mNextListener(aListener),
+      mSuspendedForDiversion(false),
+      mBrowsingContext(aBrowsingContext) {
   LOG(("ParentChannelListener::ParentChannelListener [this=%p, next=%p]", this,
        aListener));
 
@@ -76,6 +78,9 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 ParentChannelListener::OnStartRequest(nsIRequest* aRequest) {
+  MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
+                     "Cannot call OnStartRequest if suspended for diversion!");
+
   if (!mNextListener) return NS_ERROR_UNEXPECTED;
 
   // If we're not a multi-part channel, then we can drop mListener and break the
@@ -93,6 +98,9 @@ ParentChannelListener::OnStartRequest(nsIRequest* aRequest) {
 NS_IMETHODIMP
 ParentChannelListener::OnStopRequest(nsIRequest* aRequest,
                                      nsresult aStatusCode) {
+  MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
+                     "Cannot call OnStopRequest if suspended for diversion!");
+
   if (!mNextListener) return NS_ERROR_UNEXPECTED;
 
   LOG(("ParentChannelListener::OnStopRequest: [this=%p status=%" PRIu32 "]\n",
@@ -113,6 +121,9 @@ NS_IMETHODIMP
 ParentChannelListener::OnDataAvailable(nsIRequest* aRequest,
                                        nsIInputStream* aInputStream,
                                        uint64_t aOffset, uint32_t aCount) {
+  MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
+                     "Cannot call OnDataAvailable if suspended for diversion!");
+
   if (!mNextListener) return NS_ERROR_UNEXPECTED;
 
   LOG(("ParentChannelListener::OnDataAvailable [this=%p]\n", this));
@@ -223,6 +234,35 @@ ParentChannelListener::ChannelIntercepted(nsIInterceptedChannel* aChannel) {
   }
 
   return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+
+nsresult ParentChannelListener::SuspendForDiversion() {
+  if (NS_WARN_IF(mSuspendedForDiversion)) {
+    MOZ_ASSERT(!mSuspendedForDiversion, "Cannot SuspendForDiversion twice!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // While this is set, no OnStart/OnData/OnStop callbacks should be forwarded
+  // to mNextListener.
+  mSuspendedForDiversion = true;
+
+  return NS_OK;
+}
+
+void ParentChannelListener::ResumeForDiversion() {
+  MOZ_RELEASE_ASSERT(mSuspendedForDiversion, "Must already be suspended!");
+  // Allow OnStart/OnData/OnStop callbacks to be forwarded to mNextListener.
+  mSuspendedForDiversion = false;
+}
+
+void ParentChannelListener::DivertTo(nsIStreamListener* aListener) {
+  MOZ_ASSERT(aListener);
+  MOZ_RELEASE_ASSERT(mSuspendedForDiversion, "Must already be suspended!");
+
+  mNextListener = aListener;
+  ResumeForDiversion();
 }
 
 //-----------------------------------------------------------------------------
