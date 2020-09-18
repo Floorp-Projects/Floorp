@@ -26,6 +26,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/StaticPrefs_browser.h"
 
 #include "nsXULAppAPI.h"
 #define IS_CHILD_PROCESS() (GeckoProcessType_Default != XRE_GetProcessType())
@@ -483,6 +484,11 @@ void nsDOMOfflineResourceList::Update(ErrorResult& aRv) {
   nsresult rv = Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
+    return;
+  }
+
+  // If the storage is disabled this operation should be ignored.
+  if (!StaticPrefs::browser_cache_offline_storage_enable()) {
     return;
   }
 
