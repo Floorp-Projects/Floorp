@@ -184,7 +184,7 @@ raptor-youtube-playback-h264-sfr-chrome:
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
-            default: 1800
+            default: 2700
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-sfr
@@ -197,7 +197,7 @@ raptor-youtube-playback-h264-chrome:
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
-            default: 1800
+            default: 2700
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-std
@@ -210,7 +210,7 @@ raptor-youtube-playback-vp9-sfr-chrome:
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
-            default: 1800
+            default: 2700
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-vp9-sfr
