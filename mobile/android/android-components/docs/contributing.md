@@ -41,6 +41,7 @@ Before contributing, please review our [Community Participation Guidelines](http
 * [0003 - Adding a `concept-base` component]({{ site.baseurl }}/rfc/0003-concept-base-component)
 * [0004 - Introducing a Top Sites Feature]({{ site.baseurl }}/rfc/0004-top-sites-feature)
 * [0005 - Migrate feature-sitepermissions to be compatible with the new GeckoView permission API]({{ site.baseurl }}/rfc/0005-migrate-sitepermission-ac-store-geckoview-store)
+* [0006 - Determining the set of default search engines]({{ site.baseurl }}/rfc/0006-search-defaults)
 
 ### Presentations
 
