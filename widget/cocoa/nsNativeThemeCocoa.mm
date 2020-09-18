@@ -2770,10 +2770,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         // and black text.)
         EventStates docState = aFrame->GetContent()->OwnerDoc()->GetDocumentState();
         bool isInActiveWindow = !docState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
-        if (!IsDisabled(aFrame, eventState) && isInActiveWindow &&
-            !QueueAnimatedContentForRefresh(aFrame->GetContent(), 10)) {
-          NS_WARNING("Unable to animate button!");
-        }
         bool hasDefaultButtonLook = isInActiveWindow && !eventState.HasState(NS_EVENT_STATE_ACTIVE);
         ButtonType buttonType =
             hasDefaultButtonLook ? ButtonType::eDefaultPushButton : ButtonType::eRegularPushButton;
@@ -2938,8 +2934,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       return Some(WidgetInfo::SearchField(ComputeSearchFieldParams(aFrame, eventState)));
 
     case StyleAppearance::ProgressBar: {
-      // Don't request repaints for scrollbars at 100% because those don't animate.
-      if (GetProgressValue(aFrame) < GetProgressMaxValue(aFrame)) {
+      if (IsIndeterminateProgress(aFrame, eventState)) {
         if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
           NS_WARNING("Unable to animate progressbar!");
         }
