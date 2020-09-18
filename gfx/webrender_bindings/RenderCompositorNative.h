@@ -46,6 +46,7 @@ class RenderCompositorNative : public RenderCompositor {
                      const wr::ImageFormat& aReadbackFormat,
                      const Range<uint8_t>& aReadbackBuffer,
                      bool* aNeedsYFlip) override;
+  bool MaybeRecordFrame(layers::CompositionRecorder& aRecorder) override;
   bool MaybeGrabScreenshot(const gfx::IntSize& aWindowSize) override;
   bool MaybeProcessScreenshotQueue() override;
 

@@ -333,6 +333,10 @@ void RendererOGL::MaybeRecordFrame(const WebRenderPipelineInfo* aPipelineInfo) {
     return;
   }
 
+  if (mCompositor->MaybeRecordFrame(*mCompositionRecorder)) {
+    return;
+  }
+
   wr::RecordedFrameHandle handle{0};
   gfx::IntSize size(0, 0);
 
