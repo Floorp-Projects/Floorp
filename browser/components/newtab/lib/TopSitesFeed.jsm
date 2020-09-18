@@ -549,7 +549,7 @@ this.TopSitesFeed = class TopSitesFeed {
           if (isBlocked) {
             frecent.splice(frecentIndex, 1);
           } else {
-            frecent[frecentIndex].original_url = frecent[frecentIndex].url;
+            frecent[frecentIndex].original_url = link.original_url;
             frecent[frecentIndex].url = link.url;
           }
         }
