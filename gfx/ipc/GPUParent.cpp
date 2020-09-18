@@ -88,7 +88,10 @@ GPUParent::GPUParent() : mLaunchTime(TimeStamp::Now()) { sGPUParent = this; }
 GPUParent::~GPUParent() { sGPUParent = nullptr; }
 
 /* static */
-GPUParent* GPUParent::GetSingleton() { return sGPUParent; }
+GPUParent* GPUParent::GetSingleton() {
+  MOZ_DIAGNOSTIC_ASSERT(sGPUParent);
+  return sGPUParent;
+}
 
 bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
                      MessageLoop* aIOLoop, UniquePtr<IPC::Channel> aChannel) {
@@ -531,72 +534,80 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
     ProcessChild::QuickExit();
   }
 
-#ifdef XP_WIN
-  wmf::MFShutdown();
-#endif
-
 #ifndef NS_FREE_PERMANENT_DATA
+#  ifdef XP_WIN
+  wmf::MFShutdown();
+#  endif
   // No point in going through XPCOM shutdown because we don't keep persistent
   // state.
   ProcessChild::QuickExit();
 #endif
 
-#ifdef MOZ_GECKO_PROFILER
-  if (mProfilerController) {
-    mProfilerController->Shutdown();
-    mProfilerController = nullptr;
-  }
-#endif
-
-  if (mVsyncBridge) {
-    mVsyncBridge->Shutdown();
-    mVsyncBridge = nullptr;
-  }
-  RemoteDecoderManagerParent::ShutdownVideoBridge();
-  CompositorThreadHolder::Shutdown();
-  // There is a case that RenderThread exists when gfxVars::UseWebRender() is
-  // false. This could happen when WebRender was fallbacked to compositor.
-  if (wr::RenderThread::Get()) {
-    wr::RenderThread::ShutDown();
-  }
+  // Wait until all RemoteDecoderManagerParent have closed.
+  mShutdownBlockers.WaitUntilClear(10 * 1000 /* 10s timeout*/)
+      ->Then(GetCurrentSerialEventTarget(), __func__, [this]() {
 #ifdef XP_WIN
-  if (widget::WinCompositorWindowThread::Get()) {
-    widget::WinCompositorWindowThread::ShutDown();
-  }
+        wmf::MFShutdown();
 #endif
 
-  image::ImageMemoryReporter::ShutdownForWebRender();
+#ifdef MOZ_GECKO_PROFILER
+        if (mProfilerController) {
+          mProfilerController->Shutdown();
+          mProfilerController = nullptr;
+        }
+#endif
 
-  // Shut down the default GL context provider.
-  gl::GLContextProvider::Shutdown();
+        if (mVsyncBridge) {
+          mVsyncBridge->Shutdown();
+          mVsyncBridge = nullptr;
+        }
+        RemoteDecoderManagerParent::ShutdownVideoBridge();
+        CompositorThreadHolder::Shutdown();
+        // There is a case that RenderThread exists when gfxVars::UseWebRender()
+        // is false. This could happen when WebRender was fallbacked to
+        // compositor.
+        if (wr::RenderThread::Get()) {
+          wr::RenderThread::ShutDown();
+        }
+#ifdef XP_WIN
+        if (widget::WinCompositorWindowThread::Get()) {
+          widget::WinCompositorWindowThread::ShutDown();
+        }
+#endif
+
+        image::ImageMemoryReporter::ShutdownForWebRender();
+
+        // Shut down the default GL context provider.
+        gl::GLContextProvider::Shutdown();
 
 #if defined(XP_WIN)
-  // The above shutdown calls operate on the available context providers on
-  // most platforms.  Windows is a "special snowflake", though, and has three
-  // context providers available, so we have to shut all of them down.
-  // We should only support the default GL provider on Windows; then, this
-  // could go away. Unfortunately, we currently support WGL (the default) for
-  // WebGL on Optimus.
-  gl::GLContextProviderEGL::Shutdown();
+        // The above shutdown calls operate on the available context providers
+        // on most platforms.  Windows is a "special snowflake", though, and has
+        // three context providers available, so we have to shut all of them
+        // down. We should only support the default GL provider on Windows;
+        // then, this could go away. Unfortunately, we currently support WGL
+        // (the default) for WebGL on Optimus.
+        gl::GLContextProviderEGL::Shutdown();
 #endif
 
-  Factory::ShutDown();
+        Factory::ShutDown();
 
-  // We bypass gfxPlatform shutdown, so we must shutdown any libraries here
-  // that would normally be handled by it.
+    // We bypass gfxPlatform shutdown, so we must shutdown any libraries here
+    // that would normally be handled by it.
 #ifdef NS_FREE_PERMANENT_DATA
-  SkGraphics::PurgeFontCache();
-  cairo_debug_reset_static_data();
+        SkGraphics::PurgeFontCache();
+        cairo_debug_reset_static_data();
 #endif
 
 #if defined(XP_WIN)
-  DeviceManagerDx::Shutdown();
+        DeviceManagerDx::Shutdown();
 #endif
-  LayerTreeOwnerTracker::Shutdown();
-  gfxVars::Shutdown();
-  gfxConfig::Shutdown();
-  CrashReporterClient::DestroySingleton();
-  XRE_ShutdownChildProcess();
+        LayerTreeOwnerTracker::Shutdown();
+        gfxVars::Shutdown();
+        gfxConfig::Shutdown();
+        CrashReporterClient::DestroySingleton();
+        XRE_ShutdownChildProcess();
+      });
 }
 
 }  // namespace mozilla::gfx
