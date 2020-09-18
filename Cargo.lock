@@ -3058,6 +3058,7 @@ checksum = "20c82a57087fd5990d7122dbff1607c3b20c3d2958e9d9ad9765aab415e2c91c"
 name = "moz_task"
 version = "0.1.0"
 dependencies = [
+ "cstr",
  "libc",
  "nserror",
  "nsstring",
