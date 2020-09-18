@@ -64,7 +64,7 @@ void TrialInliner::cloneSharedPrefix(ICStub* stub, const uint8_t* endOfPrefix,
   }
 }
 
-void TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
+bool TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
                                  CacheKind kind) {
   ICFallbackStub* fallback = entry.fallbackStub();
   MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Candidate);
@@ -76,11 +76,16 @@ void TrialInliner::replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
   ICStub* newStub = AttachBaselineCacheIRStub(
       cx(), writer, kind, BaselineCacheIRStubKind::Regular, script_, icScript_,
       fallback, &attached);
-  if (newStub) {
-    MOZ_ASSERT(attached);
-    MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Inlined);
-    JitSpew(JitSpew_WarpTrialInlining, "Attached new stub %p", newStub);
+  if (!newStub) {
+    MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Candidate);
+    ReportOutOfMemory(cx());
+    return false;
   }
+
+  MOZ_ASSERT(attached);
+  MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Inlined);
+  JitSpew(JitSpew_WarpTrialInlining, "Attached new stub %p", newStub);
+  return true;
 }
 
 ICStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
@@ -374,7 +379,11 @@ bool TrialInliner::maybeInlineCall(const ICEntry& entry, BytecodeLocation loc) {
                              data->callFlags);
   writer.returnFromIC();
 
-  replaceICStub(entry, writer, CacheKind::Call);
+  if (!replaceICStub(entry, writer, CacheKind::Call)) {
+    icScript_->removeInlinedChild(entry.pcOffset());
+    return false;
+  }
+
   return true;
 }
 

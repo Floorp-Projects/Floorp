@@ -50,6 +50,7 @@
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "jit/JitRealm.h"
+#include "jit/TrialInlining.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{DetachArrayBuffer,GetArrayBufferLengthAndData,NewArrayBufferWithContents}
 #include "js/CharacterEncoding.h"
@@ -503,6 +504,27 @@ static bool IsTypeInferenceEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(js::IsTypeInferenceEnabled());
   return true;
+}
+
+static bool TrialInline(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
+  if (!jit::JitOptions.warpBuilder) {
+    return true;
+  }
+
+  FrameIter iter(cx);
+  if (iter.done() || !iter.isBaseline()) {
+    return true;
+  }
+
+  jit::BaselineFrame* frame = iter.abstractFramePtr().asBaselineFrame();
+  if (!jit::CanIonCompileScript(cx, frame->script())) {
+    return true;
+  }
+
+  return jit::DoTrialInlining(cx, frame);
 }
 
 static bool ReturnStringCopy(JSContext* cx, CallArgs& args,
@@ -6289,6 +6311,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("isTypeInferenceEnabled", ::IsTypeInferenceEnabled, 0, 0,
 "isTypeInferenceEnabled()",
 "  Return true if Type Inference is enabled."),
+
+  JS_FN_HELP("trialInline", TrialInline, 0, 0,
+"trialInline()",
+"  Perform trial-inlining for the caller's frame if it's a BaselineFrame."),
 
     JS_FN_HELP("hasChild", HasChild, 0, 0,
 "hasChild(parent, child)",
