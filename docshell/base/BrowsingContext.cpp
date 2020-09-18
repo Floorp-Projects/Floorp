@@ -2745,6 +2745,14 @@ void BrowsingContext::SetChildSHistory(ChildSHistory* aChildSHistory) {
   mFields.SetWithoutSyncing<IDX_HasSessionHistory>(true);
 }
 
+bool BrowsingContext::ShouldUpdateSessionHistory(uint32_t aLoadType) {
+  // We don't update session history on reload unless we're loading
+  // an iframe in shift-reload case.
+  return nsDocShell::ShouldUpdateGlobalHistory(aLoadType) &&
+         (!(aLoadType & nsIDocShell::LOAD_CMD_RELOAD) ||
+          (IsForceReloadType(aLoadType) && IsFrame()));
+}
+
 }  // namespace dom
 
 namespace ipc {

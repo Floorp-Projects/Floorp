@@ -376,7 +376,8 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
 }
 
 void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
-                                                    const nsID& aChangeID) {
+                                                    const nsID& aChangeID,
+                                                    uint32_t aLoadType) {
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
     if (mLoadingEntries[i].mLoadId == aLoadId) {
       nsISHistory* shistory = GetSessionHistory();
@@ -405,12 +406,13 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
             [](nsISHEntry* aEntry) { aEntry->SetName(EmptyString()); });
       }
 
+      bool addEntry = ShouldUpdateSessionHistory(aLoadType);
       if (IsTop()) {
         mActiveEntry = newActiveEntry;
         if (loadFromSessionHistory) {
           // XXX Synchronize browsing context tree and session history tree?
           shistory->UpdateIndex();
-        } else {
+        } else if (addEntry) {
           shistory->AddEntry(mActiveEntry,
                              /* FIXME aPersist = */ true);
         }
@@ -431,24 +433,28 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
           // FIXME UpdateIndex() here may update index too early (but even the
           //       old implementation seems to have similar issues).
           shistory->UpdateIndex();
-        } else if (oldActiveEntry) {
-          // AddChildSHEntryHelper does update the index of the session history!
-          // FIXME Need to figure out the right value for aCloneChildren.
-          shistory->AddChildSHEntryHelper(oldActiveEntry, newActiveEntry, Top(),
-                                          true);
-          mActiveEntry = newActiveEntry;
-        } else {
-          SessionHistoryEntry* parentEntry =
-              static_cast<CanonicalBrowsingContext*>(GetParent())->mActiveEntry;
-          // XXX What should happen if parent doesn't have mActiveEntry?
-          //     Or can that even happen ever?
-          if (parentEntry) {
+        } else if (addEntry) {
+          if (oldActiveEntry) {
+            // AddChildSHEntryHelper does update the index of the session
+            // history!
+            // FIXME Need to figure out the right value for aCloneChildren.
+            shistory->AddChildSHEntryHelper(oldActiveEntry, newActiveEntry,
+                                            Top(), true);
             mActiveEntry = newActiveEntry;
-            // FIXME The docshell code sometime uses -1 for aChildOffset!
-            // FIXME Using IsInProcess for aUseRemoteSubframes isn't quite
-            //       right, but aUseRemoteSubframes should be going away.
-            parentEntry->AddChild(mActiveEntry, Children().Length() - 1,
-                                  IsInProcess());
+          } else {
+            SessionHistoryEntry* parentEntry =
+                static_cast<CanonicalBrowsingContext*>(GetParent())
+                    ->mActiveEntry;
+            // XXX What should happen if parent doesn't have mActiveEntry?
+            //     Or can that even happen ever?
+            if (parentEntry) {
+              mActiveEntry = newActiveEntry;
+              // FIXME The docshell code sometime uses -1 for aChildOffset!
+              // FIXME Using IsInProcess for aUseRemoteSubframes isn't quite
+              //       right, but aUseRemoteSubframes should be going away.
+              parentEntry->AddChild(mActiveEntry, Children().Length() - 1,
+                                    IsInProcess());
+            }
           }
         }
       }
