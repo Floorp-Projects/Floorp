@@ -17,6 +17,7 @@
 #include "mozilla/net/WebSocketChannelChild.h"
 #include "mozilla/net/WebSocketEventListenerChild.h"
 #include "mozilla/net/DNSRequestChild.h"
+#include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
 #include "mozilla/dom/network/TCPServerSocketChild.h"
@@ -242,6 +243,17 @@ PUDPSocketChild* NeckoChild::AllocPUDPSocketChild(nsIPrincipal* aPrincipal,
 bool NeckoChild::DeallocPUDPSocketChild(PUDPSocketChild* child) {
   UDPSocketChild* p = static_cast<UDPSocketChild*>(child);
   p->ReleaseIPDLReference();
+  return true;
+}
+
+PChannelDiverterChild* NeckoChild::AllocPChannelDiverterChild(
+    const ChannelDiverterArgs& channel) {
+  return new ChannelDiverterChild();
+  ;
+}
+
+bool NeckoChild::DeallocPChannelDiverterChild(PChannelDiverterChild* child) {
+  delete static_cast<ChannelDiverterChild*>(child);
   return true;
 }
 

@@ -11,6 +11,7 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsIChannelWithDivertableParentListener.h"
 #include "nsIFTPChannel.h"
 #include "nsIForcePendingChannel.h"
 #include "nsIUploadChannel.h"
@@ -20,6 +21,7 @@
 #include "nsWeakReference.h"
 
 class nsIURI;
+using mozilla::net::ADivertableParentChannel;
 
 class nsFtpChannel final : public nsBaseChannel,
                            public nsIFTPChannel,
@@ -27,12 +29,14 @@ class nsFtpChannel final : public nsBaseChannel,
                            public nsIResumableChannel,
                            public nsIProxiedChannel,
                            public nsIForcePendingChannel,
-                           public nsSupportsWeakReference {
+                           public nsSupportsWeakReference,
+                           public nsIChannelWithDivertableParentListener {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIUPLOADCHANNEL
   NS_DECL_NSIRESUMABLECHANNEL
   NS_DECL_NSIPROXIEDCHANNEL
+  NS_DECL_NSICHANNELWITHDIVERTABLEPARENTLISTENER
 
   nsFtpChannel(nsIURI* uri, nsIProxyInfo* pi)
       : mProxyInfo(pi),
@@ -107,6 +111,7 @@ class nsFtpChannel final : public nsBaseChannel,
   bool mResumeRequested;
   PRTime mLastModifiedTime;
   bool mForcePending;
+  RefPtr<ADivertableParentChannel> mParentChannel;
 
   // Current suspension depth for this channel object
   uint32_t mSuspendCount;

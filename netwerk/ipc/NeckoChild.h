@@ -58,6 +58,9 @@ class NeckoChild : public PNeckoChild {
   bool DeallocPUDPSocketChild(PUDPSocketChild*);
   PSimpleChannelChild* AllocPSimpleChannelChild(const uint32_t& channelId);
   bool DeallocPSimpleChannelChild(PSimpleChannelChild* child);
+  PChannelDiverterChild* AllocPChannelDiverterChild(
+      const ChannelDiverterArgs& channel);
+  bool DeallocPChannelDiverterChild(PChannelDiverterChild* actor);
   PTransportProviderChild* AllocPTransportProviderChild();
   bool DeallocPTransportProviderChild(PTransportProviderChild* aActor);
   mozilla::ipc::IPCResult RecvAsyncAuthPromptForNestedFrame(

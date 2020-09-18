@@ -10,7 +10,6 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "nsHttp.h"
 #include "nsICancelable.h"
-#include "nsIDNSListener.h"
 #include "nsIDNSService.h"
 #include "nsIDNSRecord.h"
 #include "nsIInputStream.h"

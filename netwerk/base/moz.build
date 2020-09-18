@@ -30,6 +30,7 @@ XPIDL_SOURCES += [
     'nsICaptivePortalService.idl',
     'nsIChannel.idl',
     'nsIChannelEventSink.idl',
+    'nsIChannelWithDivertableParentListener.idl',
     'nsIChildChannel.idl',
     'nsIClassifiedChannel.idl',
     'nsIClassOfService.idl',
@@ -38,6 +39,7 @@ XPIDL_SOURCES += [
     'nsIDashboardEventNotifier.idl',
     'nsIDeprecationWarner.idl',
     'nsIDHCPClient.idl',
+    'nsIDivertableChannel.idl',
     'nsIDownloader.idl',
     'nsIEncodedChannel.idl',
     'nsIExternalProtocolHandler.idl',
@@ -159,6 +161,8 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.net += [
     'CaptivePortalService.h',
+    'ChannelDiverterChild.h',
+    'ChannelDiverterParent.h',
     'Dashboard.h',
     'DashboardTypes.h',
     'DefaultURI.h',
@@ -180,6 +184,8 @@ UNIFIED_SOURCES += [
     'ArrayBufferInputStream.cpp',
     'BackgroundFileSaver.cpp',
     'CaptivePortalService.cpp',
+    'ChannelDiverterChild.cpp',
+    'ChannelDiverterParent.cpp',
     'Dashboard.cpp',
     'DefaultURI.cpp',
     'EventTokenBucket.cpp',

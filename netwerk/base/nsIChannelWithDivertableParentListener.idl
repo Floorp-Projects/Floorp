@@ -1,0 +1,46 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+namespace mozilla {
+namespace net {
+class ADivertableParentChannel;
+}
+}
+%}
+
+[ptr] native ADivertableParentChannelPtr(mozilla::net::ADivertableParentChannel);
+
+/** When we are diverting messages from the child to the parent. The
+ *  nsHttpChannel and nsFtpChannel must know that there is a ChannelParent to
+ *  be able to suspend message delivery if the channel is suspended.
+ */
+[uuid(c073d79f-2503-4dff-ba87-d3071f8b433b)]
+interface nsIChannelWithDivertableParentListener : nsISupports
+{
+  /**
+   * Informs nsHttpChannel or nsFtpChannel that a ParentChannel starts
+   * diverting messages. During this time all suspend/resume calls to the
+   * channel must also suspend the ParentChannel by calling
+   * SuspendMessageDiversion/ResumeMessageDiversion.
+   */
+  void MessageDiversionStarted(in ADivertableParentChannelPtr aParentChannel);
+
+  /**
+   * The message diversion has finished the calls to
+   * SuspendMessageDiversion/ResumeMessageDiversion are not necessary anymore.
+   */
+  void MessageDiversionStop();
+
+  /**
+   * Internal versions of Suspend/Resume that suspend (or resume) the channel
+   * but do not suspend the ParentChannel's IPDL message queue.
+   */
+  void SuspendInternal();
+  void ResumeInternal();
+};

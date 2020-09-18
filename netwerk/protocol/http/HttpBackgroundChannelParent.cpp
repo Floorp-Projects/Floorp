@@ -344,6 +344,39 @@ bool HttpBackgroundChannelParent::OnStatus(const nsresult aStatus) {
   return SendOnStatus(aStatus);
 }
 
+bool HttpBackgroundChannelParent::OnDiversion() {
+  LOG(("HttpBackgroundChannelParent::OnDiversion [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    nsresult rv = mBackgroundThread->Dispatch(
+        NewRunnableMethod("net::HttpBackgroundChannelParent::OnDiversion", this,
+                          &HttpBackgroundChannelParent::OnDiversion),
+        NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  if (!SendFlushedForDiversion()) {
+    return false;
+  }
+
+  // The listener chain should now be setup; tell HttpChannelChild to divert
+  // the OnDataAvailables and OnStopRequest to associated HttpChannelParent.
+  if (!SendDivertMessages()) {
+    return false;
+  }
+
+  return true;
+}
+
 bool HttpBackgroundChannelParent::OnNotifyClassificationFlags(
     uint32_t aClassificationFlags, bool aIsThirdParty) {
   LOG(
