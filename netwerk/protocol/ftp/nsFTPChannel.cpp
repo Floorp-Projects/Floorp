@@ -27,8 +27,7 @@ extern LazyLogModule gFTPLog;
 NS_IMPL_ISUPPORTS_INHERITED(nsFtpChannel, nsBaseChannel, nsIUploadChannel,
                             nsIResumableChannel, nsIFTPChannel,
                             nsIProxiedChannel, nsIForcePendingChannel,
-                            nsISupportsWeakReference,
-                            nsIChannelWithDivertableParentListener)
+                            nsISupportsWeakReference)
 
 //-----------------------------------------------------------------------------
 
@@ -199,59 +198,6 @@ bool nsFtpChannel::Pending() const {
 NS_IMETHODIMP
 nsFtpChannel::Suspend() {
   LOG(("nsFtpChannel::Suspend [this=%p]\n", this));
-
-  nsresult rv = SuspendInternal();
-
-  nsresult rvParentChannel = NS_OK;
-  if (mParentChannel) {
-    rvParentChannel = mParentChannel->SuspendMessageDiversion();
-  }
-
-  return NS_FAILED(rv) ? rv : rvParentChannel;
-}
-
-NS_IMETHODIMP
-nsFtpChannel::Resume() {
-  LOG(("nsFtpChannel::Resume [this=%p]\n", this));
-
-  nsresult rv = ResumeInternal();
-
-  nsresult rvParentChannel = NS_OK;
-  if (mParentChannel) {
-    rvParentChannel = mParentChannel->ResumeMessageDiversion();
-  }
-
-  return NS_FAILED(rv) ? rv : rvParentChannel;
-}
-
-//-----------------------------------------------------------------------------
-// AChannelHasDivertableParentChannelAsListener internal functions
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsFtpChannel::MessageDiversionStarted(
-    ADivertableParentChannel* aParentChannel) {
-  MOZ_ASSERT(!mParentChannel);
-  mParentChannel = aParentChannel;
-  // If the channel is suspended, propagate that info to the parent's mEventQ.
-  uint32_t suspendCount = mSuspendCount;
-  while (suspendCount--) {
-    mParentChannel->SuspendMessageDiversion();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFtpChannel::MessageDiversionStop() {
-  LOG(("nsFtpChannel::MessageDiversionStop [this=%p]", this));
-  MOZ_ASSERT(mParentChannel);
-  mParentChannel = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFtpChannel::SuspendInternal() {
-  LOG(("nsFtpChannel::SuspendInternal [this=%p]\n", this));
   NS_ENSURE_TRUE(Pending(), NS_ERROR_NOT_AVAILABLE);
 
   ++mSuspendCount;
@@ -259,8 +205,8 @@ nsFtpChannel::SuspendInternal() {
 }
 
 NS_IMETHODIMP
-nsFtpChannel::ResumeInternal() {
-  LOG(("nsFtpChannel::ResumeInternal [this=%p]\n", this));
+nsFtpChannel::Resume() {
+  LOG(("nsFtpChannel::Resume [this=%p]\n", this));
   NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
   --mSuspendCount;
   return nsBaseChannel::Resume();

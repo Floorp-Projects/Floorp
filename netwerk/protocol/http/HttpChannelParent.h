@@ -8,7 +8,6 @@
 #ifndef mozilla_net_HttpChannelParent_h
 #define mozilla_net_HttpChannelParent_h
 
-#include "ADivertableParentChannel.h"
 #include "nsHttp.h"
 #include "mozilla/net/PHttpChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -53,7 +52,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
                                 public PHttpChannelParent,
                                 public nsIParentRedirectingChannel,
                                 public nsIProgressEventSink,
-                                public ADivertableParentChannel,
                                 public nsIAuthPromptProvider,
                                 public nsIDeprecationWarner,
                                 public HttpChannelSecurityWarningReporter,
@@ -84,22 +82,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
                     nsILoadContext* aLoadContext, PBOverrideStatus aStatus);
 
   [[nodiscard]] bool Init(const HttpChannelCreationArgs& aOpenArgs);
-
-  // ADivertableParentChannel functions.
-  void DivertTo(nsIStreamListener* aListener) override;
-  [[nodiscard]] nsresult SuspendForDiversion() override;
-  [[nodiscard]] nsresult SuspendMessageDiversion() override;
-  [[nodiscard]] nsresult ResumeMessageDiversion() override;
-  [[nodiscard]] nsresult CancelDiversion() override;
-
-  // Calls OnStartRequest for "DivertTo" listener, then notifies child channel
-  // that it should divert OnDataAvailable and OnStopRequest calls to this
-  // parent channel.
-  void StartDiversion();
-
-  // Handles calling OnStart/Stop if there are errors during diversion.
-  // Called asynchronously from FailDiversion.
-  void NotifyDiversionFailed(nsresult aErrorCode);
 
   // Forwarded to nsHttpChannel::SetApplyConversion.
   void SetApplyConversion(bool aApplyConversion) {
@@ -211,12 +193,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   virtual mozilla::ipc::IPCResult RecvDocumentChannelCleanup(
       const bool& clearCacheEntry) override;
   virtual mozilla::ipc::IPCResult RecvMarkOfflineCacheEntryAsForeign() override;
-  virtual mozilla::ipc::IPCResult RecvDivertOnDataAvailable(
-      const nsCString& data, const uint64_t& offset,
-      const uint32_t& count) override;
-  virtual mozilla::ipc::IPCResult RecvDivertOnStopRequest(
-      const nsresult& statusCode) override;
-  virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(
       const URIParams& uri,
       const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
@@ -225,12 +201,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   virtual mozilla::ipc::IPCResult RecvOpenAltDataCacheInputStream(
       const nsCString& aType) override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
-
-  // Supporting function for ADivertableParentChannel.
-  [[nodiscard]] nsresult ResumeForDiversion();
-
-  // Asynchronously calls NotifyDiversionFailed.
-  void FailDiversion(nsresult aErrorCode);
 
   friend class ParentChannelListener;
   RefPtr<mozilla::dom::BrowserParent> mBrowserParent;
@@ -252,11 +222,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
  private:
   void UpdateAndSerializeSecurityInfo(nsACString& aSerializedSecurityInfoOut);
 
-  void DivertOnDataAvailable(const nsCString& data, const uint64_t& offset,
-                             const uint32_t& count);
-  void DivertOnStopRequest(const nsresult& statusCode);
-  void DivertComplete();
-  void MaybeFlushPendingDiversion();
   // final step for Redirect2Verify procedure, will be invoked while both
   // redirecting and redirected channel are ready or any error happened.
   // OnRedirectVerifyCallback will be invoked for finishing the async
@@ -283,9 +248,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   int32_t mSendWindowSize;
 
   friend class HttpBackgroundChannelParent;
-  friend class DivertDataAvailableEvent;
-  friend class DivertStopRequestEvent;
-  friend class DivertCompleteEvent;
 
   RefPtr<HttpBaseChannel> mChannel;
   nsCOMPtr<nsICacheEntry> mCacheEntry;
@@ -299,9 +261,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   RefPtr<nsHttpHandler> mHttpHandler;
 
   RefPtr<ParentChannelListener> mParentListener;
-  // The listener we are diverting to or will divert to if mPendingDiversion
-  // is set.
-  nsCOMPtr<nsIStreamListener> mDivertListener;
 
   RefPtr<ChannelEventQueue> mEventQ;
 
@@ -340,19 +299,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   uint8_t mSentRedirect1BeginFailed : 1;
   uint8_t mReceivedRedirect2Verify : 1;
   uint8_t mHasSuspendedByBackPressure : 1;
-
-  // Indicates that diversion has been requested, but we could not start it
-  // yet because the channel is still being opened with a synthesized response.
-  uint8_t mPendingDiversion : 1;
-  // Once set, no OnStart/OnData/OnStop calls should be accepted; conversely, it
-  // must be set when RecvDivertOnData/~DivertOnStop/~DivertComplete are
-  // received from the child channel.
-  uint8_t mDivertingFromChild : 1;
-
-  // Set if OnStart|StopRequest was called during a diversion from the child.
-  uint8_t mDivertedOnStartRequest : 1;
-
-  uint8_t mSuspendedForDiversion : 1;
 
   // Set if we get the result of and cache |mNeedFlowControl|
   uint8_t mCacheNeedFlowControlInitialized : 1;

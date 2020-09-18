@@ -15,7 +15,6 @@
 #include "nsICacheEntryOpenCallback.h"
 #include "nsIDNSListener.h"
 #include "nsIApplicationCacheChannel.h"
-#include "nsIChannelWithDivertableParentListener.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -23,7 +22,6 @@
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsWeakReference.h"
 #include "TimingStruct.h"
-#include "ADivertableParentChannel.h"
 #include "AutoClose.h"
 #include "nsIStreamListener.h"
 #include "nsICorsPreflightCallback.h"
@@ -77,7 +75,6 @@ class nsHttpChannel final : public HttpBaseChannel,
                             public nsIDNSListener,
                             public nsSupportsWeakReference,
                             public nsICorsPreflightCallback,
-                            public nsIChannelWithDivertableParentListener,
                             public nsIRaceCacheWithNetwork,
                             public nsIRequestTailUnblockCallback,
                             public nsITimerCallback {
@@ -97,7 +94,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
   NS_DECL_NSITHREADRETARGETABLEREQUEST
   NS_DECL_NSIDNSLISTENER
-  NS_DECL_NSICHANNELWITHDIVERTABLEPARENTLISTENER
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTPCHANNEL_IID)
   NS_DECL_NSIRACECACHEWITHNETWORK
   NS_DECL_NSITIMERCALLBACK
@@ -790,8 +786,6 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   // If non-null, warnings should be reported to this object.
   RefPtr<HttpChannelSecurityWarningReporter> mWarningReporter;
-
-  RefPtr<ADivertableParentChannel> mParentChannel;
 
   // True if the channel is reading from cache.
   Atomic<bool> mIsReadingFromCache;
