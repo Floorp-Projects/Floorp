@@ -16,8 +16,6 @@ nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
-log = "0.4.0"
-qlog = "0.3.0"
 
 [dependencies.neqo-crypto]
 tag = "v0.4.11"
