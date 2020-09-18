@@ -731,8 +731,15 @@ class TestTLSNavigation(BaseNavigationTestCase):
         try:
             self.capabilities = self.marionette.start_session(self.secure_tls)
             self.assertFalse(self.capabilities["acceptInsecureCerts"])
+            # Always use a blank new tab for an empty history
+            self.new_tab = self.open_tab()
+            self.marionette.switch_to_window(self.new_tab)
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+                lambda _: self.history_length == 1,
+                message="The newly opened tab doesn't have a browser history length of 1")
             yield self.marionette
         finally:
+            self.close_all_tabs()
             self.marionette.delete_session()
 
     @contextlib.contextmanager
@@ -740,8 +747,15 @@ class TestTLSNavigation(BaseNavigationTestCase):
         try:
             self.capabilities = self.marionette.start_session(self.insecure_tls)
             self.assertTrue(self.capabilities["acceptInsecureCerts"])
+            # Always use a blank new tab for an empty history
+            self.new_tab = self.open_tab()
+            self.marionette.switch_to_window(self.new_tab)
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+                lambda _: self.history_length == 1,
+                message="The newly opened tab doesn't have a browser history length of 1")
             yield self.marionette
         finally:
+            self.close_all_tabs()
             self.marionette.delete_session()
 
     def test_navigate_by_command(self):
