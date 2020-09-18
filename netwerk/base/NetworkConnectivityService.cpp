@@ -7,6 +7,7 @@
 #include "mozilla/Services.h"
 #include "xpcpublic.h"
 #include "nsSocketTransport2.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsINetworkLinkService.h"
 
 static LazyLogModule gNCSLog("NetworkConnectivityService");

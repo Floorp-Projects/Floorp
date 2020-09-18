@@ -35,8 +35,6 @@ class ExternalHelperAppChild : public PExternalHelperAppChild,
 
  private:
   virtual ~ExternalHelperAppChild();
-  [[nodiscard]] nsresult DivertToParent(nsIDivertableChannel* divertable,
-                                        nsIRequest* request);
 
   RefPtr<nsExternalAppHandler> mHandler;
   nsresult mStatus;

@@ -17,7 +17,6 @@
 #include "nsIProxiedChannel.h"
 #include "nsIResumableChannel.h"
 #include "nsIChildChannel.h"
-#include "nsIDivertableChannel.h"
 #include "nsIEventTarget.h"
 
 #include "nsIStreamListener.h"
@@ -40,8 +39,7 @@ class FTPChannelChild final : public PFTPChannelChild,
                               public nsIUploadChannel,
                               public nsIResumableChannel,
                               public nsIProxiedChannel,
-                              public nsIChildChannel,
-                              public nsIDivertableChannel {
+                              public nsIChildChannel {
  public:
   typedef ::nsIStreamListener nsIStreamListener;
 
@@ -51,7 +49,6 @@ class FTPChannelChild final : public PFTPChannelChild,
   NS_DECL_NSIRESUMABLECHANNEL
   NS_DECL_NSIPROXIEDCHANNEL
   NS_DECL_NSICHILDCHANNEL
-  NS_DECL_NSIDIVERTABLECHANNEL
 
   NS_IMETHOD Cancel(nsresult aStatus) override;
   NS_IMETHOD Suspend() override;
@@ -73,8 +70,6 @@ class FTPChannelChild final : public PFTPChannelChild,
 
   bool IsSuspended() const;
 
-  void FlushedForDiversion();
-
  protected:
   virtual ~FTPChannelChild();
 
@@ -93,8 +88,6 @@ class FTPChannelChild final : public PFTPChannelChild,
                                             const bool& aUseUTF8) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(
       const nsresult& aStatusCode) override;
-  mozilla::ipc::IPCResult RecvFlushedForDiversion() override;
-  mozilla::ipc::IPCResult RecvDivertMessages() override;
   mozilla::ipc::IPCResult RecvDeleteSelf() override;
 
   void DoOnStartRequest(const nsresult& aChannelStatus,
@@ -119,12 +112,6 @@ class FTPChannelChild final : public PFTPChannelChild,
   bool mIPCOpen;
   const RefPtr<ChannelEventQueue> mEventQ;
 
-  // If nsUnknownDecoder is involved we queue onDataAvailable (and possibly
-  // OnStopRequest) so that we can divert them if needed when the listener's
-  // OnStartRequest is finally called
-  nsTArray<UniquePtr<ChannelEvent>> mUnknownDecoderEventQ;
-  bool mUnknownDecoderInvolved;
-
   bool mCanceled;
   uint32_t mSuspendCount;
   bool mIsPending;
@@ -137,11 +124,6 @@ class FTPChannelChild final : public PFTPChannelChild,
   uint64_t mStartPos;
   nsCString mEntityID;
 
-  // Once set, OnData and possibly OnStop will be diverted to the parent.
-  bool mDivertingToParent;
-  // Once set, no OnStart/OnData/OnStop callbacks should be received from the
-  // parent channel, nor dequeued from the ChannelEventQueue.
-  bool mFlushedForDiversion;
   // Set if SendSuspend is called. Determines if SendResume is needed when
   // diverting callbacks to parent.
   bool mSuspendSent;

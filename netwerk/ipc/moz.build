@@ -56,7 +56,6 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES = [
     'NeckoChannelParams.ipdlh',
-    'PChannelDiverter.ipdl',
     'PDataChannel.ipdl',
     'PDocumentChannel.ipdl',
     'PFileChannel.ipdl',

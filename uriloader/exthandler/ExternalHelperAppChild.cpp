@@ -5,9 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ExternalHelperAppChild.h"
-#include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/dom/BrowserChild.h"
-#include "nsIDivertableChannel.h"
 #include "nsIInputStream.h"
 #include "nsIRequest.h"
 #include "nsIResumableChannel.h"
@@ -64,11 +62,6 @@ ExternalHelperAppChild::OnStartRequest(nsIRequest* request) {
   nsresult rv = mHandler->OnStartRequest(request);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDivertableChannel> divertable = do_QueryInterface(request);
-  if (divertable) {
-    return DivertToParent(divertable, request);
-  }
-
   nsCString entityID;
   nsCOMPtr<nsIResumableChannel> resumable(do_QueryInterface(request));
   if (resumable) {
@@ -88,28 +81,6 @@ ExternalHelperAppChild::OnStopRequest(nsIRequest* request, nsresult status) {
   }
 
   return NS_OK;
-}
-
-nsresult ExternalHelperAppChild::DivertToParent(
-    nsIDivertableChannel* divertable, nsIRequest* request) {
-  // nsIDivertable must know about content conversions before being diverted.
-  MOZ_ASSERT(mHandler);
-  mHandler->MaybeApplyDecodingForExtension(request);
-
-  mozilla::net::ChannelDiverterChild* diverter = nullptr;
-  nsresult rv = divertable->DivertToParent(&diverter);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  MOZ_ASSERT(diverter);
-
-  if (SendDivertToParentUsing(diverter)) {
-    mHandler->DidDivertRequest(request);
-    mHandler = nullptr;
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
 }
 
 mozilla::ipc::IPCResult ExternalHelperAppChild::RecvCancel(
