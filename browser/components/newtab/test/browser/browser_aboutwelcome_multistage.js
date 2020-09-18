@@ -25,12 +25,12 @@ const TEST_MULTISTAGE_CONTENT = {
           },
           data: [
             {
-              theme: "test-theme-1",
+              theme: "automatic",
               label: "theme-1",
               tooltip: "test-tooltip",
             },
             {
-              theme: "test-theme-2",
+              theme: "dark",
               label: "theme-2",
             },
           ],
@@ -654,7 +654,7 @@ add_task(async function test_AWMultistage_Themes() {
     Assert.equal(themes.length, 2, "Two themes displayed");
   });
 
-  await onButtonClick(browser, "input[value=test-theme-1]");
+  await onButtonClick(browser, "input[value=automatic]");
 
   const { callCount } = aboutWelcomeActor.onContentMessage;
   ok(callCount >= 1, `${callCount} Stub was called`);
@@ -678,8 +678,8 @@ add_task(async function test_AWMultistage_Themes() {
   );
   Assert.equal(
     actionCall.args[1],
-    "TEST-THEME-1",
-    "Theme value passed as TEST-THEME-1"
+    "AUTOMATIC",
+    "Theme value passed as AUTOMATIC"
   );
   Assert.equal(
     eventCall.args[0],
@@ -693,7 +693,7 @@ add_task(async function test_AWMultistage_Themes() {
   );
   Assert.equal(
     eventCall.args[1].event_context.source,
-    "test-theme-1",
-    "test-theme-1 click source recorded in Telemetry"
+    "automatic",
+    "automatic click source recorded in Telemetry"
   );
 });
