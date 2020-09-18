@@ -106,8 +106,8 @@ class MOZ_RAII TrialInliner {
   void cloneSharedPrefix(ICStub* stub, const uint8_t* endOfPrefix,
                          CacheIRWriter& writer);
   ICScript* createInlinedICScript(JSFunction* target, BytecodeLocation loc);
-  void replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
-                     CacheKind kind);
+  MOZ_MUST_USE bool replaceICStub(const ICEntry& entry, CacheIRWriter& writer,
+                                  CacheKind kind);
 
   bool shouldInline(JSFunction* target, ICStub* stub, BytecodeLocation loc);
 
