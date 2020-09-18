@@ -936,7 +936,11 @@ class WindowsDllDetourPatcher final
         mLastError->mOrigBytes[i] = origBytes[i];
       }
 #  endif  // defined(_M_ARM64)
-#endif    // defined(NIGHTLY_BUILD)
+#else
+      // Silence -Wunused-lambda-capture in non-Nightly.
+      Unused << this;
+      Unused << origBytes;
+#endif  // defined(NIGHTLY_BUILD)
     });
 
     tramp.WritePointer(origBytes.AsEncodedPtr());
