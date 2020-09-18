@@ -50,6 +50,8 @@ class SelectBookmarkFolderFragment : Fragment() {
         super.onResume()
         showToolbar(getString(R.string.bookmark_select_folder_fragment_label))
 
+        val args: SelectBookmarkFolderFragmentArgs by navArgs()
+
         viewLifecycleOwner.lifecycleScope.launch(Main) {
             bookmarkNode = withContext(IO) {
                 val context = requireContext()
@@ -59,7 +61,7 @@ class SelectBookmarkFolderFragment : Fragment() {
             }
             val adapter = SelectBookmarkFolderAdapter(sharedViewModel)
             recylerViewBookmarkFolders.adapter = adapter
-            adapter.updateData(bookmarkNode)
+            adapter.updateData(bookmarkNode, args.hideFolderGuid)
         }
     }
 

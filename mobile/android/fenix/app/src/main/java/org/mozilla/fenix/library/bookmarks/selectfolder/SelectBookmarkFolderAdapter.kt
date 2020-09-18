@@ -24,12 +24,19 @@ import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderAdap
 class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedViewModel) :
     ListAdapter<BookmarkNodeWithDepth, BookmarkFolderViewHolder>(DiffCallback) {
 
-    fun updateData(tree: BookmarkNode?) {
+    fun updateData(tree: BookmarkNode?, hideFolderGuid: String?) {
         val updatedData = tree
             ?.convertToFolderDepthTree()
             ?.drop(1)
             .orEmpty()
-        submitList(updatedData)
+
+        val filteredData = if (hideFolderGuid != null && updatedData.isNotEmpty()) {
+            updatedData.filter { it.node.guid != hideFolderGuid }
+        } else {
+            updatedData
+        }
+
+        submitList(filteredData)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkFolderViewHolder {

@@ -107,7 +107,12 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                         R.id.bookmarkEditFragment,
                         EditBookmarkFragmentDirections
                             .actionBookmarkEditFragmentToBookmarkSelectFolderFragment(
-                                allowCreatingNewFolder = false
+                                allowCreatingNewFolder = false,
+                                // Don't allow moving folders into themselves.
+                                hideFolderGuid = when (bookmarkNode!!.type) {
+                                    BookmarkNodeType.FOLDER -> bookmarkNode!!.guid
+                                    else -> null
+                                }
                             )
                     )
                 }

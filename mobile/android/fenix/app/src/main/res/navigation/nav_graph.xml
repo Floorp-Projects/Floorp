@@ -308,6 +308,11 @@
             android:name="allowCreatingNewFolder"
             android:defaultValue="false"
             app:argType="boolean" />
+        <argument
+            android:name="hideFolderGuid"
+            android:defaultValue="@null"
+            app:nullable="true"
+            app:argType="string" />
     </fragment>
 
     <fragment
