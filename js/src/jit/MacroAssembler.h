@@ -3634,6 +3634,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                   ValueOperand output, Register temp,
                                   Label* fail);
 
+  void loadArgumentsObjectLength(Register obj, Register output, Label* fail);
+
   void typedArrayElementShift(Register obj, Register output);
   void branchIfClassIsNotTypedArray(Register clasp, Label* notTypedArray);
 
