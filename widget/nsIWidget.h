@@ -1857,6 +1857,15 @@ class nsIWidget : public nsISupports {
    */
   virtual void EnableIMEForPlugin(bool aEnable) {}
 
+  /**
+   * MaybeDispatchInitialFocusEvent will dispatch a focus event after creation
+   * of the widget, in the event that we were not able to observe and respond to
+   * the initial focus event. This is necessary for the early skeleton UI
+   * window, which is displayed and receives its initial focus event before we
+   * can actually respond to it.
+   */
+  virtual void MaybeDispatchInitialFocusEvent() {}
+
   /*
    * Notifies the input context changes.
    */
