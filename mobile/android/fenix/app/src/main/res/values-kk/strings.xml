@@ -1357,8 +1357,12 @@
     <string name="logins_site_copied">Сайт алмасу буферіне көшірілді</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Парольді көшіріп алу</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Парольді тазарту</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Пайдаланушы атын көшіріп алу</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Пайдаланушы атын тазарту</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Сайтты көшіріп алу</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1532,6 +1536,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Үздік сайттар саны шегіне жетті</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Жаңа үздік сайтын қосу үшін, біреуін өшіріңіз. Сайтқа басып, басулы ұстаңыз және өшіру таңдаңыз.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Жақсы, түсіндім</string>
 

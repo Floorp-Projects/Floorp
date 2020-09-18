@@ -271,6 +271,8 @@
     <string name="preferences_open_links_in_a_private_tab">Apre i liami in un’unghjetta privata</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Permette e catture di screnu durante a navigazione privata</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">S’ella hè permessa, l’unghjette private seranu ancu videvule quandu parechje appiecazioni sò aperte</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Aghjunghje un accurtatoghjiu per a navigazione privata</string>
     <!-- Preference for accessibility -->
@@ -291,6 +293,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Accolta</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Mosse</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Persunalizà</string>
     <!-- Preference description for banner about signing in -->
@@ -326,9 +330,13 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Circà in l’indette</string>
 
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Ricercà in l’unghjette sincrunizate</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Preferenze di u contu</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Compie autumaticamente l’URL</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Apre i liami in appiecazioni</string>
 
@@ -464,6 +472,9 @@
     <string name="preference_auto_battery_theme">Definitu da l’ecunumizatore d’energia di batteria</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seguità u tema di l’apparechju</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Sfilà per piattà a barra d’attrezzi</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1061,7 +1072,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Site cunnettu cum’è %s nant’à un altru navigatore Firefox cù stu telefonu. Vulete cunnettavvi cù stu contu ?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_3">Site cunnettu cum’è %s nant’à un altru navigatore Firefox cù st’apparechju. Vulete cunnettavvi cù stu contu ?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Iè, cunnettatemi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1306,7 +1317,7 @@
     <string name="add_to_homescreen_text_placeholder">Nome di l’accurtatoghju</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Hè faciule d’aghjunghje stu situ nant’à u screnu d’accolta di u vostru telefonu per accedeci direttamente è navigà più prestu cum’è s’ella fussi un’appiecazione.</string>
+    <string name="add_to_homescreen_description_2">Hè faciule d’aghjunghje stu situ nant’à u screnu d’accolta di u vostru apparechju per accedeci direttamente è navigà più prestu cum’è s’ella fussi un’appiecazione.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Identificazioni è parolle d’entrata</string>
@@ -1378,8 +1389,12 @@
     <string name="logins_site_copied">Situ cupiatu ver di u preme’papei</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Cupià a parolla d’entrata</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Squassà a parolla d’entrata</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Cupià u nome d’utilizatore</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Squassà u nome d’utilizatore</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Cupià u situ</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1537,7 +1552,7 @@
     <string name="saved_login_duplicate">L’identificazione di cunnessione cù stu nome d’utilizatore esiste dighjà</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Cunnettate un altru apparechju.</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ci vole à autenticassi torna.</string>
@@ -1559,7 +1574,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Cunfina di siti principale tocca</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Per aghjunghje un novu situ principale, ci vole à cacciane unu. Effettuate una longa incalcata nant’à u situ è selezziunate Caccià.</string>
+    <string name="top_sites_max_limit_content_2">Per aghjunghje un novu situ principale, ci vole à cacciane un’altru. Effettuate una longa incalcata nant’à u situ è selezziunate Caccià.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Iè, aghju capitu</string>
 
@@ -1569,7 +1584,7 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Caccià</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Ottene u più bellu da %s.</string>
 
@@ -1577,4 +1592,9 @@
     <string name="no_collections_header1">Racuglite ciò chì conta per voi</string>
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Gruppate inseme ricerche simile, i siti è l’unghjette per un accessu future più prestu.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Site cunnettu cum’è %s nant’à un altru navigatore Firefox cù stu telefonu. Vulete cunnettavvi cù stu contu ?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Hè faciule d’aghjunghje stu situ nant’à u screnu d’accolta di u vostru telefonu per accedeci direttamente è navigà più prestu cum’è s’ella fussi un’appiecazione.</string>
+
     </resources>

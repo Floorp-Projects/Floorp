@@ -325,6 +325,8 @@
     <string name="preferences_search_browsing_history">Pretraži povijest pregledavanja</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Pretraži zabilješke</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Pretraži sinkronizirane kartice</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Postavke računa</string>
     <!-- Preference for enabling url autocomplete-->

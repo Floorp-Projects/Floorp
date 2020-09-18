@@ -320,6 +320,8 @@
     <string name="preferences_search_browsing_history">Αναζήτηση ιστορικού περιήγησης</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Αναζήτηση σελιδοδεικτών</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Αναζήτηση συγχρονισμένων καρτελών</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Ρυθμίσεις λογαριασμού</string>
     <!-- Preference for enabling url autocomplete-->
