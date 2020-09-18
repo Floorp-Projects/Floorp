@@ -570,6 +570,13 @@ nsresult Http3Session::ProcessOutputAndEvents() {
   // ProcessOutput could fire another timer. Need to unset the flag before that.
   mTimerActive = false;
 
+  MOZ_ASSERT(mTimerShouldTrigger);
+
+  Telemetry::AccumulateTimeDelta(Telemetry::HTTP3_TIMER_DELAYED,
+                                 mTimerShouldTrigger, TimeStamp::Now());
+
+  mTimerShouldTrigger = TimeStamp();
+
   nsresult rv = ProcessOutput();
   if (NS_FAILED(rv)) {
     return rv;
@@ -586,6 +593,9 @@ void Http3Session::SetupTimer(uint64_t aTimeout) {
   }
 
   LOG(("Http3Session::SetupTimer to %" PRIu64 "ms [this=%p].", aTimeout, this));
+
+  // Remember the time when the timer should trigger.
+  mTimerShouldTrigger = TimeStamp::Now() + TimeDuration::FromMilliseconds(aTimeout);
 
   if (mTimerActive && mTimer) {
     LOG(
