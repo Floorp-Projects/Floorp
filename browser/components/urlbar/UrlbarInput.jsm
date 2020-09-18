@@ -1315,7 +1315,10 @@ class UrlbarInput {
   setSearchMode({ engineName, source, entry, isPreview = true }) {
     // Exit search mode if update2 is disabled or the passed-in engine is
     // invalid or hidden.
-    let engine = Services.search.getEngineByName(engineName);
+    let engine;
+    if (engineName) {
+      engine = Services.search.getEngineByName(engineName);
+    }
     if (
       !UrlbarPrefs.get("update2") ||
       (engineName && (!engine || engine.hidden))
