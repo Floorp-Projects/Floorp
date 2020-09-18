@@ -15,10 +15,9 @@ class NeqoHttp3Conn final {
   static nsresult Init(const nsACString& aOrigin, const nsACString& aAlpn,
                        const nsACString& aLocalAddr,
                        const nsACString& aRemoteAddr, uint32_t aMaxTableSize,
-                       uint16_t aMaxBlockedStreams, const nsACString& aQlogDir,
-                       NeqoHttp3Conn** aConn) {
+                       uint16_t aMaxBlockedStreams, NeqoHttp3Conn** aConn) {
     return neqo_http3conn_new(&aOrigin, &aAlpn, &aLocalAddr, &aRemoteAddr,
-                              aMaxTableSize, aMaxBlockedStreams, &aQlogDir,
+                              aMaxTableSize, aMaxBlockedStreams,
                               (const mozilla::net::NeqoHttp3Conn**)aConn);
   }
 

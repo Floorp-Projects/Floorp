@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Role};
+use neqo_common::Datagram;
 use neqo_crypto::{init, PRErrorCode};
 use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
@@ -11,12 +11,9 @@ use neqo_transport::Error as TransportError;
 use neqo_transport::{FixedConnectionIdManager, Output, QuicVersion};
 use nserror::*;
 use nsstring::*;
-use qlog::QlogStreamer;
 use std::cell::RefCell;
 use std::convert::TryFrom;
-use std::fs::OpenOptions;
 use std::net::SocketAddr;
-use std::path::PathBuf;
 use std::ptr;
 use std::rc::Rc;
 use std::slice;
@@ -42,7 +39,6 @@ impl NeqoHttp3Conn {
         remote_addr: &nsACString,
         max_table_size: u64,
         max_blocked_streams: u16,
-        qlog_dir: &nsACString,
     ) -> Result<RefPtr<NeqoHttp3Conn>, nsresult> {
         // Nss init.
         init();
@@ -83,7 +79,7 @@ impl NeqoHttp3Conn {
             _ => return Err(NS_ERROR_INVALID_ARG),
         };
 
-        let mut conn = match Http3Client::new(
+        let conn = match Http3Client::new(
             origin_conv,
             &[alpn_conv],
             Rc::new(RefCell::new(FixedConnectionIdManager::new(3))),
@@ -95,39 +91,6 @@ impl NeqoHttp3Conn {
             Ok(c) => c,
             Err(_) => return Err(NS_ERROR_INVALID_ARG),
         };
-
-        if !qlog_dir.is_empty() {
-            let qlog_dir_conv = str::from_utf8(qlog_dir).map_err(|_| NS_ERROR_INVALID_ARG)?;
-            let mut qlog_path = PathBuf::from(qlog_dir_conv);
-            qlog_path.push(format!("{}.qlog", origin));
-
-            // Emit warnings but to not return an error if qlog initialization
-            // fails.
-            match OpenOptions::new()
-                .write(true)
-                .create(true)
-                .truncate(true)
-                .open(&qlog_path)
-            {
-                Err(_) => qwarn!("Could not open qlog path: {}", qlog_path.display()),
-                Ok(f) => {
-                    let streamer = QlogStreamer::new(
-                        qlog::QLOG_VERSION.to_string(),
-                        Some("Firefox Client qlog".to_string()),
-                        Some("Firefox Client qlog".to_string()),
-                        None,
-                        std::time::Instant::now(),
-                        common::qlog::new_trace(Role::Client),
-                        Box::new(f),
-                    );
-
-                    match NeqoQlog::enabled(streamer, &qlog_path) {
-                        Err(_) => qwarn!("Could not write to qlog path: {}", qlog_path.display()),
-                        Ok(nq) => conn.set_qlog(nq),
-                    }
-                }
-            }
-        }
 
         let conn = Box::into_raw(Box::new(NeqoHttp3Conn {
             conn,
@@ -173,7 +136,6 @@ pub extern "C" fn neqo_http3conn_new(
     remote_addr: &nsACString,
     max_table_size: u64,
     max_blocked_streams: u16,
-    qlog_dir: &nsACString,
     result: &mut *const NeqoHttp3Conn,
 ) -> nsresult {
     *result = ptr::null_mut();
@@ -185,7 +147,6 @@ pub extern "C" fn neqo_http3conn_new(
         remote_addr,
         max_table_size,
         max_blocked_streams,
-        qlog_dir,
     ) {
         Ok(http3_conn) => {
             http3_conn.forget(result);
