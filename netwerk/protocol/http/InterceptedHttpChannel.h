@@ -12,7 +12,6 @@
 #include "nsINetworkInterceptController.h"
 #include "nsIInputStream.h"
 #include "nsICacheInfoChannel.h"
-#include "nsIChannelWithDivertableParentListener.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIThreadRetargetableStreamListener.h"
 
@@ -57,7 +56,6 @@ class InterceptedHttpChannel final
       public nsICacheInfoChannel,
       public nsIAsyncVerifyRedirectCallback,
       public nsIStreamListener,
-      public nsIChannelWithDivertableParentListener,
       public nsIThreadRetargetableRequest,
       public nsIThreadRetargetableStreamListener {
   NS_DECL_ISUPPORTS_INHERITED
@@ -66,7 +64,6 @@ class InterceptedHttpChannel final
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSICHANNELWITHDIVERTABLEPARENTLISTENER
   NS_DECL_NSITHREADRETARGETABLEREQUEST
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
@@ -81,7 +78,6 @@ class InterceptedHttpChannel final
   nsCOMPtr<nsIInterceptedBodyCallback> mBodyCallback;
   nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
   RefPtr<nsInputStreamPump> mPump;
-  RefPtr<ADivertableParentChannel> mParentChannel;
   TimeStamp mFinishResponseStart;
   TimeStamp mFinishResponseEnd;
   Atomic<int64_t> mProgress;
@@ -92,7 +88,6 @@ class InterceptedHttpChannel final
   nsString mStatusHost;
   enum { Invalid = 0, Synthesized, Reset } mSynthesizedOrReset;
   Atomic<bool> mCallingStatusAndProgress;
-  bool mDiverting;
 
   InterceptedHttpChannel(PRTime aCreationTime,
                          const TimeStamp& aCreationTimestamp,

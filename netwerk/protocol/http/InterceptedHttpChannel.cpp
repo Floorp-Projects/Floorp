@@ -21,9 +21,7 @@ namespace net {
 NS_IMPL_ISUPPORTS_INHERITED(InterceptedHttpChannel, HttpBaseChannel,
                             nsIInterceptedChannel, nsICacheInfoChannel,
                             nsIAsyncVerifyRedirectCallback, nsIRequestObserver,
-                            nsIStreamListener,
-                            nsIChannelWithDivertableParentListener,
-                            nsIThreadRetargetableRequest,
+                            nsIStreamListener, nsIThreadRetargetableRequest,
                             nsIThreadRetargetableStreamListener)
 
 InterceptedHttpChannel::InterceptedHttpChannel(
@@ -35,8 +33,7 @@ InterceptedHttpChannel::InterceptedHttpChannel(
       mSynthesizedStreamLength(-1),
       mResumeStartPos(0),
       mSynthesizedOrReset(Invalid),
-      mCallingStatusAndProgress(false),
-      mDiverting(false) {
+      mCallingStatusAndProgress(false) {
   // Pre-set the creation and AsyncOpen times based on the original channel
   // we are intercepting.  We don't want our extra internal redirect to mask
   // any time spent processing the channel.
@@ -57,7 +54,6 @@ void InterceptedHttpChannel::ReleaseListeners() {
   mProgressSink = nullptr;
   mBodyCallback = nullptr;
   mPump = nullptr;
-  mParentChannel = nullptr;
 
   MOZ_DIAGNOSTIC_ASSERT(!mIsPending);
 }
@@ -480,15 +476,6 @@ InterceptedHttpChannel::Cancel(nsresult aStatus) {
     mStatus = aStatus;
   }
 
-  // Everything is suspended during diversion until it completes.  Since the
-  // intercepted channel could be a long-running stream, we need to request that
-  // cancellation be triggered in the child, completing the diversion and
-  // allowing cancellation to run to completion.
-  if (mDiverting) {
-    Unused << mParentChannel->CancelDiversion();
-    // (We want the pump to be canceled as well, so don't directly return.)
-  }
-
   if (mPump) {
     return mPump->Cancel(mStatus);
   }
@@ -498,26 +485,20 @@ InterceptedHttpChannel::Cancel(nsresult aStatus) {
 
 NS_IMETHODIMP
 InterceptedHttpChannel::Suspend(void) {
-  nsresult rv = SuspendInternal();
-
-  nsresult rvParentChannel = NS_OK;
-  if (mParentChannel) {
-    rvParentChannel = mParentChannel->SuspendMessageDiversion();
+  ++mSuspendCount;
+  if (mPump) {
+    return mPump->Suspend();
   }
-
-  return NS_FAILED(rv) ? rv : rvParentChannel;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 InterceptedHttpChannel::Resume(void) {
-  nsresult rv = ResumeInternal();
-
-  nsresult rvParentChannel = NS_OK;
-  if (mParentChannel) {
-    rvParentChannel = mParentChannel->ResumeMessageDiversion();
+  --mSuspendCount;
+  if (mPump) {
+    return mPump->Resume();
   }
-
-  return NS_FAILED(rv) ? rv : rvParentChannel;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1106,45 +1087,6 @@ InterceptedHttpChannel::OnDataAvailable(nsIRequest* aRequest,
   }
 
   return mListener->OnDataAvailable(this, aInputStream, aOffset, aCount);
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::MessageDiversionStarted(
-    ADivertableParentChannel* aParentChannel) {
-  MOZ_ASSERT(!mParentChannel);
-  mParentChannel = aParentChannel;
-  mDiverting = true;
-  uint32_t suspendCount = mSuspendCount;
-  while (suspendCount--) {
-    mParentChannel->SuspendMessageDiversion();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::MessageDiversionStop() {
-  MOZ_ASSERT(mParentChannel);
-  mParentChannel = nullptr;
-  mDiverting = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::SuspendInternal() {
-  ++mSuspendCount;
-  if (mPump) {
-    return mPump->Suspend();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::ResumeInternal() {
-  --mSuspendCount;
-  if (mPump) {
-    return mPump->Resume();
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
