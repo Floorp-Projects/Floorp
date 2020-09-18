@@ -4457,8 +4457,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
                       !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().y,
                                            lastScrollOffset.y);
 
-  if (aLayerMetrics.GetScrollUpdateType() !=
-      FrameMetrics::ScrollOffsetUpdateType::ePending) {
+  if (aScrollMetadata.DidContentGetPainted()) {
     mLastContentPaintMetadata = aScrollMetadata;
   }
 
