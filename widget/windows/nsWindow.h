@@ -370,6 +370,7 @@ class nsWindow final : public nsWindowBase {
       mozilla::widget::CompositorWidgetInitData* aInitData) override;
   bool IsTouchWindow() const { return mTouchWindow; }
   bool SynchronouslyRepaintOnResize() override;
+  virtual void MaybeDispatchInitialFocusEvent() override;
 
  protected:
   virtual ~nsWindow();
@@ -605,6 +606,7 @@ class nsWindow final : public nsWindowBase {
   bool mOpeningAnimationSuppressed;
   bool mAlwaysOnTop;
   bool mIsEarlyBlankWindow;
+  bool mWasPreXulSkeletonUI;
   bool mResizable;
   DWORD_PTR mOldStyle;
   DWORD_PTR mOldExStyle;
