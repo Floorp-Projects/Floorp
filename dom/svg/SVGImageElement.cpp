@@ -255,9 +255,11 @@ bool SVGImageElement::GetGeometryBounds(
     const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   Rect rect;
 
-  MOZ_ASSERT(GetPrimaryFrame());
-  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
-      this, &rect.x, &rect.y, &rect.width, &rect.height);
+  DebugOnly<bool> ok =
+      SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width,
+                                      SVGT::Height>(this, &rect.x, &rect.y,
+                                                    &rect.width, &rect.height);
+  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
 
   if (rect.IsEmpty()) {
     // Rendering of the element disabled
@@ -284,9 +286,10 @@ already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
 bool SVGImageElement::HasValidDimensions() const {
   float width, height;
 
-  MOZ_ASSERT(GetPrimaryFrame());
-  SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(this, &width,
-                                                             &height);
+  DebugOnly<bool> ok =
+      SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(this, &width,
+                                                                 &height);
+  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
 
   return width > 0 && height > 0;
 }

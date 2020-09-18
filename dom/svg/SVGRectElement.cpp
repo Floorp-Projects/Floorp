@@ -95,9 +95,10 @@ already_AddRefed<DOMSVGAnimatedLength> SVGRectElement::Ry() {
 bool SVGRectElement::HasValidDimensions() const {
   float width, height;
 
-  MOZ_ASSERT(GetPrimaryFrame());
-  SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(this, &width,
-                                                             &height);
+  DebugOnly<bool> ok =
+      SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(this, &width,
+                                                                 &height);
+  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
 
   return width > 0 && height > 0;
 }
@@ -117,10 +118,11 @@ bool SVGRectElement::GetGeometryBounds(Rect* aBounds,
   Rect rect;
   Float rx, ry;
 
-  MOZ_ASSERT(GetPrimaryFrame());
-  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height,
-                                  SVGT::Rx, SVGT::Ry>(
-      this, &rect.x, &rect.y, &rect.width, &rect.height, &rx, &ry);
+  DebugOnly<bool> ok =
+      SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width,
+                                      SVGT::Height, SVGT::Rx, SVGT::Ry>(
+          this, &rect.x, &rect.y, &rect.width, &rect.height, &rx, &ry);
+  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
 
   if (rect.IsEmpty()) {
     // Rendering of the element disabled
@@ -170,9 +172,10 @@ bool SVGRectElement::GetGeometryBounds(Rect* aBounds,
 void SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath) {
   float x, y, width, height, rx, ry;
 
-  SVGGeometryProperty::ResolveAllAllowFallback<
+  DebugOnly<bool> ok = SVGGeometryProperty::ResolveAllAllowFallback<
       SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height, SVGT::Rx, SVGT::Ry>(
       this, &x, &y, &width, &height, &rx, &ry);
+  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAllAllowFallback failed");
 
   if (width <= 0 || height <= 0) {
     aSimplePath->Reset();

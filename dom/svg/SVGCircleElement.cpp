@@ -72,8 +72,8 @@ already_AddRefed<DOMSVGAnimatedLength> SVGCircleElement::R() {
 bool SVGCircleElement::HasValidDimensions() const {
   float r;
 
-  MOZ_ASSERT(GetPrimaryFrame());
-  SVGGeometryProperty::ResolveAll<SVGT::R>(this, &r);
+  DebugOnly<bool> ok = SVGGeometryProperty::ResolveAll<SVGT::R>(this, &r);
+  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
   return r > 0;
 }
 
@@ -90,9 +90,10 @@ bool SVGCircleElement::GetGeometryBounds(
     const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   float x, y, r;
 
-  MOZ_ASSERT(GetPrimaryFrame());
-  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::R>(this, &x, &y,
-                                                               &r);
+  DebugOnly<bool> ok =
+      SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::R>(this, &x, &y,
+                                                                   &r);
+  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
 
   if (r <= 0.f) {
     // Rendering of the element is disabled
