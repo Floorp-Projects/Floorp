@@ -44,6 +44,11 @@ RotorFrameRule::RotorFrameRule() : PivotRoleRule(roles::DOCUMENT) {}
 RotorFrameRule::RotorFrameRule(AccessibleOrProxy& aDirectDescendantsFrom)
     : PivotRoleRule(roles::DOCUMENT, aDirectDescendantsFrom) {}
 
+RotorImageRule::RotorImageRule() : PivotRoleRule(roles::GRAPHIC) {}
+
+RotorImageRule::RotorImageRule(AccessibleOrProxy& aDirectDescendantsFrom)
+    : PivotRoleRule(roles::GRAPHIC, aDirectDescendantsFrom) {}
+
 RotorControlRule::RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom)
     : mDirectDescendantsFrom(aDirectDescendantsFrom) {}
 
