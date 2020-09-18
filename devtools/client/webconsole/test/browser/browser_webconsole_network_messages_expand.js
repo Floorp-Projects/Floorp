@@ -344,7 +344,7 @@ async function waitForSourceEditor(panel) {
 }
 
 async function waitForRequestUpdates(hud) {
-  return hud.ui.once("network-messages-updated");
+  return hud.ui.once("network-message-updated");
 }
 
 function expandXhrMessage(node) {
