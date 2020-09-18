@@ -71,6 +71,8 @@ class MOZ_STACK_CLASS DebugOnly {
   T& operator->() { return value; }
   const T& operator->() const { return value; }
 
+  const T& inspect() const { return value; }
+
 #else
   DebugOnly() = default;
   MOZ_IMPLICIT DebugOnly(const T&) {}
