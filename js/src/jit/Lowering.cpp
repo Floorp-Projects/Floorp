@@ -346,6 +346,15 @@ void LIRGenerator::visitLoadArgumentsObjectArg(MLoadArgumentsObjectArg* ins) {
   defineBox(lir, ins);
 }
 
+void LIRGenerator::visitArgumentsObjectLength(MArgumentsObjectLength* ins) {
+  MDefinition* argsObj = ins->getArgsObject();
+  MOZ_ASSERT(argsObj->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LArgumentsObjectLength(useRegister(argsObj));
+  assignSnapshot(lir, BailoutKind::ArgumentsObjectAccess);
+  define(lir, ins);
+}
+
 void LIRGenerator::visitReturnFromCtor(MReturnFromCtor* ins) {
   LReturnFromCtor* lir = new (alloc())
       LReturnFromCtor(useBox(ins->getValue()), useRegister(ins->getObject()));

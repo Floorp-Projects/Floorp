@@ -1325,6 +1325,17 @@ bool WarpCacheIRTranspiler::emitLoadArgumentsObjectArgResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadArgumentsObjectLengthResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* length = MArgumentsObjectLength::New(alloc(), obj);
+  add(length);
+
+  pushResult(length);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(
     ObjOperandId objId, uint32_t getterOffset) {
   MDefinition* obj = getOperand(objId);
