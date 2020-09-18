@@ -102,7 +102,6 @@ class nsPrintSettings : public nsIPrintSettings {
   nsString mFooterStrs[NUM_HEAD_FOOT];
 
   nsString mPaperName;
-  int16_t mPaperData;
   double mPaperWidth;
   double mPaperHeight;
   int16_t mPaperSizeUnit;

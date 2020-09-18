@@ -59,7 +59,6 @@ static const char kPrintFooterStrRight[] = "print_footerright";
 static const char kPrintReversed[] = "print_reversed";
 static const char kPrintInColor[] = "print_in_color";
 static const char kPrintPaperName[] = "print_paper_name";
-static const char kPrintPaperData[] = "print_paper_data";
 static const char kPrintPaperSizeUnit[] = "print_paper_size_unit";
 static const char kPrintPaperWidth[] = "print_paper_width";
 static const char kPrintPaperHeight[] = "print_paper_height";
@@ -133,7 +132,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetShowPrintProgress(&data->showPrintProgress());
 
   aSettings->GetPaperName(data->paperName());
-  aSettings->GetPaperData(&data->paperData());
   aSettings->GetPaperWidth(&data->paperWidth());
   aSettings->GetPaperHeight(&data->paperHeight());
   aSettings->GetPaperSizeUnit(&data->paperSizeUnit());
@@ -233,7 +231,6 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
 
   settings->SetPaperName(data.paperName());
 
-  settings->SetPaperData(data.paperData());
   settings->SetPaperWidth(data.paperWidth());
   settings->SetPaperHeight(data.paperHeight());
   settings->SetPaperSizeUnit(data.paperSizeUnit());
@@ -512,13 +509,6 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSavePaperData) {
-    if (GETINTPREF(kPrintPaperData, &iVal)) {
-      aPS->SetPaperData(iVal);
-      DUMP_INT(kReadStr, kPrintPaperData, iVal);
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSaveOrientation) {
     if (GETINTPREF(kPrintOrientation, &iVal)) {
       aPS->SetOrientation(iVal);
@@ -669,7 +659,6 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
   bool b;
   nsString uStr;
   int32_t iVal;
-  int16_t iVal16;
   double dbl;
 
   if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
@@ -756,14 +745,6 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
     if (NS_SUCCEEDED(aPS->GetPrintInColor(&b))) {
       DUMP_BOOL(kWriteStr, kPrintInColor, b);
       Preferences::SetBool(GetPrefName(kPrintInColor, aPrinterName), b);
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSavePaperData) {
-    if (NS_SUCCEEDED(aPS->GetPaperData(&iVal16))) {
-      DUMP_INT(kWriteStr, kPrintPaperData, iVal16);
-      Preferences::SetInt(GetPrefName(kPrintPaperData, aPrinterName),
-                          int32_t(iVal16));
     }
   }
 
