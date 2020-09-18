@@ -18,6 +18,7 @@
 #include "nsStandardURL.h"
 #include "LoadContextInfo.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsSocketProviderService.h"
 #include "nsISocketProvider.h"
 #include "nsPrintfCString.h"
@@ -593,7 +594,40 @@ nsresult nsHttpHandler::Init() {
   if (pc) {
     pc->GetParentalControlsEnabled(&mParentalControlEnabled);
   }
+
+  auto initQLogDir = [&]() {
+    nsCOMPtr<nsIFile> qlogDir;
+    nsresult rv =
+        NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(qlogDir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EmptyCString();
+    }
+
+    nsAutoCString dirName("qlog_");
+    dirName.AppendInt(mProcessId);
+    rv = qlogDir->AppendNative(dirName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EmptyCString();
+    }
+
+    rv = qlogDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0755);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EmptyCString();
+    }
+
+    return qlogDir->NativePath();
+  };
+  mHttp3QlogDir = initQLogDir();
+
   return NS_OK;
+}
+
+const nsCString& nsHttpHandler::Http3QlogDir() {
+  if (StaticPrefs::network_http_http3_qlog_enabled()) {
+    return mHttp3QlogDir;
+  }
+
+  return EmptyCString();
 }
 
 void nsHttpHandler::MakeNewRequestTokenBucket() {
