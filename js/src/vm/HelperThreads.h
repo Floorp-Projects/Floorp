@@ -239,9 +239,14 @@ struct AutoEnqueuePendingParseTasksAfterGC {
   ~AutoEnqueuePendingParseTasksAfterGC();
 };
 
-// Enqueue a compression job to be processed if there's a major GC.
+// Enqueue a compression job to be processed later. These are started at the
+// start of the major GC after the next one.
 bool EnqueueOffThreadCompression(JSContext* cx,
                                  UniquePtr<SourceCompressionTask> task);
+
+// Start handling any compression tasks for this runtime. Called at the start of
+// major GC.
+void StartHandlingCompressionsOnGC(JSRuntime* rt);
 
 // Cancel all scheduled, in progress, or finished compression tasks for
 // runtime.
@@ -249,6 +254,9 @@ void CancelOffThreadCompressions(JSRuntime* runtime);
 
 void AttachFinishedCompressions(JSRuntime* runtime,
                                 AutoLockHelperThreadState& lock);
+
+// Sweep pending tasks that are holding onto should-be-dead ScriptSources.
+void SweepPendingCompressions(AutoLockHelperThreadState& lock);
 
 // Run all pending source compression tasks synchronously, for testing purposes
 void RunPendingSourceCompressions(JSRuntime* runtime);

@@ -4256,9 +4256,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
    * GC.
    */
   if (!IsShutdownReason(reason) && reason != JS::GCReason::ROOTS_REMOVED) {
-    AutoLockHelperThreadState helperLock;
-    HelperThreadState().startHandlingCompressionTasks(
-        helperLock, GlobalHelperThreadState::ScheduleCompressionTask::GC);
+    StartHandlingCompressionsOnGC(rt);
   }
 
   return true;
@@ -5097,14 +5095,7 @@ void GCRuntime::sweepCompressionTasks() {
   // Attach finished compression tasks.
   AutoLockHelperThreadState lock;
   AttachFinishedCompressions(runtime, lock);
-
-  // Sweep pending tasks that are holding onto should-be-dead ScriptSources.
-  auto& pending = HelperThreadState().compressionPendingList(lock);
-  for (size_t i = 0; i < pending.length(); i++) {
-    if (pending[i]->shouldCancel()) {
-      HelperThreadState().remove(pending, &i);
-    }
-  }
+  SweepPendingCompressions(lock);
 }
 
 void GCRuntime::sweepWeakMaps() {
