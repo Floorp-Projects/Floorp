@@ -183,6 +183,13 @@ bool ParserAtomEntry::toNumber(JSContext* cx, double* result) const {
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
+void ParserAtomEntry::dump() const {
+  js::Fprinter out(stderr);
+  out.put("\"");
+  dumpCharsNoQuote(out);
+  out.put("\"\n");
+}
+
 void ParserAtomEntry::dumpCharsNoQuote(js::GenericPrinter& out) const {
   if (hasLatin1Chars()) {
     JSString::dumpCharsNoQuote<Latin1Char>(latin1Chars(), length(), out);

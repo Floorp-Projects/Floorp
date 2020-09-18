@@ -15063,6 +15063,16 @@ void CodeGenerator::visitGuardTagNotEqual(LGuardTagNotEqual* lir) {
   masm.bind(&done);
 }
 
+void CodeGenerator::visitLoadWrapperTarget(LLoadWrapperTarget* lir) {
+  Register object = ToRegister(lir->object());
+  Register output = ToRegister(lir->output());
+
+  masm.loadPtr(Address(object, ProxyObject::offsetOfReservedSlots()), output);
+  masm.unboxObject(
+      Address(output, js::detail::ProxyReservedSlots::offsetOfPrivateSlot()),
+      output);
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;

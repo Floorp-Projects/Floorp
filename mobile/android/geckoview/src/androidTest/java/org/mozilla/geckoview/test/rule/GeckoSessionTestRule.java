@@ -8,7 +8,6 @@ package org.mozilla.geckoview.test.rule;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONTokener;
-import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.ContentBlocking;
@@ -29,7 +28,6 @@ import org.mozilla.geckoview.test.util.UiThreadUtils;
 import org.mozilla.geckoview.test.util.Callbacks;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -45,7 +43,6 @@ import org.junit.runners.model.Statement;
 import android.app.Instrumentation;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
-import android.os.Parcel;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -76,7 +73,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -1967,12 +1963,6 @@ public class GeckoSessionTestRule implements TestRule {
             openSession(session);
         }
         return session;
-    }
-
-    public GeckoSession createFromParcel(Parcel source) {
-        final GeckoSession session = new GeckoSession(mMainSession.getSettings());
-        session.readFromParcel(source);
-        return wrapSession(session);
     }
 
     /**

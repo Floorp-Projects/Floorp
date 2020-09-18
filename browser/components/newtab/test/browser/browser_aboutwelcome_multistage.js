@@ -179,6 +179,54 @@ async function onButtonClick(browser, elementId) {
 }
 
 /**
+ * Test the zero onboarding using ExperimentAPI
+ */
+add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
+  await setAboutWelcomePref(true);
+  let updatePromise = new Promise(resolve =>
+    ExperimentAPI._store.on("update:mochitest-1-aboutwelcome", resolve)
+  );
+  ExperimentAPI._store.addExperiment({
+    slug: "mochitest-1-aboutwelcome",
+    branch: {
+      slug: "mochitest-1-aboutwelcome",
+      feature: {
+        enabled: false,
+        featureId: "aboutwelcome",
+        value: null,
+      },
+    },
+    active: true,
+  });
+
+  await updatePromise;
+  ExperimentAPI._store._syncToChildren({ flush: true });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:welcome",
+    true
+  );
+  registerCleanupFunction(() => {
+    BrowserTestUtils.removeTab(tab);
+  });
+
+  const browser = tab.linkedBrowser;
+
+  await test_screen_content(
+    browser,
+    "Opens new tab",
+    // Expected selectors:
+    ["div.search-wrapper", "body.activity-stream"],
+    // Unexpected selectors:
+    ["div.multistageContainer", "main.AW_STEP1"]
+  );
+
+  ExperimentAPI._store._deleteForTests("mochitest-1-aboutwelcome");
+  Assert.equal(ExperimentAPI._store.getAll().length, 0, "Cleanup done");
+});
+
+/**
  * Test the multistage welcome UI using ExperimentAPI
  */
 add_task(async function test_multistage_aboutwelcome_experimentAPI() {
@@ -192,6 +240,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     branch: {
       slug: "mochitest-aboutwelcome",
       feature: {
+        enabled: true,
         featureId: "aboutwelcome",
         value: TEST_MULTISTAGE_CONTENT,
       },

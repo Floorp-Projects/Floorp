@@ -133,9 +133,6 @@ class Perftest(MachCommandBase):
             push_to_try("perftest", "perftest", try_task_config=task_config)
             return
 
-        # run locally
-        MachCommandBase.activate_virtualenv(self)
-
         from mozperftest.runner import run_tests
 
         run_tests(self, kwargs, original_parser.get_user_args(kwargs))

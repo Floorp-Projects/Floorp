@@ -465,9 +465,6 @@ talos-svgr:
             linux64.*-qr.*: ['fission', 'webrender-sw']
             default: ['fission']
     max-run-time: 1800
-    # Bug 1651311 - Disabled for high intermittent failure rate
-    run-on-projects: []
-    fission-run-on-projects: []
     mozharness:
         extra-options:
             - --suite=svgr
@@ -478,9 +475,6 @@ talos-svgr-profiling:
     treeherder-symbol: T-Prof(s)
     tier: 2
     max-run-time: 1800
-    # Bug 1651311 - Disabled for high intermittent failure rate
-    run-on-projects: []
-    fission-run-on-projects: []
     mozharness:
         extra-options:
             - --suite=svgr

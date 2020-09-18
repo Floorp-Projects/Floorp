@@ -310,6 +310,15 @@ class PlacesFeed {
 
     const win = action._target.browser.ownerGlobal;
     win.openLinkIn(urlToOpen, where || win.whereToOpenLink(event), params);
+
+    // If there's an original URL e.g. using the unprocessed %YYYYMMDDHH% tag,
+    // add a visit for that so it may become a frecent top site.
+    if (action.data.original_url) {
+      PlacesUtils.history.insert({
+        url: action.data.original_url,
+        visits: [{ transition: PlacesUtils.history.TRANSITION_TYPED }],
+      });
+    }
   }
 
   async saveToPocket(site, browser) {

@@ -268,6 +268,23 @@ nsresult nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch) {
     return NS_ERROR_FAILURE;
   }
 
+  if (!mOfflineStorageCacheEnabled) {
+    // Dispatch cleanup task
+    nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableFunction("Delete OfflineCache", []() {
+          nsCOMPtr<nsIFile> dir;
+          nsCacheService::GetAppCacheDirectory(getter_AddRefs(dir));
+          bool exists = false;
+          if (dir && NS_SUCCEEDED(dir->Exists(&exists)) && exists) {
+            // Delay delete by 1 minute to avoid IO thrash on startup.
+            CACHE_LOG_INFO(
+                ("Queuing Delete of AppCacheDirectory in 60 seconds"));
+            nsDeleteDir::DeleteDir(dir, false, 60000);
+          }
+        });
+    Unused << nsCacheService::DispatchToCacheIOThread(runnable);
+  }
+
   return NS_OK;
 }
 

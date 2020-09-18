@@ -200,16 +200,10 @@ class ProvidersManager {
     // search string.
     let restrictToken = updateSourcesIfEmpty(queryContext);
     if (restrictToken) {
-      queryContext.shouldFilterRestrictionTokens = true;
+      queryContext.restrictToken = restrictToken;
       // If the restriction token has an equivalent source, then set it as
       // restrictSource.
-      let restrictType = Object.entries(UrlbarTokenizer.RESTRICT).find(
-        e => e[1] == restrictToken.value
-      )?.[0];
-      if (
-        restrictType == "SEARCH" ||
-        UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(restrictType)
-      ) {
+      if (UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(restrictToken.value)) {
         queryContext.restrictSource = queryContext.sources[0];
       }
     }

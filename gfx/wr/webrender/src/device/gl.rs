@@ -956,6 +956,8 @@ pub struct Capabilities {
     pub supports_nonzero_pbo_offsets: bool,
     /// Whether the driver supports specifying the texture usage up front.
     pub supports_texture_usage: bool,
+    /// Whether offscreen render targets can be partially updated.
+    pub supports_render_target_partial_update: bool,
     /// The name of the renderer, as reported by GL
     pub renderer_name: String,
 }
@@ -1562,6 +1564,11 @@ impl Device {
         // from a non-zero offset within a PBO to fail. See bug 1603783.
         let supports_nonzero_pbo_offsets = !is_macos;
 
+        // On Mali-Gxx there is a driver bug when rendering partial updates to
+        // offscreen render targets, so we must ensure we render to the entire target.
+        // See bug 1663355.
+        let supports_render_target_partial_update = !renderer_name.starts_with("Mali-G");
+
         Device {
             gl,
             base_gl: None,
@@ -1581,6 +1588,7 @@ impl Device {
                 supports_texture_swizzle,
                 supports_nonzero_pbo_offsets,
                 supports_texture_usage,
+                supports_render_target_partial_update,
                 renderer_name,
             },
 

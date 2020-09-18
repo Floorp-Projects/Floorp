@@ -11,20 +11,11 @@ using mozilla::MediaDataDecoder::ConversionRequired from "PlatformDecoderModule.
 using mozilla::TrackInfo::TrackType from "MediaInfo.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::MediaResult from "MediaResult.h";
-
+using refcounted class mozilla::ArrayOfRemoteVideoData from "mozilla/RemoteMediaData.h";
 include PMediaDecoderParams;
 include LayersSurfaces;
 
 namespace mozilla {
-
-struct RemoteVideoDataIPDL
-{
-  MediaDataIPDL base;
-  IntSize display;
-  IntSize frameSize;
-  SurfaceDescriptor sd;
-  int32_t frameID;
-};
 
 struct RemoteAudioDataIPDL
 {
@@ -41,7 +32,7 @@ struct RemoteAudioDataIPDL
 union DecodedOutputIPDL
 {
   RemoteAudioDataIPDL[];
-  RemoteVideoDataIPDL[];
+  ArrayOfRemoteVideoData;
 };
 
 struct InitCompletionIPDL

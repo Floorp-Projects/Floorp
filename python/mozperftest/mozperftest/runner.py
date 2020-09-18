@@ -124,7 +124,13 @@ def run_tests(mach_cmd, kwargs, client_args):
         mach_cmd.log_manager.enable_unstructured()
 
     try:
+        # Only pass the virtualenv to the before_iterations hook
+        # so that users can install test-specific packages if needed.
+        mach_cmd.activate_virtualenv()
+        kwargs["virtualenv"] = mach_cmd.virtualenv_manager
         hooks.run("before_iterations", kwargs)
+        del kwargs["virtualenv"]
+
         tests, tmp_dir = build_test_list(kwargs["tests"])
 
         for test in tests:

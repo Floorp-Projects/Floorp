@@ -23,7 +23,10 @@ struct UnusedZero<UnusedZeroEnum> {
 
   static constexpr bool value = true;
   static constexpr StorageType nullValue = UnusedZeroEnum::Ok;
-  static constexpr StorageType defaultValue = UnusedZeroEnum::NotOk;
+
+  static constexpr StorageType GetDefaultValue() {
+    return UnusedZeroEnum::NotOk;
+  }
 
   static constexpr void AssertValid(StorageType aValue) {}
   static constexpr const UnusedZeroEnum& Inspect(const StorageType& aValue) {

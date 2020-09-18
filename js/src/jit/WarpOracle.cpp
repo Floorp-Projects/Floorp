@@ -869,6 +869,10 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
         [[maybe_unused]] unsigned line, column;
         LineNumberAndColumn(script_, loc, &line, &column);
 
+        MOZ_ASSERT(
+            fallbackStub->trialInliningState() != TrialInliningState::Inlined,
+            "Trial-inlined stub not supported by transpiler");
+
         // Unsupported CacheIR opcode.
         JitSpew(JitSpew_WarpTranspiler,
                 "unsupported CacheIR opcode %s for JSOp::%s @ %s:%u:%u",
@@ -936,7 +940,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   JitCode* jitCode = stub->jitCode();
 
-  if (loc.isInvokeOp()) {
+  if (fallbackStub->trialInliningState() == TrialInliningState::Inlined) {
     bool inlinedCall;
     MOZ_TRY_VAR(inlinedCall, maybeInlineCallIC(snapshots, loc, stub,
                                                fallbackStub, stubDataCopy));
@@ -1013,6 +1017,7 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCallIC(
       case AbortReason::Disable:
         // If the target script can't be warp-compiled, mark it as
         // uninlineable, clean up, and fall through to the non-inlined path.
+        fallbackStub->setTrialInliningState(TrialInliningState::Failure);
         fallbackStub->unlinkStubDontInvalidateWarp(cx_->zone(),
                                                    /*prev=*/nullptr, stub);
         targetScript->setUninlineable();

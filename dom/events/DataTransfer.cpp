@@ -336,7 +336,8 @@ bool DataTransfer::HasType(const nsAString& aType) const {
 bool DataTransfer::HasFile() const { return mItems->HasFile(); }
 
 void DataTransfer::GetData(const nsAString& aFormat, nsAString& aData,
-                           nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
+                           nsIPrincipal& aSubjectPrincipal,
+                           ErrorResult& aRv) const {
   // return an empty string if data for the format was not found
   aData.Truncate();
 
@@ -481,7 +482,7 @@ already_AddRefed<DOMStringList> DataTransfer::MozTypesAt(
 
 nsresult DataTransfer::GetDataAtNoSecurityCheck(const nsAString& aFormat,
                                                 uint32_t aIndex,
-                                                nsIVariant** aData) {
+                                                nsIVariant** aData) const {
   return GetDataAtInternal(aFormat, aIndex,
                            nsContentUtils::GetSystemPrincipal(), aData);
 }
@@ -489,7 +490,7 @@ nsresult DataTransfer::GetDataAtNoSecurityCheck(const nsAString& aFormat,
 nsresult DataTransfer::GetDataAtInternal(const nsAString& aFormat,
                                          uint32_t aIndex,
                                          nsIPrincipal* aSubjectPrincipal,
-                                         nsIVariant** aData) {
+                                         nsIVariant** aData) const {
   *aData = nullptr;
 
   if (aFormat.IsEmpty()) {

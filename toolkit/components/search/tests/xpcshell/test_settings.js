@@ -174,6 +174,54 @@ add_task(async function test_settings_write() {
   });
 });
 
+async function settings_write_check(disableFn) {
+  let ss = Services.search.wrappedJSObject;
+
+  sinon.stub(ss._settings, "_write").returns(Promise.resolve());
+
+  // Simulate the search service being initialized.
+  disableFn(true);
+
+  ss._settings.setAttribute("value", "test");
+
+  Assert.ok(
+    ss._settings._write.notCalled,
+    "Should not have attempted to _write"
+  );
+
+  // Wait for two periods of the normal delay to ensure we still do not write.
+  await new Promise(r =>
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    setTimeout(r, SearchSettings.SETTNGS_INVALIDATION_DELAY * 2)
+  );
+
+  Assert.ok(
+    ss._settings._write.notCalled,
+    "Should not have attempted to _write"
+  );
+
+  disableFn(false);
+
+  await TestUtils.waitForCondition(
+    () => ss._settings._write.calledOnce,
+    "Should attempt to write the settings."
+  );
+
+  sinon.restore();
+}
+
+add_task(async function test_settings_write_prevented_during_init() {
+  await settings_write_check(
+    disable => (Services.search.wrappedJSObject._initialized = !disable)
+  );
+});
+
+add_task(async function test_settings_write_prevented_during_reload() {
+  await settings_write_check(
+    disable => (Services.search.wrappedJSObject._reloadingEngines = disable)
+  );
+});
+
 var EXPECTED_ENGINE = {
   engine: {
     name: "Test search engine",

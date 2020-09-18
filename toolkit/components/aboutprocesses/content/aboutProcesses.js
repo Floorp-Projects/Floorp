@@ -32,6 +32,9 @@ const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 const SHOW_THREADS = Services.prefs.getBoolPref(
   "toolkit.aboutProcesses.showThreads"
 );
+const SHOW_ALL_SUBFRAMES = Services.prefs.getBoolPref(
+  "toolkit.aboutProcesses.showAllSubframes"
+);
 
 /**
  * Returns a Promise that's resolved after the next turn of the event loop.
@@ -280,7 +283,7 @@ var State = {
       type: cur.type,
       origin: cur.origin || "",
       threads: null,
-      displayRank: Control._getDisplayGroupRank(cur.type),
+      displayRank: Control._getDisplayGroupRank(cur),
       windows: this._getDOMWindows(cur),
       // If this process has an unambiguous title, store it here.
       title: null,
@@ -483,15 +486,26 @@ var View = {
           image = "chrome://mozapps/skin/extensions/extension.svg";
           break;
         default:
-          // If available, pick the first favicon.
-          if (data.windows) {
-            for (let win of data.windows) {
-              if (win.tab) {
-                image = win.tab.tab.getAttribute("image");
-              }
-              if (image) {
-                break;
-              }
+          // If all favicons match, pick the shared favicon.
+          // Otherwise, pick a default icon.
+          // If some tabs have no favicon, we ignore them.
+          for (let win of data.windows || []) {
+            if (!win.tab) {
+              continue;
+            }
+            let favicon = win.tab.tab.getAttribute("image");
+            if (!favicon) {
+              // No favicon here, let's ignore the tab.
+            } else if (!image) {
+              // Let's pick a first favicon.
+              // We'll remove it later if we find conflicting favicons.
+              image = favicon;
+            } else if (image == favicon) {
+              // So far, no conflict, keep the favicon.
+            } else {
+              // Conflicting favicons, fallback to default.
+              image = null;
+              break;
             }
           }
           if (!image) {
@@ -982,8 +996,10 @@ var Control = {
 
       let winRow;
       for (let win of process.windows) {
-        winRow = View.appendDOMWindowRow(win, process);
-        winRow.win = win;
+        if (SHOW_ALL_SUBFRAMES || win.tab || win.isProcessRoot) {
+          winRow = View.appendDOMWindowRow(win, process);
+          winRow.win = win;
+        }
       }
 
       if (SHOW_THREADS) {
@@ -1024,20 +1040,14 @@ var Control = {
       let order;
       switch (this._sortColumn) {
         case "column-name":
-          order = a.name.localeCompare(b.name);
+          order = a.name.localeCompare(b.name) || a.pid - b.pid;
           break;
         case "column-cpu-total":
           order = b.totalCpu - a.totalCpu;
-          if (order == 0) {
-            order = b.totalCpu - a.totalCpu;
-          }
           break;
 
-        case "column-cpu-threads":
         case "column-memory-resident":
-        case "column-type":
         case "column-pid":
-        case "column-twisty":
         case null:
           order = b.tid - a.tid;
           break;
@@ -1057,40 +1067,24 @@ var Control = {
         case "column-pid":
           order = b.pid - a.pid;
           break;
-        case "column-type":
-          order = String(a.origin).localeCompare(b.origin);
-          if (order == 0) {
-            order = String(a.type).localeCompare(b.type);
-          }
-          break;
         case "column-name":
-          order = String(a.name).localeCompare(b.name);
+          order =
+            String(a.origin).localeCompare(b.origin) ||
+            String(a.type).localeCompare(b.type) ||
+            a.pid - b.pid;
           break;
         case "column-cpu-total":
           order = b.totalCpu - a.totalCpu;
-          if (order == 0) {
-            order = b.totalCpu - a.totalCpu;
-          }
-          break;
-        case "column-cpu-threads":
-          order = b.threads.length - a.threads.length;
           break;
         case "column-memory-resident":
           order = b.totalResidentUniqueSize - a.totalResidentUniqueSize;
           break;
-        case "column-twisty":
         case null:
           // Default order: classify processes by group.
-          order = a.displayRank - b.displayRank;
-          if (order == 0) {
+          order =
+            a.displayRank - b.displayRank ||
             // Other processes are ordered by origin.
-            order = String(a.name).localeCompare(b.name);
-            if (order == 0) {
-              // If we're running without Fission, many processes will have
-              // the same origin, so differenciate with CPU use.
-              order = b.slopeCpuUser - a.slopeCpuUser;
-            }
-          }
+            String(a.origin).localeCompare(b.origin);
           break;
         default:
           throw new Error("Unsupported order: " + this._sortColumn);
@@ -1103,13 +1097,10 @@ var Control = {
   },
   _sortDOMWindows(windows) {
     return windows.sort((a, b) => {
-      let order = a.displayRank - b.displayRank;
-      if (order == 0) {
-        order = a.documentTitle.localeCompare(b.documentTitle);
-      }
-      if (order == 0) {
-        order = a.documentURI.spec.localeCompare(b.documentURI.spec);
-      }
+      let order =
+        a.displayRank - b.displayRank ||
+        a.documentTitle.localeCompare(b.documentTitle) ||
+        a.documentURI.spec.localeCompare(b.documentURI.spec);
       if (!this._sortAscendent) {
         order = -order;
       }
@@ -1123,23 +1114,40 @@ var Control = {
   // Then comes web content (rank 1).
   // Then come special processes (minus preallocated) (rank 2).
   // Then come preallocated processes (rank 3).
-  _getDisplayGroupRank(type) {
+  _getDisplayGroupRank(data) {
+    const RANK_BROWSER = 0;
+    const RANK_WEB_CONTENT = 1;
+    const RANK_UTILITY = 2;
+    const RANK_PREALLOCATED = 3;
+    let type = data.type;
     switch (type) {
       // Browser comes first.
       case "browser":
-        return 0;
+        return RANK_BROWSER;
       // Web content comes next.
-      case "web":
       case "webIsolated":
       case "webLargeAllocation":
       case "withCoopCoep":
-        return 1;
+        return RANK_WEB_CONTENT;
       // Preallocated processes come last.
       case "preallocated":
-        return 3;
+        return RANK_PREALLOCATED;
+      // "web" is special, as it could be one of:
+      // - web content currently loading/unloading/...
+      // - a preallocated process.
+      case "web":
+        if (data.windows.length >= 1) {
+          return RANK_WEB_CONTENT;
+        }
+        // For the time being, we do not display DOM workers
+        // (and there's no API to get information on them).
+        // Once the blockers for bug 1663737 have landed, we'll be able
+        // to find out whether this process has DOM workers. If so, we'll
+        // count this process as a content process.
+        return RANK_PREALLOCATED;
       // Other special processes before preallocated.
       default:
-        return 2;
+        return RANK_UTILITY;
     }
   },
 };

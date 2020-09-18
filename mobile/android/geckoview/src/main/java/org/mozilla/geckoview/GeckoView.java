@@ -27,8 +27,6 @@ import android.graphics.RectF;
 import android.graphics.Region;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
@@ -75,38 +73,6 @@ public class GeckoView extends FrameLayout {
 
     private GeckoSession.SelectionActionDelegate mSelectionActionDelegate;
     private Autofill.Delegate mAutofillDelegate;
-
-    private static class SavedState extends BaseSavedState {
-        public final GeckoSession session;
-
-        public SavedState(final Parcelable superState, final GeckoSession session) {
-            super(superState);
-            this.session = session;
-        }
-
-        /* package */ SavedState(final Parcel in) {
-            super(in);
-            session = in.readParcelable(getClass().getClassLoader());
-        }
-
-        @Override // BaseSavedState
-        public void writeToParcel(final Parcel dest, final int flags) {
-            super.writeToParcel(dest, flags);
-            dest.writeParcelable(session, flags);
-        }
-
-        public static final Creator<SavedState> CREATOR = new Creator<SavedState>() {
-            @Override
-            public SavedState createFromParcel(final Parcel in) {
-                return new SavedState(in);
-            }
-
-            @Override
-            public SavedState[] newArray(final int size) {
-                return new SavedState[size];
-            }
-        };
-    }
 
     private class Display implements SurfaceViewWrapper.Listener {
         private final int[] mOrigin = new int[2];
@@ -561,36 +527,6 @@ public class GeckoView extends FrameLayout {
             mDisplay.onGlobalLayout();
         }
         return super.gatherTransparentRegion(region);
-    }
-
-    @Override
-    protected Parcelable onSaveInstanceState() {
-        mStateSaved = true;
-        return new SavedState(super.onSaveInstanceState(), mSession);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(final Parcelable state) {
-        mStateSaved = false;
-
-        if (!(state instanceof SavedState)) {
-            super.onRestoreInstanceState(state);
-            return;
-        }
-
-        final SavedState ss = (SavedState) state;
-        super.onRestoreInstanceState(ss.getSuperState());
-
-        restoreSession(ss.session);
-    }
-
-    private void restoreSession(final @Nullable GeckoSession savedSession) {
-        if (savedSession == null || savedSession.equalsId(mSession)) {
-            return;
-        }
-
-        // This can throw if there's already an open session set, but that's the right thing to do.
-        setSession(savedSession);
     }
 
     @Override

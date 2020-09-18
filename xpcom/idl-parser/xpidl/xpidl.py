@@ -965,6 +965,32 @@ class CEnum(object):
         return "\tcenum %s : %d { %s };\n" % (self.name, self.width, body)
 
 
+# Infallible doesn't work for all return types.
+#
+# It also must be implemented on a builtinclass (otherwise it'd be unsound as
+# it could be implemented by JS).
+def ensureInfallibleIsSound(methodOrAttribute):
+    if not methodOrAttribute.infallible:
+        return
+    if methodOrAttribute.realtype.kind not in ['builtin',
+                                               'interface',
+                                               'forward',
+                                               'webidl',
+                                               'cenum']:
+        raise IDLError('[infallible] only works on interfaces, domobjects, and builtin types '
+                       '(numbers, booleans, cenum, and raw char types)',
+                       methodOrAttribute.location)
+    if not methodOrAttribute.iface.attributes.builtinclass:
+        raise IDLError('[infallible] attributes and methods are only allowed on '
+                       '[builtinclass] interfaces',
+                       methodOrAttribute.location)
+
+    if methodOrAttribute.notxpcom:
+        raise IDLError('[infallible] does not make sense for a [notxpcom] '
+                       'method or attribute',
+                       methodOrAttribute.location)
+
+
 # An interface cannot be implemented by JS if it has a notxpcom
 # method or attribute, so it must be marked as builtinclass.
 #
@@ -1060,19 +1086,8 @@ class Attribute(object):
     def resolve(self, iface):
         self.iface = iface
         self.realtype = iface.idl.getName(self.type, self.location)
-        if self.infallible and self.realtype.kind not in ['builtin',
-                                                          'interface',
-                                                          'forward',
-                                                          'webidl',
-                                                          'cenum']:
-            raise IDLError('[infallible] only works on interfaces, domobjects, and builtin types '
-                           '(numbers, booleans, cenum, and raw char types)',
-                           self.location)
-        if self.infallible and not iface.attributes.builtinclass:
-            raise IDLError('[infallible] attributes are only allowed on '
-                           '[builtinclass] interfaces',
-                           self.location)
 
+        ensureInfallibleIsSound(self)
         ensureBuiltinClassIfNeeded(self)
 
     def toIDL(self):
@@ -1106,6 +1121,7 @@ class Method(object):
     # explicit_can_run_script is true if the method is explicitly annotated
     # as being able to cause script to run.
     explicit_can_run_script = False
+    infallible = False
 
     def __init__(self, type, name, attlist, paramlist, location, doccomments, raises):
         self.type = type
@@ -1144,6 +1160,8 @@ class Method(object):
                 self.must_use = True
             elif name == 'can_run_script':
                 self.explicit_can_run_script = True
+            elif name == 'infallible':
+                self.infallible = True
             else:
                 raise IDLError("Unexpected attribute '%s'" % name, aloc)
 
@@ -1155,6 +1173,7 @@ class Method(object):
         self.iface = iface
         self.realtype = self.iface.idl.getName(self.type, self.location)
 
+        ensureInfallibleIsSound(self)
         ensureBuiltinClassIfNeeded(self)
 
         for p in self.params:

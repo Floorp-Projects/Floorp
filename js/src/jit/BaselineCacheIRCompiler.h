@@ -65,7 +65,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   void pushFunApplyArgs(Register argcReg, Register calleeReg, Register scratch,
                         Register scratch2, bool isJitCall);
   void createThis(Register argcReg, Register calleeReg, Register scratch,
-                  CallFlags flags);
+                  CallFlags flags, LiveGeneralRegisterSet liveNonGCRegs);
   template <typename T>
   void storeThis(const T& newThis, Register argcReg, CallFlags flags);
   void updateReturnValue();

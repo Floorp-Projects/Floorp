@@ -468,6 +468,18 @@ this.tabs = class extends ExtensionAPI {
           );
         },
 
+        async captureTab(tabId, options) {
+          const nativeTab = getTabOrActive(tabId);
+          await tabListener.awaitTabReady(nativeTab);
+
+          const { browser } = nativeTab;
+          const window = browser.ownerGlobal;
+          const zoom = window.windowUtils.fullZoom;
+
+          const tab = tabManager.wrapTab(nativeTab);
+          return tab.capture(context, zoom, options);
+        },
+
         async captureVisibleTab(windowId, options) {
           const window =
             windowId == null
@@ -476,8 +488,9 @@ this.tabs = class extends ExtensionAPI {
 
           const tab = tabManager.wrapTab(window.tab);
           await tabListener.awaitTabReady(tab.nativeTab);
+          const zoom = window.windowUtils.fullZoom;
 
-          return tab.capture(context, options);
+          return tab.capture(context, zoom, options);
         },
 
         async executeScript(tabId, details) {

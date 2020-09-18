@@ -17,11 +17,11 @@ namespace mozilla {
 RemoteAudioDecoderChild::RemoteAudioDecoderChild() : RemoteDecoderChild() {}
 
 MediaResult RemoteAudioDecoderChild::ProcessOutput(
-    const DecodedOutputIPDL& aDecodedData) {
+    DecodedOutputIPDL&& aDecodedData) {
   AssertOnManagerThread();
   MOZ_ASSERT(aDecodedData.type() ==
              DecodedOutputIPDL::TArrayOfRemoteAudioDataIPDL);
-  const nsTArray<RemoteAudioDataIPDL>& arrayData =
+  nsTArray<RemoteAudioDataIPDL>& arrayData =
       aDecodedData.get_ArrayOfRemoteAudioDataIPDL();
 
   for (auto&& data : arrayData) {

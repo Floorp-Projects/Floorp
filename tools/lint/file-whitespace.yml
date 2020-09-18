@@ -42,8 +42,6 @@ file-whitespace:
         - dom/html/test
         - dom/jsurl/crashtests/344996-1.xhtml
         - dom/jsurl/test
-        - dom/media/gtest/AudioGenerator.cpp
-        - dom/media/gtest/AudioGenerator.h
         - dom/media/mediasource/test/crashtests/926665.html
         - dom/media/test
         - dom/media/tests

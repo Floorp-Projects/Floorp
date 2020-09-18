@@ -18,7 +18,7 @@ class nsPrinterWin final : public nsPrinterBase {
   bool SupportsMonochrome() const final;
   bool SupportsCollation() const final;
   nsTArray<mozilla::PaperInfo> PaperList() const final;
-  MarginDouble GetMarginsForPaper(short aPaperId) const final;
+  MarginDouble GetMarginsForPaper(nsString aPaperId) const final;
 
   nsPrinterWin() = delete;
   static already_AddRefed<nsPrinterWin> Create(const nsAString& aName);
