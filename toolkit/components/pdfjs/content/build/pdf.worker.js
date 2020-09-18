@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.7.59';
-const pdfjsBuild = 'e73354a32';
+const pdfjsVersion = '2.7.69';
+const pdfjsBuild = '26ae7ba2a';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.7.59';
+    const workerVersion = '2.7.69';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -572,8 +572,7 @@ class WorkerMessageHandler {
           return stream.bytes;
         }
 
-        acroForm = (0, _primitives.isDict)(acroForm) ? acroForm : _primitives.Dict.empty;
-        const xfa = acroForm.get("XFA") || [];
+        const xfa = acroForm instanceof _primitives.Dict && acroForm.get("XFA") || [];
         let xfaDatasets = null;
 
         if (Array.isArray(xfa)) {
@@ -594,7 +593,7 @@ class WorkerMessageHandler {
 
           const xrefInfo = xref.trailer.get("Info") || null;
 
-          if (xrefInfo) {
+          if (xrefInfo instanceof _primitives.Dict) {
             xrefInfo.forEach((key, value) => {
               if ((0, _util.isString)(key) && (0, _util.isString)(value)) {
                 _info[key] = (0, _util.stringToPDFString)(value);
@@ -1838,7 +1837,16 @@ var Dict = function DictClosure() {
       }
     }
   };
-  Dict.empty = new Dict(null);
+
+  Dict.empty = function () {
+    const emptyDict = new Dict(null);
+
+    emptyDict.set = (key, value) => {
+      (0, _util.unreachable)("Should not call `set` on the empty dictionary.");
+    };
+
+    return emptyDict;
+  }();
 
   Dict.merge = function ({
     xref,
@@ -20495,7 +20503,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
     for (const key of normalAppearance.getKeys()) {
       if (key !== "Off") {
-        this.data.buttonValue = key;
+        this.data.buttonValue = this._decodeFormValue(key);
         break;
       }
     }
