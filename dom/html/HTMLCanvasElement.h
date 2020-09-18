@@ -20,6 +20,7 @@
 #  include "mozilla/gfx/Rect.h"
 #  include "mozilla/layers/LayersTypes.h"
 
+class nsDisplayListBuilder;
 class nsICanvasRenderingContextInternal;
 class nsITimerCallback;
 enum class gfxAlphaType;

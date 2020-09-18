@@ -9,6 +9,7 @@
 #include "DocAccessibleChild.h"
 #include "DocAccessibleWrap.h"
 #include "nsIDocShell.h"
+#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"

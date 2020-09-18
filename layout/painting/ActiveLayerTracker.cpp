@@ -17,6 +17,7 @@
 #include "nsExpirationTracker.h"
 #include "nsContainerFrame.h"
 #include "nsIContent.h"
+#include "nsIScrollableFrame.h"
 #include "nsRefreshDriver.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/Document.h"

@@ -13,6 +13,7 @@
 #include "nsArray.h"
 #include "nsString.h"
 #include "nsIContentInlines.h"
+#include "nsIScrollableFrame.h"
 #include "mozilla/dom/Document.h"
 #include "ChildIterator.h"
 #include "nsComputedDOMStyle.h"
