@@ -1481,7 +1481,6 @@ nsresult nsHttpTransaction::Restart() {
   mReuseOnRestart = false;
 
   if (!mDoNotRemoveAltSvc && !mConnInfo->GetRoutedHost().IsEmpty()) {
-    MutexAutoLock lock(*nsHttp::GetLock());
     RefPtr<nsHttpConnectionInfo> ci;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
     mConnInfo = ci;
@@ -2562,7 +2561,6 @@ nsresult nsHttpTransaction::RestartOnFastOpenError() {
   mSecurityInfo = nullptr;
 
   if (!mConnInfo->GetRoutedHost().IsEmpty()) {
-    MutexAutoLock lock(*nsHttp::GetLock());
     RefPtr<nsHttpConnectionInfo> ci;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
     mConnInfo = ci;
