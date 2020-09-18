@@ -48,7 +48,9 @@ class ParallelWorker : public GCParallelTask {
     work.next();
   }
 
-  void run() {
+  void run(AutoLockHelperThreadState& lock) {
+    AutoUnlockHelperThreadState unlock(lock);
+
     // These checks assert when run in parallel.
     AutoDisableProxyCheck noProxyCheck;
 

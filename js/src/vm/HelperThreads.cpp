@@ -504,8 +504,9 @@ static const uint32_t HELPER_STACK_SIZE = kDefaultHelperStackSize;
 static const uint32_t HELPER_STACK_QUOTA = kDefaultHelperStackQuota;
 #endif
 
-AutoSetHelperThreadContext::AutoSetHelperThreadContext() {
-  AutoLockHelperThreadState lock;
+AutoSetHelperThreadContext::AutoSetHelperThreadContext(
+    AutoLockHelperThreadState& lock)
+    : lock(lock) {
   cx = HelperThreadState().getFirstUnusedContext(lock);
   MOZ_ASSERT(cx);
   cx->setHelperThread(lock);
@@ -513,6 +514,16 @@ AutoSetHelperThreadContext::AutoSetHelperThreadContext() {
   // When we set the JSContext, we need to reset the computed stack limits for
   // the current thread, so we also set the native stack quota.
   JS_SetNativeStackQuota(cx, HELPER_STACK_QUOTA);
+}
+
+AutoSetHelperThreadContext::~AutoSetHelperThreadContext() {
+  cx->tempLifoAlloc().releaseAll();
+  if (cx->shouldFreeUnusedMemory()) {
+    cx->tempLifoAlloc().freeAll();
+    cx->setFreeUnusedMemory(false);
+  }
+  cx->clearHelperThread(lock);
+  cx = nullptr;
 }
 
 static const JSClass parseTaskGlobalClass = {"internal-parse-task-global",
@@ -593,10 +604,7 @@ void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
   }
 #endif
 
-  {
-    AutoUnlockHelperThreadState unlock(locked);
-    runTask();
-  }
+  runTask(locked);
 
   // The callback is invoked while we are still off thread.
   callback(this, callbackData);
@@ -612,8 +620,10 @@ void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
 #endif
 }
 
-void ParseTask::runTask() {
-  AutoSetHelperThreadContext usesContext;
+void ParseTask::runTask(AutoLockHelperThreadState& lock) {
+  AutoSetHelperThreadContext usesContext(lock);
+
+  AutoUnlockHelperThreadState unlock(lock);
 
   JSContext* cx = TlsContext.get();
 

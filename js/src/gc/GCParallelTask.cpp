@@ -116,7 +116,8 @@ static inline TimeDuration TimeSince(TimeStamp prev) {
 void js::GCParallelTask::runFromMainThread() {
   assertIdle();
   MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(gc->rt));
-  runTask();
+  AutoLockHelperThreadState lock;
+  runTask(lock);
 }
 
 void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
@@ -125,18 +126,15 @@ void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
 
   setRunning(lock);
 
-  {
-    AutoUnlockHelperThreadState parallelSection(lock);
-    AutoSetHelperThreadContext usesContext;
-    AutoSetContextRuntime ascr(gc->rt);
-    gc::AutoSetThreadIsPerformingGC performingGC;
-    runTask();
-  }
+  AutoSetHelperThreadContext usesContext(lock);
+  AutoSetContextRuntime ascr(gc->rt);
+  gc::AutoSetThreadIsPerformingGC performingGC;
+  runTask(lock);
 
   setFinished(lock);
 }
 
-void GCParallelTask::runTask() {
+void GCParallelTask::runTask(AutoLockHelperThreadState& lock) {
   // Run the task from either the main thread or a helper thread.
 
   // The hazard analysis can't tell what the call to func_ will do but it's not
@@ -144,7 +142,7 @@ void GCParallelTask::runTask() {
   JS::AutoSuppressGCAnalysis nogc;
 
   TimeStamp timeStart = ReallyNow();
-  run();
+  run(lock);
   duration_ = TimeSince(timeStart);
 }
 

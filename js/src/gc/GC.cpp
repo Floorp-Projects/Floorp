@@ -3300,24 +3300,26 @@ void GCRuntime::startDecommit() {
   decommitTask.runFromMainThread();
 }
 
-void js::gc::BackgroundDecommitTask::run() {
-  ChunkPool emptyChunksToFree;
-
+void js::gc::BackgroundDecommitTask::run(AutoLockHelperThreadState& lock) {
   {
-    AutoLockGC lock(gc);
+    AutoUnlockHelperThreadState unlock(lock);
 
-    // To help minimize the total number of chunks needed over time, sort the
-    // available chunks list so that we allocate into more-used chunks first.
-    gc->availableChunks(lock).sort();
+    ChunkPool emptyChunksToFree;
+    {
+      AutoLockGC lock(gc);
 
-    gc->decommitFreeArenas(cancel_, lock);
+      // To help minimize the total number of chunks needed over time, sort the
+      // available chunks list so that we allocate into more-used chunks first.
+      gc->availableChunks(lock).sort();
 
-    emptyChunksToFree = gc->expireEmptyChunkPool(lock);
+      gc->decommitFreeArenas(cancel_, lock);
+
+      emptyChunksToFree = gc->expireEmptyChunkPool(lock);
+    }
+
+    FreeChunkPool(emptyChunksToFree);
   }
 
-  FreeChunkPool(emptyChunksToFree);
-
-  AutoLockHelperThreadState lock;
   setFinishing(lock);
   gc->maybeRequestGCAfterBackgroundTask(lock);
 }
@@ -3467,11 +3469,9 @@ void GCRuntime::queueZonesAndStartBackgroundSweep(ZoneList& zones) {
   }
 }
 
-void BackgroundSweepTask::run() {
+void BackgroundSweepTask::run(AutoLockHelperThreadState& lock) {
   AutoTraceLog logSweeping(TraceLoggerForCurrentThread(),
                            TraceLogger_GCSweeping);
-
-  AutoLockHelperThreadState lock;
 
   gc->sweepFromBackgroundThread(lock);
 
@@ -3538,10 +3538,8 @@ void GCRuntime::startBackgroundFree() {
   freeTask.startOrRunIfIdle(lock);
 }
 
-void BackgroundFreeTask::run() {
+void BackgroundFreeTask::run(AutoLockHelperThreadState& lock) {
   AutoTraceLog logFreeing(TraceLoggerForCurrentThread(), TraceLogger_GCFree);
-
-  AutoLockHelperThreadState lock;
 
   gc->freeFromBackgroundThread(lock);
 
@@ -3760,7 +3758,9 @@ class MOZ_RAII AutoRunParallelTask : public GCParallelTask {
 
   ~AutoRunParallelTask() { gc->joinTask(*this, phase_, lock_); }
 
-  void run() override {
+  void run(AutoLockHelperThreadState& lock) override {
+    AutoUnlockHelperThreadState unlock(lock);
+
     // The hazard analysis can't tell what the call to func_ will do but it's
     // not allowed to GC.
     JS::AutoSuppressGCAnalysis nogc;
@@ -5032,7 +5032,8 @@ class ImmediateSweepWeakCacheTask : public GCParallelTask {
         zone(other.zone),
         cache(other.cache) {}
 
-  void run() override {
+  void run(AutoLockHelperThreadState& lock) override {
+    AutoUnlockHelperThreadState unlock(lock);
     AutoSetThreadIsSweeping threadIsSweeping(zone);
     cache.sweep(&gc->storeBuffer());
   }
@@ -5622,7 +5623,9 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
   return true;
 }
 
-void js::gc::SweepMarkTask::run() {
+void js::gc::SweepMarkTask::run(AutoLockHelperThreadState& lock) {
+  AutoUnlockHelperThreadState unlock(lock);
+
   // Time reporting is handled separately for parallel tasks.
   gc->sweepMarkResult =
       gc->markUntilBudgetExhausted(this->budget, GCMarker::DontReportMarkTime);

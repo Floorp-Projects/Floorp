@@ -133,13 +133,13 @@ class ChunkPool {
 class BackgroundSweepTask : public GCParallelTask {
  public:
   explicit BackgroundSweepTask(GCRuntime* gc) : GCParallelTask(gc) {}
-  void run() override;
+  void run(AutoLockHelperThreadState& lock) override;
 };
 
 class BackgroundFreeTask : public GCParallelTask {
  public:
   explicit BackgroundFreeTask(GCRuntime* gc) : GCParallelTask(gc) {}
-  void run() override;
+  void run(AutoLockHelperThreadState& lock) override;
 };
 
 // Performs extra allocation off thread so that when memory is required on the
@@ -154,7 +154,7 @@ class BackgroundAllocTask : public GCParallelTask {
   BackgroundAllocTask(GCRuntime* gc, ChunkPool& pool);
   bool enabled() const { return enabled_; }
 
-  void run() override;
+  void run(AutoLockHelperThreadState& lock) override;
 };
 
 // Search the provided Chunks for free arenas and decommit them.
@@ -162,7 +162,7 @@ class BackgroundDecommitTask : public GCParallelTask {
  public:
   explicit BackgroundDecommitTask(GCRuntime* gc) : GCParallelTask(gc) {}
 
-  void run() override;
+  void run(AutoLockHelperThreadState& lock) override;
 };
 
 class SweepMarkTask : public GCParallelTask {
@@ -170,7 +170,7 @@ class SweepMarkTask : public GCParallelTask {
   explicit SweepMarkTask(GCRuntime* gc)
       : GCParallelTask(gc), budget(SliceBudget::unlimited()) {}
   void setBudget(const SliceBudget& budget) { this->budget = budget; }
-  void run() override;
+  void run(AutoLockHelperThreadState& lock) override;
 
  private:
   SliceBudget budget;

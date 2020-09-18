@@ -801,15 +801,17 @@ BackgroundAllocTask::BackgroundAllocTask(GCRuntime* gc, ChunkPool& pool)
       chunkPool_(pool),
       enabled_(CanUseExtraThreads() && GetCPUCount() >= 2) {}
 
-void BackgroundAllocTask::run() {
+void BackgroundAllocTask::run(AutoLockHelperThreadState& lock) {
+  AutoUnlockHelperThreadState unlock(lock);
+
   TraceLoggerThread* logger = TraceLoggerForCurrentThread();
   AutoTraceLog logAllocation(logger, TraceLogger_GCAllocation);
 
-  AutoLockGC lock(gc);
-  while (!cancel_ && gc->wantBackgroundAllocation(lock)) {
+  AutoLockGC gcLock(gc);
+  while (!cancel_ && gc->wantBackgroundAllocation(gcLock)) {
     Chunk* chunk;
     {
-      AutoUnlockGC unlock(lock);
+      AutoUnlockGC unlock(gcLock);
       chunk = Chunk::allocate(gc);
       if (!chunk) {
         break;
