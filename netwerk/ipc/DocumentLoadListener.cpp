@@ -730,20 +730,6 @@ auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
     }
   }
 
-  // Any sort of reload/history load would need the cacheKey, and session
-  // history data for load flags. We don't have those available in the parent
-  // yet, so don't support these load types.
-  auto loadType = aLoadState->LoadType();
-  if (loadType == LOAD_HISTORY || loadType == LOAD_RELOAD_NORMAL ||
-      loadType == LOAD_RELOAD_CHARSET_CHANGE ||
-      loadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
-      loadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) {
-    LOG(
-        ("DocumentLoadListener::OpenInParent failed because of history "
-         "load"));
-    return nullptr;
-  }
-
   // Clone because this mutates the load flags in the load state, which
   // breaks nsDocShells expectations of being able to do it.
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(*aLoadState);
@@ -755,8 +741,19 @@ auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
           ? nsDOMNavigationTiming::DocShellState::eActive
           : nsDOMNavigationTiming::DocShellState::eInactive);
 
-  // We're not a history load or a reload, so we don't need this.
+  const mozilla::dom::LoadingSessionHistoryInfo* loadingInfo =
+      loadState->GetLoadingSessionHistoryInfo();
+
   uint32_t cacheKey = 0;
+  auto loadType = aLoadState->LoadType();
+  if (loadType == LOAD_HISTORY || loadType == LOAD_RELOAD_NORMAL ||
+      loadType == LOAD_RELOAD_CHARSET_CHANGE ||
+      loadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
+      loadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) {
+    if (loadingInfo) {
+      cacheKey = loadingInfo->mInfo.GetCacheKey();
+    }
+  }
 
   // Loads start in the content process might have exposed a channel id to
   // observers, so we need to preserve the value in the parent. That can't have
@@ -776,7 +773,8 @@ auto DocumentLoadListener::OpenInParent(nsDocShellLoadState* aLoadState,
       CreateDocumentLoadInfo(browsingContext, aLoadState);
 
   nsLoadFlags loadFlags = loadState->CalculateChannelLoadFlags(
-      browsingContext, Nothing(), Nothing());
+      browsingContext,
+      Some(loadingInfo && loadingInfo->mInfo.GetURIWasModified()), Nothing());
 
   nsresult rv;
   return Open(loadState, loadInfo, loadFlags, cacheKey, channelId,
