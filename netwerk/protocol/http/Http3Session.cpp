@@ -763,8 +763,17 @@ nsresult Http3Session::TryActivating(
        *aStreamId, aStream, this));
 
   MOZ_ASSERT(*aStreamId != UINT64_MAX);
+
+  if (mTransactionCount > 0 && mStreamIdHash.IsEmpty()) {
+    MOZ_ASSERT(mConnectionIdleStart);
+    MOZ_ASSERT(mFirstStreamIdReuseIdleConnection.isNothing());
+
+    mConnectionIdleEnd = TimeStamp::Now();
+    mFirstStreamIdReuseIdleConnection = Some(*aStreamId);
+  }
   mStreamIdHash.Put(*aStreamId, RefPtr{aStream});
   mTransactionCount++;
+
   return NS_OK;
 }
 
@@ -1187,7 +1196,29 @@ void Http3Session::CloseStream(Http3Stream* aStream, nsresult aResult) {
   }
   aStream->Close(aResult);
   if (aStream->HasStreamId()) {
+    // We know the transaction reusing an idle connection has succeeded or
+    // failed.
+    if (mFirstStreamIdReuseIdleConnection.isSome() &&
+        aStream->StreamId() == *mFirstStreamIdReuseIdleConnection) {
+      MOZ_ASSERT(mConnectionIdleStart);
+      MOZ_ASSERT(mConnectionIdleEnd);
+
+      Telemetry::AccumulateTimeDelta(
+          Telemetry::HTTP3_TIME_TO_REUSE_IDLE_CONNECTTION_MS,
+          NS_SUCCEEDED(aResult) ? "succeeded"_ns : "failed"_ns,
+          mConnectionIdleStart, mConnectionIdleEnd);
+
+      mConnectionIdleStart = TimeStamp();
+      mConnectionIdleEnd = TimeStamp();
+      mFirstStreamIdReuseIdleConnection.reset();
+    }
+
     mStreamIdHash.Remove(aStream->StreamId());
+
+    // Start to idle when we remove the last stream.
+    if (mStreamIdHash.IsEmpty()) {
+      mConnectionIdleStart = TimeStamp::Now();
+    }
   }
   RemoveStreamFromQueues(aStream);
   mStreamTransactionHash.Remove(aStream->Transaction());
