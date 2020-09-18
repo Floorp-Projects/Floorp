@@ -53,10 +53,6 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
       dom::CanonicalBrowsingContext* aBrowsingContext,
       bool aUsePrivateBrowsing);
 
-  // For channel diversion from child to parent.
-  void DivertTo(nsIStreamListener* aListener);
-  [[nodiscard]] nsresult SuspendForDiversion();
-
   // Called to set a new listener which replaces the old one after a redirect.
   void SetListenerAfterRedirect(nsIStreamListener* aListener);
 
@@ -67,16 +63,11 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
  private:
   virtual ~ParentChannelListener();
 
-  // Private partner function to SuspendForDiversion.
-  void ResumeForDiversion();
-
   // Can be the original HttpChannelParent that created this object (normal
   // case), a different {HTTP|FTP}ChannelParent that we've been redirected to,
   // or some other listener that we have been diverted to via
   // nsIDivertableChannel.
   nsCOMPtr<nsIStreamListener> mNextListener;
-  // When set, no OnStart/OnData/OnStop calls should be received.
-  bool mSuspendedForDiversion;
 
   // This will be populated with a real network controller if parent-side
   // interception is enabled.

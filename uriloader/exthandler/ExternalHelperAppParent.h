@@ -75,9 +75,6 @@ class ExternalHelperAppParent
                                               const uint32_t& count) override;
   mozilla::ipc::IPCResult RecvOnStopRequest(const nsresult& code) override;
 
-  mozilla::ipc::IPCResult RecvDivertToParentUsing(
-      PChannelDiverterParent* diverter) override;
-
   bool WasFileChannel() override { return mWasFileChannel; }
 
   ExternalHelperAppParent(nsIURI* uri, const int64_t& contentLength,
@@ -101,9 +98,6 @@ class ExternalHelperAppParent
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   bool mPending;
-#ifdef DEBUG
-  bool mDiverted;
-#endif
   bool mIPCClosed;
   nsLoadFlags mLoadFlags;
   nsresult mStatus;

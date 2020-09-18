@@ -29,7 +29,6 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChildChannel.h"
 #include "nsIHttpChannelChild.h"
-#include "nsIDivertableChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "mozilla/net/DNS.h"
@@ -52,7 +51,6 @@ namespace mozilla {
 namespace net {
 
 class HttpBackgroundChannelChild;
-class SyntheticDiversionListener;
 
 class HttpChannelChild final : public PHttpChannelChild,
                                public HttpBaseChannel,
@@ -63,7 +61,6 @@ class HttpChannelChild final : public PHttpChannelChild,
                                public nsIAsyncVerifyRedirectCallback,
                                public nsIChildChannel,
                                public nsIHttpChannelChild,
-                               public nsIDivertableChannel,
                                public nsIMultiPartChannel,
                                public nsIThreadRetargetableRequest,
                                public NeckoTargetHolder {
@@ -78,7 +75,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
   NS_DECL_NSICHILDCHANNEL
   NS_DECL_NSIHTTPCHANNELCHILD
-  NS_DECL_NSIDIVERTABLECHANNEL
   NS_DECL_NSIMULTIPARTCHANNEL
   NS_DECL_NSITHREADRETARGETABLEREQUEST
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_CHILD_IID)
@@ -119,8 +115,6 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   [[nodiscard]] bool IsSuspended();
 
-  void FlushedForDiversion();
-
   void OnCopyComplete(nsresult aStatus) override;
 
   // Callback while background channel is ready.
@@ -151,8 +145,6 @@ class HttpChannelChild final : public PHttpChannelChild,
       const uint32_t& warning, const bool& asError) override;
 
   mozilla::ipc::IPCResult RecvSetPriority(const int16_t& aPriority) override;
-
-  mozilla::ipc::IPCResult RecvCancelDiversion() override;
 
   mozilla::ipc::IPCResult RecvOriginalCacheInputStreamAvailable(
       const Maybe<IPCStream>& aStream) override;
@@ -229,8 +221,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   void ProcessOnConsoleReport(
       nsTArray<ConsoleReportCollected>&& aConsoleReports);
 
-  void ProcessFlushedForDiversion();
-  void ProcessDivertMessages();
   void ProcessNotifyClassificationFlags(uint32_t aClassificationFlags,
                                         bool aIsThirdParty);
   void ProcessNotifyFlashPluginStateChanged(
@@ -310,11 +300,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Used to ensure atomicity of mNeckoTarget / mODATarget;
   Mutex mEventTargetMutex;
 
-  // If nsUnknownDecoder is involved OnStartRequest call will be delayed and
-  // this queue keeps OnDataAvailable data until OnStartRequest is finally
-  // called.
-  nsTArray<UniquePtr<ChannelEvent>> mUnknownDecoderEventQ;
-
   TimeStamp mLastStatusReported;
 
   uint64_t mCacheEntryId;
@@ -334,14 +319,6 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   // To ensure only one SendDeletingChannel is triggered.
   Atomic<bool> mDeletingChannelSent;
-
-  Atomic<bool, ReleaseAcquire> mUnknownDecoderInvolved;
-
-  // Once set, OnData and possibly OnStop will be diverted to the parent.
-  Atomic<bool, ReleaseAcquire> mDivertingToParent;
-  // Once set, no OnStart/OnData/OnStop callbacks should be received from the
-  // parent channel, nor dequeued from the ChannelEventQueue.
-  Atomic<bool, ReleaseAcquire> mFlushedForDiversion;
 
   Atomic<bool, SequentiallyConsistent> mIsFromCache;
   Atomic<bool, SequentiallyConsistent> mIsRacing;
@@ -420,15 +397,12 @@ class HttpChannelChild final : public PHttpChannelChild,
                       const bool& aUseResponseHead,
                       const nsHttpHeaderArray& aRequestHeaders,
                       const HttpChannelOnStartRequestArgs& aArgs);
-  void MaybeDivertOnData(const nsCString& data, const uint64_t& offset,
-                         const uint32_t& count);
   void OnTransportAndData(const nsresult& channelStatus, const nsresult& status,
                           const uint64_t& offset, const uint32_t& count,
                           const nsCString& data);
   void OnStopRequest(const nsresult& channelStatus,
                      const ResourceTimingStructArgs& timing,
                      const nsHttpHeaderArray& aResponseTrailers);
-  void MaybeDivertOnStop(const nsresult& aChannelStatus);
   void FailedAsyncOpen(const nsresult& status);
   void HandleAsyncAbort();
   void Redirect1Begin(const uint32_t& registrarId, const URIParams& newUri,

@@ -80,10 +80,6 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   IPCResult RecvOnStatus(const nsresult& aStatus);
 
-  IPCResult RecvFlushedForDiversion();
-
-  IPCResult RecvDivertMessages();
-
   IPCResult RecvNotifyClassificationFlags(const uint32_t& aClassificationFlags,
                                           const bool& aIsThirdParty);
 

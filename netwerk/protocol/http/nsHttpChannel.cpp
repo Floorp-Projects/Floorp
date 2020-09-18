@@ -6372,7 +6372,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsICorsPreflightCallback)
   NS_INTERFACE_MAP_ENTRY(nsIRaceCacheWithNetwork)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-  NS_INTERFACE_MAP_ENTRY(nsIChannelWithDivertableParentListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestTailUnblockCallback)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsHttpChannel)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
@@ -6535,26 +6534,135 @@ void nsHttpChannel::CancelNetworkRequest(nsresult aStatus) {
 
 NS_IMETHODIMP
 nsHttpChannel::Suspend() {
-  nsresult rv = SuspendInternal();
+  NS_ENSURE_TRUE(mIsPending, NS_ERROR_NOT_AVAILABLE);
 
-  nsresult rvParentChannel = NS_OK;
-  if (mParentChannel) {
-    rvParentChannel = mParentChannel->SuspendMessageDiversion();
+  LOG(("nsHttpChannel::SuspendInternal [this=%p]\n", this));
+  LogCallingScriptLocation(this);
+
+  ++mSuspendCount;
+
+  if (mSuspendCount == 1) {
+    mSuspendTimestamp = TimeStamp::NowLoRes();
   }
 
-  return NS_FAILED(rv) ? rv : rvParentChannel;
+  nsresult rvTransaction = NS_OK;
+  if (mTransactionPump) {
+    rvTransaction = mTransactionPump->Suspend();
+  }
+  nsresult rvCache = NS_OK;
+  if (mCachePump) {
+    rvCache = mCachePump->Suspend();
+  }
+
+  return NS_FAILED(rvTransaction) ? rvTransaction : rvCache;
 }
 
 NS_IMETHODIMP
 nsHttpChannel::Resume() {
-  nsresult rv = ResumeInternal();
+  NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
 
-  nsresult rvParentChannel = NS_OK;
-  if (mParentChannel) {
-    rvParentChannel = mParentChannel->ResumeMessageDiversion();
+  LOG(("nsHttpChannel::ResumeInternal [this=%p]\n", this));
+  LogCallingScriptLocation(this);
+
+  if (--mSuspendCount == 0) {
+    mSuspendTotalTime +=
+        (TimeStamp::NowLoRes() - mSuspendTimestamp).ToMilliseconds();
+
+    if (mCallOnResume) {
+      // Resume the interrupted procedure first, then resume
+      // the pump to continue process the input stream.
+      // Any newly created pump MUST be suspended to prevent calling
+      // its OnStartRequest before OnStopRequest of any pre-existing
+      // pump.  mAsyncResumePending ensures that.
+      MOZ_ASSERT(!mAsyncResumePending);
+      mAsyncResumePending = 1;
+
+      std::function<nsresult(nsHttpChannel*)> callOnResume = nullptr;
+      std::swap(callOnResume, mCallOnResume);
+
+      RefPtr<nsHttpChannel> self(this);
+      nsCOMPtr<nsIRequest> transactionPump = mTransactionPump;
+      RefPtr<nsInputStreamPump> cachePump = mCachePump;
+
+      nsresult rv = NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+          "nsHttpChannel::CallOnResume",
+          [callOnResume{std::move(callOnResume)}, self{std::move(self)},
+           transactionPump{std::move(transactionPump)},
+           cachePump{std::move(cachePump)}]() {
+            MOZ_ASSERT(self->mAsyncResumePending);
+            nsresult rv = self->CallOrWaitForResume(callOnResume);
+            if (NS_FAILED(rv)) {
+              self->CloseCacheEntry(false);
+              Unused << self->AsyncAbort(rv);
+            }
+            MOZ_ASSERT(self->mAsyncResumePending);
+
+            self->mAsyncResumePending = 0;
+
+            // And now actually resume the previously existing pumps.
+            if (transactionPump) {
+              LOG(
+                  ("nsHttpChannel::CallOnResume resuming previous transaction "
+                   "pump %p, this=%p",
+                   transactionPump.get(), self.get()));
+              transactionPump->Resume();
+            }
+            if (cachePump) {
+              LOG(
+                  ("nsHttpChannel::CallOnResume resuming previous cache pump "
+                   "%p, this=%p",
+                   cachePump.get(), self.get()));
+              cachePump->Resume();
+            }
+
+            // Any newly created pumps were suspended once because of
+            // mAsyncResumePending. Problem is that the stream listener
+            // notification is already pending in the queue right now, because
+            // AsyncRead doesn't (regardless if called after Suspend) respect
+            // the suspend coutner and the right order would not be preserved.
+            // Hence, we do another dispatch round to actually Resume after
+            // the notification from the original pump.
+            if (transactionPump != self->mTransactionPump &&
+                self->mTransactionPump) {
+              LOG(
+                  ("nsHttpChannel::CallOnResume async-resuming new "
+                   "transaction "
+                   "pump %p, this=%p",
+                   self->mTransactionPump.get(), self.get()));
+
+              nsCOMPtr<nsIRequest> pump = self->mTransactionPump;
+              NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+                  "nsHttpChannel::CallOnResume new transaction",
+                  [pump{std::move(pump)}]() { pump->Resume(); }));
+            }
+            if (cachePump != self->mCachePump && self->mCachePump) {
+              LOG(
+                  ("nsHttpChannel::CallOnResume async-resuming new cache pump "
+                   "%p, this=%p",
+                   self->mCachePump.get(), self.get()));
+
+              RefPtr<nsInputStreamPump> pump = self->mCachePump;
+              NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+                  "nsHttpChannel::CallOnResume new pump",
+                  [pump{std::move(pump)}]() { pump->Resume(); }));
+            }
+          }));
+      NS_ENSURE_SUCCESS(rv, rv);
+      return rv;
+    }
   }
 
-  return NS_FAILED(rv) ? rv : rvParentChannel;
+  nsresult rvTransaction = NS_OK;
+  if (mTransactionPump) {
+    rvTransaction = mTransactionPump->Resume();
+  }
+
+  nsresult rvCache = NS_OK;
+  if (mCachePump) {
+    rvCache = mCachePump->Resume();
+  }
+
+  return NS_FAILED(rvTransaction) ? rvTransaction : rvCache;
 }
 
 //-----------------------------------------------------------------------------
@@ -6910,13 +7018,13 @@ nsresult nsHttpChannel::BeginConnect() {
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && mAllowAltSvc &&  // per channel
-      (http2Allowed || http3Allowed) &&
-      !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
+      (http2Allowed || http3Allowed) && !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
       AltSvcMapping::AcceptableProxy(proxyInfo) &&
       (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) &&
       (mapping = gHttpHandler->GetAltServiceMapping(
            scheme, host, port, mPrivateBrowsing, IsIsolated(),
-           GetTopWindowOrigin(), originAttributes, http2Allowed, http3Allowed))) {
+           GetTopWindowOrigin(), originAttributes, http2Allowed,
+           http3Allowed))) {
     LOG(("nsHttpChannel %p Alt Service Mapping Found %s://%s:%d [%s]\n", this,
          scheme.get(), mapping->AlternateHost().get(), mapping->AlternatePort(),
          mapping->HashKey().get()));
@@ -9535,57 +9643,6 @@ nsHttpChannel::OnPreflightFailed(nsresult aError) {
   return NS_OK;
 }
 
-//-----------------------------------------------------------------------------
-// AChannelHasDivertableParentChannelAsListener internal functions
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::MessageDiversionStarted(
-    ADivertableParentChannel* aParentChannel) {
-  LOG(("nsHttpChannel::MessageDiversionStarted [this=%p]", this));
-  MOZ_ASSERT(!mParentChannel);
-  mParentChannel = aParentChannel;
-  // If the channel is suspended, propagate that info to the parent's mEventQ.
-  uint32_t suspendCount = mSuspendCount;
-  while (suspendCount--) {
-    mParentChannel->SuspendMessageDiversion();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::MessageDiversionStop() {
-  LOG(("nsHttpChannel::MessageDiversionStop [this=%p]", this));
-  MOZ_ASSERT(mParentChannel);
-  mParentChannel = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SuspendInternal() {
-  NS_ENSURE_TRUE(mIsPending, NS_ERROR_NOT_AVAILABLE);
-
-  LOG(("nsHttpChannel::SuspendInternal [this=%p]\n", this));
-  LogCallingScriptLocation(this);
-
-  ++mSuspendCount;
-
-  if (mSuspendCount == 1) {
-    mSuspendTimestamp = TimeStamp::NowLoRes();
-  }
-
-  nsresult rvTransaction = NS_OK;
-  if (mTransactionPump) {
-    rvTransaction = mTransactionPump->Suspend();
-  }
-  nsresult rvCache = NS_OK;
-  if (mCachePump) {
-    rvCache = mCachePump->Suspend();
-  }
-
-  return NS_FAILED(rvTransaction) ? rvTransaction : rvCache;
-}
-
 nsresult nsHttpChannel::CallOrWaitForResume(
     const std::function<nsresult(nsHttpChannel*)>& aFunc) {
   if (mCanceled) {
@@ -9601,114 +9658,6 @@ nsresult nsHttpChannel::CallOrWaitForResume(
   }
 
   return aFunc(this);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::ResumeInternal() {
-  NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
-
-  LOG(("nsHttpChannel::ResumeInternal [this=%p]\n", this));
-  LogCallingScriptLocation(this);
-
-  if (--mSuspendCount == 0) {
-    mSuspendTotalTime +=
-        (TimeStamp::NowLoRes() - mSuspendTimestamp).ToMilliseconds();
-
-    if (mCallOnResume) {
-      // Resume the interrupted procedure first, then resume
-      // the pump to continue process the input stream.
-      // Any newly created pump MUST be suspended to prevent calling
-      // its OnStartRequest before OnStopRequest of any pre-existing
-      // pump.  mAsyncResumePending ensures that.
-      MOZ_ASSERT(!mAsyncResumePending);
-      mAsyncResumePending = 1;
-
-      std::function<nsresult(nsHttpChannel*)> callOnResume = nullptr;
-      std::swap(callOnResume, mCallOnResume);
-
-      RefPtr<nsHttpChannel> self(this);
-      nsCOMPtr<nsIRequest> transactionPump = mTransactionPump;
-      RefPtr<nsInputStreamPump> cachePump = mCachePump;
-
-      nsresult rv = NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-          "nsHttpChannel::CallOnResume",
-          [callOnResume{std::move(callOnResume)}, self{std::move(self)},
-           transactionPump{std::move(transactionPump)},
-           cachePump{std::move(cachePump)}]() {
-            MOZ_ASSERT(self->mAsyncResumePending);
-            nsresult rv = self->CallOrWaitForResume(callOnResume);
-            if (NS_FAILED(rv)) {
-              self->CloseCacheEntry(false);
-              Unused << self->AsyncAbort(rv);
-            }
-            MOZ_ASSERT(self->mAsyncResumePending);
-
-            self->mAsyncResumePending = 0;
-
-            // And now actually resume the previously existing pumps.
-            if (transactionPump) {
-              LOG(
-                  ("nsHttpChannel::CallOnResume resuming previous transaction "
-                   "pump %p, this=%p",
-                   transactionPump.get(), self.get()));
-              transactionPump->Resume();
-            }
-            if (cachePump) {
-              LOG(
-                  ("nsHttpChannel::CallOnResume resuming previous cache pump "
-                   "%p, this=%p",
-                   cachePump.get(), self.get()));
-              cachePump->Resume();
-            }
-
-            // Any newly created pumps were suspended once because of
-            // mAsyncResumePending. Problem is that the stream listener
-            // notification is already pending in the queue right now, because
-            // AsyncRead doesn't (regardless if called after Suspend) respect
-            // the suspend coutner and the right order would not be preserved.
-            // Hence, we do another dispatch round to actually Resume after
-            // the notification from the original pump.
-            if (transactionPump != self->mTransactionPump &&
-                self->mTransactionPump) {
-              LOG(
-                  ("nsHttpChannel::CallOnResume async-resuming new "
-                   "transaction "
-                   "pump %p, this=%p",
-                   self->mTransactionPump.get(), self.get()));
-
-              nsCOMPtr<nsIRequest> pump = self->mTransactionPump;
-              NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-                  "nsHttpChannel::CallOnResume new transaction",
-                  [pump{std::move(pump)}]() { pump->Resume(); }));
-            }
-            if (cachePump != self->mCachePump && self->mCachePump) {
-              LOG(
-                  ("nsHttpChannel::CallOnResume async-resuming new cache pump "
-                   "%p, this=%p",
-                   self->mCachePump.get(), self.get()));
-
-              RefPtr<nsInputStreamPump> pump = self->mCachePump;
-              NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-                  "nsHttpChannel::CallOnResume new pump",
-                  [pump{std::move(pump)}]() { pump->Resume(); }));
-            }
-          }));
-      NS_ENSURE_SUCCESS(rv, rv);
-      return rv;
-    }
-  }
-
-  nsresult rvTransaction = NS_OK;
-  if (mTransactionPump) {
-    rvTransaction = mTransactionPump->Resume();
-  }
-
-  nsresult rvCache = NS_OK;
-  if (mCachePump) {
-    rvCache = mCachePump->Resume();
-  }
-
-  return NS_FAILED(rvTransaction) ? rvTransaction : rvCache;
 }
 
 void nsHttpChannel::MaybeWarnAboutAppCache() {

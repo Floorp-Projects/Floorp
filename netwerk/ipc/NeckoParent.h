@@ -189,12 +189,6 @@ class NeckoParent : public PNeckoParent {
   virtual mozilla::ipc::IPCResult RecvPFileChannelConstructor(
       PFileChannelParent* aActor, const uint32_t& channelId) override;
 
-  PChannelDiverterParent* AllocPChannelDiverterParent(
-      const ChannelDiverterArgs& channel);
-  virtual mozilla::ipc::IPCResult RecvPChannelDiverterConstructor(
-      PChannelDiverterParent* actor,
-      const ChannelDiverterArgs& channel) override;
-  bool DeallocPChannelDiverterParent(PChannelDiverterParent* actor);
   PTransportProviderParent* AllocPTransportProviderParent();
   bool DeallocPTransportProviderParent(PTransportProviderParent* aActor);
 
