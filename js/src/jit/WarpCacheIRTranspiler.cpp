@@ -21,6 +21,7 @@
 #include "jit/WarpBuilderShared.h"
 #include "jit/WarpSnapshot.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
+#include "vm/ArgumentsObject.h"
 
 #include "gc/ObjectKind-inl.h"
 
@@ -275,6 +276,12 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
       break;
     case GuardClassKind::DataView:
       classp = &DataViewObject::class_;
+      break;
+    case GuardClassKind::MappedArguments:
+      classp = &MappedArgumentsObject::class_;
+      break;
+    case GuardClassKind::UnmappedArguments:
+      classp = &UnmappedArgumentsObject::class_;
       break;
     case GuardClassKind::WindowProxy:
       classp = mirGen().runtime->maybeWindowProxyClass();
@@ -1304,6 +1311,18 @@ bool WarpCacheIRTranspiler::emitLoadInt32ArrayLength(ObjOperandId objId,
   add(length);
 
   return defineOperand(resultId, length);
+}
+
+bool WarpCacheIRTranspiler::emitLoadArgumentsObjectArgResult(
+    ObjOperandId objId, Int32OperandId indexId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* load = MLoadArgumentsObjectArg::New(alloc(), obj, index);
+  add(load);
+
+  pushResult(load);
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(
