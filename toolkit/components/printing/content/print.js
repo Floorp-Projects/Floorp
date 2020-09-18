@@ -1056,9 +1056,6 @@ var PrintSettingsViewProxy = {
         let paperSize = this.availablePaperSizes[paperId];
         target.paperWidth = paperSize.width;
         target.paperHeight = paperSize.height;
-        if (+paperSize.id > 0) {
-          target.paperData = paperSize.id;
-        }
         target.unwriteableMarginTop = paperSize.unwriteableMarginTop;
         target.unwriteableMarginRight = paperSize.unwriteableMarginRight;
         target.unwriteableMarginBottom = paperSize.unwriteableMarginBottom;

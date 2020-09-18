@@ -30,7 +30,6 @@ nsPrintSettings::nsPrintSettings()
       mShowPrintProgress(true),
       mShowMarginGuides(false),
       mPrintPageDelay(50),
-      mPaperData(0),
       mPaperWidth(8.5),
       mPaperHeight(11.0),
       mPaperSizeUnit(kPaperSizeInches),
@@ -660,16 +659,6 @@ NS_IMETHODIMP nsPrintSettings::SetPaperSizeUnit(int16_t aPaperSizeUnit) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetPaperData(int16_t* aPaperData) {
-  NS_ENSURE_ARG_POINTER(aPaperData);
-  *aPaperData = mPaperData;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPaperData(int16_t aPaperData) {
-  mPaperData = aPaperData;
-  return NS_OK;
-}
-
 /** ---------------------------------------------------
  *  See documentation in nsPrintSettingsService.h
  *	@update 6/21/00 dwc
@@ -796,7 +785,6 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mShowPrintProgress = rhs.mShowPrintProgress;
   mShowMarginGuides = rhs.mShowMarginGuides;
   mPaperName = rhs.mPaperName;
-  mPaperData = rhs.mPaperData;
   mPaperWidth = rhs.mPaperWidth;
   mPaperHeight = rhs.mPaperHeight;
   mPaperSizeUnit = rhs.mPaperSizeUnit;
