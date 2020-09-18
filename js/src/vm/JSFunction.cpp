@@ -597,7 +597,7 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
     }
 
     nargs = fun->nargs();
-    flags = (fun->flags().toRaw() & ~FunctionFlags::MUTABLE_FLAGS);
+    flags = FunctionFlags::clearMutableflags(fun->flags()).toRaw();
 
     atom = fun->displayAtom();
 
