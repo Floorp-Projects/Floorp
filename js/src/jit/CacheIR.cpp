@@ -1949,36 +1949,36 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
+  if (!JSID_IS_ATOM(id, cx_->names().length)) {
+    return AttachDecision::NoAction;
+  }
+
   JSObject* holder = nullptr;
   PropertyResult prop;
-  // This property exists already, don't attach the stub.
+  // If this property exists already, don't attach the stub.
   if (LookupPropertyPure(cx_, obj, id, &holder, &prop)) {
     return AttachDecision::NoAction;
   }
 
   JSFunction* fun = &obj->as<JSFunction>();
 
-  if (JSID_IS_ATOM(id, cx_->names().length)) {
-    // length was probably deleted from the function.
-    if (fun->hasResolvedLength()) {
-      return AttachDecision::NoAction;
-    }
-
-    // Lazy functions don't store the length.
-    if (!fun->hasBytecode()) {
-      return AttachDecision::NoAction;
-    }
-
-    maybeEmitIdGuard(id);
-    writer.guardClass(objId, GuardClassKind::JSFunction);
-    writer.loadFunctionLengthResult(objId);
-    writer.returnFromIC();
-
-    trackAttached("FunctionLength");
-    return AttachDecision::Attach;
+  // length was probably deleted from the function.
+  if (fun->hasResolvedLength()) {
+    return AttachDecision::NoAction;
   }
 
-  return AttachDecision::NoAction;
+  // Lazy functions don't store the length.
+  if (!fun->hasBytecode()) {
+    return AttachDecision::NoAction;
+  }
+
+  maybeEmitIdGuard(id);
+  writer.guardClass(objId, GuardClassKind::JSFunction);
+  writer.loadFunctionLengthResult(objId);
+  writer.returnFromIC();
+
+  trackAttached("FunctionLength");
+  return AttachDecision::Attach;
 }
 
 AttachDecision GetPropIRGenerator::tryAttachModuleNamespace(HandleObject obj,
