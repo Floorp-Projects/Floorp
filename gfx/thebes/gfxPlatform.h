@@ -807,6 +807,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   virtual void InitWebRenderConfig();
   virtual void InitWebGPUConfig();
 
+  virtual void GetPlatformDisplayInfo(mozilla::widget::InfoObject& aObj) {}
+
   /**
    * Called immediately before deleting the gfxPlatform object.
    */
