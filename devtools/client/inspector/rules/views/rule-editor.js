@@ -159,6 +159,7 @@ RuleEditor.prototype = {
     }
 
     if (this.rule.domRule.type !== CSSRule.KEYFRAME_RULE) {
+      // FIXME: Avoid having this as a nested async operation. (Bug 1664511)
       (async function() {
         let selector;
 
@@ -174,26 +175,15 @@ RuleEditor.prototype = {
           selector = this.ruleView.inspector.selectionCssSelector;
         }
 
-        const isHighlighted =
-          this.ruleView._highlighters &&
-          this.ruleView.highlighters.selectorHighlighterShown === selector;
-        const selectorHighlighter = createChild(header, "span", {
+        const isHighlighted = this.ruleView.isSelectorHighlighted(selector);
+        // Handling of click events is delegated to CssRuleView.handleEvent()
+        createChild(header, "span", {
           class:
-            "ruleview-selectorhighlighter" +
+            "ruleview-selectorhighlighter js-toggle-selector-highlighter" +
             (isHighlighted ? " highlighted" : ""),
+          "data-selector": selector,
           title: l10n("rule.selectorHighlighter.tooltip"),
         });
-        selectorHighlighter.addEventListener("click", event => {
-          this.ruleView.toggleSelectorHighlighter(
-            selectorHighlighter,
-            selector
-          );
-          // Prevent clicks from focusing the property editor.
-          event.stopPropagation();
-        });
-
-        this.uniqueSelector = selector;
-        this.emit("selector-icon-created");
       }
         .bind(this)()
         .catch(error => {
@@ -668,6 +658,11 @@ RuleEditor.prototype = {
 
     this.isEditing = true;
 
+    // Remove highlighter for the previous selector.
+    if (this.ruleView.isSelectorHighlighted(this.rule.selectorText)) {
+      await this.ruleView.toggleSelectorHighlighter(this.rule.selectorText);
+    }
+
     try {
       const response = await this.rule.domRule.modifySelector(element, value);
 
@@ -714,14 +709,6 @@ RuleEditor.prototype = {
       // but that is complicated due to the way the UI installs
       // pseudo-element rules and the like.
       this.element.parentNode.replaceChild(editor.element, this.element);
-
-      // Remove highlight for modified selector
-      if (ruleView.highlighters.selectorHighlighterShown) {
-        ruleView.toggleSelectorHighlighter(
-          ruleView.lastSelectorIcon,
-          ruleView.highlighters.selectorHighlighterShown
-        );
-      }
 
       editor._moveSelectorFocus(direction);
     } catch (err) {

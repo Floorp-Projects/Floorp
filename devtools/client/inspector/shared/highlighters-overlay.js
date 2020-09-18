@@ -157,8 +157,6 @@ class HighlightersOverlay {
     this.geometryEditorHighlighterShown = null;
     // Name of the highlighter shown on mouse hover.
     this.hoveredHighlighterShown = null;
-    // Name of the selector highlighter shown.
-    this.selectorHighlighterShown = null;
     // NodeFront of the shape that is highlighted
     this.shapesHighlighterShown = null;
 
@@ -206,6 +204,74 @@ class HighlightersOverlay {
   }
 
   /**
+   * Optionally run some operations before showing a highligther of a given type.
+   *
+   * Depending its type, before showing a new instance of a highlighter, we may do extra
+   * operations, like hiding another visible highlighter, or preventing the show
+   * operation, for example due to a duplicate call with the same arguments.
+   *
+   * Returns a promise that resovles with a boolean indicating whether to skip showing
+   * the highlighter with these arguments.
+   *
+   * @param  {String} type
+   *          Highlighter type to show.
+   * @param  {NodeFront} nodeFront
+   *          Node front of the element to be highlighted.
+   * @param  {Options} options
+   *          Optional object with options to pass to the highlighter.
+   * @return {Promise}
+   */
+  async _beforeShowHighlighterTypeForNode(type, nodeFront, options) {
+    // Get the data associated with the visible highlighter of this type, if any.
+    const {
+      highlighter: activeHighlighter,
+      nodeFront: activeNodeFront,
+      options: activeOptions,
+      timer: activeTimer,
+    } = this.getDataForActiveHighlighter(type);
+
+    // There isn't an active highlighter of this type. Early return, proceed with showing.
+    if (!activeHighlighter) {
+      return false;
+    }
+
+    // Whether conditions are met to skip showing the highlighter (ex: duplicate calls).
+    let skipShow = false;
+
+    // Clear any autohide timer associated with this highlighter type.
+    // This clears any existing timer for duplicate calls to show() if:
+    // - called with different options.duration
+    // - called once with options.duration, then without (see deepEqual() above)
+    clearTimeout(activeTimer);
+
+    switch (type) {
+      // Hide the visible selector highlighter if called for the same node,
+      // but with a different selector.
+      case TYPES.SELECTOR:
+        if (
+          nodeFront === activeNodeFront &&
+          options?.selector !== activeOptions?.selector
+        ) {
+          await this.hideHighlighterType(TYPES.SELECTOR);
+        }
+        break;
+
+      // For others, hide the existing highlighter before showing it for a different node.
+      // Else, if the node is the same and options are the same, skip a duplicate call.
+      // Duplicate calls to show the highlighter for the same node are allowed
+      // if the options are different (for example, when scheduling autohide).
+      default:
+        if (nodeFront !== activeNodeFront) {
+          await this.hideHighlighterType(type);
+        } else if (deepEqual(options, activeOptions)) {
+          skipShow = true;
+        }
+    }
+
+    return skipShow;
+  }
+
+  /**
    * Get a highlighter instance of the given type for the given node front.
    *
    * @param  {String} type
@@ -237,6 +303,39 @@ class HighlightersOverlay {
 
     const { highlighter } = this._activeHighlighters.get(type);
     return highlighter;
+  }
+
+  /**
+   * Get an object with data associated with the active highlighter of a given type.
+   * This data object contains:
+   *   - nodeFront: NodeFront of the highlighted node
+   *   - highlighter: Highlighter instance
+   *   - options: Configuration options passed to the highlighter
+   *   - timer: (Optional) index of timer set with setTimout() to autohide the highlighter
+   * Returns an empty object if a highlighter of the given type is not active.
+   *
+   * @param  {String} type
+   *         Highlighter type.
+   * @return {Object}
+   */
+  getDataForActiveHighlighter(type) {
+    if (!this._activeHighlighters.has(type)) {
+      return {};
+    }
+
+    return this._activeHighlighters.get(type);
+  }
+
+  /**
+   * Get the configuration options of the active highlighter of a given type.
+   *
+   * @param  {String} type
+   *         Highlighter type.
+   * @return {Object}
+   */
+  getOptionsForActiveHighlighter(type) {
+    const { options } = this.getDataForActiveHighlighter(type);
+    return options;
   }
 
   /**
@@ -274,28 +373,14 @@ class HighlightersOverlay {
    * @return {Promise}
    */
   async showHighlighterTypeForNode(type, nodeFront, options) {
-    if (this._activeHighlighters.has(type)) {
-      const {
-        nodeFront: activeNodeFront,
-        options: activeOptions,
-        timer: activeTimer,
-      } = this._activeHighlighters.get(type);
+    const skipShow = await this._beforeShowHighlighterTypeForNode(
+      type,
+      nodeFront,
+      options
+    );
 
-      // Hide the existing highlighter before showing it for a different node.
-      // Else, if the node is the same and options are the same, skip duplicate call.
-      // Duplicate calls to show the highlighter for the same node are allowed
-      // if the options are different (for example, when scheduling autohide).
-      if (nodeFront !== activeNodeFront) {
-        await this.hideHighlighterType(type);
-      } else if (deepEqual(options, activeOptions)) {
-        return;
-      }
-
-      // Clear any autohide timer associated with this highlighter type.
-      // This clears any existing timer for duplicate calls to show() if:
-      // - called with different options.duration
-      // - called once with options.duration, then without (see deepEqual() above)
-      clearTimeout(activeTimer);
+    if (skipShow) {
+      return;
     }
 
     const highlighter = await this._getHighlighterTypeForNode(type, nodeFront);
@@ -354,9 +439,8 @@ class HighlightersOverlay {
       return;
     }
 
-    const { highlighter, nodeFront, timer } = this._activeHighlighters.get(
-      type
-    );
+    const data = this.getDataForActiveHighlighter(type);
+    const { highlighter, nodeFront, timer } = data;
     // Clear any autohide timer associated with this highlighter type.
     clearTimeout(timer);
     this._activeHighlighters.delete(type);
@@ -367,7 +451,7 @@ class HighlightersOverlay {
     if (HIGHLIGHTER_EVENTS[type]?.hidden) {
       this.emit(HIGHLIGHTER_EVENTS[type].hidden, nodeFront);
     }
-    this.emit("highlighter-hidden", { type, highlighter, nodeFront });
+    this.emit("highlighter-hidden", { type, ...data });
   }
 
   async canGetParentGridNode() {
@@ -1634,7 +1718,6 @@ class HighlightersOverlay {
     this.flexboxHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.hoveredHighlighterShown = null;
-    this.selectorHighlighterShown = null;
     this.shapesHighlighterShown = null;
   }
 
@@ -1732,7 +1815,6 @@ class HighlightersOverlay {
     this.flexboxHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.hoveredHighlighterShown = null;
-    this.selectorHighlighterShown = null;
     this.shapesHighlighterShown = null;
 
     this.destroyed = true;

@@ -164,6 +164,11 @@ function CssRuleView(inspector, document, store) {
   this.refreshPanel = this.refreshPanel.bind(this);
 
   const doc = this.styleDocument;
+  // Delegate bulk handling of events happening within the DOM tree of the Rules view
+  // to this.handleEvent(). Listening on the capture phase of the event bubbling to be
+  // able to stop event propagation on a case-by-case basis and prevent event target
+  // ancestor nodes from handling them.
+  this.styleDocument.addEventListener("click", this, { capture: true });
   this.element = doc.getElementById("ruleview-container-focusable");
   this.addRuleButton = doc.getElementById("ruleview-add-rule-button");
   this.searchField = doc.getElementById("ruleview-searchbox");
@@ -180,6 +185,16 @@ function CssRuleView(inspector, document, store) {
   this._initSimulationFeatures();
 
   this.searchClearButton.hidden = true;
+
+  this.onHighlighterShown = data =>
+    this.handleHighlighterEvent("highlighter-shown", data);
+  this.onHighlighterHidden = data =>
+    this.handleHighlighterEvent("highlighter-hidden", data);
+  this.inspector.highlighters.on("highlighter-shown", this.onHighlighterShown);
+  this.inspector.highlighters.on(
+    "highlighter-hidden",
+    this.onHighlighterHidden
+  );
 
   this.shortcuts = new KeyShortcuts({ window: this.styleWindow });
   this._onShortcut = this._onShortcut.bind(this);
@@ -305,35 +320,7 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Get an instance of SelectorHighlighter (used to highlight nodes that match
-   * selectors in the rule-view). A new instance is only created the first time
-   * this function is called. The same instance will then be returned.
-   *
-   * @return {Promise} Resolves to the instance of the highlighter.
-   */
-  async getSelectorHighlighter() {
-    if (!this.inspector) {
-      return null;
-    }
-
-    if (this.selectorHighlighter) {
-      return this.selectorHighlighter;
-    }
-
-    try {
-      const front = this.inspector.inspectorFront;
-      const h = await front.getHighlighterByType("SelectorHighlighter");
-      this.selectorHighlighter = h;
-      return h;
-    } catch (e) {
-      // The SelectorHighlighter type could not be created in the
-      // current target.  It could be an older server, or a XUL page.
-      return null;
-    }
-  },
-
-  /**
-   * Highlight/unhighlight all the nodes that match a given set of selectors
+   * Highlight/unhighlight all the nodes that match a given selector
    * inside the document of the current selected node.
    * Only one selector can be highlighted at a time, so calling the method a
    * second time with a different selector will first unhighlight the previously
@@ -341,43 +328,24 @@ CssRuleView.prototype = {
    * Calling the method a second time with the same selector will just
    * unhighlight the highlighted nodes.
    *
-   * @param {DOMNode} selectorIcon
-   *        The icon that was clicked to toggle the selector. The
-   *        class 'highlighted' will be added when the selector is
-   *        highlighted.
    * @param {String} selector
-   *        The selector used to find nodes in the page.
+   *        Elements matching this selector will be highlighted on the page.
    */
-  async toggleSelectorHighlighter(selectorIcon, selector) {
-    if (this.lastSelectorIcon) {
-      this.lastSelectorIcon.classList.remove("highlighted");
-    }
-    selectorIcon.classList.remove("highlighted");
-
-    const highlighter = await this.getSelectorHighlighter();
-    if (!highlighter) {
-      return;
-    }
-
-    await highlighter.hide();
-
-    if (selector !== this.highlighters.selectorHighlighterShown) {
-      this.highlighters.selectorHighlighterShown = selector;
-      selectorIcon.classList.add("highlighted");
-      this.lastSelectorIcon = selectorIcon;
-
-      const node = this.inspector.selection.nodeFront;
-
-      await highlighter.show(node, {
-        hideInfoBar: true,
-        hideGuides: true,
-        selector,
-      });
-
-      this.emit("ruleview-selectorhighlighter-toggled", true);
+  async toggleSelectorHighlighter(selector) {
+    if (this.isSelectorHighlighted(selector)) {
+      await this.inspector.highlighters.hideHighlighterType(
+        this.inspector.highlighters.TYPES.SELECTOR
+      );
     } else {
-      this.highlighters.selectorHighlighterShown = null;
-      this.emit("ruleview-selectorhighlighter-toggled", false);
+      await this.inspector.highlighters.showHighlighterTypeForNode(
+        this.inspector.highlighters.TYPES.SELECTOR,
+        this.inspector.selection.nodeFront,
+        {
+          hideInfoBar: true,
+          hideGuides: true,
+          selector,
+        }
+      );
     }
   },
 
@@ -391,6 +359,89 @@ CssRuleView.prototype = {
       this.inspector.toolbox.currentToolId === "inspector" &&
       this.inspector.sidebar.getCurrentTabID() == "ruleview"
     );
+  },
+
+  /**
+   * Check whether a SelectorHighlighter is active for the given selector text.
+   *
+   * @param {String} selector
+   * @return {Boolean}
+   */
+  isSelectorHighlighted(selector) {
+    const options = this.inspector.highlighters.getOptionsForActiveHighlighter(
+      this.inspector.highlighters.TYPES.SELECTOR
+    );
+
+    return options?.selector === selector;
+  },
+
+  /**
+   * Delegate handler for events happening within the DOM tree of the Rules view.
+   * Itself delegates to specific handlers by event type.
+   *
+   * Use this instead of attaching specific event handlers when:
+   * - there are many elements with the same event handler (eases memory pressure)
+   * - you want to avoid having to remove event handlers manually
+   * - elements are added/removed from the DOM tree arbitrarily over time
+   *
+   * @param {MouseEvent|UIEvent} event
+   */
+  handleEvent(event) {
+    switch (event.type) {
+      case "click":
+        this.handleClickEvent(event);
+        break;
+      default:
+    }
+  },
+
+  /**
+   * Delegate handler for click events happening within the DOM tree of the Rules view.
+   *
+   * @param {MouseEvent} event
+   */
+  handleClickEvent(event) {
+    const target = event.target;
+
+    // Handle click on the icon next to a CSS selector.
+    if (target.classList.contains("js-toggle-selector-highlighter")) {
+      this.toggleSelectorHighlighter(target.dataset.selector);
+      // Prevent the click on the element wrapping the CSS rule
+      // from triggering the prompt to add a new CSS declaration
+      event.stopPropagation();
+    }
+  },
+
+  /**
+   * Delegate handler for highlighter events.
+   *
+   * This is the place to observe for highlighter events, check the highlighter type and
+   * event name, then react to specific events, for example by modifying the DOM.
+   *
+   * @param {String} eventName
+   *        Highlighter event name. One of: "highlighter-hidden", "highlighter-shown"
+   * @param {Object} data
+   *        Object with data associated with the highlighter event.
+   */
+  handleHighlighterEvent(eventName, data) {
+    switch (data.type) {
+      // Toggle the "highlighted" CSS class name on selector icons in the Rules view when
+      // the SelectorHighlighter is shown/hidden for a certain CSS selector.
+      case this.inspector.highlighters.TYPES.SELECTOR:
+        if (data?.options?.selector) {
+          const selector = data?.options?.selector;
+          const query = `.js-toggle-selector-highlighter[data-selector='${selector}']`;
+          for (const node of this.styleDocument.querySelectorAll(query)) {
+            if (eventName == "highlighter-hidden") {
+              node.classList.remove("highlighted");
+            }
+            if (eventName == "highlighter-shown") {
+              node.classList.add("highlighted");
+            }
+          }
+        }
+        break;
+    }
   },
 
   /**
@@ -756,6 +807,7 @@ CssRuleView.prototype = {
 
     // Remove bound listeners
     this.shortcuts.destroy();
+    this.styleDocument.removeEventListener("click", this);
     this.element.removeEventListener("copy", this._onCopy);
     this.element.removeEventListener("contextmenu", this._onContextMenu);
     this.addRuleButton.removeEventListener("click", this._onAddRule);
@@ -770,6 +822,14 @@ CssRuleView.prototype = {
       this._onTogglePseudoClassPanel
     );
     this.classToggle.removeEventListener("click", this._onToggleClassPanel);
+    this.inspector.highlighters.off(
+      "highlighter-shown",
+      this.onHighlighterShown
+    );
+    this.inspector.highlighters.off(
+      "highlighter-hidden",
+      this.onHighlighterHidden
+    );
 
     this.searchField = null;
     this.searchClearButton = null;
@@ -1033,8 +1093,6 @@ CssRuleView.prototype = {
    * Clear the rule view.
    */
   clear: function(clearDom = true) {
-    this.lastSelectorIcon = null;
-
     if (clearDom) {
       this._clearRules();
     }
