@@ -96,14 +96,14 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
   friend class Observer;
 
  private:
-  RefPtr<Observer> mObserver;
+  const RefPtr<Observer> mObserver;
   mozilla::ipc::TaskFactory<RDDProcessManager> mTaskFactory;
-  uint32_t mNumProcessAttempts;
+  uint32_t mNumProcessAttempts = 0;
 
   // Fields that are associated with the current RDD process.
-  RDDProcessHost* mProcess;
-  uint64_t mProcessToken;
-  RDDChild* mRDDChild;
+  RDDProcessHost* mProcess = nullptr;
+  uint64_t mProcessToken = 0;
+  RDDChild* mRDDChild = nullptr;
   // Collects any pref changes that occur during process launch (after
   // the initial map is passed in command-line arguments) to be sent
   // when the process can receive IPC messages.
