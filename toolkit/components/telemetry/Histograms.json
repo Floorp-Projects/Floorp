@@ -3284,6 +3284,18 @@
     "keyed": true,
     "description": "Error code when http3 connection is closed. Look at Http3Session for more details."
   },
+  "HTTP3_TIME_TO_REUSE_IDLE_CONNECTTION_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 50,
+    "keyed": true,
+    "description": "Time to reuse an idle connection in HTTP3(ms); keyed by the transaction reusing an idle connection has succeeded or failed",
+    "bug_numbers": [1655566]
+  },
   "HTTP3_REQUEST_PER_CONN": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
