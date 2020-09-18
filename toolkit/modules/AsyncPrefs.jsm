@@ -18,10 +18,6 @@ const kAllowedPrefs = new Set([
   "testing.allowed-prefs.some-char-pref",
   "testing.allowed-prefs.some-int-pref",
 
-  "browser.contentblocking.report.hide_lockwise_app",
-  "browser.contentblocking.report.hide_vpn_banner",
-  "browser.contentblocking.report.show_mobile_app",
-
   "narrate.rate",
   "narrate.voice",
 
@@ -62,6 +58,8 @@ const kAllowedPrefs = new Set([
   "security.ssl.errorReporting.automatic",
   "security.tls.version.enable-deprecated",
   "security.xfocsp.errorReporting.automatic",
+  "browser.contentblocking.report.hide_lockwise_app",
+  "browser.contentblocking.report.show_mobile_app",
 ]);
 
 const kPrefTypeMap = new Map([
