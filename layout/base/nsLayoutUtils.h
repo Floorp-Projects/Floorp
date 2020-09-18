@@ -2119,6 +2119,7 @@ class nsLayoutUtils {
    * popup frame or the root prescontext's root frame.
    */
   static nsIFrame* GetDisplayRootFrame(nsIFrame* aFrame);
+  static const nsIFrame* GetDisplayRootFrame(const nsIFrame* aFrame);
 
   /**
    * Get the reference frame that would be used when constructing a
@@ -2763,7 +2764,7 @@ class nsLayoutUtils {
    * Returns true if the widget owning the given frame has builtin APZ support
    * enabled.
    */
-  static bool AsyncPanZoomEnabled(nsIFrame* aFrame);
+  static bool AsyncPanZoomEnabled(const nsIFrame* aFrame);
 
   /**
    * Returns the current APZ Resolution Scale. When Java Pan/Zoom is
