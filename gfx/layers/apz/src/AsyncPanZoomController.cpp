@@ -4507,16 +4507,14 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     }
   }
 
-  // If `isDefault` is true, this APZC is a "new" one (this is the first time
-  // it's getting a NotifyLayersUpdated call). In this case we want to apply the
-  // visual scroll offset from the main thread to our scroll offset.
-  // The main thread may also ask us to scroll the visual viewport to a
-  // particular location. This is different from a layout viewport offset update
-  // in that the layout viewport offset is limited to the layout scroll range,
-  // while the visual viewport offset is not.
-  bool visualScrollOffsetUpdated =
-      isDefault ||
-      aLayerMetrics.GetVisualScrollUpdateType() != FrameMetrics::eNone;
+  // The main thread may send us a visual scroll offset update. This is
+  // different from a layout viewport offset update in that the layout viewport
+  // offset is limited to the layout scroll range, while the visual viewport
+  // offset is not.
+  // However, there are some conditions in which the layout update will clobber
+  // the visual update, and we want to ignore the visual update in those cases.
+  // This variable tracks that.
+  bool ignoreVisualUpdate = false;
 
   // TODO if we're in a drag and scrollOffsetUpdated is set then we want to
   // ignore it
@@ -4676,10 +4674,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         scrollUpdate.GetMode() == ScrollMode::SmoothMsd) {
       // Requests to animate the visual scroll position override requests to
       // simply update the visual scroll offset to a particular point. Since
-      // we have an animation request, we reset visualScrollOffsetUpdated
-      // to false to indicate we don't need to apply the visual scroll update
-      // in aLayerMetrics.
-      visualScrollOffsetUpdated = false;
+      // we have an animation request, we set ignoreVisualUpdate to true to
+      // indicate we don't need to apply the visual scroll update in
+      // aLayerMetrics.
+      ignoreVisualUpdate = true;
 
       // For relative updates we want to add the relative offset to any existing
       // destination, or the current visual offset if there is no existing
@@ -4729,7 +4727,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     if (nsLayoutUtils::CanScrollOriginClobberApz(scrollUpdate.GetOrigin()) &&
         aLayerMetrics.GetVisualScrollUpdateType() !=
             FrameMetrics::eMainThread) {
-      visualScrollOffsetUpdated = false;
+      ignoreVisualUpdate = true;
     }
 
     Maybe<CSSPoint> relativeDelta;
@@ -4767,14 +4765,14 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       needContentRepaint = true;
       contentRepaintType = RepaintUpdateType::eVisualUpdate;
 
-      // We have to cancel a visual scroll offset update otherwise it will
+      // We have to ignore a visual scroll offset update otherwise it will
       // clobber the relative scrolling we are about to do. We perform
       // visualScrollOffset = visualScrollOffset + delta. Then the
       // visualScrollOffsetUpdated block below will do visualScrollOffset =
       // aLayerMetrics.GetVisualDestination(). We need visual scroll offset
       // updates to be incorporated into this scroll update loop to properly fix
       // this.
-      visualScrollOffsetUpdated = false;
+      ignoreVisualUpdate = true;
 
       relativeDelta =
           Some(Metrics().ApplyPureRelativeScrollUpdateFrom(scrollUpdate));
@@ -4830,6 +4828,18 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       sampledState.ClampVisualScrollOffset(Metrics());
     }
   }
+
+  // If `isDefault` is true, this APZC is a "new" one (this is the first time
+  // it's getting a NotifyLayersUpdated call). In this case we want to apply the
+  // visual scroll offset from the main thread to our scroll offset.
+  // The main thread may also ask us to scroll the visual viewport to a
+  // particular location. However, in all cases, we want to ignore the visual
+  // offset update if ignoreVisualUpdate is true, because we're clobbering
+  // the visual update with a layout update.
+  bool visualScrollOffsetUpdated =
+      !ignoreVisualUpdate &&
+      (isDefault ||
+       aLayerMetrics.GetVisualScrollUpdateType() != FrameMetrics::eNone);
 
   if (visualScrollOffsetUpdated) {
     APZC_LOG("%p updating visual scroll offset from %s to %s (updateType %d)\n",
