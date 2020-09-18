@@ -81,6 +81,13 @@ class RendererOGL {
   /// This can be called on the render thread only.
   void SetFrameStartTime(const TimeStamp& aTime);
 
+  /// These can be called on the render thread only.
+  void BeginRecording(const TimeStamp& aRecordingStart,
+                      wr::PipelineId aPipelineId);
+  void MaybeRecordFrame(const WebRenderPipelineInfo* aPipelineInfo);
+  void WriteCollectedFrames();
+  Maybe<layers::CollectedFrames> GetCollectedFrames();
+
   /// This can be called on the render thread only.
   ~RendererOGL();
 
@@ -119,6 +126,8 @@ class RendererOGL {
  protected:
   RefPtr<RenderThread> mThread;
   UniquePtr<RenderCompositor> mCompositor;
+  UniquePtr<layers::WebRenderCompositionRecorder>
+      mCompositionRecorder;  // can be null
   wr::Renderer* mRenderer;
   layers::CompositorBridgeParent* mBridge;
   wr::WindowId mWindowId;
