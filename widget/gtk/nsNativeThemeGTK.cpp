@@ -220,6 +220,9 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
                                             WidgetNodeType& aGtkWidgetType,
                                             GtkWidgetState* aState,
                                             gint* aWidgetFlags) {
+  if (aWidgetFlags) {
+    *aWidgetFlags = 0;
+  }
   if (aState) {
     memset(aState, 0, sizeof(GtkWidgetState));
 
