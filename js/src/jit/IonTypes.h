@@ -194,7 +194,7 @@ enum class BailoutKind : uint8_t {
   // Bailout triggered by a megamorphic load or store.
   MegamorphicAccess,
 
-  // Bailout triggered by MLoadArgumentsObjectArg.
+  // Bailout triggered by MLoadArgumentsObjectArg and MArgumentsObjectLength.
   ArgumentsObjectAccess,
 
   // Bailout triggered by MArrayPopShift.
