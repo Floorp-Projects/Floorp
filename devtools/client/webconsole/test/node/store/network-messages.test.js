@@ -37,7 +37,7 @@ describe("Network message reducer:", () => {
     packet.actor = "message1";
     updatePacket.actor = "message1";
     dispatch(actions.messagesAdd([packet]));
-    dispatch(actions.networkMessageUpdates([updatePacket], null));
+    dispatch(actions.networkMessageUpdate(updatePacket, null));
   });
 
   describe("networkMessagesUpdateById", () => {
@@ -47,14 +47,9 @@ describe("Network message reducer:", () => {
       };
 
       dispatch(
-        actions.networkUpdateRequests([
-          {
-            id: "message1",
-            data: {
-              requestHeaders: headers,
-            },
-          },
-        ])
+        actions.networkUpdateRequest("message1", {
+          requestHeaders: headers,
+        })
       );
 
       const networkUpdates = getAllNetworkMessagesUpdateById(getState());
@@ -67,14 +62,9 @@ describe("Network message reducer:", () => {
       };
 
       dispatch(
-        actions.networkUpdateRequests([
-          {
-            id: "message1",
-            data: {
-              securityInfo: securityInfo,
-            },
-          },
-        ])
+        actions.networkUpdateRequest("message1", {
+          securityInfo: securityInfo,
+        })
       );
 
       const networkUpdates = getAllNetworkMessagesUpdateById(getState());
@@ -92,14 +82,9 @@ describe("Network message reducer:", () => {
       };
 
       dispatch(
-        actions.networkUpdateRequests([
-          {
-            id: "message1",
-            data: {
-              requestPostData,
-            },
-          },
-        ])
+        actions.networkUpdateRequest("message1", {
+          requestPostData,
+        })
       );
 
       const { message1 } = getAllNetworkMessagesUpdateById(getState());

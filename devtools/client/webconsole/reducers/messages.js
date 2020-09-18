@@ -534,26 +534,23 @@ function messages(
         ),
       };
 
-    case constants.NETWORK_MESSAGES_UPDATE:
+    case constants.NETWORK_MESSAGE_UPDATE:
       const updatedState = {
         ...state,
         // Update messagesById since the nested object of message might be changed.
-        messagesById: new Map(messagesById),
+        messagesById: new Map(messagesById).set(
+          action.message.id,
+          action.message
+        ),
         networkMessagesUpdateById: {
           ...networkMessagesUpdateById,
+          [action.message.id]: action.message,
         },
       };
-      let hasNetworkError = null;
-      for (const message of action.messages) {
-        updatedState.messagesById.set(message.id, message);
-        updatedState.networkMessagesUpdateById[message.id] = message;
-        if (!hasNetworkError && isMessageNetworkError(message)) {
-          hasNetworkError = true;
-        }
-      }
 
-      // If the message updates contained a network error, then we may have to display it.
-      if (hasNetworkError) {
+      // If the request status code is a 4XX or 5XX, then we may have to display the
+      // message (as an error).
+      if (isMessageNetworkError(action.message)) {
         return setVisibleMessages({
           messagesState: updatedState,
           filtersState,
@@ -565,30 +562,22 @@ function messages(
       return updatedState;
 
     case UPDATE_REQUEST:
-    case constants.NETWORK_UPDATES_REQUEST: {
-      newState = {
+    case constants.NETWORK_UPDATE_REQUEST: {
+      const request = networkMessagesUpdateById[action.id];
+      if (!request) {
+        return state;
+      }
+
+      return {
         ...state,
         networkMessagesUpdateById: {
           ...networkMessagesUpdateById,
+          [action.id]: {
+            ...request,
+            ...processNetworkUpdates(action.data, request),
+          },
         },
       };
-
-      // Netmonitor's UPDATE_REQUEST action comes for only one request
-      const updates =
-        action.type == UPDATE_REQUEST
-          ? [{ id: action.id, data: action.data }]
-          : action.updates;
-      for (const { id, data } of updates) {
-        const request = networkMessagesUpdateById[id];
-        if (!request) {
-          continue;
-        }
-        newState.networkMessagesUpdateById[id] = {
-          ...request,
-          ...processNetworkUpdates(data, request),
-        };
-      }
-      return newState;
     }
 
     case constants.FRONTS_TO_RELEASE_CLEAR:
