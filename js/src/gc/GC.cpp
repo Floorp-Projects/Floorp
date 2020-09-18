@@ -3306,21 +3306,20 @@ void js::gc::BackgroundDecommitTask::run(AutoLockHelperThreadState& lock) {
 
     ChunkPool emptyChunksToFree;
     {
-      AutoLockGC lock(gc);
+      AutoLockGC gcLock(gc);
 
       // To help minimize the total number of chunks needed over time, sort the
       // available chunks list so that we allocate into more-used chunks first.
-      gc->availableChunks(lock).sort();
+      gc->availableChunks(gcLock).sort();
 
-      gc->decommitFreeArenas(cancel_, lock);
+      gc->decommitFreeArenas(cancel_, gcLock);
 
-      emptyChunksToFree = gc->expireEmptyChunkPool(lock);
+      emptyChunksToFree = gc->expireEmptyChunkPool(gcLock);
     }
 
     FreeChunkPool(emptyChunksToFree);
   }
 
-  setFinishing(lock);
   gc->maybeRequestGCAfterBackgroundTask(lock);
 }
 
@@ -3474,10 +3473,6 @@ void BackgroundSweepTask::run(AutoLockHelperThreadState& lock) {
                            TraceLogger_GCSweeping);
 
   gc->sweepFromBackgroundThread(lock);
-
-  // Signal to the main thread that we're about to finish, because we release
-  // the lock again before GCParallelTask's state is changed to finished.
-  setFinishing(lock);
 }
 
 void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
@@ -3542,10 +3537,6 @@ void BackgroundFreeTask::run(AutoLockHelperThreadState& lock) {
   AutoTraceLog logFreeing(TraceLoggerForCurrentThread(), TraceLogger_GCFree);
 
   gc->freeFromBackgroundThread(lock);
-
-  // Signal to the main thread that we're about to finish, because we release
-  // the lock again before GCParallelTask's state is changed to finished.
-  setFinishing(lock);
 }
 
 void GCRuntime::freeFromBackgroundThread(AutoLockHelperThreadState& lock) {
