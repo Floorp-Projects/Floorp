@@ -94,7 +94,8 @@ ShouldHookFunc* const GetWindowInfoFH::mShouldHook =
 static const wchar_t* kMozillaWindowClass = L"MozillaWindowClass";
 static HWND sBrowserHwnd = nullptr;
 
-BOOL WINAPI GetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi) {
+INTERCEPTOR_DISABLE_CFGUARD BOOL WINAPI GetWindowInfoHook(HWND hWnd,
+                                                          PWINDOWINFO pwi) {
   if (!pwi) {
     return FALSE;
   }
@@ -141,7 +142,7 @@ template <>
 ShouldHookFunc* const PrintDlgWFH::mShouldHook =
     &CheckQuirks<QUIRK_FLASH_HOOK_PRINTDLGW>;
 
-BOOL WINAPI PrintDlgWHook(LPPRINTDLGW aDlg) {
+INTERCEPTOR_DISABLE_CFGUARD BOOL WINAPI PrintDlgWHook(LPPRINTDLGW aDlg) {
   // Zero out the HWND supplied by the plugin.  We are sacrificing window
   // parentage for the ability to run in the NPAPI sandbox.
   HWND hwnd = aDlg->hwndOwner;
@@ -304,7 +305,8 @@ void FunctionHook::HookProtectedMode() {
 typedef BasicFunctionHook<ID_GetFileAttributesW, decltype(GetFileAttributesW)>
     GetFileAttributesWFH;
 
-DWORD WINAPI GetFileAttributesWHook(LPCWSTR aFilename) {
+INTERCEPTOR_DISABLE_CFGUARD DWORD WINAPI
+GetFileAttributesWHook(LPCWSTR aFilename) {
   MOZ_ASSERT(ID_GetFileAttributesW < FunctionHook::GetHooks()->Length());
   GetFileAttributesWFH* functionHook = static_cast<GetFileAttributesWFH*>(
       FunctionHook::GetHooks()->ElementAt(ID_GetFileAttributesW));
