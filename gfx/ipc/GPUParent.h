@@ -8,7 +8,6 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/PGPUParent.h"
-#include "mozilla/media/MediaUtils.h"
 
 namespace mozilla {
 
@@ -25,8 +24,6 @@ class GPUParent final : public PGPUParent {
   ~GPUParent();
 
   static GPUParent* GetSingleton();
-
-  AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
 
   // Gets the name of the GPU process, in the format expected by about:memory.
   // There must be a GPU process active, and the caller must be either in that
@@ -102,7 +99,6 @@ class GPUParent final : public PGPUParent {
 #ifdef MOZ_GECKO_PROFILER
   RefPtr<ChildProfilerController> mProfilerController;
 #endif
-  AsyncBlockers mShutdownBlockers;
 };
 
 }  // namespace gfx

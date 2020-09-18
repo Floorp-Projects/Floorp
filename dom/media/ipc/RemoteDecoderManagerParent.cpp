@@ -16,8 +16,6 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/VideoBridgeChild.h"
-#include "mozilla/gfx/GPUParent.h"
-#include "mozilla/RDDParent.h"
 
 namespace mozilla {
 
@@ -151,18 +149,10 @@ RemoteDecoderManagerParent::RemoteDecoderManagerParent(
     nsISerialEventTarget* aThread)
     : mThread(aThread) {
   MOZ_COUNT_CTOR(RemoteDecoderManagerParent);
-  auto& registrar = XRE_IsGPUProcess()
-                        ? GPUParent::GetSingleton()->AsyncShutdownService()
-                        : RDDParent::GetSingleton()->AsyncShutdownService();
-  registrar.Register(this);
 }
 
 RemoteDecoderManagerParent::~RemoteDecoderManagerParent() {
   MOZ_COUNT_DTOR(RemoteDecoderManagerParent);
-  auto& registrar = XRE_IsGPUProcess()
-                        ? GPUParent::GetSingleton()->AsyncShutdownService()
-                        : RDDParent::GetSingleton()->AsyncShutdownService();
-  registrar.Deregister(this);
 }
 
 void RemoteDecoderManagerParent::ActorDestroy(

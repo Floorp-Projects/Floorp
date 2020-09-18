@@ -9,11 +9,11 @@
 namespace mozilla {
 namespace media {
 
-nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
+RefPtr<nsIAsyncShutdownClient> GetShutdownBarrier() {
   nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
   MOZ_RELEASE_ASSERT(svc);
 
-  nsCOMPtr<nsIAsyncShutdownClient> barrier;
+  RefPtr<nsIAsyncShutdownClient> barrier;
   nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
   if (!barrier) {
     // We are probably in a content process. We need to do cleanup at

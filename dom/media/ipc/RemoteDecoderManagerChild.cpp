@@ -7,13 +7,12 @@
 
 #include "RemoteDecoderChild.h"
 #include "VideoUtils.h"
-#include "mozilla/dom/ContentChild.h"  // for launching RDD w/ ContentChild
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/SynchronousTask.h"
-#include "nsIObserver.h"
 
 namespace mozilla {
 
@@ -31,26 +30,6 @@ static StaticRefPtr<RemoteDecoderManagerChild>
     sRemoteDecoderManagerChildForGPUProcess;
 static UniquePtr<nsTArray<RefPtr<Runnable>>> sRecreateTasks;
 
-class ShutdownObserver final : public nsIObserver {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
- protected:
-  ~ShutdownObserver() = default;
-};
-NS_IMPL_ISUPPORTS(ShutdownObserver, nsIObserver);
-
-NS_IMETHODIMP
-ShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                          const char16_t* aData) {
-  MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
-  RemoteDecoderManagerChild::Shutdown();
-  return NS_OK;
-}
-
-StaticRefPtr<ShutdownObserver> sObserver;
-
 /* static */
 void RemoteDecoderManagerChild::InitializeThread() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -65,8 +44,6 @@ void RemoteDecoderManagerChild::InitializeThread() {
     NS_ENSURE_SUCCESS_VOID(rv);
     sRemoteDecoderManagerChildThread = childThread;
     sRecreateTasks = MakeUnique<nsTArray<RefPtr<Runnable>>>();
-    sObserver = new ShutdownObserver();
-    nsContentUtils::RegisterShutdownObserver(sObserver);
   }
 }
 
@@ -91,11 +68,6 @@ void RemoteDecoderManagerChild::InitForGPUProcess(
 /* static */
 void RemoteDecoderManagerChild::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (sObserver) {
-    nsContentUtils::UnregisterShutdownObserver(sObserver);
-    sObserver = nullptr;
-  }
 
   if (sRemoteDecoderManagerChildThread) {
     MOZ_ALWAYS_SUCCEEDS(

@@ -878,6 +878,7 @@ class MochitestArguments(ArgumentContainer):
         # See the dependencies of bug 1401764.
         if mozinfo.isWin:
             options.leakThresholds["tab"] = 1000
+            options.leakThresholds["rdd"] = 4000  # Bug 1653060
 
         # XXX We can't normalize test_paths in the non build_obj case here,
         # because testRoot depends on the flavor, which is determined by the
