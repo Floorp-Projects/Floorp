@@ -373,53 +373,6 @@ IPCResult HttpBackgroundChannelChild::RecvOnConsoleReport(
   return IPC_OK();
 }
 
-IPCResult HttpBackgroundChannelChild::RecvFlushedForDiversion() {
-  LOG(("HttpBackgroundChannelChild::RecvFlushedForDiversion [this=%p]\n",
-       this));
-  MOZ_ASSERT(OnSocketThread());
-
-  if (NS_WARN_IF(!mChannelChild)) {
-    return IPC_OK();
-  }
-
-  if (IsWaitingOnStartRequest()) {
-    LOG(("  > pending until OnStartRequest\n"));
-
-    mQueuedRunnables.AppendElement(NewRunnableMethod(
-        "HttpBackgroundChannelChild::RecvFlushedForDiversion", this,
-        &HttpBackgroundChannelChild::RecvFlushedForDiversion));
-
-    return IPC_OK();
-  }
-
-  mChannelChild->ProcessFlushedForDiversion();
-
-  return IPC_OK();
-}
-
-IPCResult HttpBackgroundChannelChild::RecvDivertMessages() {
-  LOG(("HttpBackgroundChannelChild::RecvDivertMessages [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
-
-  if (NS_WARN_IF(!mChannelChild)) {
-    return IPC_OK();
-  }
-
-  if (IsWaitingOnStartRequest()) {
-    LOG(("  > pending until OnStartRequest\n"));
-
-    mQueuedRunnables.AppendElement(NewRunnableMethod(
-        "HttpBackgroundChannelChild::RecvDivertMessages", this,
-        &HttpBackgroundChannelChild::RecvDivertMessages));
-
-    return IPC_OK();
-  }
-
-  mChannelChild->ProcessDivertMessages();
-
-  return IPC_OK();
-}
-
 IPCResult HttpBackgroundChannelChild::RecvNotifyClassificationFlags(
     const uint32_t& aClassificationFlags, const bool& aIsThirdParty) {
   LOG(

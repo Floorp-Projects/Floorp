@@ -66,17 +66,6 @@ parent:
   // again, indefinitely.
   async MarkOfflineCacheEntryAsForeign();
 
-  // Divert OnDataAvailable to the parent.
-  async DivertOnDataAvailable(nsCString data,
-                              uint64_t  offset,
-                              uint32_t  count);
-
-  // Divert OnStopRequest to the parent.
-  async DivertOnStopRequest(nsresult statusCode);
-
-  // Child has no more events/messages to divert to the parent.
-  async DivertComplete();
-
   // Child has detected a CORS check failure, so needs to tell the parent
   // to remove any matching entry from the CORS preflight cache.
   async RemoveCorsPreflightCacheEntry(URIParams uri,
@@ -146,9 +135,6 @@ child:
                             bool warning,
                             nsString url,
                             nsString contentType);
-
-  // See ADivertableParentChannel::CancelDiversion
-  async CancelDiversion();
 
   async OriginalCacheInputStreamAvailable(IPCStream? stream);
 

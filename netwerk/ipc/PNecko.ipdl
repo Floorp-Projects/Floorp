@@ -16,7 +16,6 @@ include protocol PTCPSocket;
 include protocol PTCPServerSocket;
 include protocol PUDPSocket;
 include protocol PDNSRequest;
-include protocol PChannelDiverter;
 include protocol PFileDescriptorSet;
 include protocol PDataChannel;
 include protocol PSimpleChannel;
@@ -61,7 +60,6 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PDataChannel;
   manages PSimpleChannel;
   manages PFileChannel;
-  manages PChannelDiverter;
   manages PTransportProvider;
   manages PAltDataOutputStream;
   manages PStunAddrsRequest;
@@ -114,8 +112,6 @@ parent:
   async PDataChannel(uint32_t channelId);
   async PSimpleChannel(uint32_t channelId);
   async PFileChannel(uint32_t channelId);
-
-  async PChannelDiverter(ChannelDiverterArgs channel);
 
   async PClassifierDummyChannel(nsIURI uri, nsIURI aTopWindowURI,
                                 nsresult aTopWindowURIResult,
