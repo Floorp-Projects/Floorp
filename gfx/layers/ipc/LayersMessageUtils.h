@@ -413,6 +413,7 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     WriteParam(aMsg, aParam.mForceDisableApz);
     WriteParam(aMsg, aParam.mResolutionUpdated);
     WriteParam(aMsg, aParam.mIsRDMTouchSimulationActive);
+    WriteParam(aMsg, aParam.mDidContentGetPainted);
     WriteParam(aMsg, aParam.mDisregardedDirection);
     WriteParam(aMsg, aParam.mOverscrollBehavior);
     WriteParam(aMsg, aParam.mScrollUpdates);
@@ -450,6 +451,8 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
                                 &paramType::SetResolutionUpdated) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsRDMTouchSimulationActive)) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult,
+                                &paramType::SetDidContentGetPainted) &&
            ReadParam(aMsg, aIter, &aResult->mDisregardedDirection) &&
            ReadParam(aMsg, aIter, &aResult->mOverscrollBehavior) &&
            ReadParam(aMsg, aIter, &aResult->mScrollUpdates);

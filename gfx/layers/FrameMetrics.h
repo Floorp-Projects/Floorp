@@ -793,6 +793,7 @@ struct ScrollMetadata {
         mForceDisableApz(false),
         mResolutionUpdated(false),
         mIsRDMTouchSimulationActive(false),
+        mDidContentGetPainted(true),
         mOverscrollBehavior() {}
 
   bool operator==(const ScrollMetadata& aOther) const {
@@ -809,6 +810,7 @@ struct ScrollMetadata {
            mForceDisableApz == aOther.mForceDisableApz &&
            mResolutionUpdated == aOther.mResolutionUpdated &&
            mIsRDMTouchSimulationActive == aOther.mIsRDMTouchSimulationActive &&
+           mDidContentGetPainted == aOther.mDidContentGetPainted &&
            mDisregardedDirection == aOther.mDisregardedDirection &&
            mOverscrollBehavior == aOther.mOverscrollBehavior &&
            mScrollUpdates == aOther.mScrollUpdates;
@@ -896,6 +898,17 @@ struct ScrollMetadata {
     return mIsRDMTouchSimulationActive;
   }
 
+  bool DidContentGetPainted() const {
+    return mDidContentGetPainted;
+  }
+
+ private:
+  // For use in IPC only
+  void SetDidContentGetPainted(bool aValue) {
+    mDidContentGetPainted = aValue;
+  }
+
+ public:
   // For more details about the concept of a disregarded direction, refer to the
   // code which defines mDisregardedDirection.
   Maybe<ScrollDirection> GetDisregardedDirection() const {
@@ -924,6 +937,7 @@ struct ScrollMetadata {
   void UpdatePendingScrollInfo(const ScrollPositionUpdate& aInfo) {
     mMetrics.UpdatePendingScrollInfo(aInfo);
 
+    mDidContentGetPainted = false;
     mScrollUpdates.Clear();
     mScrollUpdates.AppendElement(aInfo);
   }
@@ -992,6 +1006,14 @@ struct ScrollMetadata {
   // true for the content document but NOT the chrome document containing
   // the browser UI and RDM controls.
   bool mIsRDMTouchSimulationActive : 1;
+
+  // Whether this metadata is part of a transaction that also repainted the
+  // content (i.e. updated the displaylist or textures). This gets set to false
+  // for "paint-skip" transactions, where the main thread doesn't repaint but
+  // instead requests APZ to update the compositor scroll offset instead. APZ
+  // needs to be able to distinguish these paint-skip transactions so that it
+  // can use the correct transforms.
+  bool mDidContentGetPainted : 1;
 
   // The disregarded direction means the direction which is disregarded anyway,
   // even if the scroll frame overflows in that direction and the direction is
