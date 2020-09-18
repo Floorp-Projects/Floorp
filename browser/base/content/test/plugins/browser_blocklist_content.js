@@ -93,9 +93,15 @@ add_task(async function() {
 
   // Hack the planet! Load our blocklist shim, so we can mess with blocklist
   // return results in the content process. Active until we close our tab.
-  let mm = gTestBrowser.messageManager;
-  info("test 3a: loading " + gChromeRoot + "blocklist_proxy.js\n");
-  mm.loadFrameScript(gChromeRoot + "blocklist_proxy.js", true);
+  let base = gChromeRoot.slice(0, -1);
+
+  let actor = {
+    child: {
+      moduleURI: `${base}/BlocklistTestProxy.jsm`,
+      observer: ["webnavigation-create"],
+    },
+  };
+  ChromeUtils.registerProcessActor("BlocklistTestProxy", actor);
 
   await promiseTabLoadEvent(
     gBrowser.selectedTab,
@@ -108,6 +114,14 @@ add_task(async function() {
   await SpecialPowers.spawn(gTestBrowser, [], async function() {
     let test = content.document.getElementById("test");
     Assert.ok(test.activated, "task 3a: test plugin should be activated!");
+  });
+
+  registerCleanupFunction(async function() {
+    let dp =
+      gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.domProcess;
+    await dp.getActor("BlocklistTestProxy").sendQuery("unload");
+
+    ChromeUtils.unregisterProcessActor("BlocklistTestProxy", actor);
   });
 });
 
