@@ -5,19 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RDDProcessManager.h"
 
+#include "RDDChild.h"
+#include "RDDProcessHost.h"
 #include "mozilla/MemoryReportingProcess.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
-#include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/VideoBridgeParent.h"
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
-#include "RDDChild.h"
-#include "RDDProcessHost.h"
 
 namespace mozilla {
 
@@ -36,22 +36,20 @@ void RDDProcessManager::Initialize() {
 void RDDProcessManager::Shutdown() { sRDDSingleton = nullptr; }
 
 RDDProcessManager::RDDProcessManager()
-    : mTaskFactory(this),
-      mNumProcessAttempts(0),
-      mProcess(nullptr),
-      mProcessToken(0),
-      mRDDChild(nullptr) {
+    : mObserver(new Observer(this)), mTaskFactory(this) {
   MOZ_COUNT_CTOR(RDDProcessManager);
+  // Start listening for pref changes so we can
+  // forward them to the process once it is running.
+  nsContentUtils::RegisterShutdownObserver(mObserver);
+  Preferences::AddStrongObserver(mObserver, "");
 }
 
 RDDProcessManager::~RDDProcessManager() {
   MOZ_COUNT_DTOR(RDDProcessManager);
+  MOZ_ASSERT(NS_IsMainThread());
 
   // The RDD process should have already been shut down.
   MOZ_ASSERT(!mProcess && !mRDDChild);
-
-  // We should have already removed observers.
-  MOZ_ASSERT(!mObserver);
 }
 
 NS_IMPL_ISUPPORTS(RDDProcessManager::Observer, nsIObserver);
@@ -71,16 +69,16 @@ RDDProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void RDDProcessManager::OnXPCOMShutdown() {
-  if (mObserver) {
-    nsContentUtils::UnregisterShutdownObserver(mObserver);
-    Preferences::RemoveObserver(mObserver, "");
-    mObserver = nullptr;
-  }
-
+  nsContentUtils::UnregisterShutdownObserver(mObserver);
+  Preferences::RemoveObserver(mObserver, "");
   CleanShutdown();
 }
 
 void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
+  if (!mProcess) {
+    // Process hasn't been launched yet
+    return;
+  }
   // A pref changed. If it is useful to do so, inform child processes.
   if (!dom::ContentParent::ShouldSyncPreference(aData)) {
     return;
@@ -102,14 +100,6 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
 bool RDDProcessManager::LaunchRDDProcess() {
   if (mProcess) {
     return true;
-  }
-
-  // Start listening for pref changes so we can
-  // forward them to the process once it is running.
-  if (!mObserver) {
-    mObserver = new Observer(this);
-    nsContentUtils::RegisterShutdownObserver(mObserver);
-    Preferences::AddStrongObserver(mObserver, "");
   }
 
   mNumProcessAttempts++;
