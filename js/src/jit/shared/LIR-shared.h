@@ -3931,6 +3931,19 @@ class LSetArrayLength : public LInstructionHelper<0, 2, 0> {
   const LAllocation* index() { return getOperand(1); }
 };
 
+// Load the "length" property of a function.
+class LFunctionLength : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(FunctionLength)
+
+  explicit LFunctionLength(const LAllocation& function)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, function);
+  }
+
+  const LAllocation* function() { return getOperand(0); }
+};
+
 class LGetNextEntryForIterator : public LInstructionHelper<1, 2, 3> {
  public:
   LIR_HEADER(GetNextEntryForIterator)

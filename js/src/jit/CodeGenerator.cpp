@@ -8214,6 +8214,28 @@ void CodeGenerator::visitSetArrayLength(LSetArrayLength* lir) {
   SetLengthFromIndex(masm, lir->index(), length);
 }
 
+void CodeGenerator::visitFunctionLength(LFunctionLength* lir) {
+  Register function = ToRegister(lir->function());
+  Register output = ToRegister(lir->output());
+
+  Label bail;
+
+  // Get the JSFunction flags.
+  masm.load16ZeroExtend(Address(function, JSFunction::offsetOfFlags()), output);
+
+  // Functions with a SelfHostedLazyScript must be compiled with the slow-path
+  // before the function length is known. If the length was previously resolved,
+  // the length property may be shadowed.
+  masm.branchTest32(
+      Assembler::NonZero, output,
+      Imm32(FunctionFlags::SELFHOSTLAZY | FunctionFlags::RESOLVED_LENGTH),
+      &bail);
+
+  masm.loadFunctionLength(function, output, output, &bail);
+
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 template <class OrderedHashTable>
 static void RangeFront(MacroAssembler&, Register, Register, Register);
 
