@@ -52,6 +52,12 @@
       testTextAtOffset("li1", BOUNDARY_PARAGRAPH,
       [[0, 3, "• a", 0, 3]]);
 
+      // Test that a textarea has a blank paragraph at the end if it contains
+      // a line break as its last character.
+      testTextAtOffset("textarea_with_br", BOUNDARY_PARAGRAPH,
+      [[0, 15, "This is a test.\n", 0, 16],
+       [16, 16, "", 16, 16]]);
+
       SimpleTest.finish();
     }
 
@@ -81,5 +87,7 @@
   <p id="br_at_beginning"><br>a<br>b</p>
   <p id="pWithLink">a<a id="link" href="https://example.com/">bc</a>d</p>
   <ul id="ul"><li id="li1">a</li><li>b</li></ul>
+  <textarea id="textarea_with_br">This is a test.
+</textarea> <!-- This must be outdented for a correct test case -->
 </body>
 </html>
