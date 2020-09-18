@@ -9,15 +9,27 @@ var secureURL =
 var unsecureURL =
   "http://example.com/browser/toolkit/components/antitracking/test/browser/browser_staticPartition_HSTS.sjs";
 
-function cleanupHSTS() {
+function cleanupHSTS(aPartitionEnabled, aUseSite) {
   // Ensure to remove example.com from the HSTS list.
   let sss = Cc["@mozilla.org/ssservice;1"].getService(
     Ci.nsISiteSecurityService
   );
+
+  let originAttributes = {};
+
+  if (aPartitionEnabled) {
+    if (aUseSite) {
+      originAttributes = { partitionKey: "(http,example.com)" };
+    } else {
+      originAttributes = { partitionKey: "example.com" };
+    }
+  }
+
   sss.resetState(
     Ci.nsISiteSecurityService.HEADER_HSTS,
     NetUtil.newURI("http://example.com/"),
-    0
+    0,
+    originAttributes
   );
 }
 
@@ -81,7 +93,7 @@ add_task(async function() {
       }
 
       gBrowser.removeCurrentTab();
-      cleanupHSTS();
+      cleanupHSTS(networkIsolation, partitionPerSite);
     }
   }
 });
