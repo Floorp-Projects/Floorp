@@ -65,7 +65,7 @@ class SelectBookmarkFolderFragment : Fragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         val args: SelectBookmarkFolderFragmentArgs by navArgs()
-        if (!args.visitedAddBookmark) {
+        if (!args.allowCreatingNewFolder) {
             inflater.inflate(R.menu.bookmarks_select_folder, menu)
         }
     }

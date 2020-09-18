@@ -305,7 +305,7 @@
             android:id="@+id/action_bookmarkSelectFolderFragment_to_bookmarkAddFolderFragment"
             app:destination="@id/bookmarkAddFolderFragment" />
         <argument
-            android:name="visitedAddBookmark"
+            android:name="allowCreatingNewFolder"
             android:defaultValue="false"
             app:argType="boolean" />
     </fragment>

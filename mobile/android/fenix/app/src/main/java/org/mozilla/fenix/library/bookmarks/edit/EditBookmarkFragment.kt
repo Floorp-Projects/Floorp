@@ -106,7 +106,9 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     nav(
                         R.id.bookmarkEditFragment,
                         EditBookmarkFragmentDirections
-                            .actionBookmarkEditFragmentToBookmarkSelectFolderFragment()
+                            .actionBookmarkEditFragmentToBookmarkSelectFolderFragment(
+                                allowCreatingNewFolder = false
+                            )
                     )
                 }
             }

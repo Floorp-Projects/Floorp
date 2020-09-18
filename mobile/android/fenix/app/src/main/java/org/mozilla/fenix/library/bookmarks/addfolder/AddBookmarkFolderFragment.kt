@@ -69,7 +69,7 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     R.id.bookmarkAddFolderFragment,
                     AddBookmarkFolderFragmentDirections
                         .actionBookmarkAddFolderFragmentToBookmarkSelectFolderFragment(
-                            true
+                            allowCreatingNewFolder = true
                         )
                 )
             }
