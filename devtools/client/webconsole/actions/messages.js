@@ -17,8 +17,8 @@ const {
 
 const {
   MESSAGES_ADD,
-  NETWORK_MESSAGES_UPDATE,
-  NETWORK_UPDATES_REQUEST,
+  NETWORK_MESSAGE_UPDATE,
+  NETWORK_UPDATE_REQUEST,
   MESSAGES_CLEAR,
   MESSAGES_CLEAR_LOGPOINT,
   MESSAGE_OPEN,
@@ -146,23 +146,24 @@ function messageRemove(id) {
   };
 }
 
-function networkMessageUpdates(packets, idGenerator = null) {
+function networkMessageUpdate(packet, idGenerator = null) {
   if (idGenerator == null) {
     idGenerator = defaultIdGenerator;
   }
 
-  const messages = packets.map(packet => prepareMessage(packet, idGenerator));
+  const message = prepareMessage(packet, idGenerator);
 
   return {
-    type: NETWORK_MESSAGES_UPDATE,
-    messages,
+    type: NETWORK_MESSAGE_UPDATE,
+    message,
   };
 }
 
-function networkUpdateRequests(updates) {
+function networkUpdateRequest(id, data) {
   return {
-    type: NETWORK_UPDATES_REQUEST,
-    updates,
+    type: NETWORK_UPDATE_REQUEST,
+    id,
+    data,
   };
 }
 
@@ -175,7 +176,7 @@ module.exports = {
   messageRemove,
   messageGetMatchingElements,
   messageUpdatePayload,
-  networkMessageUpdates,
-  networkUpdateRequests,
+  networkMessageUpdate,
+  networkUpdateRequest,
   privateMessagesClear,
 };
