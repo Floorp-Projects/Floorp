@@ -156,6 +156,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::GuardArrayIsPacked:
     case MDefinition::Opcode::GuardFunctionFlags:
     case MDefinition::Opcode::GuardFunctionKind:
+    case MDefinition::Opcode::ArgumentsObjectLength:
       object = ins->getOperand(0);
       break;
     case MDefinition::Opcode::GetPropertyCache:

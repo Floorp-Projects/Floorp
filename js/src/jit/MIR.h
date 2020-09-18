@@ -3772,6 +3772,34 @@ class MLoadArgumentsObjectArg
   }
 };
 
+// Load |arguments.length|. Bails out if the length has been overriden.
+class MArgumentsObjectLength : public MUnaryInstruction,
+                               public SingleObjectPolicy::Data {
+  explicit MArgumentsObjectLength(MDefinition* argsObj)
+      : MUnaryInstruction(classOpcode, argsObj) {
+    setResultType(MIRType::Int32);
+    setMovable();
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(ArgumentsObjectLength)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, getArgsObject))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    // Even though the "length" property is lazily resolved, it acts similar to
+    // a normal property load, so we can treat this operation like any other
+    // property read.
+    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                          AliasSet::DynamicSlot);
+  }
+};
+
 // Given a MIRType::Value A and a MIRType::Object B:
 // If the Value may be safely unboxed to an Object, return Object(A).
 // Otherwise, return B.
