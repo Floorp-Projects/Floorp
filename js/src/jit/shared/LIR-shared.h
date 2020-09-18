@@ -912,6 +912,24 @@ class LSetArgumentsObjectArg : public LInstructionHelper<0, 1 + BOX_PIECES, 1> {
   static const size_t ValueIndex = 1;
 };
 
+// Load an element from an arguments object.
+class LLoadArgumentsObjectArg : public LInstructionHelper<BOX_PIECES, 2, 1> {
+ public:
+  LIR_HEADER(LoadArgumentsObjectArg)
+
+  LLoadArgumentsObjectArg(const LAllocation& argsObj, const LAllocation& index,
+                          const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, argsObj);
+    setOperand(1, index);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* getArgsObject() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LDefinition* temp() { return this->getTemp(0); }
+};
+
 // If the Value is an Object, return unbox(Value).
 // Otherwise, return the other Object.
 class LReturnFromCtor : public LInstructionHelper<1, BOX_PIECES + 1, 0> {

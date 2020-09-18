@@ -333,6 +333,19 @@ void LIRGenerator::visitSetArgumentsObjectArg(MSetArgumentsObjectArg* ins) {
   add(lir, ins);
 }
 
+void LIRGenerator::visitLoadArgumentsObjectArg(MLoadArgumentsObjectArg* ins) {
+  MDefinition* argsObj = ins->getArgsObject();
+  MOZ_ASSERT(argsObj->type() == MIRType::Object);
+
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  auto* lir = new (alloc())
+      LLoadArgumentsObjectArg(useRegister(argsObj), useRegister(index), temp());
+  assignSnapshot(lir, BailoutKind::ArgumentsObjectAccess);
+  defineBox(lir, ins);
+}
+
 void LIRGenerator::visitReturnFromCtor(MReturnFromCtor* ins) {
   LReturnFromCtor* lir = new (alloc())
       LReturnFromCtor(useBox(ins->getValue()), useRegister(ins->getObject()));
