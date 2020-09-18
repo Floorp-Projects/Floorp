@@ -817,6 +817,10 @@ class FunctionExtended : public JSFunction {
 
   static const unsigned METHOD_HOMEOBJECT_SLOT = 0;
 
+  // Stores the length for bound functions, so the .length property doesn't need
+  // to be resolved eagerly.
+  static const unsigned BOUND_FUNCTION_LENGTH_SLOT = 1;
+
   // Exported asm.js/wasm functions store their WasmInstanceObject in the
   // first slot.
   static const unsigned WASM_INSTANCE_SLOT = 0;
@@ -838,6 +842,9 @@ class FunctionExtended : public JSFunction {
   }
   static inline size_t offsetOfMethodHomeObjectSlot() {
     return offsetOfExtendedSlot(METHOD_HOMEOBJECT_SLOT);
+  }
+  static inline size_t offsetOfBoundFunctionLengthSlot() {
+    return offsetOfExtendedSlot(BOUND_FUNCTION_LENGTH_SLOT);
   }
 
  private:

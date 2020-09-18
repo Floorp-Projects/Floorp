@@ -14883,7 +14883,7 @@ void CodeGenerator::visitFinishBoundFunctionInit(
   Label* slowPath = ool->entry();
 
   const size_t boundLengthOffset =
-      FunctionExtended::offsetOfExtendedSlot(BOUND_FUN_LENGTH_SLOT);
+      FunctionExtended::offsetOfBoundFunctionLengthSlot();
 
   // Take the slow path if the target is not a JSFunction.
   masm.branchTestObjClass(Assembler::NotEqual, target, &JSFunction::class_,
