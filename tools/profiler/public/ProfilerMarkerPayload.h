@@ -289,34 +289,6 @@ class FileIOMarkerPayload : public ProfilerMarkerPayload {
   mozilla::Maybe<int> mIOThreadId;
 };
 
-class DOMEventMarkerPayload : public TracingMarkerPayload {
- public:
-  // `aTimeStamp` is the internal timestamp of the event, and recorded
-  // separately from the tracing marker timestamp, which is now (the time of
-  // this recording.)
-  DOMEventMarkerPayload(const nsAString& aEventType,
-                        const mozilla::TimeStamp& aTimeStamp,
-                        const char* aCategory, TracingKind aKind,
-                        const mozilla::Maybe<uint64_t>& aInnerWindowID)
-      : TracingMarkerPayload(aCategory, aKind,
-                             mozilla::TimeStamp::NowUnfuzzed(), aInnerWindowID),
-        mTimeStamp(aTimeStamp),
-        mEventType(aEventType) {}
-
-  DECL_STREAM_PAYLOAD
-
- private:
-  DOMEventMarkerPayload(CommonProps&& aCommonProps, const char* aCategory,
-                        TracingKind aKind, mozilla::TimeStamp aTimeStamp,
-                        nsString aEventType)
-      : TracingMarkerPayload(std::move(aCommonProps), aCategory, aKind),
-        mTimeStamp(aTimeStamp),
-        mEventType(aEventType) {}
-
-  mozilla::TimeStamp mTimeStamp;
-  nsString mEventType;
-};
-
 class PrefMarkerPayload : public ProfilerMarkerPayload {
  public:
   PrefMarkerPayload(const char* aPrefName,
