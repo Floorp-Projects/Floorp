@@ -280,6 +280,52 @@ void RendererOGL::SetFrameStartTime(const TimeStamp& aTime) {
   mFrameStartTime = aTime;
 }
 
+void RendererOGL::BeginRecording(const TimeStamp& aRecordingStart,
+                                 wr::PipelineId aPipelineId) {
+  MOZ_ASSERT(!mCompositionRecorder);
+
+  mCompositionRecorder = MakeUnique<layers::WebRenderCompositionRecorder>(
+      aRecordingStart, aPipelineId);
+}
+
+void RendererOGL::MaybeRecordFrame(const WebRenderPipelineInfo* aPipelineInfo) {
+  if (!mCompositionRecorder || !EnsureAsyncScreenshot()) {
+    return;
+  }
+  mCompositionRecorder->MaybeRecordFrame(mRenderer, aPipelineInfo);
+}
+
+void RendererOGL::WriteCollectedFrames() {
+  if (!mCompositionRecorder) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        false,
+        "Attempted to write frames from a window that was not recording.");
+    return;
+  }
+
+  mCompositionRecorder->WriteCollectedFrames();
+
+  wr_renderer_release_composition_recorder_structures(mRenderer);
+
+  mCompositionRecorder = nullptr;
+}
+
+Maybe<layers::CollectedFrames> RendererOGL::GetCollectedFrames() {
+  if (!mCompositionRecorder) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        false, "Attempted to get frames from a window that was not recording.");
+    return Nothing();
+  }
+
+  layers::CollectedFrames frames = mCompositionRecorder->GetCollectedFrames();
+
+  wr_renderer_release_composition_recorder_structures(mRenderer);
+
+  mCompositionRecorder = nullptr;
+
+  return Some(std::move(frames));
+}
+
 RefPtr<WebRenderPipelineInfo> RendererOGL::FlushPipelineInfo() {
   RefPtr<WebRenderPipelineInfo> info = new WebRenderPipelineInfo();
   wr_renderer_flush_pipeline_info(mRenderer, &info->Raw());
