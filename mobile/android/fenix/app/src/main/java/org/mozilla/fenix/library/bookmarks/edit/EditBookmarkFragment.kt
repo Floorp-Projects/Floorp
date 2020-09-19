@@ -71,14 +71,22 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         viewLifecycleOwner.lifecycleScope.launch(Main) {
             val context = requireContext()
             val bookmarkNodeBeforeReload = bookmarkNode
+            val bookmarksStorage = context.components.core.bookmarksStorage
 
-            withContext(IO) {
-                val bookmarksStorage = context.components.core.bookmarksStorage
-                bookmarkNode = bookmarksStorage.getTree(args.guidToEdit)
-                bookmarkParent = sharedViewModel.selectedFolder
-                    ?: bookmarkNode?.parentGuid
-                        ?.let { bookmarksStorage.getTree(it) }
-                        ?.let { DesktopFolders(context, showMobileRoot = true).withRootTitle(it) }
+            bookmarkNode = withContext(IO) {
+                bookmarksStorage.getBookmark(args.guidToEdit)
+            }
+
+            bookmarkParent = withContext(IO) {
+                // Use user-selected parent folder if it's set, or node's current parent otherwise.
+                if (sharedViewModel.selectedFolder != null) {
+                    sharedViewModel.selectedFolder
+                } else {
+                    bookmarkNode?.parentGuid?.let { bookmarksStorage.getBookmark(it) }
+                }?.let {
+                    // No-op for non-root nodes, and copies a node with a friendly title otherwise.
+                    DesktopFolders(context, showMobileRoot = true).withRootTitle(it)
+                }
             }
 
             when (bookmarkNode?.type) {
@@ -101,21 +109,22 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
 
             bookmarkParent?.let { node ->
                 bookmarkParentFolderSelector.text = node.title
-                bookmarkParentFolderSelector.setOnClickListener {
-                    sharedViewModel.selectedFolder = null
-                    nav(
-                        R.id.bookmarkEditFragment,
-                        EditBookmarkFragmentDirections
-                            .actionBookmarkEditFragmentToBookmarkSelectFolderFragment(
-                                allowCreatingNewFolder = false,
-                                // Don't allow moving folders into themselves.
-                                hideFolderGuid = when (bookmarkNode!!.type) {
-                                    BookmarkNodeType.FOLDER -> bookmarkNode!!.guid
-                                    else -> null
-                                }
-                            )
-                    )
-                }
+            }
+
+            bookmarkParentFolderSelector.setOnClickListener {
+                sharedViewModel.selectedFolder = null
+                nav(
+                    R.id.bookmarkEditFragment,
+                    EditBookmarkFragmentDirections
+                        .actionBookmarkEditFragmentToBookmarkSelectFolderFragment(
+                            allowCreatingNewFolder = false,
+                            // Don't allow moving folders into themselves.
+                            hideFolderGuid = when (bookmarkNode!!.type) {
+                                BookmarkNodeType.FOLDER -> bookmarkNode!!.guid
+                                else -> null
+                            }
+                        )
+                )
             }
 
             view.bookmarkNameEdit.apply {
