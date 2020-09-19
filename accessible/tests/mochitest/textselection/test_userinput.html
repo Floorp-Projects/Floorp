@@ -12,56 +12,47 @@
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
-          src="../role.js"></script>
-  <script type="application/javascript"
-          src="../states.js"></script>
-  <script type="application/javascript"
-          src="../events.js"></script>
+          src="../promisified-events.js"></script>
 
   <script type="application/javascript">
-    /**
-     * Invokers
-     */
-    function synthTabAndCheckPrevTabbed(aID, aPrevID) {
-      this.__proto__ = new synthTab(aID, new focusChecker(aID));
+    async function doTests() {
+      // Tab to 't2' and then tab out of it: it must not have any selection.
+      info("Select all text in t1 and focus it");
+      const t1 = getNode("t1");
+      let focused = waitForEvent(EVENT_FOCUS, t1);
+      // Simulate tabbing to it by selecting all text before focusing it.
+      if (t1.editor) {
+        t1.selectionStart = t1.selectionEnd = t1.value.length;
+      }
+      t1.focus();
+      await focused;
 
-      this.finalCheck = function changeSelection_finalCheck() {
-        var prevTabbed = getAccessible(aPrevID, [ nsIAccessibleText ]);
-        is(prevTabbed.selectionCount, 0,
-           "Wrong selection count for " + aPrevID);
+      info("Tab to t2");
+      const t2 = getNode("t2");
+      focused = waitForEvent(EVENT_FOCUS, t2);
+      synthesizeKey("VK_TAB");
+      await focused;
 
-        var exceptionCaught = false;
-        try {
-          var startOffsetObj = {}, endOffsetObj = {};
-          prevTabbed.getSelectionBounds(0, startOffsetObj, endOffsetObj);
-        } catch (e) {
-          exceptionCaught = true;
-        }
+      info("Tab to t3 and make sure there is no selection in t2 afterwards");
+      const t3 = getNode("t3");
+      focused = waitForEvent(EVENT_FOCUS, t3);
+      synthesizeKey("VK_TAB");
+      await focused;
+      const prevFocus = getAccessible(t2, [ nsIAccessibleText ]);
+      is(prevFocus.selectionCount, 0,
+        "Wrong selection count for t2");
 
-        ok(exceptionCaught, "No selection was expected for " + aPrevID);
-      };
+      let exceptionCaught = false;
+      try {
+        const startOffsetObj = {}, endOffsetObj = {};
+        prevFocus.getSelectionBounds(0, startOffsetObj, endOffsetObj);
+      } catch (e) {
+        exceptionCaught = true;
+      }
 
-      this.getID = function changeSelection_getID() {
-        return "Hidden selection check for " + aPrevID;
-      };
-    }
+      ok(exceptionCaught, "No selection was expected for t2");
 
-    /**
-     * Do tests
-     */
-
-    // gA11yEventDumpToConsole = true; // debug stuff
-
-    var gQueue = null;
-    function doTests() {
-      gQueue = new eventQueue();
-
-      // Tab to 't2' and then tab out it: it must has no selection.
-      gQueue.push(new synthFocus("t1"));
-      gQueue.push(new synthTab("t2", new focusChecker("t2")));
-      gQueue.push(new synthTabAndCheckPrevTabbed("t3", "t2"));
-
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
