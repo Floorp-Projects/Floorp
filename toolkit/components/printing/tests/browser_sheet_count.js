@@ -41,20 +41,43 @@ add_task(async function testSheetCount() {
       "numCopies is ignored for Save to PDF printer"
     );
 
-    // TODO: Ideally, this test would set numCopies=4 for a "real" printer and
-    // verify that the value is ignored when switching to the PDF printer. Since
-    // we don't have any "real" printers set up for testing yet, fake the printer
-    // and force the component to update.
-    let { settings, viewSettings } = helper;
-    is(viewSettings.numCopies, 1, "numCopies is 1 in viewSettings");
-    settings.outputFormat = Ci.nsIPrintSettings.kOutputFormatNative;
-    settings.printerName = "My real printer";
-    is(viewSettings.numCopies, 4, "numCopies is 4 in viewSettings");
+    is(helper.viewSettings.numCopies, 1, "numCopies is 1 in viewSettings");
 
-    // Manually update the components.
-    helper.get("print").update(viewSettings);
-    sheetCount.update(viewSettings);
-    numCopies.update(viewSettings);
+    // We don't have any "real" printers set up for testing yet, so insert a modified
+    // copy of the PDF printer which pretends to be real, and switch to that
+    // to triggers the component to update.
+    let realPrinterName = "My real printer";
+    let pdfPrinterInfo =
+      helper.win.PrintSettingsViewProxy.availablePrinters[
+        PrintUtils.SAVE_TO_PDF_PRINTER
+      ];
+    let mockPrinterInfo = Object.assign({}, pdfPrinterInfo, {});
+    mockPrinterInfo.settings = pdfPrinterInfo.settings.clone();
+    mockPrinterInfo.settings.outputFormat =
+      Ci.nsIPrintSettings.kOutputFormatNative;
+    mockPrinterInfo.settings.printerName = realPrinterName;
+
+    helper.win.PrintSettingsViewProxy.availablePrinters[
+      realPrinterName
+    ] = mockPrinterInfo;
+    await helper.dispatchSettingsChange({
+      printerName: realPrinterName,
+    });
+    await helper.awaitAnimationFrame();
+
+    let { settings, viewSettings } = helper;
+
+    is(
+      settings.printerName,
+      realPrinterName,
+      "Sanity check the current settings have the new printerName"
+    );
+    is(
+      settings.outputFormat,
+      Ci.nsIPrintSettings.kOutputFormatNative,
+      "The new printer has the correct outputFormat"
+    );
+    is(viewSettings.numCopies, 4, "numCopies is 4 in viewSettings");
 
     // numCopies is now visible and sheetCount is multiplied by numCopies.
     ok(BrowserTestUtils.is_visible(numCopies), "numCopies element is visible");
