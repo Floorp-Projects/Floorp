@@ -26,16 +26,30 @@ class BookmarkAdapter(private val emptyView: View, private val interactor: Bookm
     private var isFirstRun = true
 
     fun updateData(tree: BookmarkNode?, mode: BookmarkFragmentState.Mode) {
+        // Display folders above all other bookmarks.
+        val allNodes = tree?.children.orEmpty()
+        val folders: MutableList<BookmarkNode> = mutableListOf()
+        val notFolders: MutableList<BookmarkNode> = mutableListOf()
+        allNodes.forEach {
+            if (it.type == BookmarkNodeType.FOLDER) {
+                folders.add(it)
+            } else {
+                notFolders.add(it)
+            }
+        }
+        val newTree = folders + notFolders
+
         val diffUtil = DiffUtil.calculateDiff(
             BookmarkDiffUtil(
                 this.tree,
-                tree?.children.orEmpty(),
+                newTree,
                 this.mode,
                 mode
             )
         )
 
-        this.tree = tree?.children.orEmpty()
+        this.tree = newTree
+
         isFirstRun = if (isFirstRun) false else {
             emptyView.isVisible = this.tree.isEmpty()
             false
