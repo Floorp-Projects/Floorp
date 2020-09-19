@@ -444,10 +444,7 @@ class UrlbarInput {
    * @param {Event} [event]
    *   The event triggering the open.
    * @param {object} [oneOffParams]
-   *   Optional. Pass if this navigation was triggered by a one-off. Practically
-   *   speaking, UrlbarSearchOneOffs passes this when the user holds certain key
-   *   modifiers while picking a one-off. In those cases, we do an immediate
-   *   search using the one-off's engine instead of entering search mode.
+   *   Optional. Pass if this navigation was triggered by a one-off.
    * @param {string} oneOffParams.openWhere
    *   Where we expect the result to be opened.
    * @param {object} oneOffParams.openParams
@@ -506,17 +503,6 @@ class UrlbarInput {
     }
 
     if (!url) {
-      return;
-    }
-
-    // When the user hits enter in a local search mode and there's no selected
-    // result or one-off, don't do anything.
-    if (
-      this.searchMode &&
-      !this.searchMode.engineName &&
-      !result &&
-      !oneOffParams
-    ) {
       return;
     }
 
