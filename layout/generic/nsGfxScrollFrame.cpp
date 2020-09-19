@@ -2185,6 +2185,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mSuppressScrollbarUpdate(false),
       mSkippedScrollbarLayout(false),
       mHadNonInitialReflow(false),
+      mFirstReflow(true),
       mHorizontalOverflow(false),
       mVerticalOverflow(false),
       mPostedReflowCallback(false),
@@ -2209,7 +2210,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mApzAnimationRequested(false),
       mVelocityQueue(aOuter->PresContext()) {
   mScrollUpdates.AppendElement(
-      ScrollPositionUpdate::NewScrollframe(mScrollGeneration));
+      ScrollPositionUpdate::NewScrollframe(mScrollGeneration, nsPoint()));
 
   if (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
@@ -6259,6 +6260,39 @@ bool ScrollFrameHelper::ReflowFinished() {
     // We will get another call after the next reflow and scrolling
     // later is less janky.
     doScroll = false;
+  }
+
+  if (mFirstReflow) {
+    nsPoint currentScrollPos = GetScrollPosition();
+    if (!mScrollUpdates.IsEmpty() &&
+        mScrollUpdates.LastElement().GetOrigin() == ScrollOrigin::None &&
+        currentScrollPos != nsPoint()) {
+      // With frame reconstructions, the reconstructed frame may have a nonzero
+      // scroll position by the end of the reflow, but without going through
+      // RestoreState. In particular this can happen with RTL XUL scrollframes,
+      // see https://bugzilla.mozilla.org/show_bug.cgi?id=1664638#c14.
+      // Upon construction, the ScrollFrameHelper constructor will have inserted
+      // a ScrollPositionUpdate into mScrollUpdates with origin None and a zero
+      // scroll position, but here we update that to hold the correct scroll
+      // position. Otherwise APZ may end up resetting the scroll position to
+      // zero incorrectly. If we ever hit this codepath, it must be on a reflow
+      // immediately following the scrollframe construction, so there should be
+      // exactly one ScrollPositionUpdate in mScrollUpdates.
+      MOZ_ASSERT(mScrollUpdates.Length() == 1);
+      MOZ_ASSERT(mScrollUpdates.LastElement().GetGeneration() ==
+                 mScrollGeneration);
+      MOZ_ASSERT(mScrollUpdates.LastElement().GetDestination() == CSSPoint());
+      SCROLLRESTORE_LOG("%p: updating initial SPU to pos %s\n", this,
+                        Stringify(currentScrollPos).c_str());
+      mScrollUpdates.Clear();
+      // Scroll generation bump not strictly necessary, but good for
+      // consistency.
+      mScrollGeneration = ++sScrollGenerationCounter;
+      mScrollUpdates.AppendElement(ScrollPositionUpdate::NewScrollframe(
+          mScrollGeneration, currentScrollPos));
+    }
+
+    mFirstReflow = false;
   }
 
   nsAutoScriptBlocker scriptBlocker;
