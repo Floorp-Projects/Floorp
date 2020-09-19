@@ -149,6 +149,8 @@
     <string name="browser_menu_install_on_homescreen">Installà</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Unghjette sincrunizate</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Risincrunizà</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Circà in a pagina</string>
     <!-- Browser menu button that creates a private tab -->
@@ -473,8 +475,16 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seguità u tema di l’apparechju</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Tirà per attualizà</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Sfilà per piattà a barra d’attrezzi</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Fà sfilà a barra d’attrezzi lateralmente per cambià d’unghjetta</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Fà sfilà a barra d’attrezzi insù per apre unghjette</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->

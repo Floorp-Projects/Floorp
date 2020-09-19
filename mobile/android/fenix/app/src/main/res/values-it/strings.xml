@@ -145,6 +145,8 @@
     <string name="browser_menu_install_on_homescreen">Installa</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Schede sincronizzate</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Risincronizza</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Trova nella pagina</string>
     <!-- Browser menu button that creates a private tab -->
@@ -331,6 +333,8 @@
     <string name="preferences_search_browsing_history">Cerca nella cronologia</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Cerca nei segnalibri</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Cerca nelle schede sincronizzate</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Impostazioni account</string>
 

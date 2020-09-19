@@ -146,6 +146,8 @@
     <string name="browser_menu_install_on_homescreen">Asenna</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Synkronoidut välilehdet</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Synkronoi uudelleen</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Etsi sivulta</string>
     <!-- Browser menu button that creates a private tab -->
@@ -330,6 +332,8 @@
     <string name="preferences_search_browsing_history">Etsi selaushistoriasta</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Etsi kirjanmerkeistä</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Etsi synkronoiduista välilehdistä</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Tilin asetukset</string>
 
@@ -478,7 +482,7 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Vedä päivittääksesi</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Viertä piilottaaksesi työkalurivin</string>
+    <string name="preference_gestures_dynamic_toolbar">Vieritä piilottaaksesi työkalurivin</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
     <string name="preference_gestures_swipe_toolbar_switch_tabs">Pyyhkäise työkaluriviä sivuttain vaihtaaksesi välilehtiä</string>

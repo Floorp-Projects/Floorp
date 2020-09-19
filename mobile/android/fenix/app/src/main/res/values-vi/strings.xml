@@ -146,6 +146,8 @@
     <string name="browser_menu_install_on_homescreen">Cài đặt</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Các thẻ đã đồng bộ</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Đồng bộ hóa lại</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Tìm trong trang</string>
     <!-- Browser menu button that creates a private tab -->
