@@ -53,6 +53,7 @@ async function selectAndPaste(str, win = window) {
 
 /**
  * Updates the Top Sites feed.
+ *
  * @param {function} condition
  *   A callback that returns true after Top Sites are successfully updated.
  * @param {boolean} searchShortcuts
@@ -94,4 +95,38 @@ function getAutofillSearchString(val) {
     return val;
   }
   return val + " ";
+}
+
+/**
+ * Waits for a load in any browser or a timeout, whichever comes first.
+ *
+ * @param {window} win
+ *   The top-level browser window to listen in.
+ * @param {number} timeoutMs
+ *   The timeout in ms.
+ * @returns {event|null}
+ *   If a load event was detected before the timeout fired, then the event is
+ *   returned.  event.target will be the browser in which the load occurred.  If
+ *   the timeout fired before a load was detected, null is returned.
+ */
+async function waitForLoadOrTimeout(win = window, timeoutMs = 1000) {
+  let event;
+  let listener;
+  let timeout;
+  let eventName = "BrowserTestUtils:ContentEvent:load";
+  try {
+    event = await Promise.race([
+      new Promise(resolve => {
+        listener = resolve;
+        win.addEventListener(eventName, listener, true);
+      }),
+      new Promise(resolve => {
+        timeout = win.setTimeout(resolve, timeoutMs);
+      }),
+    ]);
+  } finally {
+    win.removeEventListener(eventName, listener, true);
+    win.clearTimeout(timeout);
+  }
+  return event || null;
 }
