@@ -201,7 +201,7 @@ interface nsIPrintSettings : nsISupports
   attribute boolean showMarginGuides;    /* whether to draw guidelines showing the margin settings */
 
   /* Additional XP Related */
-  attribute AString paperName;     /* name of paper */
+  attribute AString paperId;       /* identifier of paper (not display name) */
   attribute double  paperWidth;    /* width of the paper in inches or mm */
   attribute double  paperHeight;   /* height of the paper in inches or mm */
   attribute short   paperSizeUnit; /* paper is in inches or mm */

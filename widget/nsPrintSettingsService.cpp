@@ -58,7 +58,7 @@ static const char kPrintFooterStrRight[] = "print_footerright";
 // Additional Prefs
 static const char kPrintReversed[] = "print_reversed";
 static const char kPrintInColor[] = "print_in_color";
-static const char kPrintPaperName[] = "print_paper_name";
+static const char kPrintPaperId[] = "print_paper_id";
 static const char kPrintPaperSizeUnit[] = "print_paper_size_unit";
 static const char kPrintPaperWidth[] = "print_paper_width";
 static const char kPrintPaperHeight[] = "print_paper_height";
@@ -131,7 +131,7 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetShrinkToFit(&data->shrinkToFit());
   aSettings->GetShowPrintProgress(&data->showPrintProgress());
 
-  aSettings->GetPaperName(data->paperName());
+  aSettings->GetPaperId(data->paperId());
   aSettings->GetPaperWidth(&data->paperWidth());
   aSettings->GetPaperHeight(&data->paperHeight());
   aSettings->GetPaperSizeUnit(&data->paperSizeUnit());
@@ -229,7 +229,7 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetShrinkToFit(data.shrinkToFit());
   settings->SetShowPrintProgress(data.showPrintProgress());
 
-  settings->SetPaperName(data.paperName());
+  settings->SetPaperId(data.paperId());
 
   settings->SetPaperWidth(data.paperWidth());
   settings->SetPaperHeight(data.paperHeight());
@@ -406,7 +406,7 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
     bool success = GETINTPREF(kPrintPaperSizeUnit, &sizeUnit) &&
                    GETDBLPREF(kPrintPaperWidth, width) &&
                    GETDBLPREF(kPrintPaperHeight, height) &&
-                   GETSTRPREF(kPrintPaperName, str);
+                   GETSTRPREF(kPrintPaperId, str);
 
     // Bug 315687: Sanity check paper size to avoid paper size values in
     // mm when the size unit flag is inches. The value 100 is arbitrary
@@ -423,8 +423,8 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
       DUMP_DBL(kReadStr, kPrintPaperWidth, width);
       aPS->SetPaperHeight(height);
       DUMP_DBL(kReadStr, kPrintPaperHeight, height);
-      aPS->SetPaperName(str);
-      DUMP_STR(kReadStr, kPrintPaperName, str.get());
+      aPS->SetPaperId(str);
+      DUMP_STR(kReadStr, kPrintPaperId, str.get());
     }
   }
 
@@ -643,7 +643,7 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
     if (NS_SUCCEEDED(aPS->GetPaperSizeUnit(&sizeUnit)) &&
         NS_SUCCEEDED(aPS->GetPaperWidth(&width)) &&
         NS_SUCCEEDED(aPS->GetPaperHeight(&height)) &&
-        NS_SUCCEEDED(aPS->GetPaperName(name))) {
+        NS_SUCCEEDED(aPS->GetPaperId(name))) {
       DUMP_INT(kWriteStr, kPrintPaperSizeUnit, sizeUnit);
       Preferences::SetInt(GetPrefName(kPrintPaperSizeUnit, aPrinterName),
                           int32_t(sizeUnit));
@@ -651,8 +651,8 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
       WritePrefDouble(GetPrefName(kPrintPaperWidth, aPrinterName), width);
       DUMP_DBL(kWriteStr, kPrintPaperHeight, height);
       WritePrefDouble(GetPrefName(kPrintPaperHeight, aPrinterName), height);
-      DUMP_STR(kWriteStr, kPrintPaperName, name.get());
-      Preferences::SetString(GetPrefName(kPrintPaperName, aPrinterName), name);
+      DUMP_STR(kWriteStr, kPrintPaperId, name.get());
+      Preferences::SetString(GetPrefName(kPrintPaperId, aPrinterName), name);
     }
   }
 
