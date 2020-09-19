@@ -231,15 +231,17 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                         components.analytics.metrics.track(Event.EditedBookmark)
                     }
                     val parentGuid = sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid
+                    val parentChanged = initialParentGuid != parentGuid
                     // Only track the 'moved' event if new parent was selected.
-                    if (initialParentGuid != parentGuid) {
+                    if (parentChanged) {
                         components.analytics.metrics.track(Event.MovedBookmark)
                     }
                     components.core.bookmarksStorage.updateNode(
                         args.guidToEdit,
                         BookmarkInfo(
                             parentGuid,
-                            bookmarkNode?.position,
+                            // Setting position to 'null' is treated as a 'move to the end' by the storage API.
+                            if (parentChanged) null else bookmarkNode?.position,
                             title,
                             if (bookmarkNode?.type == BookmarkNodeType.ITEM) url else null
                         )
