@@ -3165,11 +3165,6 @@ NS_IMETHODIMP nsDocShell::SynchronizeLayoutHistoryState() {
         entry->SetLayoutHistoryState(mActiveEntry->GetLayoutHistoryState());
       }
     }
-    if (mLoadingEntry &&
-        mLoadingEntry->mInfo.SharedId() == mActiveEntry->SharedId()) {
-      mLoadingEntry->mInfo.SetLayoutHistoryState(
-          mActiveEntry->GetLayoutHistoryState());
-    }
   }
 
   return NS_OK;
@@ -5718,7 +5713,7 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
       nsID changeID = {};
       if (XRE_IsParentProcess()) {
         mBrowsingContext->Canonical()->SessionHistoryCommit(
-            loadingEntry->mLoadId, changeID, mLoadType);
+            loadingEntry->mLoadId, changeID);
       } else {
         RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
         if (rootSH) {
@@ -5734,7 +5729,7 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
         }
         ContentChild* cc = ContentChild::GetSingleton();
         mozilla::Unused << cc->SendHistoryCommit(
-            mBrowsingContext, loadingEntry->mLoadId, changeID, mLoadType);
+            mBrowsingContext, loadingEntry->mLoadId, changeID);
       }
     }
   }
@@ -8900,7 +8895,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     nsID changeID = {};
     if (XRE_IsParentProcess()) {
       mBrowsingContext->Canonical()->SessionHistoryCommit(
-          mLoadingEntry->mLoadId, changeID, mLoadType);
+          mLoadingEntry->mLoadId, changeID);
     } else {
       RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
       if (rootSH) {
@@ -8912,7 +8907,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       }
       ContentChild* cc = ContentChild::GetSingleton();
       mozilla::Unused << cc->SendHistoryCommit(
-          mBrowsingContext, mLoadingEntry->mLoadId, changeID, mLoadType);
+          mBrowsingContext, mLoadingEntry->mLoadId, changeID);
     }
   }
 
@@ -10635,7 +10630,9 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
 
   // We don't update session history on reload unless we're loading
   // an iframe in shift-reload case.
-  bool updateSHistory = mBrowsingContext->ShouldUpdateSessionHistory(aLoadType);
+  bool updateSHistory =
+      updateGHistory && (!(aLoadType & LOAD_CMD_RELOAD) ||
+                         (IsForceReloadType(aLoadType) && IsFrame()));
 
   // Create SH Entry (mLSHE) only if there is a SessionHistory object in the
   // root browsing context.
