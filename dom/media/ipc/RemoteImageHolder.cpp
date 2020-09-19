@@ -16,6 +16,25 @@ namespace mozilla {
 using namespace gfx;
 using namespace layers;
 
+RemoteImageHolder::RemoteImageHolder() = default;
+RemoteImageHolder::RemoteImageHolder(layers::IGPUVideoSurfaceManager* aManager,
+                                     layers::VideoBridgeSource aSource,
+                                     const gfx::IntSize& aSize,
+                                     const layers::SurfaceDescriptor& aSD)
+    : mSource(aSource),
+      mSize(aSize),
+      mSD(aSD),
+      mManager(aManager),
+      mEmpty(false) {}
+RemoteImageHolder::RemoteImageHolder(RemoteImageHolder&& aOther)
+    : mSource(aOther.mSource),
+      mSize(aOther.mSize),
+      mSD(aOther.mSD),
+      mManager(aOther.mManager),
+      mEmpty(aOther.mEmpty) {
+  aOther.mEmpty = true;
+}
+
 already_AddRefed<Image> RemoteImageHolder::DeserializeImage(
     layers::BufferRecycleBin* aBufferRecycleBin) {
   MOZ_ASSERT(mSD.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer);
