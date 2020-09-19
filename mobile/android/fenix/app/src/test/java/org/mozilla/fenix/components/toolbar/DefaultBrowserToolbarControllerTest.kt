@@ -21,7 +21,6 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -200,17 +199,13 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarCloseTabPress() {
-        val tabsUseCases: TabsUseCases = mockk(relaxed = true)
-        val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mockk(relaxed = true)
         val item = TabCounterMenu.Item.CloseTab
 
         every { sessionManager.sessions } returns emptyList()
-        every { activity.components.useCases.tabsUseCases } returns tabsUseCases
-        every { tabsUseCases.removeTab } returns removeTabUseCase
 
         val controller = createController()
         controller.handleTabCounterItemInteraction(item)
-        verify { removeTabUseCase.invoke(currentSession) }
+        verify { sessionManager.remove(currentSession, selectParentIfExists = true) }
     }
 
     @Test

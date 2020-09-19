@@ -940,7 +940,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 true
             } else {
                 if (session.hasParentSession) {
-                    requireComponents.useCases.tabsUseCases.removeTab(session)
+                    // The removeTab use case does not currently select a parent session, so
+                    // we are using sessionManager.remove
+                    requireComponents.core.sessionManager.remove(
+                        session,
+                        selectParentIfExists = true
+                    )
                 }
                 // We want to return to home if this session didn't have a parent session to select.
                 val goToOverview = !session.hasParentSession

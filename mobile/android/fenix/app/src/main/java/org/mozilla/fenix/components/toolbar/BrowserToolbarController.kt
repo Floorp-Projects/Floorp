@@ -145,7 +145,9 @@ class DefaultBrowserToolbarController(
                         )
                     } else {
                         onCloseTab.invoke(it)
-                        activity.components.useCases.tabsUseCases.removeTab.invoke(it)
+                        // The removeTab use case does not currently select a parent session, so
+                        // we are using sessionManager.remove
+                        sessionManager.remove(it, selectParentIfExists = true)
                     }
                 }
             }
