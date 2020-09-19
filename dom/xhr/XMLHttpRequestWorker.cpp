@@ -898,7 +898,12 @@ Proxy::HandleEvent(Event* aEvent) {
   }
 
   {
-    AutoSafeJSContext cx;
+    AutoJSAPI jsapi;
+    JSObject* junkScope = xpc::UnprivilegedJunkScope(fallible);
+    if (!junkScope || !jsapi.Init(junkScope)) {
+      return NS_ERROR_FAILURE;
+    }
+    JSContext* cx = jsapi.cx();
 
     JS::Rooted<JS::Value> value(cx);
     if (!GetOrCreateDOMReflectorNoWrap(cx, mXHR, &value)) {
