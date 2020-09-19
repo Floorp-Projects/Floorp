@@ -640,6 +640,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool mSkippedScrollbarLayout : 1;
 
   bool mHadNonInitialReflow : 1;
+  // Initially true; first call to ReflowFinished() sets it to false.
+  bool mFirstReflow : 1;
   // State used only by PostScrollEvents so we know
   // which overflow states have changed.
   bool mHorizontalOverflow : 1;

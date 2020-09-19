@@ -60,6 +60,15 @@ span { background-color:white; }
     </style>
     <script type="text/javascript">
 function init() {
+
+  // The behaviour of this test may be subtly different when this code runs
+  // before the first paint vs after the first paint. If you encounter
+  // intermittent failures in this reftest, you might have luck turning it into
+  // a reliable failure by wrapping this function body in a
+  // requestAnimationFrame callback to force it to run after the first paint.
+  // Alternatively you might need to force it to run before the first paint,
+  // perhaps by running it inline (not as an onload handler) or something.
+
   // workaround bug 936936
   document.body.style.display="block";
 
