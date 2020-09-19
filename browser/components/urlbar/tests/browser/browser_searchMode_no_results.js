@@ -193,16 +193,17 @@ add_task(async function backspaceRemainOpen() {
       source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     });
 
-    // The heursitic should not be shown since we don't show it in local search
-    // modes.
-    Assert.equal(
+    // The heursitic should now be shown since we always show it in search mode
+    // when the search string is *not* empty, even when there are no other
+    // results.
+    Assert.greater(
       UrlbarTestUtils.getResultCount(win),
       0,
-      "No results should be present"
+      "At least the heuristic result should be shown"
     );
     Assert.ok(
-      win.gURLBar.panel.hasAttribute("noresults"),
-      "Panel has no results, therefore should have noresults attribute"
+      !win.gURLBar.panel.hasAttribute("noresults"),
+      "Panel has results, therefore should not have noresults attribute"
     );
 
     // Backspace.  The search string will now be empty.

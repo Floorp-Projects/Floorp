@@ -111,29 +111,18 @@ add_task(async function() {
       );
     }
 
-    let context = await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: testcase.input,
     });
 
-    // If testcase.input triggers local search mode, there won't be a heuristic.
-    let resultIndex =
-      UrlbarPrefs.get("update2") &&
-      context.searchMode &&
-      !context.searchMode.engineName
-        ? 0
-        : 1;
-
     Assert.greaterOrEqual(
       UrlbarTestUtils.getResultCount(window),
-      resultIndex + 1,
-      `Should be at least ${resultIndex + 1} results`
+      2,
+      "Should be at least two results"
     );
 
-    let result = await UrlbarTestUtils.getDetailsOfResultAt(
-      window,
-      resultIndex
-    );
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
 
     Assert.equal(
       result.type,

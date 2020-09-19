@@ -73,9 +73,7 @@ add_task(async function init() {
 
 // Opens the view without showing the one-offs.  They should be hidden and arrow
 // key selection should work properly.
-//
-// This task can be removed when update2 is enabled by default.
-add_task(async function noOneOffs_legacy() {
+add_task(async function noOneOffs() {
   // Do a search for "@" since we hide the one-offs in that case.
   let value = "@";
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -130,9 +128,10 @@ add_task(async function noOneOffs_legacy() {
   await hidePopup();
 });
 
-// Opens the view without showing the one-offs.  They should be hidden and arrow
-// key selection should work properly.
-add_task(async function noOneOffs() {
+// The same as the previous task but with update 2 enabled.  Opens the view
+// without showing the one-offs.  Makes sure they're hidden and that arrow key
+// selection works properly.
+add_task(async function noOneOffsUpdate2() {
   // Set the update2 prefs.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -197,8 +196,8 @@ add_task(async function noOneOffs() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Opens the top-sites view.  The one-offs should be shown.
-add_task(async function topSites() {
+// Opens the top-sites view with update2 enabled.  The one-offs should be shown.
+add_task(async function topSitesUpdate2() {
   // Set the update2 prefs.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -623,9 +622,7 @@ add_task(async function hiddenWhenUsingSearchAlias() {
 });
 
 // Makes sure local search mode one-offs don't exist without update2.
-//
-// This task can be removed when update2 is enabled by default.
-add_task(async function localOneOffs_legacy() {
+add_task(async function localOneOffsWithoutUpdate2() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.update2", false]],
   });
@@ -664,8 +661,8 @@ add_task(async function localOneOffs_legacy() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Makes sure local search mode one-offs exist.
-add_task(async function localOneOffs() {
+// Makes sure local search mode one-offs exist with update2.
+add_task(async function localOneOffsWithUpdate2() {
   // Null out _engines so that the one-offs rebuild themselves when the view
   // opens.
   oneOffSearchButtons._engines = null;
@@ -768,16 +765,7 @@ add_task(async function localOneOffReturn() {
       () => oneOffSearchButtons.selectedButtonIndex == index,
       "Waiting for local one-off to become selected"
     );
-
-    let expectedSelectedResultIndex = -1;
-    let count = UrlbarTestUtils.getResultCount(window);
-    if (count > 0) {
-      let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-      if (result.heuristic) {
-        expectedSelectedResultIndex = 0;
-      }
-    }
-    assertState(expectedSelectedResultIndex, index, typedValue);
+    assertState(0, index, typedValue);
 
     Assert.ok(button.source, "Sanity check: Button has a source");
     let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
