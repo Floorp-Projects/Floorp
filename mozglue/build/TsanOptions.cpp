@@ -167,10 +167,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1606804
          "deadlock:third_party/rust/rkv/src/env.rs\n"
 
-         // Bug 1606860
-         "race:majorGCCount\n"
-         "race:incMajorGcNumber\n"
-
          // Bug 1606864
          "race:nsSocketTransport::Close\n"
          "race:nsSocketTransport::OnSocketDetached\n"
