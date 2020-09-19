@@ -9290,18 +9290,6 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     viewport.MoveTo(layoutScrollOffset);
     metrics.SetLayoutViewport(viewport);
 
-    // If the frame was scrolled since the last layers update, and by something
-    // that is higher priority than APZ, we want to tell the APZ to update
-    // its scroll offset. We want to distinguish the case where the scroll
-    // offset was "restored" because in that case the restored scroll position
-    // should not overwrite a user-driven scroll.
-    ScrollOrigin lastOrigin = scrollableFrame->LastScrollOrigin();
-    if (lastOrigin == ScrollOrigin::Restore) {
-      metrics.SetScrollOffsetUpdateType(FrameMetrics::eRestore);
-    } else if (CanScrollOriginClobberApz(lastOrigin)) {
-      metrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
-    }
-
     nsSize lineScrollAmount = scrollableFrame->GetLineScrollAmount();
     LayoutDeviceIntSize lineScrollAmountInDevPixels =
         LayoutDeviceIntSize::FromAppUnitsRounded(

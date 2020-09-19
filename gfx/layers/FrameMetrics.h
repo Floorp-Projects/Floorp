@@ -68,9 +68,6 @@ struct FrameMetrics {
     ScrollOffsetUpdateType, uint8_t, (
       eNone,          // The default; the scroll offset was not updated
       eMainThread,    // The scroll offset was updated by the main thread.
-      ePending,       // The scroll offset was updated on the main thread, but
-                      // not painted, so the layer texture data is still at the
-                      // old offset.
       eRestore        // The scroll offset was updated by the main thread, but
                       // as a restore from history or after a frame
                       // reconstruction.  In this case, APZ can ignore the
@@ -97,7 +94,6 @@ struct FrameMetrics {
         mLayoutViewport(0, 0, 0, 0),
         mExtraResolution(),
         mPaintRequestTime(),
-        mScrollUpdateType(eNone),
         mVisualDestination(0, 0),
         mVisualScrollUpdateType(eNone),
         mIsRootContent(false),
@@ -124,7 +120,6 @@ struct FrameMetrics {
            mLayoutViewport.IsEqualEdges(aOther.mLayoutViewport) &&
            mExtraResolution == aOther.mExtraResolution &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
-           mScrollUpdateType == aOther.mScrollUpdateType &&
            mVisualDestination == aOther.mVisualDestination &&
            mVisualScrollUpdateType == aOther.mVisualScrollUpdateType &&
            mIsRootContent == aOther.mIsRootContent &&
@@ -270,7 +265,6 @@ struct FrameMetrics {
   void UpdatePendingScrollInfo(const ScrollPositionUpdate& aInfo) {
     SetLayoutScrollOffset(aInfo.GetDestination());
     mScrollGeneration = aInfo.GetGeneration();
-    mScrollUpdateType = ePending;
   }
 
  public:
@@ -345,14 +339,6 @@ struct FrameMetrics {
 
   void SetScrollGeneration(uint32_t aScrollGeneration) {
     mScrollGeneration = aScrollGeneration;
-  }
-
-  void SetScrollOffsetUpdateType(ScrollOffsetUpdateType aScrollUpdateType) {
-    mScrollUpdateType = aScrollUpdateType;
-  }
-
-  ScrollOffsetUpdateType GetScrollUpdateType() const {
-    return mScrollUpdateType;
   }
 
   uint32_t GetScrollGeneration() const { return mScrollGeneration; }
@@ -595,10 +581,6 @@ struct FrameMetrics {
 
   // The time at which the APZC last requested a repaint for this scroll frame.
   TimeStamp mPaintRequestTime;
-
-  // Whether mScrollOffset was updated by something other than the APZ code, and
-  // if the APZC receiving this metrics should update its local copy.
-  ScrollOffsetUpdateType mScrollUpdateType;
 
   // These fields are used when the main thread wants to set a visual viewport
   // offset that's distinct from the layout viewport offset.
@@ -997,8 +979,7 @@ struct ScrollMetadata {
   bool mForceDisableApz : 1;
 
   // Whether the pres shell resolution stored in mMetrics reflects a change
-  // originated by the main thread. Plays a similar role for the resolution as
-  // FrameMetrics::mScrollUpdateType) does for the scroll offset.
+  // originated by the main thread.
   bool mResolutionUpdated : 1;
 
   // Whether or not RDM and touch simulation are active for this document.
