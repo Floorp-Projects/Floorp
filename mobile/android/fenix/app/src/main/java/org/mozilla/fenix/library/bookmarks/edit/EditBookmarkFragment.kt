@@ -58,6 +58,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
     }
     private var bookmarkNode: BookmarkNode? = null
     private var bookmarkParent: BookmarkNode? = null
+    private var initialParentGuid: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,6 +76,10 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
 
             bookmarkNode = withContext(IO) {
                 bookmarksStorage.getBookmark(args.guidToEdit)
+            }
+
+            if (initialParentGuid == null) {
+                initialParentGuid = bookmarkNode?.parentGuid
             }
 
             bookmarkParent = withContext(IO) {
@@ -225,13 +230,15 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     if (title != bookmarkNode?.title || url != bookmarkNode?.url) {
                         components.analytics.metrics.track(Event.EditedBookmark)
                     }
-                    if (sharedViewModel.selectedFolder != null) {
+                    val parentGuid = sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid
+                    // Only track the 'moved' event if new parent was selected.
+                    if (initialParentGuid != parentGuid) {
                         components.analytics.metrics.track(Event.MovedBookmark)
                     }
                     components.core.bookmarksStorage.updateNode(
                         args.guidToEdit,
                         BookmarkInfo(
-                            sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid,
+                            parentGuid,
                             bookmarkNode?.position,
                             title,
                             if (bookmarkNode?.type == BookmarkNodeType.ITEM) url else null
