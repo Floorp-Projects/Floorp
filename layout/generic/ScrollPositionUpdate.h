@@ -43,7 +43,8 @@ class ScrollPositionUpdate {
 
   // Create a ScrollPositionUpdate for a newly created (or reconstructed)
   // scrollframe.
-  static ScrollPositionUpdate NewScrollframe(uint32_t aGeneration);
+  static ScrollPositionUpdate NewScrollframe(uint32_t aGeneration,
+                                             nsPoint aInitialPosition);
   // Create a ScrollPositionUpdate for a new absolute/instant scroll, to
   // the given destination.
   static ScrollPositionUpdate NewScroll(uint32_t aGeneration,

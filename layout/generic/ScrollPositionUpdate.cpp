@@ -16,10 +16,11 @@ ScrollPositionUpdate::ScrollPositionUpdate()
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewScrollframe(
-    uint32_t aGeneration) {
+    uint32_t aGeneration, nsPoint aInitialPosition) {
   ScrollPositionUpdate ret;
   ret.mScrollGeneration = aGeneration;
   ret.mScrollMode = ScrollMode::Instant;
+  ret.mDestination = CSSPoint::FromAppUnits(aInitialPosition);
   return ret;
 }
 
