@@ -1228,11 +1228,6 @@ SessionHistoryEntry::SyncTreesForSubframeNavigation(
   }
 }
 
-void SessionHistoryEntry::ReplaceWith(const SessionHistoryEntry& aSource) {
-  mInfo = MakeUnique<SessionHistoryInfo>(*aSource.mInfo);
-  mChildren.Clear();
-}
-
 SHEntrySharedParentState* SessionHistoryEntry::SharedInfo() const {
   return static_cast<SHEntrySharedParentState*>(mInfo->mSharedState.Get());
 }

@@ -224,8 +224,6 @@ class SessionHistoryEntry : public nsISHEntry {
   NS_DECL_NSISHENTRY
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SESSIONHISTORYENTRY_IID)
 
-  void ReplaceWith(const SessionHistoryEntry& aSource);
-
   const SessionHistoryInfo& Info() const { return *mInfo; }
 
   SHEntrySharedParentState* SharedInfo() const;

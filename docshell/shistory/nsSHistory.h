@@ -174,13 +174,6 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
     mRootBC = aRootBC;
   }
 
-  bool GetIndexForReplace() {
-    // Replace current entry in session history; If the requested index is
-    // valid, it indicates the loading was triggered by a history load, and
-    // we should replace the entry at requested index instead.
-    return mRequestedIndex == -1 ? mIndex : mRequestedIndex;
-  }
-
  protected:
   virtual ~nsSHistory();
 
