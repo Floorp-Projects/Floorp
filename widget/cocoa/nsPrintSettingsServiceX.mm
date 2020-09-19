@@ -85,7 +85,7 @@ nsresult nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* a
 
   NSString* paperName = [dict objectForKey:NSPrintPaperName];
   if (paperName) {
-    nsCocoaUtils::GetStringForNSString(paperName, data->paperName());
+    nsCocoaUtils::GetStringForNSString(paperName, data->paperId());
   }
 
   float scalingFactor = [[dict objectForKey:NSPrintScalingFactor] floatValue];

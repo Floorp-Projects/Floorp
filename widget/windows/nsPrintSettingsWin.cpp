@@ -197,7 +197,7 @@ void nsPrintSettingsWin::InitWithInitializer(
   if (mDevMode->dmFields & DM_PAPERSIZE) {
     nsString paperIdString;
     paperIdString.AppendInt(mDevMode->dmPaperSize);
-    SetPaperName(paperIdString);
+    SetPaperId(paperIdString);
     if (mDevMode->dmPaperSize > 0 &&
         mDevMode->dmPaperSize < int32_t(ArrayLength(kPaperSizeUnits))) {
       SetPaperSizeUnit(kPaperSizeUnits[mDevMode->dmPaperSize]);
@@ -351,8 +351,8 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
   }
 
   if (aDevMode->dmFields & DM_PAPERSIZE) {
-    mPaperName.Truncate(0);
-    mPaperName.AppendInt(aDevMode->dmPaperSize);
+    mPaperId.Truncate(0);
+    mPaperId.AppendInt(aDevMode->dmPaperSize);
     // If not a paper size we know about, the unit will be the last one saved.
     if (aDevMode->dmPaperSize > 0 &&
         aDevMode->dmPaperSize < int32_t(ArrayLength(kPaperSizeUnits))) {
@@ -403,8 +403,8 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
 void nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode) {
   MOZ_ASSERT(aDevMode);
 
-  if (!mPaperName.IsEmpty()) {
-    aDevMode->dmPaperSize = _wtoi((const wchar_t*)mPaperName.BeginReading());
+  if (!mPaperId.IsEmpty()) {
+    aDevMode->dmPaperSize = _wtoi((const wchar_t*)mPaperId.BeginReading());
     aDevMode->dmFields |= DM_PAPERSIZE;
   } else {
     aDevMode->dmPaperSize = 0;
@@ -543,7 +543,7 @@ Tester::Tester() {
     ps->SetFooterStrLeft(NS_ConvertUTF8toUTF16("Left").get());
     ps->SetFooterStrCenter(NS_ConvertUTF8toUTF16("Center").get());
     ps->SetFooterStrRight(NS_ConvertUTF8toUTF16("Right").get());
-    ps->SetPaperName(NS_ConvertUTF8toUTF16("Paper Name").get());
+    ps->SetPaperId(NS_ConvertUTF8toUTF16("Paper Id").get());
     ps->SetPaperWidth(100.0);
     ps->SetPaperHeight(50.0);
     ps->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);

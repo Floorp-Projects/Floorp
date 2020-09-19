@@ -66,10 +66,10 @@ void nsPrintSettings::InitWithInitializer(
   SetPrinterName(aSettings.mPrinter);
   SetPrintInColor(aSettings.mPrintInColor);
   SetResolution(aSettings.mResolution);
-  // The paper "name" used by nsPrintSettings is the non-localizable identifier
+  // The paper ID used by nsPrintSettings is the non-localizable identifier
   // exposed as "id" by the paper, not the potentially localized human-friendly
   // "name", which could change, e.g. if the user changes their system locale.
-  SetPaperName(aSettings.mPaperInfo.mId);
+  SetPaperId(aSettings.mPaperInfo.mId);
   SetPaperWidth(aSettings.mPaperInfo.mSize.Width() * kInchesPerPoint);
   SetPaperHeight(aSettings.mPaperInfo.mSize.Height() * kInchesPerPoint);
   SetPaperSizeUnit(nsIPrintSettings::kPaperSizeInches);
@@ -605,12 +605,12 @@ NS_IMETHODIMP nsPrintSettings::SetShowMarginGuides(bool aShowMarginGuides) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetPaperName(nsAString& aPaperName) {
-  aPaperName = mPaperName;
+NS_IMETHODIMP nsPrintSettings::GetPaperId(nsAString& aPaperId) {
+  aPaperId = mPaperId;
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetPaperName(const nsAString& aPaperName) {
-  mPaperName = aPaperName;
+NS_IMETHODIMP nsPrintSettings::SetPaperId(const nsAString& aPaperId) {
+  mPaperId = aPaperId;
   return NS_OK;
 }
 
@@ -784,7 +784,7 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mShrinkToFit = rhs.mShrinkToFit;
   mShowPrintProgress = rhs.mShowPrintProgress;
   mShowMarginGuides = rhs.mShowMarginGuides;
-  mPaperName = rhs.mPaperName;
+  mPaperId = rhs.mPaperId;
   mPaperWidth = rhs.mPaperWidth;
   mPaperHeight = rhs.mPaperHeight;
   mPaperSizeUnit = rhs.mPaperSizeUnit;

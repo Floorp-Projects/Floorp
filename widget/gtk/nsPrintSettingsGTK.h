@@ -93,8 +93,8 @@ class nsPrintSettingsGTK : public nsPrintSettings {
 
   // A name recognised by GTK is strongly advised here, as this is used to
   // create a GtkPaperSize.
-  NS_IMETHOD GetPaperName(nsAString& aPaperName) override;
-  NS_IMETHOD SetPaperName(const nsAString& aPaperName) override;
+  NS_IMETHOD GetPaperId(nsAString& aPaperId) override;
+  NS_IMETHOD SetPaperId(const nsAString& aPaperId) override;
 
   NS_IMETHOD SetUnwriteableMarginInTwips(
       nsIntMargin& aUnwriteableMargin) override;
