@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
 import android.view.View
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
@@ -81,7 +82,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         components.core.store,
                         customTabSessionId
                     ) { uri ->
-                        val intent = Intent.parseUri("${BuildConfig.DEEP_LINK_SCHEME}://open?url=$uri", 0)
+                        val intent =
+                            Intent.parseUri("${BuildConfig.DEEP_LINK_SCHEME}://open?url=$uri", 0)
                         if (intent.action == Intent.ACTION_VIEW) {
                             intent.addCategory(Intent.CATEGORY_BROWSABLE)
                             intent.component = null
@@ -103,7 +105,12 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                     ) { toolbarVisible ->
                         browserToolbarView.view.isVisible = toolbarVisible
                         webAppToolbarShouldBeVisible = toolbarVisible
-                        if (!toolbarVisible) { engineView.setDynamicToolbarMaxHeight(0) }
+                        if (!toolbarVisible) {
+                            engineView.setDynamicToolbarMaxHeight(0)
+                            val browserEngine =
+                                swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
+                            browserEngine.bottomMargin = 0
+                        }
                     },
                     owner = this,
                     view = toolbar
