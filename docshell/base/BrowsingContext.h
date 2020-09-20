@@ -688,6 +688,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void HistoryGo(int32_t aIndex, std::function<void(int32_t&&)>&& aResolver);
 
+  bool ShouldUpdateSessionHistory(uint32_t aLoadType);
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,

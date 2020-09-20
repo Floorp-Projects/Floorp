@@ -5713,7 +5713,7 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
       nsID changeID = {};
       if (XRE_IsParentProcess()) {
         mBrowsingContext->Canonical()->SessionHistoryCommit(
-            loadingEntry->mLoadId, changeID);
+            loadingEntry->mLoadId, changeID, mLoadType);
       } else {
         RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
         if (rootSH) {
@@ -5729,7 +5729,7 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
         }
         ContentChild* cc = ContentChild::GetSingleton();
         mozilla::Unused << cc->SendHistoryCommit(
-            mBrowsingContext, loadingEntry->mLoadId, changeID);
+            mBrowsingContext, loadingEntry->mLoadId, changeID, mLoadType);
       }
     }
   }
@@ -8895,7 +8895,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     nsID changeID = {};
     if (XRE_IsParentProcess()) {
       mBrowsingContext->Canonical()->SessionHistoryCommit(
-          mLoadingEntry->mLoadId, changeID);
+          mLoadingEntry->mLoadId, changeID, mLoadType);
     } else {
       RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
       if (rootSH) {
@@ -8907,7 +8907,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       }
       ContentChild* cc = ContentChild::GetSingleton();
       mozilla::Unused << cc->SendHistoryCommit(
-          mBrowsingContext, mLoadingEntry->mLoadId, changeID);
+          mBrowsingContext, mLoadingEntry->mLoadId, changeID, mLoadType);
     }
   }
 
@@ -10630,9 +10630,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
 
   // We don't update session history on reload unless we're loading
   // an iframe in shift-reload case.
-  bool updateSHistory =
-      updateGHistory && (!(aLoadType & LOAD_CMD_RELOAD) ||
-                         (IsForceReloadType(aLoadType) && IsFrame()));
+  bool updateSHistory = mBrowsingContext->ShouldUpdateSessionHistory(aLoadType);
 
   // Create SH Entry (mLSHE) only if there is a SessionHistory object in the
   // root browsing context.
