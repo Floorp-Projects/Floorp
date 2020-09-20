@@ -32,3 +32,8 @@
 .conditional-breakpoint-panel .CodeMirror {
   margin: 6px 10px;
 }
+
+.conditional-breakpoint-panel .CodeMirror pre.CodeMirror-placeholder {
+  /* Match the color of the placeholder text to existing inputs in the Debugger */
+  color: var(--theme-text-color-alt);
+}
