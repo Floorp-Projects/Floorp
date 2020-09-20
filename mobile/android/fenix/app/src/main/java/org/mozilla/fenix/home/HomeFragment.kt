@@ -137,6 +137,9 @@ class HomeFragment : Fragment() {
         }
 
         override fun onCollectionRenamed(tabCollection: TabCollection, title: String) {
+            lifecycleScope.launch(Main) {
+                view?.sessionControlRecyclerView?.adapter?.notifyDataSetChanged()
+            }
             showRenamedSnackbar()
         }
     }
