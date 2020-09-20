@@ -441,7 +441,11 @@ fn gen_inner_vtable(real: &DeriveInput, iface: &Interface) -> Result<TokenStream
     }))
 }
 
-fn gen_root_vtable(real: &DeriveInput, base: &Interface, idx: usize) -> Result<TokenStream, syn::Error> {
+fn gen_root_vtable(
+    real: &DeriveInput,
+    base: &Interface,
+    idx: usize,
+) -> Result<TokenStream, syn::Error> {
     let field = format_ident!("__base_{}", base.name);
     let vtable_ty = format_ident!("{}VTable", base.name);
 

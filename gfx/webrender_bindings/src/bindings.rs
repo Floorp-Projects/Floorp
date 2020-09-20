@@ -586,10 +586,7 @@ impl RenderNotifier for CppNotifier {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_renderer_set_clear_color(
-    renderer: &mut Renderer,
-    color: ColorF,
-) {
+pub extern "C" fn wr_renderer_set_clear_color(renderer: &mut Renderer, color: ColorF) {
     renderer.set_clear_color(Some(color));
 }
 

@@ -680,14 +680,20 @@ pub extern "C" fn neqo_http3conn_authenticated(conn: &mut NeqoHttp3Conn, error: 
 }
 
 #[no_mangle]
-pub extern "C" fn neqo_http3conn_resumption_token(conn: &mut NeqoHttp3Conn, token: &mut ThinVec<u8>,) {
+pub extern "C" fn neqo_http3conn_resumption_token(
+    conn: &mut NeqoHttp3Conn,
+    token: &mut ThinVec<u8>,
+) {
     if let Some(t) = conn.conn.resumption_token() {
         token.extend_from_slice(&t);
     }
 }
 
 #[no_mangle]
-pub extern "C" fn neqo_http3conn_set_resumption_token(conn: &mut NeqoHttp3Conn, token: &mut ThinVec<u8>,) {
+pub extern "C" fn neqo_http3conn_set_resumption_token(
+    conn: &mut NeqoHttp3Conn,
+    token: &mut ThinVec<u8>,
+) {
     let _ = conn.conn.enable_resumption(Instant::now(), token);
 }
 
