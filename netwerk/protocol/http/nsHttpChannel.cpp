@@ -587,8 +587,8 @@ nsresult nsHttpChannel::OnBeforeConnect() {
         this, getter_AddRefs(resultPrincipal));
   }
   OriginAttributes originAttributes;
-  if (!StoragePrincipalHelper::GetOriginAttributes(
-          this, originAttributes, StoragePrincipalHelper::eRegularPrincipal)) {
+  if (!StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+          this, originAttributes)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2273,8 +2273,11 @@ nsresult nsHttpChannel::ProcessSingleSecurityHeader(
     // Process header will now discard the headers itself if the channel
     // wasn't secure (whereas before it had to be checked manually)
     OriginAttributes originAttributes;
-    StoragePrincipalHelper::GetOriginAttributes(
-        this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
+    if (NS_WARN_IF(!StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+            this, originAttributes))) {
+      return NS_ERROR_FAILURE;
+    }
+
     uint32_t failureResult;
     uint32_t headerSource = nsISiteSecurityService::SOURCE_ORGANIC_REQUEST;
     rv = sss->ProcessHeader(aType, mURI, securityHeader, aSecInfo, aFlags,
