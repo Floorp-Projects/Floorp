@@ -2048,6 +2048,13 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
         return LOOKUP_OK;
       }
 
+      if (addrRec->mTRRSuccess && mNCS &&
+          (mNCS->GetNAT64() == nsINetworkConnectivityService::OK) && newRRSet &&
+          !newRRSet->Addresses().IsEmpty() &&
+          newRRSet->Addresses()[0].raw.family != PR_AF_INET6) {
+        newRRSet = mNCS->MapNAT64IPs(newRRSet);
+      }
+
       // continue
     }
 
