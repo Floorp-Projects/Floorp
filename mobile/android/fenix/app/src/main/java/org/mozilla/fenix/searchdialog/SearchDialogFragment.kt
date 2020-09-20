@@ -234,6 +234,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
 
         fill_link_from_clipboard.setOnClickListener {
+            view.hideKeyboard()
+            toolbarView.view.clearFocus()
             (activity as HomeActivity)
                 .openToBrowserAndLoad(
                     searchTermOrURL = requireContext().components.clipboardHandler.url ?: "",
