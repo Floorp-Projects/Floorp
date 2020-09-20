@@ -29,6 +29,9 @@ pub use std::ops::Deref;
 /// as a lifetime bound, such that the returned `&U` reference has a bounded
 /// lifetime when used to call the implementation method.
 #[inline]
-pub unsafe fn transmute_from_vtable_ptr<'a, T, U>(this: &'a *const T, vtable_index: usize) -> &'a U {
+pub unsafe fn transmute_from_vtable_ptr<'a, T, U>(
+    this: &'a *const T,
+    vtable_index: usize,
+) -> &'a U {
     &*((*this as *const *const ()).sub(vtable_index) as *const U)
 }

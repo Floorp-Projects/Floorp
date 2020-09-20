@@ -10,8 +10,8 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::mem;
 use std::ops::Deref;
-use std::sync::atomic::{self, AtomicUsize, Ordering};
 use std::ptr::{self, NonNull};
+use std::sync::atomic::{self, AtomicUsize, Ordering};
 use threadbound::ThreadBound;
 
 /// A trait representing a type which can be reference counted invasively.
