@@ -29,12 +29,12 @@ async function run() {
       is(settings.printerName, printer.name, "Print settings' printer should match the printer that created them.");
 
       console.log(typeof settings.paperWidth);
-      is(typeof settings.paperName, "string", "Paper name should never be null.");
-      is(typeof settings.paperWidth, "number", "Paper width hould never be null.");
-      is(typeof settings.paperHeight, "number", "Paper height hould never be null.");
+      is(typeof settings.paperId, "string", "Paper ID should never be null.");
+      is(typeof settings.paperWidth, "number", "Paper width should never be null.");
+      is(typeof settings.paperHeight, "number", "Paper height should never be null.");
 
-      if (settings.paperName != "") {
-        info(`Paper: ${settings.paperName}`);
+      if (settings.paperId != "") {
+        info(`Paper: ${settings.paperId}`);
         info(`Size:  (${settings.paperWidth} x ${settings.paperHeight})`);
         ok(settings.paperWidth  > 0.0, "Paper width should be greater than zero.");
         ok(settings.paperHeight > 0.0, "Paper height should be greater than zero.");
