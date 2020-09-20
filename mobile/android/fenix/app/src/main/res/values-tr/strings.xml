@@ -145,6 +145,8 @@
     <string name="browser_menu_install_on_homescreen">Yükle</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Eşitlenmiş sekmeler</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Yeniden eşitle</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Sayfada bul</string>
     <!-- Browser menu button that creates a private tab -->

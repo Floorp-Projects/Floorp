@@ -84,7 +84,7 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">アプリでリンクを自動的に開くように Firefox を設定できます。</string>
+    <string name="open_in_app_cfr_info_message">アプリ内のリンクを Firefox で自動的に開くように設定できます。</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">設定を開く</string>
     <!-- Text for the negative action button -->
@@ -148,6 +148,8 @@
     <string name="browser_menu_install_on_homescreen">インストール</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">同期したタブ</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">再同期</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ページ内検索</string>
     <!-- Browser menu button that creates a private tab -->
@@ -340,7 +342,7 @@
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">自動補完 URL</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">リンクをアプリで開く</string>
+    <string name="preferences_open_links_in_apps">アプリ内のリンクを開く</string>
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">外部のダウンロードマネージャー</string>

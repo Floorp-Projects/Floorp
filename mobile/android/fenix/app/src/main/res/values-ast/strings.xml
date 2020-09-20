@@ -318,6 +318,8 @@
     <string name="preferences_search_browsing_history">Buscar nel historial de restolar</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Buscar nos marcadores</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Buscar llingüetes sincronizaes</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Axustes de la cuenta</string>
     <!-- Preference for open links in third party apps -->
@@ -600,7 +602,7 @@
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
-    <string name="tab_crash_title_2">Perdona pero %1$s nun pue cargar esa páxina.</string>
+    <string name="tab_crash_title_2">Perdona mas %1$s nun pue cargar esa páxina.</string>
 
     <!-- Description text displayed on the tab crash page -->
     <string name="tab_crash_description">Pues tentar de restaurar o zarrar esta llingüeta embaxo.</string>
@@ -1012,7 +1014,7 @@
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Estricta</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Bloquia más rastrexadores, anuncios y ventanos emerxentes. Los páxines van cargar más rápido pero quiciabes dalgunes funcionalidaes nun funcionen.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Bloquia más rastrexadores, anuncios y ventanos emerxentes. Los páxines van cargar más rápido mas dalgunes funcionalidaes quiciabes nun funcionen.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1078,9 +1080,9 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Usar una direición de corréu</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox va dexar de sincronizase cola to cuenta pero nun va desaniciar nengún datu d\'esti preséu.</string>
+    <string name="sign_out_confirmation_message">Firefox va dexar de sincronizase cola to cuenta mas nun va desaniciar nengún datu d\'esti preséu.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="sign_out_confirmation_message_2">%s va dexar de sincronizase cola to cuenta pero nun va desaniciar nengún datu d\'esti preséu.</string>
+    <string name="sign_out_confirmation_message_2">%s va dexar de sincronizase cola to cuenta mas nun va desaniciar nengún datu d\'esti preséu.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Desconeutar</string>
 
@@ -1110,7 +1112,7 @@
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloquia más rastrexadores, anuncios y ventanos emerxentes. Les páxines van cargar más rápido pero quiciabes dalgunes funcionalidaes nun funcionen.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloquia más rastrexadores, anuncios y ventanos emerxentes. Les páxines van cargar más rápido mas dalgunes funcionalidaes quiciabes nun funcionen.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Lo que la proteición estricta escontra\'l rastrexu bloquia</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1472,7 +1474,7 @@
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Amosar los sitios más visitaos</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Aprovecha %s al máximu.</string>
 
