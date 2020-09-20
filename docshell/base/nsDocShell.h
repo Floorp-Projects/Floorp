@@ -1095,6 +1095,11 @@ class nsDocShell final : public nsDocLoader,
   nsresult LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating,
                    bool aContinueHandlingSubframeHistory);
 
+  // Sets the active entry to the current loading entry. If aCommit is true then
+  // SessionHistoryCommit will be called on the CanonicalBrowsingContext
+  // (directly or over IPC).
+  void MoveLoadingToActiveEntry(bool aCommit);
+
  private:  // data members
   nsID mHistoryID;
   nsString mTitle;
