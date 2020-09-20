@@ -88,9 +88,7 @@ class NeqoHttp3Conn final {
     neqo_http3conn_set_resumption_token(this, &aToken);
   }
 
-  bool IsZeroRtt() {
-    return neqo_http3conn_is_zero_rtt(this);
-  }
+  bool IsZeroRtt() { return neqo_http3conn_is_zero_rtt(this); }
 
   nsrefcnt AddRef() { return neqo_http3conn_addref(this); }
   nsrefcnt Release() { return neqo_http3conn_release(this); }

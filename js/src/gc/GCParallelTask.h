@@ -130,7 +130,6 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
     return state_ == State::Dispatched;
   }
 
-
  protected:
   // Override this method to provide the task's functionality.
   virtual void run(AutoLockHelperThreadState& lock) = 0;

@@ -24,9 +24,9 @@
 #include "js/RootingAPI.h"                // JS::MutableHandle, JS::Rooted
 #include "js/SourceText.h"                // JS::SourceOwnership, JS::SourceText
 #include "js/String.h"  // JS::GetLatin1LinearStringChars, JS::GetTwoByteLinearStringChars, JS::StringHasLatin1Chars
-#include "js/UniquePtr.h"                 // js::UniquePtr
-#include "js/Utility.h"                   // JS::FreePolicy
-#include "js/Value.h"  // JS::NullValue, JS::ObjectValue, JS::Value
+#include "js/UniquePtr.h"  // js::UniquePtr
+#include "js/Utility.h"    // JS::FreePolicy
+#include "js/Value.h"      // JS::NullValue, JS::ObjectValue, JS::Value
 #include "jsapi-tests/tests.h"
 #include "vm/Compression.h"  // js::Compressor::CHUNK_SIZE
 #include "vm/JSFunction.h"   // JSFunction::getOrCreateScript

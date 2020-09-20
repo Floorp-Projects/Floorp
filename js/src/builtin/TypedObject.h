@@ -14,7 +14,7 @@
 #include "gc/WeakMap.h"
 #include "js/Conversions.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
-#include "js/ScalarType.h"  // js::Scalar::Type
+#include "js/ScalarType.h"            // js::Scalar::Type
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
 

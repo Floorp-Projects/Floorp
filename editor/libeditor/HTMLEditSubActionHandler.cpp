@@ -5178,7 +5178,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   nsresult rv =
       mDeleteRangesHandlerConst.ComputeRangesToDeleteRangesWithTransaction(
-         aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete);
+          aHTMLEditor, aDirectionAndAmount, aStripWrappers, aRangesToDelete);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "AutoDeleteRangesHandler::"
                        "ComputeRangesToDeleteRangesWithTransaction() failed");

@@ -51,7 +51,9 @@ class Http3Session final : public nsAHttpTransaction,
                 HttpConnectionUDP* readerWriter);
 
   bool IsConnected() const { return mState == CONNECTED; }
-  bool CanSandData() const { return (mState == CONNECTED) || (mState == ZERORTT); }
+  bool CanSandData() const {
+    return (mState == CONNECTED) || (mState == ZERORTT);
+  }
   bool IsClosing() const { return (mState == CLOSING || mState == CLOSED); }
   bool IsClosed() const { return mState == CLOSED; }
 

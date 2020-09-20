@@ -8509,7 +8509,8 @@ void PresShell::EventHandler::RecordEventHandlingResponsePerformance(
       GetDocument()->GetReadyStateEnum() != Document::READYSTATE_COMPLETE) {
     Telemetry::Accumulate(Telemetry::LOAD_INPUT_EVENT_RESPONSE_MS, millis);
 
-    if (GetDocument()->ShouldIncludeInTelemetry(/* aAllowExtensionURIs = */ false) &&
+    if (GetDocument()->ShouldIncludeInTelemetry(
+            /* aAllowExtensionURIs = */ false) &&
         GetDocument()->IsTopLevelContentDocument()) {
       if (auto* wgc = GetDocument()->GetWindowGlobalChild()) {
         Unused << wgc->SendSubmitLoadInputEventResponsePreloadTelemetry(millis);

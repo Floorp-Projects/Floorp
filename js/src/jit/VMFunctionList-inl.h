@@ -9,7 +9,7 @@
 
 #include "builtin/Eval.h"
 #include "builtin/ModuleObject.h"  // js::GetOrCreateModuleMetaObject
-#include "builtin/Promise.h"  // js::AsyncFunctionAwait
+#include "builtin/Promise.h"       // js::AsyncFunctionAwait
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
 #include "jit/BaselineIC.h"

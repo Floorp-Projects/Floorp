@@ -151,7 +151,7 @@ inline NS_HIDDEN_(void)
                            bool aAlwaysProxy = false) {
   RefPtr<T> doomed = aDoomed;
   if (!doomed) {
-    return; // Nothing to do.
+    return;  // Nothing to do.
   }
 
   // NS_ProxyRelease treats a null event target as "the current thread".  So a

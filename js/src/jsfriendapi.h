@@ -619,7 +619,6 @@ extern JS_FRIEND_API uint64_t GetSCOffset(JSStructuredCloneWriter* writer);
 
 }  // namespace js
 
-
 namespace js {
 
 static MOZ_ALWAYS_INLINE JS::shadow::Function* FunctionObjectToShadowFunction(

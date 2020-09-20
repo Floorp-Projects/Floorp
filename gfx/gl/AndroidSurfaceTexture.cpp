@@ -70,7 +70,6 @@ class AndroidSharedBlitGL final {
   }
 
  private:
-
   static already_AddRefed<GLContextEGL> CreateContextImpl(bool aUseGles) {
     sMutex.AssertCurrentThreadOwns();
     MOZ_ASSERT(!sContext);

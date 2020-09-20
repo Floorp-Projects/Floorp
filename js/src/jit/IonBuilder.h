@@ -24,8 +24,8 @@
 #include "jit/MIRGraph.h"
 #include "jit/TIOracle.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
-#include "js/ScalarType.h"     // js::Scalar::Type
-#include "vm/SharedStencil.h"  // GCThingIndex
+#include "js/ScalarType.h"            // js::Scalar::Type
+#include "vm/SharedStencil.h"         // GCThingIndex
 
 namespace js {
 

@@ -36,7 +36,6 @@ void AssertRoundTrips(const nsHttpResponseHead& aHead) {
   }
 }
 
-
 TEST(TestHttpResponseHead, Bug1636930)
 {
   // Only create atom table when it's not already created.
@@ -79,7 +78,8 @@ TEST(TestHttpResponseHead, bug1649807)
   Unused << head.ParseHeaderLine("pragma: no-cache"_ns);
   Unused << head.ParseHeaderLine("date: Tue, 12 May 2020 09:24:23 GMT"_ns);
 
-  ASSERT_FALSE(head.NoCache()) << "Cache-Control wins over Pragma: no-cache";
+  ASSERT_FALSE(head.NoCache())
+  << "Cache-Control wins over Pragma: no-cache";
   AssertRoundTrips(head);
 }
 
