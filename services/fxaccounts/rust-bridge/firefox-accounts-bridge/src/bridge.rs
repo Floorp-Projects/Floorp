@@ -300,7 +300,12 @@ impl Bridge {
             callback: *const mozIFirefoxAccountsBridgeCallback
         )
     );
-    punt!(send_single_tab, target_id: &nsACString, title: &nsACString, url: &nsACString);
+    punt!(
+        send_single_tab,
+        target_id: &nsACString,
+        title: &nsACString,
+        url: &nsACString
+    );
 
     xpcom_method!(
         set_device_push_subscription => SetDevicePushSubscription(
@@ -311,7 +316,12 @@ impl Bridge {
         )
     );
 
-    punt!(set_device_push_subscription, endpoint: &nsACString, public_key: &nsACString, auth_key: &nsACString);
+    punt!(
+        set_device_push_subscription,
+        endpoint: &nsACString,
+        public_key: &nsACString,
+        auth_key: &nsACString
+    );
 
     xpcom_method!(
         initialize_device => InitializeDevice(
@@ -322,7 +332,12 @@ impl Bridge {
         )
     );
 
-    punt!(initialize_device, name: &nsACString, device_type: &nsACString, supported_capabilities: &ThinVec<nsCString>);
+    punt!(
+        initialize_device,
+        name: &nsACString,
+        device_type: &nsACString,
+        supported_capabilities: &ThinVec<nsCString>
+    );
 
     xpcom_method!(
         ensure_capabilities => EnsureCapabilities(
@@ -331,5 +346,8 @@ impl Bridge {
         )
     );
 
-    punt!(ensure_capabilities, supported_capabilities: &ThinVec<nsCString>);
+    punt!(
+        ensure_capabilities,
+        supported_capabilities: &ThinVec<nsCString>
+    );
 }
