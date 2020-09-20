@@ -423,7 +423,7 @@ class nsDocumentViewer final : public nsIContentViewer,
   // (ie, non owning) references. If you add any members to this
   // class, please make the ownership explicit (pinkerton, scc).
 
-  WeakPtr<nsDocShell> mContainer;  // it owns me!
+  WeakPtr<nsDocShell> mContainer;          // it owns me!
   RefPtr<nsDeviceContext> mDeviceContext;  // We create and own this baby
 
   // the following six items are explicitly in this order

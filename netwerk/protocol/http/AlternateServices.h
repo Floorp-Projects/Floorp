@@ -102,7 +102,8 @@ class AltSvcMapping {
                           const nsACString& originHost, int32_t originPort,
                           bool privateBrowsing, bool isolated,
                           const nsACString& topWindowOrigin,
-                          const OriginAttributes& originAttributes, bool aIsHttp3);
+                          const OriginAttributes& originAttributes,
+                          bool aIsHttp3);
 
   bool IsHttp3() { return mIsHttp3; }
   const nsCString& NPNToken() const { return mNPNToken; }

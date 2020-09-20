@@ -3077,7 +3077,8 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   // inconsistencies from querying a stale value.
   if (mIsRoot && nsLayoutUtils::CanScrollOriginClobberApz(mLastScrollOrigin)) {
     AutoWeakFrame weakFrame(mOuter);
-    AutoScrollbarRepaintSuppression repaintSuppression(this, weakFrame, !schedulePaint);
+    AutoScrollbarRepaintSuppression repaintSuppression(this, weakFrame,
+                                                       !schedulePaint);
 
     nsPoint relativeOffset =
         presContext->PresShell()->GetVisualViewportOffset() - curPos;
@@ -3087,7 +3088,6 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
       return;
     }
   }
-
 
   if (schedulePaint) {
     mOuter->SchedulePaint();

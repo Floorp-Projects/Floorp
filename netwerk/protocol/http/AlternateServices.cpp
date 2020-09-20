@@ -261,14 +261,11 @@ AltSvcMapping::AltSvcMapping(
   }
 }
 
-void AltSvcMapping::MakeHashKey(nsCString& outKey,
-                                const nsACString& originScheme,
-                                const nsACString& originHost,
-                                int32_t originPort, bool privateBrowsing,
-                                bool isolated,
-                                const nsACString& topWindowOrigin,
-                                const OriginAttributes& originAttributes,
-                                bool aHttp3) {
+void AltSvcMapping::MakeHashKey(
+    nsCString& outKey, const nsACString& originScheme,
+    const nsACString& originHost, int32_t originPort, bool privateBrowsing,
+    bool isolated, const nsACString& topWindowOrigin,
+    const OriginAttributes& originAttributes, bool aHttp3) {
   outKey.Truncate();
 
   if (originPort == -1) {
@@ -1154,8 +1151,9 @@ already_AddRefed<AltSvcMapping> AltSvcCache::GetAltServiceMapping(
   // First look for HTTP3
   if (aHttp3Allowed) {
     nsAutoCString key;
-    AltSvcMapping::MakeHashKey(key, scheme, host, port, privateBrowsing, isolated,
-                               topWindowOrigin, originAttributes, true);
+    AltSvcMapping::MakeHashKey(key, scheme, host, port, privateBrowsing,
+                               isolated, topWindowOrigin, originAttributes,
+                               true);
     RefPtr<AltSvcMapping> existing = LookupMapping(key, privateBrowsing);
     LOG(
         ("AltSvcCache::GetAltServiceMapping %p key=%s "
@@ -1170,8 +1168,9 @@ already_AddRefed<AltSvcMapping> AltSvcCache::GetAltServiceMapping(
   // Now look for HTTP2.
   if (aHttp2Allowed) {
     nsAutoCString key;
-    AltSvcMapping::MakeHashKey(key, scheme, host, port, privateBrowsing, isolated,
-                               topWindowOrigin, originAttributes, false);
+    AltSvcMapping::MakeHashKey(key, scheme, host, port, privateBrowsing,
+                               isolated, topWindowOrigin, originAttributes,
+                               false);
     RefPtr<AltSvcMapping> existing = LookupMapping(key, privateBrowsing);
     LOG(
         ("AltSvcCache::GetAltServiceMapping %p key=%s "
