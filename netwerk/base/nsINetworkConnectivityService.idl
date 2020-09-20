@@ -14,7 +14,7 @@ interface nsINetworkConnectivityService : nsISupports
    *   NOT_AVAILABLE, if the feature is blocked by the network.
    *                  Note that the endpoints are guaranteed to support the features.
    */
-  cenum ConnectivityState: 32 {
+  cenum ConnectivityState: 8 {
     UNKNOWN             = 0,
     OK                  = 1,
     NOT_AVAILABLE       = 2
@@ -31,10 +31,6 @@ interface nsINetworkConnectivityService : nsISupports
   readonly attribute nsINetworkConnectivityService_ConnectivityState IPv4;
   [infallible]
   readonly attribute nsINetworkConnectivityService_ConnectivityState IPv6;
-
-  /* If a NAT64 gateway was detected on the current network */
-  [infallible]
-  readonly attribute nsINetworkConnectivityService_ConnectivityState NAT64;
 
   /* Starts the DNS request to check for DNS v4/v6 availability */
   void recheckDNS();
