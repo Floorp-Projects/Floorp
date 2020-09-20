@@ -14,7 +14,7 @@
 
 #include "jsapi.h"
 #include "js/friend/DOMProxy.h"  // JS::DOMProxyShadowsResult, JS::ExpandoAndGeneration, JS::SetDOMProxyInformation
-#include "js/Object.h"  // JS::GetCompartment
+#include "js/Object.h"           // JS::GetCompartment
 
 using namespace JS;
 

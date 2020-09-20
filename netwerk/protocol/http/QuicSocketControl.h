@@ -44,6 +44,7 @@ class QuicSocketControl final : public CommonSocketControl {
   void SetCertVerificationResult(PRErrorCode errorCode) override;
 
   NS_IMETHOD GetPeerId(nsACString& aResult) override;
+
  private:
   ~QuicSocketControl() = default;
 

@@ -21,18 +21,18 @@
 #include "debugger/Script.h"            // for DebuggerScript
 #include "frontend/BytecodeCompiler.h"  // for IsIdentifier
 #include "gc/Rooting.h"                 // for RootedDebuggerEnvironment
-#include "gc/Tracer.h"       // for TraceManuallyBarrieredCrossCompartmentEdge
-#include "js/HeapAPI.h"      // for IsInsideNursery
-#include "vm/Compartment.h"  // for Compartment
-#include "vm/JSAtom.h"             // for Atomize, PinAtom
-#include "vm/JSContext.h"          // for JSContext
-#include "vm/JSFunction.h"         // for JSFunction
-#include "vm/JSObject.h"           // for JSObject, RequireObject
-#include "vm/NativeObject.h"       // for NativeObject, JSObject::is
-#include "vm/ObjectGroup.h"        // for GenericObject, NewObjectKind
-#include "vm/Realm.h"              // for AutoRealm, ErrorCopier
-#include "vm/Scope.h"              // for ScopeKind, ScopeKindString
-#include "vm/StringType.h"         // for JSAtom
+#include "gc/Tracer.h"        // for TraceManuallyBarrieredCrossCompartmentEdge
+#include "js/HeapAPI.h"       // for IsInsideNursery
+#include "vm/Compartment.h"   // for Compartment
+#include "vm/JSAtom.h"        // for Atomize, PinAtom
+#include "vm/JSContext.h"     // for JSContext
+#include "vm/JSFunction.h"    // for JSFunction
+#include "vm/JSObject.h"      // for JSObject, RequireObject
+#include "vm/NativeObject.h"  // for NativeObject, JSObject::is
+#include "vm/ObjectGroup.h"   // for GenericObject, NewObjectKind
+#include "vm/Realm.h"         // for AutoRealm, ErrorCopier
+#include "vm/Scope.h"         // for ScopeKind, ScopeKindString
+#include "vm/StringType.h"    // for JSAtom
 
 #include "vm/Compartment-inl.h"        // for Compartment::wrap
 #include "vm/EnvironmentObject-inl.h"  // for JSObject::enclosingEnvironment

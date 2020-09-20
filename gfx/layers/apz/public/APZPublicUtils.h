@@ -100,8 +100,8 @@ std::pair<int32_t, int32_t> GetMouseWheelAnimationDurations();
  * Calculate the physics parameters for smooth scroll animations for the
  * given origin, based on pref values.
  */
-ScrollAnimationBezierPhysicsSettings
-ComputeBezierAnimationSettingsForOrigin(ScrollOrigin aOrigin);
+ScrollAnimationBezierPhysicsSettings ComputeBezierAnimationSettingsForOrigin(
+    ScrollOrigin aOrigin);
 
 }  // namespace apz
 

@@ -880,15 +880,11 @@ struct ScrollMetadata {
     return mIsRDMTouchSimulationActive;
   }
 
-  bool DidContentGetPainted() const {
-    return mDidContentGetPainted;
-  }
+  bool DidContentGetPainted() const { return mDidContentGetPainted; }
 
  private:
   // For use in IPC only
-  void SetDidContentGetPainted(bool aValue) {
-    mDidContentGetPainted = aValue;
-  }
+  void SetDidContentGetPainted(bool aValue) { mDidContentGetPainted = aValue; }
 
  public:
   // For more details about the concept of a disregarded direction, refer to the

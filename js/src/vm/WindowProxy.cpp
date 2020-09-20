@@ -12,10 +12,10 @@
 
 #include "jsapi.h"  // js::AssertHeapIsIdle
 
-#include "vm/GlobalObject.h"       // js::GlobalObject
-#include "vm/JSContext.h"          // JSContext, CHECK_THREAD
-#include "vm/JSObject.h"           // JSObject
-#include "vm/Runtime.h"            // JSRuntime
+#include "vm/GlobalObject.h"  // js::GlobalObject
+#include "vm/JSContext.h"     // JSContext, CHECK_THREAD
+#include "vm/JSObject.h"      // JSObject
+#include "vm/Runtime.h"       // JSRuntime
 
 #include "vm/JSContext-inl.h"  // JSContext::check
 #include "vm/JSObject-inl.h"   // JSObject::nonCCWGlobal
