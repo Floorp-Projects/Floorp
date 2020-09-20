@@ -3165,6 +3165,11 @@ NS_IMETHODIMP nsDocShell::SynchronizeLayoutHistoryState() {
         entry->SetLayoutHistoryState(mActiveEntry->GetLayoutHistoryState());
       }
     }
+    if (mLoadingEntry &&
+        mLoadingEntry->mInfo.SharedId() == mActiveEntry->SharedId()) {
+      mLoadingEntry->mInfo.SetLayoutHistoryState(
+          mActiveEntry->GetLayoutHistoryState());
+    }
   }
 
   return NS_OK;
