@@ -39,6 +39,9 @@ const {
   parseSockJS,
 } = require("devtools/client/netmonitor/src/components/messages/parsers/sockjs/index.js");
 const {
+  parseStompJs,
+} = require("devtools/client/netmonitor/src/components/messages/parsers/stomp/index.js");
+const {
   wampSerializers,
 } = require("devtools/client/netmonitor/src/components/messages/parsers/wamp/serializers.js");
 const {
@@ -170,6 +173,14 @@ class MessagePayload extends Component {
       return {
         formattedData: signalRPayload,
         formattedDataTitle: "SignalR",
+      };
+    }
+    // STOMP
+    const stompPayload = parseStompJs(payload);
+    if (stompPayload) {
+      return {
+        formattedData: stompPayload,
+        formattedDataTitle: "STOMP",
       };
     }
 
