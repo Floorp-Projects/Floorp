@@ -287,7 +287,7 @@ JS_FRIEND_API void js::ReportOutOfMemory(JSContext* cx) {
   cx->setPendingException(oomMessage, nullptr);
 }
 
-mozilla::GenericErrorResult<OOM&> js::ReportOutOfMemoryResult(JSContext* cx) {
+mozilla::GenericErrorResult<OOM> js::ReportOutOfMemoryResult(JSContext* cx) {
   ReportOutOfMemory(cx);
   return cx->alreadyReportedOOM();
 }
@@ -861,10 +861,7 @@ js::UniquePtr<JS::JobQueue::SavedJobQueue> InternalJobQueue::saveJobQueue(
   return saved;
 }
 
-JS::Error JSContext::reportedError;
-JS::OOM JSContext::reportedOOM;
-
-mozilla::GenericErrorResult<OOM&> JSContext::alreadyReportedOOM() {
+mozilla::GenericErrorResult<OOM> JSContext::alreadyReportedOOM() {
 #ifdef DEBUG
   if (isHelperThreadContext()) {
     // Keep in sync with addPendingOutOfMemory.
@@ -875,16 +872,16 @@ mozilla::GenericErrorResult<OOM&> JSContext::alreadyReportedOOM() {
     MOZ_ASSERT(isThrowingOutOfMemory());
   }
 #endif
-  return mozilla::Err(reportedOOM);
+  return mozilla::Err(JS::OOM());
 }
 
-mozilla::GenericErrorResult<JS::Error&> JSContext::alreadyReportedError() {
+mozilla::GenericErrorResult<JS::Error> JSContext::alreadyReportedError() {
 #ifdef DEBUG
   if (!isHelperThreadContext()) {
     MOZ_ASSERT(isExceptionPending());
   }
 #endif
-  return mozilla::Err(reportedError);
+  return mozilla::Err(JS::Error());
 }
 
 JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)

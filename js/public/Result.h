@@ -17,13 +17,13 @@
  * can't fail, don't use Result. Otherwise:
  *
  *     JS::Result<>  - function can fail, doesn't return anything on success
- *         (defaults to `JS::Result<JS::Ok, JS::Error&>`)
- *     JS::Result<JS::OOM&> - like JS::Result<>, but fails only on OOM
+ *         (defaults to `JS::Result<JS::Ok, JS::Error>`)
+ *     JS::Result<JS::Ok, JS::OOM> - like JS::Result<>, but fails only on OOM
  *
  *     JS::Result<Data>  - function can fail, returns Data on success
- *     JS::Result<Data, JS::OOM&>  - returns Data, fails only on OOM
+ *     JS::Result<Data, JS::OOM>  - returns Data, fails only on OOM
  *
- *     mozilla::GenericErrorResult<JS::Error&> - always fails
+ *     mozilla::GenericErrorResult<JS::Error> - always fails
  *
  * That last type is like a Result with no success type. It's used for
  * functions like `js::ReportNotFunction` that always return an error
@@ -177,17 +177,81 @@ namespace JS {
 
 using mozilla::Ok;
 
+template <typename T>
+struct UnusedZero;
+
 /**
  * Type representing a JS error or exception. At the moment this only
  * "represents" an error in a rather abstract way.
  */
 struct Error {
-  // Ensure sizeof(Error) > 1 so that Result<V, Error&> can use pointer
-  // tagging.
-  int dummy;
+  // Since we claim UnusedZero<Error>::value and HasFreeLSB<Error>::value ==
+  // true below, we must only use positive even enum values.
+  enum class ErrorKind : uintptr_t { Unspecified = 2, OOM = 4 };
+
+  const ErrorKind kind = ErrorKind::Unspecified;
+
+  Error() = default;
+
+ protected:
+  friend struct UnusedZero<Error>;
+
+  constexpr MOZ_IMPLICIT Error(ErrorKind kind) : kind(kind) {}
 };
 
-struct OOM : public Error {};
+struct OOM : Error {
+  constexpr OOM() : Error(ErrorKind::OOM) {}
+
+ protected:
+  friend struct UnusedZero<OOM>;
+
+  using Error::Error;
+};
+
+template <typename T>
+struct UnusedZero {
+  using StorageType = std::underlying_type_t<Error::ErrorKind>;
+
+  static constexpr bool value = true;
+  static constexpr StorageType nullValue = 0;
+  static constexpr StorageType GetDefaultValue() {
+    return T::ErrorKind::Unspecified;
+  }
+
+  static constexpr void AssertValid(StorageType aValue) {}
+  static constexpr T Inspect(const StorageType& aValue) {
+    return static_cast<Error::ErrorKind>(aValue);
+  }
+  static constexpr T Unwrap(StorageType aValue) {
+    return static_cast<Error::ErrorKind>(aValue);
+  }
+  static constexpr StorageType Store(T aValue) {
+    return static_cast<StorageType>(aValue.kind);
+  }
+};
+
+}  // namespace JS
+
+namespace mozilla::detail {
+
+template <>
+struct UnusedZero<JS::Error> : JS::UnusedZero<JS::Error> {};
+
+template <>
+struct UnusedZero<JS::OOM> : JS::UnusedZero<JS::OOM> {};
+
+template <>
+struct HasFreeLSB<JS::Error> {
+  static const bool value = true;
+};
+
+template <>
+struct HasFreeLSB<JS::OOM> {
+  static const bool value = true;
+};
+}  // namespace mozilla::detail
+
+namespace JS {
 
 /**
  * `Result` is intended to be the return type of JSAPI calls and internal
@@ -204,25 +268,15 @@ struct OOM : public Error {};
  *     return. JS `catch` blocks can't catch this kind of failure,
  *     and JS `finally` blocks don't execute.
  */
-template <typename V = Ok, typename E = Error&>
+template <typename V = Ok, typename E = Error>
 using Result = mozilla::Result<V, E>;
 
 static_assert(sizeof(Result<>) == sizeof(uintptr_t),
               "Result<> should be pointer-sized");
 
-static_assert(sizeof(Result<int*, Error&>) == sizeof(uintptr_t),
-              "Result<V*, Error&> should be pointer-sized");
+static_assert(sizeof(Result<int*, Error>) == sizeof(uintptr_t),
+              "Result<V*, Error> should be pointer-sized");
 
 }  // namespace JS
-
-namespace mozilla {
-inline auto Err(JS::Error& aErrorValue) {
-  return mozilla::GenericErrorResult<JS::Error&>(aErrorValue);
-}
-
-inline auto Err(JS::OOM& aErrorValue) {
-  return mozilla::GenericErrorResult<JS::OOM&>(aErrorValue);
-}
-}  // namespace mozilla
 
 #endif  // js_Result_h
