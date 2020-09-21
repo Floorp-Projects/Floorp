@@ -310,7 +310,8 @@ gfxWindowsPlatform::~gfxWindowsPlatform() {
 static void UpdateANGLEConfig() {
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     gfxConfig::Disable(Feature::D3D11_HW_ANGLE, FeatureStatus::Disabled,
-                       "D3D11 compositing is disabled");
+                       "D3D11 compositing is disabled",
+                       "FEATURE_FAILURE_HW_ANGLE_D3D11_DISABLED"_ns);
   }
 }
 
@@ -1256,7 +1257,7 @@ static void InitializeANGLEConfig() {
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     d3d11ANGLE.DisableByDefault(FeatureStatus::Unavailable,
                                 "D3D11 compositing is disabled",
-                                "FEATURE_FAILURE_D3D11_DISABLED"_ns);
+                                "FEATURE_FAILURE_HW_ANGLE_D3D11_DISABLED"_ns);
     return;
   }
 
