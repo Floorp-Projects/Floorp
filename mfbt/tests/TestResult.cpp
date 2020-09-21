@@ -202,37 +202,6 @@ static void BasicTests() {
   }
 }
 
-struct NonCopyableNonMovable {
-  explicit NonCopyableNonMovable(uint32_t aValue) : mValue(aValue) {}
-
-  NonCopyableNonMovable(const NonCopyableNonMovable&) = delete;
-  NonCopyableNonMovable(NonCopyableNonMovable&&) = delete;
-  NonCopyableNonMovable& operator=(const NonCopyableNonMovable&) = delete;
-  NonCopyableNonMovable& operator=(NonCopyableNonMovable&&) = delete;
-
-  uint32_t mValue;
-};
-
-static void InPlaceConstructionTests() {
-  {
-    // PackingStrategy == NullIsOk
-    static_assert(mozilla::detail::SelectResultImpl<NonCopyableNonMovable,
-                                                    Failed>::value ==
-                  mozilla::detail::PackingStrategy::NullIsOk);
-    const Result<NonCopyableNonMovable, Failed> result{std::in_place, 42};
-    MOZ_RELEASE_ASSERT(42 == result.inspect().mValue);
-  }
-
-  {
-    // PackingStrategy == Variant
-    static_assert(
-        mozilla::detail::SelectResultImpl<NonCopyableNonMovable, int>::value ==
-        mozilla::detail::PackingStrategy::Variant);
-    const Result<NonCopyableNonMovable, int> result{std::in_place, 42};
-    MOZ_RELEASE_ASSERT(42 == result.inspect().mValue);
-  }
-}
-
 /* * */
 
 struct Snafu : Failed {};
@@ -596,7 +565,6 @@ static void UniquePtrTest() {
 
 int main() {
   BasicTests();
-  InPlaceConstructionTests();
   TypeConversionTests();
   EmptyValueTest();
   ReferenceTest();
