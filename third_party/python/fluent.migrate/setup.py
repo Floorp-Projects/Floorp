@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='fluent.migrate',
-    version='0.9',
+    version='0.10',
     description='Toolchain to migrate legacy translation to Fluent.',
     author='Mozilla',
     author_email='l10n-drivers@mozilla.org',
@@ -20,8 +20,8 @@ setup(
     ],
     packages=['fluent', 'fluent.migrate'],
     install_requires=[
-        'compare-locales >=7.6, <8.1',
-        'fluent.syntax >=0.17.0, <0.18',
+        'compare-locales >=8.1, <9.0',
+        'fluent.syntax >=0.18.0, <0.19',
         'six',
     ],
     extras_require={
