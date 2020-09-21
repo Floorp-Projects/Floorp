@@ -141,7 +141,7 @@ class AbortSignalProxy final : public AbortFollower {
   };
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbortSignalProxy)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbortSignalProxy, override)
 
   AbortSignalProxy(AbortSignalImpl* aSignalImpl,
                    nsIEventTarget* aMainThreadEventTarget)
