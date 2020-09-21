@@ -3786,27 +3786,22 @@ uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
   return features;
 }
 
-// Find the RegisteredThread for the current thread. This should only be called
-// in places where TLSRegisteredThread can't be used.
-static RegisteredThread* FindCurrentThreadRegisteredThread(PSLockRef aLock) {
-  int id = profiler_current_thread_id();
-  const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
-      CorePS::RegisteredThreads(aLock);
-  for (auto& registeredThread : registeredThreads) {
-    if (registeredThread->Info()->ThreadId() == id) {
-      return registeredThread.get();
+static bool IsRegisteredThreadInRegisteredThreadsList(
+    PSLockRef aLock, RegisteredThread* aThread) {
+  const auto& registeredThreads = CorePS::RegisteredThreads(aLock);
+  for (const auto& registeredThread : registeredThreads) {
+    if (registeredThread.get() == aThread) {
+      return true;
     }
   }
 
-  return nullptr;
+  return false;
 }
 
 static ProfilingStack* locked_register_thread(PSLockRef aLock,
                                               const char* aName,
                                               void* aStackTop) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  MOZ_ASSERT(!FindCurrentThreadRegisteredThread(aLock));
 
   VTUNE_REGISTER_THREAD(aName);
 
@@ -5062,10 +5057,19 @@ ProfilingStack* profiler_register_thread(const char* aName,
   (void)NS_GetCurrentThread();
   NS_SetCurrentThreadName(aName);
 
+  if (!TLSRegisteredThread::IsTLSInited()) {
+    return nullptr;
+  }
+
   PSAutoLock lock(gPSMutex);
 
-  if (RegisteredThread* thread = FindCurrentThreadRegisteredThread(lock);
-      thread) {
+  if (RegisteredThread* thread = TLSRegisteredThread::RegisteredThread(lock)) {
+    MOZ_RELEASE_ASSERT(IsRegisteredThreadInRegisteredThreadsList(lock, thread),
+                       "Thread being re-registered is not in registered thread "
+                       "list even though its TLS is non-null");
+    MOZ_RELEASE_ASSERT(
+        thread->Info()->ThreadId() == profiler_current_thread_id(),
+        "Thread being re-registered has changed its TID");
     LOG("profiler_register_thread(%s) - thread %d already registered as %s",
         aName, profiler_current_thread_id(), thread->Info()->Name());
     // TODO: Use new name. This is currently not possible because the
@@ -5083,15 +5087,6 @@ ProfilingStack* profiler_register_thread(const char* aName,
         "profiler_register_thread again",
         TextMarkerPayload(text, TimeStamp::NowUnfuzzed()), &lock);
 
-    MOZ_RELEASE_ASSERT(
-        TLSRegisteredThread::IsTLSInited(),
-        "Thread should not have already been registered without TLS::Init()");
-    MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(lock),
-                       "TLS should be set when re-registering thread");
-    MOZ_RELEASE_ASSERT(
-        thread == TLSRegisteredThread::RegisteredThread(lock),
-        "TLS should be set as expected when re-registering thread");
-
     return &thread->RacyRegisteredThread().ProfilingStack();
   }
 
@@ -5101,6 +5096,10 @@ ProfilingStack* profiler_register_thread(const char* aName,
 
 void profiler_unregister_thread() {
   PSAutoLock lock(gPSMutex);
+
+  if (!TLSRegisteredThread::IsTLSInited()) {
+    return;
+  }
 
   if (!CorePS::Exists()) {
     // This function can be called after the main thread has already shut down.
@@ -5115,16 +5114,14 @@ void profiler_unregister_thread() {
   // doing that for a JS thread that is in the process of disappearing.
 
   if (RegisteredThread* registeredThread =
-          FindCurrentThreadRegisteredThread(lock);
-      registeredThread) {
+          TLSRegisteredThread::RegisteredThread(lock)) {
     MOZ_RELEASE_ASSERT(
-        TLSRegisteredThread::IsTLSInited(),
-        "Thread should not have been registered without TLS::Init()");
-    MOZ_RELEASE_ASSERT(TLSRegisteredThread::RegisteredThread(lock),
-                       "TLS should be set when un-registering thread");
+        IsRegisteredThreadInRegisteredThreadsList(lock, registeredThread),
+        "Thread being unregistered is not in registered thread list even "
+        "though its TLS is non-null");
     MOZ_RELEASE_ASSERT(
-        registeredThread == TLSRegisteredThread::RegisteredThread(lock),
-        "TLS should be set as expected when un-registering thread");
+        registeredThread->Info()->ThreadId() == profiler_current_thread_id(),
+        "Thread being unregistered has changed its TID");
     RefPtr<ThreadInfo> info = registeredThread->Info();
 
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
@@ -5142,11 +5139,22 @@ void profiler_unregister_thread() {
     // Remove the thread from the list of registered threads. This deletes the
     // registeredThread object.
     CorePS::RemoveRegisteredThread(lock, registeredThread);
-    MOZ_RELEASE_ASSERT(!FindCurrentThreadRegisteredThread(lock));
+
+    MOZ_RELEASE_ASSERT(
+        !IsRegisteredThreadInRegisteredThreadsList(lock, registeredThread),
+        "After unregistering, thread should no longer be in the registered "
+        "thread list");
     MOZ_RELEASE_ASSERT(
         !TLSRegisteredThread::RegisteredThread(lock),
         "TLS should have been reset after un-registering thread");
   } else {
+    // There are two ways TLSRegisteredThread::RegisteredThread() might be
+    // empty.
+    //
+    // - TLSRegisteredThread::Init() failed in locked_register_thread().
+    //
+    // - We've already called profiler_unregister_thread() for this thread.
+    //   (Whether or not it should, this does happen in practice.)
     LOG("profiler_unregister_thread() - thread %d already unregistered",
         profiler_current_thread_id());
     // We cannot record a marker on this thread because it was already
@@ -5161,17 +5169,6 @@ void profiler_unregister_thread() {
           "profiler_unregister_thread again",
           TextMarkerPayload(threadIdString, TimeStamp::NowUnfuzzed()), &lock);
     }
-    // There are two ways FindCurrentThreadRegisteredThread() might have failed.
-    //
-    // - TLSRegisteredThread::Init() failed in locked_register_thread().
-    //
-    // - We've already called profiler_unregister_thread() for this thread.
-    //   (Whether or not it should, this does happen in practice.)
-    //
-    // Either way, TLSRegisteredThread should be empty.
-    MOZ_RELEASE_ASSERT(
-        !TLSRegisteredThread::RegisteredThread(lock),
-        "TLS should have been reset when thread was previously un-registered");
   }
 }
 
