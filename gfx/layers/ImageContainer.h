@@ -10,10 +10,11 @@
 #include <stdint.h>     // for uint32_t, uint8_t, uint64_t
 #include <sys/types.h>  // for int32_t
 #include "gfxTypes.h"
-#include "ImageTypes.h"                  // for ImageFormat, etc
-#include "mozilla/Assertions.h"          // for MOZ_ASSERT_HELPER2
-#include "mozilla/Mutex.h"               // for Mutex
-#include "mozilla/RecursiveMutex.h"      // for RecursiveMutex, etc
+#include "ImageTypes.h"              // for ImageFormat, etc
+#include "mozilla/Assertions.h"      // for MOZ_ASSERT_HELPER2
+#include "mozilla/Mutex.h"           // for Mutex
+#include "mozilla/RecursiveMutex.h"  // for RecursiveMutex, etc
+#include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/TimeStamp.h"           // for TimeStamp
 #include "mozilla/gfx/Point.h"           // For IntSize
 #include "mozilla/gfx/Types.h"           // For ColorDepth
@@ -274,12 +275,13 @@ class ImageContainerListener final {
  * synchronously updates the shared state to point to the new image and the old
  * image is immediately released (not true in Normal or Asynchronous modes).
  */
-class ImageContainer final : public SupportsWeakPtr {
+class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
   friend class ImageContainerChild;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)
-
  public:
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(ImageContainer)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(ImageContainer)
+
   enum Mode { SYNCHRONOUS = 0x0, ASYNCHRONOUS = 0x01 };
 
   static const uint64_t sInvalidAsyncContainerId = 0;
@@ -292,6 +294,8 @@ class ImageContainer final : public SupportsWeakPtr {
    * @param aAsyncContainerID async container ID for which we are a proxy
    */
   explicit ImageContainer(const CompositableHandle& aHandle);
+
+  ~ImageContainer();
 
   typedef ContainerFrameID FrameID;
   typedef ContainerProducerID ProducerID;
@@ -530,9 +534,6 @@ class ImageContainer final : public SupportsWeakPtr {
 
  private:
   typedef mozilla::RecursiveMutex RecursiveMutex;
-
-  // Private destructor, to discourage deletion outside of Release():
-  ~ImageContainer();
 
   void SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages);
 
