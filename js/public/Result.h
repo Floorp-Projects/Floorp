@@ -215,4 +215,14 @@ static_assert(sizeof(Result<int*, Error&>) == sizeof(uintptr_t),
 
 }  // namespace JS
 
+namespace mozilla {
+inline auto Err(JS::Error& aErrorValue) {
+  return mozilla::GenericErrorResult<JS::Error&>(aErrorValue);
+}
+
+inline auto Err(JS::OOM& aErrorValue) {
+  return mozilla::GenericErrorResult<JS::OOM&>(aErrorValue);
+}
+}  // namespace mozilla
+
 #endif  // js_Result_h
