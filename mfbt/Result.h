@@ -75,29 +75,6 @@ class ResultImplementation<V, E, PackingStrategy::Variant> {
   const E& inspectErr() const { return mStorage.template as<E>(); }
 };
 
-/**
- * mozilla::Variant doesn't like storing a reference. This is a specialization
- * to store E as pointer if it's a reference.
- */
-template <typename V, typename E>
-class ResultImplementation<V, E&, PackingStrategy::Variant> {
-  mozilla::Variant<V, E*> mStorage;
-
- public:
-  explicit ResultImplementation(V&& aValue)
-      : mStorage(std::forward<V>(aValue)) {}
-  explicit ResultImplementation(const V& aValue) : mStorage(aValue) {}
-  explicit ResultImplementation(E& aErrorValue) : mStorage(&aErrorValue) {}
-
-  bool isOk() const { return mStorage.template is<V>(); }
-
-  const V& inspect() const { return mStorage.template as<V>(); }
-  V unwrap() { return std::move(mStorage.template as<V>()); }
-
-  E& unwrapErr() { return *mStorage.template as<E*>(); }
-  const E& inspectErr() const { return *mStorage.template as<E*>(); }
-};
-
 // The purpose of EmptyWrapper is to make an empty class look like
 // AlignedStorage2 for the purposes of the PackingStrategy::NullIsOk
 // specializations of ResultImplementation below. We can't use AlignedStorage2
@@ -148,11 +125,8 @@ class ResultImplementationNullIsOkBase {
     }
   }
   explicit ResultImplementationNullIsOkBase(E aErrorValue)
-      : mValue(
-            std::piecewise_construct, std::tuple<>(),
-            std::tuple(UnusedZero<E>::Store(
-                static_cast<std::conditional_t<std::is_reference_v<E>, E, E&&>>(
-                    aErrorValue)))) {
+      : mValue(std::piecewise_construct, std::tuple<>(),
+               std::tuple(UnusedZero<E>::Store(std::move(aErrorValue)))) {
     MOZ_ASSERT(mValue.second() != kNullValue);
   }
 
@@ -323,38 +297,6 @@ struct UnusedZero {
   static const bool value = false;
 };
 
-// References can't be null.
-template <typename T>
-struct UnusedZero<T&> {
-  using StorageType = T*;
-
-  static constexpr bool value = true;
-
-  // This is static function rather than a static data member in order to avoid
-  // that gcc emits lots of static constructors. It may be changed to a static
-  // constexpr data member using bit_cast with C++20.
-  static inline StorageType GetDefaultValue() {
-    return reinterpret_cast<StorageType>(~ptrdiff_t(0));
-  }
-
-  static constexpr StorageType nullValue = nullptr;
-
-  static constexpr const T& Inspect(StorageType aValue) {
-    AssertValid(aValue);
-    return *aValue;
-  }
-  static constexpr T& Unwrap(StorageType aValue) {
-    AssertValid(aValue);
-    return *aValue;
-  }
-  static constexpr StorageType Store(T& aValue) { return &aValue; }
-
- private:
-  static constexpr void AssertValid(StorageType aValue) {
-    MOZ_ASSERT(aValue != GetDefaultValue());
-  }
-};
-
 // A bit of help figuring out which of the above specializations to use.
 //
 // We begin by safely assuming types don't have a spare bit.
@@ -375,13 +317,6 @@ struct HasFreeLSB<void*> {
 template <typename T>
 struct HasFreeLSB<T*> {
   static const bool value = (alignof(T) & 1) == 0;
-};
-
-// We store references as pointers, so they have a free bit if a pointer would
-// have one.
-template <typename T>
-struct HasFreeLSB<T&> {
-  static const bool value = HasFreeLSB<T*>::value;
 };
 
 // Select one of the previous result implementation based on the properties of
@@ -425,17 +360,24 @@ auto ToResult(Result<V, E>&& aValue)
  * This is just like Variant<V, E> but with a slightly different API, and the
  * following cases are optimized so Result can be stored more efficiently:
  *
- * - If the success type is Ok (or another empty class) and the error type is a
- *   reference, Result<V, E&> is guaranteed to be pointer-sized and all zero
- *   bits on success. Do not change this representation! There is JIT code that
- *   depends on it.
+ * - If both the success and error types do not use their least significant bit,
+ * are trivially copyable and destructible, Result<V, E> is guaranteed to be as
+ * large as the larger type. This is determined via the HasFreeLSB trait. By
+ * default, empty classes (in particular Ok) and aligned pointer types are
+ * assumed to have a free LSB, but you can specialize this trait for other
+ * types. If the success type is empty, the representation is guaranteed to be
+ * all zero bits on success. Do not change this representation! There is JIT
+ * code that depends on it. (Implementation note: The lowest bit is used as a
+ * tag bit: 0 to indicate the Result's bits are a success value, 1 to indicate
+ * the Result's bits (with the 1 masked out) encode an error value)
  *
- * - If the success type is a pointer type and the error type is a reference
- *   type, and the least significant bit is unused for both types when stored
- *   as a pointer (due to alignment rules), Result<V*, E&> is guaranteed to be
- *   pointer-sized. In this case, we use the lowest bit as tag bit: 0 to
- *   indicate the Result's bits are a V, 1 to indicate the Result's bits (with
- *   the 1 masked out) encode an E*.
+ * - Else, if the error type can't have a all-zero bits representation and is
+ * not larger than a pointer, a CompactPair is used to represent this rather
+ * than a Variant. This has shown to be better optimizable, and the template
+ * code is much simpler than that of Variant, so it should also compile faster.
+ * Whether an error type can't be all-zero bits, is determined via the
+ * UnusedZero trait. MFBT doesn't declare any public type UnusedZero, but
+ * nsresult is declared UnusedZero in XPCOM.
  *
  * The purpose of Result is to reduce the screwups caused by using `false` or
  * `nullptr` to indicate errors.
@@ -455,6 +397,8 @@ class MOZ_MUST_USE_TYPE Result final {
   // See class comment on Result<const V, E> and Result<V, const E>.
   static_assert(!std::is_const_v<V>);
   static_assert(!std::is_const_v<E>);
+  static_assert(!std::is_reference_v<V>);
+  static_assert(!std::is_reference_v<E>);
 
   using Impl = typename detail::SelectResultImpl<V, E>::Type;
 
@@ -473,10 +417,7 @@ class MOZ_MUST_USE_TYPE Result final {
   MOZ_IMPLICIT Result(const V& aValue) : mImpl(aValue) { MOZ_ASSERT(isOk()); }
 
   /** Create an error result. */
-  explicit Result(
-      std::conditional_t<std::is_reference_v<E>, E, E&&> aErrorValue)
-      : mImpl(static_cast<std::conditional_t<std::is_reference_v<E>, E, E&&>>(
-            aErrorValue)) {
+  explicit Result(E aErrorValue) : mImpl(std::move(aErrorValue)) {
     MOZ_ASSERT(isErr());
   }
 
@@ -486,8 +427,7 @@ class MOZ_MUST_USE_TYPE Result final {
    */
   template <typename E2>
   MOZ_IMPLICIT Result(GenericErrorResult<E2>&& aErrorResult)
-      : mImpl(static_cast<std::conditional_t<std::is_reference_v<E>, E2, E2&&>>(
-            aErrorResult.mErrorValue)) {
+      : mImpl(std::move(aErrorResult.mErrorValue)) {
     static_assert(std::is_convertible_v<E2, E>, "E2 must be convertible to E");
     MOZ_ASSERT(isErr());
   }
@@ -741,17 +681,6 @@ class MOZ_MUST_USE_TYPE GenericErrorResult {
 
   explicit GenericErrorResult(E&& aErrorValue)
       : mErrorValue(std::move(aErrorValue)) {}
-};
-
-template <typename E>
-class MOZ_MUST_USE_TYPE GenericErrorResult<E&> {
-  E& mErrorValue;
-
-  template <typename V, typename E2>
-  friend class Result;
-
- public:
-  explicit GenericErrorResult(E& aErrorValue) : mErrorValue(aErrorValue) {}
 };
 
 template <typename E>
