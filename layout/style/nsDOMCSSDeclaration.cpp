@@ -140,7 +140,8 @@ void nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
   }
 
   RefPtr<DeclarationBlock> newdecl = DeclarationBlock::FromCssText(
-      aCssText, servoEnv.mUrlExtraData, servoEnv.mCompatMode, servoEnv.mLoader);
+      aCssText, servoEnv.mUrlExtraData, servoEnv.mCompatMode, servoEnv.mLoader,
+      servoEnv.mRuleType);
 
   aRv = SetCSSDeclaration(newdecl, &closureData);
 }
@@ -237,10 +238,17 @@ void nsDOMCSSDeclaration::RemoveProperty(const nsACString& aPropertyName,
 }
 
 /* static */ nsDOMCSSDeclaration::ParsingEnvironment
-nsDOMCSSDeclaration::GetParsingEnvironmentForRule(const css::Rule* aRule) {
-  StyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr;
+nsDOMCSSDeclaration::GetParsingEnvironmentForRule(const css::Rule* aRule,
+                                                  uint16_t aRuleType) {
+  if (!aRule) {
+    return {};
+  }
+
+  MOZ_ASSERT(aRule->Type() == aRuleType);
+
+  StyleSheet* sheet = aRule->GetStyleSheet();
   if (!sheet) {
-    return {nullptr, eCompatibility_FullStandards, nullptr};
+    return {};
   }
 
   if (Document* document = sheet->GetAssociatedDocument()) {
@@ -248,6 +256,7 @@ nsDOMCSSDeclaration::GetParsingEnvironmentForRule(const css::Rule* aRule) {
         sheet->URLData(),
         document->GetCompatibilityMode(),
         document->CSSLoader(),
+        aRuleType,
     };
   }
 
@@ -255,6 +264,7 @@ nsDOMCSSDeclaration::GetParsingEnvironmentForRule(const css::Rule* aRule) {
       sheet->URLData(),
       eCompatibility_FullStandards,
       nullptr,
+      aRuleType,
   };
 }
 
@@ -311,7 +321,8 @@ nsresult nsDOMCSSDeclaration::ParsePropertyValue(
       [&](DeclarationBlock* decl, ParsingEnvironment& env) {
         return Servo_DeclarationBlock_SetPropertyById(
             decl->Raw(), aPropID, &aPropValue, aIsImportant, env.mUrlExtraData,
-            ParsingMode::Default, env.mCompatMode, env.mLoader, closure);
+            ParsingMode::Default, env.mCompatMode, env.mLoader, env.mRuleType,
+            closure);
       });
 }
 
@@ -334,7 +345,7 @@ nsresult nsDOMCSSDeclaration::ParseCustomPropertyValue(
         return Servo_DeclarationBlock_SetProperty(
             decl->Raw(), &aPropertyName, &aPropValue, aIsImportant,
             env.mUrlExtraData, ParsingMode::Default, env.mCompatMode,
-            env.mLoader, closure);
+            env.mLoader, env.mRuleType, closure);
       });
 }
 

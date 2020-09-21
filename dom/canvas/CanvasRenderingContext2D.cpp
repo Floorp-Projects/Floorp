@@ -2182,14 +2182,9 @@ void CanvasRenderingContext2D::SetShadowColor(const nsAString& aShadowColor) {
 static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
     nsCSSPropertyID aProperty, const nsAString& aPropertyValue,
     Document* aDocument) {
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      ReferrerInfo::CreateForInternalCSSResources(aDocument);
-
-  RefPtr<URLExtraData> data = new URLExtraData(
-      aDocument->GetDocBaseURI(), referrerInfo, aDocument->NodePrincipal());
-
-  ServoCSSParser::ParsingEnvironment env(
-      data, aDocument->GetCompatibilityMode(), aDocument->CSSLoader());
+  ServoCSSParser::ParsingEnvironment env{aDocument->DefaultStyleAttrURLData(),
+                                         aDocument->GetCompatibilityMode(),
+                                         aDocument->CSSLoader()};
   RefPtr<RawServoDeclarationBlock> servoDeclarations =
       ServoCSSParser::ParseProperty(aProperty, aPropertyValue, env);
 
@@ -2203,9 +2198,9 @@ static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
   if (aProperty == eCSSProperty_font) {
     const nsCString normalString = "normal"_ns;
     Servo_DeclarationBlock_SetPropertyById(
-        servoDeclarations, eCSSProperty_line_height, &normalString, false, data,
-        ParsingMode::Default, aDocument->GetCompatibilityMode(),
-        aDocument->CSSLoader(), {});
+        servoDeclarations, eCSSProperty_line_height, &normalString, false,
+        env.mUrlExtraData, ParsingMode::Default, env.mCompatMode, env.mLoader,
+        env.mRuleType, {});
   }
 
   return servoDeclarations.forget();

@@ -147,7 +147,13 @@ class DeclarationBlock final {
 
   static already_AddRefed<DeclarationBlock> FromCssText(
       const nsAString& aCssText, URLExtraData* aExtraData,
-      nsCompatibility aMode, css::Loader* aLoader);
+      nsCompatibility aMode, css::Loader* aLoader, uint16_t aRuleType) {
+    NS_ConvertUTF16toUTF8 value(aCssText);
+    RefPtr<RawServoDeclarationBlock> raw =
+        Servo_ParseStyleAttribute(&value, aExtraData, aMode, aLoader, aRuleType)
+            .Consume();
+    return MakeAndAddRef<DeclarationBlock>(raw.forget());
+  }
 
   RawServoDeclarationBlock* Raw() const { return mRaw; }
   RawServoDeclarationBlock* const* RefRaw() const {
