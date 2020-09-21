@@ -115,7 +115,7 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
     return Err(NS_ERROR_NOT_INITIALIZED);
   }
 
-  Result<RefPtr<nsRange>, nsresult> result(NS_ERROR_UNEXPECTED);
+  Result<RefPtr<nsRange>, nsresult> result = Err(NS_ERROR_UNEXPECTED);
   nsIEditor::EDirection directionAndAmountResult = aDirectionAndAmount;
   switch (aDirectionAndAmount) {
     case nsIEditor::eNextWord:

@@ -1261,9 +1261,13 @@ struct Failed {
   int x;
 };
 
+inline auto Err(Failed& aErrorValue) {
+  return mozilla::GenericErrorResult<Failed&>(aErrorValue);
+}
+
 static GenericErrorResult<Failed&> Fail() {
   static Failed failed;
-  return Err<Failed&>(failed);
+  return Err(failed);
 }
 
 static Result<Ok, Failed&> Task1(bool pass) {
