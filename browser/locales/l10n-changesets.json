@@ -609,7 +609,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "3cd7f370fb59b56c3d02600f36c659381ec68bf5"
+        "revision": "73e573f38daaf6294bda78ee1bdc5b4503c202d6"
     },
     "ga-IE": {
         "pin": false,
