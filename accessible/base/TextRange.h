@@ -14,6 +14,7 @@
 #include "nsTArray.h"
 
 class nsIVariant;
+class nsRange;
 
 namespace mozilla {
 namespace a11y {
@@ -192,13 +193,27 @@ class TextRange final {
    */
   void AddToSelection() const;
   void RemoveFromSelection() const;
-  void Select() const;
+  MOZ_CAN_RUN_SCRIPT bool SetSelectionAt(int32_t aSelectionNum) const;
 
   /**
    * Scroll the text range into view.
    */
-  enum EHowToAlign { eAlignToTop, eAlignToBottom };
-  void ScrollIntoView(EHowToAlign aHow) const;
+  void ScrollIntoView(uint32_t aScrollType) const;
+
+  /**
+   * Convert stored hypertext offsets into DOM offsets and assign it to DOM
+   * range.
+   *
+   * Note that if start and/or end accessible offsets are in generated content
+   * such as ::before or
+   * ::after, the result range excludes the generated content.  See also
+   * ClosestNotGeneratedDOMPoint() for more information.
+   *
+   * @param  aRange        [in, out] the range whose bounds to set
+   * @param  aReversed     [out] whether the start/end offsets were reversed.
+   * @return true   if conversion was successful
+   */
+  bool AssignDOMRange(nsRange* aRange, bool* aReversed = nullptr) const;
 
   /**
    * Return true if this TextRange object represents an actual range of text.
