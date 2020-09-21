@@ -71,7 +71,7 @@ class PromptCollection {
     return buttonPressed === 0;
   }
 
-  beforeUnloadCheckInternal(browsingContext, sync) {
+  asyncBeforeUnloadCheck(browsingContext) {
     let title;
     let message;
     let leaveLabel;
@@ -113,23 +113,6 @@ class PromptCollection {
       (Ci.nsIPromptService.BUTTON_TITLE_IS_STRING *
         Ci.nsIPromptService.BUTTON_POS_1);
 
-    if (sync) {
-      let buttonNumClicked = Services.prompt.confirmExBC(
-        browsingContext,
-        modalType,
-        title,
-        message,
-        buttonFlags,
-        leaveLabel,
-        stayLabel,
-        null,
-        null,
-        {}
-      );
-
-      return buttonNumClicked === 0;
-    }
-
     return Services.prompt
       .asyncConfirmEx(
         browsingContext,
@@ -144,24 +127,13 @@ class PromptCollection {
         false,
         // Tell the prompt service that this is a permit unload prompt
         // so that it can set the appropriate flag on the detail object
-        // of the events it dispatches. This happens automatically for
-        // the sync version of the prompt, which is always dispatched
-        // from the content process, where the flag comes from the
-        // content viewer which triggers the prompt.
+        // of the events it dispatches.
         { inPermitUnload: true }
       )
       .then(
         result =>
           result.QueryInterface(Ci.nsIPropertyBag2).get("buttonNumClicked") == 0
       );
-  }
-
-  beforeUnloadCheck(browsingContext) {
-    return this.beforeUnloadCheckInternal(browsingContext, /* sync */ true);
-  }
-
-  asyncBeforeUnloadCheck(browsingContext) {
-    return this.beforeUnloadCheckInternal(browsingContext, /* sync */ false);
   }
 }
 
