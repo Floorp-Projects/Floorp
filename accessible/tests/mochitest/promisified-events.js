@@ -40,6 +40,8 @@ const EVENT_DOCUMENT_RELOAD = nsIAccessibleEvent.EVENT_DOCUMENT_RELOAD;
 const EVENT_VIRTUALCURSOR_CHANGED =
   nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED;
 const EVENT_ALERT = nsIAccessibleEvent.EVENT_ALERT;
+const EVENT_TEXT_SELECTION_CHANGED =
+  nsIAccessibleEvent.EVENT_TEXT_SELECTION_CHANGED;
 
 const EventsLogger = {
   enabled: false,
