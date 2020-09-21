@@ -2329,6 +2329,13 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   }
 
   void fDeleteTextures(GLsizei n, const GLuint* names) {
+#ifdef XP_MACOSX
+    // On the Mac the call to fDeleteTextures() triggers a flush. But it
+    // happens at the wrong time, which can lead to crashes. To work around
+    // this we call fFlush() explicitly ourselves, before the call to
+    // fDeleteTextures(). This fixes bug 1666293.
+    fFlush();
+#endif
     raw_fDeleteTextures(n, names);
     TRACKING_CONTEXT(DeletedTextures(this, n, names));
   }
