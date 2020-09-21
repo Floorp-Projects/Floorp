@@ -639,6 +639,7 @@ void AudioDestinationNode::NotifyAudibleStateChanged(bool aAudible) {
     if (IsCapturingAudio()) {
       StopAudioCapturingTrack();
     }
+    ReleaseAudioWakeLockIfExists();
     return;
   }
 
