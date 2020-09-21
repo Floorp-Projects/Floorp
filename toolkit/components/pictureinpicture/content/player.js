@@ -209,7 +209,6 @@ let Player = {
           event.preventDefault();
         } else if (
           Services.prefs.getBoolPref(KEYBOARD_CONTROLS_ENABLED_PREF, false) &&
-          !this.controls.hasAttribute("keying") &&
           (event.keyCode != KeyEvent.DOM_VK_SPACE || !event.target.id)
         ) {
           // Pressing "space" fires a "keydown" event which can also trigger a control
