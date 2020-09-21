@@ -1108,6 +1108,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 .show()
             activity?.enterToImmersiveMode()
             browserToolbarView.view.isVisible = false
+            val browserEngine = swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
+            browserEngine.bottomMargin = 0
 
             engineView.setDynamicToolbarMaxHeight(0)
             browserToolbarView.expand()
