@@ -59,6 +59,10 @@ class ResultImplementation<V, E, PackingStrategy::Variant> {
   explicit ResultImplementation(V&& aValue)
       : mStorage(std::forward<V>(aValue)) {}
   explicit ResultImplementation(const V& aValue) : mStorage(aValue) {}
+  template <typename... Args>
+  explicit ResultImplementation(std::in_place_t, Args&&... aArgs)
+      : mStorage(VariantType<V>{}, std::forward<Args>(aArgs)...) {}
+
   explicit ResultImplementation(const E& aErrorValue) : mStorage(aErrorValue) {}
   explicit ResultImplementation(E&& aErrorValue)
       : mStorage(std::forward<E>(aErrorValue)) {}
@@ -145,6 +149,14 @@ class ResultImplementationNullIsOkBase {
                std::tuple(kNullValue)) {
     if constexpr (!std::is_empty_v<V>) {
       new (mValue.first().addr()) V(std::move(aSuccessValue));
+    }
+  }
+  template <typename... Args>
+  explicit ResultImplementationNullIsOkBase(std::in_place_t, Args&&... aArgs)
+      : mValue(std::piecewise_construct, std::tuple<>(),
+               std::tuple(kNullValue)) {
+    if constexpr (!std::is_empty_v<V>) {
+      new (mValue.first().addr()) V(std::forward<Args>(aArgs)...);
     }
   }
   explicit ResultImplementationNullIsOkBase(E aErrorValue)
@@ -469,6 +481,13 @@ class MOZ_MUST_USE_TYPE Result final {
 
   /** Create a success result. */
   MOZ_IMPLICIT Result(const V& aValue) : mImpl(aValue) { MOZ_ASSERT(isOk()); }
+
+  /** Create a success result in-place. */
+  template <typename... Args>
+  explicit Result(std::in_place_t, Args&&... aArgs)
+      : mImpl(std::in_place, std::forward<Args>(aArgs)...) {
+    MOZ_ASSERT(isOk());
+  }
 
   /** Create an error result. */
   explicit Result(E aErrorValue) : mImpl(std::forward<E>(aErrorValue)) {
