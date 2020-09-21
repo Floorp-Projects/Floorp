@@ -18,10 +18,10 @@
 # By default the Android Components team will be the owner for everything in
 # the repo. Unless a later match takes precedence.
 * @mozilla-mobile/ACT @mozilla-mobile/fenix
-/.cron.yml /@mozilla-mobile/releng @mozilla-mobile/fenix
-/.taskcluster.yml /@mozilla-mobile/releng @mozilla-mobile/fenix
+/.cron.yml @mozilla-mobile/releng @mozilla-mobile/fenix
+/.taskcluster.yml @mozilla-mobile/releng @mozilla-mobile/fenix
 /automation/ @mozilla-mobile/releng @mozilla-mobile/fenix
-/taskcluster/ /@mozilla-mobile/releng @mozilla-mobile/fenix
+/taskcluster/ @mozilla-mobile/releng @mozilla-mobile/fenix
 /.github/ @mozilla-mobile/releng @mozilla-mobile/fenix
 
 # --- PERFORMANCE START --- #
