@@ -1840,15 +1840,13 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DeviceFamily::IntelRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_ROLLOUT_EARLY_BETA_OR_EARLIER_INTEL");
-#endif
 
-#ifdef NIGHTLY_BUILD
     APPEND_TO_DRIVER_BLOCKLIST2_EXT(
         OperatingSystem::Windows, ScreenSizeStatus::All, BatteryStatus::All,
         DesktopEnvironment::All, WindowProtocol::All, DriverVendor::All,
         DeviceFamily::NvidiaRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_ALLOW_QUALIFIED, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_ROLLOUT_NIGHTLY_LISTED_NVIDIA");
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_EARLY_BETA_OR_EARLIER_NVIDIA");
 #endif
 
     ////////////////////////////////////
