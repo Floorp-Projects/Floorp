@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.utils
 
+import android.content.Context
 import android.view.View
 import androidx.appcompat.widget.ContentFrameLayout
 import androidx.core.view.updatePadding
@@ -18,6 +19,18 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 internal const val UNDO_DELAY = 3000L
 internal const val ACCESSIBLE_UNDO_DELAY = 15000L
+
+/**
+ * Get the recommended time an "undo" action should be available until it can automatically be
+ * dismissed. The delay may be different based on the accessibility settings of the device.
+ */
+fun Context.getUndoDelay(): Long {
+    return if (settings().accessibilityServicesEnabled) {
+        ACCESSIBLE_UNDO_DELAY
+    } else {
+        UNDO_DELAY
+    }
+}
 
 /**
  * Runs [operation] after giving user time (see [UNDO_DELAY]) to cancel it.
@@ -92,13 +105,7 @@ fun CoroutineScope.allowUndo(
         // Wait a bit, and if user didn't request cancellation, proceed with
         // requested operation and hide the snackbar.
         launch {
-            val lengthToDelay = if (view.context.settings().accessibilityServicesEnabled) {
-                ACCESSIBLE_UNDO_DELAY
-            } else {
-                UNDO_DELAY
-            }
-
-            delay(lengthToDelay)
+            delay(view.context.getUndoDelay())
 
             if (!requestedUndo.get()) {
                 snackbar.dismiss()

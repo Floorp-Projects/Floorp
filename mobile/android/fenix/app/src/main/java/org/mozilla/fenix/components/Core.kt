@@ -20,6 +20,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
+import mozilla.components.browser.session.undo.UndoMiddleware
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
@@ -69,6 +70,7 @@ import org.mozilla.fenix.search.telemetry.incontent.InContentTelemetry
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.advanced.getSelectedLocale
 import org.mozilla.fenix.utils.Mockable
+import org.mozilla.fenix.utils.getUndoDelay
 import java.util.concurrent.TimeUnit
 
 /**
@@ -146,11 +148,16 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
                 MediaMiddleware(context, MediaService::class.java),
                 DownloadMiddleware(context, DownloadService::class.java),
                 ReaderViewMiddleware(),
-                ThumbnailsMiddleware(thumbnailStorage)
+                ThumbnailsMiddleware(thumbnailStorage),
+                UndoMiddleware(::lookupSessionManager, context.getUndoDelay())
             ) + EngineMiddleware.create(engine, ::findSessionById)
         ).also {
             it.dispatch(RecentlyClosedAction.InitializeRecentlyClosedState)
         }
+    }
+
+    private fun lookupSessionManager(): SessionManager {
+        return sessionManager
     }
 
     private fun findSessionById(tabId: String): Session? {

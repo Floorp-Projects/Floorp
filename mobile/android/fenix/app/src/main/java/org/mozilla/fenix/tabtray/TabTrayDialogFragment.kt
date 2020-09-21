@@ -260,10 +260,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
 
     private fun showUndoSnackbarForTab(sessionId: String) {
         val store = requireComponents.core.store
-        val sessionManager = requireComponents.core.sessionManager
-
         val tab = requireComponents.core.store.state.findTab(sessionId) ?: return
-        val session = sessionManager.findSessionById(sessionId) ?: return
 
         // Check if this is the last tab of this session type
         val isLastOpenTab =
@@ -272,8 +269,6 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             dismissTabTrayAndNavigateHome(sessionId)
             return
         }
-
-        val isSelected = sessionId == requireComponents.core.store.state.selectedTabId ?: false
 
         val snackbarMessage = if (tab.content.private) {
             getString(R.string.snackbar_private_tab_closed)
@@ -286,12 +281,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             snackbarMessage,
             getString(R.string.snackbar_deleted_undo),
             {
-                sessionManager.add(
-                    session,
-                    isSelected,
-                    engineSessionState = tab.engineState.engineSessionState
-                )
-                _tabTrayView?.scrollToTab(session.id)
+                requireComponents.useCases.tabsUseCases.undo.invoke()
+                _tabTrayView?.scrollToTab(tab.id)
             },
             operation = { },
             elevation = ELEVATION,
