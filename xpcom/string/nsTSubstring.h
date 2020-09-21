@@ -18,7 +18,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Result.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/Unused.h"
 
@@ -174,8 +173,16 @@ class BulkWriteHandle final {
   mozilla::Result<mozilla::Ok, nsresult> RestartBulkWrite(
       size_type aCapacity, size_type aPrefixToPreserve, bool aAllowShrinking) {
     MOZ_ASSERT(mString);
-    MOZ_TRY_VAR(mCapacity, mString->StartBulkWriteImpl(
-                               aCapacity, aPrefixToPreserve, aAllowShrinking));
+    auto r = mString->StartBulkWriteImpl(aCapacity, aPrefixToPreserve,
+                                         aAllowShrinking);
+    if (MOZ_UNLIKELY(r.isErr())) {
+      nsresult rv = r.unwrapErr();
+      // MOZ_TRY or manual unwrapErr() without the intermediate
+      // assignment complains about an incomplete type.
+      // andThen() is not enabled on r.
+      return mozilla::Err(rv);
+    }
+    mCapacity = r.unwrap();
     return mozilla::Ok();
   }
 
