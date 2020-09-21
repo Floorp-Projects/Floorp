@@ -14,6 +14,7 @@ from fluent.syntax.serializer import FluentSerializer
 from compare_locales.parser import getParser
 from compare_locales.plurals import get_plural
 
+from .evaluator import Evaluator
 from .merge import merge_resource
 from .errors import (
     UnreadableReferenceError,
@@ -51,6 +52,10 @@ class InternalContext(object):
         # An iterable of `FTL.Message` objects some of whose nodes can be the
         # transform operations.
         self.transforms = {}
+
+        # The evaluator instance is an AST transformer capable of walking an
+        # AST hierarchy and evaluating nodes which are migration Transforms.
+        self.evaluator = Evaluator(self)
 
     def read_ftl_resource(self, path):
         """Read an FTL resource and parse it into an AST."""
@@ -320,6 +325,9 @@ class InternalContext(object):
                 changeset, known_translations
             )
         }
+
+    def evaluate(self, node):
+        return self.evaluator.visit(node)
 
 
 logging.basicConfig()

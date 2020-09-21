@@ -177,6 +177,7 @@ CATEGORIES_BY_LOCALE = {
     'st': 1,
     'sv': 1,
     'sw': 1,
+    'szl': 9,
     'ta': 1,
     'ta': 1,
     'te': 1,

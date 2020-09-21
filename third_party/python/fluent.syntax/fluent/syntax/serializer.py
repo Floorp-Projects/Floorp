@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from . import ast
 
 
-def indent(content):
+def indent_except_first_line(content):
     return "    ".join(
         content.splitlines(True)
     )
@@ -18,13 +18,32 @@ def is_select_expr(elem):
         isinstance(elem.expression, ast.SelectExpression))
 
 
+def should_start_on_new_line(pattern):
+    is_multiline = any(is_select_expr(elem) for elem in pattern.elements) \
+        or any(includes_new_line(elem) for elem in pattern.elements)
+
+    if is_multiline:
+        first_element = pattern.elements[0]
+        if isinstance(first_element, ast.TextElement):
+            first_char = first_element.value[0]
+            if first_char in ("[", ".", "*"):
+                return False
+        return True
+    return False
+
+
 class FluentSerializer(object):
+    """FluentSerializer converts :class:`.ast.SyntaxNode` objects to unicode strings.
+
+    `with_junk` controls if parse errors are written back or not.
+    """
     HAS_ENTRIES = 1
 
     def __init__(self, with_junk=False):
         self.with_junk = with_junk
 
     def serialize(self, resource):
+        "Serialize a :class:`.ast.Resource` to a string."
         if not isinstance(resource, ast.Resource):
             raise Exception('Unknown resource type: {}'.format(type(resource)))
 
@@ -40,6 +59,7 @@ class FluentSerializer(object):
         return "".join(parts)
 
     def serialize_entry(self, entry, state=0):
+        "Serialize an :class:`.ast.Entry` to a string."
         if isinstance(entry, ast.Message):
             return serialize_message(entry)
         if isinstance(entry, ast.Term):
@@ -113,19 +133,16 @@ def serialize_term(term):
 def serialize_attribute(attribute):
     return "\n    .{} ={}".format(
         attribute.id.name,
-        indent(serialize_pattern(attribute.value))
+        indent_except_first_line(serialize_pattern(attribute.value))
     )
 
 
 def serialize_pattern(pattern):
-    content = "".join([
-        serialize_element(elem)
-        for elem in pattern.elements])
-    start_on_new_line = any(
-        includes_new_line(elem) or is_select_expr(elem)
-        for elem in pattern.elements)
-    if start_on_new_line:
-        return '\n    {}'.format(indent(content))
+    content = "".join(serialize_element(elem) for elem in pattern.elements)
+    content = indent_except_first_line(content)
+
+    if should_start_on_new_line(pattern):
+        return '\n    {}'.format(content)
 
     return ' {}'.format(content)
 
@@ -187,7 +204,7 @@ def serialize_variant(variant):
     return "\n{}[{}]{}".format(
         "   *" if variant.default else "    ",
         serialize_variant_key(variant.key),
-        indent(serialize_pattern(variant.value))
+        indent_except_first_line(serialize_pattern(variant.value))
     )
 
 
