@@ -182,18 +182,14 @@ ImgDrawResult ImageResource::GetImageContainerImpl(
   int i = mImageContainers.Length() - 1;
   for (; i >= 0; --i) {
     entry = &mImageContainers[i];
-    container = entry->mContainer.get();
     if (size == entry->mSize && flags == entry->mFlags &&
         aSVGContext == entry->mSVGContext) {
       // Lack of a container is handled below.
+      container = RefPtr<layers::ImageContainer>(entry->mContainer);
       break;
-    } else if (!container) {
+    } else if (!entry->mContainer) {
       // Stop tracking if our weak pointer to the image container was freed.
       mImageContainers.RemoveElementAt(i);
-    } else {
-      // It isn't a match, but still valid. Forget the container so we don't
-      // try to reuse it below.
-      container = nullptr;
     }
   }
 
@@ -254,7 +250,7 @@ ImgDrawResult ImageResource::GetImageContainerImpl(
       entry = &mImageContainers[i];
       if (bestSize == entry->mSize && flags == entry->mFlags &&
           aSVGContext == entry->mSVGContext) {
-        container = entry->mContainer.get();
+        container = RefPtr<layers::ImageContainer>(entry->mContainer);
         if (container) {
           switch (entry->mLastDrawResult) {
             case ImgDrawResult::SUCCESS:
@@ -305,7 +301,7 @@ bool ImageResource::UpdateImageContainer(const Maybe<IntRect>& aDirtyRect) {
 
   for (int i = mImageContainers.Length() - 1; i >= 0; --i) {
     ImageContainerEntry& entry = mImageContainers[i];
-    RefPtr<ImageContainer> container = entry.mContainer.get();
+    RefPtr<layers::ImageContainer> container(entry.mContainer);
     if (container) {
       IntSize bestSize;
       RefPtr<SourceSurface> surface;
