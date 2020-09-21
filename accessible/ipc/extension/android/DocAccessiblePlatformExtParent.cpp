@@ -20,7 +20,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtParent::RecvSetPivotBoundaries(
   MOZ_ASSERT(aFirstDoc);
   MOZ_ASSERT(aLastDoc);
 
-  SessionAccessibility* sessionAcc = SessionAccessibility::GetInstanceFor(
+  RefPtr<SessionAccessibility> sessionAcc = SessionAccessibility::GetInstanceFor(
       static_cast<DocAccessibleParent*>(Manager()));
   if (!sessionAcc) {
     return IPC_OK();
