@@ -24,9 +24,7 @@ from .base import (ConnectionlessProtocol,
 from .process import ProcessTestExecutor
 from ..browsers.base import browser_command
 from ..process import cast_env
-from ..wpttest import WdspecResult, WdspecSubtestResult
 from ..webdriver_server import ServoDriverServer
-from .executormarionette import WdspecRun
 
 
 pytestrunner = None

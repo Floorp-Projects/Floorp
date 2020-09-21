@@ -37,6 +37,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   5000
 );
 
+// Retry the region lookup every hour on failure, a failure
+// is likely to be a service failure so this gives the
+// service some time to restore. Setting to 0 disabled retries.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "retryTimeout",
+  "browser.region.retry-timeout",
+  60 * 60 * 1000
+);
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "loggingEnabled",
@@ -74,6 +84,8 @@ const UPDATE_PREFIX = "browser.region.update";
 // Currently set to 2 weeks.
 const UPDATE_INTERVAL = 60 * 60 * 24 * 14;
 
+const MAX_RETRIES = 3;
+
 /**
  * This module keeps track of the users current region (country).
  * so the SearchService and other consumers can apply region
@@ -88,6 +100,9 @@ class RegionDetector {
   _rsClient = null;
   // Keep track of the wifi data across listener events.
   _wifiDataPromise = null;
+  // Keep track of how many times we have tried to fetch
+  // the users region during failure.
+  _retryCount = 0;
   // Topic for Observer events fired by Region.jsm.
   REGION_TOPIC = "browser-region";
   // Verb for event fired when we update the region.
@@ -143,6 +158,9 @@ class RegionDetector {
    *   The country_code defining users current region.
    */
   async _fetchRegion() {
+    if (this._retryCount >= MAX_RETRIES) {
+      return null;
+    }
     let startTime = Date.now();
     let telemetryResult = this.TELEMETRY.SUCCESS;
     let result = null;
@@ -152,6 +170,12 @@ class RegionDetector {
     } catch (err) {
       telemetryResult = this.TELEMETRY[err.message] || this.TELEMETRY.ERROR;
       log.error("Failed to fetch region", err);
+      if (retryTimeout) {
+        this._retryCount++;
+        setTimeout(() => {
+          Services.tm.idleDispatchToMainThread(this._fetchRegion.bind(this));
+        }, retryTimeout);
+      }
     }
 
     let took = Date.now() - startTime;
@@ -348,7 +372,8 @@ class RegionDetector {
       return res.country_code;
     } catch (err) {
       log.error("Error fetching region", err);
-      throw new Error("NO_RESULT");
+      let errCode = err.message in this.TELEMETRY ? err.message : "NO_RESULT";
+      throw new Error(errCode);
     }
   }
 
@@ -694,7 +719,9 @@ class RegionDetector {
   async _timeout(timeout, controller) {
     await new Promise(resolve => setTimeout(resolve, timeout));
     if (controller) {
-      controller.abort();
+      // Yield so it is the TIMEOUT that is returned and not
+      // the result of the abort().
+      setTimeout(() => controller.abort(), 0);
     }
     throw new Error("TIMEOUT");
   }

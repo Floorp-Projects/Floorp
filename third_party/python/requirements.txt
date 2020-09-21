@@ -26,9 +26,9 @@ click==7.0 \
     --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13 \
     --hash=sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7 \
     # via glean-parser, pip-tools
-compare-locales==8.0.0 \
-    --hash=sha256:077b007bd2c025284f73994970e7fada7fbdcbb4199ff010e378b305dee6d469 \
-    --hash=sha256:ee02bdad012cdc9f6c6df24d7518ba2c5084f6bac0d176b4826156accc8d48d6 \
+compare-locales==8.1.0 \
+    --hash=sha256:286270797ce64f7a2f25e734bb437870661409884a4f0971c0bb94fdad6c1f35 \
+    --hash=sha256:3d374ff959d5de2cfd5b94caf6b0fa61445f1d8ede5af384002cb3542aacad3a \
     # via -r requirements-mach-vendor-python.in, fluent.migrate
 cookies==2.2.1 \
     --hash=sha256:15bee753002dff684987b8df8c235288eb8d45f8191ae056254812dfd42c81d3 \
@@ -82,14 +82,14 @@ ecdsa==0.15 \
 esprima==4.0.1 \
     --hash=sha256:08db1a876d3c2910db9cfaeb83108193af5411fc3a3a66ebefacd390d21323ee \
     # via -r requirements-mach-vendor-python.in
-fluent.migrate==0.9 \
-    --hash=sha256:735c86816ef7b7b03b32ff9985685f2d99cb0ed135351e4760a85236538f0beb \
-    --hash=sha256:d42a001bd7292cef400e63f3d77c0c813a6a6162e7bd2dfa14eb01172d21e788 \
+fluent.migrate==0.10 \
+    --hash=sha256:532322b53c895142cf7c1702f95b54b9d3d128fb92eab38f6e8c8a80c447d8c2 \
+    --hash=sha256:ee1b4d827cff6d1df7f9b6a4b3eb78a75f1dd425e2e71b2013fd0dd411167b3e \
     # via -r requirements-mach-vendor-python.in
-fluent.syntax==0.17.0 \
-    --hash=sha256:ac3db2f77d62b032fdf1f17ef5c390b7801a9e9fb58d41eca3825c0d47b88d79 \
-    --hash=sha256:e26be470aeebe4badd84f7bb0b648414e0f2ef95d26e5336d634af99e402ea61 \
-    # via compare-locales, fluent.migrate
+fluent.syntax==0.18.1 \
+    --hash=sha256:0e63679fa4f1b3042565220a5127b4bab842424f07d6a13c12299e3b3835486a \
+    --hash=sha256:3a55f5e605d1b029a65cc8b6492c86ec4608e15447e73db1495de11fd46c104f \
+    # via -r requirements-mach-vendor-python.in, compare-locales, fluent.migrate
 glean_parser==1.28.0 \
     --hash=sha256:994c1d12b686ffe49321496497990e24609e11a8edb27d3afbe0b1f86b01fed3 \
     --hash=sha256:a8402d210fd5a50b05cc64d96a8506be972b35a47c78195f04e745756f75db61 \
@@ -275,5 +275,4 @@ zipp==3.1.0 \
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
-# pip
 # setuptools

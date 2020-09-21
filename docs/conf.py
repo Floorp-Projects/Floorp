@@ -101,6 +101,13 @@ moz_project_name = "main"
 
 html_show_copyright = False
 
+# Only run autosection for the page title.
+# Otherwise, we have a huge number of duplicate links.
+# For example, the page https://firefox-source-docs.mozilla.org/code-quality/lint/
+# is called "Linting"
+# just like https://firefox-source-docs.mozilla.org/remote/CodeStyle.html
+autosectionlabel_maxdepth = 1
+
 
 def setup(app):
     app.add_config_value(

@@ -209,26 +209,27 @@ class XHRBreakpoints extends Component<Props, State> {
     const placeholder = L10N.getStr("xhrBreakpoints.placeholder");
 
     return (
-      <li
-        className={classnames("xhr-input-container", { focused })}
+      <form
         key="xhr-input-container"
+        className={classnames("xhr-input-container xhr-input-form", {
+          focused,
+        })}
+        onSubmit={onSubmit}
       >
-        <form className="xhr-input-form" onSubmit={onSubmit}>
-          <input
-            className="xhr-input-url"
-            type="text"
-            placeholder={placeholder}
-            onChange={this.handleChange}
-            onBlur={this.hideInput}
-            onFocus={this.onFocus}
-            value={inputValue}
-            onKeyDown={this.handleTab}
-            ref={c => (this._input = c)}
-          />
-          {this.renderMethodSelectElement()}
-          <input type="submit" style={{ display: "none" }} />
-        </form>
-      </li>
+        <input
+          className="xhr-input-url"
+          type="text"
+          placeholder={placeholder}
+          onChange={this.handleChange}
+          onBlur={this.hideInput}
+          onFocus={this.onFocus}
+          value={inputValue}
+          onKeyDown={this.handleTab}
+          ref={c => (this._input = c)}
+        />
+        {this.renderMethodSelectElement()}
+        <input type="submit" style={{ display: "none" }} />
+      </form>
     );
   }
 
@@ -290,22 +291,21 @@ class XHRBreakpoints extends Component<Props, State> {
     );
   };
 
-  renderBreakpoints = () => {
-    const { showInput, xhrBreakpoints } = this.props;
-    const explicitXhrBreakpoints = getExplicitXHRBreakpoints(xhrBreakpoints);
+  renderBreakpoints = (explicitXhrBreakpoints: XHRBreakpointsList) => {
+    const { showInput } = this.props;
 
     return (
-      <ul className="pane expressions-list">
-        {explicitXhrBreakpoints.map(this.renderBreakpoint)}
-        {(showInput || explicitXhrBreakpoints.length === 0) &&
-          this.renderXHRInput(this.handleNewSubmit)}
-      </ul>
+      <>
+        <ul className="pane expressions-list">
+          {explicitXhrBreakpoints.map(this.renderBreakpoint)}
+        </ul>
+        {showInput && this.renderXHRInput(this.handleNewSubmit)}
+      </>
     );
   };
 
-  renderCheckbox = () => {
-    const { shouldPauseOnAny, togglePauseOnAny, xhrBreakpoints } = this.props;
-    const explicitXhrBreakpoints = getExplicitXHRBreakpoints(xhrBreakpoints);
+  renderCheckbox = (explicitXhrBreakpoints: XHRBreakpointsList) => {
+    const { shouldPauseOnAny, togglePauseOnAny } = this.props;
 
     return (
       <div
@@ -352,11 +352,16 @@ class XHRBreakpoints extends Component<Props, State> {
   };
 
   render() {
+    const { xhrBreakpoints } = this.props;
+    const explicitXhrBreakpoints = getExplicitXHRBreakpoints(xhrBreakpoints);
+
     return (
-      <div>
-        {this.renderCheckbox()}
-        {this.renderBreakpoints()}
-      </div>
+      <>
+        {this.renderCheckbox(explicitXhrBreakpoints)}
+        {explicitXhrBreakpoints.length === 0
+          ? this.renderXHRInput(this.handleNewSubmit)
+          : this.renderBreakpoints(explicitXhrBreakpoints)}
+      </>
     );
   }
 }

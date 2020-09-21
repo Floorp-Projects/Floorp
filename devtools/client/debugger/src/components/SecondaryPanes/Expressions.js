@@ -100,6 +100,12 @@ class Expressions extends Component<Props, State> {
     if (this.state.editing && !nextProps.expressionError) {
       this.clear();
     }
+
+    // Ensures that the add watch expression input
+    // is no longer visible when the new watch expression is rendered
+    if (this.props.expressions.length < nextProps.expressions.length) {
+      this.hideInput();
+    }
   }
 
   shouldComponentUpdate(nextProps: Props, nextState: State) {
@@ -203,7 +209,6 @@ class Expressions extends Component<Props, State> {
       this.state.inputValue,
       expression
     );
-    this.hideInput();
   };
 
   handleNewSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
@@ -218,10 +223,6 @@ class Expressions extends Component<Props, State> {
       editIndex: -1,
       inputValue: this.props.expressionError ? inputValue : "",
     });
-
-    if (!this.props.expressionError) {
-      this.hideInput();
-    }
 
     this.props.clearAutocomplete();
   };
@@ -292,6 +293,19 @@ class Expressions extends Component<Props, State> {
     );
   };
 
+  renderExpressions() {
+    const { expressions, showInput } = this.props;
+
+    return (
+      <>
+        <ul className="pane expressions-list">
+          {expressions.map(this.renderExpression)}
+        </ul>
+        {showInput && this.renderNewExpressionInput()}
+      </>
+    );
+  }
+
   renderAutoCompleteMatches() {
     if (!features.autocompleteExpression) {
       return null;
@@ -318,28 +332,30 @@ class Expressions extends Component<Props, State> {
       : L10N.getStr("expressions.placeholder");
 
     return (
-      <li
-        className={classnames("expression-input-container", { focused, error })}
+      <form
+        className={classnames(
+          "expression-input-container expression-input-form",
+          { focused, error }
+        )}
+        onSubmit={this.handleNewSubmit}
       >
-        <form className="expression-input-form" onSubmit={this.handleNewSubmit}>
-          <input
-            className="input-expression"
-            type="text"
-            placeholder={placeholder}
-            onChange={this.handleChange}
-            onBlur={this.hideInput}
-            onKeyDown={this.handleKeyDown}
-            onFocus={this.onFocus}
-            value={!editing ? inputValue : ""}
-            ref={c => (this._input = c)}
-            {...(features.autocompleteExpression && {
-              list: "autocomplete-matches",
-            })}
-          />
-          {this.renderAutoCompleteMatches()}
-          <input type="submit" style={{ display: "none" }} />
-        </form>
-      </li>
+        <input
+          className="input-expression"
+          type="text"
+          placeholder={placeholder}
+          onChange={this.handleChange}
+          onBlur={this.hideInput}
+          onKeyDown={this.handleKeyDown}
+          onFocus={this.onFocus}
+          value={!editing ? inputValue : ""}
+          ref={c => (this._input = c)}
+          {...(features.autocompleteExpression && {
+            list: "autocomplete-matches",
+          })}
+        />
+        {this.renderAutoCompleteMatches()}
+        <input type="submit" style={{ display: "none" }} />
+      </form>
     );
   }
 
@@ -349,45 +365,43 @@ class Expressions extends Component<Props, State> {
     const error = editing === true && expressionError === true;
 
     return (
-      <span
-        className={classnames("expression-input-container", { focused, error })}
+      <form
         key={expression.input}
+        className={classnames(
+          "expression-input-container expression-input-form",
+          { focused, error }
+        )}
+        onSubmit={(e: SyntheticEvent<HTMLFormElement>) =>
+          this.handleExistingSubmit(e, expression)
+        }
       >
-        <form
-          className="expression-input-form"
-          onSubmit={(e: SyntheticEvent<HTMLFormElement>) =>
-            this.handleExistingSubmit(e, expression)
-          }
-        >
-          <input
-            className={classnames("input-expression", { error })}
-            type="text"
-            onChange={this.handleChange}
-            onBlur={this.clear}
-            onKeyDown={this.handleKeyDown}
-            onFocus={this.onFocus}
-            value={editing ? inputValue : expression.input}
-            ref={c => (this._input = c)}
-            {...(features.autocompleteExpression && {
-              list: "autocomplete-matches",
-            })}
-          />
-          {this.renderAutoCompleteMatches()}
-          <input type="submit" style={{ display: "none" }} />
-        </form>
-      </span>
+        <input
+          className={classnames("input-expression", { error })}
+          type="text"
+          onChange={this.handleChange}
+          onBlur={this.clear}
+          onKeyDown={this.handleKeyDown}
+          onFocus={this.onFocus}
+          value={editing ? inputValue : expression.input}
+          ref={c => (this._input = c)}
+          {...(features.autocompleteExpression && {
+            list: "autocomplete-matches",
+          })}
+        />
+        {this.renderAutoCompleteMatches()}
+        <input type="submit" style={{ display: "none" }} />
+      </form>
     );
   }
 
   render() {
-    const { expressions, showInput } = this.props;
+    const { expressions } = this.props;
 
-    return (
-      <ul className="pane expressions-list">
-        {expressions.map(this.renderExpression)}
-        {(showInput || !expressions.length) && this.renderNewExpressionInput()}
-      </ul>
-    );
+    if (expressions.length === 0) {
+      return this.renderNewExpressionInput();
+    }
+
+    return this.renderExpressions();
   }
 }
 

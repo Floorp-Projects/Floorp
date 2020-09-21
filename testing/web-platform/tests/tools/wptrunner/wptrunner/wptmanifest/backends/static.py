@@ -22,6 +22,7 @@ class Compiler(base.Compiler):
                           the class of the output node to use for the current
                           ast node
         """
+
         self._kwargs = kwargs
         self.expr_data = expr_data
 

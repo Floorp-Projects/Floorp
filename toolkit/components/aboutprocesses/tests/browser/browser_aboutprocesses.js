@@ -521,6 +521,7 @@ add_task(async function testAboutProcesses() {
     }
   }
 
+  Services.prefs.clearUserPref("toolkit.aboutProcesses.showAllSubframes");
   Services.prefs.clearUserPref("toolkit.aboutProcesses.showThreads");
 
   await extension.unload();

@@ -14295,22 +14295,6 @@ static void DispatchPointerLockError(Document* aTarget, const char* aMessage) {
                                   aMessage);
 }
 
-class PointerLockRequest final : public Runnable {
- public:
-  PointerLockRequest(Element* aElement, bool aUserInputOrChromeCaller)
-      : mozilla::Runnable("PointerLockRequest"),
-        mElement(do_GetWeakReference(aElement)),
-        mDocument(do_GetWeakReference(aElement->OwnerDoc())),
-        mUserInputOrChromeCaller(aUserInputOrChromeCaller) {}
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() final;
-
- private:
-  nsWeakPtr mElement;
-  nsWeakPtr mDocument;
-  bool mUserInputOrChromeCaller;
-};
-
 static const char* GetPointerLockError(Element* aElement, Element* aCurrentLock,
                                        bool aNoFocusCheck = false) {
   // Check if pointer lock pref is enabled
@@ -14395,52 +14379,72 @@ static void ChangePointerLockedElement(Element* aElement, Document* aDocument,
   DispatchPointerLockChange(aDocument);
 }
 
-NS_IMETHODIMP
-PointerLockRequest::Run() {
-  nsCOMPtr<Element> e = do_QueryReferent(mElement);
-  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
+MOZ_CAN_RUN_SCRIPT_BOUNDARY static void StartSetPointerLock(
+    Element* aElement, Document* aDocument, bool aUserInputOrChromeCaller) {
   const char* error = nullptr;
-  if (!e || !doc || !e->GetComposedDoc()) {
+  if (!aElement || !aDocument || !aElement->GetComposedDoc()) {
     error = "PointerLockDeniedNotInDocument";
-  } else if (e->GetComposedDoc() != doc) {
+  } else if (aElement->GetComposedDoc() != aDocument) {
     error = "PointerLockDeniedMovedDocument";
   }
   if (!error) {
     nsCOMPtr<Element> pointerLockedElement =
         do_QueryReferent(EventStateManager::sPointerLockedElement);
-    if (e == pointerLockedElement) {
-      DispatchPointerLockChange(doc);
-      return NS_OK;
+    if (aElement == pointerLockedElement) {
+      DispatchPointerLockChange(aDocument);
+      return;
     }
     // Note, we must bypass focus change, so pass true as the last parameter!
-    error = GetPointerLockError(e, pointerLockedElement, true);
+    error = GetPointerLockError(aElement, pointerLockedElement, true);
     // Another element in the same document is requesting pointer lock,
     // just grant it without user input check.
     if (!error && pointerLockedElement) {
-      ChangePointerLockedElement(e, doc, pointerLockedElement);
-      return NS_OK;
+      ChangePointerLockedElement(aElement, aDocument, pointerLockedElement);
+      return;
     }
   }
   // If it is neither user input initiated, nor requested in fullscreen,
   // it should be rejected.
-  if (!error && !mUserInputOrChromeCaller &&
-      !doc->GetUnretargetedFullScreenElement()) {
+  if (!error && !aUserInputOrChromeCaller &&
+      !aDocument->GetUnretargetedFullScreenElement()) {
     error = "PointerLockDeniedNotInputDriven";
   }
-  if (!error && !doc->SetPointerLock(e, StyleCursorKind::None)) {
+  if (!error && !aDocument->SetPointerLock(aElement, StyleCursorKind::None)) {
     error = "PointerLockDeniedFailedToLock";
   }
   if (error) {
-    DispatchPointerLockError(doc, error);
-    return NS_OK;
+    DispatchPointerLockError(aDocument, error);
+    return;
   }
 
-  ChangePointerLockedElement(e, doc, nullptr);
+  ChangePointerLockedElement(aElement, aDocument, nullptr);
   nsContentUtils::DispatchEventOnlyToChrome(
-      doc, ToSupports(e), u"MozDOMPointerLock:Entered"_ns, CanBubble::eYes,
-      Cancelable::eNo, /* DefaultAction */ nullptr);
-  return NS_OK;
+      aDocument, ToSupports(aElement), u"MozDOMPointerLock:Entered"_ns,
+      CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
 }
+
+class PointerLockRequest final : public Runnable {
+ public:
+  PointerLockRequest(Element* aElement, bool aUserInputOrChromeCaller)
+      : mozilla::Runnable("PointerLockRequest"),
+        mElement(do_GetWeakReference(aElement)),
+        mDocument(do_GetWeakReference(aElement->OwnerDoc())),
+        mUserInputOrChromeCaller(aUserInputOrChromeCaller) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+  }
+
+  NS_IMETHOD Run() final {
+    nsCOMPtr<Element> element = do_QueryReferent(mElement);
+    nsCOMPtr<Document> document = do_QueryReferent(mDocument);
+    StartSetPointerLock(element, document, mUserInputOrChromeCaller);
+    return NS_OK;
+  };
+
+ private:
+  nsWeakPtr mElement;
+  nsWeakPtr mDocument;
+  bool mUserInputOrChromeCaller;
+};
 
 void Document::RequestPointerLock(Element* aElement, CallerType aCallerType) {
   NS_ASSERTION(aElement,
@@ -14460,9 +14464,30 @@ void Document::RequestPointerLock(Element* aElement, CallerType aCallerType) {
 
   bool userInputOrSystemCaller = HasValidTransientUserGestureActivation() ||
                                  aCallerType == CallerType::System;
-  nsCOMPtr<nsIRunnable> request =
-      new PointerLockRequest(aElement, userInputOrSystemCaller);
-  Dispatch(TaskCategory::Other, request.forget());
+  if (BrowserChild* browserChild = BrowserChild::GetFrom(GetDocShell())) {
+    nsWeakPtr e = do_GetWeakReference(aElement);
+    nsWeakPtr doc = do_GetWeakReference(aElement->OwnerDoc());
+    browserChild->SendRequestPointerLock(
+        [e, doc, userInputOrSystemCaller](const nsCString& aError) {
+          nsCOMPtr<Document> document = do_QueryReferent(doc);
+          if (!aError.IsEmpty()) {
+            DispatchPointerLockError(document, aError.get());
+            return;
+          }
+
+          nsCOMPtr<Element> element = do_QueryReferent(e);
+          StartSetPointerLock(element, document, userInputOrSystemCaller);
+        },
+        [doc](mozilla::ipc::ResponseRejectReason) {
+          // IPC layer error
+          nsCOMPtr<Document> document = do_QueryReferent(doc);
+          DispatchPointerLockError(document, "PointerLockDeniedFailedToLock");
+        });
+  } else {
+    nsCOMPtr<nsIRunnable> request =
+        new PointerLockRequest(aElement, userInputOrSystemCaller);
+    Dispatch(TaskCategory::Other, request.forget());
+  }
 }
 
 bool Document::SetPointerLock(Element* aElement, StyleCursorKind aCursorStyle) {
@@ -14532,6 +14557,11 @@ void Document::UnlockPointer(Document* aDoc) {
   nsCOMPtr<Element> pointerLockedElement =
       do_QueryReferent(EventStateManager::sPointerLockedElement);
   ChangePointerLockedElement(nullptr, pointerLockedDoc, pointerLockedElement);
+
+  if (BrowserChild* browserChild =
+          BrowserChild::GetFrom(pointerLockedDoc->GetDocShell())) {
+    browserChild->SendReleasePointerLock();
+  }
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
       pointerLockedElement, u"MozDOMPointerLock:Exited"_ns, CanBubble::eYes,

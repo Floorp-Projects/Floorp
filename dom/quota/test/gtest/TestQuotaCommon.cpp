@@ -1257,16 +1257,11 @@ TEST(QuotaCommon_ToResultGet, Lambda_WithInput_Err)
 }
 
 // BEGIN COPY FROM mfbt/tests/TestResult.cpp
-struct Failed {
-  int x;
-};
+struct Failed {};
 
-static GenericErrorResult<Failed&> Fail() {
-  static Failed failed;
-  return Err<Failed&>(failed);
-}
+static GenericErrorResult<Failed> Fail() { return Err(Failed()); }
 
-static Result<Ok, Failed&> Task1(bool pass) {
+static Result<Ok, Failed> Task1(bool pass) {
   if (!pass) {
     return Fail();  // implicit conversion from GenericErrorResult to Result
   }
@@ -1274,7 +1269,7 @@ static Result<Ok, Failed&> Task1(bool pass) {
 }
 // END COPY FROM mfbt/tests/TestResult.cpp
 
-static Result<bool, Failed&> Condition(bool aNoError, bool aResult) {
+static Result<bool, Failed> Condition(bool aNoError, bool aResult) {
   return Task1(aNoError).map([aResult](auto) { return aResult; });
 }
 
@@ -1292,7 +1287,7 @@ TEST(QuotaCommon_CollectWhileTest, NoFailures)
         ++bodyExecutions;
         return Task1(true);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
   MOZ_RELEASE_ASSERT(result.isOk());
   MOZ_RELEASE_ASSERT(loopCount == bodyExecutions);
   MOZ_RELEASE_ASSERT(1 + loopCount == conditionExecutions);
@@ -1311,7 +1306,7 @@ TEST(QuotaCommon_CollectWhileTest, BodyFailsImmediately)
         ++bodyExecutions;
         return Task1(false);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
   MOZ_RELEASE_ASSERT(result.isErr());
   MOZ_RELEASE_ASSERT(1 == bodyExecutions);
   MOZ_RELEASE_ASSERT(1 == conditionExecutions);
@@ -1330,7 +1325,7 @@ TEST(QuotaCommon_CollectWhileTest, BodyFailsOnSecondExecution)
         ++bodyExecutions;
         return Task1(bodyExecutions < 2);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
   MOZ_RELEASE_ASSERT(result.isErr());
   MOZ_RELEASE_ASSERT(2 == bodyExecutions);
   MOZ_RELEASE_ASSERT(2 == conditionExecutions);
@@ -1349,7 +1344,7 @@ TEST(QuotaCommon_CollectWhileTest, ConditionFailsImmediately)
         ++bodyExecutions;
         return Task1(true);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
   MOZ_RELEASE_ASSERT(result.isErr());
   MOZ_RELEASE_ASSERT(0 == bodyExecutions);
   MOZ_RELEASE_ASSERT(1 == conditionExecutions);
@@ -1368,8 +1363,68 @@ TEST(QuotaCommon_CollectWhileTest, ConditionFailsOnSecondExecution)
         ++bodyExecutions;
         return Task1(true);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
   MOZ_RELEASE_ASSERT(result.isErr());
   MOZ_RELEASE_ASSERT(1 == bodyExecutions);
   MOZ_RELEASE_ASSERT(2 == conditionExecutions);
+}
+
+TEST(QuotaCommon_ScopedLogExtraInfo, AddAndRemove)
+{
+  static constexpr auto text = "foo"_ns;
+
+  {
+    const auto extraInfo =
+        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
+
+#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+    const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+    EXPECT_NE(nullptr, extraInfoMap);
+
+    EXPECT_EQ(text, extraInfoMap->at(ScopedLogExtraInfo::kTagQuery));
+#endif
+  }
+
+#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+  const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+  EXPECT_NE(nullptr, extraInfoMap);
+
+  EXPECT_EQ(0u, extraInfoMap->count(ScopedLogExtraInfo::kTagQuery));
+#endif
+}
+
+TEST(QuotaCommon_ScopedLogExtraInfo, Nested)
+{
+  static constexpr auto text = "foo"_ns;
+  static constexpr auto nestedText = "bar"_ns;
+
+  {
+    const auto extraInfo =
+        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
+
+#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+    const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+    EXPECT_NE(nullptr, extraInfoMap);
+#endif
+
+    {
+      const auto extraInfo =
+          ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, nestedText};
+
+#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+      EXPECT_EQ(nestedText, extraInfoMap->at(ScopedLogExtraInfo::kTagQuery));
+#endif
+    }
+
+#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+    EXPECT_EQ(text, extraInfoMap->at(ScopedLogExtraInfo::kTagQuery));
+#endif
+  }
+
+#ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
+  const auto* const extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
+  EXPECT_NE(nullptr, extraInfoMap);
+
+  EXPECT_EQ(0u, extraInfoMap->count(ScopedLogExtraInfo::kTagQuery));
+#endif
 }

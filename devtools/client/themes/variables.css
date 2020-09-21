@@ -25,6 +25,9 @@
   --theme-focus-outline: 1px dotted var(--theme-focus-outline-color);
   --theme-focus-box-shadow-textbox: 0 0 0 1px var(--theme-textbox-box-shadow);
 
+  /* Standardizes the height of items in the Watch Expressions and XHR Breakpoints panes */
+  --expression-item-height: 20.5px;
+
   /* The photon animation curve */
   --animation-curve: cubic-bezier(0.07, 0.95, 0, 1);
 
