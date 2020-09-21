@@ -101,6 +101,7 @@
 #  include <intrin.h>
 #  include <math.h>
 #  include "cairo/cairo-features.h"
+#  include "mozilla/EarlyBlankWindow.h"
 #  include "mozilla/DllPrefetchExperimentRegistryInfo.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WindowsProcessMitigations.h"
@@ -267,6 +268,13 @@ static const char kPrefServicesSettingsServer[] = "services.settings.server";
 static const char kPrefSecurityContentSignatureRootHash[] =
     "security.content.signature.root_hash";
 #endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
+
+#if defined(XP_WIN)
+static const char kPrefThemeId[] = "extensions.activeThemeID";
+static const char kPrefBrowserStartupBlankWindow[] =
+    "browser.startup.blankWindow";
+static const char kPrefPreXulSkeletonUI[] = "browser.startup.preXulSkeletonUI";
+#endif  // defined(XP_WIN)
 
 int gArgc;
 char** gArgv;
@@ -1589,6 +1597,33 @@ static void SetupAlteredPrefetchPref() {
 
   Preferences::RegisterCallback(&OnAlteredPrefetchPrefChanged,
                                 PREF_WIN_ALTERED_DLL_PREFETCH);
+}
+
+static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
+  Unused << aPref;
+  Unused << aData;
+
+  bool shouldBeEnabled =
+      Preferences::GetBool(kPrefPreXulSkeletonUI, false) &&
+      Preferences::GetBool(kPrefBrowserStartupBlankWindow, false);
+  if (shouldBeEnabled && Preferences::HasUserValue(kPrefThemeId)) {
+    nsCString themeId;
+    Preferences::GetCString(kPrefThemeId, themeId);
+    shouldBeEnabled = themeId.EqualsLiteral("default-theme@mozilla.org");
+  }
+
+  if (GetEarlyBlankWindowEnabled() != shouldBeEnabled) {
+    SetEarlyBlankWindowEnabled(shouldBeEnabled);
+  }
+}
+
+static void SetupSkeletonUIPrefs() {
+  ReflectSkeletonUIPrefToRegistry(nullptr, nullptr);
+  Preferences::RegisterCallback(&ReflectSkeletonUIPrefToRegistry,
+                                kPrefPreXulSkeletonUI);
+  Preferences::RegisterCallback(&ReflectSkeletonUIPrefToRegistry,
+                                kPrefBrowserStartupBlankWindow);
+  Preferences::RegisterCallback(&ReflectSkeletonUIPrefToRegistry, kPrefThemeId);
 }
 
 #  if defined(MOZ_LAUNCHER_PROCESS)
@@ -4625,6 +4660,7 @@ nsresult XREMain::XRE_mainRun() {
     Preferences::RegisterCallbackAndCall(RegisterApplicationRestartChanged,
                                          PREF_WIN_REGISTER_APPLICATION_RESTART);
     SetupAlteredPrefetchPref();
+    SetupSkeletonUIPrefs();
 #  if defined(MOZ_LAUNCHER_PROCESS)
     SetupLauncherProcessPref();
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)
