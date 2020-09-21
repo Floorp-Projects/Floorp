@@ -36,12 +36,15 @@ exclude: true
   ([bug 1650108]({{bugzilla}}1650108))
 - ⚠️ Use AndroidX instead of the Android support library. For the public API this only changes
   the thread and nullable annotation types.
+- Added [`REPLACED_UNSAFE_CONTENT`][82.6] to content blocking API to indicate when unsafe content is shimmed.
+  ([bug 1663756]({{bugzilla}}1663756))
   
 [82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.WebResponseInfo-
 [82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-
 [82.3]: {{javadoc_uri}}/Image.html
 [82.4]: {{javadoc_uri}}/GeckoSession.PromptDelegate.RepostConfirmPrompt.html
 [82.5]: {{javadoc_uri}}/GeckoSession.html#restoreState-org.mozilla.geckoview.GeckoSession.SessionState-
+[82.6]: {{javadoc_uri}}/ContentBlockingController.Event.html#REPLACED_UNSAFE_CONTENT
 
 ## v81
 - Added `cookiePurging` to [`ContentBlocking.Settings.Builder`][81.1] and `getCookiePurging` and `setCookiePurging`
@@ -800,4 +803,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 6c24e94d3aecdae9046cfab8ec8470d81f2a2c96
+[api-version]: e62341ace2541ae9fbd4f08f7c2d03ba28bf416a
