@@ -1,0 +1,8 @@
+[package]
+name = "qcms"
+authors = ["Jeff Muizelaar", "Benoit Girard", "Andrew Osmond"]
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+libc = "0.2"

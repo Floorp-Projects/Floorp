@@ -1996,6 +1996,7 @@ dependencies = [
  "prefs_parser",
  "processtools",
  "profiler_helper",
+ "qcms",
  "remote",
  "rlbox_lucet_sandbox",
  "rsdparsa_capi",
@@ -3883,6 +3884,13 @@ dependencies = [
 name = "pulse-ffi"
 version = "0.1.0"
 source = "git+https://github.com/djg/cubeb-pulse-rs?rev=3224e2dee65c0726c448484d4c3c43956b9330ec#3224e2dee65c0726c448484d4c3c43956b9330ec"
+dependencies = [
+ "libc",
+]
+
+[[package]]
+name = "qcms"
+version = "0.1.0"
 dependencies = [
  "libc",
 ]
