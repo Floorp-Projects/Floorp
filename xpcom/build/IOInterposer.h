@@ -257,13 +257,13 @@ void EnteringNextStage();
 class IOInterposerInit {
  public:
   IOInterposerInit() {
-#if !defined(RELEASE_OR_BETA)
+#if defined(EARLY_BETA_OR_EARLIER)
     IOInterposer::Init();
 #endif
   }
 
   ~IOInterposerInit() {
-#if !defined(RELEASE_OR_BETA)
+#if defined(EARLY_BETA_OR_EARLIER)
     IOInterposer::Clear();
 #endif
   }
