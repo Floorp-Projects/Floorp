@@ -1516,14 +1516,26 @@ static nscoord PartiallyResolveAutoMinSize(
   //   from the aspect ratio and any definite size constraints in the opposite
   //   dimension.
   nscoord transferredSizeSuggestion = nscoord_MAX;
-  if (aFlexItem.IntrinsicRatio()) {
+  const StyleAspectRatio& aspectRatio =
+      aFlexItem.Frame()->StylePosition()->mAspectRatio;
+  AspectRatio ratio;
+  if (!aspectRatio.auto_) {
+    // For "aspect-ratio: <ratio>" case.
+    // Basically, this is for non-replaced elements. Replaced elements handle
+    // this already in GetIntrinsicRatio(), so does aFlexItem.IntrinsicRatio().
+    ratio = aspectRatio.ratio.AsRatio().ToLayoutRatio();
+  } else if (aFlexItem.HasIntrinsicRatio()) {
+    ratio = aFlexItem.IntrinsicRatio();
+  }
+
+  if (ratio) {
     // We have a usable aspect ratio. (not going to divide by 0)
     const bool useMinSizeIfCrossSizeIsIndefinite = true;
     nscoord crossSizeToUseWithRatio = CrossSizeToUseWithRatio(
         aFlexItem, aItemReflowInput, useMinSizeIfCrossSizeIsIndefinite,
         aAxisTracker);
-    transferredSizeSuggestion = MainSizeFromAspectRatio(
-        crossSizeToUseWithRatio, aFlexItem.IntrinsicRatio(), aAxisTracker);
+    transferredSizeSuggestion =
+        MainSizeFromAspectRatio(crossSizeToUseWithRatio, ratio, aAxisTracker);
   }
 
   return std::min(specifiedSizeSuggestion, transferredSizeSuggestion);
