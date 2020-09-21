@@ -151,6 +151,13 @@ using namespace mozilla::a11y;
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
+    if ([key isEqualToString:@"AXListSearchKey"]) {
+      RotorListRule rule = mImmediateDescendantsOnly
+                               ? RotorListRule(geckoStartAcc)
+                               : RotorListRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+
     if ([key isEqualToString:@"AXLinkSearchKey"]) {
       RotorLinkRule rule = mImmediateDescendantsOnly
                                ? RotorLinkRule(geckoStartAcc)
