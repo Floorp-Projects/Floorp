@@ -98,10 +98,11 @@ class HistoryListItemViewHolder(
         showTopContent: Boolean,
         isNormalMode: Boolean
     ) {
+        itemView.delete_button.isVisible = showTopContent
+        itemView.findViewById<ConstraintLayout>(R.id.recently_closed_nav).isVisible = showTopContent
+
         if (showTopContent) {
             itemView.delete_button.run {
-                visibility = View.VISIBLE
-
                 if (isNormalMode) {
                     isEnabled = true
                     alpha = 1f
@@ -117,10 +118,15 @@ class HistoryListItemViewHolder(
                         R.string.recently_closed_tab else R.string.recently_closed_tabs
                 ), numRecentTabs
             )
-            itemView.findViewById<ConstraintLayout>(R.id.recently_closed_nav).isVisible = true
-        } else {
-            itemView.findViewById<ConstraintLayout>(R.id.recently_closed_nav).visibility = View.GONE
-            itemView.delete_button.visibility = View.GONE
+            itemView.findViewById<ConstraintLayout>(R.id.recently_closed_nav).run {
+                if (isNormalMode) {
+                    isEnabled = true
+                    alpha = 1f
+                } else {
+                    isEnabled = false
+                    alpha = DELETE_BUTTON_DISABLED_ALPHA
+                }
+            }
         }
     }
 
