@@ -2,7 +2,7 @@ pull_request_rules:
   - name: MickeyMoz - Auto Merge
     conditions:
       - author=MickeyMoz
-      - status-success=pr-complete
+      - status-success=complete-pr
       - files~=(Gecko.kt|publicsuffixes)
     actions:
       merge:
@@ -11,7 +11,7 @@ pull_request_rules:
   - name: L10N - Auto Merge
     conditions:
       - author=mozilla-l10n-automation-bot
-      - status-success=pr-complete
+      - status-success=complete-pr
       - files~=(strings.xml)
     actions:
       merge:
@@ -19,7 +19,7 @@ pull_request_rules:
         strict: true
   - name: Needs landing - Merge
     conditions:
-      - status-success=pr-complete
+      - status-success=complete-pr
       - label=🛬 needs landing
       - "#approved-reviews-by>=1"
     actions:
