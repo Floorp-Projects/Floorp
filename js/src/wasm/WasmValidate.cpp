@@ -3080,9 +3080,13 @@ static bool DecodeModuleNameSubsection(Decoder& d,
     return d.fail("failed to read module name bytes");
   }
 
-  env->moduleName.emplace(moduleName);
+  if (!d.finishNameSubsection(*endOffset)) {
+    return false;
+  }
 
-  return d.finishNameSubsection(*endOffset);
+  // Only save the module name if the whole subsection validates.
+  env->moduleName.emplace(moduleName);
+  return true;
 }
 
 static bool DecodeFunctionNameSubsection(Decoder& d,
