@@ -490,13 +490,13 @@ toolbarpaletteitem[place="toolbar"] {
 #bookmarks-toolbar-placeholder,
 #bookmarks-toolbar-button,
 toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
-#personal-bookmarks:-moz-any([overflowedItem=true], [cui-areatype="menu-panel"]) > #PlacesToolbar {
+#personal-bookmarks:is([overflowedItem=true], [cui-areatype="menu-panel"]) > #PlacesToolbar {
   display: none;
 }
 
 toolbarpaletteitem[place="toolbar"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-button,
-#personal-bookmarks:-moz-any([overflowedItem=true], [cui-areatype="menu-panel"]) > #bookmarks-toolbar-button {
+#personal-bookmarks:is([overflowedItem=true], [cui-areatype="menu-panel"]) > #bookmarks-toolbar-button {
   display: -moz-box;
 }
 

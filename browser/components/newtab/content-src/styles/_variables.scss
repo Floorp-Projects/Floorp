@@ -195,7 +195,7 @@ $textbox-shadow-size: 4px;
     transition-property: transform, opacity;
     width: $context-menu-button-size;
 
-    &:-moz-any(:active, :focus) {
+    &:is(:active, :focus) {
       opacity: 1;
       transform: scale(1);
     }
