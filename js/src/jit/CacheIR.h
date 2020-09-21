@@ -212,8 +212,16 @@ enum class CacheOp {
 #undef DEFINE_OP
 };
 
+// CacheIR opcode info that's read in performance-sensitive code. Stored as a
+// single byte per op for better cache locality.
+struct CacheIROpInfo {
+  uint8_t argLength : 7;
+  bool transpile : 1;
+};
+static_assert(sizeof(CacheIROpInfo) == 1);
+extern const CacheIROpInfo CacheIROpInfos[];
+
 extern const char* const CacheIROpNames[];
-extern const uint32_t CacheIROpArgLengths[];
 extern const uint32_t CacheIROpHealth[];
 
 class StubField {
@@ -545,7 +553,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void assertLengthMatches() {
 #ifdef DEBUG
     // After writing arguments, assert the length matches CacheIROpArgLengths.
-    size_t expectedLen = CacheIROpArgLengths[size_t(*currentOp_)];
+    size_t expectedLen = CacheIROpInfos[size_t(*currentOp_)].argLength;
     MOZ_ASSERT_IF(!failed(),
                   buffer_.length() - currentOpArgsStart_ == expectedLen);
     currentOp_.reset();

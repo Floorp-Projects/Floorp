@@ -42,7 +42,7 @@ CacheIRHealth::Happiness CacheIRHealth::spewStubHealth(
   while (stubReader.more()) {
     CacheOp op = stubReader.readOp();
     uint32_t opHealth = CacheIROpHealth[size_t(op)];
-    uint32_t argLength = CacheIROpArgLengths[size_t(op)];
+    uint32_t argLength = CacheIROpInfos[size_t(op)].argLength;
     const char* opName = CacheIROpNames[size_t(op)];
 
     spew->beginObject();

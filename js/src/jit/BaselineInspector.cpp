@@ -679,7 +679,7 @@ static bool MaybeArgumentReader(ICStub* stub, CacheOp targetOp,
   CacheIRReader stubReader(stub->cacheIRStubInfo());
   while (stubReader.more()) {
     CacheOp op = stubReader.readOp();
-    uint32_t argLength = CacheIROpArgLengths[size_t(op)];
+    uint32_t argLength = CacheIROpInfos[size_t(op)].argLength;
 
     if (op == targetOp) {
       MOZ_ASSERT(argReader.isNothing(),

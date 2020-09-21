@@ -476,7 +476,9 @@ def generate_cacheirops_header(c_out, yaml_path):
         else:
             args_length = '0'
 
-        ops_items.append('_({}, {}, {})'.format(name, args_length, cost_estimate))
+        transpile_str = ('true' if transpile else 'false')
+        ops_items.append('_({}, {}, {}, {})'.format(
+            name, args_length, transpile_str, cost_estimate))
 
         writer_methods.append(gen_writer_method(name, args, custom_writer))
 
