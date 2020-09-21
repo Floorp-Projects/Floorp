@@ -24,7 +24,7 @@ const WIN = `
   <body>
     just a dummy window
     <script>
-      window.addEventListner("load",()=>{
+      window.addEventListener("load",()=>{
         window.close();
       });
     </script>

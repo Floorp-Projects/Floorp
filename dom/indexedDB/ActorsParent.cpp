@@ -7045,12 +7045,7 @@ nsresult DatabaseConnection::Init() {
   MOZ_ASSERT(!mInReadTransaction);
   MOZ_ASSERT(!mInWriteTransaction);
 
-  IDB_TRY_VAR(const auto stmt, GetCachedStatement("BEGIN;"_ns));
-
-  nsresult rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(ExecuteCachedStatement("BEGIN;"_ns));
 
   mInReadTransaction = true;
 
@@ -7093,17 +7088,12 @@ DatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
 template <typename BindFunctor>
 nsresult DatabaseConnection::ExecuteCachedStatement(
     const nsACString& aQuery, const BindFunctor& aBindFunctor) {
+  const auto queryInfo =
+      ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
+
   IDB_TRY_VAR(const auto stmt, GetCachedStatement(aQuery));
-
-  nsresult rv = aBindFunctor(*stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  IDB_TRY(aBindFunctor(*stmt));
+  IDB_TRY(stmt->Execute());
 
   return NS_OK;
 }
@@ -16231,45 +16221,44 @@ nsresult FactoryOp::DirectoryOpen() {
   MOZ_ASSERT(gFactoryOps);
 
   // See if this FactoryOp needs to wait.
-  bool delayed = false;
-  bool foundThis = false;
-  for (uint32_t index = gFactoryOps->Length(); index > 0; index--) {
-    CheckedUnsafePtr<FactoryOp>& existingOp = (*gFactoryOps)[index - 1];
+  const bool delayed =
+      std::any_of(
+          gFactoryOps->rbegin(), gFactoryOps->rend(),
+          [foundThis = false, &self = *this](const auto& existingOp) mutable {
+            if (existingOp == &self) {
+              foundThis = true;
+              return false;
+            }
 
-    if (existingOp == this) {
-      foundThis = true;
-      continue;
-    }
+            if (foundThis && self.MustWaitFor(*existingOp)) {
+              // Only one op can be delayed.
+              MOZ_ASSERT(!existingOp->mDelayedOp);
+              existingOp->mDelayedOp = &self;
+              return true;
+            }
 
-    if (foundThis && MustWaitFor(*existingOp)) {
-      // Only one op can be delayed.
-      MOZ_ASSERT(!existingOp->mDelayedOp);
-      existingOp->mDelayedOp = this;
-      delayed = true;
-      break;
-    }
-  }
+            return false;
+          }) ||
+      [&self = *this] {
+        QuotaClient* quotaClient = QuotaClient::GetInstance();
+        MOZ_ASSERT(quotaClient);
 
-  if (!delayed) {
-    QuotaClient* quotaClient = QuotaClient::GetInstance();
-    MOZ_ASSERT(quotaClient);
+        if (RefPtr<Maintenance> currentMaintenance =
+                quotaClient->GetCurrentMaintenance()) {
+          if (RefPtr<DatabaseMaintenance> databaseMaintenance =
+                  currentMaintenance->GetDatabaseMaintenance(
+                      self.mDatabaseFilePath)) {
+            databaseMaintenance->WaitForCompletion(&self);
+            return true;
+          }
+        }
 
-    if (RefPtr<Maintenance> currentMaintenance =
-            quotaClient->GetCurrentMaintenance()) {
-      if (RefPtr<DatabaseMaintenance> databaseMaintenance =
-              currentMaintenance->GetDatabaseMaintenance(mDatabaseFilePath)) {
-        databaseMaintenance->WaitForCompletion(this);
-        delayed = true;
-      }
-    }
-  }
+        return false;
+      }();
 
   mState = State::DatabaseOpenPending;
   if (!delayed) {
-    nsresult rv = DatabaseOpen();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    IDB_TRY(DatabaseOpen());
   }
 
   return NS_OK;

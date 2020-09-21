@@ -101,12 +101,15 @@ let NewTabPagePreloading = {
   },
 
   maybeCreatePreloadedBrowser(window) {
-    // If we're not enabled, have already got one, or are in a popup window,
-    // don't bother creating a preload browser - there's no point.
+    // If we're not enabled, have already got one, are in a popup window, or the
+    // window is minimized / occluded, don't bother creating a preload browser -
+    // there's no point.
     if (
       !this.enabled ||
       window.gBrowser.preloadedBrowser ||
-      !window.toolbar.visible
+      !window.toolbar.visible ||
+      window.windowState == window.STATE_MINIMIZED ||
+      window.isFullyOccluded
     ) {
       return;
     }

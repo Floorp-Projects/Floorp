@@ -16,9 +16,11 @@ function warmup(fun, input_array, output_array) {
 var fun_neg_int32_double = (x) => { return -x; }
 var fun_neg_double_int32 = (x) => { return -x; }
 
-// Unary ~ operator using either int32 or double.
+// Unary ~ operator using either int32, double, null, or undefined.
 var fun_bitnot_int32 = (x) => { return ~x; }
 var fun_bitnot_double = (x) => { return ~x; }
+var fun_bitnot_null = (x) => { return ~x; }
+var fun_bitnot_undefined = (x) => { return ~x; }
 
 // Unary ++ operator using either int32 or double.
 var fun_inc_int32 = (x) => { return ++x; }
@@ -44,6 +46,8 @@ warmup(fun_neg_int32_double, [1.2, 1.4], [-1.2, -1.4]);
 
 warmup(fun_bitnot_int32, [-1, 0], [0, -1]);
 warmup(fun_bitnot_double, [-1.0, 0.0, 1.2, 3], [0, -1, -2, -4]);
+warmup(fun_bitnot_null, [null], [-1]);
+warmup(fun_bitnot_undefined, [void 0], [-1]);
 
 warmup(fun_inc_int32, [-1, 0], [0, 1]);
 warmup(fun_inc_double, [-1.0, 0.0, 1.2, 3], [0, 1, 2.2, 4]);

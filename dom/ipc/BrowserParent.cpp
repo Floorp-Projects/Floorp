@@ -161,6 +161,8 @@ BrowserParent* BrowserParent::sFocus = nullptr;
 BrowserParent* BrowserParent::sTopLevelWebFocus = nullptr;
 /* static */
 BrowserParent* BrowserParent::sLastMouseRemoteTarget = nullptr;
+/* static */
+BrowserParent* BrowserParent::sPointerLockedRemoteTarget = nullptr;
 
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
@@ -243,6 +245,11 @@ BrowserParent* BrowserParent::GetFocused() { return sFocus; }
 /* static */
 BrowserParent* BrowserParent::GetLastMouseRemoteTarget() {
   return sLastMouseRemoteTarget;
+}
+
+/* static */
+BrowserParent* BrowserParent::GetPointerLockedRemoteTarget() {
+  return sPointerLockedRemoteTarget;
 }
 
 /*static*/
@@ -592,6 +599,7 @@ void BrowserParent::RemoveWindowListeners() {
 void BrowserParent::DestroyInternal() {
   UnsetTopLevelWebFocus(this);
   UnsetLastMouseRemoteTarget(this);
+  UnsetPointerLockedRemoteTarget(this);
 
   RemoveWindowListeners();
 
@@ -673,6 +681,7 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   // case of a crash.
   BrowserParent::UnsetTopLevelWebFocus(this);
   BrowserParent::UnsetLastMouseRemoteTarget(this);
+  BrowserParent::UnsetPointerLockedRemoteTarget(this);
 
   if (why == AbnormalShutdown) {
     // dom_reporting_header must also be enabled for the report to be sent.
@@ -2880,6 +2889,20 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvIntrinsicSizeOrRatioChanged(
+    const Maybe<IntrinsicSize>& aIntrinsicSize,
+    const Maybe<AspectRatio>& aIntrinsicRatio) {
+  BrowserBridgeParent* bridge = GetBrowserBridgeParent();
+  if (!bridge || !bridge->CanSend()) {
+    return IPC_OK();
+  }
+
+  Unused << bridge->SendIntrinsicSizeOrRatioChanged(aIntrinsicSize,
+                                                    aIntrinsicRatio);
+
+  return IPC_OK();
+}
+
 bool BrowserParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {
   nsCOMPtr<nsIWidget> textInputHandlingWidget = GetTextInputHandlingWidget();
   if (!textInputHandlingWidget) {
@@ -3052,6 +3075,14 @@ void BrowserParent::UnsetTopLevelWebFocusAll() {
 void BrowserParent::UnsetLastMouseRemoteTarget(BrowserParent* aBrowserParent) {
   if (sLastMouseRemoteTarget == aBrowserParent) {
     sLastMouseRemoteTarget = nullptr;
+  }
+}
+
+/* static */
+void BrowserParent::UnsetPointerLockedRemoteTarget(
+    BrowserParent* aBrowserParent) {
+  if (sPointerLockedRemoteTarget == aBrowserParent) {
+    sPointerLockedRemoteTarget = nullptr;
   }
 }
 
@@ -4122,6 +4153,31 @@ mozilla::ipc::IPCResult BrowserParent::RecvIsWindowSupportingWebVR(
   aResolve(true);
 #endif
 
+  return IPC_OK();
+}
+
+bool BrowserParent::SetPointerLock() {
+  if (sPointerLockedRemoteTarget) {
+    return sPointerLockedRemoteTarget == this;
+  }
+
+  sPointerLockedRemoteTarget = this;
+  return true;
+}
+
+mozilla::ipc::IPCResult BrowserParent::RecvRequestPointerLock(
+    RequestPointerLockResolver&& aResolve) {
+  nsCString error;
+  if (!SetPointerLock()) {
+    error = "PointerLockDeniedInUse";
+  }
+  aResolve(error);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserParent::RecvReleasePointerLock() {
+  MOZ_ASSERT_IF(sPointerLockedRemoteTarget, sPointerLockedRemoteTarget == this);
+  UnsetPointerLockedRemoteTarget(this);
   return IPC_OK();
 }
 

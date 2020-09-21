@@ -118,6 +118,8 @@ class BrowserParent final : public PBrowserParent,
 
   static BrowserParent* GetLastMouseRemoteTarget();
 
+  static BrowserParent* GetPointerLockedRemoteTarget();
+
   static BrowserParent* GetFrom(nsFrameLoader* aFrameLoader);
 
   static BrowserParent* GetFrom(PBrowserParent* aBrowserParent);
@@ -333,6 +335,10 @@ class BrowserParent final : public PBrowserParent,
       nsTArray<nsString>&& aValues, const bool aIsFullStorage,
       const bool aNeedCollectSHistory, const uint32_t& aFlushId,
       const bool& aIsFinal, const uint32_t& aEpoch);
+
+  mozilla::ipc::IPCResult RecvIntrinsicSizeOrRatioChanged(
+      const Maybe<IntrinsicSize>& aIntrinsicSize,
+      const Maybe<AspectRatio>& aIntrinsicRatio);
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
@@ -774,6 +780,11 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvMaybeFireEmbedderLoadEvents(
       EmbedderElementEventType aFireEventAtEmbeddingElement);
 
+  bool SetPointerLock();
+  mozilla::ipc::IPCResult RecvRequestPointerLock(
+      RequestPointerLockResolver&& aResolve);
+  mozilla::ipc::IPCResult RecvReleasePointerLock();
+
  private:
   void SuppressDisplayport(bool aEnabled);
 
@@ -844,6 +855,13 @@ class BrowserParent final : public PBrowserParent,
   // Unsetter for LastMouseRemoteTarget; only unsets if argument matches
   // current sLastMouseRemoteTarget.
   static void UnsetLastMouseRemoteTarget(BrowserParent* aBrowserParent);
+
+  // Keeps track of which BrowserParent requested pointer lock.
+  static BrowserParent* sPointerLockedRemoteTarget;
+
+  // Unsetter for sPointerLockedRemoteTarget; only unsets if argument matches
+  // current sPointerLockedRemoteTarget.
+  static void UnsetPointerLockedRemoteTarget(BrowserParent* aBrowserParent);
 
   struct APZData {
     bool operator==(const APZData& aOther) {

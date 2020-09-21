@@ -9,6 +9,8 @@
 #ifndef mozilla_Result_h
 #define mozilla_Result_h
 
+#include <algorithm>
+#include <cstring>
 #include <type_traits>
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
@@ -59,6 +61,10 @@ class ResultImplementation<V, E, PackingStrategy::Variant> {
   explicit ResultImplementation(V&& aValue)
       : mStorage(std::forward<V>(aValue)) {}
   explicit ResultImplementation(const V& aValue) : mStorage(aValue) {}
+  template <typename... Args>
+  explicit ResultImplementation(std::in_place_t, Args&&... aArgs)
+      : mStorage(VariantType<V>{}, std::forward<Args>(aArgs)...) {}
+
   explicit ResultImplementation(const E& aErrorValue) : mStorage(aErrorValue) {}
   explicit ResultImplementation(E&& aErrorValue)
       : mStorage(std::forward<E>(aErrorValue)) {}
@@ -73,29 +79,6 @@ class ResultImplementation<V, E, PackingStrategy::Variant> {
 
   E unwrapErr() { return std::move(mStorage.template as<E>()); }
   const E& inspectErr() const { return mStorage.template as<E>(); }
-};
-
-/**
- * mozilla::Variant doesn't like storing a reference. This is a specialization
- * to store E as pointer if it's a reference.
- */
-template <typename V, typename E>
-class ResultImplementation<V, E&, PackingStrategy::Variant> {
-  mozilla::Variant<V, E*> mStorage;
-
- public:
-  explicit ResultImplementation(V&& aValue)
-      : mStorage(std::forward<V>(aValue)) {}
-  explicit ResultImplementation(const V& aValue) : mStorage(aValue) {}
-  explicit ResultImplementation(E& aErrorValue) : mStorage(&aErrorValue) {}
-
-  bool isOk() const { return mStorage.template is<V>(); }
-
-  const V& inspect() const { return mStorage.template as<V>(); }
-  V unwrap() { return std::move(mStorage.template as<V>()); }
-
-  E& unwrapErr() { return *mStorage.template as<E*>(); }
-  const E& inspectErr() const { return *mStorage.template as<E*>(); }
 };
 
 // The purpose of EmptyWrapper is to make an empty class look like
@@ -147,9 +130,17 @@ class ResultImplementationNullIsOkBase {
       new (mValue.first().addr()) V(std::move(aSuccessValue));
     }
   }
+  template <typename... Args>
+  explicit ResultImplementationNullIsOkBase(std::in_place_t, Args&&... aArgs)
+      : mValue(std::piecewise_construct, std::tuple<>(),
+               std::tuple(kNullValue)) {
+    if constexpr (!std::is_empty_v<V>) {
+      new (mValue.first().addr()) V(std::forward<Args>(aArgs)...);
+    }
+  }
   explicit ResultImplementationNullIsOkBase(E aErrorValue)
       : mValue(std::piecewise_construct, std::tuple<>(),
-               std::tuple(UnusedZero<E>::Store(aErrorValue))) {
+               std::tuple(UnusedZero<E>::Store(std::move(aErrorValue)))) {
     MOZ_ASSERT(mValue.second() != kNullValue);
   }
 
@@ -235,33 +226,77 @@ class ResultImplementation<V, E, PackingStrategy::NullIsOk>
   using ResultImplementationNullIsOk<V, E>::ResultImplementationNullIsOk;
 };
 
+template <size_t S>
+using UnsignedIntType = std::conditional_t<
+    S == 1, std::uint8_t,
+    std::conditional_t<
+        S == 2, std::uint16_t,
+        std::conditional_t<S == 3 || S == 4, std::uint32_t,
+                           std::conditional_t<S <= 8, std::uint64_t, void>>>>;
+
 /**
  * Specialization for when alignment permits using the least significant bit
  * as a tag bit.
  */
 template <typename V, typename E>
-class ResultImplementation<V*, E&, PackingStrategy::LowBitTagIsError> {
-  uintptr_t mBits;
+class ResultImplementation<V, E, PackingStrategy::LowBitTagIsError> {
+  static_assert(std::is_trivially_copyable_v<V> &&
+                std::is_trivially_destructible_v<V>);
+  static_assert(std::is_trivially_copyable_v<E> &&
+                std::is_trivially_destructible_v<E>);
+
+  static constexpr size_t kRequiredSize = std::max(sizeof(V), sizeof(E));
+
+  using StorageType = UnsignedIntType<kRequiredSize>;
+
+#if defined(__clang__)
+  alignas(std::max(alignof(V), alignof(E))) StorageType mBits;
+#else
+  // Some gcc versions choke on using std::max with alignas, see
+  // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94929 (and this seems to have
+  // regressed in some gcc 9.x version before being fixed again) Keeping the
+  // code above since we would eventually drop this when we no longer support
+  // gcc versions with the bug.
+  alignas(alignof(V) > alignof(E) ? alignof(V) : alignof(E)) StorageType mBits;
+#endif
 
  public:
-  explicit ResultImplementation(V* aValue)
-      : mBits(reinterpret_cast<uintptr_t>(aValue)) {
-    MOZ_ASSERT((uintptr_t(aValue) % MOZ_ALIGNOF(V)) == 0,
-               "Result value pointers must not be misaligned");
+  explicit ResultImplementation(V aValue) {
+    if constexpr (!std::is_empty_v<V>) {
+      std::memcpy(&mBits, &aValue, sizeof(V));
+      MOZ_ASSERT((mBits & 1) == 0);
+    } else {
+      (void)aValue;
+      mBits = 0;
+    }
   }
-  explicit ResultImplementation(E& aErrorValue)
-      : mBits(reinterpret_cast<uintptr_t>(&aErrorValue) | 1) {
-    MOZ_ASSERT((uintptr_t(&aErrorValue) % MOZ_ALIGNOF(E)) == 0,
-               "Result errors must not be misaligned");
+  explicit ResultImplementation(E aErrorValue) {
+    if constexpr (!std::is_empty_v<E>) {
+      std::memcpy(&mBits, &aErrorValue, sizeof(E));
+      MOZ_ASSERT((mBits & 1) == 0);
+      mBits |= 1;
+    } else {
+      (void)aErrorValue;
+      mBits = 1;
+    }
   }
 
   bool isOk() const { return (mBits & 1) == 0; }
 
-  V* inspect() const { return reinterpret_cast<V*>(mBits); }
-  V* unwrap() { return inspect(); }
+  V inspect() const {
+    V res;
+    std::memcpy(&res, &mBits, sizeof(V));
+    return res;
+  }
+  V unwrap() { return inspect(); }
 
-  E& inspectErr() const { return *reinterpret_cast<E*>(mBits ^ 1); }
-  E& unwrapErr() { return inspectErr(); }
+  E inspectErr() const {
+    const auto bits = mBits ^ 1;
+    E res;
+    std::memcpy(&res, &bits, sizeof(E));
+    return res;
+  }
+  E unwrapErr() { return inspectErr(); }
 };
 
 // Return true if any of the struct can fit in a word.
@@ -321,44 +356,13 @@ struct UnusedZero {
   static const bool value = false;
 };
 
-// References can't be null.
-template <typename T>
-struct UnusedZero<T&> {
-  using StorageType = T*;
-
-  static constexpr bool value = true;
-
-  // This is static function rather than a static data member in order to avoid
-  // that gcc emits lots of static constructors. It may be changed to a static
-  // constexpr data member using bit_cast with C++20.
-  static inline StorageType GetDefaultValue() {
-    return reinterpret_cast<StorageType>(~ptrdiff_t(0));
-  }
-
-  static constexpr StorageType nullValue = nullptr;
-
-  static constexpr const T& Inspect(StorageType aValue) {
-    AssertValid(aValue);
-    return *aValue;
-  }
-  static constexpr T& Unwrap(StorageType aValue) {
-    AssertValid(aValue);
-    return *aValue;
-  }
-  static constexpr StorageType Store(T& aValue) { return &aValue; }
-
- private:
-  static constexpr void AssertValid(StorageType aValue) {
-    MOZ_ASSERT(aValue != GetDefaultValue());
-  }
-};
-
 // A bit of help figuring out which of the above specializations to use.
 //
-// We begin by safely assuming types don't have a spare bit.
+// We begin by safely assuming types don't have a spare bit, unless they are
+// empty.
 template <typename T>
 struct HasFreeLSB {
-  static const bool value = false;
+  static const bool value = std::is_empty_v<T>;
 };
 
 // As an incomplete type, void* does not have a spare bit.
@@ -373,13 +377,6 @@ struct HasFreeLSB<void*> {
 template <typename T>
 struct HasFreeLSB<T*> {
   static const bool value = (alignof(T) & 1) == 0;
-};
-
-// We store references as pointers, so they have a free bit if a pointer would
-// have one.
-template <typename T>
-struct HasFreeLSB<T&> {
-  static const bool value = HasFreeLSB<T*>::value;
 };
 
 // Select one of the previous result implementation based on the properties of
@@ -423,17 +420,24 @@ auto ToResult(Result<V, E>&& aValue)
  * This is just like Variant<V, E> but with a slightly different API, and the
  * following cases are optimized so Result can be stored more efficiently:
  *
- * - If the success type is Ok (or another empty class) and the error type is a
- *   reference, Result<V, E&> is guaranteed to be pointer-sized and all zero
- *   bits on success. Do not change this representation! There is JIT code that
- *   depends on it.
+ * - If both the success and error types do not use their least significant bit,
+ * are trivially copyable and destructible, Result<V, E> is guaranteed to be as
+ * large as the larger type. This is determined via the HasFreeLSB trait. By
+ * default, empty classes (in particular Ok) and aligned pointer types are
+ * assumed to have a free LSB, but you can specialize this trait for other
+ * types. If the success type is empty, the representation is guaranteed to be
+ * all zero bits on success. Do not change this representation! There is JIT
+ * code that depends on it. (Implementation note: The lowest bit is used as a
+ * tag bit: 0 to indicate the Result's bits are a success value, 1 to indicate
+ * the Result's bits (with the 1 masked out) encode an error value)
  *
- * - If the success type is a pointer type and the error type is a reference
- *   type, and the least significant bit is unused for both types when stored
- *   as a pointer (due to alignment rules), Result<V*, E&> is guaranteed to be
- *   pointer-sized. In this case, we use the lowest bit as tag bit: 0 to
- *   indicate the Result's bits are a V, 1 to indicate the Result's bits (with
- *   the 1 masked out) encode an E*.
+ * - Else, if the error type can't have a all-zero bits representation and is
+ * not larger than a pointer, a CompactPair is used to represent this rather
+ * than a Variant. This has shown to be better optimizable, and the template
+ * code is much simpler than that of Variant, so it should also compile faster.
+ * Whether an error type can't be all-zero bits, is determined via the
+ * UnusedZero trait. MFBT doesn't declare any public type UnusedZero, but
+ * nsresult is declared UnusedZero in XPCOM.
  *
  * The purpose of Result is to reduce the screwups caused by using `false` or
  * `nullptr` to indicate errors.
@@ -453,6 +457,8 @@ class MOZ_MUST_USE_TYPE Result final {
   // See class comment on Result<const V, E> and Result<V, const E>.
   static_assert(!std::is_const_v<V>);
   static_assert(!std::is_const_v<E>);
+  static_assert(!std::is_reference_v<V>);
+  static_assert(!std::is_reference_v<E>);
 
   using Impl = typename detail::SelectResultImpl<V, E>::Type;
 
@@ -470,8 +476,15 @@ class MOZ_MUST_USE_TYPE Result final {
   /** Create a success result. */
   MOZ_IMPLICIT Result(const V& aValue) : mImpl(aValue) { MOZ_ASSERT(isOk()); }
 
+  /** Create a success result in-place. */
+  template <typename... Args>
+  explicit Result(std::in_place_t, Args&&... aArgs)
+      : mImpl(std::in_place, std::forward<Args>(aArgs)...) {
+    MOZ_ASSERT(isOk());
+  }
+
   /** Create an error result. */
-  explicit Result(E aErrorValue) : mImpl(std::forward<E>(aErrorValue)) {
+  explicit Result(E aErrorValue) : mImpl(std::move(aErrorValue)) {
     MOZ_ASSERT(isErr());
   }
 
@@ -481,7 +494,7 @@ class MOZ_MUST_USE_TYPE Result final {
    */
   template <typename E2>
   MOZ_IMPLICIT Result(GenericErrorResult<E2>&& aErrorResult)
-      : mImpl(std::forward<E2>(aErrorResult.mErrorValue)) {
+      : mImpl(std::move(aErrorResult.mErrorValue)) {
     static_assert(std::is_convertible_v<E2, E>, "E2 must be convertible to E");
     MOZ_ASSERT(isErr());
   }
@@ -530,10 +543,22 @@ class MOZ_MUST_USE_TYPE Result final {
   }
 
   /** See the success value from this Result, which must be a success result. */
-  const V& inspect() const { return mImpl.inspect(); }
+  decltype(auto) inspect() const {
+    static_assert(!std::is_reference_v<
+                      std::invoke_result_t<decltype(&Impl::inspect), Impl>> ||
+                  std::is_const_v<std::remove_reference_t<
+                      std::invoke_result_t<decltype(&Impl::inspect), Impl>>>);
+    MOZ_ASSERT(isOk());
+    return mImpl.inspect();
+  }
 
   /** See the error value from this Result, which must be an error result. */
-  const E& inspectErr() const {
+  decltype(auto) inspectErr() const {
+    static_assert(
+        !std::is_reference_v<
+            std::invoke_result_t<decltype(&Impl::inspectErr), Impl>> ||
+        std::is_const_v<std::remove_reference_t<
+            std::invoke_result_t<decltype(&Impl::inspectErr), Impl>>>);
     MOZ_ASSERT(isErr());
     return mImpl.inspectErr();
   }
@@ -730,13 +755,16 @@ class MOZ_MUST_USE_TYPE GenericErrorResult {
   friend class Result;
 
  public:
+  explicit GenericErrorResult(const E& aErrorValue)
+      : mErrorValue(aErrorValue) {}
+
   explicit GenericErrorResult(E&& aErrorValue)
-      : mErrorValue(std::forward<E>(aErrorValue)) {}
+      : mErrorValue(std::move(aErrorValue)) {}
 };
 
 template <typename E>
-inline GenericErrorResult<E> Err(E&& aErrorValue) {
-  return GenericErrorResult<E>(std::forward<E>(aErrorValue));
+inline auto Err(E&& aErrorValue) {
+  return GenericErrorResult<std::decay_t<E>>(std::forward<E>(aErrorValue));
 }
 
 }  // namespace mozilla

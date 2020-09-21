@@ -9,6 +9,7 @@ from collections import defaultdict
 
 from fluent.syntax import ast as ftl
 from fluent.syntax.serializer import serialize_variant_key
+from fluent.syntax.visitor import Visitor
 
 from .base import Checker, CSSCheckMixin
 from compare_locales import plurals
@@ -45,7 +46,7 @@ def pattern_variants(pattern):
     return []
 
 
-class ReferenceMessageVisitor(ftl.Visitor, CSSCheckMixin):
+class ReferenceMessageVisitor(Visitor, CSSCheckMixin):
     def __init__(self):
         # References to Messages, their Attributes, and Terms
         # Store reference name and type
@@ -284,7 +285,7 @@ class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
             )
 
 
-class TermVisitor(GenericL10nChecks, ftl.Visitor):
+class TermVisitor(GenericL10nChecks, Visitor):
     def __init__(self, locale):
         super(TermVisitor, self).__init__()
         self.locale = locale

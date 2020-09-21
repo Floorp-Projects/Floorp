@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+
+<p>Test intrinsic sizing of embed elements referencing SVG documents, both same
+origin and cross origin.</p>
+
+<div id="container" style="width: 500px;"></div>
+
+<script>
+const TESTS = [
+  { outer: "none", inner: "none", expected: "300x150" },
+  { outer: "none", inner: "size", expected: "200x900" },
+  { outer: "none", inner: "ratio", expected: "500x2500" },
+  { outer: "none", inner: "both", expected: "200x400" },
+  { outer: "size", inner: "none", expected: "100x150" },
+  { outer: "size", inner: "size", expected: "100x450" },
+  { outer: "size", inner: "ratio", expected: "100x500" },
+  { outer: "size", inner: "both", expected: "100x200" },
+  { outer: "ratio", inner: "none", expected: "500x1500" },
+  { outer: "ratio", inner: "size", expected: "200x900" },
+  { outer: "ratio", inner: "ratio", expected: "500x1500" },
+  { outer: "ratio", inner: "both", expected: "200x400" },
+  { outer: "both", inner: "none", expected: "100x300" },
+  { outer: "both", inner: "size", expected: "100x300" },
+  { outer: "both", inner: "ratio", expected: "100x300" },
+  { outer: "both", inner: "both", expected: "100x300" },
+];
+
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({ "set": [["layout.css.aspect-ratio.enabled", true]] });
+
+  for (let test of TESTS) {
+    for (let crossorigin of [false, true]) {
+      let host = crossorigin ? "http://example.org" : "http://mochi.test:8888";
+      let e = document.createElement("embed");
+
+      switch (test.outer) {
+        case "none":
+          break;
+        case "size":
+          e.style.width = "100px";
+          break;
+        case "ratio":
+          e.style.aspectRatio = "1 / 3";
+          break;
+        case "both":
+          e.style.width = "100px";
+          e.style.aspectRatio = "1 / 3";
+          break;
+        default:
+          throw new Error("unexpected subtest");
+      }
+
+      await new Promise(function(resolve) {
+        e.src = host + location.pathname.replace("test_embed_sizing.html", `file_embed_sizing_${test.inner}.svg`);
+        e.onload = resolve;
+        container.append(e);
+      });
+
+      let desc = `Subtest (${test.outer}/${test.inner}/${crossorigin ? 'cross' : 'same'} origin)`;
+      is(`${e.offsetWidth}x${e.offsetHeight}`, test.expected, desc);
+      e.remove();
+    }
+  }
+});
+</script>

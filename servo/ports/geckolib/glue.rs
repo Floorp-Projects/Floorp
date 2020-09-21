@@ -4050,11 +4050,18 @@ fn parse_property_into(
     data: *mut URLExtraData,
     parsing_mode: structs::ParsingMode,
     quirks_mode: QuirksMode,
+    rule_type: CssRuleType,
     reporter: Option<&dyn ParseErrorReporter>,
 ) -> Result<(), ()> {
     let value = unsafe { value.as_str_unchecked() };
     let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
     let parsing_mode = ParsingMode::from_bits_truncate(parsing_mode);
+
+    if let Some(non_custom) = property_id.non_custom_id() {
+        if !non_custom.allowed_in_rule(rule_type) {
+            return Err(());
+        }
+    }
 
     parse_one_declaration_into(
         declarations,
@@ -4064,6 +4071,7 @@ fn parse_property_into(
         reporter,
         parsing_mode,
         quirks_mode,
+        rule_type,
     )
 }
 
@@ -4075,6 +4083,7 @@ pub extern "C" fn Servo_ParseProperty(
     parsing_mode: structs::ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
+    rule_type: u16,
 ) -> Strong<RawServoDeclarationBlock> {
     let id = get_property_id_from_nscsspropertyid!(property, Strong::null());
     let mut declarations = SourcePropertyDeclaration::new();
@@ -4086,6 +4095,7 @@ pub extern "C" fn Servo_ParseProperty(
         data,
         parsing_mode,
         quirks_mode.into(),
+        to_rule_type(rule_type),
         reporter.as_ref().map(|r| r as &dyn ParseErrorReporter),
     );
 
@@ -4215,6 +4225,7 @@ pub unsafe extern "C" fn Servo_ParseStyleAttribute(
     raw_extra_data: *mut URLExtraData,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
+    rule_type: u16,
 ) -> Strong<RawServoDeclarationBlock> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let value = data.as_str_unchecked();
@@ -4225,6 +4236,7 @@ pub unsafe extern "C" fn Servo_ParseStyleAttribute(
         url_data,
         reporter.as_ref().map(|r| r as &dyn ParseErrorReporter),
         quirks_mode.into(),
+        to_rule_type(rule_type),
     )))
     .into_strong()
 }
@@ -4437,6 +4449,7 @@ fn set_property(
     parsing_mode: structs::ParsingMode,
     quirks_mode: QuirksMode,
     loader: *mut Loader,
+    rule_type: CssRuleType,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     let mut source_declarations = SourcePropertyDeclaration::new();
@@ -4448,6 +4461,7 @@ fn set_property(
         data,
         parsing_mode,
         quirks_mode,
+        rule_type,
         reporter.as_ref().map(|r| r as &dyn ParseErrorReporter),
     );
 
@@ -4469,6 +4483,12 @@ fn set_property(
     )
 }
 
+#[inline]
+fn to_rule_type(ty: u16) -> CssRuleType {
+    use num_traits::FromPrimitive;
+    CssRuleType::from_u16(ty).unwrap_or(CssRuleType::Style)
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
     declarations: &RawServoDeclarationBlock,
@@ -4479,6 +4499,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
     parsing_mode: structs::ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
+    rule_type: u16,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     set_property(
@@ -4490,6 +4511,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
         parsing_mode,
         quirks_mode.into(),
         loader,
+        to_rule_type(rule_type),
         before_change_closure,
     )
 }
@@ -4521,6 +4543,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyById(
     parsing_mode: structs::ParsingMode,
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
+    rule_type: u16,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
     set_property(
@@ -4532,6 +4555,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyById(
         parsing_mode,
         quirks_mode.into(),
         loader,
+        to_rule_type(rule_type),
         before_change_closure,
     )
 }
@@ -5274,6 +5298,7 @@ pub unsafe extern "C" fn Servo_CSSSupports2(
         DUMMY_URL_DATA,
         structs::ParsingMode_Default,
         QuirksMode::NoQuirks,
+        CssRuleType::Style,
         None,
     )
     .is_ok()

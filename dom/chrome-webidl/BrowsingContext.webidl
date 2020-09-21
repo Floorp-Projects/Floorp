@@ -124,6 +124,9 @@ interface BrowsingContext {
   [SetterThrows] attribute unsigned long long browserId;
 
   readonly attribute ChildSHistory? childSessionHistory;
+
+  // Resets the location change rate limit. Used for testing.
+  void resetLocationChangeRateLimit();
 };
 
 BrowsingContext includes LoadContextMixin;

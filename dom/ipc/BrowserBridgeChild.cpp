@@ -242,5 +242,19 @@ void BrowserBridgeChild::UnblockOwnerDocsLoadEvent() {
   }
 }
 
+mozilla::ipc::IPCResult BrowserBridgeChild::RecvIntrinsicSizeOrRatioChanged(
+    const Maybe<IntrinsicSize>& aIntrinsicSize,
+    const Maybe<AspectRatio>& aIntrinsicRatio) {
+  if (RefPtr<Element> owner = mFrameLoader->GetOwnerContent()) {
+    if (nsIFrame* f = owner->GetPrimaryFrame()) {
+      if (nsSubDocumentFrame* sdf = do_QueryFrame(f)) {
+        sdf->SubdocumentIntrinsicSizeOrRatioChanged(aIntrinsicSize,
+                                                    aIntrinsicRatio);
+      }
+    }
+  }
+  return IPC_OK();
+}
+
 }  // namespace dom
 }  // namespace mozilla

@@ -18,7 +18,6 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCategoryManager.h"
-#include "nsCategoryManagerUtils.h"
 #include "nsLayoutModule.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsIObserverService.h"
@@ -73,48 +72,6 @@ static LazyLogModule nsComponentManagerLog("nsComponentManager");
 #  define SHOW_DENIED_ON_SHUTDOWN
 #  define SHOW_CI_ON_EXISTING_SERVICE
 #endif
-
-NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
-
-nsresult nsGetServiceFromCategory::operator()(const nsIID& aIID,
-                                              void** aInstancePtr) const {
-  nsresult rv;
-  nsCString value;
-  nsCOMPtr<nsICategoryManager> catman;
-  nsComponentManagerImpl* compMgr = nsComponentManagerImpl::gComponentManager;
-  if (!compMgr) {
-    rv = NS_ERROR_NOT_INITIALIZED;
-    goto error;
-  }
-
-  rv = compMgr->nsComponentManagerImpl::GetService(
-      kCategoryManagerCID, NS_GET_IID(nsICategoryManager),
-      getter_AddRefs(catman));
-  if (NS_FAILED(rv)) {
-    goto error;
-  }
-
-  /* find the contractID for category.entry */
-  rv = catman->GetCategoryEntry(mCategory, mEntry, value);
-  if (NS_FAILED(rv)) {
-    goto error;
-  }
-  if (value.IsVoid()) {
-    rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
-    goto error;
-  }
-
-  rv = compMgr->nsComponentManagerImpl::GetServiceByContractID(
-      value.get(), aIID, aInstancePtr);
-  if (NS_FAILED(rv)) {
-  error:
-    *aInstancePtr = 0;
-  }
-  if (mErrorPtr) {
-    *mErrorPtr = rv;
-  }
-  return rv;
-}
 
 namespace {
 
