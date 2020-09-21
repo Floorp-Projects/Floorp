@@ -254,6 +254,10 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvSubmitLoadInputEventResponsePreloadTelemetry(
       uint32_t aMillis);
 
+  mozilla::ipc::IPCResult RecvCheckPermitUnload(
+      bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction,
+      CheckPermitUnloadResolver&& aResolver);
+
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,

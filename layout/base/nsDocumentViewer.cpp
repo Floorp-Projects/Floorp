@@ -1201,7 +1201,6 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
     aAction = eDontPromptAndUnload;
   }
 
-  nsresult rv = NS_OK;
   *aPermitUnload = true;
 
   RefPtr<BrowsingContext> bc = mContainer->GetBrowsingContext();
@@ -1216,6 +1215,7 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
   IgnoreOpensDuringUnload ignoreOpens(mDocument);
 
   bool foundBlocker = false;
+  bool foundOOPListener = false;
   bc->PreOrderWalk([&](BrowsingContext* aBC) {
     if (aBC->IsInProcess()) {
       nsCOMPtr<nsIContentViewer> contentViewer;
@@ -1224,30 +1224,45 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
           contentViewer->DispatchBeforeUnload() == eRequestBlockNavigation) {
         foundBlocker = true;
       }
+    } else {
+      WindowContext* wc = aBC->GetCurrentWindowContext();
+      if (wc && wc->HasBeforeUnload()) {
+        foundOOPListener = true;
+      }
     }
   });
 
+  if (!foundOOPListener) {
+    if (!foundBlocker) {
+      return NS_OK;
+    }
+    if (aAction != ePrompt) {
+      *aPermitUnload = aAction == eDontPromptAndUnload;
+      return NS_OK;
+    }
+  }
+
   // NB: we nullcheck mDocument because it might now be dead as a result of
   // the event being dispatched.
-  if (!mDocument) {
+  RefPtr<WindowGlobalChild> wgc(mDocument ? mDocument->GetWindowGlobalChild()
+                                          : nullptr);
+  if (!wgc) {
     return NS_OK;
   }
 
-  if (foundBlocker) {
-    if (aAction == eDontPromptAndUnload) {
-      // Ask the user if it's ok to unload the current page
+  nsAutoSyncOperation sync(mDocument);
+  AutoSuppressEventHandlingAndSuspend seh(bc->Group());
 
-      nsCOMPtr<nsIPromptCollection> prompt =
-          do_GetService("@mozilla.org/embedcomp/prompt-collection;1");
+  mInPermitUnloadPrompt = true;
 
-      if (prompt) {
-        nsAutoSyncOperation sync(mDocument);
-        mInPermitUnloadPrompt = true;
-        mozilla::Telemetry::Accumulate(
-            mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_COUNT, 1);
-        rv = prompt->BeforeUnloadCheck(bc, aPermitUnload);
-        mInPermitUnloadPrompt = false;
-
+  bool done = false;
+  wgc->SendCheckPermitUnload(
+      foundBlocker, aAction,
+      [&](bool aPermit) {
+        done = true;
+        *aPermitUnload = aPermit;
+      },
+      [&](auto) {
         // If the prompt aborted, we tell our consumer that it is not allowed
         // to unload the page. One reason that prompts abort is that the user
         // performed some action that caused the page to unload while our prompt
@@ -1256,22 +1271,13 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
         //
         // XXX: Are there other cases where prompts can abort? Is it ok to
         //      prevent unloading the page in those cases?
-        if (NS_FAILED(rv)) {
-          mozilla::Telemetry::Accumulate(
-              mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION, 2);
-          *aPermitUnload = false;
-          return NS_OK;
-        }
+        done = true;
+        *aPermitUnload = false;
+      });
 
-        mozilla::Telemetry::Accumulate(
-            mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION,
-            (*aPermitUnload ? 1 : 0));
-      }
-    } else if (aAction == eDontPromptAndDontUnload) {
-      *aPermitUnload = false;
-    }
-  }
+  SpinEventLoopUntil([&]() { return done; });
 
+  mInPermitUnloadPrompt = false;
   return NS_OK;
 }
 
