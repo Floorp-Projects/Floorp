@@ -240,7 +240,8 @@ static void SkipBinaryGuards(CacheIRReader& reader, bool* sawStringOperand) {
     // Two skip opcodes
     if (reader.matchOp(CacheOp::GuardNonDoubleType) ||
         reader.matchOp(CacheOp::TruncateDoubleToUInt32) ||
-        reader.matchOp(CacheOp::GuardBooleanToInt32)) {
+        reader.matchOp(CacheOp::GuardBooleanToInt32) ||
+        reader.matchOp(CacheOp::LoadInt32Constant)) {
       reader.skip();  // Skip over operandId
       reader.skip();  // Skip over result/type.
       continue;
@@ -261,7 +262,8 @@ static void SkipBinaryGuards(CacheIRReader& reader, bool* sawStringOperand) {
         reader.matchOp(CacheOp::GuardToString) ||
         reader.matchOp(CacheOp::GuardToObject) ||
         reader.matchOp(CacheOp::GuardToBigInt) ||
-        reader.matchOp(CacheOp::GuardToBoolean)) {
+        reader.matchOp(CacheOp::GuardToBoolean) ||
+        reader.matchOp(CacheOp::GuardIsNullOrUndefined)) {
       reader.skip();  // Skip over operandId
       continue;
     }

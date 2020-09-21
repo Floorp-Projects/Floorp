@@ -150,6 +150,14 @@ warmup(funBitOr1, [[1, 1, 1], [8, 1, 9], [0, 1233, 1233], [5, 0, 5],
 var funBitOr3 = (a, b) => { return a | b; }
 warmup(funBitOr3, [[1, true, 1], [8, true, 9], [false, 1233, 1233], [5, false, 5]]);
 
+//BitOr  null w/ Int32
+var funBitOr4 = (a, b) => { return a | b; }
+warmup(funBitOr4, [[1, null, 1], [8, null, 8], [null, 1233, 1233], [5, null, 5]]);
+
+//BitOr  undefined w/ Int32
+var funBitOr5 = (a, b) => { return a | b; }
+warmup(funBitOr5, [[1, void 0, 1], [8, void 0, 8], [void 0, 1233, 1233], [5, void 0, 5]]);
+
 //BitXOr Int32
 var funBitXOr1 = (a, b) => { return a ^ b; }
 warmup(funBitXOr1, [[1, 1, 0], [5, 1, 4], [63, 31, 32], [4294967295, 2147483647, -2147483648 ] ]);
@@ -170,6 +178,14 @@ warmup(funBitXOr4, [[54772703898, 2890608493, 1828589047],
                     [-18446744073709551615, 54772703898, -1061870950],
                     [4294967295, -1, 0]]);
 
+//BitXOr null+int32
+var funBitXOr5 = (a, b) => { return a ^ b; }
+warmup(funBitXOr5, [[1, null, 1], [5, null, 5], [5, null, 5], [null, 1, 1]]);
+
+//BitXOr undefined+int32
+var funBitXOr6 = (a, b) => { return a ^ b; }
+warmup(funBitXOr6, [[1, void 0, 1], [5, void 0, 5], [5, void 0, 5], [void 0, 1, 1]]);
+
 //BitAnd Int32
 var funBitAnd1 = (a, b) => { return a & b; }
 warmup(funBitAnd1, [[1,1,1], [5,1,1], [63,31,31], [4294967295,2147483647,2147483647],
@@ -183,6 +199,14 @@ warmup(funBitAnd2, [[1.2 ,1, 1], [5, 1.4, 1], [63,31.99,31],
 //BitAnd Int32 + Boolean
 var funBitAnd1 = (a, b) => { return a & b; }
 warmup(funBitAnd1, [[1,true,1], [5,false,0], [true, 6, 0], [false, 12, 0]]);
+
+//BitAnd Int32 + null
+var funBitAnd4 = (a, b) => { return a & b; }
+warmup(funBitAnd4, [[1, null, 0], [5, null, 0], [null, 6, 0], [null, 12, 0]]);
+
+//BitAnd Int32 + undefined
+var funBitAnd5 = (a, b) => { return a & b; }
+warmup(funBitAnd5, [[1, void 0, 0], [5, void 0, 0], [void 0, 6, 0], [void 0, 12, 0]]);
 
 //Lsh Int32
 var funLsh1 = (a, b) => { return a << b; }
@@ -198,6 +222,14 @@ warmup(funLsh2, [[5,true,10], [true,1,2], [63,false,63], [false, 12, 0]]);
 var funLsh3 = (a, b) => { return a << b; }
 warmup(funLsh3, [[54772703898, 1, -2123741900],[2147483658, 0, -2147483638]]);
 
+//Lsh Boolean w/ null
+var funLsh4 = (a, b) => { return a << b; }
+warmup(funLsh4, [[5, null, 5], [null, 1, 0], [63, null, 63], [null, 12, 0]]);
+
+//Lsh Boolean w/ undefined
+var funLsh5 = (a, b) => { return a << b; }
+warmup(funLsh5, [[5, void 0, 5], [void 0, 1, 0], [63, void 0, 63], [void 0, 12, 0]]);
+
 //Rsh Int32
 var funRsh1 = (a, b) => { return a >> b; }
 warmup(funRsh1, [[1,1,0], [5,1,2], [63,31,0], [4294967295,2147483647,-1], [-2,10,-1],
@@ -210,6 +242,14 @@ warmup(funRsh2, [[true,1,0], [1,true,0], [false, 3, 0], [3, false, 3]]);
 //Rsh Number Number
 var funRsh3 = (a, b) => { return a >> b; }
 warmup(funRsh3, [[54772703898, 11, -518492 ], [2147483658, 0, -2147483638]]);
+
+//Rsh Int32 null
+var funRsh4 = (a, b) => { return a >> b; }
+warmup(funRsh4, [[null, 1, 0], [1, null, 1], [null, 3, 0], [3, null, 3]]);
+
+//Rsh Int32 undefined
+var funRsh5 = (a, b) => { return a >> b; }
+warmup(funRsh5, [[void 0, 1, 0], [1, void 0, 1], [void 0, 3, 0], [3, void 0, 3]]);
 
 //URsh Int32
 var funURsh1 = (a, b) => { return a >>> b; }
@@ -229,6 +269,14 @@ warmup(funURsh3, [[4294967295, 0, 4294967295]]);
 var funURsh4 = (a, b) => { return a >>> b; }
 warmup(funURsh4, [[54772703898, 11, 1578660], [2147483658, 11, 1048576],
                   [4294967295, 0, 4294967295]]);
+
+//URsh null Int32
+var funURsh5 = (a, b) => { return a >>> b; }
+warmup(funURsh5, [[null, 1, 0], [5, null, 5], [63, null, 63], [null, 20, 0]]);
+
+//URsh undefined Int32
+var funURsh6 = (a, b) => { return a >>> b; }
+warmup(funURsh6, [[void 0, 1, 0], [5, void 0, 5], [63, void 0, 63], [void 0, 20, 0]]);
 
 
 // Other Test cases that Have been useful:
