@@ -2448,6 +2448,8 @@ void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
     srcSingle = src;
     src = src.asDouble();
     Push(srcSingle);
+    // Because we pushed FloatRegister we should adjust offset to tls.
+    *tlsOffset += sizeof(double);
     convertFloat32ToDouble(srcSingle, src);
   }
 #else
