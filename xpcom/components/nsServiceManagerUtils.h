@@ -10,21 +10,21 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-inline const nsGetServiceByCID do_GetService(const nsCID& aCID) {
+inline nsGetServiceByCID do_GetService(const nsCID& aCID) {
   return nsGetServiceByCID(aCID);
 }
 
-inline const nsGetServiceByCIDWithError do_GetService(const nsCID& aCID,
-                                                      nsresult* aError) {
+inline nsGetServiceByCIDWithError do_GetService(const nsCID& aCID,
+                                                nsresult* aError) {
   return nsGetServiceByCIDWithError(aCID, aError);
 }
 
-inline const nsGetServiceByContractID do_GetService(const char* aContractID) {
+inline nsGetServiceByContractID do_GetService(const char* aContractID) {
   return nsGetServiceByContractID(aContractID);
 }
 
-inline const nsGetServiceByContractIDWithError do_GetService(
-    const char* aContractID, nsresult* aError) {
+inline nsGetServiceByContractIDWithError do_GetService(const char* aContractID,
+                                                       nsresult* aError) {
   return nsGetServiceByContractIDWithError(aContractID, aError);
 }
 
