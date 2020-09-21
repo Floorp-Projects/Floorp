@@ -10109,8 +10109,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   }
 
   bool uriModified;
-  if (mLSHE) {
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (mLSHE || mLoadingEntry) {
+    if (mLoadingEntry) {
       uriModified = mLoadingEntry->mInfo.GetURIWasModified();
     } else {
       uriModified = mLSHE->GetURIWasModified();
