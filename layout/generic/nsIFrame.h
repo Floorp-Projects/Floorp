@@ -467,10 +467,10 @@ struct IntrinsicSize {
   IntrinsicSize(nscoord aWidth, nscoord aHeight)
       : width(Some(aWidth)), height(Some(aHeight)) {}
 
-  bool operator==(const IntrinsicSize& rhs) {
+  bool operator==(const IntrinsicSize& rhs) const {
     return width == rhs.width && height == rhs.height;
   }
-  bool operator!=(const IntrinsicSize& rhs) { return !(*this == rhs); }
+  bool operator!=(const IntrinsicSize& rhs) const { return !(*this == rhs); }
 };
 
 // Pseudo bidi embedding level indicating nonexistence.

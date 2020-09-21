@@ -16,7 +16,9 @@
 class gfxContext;
 
 namespace mozilla {
+class AutoSVGViewHandler;
 class SVGForeignObjectFrame;
+class SVGFragmentIdentifier;
 class PresShell;
 }  // namespace mozilla
 
@@ -36,6 +38,8 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
 
   friend nsContainerFrame* ::NS_NewSVGOuterSVGFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
+  friend class AutoSVGViewHandler;
+  friend class SVGFragmentIdentifier;
 
  protected:
   explicit SVGOuterSVGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
@@ -92,6 +96,11 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
     return MakeFrameName(u"SVGOuterSVG"_ns, aResult);
   }
 #endif
+
+  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
@@ -175,15 +184,13 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   bool mCallingReflowSVG;
 
   /* Returns true if our content is the document element and our document is
-   * embedded in an HTML 'object' or 'embed' element. Set
-   * aEmbeddingFrame to obtain the nsIFrame for the embedding HTML element.
-   */
-  bool IsRootOfReplacedElementSubDoc(nsIFrame** aEmbeddingFrame = nullptr);
-
-  /* Returns true if our content is the document element and our document is
    * being used as an image.
    */
   bool IsRootOfImage();
+
+  void MaybeSendIntrinsicSizeAndRatioToEmbedder();
+  void MaybeSendIntrinsicSizeAndRatioToEmbedder(Maybe<IntrinsicSize>,
+                                                Maybe<AspectRatio>);
 
   // This is temporary until display list based invalidation is implemented for
   // SVG.
@@ -199,11 +206,8 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
 
   bool mViewportInitialized;
   bool mIsRootContent;
-
- private:
-  template <typename... Args>
-  bool IsContainingWindowElementOfType(nsIFrame** aContainingWindowFrame,
-                                       Args... aArgs) const;
+  bool mIsInObjectOrEmbed;
+  bool mIsInIframe;
 };
 
 ////////////////////////////////////////////////////////////////////////

@@ -334,6 +334,10 @@ class BrowserParent final : public PBrowserParent,
       const bool aNeedCollectSHistory, const uint32_t& aFlushId,
       const bool& aIsFinal, const uint32_t& aEpoch);
 
+  mozilla::ipc::IPCResult RecvIntrinsicSizeOrRatioChanged(
+      const Maybe<IntrinsicSize>& aIntrinsicSize,
+      const Maybe<AspectRatio>& aIntrinsicRatio);
+
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
       nsTArray<ipc::StructuredCloneData>* aRetVal);

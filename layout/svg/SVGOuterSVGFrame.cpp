@@ -16,6 +16,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGForeignObjectFrame.h"
 #include "mozilla/SVGUtils.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGSVGElement.h"
@@ -24,15 +25,6 @@
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
-
-/**
- * Recursively checks if any atom in the parameter pack is equal to |aString|.
- */
-template <typename... Atoms>
-bool IsAnyAtomEqual(const nsAString& aString, nsAtom* aFirst, Atoms... aArgs) {
-  return aFirst->Equals(aString) || IsAnyAtomEqual(aString, aArgs...);
-}
-bool IsAnyAtomEqual(const nsAString& aString) { return false; }
 
 namespace mozilla {
 
@@ -84,7 +76,9 @@ SVGOuterSVGFrame::SVGOuterSVGFrame(ComputedStyle* aStyle,
       mCallingReflowSVG(false),
       mFullZoom(PresContext()->GetFullZoom()),
       mViewportInitialized(false),
-      mIsRootContent(false) {
+      mIsRootContent(false),
+      mIsInObjectOrEmbed(false),
+      mIsInIframe(false) {
   // Outer-<svg> has CSS layout, so remove this bit:
   RemoveStateBits(NS_FRAME_SVG_LAYOUT);
 }
@@ -134,40 +128,27 @@ void SVGOuterSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   SVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   Document* doc = mContent->GetUncomposedDoc();
-  if (doc) {
-    // we only care about our content's zoom and pan values if it's the root
-    // element
-    if (doc->GetRootElement() == mContent) {
-      mIsRootContent = true;
+  mIsRootContent = doc && doc->GetRootElement() == mContent;
 
-      nsIFrame* embeddingFrame;
-      if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
-        if (MOZ_UNLIKELY(!embeddingFrame->HasAllStateBits(NS_FRAME_IS_DIRTY))) {
-          bool dependsOnIntrinsicSize = DependsOnIntrinsicSize(embeddingFrame);
-          if (dependsOnIntrinsicSize ||
-              embeddingFrame->StylePosition()->mObjectFit !=
-                  StyleObjectFit::Fill) {
-            // Looks like this document is loading after the embedding element
-            // has had its first reflow, and it cares about our intrinsic size
-            // (either for determining its own size, or for sizing/positioning
-            // its view to honor "object-fit").  We need it to reflow itself to
-            // use our (now-available) intrinsic size:
-            auto dirtyHint = dependsOnIntrinsicSize
-                                 ? IntrinsicDirty::StyleChange
-                                 : IntrinsicDirty::Resize;
-            embeddingFrame->PresShell()->FrameNeedsReflow(
-                embeddingFrame, dirtyHint, NS_FRAME_IS_DIRTY);
-          }
-        }
+  if (mIsRootContent) {
+    if (nsCOMPtr<nsIDocShell> docShell = PresContext()->GetDocShell()) {
+      RefPtr<BrowsingContext> bc = docShell->GetBrowsingContext();
+      if (const Maybe<nsString>& type = bc->GetEmbedderElementType()) {
+        mIsInObjectOrEmbed =
+            nsGkAtoms::object->Equals(*type) || nsGkAtoms::embed->Equals(*type);
+        mIsInIframe = nsGkAtoms::iframe->Equals(*type);
       }
     }
   }
+
+  MaybeSendIntrinsicSizeAndRatioToEmbedder();
 }
 
 //----------------------------------------------------------------------
 // nsQueryFrame methods
 
 NS_QUERYFRAME_HEAD(SVGOuterSVGFrame)
+  NS_QUERYFRAME_ENTRY(SVGOuterSVGFrame)
   NS_QUERYFRAME_ENTRY(ISVGSVGFrame)
 NS_QUERYFRAME_TAIL_INHERITING(SVGDisplayContainerFrame)
 
@@ -181,6 +162,8 @@ nscoord SVGOuterSVGFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
 
+  // If this ever changes to return something other than zero, then
+  // nsSubDocumentFrame::GetMinISize will also need to change.
   result = nscoord(0);
 
   return result;
@@ -319,7 +302,7 @@ nsIFrame::SizeComputationResult SVGOuterSVGFrame::ComputeSize(
     const LogicalSize& aCBSize, nscoord aAvailableISize,
     const LogicalSize& aMargin, const LogicalSize& aBorderPadding,
     ComputeSizeFlags aFlags) {
-  if (IsRootOfImage() || IsRootOfReplacedElementSubDoc()) {
+  if (IsRootOfImage() || mIsInObjectOrEmbed) {
     // The embedding element has sized itself using the CSS replaced element
     // sizing rules, using our intrinsic dimensions as necessary. The SVG spec
     // says that the width and height of embedded SVG is overridden by the
@@ -339,7 +322,7 @@ nsIFrame::SizeComputationResult SVGOuterSVGFrame::ComputeSize(
                      aCBSize.BSize(aWritingMode) != NS_UNCONSTRAINEDSIZE,
                  "root should not have auto-width/height containing block");
 
-    if (!IsContainingWindowElementOfType(nullptr, nsGkAtoms::iframe)) {
+    if (!mIsInIframe) {
       cbSize.ISize(aWritingMode) *= PresContext()->GetFullZoom();
       cbSize.BSize(aWritingMode) *= PresContext()->GetFullZoom();
     }
@@ -459,8 +442,7 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
     changeBits |= COORD_CONTEXT_CHANGED;
     svgElem->SetViewportSize(newViewportSize);
   }
-  if (mFullZoom != PresContext()->GetFullZoom() &&
-      !IsContainingWindowElementOfType(nullptr, nsGkAtoms::iframe)) {
+  if (mFullZoom != PresContext()->GetFullZoom() && !mIsInIframe) {
     changeBits |= FULL_ZOOM_CHANGED;
     mFullZoom = PresContext()->GetFullZoom();
   }
@@ -722,22 +704,9 @@ nsresult SVGOuterSVGFrame::AttributeChanged(int32_t aNameSpaceID,
       // Don't call ChildrenOnlyTransformChanged() here, since we call it
       // under Reflow if the width/height/viewBox actually changed.
 
-      nsIFrame* embeddingFrame;
-      if (IsRootOfReplacedElementSubDoc(&embeddingFrame) && embeddingFrame) {
-        bool dependsOnIntrinsicSize = DependsOnIntrinsicSize(embeddingFrame);
-        if (dependsOnIntrinsicSize ||
-            embeddingFrame->StylePosition()->mObjectFit !=
-                StyleObjectFit::Fill) {
-          // Tell embeddingFrame's presShell it needs to be reflowed (which
-          // takes care of reflowing us too). And if it depends on our
-          // intrinsic size, then we need to invalidate its intrinsic sizes
-          // (via the IntrinsicDirty::StyleChange hint.)
-          auto dirtyHint = dependsOnIntrinsicSize ? IntrinsicDirty::StyleChange
-                                                  : IntrinsicDirty::Resize;
-          embeddingFrame->PresShell()->FrameNeedsReflow(
-              embeddingFrame, dirtyHint, NS_FRAME_IS_DIRTY);
-        }  // else our width/height/viewBox are irrelevant to the outer doc.
-      } else {
+      MaybeSendIntrinsicSizeAndRatioToEmbedder();
+
+      if (!mIsInObjectOrEmbed) {
         // We are not embedded by reference, so our 'width' and 'height'
         // attributes are not overridden (and viewBox may influence our
         // intrinsic aspect ratio).  We need to reflow.
@@ -916,39 +885,6 @@ gfxMatrix SVGOuterSVGFrame::GetCanvasTM() {
 //----------------------------------------------------------------------
 // Implementation helpers
 
-template <typename... Args>
-bool SVGOuterSVGFrame::IsContainingWindowElementOfType(
-    nsIFrame** aContainingWindowFrame, Args... aArgs) const {
-  if (aContainingWindowFrame) {
-    *aContainingWindowFrame = nullptr;
-  }
-
-  if (!mContent->GetParent()) {
-    // Our content is the document element
-    if (nsCOMPtr<nsIDocShell> docShell = PresContext()->GetDocShell()) {
-      RefPtr<BrowsingContext> bc = docShell->GetBrowsingContext();
-      const Maybe<nsString>& type = bc->GetEmbedderElementType();
-
-      if (type && ::IsAnyAtomEqual(*type, aArgs...)) {
-        if (aContainingWindowFrame) {
-          if (const Element* const element = bc->GetEmbedderElement()) {
-            *aContainingWindowFrame = element->GetPrimaryFrame();
-            NS_ASSERTION(*aContainingWindowFrame, "Yikes, no frame!");
-          }
-        }
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-bool SVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(
-    nsIFrame** aEmbeddingFrame) {
-  return IsContainingWindowElementOfType(aEmbeddingFrame, nsGkAtoms::object,
-                                         nsGkAtoms::embed);
-}
-
 bool SVGOuterSVGFrame::IsRootOfImage() {
   if (!mContent->GetParent()) {
     // Our content is the document element
@@ -974,6 +910,69 @@ void SVGOuterSVGFrame::AppendDirectlyOwnedAnonBoxes(
   nsIFrame* anonKid = PrincipalChildList().FirstChild();
   MOZ_ASSERT(anonKid->IsSVGOuterSVGAnonChildFrame());
   aResult.AppendElement(OwnedAnonBox(anonKid));
+}
+
+void SVGOuterSVGFrame::MaybeSendIntrinsicSizeAndRatioToEmbedder() {
+  MaybeSendIntrinsicSizeAndRatioToEmbedder(Some(GetIntrinsicSize()),
+                                           Some(GetIntrinsicRatio()));
+}
+
+void SVGOuterSVGFrame::MaybeSendIntrinsicSizeAndRatioToEmbedder(
+    Maybe<IntrinsicSize> aIntrinsicSize, Maybe<AspectRatio> aIntrinsicRatio) {
+  if (!mIsInObjectOrEmbed) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = PresContext()->GetDocShell();
+  if (!docShell) {
+    return;
+  }
+
+  BrowsingContext* bc = docShell->GetBrowsingContext();
+  MOZ_ASSERT(bc->IsContentSubframe());
+
+  if (bc->GetParent()->IsInProcess()) {
+    if (Element* embedder = bc->GetEmbedderElement()) {
+      nsSubDocumentFrame* sdf = do_QueryFrame(embedder->GetPrimaryFrame());
+      if (!sdf) {
+        return;
+      }
+
+      sdf->SubdocumentIntrinsicSizeOrRatioChanged(aIntrinsicSize,
+                                                  aIntrinsicRatio);
+    }
+  }
+
+  if (BrowserChild* browserChild = BrowserChild::GetFrom(docShell)) {
+    Unused << browserChild->SendIntrinsicSizeOrRatioChanged(aIntrinsicSize,
+                                                            aIntrinsicRatio);
+  }
+}
+
+void SVGOuterSVGFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
+  SVGDisplayContainerFrame::DidSetComputedStyle(aOldComputedStyle);
+
+  if (!aOldComputedStyle) {
+    return;
+  }
+
+  if (aOldComputedStyle->StylePosition()->mAspectRatio !=
+      StylePosition()->mAspectRatio) {
+    // Our aspect-ratio property value changed, and an embedding <object> or
+    // <embed> might care about that.
+    MaybeSendIntrinsicSizeAndRatioToEmbedder();
+  }
+}
+
+void SVGOuterSVGFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                   PostDestroyData& aPostDestroyData) {
+  // This handles both the case when the root <svg> element is made display:none
+  // (and thus loses its intrinsic size and aspect ratio), and when the frame
+  // is navigated elsewhere & we need to reset parent <object>/<embed>'s
+  // recorded intrinsic size/ratio values.
+  MaybeSendIntrinsicSizeAndRatioToEmbedder(Nothing(), Nothing());
+
+  SVGDisplayContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 }  // namespace mozilla
