@@ -51,19 +51,31 @@ interface nsIContentViewer : nsISupports
 
   [notxpcom,nostdcall] readonly attribute boolean isStopped;
 
-  /**
-   * aPermitUnloadFlags are passed to PermitUnload to indicate what action to take
-   * if a beforeunload handler wants to prompt the user.  It is also used by
-   * permitUnloadInternal to ensure we only prompt once.
+   /**
+   * aAction is passed to PermitUnload to indicate what action to take
+   * if a beforeunload handler wants to prompt the user.
    *
    * ePrompt: Prompt and return the user's choice (default).
    * eDontPromptAndDontUnload: Don't prompt and return false (unload not permitted)
    *                           if the document (or its children) asks us to prompt.
    * eDontPromptAndUnload: Don't prompt and return true (unload permitted) no matter what.
    */
-  const unsigned long ePrompt = 0;
-  const unsigned long eDontPromptAndDontUnload = 1;
-  const unsigned long eDontPromptAndUnload = 2;
+  cenum PermitUnloadAction : 8 {
+    ePrompt = 0,
+    eDontPromptAndDontUnload = 1,
+    eDontPromptAndUnload = 2
+  };
+
+  /**
+   * The result of dispatching a "beforeunload" event. If `eAllowNavigation`,
+   * no "beforeunload" listener requested to prevent the navigation, or its
+   * request was ignored. If `eRequestBlockNavigation`, a listener did request
+   * to block the navigation, and the user should be prompted.
+   */
+  cenum PermitUnloadResult : 8 {
+    eAllowNavigation = 0,
+    eRequestBlockNavigation = 1,
+  };
 
   /**
    * Overload PermitUnload method for C++ consumers with no aPermitUnloadFlags
@@ -77,10 +89,10 @@ interface nsIContentViewer : nsISupports
 
   /**
    * Checks if the document wants to prevent unloading by firing beforeunload on
-   * the document, and if it does, takes action directed by aPermitUnloadFlags.
+   * the document.
    * The result is returned.
    */
-  boolean permitUnload([optional] in unsigned long aPermitUnloadFlags);
+  boolean permitUnload([optional] in nsIContentViewer_PermitUnloadAction aAction);
 
   /**
    * Exposes whether we're blocked in a call to permitUnload.
@@ -88,11 +100,10 @@ interface nsIContentViewer : nsISupports
   readonly attribute boolean inPermitUnload;
 
   /**
-   * As above, but this passes around the aPermitUnloadFlags argument to keep
-   * track of whether the user has responded to a prompt.
-   * Used internally by the scriptable version to ensure we only prompt once.
+   * Dispatches the "beforeunload" event and returns the result, as documented
+   * in the `PermitUnloadResult` enum.
    */
-  [noscript,nostdcall] boolean permitUnloadInternal(inout unsigned long aPermitUnloadFlags);
+  [noscript,nostdcall,notxpcom] nsIContentViewer_PermitUnloadResult dispatchBeforeUnload();
 
   /**
    * Exposes whether we're in the process of firing the beforeunload event.
