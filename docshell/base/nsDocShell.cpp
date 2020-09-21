@@ -4092,6 +4092,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
         }
       }
     }
+    return NS_OK;
   }
 
   bool canReload = true;
