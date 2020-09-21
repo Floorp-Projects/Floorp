@@ -1195,29 +1195,99 @@ bool nsDocumentViewer::GetLoadCompleted() { return mLoaded; }
 bool nsDocumentViewer::GetIsStopped() { return mStopped; }
 
 NS_IMETHODIMP
-nsDocumentViewer::PermitUnload(uint32_t aPermitUnloadFlags,
+nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
                                bool* aPermitUnload) {
-  return PermitUnloadInternal(&aPermitUnloadFlags, aPermitUnload);
-}
-
-nsresult nsDocumentViewer::PermitUnloadInternal(uint32_t* aPermitUnloadFlags,
-                                                bool* aPermitUnload) {
-  AutoDontWarnAboutSyncXHR disableSyncXHRWarning;
+  if (StaticPrefs::dom_disable_beforeunload()) {
+    aAction = eDontPromptAndUnload;
+  }
 
   nsresult rv = NS_OK;
   *aPermitUnload = true;
 
-  if (!mDocument || mInPermitUnload || mInPermitUnloadPrompt) {
+  RefPtr<BrowsingContext> bc = mContainer->GetBrowsingContext();
+  if (!bc) {
     return NS_OK;
   }
 
-  // First, get the script global object from the document...
-  nsPIDOMWindowOuter* window = mDocument->GetWindow();
+  // Per spec, we need to increase the ignore-opens-during-unload counter while
+  // dispatching the "beforeunload" event on both the document we're currently
+  // dispatching the event to and the document that we explicitly asked to
+  // unload.
+  IgnoreOpensDuringUnload ignoreOpens(mDocument);
 
+  bool foundBlocker = false;
+  bc->PreOrderWalk([&](BrowsingContext* aBC) {
+    if (aBC->IsInProcess()) {
+      nsCOMPtr<nsIContentViewer> contentViewer;
+      aBC->GetDocShell()->GetContentViewer(getter_AddRefs(contentViewer));
+      if (contentViewer &&
+          contentViewer->DispatchBeforeUnload() == eRequestBlockNavigation) {
+        foundBlocker = true;
+      }
+    }
+  });
+
+  // NB: we nullcheck mDocument because it might now be dead as a result of
+  // the event being dispatched.
+  if (!mDocument) {
+    return NS_OK;
+  }
+
+  if (foundBlocker) {
+    if (aAction == eDontPromptAndUnload) {
+      // Ask the user if it's ok to unload the current page
+
+      nsCOMPtr<nsIPromptCollection> prompt =
+          do_GetService("@mozilla.org/embedcomp/prompt-collection;1");
+
+      if (prompt) {
+        nsAutoSyncOperation sync(mDocument);
+        mInPermitUnloadPrompt = true;
+        mozilla::Telemetry::Accumulate(
+            mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_COUNT, 1);
+        rv = prompt->BeforeUnloadCheck(bc, aPermitUnload);
+        mInPermitUnloadPrompt = false;
+
+        // If the prompt aborted, we tell our consumer that it is not allowed
+        // to unload the page. One reason that prompts abort is that the user
+        // performed some action that caused the page to unload while our prompt
+        // was active. In those cases we don't want our consumer to also unload
+        // the page.
+        //
+        // XXX: Are there other cases where prompts can abort? Is it ok to
+        //      prevent unloading the page in those cases?
+        if (NS_FAILED(rv)) {
+          mozilla::Telemetry::Accumulate(
+              mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION, 2);
+          *aPermitUnload = false;
+          return NS_OK;
+        }
+
+        mozilla::Telemetry::Accumulate(
+            mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION,
+            (*aPermitUnload ? 1 : 0));
+      }
+    } else if (aAction == eDontPromptAndDontUnload) {
+      *aPermitUnload = false;
+    }
+  }
+
+  return NS_OK;
+}
+
+PermitUnloadResult nsDocumentViewer::DispatchBeforeUnload() {
+  AutoDontWarnAboutSyncXHR disableSyncXHRWarning;
+
+  if (!mDocument || mInPermitUnload || mInPermitUnloadPrompt) {
+    return eAllowNavigation;
+  }
+
+  // First, get the script global object from the document...
+  auto* window = nsGlobalWindowOuter::Cast(mDocument->GetWindow());
   if (!window) {
     // This is odd, but not fatal
     NS_WARNING("window not set for document!");
-    return NS_OK;
+    return eAllowNavigation;
   }
 
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(), "This is unsafe");
@@ -1244,109 +1314,35 @@ nsresult nsDocumentViewer::PermitUnloadInternal(uint32_t* aPermitUnloadFlags,
   // onbeforeunload event, don't let that happen. (see also bug#331040)
   RefPtr<nsDocumentViewer> kungFuDeathGrip(this);
 
-  bool dialogsAreEnabled = false;
   {
     // Never permit popups from the beforeunload handler, no matter
     // how we get here.
     AutoPopupStatePusher popupStatePusher(PopupBlocker::openAbused, true);
 
     // Never permit dialogs from the beforeunload handler
-    nsGlobalWindowOuter* globalWindow = nsGlobalWindowOuter::Cast(window);
-    dialogsAreEnabled = globalWindow->AreDialogsEnabled();
-    nsGlobalWindowOuter::TemporarilyDisableDialogs disableDialogs(globalWindow);
+    nsGlobalWindowOuter::TemporarilyDisableDialogs disableDialogs(window);
 
     Document::PageUnloadingEventTimeStamp timestamp(mDocument);
 
     mInPermitUnload = true;
-    EventDispatcher::DispatchDOMEvent(window, nullptr, event, mPresContext,
-                                      nullptr);
+    EventDispatcher::DispatchDOMEvent(ToSupports(window), nullptr, event,
+                                      mPresContext, nullptr);
     mInPermitUnload = false;
   }
 
-  nsCOMPtr<nsIDocShell> docShell(mContainer);
   nsAutoString text;
   event->GetReturnValue(text);
 
-  if (StaticPrefs::dom_disable_beforeunload()) {
-    *aPermitUnloadFlags = eDontPromptAndUnload;
-  }
-
   // NB: we nullcheck mDocument because it might now be dead as a result of
   // the event being dispatched.
-  if (*aPermitUnloadFlags != eDontPromptAndUnload && dialogsAreEnabled &&
-      mDocument && !(mDocument->GetSandboxFlags() & SANDBOXED_MODALS) &&
+  if (window->AreDialogsEnabled() && mDocument &&
+      !(mDocument->GetSandboxFlags() & SANDBOXED_MODALS) &&
       (!StaticPrefs::dom_require_user_interaction_for_beforeunload() ||
        mDocument->UserHasInteracted()) &&
       (event->WidgetEventPtr()->DefaultPrevented() || !text.IsEmpty())) {
-    // If the consumer wants prompt requests to just stop unloading, we don't
-    // need to prompt and can return immediately.
-    if (*aPermitUnloadFlags == eDontPromptAndDontUnload) {
-      *aPermitUnload = false;
-      return NS_OK;
-    }
-
-    // Ask the user if it's ok to unload the current page
-
-    nsCOMPtr<nsIPromptCollection> prompt =
-        do_GetService("@mozilla.org/embedcomp/prompt-collection;1");
-
-    if (prompt) {
-      nsAutoSyncOperation sync(mDocument);
-      mInPermitUnloadPrompt = true;
-      mozilla::Telemetry::Accumulate(
-          mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_COUNT, 1);
-      rv = prompt->BeforeUnloadCheck(docShell->GetBrowsingContext(),
-                                     aPermitUnload);
-      mInPermitUnloadPrompt = false;
-
-      // If the prompt aborted, we tell our consumer that it is not allowed
-      // to unload the page. One reason that prompts abort is that the user
-      // performed some action that caused the page to unload while our prompt
-      // was active. In those cases we don't want our consumer to also unload
-      // the page.
-      //
-      // XXX: Are there other cases where prompts can abort? Is it ok to
-      //      prevent unloading the page in those cases?
-      if (NS_FAILED(rv)) {
-        mozilla::Telemetry::Accumulate(
-            mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION, 2);
-        *aPermitUnload = false;
-        return NS_OK;
-      }
-
-      mozilla::Telemetry::Accumulate(
-          mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION,
-          (*aPermitUnload ? 1 : 0));
-      // If the user decided to go ahead, make sure not to prompt the user again
-      // by toggling the internal prompting bool to false:
-      if (*aPermitUnload) {
-        *aPermitUnloadFlags = eDontPromptAndUnload;
-      }
-    }
+    return eRequestBlockNavigation;
   }
-
-  if (docShell) {
-    int32_t childCount;
-    docShell->GetInProcessChildCount(&childCount);
-
-    for (int32_t i = 0; i < childCount && *aPermitUnload; ++i) {
-      nsCOMPtr<nsIDocShellTreeItem> item;
-      docShell->GetInProcessChildAt(i, getter_AddRefs(item));
-
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
-
-      if (docShell) {
-        nsCOMPtr<nsIContentViewer> cv;
-        docShell->GetContentViewer(getter_AddRefs(cv));
-
-        if (cv) {
-          cv->PermitUnloadInternal(aPermitUnloadFlags, aPermitUnload);
-        }
-      }
-    }
-  }
-
-  return NS_OK;
+  return eAllowNavigation;
 }
 
 NS_IMETHODIMP
