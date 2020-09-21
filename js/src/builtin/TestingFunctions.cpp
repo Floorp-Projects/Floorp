@@ -515,7 +515,7 @@ static bool TrialInline(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   FrameIter iter(cx);
-  if (iter.done() || !iter.isBaseline()) {
+  if (iter.done() || !iter.isBaseline() || iter.realm() != cx->realm()) {
     return true;
   }
 
