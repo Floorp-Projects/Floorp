@@ -410,4 +410,9 @@
 // AXTextMarkerRangeForUIElement
 - (id _Nullable)moxTextMarkerRangeForUIElement:(id _Nonnull)element;
 
+#pragma mark - TextAttributeSetters
+
+// AXSelectedTextMarkerRange
+- (void)moxSetSelectedTextMarkerRange:(id _Nullable)textMarkerRange;
+
 @end
