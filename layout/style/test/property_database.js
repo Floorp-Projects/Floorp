@@ -9141,14 +9141,6 @@ var gCSSProperties = {
     other_values: ["url(#mysym)"],
     invalid_values: [],
   },
-  "math-style": {
-    domProp: "mathStyle",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["normal"],
-    other_values: ["compact"],
-    invalid_values: [],
-  },
   "mix-blend-mode": {
     domProp: "mixBlendMode",
     inherited: false,
