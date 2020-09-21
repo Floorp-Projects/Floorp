@@ -25,12 +25,6 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
 
     @Test
     @UiThreadTest
-    override fun get200WithDefaultHeaders() {
-        super.get200WithDefaultHeaders()
-    }
-
-    @Test
-    @UiThreadTest
     override fun get200WithGzippedBody() {
         super.get200WithGzippedBody()
     }

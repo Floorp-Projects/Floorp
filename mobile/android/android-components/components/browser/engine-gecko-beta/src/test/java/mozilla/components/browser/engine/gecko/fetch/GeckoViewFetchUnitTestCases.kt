@@ -70,25 +70,6 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
     }
 
     @Test
-    override fun get200WithDefaultHeaders() {
-        val server = mock<MockWebServer>()
-        whenever(server.url(any())).thenReturn(mock())
-        val host = server.url("/").host()
-        val port = server.url("/").port()
-        val headerMap = mapOf(
-            "Host" to "$host:$port",
-            "Accept" to "*/*",
-            "Accept-Language" to "*/*",
-            "Accept-Encoding" to "gzip",
-            "Connection" to "keep-alive",
-            "User-Agent" to "test")
-        mockRequest(headerMap)
-        mockResponse(200)
-
-        super.get200WithDefaultHeaders()
-    }
-
-    @Test
     override fun get200WithDuplicatedCacheControlRequestHeaders() {
         val headerMap = mapOf("Cache-Control" to "no-cache, no-store")
         mockRequest(headerMap)

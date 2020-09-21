@@ -27,7 +27,6 @@ import java.io.File
 import java.io.IOException
 import java.lang.Exception
 import java.net.SocketTimeoutException
-import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -70,48 +69,6 @@ abstract class FetchTestCases {
 
             assertEquals(404, response.status)
             assertEquals("Error", response.body.string())
-        }
-    }
-
-    @Test
-    open fun get200WithDefaultHeaders() {
-        withServerResponding(
-            MockResponse()
-        ) { client ->
-            val response = client.fetch(Request(rootUrl()))
-            assertEquals(200, response.status)
-
-            val request = takeRequest()
-
-            for (i in 0 until request.headers.size()) {
-                println(request.headers.name(i) + " = " + request.headers.value(i))
-            }
-
-            val headers = request.headers.filtered()
-
-            assertEquals(6, headers.size())
-
-            val names = headers.names()
-            assertTrue(names.contains("Host"))
-            assertTrue(names.contains("User-Agent"))
-            assertTrue(names.contains("Connection"))
-            assertTrue(names.contains("Accept-Encoding"))
-            assertTrue(names.contains("Accept"))
-            assertTrue(names.contains("Accept-Language"))
-
-            val host = url("/").host()
-            val port = url("/").port()
-            assertEquals("$host:$port", request.getHeader("Host"))
-
-            assertEquals("*/*", request.getHeader("Accept"))
-            assertEquals("*/*", request.getHeader("Accept-Language"))
-            assertEquals("gzip", request.getHeader("Accept-Encoding"))
-
-            // Ignoring case here: okhttp uses "Keep-Alive" and httpurlconnection uses "keep-alive".
-            // I do not want to override the header of either because I do not know if they read it
-            // internally and require a certain case.
-            assertEquals("keep-alive", request.getHeader("Connection")
-                .toLowerCase(Locale.ROOT))
         }
     }
 
