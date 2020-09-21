@@ -199,7 +199,18 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   NSDictionary* setters = mac::AttributeSetters();
   if (setters[attribute]) {
     SEL selector = NSSelectorFromString(setters[attribute]);
-    return ([self isSelectorSupported:selector]);
+    if ([self isSelectorSupported:selector]) {
+      return YES;
+    }
+  } else if (id textMarkerDelegate = [self moxTextMarkerDelegate]) {
+    // If we have a delegate, check text setters on delegate
+    NSDictionary* textMarkerSetters = mac::TextAttributeSetters();
+    if (textMarkerSetters[attribute]) {
+      SEL selector = NSSelectorFromString(textMarkerSetters[attribute]);
+      if ([textMarkerDelegate respondsToSelector:selector]) {
+        return YES;
+      }
+    }
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
@@ -217,6 +228,17 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     SEL selector = NSSelectorFromString(setters[attribute]);
     if ([self isSelectorSupported:selector]) {
       [self performSelector:selector withObject:value];
+    }
+  } else if (id textMarkerDelegate = [self moxTextMarkerDelegate]) {
+    // If we have a delegate, check if attribute is a text marker
+    // attribute and call the associated selector on the delegate
+    // if so.
+    NSDictionary* textMarkerSetters = mac::TextAttributeSetters();
+    if (textMarkerSetters[attribute]) {
+      SEL selector = NSSelectorFromString(textMarkerSetters[attribute]);
+      if ([textMarkerDelegate respondsToSelector:selector]) {
+        [textMarkerDelegate performSelector:selector withObject:value];
+      }
     }
   }
 
