@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1314912
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1314912</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1314912 **/
+
+  const RATE_LIMIT_COUNT = 90;
+  const RATE_LIMIT_TIME_SPAN = 3;
+
+  async function setup() {
+    await SpecialPowers.pushPrefEnv({set: [
+      ["dom.navigation.locationChangeRateLimit.count", RATE_LIMIT_COUNT],
+      ["dom.navigation.locationChangeRateLimit.timespan", RATE_LIMIT_TIME_SPAN]]});
+  }
+
+  let inc = 0;
+
+  const rateLimitedFunctions = (win) => ({
+    "history.replaceState": () => win.history.replaceState(null, "test", `${win.location.href}#${inc++}`),
+    "history.pushState":  () => win.history.pushState(null, "test", `${win.location.href}#${inc++}`),
+    "history.back": () => win.history.back(),
+    "history.forward": () => win.history.forward(),
+    "history.go": () => win.history.go(-1),
+    "location.hash": () => win.location.hash = inc++,
+    "location.host": () => win.location.host = win.location.host + "",
+    "location.hostname": () => win.location.hostname = win.location.hostname + "",
+    "location.pathname": () => win.location.pathname = win.location.pathname + "",
+    "location.port": () => win.location.port = win.location.port + "",
+    "location.protocol": () => win.location.protocol = win.location.protocol + "",
+    "location.search": () => win.location.search = win.location.search + "",
+  });
+
+  async function test() {
+    await setup();
+
+    // Open new window and wait for it to load
+    let win = window.open("blank.html");
+    await new Promise((resolve) => SimpleTest.waitForFocus(resolve, win))
+
+    // Execute the history and location functions
+    Object.entries(rateLimitedFunctions(win)).forEach(([name, fn]) => {
+      // Reset the rate limit for the next run.
+      info("Reset rate limit.");
+      SpecialPowers.wrap(win).browsingContext.resetLocationChangeRateLimit();
+
+      info(`Calling ${name} ${RATE_LIMIT_COUNT} times to reach the rate limit.`);
+      for(let i = 0; i< RATE_LIMIT_COUNT; i++) {
+        fn.call(this);
+      }
+      // Next calls should throw because we're above the rate limit
+      for(let i = 0; i < 5; i++)  {
+        SimpleTest.doesThrow(() => fn.call(this), `Call #${RATE_LIMIT_COUNT + i + 1} to ${name} should throw.`);
+      }
+    })
+
+    // We didn't reset the rate limit after the last loop iteration above.
+    // Wait for the rate limit timer to expire.
+    SimpleTest.requestFlakyTimeout("Waiting to trigger rate limit reset.");
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    // Calls should be allowed again.
+    Object.entries(rateLimitedFunctions(win)).forEach(([name, fn]) => {
+      let didThrow = false;
+      try {
+        fn.call(this);
+      } catch(error) {
+        didThrow = true;
+      }
+      is(didThrow, false, `Call to ${name} must not throw.`)
+    });
+
+    // Cleanup
+    win.close();
+    SpecialPowers.wrap(win).browsingContext.resetLocationChangeRateLimit();
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="setTimeout(test, 0);">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1314912">Mozilla Bug 1314912</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
