@@ -1659,12 +1659,18 @@ bool GfxInfoBase::InitFeatureObject(JSContext* aCx,
 
   nsCString status;
   auto value = aFeatureState.GetValue();
-  if (value == FeatureStatus::Blocklisted || value == FeatureStatus::Disabled ||
-      value == FeatureStatus::Unavailable || value == FeatureStatus::Blocked) {
-    status.AppendPrintf("%s:%s", FeatureStatusToString(value),
-                        aFeatureState.GetFailureId().get());
-  } else {
-    status.Append(FeatureStatusToString(value));
+  switch (value) {
+    case FeatureStatus::Blocklisted:
+    case FeatureStatus::Disabled:
+    case FeatureStatus::Unavailable:
+    case FeatureStatus::UnavailableNoAngle:
+    case FeatureStatus::Blocked:
+      status.AppendPrintf("%s:%s", FeatureStatusToString(value),
+                          aFeatureState.GetFailureId().get());
+      break;
+    default:
+      status.Append(FeatureStatusToString(value));
+      break;
   }
 
   JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, status.get()));
