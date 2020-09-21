@@ -26,9 +26,6 @@ git commit -m \
 	--author="MickeyMoz <sebastian@mozilla.com>" \
 || { echo "No new public suffix list available available"; exit 0; }
 
-# Build and test engine component as well as sample browser
-./gradlew lib-publicsuffixlist:assemble lib-publicsuffixlist:test
-
 # Get token for using GitHub
 python automation/taskcluster/helper/get-secret.py \
     -s project/mobile/github \
@@ -46,7 +43,7 @@ URL="https://$USER:$TOKEN@github.com/$USER/$REPO/"
 echo "token=$TOKEN" > token.properties
 
 echo "Pushing branch to GitHub"
-git push  --no-verify --quiet $URL $BRANCH
+git push  --no-verify --quiet $URL $BRANCH > /dev/null 2>&1 || echo "Failed ($?)"
 echo "Done ($?)"
 
 echo "Opening pull request"

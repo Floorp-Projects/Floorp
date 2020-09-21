@@ -48,21 +48,12 @@ COMPONENT_NAME=
 if [ "$CHANNEL" = "nightly" ]
 then
     COMPONENT_NAME="engine-gecko-nightly"
-    ./gradlew browser-engine-gecko-nightly:assemble \
-          browser-engine-gecko-nightly:test \
-          sample-browser:assembleGeckoNightly
 elif [ "$CHANNEL" = "beta" ]
 then
     COMPONENT_NAME="engine-gecko-beta"
-    ./gradlew browser-engine-gecko-beta:assemble \
-          browser-engine-gecko-beta:test \
-          sample-browser:assembleGeckoBeta
 elif [ "$CHANNEL" = "release" ]
 then
     COMPONENT_NAME="engine-gecko"
-    ./gradlew browser-engine-gecko:assemble \
-          browser-engine-gecko:test \
-          sample-browser:assembleGeckoRelease
 else
     echo "Unknown channel: $CHANNEL"
     exit 1
@@ -91,7 +82,7 @@ URL="https://$USER:$TOKEN@github.com/$USER/$REPO/"
 echo "token=$TOKEN" > token.properties
 
 echo "Pushing branch to GitHub"
-git push  --no-verify --quiet $URL $BRANCH
+git push  --no-verify --quiet $URL $BRANCH > /dev/null 2>&1 || echo "Failed ($?)"
 echo "Done ($?)"
 
 echo "Opening pull request"
