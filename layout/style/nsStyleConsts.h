@@ -420,9 +420,9 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_MATHML_MATHVARIANT_LOOPED 17
 #define NS_MATHML_MATHVARIANT_STRETCHED 18
 
-// See nsStyleFont::mMathStyle
-#define NS_STYLE_MATH_STYLE_COMPACT 0
-#define NS_STYLE_MATH_STYLE_NORMAL 1
+// See nsStyleFont::mMathDisplay
+#define NS_MATHML_DISPLAYSTYLE_INLINE 0
+#define NS_MATHML_DISPLAYSTYLE_BLOCK 1
 
 // See nsStyleDisplay.mPosition
 enum class StylePositionProperty : uint8_t {

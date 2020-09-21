@@ -203,9 +203,9 @@ void nsMathMLmrootFrame::Reflow(nsPresContext* aPresContext,
       nsLayoutUtils::GetFontMetricsForFrame(this, fontSizeInflation);
 
   nscoord ruleThickness, leading, psi;
-  GetRadicalParameters(fm,
-                       StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_NORMAL,
-                       ruleThickness, leading, psi);
+  GetRadicalParameters(
+      fm, StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_BLOCK,
+      ruleThickness, leading, psi);
 
   // built-in: adjust clearance psi to emulate \mathstrut using '1' (TexBook,
   // p.131)
