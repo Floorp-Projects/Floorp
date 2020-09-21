@@ -170,7 +170,7 @@ toolbar[brighttext] .toolbaritem-combined-buttons > separator {
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover,
 #tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover,
 #tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover,
-.findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover,
+.findbar-button:not(:is([checked="true"],[disabled="true"])):hover,
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not([open]),
 toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
 toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
@@ -179,13 +179,13 @@ toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:ac
   color: inherit;
 }
 
-#PersonalToolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active),
-.findbar-button:not([disabled=true]):-moz-any([checked="true"],:hover:active),
+#PersonalToolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active),
+.findbar-button:not([disabled=true]):is([checked="true"],:hover:active),
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:active:not([disabled="true"]),
 toolbarbutton.bookmark-item[open="true"],
-toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
-toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
-toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
+toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-icon,
+toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-text,
+toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
   background-color: var(--toolbarbutton-active-background);
   color: inherit;
 }

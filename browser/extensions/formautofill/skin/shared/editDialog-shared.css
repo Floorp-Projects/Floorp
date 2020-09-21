@@ -53,7 +53,7 @@ form div {
   margin: 0;
 }
 
-form :-moz-any(label, div) .label-text {
+form :is(label, div) .label-text {
   position: absolute;
   opacity: .5;
   pointer-events: none;
@@ -63,25 +63,26 @@ form :-moz-any(label, div) .label-text {
               font-size .2s var(--animation-easing-function);
 }
 
-form :-moz-any(label, div):focus-within .label-text,
-form :-moz-any(label, div) .label-text[field-populated] {
+form :is(label, div):focus-within .label-text,
+form :is(label, div) .label-text[field-populated] {
   top: 0;
   font-size: var(--in-field-label-size);
 }
 
-form :-moz-any(input, select, textarea):focus ~ .label-text {
+
+form :is(input, select, textarea):focus ~ .label-text {
   color: var(--in-content-item-selected);
   opacity: 1;
 }
 
 /* Focused error fields should get a darker text but not the blue one since it
  * doesn't look good with the red error outline. */
-form :-moz-any(input, select, textarea):focus:-moz-ui-invalid ~ .label-text {
+form :is(input, select, textarea):focus:-moz-ui-invalid ~ .label-text {
   color: var(--in-content-text-color);
 }
 
 form div[required] > label .label-text::after,
-form :-moz-any(label, div)[required] .label-text::after {
+form :is(label, div)[required] .label-text::after {
   content: attr(fieldRequiredSymbol);
 }
 

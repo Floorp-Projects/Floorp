@@ -61,10 +61,10 @@ toolbar[brighttext] {
 
 /* The animations for the reload-button and stop-button are disabled
    outside of the nav-bar due to bug 1382894. */
-:-moz-any(#reload-button, #stop-button) > .toolbarbutton-animatable-box {
+:is(#reload-button, #stop-button) > .toolbarbutton-animatable-box {
   display: none;
 }
-#nav-bar-customization-target > #stop-reload-button > :-moz-any(#reload-button, #stop-button) > .toolbarbutton-animatable-box {
+#nav-bar-customization-target > #stop-reload-button > :is(#reload-button, #stop-button) > .toolbarbutton-animatable-box {
   display: block;
 }
 

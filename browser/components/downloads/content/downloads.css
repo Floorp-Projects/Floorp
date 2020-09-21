@@ -43,54 +43,54 @@
   display: none;
 }
 
-.download-state:not(:-moz-any([state="6"], /* Blocked (parental) */
-                              [state="8"], /* Blocked (dirty)    */
-                              [state="9"]) /* Blocked (policy)   */)
+.download-state:not(:is([state="6"], /* Blocked (parental) */
+                        [state="8"], /* Blocked (dirty)    */
+                        [state="9"]) /* Blocked (policy)   */)
                                            .downloadBlockedBadge,
 
-.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
-                              [state="5"], /* Starting (queued)  */
-                              [state="0"], /* Downloading        */
-                              [state="4"], /* Paused             */
-                              [state="7"]) /* Scanning           */)
+.download-state:not(:is([state="-1"],/* Starting (initial) */
+                        [state="5"], /* Starting (queued)  */
+                        [state="0"], /* Downloading        */
+                        [state="4"], /* Paused             */
+                        [state="7"]) /* Scanning           */)
                                            .downloadProgress,
 
-.download-state:not(          [state="0"]  /* Downloading        */)
+.download-state:not(    [state="0"]  /* Downloading        */)
                                            .downloadPauseMenuItem,
 
-.download-state:not(          [state="4"]  /* Paused             */)
+.download-state:not(    [state="4"]  /* Paused             */)
                                            .downloadResumeMenuItem,
 
 /* Blocked (dirty) downloads that have not been confirmed and
    have temporary data. */
-.download-state:not(          [state="8"]  /* Blocked (dirty)    */)
+.download-state:not(    [state="8"]  /* Blocked (dirty)    */)
                                            .downloadUnblockMenuItem,
 .download-state[state="8"]:not(.temporary-block)
                                            .downloadUnblockMenuItem,
 
-.download-state:not(:-moz-any([state="1"], /* Finished           */
-                              [state="2"], /* Failed             */
-                              [state="3"], /* Canceled           */
-                              [state="6"], /* Blocked (parental) */
-                              [state="8"], /* Blocked (dirty)    */
-                              [state="9"]) /* Blocked (policy)   */)
+.download-state:not(:is([state="1"], /* Finished           */
+                        [state="2"], /* Failed             */
+                        [state="3"], /* Canceled           */
+                        [state="6"], /* Blocked (parental) */
+                        [state="8"], /* Blocked (dirty)    */
+                        [state="9"]) /* Blocked (policy)   */)
                                            .downloadRemoveFromHistoryMenuItem,
 
-.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
-                              [state="0"], /* Downloading        */
-                              [state="1"], /* Finished           */
-                              [state="4"], /* Paused             */
-                              [state="5"]) /* Starting (queued)  */)
+.download-state:not(:is([state="-1"],/* Starting (initial) */
+                        [state="0"], /* Downloading        */
+                        [state="1"], /* Finished           */
+                        [state="4"], /* Paused             */
+                        [state="5"]) /* Starting (queued)  */)
                                            .downloadShowMenuItem,
 .download-state[state="1"]:not([exists])
                                            .downloadShowMenuItem,
 
-.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
-                              [state="0"], /* Downloading        */
-                              [state="1"], /* Finished           */
-                              [state="4"], /* Paused             */
-                              [state="5"], /* Starting (queued)  */
-                              [state="8"]) /* Blocked (dirty)    */)
+.download-state:not(:is([state="-1"],/* Starting (initial) */
+                        [state="0"], /* Downloading        */
+                        [state="1"], /* Finished           */
+                        [state="4"], /* Paused             */
+                        [state="5"], /* Starting (queued)  */
+                        [state="8"]) /* Blocked (dirty)    */)
                                            .downloadCommandsSeparator,
 .download-state[state="1"]:not([exists])
                                            .downloadCommandsSeparator,
@@ -102,24 +102,23 @@
 .download-state:not([viewable-internally]) .downloadUseSystemDefaultMenuItem,
 .download-state                            .downloadUseSystemDefaultMenuItem:not([enabled]),
 .download-state                            .downloadAlwaysUseSystemDefaultMenuItem:not([enabled]),
-.download-state:not([viewable-internally]) .downloadAlwaysUseSystemDefaultMenuItem
-{
+.download-state:not([viewable-internally]) .downloadAlwaysUseSystemDefaultMenuItem {
   display: none;
 }
 
 /*** Visibility of download button labels ***/
 
-.download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
-                              [state="5"], /* Starting (queued)  */
-                              [state="0"], /* Downloading        */
-                              [state="4"]) /* Paused             */)
+.download-state:not(:is([state="-1"],/* Starting (initial) */
+                        [state="5"], /* Starting (queued)  */
+                        [state="0"], /* Downloading        */
+                        [state="4"]) /* Paused             */)
                                            .downloadCancel,
 
-.download-state:not(:-moz-any([state="2"], /* Failed             */
-                              [state="3"]) /* Canceled           */)
+.download-state:not(:is([state="2"], /* Failed             */
+                        [state="3"]) /* Canceled           */)
                                            .downloadRetry,
 
-.download-state:not(          [state="1"]  /* Finished           */)
+.download-state:not(    [state="1"]  /* Finished           */)
                                            .downloadShow
 {
   display: none;
@@ -157,7 +156,7 @@
 .subviewbutton.download:not(:hover) > .toolbarbutton-text > .status-full,
 /* When a Download is hovered when the file doesn't exist and cannot be retried,
    keep showing the full status message. */
-.subviewbutton.download:hover:-moz-any(:not([canShow]),:not([exists])):not([canRetry]) > .toolbarbutton-text > .status-full,
+.subviewbutton.download:hover:is(:not([canShow]),:not([exists])):not([canRetry]) > .toolbarbutton-text > .status-full,
 /* When a Download is hovered and the it can be retried, but the action button
    is _not_ hovered, keep showing the full status message. */
 .subviewbutton.download:hover[canRetry]:not(.downloadHoveringButton) > .toolbarbutton-text > .status-full,

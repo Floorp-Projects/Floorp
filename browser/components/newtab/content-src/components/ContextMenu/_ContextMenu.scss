@@ -37,7 +37,7 @@
         padding: $context-menu-item-padding;
         white-space: nowrap;
 
-        &:-moz-any(:focus, :hover) {
+        &:is(:focus, :hover) {
           background: var(--newtab-element-hover-color);
         }
 

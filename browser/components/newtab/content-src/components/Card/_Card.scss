@@ -35,7 +35,7 @@
     position: absolute;
     width: 100%;
 
-    &:-moz-any(.active, :focus) {
+    &:is(.active, :focus) {
       .card {
         @include fade-in-card;
       }
@@ -46,7 +46,7 @@
     }
   }
 
-  &:-moz-any(:hover, :focus, .active):not(.placeholder) {
+  &:is(:hover, :focus, .active):not(.placeholder) {
     @include fade-in-card;
     @include context-menu-button-hover;
     outline: none;

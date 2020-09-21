@@ -116,7 +116,6 @@ window[sharingscreen][sharingaudio] > #shareSeparator {
   display: -moz-box;
 }
 
-:-moz-any(#audioVideoButton, #screenShareButton,
-          #firefoxButton):-moz-focusring {
+:is(#audioVideoButton, #screenShareButton, #firefoxButton):-moz-focusring {
   outline: none;
 }

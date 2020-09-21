@@ -190,7 +190,7 @@ menupopup::part(drop-indicator) {
   text-shadow: unset;
 }
 
-.accessibility-indicator:-moz-any(:hover, :active, :focus, :-moz-focusring) {
+.accessibility-indicator:is(:hover, :active, :focus, :-moz-focusring) {
   background-image: url("chrome://browser/skin/accessibility-active.svg");
   outline: 0;
 }

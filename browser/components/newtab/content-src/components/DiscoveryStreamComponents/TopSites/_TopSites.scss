@@ -7,7 +7,7 @@ $top-sites-vertical-space-with-spoc: 20px;
     .top-site-outer {
       padding: 0 12px;
 
-      .top-site-inner > a:-moz-any(.active, :focus) .tile {
+      .top-site-inner > a:is(.active, :focus) .tile {
         @include ds-fade-in;
 
         @include dark-theme-only {
@@ -15,7 +15,7 @@ $top-sites-vertical-space-with-spoc: 20px;
         }
       }
 
-      .top-site-inner > a:-moz-any(:hover) .tile {
+      .top-site-inner > a:is(:hover) .tile {
         @include ds-fade-in($grey-30);
 
         @include dark-theme-only {

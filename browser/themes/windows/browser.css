@@ -223,7 +223,7 @@
           ActiveBorder 2px, ActiveBorder 4px, transparent 4px);
   }
 
-  :root[tabsintitlebar]:not([inFullscreen]) :-moz-any(#TabsToolbar, #toolbar-menubar) toolbarbutton:not(:-moz-lwtheme) {
+  :root[tabsintitlebar]:not([inFullscreen]) :is(#TabsToolbar, #toolbar-menubar) toolbarbutton:not(:-moz-lwtheme) {
     color: inherit;
   }
 }

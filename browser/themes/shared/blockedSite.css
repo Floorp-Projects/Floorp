@@ -52,7 +52,7 @@
 }
 
 .error-description #ignore_warning_link,
-.error-description a:-moz-any(:link, :visited) {
+.error-description a:is(:link, :visited) {
   cursor: pointer;
   text-decoration: underline;
   color: black;
