@@ -2193,6 +2193,19 @@
   value: true
   mirror: always
 
+# Limit of location change caused by content scripts in a time span per
+# BrowsingContext. This includes calls to History and Location APIs.
+- name: dom.navigation.locationChangeRateLimit.count
+  type: uint32_t
+  value: 200
+  mirror: always
+
+# Time span in seconds for location change rate limit.
+- name: dom.navigation.locationChangeRateLimit.timespan
+  type: uint32_t
+  value: 10
+  mirror: always
+
 # Network Information API
 - name: dom.netinfo.enabled
   type: RelaxedAtomicBool
