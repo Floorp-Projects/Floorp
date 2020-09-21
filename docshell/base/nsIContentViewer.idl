@@ -338,3 +338,14 @@ interface nsIContentViewer : nsISupports
   [noscript, notxpcom] Encoding getHintCharset();
   [noscript, notxpcom] void setHintCharset(in Encoding aEncoding);
 };
+
+%{C++
+namespace mozilla {
+namespace dom {
+
+using XPCOMPermitUnloadAction = nsIContentViewer::PermitUnloadAction;
+using PermitUnloadResult = nsIContentViewer::PermitUnloadResult;
+
+} // namespace dom
+} // namespace mozilla
+%}

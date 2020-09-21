@@ -814,9 +814,18 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvDispatchLocationChangeEvent(
       const MaybeDiscarded<BrowsingContext>& aContext);
 
-  mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvDispatchBeforeUnloadToSubtree(
+      const MaybeDiscarded<BrowsingContext>& aStartingAt,
+      DispatchBeforeUnloadToSubtreeResolver&& aResolver);
+
+ public:
+  static void DispatchBeforeUnloadToSubtree(
+      BrowsingContext* aStartingAt,
+      const DispatchBeforeUnloadToSubtreeResolver& aResolver);
 
  private:
+  mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
+
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;
 #else

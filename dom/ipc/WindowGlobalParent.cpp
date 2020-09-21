@@ -12,9 +12,11 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/InProcessParent.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ClientIPCTypes.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -39,6 +41,7 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsSerializationHelper.h"
 #include "nsIBrowser.h"
+#include "nsIPromptCollection.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsISharePicker.h"
 #include "mozilla/Telemetry.h"
@@ -665,6 +668,185 @@ WindowGlobalParent::RecvSubmitLoadInputEventResponsePreloadTelemetry(
     Telemetry::Accumulate(Telemetry::LOAD_INPUT_EVENT_RESPONSE_NO_PRELOAD_MS,
                           aMillis);
   }
+
+  return IPC_OK();
+}
+
+namespace {
+
+class CheckPermitUnloadRequest final : public PromiseNativeHandler {
+ public:
+  CheckPermitUnloadRequest(WindowGlobalParent* aWGP, bool aHasInProcessBlocker,
+                           nsIContentViewer::PermitUnloadAction aAction,
+                           std::function<void(bool)>&& aResolver)
+      : mResolver(std::move(aResolver)),
+        mWGP(aWGP),
+        mAction(aAction),
+        mFoundBlocker(aHasInProcessBlocker) {}
+
+  void Run(ContentParent* aIgnoreProcess = nullptr) {
+    MOZ_ASSERT(mState == State::UNINITIALIZED);
+    mState = State::WAITING;
+
+    RefPtr<CheckPermitUnloadRequest> self(this);
+
+    AutoTArray<ContentParent*, 8> seen;
+    if (aIgnoreProcess) {
+      seen.AppendElement(aIgnoreProcess);
+    }
+
+    BrowsingContext* bc = mWGP->GetBrowsingContext();
+    bc->PreOrderWalk([&](dom::BrowsingContext* aBC) {
+      if (WindowGlobalParent* wgp =
+              aBC->Canonical()->GetCurrentWindowGlobal()) {
+        ContentParent* cp = wgp->GetContentParent();
+        if (wgp->HasBeforeUnload() && !seen.ContainsSorted(cp)) {
+          seen.InsertElementSorted(cp);
+          mPendingRequests++;
+          auto resolve = [self](bool blockNavigation) {
+            if (blockNavigation) {
+              self->mFoundBlocker = true;
+            }
+            self->ResolveRequest();
+          };
+          if (cp) {
+            cp->SendDispatchBeforeUnloadToSubtree(
+                bc, resolve, [self](auto) { self->ResolveRequest(); });
+          } else {
+            ContentChild::DispatchBeforeUnloadToSubtree(bc, resolve);
+          }
+        }
+      }
+    });
+
+    CheckDoneWaiting();
+  }
+
+  void ResolveRequest() {
+    mPendingRequests--;
+    CheckDoneWaiting();
+  }
+
+  void CheckDoneWaiting() {
+    // If we've found a blocker, we prompt immediately without waiting for
+    // further responses. The user's response applies to the entire navigation
+    // attempt, regardless of how many "beforeunload" listeners we call.
+    if (mState != State::WAITING || (mPendingRequests && !mFoundBlocker)) {
+      return;
+    }
+
+    mState = State::PROMPTING;
+
+    if (!mFoundBlocker) {
+      SendReply(true);
+      return;
+    }
+
+    auto action = mAction;
+    if (StaticPrefs::dom_disable_beforeunload()) {
+      action = nsIContentViewer::eDontPromptAndUnload;
+    }
+    if (action != nsIContentViewer::ePrompt) {
+      SendReply(action == nsIContentViewer::eDontPromptAndUnload);
+      return;
+    }
+
+    // Handle any failure in prompting by aborting the navigation. See comment
+    // in nsContentViewer::PermitUnload for reasoning.
+    auto cleanup = MakeScopeExit([&]() { SendReply(false); });
+
+    if (nsCOMPtr<nsIPromptCollection> prompt =
+            do_GetService("@mozilla.org/embedcomp/prompt-collection;1")) {
+      mozilla::Telemetry::Accumulate(
+          mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_COUNT, 1);
+
+      RefPtr<Promise> promise;
+      prompt->AsyncBeforeUnloadCheck(mWGP->GetBrowsingContext(),
+                                     getter_AddRefs(promise));
+
+      if (!promise) {
+        mozilla::Telemetry::Accumulate(
+            mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION, 2);
+        return;
+      }
+
+      promise->AppendNativeHandler(this);
+      cleanup.release();
+    }
+  }
+
+  void SendReply(bool aAllow) {
+    MOZ_ASSERT(mState != State::REPLIED);
+    mResolver(aAllow);
+    mState = State::REPLIED;
+  }
+
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    MOZ_ASSERT(mState == State::PROMPTING);
+
+    bool allow = JS::ToBoolean(aValue);
+
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION, (allow ? 1 : 0));
+
+    SendReply(allow);
+  }
+
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    MOZ_ASSERT(mState == State::PROMPTING);
+
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::ONBEFOREUNLOAD_PROMPT_ACTION, 2);
+
+    SendReply(false);
+  }
+
+  NS_DECL_ISUPPORTS
+
+ private:
+  ~CheckPermitUnloadRequest() {
+    // We may get here without having sent a reply if the promise we're waiting
+    // on is destroyed without being resolved or rejected.
+    if (mState != State::REPLIED) {
+      SendReply(false);
+    }
+  }
+
+  enum class State : uint8_t {
+    UNINITIALIZED,
+    WAITING,
+    PROMPTING,
+    REPLIED,
+  };
+
+  std::function<void(bool)> mResolver;
+
+  RefPtr<WindowGlobalParent> mWGP;
+
+  uint32_t mPendingRequests = 0;
+
+  nsIContentViewer::PermitUnloadAction mAction;
+
+  State mState = State::UNINITIALIZED;
+
+  bool mFoundBlocker = false;
+};
+
+NS_IMPL_ISUPPORTS0(CheckPermitUnloadRequest)
+
+}  // namespace
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvCheckPermitUnload(
+    bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction,
+    CheckPermitUnloadResolver&& aResolver) {
+  if (!IsCurrentGlobal()) {
+    aResolver(false);
+    return IPC_OK();
+  }
+
+  auto request = MakeRefPtr<CheckPermitUnloadRequest>(
+      this, aHasInProcessBlocker, aAction, std::move(aResolver));
+  request->Run(/* aIgnoreProcess */ GetContentParent());
 
   return IPC_OK();
 }

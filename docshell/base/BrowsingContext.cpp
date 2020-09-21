@@ -842,14 +842,21 @@ void BrowsingContext::UnregisterWindowContext(WindowContext* aWindow) {
 void BrowsingContext::PreOrderWalk(
     const std::function<void(BrowsingContext*)>& aCallback) {
   aCallback(this);
-  for (auto& child : Children()) {
+
+  AutoTArray<RefPtr<BrowsingContext>, 8> children;
+  children.AppendElements(Children());
+
+  for (auto& child : children) {
     child->PreOrderWalk(aCallback);
   }
 }
 
 void BrowsingContext::PostOrderWalk(
     const std::function<void(BrowsingContext*)>& aCallback) {
-  for (auto& child : Children()) {
+  AutoTArray<RefPtr<BrowsingContext>, 8> children;
+  children.AppendElements(Children());
+
+  for (auto& child : children) {
     child->PostOrderWalk(aCallback);
   }
 

@@ -20,6 +20,7 @@ using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using moveonly mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
 using nscolor from "nsColor.h";
 using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
+using mozilla::dom::XPCOMPermitUnloadAction from "mozilla/dom/DocShellMessageUtils.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
@@ -145,6 +146,7 @@ parent:
                                         TimeStamp aLoadStart,
                                         TimeStamp aLoadEnd);
 
+
   /**
    * Submit Time-to-First-Interaction telemetry correlated with whether or not
    * the document tree preloaded any resources.
@@ -156,6 +158,15 @@ parent:
    * or not the document tree preloaded any resources.
    */
   async SubmitLoadInputEventResponsePreloadTelemetry(uint32_t aMillis);
+
+  // Checks whether any "beforeunload" event listener in the document subtree
+  // wants to block unload, and prompts the user to allow if any does (depending
+  // on the action specified, using nsIContentViewer::PermitUnloadAction
+  // values). The sender is responsible for checking documents in its own
+  // process, and passing true for `aHasInProcessBlocker` if any exist. Windows
+  // hosted outside of the caller process will be checked automatically.
+  async CheckPermitUnload(bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction)
+    returns (bool permitUnload);
 
   async Destroy();
 };
