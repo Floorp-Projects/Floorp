@@ -31,6 +31,11 @@ class OkHttpClient(
     private val client: OkHttpClient = OkHttpClient(),
     private val context: Context? = null
 ) : Client() {
+    private val defaultHeaders: Headers = MutableHeaders(
+        "User-Agent" to "MozacFetch/${BuildConfig.LIBRARY_VERSION}",
+        "Accept-Encoding" to "gzip"
+    )
+
     override fun fetch(request: Request): Response {
         if (request.isDataUri()) {
             return fetchDataUri(request)
@@ -39,7 +44,6 @@ class OkHttpClient(
         val requestClient = client.rebuildFor(request, context)
 
         val requestBuilder = createRequestBuilderWithBody(request)
-        requestBuilder.addHeader("User-Agent", "MozacFetch/${BuildConfig.LIBRARY_VERSION}")
         requestBuilder.addHeadersFrom(request, defaultHeaders = defaultHeaders)
 
         if (!request.useCaches) {

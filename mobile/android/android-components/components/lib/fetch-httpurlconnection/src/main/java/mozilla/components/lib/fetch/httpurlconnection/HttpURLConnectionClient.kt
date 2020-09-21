@@ -25,6 +25,11 @@ import java.util.zip.GZIPInputStream
  * [HttpURLConnection] implementation of [Client].
  */
 class HttpURLConnectionClient : Client() {
+    private val defaultHeaders: Headers = MutableHeaders(
+        "User-Agent" to "MozacFetch/${BuildConfig.LIBRARY_VERSION}",
+        "Accept-Encoding" to "gzip"
+    )
+
     @Throws(IOException::class)
     override fun fetch(request: Request): Response {
         if (request.isDataUri()) {
@@ -33,9 +38,8 @@ class HttpURLConnectionClient : Client() {
 
         val connection = (URL(request.url).openConnection() as HttpURLConnection)
 
-        connection.setRequestProperty("User-Agent", "MozacFetch/${BuildConfig.LIBRARY_VERSION}")
         connection.setupWith(request)
-        connection.addHeadersFrom(request, defaultHeaders = defaultHeaders)
+        connection.addHeadersFrom(request, defaultHeaders)
         connection.addBodyFrom(request)
 
         return connection.toResponse()

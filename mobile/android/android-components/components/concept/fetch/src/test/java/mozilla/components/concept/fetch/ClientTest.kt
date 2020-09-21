@@ -7,28 +7,9 @@ package mozilla.components.concept.fetch
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class ClientTest {
-    @Test
-    fun `Expects gzip encoding default header`() {
-        val client = TestClient()
-
-        val acceptEncoding = client.exposeDefaultHeaders().get("Accept-Encoding")
-        assertNotNull(acceptEncoding!!)
-        assertEquals("gzip", acceptEncoding)
-    }
-
-    @Test
-    fun `Expects accept all default header`() {
-        val client = TestClient()
-
-        val accept = client.exposeDefaultHeaders().get("Accept")
-        assertNotNull(accept!!)
-        assertEquals("*/*", accept)
-    }
-
     @Test
     fun `Async request with coroutines`() = runBlocking {
         val client = TestClient(responseBody = Response.Body("Hello World".byteInputStream()))
@@ -50,6 +31,4 @@ private class TestClient(
     override fun fetch(request: Request): Response {
         return Response(responseUrl ?: request.url, responseStatus, responseHeaders, responseBody)
     }
-
-    fun exposeDefaultHeaders() = defaultHeaders
 }

@@ -92,22 +92,6 @@ abstract class Client {
         }
     }
 
-    /**
-     * List of default headers that should be added to every request unless overridden by the headers in the request.
-     */
-    protected val defaultHeaders: Headers = MutableHeaders(
-        // Unfortunately some implementations will always send a not removable Accept header. Let's override it with
-        // a header that accepts everything.
-        "Accept" to "*/*",
-
-        // We expect all clients to implement gzip decoding transparently.
-        "Accept-Encoding" to "gzip",
-
-        // Unfortunately some implementations will always send a not removable Accept-Language header. Let's override
-        // it with a header that accepts everything.
-        "Accept-Language" to "*/*"
-    )
-
     companion object {
         const val DATA_URI_BASE64_EXT = ";base64"
         const val DATA_URI_SCHEME = "data:"
