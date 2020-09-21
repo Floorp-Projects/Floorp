@@ -59,8 +59,8 @@ function enableNetProvider(webConsoleUI) {
 
       // Process all incoming HTTP details packets. Note that
       // Network event update packets are sent in batches from:
-      // `WebConsoleOutputWrapper.dispatchMessageUpdate` using
-      // NETWORK_MESSAGE_UPDATE action.
+      // `WebConsoleOutputWrapper.dispatchMessagesUpdate` using
+      // NETWORK_MESSAGES_UPDATE action.
       // Make sure to call `dataProvider.onNetworkResourceUpdated`
       // to fetch data from the backend.
       if (type == NETWORK_MESSAGE_UPDATE) {
