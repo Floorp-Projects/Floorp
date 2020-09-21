@@ -331,21 +331,6 @@ impl SpatialTree {
         CoordinateSpaceMapping::Transform(transform)
     }
 
-    pub fn is_relative_transform_complex(
-        &self,
-        child_index: SpatialNodeIndex,
-        parent_index: SpatialNodeIndex,
-    ) -> bool {
-        if child_index == parent_index {
-            return false;
-        }
-
-        let child = &self.spatial_nodes[child_index.0 as usize];
-        let parent = &self.spatial_nodes[parent_index.0 as usize];
-
-        child.coordinate_system_id != parent.coordinate_system_id
-    }
-
     fn get_world_transform_impl(
         &self,
         index: SpatialNodeIndex,
