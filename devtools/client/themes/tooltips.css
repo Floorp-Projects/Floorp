@@ -476,7 +476,7 @@ strong {
   margin-inline-end: 15px;
 }
 
-.tooltip-container[type="doorhanger"] .menuitem > button.command:-moz-any([role="menuitem"],[role="menuitemcheckbox"],[role="link"]) {
+.tooltip-container[type="doorhanger"] .menuitem > button.command:is([role="menuitem"],[role="menuitemcheckbox"],[role="link"]) {
   appearance: none;
   border: none;
   color: var(--theme-arrowpanel-color);
@@ -485,7 +485,7 @@ strong {
   width: 100%;
 }
 
-.tooltip-container[type="doorhanger"] .menuitem > .command:not(:-moz-any([disabled],[open],:active)):-moz-any(:hover,:focus) {
+.tooltip-container[type="doorhanger"] .menuitem > .command:not(:is([disabled],[open],:active)):is(:hover,:focus) {
   background-color: var(--theme-arrowpanel-dimmed);
 }
 
@@ -493,7 +493,7 @@ strong {
   border-color: transparent;
 }
 
-.tooltip-container[type="doorhanger"] .menuitem > .command:not([disabled]):-moz-any([open],:hover:active) {
+.tooltip-container[type="doorhanger"] .menuitem > .command:not([disabled]):is([open],:hover:active) {
   background-color: var(--theme-arrowpanel-dimmed-further);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
