@@ -240,6 +240,7 @@ function makeChan(url, mode) {
 add_task(
   { skip_if: () => mozinfo.os == "mac" },
   async function test_trr_flags() {
+    Services.prefs.setBoolPref("network.trr.fallback-on-zero-response", true);
     let httpserv = new HttpServer();
     httpserv.registerPathHandler("/", function handler(metadata, response) {
       let content = "ok";
@@ -348,6 +349,7 @@ add_task(
     await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
 
     await new Promise(resolve => httpserv.stop(resolve));
+    Services.prefs.clearUserPref("network.trr.fallback-on-zero-response");
   }
 );
 
@@ -2067,4 +2069,53 @@ add_task(async function test_ipv6_trr_fallback() {
 
   override.clearOverrides();
   await httpserver.stop();
+});
+
+add_task(async function test_no_retry_without_doh() {
+  // See bug 1648147 - if the TRR returns 0.0.0.0 we should not retry with DNS
+  Services.prefs.setBoolPref("network.trr.fallback-on-zero-response", false);
+
+  async function test(url, ip) {
+    Services.prefs.setIntPref("network.trr.mode", 2);
+    Services.prefs.setCharPref(
+      "network.trr.uri",
+      `https://foo.example.com:${h2Port}/doh?responseIP=${ip}`
+    );
+
+    // Requests to 0.0.0.0 are usually directed to localhost, so let's use a port
+    // we know isn't being used - 666 (Doom)
+    let chan = makeChan(url, Ci.nsIRequest.TRR_DEFAULT_MODE);
+    let resolutions = 0;
+    let statusCounter = {
+      statusCount: {},
+      QueryInterface: ChromeUtils.generateQI([
+        "nsIInterfaceRequestor",
+        "nsIProgressEventSink",
+      ]),
+      getInterface(iid) {
+        return this.QueryInterface(iid);
+      },
+      onProgress(request, progress, progressMax) {},
+      onStatus(request, status, statusArg) {
+        this.statusCount[status] = 1 + (this.statusCount[status] || 0);
+      },
+    };
+    chan.notificationCallbacks = statusCounter;
+    let req = await new Promise(resolve =>
+      chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE))
+    );
+    equal(
+      statusCounter.statusCount[0x804b000b],
+      1,
+      "Expecting only one instance of NS_NET_STATUS_RESOLVED_HOST"
+    );
+    equal(
+      statusCounter.statusCount[0x804b0007],
+      1,
+      "Expecting only one instance of NS_NET_STATUS_CONNECTING_TO"
+    );
+  }
+
+  await test(`http://unknown.ipv4.stuff:666/path`, "0.0.0.0");
+  await test(`http://unknown.ipv6.stuff:666/path`, "::");
 });
