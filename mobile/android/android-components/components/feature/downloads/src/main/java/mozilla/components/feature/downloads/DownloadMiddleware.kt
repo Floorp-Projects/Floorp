@@ -55,21 +55,21 @@ class DownloadMiddleware(
             is DownloadAction.RemoveAllDownloadsAction -> removeDownloads()
             is DownloadAction.UpdateDownloadAction -> updateDownload(action.download, context)
             is DownloadAction.RestoreDownloadsStateAction -> restoreDownloads(context.store)
+            is DownloadAction.AddDownloadAction -> {
+                if (!saveDownload(context.store, action.download)) {
+                    // The download was already added before, so we are ignoring this request.
+                    logger.debug("Ignored add action for ${action.download.id} " +
+                            "download already in store.downloads")
+                    return
+                }
+            }
         }
 
         next(action)
 
         when (action) {
-            is DownloadAction.AddDownloadAction -> {
-                scope.launch {
-                    downloadStorage.add(action.download)
-                    logger.debug("Added download ${action.download.fileName} to the storage")
-                }
-                sendDownloadIntent(action.download)
-            }
-            is DownloadAction.RestoreDownloadStateAction -> {
-                sendDownloadIntent(action.download)
-            }
+            is DownloadAction.AddDownloadAction -> sendDownloadIntent(action.download)
+            is DownloadAction.RestoreDownloadStateAction -> sendDownloadIntent(action.download)
         }
     }
 
@@ -108,6 +108,18 @@ class DownloadMiddleware(
                     logger.debug("Download restored from the storage ${download.fileName}")
                 }
             }
+        }
+    }
+
+    private fun saveDownload(store: Store<BrowserState, BrowserAction>, download: DownloadState): Boolean {
+        return if (!store.state.downloads.containsKey(download.id)) {
+            scope.launch {
+                downloadStorage.add(download)
+                logger.debug("Added download ${download.fileName} to the storage")
+            }
+            true
+        } else {
+            false
         }
     }
 

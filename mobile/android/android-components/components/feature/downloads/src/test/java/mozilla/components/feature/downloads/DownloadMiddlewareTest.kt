@@ -113,6 +113,29 @@ class DownloadMiddlewareTest {
     }
 
     @Test
+    fun `previously added downloads MUST be ignored`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadStorage: DownloadStorage = mock()
+        val download = DownloadState("https://mozilla.org/download")
+        val downloadMiddleware = DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            downloadStorage = downloadStorage,
+            coroutineContext = dispatcher
+        )
+        val store = BrowserStore(
+            initialState = BrowserState(
+                downloads = mapOf(download.id to download)
+            ),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
+
+        verify(downloadStorage, never()).add(download)
+    }
+
+    @Test
     fun `RemoveDownloadAction MUST remove from the storage`() = runBlockingTest {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
