@@ -578,6 +578,8 @@ uint32_t DesktopCaptureImpl::CalculateFrameRate(int64_t now_ns) {
 
 int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& capability) {
+  rtc::CritScope lock(&_apiCs);
+
   _requestedCapability = capability;
 #if defined(_WIN32)
   uint32_t maxFPSNeeded = _requestedCapability.maxFPS > 0
