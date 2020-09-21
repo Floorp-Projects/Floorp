@@ -564,13 +564,26 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
   RefPtr<BrowsingContext> bc;
   loadInfo->GetBrowsingContext(getter_AddRefs(bc));
 
-  // In xpcshell-tests we don't always have a browsingContext.
-  if (!bc) {
-    return;
-  }
-
   nsCOMPtr<nsIURI> uri;
   Unused << aChannel->GetURI(getter_AddRefs(uri));
+
+  // In some cases we don't have a browsingContext. For example, in xpcshell
+  // tests or channels that are used to download images.
+  if (!bc) {
+    // We turn to check the loading principal if there is no browsing context.
+    auto* loadingPrincipal =
+        BasePrincipal::Cast(loadInfo->GetLoadingPrincipal());
+
+    if (uri && loadingPrincipal) {
+      bool isThirdParty = true;
+      nsresult rv = loadingPrincipal->IsThirdPartyURI(uri, &isThirdParty);
+
+      if (NS_SUCCEEDED(rv)) {
+        loadInfo->SetIsThirdPartyContextToTopWindow(isThirdParty);
+      }
+    }
+    return;
+  }
 
   RefPtr<WindowGlobalParent> topWindow =
       GetTopWindowExcludingExtensionAccessibleContentFrames(bc->Canonical(),
