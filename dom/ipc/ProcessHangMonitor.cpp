@@ -784,6 +784,12 @@ void HangMonitorParent::CancelContentJSExecutionIfRunning(
     const dom::CancelContentJSOptions& aCancelContentJSOptions) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
+  if (!aBrowserParent->CanCancelContentJS(aNavigationType,
+                                          aCancelContentJSOptions.mIndex,
+                                          aCancelContentJSOptions.mUri)) {
+    return;
+  }
+
   TabId id = aBrowserParent->GetTabId();
   Dispatch(NewNonOwningRunnableMethod<TabId, nsIRemoteTab::NavigationType,
                                       int32_t, nsIURI*, int32_t>(
