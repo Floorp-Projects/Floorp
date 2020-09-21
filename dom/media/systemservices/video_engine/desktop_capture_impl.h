@@ -219,6 +219,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
       [kFrameRateCountHistorySize];  // timestamp for local captured frames
   VideoRotation _rotateFrame;  // Set if the frame should be rotated by the
                                // capture module.
+  std::atomic<uint32_t> _maxFPSNeeded;
 
   // Used to make sure incoming timestamp is increasing for every frame.
   int64_t last_capture_time_;

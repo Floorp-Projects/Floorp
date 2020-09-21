@@ -415,6 +415,7 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id, const char* uniqueId,
   _requestedCapability.height = kDefaultHeight;
   _requestedCapability.maxFPS = 30;
   _requestedCapability.videoType = kI420;
+  _maxFPSNeeded = 1000 / _requestedCapability.maxFPS;
   memset(_incomingFrameTimesNanos, 0, sizeof(_incomingFrameTimesNanos));
 }
 
@@ -581,11 +582,11 @@ int32_t DesktopCaptureImpl::StartCapture(
   rtc::CritScope lock(&_apiCs);
 
   _requestedCapability = capability;
+  _maxFPSNeeded = _requestedCapability.maxFPS > 0
+                      ? 1000 / _requestedCapability.maxFPS
+                      : 1000;
 #if defined(_WIN32)
-  uint32_t maxFPSNeeded = _requestedCapability.maxFPS > 0
-                              ? 1000 / _requestedCapability.maxFPS
-                              : 1000;
-  capturer_thread_->RequestCallbackTimer(maxFPSNeeded);
+  capturer_thread_->RequestCallbackTimer(_maxFPSNeeded);
 #endif
 
   if (started_) {
@@ -668,12 +669,9 @@ void DesktopCaptureImpl::process() {
       ((uint32_t)(rtc::TimeNanos() - startProcessTime)) /
       rtc::kNumNanosecsPerMillisec;
   // Use at most x% CPU or limit framerate
-  const uint32_t maxFPSNeeded = _requestedCapability.maxFPS > 0
-                                    ? 1000 / _requestedCapability.maxFPS
-                                    : 1000;
   const float sleepTimeFactor = (100.0f / kMaxDesktopCaptureCpuUsage) - 1.0f;
   const uint32_t sleepTime = sleepTimeFactor * processTime;
-  time_event_->Wait(std::max<uint32_t>(maxFPSNeeded, sleepTime));
+  time_event_->Wait(std::max<uint32_t>(_maxFPSNeeded, sleepTime));
 #endif
 }
 
