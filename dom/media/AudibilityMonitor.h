@@ -11,6 +11,7 @@
 
 #include "AudioSampleFormat.h"
 #include "WebAudioUtils.h"
+#include "AudioBlock.h"
 
 namespace mozilla {
 
@@ -25,8 +26,36 @@ class AudibilityMonitor {
         mSilentFramesInARow(0),
         mEverAudible(false) {}
 
-  void ProcessAudioData(const AudioData* aData) {
+  void Process(const AudioData* aData) {
     ProcessInterleaved(aData->Data(), aData->mChannels);
+  }
+
+  void Process(const AudioBlock& aData) {
+    if (aData.IsNull() || aData.IsMuted()) {
+      mSilentFramesInARow += aData.GetDuration();
+      return;
+    }
+    ProcessPlanar(aData.ChannelData<AudioDataValue>(), aData.GetDuration());
+  }
+
+  void ProcessPlanar(const nsTArray<const AudioDataValue*>& aPlanar,
+                     TrackTime aFrames) {
+    uint32_t lastFrameAudibleAccrossChannels = 0;
+    for (uint32_t channel = 0; channel < aPlanar.Length(); channel++) {
+      uint32_t lastSampleAudible = 0;
+      for (uint32_t frame = 0; frame < aFrames; frame++) {
+        float dbfs = dom::WebAudioUtils::ConvertLinearToDecibels(
+            abs(AudioSampleToFloat(aPlanar[channel][frame])), -100.f);
+        if (dbfs > AUDIBILITY_THREHSOLD) {
+          mEverAudible = true;
+          mSilentFramesInARow = 0;
+          lastSampleAudible = frame;
+        }
+      }
+      lastFrameAudibleAccrossChannels =
+          std::max(lastFrameAudibleAccrossChannels, lastSampleAudible);
+    }
+    mSilentFramesInARow += aFrames - lastFrameAudibleAccrossChannels - 1;
   }
 
   void ProcessInterleaved(const Span<AudioDataValue>& aInterleaved,
