@@ -2307,9 +2307,7 @@
 
     _mayDiscardBrowser(aTab, aForceDiscard) {
       let browser = aTab.linkedBrowser;
-      let permitUnloadFlags = aForceDiscard
-        ? browser.dontPromptAndUnload
-        : browser.dontPromptAndDontUnload;
+      let action = aForceDiscard ? "unload" : "dontUnload";
 
       if (
         !aTab ||
@@ -2318,7 +2316,7 @@
         this._windowIsClosing ||
         !browser.isConnected ||
         !browser.isRemoteBrowser ||
-        !browser.permitUnload(permitUnloadFlags).permitUnload
+        !browser.permitUnload(action).permitUnload
       ) {
         return false;
       }
@@ -3386,7 +3384,7 @@
     _hasBeforeUnload(aTab) {
       let browser = aTab.linkedBrowser;
       if (browser.isRemoteBrowser && browser.frameLoader) {
-        return PermitUnloader.hasBeforeUnload(browser.frameLoader);
+        return browser.hasBeforeUnload;
       }
       return false;
     },
