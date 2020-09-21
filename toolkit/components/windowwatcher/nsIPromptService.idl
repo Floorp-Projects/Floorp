@@ -364,7 +364,8 @@ interface nsIPromptService : nsISupports
                       in wstring aButton1Title,
                       in wstring aButton2Title,
                       in wstring aCheckMsg,
-                      in boolean aCheckState);
+                      in boolean aCheckState,
+                      [optional] in jsval aExtraArgs);
   /**
    * Puts up a dialog with an edit field and an optional, labeled checkbox.
    *

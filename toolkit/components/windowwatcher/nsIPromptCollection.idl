@@ -24,6 +24,13 @@ interface nsIPromptCollection : nsISupports
   boolean beforeUnloadCheck(in BrowsingContext aBrowsingContext);
 
   /**
+   * Like `beforeUnloadCheck`, but does not spin a nested event loop, and
+   * instead returns a promise which resolves to true if navigation should be
+   * allowed, and false if not.
+   */
+  Promise asyncBeforeUnloadCheck(in BrowsingContext aBrowsingContext);
+
+  /**
    * Puts up a dialog for the confirm repost prompt.
    *
    * @param aBrowsingContext
