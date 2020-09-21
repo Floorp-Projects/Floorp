@@ -14,6 +14,7 @@
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
@@ -1506,13 +1507,12 @@ nsresult nsXULPrototypeElement::SetAttrAt(uint32_t aPos,
     // as has been discussed, the CSP should be checked here to see if
     // inline styles are allowed to be applied.
     // XXX No specific specs talk about xul and referrer policy, pass Unset
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new ReferrerInfo(aDocumentURI, ReferrerPolicy::_empty);
-
-    RefPtr<URLExtraData> data =
-        new URLExtraData(aDocumentURI, referrerInfo, principal);
+    auto referrerInfo =
+        MakeRefPtr<ReferrerInfo>(aDocumentURI, ReferrerPolicy::_empty);
+    auto data = MakeRefPtr<URLExtraData>(aDocumentURI, referrerInfo, principal);
     RefPtr<DeclarationBlock> declaration = DeclarationBlock::FromCssText(
-        aValue, data, eCompatibility_FullStandards, nullptr);
+        aValue, data, eCompatibility_FullStandards, nullptr,
+        CSSRule_Binding::STYLE_RULE);
     if (declaration) {
       mAttributes[aPos].mValue.SetTo(declaration.forget(), &aValue);
 

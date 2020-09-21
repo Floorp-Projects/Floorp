@@ -125,25 +125,15 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound,
                              nsACString& aPropName) override;
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   // Information needed to parse a declaration for Servo side.
   // Put this in public so other Servo parsing functions can reuse this.
   struct MOZ_STACK_CLASS ParsingEnvironment {
     RefPtr<mozilla::URLExtraData> mUrlExtraData;
-    nsCompatibility mCompatMode;
-    mozilla::css::Loader* mLoader;
-
-    ParsingEnvironment(mozilla::URLExtraData* aUrlData,
-                       nsCompatibility aCompatMode,
-                       mozilla::css::Loader* aLoader)
-        : mUrlExtraData(aUrlData), mCompatMode(aCompatMode), mLoader(aLoader) {}
-
-    ParsingEnvironment(already_AddRefed<mozilla::URLExtraData> aUrlData,
-                       nsCompatibility aCompatMode,
-                       mozilla::css::Loader* aLoader)
-        : mUrlExtraData(aUrlData), mCompatMode(aCompatMode), mLoader(aLoader) {}
+    nsCompatibility mCompatMode = eCompatibility_FullStandards;
+    mozilla::css::Loader* mLoader = nullptr;
+    uint16_t mRuleType{0};
   };
 
  protected:
@@ -189,8 +179,11 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
 
   // An implementation for GetParsingEnvironment for callers wrapping a
   // css::Rule.
+  //
+  // The RuleType argument is just to avoid a virtual call, since all callers
+  // know it statically. Should be equal to aRule->Type().
   static ParsingEnvironment GetParsingEnvironmentForRule(
-      const mozilla::css::Rule* aRule);
+      const mozilla::css::Rule* aRule, uint16_t aRuleType);
 
   nsresult ParsePropertyValue(const nsCSSPropertyID aPropID,
                               const nsACString& aPropValue, bool aIsImportant,
