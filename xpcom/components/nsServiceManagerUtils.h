@@ -28,26 +28,6 @@ inline nsGetServiceByContractIDWithError do_GetService(const char* aContractID,
   return nsGetServiceByContractIDWithError(aContractID, aError);
 }
 
-class MOZ_STACK_CLASS nsGetServiceFromCategory final : public nsCOMPtr_helper {
- public:
-  nsGetServiceFromCategory(const nsACString& aCategory,
-                           const nsACString& aEntry, nsresult* aErrorPtr)
-      : mCategory(aCategory), mEntry(aEntry), mErrorPtr(aErrorPtr) {}
-
-  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const override;
-
- protected:
-  const nsCString mCategory;
-  const nsCString mEntry;
-  nsresult* mErrorPtr;
-};
-
-inline const nsGetServiceFromCategory do_GetServiceFromCategory(
-    const nsACString& aCategory, const nsACString& aEntry,
-    nsresult* aError = 0) {
-  return nsGetServiceFromCategory(aCategory, aEntry, aError);
-}
-
 nsresult CallGetService(const nsCID& aClass, const nsIID& aIID, void** aResult);
 
 nsresult CallGetService(const char* aContractID, const nsIID& aIID,
