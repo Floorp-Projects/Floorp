@@ -722,6 +722,8 @@ impl<'a> SceneBuilder<'a> {
         );
 
         let iframe_rect = LayoutRect::new(LayoutPoint::zero(), bounds.size);
+        let is_root_pipeline = self.iframe_size.is_empty();
+
         self.add_scroll_frame(
             SpatialId::root_scroll_node(iframe_pipeline_id),
             spatial_node_index,
@@ -730,7 +732,9 @@ impl<'a> SceneBuilder<'a> {
             &iframe_rect,
             &bounds.size,
             ScrollSensitivity::ScriptAndInputEvents,
-            ScrollFrameKind::PipelineRoot,
+            ScrollFrameKind::PipelineRoot {
+                is_root_pipeline,
+            },
             LayoutVector2D::zero(),
         );
 
@@ -2006,7 +2010,9 @@ impl<'a> SceneBuilder<'a> {
             &viewport_rect,
             &viewport_rect.size,
             ScrollSensitivity::ScriptAndInputEvents,
-            ScrollFrameKind::PipelineRoot,
+            ScrollFrameKind::PipelineRoot {
+                is_root_pipeline: true,
+            },
             LayoutVector2D::zero(),
         );
     }
