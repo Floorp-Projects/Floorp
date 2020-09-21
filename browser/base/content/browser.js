@@ -5291,6 +5291,16 @@ var XULBrowserWindow = {
       gURLBar.setURI(aLocationURI, aIsSimulated);
 
       BookmarkingUI.onLocationChange();
+      if (
+        Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020", false)
+      ) {
+        AutoShowBookmarksToolbar.toggleVisibility({
+          currentURI: gBrowser.currentURI,
+          isNullPrincipal: gBrowser.contentPrincipal.isNullPrincipal,
+          animated: false,
+          persist: false,
+        });
+      }
 
       gIdentityHandler.onLocationChange();
 
@@ -6315,16 +6325,32 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     }
 
     let menuItem = document.createXULElement("menuitem");
-    let hidingAttribute =
-      toolbar.getAttribute("type") == "menubar" ? "autohide" : "collapsed";
+
     menuItem.setAttribute("id", "toggle_" + toolbar.id);
     menuItem.setAttribute("toolbarId", toolbar.id);
     menuItem.setAttribute("type", "checkbox");
     menuItem.setAttribute("label", toolbar.getAttribute("toolbarname"));
-    menuItem.setAttribute(
-      "checked",
-      toolbar.getAttribute(hidingAttribute) != "true"
-    );
+    if (toolbar.id == "PersonalToolbar") {
+      // The persisted state of the PersonalToolbar is stored in
+      // "browser.toolbars.bookmarks.persist_open" so we can
+      // automatically show/hide it on newtab. We want the menuitem
+      // to reflect the persisted state of the pref and not if the
+      // toolbar is temporarily visible because the user is on newtab.
+      menuItem.setAttribute(
+        "checked",
+        Services.prefs.getBoolPref(
+          "browser.toolbars.bookmarks.persist_open",
+          false
+        )
+      );
+    } else {
+      let hidingAttribute =
+        toolbar.getAttribute("type") == "menubar" ? "autohide" : "collapsed";
+      menuItem.setAttribute(
+        "checked",
+        toolbar.getAttribute(hidingAttribute) != "true"
+      );
+    }
     menuItem.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
     if (popup.id != "toolbar-context-menu") {
       menuItem.setAttribute("key", toolbar.getAttribute("key"));
@@ -6431,12 +6457,19 @@ function onViewToolbarCommand(aEvent) {
   let menuId = node.parentNode.id;
   let toolbarId = node.getAttribute("toolbarId");
   let isVisible = node.getAttribute("checked") == "true";
+  if (toolbarId == "PersonalToolbar") {
+    BookmarkingUI.toggleBookmarksToolbar(menuId);
+  }
   CustomizableUI.setToolbarVisibility(toolbarId, isVisible);
   BrowserUsageTelemetry.recordToolbarVisibility(toolbarId, isVisible, menuId);
-  updateToggleControlLabel(node);
 }
 
-function setToolbarVisibility(toolbar, isVisible, persist = true) {
+function setToolbarVisibility(
+  toolbar,
+  isVisible,
+  persist = true,
+  animated = true
+) {
   let hidingAttribute;
   if (toolbar.getAttribute("type") == "menubar") {
     hidingAttribute = "autohide";
@@ -6447,9 +6480,17 @@ function setToolbarVisibility(toolbar, isVisible, persist = true) {
     hidingAttribute = "collapsed";
   }
 
+  toolbar.classList.toggle("animated", animated);
   toolbar.setAttribute(hidingAttribute, !isVisible);
   if (persist) {
-    Services.xulStore.persist(toolbar, hidingAttribute);
+    if (toolbar.id == "PersonalToolbar") {
+      Services.prefs.setBoolPref(
+        "browser.toolbars.bookmarks.persist_open",
+        isVisible
+      );
+    } else {
+      Services.xulStore.persist(toolbar, hidingAttribute);
+    }
   }
 
   let eventParams = {
