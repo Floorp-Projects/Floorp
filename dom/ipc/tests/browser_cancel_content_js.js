@@ -8,7 +8,7 @@ requestLongerTimeout(10);
 
 const TEST_PAGE =
   "http://mochi.test:8888/browser/dom/ipc/tests/file_cancel_content_js.html";
-const NEXT_PAGE = "https://example.org/";
+const NEXT_PAGE = "http://mochi.test:8888/browser/dom/ipc/tests/";
 const JS_URI = "javascript:void(document.title = 'foo')";
 
 async function test_navigation(nextPage, cancelContentJSPref, shouldCancel) {
