@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<style>
+html,body {
+  color:black; background-color:white; font:15px/1 monospace;
+}
+
+.grid {
+  display: inline-grid;
+  grid: masonry / repeat(10,auto);
+  align-tracks: start, start, stretch, start, start, end, end, stretch, end, end;
+  gap: 3px 1px;
+  border: 2px solid;
+  height: 400px;
+  align-content: center;
+  masonry-auto-flow: ordered next;
+  vertical-align: top;
+}
+.fb, .lb { background: olive; }
+item > div {
+  text-decoration: underline red;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0;
+  text-decoration-skip-ink: none;
+}
+x { height: 20px; background: grey; opacity:.5; }
+x:nth-of-type(2) { height: 30px; }
+.fb { align-content: baseline; }
+.lb { align-content: last baseline; }
+.large { font-size:72pt; }
+.lb.large { font-size:64pt; }
+.medium { font-size:48pt; }
+</style>
+<body>
+<pre>align-tracks: start, start, stretch, start, start, end, end, stretch, end, end</pre>
+
+<div class="grid">
+  <item class="fb" style="padding-bottom: 5px"><div>F</div>x</item>
+  <item class="fb large"><div>F</div>x</item>
+  <item class="fb medium"><div>F</div></item>
+
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+
+  <item class="fb large" style="padding-bottom: 5px; grid-column:9"><div>F</div>x</item>
+  <item class="fb medium" style="grid-column:10"><div>F</div></item>
+
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+
+  <item class="fb large" style="padding-bottom: 5px; grid-column:4"><div>F</div>x</item>
+  <item class="fb medium" style="grid-column:5"><div>F</div></item>
+
+  <item class="fb" style="padding-bottom: 15px; grid-column:6"><div>F</div>x</item>
+  <item class="fb large" style="grid-column:7"><div>F</div></item>
+  <item class="fb medium" style="grid-column:8; margin-top:auto"><div>F</div></item>
+</div>
+
+<div class="grid">
+  <item class="lb" style="padding-bottom: 5px">x<div>L</div></item>
+  <item class="lb large">x<div>L</div></item>
+  <item class="lb medium"><div>L</div></item>
+
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+
+  <item class="lb large" style="padding-bottom: 5px; grid-column:9">x<div>L</div></item>
+  <item class="lb medium" style="grid-column:10"><div>L</div></item>
+
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+  <x>&nbsp;</x><x>&nbsp;</x><x>&nbsp;</x>
+
+  <item class="lb" style="padding-bottom: 5px; grid-column:4">x<div>L</div></item>
+  <item class="lb medium" style="grid-column:5"><div>L</div></item>
+
+  <item class="lb" style="padding-bottom: 15px; grid-column:6">x<div>L</div></item>
+  <item class="lb large" style="grid-column:7"><div>L</div></item>
+  <item class="lb medium" style="grid-column:8; margin-top:auto"><div>L</div></item>
+</div>
+</body>
+</html>
