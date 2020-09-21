@@ -148,8 +148,11 @@ class ResultImplementationNullIsOkBase {
     }
   }
   explicit ResultImplementationNullIsOkBase(E aErrorValue)
-      : mValue(std::piecewise_construct, std::tuple<>(),
-               std::tuple(UnusedZero<E>::Store(aErrorValue))) {
+      : mValue(
+            std::piecewise_construct, std::tuple<>(),
+            std::tuple(UnusedZero<E>::Store(
+                static_cast<std::conditional_t<std::is_reference_v<E>, E, E&&>>(
+                    aErrorValue)))) {
     MOZ_ASSERT(mValue.second() != kNullValue);
   }
 
@@ -471,7 +474,10 @@ class MOZ_MUST_USE_TYPE Result final {
   MOZ_IMPLICIT Result(const V& aValue) : mImpl(aValue) { MOZ_ASSERT(isOk()); }
 
   /** Create an error result. */
-  explicit Result(E aErrorValue) : mImpl(std::forward<E>(aErrorValue)) {
+  explicit Result(
+      std::conditional_t<std::is_reference_v<E>, E, E&&> aErrorValue)
+      : mImpl(static_cast<std::conditional_t<std::is_reference_v<E>, E, E&&>>(
+            aErrorValue)) {
     MOZ_ASSERT(isErr());
   }
 
@@ -481,7 +487,8 @@ class MOZ_MUST_USE_TYPE Result final {
    */
   template <typename E2>
   MOZ_IMPLICIT Result(GenericErrorResult<E2>&& aErrorResult)
-      : mImpl(std::forward<E2>(aErrorResult.mErrorValue)) {
+      : mImpl(static_cast<std::conditional_t<std::is_reference_v<E>, E2, E2&&>>(
+            aErrorResult.mErrorValue)) {
     static_assert(std::is_convertible_v<E2, E>, "E2 must be convertible to E");
     MOZ_ASSERT(isErr());
   }
@@ -730,13 +737,27 @@ class MOZ_MUST_USE_TYPE GenericErrorResult {
   friend class Result;
 
  public:
+  explicit GenericErrorResult(const E& aErrorValue)
+      : mErrorValue(aErrorValue) {}
+
   explicit GenericErrorResult(E&& aErrorValue)
-      : mErrorValue(std::forward<E>(aErrorValue)) {}
+      : mErrorValue(std::move(aErrorValue)) {}
 };
 
 template <typename E>
-inline GenericErrorResult<E> Err(E&& aErrorValue) {
-  return GenericErrorResult<E>(std::forward<E>(aErrorValue));
+class MOZ_MUST_USE_TYPE GenericErrorResult<E&> {
+  E& mErrorValue;
+
+  template <typename V, typename E2>
+  friend class Result;
+
+ public:
+  explicit GenericErrorResult(E& aErrorValue) : mErrorValue(aErrorValue) {}
+};
+
+template <typename E>
+inline auto Err(E&& aErrorValue) {
+  return GenericErrorResult<std::decay_t<E>>(std::forward<E>(aErrorValue));
 }
 
 }  // namespace mozilla
