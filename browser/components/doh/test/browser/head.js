@@ -55,7 +55,6 @@ const prefs = {
   TRR_SELECT_DRY_RUN_RESULT_PREF: "doh-rollout.trr-selection.dry-run-result",
   PROVIDER_STEERING_PREF: "doh-rollout.provider-steering.enabled",
   PROVIDER_STEERING_LIST_PREF: "doh-rollout.provider-steering.provider-list",
-  PROFILE_CREATION_THRESHOLD_PREF: "doh-rollout.profileCreationThreshold",
 };
 
 const CFR_PREF = "browser.newtabpage.activity-stream.asrouter.providers.cfr";
