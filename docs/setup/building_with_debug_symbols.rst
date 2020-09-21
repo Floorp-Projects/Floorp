@@ -1,10 +1,14 @@
 Building with Debug Symbols
 ===========================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 By default, a release build of Firefox will not generate debug symbols
 suitable for debugging or post-processing into the
-`breakpad </en-US/docs/Crash_reporting>`__ symbol format. Use the
-following `mozconfig </en-US/docs/Configuring_Build_Options>`__ settings
+`breakpad <https://developer.mozilla.org/docs/Mozilla/Projects/Crash_reporting>`__ symbol format. Use the
+following :ref:`mozconfig <Configuring Build Options>` settings
 to do a build with symbols:
 
 
@@ -32,15 +36,15 @@ Breakpad symbol files
 ~~~~~~~~~~~~~~~~~~~~~
 
 After the build is complete, run the following command to generate an
-archive of `Breakpad </en-US/docs/Crash_reporting>`__ symbol files:
+archive of `Breakpad <https://developer.mozilla.org/docs/Mozilla/Projects/Crash_reporting>`__ symbol files:
 
 .. code:: bash
 
    mach buildsymbols
 
-The tinderbox uses an additional ``uploadsymbols`` target to upload
+Treeherder uses an additional ``uploadsymbols`` target to upload
 symbols to a socorro server. See
-https://dxr.mozilla.org/mozilla/source/toolkit/crashreporter/tools/upload_symbols.sh
+https://searchfox.org/mozilla-central/source/toolkit/crashreporter/tools/upload_symbols.py
 for more information about the environment variables used by this
 target.
 
@@ -52,6 +56,6 @@ If you use ``make package`` to package your build, symbols will be
 stripped. If you want to keep the symbols in the patches, you need to
 add this to your mozconfig:
 
-.. code:: bash
+.. code::
 
     ac_add_options --disable-install-strip

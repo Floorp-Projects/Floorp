@@ -1,6 +1,10 @@
 Committing rules and responsibilities
 =====================================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 Preparation
 -----------
 
@@ -8,14 +12,12 @@ There are things you need to be sure of before you even attempt to check
 in:
 
 -  Your code must
-   `compile </en-US/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build>`__
-   and `pass all the automated tests </en/Mozilla_automated_testing>`__
+   :ref:`compile <Building Firefox On Linux>` and `pass all the automated tests <https://developer.mozilla.org/docs/Mozilla/QA/Automated_testing>`__
    before you consider pushing changes. If you are at all unsure, verify
    your changes with the
-   `mozilla-central <https://wiki.mozilla.org/Build:TryServer>`__ or
-   `comm-central <https://wiki.mozilla.org/Thunderbird/Infrastructure/TryServer>`__
+   `mozilla-central <https://wiki.mozilla.org/Build:TryServer>`__.
    try server, as appropriate.
--  You need `code review </en/Code_Review_FAQ>`__.
+-  You need :ref:`code review <Code Review FAQ>`.
 -  Depending on the stage of the development process, you may need
    `approval <https://wiki.mozilla.org/Tree_Rules>`__. Commits to trees
    where approval is required must have "a=" in the commit message
@@ -25,12 +27,6 @@ in:
    switch/preference. Be especially careful when landing features which
    depend on other new features which may be disabled. Ask
    mozilla.dev.planning for assistance if there are any questions.
--  If your code is likely to break a product other than the one you are
-   focused on (e.g. SeaMonkey or Camino), it's polite to warn them in
-   advance. For instance, you might send a message to
-   `mozilla.dev.apps.seamonkey <https://lists.mozilla.org/listinfo/dev-apps-seamonkey>`__.
-
-.. _Checkin_comment:
 
 Checkin comment
 ---------------
@@ -39,7 +35,7 @@ The checkin comment for the change you push should include the bug
 number, the names of the reviewers, and a clear explanation of the fix.
 Please say what changes are made, not what problem was fixed, e.g.:
 
-Good: "Bug 123456 - Null-check pres shell so we don't crash when a
+Good: "Bug 123456 - Null-check presentation shell so we don't crash when a
 button removes itself during its own onclick handler. r=paul, a=ringo."
 
 Bad: "Bug 123456 - crash clicking button on www.example.com"
@@ -60,7 +56,7 @@ still allow a small set of special commits lacking bugs numbers, like
 merges and backouts.
 
 This hook will be enabled on mozilla-central and every major branch that
-directly merges into it, such as mozilla-inbound or integration
+directly merges into it, such as autoland or integration
 branches, team branches, or established project branches.
 
 An example for a passing commit message would be,
@@ -102,23 +98,22 @@ Explicitly disallowed:
 
 All tests for allowed or excluded messages are case-insensitive. The
 hook,
-`commit-message.py <http://hg.mozilla.org/hgcustom/hghooks/file/default/mozhghooks/commit-message.py>`__,
-was added in `bug
-506949 <https://bugzilla.mozilla.org/show_bug.cgi?id=506949>`__.
+`commit-message.py <https://hg.mozilla.org/hgcustom/version-control-tools/file/tip/hghooks/mozhghooks/commit-message.py>`__,
+was added in `bug 506949 <https://bugzilla.mozilla.org/show_bug.cgi?id=506949>`__.
 
 
 Check the tree
 --------------
 
-Buildbot is a continuous build system that builds and tests every change
-checked into mozilla-central and related source trees.
+TaskCluster is a continuous build system that builds and tests every change
+checked into autoland/mozilla-central and related source trees.
 `Treeherder <https://treeherder.mozilla.org/>`__ displays the progress
 and results of all the build and test jobs for a given tree. For a
 particular job, green means all is well, orange means tests have failed,
-and red means the build itself broke.  Purple means that a test was
+and red means the build itself broke. Purple means that a test was
 interrupted, possibly by a problem with the build system or the
-network.  Blue means that a test was interrupted in a known way and will
-be automatically restarted.  You can click on the "Help" link in the top
+network. Blue means that a test was interrupted in a known way and will
+be automatically restarted. You can click on the "Help" link in the top
 right corner of Treeherder for a legend to help you decode all the other
 colors and letters.
 
@@ -134,9 +129,8 @@ oranges or reds, you should contact the sheriff before checking in.
 Failures and backouts
 ---------------------
 
-Patches which cause unit test failures (on `tier 1
-platforms </en/Supported_build_configurations>`__) will be `backed
-out </En/Mercurial/Reverting_Changesets_With_File_Moves//Renames>`__.
+Patches which cause unit test failures (on :ref:`tier 1
+platforms <Supported build targets>`) will be backed out.
 Regressions on tier-2 platforms and in performance are not cause for a
 direct backout, but you will be expected to help fix them if quickly.
 
@@ -150,7 +144,7 @@ Dealing with test failures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a build or a test job fails, you can click on the red or orange or
-purple symbol for the job on Treeherder to display more information. 
+purple symbol for the job on Treeherder to display more information. 
 The information will appear in the footer, including a summary of any
 error messages, a "+" icon to re-trigger the job (schedule it to run
 again), and links to the log files and to possibly-related bugs.
@@ -159,43 +153,42 @@ Here are some steps you can follow to figure out what is causing most
 failures, `and "star" them
 appropriately <http://ehsanakhgari.org/blog/2010-04-09/assisted-starring-oranges>`__:
 
-#. Click on the failing job to see a list of suggested bugs.  If the
+#. Click on the failing job to see a list of suggested bugs. If the
    failure clearly matches a known bug, **click on the star** next to
    that bug and then click "Add a comment" and then submit the comment.
    This is referred to as "starring the build;" you'll see this phrase
    or ones like it in IRC a lot.
 #. If the failure might match a known bug but you are not sure, click
    the bug number to open the Bugzilla report, and click the failing job
-   to open its log.  If the log and the bug do match, add a comment as
+   to open its log. If the log and the bug do match, add a comment as
    in step 1 (above).
 #. If the summary does not seem to match any suggested bugs, search
-   Bugzilla for the name of the failing test or the error message.  If
+   Bugzilla for the name of the failing test or the error message. If
    you find a matching bug, add a comment in the bug in Bugzilla, and
    another to the job in Treeherder.
 #. If you can't figure out whether a known bug exists (for example,
    because you can't figure out what part of the log you should search
    for), look on Treeherder to see if there are other similar failures
    nearby, or ask on #developers to see if anyone recognizes it as a
-   known failure.  For example, many Android tests fail frequently in
-   ways that do not produce useful log messages.  You can often find the
+   known failure. For example, many Android tests fail frequently in
+   ways that do not produce useful log messages. You can often find the
    appropriate bug just by looking at other Android failures that are
    already starred.
 #. If there is no matching bug, you can back out the change (if you
-   suspect the  failure was caused by your changeset) or re-trigger the
-   job (if you suspect it's an unrelated intermittent failure).  After
+   suspect the failure was caused by your changeset) or re-trigger the
+   job (if you suspect it's an unrelated intermittent failure). After
    more test runs it should become clear whether it is a new regression
    or just an unknown intermittent failure.
 #. If it turns out to be an unknown intermittent failure, file a new bug
-   with "intermittent-failure" in the keywords.  Include the name of the
+   with "intermittent-failure" in the keywords. Include the name of the
    test file and an one-line summary of the log messages in the Summary
-   field.  In the description, include an excerpt of the error messages
+   field. In the description, include an excerpt of the error messages
    from the log, and a link to the log file itself.
 
 At any point if you are not sure or can't figure out what to do, ask for
-advice or help in `#developers <irc://irc.mozilla.org/developers>`__ on
-`IRC <https://wiki.mozilla.org/IRC>`__. If a large number of jobs are
-failing and you suspect an infrastructure problem, you can also ask
-about it in `#releng <irc://irc.mozilla.org/releng>`__.
+advice or help in `#developers <https://chat.mozilla.org>`__.
+If a large number of jobs are failing and you suspect an infrastructure problem, you can also ask
+about it in `#releng <https://chat.mozilla.org>`__.
 
 
 Dealing with performance regressions

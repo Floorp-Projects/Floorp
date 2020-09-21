@@ -33,11 +33,6 @@ approve. For example, tree-wide changes such as a change to a string
 class or a change to text that is displayed in many modules generally
 doesn't get reviewed by every module owner.
 
-If your patch affects the user interface of Firefox, you should read
-"`Requesting feedback and ui-review for desktop Firefox front-end
-changes </en-US/docs/Developer_Guide/Requesting_feedback_and_ui-review_for_desktop_Firefox_front-end_changes>`__"
-to learn how to get that review performed.
-
 You may wish to ask others as well.
 
 
@@ -58,9 +53,7 @@ Reviewers will probably look at the following areas of the code:
 -  API/design review. Because APIs define the interactions between
    modules, they need special care. Review is especially important to
    keep APIs balanced and targeted, and not too specific or
-   overdesigned. There are also specific `API change
-   rules </en-US/docs/API_change_rules>`__ that must be followed and a
-   `WebIDL review
+   overdesigned. There are a `WebIDL review
    checklist <https://wiki.mozilla.org/WebAPI/WebIDL_Review_Checklist>`__.
    There are also templates for emails that should be sent when APIs are
    going to be exposed to the Web and general guidance around naming on
@@ -69,8 +62,7 @@ Reviewers will probably look at the following areas of the code:
 -  Maintainability review. Code which is unreadable is impossible to
    maintain. If the reviewer has to ask questions about the purpose of a
    piece of code, then it is probably not documented well enough. Does
-   the code follow the `coding style
-   guide </en-US/docs/Developer_Guide/Coding_Style>`__? Be careful when
+   the code follow the :ref:`Coding style` ? Be careful when
    reviewing code using modern C++ features like auto.
 -  Security review. Does the design use security concepts such as input
    sanitizers, wrappers, and other techniques? Does this code need
