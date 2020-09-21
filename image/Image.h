@@ -8,8 +8,9 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Tuple.h"
+#include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Tuple.h"
 #include "gfx2DGlue.h"
 #include "imgIContainer.h"
 #include "ImageContainer.h"
@@ -448,7 +449,7 @@ class ImageResource : public Image {
     Maybe<SVGImageContext> mSVGContext;
     // A weak pointer to our ImageContainer, which stays alive only as long as
     // the layer system needs it.
-    WeakPtr<layers::ImageContainer> mContainer;
+    ThreadSafeWeakPtr<layers::ImageContainer> mContainer;
     // If mContainer is non-null, this contains the ImgDrawResult we obtained
     // the last time we updated it.
     ImgDrawResult mLastDrawResult;
