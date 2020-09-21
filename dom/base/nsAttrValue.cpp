@@ -22,6 +22,7 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/ShadowParts.h"
 #include "mozilla/DeclarationBlock.h"
+#include "mozilla/dom/CSSRuleBinding.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsHTMLCSSStyleSheet.h"
@@ -1732,10 +1733,10 @@ bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       dom::ReferrerInfo::CreateForInternalCSSResources(ownerDoc);
-  RefPtr<URLExtraData> data =
-      new URLExtraData(baseURI, referrerInfo, principal);
+  auto data = MakeRefPtr<URLExtraData>(baseURI, referrerInfo, principal);
   RefPtr<DeclarationBlock> decl = DeclarationBlock::FromCssText(
-      aString, data, ownerDoc->GetCompatibilityMode(), ownerDoc->CSSLoader());
+      aString, data, ownerDoc->GetCompatibilityMode(), ownerDoc->CSSLoader(),
+      dom::CSSRule_Binding::STYLE_RULE);
   if (!decl) {
     return false;
   }
