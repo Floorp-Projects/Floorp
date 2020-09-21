@@ -961,8 +961,7 @@ class UrlbarInput {
     // we might stay in a search mode of some kind, exit it now.
     if (
       this.searchMode?.isPreview &&
-      result?.payload.keywordOffer != UrlbarUtils.KEYWORD_OFFER.SHOW &&
-      !this.view.oneOffSearchButtons.selectedButton
+      result?.payload.keywordOffer != UrlbarUtils.KEYWORD_OFFER.SHOW
     ) {
       this.setSearchMode({});
     }
