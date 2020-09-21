@@ -123,49 +123,6 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
-   * The selected one-off, a xul:button, including the search-settings button.
-   *
-   * @param {DOMElement|null} button
-   *   The selected one-off button. Null if no one-off is selected.
-   */
-  set selectedButton(button) {
-    super.selectedButton = button;
-
-    // We don't want to enter search mode preview if we're already in full
-    // search mode.
-    if (this.input.searchMode && !this.input.searchMode.isPreview) {
-      return;
-    }
-
-    let expectedSearchMode;
-    if (
-      button &&
-      button != this.view.oneOffSearchButtons.settingsButtonCompact
-    ) {
-      expectedSearchMode = {
-        engineName: button.engine?.name,
-        source: button.source,
-        entry: "oneoff",
-      };
-    }
-
-    // selectedButton is set every time the up/down arrows are pressed,
-    // including when cycling through the results. If a one-off hasn't set
-    // expectedSearchMode, we may still want to call setSearchMode({}) to exit
-    // search mode when moving from a one-off to the settings button or to a
-    // result. We avoid calling setSearchMode({}) when we're not already in
-    // search mode as an optimization  in the common case of cycling through
-    // normal results.
-    if (expectedSearchMode || this.input.searchMode) {
-      this.input.setSearchMode(expectedSearchMode || {});
-    }
-  }
-
-  get selectedButton() {
-    return super.selectedButton;
-  }
-
-  /**
    * @returns {number}
    *   The selected index in the view.
    */
@@ -261,10 +218,11 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
         break;
       }
       case "tab": {
-        // We set this.selectedButton when switching tabs. If we entered search
-        // mode preview here, it could be cleared when this.selectedButton calls
-        // setSearchMode.
-        searchMode.isPreview = false;
+        if (params?.inBackground) {
+          // We will enter search mode in a background tab. We should enter full
+          // search mode right away so it is not cleared on Urlbar blur.
+          searchMode.isPreview = false;
+        }
 
         let newTab = this.input.window.gBrowser.addTrustedTab("about:newtab");
         this.input.setSearchModeForBrowser(searchMode, newTab.linkedBrowser);
