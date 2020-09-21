@@ -62,14 +62,14 @@ const char* const js::jit::CacheIROpNames[] = {
 #undef OPNAME
 };
 
-const uint32_t js::jit::CacheIROpArgLengths[] = {
-#define ARGLENGTH(op, len, ...) len,
-    CACHE_IR_OPS(ARGLENGTH)
-#undef ARGLENGTH
+const CacheIROpInfo js::jit::CacheIROpInfos[] = {
+#define OPINFO(op, len, transpile, ...) {len, transpile},
+    CACHE_IR_OPS(OPINFO)
+#undef OPINFO
 };
 
 const uint32_t js::jit::CacheIROpHealth[] = {
-#define OPHEALTH(op, len, health) health,
+#define OPHEALTH(op, len, transpile, health) health,
     CACHE_IR_OPS(OPHEALTH)
 #undef OPHEALTH
 };

@@ -135,7 +135,7 @@ Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
     const uint8_t* opStart = reader.currentPosition();
 
     CacheOp op = reader.readOp();
-    uint32_t argLength = CacheIROpArgLengths[size_t(op)];
+    uint32_t argLength = CacheIROpInfos[size_t(op)].argLength;
     mozilla::DebugOnly<const uint8_t*> argStart = reader.currentPosition();
 
     switch (op) {
