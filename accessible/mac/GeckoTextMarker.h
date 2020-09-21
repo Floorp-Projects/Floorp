@@ -99,6 +99,11 @@ class GeckoTextMarkerRange final {
    */
   NSValue* Bounds() const;
 
+  /**
+   * Set the current range as the DOM selection.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Select() const;
+
   GeckoTextMarker mStart;
   GeckoTextMarker mEnd;
 };
