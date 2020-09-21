@@ -346,6 +346,7 @@ Prompter.prototype = {
    * @param {String} checkLabel - Text to appear with the checkbox.
    *        Null if no checkbox.
    * @param {Boolean} checkValue - The initial checked state of the checkbox.
+   * @param {Object} [extraArgs] - Extra arguments for the prompt metadata.
    * @returns {Promise<nsIPropertyBag<{ buttonNumClicked: Number, checked: Boolean }>>}
    */
   asyncConfirmEx(browsingContext, modalType, ...promptArgs) {
@@ -1400,7 +1401,8 @@ class ModalPrompter {
     button1,
     button2,
     checkLabel,
-    checkValue
+    checkValue,
+    extraArgs = {}
   ) {
     if (!title) {
       title = PromptUtils.getLocalizedString("Confirm");
@@ -1414,6 +1416,7 @@ class ModalPrompter {
       checked: this.async ? checkValue : checkValue.value,
       ok: false,
       buttonNumClicked: 1,
+      ...extraArgs,
     };
 
     let [

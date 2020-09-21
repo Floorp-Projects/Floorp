@@ -68,6 +68,8 @@ interface BrowsingContext {
 
   readonly attribute WindowContext? topWindowContext;
 
+  readonly attribute boolean ancestorsAreCurrent;
+
   [SetterThrows] attribute [TreatNullAs=EmptyString] DOMString customPlatform;
 
   [SetterThrows] attribute [TreatNullAs=EmptyString] DOMString customUserAgent;
