@@ -19,14 +19,8 @@ interface nsIPromptCollection : nsISupports
    * @param aBrowsingContext
    *        The browsing context the prompt should be opened for.
    *
-   * @return true if the page should be allowed to navigate away
-   */
-  boolean beforeUnloadCheck(in BrowsingContext aBrowsingContext);
-
-  /**
-   * Like `beforeUnloadCheck`, but does not spin a nested event loop, and
-   * instead returns a promise which resolves to true if navigation should be
-   * allowed, and false if not.
+   * @return Promise which resolves to true if the page should be allowed to
+   * navigate away
    */
   Promise asyncBeforeUnloadCheck(in BrowsingContext aBrowsingContext);
 
