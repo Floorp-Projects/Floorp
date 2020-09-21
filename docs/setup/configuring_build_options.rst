@@ -1,6 +1,10 @@
 Configuring Build Options
 =========================
 
++--------------------------------------------------------------------+
+| This page is an import from MDN and the contents might be outdated |
++--------------------------------------------------------------------+
+
 This document details how to configure Firefox builds.
 Most of the time a ``mozconfig`` file is not required. The default
 options are the most well-supported, so it is preferable to add as few
@@ -18,8 +22,7 @@ The choice of which Mozilla application to build and other configuration
 options can be configured in a ``mozconfig`` file. (It is possible to
 manually call ``configure`` with command-line options, but this is not
 recommended). The ``mozconfig`` file should be in your source directory
-(that is, ``/mozilla-central/mozconfig`` or
-``/comm-central/mozconfig``).
+(that is, ``/mozilla-central/mozconfig``).
 
 Create a blank ``mozconfig`` file:
 
@@ -56,7 +59,7 @@ Setting the ``mozconfig`` path:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  Options prefixed with ``mk_add_options`` are passed to
-   ``client.mk``.  The most important of these is ``MOZ_OBJDIR``, which
+   ``client.mk``. The most important of these is ``MOZ_OBJDIR``, which
    controls where your application gets built (also known as the object
    directory).
 -  Options prefixed with ``ac_add_options`` are passed to ``configure``,
@@ -104,7 +107,7 @@ and a ``mozconfig-rel-opt``:
    ac_add_options --disable-debug
    ac_add_options --enable-optimize
 
-allow for building both versions by specifiying the configuration via
+allow for building both versions by specifying the configuration via
 the ``MOZCONFIG`` environment variable:
 
 .. code:: bash
@@ -196,10 +199,12 @@ situations, and should not be used to build the full suite/XUL
 applications. The full list of options can be obtained by running
 ``./configure --help``.
 
-{{ Warning("Do not use a configure option unless you know what it does.
-The default values are usually the right ones. Each additional option
-you add to your ``mozconfig`` file reduces the chance that your build
-will compile and run correctly.") }}
+.. warning::
+
+   Do not use a configure option unless you know what it does.
+   The default values are usually the right ones. Each additional option
+   you add to your ``mozconfig`` file reduces the chance that your build
+   will compile and run correctly.
 
 The following build options are very common:
 
@@ -223,12 +228,12 @@ Optimization
 ``ac_add_options --enable-debug``
    Enables assertions in C++ and JavaScript, plus other debug-only code.
    This can significantly slow a build, but it is invaluable when
-   writing patches.  **People developing patches (especially in C++)
+   writing patches. **People developing patches (especially in C++)
    should generally use this option.**
 ``ac_add_options --disable-optimize``
    Disables compiler optimization. This makes it much easier to step
    through code in a debugger.
-**``ac_add_options --enable-debug-js-modules``**
+``ac_add_options --enable-debug-js-modules``
    Enable only JavaScript assertions. This is useful when working
    locally on JavaScript-powered components like the DevTools. This will
    help catch any errors introduced into the JS code, with less of a
@@ -236,7 +241,6 @@ Optimization
 
 You can make an optimized build with debugging symbols. See :ref:`Building
 with Debug Symbols <Building with Debug Symbols>`.
-
 
 Extensions
 ^^^^^^^^^^
@@ -249,15 +253,13 @@ Extensions
    specifies a different default set. Some extensions are not compatible
    with all apps, for example:
 
-   -  ``cookie`` is not compatible with thunderbird
-   -  ``typeaheadfind`` is not compatible with any toolkit app (Firefox,
+   - ``cookie`` is not compatible with thunderbird
+   - ``typeaheadfind`` is not compatible with any toolkit app (Firefox,
       Thunderbird)
 
    Unless you know which extensions are compatible with which apps, do
    not use the ``--enable-extensions`` option; the build system will
    automatically select the proper default set of extensions.
-
-.. _Tests:
 
 Tests
 ^^^^^
@@ -268,19 +270,15 @@ Tests
    speed build time and reduce disk space considerably. Developers
    should generally not use this option.
 
-.. _Localization:
-
 Localization
 ^^^^^^^^^^^^
 
 ``mk_add_options MOZ_CO_LOCALES=ISOcode``
-   TBD. 
+   TBD. 
 ``ac_add_options --enable-ui-locale=ISOcode``
    TBD.
 ``ac_add_options --with-l10n-base=/path/to/base/dir``
    TBD.
-
-.. _Other_Options:
 
 Other Options
 ^^^^^^^^^^^^^
@@ -289,14 +287,6 @@ Other Options
    If a clobber would be required before a build, this will cause mach
    to clobber and continue with the build instead of asking the user to
    manually clobber and exiting.
-``ac_add_options --disable-crypto``
-   Cryptography is enabled by default. In some countries, it may be
-   illegal to use or export cryptographic software. You should become
-   familiar with the cryptography laws in your country.
-
-   On the 1.7 and aviary branches, cryptography was off by default. You
-   need to specify ``--enable-crypto`` if you want SSL, S/MIME, or other
-   software features that require cryptography.
 
 ``ac_add_options --enable-crashreporter``
    This enables the machinery that allows Firefox to write out a
@@ -305,7 +295,7 @@ Other Options
    reports to Mozilla. After enabling the crash reporter in your local
    build, you will need to run mach with the --enable-crash-reporter
    (note the extra dash) to enable it at runtime, like so:
-   \`\ ``./mach run --enable-crash-reporter``\ \`
+   ``./mach run --enable-crash-reporter``
 ``ac_add_options --enable-warnings-as-errors``
    This makes compiler warnings into errors which fail the build. This
    can be useful since certain warnings coincide with reviewbot lints
@@ -323,21 +313,17 @@ Example ``mozconfig`` Files
 Mozilla's official builds use mozconfig files from the appropriate
 directory within each repository.
 
-{{ Warning("These ``mozconfig`` files are taken from production builds
-and are provided as examples only. It is recommended to use the default
-build options, and only change the properties from the list above as
-needed. The production builds aren't really appropriate for local
-builds.") }}
+.. warning::
+
+   These ``mozconfig`` files are taken from production builds
+   and are provided as examples only. It is recommended to use the default
+   build options, and only change the properties from the list above as
+   needed. The production builds aren't really appropriate for local
+   builds."
 
 -  .. rubric:: Firefox, `Debugging Build (Mac OS X
       64bits) <http://hg.mozilla.org/mozilla-central/file/tip/browser/config/mozconfigs/macosx64/debug>`__
       :name: Firefox.2C_Default_Release_Configuration
-
--  .. rubric:: Thunderbird, `Debugging Build (Linux 64
-      bits) <http://hg.mozilla.org/comm-central/file/tip/mail/config/mozconfigs/linux64/debug>`__
-      :name: Thunderbird.2C_Debugging_Build
-
-.. _Building_multiple_applications_from_the_same_source_tree:
 
 Building multiple applications from the same source tree
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -348,8 +334,6 @@ each application.
 
 You can either create multiple ``mozconfig`` files, or alternatively,
 use the ``MOZ_BUILD_PROJECTS`` make option.
-
-.. _Using_MOZ_BUILD_PROJECTS_in_a_single_mozconfig:
 
 Using ``MOZ_BUILD_PROJECTS`` in a single ``mozconfig``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -379,8 +363,6 @@ following command line:
    MOZ_CURRENT_PROJECT=browser ./mach build
 
 This will build only the browser.
-
-.. _Using_multiple_mozconfig_files:
 
 Using multiple mozconfig files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -433,8 +415,6 @@ To build Thunderbird, run the following commands:
 
    export MOZCONFIG=/path/to/mozilla/mozconfig-thunderbird
    ./mach build
-
-.. _Using_mozconfigwrapper:
 
 Using mozconfigwrapper
 ^^^^^^^^^^^^^^^^^^^^^^
