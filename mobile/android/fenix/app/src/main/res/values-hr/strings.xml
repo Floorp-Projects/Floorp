@@ -1170,7 +1170,7 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Prijavi se pomoću kamere</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">Umjesto toga koristi e-mail</string>
+    <string name="sign_in_with_email">Umjesto toga koristi e-poštu</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox će prestati sinkronizirati s tvojim računom, ali neće izbrisati podatke o tvom pregledavanju na ovom uređaju.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->

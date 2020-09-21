@@ -321,6 +321,8 @@
     <string name="preferences_account_settings">Налады ўліковага запісу</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Адкрываць спасылкі ў праграмах</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Вонкавы менеджар сцягванняў</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Дадаткі</string>
 
@@ -351,6 +353,8 @@
     <string name="sync_syncing_in_progress">Сінхранізацыя…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Памылка сінхранізацыі. Апошняе паспяховае сінхранаванне: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Памылка сінхранізацыі. Апошняе сінхранаванне: ніколі</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Апошняя сінхранізацыя: %s</string>
     <!-- Label summary showing never synced -->

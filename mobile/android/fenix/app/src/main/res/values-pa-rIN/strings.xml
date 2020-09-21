@@ -141,6 +141,8 @@
     <string name="browser_menu_install_on_homescreen">ਇੰਸਟਾਲ ਕਰੋ</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">ਮੁੜ-ਸਿੰਕ ਕਰੋ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ਸਫ਼ੇ ‘ਚ ਲੱਭੋ</string>
     <!-- Browser menu button that creates a private tab -->

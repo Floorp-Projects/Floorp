@@ -144,6 +144,8 @@
     <string name="browser_menu_install_on_homescreen">ติดตั้ง</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">แท็บที่ซิงค์</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">ซิงค์ใหม่</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ค้นหาในหน้า</string>
     <!-- Browser menu button that creates a private tab -->
@@ -325,6 +327,8 @@
     <string name="preferences_search_browsing_history">ค้นหาประวัติการเรียกดู</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">ค้นหาที่คั่นหน้า</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">ค้นหาแท็บที่ซิงค์</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">การตั้งค่าบัญชี</string>
     <!-- Preference for enabling url autocomplete-->

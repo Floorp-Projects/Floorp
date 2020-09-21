@@ -567,7 +567,7 @@
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">新建隐私标签页</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
-    <string name="tab_drawer_fab_content">私密</string>
+    <string name="tab_drawer_fab_content">隐私标签页</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">打开的标签页</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
