@@ -389,7 +389,7 @@ checkbox:-moz-focusring {
 /* Selectable button which is unchecked. */
 
 .devtools-button:not(:empty):not(:disabled):not(.checked):hover,
-.devtools-button:empty:not(:disabled):-moz-any(:hover:active,.checked),
+.devtools-button:empty:not(:disabled):is(:hover:active,.checked),
 .devtools-button[aria-haspopup="menu"][aria-expanded="true"] {
   background-color: var(--toolbarbutton-hover-background);
 }

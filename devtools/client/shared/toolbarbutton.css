@@ -53,17 +53,17 @@
   background: var(--toolbarbutton-background);
 }
 
-.devtools-toolbarbutton:not([label]):-moz-any([checked],[open],:hover,:hover:active) {
+.devtools-toolbarbutton:not([label]):is([checked],[open],:hover,:hover:active) {
   background: var(--toolbarbutton-hover-background);
 }
 
 /* Selectable button which is unchecked. */
 
-.devtools-toolbarbutton[label]:not(:-moz-any([checked=true],[disabled])):hover {
+.devtools-toolbarbutton[label]:not(:is([checked=true],[disabled])):hover {
   background-color: var(--toolbarbutton-hover-background);
 }
 
-.devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled]))[label]:focus {
+.devtools-toolbarbutton:not(:is([checked=true],[disabled]))[label]:focus {
   background-color: var(--toolbarbutton-focus-background);
   color: var(--toolbarbutton-focus-color);
 }
