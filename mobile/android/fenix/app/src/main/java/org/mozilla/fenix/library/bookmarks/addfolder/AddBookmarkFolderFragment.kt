@@ -29,6 +29,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
+import org.mozilla.fenix.library.bookmarks.friendlyRootTitle
 
 /**
  * Menu to create a new bookmark folder.
@@ -58,12 +59,13 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
         showToolbar(getString(R.string.bookmark_add_folder_fragment_label))
 
         viewLifecycleOwner.lifecycleScope.launch(Main) {
+            val context = requireContext()
             sharedViewModel.selectedFolder = withContext(IO) {
                 sharedViewModel.selectedFolder
-                    ?: requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id)
+                    ?: requireComponents.core.bookmarksStorage.getBookmark(BookmarkRoot.Mobile.id)
             }
 
-            bookmarkParentFolderSelector.text = sharedViewModel.selectedFolder!!.title
+            bookmarkParentFolderSelector.text = friendlyRootTitle(context, sharedViewModel.selectedFolder!!)
             bookmarkParentFolderSelector.setOnClickListener {
                 nav(
                     R.id.bookmarkAddFolderFragment,
