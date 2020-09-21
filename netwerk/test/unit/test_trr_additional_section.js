@@ -32,15 +32,17 @@ function channelOpenPromise(chan) {
   });
 }
 
-add_task(async function test_parse_additional_section() {
-  let trrServer = new TRRServer();
-  registerCleanupFunction(async () => trrServer.stop());
+let trrServer = new TRRServer();
+registerCleanupFunction(async () => trrServer.stop());
+add_task(async function setup_server() {
   await trrServer.start();
   dump(`port = ${trrServer.port}\n`);
   let chan = makeChan(`https://localhost:${trrServer.port}/test?bla=some`);
   let [req, resp] = await channelOpenPromise(chan);
   equal(resp, "<h1> 404 Path not found: /test?bla=some</h1>");
+});
 
+add_task(async function test_parse_additional_section() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
@@ -271,6 +273,43 @@ add_task(async function test_parse_additional_section() {
   equal(IPs.length, 2);
   equal(IPs[0], "2001::a:b:c:d");
   equal(IPs[1], "1.2.3.4");
+});
 
-  await trrServer.stop();
+add_task(async function test_additional_after_resolve() {
+  await trrServer.registerDoHAnswers("first.foo", "A", [
+    {
+      name: "first.foo",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "3.4.5.6",
+    },
+  ]);
+  await new TRRDNSListener("first.foo", "3.4.5.6");
+
+  await trrServer.registerDoHAnswers(
+    "second.foo",
+    "A",
+    [
+      {
+        name: "second.foo",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "1.2.3.4",
+      },
+    ],
+    [
+      {
+        name: "first.foo",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "2.3.4.5",
+      },
+    ]
+  );
+
+  await new TRRDNSListener("second.foo", "1.2.3.4");
+  await new TRRDNSListener("first.foo", "2.3.4.5");
 });
