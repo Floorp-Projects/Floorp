@@ -284,7 +284,7 @@ void gfxConfigManager::ConfigureWebRender() {
     if (!mFeatureD3D11HwAngle->IsEnabled()) {
       mFeatureWr->ForceDisable(FeatureStatus::UnavailableNoAngle,
                                "ANGLE is disabled",
-                               "FEATURE_FAILURE_ANGLE_DISABLED"_ns);
+                               mFeatureD3D11HwAngle->GetFailureId());
     } else if (!mFeatureGPUProcess->IsEnabled() &&
                (!mIsNightly || !mWrForceAngleNoGPUProcess)) {
       // WebRender with ANGLE relies on the GPU process when on Windows
