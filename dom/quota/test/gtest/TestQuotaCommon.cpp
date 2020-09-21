@@ -1257,11 +1257,16 @@ TEST(QuotaCommon_ToResultGet, Lambda_WithInput_Err)
 }
 
 // BEGIN COPY FROM mfbt/tests/TestResult.cpp
-struct Failed {};
+struct Failed {
+  int x;
+};
 
-static GenericErrorResult<Failed> Fail() { return Err(Failed()); }
+static GenericErrorResult<Failed&> Fail() {
+  static Failed failed;
+  return Err<Failed&>(failed);
+}
 
-static Result<Ok, Failed> Task1(bool pass) {
+static Result<Ok, Failed&> Task1(bool pass) {
   if (!pass) {
     return Fail();  // implicit conversion from GenericErrorResult to Result
   }
@@ -1269,7 +1274,7 @@ static Result<Ok, Failed> Task1(bool pass) {
 }
 // END COPY FROM mfbt/tests/TestResult.cpp
 
-static Result<bool, Failed> Condition(bool aNoError, bool aResult) {
+static Result<bool, Failed&> Condition(bool aNoError, bool aResult) {
   return Task1(aNoError).map([aResult](auto) { return aResult; });
 }
 
@@ -1287,7 +1292,7 @@ TEST(QuotaCommon_CollectWhileTest, NoFailures)
         ++bodyExecutions;
         return Task1(true);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
   MOZ_RELEASE_ASSERT(result.isOk());
   MOZ_RELEASE_ASSERT(loopCount == bodyExecutions);
   MOZ_RELEASE_ASSERT(1 + loopCount == conditionExecutions);
@@ -1306,7 +1311,7 @@ TEST(QuotaCommon_CollectWhileTest, BodyFailsImmediately)
         ++bodyExecutions;
         return Task1(false);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
   MOZ_RELEASE_ASSERT(result.isErr());
   MOZ_RELEASE_ASSERT(1 == bodyExecutions);
   MOZ_RELEASE_ASSERT(1 == conditionExecutions);
@@ -1325,7 +1330,7 @@ TEST(QuotaCommon_CollectWhileTest, BodyFailsOnSecondExecution)
         ++bodyExecutions;
         return Task1(bodyExecutions < 2);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
   MOZ_RELEASE_ASSERT(result.isErr());
   MOZ_RELEASE_ASSERT(2 == bodyExecutions);
   MOZ_RELEASE_ASSERT(2 == conditionExecutions);
@@ -1344,7 +1349,7 @@ TEST(QuotaCommon_CollectWhileTest, ConditionFailsImmediately)
         ++bodyExecutions;
         return Task1(true);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
   MOZ_RELEASE_ASSERT(result.isErr());
   MOZ_RELEASE_ASSERT(0 == bodyExecutions);
   MOZ_RELEASE_ASSERT(1 == conditionExecutions);
@@ -1363,7 +1368,7 @@ TEST(QuotaCommon_CollectWhileTest, ConditionFailsOnSecondExecution)
         ++bodyExecutions;
         return Task1(true);
       });
-  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed>>);
+  static_assert(std::is_same_v<decltype(result), Result<Ok, Failed&>>);
   MOZ_RELEASE_ASSERT(result.isErr());
   MOZ_RELEASE_ASSERT(1 == bodyExecutions);
   MOZ_RELEASE_ASSERT(2 == conditionExecutions);

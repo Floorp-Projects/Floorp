@@ -411,6 +411,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   friend class js::jit::DebugModeOSRVolatileJitFrameIter;
   friend void js::ReportOverRecursed(JSContext*, unsigned errorNumber);
 
+ private:
+  static JS::Error reportedError;
+  static JS::OOM reportedOOM;
+
  public:
   inline JS::Result<> boolToResult(bool ok);
 
@@ -428,8 +432,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return result.isOk() ? result.unwrap() : nullptr;
   }
 
-  mozilla::GenericErrorResult<JS::OOM> alreadyReportedOOM();
-  mozilla::GenericErrorResult<JS::Error> alreadyReportedError();
+  mozilla::GenericErrorResult<JS::OOM&> alreadyReportedOOM();
+  mozilla::GenericErrorResult<JS::Error&> alreadyReportedError();
 
   /*
    * Points to the most recent JitActivation pushed on the thread.
@@ -1003,7 +1007,7 @@ inline JS::Result<> JSContext::boolToResult(bool ok) {
     MOZ_ASSERT(!isPropagatingForcedReturn());
     return JS::Ok();
   }
-  return JS::Result<>(JS::Error());
+  return JS::Result<>(reportedError);
 }
 
 inline JSContext* JSRuntime::mainContextFromOwnThread() {
