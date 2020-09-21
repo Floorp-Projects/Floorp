@@ -147,7 +147,7 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
     }
 
     ipcDoc->SendBatch(eBatch_Viewport, cacheData);
-  } else if (SessionAccessibility* sessionAcc =
+  } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(docAcc)) {
     nsTArray<AccessibleWrap*> accessibles(inViewAccs.Count());
     for (auto iter = inViewAccs.Iter(); !iter.Done(); iter.Next()) {
@@ -178,7 +178,7 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
         ipcDoc->GetPlatformExtension()->SendSetPivotBoundaries(
             firstDoc, UNIQUE_ID(first), lastDoc, UNIQUE_ID(last));
       }
-    } else if (SessionAccessibility* sessionAcc =
+    } else if (RefPtr<SessionAccessibility> sessionAcc =
                    SessionAccessibility::GetInstanceFor(docAcc)) {
       sessionAcc->UpdateAccessibleFocusBoundaries(
           first ? static_cast<AccessibleWrap*>(first) : docAcc,
@@ -244,7 +244,7 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
     }
 
     ipcDoc->SendBatch(eBatch_FocusPath, cacheData);
-  } else if (SessionAccessibility* sessionAcc =
+  } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(this)) {
     nsTArray<AccessibleWrap*> accessibles;
     for (AccessibleWrap* acc = aAccessible; acc && acc != this->Parent();
@@ -281,7 +281,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
     }
 
     ipcDoc->SendBatch(eBatch_BoundsUpdate, boundsData);
-  } else if (SessionAccessibility* sessionAcc =
+  } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(this)) {
     nsTArray<AccessibleWrap*> accessibles(mFocusPath.Count());
     for (auto iter = mFocusPath.Iter(); !iter.Done(); iter.Next()) {
