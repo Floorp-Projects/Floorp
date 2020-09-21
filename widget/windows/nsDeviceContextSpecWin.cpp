@@ -528,12 +528,28 @@ nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
       reinterpret_cast<const _PRINTER_INFO_4W*>(buffer.Elements());
   nsTArray<PrinterInfo> list;
   for (unsigned i = 0; i < count; i++) {
-    HANDLE handle;
-    if (::OpenPrinterW(printers[i].pPrinterName, &handle, nullptr)) {
+    // For LOCAL printers, we check whether OpenPrinter succeeds, and omit
+    // them from the list if not. This avoids presenting printers that the
+    // user cannot actually use (e.g. due to Windows permissions).
+    // For NETWORK printers, this check may block for a long time (waiting for
+    // network timeout), so we skip it; if the user tries to access a printer
+    // that isn't available, we'll have to show an error later.
+    // (We always need to be able to handle an error, anyhow, as the printer
+    // could get disconnected after we've created the list, for example.)
+    bool isAvailable = false;
+    if (printers[i].Attributes & PRINTER_ATTRIBUTE_NETWORK) {
+      isAvailable = true;
+    } else if (printers[i].Attributes & PRINTER_ATTRIBUTE_LOCAL) {
+      HANDLE handle;
+      if (::OpenPrinterW(printers[i].pPrinterName, &handle, nullptr)) {
+        ::ClosePrinter(handle);
+        isAvailable = true;
+      }
+    }
+    if (isAvailable) {
       list.AppendElement(PrinterInfo{nsString(printers[i].pPrinterName)});
       PR_PL(("Printer Name: %s\n",
              NS_ConvertUTF16toUTF8(printers[i].pPrinterName).get()));
-      ::ClosePrinter(handle);
     }
   }
 
