@@ -11,7 +11,10 @@ const TEST_ENGINE_NAME = "Test";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
+    set: [
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.oneOffsRefresh", true],
+    ],
   });
   let testEngine = await Services.search.addEngineWithDetails(
     TEST_ENGINE_NAME,
