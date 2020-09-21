@@ -514,4 +514,24 @@ void PersistEarlyBlankWindowValues(int screenX, int screenY, int width,
   }
 }
 
+MFBT_API bool GetEarlyBlankWindowEnabled() { return sEarlyBlankWindowEnabled; }
+
+MFBT_API void SetEarlyBlankWindowEnabled(bool value) {
+  HKEY regKey;
+  if (!OpenEarlyBlankWindowRegKey(regKey)) {
+    return;
+  }
+  AutoCloseRegKey closeKey(regKey);
+  DWORD enabled = value;
+  LSTATUS result =
+      ::RegSetValueExW(regKey, L"enabled", 0, REG_DWORD,
+                       reinterpret_cast<PBYTE>(&enabled), sizeof(enabled));
+  if (result != ERROR_SUCCESS) {
+    printf_stderr("Failed persisting enabled to Windows registry\n");
+    return;
+  }
+
+  sEarlyBlankWindowEnabled = true;
+}
+
 }  // namespace mozilla

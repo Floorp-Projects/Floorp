@@ -17,6 +17,8 @@ MFBT_API HWND ConsumeEarlyBlankWindowHandle();
 MFBT_API void PersistEarlyBlankWindowValues(int screenX, int screenY, int width,
                                             int height,
                                             double cssToDevPixelScaling);
+MFBT_API bool GetEarlyBlankWindowEnabled();
+MFBT_API void SetEarlyBlankWindowEnabled(bool value);
 
 }  // namespace mozilla
 
