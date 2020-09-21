@@ -80,4 +80,7 @@
 // override
 - (id)moxTextMarkerRangeForUIElement:(id)element;
 
+// override
+- (void)moxSetSelectedTextMarkerRange:(id)textMarkerRange;
+
 @end

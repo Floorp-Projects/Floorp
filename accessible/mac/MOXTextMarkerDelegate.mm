@@ -261,4 +261,12 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
   return range.CreateAXTextMarkerRange();
 }
 
+- (void)moxSetSelectedTextMarkerRange:(id)textMarkerRange {
+  mozilla::a11y::GeckoTextMarkerRange range(mGeckoDocAccessible,
+                                            textMarkerRange);
+  if (range.IsValid()) {
+    range.Select();
+  }
+}
+
 @end

@@ -87,6 +87,18 @@ addAccessibleTask(`<p id="p">Hello World</p>`, async (browser, accDoc) => {
 
   range = macDoc.getAttributeValue("AXSelectedTextMarkerRange");
   is(stringForRange(macDoc, range), "ello Wo");
+
+  let firstWordRange = macDoc.getParameterizedAttributeValue(
+    "AXRightWordTextMarkerRangeForTextMarker",
+    startMarker
+  );
+  is(stringForRange(macDoc, firstWordRange), "Hello");
+
+  evt = waitForMacEvent("AXSelectedTextChanged");
+  macDoc.setAttributeValue("AXSelectedTextMarkerRange", firstWordRange);
+  await evt;
+  range = macDoc.getAttributeValue("AXSelectedTextMarkerRange");
+  is(stringForRange(macDoc, range), "Hello");
 });
 
 addAccessibleTask(`<p>hello world goodbye</p>`, (browser, accDoc) => {
