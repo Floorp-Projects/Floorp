@@ -147,6 +147,7 @@ EXPORTS.mozilla += [
     'ColumnUtils.h',
     'CSSAlignUtils.h',
     'CSSOrderAwareFrameIterator.h',
+    'LayoutMessageUtils.h',
     'PrintedSheetFrame.h',
     'ReflowInput.h',
     'ReflowOutput.h',
