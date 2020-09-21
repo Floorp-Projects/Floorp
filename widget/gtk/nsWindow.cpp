@@ -7741,8 +7741,9 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(bool aIsPopup) {
     return sCSDSupportLevel;
   }
 
-  // We use CSD titlebar mode on Wayland only
-  if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
+  // nsWindow::GetSystemCSDSupportLevel can be called from various threads
+  // so we can't use gfxPlatformGtk here.
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     return sCSDSupportLevel;
   }
