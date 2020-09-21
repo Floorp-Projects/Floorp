@@ -565,9 +565,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         mPendingParentProcessVsync = true;
       }
 
-      if (NS_IsMainThread()) {
-        // This clears the input handling start time.
-        InputTaskManager::Get()->SetInputHandlingStartTime(TimeStamp());
+      if (XRE_IsContentProcess()) {
+        NotifyParentProcessVsync();
+        return true;
       }
 
       nsCOMPtr<nsIRunnable> vsyncEvent = new ParentProcessVsyncNotifier(this);
@@ -579,6 +579,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // IMPORTANT: All paths through this method MUST hold a strong ref on
       // |this| for the duration of the TickRefreshDriver callback.
       MOZ_ASSERT(NS_IsMainThread());
+
+      // This clears the input handling start time.
+      InputTaskManager::Get()->SetInputHandlingStartTime(TimeStamp());
 
       VsyncEvent aVsync;
       {
