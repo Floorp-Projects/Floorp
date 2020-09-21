@@ -1372,11 +1372,6 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
         return;
       }
 
-      if (BrowserParent* pointerLockedRemote =
-              BrowserParent::GetPointerLockedRemoteTarget()) {
-        remote = pointerLockedRemote;
-      }
-
       // If a mouse is over a remote target A, and then moves to
       // remote target B, we'd deliver the event directly to remote target B
       // after the moving, A would never get notified that the mouse left.
