@@ -428,14 +428,12 @@ DesktopCaptureImpl::~DesktopCaptureImpl() {
 void DesktopCaptureImpl::RegisterCaptureDataCallback(
     rtc::VideoSinkInterface<VideoFrame>* dataCallback) {
   rtc::CritScope lock(&_apiCs);
-  rtc::CritScope lock2(&_callBackCs);
   _dataCallBacks.insert(dataCallback);
 }
 
 void DesktopCaptureImpl::DeRegisterCaptureDataCallback(
     rtc::VideoSinkInterface<VideoFrame>* dataCallback) {
   rtc::CritScope lock(&_apiCs);
-  rtc::CritScope lock2(&_callBackCs);
   auto it = _dataCallBacks.find(dataCallback);
   if (it != _dataCallBacks.end()) {
     _dataCallBacks.erase(it);
@@ -480,7 +478,7 @@ int32_t DesktopCaptureImpl::IncomingFrame(
     uint8_t* videoFrame, size_t videoFrameLength,
     const VideoCaptureCapability& frameInfo, int64_t captureTime /*=0*/) {
   int64_t startProcessTime = rtc::TimeNanos();
-  rtc::CritScope cs(&_callBackCs);
+  rtc::CritScope cs(&_apiCs);
 
   const int32_t width = frameInfo.width;
   const int32_t height = frameInfo.height;
@@ -535,7 +533,6 @@ int32_t DesktopCaptureImpl::IncomingFrame(
 
 int32_t DesktopCaptureImpl::SetCaptureRotation(VideoRotation rotation) {
   rtc::CritScope lock(&_apiCs);
-  rtc::CritScope lock2(&_callBackCs);
   _rotateFrame = rotation;
   return 0;
 }
