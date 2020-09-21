@@ -73,10 +73,7 @@ class FirefoxConnector {
     );
 
     await this.toolbox.resourceWatcher.watchResources(
-      [
-        this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT,
-        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
-      ],
+      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
     );
   }
@@ -95,10 +92,7 @@ class FirefoxConnector {
     );
 
     this.toolbox.resourceWatcher.unwatchResources(
-      [
-        this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT,
-        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
-      ],
+      [this.toolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
     );
 
@@ -227,7 +221,10 @@ class FirefoxConnector {
   }
 
   async addListeners(ignoreExistingResources = false) {
-    const targetResources = [this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT];
+    const targetResources = [
+      this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT,
+      this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
+    ];
     if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
       targetResources.push(this.toolbox.resourceWatcher.TYPES.WEBSOCKET);
     }
@@ -259,6 +256,7 @@ class FirefoxConnector {
     this.toolbox.resourceWatcher.unwatchResources(
       [
         this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT,
+        this.toolbox.resourceWatcher.TYPES.NETWORK_EVENT_STACKTRACE,
         this.toolbox.resourceWatcher.TYPES.WEBSOCKET,
       ],
       {
