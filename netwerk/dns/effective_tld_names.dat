@@ -4697,13 +4697,12 @@ web.ni
 //      ccTLD for the Netherlands
 nl
 
-// no : http://www.norid.no/regelverk/index.en.html
-// The Norwegian registry has declined to notify us of updates. The web pages
-// referenced below are the official source of the data. There is also an
-// announce mailing list:
-// https://postlister.uninett.no/sympa/info/norid-diskusjon
+// no : https://www.norid.no/en/om-domenenavn/regelverk-for-no/
+// Norid geographical second level domains : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-b/
+// Norid category second level domains : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-c/
+// Norid category second-level domains managed by parties other than Norid : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-d/
 no
-// Norid generic domains : http://www.norid.no/regelverk/vedlegg-c.en.html
+// Norid category second level domains : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-c/
 fhs.no
 vgs.no
 fylkesbibl.no
@@ -4711,13 +4710,13 @@ folkebibl.no
 museum.no
 idrett.no
 priv.no
-// Non-Norid generic domains : http://www.norid.no/regelverk/vedlegg-d.en.html
+// Norid category second-level domains managed by parties other than Norid : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-d/
 mil.no
 stat.no
 dep.no
 kommune.no
 herad.no
-// no geographical names : http://www.norid.no/regelverk/vedlegg-b.en.html
+// Norid geographical second level domains : https://www.norid.no/en/om-domenenavn/regelverk-for-no/vedlegg-b/
 // counties
 aa.no
 ah.no
