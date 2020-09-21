@@ -76,13 +76,17 @@ link.addEventListener("click", () => window.clicked = true);
 """)
 
 
-class TestLegacyClick(MarionetteTestCase):
-    """Uses legacy Selenium element displayedness checks."""
+class ClickBaseTestCase(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.marionette.delete_session()
-        self.marionette.start_session()
+        super(ClickBaseTestCase, self).setUp()
+
+        # Always use a blank new tab for an empty history
+        self.new_tab = self.open_tab()
+        self.marionette.switch_to_window(self.new_tab)
+
+    def tearDown(self):
+        self.close_all_tabs()
 
     def test_click(self):
         self.marionette.navigate(inline("""
@@ -199,13 +203,22 @@ class TestLegacyClick(MarionetteTestCase):
         self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
 
 
-class TestClick(TestLegacyClick):
-    """Uses WebDriver specification compatible element interactability
-    checks.
-    """
+class TestLegacyClick(ClickBaseTestCase):
+    """Uses legacy Selenium element displayedness checks."""
 
     def setUp(self):
-        TestLegacyClick.setUp(self)
+        super(TestLegacyClick, self).setUp()
+
+        self.marionette.delete_session()
+        self.marionette.start_session({"moz:webdriverClick": False})
+
+
+class TestClick(ClickBaseTestCase):
+    """Uses WebDriver specification compatible element interactability checks."""
+
+    def setUp(self):
+        super(TestClick, self).setUp()
+
         self.marionette.delete_session()
         self.marionette.start_session({"moz:webdriverClick": True})
 
@@ -333,7 +346,7 @@ class TestClick(TestLegacyClick):
             button.click()
         self.assertFalse(self.marionette.execute_script("return window.clicked", sandbox=None))
 
-    def test_preventDefault(self):
+    def test_prevent_default(self):
         self.marionette.navigate(inline("""
             <button>click me</button>
             <script>
@@ -345,7 +358,7 @@ class TestClick(TestLegacyClick):
         # should not time out
         button.click()
 
-    def test_stopPropagation(self):
+    def test_stop_propagation(self):
         self.marionette.navigate(inline("""
             <button>click me</button>
             <script>
@@ -357,7 +370,7 @@ class TestClick(TestLegacyClick):
         # should not time out
         button.click()
 
-    def test_stopImmediatePropagation(self):
+    def test_stop_immediate_propagation(self):
         self.marionette.navigate(inline("""
             <button>click me</button>
             <script>
@@ -370,19 +383,29 @@ class TestClick(TestLegacyClick):
         button.click()
 
 
-class TestClickNavigation(MarionetteTestCase):
+class TestClickNavigation(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestClickNavigation, self).setUp()
 
+        # Always use a blank new tab for an empty history
+        self.new_tab = self.open_tab()
+        self.marionette.switch_to_window(self.new_tab)
+
         self.test_page = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(self.test_page)
+
+    def tearDown(self):
+        self.close_all_tabs()
 
     def close_notification(self):
         try:
             with self.marionette.using_context("chrome"):
-                self.marionette.find_element(By.CSS_SELECTOR,
-                    "#notification-popup popupnotification .popup-notification-closebutton").click()
+                elem = self.marionette.find_element(
+                    By.CSS_SELECTOR,
+                    "#notification-popup popupnotification .popup-notification-closebutton"
+                )
+                elem.click()
         except errors.NoSuchElementException:
             pass
 
