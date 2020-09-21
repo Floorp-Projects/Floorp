@@ -4,7 +4,7 @@
 
 use api::BorderRadius;
 use api::units::*;
-use euclid::{Point2D, Rect, Size2D, Vector2D};
+use euclid::{Point2D, Rect, Size2D, Vector2D, point2, size2};
 use euclid::{default, Transform2D, Transform3D, Scale};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use plane_split::{Clipper, Polygon};
@@ -1283,4 +1283,140 @@ macro_rules! c_str {
                                      as *const std::os::raw::c_char)
         }
     }
+}
+
+// Find a rectangle that is contained by the sum of r1 and r2.
+pub fn conservative_union_rect<U>(r1: &Rect<f32, U>, r2: &Rect<f32, U>) -> Rect<f32, U> {
+    //  +---+---+   +--+-+--+
+    //  |   |   |   |  | |  |
+    //  |   |   |   |  | |  |
+    //  +---+---+   +--+-+--+
+    if r1.origin.y == r2.origin.y && r1.size.height == r2.size.height {
+        if r2.min_x() <= r1.max_x() && r2.max_x() >= r1.min_x() {
+            let origin_x = f32::min(r1.origin.x, r2.origin.x);
+            let width = f32::max(r1.max_x(), r2.max_x()) - origin_x;
+
+            return Rect {
+                origin: point2(origin_x, r1.origin.y),
+                size: size2(width, r1.size.height),
+            }
+        }
+    }
+
+    //  +----+    +----+
+    //  |    |    |    |
+    //  |    |    +----+
+    //  +----+    |    |
+    //  |    |    +----+
+    //  |    |    |    |
+    //  +----+    +----+
+    if r1.origin.x == r2.origin.x && r1.size.width == r2.size.width {
+        if r2.min_y() <= r1.max_y() && r2.max_y() >= r1.min_y() {
+            let origin_y = f32::min(r1.origin.y, r2.origin.y);
+            let height = f32::max(r1.max_y(), r2.max_y()) - origin_y;
+
+            return Rect {
+                origin: point2(r1.origin.x, origin_y),
+                size: size2(r1.size.width, height),
+            }
+        }
+    }
+
+    if r1.area() >= r2.area() { *r1 } else {*r2 }
+}
+
+#[test]
+fn test_conservative_union_rect() {
+    // Adjacent, x axis
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(4.0, 2.0), size: size2(5.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(8.0, 4.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(4.0, 2.0), size: size2(5.0, 4.0) },
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(8.0, 4.0) });
+
+    // Averlapping adjacent, x axis
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(3.0, 2.0), size: size2(5.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(7.0, 4.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(5.0, 2.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(5.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(7.0, 4.0) });
+
+    // Adjacent but not touching, x axis
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(6.0, 2.0), size: size2(5.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(6.0, 2.0), size: size2(5.0, 4.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(-6.0, 2.0), size: size2(1.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) });
+
+
+    // Adjacent, y axis
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(1.0, 6.0), size: size2(3.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 8.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 5.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(1.0, 1.0), size: size2(3.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 1.0), size: size2(3.0, 8.0) });
+
+    // Averlapping adjacent, y axis
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(1.0, 3.0), size: size2(3.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 5.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 4.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 6.0) });
+
+    // Adjacent but not touching, y axis
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(1.0, 10.0), size: size2(3.0, 5.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 10.0), size: size2(3.0, 5.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 5.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(1.0, 0.0), size: size2(3.0, 3.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(1.0, 5.0), size: size2(3.0, 4.0) });
+
+
+    // Contained
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+        &LayoutRect { origin: point2(0.0, 1.0), size: size2(10.0, 11.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(0.0, 1.0), size: size2(10.0, 11.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { origin: point2(0.0, 1.0), size: size2(10.0, 11.0) },
+        &LayoutRect { origin: point2(1.0, 2.0), size: size2(3.0, 4.0) },
+    );
+    assert_eq!(r, LayoutRect { origin: point2(0.0, 1.0), size: size2(10.0, 11.0) });
 }
