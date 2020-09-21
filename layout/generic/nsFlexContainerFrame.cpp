@@ -1516,26 +1516,14 @@ static nscoord PartiallyResolveAutoMinSize(
   //   from the aspect ratio and any definite size constraints in the opposite
   //   dimension.
   nscoord transferredSizeSuggestion = nscoord_MAX;
-  const StyleAspectRatio& aspectRatio =
-      aFlexItem.Frame()->StylePosition()->mAspectRatio;
-  AspectRatio ratio;
-  if (!aspectRatio.auto_) {
-    // For "aspect-ratio: <ratio>" case.
-    // Basically, this is for non-replaced elements. Replaced elements handle
-    // this already in GetIntrinsicRatio(), so does aFlexItem.IntrinsicRatio().
-    ratio = aspectRatio.ratio.AsRatio().ToLayoutRatio();
-  } else if (aFlexItem.HasIntrinsicRatio()) {
-    ratio = aFlexItem.IntrinsicRatio();
-  }
-
-  if (ratio) {
+  if (aFlexItem.HasIntrinsicRatio()) {
     // We have a usable aspect ratio. (not going to divide by 0)
     const bool useMinSizeIfCrossSizeIsIndefinite = true;
     nscoord crossSizeToUseWithRatio = CrossSizeToUseWithRatio(
         aFlexItem, aItemReflowInput, useMinSizeIfCrossSizeIsIndefinite,
         aAxisTracker);
-    transferredSizeSuggestion =
-        MainSizeFromAspectRatio(crossSizeToUseWithRatio, ratio, aAxisTracker);
+    transferredSizeSuggestion = MainSizeFromAspectRatio(
+        crossSizeToUseWithRatio, aFlexItem.IntrinsicRatio(), aAxisTracker);
   }
 
   return std::min(specifiedSizeSuggestion, transferredSizeSuggestion);
@@ -2146,6 +2134,16 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
     } else if (mAlignSelf._0 == StyleAlignFlags::LAST_BASELINE) {
       mAlignSelf = {StyleAlignFlags::FLEX_END};
     }
+  }
+
+  // FIXME: Bug 1660122: Drop this if nsIFrame::GetIntrinicRatio() takes
+  // aspect-ratio property into account.
+  // Note: We check eReplaced here because replaced elements already handle the
+  // aspect-ratio property in their GetIntrinsicRatio() implementation.
+  const StyleAspectRatio& ratio =
+      aFlexItemReflowInput.mStylePosition->mAspectRatio;
+  if (!mFrame->IsFrameOfType(nsIFrame::eReplaced) && ratio.HasFiniteRatio()) {
+    mIntrinsicRatio = ratio.ratio.AsRatio().ToLayoutRatio();
   }
 }
 
