@@ -1434,6 +1434,8 @@ public class GeckoSession {
 
         mWindow.close();
         mWindow.disposeNative();
+        // Can't access the compositor after we dispose of the window
+        mCompositorReady = false;
         mWindow = null;
 
         onWindowChanged(WINDOW_CLOSE, /* inProgress */ false);

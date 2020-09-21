@@ -9,6 +9,7 @@
 
 #include "mozilla/java/GeckoResultWrappers.h"
 #include "mozilla/java/GeckoSessionNatives.h"
+#include "mozilla/java/WebResponseWrappers.h"
 #include "mozilla/widget/WindowEvent.h"
 
 class nsWindow;
@@ -85,6 +86,8 @@ class GeckoViewSupport final
                      int32_t aFlags, mozilla::jni::String::Param aTriggeringUri,
                      bool aHasUserGesture, bool aIsTopLevel) const
       -> java::GeckoResult::LocalRef;
+
+  void PassExternalResponse(java::WebResponse::Param aResponse);
 
   void OnWeakNonIntrusiveDetach(already_AddRefed<Runnable> aDisposer) {
     RefPtr<Runnable> disposer(aDisposer);
