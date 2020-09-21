@@ -10549,6 +10549,37 @@ AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
   return AttachDecision::Attach;
 }
 
+static bool CanTruncateToInt32(const Value& val) {
+  return val.isNumber() || val.isBoolean() || val.isNullOrUndefined() ||
+         val.isString();
+}
+
+// Convert type into int32 for the bitwise/shift operands.
+static Int32OperandId EmitTruncateToInt32Guard(CacheIRWriter& writer,
+                                               ValOperandId id,
+                                               HandleValue val) {
+  MOZ_ASSERT(CanTruncateToInt32(val));
+  if (val.isInt32()) {
+    return writer.guardToInt32(id);
+  }
+  if (val.isBoolean()) {
+    return writer.guardBooleanToInt32(id);
+  }
+  if (val.isNullOrUndefined()) {
+    writer.guardIsNullOrUndefined(id);
+    return writer.loadInt32Constant(0);
+  }
+  NumberOperandId numId;
+  if (val.isString()) {
+    StringOperandId strId = writer.guardToString(id);
+    numId = writer.guardStringToNumber(strId);
+  } else {
+    MOZ_ASSERT(val.isDouble());
+    numId = writer.guardIsNumber(id);
+  }
+  return writer.truncateDoubleToUInt32(numId);
+}
+
 AttachDecision UnaryArithIRGenerator::tryAttachBigInt() {
   if (!val_.isBigInt()) {
     return AttachDecision::NoAction;
@@ -10834,13 +10865,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachBitwise() {
     return AttachDecision::NoAction;
   }
 
-  auto canConvert = [](const Value& val) {
-    return val.isNumber() || val.isBoolean() || val.isNullOrUndefined() ||
-           val.isString();
-  };
-
   // Check guard conditions
-  if (!canConvert(lhs_) || !canConvert(rhs_)) {
+  if (!CanTruncateToInt32(lhs_) || !CanTruncateToInt32(rhs_)) {
     return AttachDecision::NoAction;
   }
 
@@ -10850,31 +10876,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachBitwise() {
   ValOperandId lhsId(writer.setInputOperandId(0));
   ValOperandId rhsId(writer.setInputOperandId(1));
 
-  // Convert type into int32 for the bitwise/shift operands.
-  auto guardToInt32 = [&](ValOperandId id, HandleValue val) {
-    if (val.isInt32()) {
-      return writer.guardToInt32(id);
-    }
-    if (val.isBoolean()) {
-      return writer.guardBooleanToInt32(id);
-    }
-    if (val.isNullOrUndefined()) {
-      writer.guardIsNullOrUndefined(id);
-      return writer.loadInt32Constant(0);
-    }
-    NumberOperandId numId;
-    if (val.isString()) {
-      StringOperandId strId = writer.guardToString(id);
-      numId = writer.guardStringToNumber(strId);
-    } else {
-      MOZ_ASSERT(val.isDouble());
-      numId = writer.guardIsNumber(id);
-    }
-    return writer.truncateDoubleToUInt32(numId);
-  };
-
-  Int32OperandId lhsIntId = guardToInt32(lhsId, lhs_);
-  Int32OperandId rhsIntId = guardToInt32(rhsId, rhs_);
+  Int32OperandId lhsIntId = EmitTruncateToInt32Guard(writer, lhsId, lhs_);
+  Int32OperandId rhsIntId = EmitTruncateToInt32Guard(writer, rhsId, rhs_);
 
   switch (op_) {
     case JSOp::BitOr:
