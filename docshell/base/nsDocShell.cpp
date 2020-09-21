@@ -13214,7 +13214,8 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aCommit) {
 
   mActiveEntry = nullptr;
   mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo> loadingEntry;
-  mActiveEntryIsLoadingFromSessionHistory = !!mLoadingEntry;
+  mActiveEntryIsLoadingFromSessionHistory =
+      mLoadingEntry && mLoadingEntry->mLoadIsFromSessionHistory;
   if (mLoadingEntry) {
     MOZ_LOG(gSHLog, LogLevel::Debug,
             ("Moving the loading entry to the active entry on nsDocShell %p "
