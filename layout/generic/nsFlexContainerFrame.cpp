@@ -4135,6 +4135,13 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
         "Unconstrained inline size; this should only result from huge sizes "
         "(not intrinsic sizing w/ orthogonal flows)");
     *aIsDefinite = true;
+    // FIXME: Bug 1661847 - there are cases where aReflowInput.ComputedISize()
+    // might not be the right thing to return here. Specifically: if our cross
+    // size is an intrinsic size, and we have flex items that are flexible and
+    // have intrinsic aspect ratios, then we may need to take their post-flexing
+    // main sizes into account (multiplied through their aspect ratios to get
+    // their cross sizes), in order to determine their flex line's size & the
+    // flex container's cross size (e.g. as `aSumLineCrossSizes`).
     return aReflowInput.ComputedISize();
   }
 
