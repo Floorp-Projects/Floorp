@@ -51,6 +51,10 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
 
   Accessible* LeafAtOffset(int32_t aOffset);
 
+  MOZ_CAN_RUN_SCRIPT void SelectRange(int32_t aStartOffset,
+                                      HyperTextAccessible* aEndContainer,
+                                      int32_t aEndOffset);
+
  protected:
   ~HyperTextAccessibleWrap() {}
 
