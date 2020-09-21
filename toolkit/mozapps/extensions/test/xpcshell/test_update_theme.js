@@ -64,16 +64,11 @@ add_task(async function test_builtin_location_migration() {
   };
 
   await setupBuiltinExtension(themeDef, "first-loc", false);
-  let themeInstalled = AddonTestUtils.promiseAddonEvent(
-    "onInstalled",
-    aAddon => aAddon.id == ADDON_ID
-  );
   await AddonManager.maybeInstallBuiltinAddon(
     ADDON_ID,
     "1.0",
     "resource://first-loc/"
   );
-  await themeInstalled;
 
   let addon = await AddonManager.getAddonByID(ADDON_ID);
   await addon.enable();
@@ -101,17 +96,11 @@ add_task(async function test_builtin_location_migration() {
   let newDef = { manifest: Object.assign({}, themeDef.manifest) };
   newDef.manifest.version = "1.1";
   await setupBuiltinExtension(newDef, "second-loc");
-  themeInstalled = AddonTestUtils.promiseAddonEvent(
-    "onInstalled",
-    aAddon => aAddon.id == ADDON_ID
-  );
-
   await AddonManager.maybeInstallBuiltinAddon(
     ADDON_ID,
     "1.1",
     "resource://second-loc/"
   );
-  await themeInstalled;
 
   let newAddon = await AddonManager.getAddonByID(ADDON_ID);
   Assert.ok(!newAddon.userDisabled, "Add-on should be enabled.");
