@@ -10457,6 +10457,7 @@ AttachDecision UnaryArithIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
   TRY_ATTACH(tryAttachInt32());
   TRY_ATTACH(tryAttachNumber());
+  TRY_ATTACH(tryAttachBitwise());
   TRY_ATTACH(tryAttachBigInt());
   TRY_ATTACH(tryAttachStringInt32());
   TRY_ATTACH(tryAttachStringNumber());
@@ -10466,6 +10467,9 @@ AttachDecision UnaryArithIRGenerator::tryAttachStub() {
 }
 
 AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
+  if (op_ == JSOp::BitNot) {
+    return AttachDecision::NoAction;
+  }
   if (!val_.isInt32() || !res_.isInt32()) {
     return AttachDecision::NoAction;
   }
@@ -10474,10 +10478,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
 
   Int32OperandId intId = writer.guardToInt32(valId);
   switch (op_) {
-    case JSOp::BitNot:
-      writer.int32NotResult(intId);
-      trackAttached("UnaryArith.Int32Not");
-      break;
     case JSOp::Pos:
       writer.loadInt32Result(intId);
       trackAttached("UnaryArith.Int32Pos");
@@ -10507,6 +10507,9 @@ AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
 }
 
 AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
+  if (op_ == JSOp::BitNot) {
+    return AttachDecision::NoAction;
+  }
   if (!val_.isNumber()) {
     return AttachDecision::NoAction;
   }
@@ -10516,11 +10519,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
   NumberOperandId numId = writer.guardIsNumber(valId);
   Int32OperandId truncatedId;
   switch (op_) {
-    case JSOp::BitNot:
-      truncatedId = writer.truncateDoubleToUInt32(numId);
-      writer.int32NotResult(truncatedId);
-      trackAttached("UnaryArith.DoubleNot");
-      break;
     case JSOp::Pos:
       writer.loadDoubleResult(numId);
       trackAttached("UnaryArith.DoublePos");
@@ -10580,6 +10578,29 @@ static Int32OperandId EmitTruncateToInt32Guard(CacheIRWriter& writer,
   return writer.truncateDoubleToUInt32(numId);
 }
 
+AttachDecision UnaryArithIRGenerator::tryAttachBitwise() {
+  // Only bitwise operators.
+  if (op_ != JSOp::BitNot) {
+    return AttachDecision::NoAction;
+  }
+
+  // Check guard conditions
+  if (!CanTruncateToInt32(val_)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Bitwise operators always produce Int32 values.
+  MOZ_ASSERT(res_.isInt32());
+
+  ValOperandId valId(writer.setInputOperandId(0));
+  Int32OperandId intId = EmitTruncateToInt32Guard(writer, valId, val_);
+  writer.int32NotResult(intId);
+  trackAttached("BinaryArith.Bitwise.BitNot");
+
+  writer.returnFromIC();
+  return AttachDecision::Attach;
+}
+
 AttachDecision UnaryArithIRGenerator::tryAttachBigInt() {
   if (!val_.isBigInt()) {
     return AttachDecision::NoAction;
@@ -10626,6 +10647,9 @@ AttachDecision UnaryArithIRGenerator::tryAttachStringInt32() {
   }
   MOZ_ASSERT(res_.isNumber());
 
+  // Case should have been handled by tryAttachBitwise.
+  MOZ_ASSERT(op_ != JSOp::BitNot);
+
   if (!res_.isInt32()) {
     return AttachDecision::NoAction;
   }
@@ -10635,10 +10659,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachStringInt32() {
   Int32OperandId intId = writer.guardStringToInt32(stringId);
 
   switch (op_) {
-    case JSOp::BitNot:
-      writer.int32NotResult(intId);
-      trackAttached("UnaryArith.StringInt32Not");
-      break;
     case JSOp::Pos:
       writer.loadInt32Result(intId);
       trackAttached("UnaryArith.StringInt32Pos");
@@ -10673,17 +10693,15 @@ AttachDecision UnaryArithIRGenerator::tryAttachStringNumber() {
   }
   MOZ_ASSERT(res_.isNumber());
 
+  // Case should have been handled by tryAttachBitwise.
+  MOZ_ASSERT(op_ != JSOp::BitNot);
+
   ValOperandId valId(writer.setInputOperandId(0));
   StringOperandId stringId = writer.guardToString(valId);
   NumberOperandId numId = writer.guardStringToNumber(stringId);
 
   Int32OperandId truncatedId;
   switch (op_) {
-    case JSOp::BitNot:
-      truncatedId = writer.truncateDoubleToUInt32(numId);
-      writer.int32NotResult(truncatedId);
-      trackAttached("UnaryArith.StringNumberNot");
-      break;
     case JSOp::Pos:
       writer.loadDoubleResult(numId);
       trackAttached("UnaryArith.StringNumberPos");
