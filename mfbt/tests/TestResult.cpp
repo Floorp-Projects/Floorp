@@ -37,23 +37,46 @@ struct UnusedZero<UnusedZeroEnum> {
 };
 }  // namespace mozilla::detail
 
-struct Failed {
-  int x;
+struct Failed {};
+
+namespace mozilla::detail {
+template <>
+struct UnusedZero<Failed> {
+  using StorageType = uintptr_t;
+
+  static constexpr bool value = true;
+  static constexpr StorageType nullValue = 0;
+  static constexpr StorageType GetDefaultValue() { return 2; }
+
+  static constexpr void AssertValid(StorageType aValue) {}
+  static constexpr Failed Inspect(const StorageType& aValue) {
+    return Failed{};
+  }
+  static constexpr Failed Unwrap(StorageType aValue) { return Failed{}; }
+  static constexpr StorageType Store(Failed aValue) {
+    return GetDefaultValue();
+  }
 };
+
+template <>
+struct HasFreeLSB<Failed> {
+  static const bool value = true;
+};
+}  // namespace mozilla::detail
 
 // V is trivially default-constructible, and E has UnusedZero<E>::value == true,
 // for a reference type and for a non-reference type
-static_assert(mozilla::detail::SelectResultImpl<uintptr_t, Failed&>::value ==
+static_assert(mozilla::detail::SelectResultImpl<uintptr_t, Failed>::value ==
               mozilla::detail::PackingStrategy::NullIsOk);
 static_assert(mozilla::detail::SelectResultImpl<Ok, UnusedZeroEnum>::value ==
               mozilla::detail::PackingStrategy::NullIsOk);
 
-static_assert(std::is_trivially_destructible_v<Result<uintptr_t, Failed&>>);
+static_assert(std::is_trivially_destructible_v<Result<uintptr_t, Failed>>);
 static_assert(std::is_trivially_destructible_v<Result<Ok, UnusedZeroEnum>>);
 
-static_assert(sizeof(Result<Ok, Failed&>) == sizeof(uintptr_t),
+static_assert(sizeof(Result<Ok, Failed>) == sizeof(uintptr_t),
               "Result with empty value type should be pointer-sized");
-static_assert(sizeof(Result<int*, Failed&>) == sizeof(uintptr_t),
+static_assert(sizeof(Result<int*, Failed>) == sizeof(uintptr_t),
               "Result with two aligned pointer types should be pointer-sized");
 static_assert(
     sizeof(Result<char*, Failed*>) > sizeof(char*),
@@ -84,15 +107,7 @@ static_assert(sizeof(Foo32) >= sizeof(uintptr_t) ||
                   sizeof(Result<Foo16, Foo32>) <= sizeof(uintptr_t),
               "Result with small types should be pointer-sized");
 
-inline auto Err(Failed& aErrorValue) {
-  return mozilla::GenericErrorResult<Failed&>(aErrorValue);
-}
-
-inline auto Err(double& aErrorValue) {
-  return mozilla::GenericErrorResult<double&>(aErrorValue);
-}
-
-static GenericErrorResult<Failed&> Fail() {
+static GenericErrorResult<Failed> Fail() {
   static Failed failed;
   return Err(failed);
 }
@@ -101,7 +116,7 @@ static GenericErrorResult<UnusedZeroEnum> FailUnusedZeroEnum() {
   return Err(UnusedZeroEnum::NotOk);
 }
 
-static Result<Ok, Failed&> Task1(bool pass) {
+static Result<Ok, Failed> Task1(bool pass) {
   if (!pass) {
     return Fail();  // implicit conversion from GenericErrorResult to Result
   }
@@ -116,7 +131,7 @@ static Result<Ok, UnusedZeroEnum> Task1UnusedZeroEnumErr(bool pass) {
   return Ok();
 }
 
-static Result<int, Failed&> Task2(bool pass, int value) {
+static Result<int, Failed> Task2(bool pass, int value) {
   MOZ_TRY(
       Task1(pass));  // converts one type of result to another in the error case
   return value;      // implicit conversion from T to Result<T, E>
@@ -129,7 +144,7 @@ static Result<int, UnusedZeroEnum> Task2UnusedZeroEnumErr(bool pass,
   return value;  // implicit conversion from T to Result<T, E>
 }
 
-static Result<int, Failed&> Task3(bool pass1, bool pass2, int value) {
+static Result<int, Failed> Task3(bool pass1, bool pass2, int value) {
   int x, y;
   MOZ_TRY_VAR(x, Task2(pass1, value));
   MOZ_TRY_VAR(y, Task2(pass2, value));
@@ -173,7 +188,7 @@ static void BasicTests() {
 
   // Lvalues should work too.
   {
-    Result<Ok, Failed&> res = Task1(true);
+    Result<Ok, Failed> res = Task1(true);
     MOZ_RELEASE_ASSERT(res.isOk());
     MOZ_RELEASE_ASSERT(!res.isErr());
 
@@ -183,7 +198,7 @@ static void BasicTests() {
   }
 
   {
-    Result<int, Failed&> res = Task2(true, 3);
+    Result<int, Failed> res = Task2(true, 3);
     MOZ_RELEASE_ASSERT(res.isOk());
     MOZ_RELEASE_ASSERT(res.unwrap() == 3);
 
@@ -194,19 +209,16 @@ static void BasicTests() {
   // Some tests for pointer tagging.
   {
     int i = 123;
-    double d = 3.14;
 
-    Result<int*, double&> res = &i;
+    Result<int*, Failed> res = &i;
     static_assert(sizeof(res) == sizeof(uintptr_t),
                   "should use pointer tagging to fit in a word");
 
     MOZ_RELEASE_ASSERT(res.isOk());
     MOZ_RELEASE_ASSERT(*res.unwrap() == 123);
 
-    res = Err(d);
+    res = Err(Failed());
     MOZ_RELEASE_ASSERT(res.isErr());
-    MOZ_RELEASE_ASSERT(&res.unwrapErr() == &d);
-    MOZ_RELEASE_ASSERT(res.unwrapErr() == 3.14);
   }
 }
 
@@ -230,20 +242,11 @@ static void TypeConversionTests() {
 
 static void EmptyValueTest() {
   struct Fine {};
-  mozilla::Result<Fine, int&> res((Fine()));
+  mozilla::Result<Fine, Failed> res((Fine()));
   res.unwrap();
   MOZ_RELEASE_ASSERT(res.isOk());
   static_assert(sizeof(res) == sizeof(uintptr_t),
                 "Result with empty value type should be pointer-sized");
-}
-
-static void ReferenceTest() {
-  struct MyError {
-    int x = 0;
-  };
-  MyError merror;
-  Result<int, MyError&> res(merror);
-  MOZ_RELEASE_ASSERT(&res.unwrapErr() == &merror);
 }
 
 static void MapTest() {
@@ -575,7 +578,6 @@ int main() {
   BasicTests();
   TypeConversionTests();
   EmptyValueTest();
-  ReferenceTest();
   MapTest();
   MapErrTest();
   OrElseTest();

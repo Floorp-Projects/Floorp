@@ -26,7 +26,7 @@ class PlainObject : public NativeObject {
  public:
   static const JSClass class_;
 
-  static inline JS::Result<PlainObject*, JS::OOM&> createWithTemplate(
+  static inline JS::Result<PlainObject*, JS::OOM> createWithTemplate(
       JSContext* cx, JS::Handle<PlainObject*> templateObject);
 
   /* Return the allocKind we would use if we were to tenure this object. */
