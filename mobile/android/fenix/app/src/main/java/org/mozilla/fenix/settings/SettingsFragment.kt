@@ -321,6 +321,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
         val preferenceMakeDefaultBrowser =
             requirePreference<Preference>(R.string.pref_key_make_default_browser)
+        val preferenceOpenLinksInExternalApp =
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_open_links_in_external_app))
 
         preferencePrivateBrowsing.icon.mutate().apply {
             setTint(requireContext().getColorFromAttr(R.attr.primaryText))
@@ -344,6 +346,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         preferenceMakeDefaultBrowser.onPreferenceClickListener =
             getClickListenerForMakeDefaultBrowser()
+
+        preferenceOpenLinksInExternalApp?.onPreferenceChangeListener = SharedPreferenceUpdater()
 
         val preferenceFxAOverride =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_fxa_server))
