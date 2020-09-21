@@ -410,6 +410,12 @@ public class ContentBlockingController {
          */
         public static final int LOADED_SOCIALTRACKING_CONTENT   = 0x00020000;
 
+        /**
+         * Indicates that content that would have been blocked has instead been
+         * replaced with a shim.
+         */
+        public static final int REPLACED_UNSAFE_CONTENT        = 0x00000010;
+
         protected Event() {}
     }
 
