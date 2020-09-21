@@ -18,13 +18,9 @@
     async function doTests() {
       // Tab to 't2' and then tab out of it: it must not have any selection.
       info("Select all text in t1 and focus it");
-      const t1 = getNode("t1");
-      let focused = waitForEvent(EVENT_FOCUS, t1);
-      // Simulate tabbing to it by selecting all text before focusing it.
-      if (t1.editor) {
-        t1.selectionStart = t1.selectionEnd = t1.value.length;
-      }
-      t1.focus();
+      let focused = waitForEvent(EVENT_FOCUS, "t1");
+      // Simulate tabbing to t1 by selecting all text before focusing it.
+      selectAllTextAndFocus("t1");
       await focused;
 
       info("Tab to t2");
