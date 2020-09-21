@@ -67,32 +67,32 @@ panel[type="arrow"].panel-no-padding::part(arrowcontent) {
   overflow: hidden; /* Don't let panel content overflow the border-radius */
 }
 
-:-moz-any(panel, menupopup)::part(arrow) {
+:is(panel, menupopup)::part(arrow) {
   -moz-context-properties: fill, stroke;
   fill: var(--arrowpanel-background);
   stroke: var(--arrowpanel-border-color);
 }
 
-:-moz-any(panel, menupopup)[side="top"]::part(arrow) {
+:is(panel, menupopup)[side="top"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
   margin-inline: 16px;
   margin-bottom: -1px;
 }
 
-:-moz-any(panel, menupopup)[side="bottom"]::part(arrow) {
+:is(panel, menupopup)[side="bottom"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
   -moz-transform: scaleY(-1);
   margin-inline: 16px;
   margin-top: -1px;
 }
 
-:-moz-any(panel, menupopup)[side="left"]::part(arrow) {
+:is(panel, menupopup)[side="left"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
   margin-block: 16px;
   margin-right: -1px;
 }
 
-:-moz-any(panel, menupopup)[side="right"]::part(arrow) {
+:is(panel, menupopup)[side="right"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
   transform: scaleX(-1);
   margin-block: 16px;
