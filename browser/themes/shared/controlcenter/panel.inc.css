@@ -5,7 +5,7 @@
 %endif
 
 /* Hide all conditional elements by default. */
-:-moz-any([when-connection],[when-customroot],[when-mixedcontent],[when-ciphers]) {
+:is([when-connection],[when-customroot],[when-mixedcontent],[when-ciphers]) {
   display: none;
 }
 
@@ -77,7 +77,7 @@
 }
 
 /* Hide 'not secure' message in subview when weak cipher or mixed content messages are shown. */
-#identity-popup-securityView-body:-moz-any([mixedcontent],[ciphers]) > description[when-connection=not-secure],
+#identity-popup-securityView-body:is([mixedcontent],[ciphers]) > description[when-connection=not-secure],
 /* Hide 'passive-loaded (only)' message when there is mixed passive content loaded and active blocked. */
 #identity-popup-securityView-body[mixedcontent~=passive-loaded][mixedcontent~=active-blocked] > description[when-mixedcontent=passive-loaded] {
   display: none;

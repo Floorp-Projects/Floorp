@@ -537,10 +537,10 @@ main {
       display: inline-block; } }
   .top-sites-list li {
     margin: 0 0 8px; }
-  .top-sites-list:not(.dnd-active) .top-site-outer:-moz-any(.active, :focus, :hover) .tile {
+  .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) .tile {
     box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color), 0 0 0 5px var(--newtab-card-active-outline-color);
     transition: box-shadow 150ms; }
-  .top-sites-list:not(.dnd-active) .top-site-outer:-moz-any(.active, :focus, :hover) .context-menu-button {
+  .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) .context-menu-button {
     opacity: 1;
     transform: scale(1);
     transition-delay: 333ms; }
@@ -554,7 +554,7 @@ main {
       color: inherit;
       display: block;
       outline: none; }
-      .top-site-outer .top-site-inner > a:-moz-any(.active, :focus) .tile {
+      .top-site-outer .top-site-inner > a:is(.active, :focus) .tile {
         box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color), 0 0 0 5px var(--newtab-card-active-outline-color);
         transition: box-shadow 150ms; }
   .top-site-outer .context-menu-button {
@@ -576,7 +576,7 @@ main {
     transition-duration: 150ms;
     transition-property: transform, opacity;
     width: 27px; }
-    .top-site-outer .context-menu-button:-moz-any(:active, :focus) {
+    .top-site-outer .context-menu-button:is(:active, :focus) {
       opacity: 1;
       transform: scale(1); }
   .top-site-outer .tile {
@@ -1293,8 +1293,8 @@ main {
         border: 0;
         padding: 3px 12px;
         white-space: nowrap; }
-        .context-menu > ul > li > a:-moz-any(:focus, :hover),
-        .context-menu > ul > li > button:-moz-any(:focus, :hover) {
+        .context-menu > ul > li > a:is(:focus, :hover),
+        .context-menu > ul > li > button:is(:focus, :hover) {
           background: var(--newtab-element-hover-color); }
         .context-menu > ul > li > a:active,
         .context-menu > ul > li > button:active {
@@ -1385,7 +1385,7 @@ main {
     transition-duration: 150ms;
     transition-property: transform, opacity;
     width: 27px; }
-    .card-outer .context-menu-button:-moz-any(:active, :focus) {
+    .card-outer .context-menu-button:is(:active, :focus) {
       opacity: 1;
       transform: scale(1); }
   .card-outer.placeholder {
@@ -1406,24 +1406,24 @@ main {
     outline: none;
     position: absolute;
     width: 100%; }
-    .card-outer > a:-moz-any(.active, :focus) .card {
+    .card-outer > a:is(.active, :focus) .card {
       box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
       transition: box-shadow 150ms; }
-    .card-outer > a:-moz-any(.active, :focus) .card-title {
+    .card-outer > a:is(.active, :focus) .card-title {
       color: var(--newtab-link-primary-color); }
-  .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) {
+  .card-outer:is(:hover, :focus, .active):not(.placeholder) {
     box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
     transition: box-shadow 150ms;
     outline: none; }
-    .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .context-menu-button {
+    .card-outer:is(:hover, :focus, .active):not(.placeholder) .context-menu-button {
       opacity: 1;
       transform: scale(1);
       transition-delay: 333ms; }
-    .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .card-title {
+    .card-outer:is(:hover, :focus, .active):not(.placeholder) .card-title {
       color: var(--newtab-link-primary-color); }
-    .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .alternate ~ .card-host-name {
+    .card-outer:is(:hover, :focus, .active):not(.placeholder) .alternate ~ .card-host-name {
       display: none; }
-    .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .card-host-name.alternate {
+    .card-outer:is(:hover, :focus, .active):not(.placeholder) .card-host-name.alternate {
       display: block; }
   .card-outer .card-preview-image-outer {
     background-color: #D7D7DB;
@@ -1631,7 +1631,7 @@ main {
       transition-duration: 200ms;
       transition-property: opacity;
       width: 27px; }
-      .collapsible-section .section-top-bar .context-menu-button:-moz-any(:active, :focus, :hover) {
+      .collapsible-section .section-top-bar .context-menu-button:is(:active, :focus, :hover) {
         fill: var(--newtab-section-header-text-color);
         opacity: 1; }
     .collapsible-section .section-top-bar .context-menu {
@@ -1958,7 +1958,7 @@ main {
   .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
     color: var(--newtab-link-primary-color);
     font-weight: normal; }
-    .collapsible-section.ds-layout .section-top-bar .learn-more-link a:-moz-any(:focus, :hover) {
+    .collapsible-section.ds-layout .section-top-bar .learn-more-link a:is(:focus, :hover) {
       text-decoration: underline; }
 
 .ds-card-grid {
@@ -2625,22 +2625,22 @@ main {
 
 .ds-top-sites .top-sites .top-site-outer {
   padding: 0 12px; }
-  .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:-moz-any(.active, :focus) .tile {
+  .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(.active, :focus) .tile {
     box-shadow: 0 0 0 5px rgba(10, 132, 255, 0.3);
     transition: box-shadow 150ms;
     border-radius: 4px;
     outline: none; }
-    [lwt-newtab-brighttext] .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:-moz-any(.active, :focus) .tile {
+    [lwt-newtab-brighttext] .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(.active, :focus) .tile {
       box-shadow: 0 0 0 5px rgba(69, 161, 255, 0.4);
       transition: box-shadow 150ms;
       border-radius: 4px;
       outline: none; }
-  .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:-moz-any(:hover) .tile {
+  .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(:hover) .tile {
     box-shadow: 0 0 0 5px #D7D7DB;
     transition: box-shadow 150ms;
     border-radius: 4px;
     outline: none; }
-    [lwt-newtab-brighttext] .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:-moz-any(:hover) .tile {
+    [lwt-newtab-brighttext] .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(:hover) .tile {
       box-shadow: 0 0 0 5px #4A4A4F;
       transition: box-shadow 150ms;
       border-radius: 4px;
@@ -2745,10 +2745,10 @@ main {
   transition-duration: 150ms;
   transition-property: transform, opacity;
   width: 27px; }
-  .ds-hero-item .context-menu-button:-moz-any(:active, :focus),
-  .ds-list-item .context-menu-button:-moz-any(:active, :focus),
-  .ds-card .context-menu-button:-moz-any(:active, :focus),
-  .ds-signup .context-menu-button:-moz-any(:active, :focus) {
+  .ds-hero-item .context-menu-button:is(:active, :focus),
+  .ds-list-item .context-menu-button:is(:active, :focus),
+  .ds-card .context-menu-button:is(:active, :focus),
+  .ds-signup .context-menu-button:is(:active, :focus) {
     opacity: 1;
     transform: scale(1); }
 
@@ -2779,22 +2779,22 @@ main {
 .ds-signup.last-item .context-menu {
   opacity: 1; }
 
-.ds-hero-item:-moz-any(:hover, :focus, .active),
-.ds-list-item:-moz-any(:hover, :focus, .active),
-.ds-card:-moz-any(:hover, :focus, .active),
-.ds-signup:-moz-any(:hover, :focus, .active) {
+.ds-hero-item:is(:hover, :focus, .active),
+.ds-list-item:is(:hover, :focus, .active),
+.ds-card:is(:hover, :focus, .active),
+.ds-signup:is(:hover, :focus, .active) {
   outline: none; }
-  .ds-hero-item:-moz-any(:hover, :focus, .active) .context-menu-button,
-  .ds-list-item:-moz-any(:hover, :focus, .active) .context-menu-button,
-  .ds-card:-moz-any(:hover, :focus, .active) .context-menu-button,
-  .ds-signup:-moz-any(:hover, :focus, .active) .context-menu-button {
+  .ds-hero-item:is(:hover, :focus, .active) .context-menu-button,
+  .ds-list-item:is(:hover, :focus, .active) .context-menu-button,
+  .ds-card:is(:hover, :focus, .active) .context-menu-button,
+  .ds-signup:is(:hover, :focus, .active) .context-menu-button {
     opacity: 1;
     transform: scale(1);
     transition-delay: 333ms; }
-  .ds-hero-item:-moz-any(:hover, :focus, .active).ds-card-grid-border,
-  .ds-list-item:-moz-any(:hover, :focus, .active).ds-card-grid-border,
-  .ds-card:-moz-any(:hover, :focus, .active).ds-card-grid-border,
-  .ds-signup:-moz-any(:hover, :focus, .active).ds-card-grid-border {
+  .ds-hero-item:is(:hover, :focus, .active).ds-card-grid-border,
+  .ds-list-item:is(:hover, :focus, .active).ds-card-grid-border,
+  .ds-card:is(:hover, :focus, .active).ds-card-grid-border,
+  .ds-signup:is(:hover, :focus, .active).ds-card-grid-border {
     box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
     transition: box-shadow 150ms; }
 

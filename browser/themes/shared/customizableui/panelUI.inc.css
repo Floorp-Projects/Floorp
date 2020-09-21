@@ -13,12 +13,12 @@
 % There's no calc() here (and therefore lots of calc() where this is used) because
 % we don't support nested calc(): https://bugzilla.mozilla.org/show_bug.cgi?id=968761
 %define menuPanelButtonWidth (@menuPanelWidth@ / 3 - 0.1px)
-%define buttonStateHover :not(:-moz-any([disabled],[open],:active)):-moz-any(:hover,:focus)
-%define menuStateHover :not(:-moz-any([disabled],:active))[_moz-menuactive]
-%define buttonStateActive :not([disabled]):-moz-any([open],:hover:active)
+%define buttonStateHover :not(:is([disabled],[open],:active)):is(:hover,:focus)
+%define menuStateHover :not(:is([disabled],:active))[_moz-menuactive]
+%define buttonStateActive :not([disabled]):is([open],:hover:active)
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
 %define menuStateMenuActive :not([disabled])[_moz-menuactive]
-%define inAnyPanel :-moz-any(:not([cui-areatype="toolbar"]), [overflowedItem=true])
+%define inAnyPanel :is(:not([cui-areatype="toolbar"]), [overflowedItem=true])
 %define panelPaletteIconSize 16px
 
 %define appmenuWarningBackgroundColor #FFEFBF
@@ -227,8 +227,8 @@ panelview {
   -moz-box-flex: 1;
 }
 
-#wrapper-edit-controls:-moz-any([place="palette"],[place="menu-panel"]) > #edit-controls,
-#wrapper-zoom-controls:-moz-any([place="palette"],[place="menu-panel"]) > #zoom-controls {
+#wrapper-edit-controls:is([place="palette"],[place="menu-panel"]) > #edit-controls,
+#wrapper-zoom-controls:is([place="palette"],[place="menu-panel"]) > #zoom-controls {
   margin-inline-start: 0;
 }
 
@@ -1796,11 +1796,11 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   fill-opacity: 0.4;
 }
 
-.subviewbutton.download:-moz-any([canShow],[canRetry]) > .action-button@buttonStateHover@ {
+.subviewbutton.download:is([canShow],[canRetry]) > .action-button@buttonStateHover@ {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-.subviewbutton.download:-moz-any([canShow],[canRetry]) > .action-button@buttonStateActive@ {
+.subviewbutton.download:is([canShow],[canRetry]) > .action-button@buttonStateActive@ {
   background-color: var(--arrowpanel-dimmed-even-further);
 }
 

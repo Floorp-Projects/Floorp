@@ -498,7 +498,7 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
 
           info("check that non-payer requested fields are hidden");
           let formElements = addressForm.querySelectorAll(
-            ":-moz-any(input, select, textarea"
+            ":is(input, select, textarea"
           );
           let allowedFields = [
             "given-name",
