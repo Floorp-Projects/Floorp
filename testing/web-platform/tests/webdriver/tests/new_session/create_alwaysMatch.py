@@ -13,4 +13,3 @@ def test_valid(new_session, add_browser_capabilities, key, value):
     response, _ = new_session({"capabilities": {
         "alwaysMatch": add_browser_capabilities({key: value})}})
     assert_success(response)
-

@@ -15,8 +15,12 @@
             var w = window.open(origin + "/cookies/resources/postToParent.py");
 
             var reloaded = false;
-            var msgHandler = t.step_func(e => {
-              getSameSiteVerifier()(expectedStatus, value, e.data, DomSameSiteStatus.SAME_SITE);
+            var msgHandler = e => {
+              try {
+                getSameSiteVerifier()(expectedStatus, value, e.data, DomSameSiteStatus.SAME_SITE);
+              } catch (e) {
+                reject(e);
+              }
 
               if (reloaded) {
                 window.removeEventListener("message", msgHandler);
@@ -26,7 +30,7 @@
                 reloaded = true;
                 w.postMessage("reload", "*");
               }
-            });
+            };
             window.addEventListener("message", msgHandler);
 
             if (!w)
