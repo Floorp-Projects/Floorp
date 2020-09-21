@@ -8,6 +8,7 @@
 #define mozilla_dom_AbortSignal_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "nsISupportsImpl.h"
 #include "nsTObserverArray.h"
 
 namespace mozilla {
@@ -20,6 +21,8 @@ class AbortSignalImpl;
 // AbortSignalImpl.
 class AbortFollower {
  public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
   virtual void Abort() = 0;
 
   void Follow(AbortSignalImpl* aSignal);
@@ -40,6 +43,9 @@ class AbortFollower {
 // Unfollow() when Unlinking.
 class AbortSignalImpl : public AbortFollower, public nsISupports {
  public:
+  using nsISupports::AddRef;
+  using nsISupports::Release;
+
   explicit AbortSignalImpl(bool aAborted);
 
   bool Aborted() const;
