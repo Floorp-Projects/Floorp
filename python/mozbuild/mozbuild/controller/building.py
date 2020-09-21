@@ -1361,11 +1361,12 @@ class BuildDriver(MozbuildObject):
             print('To view resource usage of the build, run |mach '
                   'resource-usage|.')
 
-        long_build = monitor.elapsed > 600
+        long_build = monitor.elapsed > 1200
 
         if long_build:
             output.on_line(
                 'We know it took a while, but your build finally finished successfully!')
+            output.on_line('If you are building Firefox often, SCCache can save you a lot of time. You can learn more here: https://firefox-source-docs.mozilla.org/build/buildsystem/sccache-dist.html')  # noqa
         else:
             output.on_line('Your build was successful!')
 
@@ -1381,7 +1382,7 @@ class BuildDriver(MozbuildObject):
                 if app in ('browser', 'mobile/android'):
                     print(
                         'For more information on what to do now, see '
-                        'https://developer.mozilla.org/docs/Developer_Guide/So_You_Just_Built_Firefox'  # noqa
+                        'https://firefox-source-docs.mozilla.org/setup/contributing_code.html'  # noqa
                     )
             except Exception:
                 # Ignore Exceptions in case we can't find config.status (such
