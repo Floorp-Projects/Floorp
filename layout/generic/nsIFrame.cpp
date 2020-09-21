@@ -6058,6 +6058,11 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // flex container's main axis.
   LogicalAxis flexMainAxis =
       eLogicalAxisInline;  // (init to make valgrind happy)
+
+  // The holder of the imposed main size pointer. This is used for adjusting the
+  // main size of the flex item after we resolve its flexible length.
+  Maybe<StyleSize> imposedMainSizeStyleCoord;
+
   if (isFlexItem) {
     // Flex items use their "flex-basis" property in place of their main-size
     // property for sizing purposes, *unless* they have "flex-basis:auto", in
@@ -6075,51 +6080,70 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
         (flexMainAxis == eLogicalAxisInline ? inlineStyleCoord
                                             : blockStyleCoord);
 
-    // FIXME: Bug 1646100: We may have to revisit this and make sure this
-    // behavior matches the spec once we support intrinsic size keywords for
-    // 'aspect-ratio' property.
-    bool isCrossSizeDefinite =
-        (flexMainAxis == eLogicalAxisInline)
-            ? !nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM))
-            : !inlineStyleCoord->IsAuto() &&
-                  !inlineStyleCoord->IsExtremumLength();
-
-    // NOTE: If we're a table-wrapper frame, we skip this clause and just stick
-    // with 'main-size:auto' behavior (which -- unlike 'content'
-    // i.e. 'max-content' -- will give us the ability to honor percent sizes on
-    // our table-box child when resolving the flex base size). The flexbox spec
-    // doesn't call for this special case, but webcompat & regression-avoidance
-    // seems to require it, for the time being... Tables sure are special.
-    if (nsFlexContainerFrame::IsUsedFlexBasisContent(*flexBasis,
-                                                     *mainAxisCoord) &&
-        MOZ_LIKELY(!IsTableWrapperFrame())) {
-      // If the flex item has
-      // 1. an intrinsic aspect ratio (or the explicit 'aspect-ratio' property),
-      // 2. a used flex-basis of 'content' (it does! we checked above), and
-      // 3. a definite cross size,
-      // we will calculate the main size by cross size and aspect-ratio via
-      // ComputeInlineSizeFromAspectRatio() or ComputeBlockSizeFromAspectRatio()
-      // in this function below.
-      // Therefore, we assign mainAxisCoord as 'auto', which makes sure that we
-      // will go into the correct if-branch for 'aspect-ratio'.
-      //
-      // https://drafts.csswg.org/css-flexbox-1/#algo-main-item
-      if (stylePos->mAspectRatio.HasFiniteRatio() && isCrossSizeDefinite) {
-        static const StyleSize autoStyleCoord(StyleSize::Auto());
-        mainAxisCoord = &autoStyleCoord;
+    // If FlexItemMainSizeOverride frame-property is set, then that means the
+    // flex container is imposing a main-size on this flex item for it to use
+    // as its size in the container's main axis.
+    bool didImposeMainSize;
+    nscoord imposedMainSize =
+        GetProperty(nsIFrame::FlexItemMainSizeOverride(), &didImposeMainSize);
+    if (didImposeMainSize) {
+      imposedMainSizeStyleCoord = Some(StyleSize::LengthPercentage(
+          LengthPercentage::FromAppUnits(imposedMainSize)));
+      if (flexMainAxis == eLogicalAxisInline) {
+        inlineStyleCoord = imposedMainSizeStyleCoord.ptr();
       } else {
-        static const StyleSize maxContStyleCoord(
-            StyleSize::ExtremumLength(StyleExtremumLength::MaxContent));
-        mainAxisCoord = &maxContStyleCoord;
+        blockStyleCoord = imposedMainSizeStyleCoord.ptr();
       }
-      // (Note: if our main axis is the block axis, then this 'max-content'
-      // value will be treated like 'auto', via the IsAutoBSize() call below.)
-    } else if (!flexBasis->IsAuto()) {
-      // For all other non-'auto' flex-basis values, we just swap in the
-      // flex-basis itself for the main-size property.
-      mainAxisCoord = &flexBasis->AsSize();
-    }  // else: flex-basis is 'auto', which is deferring to some explicit value
-       // in mainAxisCoord. So we proceed w/o touching mainAxisCoord.
+    } else {
+      // FIXME: Bug 1646100: We may have to revisit this and make sure this
+      // behavior matches the spec once we support intrinsic size keywords for
+      // 'aspect-ratio' property.
+      bool isCrossSizeDefinite =
+          (flexMainAxis == eLogicalAxisInline)
+              ? !nsLayoutUtils::IsAutoBSize(*blockStyleCoord,
+                                            aCBSize.BSize(aWM))
+              : !inlineStyleCoord->IsAuto() &&
+                    !inlineStyleCoord->IsExtremumLength();
+
+      // NOTE: If we're a table-wrapper frame, we skip this clause and just
+      // stick with 'main-size:auto' behavior (which -- unlike 'content' i.e.
+      // 'max-content' -- will give us the ability to honor percent sizes on our
+      // table-box child when resolving the flex base size). The flexbox spec
+      // doesn't call for this special case, but webcompat &
+      // regression-avoidance seems to require it, for the time being... Tables
+      // sure are special.
+      if (nsFlexContainerFrame::IsUsedFlexBasisContent(*flexBasis,
+                                                       *mainAxisCoord) &&
+          MOZ_LIKELY(!IsTableWrapperFrame())) {
+        // If the flex item has
+        // 1. an intrinsic aspect ratio (or the explicit 'aspect-ratio'
+        //    property),
+        // 2. a used flex-basis of 'content' (it does! we checked above), and
+        // 3. a definite cross size,
+        // we will calculate the main size by cross size and aspect-ratio via
+        // ComputeInlineSizeFromAspectRatio() or
+        // ComputeBlockSizeFromAspectRatio() in this function below. Therefore,
+        // we assign mainAxisCoord as 'auto', which makes sure that we will go
+        // into the correct if-branch for 'aspect-ratio'.
+        //
+        // https://drafts.csswg.org/css-flexbox-1/#algo-main-item
+        if (stylePos->mAspectRatio.HasFiniteRatio() && isCrossSizeDefinite) {
+          static const StyleSize autoStyleCoord(StyleSize::Auto());
+          mainAxisCoord = &autoStyleCoord;
+        } else {
+          static const StyleSize maxContStyleCoord(
+              StyleSize::ExtremumLength(StyleExtremumLength::MaxContent));
+          mainAxisCoord = &maxContStyleCoord;
+        }
+        // (Note: if our main axis is the block axis, then this 'max-content'
+        // value will be treated like 'auto', via the IsAutoBSize() call below.)
+      } else if (!flexBasis->IsAuto()) {
+        // For all other non-'auto' flex-basis values, we just swap in the
+        // flex-basis itself for the main-size property.
+        mainAxisCoord = &flexBasis->AsSize();
+      }  // else: flex-basis is 'auto', which is deferring to some explicit
+         // value in mainAxisCoord. So we proceed w/o touching mainAxisCoord.
+    }
   }
 
   const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
