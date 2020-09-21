@@ -2347,7 +2347,7 @@ bool TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp) {
   return false;
 }
 
-/* static */ JS::Result<TypedObject*, JS::OOM&> TypedObject::create(
+/* static */ JS::Result<TypedObject*, JS::OOM> TypedObject::create(
     JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
     js::HandleShape shape, js::HandleObjectGroup group) {
   debugCheckNewObject(group, shape, kind, heap);

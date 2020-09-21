@@ -243,7 +243,9 @@ class ResultImplementation<V, E, PackingStrategy::NullIsOk>
  * as a tag bit.
  */
 template <typename V, typename E>
-class ResultImplementation<V*, E&, PackingStrategy::LowBitTagIsError> {
+class ResultImplementation<V*, E, PackingStrategy::LowBitTagIsError> {
+  static_assert(sizeof(E) <= sizeof(uintptr_t));
+
   uintptr_t mBits;
 
  public:
@@ -252,19 +254,16 @@ class ResultImplementation<V*, E&, PackingStrategy::LowBitTagIsError> {
     MOZ_ASSERT((uintptr_t(aValue) % MOZ_ALIGNOF(V)) == 0,
                "Result value pointers must not be misaligned");
   }
-  explicit ResultImplementation(E& aErrorValue)
-      : mBits(reinterpret_cast<uintptr_t>(&aErrorValue) | 1) {
-    MOZ_ASSERT((uintptr_t(&aErrorValue) % MOZ_ALIGNOF(E)) == 0,
-               "Result errors must not be misaligned");
-  }
+  explicit ResultImplementation(E aErrorValue)
+      : mBits(UnusedZero<E>::Store(aErrorValue) | 1) {}
 
   bool isOk() const { return (mBits & 1) == 0; }
 
   V* inspect() const { return reinterpret_cast<V*>(mBits); }
   V* unwrap() { return inspect(); }
 
-  E& inspectErr() const { return *reinterpret_cast<E*>(mBits ^ 1); }
-  E& unwrapErr() { return inspectErr(); }
+  auto inspectErr() const { return UnusedZero<E>::Inspect(mBits ^ 1); }
+  E unwrapErr() { return inspectErr(); }
 };
 
 // Return true if any of the struct can fit in a word.
