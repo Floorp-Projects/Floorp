@@ -59,7 +59,7 @@ td:nth-child(5) {
 }
 
 /* Show action icons on selected or hovered rows */
-tr:-moz-any([selected], :hover) > td > .action-icon {
+tr:is([selected], :hover) > td > .action-icon {
   padding: 1px 10px;
   opacity: 1;
 }
