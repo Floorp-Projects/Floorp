@@ -21,6 +21,7 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
+#include "mozilla/widget/GeckoViewSupport.h"
 
 #ifdef DEBUG
 #  include <android/log.h>
@@ -42,10 +43,6 @@
     acc->funcname(__VA_ARGS__);                             \
   }
 
-template <>
-const char nsWindow::NativePtr<mozilla::a11y::SessionAccessibility>::sName[] =
-    "SessionAccessibility";
-
 using namespace mozilla::a11y;
 
 class Settings final
@@ -59,6 +56,13 @@ class Settings final
     }
   }
 };
+
+SessionAccessibility::SessionAccessibility(
+    jni::NativeWeakPtr<widget::GeckoViewSupport> aWindow,
+    java::SessionAccessibility::NativeProvider::Param aSessionAccessibility)
+    : mWindow(aWindow), mSessionAccessibility(aSessionAccessibility) {
+  SetAttached(true, nullptr);
+}
 
 void SessionAccessibility::SetAttached(bool aAttached,
                                        already_AddRefed<Runnable> aRunnable) {
@@ -101,11 +105,17 @@ mozilla::jni::Object::LocalRef SessionAccessibility::GetNodeInfo(int32_t aID) {
 }
 
 RootAccessibleWrap* SessionAccessibility::GetRoot() {
-  if (!mWindow) {
+  auto acc(mWindow.Access());
+  if (!acc) {
     return nullptr;
   }
 
-  return static_cast<RootAccessibleWrap*>(mWindow->GetRootAccessible());
+  nsWindow* gkWindow = acc->GetNsWindow();
+  if (!gkWindow) {
+    return nullptr;
+  }
+
+  return static_cast<RootAccessibleWrap*>(gkWindow->GetRootAccessible());
 }
 
 void SessionAccessibility::SetText(int32_t aID, jni::String::Param aText) {
@@ -150,7 +160,7 @@ void SessionAccessibility::Paste(int32_t aID) {
   FORWARD_ACTION_TO_ACCESSIBLE(Paste);
 }
 
-SessionAccessibility* SessionAccessibility::GetInstanceFor(
+RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     ProxyAccessible* aAccessible) {
   auto tab =
       static_cast<dom::BrowserParent*>(aAccessible->Document()->Manager());
@@ -164,7 +174,7 @@ SessionAccessibility* SessionAccessibility::GetInstanceFor(
   return chromeDoc ? GetInstanceFor(chromeDoc) : nullptr;
 }
 
-SessionAccessibility* SessionAccessibility::GetInstanceFor(
+RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     Accessible* aAccessible) {
   RootAccessible* rootAcc = aAccessible->RootAccessible();
   nsViewManager* vm = rootAcc->PresShellPtr()->GetViewManager();
