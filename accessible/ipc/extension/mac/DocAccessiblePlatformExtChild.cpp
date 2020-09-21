@@ -223,6 +223,21 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLeafAtOffset(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvSelectRange(
+    const uint64_t& aID, const int32_t& aStartOffset,
+    const uint64_t& aEndContainer, const int32_t& aEndOffset) {
+  RefPtr<HyperTextAccessibleWrap> acc = IdToHyperTextAccessibleWrap(aID);
+  RefPtr<HyperTextAccessibleWrap> endContainer =
+      IdToHyperTextAccessibleWrap(aEndContainer);
+  if (!acc || !endContainer) {
+    return IPC_OK();
+  }
+
+  acc->SelectRange(aStartOffset, endContainer, aEndOffset);
+
+  return IPC_OK();
+}
+
 HyperTextAccessibleWrap*
 DocAccessiblePlatformExtChild::IdToHyperTextAccessibleWrap(
     const uint64_t& aID) const {

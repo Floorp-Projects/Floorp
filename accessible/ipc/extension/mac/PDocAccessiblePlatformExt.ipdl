@@ -48,6 +48,8 @@ child:
 
   nested(inside_sync) sync LeafAtOffset(uint64_t aID, int32_t aOffset)
       returns(uint64_t aLeaf);
+
+  async SelectRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset);
 };
 
 }  // namespace a11y

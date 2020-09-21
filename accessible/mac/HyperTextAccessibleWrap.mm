@@ -388,6 +388,13 @@ Accessible* HyperTextAccessibleWrap::LeafAtOffset(int32_t aOffset) {
   return child;
 }
 
+void HyperTextAccessibleWrap::SelectRange(int32_t aStartOffset,
+                                          HyperTextAccessible* aEndContainer,
+                                          int32_t aEndOffset) {
+  TextRange range(this, this, aStartOffset, aEndContainer, aEndOffset);
+  range.SetSelectionAt(0);
+}
+
 TextPoint HyperTextAccessibleWrap::FindTextPoint(
     int32_t aOffset, nsDirection aDirection, nsSelectionAmount aAmount,
     EWordMovementType aWordMovementType) {
