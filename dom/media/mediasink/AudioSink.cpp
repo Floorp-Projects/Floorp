@@ -320,7 +320,7 @@ void AudioSink::Errored() {
 void AudioSink::CheckIsAudible(const AudioData* aData) {
   MOZ_ASSERT(aData);
 
-  mAudibilityMonitor.ProcessAudioData(aData);
+  mAudibilityMonitor.Process(aData);
   bool isAudible = mAudibilityMonitor.RecentlyAudible();
 
   if (isAudible != mIsAudioDataAudible) {
