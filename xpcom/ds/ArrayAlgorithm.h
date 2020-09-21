@@ -10,7 +10,6 @@
 #include "nsTArray.h"
 
 #include "mozilla/Algorithm.h"
-#include "mozilla/ResultExtensions.h"
 
 namespace mozilla {
 

@@ -891,7 +891,7 @@ void ExtensionProtocolHandler::NewSimpleChannel(nsIURI* aURI,
         nsresult rv = origChannel->AsyncOpen(listener);
         if (NS_FAILED(rv)) {
           simpleChannel->Cancel(NS_BINDING_ABORTED);
-          return Err(rv);
+          return RequestOrReason(rv);
         }
         return RequestOrReason(origChannel);
       });

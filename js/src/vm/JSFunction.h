@@ -132,7 +132,7 @@ class JSFunction : public js::NativeObject {
   js::GCPtrAtom atom_;
 
  public:
-  static inline JS::Result<JSFunction*, JS::OOM> create(
+  static inline JS::Result<JSFunction*, JS::OOM&> create(
       JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
       js::HandleShape shape, js::HandleObjectGroup group);
 

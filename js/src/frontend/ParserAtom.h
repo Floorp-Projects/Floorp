@@ -32,7 +32,7 @@ class SpecificParserAtomLookup;
 
 class ParserAtomsTable;
 
-mozilla::GenericErrorResult<OOM> RaiseParserAtomsOOMError(JSContext* cx);
+mozilla::GenericErrorResult<OOM&> RaiseParserAtomsOOMError(JSContext* cx);
 
 // An index into CompilationInfo.atoms.
 // This is local to the current compilation.
@@ -248,12 +248,12 @@ class alignas(alignof(void*)) ParserAtomEntry {
   }
 
   template <typename CharT>
-  static JS::Result<UniquePtr<ParserAtomEntry>, OOM> allocate(
+  static JS::Result<UniquePtr<ParserAtomEntry>, OOM&> allocate(
       JSContext* cx, mozilla::UniquePtr<CharT[], JS::FreePolicy>&& ptr,
       uint32_t length, HashNumber hash);
 
   template <typename CharT, typename SeqCharT>
-  static JS::Result<UniquePtr<ParserAtomEntry>, OOM> allocateInline(
+  static JS::Result<UniquePtr<ParserAtomEntry>, OOM&> allocateInline(
       JSContext* cx, InflatedChar16Sequence<SeqCharT> seq, uint32_t length,
       HashNumber hash);
 
@@ -319,8 +319,8 @@ class alignas(alignof(void*)) ParserAtomEntry {
 
   // Convert this entry to a js-atom.  The first time this method is called
   // the entry will cache the JSAtom pointer to return later.
-  JS::Result<JSAtom*, OOM> toJSAtom(JSContext* cx,
-                                    CompilationInfo& compilationInfo) const;
+  JS::Result<JSAtom*, OOM&> toJSAtom(JSContext* cx,
+                                     CompilationInfo& compilationInfo) const;
 
   // Convert this entry to a number.
   bool toNumber(JSContext* cx, double* result) const;
@@ -517,35 +517,36 @@ class ParserAtomsTable {
 
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.
-  JS::Result<const ParserAtom*, OOM> addEntry(JSContext* cx, AddPtr& addPtr,
-                                              UniquePtr<ParserAtomEntry> entry);
-  JS::Result<const ParserAtom*, OOM> internLatin1Seq(
+  JS::Result<const ParserAtom*, OOM&> addEntry(
+      JSContext* cx, AddPtr& addPtr, UniquePtr<ParserAtomEntry> entry);
+  JS::Result<const ParserAtom*, OOM&> internLatin1Seq(
       JSContext* cx, AddPtr& addPtr, const Latin1Char* latin1Ptr,
       uint32_t length);
   template <typename AtomCharT, typename SeqCharT>
-  JS::Result<const ParserAtom*, OOM> internChar16Seq(
+  JS::Result<const ParserAtom*, OOM&> internChar16Seq(
       JSContext* cx, AddPtr& addPtr, InflatedChar16Sequence<SeqCharT> seq,
       uint32_t length);
 
  public:
-  JS::Result<const ParserAtom*, OOM> internAscii(JSContext* cx,
-                                                 const char* asciiPtr,
-                                                 uint32_t length);
-
-  JS::Result<const ParserAtom*, OOM> internLatin1(
-      JSContext* cx, const JS::Latin1Char* latin1Ptr, uint32_t length);
-
-  JS::Result<const ParserAtom*, OOM> internUtf8(
-      JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte);
-
-  JS::Result<const ParserAtom*, OOM> internChar16(JSContext* cx,
-                                                  const char16_t* char16Ptr,
+  JS::Result<const ParserAtom*, OOM&> internAscii(JSContext* cx,
+                                                  const char* asciiPtr,
                                                   uint32_t length);
 
-  JS::Result<const ParserAtom*, OOM> internJSAtom(
+  JS::Result<const ParserAtom*, OOM&> internLatin1(JSContext* cx,
+                                                   const Latin1Char* latin1Ptr,
+                                                   uint32_t length);
+
+  JS::Result<const ParserAtom*, OOM&> internUtf8(
+      JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte);
+
+  JS::Result<const ParserAtom*, OOM&> internChar16(JSContext* cx,
+                                                   const char16_t* char16Ptr,
+                                                   uint32_t length);
+
+  JS::Result<const ParserAtom*, OOM&> internJSAtom(
       JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom);
 
-  JS::Result<const ParserAtom*, OOM> concatAtoms(
+  JS::Result<const ParserAtom*, OOM&> concatAtoms(
       JSContext* cx, mozilla::Range<const ParserAtom*> atoms);
 };
 
