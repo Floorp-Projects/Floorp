@@ -377,5 +377,18 @@ NSValue* GeckoTextMarkerRange::Bounds() const {
 
   return [NSValue valueWithRect:r];
 }
+
+void GeckoTextMarkerRange::Select() const {
+  if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
+    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendSelectRange(
+        mStart.mContainer.AsProxy()->ID(), mStart.mOffset,
+        mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset);
+  } else if (RefPtr<HyperTextAccessibleWrap> htWrap =
+                 mStart.ContainerAsHyperTextWrap()) {
+    RefPtr<HyperTextAccessibleWrap> end = mEnd.ContainerAsHyperTextWrap();
+    htWrap->SelectRange(mStart.mOffset, end, mEnd.mOffset);
+  }
+}
 }
 }
