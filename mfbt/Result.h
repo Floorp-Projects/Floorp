@@ -9,6 +9,8 @@
 #ifndef mozilla_Result_h
 #define mozilla_Result_h
 
+#include <algorithm>
+#include <cstring>
 #include <type_traits>
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
@@ -212,31 +214,74 @@ class ResultImplementation<V, E, PackingStrategy::NullIsOk>
   using ResultImplementationNullIsOk<V, E>::ResultImplementationNullIsOk;
 };
 
+template <size_t S>
+using UnsignedIntType = std::conditional_t<
+    S == 1, std::uint8_t,
+    std::conditional_t<
+        S == 2, std::uint16_t,
+        std::conditional_t<S == 3 || S == 4, std::uint32_t,
+                           std::conditional_t<S <= 8, std::uint64_t, void>>>>;
+
 /**
  * Specialization for when alignment permits using the least significant bit
  * as a tag bit.
  */
 template <typename V, typename E>
-class ResultImplementation<V*, E, PackingStrategy::LowBitTagIsError> {
-  static_assert(sizeof(E) <= sizeof(uintptr_t));
+class ResultImplementation<V, E, PackingStrategy::LowBitTagIsError> {
+  static_assert(std::is_trivially_copyable_v<V> &&
+                std::is_trivially_destructible_v<V>);
+  static_assert(std::is_trivially_copyable_v<E> &&
+                std::is_trivially_destructible_v<E>);
 
-  uintptr_t mBits;
+  static constexpr size_t kRequiredSize = std::max(sizeof(V), sizeof(E));
+
+  using StorageType = UnsignedIntType<kRequiredSize>;
+
+#if defined(__clang__)
+  alignas(std::max(alignof(V), alignof(E))) StorageType mBits;
+#else
+  // Some gcc versions choke on using std::max with alignas, see
+  // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94929 (and this seems to have
+  // regressed in some gcc 9.x version before being fixed again) Keeping the
+  // code above since we would eventually drop this when we no longer support
+  // gcc versions with the bug.
+  alignas(alignof(V) > alignof(E) ? alignof(V) : alignof(E)) StorageType mBits;
+#endif
 
  public:
-  explicit ResultImplementation(V* aValue)
-      : mBits(reinterpret_cast<uintptr_t>(aValue)) {
-    MOZ_ASSERT((uintptr_t(aValue) % MOZ_ALIGNOF(V)) == 0,
-               "Result value pointers must not be misaligned");
+  explicit ResultImplementation(V aValue) {
+    if constexpr (!std::is_empty_v<V>) {
+      std::memcpy(&mBits, &aValue, sizeof(V));
+      MOZ_ASSERT((mBits & 1) == 0);
+    } else {
+      mBits = 0;
+    }
   }
-  explicit ResultImplementation(E aErrorValue)
-      : mBits(UnusedZero<E>::Store(aErrorValue) | 1) {}
+  explicit ResultImplementation(E aErrorValue) {
+    if constexpr (!std::is_empty_v<E>) {
+      std::memcpy(&mBits, &aErrorValue, sizeof(E));
+      MOZ_ASSERT((mBits & 1) == 0);
+      mBits |= 1;
+    } else {
+      mBits = 1;
+    }
+  }
 
   bool isOk() const { return (mBits & 1) == 0; }
 
-  V* inspect() const { return reinterpret_cast<V*>(mBits); }
-  V* unwrap() { return inspect(); }
+  V inspect() const {
+    V res;
+    std::memcpy(&res, &mBits, sizeof(V));
+    return res;
+  }
+  V unwrap() { return inspect(); }
 
-  auto inspectErr() const { return UnusedZero<E>::Inspect(mBits ^ 1); }
+  E inspectErr() const {
+    const auto bits = mBits ^ 1;
+    E res;
+    std::memcpy(&res, &bits, sizeof(E));
+    return res;
+  }
   E unwrapErr() { return inspectErr(); }
 };
 
@@ -299,10 +344,11 @@ struct UnusedZero {
 
 // A bit of help figuring out which of the above specializations to use.
 //
-// We begin by safely assuming types don't have a spare bit.
+// We begin by safely assuming types don't have a spare bit, unless they are
+// empty.
 template <typename T>
 struct HasFreeLSB {
-  static const bool value = false;
+  static const bool value = std::is_empty_v<T>;
 };
 
 // As an incomplete type, void* does not have a spare bit.
@@ -476,10 +522,22 @@ class MOZ_MUST_USE_TYPE Result final {
   }
 
   /** See the success value from this Result, which must be a success result. */
-  const V& inspect() const { return mImpl.inspect(); }
+  decltype(auto) inspect() const {
+    static_assert(!std::is_reference_v<
+                      std::invoke_result_t<decltype(&Impl::inspect), Impl>> ||
+                  std::is_const_v<std::remove_reference_t<
+                      std::invoke_result_t<decltype(&Impl::inspect), Impl>>>);
+    MOZ_ASSERT(isOk());
+    return mImpl.inspect();
+  }
 
   /** See the error value from this Result, which must be an error result. */
-  const E& inspectErr() const {
+  decltype(auto) inspectErr() const {
+    static_assert(
+        !std::is_reference_v<
+            std::invoke_result_t<decltype(&Impl::inspectErr), Impl>> ||
+        std::is_const_v<std::remove_reference_t<
+            std::invoke_result_t<decltype(&Impl::inspectErr), Impl>>>);
     MOZ_ASSERT(isErr());
     return mImpl.inspectErr();
   }
