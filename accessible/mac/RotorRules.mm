@@ -34,6 +34,11 @@ RotorLandmarkRule::RotorLandmarkRule() : PivotRoleRule(roles::LANDMARK) {}
 RotorLandmarkRule::RotorLandmarkRule(AccessibleOrProxy& aDirectDescendantsFrom)
     : PivotRoleRule(roles::LANDMARK, aDirectDescendantsFrom) {}
 
+RotorListRule::RotorListRule() : PivotRoleRule(roles::LIST) {}
+
+RotorListRule::RotorListRule(AccessibleOrProxy& aDirectDescendantsFrom)
+    : PivotRoleRule(roles::LIST, aDirectDescendantsFrom) {}
+
 RotorButtonRule::RotorButtonRule() : PivotRoleRule(roles::PUSHBUTTON) {}
 
 RotorButtonRule::RotorButtonRule(AccessibleOrProxy& aDirectDescendantsFrom)
