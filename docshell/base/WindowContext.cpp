@@ -156,6 +156,12 @@ bool WindowContext::CanSet(FieldIndex<IDX_AllowMixedContent>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_HasBeforeUnload>,
+                           const bool& aHasBeforeUnload,
+                           ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
 bool WindowContext::CanSet(FieldIndex<IDX_CookieBehavior>,
                            const Maybe<uint32_t>& aValue,
                            ContentParent* aSource) {

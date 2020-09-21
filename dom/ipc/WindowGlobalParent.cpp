@@ -62,7 +62,6 @@ WindowGlobalParent::WindowGlobalParent(
     : WindowContext(aBrowsingContext, aInnerWindowId, aOuterWindowId,
                     aInProcess, std::move(aInit)),
       mIsInitialDocument(false),
-      mHasBeforeUnload(false),
       mSandboxFlags(0),
       mDocumentHasLoaded(false),
       mDocumentHasUserInteracted(false),
@@ -389,11 +388,6 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentCspSettings(
     bool aBlockAllMixedContent, bool aUpgradeInsecureRequests) {
   mBlockAllMixedContent = aBlockAllMixedContent;
   mUpgradeInsecureRequests = aUpgradeInsecureRequests;
-  return IPC_OK();
-}
-
-IPCResult WindowGlobalParent::RecvSetHasBeforeUnload(bool aHasBeforeUnload) {
-  mHasBeforeUnload = aHasBeforeUnload;
   return IPC_OK();
 }
 

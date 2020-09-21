@@ -143,8 +143,6 @@ class WindowGlobalParent final : public WindowContext,
 
   bool IsInitialDocument() { return mIsInitialDocument; }
 
-  bool HasBeforeUnload() { return mHasBeforeUnload; }
-
   already_AddRefed<mozilla::dom::Promise> DrawSnapshot(
       const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,
       mozilla::ErrorResult& aRv);
@@ -225,7 +223,6 @@ class WindowGlobalParent final : public WindowContext,
   }
   mozilla::ipc::IPCResult RecvUpdateDocumentSecurityInfo(
       nsITransportSecurityInfo* aSecurityInfo);
-  mozilla::ipc::IPCResult RecvSetHasBeforeUnload(bool aHasBeforeUnload);
   mozilla::ipc::IPCResult RecvSetClientInfo(
       const IPCClientInfo& aIPCClientInfo);
   mozilla::ipc::IPCResult RecvDestroy();
