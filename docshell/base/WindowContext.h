@@ -55,6 +55,9 @@ class BrowsingContextGroup;
   /* Whether the user has overriden the mixed content blocker to allow \
    * mixed content loads to happen */                                  \
   FIELD(AllowMixedContent, bool)                                       \
+  /* Whether this window has registered a "beforeunload" event         \
+   * handler */                                                        \
+  FIELD(HasBeforeUnload, bool)                                         \
   /* Controls whether the WindowContext is currently considered to be  \
    * activated by a gesture */                                         \
   FIELD(UserActivationState, UserActivation::State)                    \
@@ -96,6 +99,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool IsCached() const;
 
   bool IsInProcess() const { return mInProcess; }
+
+  bool HasBeforeUnload() const { return GetHasBeforeUnload(); }
 
   nsGlobalWindowInner* GetInnerWindow() const;
   Document* GetDocument() const;
@@ -187,6 +192,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_IsSecure>, const bool& aIsSecure,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowMixedContent>, const bool& aAllowMixedContent,
+              ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_HasBeforeUnload>, const bool& aHasBeforeUnload,
               ContentParent* aSource);
 
   bool CanSet(FieldIndex<IDX_CookieBehavior>, const Maybe<uint32_t>& aValue,
