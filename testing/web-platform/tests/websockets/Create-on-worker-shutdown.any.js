@@ -4,11 +4,10 @@ async_test(t => {
   function workerCode() {
     close();
     var ws = new WebSocket(self.location.origin.replace('http', 'ws'));
-
     var data = {
       originalState: ws.readyState,
       afterCloseState: null
-    };
+     };
 
     ws.close();
 

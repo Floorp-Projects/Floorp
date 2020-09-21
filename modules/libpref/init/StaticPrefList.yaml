@@ -2193,6 +2193,19 @@
   value: true
   mirror: always
 
+# Limit of location change caused by content scripts in a time span per
+# BrowsingContext. This includes calls to History and Location APIs.
+- name: dom.navigation.locationChangeRateLimit.count
+  type: uint32_t
+  value: 200
+  mirror: always
+
+# Time span in seconds for location change rate limit.
+- name: dom.navigation.locationChangeRateLimit.timespan
+  type: uint32_t
+  value: 10
+  mirror: always
+
 # Network Information API
 - name: dom.netinfo.enabled
   type: RelaxedAtomicBool
@@ -5806,7 +5819,7 @@
 # Whether :-moz-any is an alias of the :is selector.
 - name: layout.css.moz-any-is-is.enabled
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
   rust: true
 
@@ -8409,6 +8422,12 @@
   value: 5
   mirror: always
 
+# Retry with no TRR when the response contained only 0.0.0.0 or ::
+- name: network.trr.fallback-on-zero-response
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Allow the network changed event to get sent when a network topology or setup
 # change is noticed while running.
 - name: network.notify.changed
@@ -10011,6 +10030,12 @@
 # Whether to use gtk high contrast themes to disable content styling like on
 # windows high contrast mode.
 - name: widget.content.gtk-high-contrast.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# Whether to pause the compositor when a native window is minimized.
+- name: widget.pause-compositor-when-minimized
   type: bool
   value: true
   mirror: always

@@ -690,6 +690,16 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool ShouldUpdateSessionHistory(uint32_t aLoadType);
 
+  // Checks if we reached the rate limit for calls to Location and History API.
+  // The rate limit is controlled by the
+  // "dom.navigation.locationChangeRateLimit" prefs.
+  // Rate limit applies per BrowsingContext.
+  // Returns NS_OK if we are below the rate limit and increments the counter.
+  // Returns NS_ERROR_DOM_SECURITY_ERR if limit is reached.
+  nsresult CheckLocationChangeRateLimit(CallerType aCallerType);
+
+  void ResetLocationChangeRateLimit();
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
@@ -989,6 +999,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   RefPtr<SessionStorageManager> mSessionStorageManager;
   RefPtr<ChildSHistory> mChildSessionHistory;
+
+  // Counter and time span for rate limiting Location and History API calls.
+  // Used by CheckLocationChangeRateLimit. Do not apply cross-process.
+  uint32_t mLocationChangeRateLimitCount;
+  mozilla::TimeStamp mLocationChangeRateLimitSpanStart;
 };
 
 /**

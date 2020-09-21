@@ -26,10 +26,17 @@ def with_span(fn):
 
 
 class FluentParser(object):
+    """This class is used to parse Fluent source content.
+
+    ``with_spans`` enables source information in the form of
+    :class:`.ast.Span` objects for each :class:`.ast.SyntaxNode`.
+    """
     def __init__(self, with_spans=True):
         self.with_spans = with_spans
 
     def parse(self, source):
+        """Create a :class:`.ast.Resource` from a Fluent source.
+        """
         ps = FluentParserStream(source)
         ps.skip_blank_block()
 
@@ -73,13 +80,13 @@ class FluentParser(object):
         return res
 
     def parse_entry(self, source):
-        """Parse the first Message or Term in source.
+        """Parse the first :class:`.ast.Entry` in source.
 
-        Skip all encountered comments and start parsing at the first Mesage
-        or Term start. Return Junk if the parsing is not successful.
+        Skip all encountered comments and start parsing at the first :class:`.ast.Message`
+        or :class:`.ast.Term` start. Return :class:`.ast.Junk` if the parsing is not successful.
 
         Preceding comments are ignored unless they contain syntax errors
-        themselves, in which case Junk for the invalid comment is returned.
+        themselves, in which case :class:`.ast.Junk` for the invalid comment is returned.
         """
         ps = FluentParserStream(source)
         ps.skip_blank_block()

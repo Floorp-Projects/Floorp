@@ -10,42 +10,22 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-inline const nsGetServiceByCID do_GetService(const nsCID& aCID) {
+inline nsGetServiceByCID do_GetService(const nsCID& aCID) {
   return nsGetServiceByCID(aCID);
 }
 
-inline const nsGetServiceByCIDWithError do_GetService(const nsCID& aCID,
-                                                      nsresult* aError) {
+inline nsGetServiceByCIDWithError do_GetService(const nsCID& aCID,
+                                                nsresult* aError) {
   return nsGetServiceByCIDWithError(aCID, aError);
 }
 
-inline const nsGetServiceByContractID do_GetService(const char* aContractID) {
+inline nsGetServiceByContractID do_GetService(const char* aContractID) {
   return nsGetServiceByContractID(aContractID);
 }
 
-inline const nsGetServiceByContractIDWithError do_GetService(
-    const char* aContractID, nsresult* aError) {
+inline nsGetServiceByContractIDWithError do_GetService(const char* aContractID,
+                                                       nsresult* aError) {
   return nsGetServiceByContractIDWithError(aContractID, aError);
-}
-
-class MOZ_STACK_CLASS nsGetServiceFromCategory final : public nsCOMPtr_helper {
- public:
-  nsGetServiceFromCategory(const nsACString& aCategory,
-                           const nsACString& aEntry, nsresult* aErrorPtr)
-      : mCategory(aCategory), mEntry(aEntry), mErrorPtr(aErrorPtr) {}
-
-  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const override;
-
- protected:
-  const nsCString mCategory;
-  const nsCString mEntry;
-  nsresult* mErrorPtr;
-};
-
-inline const nsGetServiceFromCategory do_GetServiceFromCategory(
-    const nsACString& aCategory, const nsACString& aEntry,
-    nsresult* aError = 0) {
-  return nsGetServiceFromCategory(aCategory, aEntry, aError);
 }
 
 nsresult CallGetService(const nsCID& aClass, const nsIID& aIID, void** aResult);

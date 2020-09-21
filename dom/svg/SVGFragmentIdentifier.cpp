@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGViewElement.h"
+#include "mozilla/SVGOuterSVGFrame.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"  // for nsCharSeparatedTokenizerTemplate
 #include "SVGAnimatedTransformList.h"
@@ -54,6 +55,11 @@ class MOZ_RAII AutoSVGViewHandler {
       mRoot->mSVGView = std::move(mSVGView);
     }
     mRoot->InvalidateTransformNotifyFrame();
+    if (nsIFrame* f = mRoot->GetPrimaryFrame()) {
+      if (SVGOuterSVGFrame* osf = do_QueryFrame(f)) {
+        osf->MaybeSendIntrinsicSizeAndRatioToEmbedder();
+      }
+    }
   }
 
   void CreateSVGView() {
@@ -171,6 +177,11 @@ bool SVGFragmentIdentifier::ProcessFragmentIdentifier(
     *rootElement->mCurrentViewID = aAnchorName;
     rootElement->mSVGView = nullptr;
     rootElement->InvalidateTransformNotifyFrame();
+    if (nsIFrame* f = rootElement->GetPrimaryFrame()) {
+      if (SVGOuterSVGFrame* osf = do_QueryFrame(f)) {
+        osf->MaybeSendIntrinsicSizeAndRatioToEmbedder();
+      }
+    }
     // not an svgView()-style fragment identifier, return false so the caller
     // continues processing to match any :target pseudo elements
     return false;

@@ -26,6 +26,7 @@
 
 #  include "mozilla/Unused.h"
 #  include "mozilla/ScopeExit.h"
+#  include "ProcessUtils.h"
 
 using namespace mozilla::ipc;
 #endif
@@ -184,6 +185,7 @@ static void ReserveFileDescriptors() {
 void InitForkServerProcess() {
   InstallChildSignalHandler();
   ReserveFileDescriptors();
+  SetThisProcessName("forkserver");
 }
 
 static bool LaunchAppWithForkServer(const std::vector<std::string>& argv,

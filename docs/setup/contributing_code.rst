@@ -1,7 +1,7 @@
 How To Contribute Code To Firefox
 =================================
 
-The whole process is a bit long, and it will take time to get things right.
+The whole process can be a bit long, and it might take time to get things right.
 If at any point you are stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`_
 in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`_ channel.
 

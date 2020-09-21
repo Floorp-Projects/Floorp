@@ -19,6 +19,8 @@ namespace mozilla {
 class WritingMode;
 
 struct AspectRatio {
+  friend struct IPC::ParamTraits<mozilla::AspectRatio>;
+
   AspectRatio() : mRatio(0.0f) {}
   explicit AspectRatio(float aRatio) : mRatio(std::max(aRatio, 0.0f)) {}
 

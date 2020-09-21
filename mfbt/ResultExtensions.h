@@ -104,7 +104,7 @@ using to_result_retval_t = decltype(
     std::declval<Func&>()(std::declval<Args&&>()...,
                           std::declval<typename RArg<decltype(
                               ResultRefAsParam(std::declval<R&>()))>::type>()),
-    Result<R, nsresult>(NS_OK));
+    Result<R, nsresult>(Err(NS_ERROR_FAILURE)));
 
 // There are two ToResultInvokeSelector overloads, which cover the cases of a) a
 // pointer-typed output parameter, and b) a reference-typed output parameter,

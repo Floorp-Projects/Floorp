@@ -43,10 +43,19 @@
   cursor: text;
 }
 
+.expressions-list .expression-input-container {
+  height: var(--expression-item-height);
+}
+
+.expressions-list .input-expression {
+  /* Prevent vertical bounce when editing an existing Watch Expression */
+  height: 100%;
+}
+
 .expressions-list {
   /* TODO: add normalize */
   margin: 0;
-  padding: 0px 0px;
+  padding: 4px 0px;
   overflow-x: auto;
 }
 

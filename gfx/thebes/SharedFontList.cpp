@@ -1020,6 +1020,9 @@ void FontList::SearchForLocalFace(const nsACString& aName, Family** aFamily,
       }
     }
     Pointer* faces = family->Faces(this);
+    if (!faces) {
+      continue;
+    }
     for (uint32_t j = 0; j < family->NumFaces(); j++) {
       Face* face = static_cast<Face*>(faces[j].ToPtr(this));
       if (!face) {

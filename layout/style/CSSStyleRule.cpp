@@ -83,7 +83,7 @@ Document* CSSStyleRuleDeclaration::DocToUpdate() { return nullptr; }
 nsDOMCSSDeclaration::ParsingEnvironment
 CSSStyleRuleDeclaration::GetParsingEnvironment(
     nsIPrincipal* aSubjectPrincipal) const {
-  return GetParsingEnvironmentForRule(Rule());
+  return GetParsingEnvironmentForRule(Rule(), CSSRule_Binding::STYLE_RULE);
 }
 
 // -- CSSStyleRule --------------------------------------------------

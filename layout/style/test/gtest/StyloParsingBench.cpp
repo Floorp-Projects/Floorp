@@ -50,6 +50,8 @@ static void ServoParsingBench(const StyleUseCounters* aCounters) {
   }
 }
 
+static constexpr uint16_t STYLE_RULE = 1;
+
 static void ServoSetPropertyByIdBench(const nsACString& css) {
   RefPtr<RawServoDeclarationBlock> block =
       Servo_DeclarationBlock_CreateEmpty().Consume();
@@ -64,7 +66,7 @@ static void ServoSetPropertyByIdBench(const nsACString& css) {
     Servo_DeclarationBlock_SetPropertyById(
         block, eCSSProperty_width, &css,
         /* is_important = */ false, data, ParsingMode::Default,
-        eCompatibility_FullStandards, nullptr, {});
+        eCompatibility_FullStandards, nullptr, STYLE_RULE, {});
   }
 }
 
@@ -82,7 +84,7 @@ static void ServoGetPropertyValueById() {
   Servo_DeclarationBlock_SetPropertyById(
       block, eCSSProperty_width, &css,
       /* is_important = */ false, data, ParsingMode::Default,
-      eCompatibility_FullStandards, nullptr, {});
+      eCompatibility_FullStandards, nullptr, STYLE_RULE, {});
 
   for (int i = 0; i < GETPROPERTY_REPETITIONS; i++) {
     DOMString value_;

@@ -21,14 +21,14 @@ interface History {
   attribute ScrollRestoration scrollRestoration;
   [Throws]
   readonly attribute any state;
-  [Throws]
+  [Throws, NeedsCallerType]
   void go(optional long delta = 0);
-  [Throws]
+  [Throws, NeedsCallerType]
   void back();
-  [Throws]
+  [Throws, NeedsCallerType]
   void forward();
-  [Throws]
+  [Throws, NeedsCallerType]
   void pushState(any data, DOMString title, optional DOMString? url = null);
-  [Throws]
+  [Throws, NeedsCallerType]
   void replaceState(any data, DOMString title, optional DOMString? url = null);
 };

@@ -1550,6 +1550,9 @@ nsresult nsStandardURL::SetSpecWithEncoding(const nsACString& input,
 
   // parse the given URL...
   nsresult rv = ParseURL(spec, specLength);
+  if (mScheme.mLen <= 0) {
+    rv = NS_ERROR_MALFORMED_URI;
+  }
   if (NS_SUCCEEDED(rv)) {
     // finally, use the URLSegment member variables to build a normalized
     // copy of |spec|

@@ -12,7 +12,7 @@
       var value = "" + Math.random();
       return resetSameSiteCookies(origin, value)
         .then(_ => {
-          return new Promise(resolve => {
+          return new Promise((resolve, reject) => {
             var f = document.createElement('form');
             f.action = target + "/cookies/resources/postToParent.py";
             f.target = "_blank";
@@ -29,13 +29,16 @@
               f.appendChild(i);
             }
 
-            var msgHandler = t.step_func(e => {
+            var msgHandler = e => {
               window.removeEventListener("message", msgHandler);
               e.source.close();
-
-              getSameSiteVerifier()(expectedStatus, value, e.data, DomSameSiteStatus.SAME_SITE);
-              resolve("Popup received the cookie.");
-            });
+              try {
+                getSameSiteVerifier()(expectedStatus, value, e.data, DomSameSiteStatus.SAME_SITE);
+                resolve("Popup received the cookie.");
+              } catch (e) {
+                reject(e);
+              }
+            };
             window.addEventListener("message", msgHandler);
             document.body.appendChild(f);
             f.submit();

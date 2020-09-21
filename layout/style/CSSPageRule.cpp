@@ -73,7 +73,7 @@ nsresult CSSPageRuleDeclaration::SetCSSDeclaration(
 nsDOMCSSDeclaration::ParsingEnvironment
 CSSPageRuleDeclaration::GetParsingEnvironment(
     nsIPrincipal* aSubjectPrincipal) const {
-  return GetParsingEnvironmentForRule(Rule());
+  return GetParsingEnvironmentForRule(Rule(), CSSRule_Binding::PAGE_RULE);
 }
 
 // -- CSSPageRule --------------------------------------------------

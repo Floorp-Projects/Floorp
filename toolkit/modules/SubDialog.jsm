@@ -604,6 +604,8 @@ SubDialog.prototype = {
         (this._window.isChromeWindow && aEvent.currentTarget == this._box) ||
         (!this._window.isChromeWindow && aEvent.currentTarget == this._window)
       ) {
+        // Prevent ESC on SubDialog from cancelling page load (Bug 1665339).
+        aEvent.preventDefault();
         this._frame.contentWindow.close();
         return;
       }

@@ -1895,7 +1895,16 @@ bool nsSocketTransport::RecoverFromError() {
       } else if (!(mConnectionFlags & DISABLE_TRR)) {
         bool trrEnabled;
         mDNSRecord->IsTRR(&trrEnabled);
-        if (trrEnabled) {
+
+        // Bug 1648147 - If the server responded with `0.0.0.0` or `::` then we
+        // should intentionally not fallback to regular DNS.
+        if (!StaticPrefs::network_trr_fallback_on_zero_response() &&
+            ((mNetAddr.raw.family == AF_INET && mNetAddr.inet.ip == 0) ||
+             (mNetAddr.raw.family == AF_INET6 &&
+              mNetAddr.inet6.ip.u64[0] == 0 &&
+              mNetAddr.inet6.ip.u64[1] == 0))) {
+          SOCKET_LOG(("  TRR returned 0.0.0.0 and there are no other IPs"));
+        } else if (trrEnabled) {
           // Drop state to closed.  This will trigger a new round of
           // DNS resolving. Bypass the cache this time since the
           // cached data came from TRR and failed already!

@@ -1472,6 +1472,9 @@ impl BatchBuilder {
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
                         let surface_task = surface.render_tasks.map(|s| s.root);
 
+                        let mut is_opaque = prim_info.clip_task_index == ClipTaskIndex::INVALID
+                            && surface.opaque_rect.contains_rect(&surface.rect);
+
                         match raster_config.composite_mode {
                             PictureCompositeMode::TileCache { slice_id } => {
                                 // Tile cache instances are added to the composite config, rather than
@@ -1716,14 +1719,26 @@ impl BatchBuilder {
                                             Filter::Opacity(..) => unreachable!(),
                                         };
 
+                                        // Other filters that may introduce opacity are handled via different
+                                        // paths.
+                                        if let Filter::ColorMatrix(..) = filter {
+                                            is_opaque = false;
+                                        }
+
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
                                             surface_task.expect("bug: surface must be allocated by now"),
                                             gpu_cache,
                                         );
 
+                                        let blend_mode = if is_opaque {
+                                            BlendMode::None
+                                        } else {
+                                            BlendMode::PremultipliedAlpha
+                                        };
+
                                         let key = BatchKey::new(
                                             BatchKind::Brush(BrushBatchKind::Blend),
-                                            BlendMode::PremultipliedAlpha,
+                                            blend_mode,
                                             textures,
                                         );
 
@@ -1927,14 +1942,11 @@ impl BatchBuilder {
                                     batch_params.prim_user_data,
                                 );
 
-                                // TODO(gw): As before, all pictures that get blitted are assumed
-                                //           to have alpha. However, we could determine (at least for
-                                //           simple, common cases) if the picture content is opaque.
-                                //           That would allow inner segments of pictures to be drawn
-                                //           with blend disabled, which is a big performance win on
-                                //           integrated GPUs.
-                                let opacity = PrimitiveOpacity::translucent();
-                                let specified_blend_mode = BlendMode::PremultipliedAlpha;
+                                let (opacity, specified_blend_mode) = if is_opaque {
+                                    (PrimitiveOpacity::opaque(), BlendMode::None)
+                                } else {
+                                    (PrimitiveOpacity::translucent(), BlendMode::PremultipliedAlpha)
+                                };
 
                                 self.add_segmented_prim_to_batch(
                                     segments,

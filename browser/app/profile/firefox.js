@@ -1944,12 +1944,6 @@ pref("extensions.screenshots.disabled", false);
 // disable uploading to the server.
 pref("extensions.screenshots.upload-disabled", false);
 
-// DoH Rollout: the earliest date of profile creation for which we don't need
-// to show the doorhanger. This is when the version of the privacy statement
-// that includes DoH went live - Oct 31, 2019. This has to be a string because
-// the number is outside the signed 32-bit integer range.
-pref("doh-rollout.profileCreationThreshold", "1572476400000");
-
 // DoH Rollout: whether to enable automatic performance-based TRR-selection.
 // This pref is controlled by a Normandy rollout so we don't overload providers.
 pref("doh-rollout.trr-selection.enabled", false);
