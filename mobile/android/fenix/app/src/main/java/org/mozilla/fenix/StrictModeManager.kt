@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This class implements the alternative ways to suppress StrictMode with performance
+// monitoring by wrapping the raw methods. This lint check tells us not to use the raw
+// methods so we suppress the check.
+@file:Suppress("MozillaStrictModeSuppression")
+
 package org.mozilla.fenix
 
 import android.os.Build
@@ -26,6 +31,14 @@ class StrictModeManager(config: Config) {
     // This is public so it can be used by inline functions.
     val isEnabledByBuildConfig = config.channel.isDebug
 
+    /**
+     * The number of times StrictMode has been suppressed. StrictMode can be used to prevent main
+     * thread IO but it's easy to suppress. We use this value, in combination with:
+     * - a test: that fails if the suppression count increases
+     * - a lint check: to ensure this value gets used instead of functions that work around it
+     * - code owners: to prevent modifications to these above items without perf knowing
+     * to make suppressions a more deliberate act.
+     */
     @VisibleForTesting(otherwise = PRIVATE)
     var suppressionCount: Long = 0
 
@@ -78,12 +91,14 @@ class StrictModeManager(config: Config) {
     /**
      * Runs the given [functionBlock] and sets the given [StrictMode.ThreadPolicy] after its
      * completion when in a build configuration that has StrictMode enabled. If StrictMode is
-     * not enabled, simply runs the [functionBlock].
+     * not enabled, simply runs the [functionBlock]. This function is written in the style of
+     * [AutoCloseable.use].
      *
-     * This function is written in the style of [AutoCloseable.use].
-     *
-     * This is significantly less convenient to run than when it was written as an extension function
-     * on [StrictMode.ThreadPolicy] but I think this is okay: it shouldn't be easy to ignore StrictMode.
+     * This function contains perf improvements so it should be
+     * called instead of [mozilla.components.support.ktx.android.os.resetAfter] (using the wrong
+     * method should be prevented by a lint check). This is significantly less convenient to run than
+     * when it was written as an extension function on [StrictMode.ThreadPolicy] but I think this is
+     * okay: it shouldn't be easy to ignore StrictMode.
      *
      * @return the value returned by [functionBlock].
      */
