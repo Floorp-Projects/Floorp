@@ -33,13 +33,6 @@ class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult> {
   operator nsresult() const { return mErrorValue; }
 };
 
-// Do not instantiate these...
-template <>
-class GenericErrorResult<nsresult&>;
-
-template <>
-class GenericErrorResult<const nsresult&>;
-
 // Allow MOZ_TRY to handle `PRStatus` values.
 inline Result<Ok, nsresult> ToResult(PRStatus aValue);
 

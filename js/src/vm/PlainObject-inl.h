@@ -24,7 +24,7 @@
 #include "vm/JSObject-inl.h"  // js::GetInitialHeap, js::NewBuiltinClassInstance
 #include "vm/NativeObject-inl.h"  // js::NativeObject::{create,setLastProperty}
 
-/* static */ inline JS::Result<js::PlainObject*, JS::OOM&>
+/* static */ inline JS::Result<js::PlainObject*, JS::OOM>
 js::PlainObject::createWithTemplate(JSContext* cx,
                                     JS::Handle<PlainObject*> templateObject) {
   JS::Rooted<ObjectGroup*> group(cx, templateObject->group());

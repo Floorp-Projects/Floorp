@@ -46,13 +46,13 @@ static JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId kind) {
   return (&cx->names().abort)[int32_t(kind)];
 }
 
-mozilla::GenericErrorResult<OOM&> RaiseParserAtomsOOMError(JSContext* cx) {
+mozilla::GenericErrorResult<OOM> RaiseParserAtomsOOMError(JSContext* cx) {
   js::ReportOutOfMemory(cx);
   return mozilla::Err(PARSER_ATOMS_OOM);
 }
 
 template <typename CharT>
-/* static */ JS::Result<UniquePtr<ParserAtomEntry>, OOM&>
+/* static */ JS::Result<UniquePtr<ParserAtomEntry>, OOM>
 ParserAtomEntry::allocate(JSContext* cx,
                           mozilla::UniquePtr<CharT[], JS::FreePolicy>&& ptr,
                           uint32_t length, HashNumber hash) {
@@ -67,7 +67,7 @@ ParserAtomEntry::allocate(JSContext* cx,
 }
 
 template <typename CharT, typename SeqCharT>
-/* static */ JS::Result<UniquePtr<ParserAtomEntry>, OOM&>
+/* static */ JS::Result<UniquePtr<ParserAtomEntry>, OOM>
 ParserAtomEntry::allocateInline(JSContext* cx,
                                 InflatedChar16Sequence<SeqCharT> seq,
                                 uint32_t length, HashNumber hash) {
@@ -143,7 +143,7 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
          js::CheckStringIsIndex(twoByteChars(), len, indexp);
 }
 
-JS::Result<JSAtom*, OOM&> ParserAtomEntry::toJSAtom(
+JS::Result<JSAtom*, OOM> ParserAtomEntry::toJSAtom(
     JSContext* cx, CompilationInfo& compilationInfo) const {
   if (atomIndex_.is<AtomIndex>()) {
     return compilationInfo.input.atoms[atomIndex_.as<AtomIndex>()];
@@ -237,7 +237,7 @@ ParserAtomsTable::AddPtr ParserAtomsTable::lookupForAdd(
   return AddPtr(entrySet_.lookupForAdd(lookup), lookup.hash());
 }
 
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::addEntry(
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::addEntry(
     JSContext* cx, AddPtr& addPtr, UniquePtr<ParserAtomEntry> entry) {
   ParserAtomEntry* entryPtr = entry.get();
   MOZ_ASSERT(!addPtr);
@@ -247,7 +247,7 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::addEntry(
   return entryPtr->asAtom();
 }
 
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internLatin1Seq(
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1Seq(
     JSContext* cx, AddPtr& addPtr, const Latin1Char* latin1Ptr,
     uint32_t length) {
   MOZ_ASSERT(!addPtr);
@@ -272,7 +272,7 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internLatin1Seq(
 }
 
 template <typename AtomCharT, typename SeqCharT>
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16Seq(
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16Seq(
     JSContext* cx, AddPtr& addPtr, InflatedChar16Sequence<SeqCharT> seq,
     uint32_t length) {
   MOZ_ASSERT(!addPtr);
@@ -300,14 +300,14 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16Seq(
 
 static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internAscii(
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internAscii(
     JSContext* cx, const char* asciiPtr, uint32_t length) {
   // ASCII strings are strict subsets of Latin1 strings.
   const Latin1Char* latin1Ptr = reinterpret_cast<const Latin1Char*>(asciiPtr);
   return internLatin1(cx, latin1Ptr, length);
 }
 
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internLatin1(
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internLatin1(
     JSContext* cx, const Latin1Char* latin1Ptr, uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
   if (const ParserAtom* tiny = wellKnownTable_.lookupTiny(latin1Ptr, length)) {
@@ -324,7 +324,7 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internLatin1(
   return internLatin1Seq(cx, addPtr, latin1Ptr, length);
 }
 
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internUtf8(
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internUtf8(
     JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte) {
   // Check for tiny strings which are abundant in minified code.
   // NOTE: The tiny atoms are all ASCII-only so we can directly look at the
@@ -371,7 +371,7 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internUtf8(
               : internChar16Seq<Latin1Char>(cx, addPtr, seq, length);
 }
 
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16(
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internChar16(
     JSContext* cx, const char16_t* char16Ptr, uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
   if (const ParserAtom* tiny = wellKnownTable_.lookupTiny(char16Ptr, length)) {
@@ -403,7 +403,7 @@ JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internChar16(
               : internChar16Seq<Latin1Char>(cx, addPtr, seq, length);
 }
 
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::internJSAtom(
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internJSAtom(
     JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom) {
   const ParserAtom* id;
   {
@@ -449,7 +449,7 @@ static void FillChar16Buffer(char16_t* buf, const ParserAtomEntry* ent) {
   }
 }
 
-JS::Result<const ParserAtom*, OOM&> ParserAtomsTable::concatAtoms(
+JS::Result<const ParserAtom*, OOM> ParserAtomsTable::concatAtoms(
     JSContext* cx, mozilla::Range<const ParserAtom*> atoms) {
   bool latin1 = true;
   uint32_t catLen = 0;

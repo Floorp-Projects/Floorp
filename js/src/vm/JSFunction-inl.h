@@ -86,7 +86,7 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
 
 } /* namespace js */
 
-/* static */ inline JS::Result<JSFunction*, JS::OOM&> JSFunction::create(
+/* static */ inline JS::Result<JSFunction*, JS::OOM> JSFunction::create(
     JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
     js::HandleShape shape, js::HandleObjectGroup group) {
   MOZ_ASSERT(kind == js::gc::AllocKind::FUNCTION ||
