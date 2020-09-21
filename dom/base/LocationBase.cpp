@@ -118,6 +118,16 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
     return;
   }
 
+  CallerType callerType = aSubjectPrincipal.IsSystemPrincipal()
+                              ? CallerType::System
+                              : CallerType::NonSystem;
+
+  nsresult rv = bc->CheckLocationChangeRateLimit(callerType);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
   RefPtr<nsDocShellLoadState> loadState =
       CheckURL(aURI, aSubjectPrincipal, aRv);
   if (aRv.Failed()) {
@@ -143,7 +153,7 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
   loadState->SetFirstParty(true);
 
-  nsresult rv = bc->LoadURI(loadState);
+  rv = bc->LoadURI(loadState);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
   }

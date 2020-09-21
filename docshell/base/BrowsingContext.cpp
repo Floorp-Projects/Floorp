@@ -2753,6 +2753,56 @@ bool BrowsingContext::ShouldUpdateSessionHistory(uint32_t aLoadType) {
           (IsForceReloadType(aLoadType) && IsFrame()));
 }
 
+nsresult BrowsingContext::CheckLocationChangeRateLimit(CallerType aCallerType) {
+  // We only rate limit non system callers
+  if (aCallerType == CallerType::System) {
+    return NS_OK;
+  }
+
+  // Fetch rate limiting preferences
+  uint32_t limitCount =
+      StaticPrefs::dom_navigation_locationChangeRateLimit_count();
+  uint32_t timeSpanSeconds =
+      StaticPrefs::dom_navigation_locationChangeRateLimit_timespan();
+
+  // Disable throttling if either of the preferences is set to 0.
+  if (limitCount == 0 || timeSpanSeconds == 0) {
+    return NS_OK;
+  }
+
+  TimeDuration throttleSpan = TimeDuration::FromSeconds(timeSpanSeconds);
+
+  if (mLocationChangeRateLimitSpanStart.IsNull() ||
+      ((TimeStamp::Now() - mLocationChangeRateLimitSpanStart) > throttleSpan)) {
+    // Initial call or timespan exceeded, reset counter and timespan.
+    mLocationChangeRateLimitSpanStart = TimeStamp::Now();
+    mLocationChangeRateLimitCount = 1;
+    return NS_OK;
+  }
+
+  if (mLocationChangeRateLimitCount >= limitCount) {
+    // Rate limit reached
+
+    Document* doc = GetDocument();
+    if (doc) {
+      nsContentUtils::ReportToConsole(nsIScriptError::errorFlag, "DOM"_ns, doc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      "LocChangeFloodingPrevented");
+    }
+
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  mLocationChangeRateLimitCount++;
+  return NS_OK;
+}
+
+void BrowsingContext::ResetLocationChangeRateLimit() {
+  // Resetting the timestamp object will cause the check function to
+  // init again and reset the rate limit.
+  mLocationChangeRateLimitSpanStart = TimeStamp();
+}
+
 }  // namespace dom
 
 namespace ipc {

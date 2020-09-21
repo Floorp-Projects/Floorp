@@ -169,7 +169,14 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
   GotoIndex(index.value(), aRv);
 }
 
-void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction) {
+void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
+                            CallerType aCallerType, ErrorResult& aRv) {
+  nsresult rv = mBrowsingContext->CheckLocationChangeRateLimit(aCallerType);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
   if (!CanGo(aOffset)) {
     return;
   }
