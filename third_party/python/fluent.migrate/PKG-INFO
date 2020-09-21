@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: fluent.migrate
-Version: 0.9
+Version: 0.10
 Summary: Toolchain to migrate legacy translation to Fluent.
 Home-page: https://hg.mozilla.org/l10n/fluent-migration/
 Author: Mozilla
