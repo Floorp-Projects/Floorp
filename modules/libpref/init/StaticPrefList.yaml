@@ -5806,7 +5806,7 @@
 # Whether :-moz-any is an alias of the :is selector.
 - name: layout.css.moz-any-is-is.enabled
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
   rust: true
 
