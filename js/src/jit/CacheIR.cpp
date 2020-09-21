@@ -10797,7 +10797,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachStub() {
   // Arithmetic operations with Int32 operands
   TRY_ATTACH(tryAttachInt32());
 
-  // Bitwise operations with Int32/Double/Boolean/Null/Undefined operands.
+  // Bitwise operations with Int32/Double/Boolean/Null/Undefined/String
+  // operands.
   TRY_ATTACH(tryAttachBitwise());
 
   // Arithmetic operations with Double operands. This needs to come after
@@ -10833,9 +10834,13 @@ AttachDecision BinaryArithIRGenerator::tryAttachBitwise() {
     return AttachDecision::NoAction;
   }
 
+  auto canConvert = [](const Value& val) {
+    return val.isNumber() || val.isBoolean() || val.isNullOrUndefined() ||
+           val.isString();
+  };
+
   // Check guard conditions
-  if (!(lhs_.isNumber() || lhs_.isBoolean() || lhs_.isNullOrUndefined()) ||
-      !(rhs_.isNumber() || rhs_.isBoolean() || rhs_.isNullOrUndefined())) {
+  if (!canConvert(lhs_) || !canConvert(rhs_)) {
     return AttachDecision::NoAction;
   }
 
@@ -10857,8 +10862,14 @@ AttachDecision BinaryArithIRGenerator::tryAttachBitwise() {
       writer.guardIsNullOrUndefined(id);
       return writer.loadInt32Constant(0);
     }
-    MOZ_ASSERT(val.isDouble());
-    NumberOperandId numId = writer.guardIsNumber(id);
+    NumberOperandId numId;
+    if (val.isString()) {
+      StringOperandId strId = writer.guardToString(id);
+      numId = writer.guardStringToNumber(strId);
+    } else {
+      MOZ_ASSERT(val.isDouble());
+      numId = writer.guardIsNumber(id);
+    }
     return writer.truncateDoubleToUInt32(numId);
   };
 
