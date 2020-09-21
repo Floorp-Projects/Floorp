@@ -675,9 +675,11 @@ impl SpatialTree {
                 SpatialNodeType::StickyFrame(..) => {}
                 SpatialNodeType::ScrollFrame(ref info) => {
                     match info.frame_kind {
-                        ScrollFrameKind::PipelineRoot => {
+                        ScrollFrameKind::PipelineRoot { is_root_pipeline } => {
                             // Once we encounter a pipeline root, there is no need to look further
-                            break;
+                            if is_root_pipeline {
+                                break;
+                            }
                         }
                         ScrollFrameKind::Explicit => {
                             // Store the closest scroll root we find to the root, for use
