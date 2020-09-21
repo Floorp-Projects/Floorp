@@ -287,7 +287,7 @@ static void MapTest() {
   // Mapping over error values.
   {
     MyError err(1);
-    Result<char, MyError> res = Err(err);
+    Result<char, MyError> res(err);
     MOZ_RELEASE_ASSERT(res.isErr());
     Result<char, MyError> res2 = res.map([](int x) {
       MOZ_RELEASE_ASSERT(false);
@@ -322,7 +322,7 @@ static void MapErrTest() {
   // Mapping over error values, to the same error type.
   {
     MyError err(1);
-    Result<char, MyError> res = Err(err);
+    Result<char, MyError> res(err);
     MOZ_RELEASE_ASSERT(res.isErr());
     bool invoked = false;
     auto res2 = res.mapErr([&invoked](const auto err) {
@@ -338,7 +338,7 @@ static void MapErrTest() {
   // Mapping over error values, to a different error type.
   {
     MyError err(1);
-    Result<char, MyError> res = Err(err);
+    Result<char, MyError> res(err);
     MOZ_RELEASE_ASSERT(res.isErr());
     bool invoked = false;
     auto res2 = res.mapErr([&invoked](const auto err) {
@@ -392,7 +392,7 @@ static void OrElseTest() {
   // variant.
   {
     MyError err(1);
-    Result<char, MyError> res = Err(err);
+    Result<char, MyError> res(err);
     MOZ_RELEASE_ASSERT(res.isErr());
     bool invoked = false;
     auto res2 = res.orElse([&invoked](const auto err) -> Result<char, MyError> {
@@ -412,7 +412,7 @@ static void OrElseTest() {
   // success variant.
   {
     MyError err(42);
-    Result<char, MyError> res = Err(err);
+    Result<char, MyError> res(err);
     MOZ_RELEASE_ASSERT(res.isErr());
     bool invoked = false;
     auto res2 = res.orElse([&invoked](const auto err) -> Result<char, MyError> {
@@ -432,7 +432,7 @@ static void OrElseTest() {
   // error variant.
   {
     MyError err(1);
-    Result<char, MyError> res = Err(err);
+    Result<char, MyError> res(err);
     MOZ_RELEASE_ASSERT(res.isErr());
     bool invoked = false;
     auto res2 =
@@ -453,7 +453,7 @@ static void OrElseTest() {
   // success variant.
   {
     MyError err(42);
-    Result<char, MyError> res = Err(err);
+    Result<char, MyError> res(err);
     MOZ_RELEASE_ASSERT(res.isErr());
     bool invoked = false;
     auto res2 =
