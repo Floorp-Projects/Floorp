@@ -342,6 +342,10 @@ let Player = {
     this.resizeDebouncer.arm();
   },
 
+  onCommand(event) {
+    PictureInPicture.closePipWindow({ reason: "player-shortcut" });
+  },
+
   get controls() {
     delete this.controls;
     return (this.controls = document.getElementById("controls"));
