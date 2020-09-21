@@ -621,6 +621,7 @@ class PackedResultList(object):
 class TestFileData(object):
     __slots__ = ("url_base", "item_type", "test_path", "metadata_path", "tests",
                  "_requires_update", "data")
+
     def __init__(self, url_base, item_type, metadata_path, test_path, tests):
         self.url_base = url_base
         self.item_type = item_type
