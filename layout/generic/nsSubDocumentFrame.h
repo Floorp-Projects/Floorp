@@ -129,6 +129,10 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
 
   void ClearDisplayItems();
 
+  void SubdocumentIntrinsicSizeOrRatioChanged(
+      const mozilla::Maybe<mozilla::IntrinsicSize>& aIntrinsicSize,
+      const mozilla::Maybe<mozilla::AspectRatio>& aIntrinsicRatio);
+
  protected:
   friend class AsyncFrameInit;
 
@@ -153,16 +157,6 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   // being reframed.
   void ShowViewer();
 
-  /* Obtains the frame we should use for intrinsic size information if we are
-   * an HTML <object> or <embed>  (a replaced element - not <iframe>)
-   * and our sub-document has an intrinsic size. The frame returned is the
-   * frame for the document element of the document we're embedding.
-   *
-   * Called "Obtain*" and not "Get*" because of comment on GetDocShell that
-   * says it should be called ObtainDocShell because of its side effects.
-   */
-  nsIFrame* ObtainIntrinsicSizeFrame();
-
   nsView* GetViewInternal() const override { return mOuterView; }
   void SetViewInternal(nsView* aView) override { mOuterView = aView; }
 
@@ -170,6 +164,13 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
 
   nsView* mOuterView;
   nsView* mInnerView;
+
+  // The intrinsic size and aspect ratio from a child SVG document that
+  // we should use.  These are only set when we are an <object> or <embed>
+  // and the inner document is SVG.
+  mozilla::Maybe<mozilla::IntrinsicSize> mSubdocumentIntrinsicSize;
+  mozilla::Maybe<mozilla::AspectRatio> mSubdocumentIntrinsicRatio;
+
   bool mIsInline;
   bool mPostedReflowCallback;
   bool mDidCreateDoc;

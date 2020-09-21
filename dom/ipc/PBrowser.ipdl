@@ -33,6 +33,7 @@ include PBackgroundSharedTypes;
 include "mozilla/AntiTrackingIPCUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/LayoutMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/ipc/TransportSecurityInfoUtils.h";
 
@@ -99,6 +100,8 @@ using mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason fro
 using CallerType from "mozilla/dom/BindingDeclarations.h";
 using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h";
 using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
+using mozilla::IntrinsicSize from "nsIFrame.h";
+using mozilla::AspectRatio from "mozilla/AspectRatio.h";
 
 namespace mozilla {
 namespace dom {
@@ -596,6 +599,9 @@ parent:
                              nsString[] aValues, bool aIsFullStorage,
                              bool aNeedCollectSHistory, uint32_t aFlushId,
                              bool aIsFinal, uint32_t aEpoch);
+
+    async IntrinsicSizeOrRatioChanged(IntrinsicSize? aIntrinsicSize,
+                                      AspectRatio? aIntrinsicRatio);
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);

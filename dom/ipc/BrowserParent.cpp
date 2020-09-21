@@ -2880,6 +2880,20 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvIntrinsicSizeOrRatioChanged(
+    const Maybe<IntrinsicSize>& aIntrinsicSize,
+    const Maybe<AspectRatio>& aIntrinsicRatio) {
+  BrowserBridgeParent* bridge = GetBrowserBridgeParent();
+  if (!bridge || !bridge->CanSend()) {
+    return IPC_OK();
+  }
+
+  Unused << bridge->SendIntrinsicSizeOrRatioChanged(aIntrinsicSize,
+                                                    aIntrinsicRatio);
+
+  return IPC_OK();
+}
+
 bool BrowserParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {
   nsCOMPtr<nsIWidget> textInputHandlingWidget = GetTextInputHandlingWidget();
   if (!textInputHandlingWidget) {
