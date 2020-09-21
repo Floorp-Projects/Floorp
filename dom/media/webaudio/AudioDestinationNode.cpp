@@ -242,7 +242,7 @@ class DestinationNodeEngine final : public AudioNodeEngine {
 
   void SetDoubleParameter(uint32_t aIndex, double aParam) override {
     if (aIndex == VOLUME) {
-      mVolume = aParam;
+      mVolume = static_cast<float>(aParam);
     }
   }
 
@@ -493,7 +493,7 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted) {
       "aVolume = %f, aMuted = %s\n",
       this, aVolume, aMuted ? "true" : "false");
 
-  float volume = aMuted ? 0.0 : aVolume;
+  float volume = aMuted ? 0.0f : aVolume;
   mTrack->SetAudioOutputVolume(nullptr, volume);
 
   AudioChannelService::AudibleState audible =
