@@ -407,10 +407,6 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id, const char* uniqueId,
 #  endif
 #endif
       started_(false) {
-#if 0
-  // XXX this crashes due to an immediate IsRunning() check
-  capturer_thread_->SetPriority(rtc::kHighPriority);
-#endif
   _requestedCapability.width = kDefaultWidth;
   _requestedCapability.height = kDefaultHeight;
   _requestedCapability.maxFPS = 30;
@@ -597,8 +593,6 @@ int32_t DesktopCaptureImpl::StartCapture(
   if (!capturer_thread_) {
     capturer_thread_ = std::unique_ptr<rtc::PlatformThread>(
         new rtc::PlatformThread(Run, this, "ScreenCaptureThread"));
-    // XXX this crashes due to an immediate IsRunning() check on Linux
-    // capturer_thread_->SetPriority(rtc::kHighPriority);
   }
 #endif
 
@@ -609,6 +603,7 @@ int32_t DesktopCaptureImpl::StartCapture(
 
   desktop_capturer_cursor_composer_->Start(this);
   capturer_thread_->Start();
+  capturer_thread_->SetPriority(rtc::kHighPriority);
   started_ = true;
 
   return 0;
