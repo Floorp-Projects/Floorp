@@ -122,10 +122,6 @@ parent:
   /// Send down initial document bit to the parent.
   async SetIsInitialDocument(bool aIsInitialDocument);
 
-  /// Tell the parent if this WindowGlobal has any "beforeunload" event
-  /// listeners.
-  async SetHasBeforeUnload(bool aHasBeforeUnload);
-
   // Attempts to perform a "Web Share".
   async Share(IPCWebShareData aData) returns (nsresult rv);
 
