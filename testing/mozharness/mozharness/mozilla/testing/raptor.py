@@ -475,7 +475,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin, Pyt
                 "raptor",
                 "tooltool-manifests",
                 "chrome-android",
-                "chrome80.manifest"
+                "chrome85.manifest"
             ),
             output_dir=tmpdir
         )
