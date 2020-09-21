@@ -58,10 +58,6 @@ struct UnusedZero<Failed> {
   }
 };
 
-template <>
-struct HasFreeLSB<Failed> {
-  static const bool value = true;
-};
 }  // namespace mozilla::detail
 
 // V is trivially default-constructible, and E has UnusedZero<E>::value == true,
@@ -70,12 +66,15 @@ static_assert(mozilla::detail::SelectResultImpl<uintptr_t, Failed>::value ==
               mozilla::detail::PackingStrategy::NullIsOk);
 static_assert(mozilla::detail::SelectResultImpl<Ok, UnusedZeroEnum>::value ==
               mozilla::detail::PackingStrategy::NullIsOk);
+static_assert(mozilla::detail::SelectResultImpl<Ok, Failed>::value ==
+              mozilla::detail::PackingStrategy::LowBitTagIsError);
 
 static_assert(std::is_trivially_destructible_v<Result<uintptr_t, Failed>>);
 static_assert(std::is_trivially_destructible_v<Result<Ok, UnusedZeroEnum>>);
+static_assert(std::is_trivially_destructible_v<Result<Ok, Failed>>);
 
-static_assert(sizeof(Result<Ok, Failed>) == sizeof(uintptr_t),
-              "Result with empty value type should be pointer-sized");
+static_assert(sizeof(Result<Ok, Failed>) == sizeof(uint8_t),
+              "Result with empty value type should be size 1");
 static_assert(sizeof(Result<int*, Failed>) == sizeof(uintptr_t),
               "Result with two aligned pointer types should be pointer-sized");
 static_assert(
@@ -245,8 +244,8 @@ static void EmptyValueTest() {
   mozilla::Result<Fine, Failed> res((Fine()));
   res.unwrap();
   MOZ_RELEASE_ASSERT(res.isOk());
-  static_assert(sizeof(res) == sizeof(uintptr_t),
-                "Result with empty value type should be pointer-sized");
+  static_assert(sizeof(res) == sizeof(uint8_t),
+                "Result with empty value and error types should be size 1");
 }
 
 static void MapTest() {
