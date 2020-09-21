@@ -2251,8 +2251,10 @@ LogicVRegister Simulator::tbl(VectorFormat vform,
                               LogicVRegister dst,
                               const LogicVRegister& tab,
                               const LogicVRegister& ind) {
-    movi(vform, dst, 0);
-    return tbx(vform, dst, tab, ind);
+  SimVRegister result;
+  movi(vform, result, 0);
+  tbx(vform, result, tab, ind);
+  return orr(vform, dst, result, result);
 }
 
 
@@ -2261,8 +2263,10 @@ LogicVRegister Simulator::tbl(VectorFormat vform,
                               const LogicVRegister& tab,
                               const LogicVRegister& tab2,
                               const LogicVRegister& ind) {
-    movi(vform, dst, 0);
-    return tbx(vform, dst, tab, tab2, ind);
+  SimVRegister result;
+  movi(vform, result, 0);
+  tbx(vform, result, tab, tab2, ind);
+  return orr(vform, dst, result, result);
 }
 
 
@@ -2272,8 +2276,10 @@ LogicVRegister Simulator::tbl(VectorFormat vform,
                               const LogicVRegister& tab2,
                               const LogicVRegister& tab3,
                               const LogicVRegister& ind) {
-    movi(vform, dst, 0);
-    return tbx(vform, dst, tab, tab2, tab3, ind);
+  SimVRegister result;
+  movi(vform, result, 0);
+  tbx(vform, result, tab, tab2, tab3, ind);
+  return orr(vform, dst, result, result);
 }
 
 
@@ -2284,8 +2290,10 @@ LogicVRegister Simulator::tbl(VectorFormat vform,
                               const LogicVRegister& tab3,
                               const LogicVRegister& tab4,
                               const LogicVRegister& ind) {
-    movi(vform, dst, 0);
-    return tbx(vform, dst, tab, tab2, tab3, tab4, ind);
+  SimVRegister result;
+  movi(vform, result, 0);
+  tbx(vform, result, tab, tab2, tab3, tab4, ind);
+  return orr(vform, dst, result, result);
 }
 
 
