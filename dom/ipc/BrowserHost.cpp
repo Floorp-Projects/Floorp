@@ -259,30 +259,6 @@ BrowserHost::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal) {
   return GetContentParent()->TransmitPermissionsForPrincipal(aPrincipal);
 }
 
-/* readonly attribute boolean hasBeforeUnload; */
-NS_IMETHODIMP
-BrowserHost::GetHasBeforeUnload(bool* aHasBeforeUnload) {
-  if (!mRoot || !GetBrowsingContext()) {
-    *aHasBeforeUnload = false;
-    return NS_OK;
-  }
-
-  bool result = false;
-
-  GetBrowsingContext()->PreOrderWalk(
-      [&result](BrowsingContext* aBrowsingContext) {
-        WindowGlobalParent* windowGlobal =
-            aBrowsingContext->Canonical()->GetCurrentWindowGlobal();
-
-        if (windowGlobal) {
-          result |= windowGlobal->HasBeforeUnload();
-        }
-      });
-
-  *aHasBeforeUnload = result;
-  return NS_OK;
-}
-
 /* boolean startApzAutoscroll (in float aAnchorX, in float aAnchorY, in nsViewID
  * aScrollId, in uint32_t aPresShellId); */
 NS_IMETHODIMP

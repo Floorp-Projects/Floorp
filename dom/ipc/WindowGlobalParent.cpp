@@ -21,7 +21,6 @@
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/RemoteWebProgress.h"
-#include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -30,6 +29,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Variant.h"
 #include "mozJSComponentLoader.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
@@ -849,6 +849,23 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvCheckPermitUnload(
   request->Run(/* aIgnoreProcess */ GetContentParent());
 
   return IPC_OK();
+}
+
+already_AddRefed<Promise> WindowGlobalParent::PermitUnload(
+    PermitUnloadAction aAction, mozilla::ErrorResult& aRv) {
+  nsIGlobalObject* global = GetParentObject();
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  auto request = MakeRefPtr<CheckPermitUnloadRequest>(
+      this, /* aHasInProcessBlocker */ false,
+      nsIContentViewer::PermitUnloadAction(aAction),
+      [promise](bool aAllow) { promise->MaybeResolve(aAllow); });
+  request->Run();
+
+  return promise.forget();
 }
 
 already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(

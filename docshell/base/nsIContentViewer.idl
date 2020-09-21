@@ -59,6 +59,8 @@ interface nsIContentViewer : nsISupports
    * eDontPromptAndDontUnload: Don't prompt and return false (unload not permitted)
    *                           if the document (or its children) asks us to prompt.
    * eDontPromptAndUnload: Don't prompt and return true (unload permitted) no matter what.
+   *
+   * NOTE: Keep this in sync with PermitUnloadAction in WindowGlobalActors.webidl.
    */
   cenum PermitUnloadAction : 8 {
     ePrompt = 0,

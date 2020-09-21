@@ -395,11 +395,11 @@ async function prepareSubframes(browser, options) {
  *        True if hasBeforeUnload is expected to be true.
  */
 function assertHasBeforeUnload(browser, expected) {
-  Assert.equal(browser.frameLoader.remoteTab.hasBeforeUnload, expected);
+  Assert.equal(browser.hasBeforeUnload, expected);
 }
 
 /**
- * Tests that the nsIRemoteTab hasBeforeUnload attribute works under
+ * Tests that the MozBrowser hasBeforeUnload property works under
  * a number of different scenarios on inner windows. At a high-level,
  * we test that hasBeforeUnload works properly during page / iframe
  * navigation, or when an <iframe> with a beforeunload listener on its

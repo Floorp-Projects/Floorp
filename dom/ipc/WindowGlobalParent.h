@@ -16,6 +16,7 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/WindowContext.h"
+#include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
@@ -142,6 +143,9 @@ class WindowGlobalParent final : public WindowContext,
   void GetContentBlockingLog(nsAString& aLog);
 
   bool IsInitialDocument() { return mIsInitialDocument; }
+
+  already_AddRefed<mozilla::dom::Promise> PermitUnload(
+      PermitUnloadAction aAction, mozilla::ErrorResult& aRv);
 
   already_AddRefed<mozilla::dom::Promise> DrawSnapshot(
       const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,

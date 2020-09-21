@@ -372,7 +372,7 @@ However, if any of the frames on the page are running in their own process, they
 
 The original ``"PageInfo:info"`` message listener will need to be updated, too. Any responses from the ``PageInfoChild`` actor will end up being passed to the ``receiveMessage`` method of the ``PageInfoParent`` actor. It will be necessary to pass that information along to the interested party (in this case, the dialog code which is showing the table of interesting Page Info).
 
-It might be necessary to refactor or rearchitect the original senders and consumers of message manager messages in order to accommodate the ``JSWindowActor`` model. Sometimes it's also helpful to have a singleton management object that manages all ``JSWindowActorParent`` instances and does something with their results. See ``PermitUnloader`` inside the implementation of `BrowserElementParent.jsm`_ for example.
+It might be necessary to refactor or rearchitect the original senders and consumers of message manager messages in order to accommodate the ``JSWindowActor`` model. Sometimes it's also helpful to have a singleton management object that manages all ``JSWindowActorParent`` instances and does something with their results.
 
 Where to store state
 ~~~~~~~~~~~~~~~~~~~~
@@ -384,7 +384,7 @@ Your best bet for storing state is in the parent process.
 .. hint::
     If each individual frame needs state, consider using a ``WeakMap`` in the parent process, mapping ``CanonicalBrowsingContext``'s with that state. That way, if the associates frames ever go away, you don't have to do any cleaning up yourself.
 
-If you have state that you want multiple ``JSWindowActorParent``'s to have access to, consider having a "manager" of those ``JSWindowActorParent``'s inside of the same .jsm file to hold that state. See ``PermitUnloader`` inside the implementation of `BrowserElementParent.jsm`_ for example.
+If you have state that you want multiple ``JSWindowActorParent``'s to have access to, consider having a "manager" of those ``JSWindowActorParent``'s inside of the same .jsm file to hold that state.
 
 Registering a new actor
 -----------------------
