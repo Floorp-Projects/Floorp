@@ -55,7 +55,7 @@ nsMathMLmunderoverFrame::UpdatePresentationData(uint32_t aFlagsValues,
   // disable the stretch-all flag if we are going to act like a
   // subscript-superscript pair
   if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
-      StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_INLINE) {
+      StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_COMPACT) {
     mPresentationData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
   } else {
     mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
@@ -255,7 +255,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
 
   bool subsupDisplay =
       NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
-      StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_INLINE;
+      StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_COMPACT;
 
   // disable the stretch-all flag if we are going to act like a superscript
   if (subsupDisplay) {
@@ -349,7 +349,7 @@ The REC says:
 
 i.e.,:
  if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishDataflags) &&
-     StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_INLINE) {
+     StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_COMPACT) {
   // place like subscript-superscript pair
  }
  else {
@@ -363,7 +363,7 @@ nsresult nsMathMLmunderoverFrame::Place(DrawTarget* aDrawTarget,
                                         ReflowOutput& aDesiredSize) {
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
-      StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_INLINE) {
+      StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_COMPACT) {
     // place like sub sup or subsup
     if (mContent->IsMathMLElement(nsGkAtoms::munderover_)) {
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(
