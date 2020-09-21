@@ -18,6 +18,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/Unused.h"
 
