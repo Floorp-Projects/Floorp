@@ -6075,6 +6075,15 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
         (flexMainAxis == eLogicalAxisInline ? inlineStyleCoord
                                             : blockStyleCoord);
 
+    // FIXME: Bug 1646100: We may have to revisit this and make sure this
+    // behavior matches the spec once we support intrinsic size keywords for
+    // 'aspect-ratio' property.
+    bool isCrossSizeDefinite =
+        (flexMainAxis == eLogicalAxisInline)
+            ? !nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM))
+            : !inlineStyleCoord->IsAuto() &&
+                  !inlineStyleCoord->IsExtremumLength();
+
     // NOTE: If we're a table-wrapper frame, we skip this clause and just stick
     // with 'main-size:auto' behavior (which -- unlike 'content'
     // i.e. 'max-content' -- will give us the ability to honor percent sizes on
@@ -6084,9 +6093,25 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     if (nsFlexContainerFrame::IsUsedFlexBasisContent(*flexBasis,
                                                      *mainAxisCoord) &&
         MOZ_LIKELY(!IsTableWrapperFrame())) {
-      static const StyleSize maxContStyleCoord(
-          StyleSize::ExtremumLength(StyleExtremumLength::MaxContent));
-      mainAxisCoord = &maxContStyleCoord;
+      // If the flex item has
+      // 1. an intrinsic aspect ratio (or the explicit 'aspect-ratio' property),
+      // 2. a used flex-basis of 'content' (it does! we checked above), and
+      // 3. a definite cross size,
+      // we will calculate the main size by cross size and aspect-ratio via
+      // ComputeInlineSizeFromAspectRatio() or ComputeBlockSizeFromAspectRatio()
+      // in this function below.
+      // Therefore, we assign mainAxisCoord as 'auto', which makes sure that we
+      // will go into the correct if-branch for 'aspect-ratio'.
+      //
+      // https://drafts.csswg.org/css-flexbox-1/#algo-main-item
+      if (stylePos->mAspectRatio.HasFiniteRatio() && isCrossSizeDefinite) {
+        static const StyleSize autoStyleCoord(StyleSize::Auto());
+        mainAxisCoord = &autoStyleCoord;
+      } else {
+        static const StyleSize maxContStyleCoord(
+            StyleSize::ExtremumLength(StyleExtremumLength::MaxContent));
+        mainAxisCoord = &maxContStyleCoord;
+      }
       // (Note: if our main axis is the block axis, then this 'max-content'
       // value will be treated like 'auto', via the IsAutoBSize() call below.)
     } else if (!flexBasis->IsAuto()) {
