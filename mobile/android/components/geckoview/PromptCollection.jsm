@@ -29,15 +29,6 @@ class PromptCollection {
     return !!result?.allow;
   }
 
-  beforeUnloadCheck(browsingContext) {
-    const msg = {
-      type: "beforeUnload",
-    };
-    const prompter = new GeckoViewPrompter(browsingContext);
-    const result = prompter.showPrompt(msg);
-    return !!result?.allow;
-  }
-
   asyncBeforeUnloadCheck(browsingContext) {
     return new Promise(resolve => {
       const msg = {
