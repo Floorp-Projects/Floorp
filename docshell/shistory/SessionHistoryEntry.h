@@ -140,7 +140,7 @@ class SessionHistoryInfo {
   bool mURIWasModified = false;
   bool mIsSrcdocEntry = false;
   bool mScrollRestorationIsManual = false;
-  bool mPersist = false;
+  bool mPersist = true;
 
   union SharedState {
     SharedState();

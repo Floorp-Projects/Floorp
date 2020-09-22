@@ -356,6 +356,11 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     entry = SessionHistoryEntry::GetByLoadId(existingLoadingInfo->mLoadId);
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
+    if (IsTop()) {
+      // Only top level pages care about Get/SetPersist.
+      entry->SetPersist(
+          nsDocShell::ShouldAddToSessionHistory(aLoadState->URI(), aChannel));
+    }
     entry->SetDocshellID(GetHistoryID());
     entry->SetIsDynamicallyAdded(GetCreatedDynamically());
     entry->SetForInitialLoad(true);
@@ -427,8 +432,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
           }
 
           if (addEntry) {
-            shistory->AddEntry(mActiveEntry,
-                               /* FIXME aPersist = */ true);
+            shistory->AddEntry(mActiveEntry, mActiveEntry->GetPersist());
           }
         }
       } else {
