@@ -3644,8 +3644,9 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef JS_CACHEIR_SPEW
 static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  Rooted<ScriptVector> scripts(cx, ScriptVector(cx));
 
+  js::jit::CacheIRHealth cih;
+  RootedScript script(cx);
   if (!argc) {
     // Calling RateMyCacheIR without any arguments will create health
     // reports for all scripts in the zone.
@@ -3655,28 +3656,27 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
         continue;
       }
 
-      if (!scripts.append(base->asJSScript())) {
+      script = base->asJSScript();
+      if (!cih.rateMyCacheIR(cx, script)) {
         return false;
       }
     }
   } else {
     RootedValue value(cx, args.get(0));
-    RootedScript script(cx);
 
     if (value.isObject() && value.toObject().is<ModuleObject>()) {
-      script.set(value.toObject().as<ModuleObject>().maybeScript());
+      script = value.toObject().as<ModuleObject>().maybeScript();
     } else {
-      script.set(TestingFunctionArgumentToScript(cx, args.get(0)));
+      script = TestingFunctionArgumentToScript(cx, args.get(0));
     }
 
-    if (!script || !scripts.append(script)) {
+    if (!script) {
       return false;
     }
-  }
 
-  js::jit::CacheIRHealth cih;
-  if (!cih.rateMyCacheIR(cx, scripts)) {
-    return false;
+    if (!cih.rateMyCacheIR(cx, script)) {
+      return false;
+    }
   }
 
   args.rval().setUndefined();
