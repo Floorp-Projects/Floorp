@@ -1082,7 +1082,22 @@
       "label": "OU_certSIGN_ROOT_CA_G2_O_CERTSIGN_SA_C_RO",
       "binNumber": 215,
       "sha256Fingerprint": "ZXz+L6c/qjhGJXHzMqI2Okb85wIJUXEHAs37tu7aMwU="
+    },
+    {
+      "label": "Trustwave_Global_Certification_Authority",
+      "binNumber": 216,
+      "sha256Fingerprint": "l1UgFfXd/DyHiMAGlEVVQIiURQCE8QCGcIa8Giu1jcg="
+    },
+    {
+      "label": "Trustwave_Global_ECC_P256_Certification_Authority",
+      "binNumber": 217,
+      "sha256Fingerprint": "lFu8gl6lVPSJ0f1Rpz3fLqYkrHAZoFIFIlwip4zPqLQ="
+    },
+    {
+      "label": "Trustwave_Global_ECC_P384_Certification_Authority",
+      "binNumber": 218,
+      "sha256Fingerprint": "VZA4WcjAw+u4dZ7OTiVXIl/1dYu9OOvUgnZgHhvVgJc="
     }
   ],
-  "maxBin": 215
+  "maxBin": 218
 }
