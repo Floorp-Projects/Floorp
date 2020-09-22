@@ -42,6 +42,17 @@ pub fn launch(task: impl FnOnce() + Send + 'static) {
     }
 }
 
+/// Block until all tasks prior to this call are processed.
+pub fn block_on_queue() {
+    let (tx, rx) = crossbeam_channel::bounded(0);
+    launch(move || {
+        tx.send(())
+            .expect("(worker) Can't send message on single-use channel")
+    });
+    rx.recv()
+        .expect("Failed to receive message on single-use channel");
+}
+
 /// Starts processing queued tasks in the global dispatch queue.
 ///
 /// This function blocks until queued tasks prior to this call are finished.
