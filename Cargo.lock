@@ -1535,13 +1535,11 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "chrono",
- "crossbeam-channel",
  "glean-core",
  "log",
  "once_cell",
  "serde",
  "tempfile",
- "thiserror",
  "uuid",
  "xpcom",
 ]
