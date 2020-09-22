@@ -30,6 +30,10 @@ job-defaults:
             default: []
     fission-tier: 2
     variants: ["fission"]
+    virtualization:
+        by-test-platform:
+            windows10-64.*: hardware
+            default: virtual
 
 marionette:
     description: "Marionette unittest run"
@@ -56,7 +60,3 @@ marionette-gpu:
     mozharness:
         extra-options:
             - --test-manifest gpu-unit-tests.ini
-    virtualization:
-        by-test-platform:
-            windows10-64.*: virtual-with-gpu
-            default: virtual

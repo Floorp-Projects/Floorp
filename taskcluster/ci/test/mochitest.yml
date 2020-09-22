@@ -491,7 +491,10 @@ mochitest-webgpu:
     description: "Mochitest webgpu run"
     treeherder-symbol: M(webgpu)
     schedules-component: mochitest-plain
-    virtualization: virtual-with-gpu
+    virtualization:
+        by-test-platform:
+            windows10-64.*: hardware
+            default: virtual-with-gpu
     e10s: true
     loopback-video: true
     run-on-projects:
@@ -527,3 +530,7 @@ mochitest-remote:
         mochitest-flavor: browser
         extra-options:
             - --setpref=remote.log.level=Trace
+    virtualization:
+        by-test-platform:
+            windows10-64.*: hardware
+            default: virtual
