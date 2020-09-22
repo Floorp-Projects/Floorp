@@ -8,6 +8,10 @@ commands:
                     name: environment
                     command: |
                         echo 'export PATH=.:$HOME/.local/bin:$PATH' >> $BASH_ENV
+            - run:
+                    name: Upgrade pip
+                    command: |
+                        pip install --upgrade --user pip
 
     test-min-requirements:
         steps:
@@ -23,7 +27,7 @@ commands:
                         .rb/bin/pip install requirements-builder
                         .rb/bin/requirements-builder --level=min setup.py > min_requirements.txt
 
-                        pip install --progress-bar off --user -U -r min_requirements.txt
+                        pip install --use-feature=2020-resolver --progress-bar off --user -U -r min_requirements.txt
 
     test-python-version:
         parameters:
@@ -34,7 +38,7 @@ commands:
             - run:
                     name: install
                     command: |
-                        pip install --progress-bar off --user -U -r <<parameters.requirements-file>>
+                        pip install --use-feature=2020-resolver --progress-bar off --user -U -r <<parameters.requirements-file>>
                         sudo apt update -q
                         sudo apt upgrade -q
                         sudo apt install openjdk-11-jdk-headless
@@ -132,9 +136,13 @@ jobs:
                     command: |
                         echo 'export PATH=.:$HOME/.local/bin:$PATH' >> $BASH_ENV
             - run:
+                    name: Upgrade pip
+                    command: |
+                        pip install --upgrade --user pip
+            - run:
                     name: install
                     command: |
-                        pip install --user -U -r requirements_dev.txt
+                        pip install --use-feature=2020-resolver --user -U -r requirements_dev.txt
             - run:
                     name: deploy
                     # Requires that the TWINE_USERNAME and TWINE_PASSWORD environment

@@ -46,7 +46,7 @@ class Metric:
         bugs: List[str],
         description: str,
         notification_emails: List[str],
-        expires: str,
+        expires: Any,
         data_reviews: Optional[List[str]] = None,
         version: int = 0,
         disabled: bool = False,
@@ -56,7 +56,7 @@ class Metric:
         gecko_datapoint: str = "",
         no_lint: Optional[List[str]] = None,
         data_sensitivity: Optional[List[str]] = None,
-        _config: Optional[Dict[str, Any]] = None,
+        _config: Dict[str, Any] = None,
         _validated: bool = False,
     ):
         # Avoid cyclical import
@@ -97,6 +97,11 @@ class Metric:
             }  # type: Dict[str, util.JSONType]
             for error in parser.validate(data):
                 raise ValueError(error)
+
+        # Store the config, but only after validation.
+        if _config is None:
+            _config = {}
+        self._config = _config
 
         # Metrics in the special category "glean.internal.metrics" need to have
         # an empty category string when identifying the metrics in the ping.
@@ -173,11 +178,12 @@ class Metric:
         return self.disabled or self.is_expired()
 
     def is_expired(self) -> bool:
-        return util.is_expired(self.expires)
+        return self._config.get("custom_is_expired", util.is_expired)(self.expires)
 
-    @staticmethod
-    def validate_expires(expires) -> None:
-        return util.validate_expires(expires)
+    def validate_expires(self):
+        return self._config.get("custom_validate_expires", util.validate_expires)(
+            self.expires
+        )
 
     def is_internal_metric(self) -> bool:
         return self.category in (Metric.glean_internal_metric_cat, "")

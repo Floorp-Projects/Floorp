@@ -24,8 +24,8 @@ def csharp_datatypes_filter(value: util.JSONType) -> str:
 
     Based on Python's JSONEncoder, but overrides:
       - lists to use `new string[] {}` (only strings)
-      - dicts to use mapOf (not currently supported)
-      - sets to use setOf (not currently supported)
+      - dicts to use `new Dictionary<string, string> { ...}` (string, string)
+      - sets to use `new HashSet<string>() {}` (only strings)
       - enums to use the like-named C# enum
     """
 
@@ -42,27 +42,29 @@ def csharp_datatypes_filter(value: util.JSONType) -> str:
                     first = False
                 yield "}"
             elif isinstance(value, dict):
-                yield "mapOf("
+                yield "new Dictionary<string, string> {"
                 first = True
                 for key, subvalue in value.items():
                     if not first:
                         yield ", "
+                    yield "{"
                     yield from self.iterencode(key)
-                    yield " to "
+                    yield ", "
                     yield from self.iterencode(subvalue)
+                    yield "}"
                     first = False
-                yield ")"
+                yield "}"
             elif isinstance(value, enum.Enum):
                 yield (value.__class__.__name__ + "." + util.Camelize(value.name))
             elif isinstance(value, set):
-                yield "setOf("
+                yield "new HashSet<string>() {"
                 first = True
                 for subvalue in sorted(list(value)):
                     if not first:
                         yield ", "
                     yield from self.iterencode(subvalue)
                     first = False
-                yield ")"
+                yield "}"
             else:
                 yield from super().iterencode(value)
 
