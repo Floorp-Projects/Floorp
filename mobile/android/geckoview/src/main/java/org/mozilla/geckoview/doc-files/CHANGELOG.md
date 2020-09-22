@@ -14,6 +14,12 @@ exclude: true
 ⚠️  breaking change and deprecation notices
 
 ## v83
+- ⚠️  Removing unsupported `MediaSession.Delegate.onPictureInPicture` for now.
+  Also, [`MediaSession.Delegate.onMetadata`][83.1] is no longer dispatched for
+  plain media elements.
+  ([bug 1658937]({{bugzilla}}1658937))
+
+[83.1]: {{javadoc_uri}}/MediaSession.Delegate.html#onMetadata-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.MediaSession-org.mozilla.geckoview.MediaSession.Metadata-
 
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
@@ -803,4 +809,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: e62341ace2541ae9fbd4f08f7c2d03ba28bf416a
+[api-version]: 8cbbe3b03d78c33888562ea18a4554cff90f531d
