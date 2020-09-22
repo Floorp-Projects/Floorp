@@ -496,7 +496,7 @@ class BaseBootstrapper(object):
         '''
         if not name:
             name = os.path.basename(path)
-        if name.endswith('.exe'):
+        if name.lower().endswith('.exe'):
             name = name[:-4]
 
         process = subprocess.run(
