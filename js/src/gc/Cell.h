@@ -7,6 +7,8 @@
 #ifndef gc_Cell_h
 #define gc_Cell_h
 
+#include "mozilla/Atomics.h"
+
 #include <type_traits>
 
 #include "gc/GCEnum.h"
@@ -115,7 +117,13 @@ class CellColor {
 struct Cell {
  protected:
   // Cell header word. Stores GC flags and derived class data.
-  uintptr_t header_;
+  //
+  // This is atomic since it can be read from and written to by different
+  // threads during compacting GC, in a limited way. Specifically, writes that
+  // update the derived class data can race with reads that check the forwarded
+  // flag. The writes do not change the forwarded flag (which is always false in
+  // this situation).
+  mozilla::Atomic<uintptr_t, mozilla::MemoryOrdering::Relaxed> header_;
 
  public:
   static_assert(gc::CellFlagBitsReservedForGC >= 3,
@@ -681,7 +689,7 @@ class alignas(gc::CellAlignBytes) TenuredCellWithNonGCPointer
     // flags are also always clear). This means we don't need to use masking to
     // get and set the pointer.
     MOZ_ASSERT(flags() == 0);
-    return reinterpret_cast<PtrT*>(header_);
+    return reinterpret_cast<PtrT*>(uintptr_t(header_));
   }
 
   void setHeaderPtr(PtrT* newValue) {
@@ -747,7 +755,7 @@ class alignas(gc::CellAlignBytes) CellWithTenuredGCPointer : public BaseCell {
     // masking to get and set the pointer.
     staticAsserts();
     MOZ_ASSERT(this->flags() == 0);
-    return reinterpret_cast<PtrT*>(this->header_);
+    return reinterpret_cast<PtrT*>(uintptr_t(this->header_));
   }
 
   void unbarrieredSetHeaderPtr(PtrT* newValue) {

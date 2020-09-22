@@ -126,12 +126,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1600594
          "race:nsThread::SizeOfEventQueues\n"
 
-         // Bug 1600895, bug 1647702
-         "race:UpdateArenaPointersTyped<js::ObjectGroup>\n"
-         "race:UpdateArenaPointersTyped<js::Shape>\n"
-         "race:UpdateArenaPointersTyped<JSObject>\n"
-         "race:JSObject::fixupAfterMovingGC\n"
-
          // Bug 1601286
          "race:setFlagBit\n"
          "race:isFatInline\n"

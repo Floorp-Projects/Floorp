@@ -204,6 +204,7 @@ class TypeCache(object):
         # enough.
         self.void_t = gdb.lookup_type('void')
         self.void_ptr_t = self.void_t.pointer()
+        self.uintptr_t = gdb.lookup_type('uintptr_t')
         try:
             self.JSString_ptr_t = gdb.lookup_type('JSString').pointer()
             self.JSSymbol_ptr_t = gdb.lookup_type('JS::Symbol').pointer()
