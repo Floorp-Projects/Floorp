@@ -938,8 +938,13 @@ SessionHistoryEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry) {
 
 NS_IMETHODIMP
 SessionHistoryEntry::AdoptBFCacheEntry(nsISHEntry* aEntry) {
-  NS_WARNING("This lives in the child process");
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aEntry);
+  NS_ENSURE_STATE(she && she->mInfo->mSharedState.Get());
+
+  mInfo->mSharedState =
+      static_cast<SessionHistoryEntry*>(aEntry)->mInfo->mSharedState;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
