@@ -1487,6 +1487,10 @@ nsresult nsPrintJob::InitPrintDocConstruction(bool aHandleError) {
   // So, we should grab it with local variable.
   RefPtr<nsPrintData> printData = mPrt;
 
+  if (NS_WARN_IF(!printData)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Attach progressListener to catch network requests.
   mDidLoadDataForPrinting = false;
 
