@@ -58,6 +58,7 @@ UNIFIED_SOURCES += [
     'SharedContext.cpp',
     'SourceNotes.cpp',
     'Stencil.cpp',
+    'StencilXdr.cpp',
     'SwitchEmitter.cpp',
     'TDZCheckCache.cpp',
     'TokenStream.cpp',
