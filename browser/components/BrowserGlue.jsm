@@ -312,8 +312,6 @@ let JSWINDOWACTORS = {
       events: {
         DOMWindowCreated: {},
         MozAfterPaint: {},
-        "MozDOMPointerLock:Entered": {},
-        "MozDOMPointerLock:Exited": {},
       },
     },
 
@@ -552,6 +550,22 @@ let JSWINDOWACTORS = {
       observers: ["decoder-doctor-notification"],
     },
 
+    allFrames: true,
+  },
+
+  PointerLock: {
+    parent: {
+      moduleURI: "resource:///actors/PointerLockParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/PointerLockChild.jsm",
+      events: {
+        "MozDOMPointerLock:Entered": {},
+        "MozDOMPointerLock:Exited": {},
+      },
+    },
+
+    messageManagerGroups: ["browsers"],
     allFrames: true,
   },
 
