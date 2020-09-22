@@ -1461,6 +1461,13 @@ void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
   });
 }
 
+void CanonicalBrowsingContext::SetCrossGroupOpenerId(uint64_t aOpenerId) {
+  MOZ_DIAGNOSTIC_ASSERT(IsTopContent());
+  MOZ_DIAGNOSTIC_ASSERT(mCrossGroupOpenerId == 0,
+                        "Can only set CrossGroupOpenerId once");
+  mCrossGroupOpenerId = aOpenerId;
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CanonicalBrowsingContext, BrowsingContext,
                                    mSessionHistory)
 

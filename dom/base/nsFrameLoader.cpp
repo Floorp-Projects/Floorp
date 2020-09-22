@@ -414,6 +414,14 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
       CreateBrowsingContext(aOwner, aOpenWindowInfo, group, aNetworkCreated);
   NS_ENSURE_TRUE(context, nullptr);
 
+  if (XRE_IsParentProcess() && aOpenWindowInfo) {
+    MOZ_ASSERT(context->IsTopContent());
+    if (RefPtr<BrowsingContext> crossGroupOpener =
+            aOpenWindowInfo->GetParent()) {
+      context->Canonical()->SetCrossGroupOpenerId(crossGroupOpener->Id());
+    }
+  }
+
   bool isRemoteFrame = InitialLoadIsRemote(aOwner);
   RefPtr<nsFrameLoader> fl =
       new nsFrameLoader(aOwner, context, isRemoteFrame, aNetworkCreated);
