@@ -11,7 +11,7 @@ The first step when adding a new property is to extend the schema so
 that manifests containing the new property pass validation.
 This is done with the ``"$extend"`` property as follows:
 
-.. code-block:: json
+.. code-block:: js
 
    [
      "namespace": "manifest",
@@ -37,7 +37,7 @@ in the API manifest (e.g., ``ext-toolkit.json``).
 Note that this property is an array so an extension can implement
 multiple properties:
 
-.. code-block:: json
+.. code-block:: js
 
    "myapi": {
      "schema": "...",
