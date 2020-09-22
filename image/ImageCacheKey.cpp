@@ -12,7 +12,6 @@
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Unused.h"
-#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
@@ -29,19 +28,6 @@ using namespace dom;
 
 namespace image {
 
-static Maybe<uint64_t> BlobSerial(nsIURI* aURI) {
-  nsAutoCString spec;
-  aURI->GetSpec(spec);
-
-  RefPtr<BlobImpl> blob;
-  if (NS_SUCCEEDED(NS_GetBlobForBlobURISpec(spec, getter_AddRefs(blob))) &&
-      blob) {
-    return Some(blob->GetSerialNumber());
-  }
-
-  return Nothing();
-}
-
 ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
                              Document* aDocument)
     : mURI(aURI),
@@ -49,17 +35,13 @@ ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
       mControlledDocument(GetSpecialCaseDocumentToken(aDocument)),
       mIsolationKey(GetIsolationKey(aDocument, aURI)),
       mIsChrome(false) {
-  if (mURI->SchemeIs("blob")) {
-    mBlobSerial = BlobSerial(mURI);
-  } else if (mURI->SchemeIs("chrome")) {
+  if (mURI->SchemeIs("chrome")) {
     mIsChrome = true;
   }
 }
 
 ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
     : mURI(aOther.mURI),
-      mBlobSerial(aOther.mBlobSerial),
-      mBlobRef(aOther.mBlobRef),
       mOriginAttributes(aOther.mOriginAttributes),
       mControlledDocument(aOther.mControlledDocument),
       mIsolationKey(aOther.mIsolationKey),
@@ -68,8 +50,6 @@ ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
 
 ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
     : mURI(std::move(aOther.mURI)),
-      mBlobSerial(std::move(aOther.mBlobSerial)),
-      mBlobRef(std::move(aOther.mBlobRef)),
       mOriginAttributes(aOther.mOriginAttributes),
       mControlledDocument(aOther.mControlledDocument),
       mIsolationKey(aOther.mIsolationKey),
@@ -92,30 +72,11 @@ bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
   if (mOriginAttributes != aOther.mOriginAttributes) {
     return false;
   }
-  if (mBlobSerial || aOther.mBlobSerial) {
-    if (mBlobSerial && mBlobRef.IsEmpty()) {
-      EnsureBlobRef();
-    }
-    if (aOther.mBlobSerial && aOther.mBlobRef.IsEmpty()) {
-      aOther.EnsureBlobRef();
-    }
-    // If at least one of us has a blob serial, just compare the blob serial and
-    // the ref portion of the URIs.
-    return mBlobSerial == aOther.mBlobSerial && mBlobRef == aOther.mBlobRef;
-  }
 
   // For non-blob URIs, compare the URIs.
   bool equals = false;
   nsresult rv = mURI->Equals(aOther.mURI, &equals);
   return NS_SUCCEEDED(rv) && equals;
-}
-
-void ImageCacheKey::EnsureBlobRef() const {
-  MOZ_ASSERT(mBlobSerial);
-  MOZ_ASSERT(mBlobRef.IsEmpty());
-
-  nsresult rv = mURI->GetRef(mBlobRef);
-  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 void ImageCacheKey::EnsureHash() const {
@@ -129,16 +90,9 @@ void ImageCacheKey::EnsureHash() const {
   nsAutoCString suffix;
   mOriginAttributes.CreateSuffix(suffix);
 
-  if (mBlobSerial) {
-    if (mBlobRef.IsEmpty()) {
-      EnsureBlobRef();
-    }
-    hash = HashGeneric(*mBlobSerial, HashString(mBlobRef));
-  } else {
-    nsAutoCString spec;
-    Unused << mURI->GetSpec(spec);
-    hash = HashString(spec);
-  }
+  nsAutoCString spec;
+  Unused << mURI->GetSpec(spec);
+  hash = HashString(spec);
 
   hash = AddToHash(hash, HashString(suffix), HashString(mIsolationKey),
                    HashString(ptr));
