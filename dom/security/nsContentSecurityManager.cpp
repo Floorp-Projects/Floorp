@@ -38,6 +38,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryComms.h"
 #include "xpcpublic.h"
+#include "nsMimeTypes.h"
 
 #include "jsapi.h"
 #include "js/RegExp.h"
@@ -96,9 +97,10 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
       !contentType.EqualsLiteral("image/svg+xml")) {
     return true;
   }
-  // Allow all plain text types as well as data: PDFs.
-  if (nsContentUtils::IsPlainTextType(contentType) ||
-      contentType.EqualsLiteral("application/pdf")) {
+  // Allow all data: PDFs. or JSON documents
+  if (contentType.EqualsLiteral(APPLICATION_JSON) ||
+      contentType.EqualsLiteral(TEXT_JSON) ||
+      contentType.EqualsLiteral(APPLICATION_PDF)) {
     return true;
   }
   // Redirecting to a toplevel data: URI is not allowed, hence we make

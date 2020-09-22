@@ -1710,6 +1710,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
+  if (mSourceUrl->SchemeIs("data")) {
+    // In case we're downloading a data:// uri
+    // we don't want to apply AllowTopLevelNavigationToDataURI.
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    loadInfo->SetForceAllowDataURI(true);
+  }
+
   // now that the temp file is set up, find out if we need to invoke a dialog
   // asking the user what they want us to do with this content...
 

@@ -116,6 +116,26 @@ function test5() {
     }
     is(body, "", "navigating to URI which redirects to a data: URI using window.open() should be blocked");
     win5.close();
+    test6();
+  }, 1000);
+}
+
+function test6() {
+  // navigating to a data: URI without a Content Type should be blocked
+  let win6 = window.open("data:DataURIsWithNoContentTypeShouldBeBlocked");
+  setTimeout(function () {
+    let body = "Error";
+    try {
+      body = win6.document.body.innerHTML;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "SecurityError") {
+        body = "";
+      } else {
+        throw e;
+      }
+    }
+    is(body, "", "navigating to a data: URI without a Content Type should be blocked");
+    win6.close();
     SimpleTest.finish();
   }, 1000);
 }
