@@ -69,21 +69,10 @@ fn get_cert_subject_dn(cert_info: &CERT_INFO) -> Result<Vec<u8>, ()> {
 /// Certificates with keys that are available via the CNG APIs are exposed on the modern slot.
 /// Certificates with keys that are only available via the CryptoAPI APIs are exposed on the legacy
 /// slot.
-fn get_slot_type_for_cert(cert: PCCERT_CONTEXT) -> SlotType {
-    if unsafe {
-        CryptFindCertificateKeyProvInfo(
-            cert,
-            CRYPT_ACQUIRE_ONLY_NCRYPT_KEY_FLAG | CRYPT_FIND_SILENT_KEYSET_FLAG,
-            std::ptr::null_mut(),
-        )
-    } != 0
-    {
-        SlotType::Modern
-    } else if unsafe { GetLastError() } == winapi::shared::winerror::NTE_SILENT_CONTEXT as u32 {
-        // If the CSP wanted to show UI, assume it is available via CNG.
-        SlotType::Modern
-    } else {
-        SlotType::Legacy
+fn get_slot_type_for_cert(cert: &CertContext) -> Result<SlotType, ()> {
+    match KeyHandle::from_cert_no_ui(cert)? {
+        KeyHandle::NCrypt(_) => Ok(SlotType::Modern),
+        KeyHandle::CryptoAPI(_, _) => Ok(SlotType::Legacy),
     }
 }
 
@@ -110,7 +99,7 @@ pub struct Cert {
 }
 
 impl Cert {
-    fn new(cert_context: PCCERT_CONTEXT) -> Result<Cert, ()> {
+    fn new(cert_context: PCCERT_CONTEXT, slot_type: SlotType) -> Result<Cert, ()> {
         let cert = unsafe { &*cert_context };
         let cert_info = unsafe { &*cert.pCertInfo };
         let value =
@@ -136,7 +125,7 @@ impl Cert {
             issuer,
             serial_number,
             subject,
-            slot_type: get_slot_type_for_cert(cert_context),
+            slot_type,
         })
     }
 
@@ -242,13 +231,21 @@ enum KeyHandle {
 
 impl KeyHandle {
     fn from_cert(cert: &CertContext) -> Result<KeyHandle, ()> {
+        KeyHandle::from_cert_common(cert, 0)
+    }
+
+    fn from_cert_no_ui(cert: &CertContext) -> Result<KeyHandle, ()> {
+        KeyHandle::from_cert_common(cert, CRYPT_ACQUIRE_SILENT_FLAG)
+    }
+
+    fn from_cert_common(cert: &CertContext, extra_flags: DWORD) -> Result<KeyHandle, ()> {
         let mut key_handle = 0;
         let mut key_spec = 0;
         let mut must_free = 0;
         unsafe {
             if CryptAcquireCertificatePrivateKey(
                 **cert,
-                CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG,
+                CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG | extra_flags,
                 std::ptr::null_mut(),
                 &mut key_handle,
                 &mut key_spec,
@@ -630,8 +627,10 @@ impl Key {
         } else {
             return Err(());
         };
+        let cert = CertContext::new(cert_context);
+        let slot_type = get_slot_type_for_cert(&cert)?;
         Ok(Key {
-            cert: CertContext::new(cert_context),
+            cert,
             class: serialize_uint(CKO_PRIVATE_KEY)?,
             token: serialize_uint(CK_TRUE)?,
             id,
@@ -640,7 +639,7 @@ impl Key {
             modulus,
             ec_params,
             key_type_enum,
-            slot_type: get_slot_type_for_cert(cert_context),
+            slot_type,
         })
     }
 
@@ -931,12 +930,12 @@ pub fn list_objects() -> Vec<Object> {
         // after).
         match cert_contexts.get(0) {
             Some(cert_context) => {
-                let cert = match Cert::new(*cert_context) {
-                    Ok(cert) => cert,
-                    Err(()) => continue,
-                };
                 let key = match Key::new(*cert_context) {
                     Ok(key) => key,
+                    Err(()) => continue,
+                };
+                let cert = match Cert::new(*cert_context, key.slot_type) {
+                    Ok(cert) => cert,
                     Err(()) => continue,
                 };
                 objects.push(Object::Cert(cert));
@@ -945,7 +944,7 @@ pub fn list_objects() -> Vec<Object> {
             None => {}
         };
         for cert_context in cert_contexts.iter().skip(1) {
-            if let Ok(cert) = Cert::new(*cert_context) {
+            if let Ok(cert) = Cert::new(*cert_context, SlotType::Legacy) {
                 objects.push(Object::Cert(cert));
             }
         }
