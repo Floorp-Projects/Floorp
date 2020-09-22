@@ -26,6 +26,7 @@
 #include "nsSimpleEnumerator.h"
 #include "nsStringStream.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/ResultExtensions.h"
@@ -481,6 +482,19 @@ nsresult SharedStringBundle::LoadProperties() {
     mStringMap = new SharedStringMap(mMapFile.ref(), mMapSize);
     mMapFile.reset();
     return NS_OK;
+  }
+
+  MOZ_ASSERT(NS_IsMainThread(),
+             "String bundles must be initialized on the main thread "
+             "before they may be used off-main-thread");
+
+  // We can't access the locale service after shutdown has started, which
+  // means we can't attempt to load chrome: locale resources (which most of
+  // our string bundles come from). Since shared string bundles won't be
+  // useful after shutdown has started anyway (and we almost certainly got
+  // here from a pre-load attempt in an idle task), just bail out.
+  if (PastShutdownPhase(ShutdownPhase::Shutdown)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
   // We should only populate shared memory string bundles in the parent
