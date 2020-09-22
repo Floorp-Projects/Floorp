@@ -9,8 +9,8 @@ simulate user interaction for automation purposes, and for subscribing
 to updates in the browser such as network- or console logs.
 
 It complements the existing Firefox Developer Tools :ref:`Remote Debugging
-Protocol <Remote Debugging Protocol>` (RDP) by implementing a subset of the `Chrome DevTools
-Protocol`_ (CDP).
+Protocol <Remote Debugging Protocol>` (RDP) by implementing a subset of the
+`Chrome DevTools Protocol`_ (CDP).
 
 .. _Chrome DevTools Protocol: https://chromedevtools.github.io/devtools-protocol/
 

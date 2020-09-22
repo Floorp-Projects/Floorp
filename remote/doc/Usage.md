@@ -1,7 +1,7 @@
 Usage
 =====
 
-When using the CDP-based remote debugger in Firefox, there are
+When using the CDP-based remote agent in Firefox, there are
 three different programs/components running simultaneously:
 
   * the __client__, being the out-of-process script or library
