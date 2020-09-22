@@ -8,6 +8,7 @@
 
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineIC.h"
+#include "jit/CacheIRHealth.h"
 #include "jit/Ion.h"  // TooManyFormalArguments
 
 #include "jit/BaselineFrame-inl.h"
@@ -25,6 +26,13 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
   RootedScript script(cx, frame->script());
   ICScript* icScript = frame->icScript();
   bool isRecursive = icScript->depth() > 0;
+
+#ifdef JS_CACHEIR_SPEW
+  if (cx->spewer().enabled(cx, script, SpewChannel::RateMyCacheIR)) {
+    CacheIRHealth cih;
+    cih.rateMyCacheIR(cx, script);
+  }
+#endif
 
   if (!script->canIonCompile()) {
     return true;

@@ -146,6 +146,10 @@ class StructuredSpewer {
   static void spew(JSContext* cx, SpewChannel channel, const char* fmt, ...)
       MOZ_FORMAT_PRINTF(3, 4);
 
+  // Returns true iff the channel is enabled for the given script.
+  bool enabled(JSContext* cx, const JSScript* script,
+               SpewChannel channel) const;
+
  private:
   // In order to support lazy initialization, and simultaneously support a
   // failure to open a log file being non-fatal (as lazily reporting failure
@@ -199,10 +203,6 @@ class StructuredSpewer {
   bool enabled(SpewChannel channel) {
     return (spewingEnabled_ && filter().enabled(channel));
   }
-
-  // Returns true iff the channels is enabled for the given script.
-  bool enabled(JSContext* cx, const JSScript* script,
-               SpewChannel channel) const;
 
   // Start a record
   void startObject(JSContext* cx, const JSScript* script, SpewChannel channel);
