@@ -614,6 +614,7 @@ child:
     async FlushTabState(uint32_t aFlushId, bool aIsFinal);
     async UpdateEpoch(uint32_t aEpoch);
     async UpdateSHistory(bool aImmediately);
+    async CloneDocumentTreeIntoSelf(MaybeDiscardedBrowsingContext aBc);
 
 parent:
 
