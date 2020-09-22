@@ -72,11 +72,18 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Descartar</string>
 
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Ir a ajustes</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Descartar</string>
 
     <!-- Text for the banner message to tell users about our auto close feature. -->
     <string name="tab_tray_close_tabs_banner_message">Configura que las pestañas abiertas se cierren automáticamente si no han sido vistas en el último día, semana o mes.</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Ver opciones</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Descartar</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -122,6 +129,8 @@
     <string name="browser_menu_install_on_homescreen">Instalar</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Pestañas sincronizadas</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Resincronizar</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Buscar en la página</string>
     <!-- Browser menu button that creates a private tab -->
@@ -264,6 +273,8 @@
     <string name="preferences_toolbar">Barra de herramientas</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Inicio</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gestos</string>
     <!-- Preference for settings related to visual options -->
@@ -300,13 +311,22 @@
     <string name="preferences_search_browsing_history">Buscar historial de navegación</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Buscar marcadores</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Buscar pestañas sincronizadas</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Configuración de la cuenta</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Autocompletar URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Abrir enlaces en aplicaciones</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Administrador de descargas externo</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Complementos</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Notificaciones</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -437,6 +457,9 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seguir el tema del dispositivo</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Arrastrar para actualizar</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Desplazar para ocultar la barra</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
@@ -476,6 +499,31 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Cerrar</string>
 
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Pestañas cerradas recientemente</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Mostrar historial completo</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d pestañas</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d pestaña</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">No hay pestañas recientemente cerradas</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Cerrar pestañas</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Manualmente</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Después de un día</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Después de una semana</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Después de un mes</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Pestañas abiertas</string>
@@ -495,6 +543,8 @@
     <string name="tab_tray_menu_item_save">Guardar en colección</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Compartir todas las pestañas</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Pestañas cerradas recientemente</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Cerrar todas las pestañas</string>
     <!-- Shortcut action to open new tab -->
@@ -542,6 +592,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Eliminar</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Eliminar del historial</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (modo privado)</string>
 
@@ -587,6 +639,9 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">No hay ningún historial</string>
 
+    <!-- Downloads -->
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message">No hay descargas aquí</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d seleccionado</string>
@@ -1326,8 +1381,12 @@
     <string name="logins_site_copied">Sitio copiado al portapapeles</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copiar contraseña</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Borrar contraseña</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copiar nombre de usuario</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Borrar nombre de usuario</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copiar sitio</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1506,7 +1565,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Vale, entendido</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Mostrar los sitios más visitados</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Eliminar</string>
+
+    <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Sácale el máximo provecho a %s.</string>
 
