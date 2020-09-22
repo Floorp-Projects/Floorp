@@ -1680,6 +1680,8 @@ class PresShell final : public nsStubDocumentObserver,
   nsIFrame* GetDrawEventTargetFrame() { return mDrawEventTargetFrame; }
 #endif
 
+  bool GetZoomableByAPZ() const;
+
  private:
   ~PresShell();
 

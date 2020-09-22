@@ -11756,3 +11756,7 @@ void PresShell::EndPaint() {
 void PresShell::PingPerTickTelemetry(FlushType aFlushType) {
   mLayoutTelemetry.PingPerTickTelemetry(aFlushType);
 }
+
+bool PresShell::GetZoomableByAPZ() const {
+  return mZoomConstraintsClient && mZoomConstraintsClient->GetAllowZoom();
+}
