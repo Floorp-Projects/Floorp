@@ -2137,38 +2137,6 @@ add_task(async function test_defaultSearchEngine() {
   data = TelemetryEnvironment.currentEnvironment;
   checkEnvironmentData(data);
   Assert.equal(data.settings.defaultSearchEngine, EXPECTED_SEARCH_ENGINE);
-
-  // Check that by default we are not sending a cohort identifier...
-  Assert.equal(data.settings.searchCohort, undefined);
-
-  // ... but that if a cohort identifier is set, we send it.
-  deferred = PromiseUtils.defer();
-  TelemetryEnvironment.registerChangeListener(
-    "testSearchEngine_pref",
-    deferred.resolve
-  );
-  Services.prefs.setCharPref("browser.search.cohort", "testcohort");
-  Services.obs.notifyObservers(null, "browser-search-service", "init-complete");
-  await deferred.promise;
-  TelemetryEnvironment.unregisterChangeListener("testSearchEngine_pref");
-  data = TelemetryEnvironment.currentEnvironment;
-  Assert.equal(data.settings.searchCohort, "testcohort");
-  Assert.equal(data.experiments.searchCohort.branch, "testcohort");
-
-  // Check that when changing the cohort identifier...
-  deferred = PromiseUtils.defer();
-  TelemetryEnvironment.registerChangeListener(
-    "testSearchEngine_pref",
-    deferred.resolve
-  );
-  Services.prefs.setCharPref("browser.search.cohort", "testcohort2");
-  Services.obs.notifyObservers(null, "browser-search-service", "init-complete");
-  await deferred.promise;
-  TelemetryEnvironment.unregisterChangeListener("testSearchEngine_pref");
-  data = TelemetryEnvironment.currentEnvironment;
-  // ... the setting and experiment are updated.
-  Assert.equal(data.settings.searchCohort, "testcohort2");
-  Assert.equal(data.experiments.searchCohort.branch, "testcohort2");
 });
 
 add_task(async function test_defaultPrivateSearchEngine() {
