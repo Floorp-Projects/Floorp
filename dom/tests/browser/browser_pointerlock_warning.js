@@ -5,41 +5,70 @@
 
 "use strict";
 
-const TEST_URL =
-  "data:text/html,<body onpointerdown='this.requestPointerLock()' style='width: 100px; height: 100px;'></body>";
+const BODY_URL =
+  "<body onpointerdown='this.requestPointerLock()' style='width: 100px; height: 100px;'></body>";
+
+const TEST_URL = "data:text/html," + BODY_URL;
+
+const FRAME_TEST_URL =
+  'data:text/html,<body><iframe src="http://example.org/document-builder.sjs?html=' +
+  encodeURI(BODY_URL) +
+  '"></iframe></body>';
 
 // Make sure the pointerlock warning is shown and exited with the escape key
 add_task(async function show_pointerlock_warning_escape() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  let urls = [TEST_URL, FRAME_TEST_URL];
+  for (let url of urls) {
+    info("Pointerlock warning test for " + url);
 
-  let warning = document.getElementById("pointerlock-warning");
-  let warningShownPromise = BrowserTestUtils.waitForAttribute(
-    "onscreen",
-    warning,
-    "true"
-  );
-  await BrowserTestUtils.synthesizeMouse("body", 4, 4, {}, tab.linkedBrowser);
+    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await warningShownPromise;
+    let warning = document.getElementById("pointerlock-warning");
+    let warningShownPromise = BrowserTestUtils.waitForAttribute(
+      "onscreen",
+      warning,
+      "true"
+    );
 
-  ok(true, "Pointerlock warning shown");
+    let expectedWarningText;
 
-  let warningHiddenPromise = BrowserTestUtils.waitForAttribute(
-    "hidden",
-    warning,
-    "true"
-  );
-  EventUtils.synthesizeKey("KEY_Escape");
-  await warningHiddenPromise;
+    let bc = tab.linkedBrowser.browsingContext;
+    if (bc.children.length) {
+      // use the subframe if it exists
+      bc = bc.children[0];
+      expectedWarningText = "example.org";
+    } else {
+      expectedWarningText = "This document";
+    }
+    expectedWarningText +=
+      " has control of your pointer. Press Esc to take back control.";
 
-  ok(true, "Pointerlock warning hidden");
+    await BrowserTestUtils.synthesizeMouse("body", 4, 4, {}, bc);
 
-  // Pointerlock should be released after escape is pressed.
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    Assert.equal(content.document.pointerLockElement, null);
-  });
+    await warningShownPromise;
 
-  await BrowserTestUtils.removeTab(tab);
+    ok(true, "Pointerlock warning shown");
+
+    let warningHiddenPromise = BrowserTestUtils.waitForAttribute(
+      "hidden",
+      warning,
+      "true"
+    );
+
+    is(warning.innerText, expectedWarningText, "Warning text");
+
+    EventUtils.synthesizeKey("KEY_Escape");
+    await warningHiddenPromise;
+
+    ok(true, "Pointerlock warning hidden");
+
+    // Pointerlock should be released after escape is pressed.
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+      Assert.equal(content.document.pointerLockElement, null);
+    });
+
+    await BrowserTestUtils.removeTab(tab);
+  }
 });
 
 /*

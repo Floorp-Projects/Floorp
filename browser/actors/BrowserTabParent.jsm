@@ -39,15 +39,6 @@ class BrowserTabParent extends JSWindowActorParent {
         gBrowser.ownerGlobal.RedirectLoad(browser, message.data);
         break;
       }
-
-      case "PointerLock:Entered": {
-        browser.ownerGlobal.PointerLock.entered(message.data.originNoSuffix);
-        break;
-      }
-
-      case "PointerLock:Exited":
-        browser.ownerGlobal.PointerLock.exited();
-        break;
     }
   }
 }
