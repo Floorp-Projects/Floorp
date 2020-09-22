@@ -68,24 +68,17 @@
   padding-inline: 2px;
 }
 
-#PersonalToolbar[collapsed=true] {
-  visibility: collapse;
+:root[sessionrestored] #PersonalToolbar {
+  transition: min-height 170ms ease-out, max-height 170ms ease-out, @themeTransition@;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  :root[sessionrestored] #PersonalToolbar.animated {
-    transition: min-height 170ms ease-out, max-height 170ms ease-out, @themeTransition@;
-  }
+#PersonalToolbar[collapsed=true] {
+  min-height: 0.1px;
+  max-height: 0;
+}
 
-  #PersonalToolbar.animated[collapsed=true] {
-    min-height: 0.1px;
-    max-height: 0;
-  }
-
-  :root[sessionrestored] #PersonalToolbar.animated[collapsed=true] {
-    visibility: initial;
-    transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
-  }
+:root[sessionrestored] #PersonalToolbar[collapsed=true] {
+  transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
 
 #PersonalToolbar[customizing] {
