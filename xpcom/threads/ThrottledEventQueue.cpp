@@ -261,8 +261,10 @@ class ThrottledEventQueue::Inner final : public nsISupports {
   static already_AddRefed<Inner> Create(nsISerialEventTarget* aBaseTarget,
                                         const char* aName, uint32_t aPriority) {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(ClearOnShutdown_Internal::sCurrentShutdownPhase ==
-               ShutdownPhase::NotInShutdown);
+    // FIXME: This assertion only worked when `sCurrentShutdownPhase` was not
+    // being updated.
+    // MOZ_ASSERT(ClearOnShutdown_Internal::sCurrentShutdownPhase ==
+    //            ShutdownPhase::NotInShutdown);
 
     RefPtr<Inner> ref = new Inner(aBaseTarget, aName, aPriority);
     return ref.forget();
