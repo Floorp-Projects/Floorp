@@ -309,6 +309,9 @@ mozJSComponentLoader::~mozJSComponentLoader() {
 
 StaticRefPtr<mozJSComponentLoader> mozJSComponentLoader::sSelf;
 
+// True if ShutdownPhase::ShutdownFinal has been reached.
+static bool sShutdownFinal = false;
+
 // For terrible compatibility reasons, we need to consider both the global
 // lexical environment and the global of modules when searching for exported
 // symbols.
@@ -504,6 +507,8 @@ void mozJSComponentLoader::FindTargetObject(JSContext* aCx,
 void mozJSComponentLoader::InitStatics() {
   MOZ_ASSERT(!sSelf);
   sSelf = new mozJSComponentLoader();
+
+  RunOnShutdown([&] { sShutdownFinal = true; });
 }
 
 void mozJSComponentLoader::Unload() {
@@ -1192,7 +1197,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
       !mInProgressImports.Get(info.Key(), &mod)) {
     // We're trying to import a new JSM, but we're late in shutdown and this
     // will likely not succeed and might even crash, so fail here.
-    if (PastShutdownPhase(ShutdownPhase::ShutdownFinal)) {
+    if (sShutdownFinal) {
       return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
     }
 
