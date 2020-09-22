@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ext
 
 import android.os.StrictMode
+import mozilla.components.support.ktx.android.os.resetAfter
 import org.mozilla.fenix.Config
 
 /**
@@ -15,11 +16,7 @@ import org.mozilla.fenix.Config
  */
 inline fun <R> StrictMode.ThreadPolicy.resetPoliciesAfter(functionBlock: () -> R): R {
     return if (Config.channel.isDebug) {
-        try {
-            functionBlock()
-        } finally {
-            StrictMode.setThreadPolicy(this)
-        }
+        resetAfter { functionBlock() }
     } else {
         functionBlock()
     }
