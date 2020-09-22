@@ -4,6 +4,10 @@
 ---
 job-defaults:
     e10s: false
+    virtualization:
+        by-test-platform:
+            windows10-64.*: hardware
+            default: virtual
     mozharness:
         script:
             by-test-platform:
