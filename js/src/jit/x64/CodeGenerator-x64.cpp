@@ -578,22 +578,6 @@ void CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins) {
   emitTruncateDouble(input, output, ins->mir());
 }
 
-void CodeGenerator::visitWasmBuiltinTruncateDToInt32(
-    LWasmBuiltinTruncateDToInt32* lir) {
-  FloatRegister input = ToFloatRegister(lir->getOperand(0));
-  Register output = ToRegister(lir->getDef(0));
-
-  emitTruncateDoubleBuiltin(input, output, lir->mir());
-}
-
-void CodeGenerator::visitWasmBuiltinTruncateFToInt32(
-    LWasmBuiltinTruncateFToInt32* lir) {
-  FloatRegister input = ToFloatRegister(lir->getOperand(0));
-  Register output = ToRegister(lir->getDef(0));
-
-  emitTruncateFloat32Builtin(input, output, lir->mir());
-}
-
 void CodeGenerator::visitTruncateFToInt32(LTruncateFToInt32* ins) {
   FloatRegister input = ToFloatRegister(ins->input());
   Register output = ToRegister(ins->output());

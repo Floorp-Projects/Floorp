@@ -2432,8 +2432,7 @@ void MacroAssembler::convertValueToFloatingPoint(ValueOperand value,
 void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
                                            bool widenFloatToDouble,
                                            bool compilingWasm,
-                                           wasm::BytecodeOffset callOffset,
-                                           mozilla::Maybe<int32_t> tlsOffset) {
+                                           wasm::BytecodeOffset callOffset) {
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
   ScratchDoubleScope fpscratch(*this);
@@ -2460,7 +2459,7 @@ void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
   if (compilingWasm) {
     setupWasmABICall();
     passABIArg(src, MoveOp::DOUBLE);
-    callWithABI(callOffset, wasm::SymbolicAddress::ToInt32, tlsOffset);
+    callWithABI(callOffset, wasm::SymbolicAddress::ToInt32);
   } else {
     setupUnalignedABICall(dest);
     passABIArg(src, MoveOp::DOUBLE);
@@ -3123,7 +3122,6 @@ void MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result,
 
 CodeOffset MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
                                        wasm::SymbolicAddress imm,
-                                       mozilla::Maybe<int32_t> tlsOffset,
                                        MoveOp::Type result) {
   MOZ_ASSERT(wasm::NeedsBuiltinThunk(imm));
 
@@ -3137,14 +3135,8 @@ CodeOffset MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
   // The TLS register is used in builtin thunks and must be set, by ABI:
   // reload it after passing arguments, which might have used it at spill
   // points when placing arguments.
+  loadWasmTlsRegFromFrame();
 
-  if (tlsOffset) {
-    // Account for stackAdjust and Push(WasmTlsReg).
-    *tlsOffset += stackAdjust + sizeof(void*);
-    loadPtr(Address(getStackPointer(), *tlsOffset), WasmTlsReg);
-  } else {
-    loadWasmTlsRegFromFrame();
-  }
   CodeOffset raOffset = call(
       wasm::CallSiteDesc(bytecode.offset(), wasm::CallSite::Symbolic), imm);
 
