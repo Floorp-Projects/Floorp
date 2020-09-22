@@ -174,13 +174,13 @@ The code using the fuzzing interface usually lives in a separate directory
 called ``fuzztest`` that is on the same level as gtests. If your component
 has no gtests, then a subdirectory either in tests or in your main directory
 will work. If such a directory does not exist yet in your component, then you
-need to create one with a suitable ``moz.build``. See  `the mtransport target
-for an example <https://searchfox.org/mozilla-central/source/media/mtransport/fuzztest/moz.build>`__
+need to create one with a suitable ``moz.build``. See  `the transport target
+for an example <https://searchfox.org/mozilla-central/source/dom/media/webrtc/transport/fuzztest/moz.build>`__
 
 In order to include the new subdirectory into the build process, you will
 also have to modify the toplevel ``moz.build`` file accordingly. For this
 purpose, you should add your directory to ``TEST_DIRS`` only if ``FUZZING_INTERFACES``
-is set. See again `the mtransport target for an example
+is set. See again `the transport target for an example
 <https://searchfox.org/mozilla-central/rev/de7676288a78b70d2b9927c79493adbf294faad5/media/mtransport/moz.build#18-24>`__.
 
 How your code should look like
@@ -274,7 +274,7 @@ but the macro invocation is quite similar:
   MOZ_FUZZING_INTERFACE_STREAM(FuzzingInitMyTarget, FuzzingRunMyTarget, MyTarget);
 
 For a live example, see also the `implementation of the STUN fuzzing target
-<https://searchfox.org/mozilla-central/source/media/mtransport/fuzztest/stun_parser_libfuzz.cpp>`__.
+<https://searchfox.org/mozilla-central/source/dom/media/webrtc/transport/fuzztest/stun_parser_libfuzz.cpp>`__.
 
 Add instrumentation to the code being tested
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

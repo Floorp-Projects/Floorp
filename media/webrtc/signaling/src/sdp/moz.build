@@ -15,7 +15,7 @@ else:
 include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    '/media/mtransport',
+    '/dom/media/webrtc/transport',
     '/media/webrtc',
     '/media/webrtc/signaling/src/common/browser_logging',
     '/media/webrtc/trunk',

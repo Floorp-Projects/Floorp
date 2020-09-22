@@ -44,18 +44,18 @@ if CONFIG['OS_TARGET'] == 'Android':
     DEFINES['LINUX'] = True
     DEFINES['ANDROID'] = True
     LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/android/include',
+        '/dom/media/webrtc/transport/third_party/nrappkit/src/port/android/include',
     ]
 
 if CONFIG['OS_TARGET'] == 'Linux':
     DEFINES['LINUX'] = True
     LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/linux/include',
+        '/dom/media/webrtc/transport/third_party/nrappkit/src/port/linux/include',
     ]
 
 if CONFIG['OS_TARGET'] == 'Darwin':
     LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
+        '/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include',
     ]
 
 if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
@@ -64,7 +64,7 @@ if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
     else:
         DEFINES['BSD'] = True
     LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
+        '/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include',
     ]
 
 # SCTP DEFINES
@@ -81,22 +81,22 @@ if CONFIG['OS_TARGET'] in ('Darwin', 'Android'):
     DEFINES['GTEST_USE_OWN_TR1_TUPLE'] = 1
 
 LOCAL_INCLUDES += [
-    '/media/mtransport/',
-    '/media/mtransport/third_party/',
-    '/media/mtransport/third_party/nICEr/src/crypto',
-    '/media/mtransport/third_party/nICEr/src/ice',
-    '/media/mtransport/third_party/nICEr/src/net',
-    '/media/mtransport/third_party/nICEr/src/stun',
-    '/media/mtransport/third_party/nICEr/src/util',
-    '/media/mtransport/third_party/nrappkit/src/event',
-    '/media/mtransport/third_party/nrappkit/src/log',
-    '/media/mtransport/third_party/nrappkit/src/plugin',
-    '/media/mtransport/third_party/nrappkit/src/port/generic/include',
-    '/media/mtransport/third_party/nrappkit/src/registry',
-    '/media/mtransport/third_party/nrappkit/src/share',
-    '/media/mtransport/third_party/nrappkit/src/stats',
-    '/media/mtransport/third_party/nrappkit/src/util/',
-    '/media/mtransport/third_party/nrappkit/src/util/libekr',
+    '/dom/media/webrtc/transport/',
+    '/dom/media/webrtc/transport/third_party/',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/crypto',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/ice',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/net',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/stun',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/util',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/event',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/log',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/plugin',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/port/generic/include',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/registry',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/share',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/stats',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/util/',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr',
     '/netwerk/sctp/src/',
     '/xpcom/tests/'
 ]

@@ -9,7 +9,7 @@
 
 #include "mozilla/net/PWebrtcTCPSocketChild.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "mtransport/nr_socket_proxy_config.h"
+#include "transport/nr_socket_proxy_config.h"
 
 namespace mozilla {
 

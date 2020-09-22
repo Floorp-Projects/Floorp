@@ -1,6 +1,6 @@
-diff --git a/media/mtransport/third_party/nrappkit/src/event/async_wait.h b/media/mtransport/third_party/nrappkit/src/event/async_wait.h
---- a/media/mtransport/third_party/nrappkit/src/event/async_wait.h
-+++ b/media/mtransport/third_party/nrappkit/src/event/async_wait.h
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/event/async_wait.h b/dom/media/webrtc/transport/third_party/nrappkit/src/event/async_wait.h
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/event/async_wait.h
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/event/async_wait.h
 @@ -38,21 +38,21 @@
  
  
@@ -24,9 +24,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/event/async_wait.h b/medi
                              char *function,int line);
  int NR_async_cancel(NR_SOCKET sock,int how);
  int NR_async_schedule(NR_async_cb cb,void *arg,char *function,int line);
-diff --git a/media/mtransport/third_party/nrappkit/src/log/r_log.c b/media/mtransport/third_party/nrappkit/src/log/r_log.c
---- a/media/mtransport/third_party/nrappkit/src/log/r_log.c
-+++ b/media/mtransport/third_party/nrappkit/src/log/r_log.c
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/log/r_log.c b/dom/media/webrtc/transport/third_party/nrappkit/src/log/r_log.c
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/log/r_log.c
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/log/r_log.c
 @@ -33,28 +33,41 @@
     POSSIBILITY OF SUCH DAMAGE.
  
@@ -69,9 +69,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/log/r_log.c b/media/mtran
       "CRIT",
       "ERR",
       "WARNING",
-diff --git a/media/mtransport/third_party/nrappkit/src/port/darwin/include/csi_platform.h b/media/mtransport/third_party/nrappkit/src/port/darwin/include/csi_platform.h
---- a/media/mtransport/third_party/nrappkit/src/port/darwin/include/csi_platform.h
-+++ b/media/mtransport/third_party/nrappkit/src/port/darwin/include/csi_platform.h
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include/csi_platform.h b/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include/csi_platform.h
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include/csi_platform.h
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include/csi_platform.h
 @@ -37,17 +37,21 @@
   */
  
@@ -94,9 +94,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/port/darwin/include/csi_p
  
  #endif
  
-diff --git a/media/mtransport/third_party/nrappkit/src/port/linux/include/csi_platform.h b/media/mtransport/third_party/nrappkit/src/port/linux/include/csi_platform.h
---- a/media/mtransport/third_party/nrappkit/src/port/linux/include/csi_platform.h
-+++ b/media/mtransport/third_party/nrappkit/src/port/linux/include/csi_platform.h
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/port/linux/include/csi_platform.h b/dom/media/webrtc/transport/third_party/nrappkit/src/port/linux/include/csi_platform.h
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/port/linux/include/csi_platform.h
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/port/linux/include/csi_platform.h
 @@ -35,17 +35,21 @@
  
     ekr@rtfm.com  Mon Dec 13 17:26:51 2004
@@ -119,9 +119,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/port/linux/include/csi_pl
  
  #endif
  
-diff --git a/media/mtransport/third_party/nrappkit/src/port/win32/include/csi_platform.h b/media/mtransport/third_party/nrappkit/src/port/win32/include/csi_platform.h
---- a/media/mtransport/third_party/nrappkit/src/port/win32/include/csi_platform.h
-+++ b/media/mtransport/third_party/nrappkit/src/port/win32/include/csi_platform.h
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/port/win32/include/csi_platform.h b/dom/media/webrtc/transport/third_party/nrappkit/src/port/win32/include/csi_platform.h
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/port/win32/include/csi_platform.h
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/port/win32/include/csi_platform.h
 @@ -44,45 +44,51 @@
  #define _WIN32_WINNT 0x0400  // This prevents weird "'TryEnterCriticalSection': identifier not found"
                               // compiler errors when poco/win32_mutex.h is included
@@ -175,9 +175,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/port/win32/include/csi_pl
  #define LOG_INFO        6
  #define LOG_DEBUG       7
  
-diff --git a/media/mtransport/third_party/nrappkit/src/registry/registry.c b/media/mtransport/third_party/nrappkit/src/registry/registry.c
---- a/media/mtransport/third_party/nrappkit/src/registry/registry.c
-+++ b/media/mtransport/third_party/nrappkit/src/registry/registry.c
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/registry/registry.c b/dom/media/webrtc/transport/third_party/nrappkit/src/registry/registry.c
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/registry/registry.c
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/registry/registry.c
 @@ -37,21 +37,22 @@
   *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
   *    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
@@ -202,9 +202,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/registry/registry.c b/med
  #include "registry.h"
  #include "registry_int.h"
  #include "registry_vtbl.h"
-diff --git a/media/mtransport/third_party/nrappkit/src/util/libekr/r_crc32.c b/media/mtransport/third_party/nrappkit/src/util/libekr/r_crc32.c
---- a/media/mtransport/third_party/nrappkit/src/util/libekr/r_crc32.c
-+++ b/media/mtransport/third_party/nrappkit/src/util/libekr/r_crc32.c
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_crc32.c b/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_crc32.c
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_crc32.c
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_crc32.c
 @@ -58,20 +58,21 @@
   * the crc computation is finished.  The crc should be complemented
   * before transmission.
@@ -227,9 +227,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/util/libekr/r_crc32.c b/m
  #define CRC(crc, ch)	 (crc = (crc >> 8) ^ crctab[(crc ^ (ch)) & 0xff])
  
  /* generated using the AUTODIN II polynomial
-diff --git a/media/mtransport/third_party/nrappkit/src/util/libekr/r_macros.h b/media/mtransport/third_party/nrappkit/src/util/libekr/r_macros.h
---- a/media/mtransport/third_party/nrappkit/src/util/libekr/r_macros.h
-+++ b/media/mtransport/third_party/nrappkit/src/util/libekr/r_macros.h
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_macros.h b/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_macros.h
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_macros.h
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_macros.h
 @@ -118,20 +118,20 @@
  #ifndef MIN
  #define MIN(a,b) ((a)>(b))?(b):(a)
@@ -252,9 +252,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/util/libekr/r_macros.h b/
  #include "r_memory.h"
  
  #endif
-diff --git a/media/mtransport/third_party/nrappkit/src/util/libekr/r_time.h b/media/mtransport/third_party/nrappkit/src/util/libekr/r_time.h
---- a/media/mtransport/third_party/nrappkit/src/util/libekr/r_time.h
-+++ b/media/mtransport/third_party/nrappkit/src/util/libekr/r_time.h
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_time.h b/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_time.h
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_time.h
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr/r_time.h
 @@ -77,35 +77,25 @@
     $Id: r_time.h,v 1.4 2007/06/26 22:37:57 adamcain Exp $
  
@@ -295,9 +295,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/util/libekr/r_time.h b/me
  int r_int2timeval(UINT8 t,struct timeval *tv);
  UINT8 r_gettimeint(void);
  
-diff --git a/media/mtransport/third_party/nrappkit/src/util/util.c b/media/mtransport/third_party/nrappkit/src/util/util.c
---- a/media/mtransport/third_party/nrappkit/src/util/util.c
-+++ b/media/mtransport/third_party/nrappkit/src/util/util.c
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/util/util.c b/dom/media/webrtc/transport/third_party/nrappkit/src/util/util.c
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/util/util.c
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/util/util.c
 @@ -292,20 +292,22 @@ int nr_sha1_file(char *filename,UCHAR *o
  
      return(_status);
@@ -368,9 +368,9 @@ diff --git a/media/mtransport/third_party/nrappkit/src/util/util.c b/media/mtran
 +
  #endif
  
-diff --git a/media/mtransport/third_party/nrappkit/src/util/util.h b/media/mtransport/third_party/nrappkit/src/util/util.h
---- a/media/mtransport/third_party/nrappkit/src/util/util.h
-+++ b/media/mtransport/third_party/nrappkit/src/util/util.h
+diff --git a/dom/media/webrtc/transport/third_party/nrappkit/src/util/util.h b/dom/media/webrtc/transport/third_party/nrappkit/src/util/util.h
+--- a/dom/media/webrtc/transport/third_party/nrappkit/src/util/util.h
++++ b/dom/media/webrtc/transport/third_party/nrappkit/src/util/util.h
 @@ -57,12 +57,17 @@ int nr_drop_privileges(char *username);
  int nr_hex_ascii_dump(Data *data);
  int nr_fwrite_all(FILE *fp,UCHAR *buf,int len);

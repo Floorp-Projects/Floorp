@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-mtransport_lcppsrcs = [
+transport_lcppsrcs = [
     'dtlsidentity.cpp',
     'mediapacket.cpp',
     'nr_socket_proxy_config.cpp',
@@ -32,26 +32,26 @@ mtransport_lcppsrcs = [
     'WebrtcTCPSocketWrapper.cpp',
 ]
 
-mtransport_cppsrcs = [
-    '/media/mtransport/%s' % s for s in sorted(mtransport_lcppsrcs)
+transport_cppsrcs = [
+    '/dom/media/webrtc/transport/%s' % s for s in sorted(transport_lcppsrcs)
 ]
 
 LOCAL_INCLUDES += [
-    '/media/mtransport/',
-    '/media/mtransport/third_party/',
-    '/media/mtransport/third_party/nICEr/src/crypto',
-    '/media/mtransport/third_party/nICEr/src/ice',
-    '/media/mtransport/third_party/nICEr/src/net',
-    '/media/mtransport/third_party/nICEr/src/stun',
-    '/media/mtransport/third_party/nICEr/src/util',
-    '/media/mtransport/third_party/nrappkit/src/event',
-    '/media/mtransport/third_party/nrappkit/src/log',
-    '/media/mtransport/third_party/nrappkit/src/plugin',
-    '/media/mtransport/third_party/nrappkit/src/port/generic/include',
-    '/media/mtransport/third_party/nrappkit/src/registry',
-    '/media/mtransport/third_party/nrappkit/src/share',
-    '/media/mtransport/third_party/nrappkit/src/stats',
-    '/media/mtransport/third_party/nrappkit/src/util/libekr',
+    '/dom/media/webrtc/transport/',
+    '/dom/media/webrtc/transport/third_party/',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/crypto',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/ice',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/net',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/stun',
+    '/dom/media/webrtc/transport/third_party/nICEr/src/util',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/event',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/log',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/plugin',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/port/generic/include',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/registry',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/share',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/stats',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr',
     '/netwerk/srtp/src/crypto/include',
     '/netwerk/srtp/src/include',
 ]
@@ -62,25 +62,25 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'
     else:
         DEFINES['BSD'] = True
     LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
+        '/dom/media/webrtc/transport/third_party/nrappkit/src/port/darwin/include',
     ]
 elif CONFIG['OS_TARGET'] == 'Linux':
     DEFINES['LINUX'] = True
     LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/linux/include',
+        '/dom/media/webrtc/transport/third_party/nrappkit/src/port/linux/include',
     ]
 elif CONFIG['OS_TARGET'] == 'Android':
     DEFINES['LINUX'] = True
     DEFINES['ANDROID'] = True
     LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/android/include',
+        '/dom/media/webrtc/transport/third_party/nrappkit/src/port/android/include',
     ]
 elif CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['WIN'] = True
     # for stun.h
     DEFINES['WIN32'] = True
     LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/win32/include',
+        '/dom/media/webrtc/transport/third_party/nrappkit/src/port/win32/include',
     ]
 
 for var in ('HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR'):

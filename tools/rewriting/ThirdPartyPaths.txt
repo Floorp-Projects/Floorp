@@ -36,6 +36,7 @@ dom/media/platforms/ffmpeg/libav53/
 dom/media/platforms/ffmpeg/libav54/
 dom/media/platforms/ffmpeg/libav55/
 dom/media/webaudio/test/blink/
+dom/media/webrtc/transport/third_party/
 dom/media/webspeech/recognition/endpointer.cc
 dom/media/webspeech/recognition/endpointer.h
 dom/media/webspeech/recognition/energy_endpointer.cc
@@ -119,7 +120,6 @@ media/libvpx/
 media/libwebp/
 media/libyuv/
 media/mp4parse-rust/
-media/mtransport/third_party/
 media/openmax_dl/
 media/openmax_il/
 media/webrtc/signaling/src/sdp/sipcc/

@@ -16,7 +16,7 @@
 #include "mozilla/net/PNeckoParent.h"
 #include "nsIPermissionManager.h"
 #include "mozilla/ipc/PBackgroundParent.h"
-#include "mtransport/runnable_utils.h"
+#include "transport/runnable_utils.h"
 
 namespace mozilla {
 
@@ -38,7 +38,7 @@ bool UDPSocketParent::Init(nsIPrincipal* aPrincipal,
                            const nsACString& aFilter) {
   MOZ_ASSERT_IF(mBackgroundManager, !aPrincipal);
   // will be used once we move all UDPSocket to PBackground, or
-  // if we add in Principal checking for mtransport
+  // if we add in Principal checking for dom/media/webrtc/transport
   Unused << mBackgroundManager;
 
   mPrincipal = aPrincipal;
