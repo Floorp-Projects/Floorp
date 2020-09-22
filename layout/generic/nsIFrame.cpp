@@ -6438,13 +6438,9 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
   return 0;
 }
 
-nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
-                                    nscoord aContainingBlockISize,
+nscoord nsIFrame::ComputeISizeValue(nscoord aContainingBlockISize,
                                     nscoord aContentEdgeToBoxSizing,
-                                    nscoord aBoxSizingToMarginEdge,
-                                    const LengthPercentage& aCoord,
-                                    ComputeSizeFlags aFlags) {
-  MOZ_ASSERT(aRenderingContext, "non-null rendering context expected");
+                                    const LengthPercentage& aSize) {
   LAYOUT_WARN_IF_FALSE(
       aContainingBlockISize != NS_UNCONSTRAINEDSIZE,
       "have unconstrained inline-size; this should only result from "
@@ -6452,7 +6448,7 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
       "calculation");
   NS_ASSERTION(aContainingBlockISize >= 0, "inline-size less than zero");
 
-  nscoord result = aCoord.Resolve(aContainingBlockISize);
+  nscoord result = aSize.Resolve(aContainingBlockISize);
   // The result of a calc() expression might be less than 0; we
   // should clamp at runtime (below).  (Percentages and coords that
   // are less than 0 have already been dropped by the parser.)
