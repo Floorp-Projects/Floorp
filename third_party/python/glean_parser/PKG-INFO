@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: glean_parser
-Version: 1.28.0
+Version: 1.28.5
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: Michael Droettboom
@@ -68,6 +68,41 @@ Description: ============
         
         Unreleased
         ----------
+        
+        1.28.5 (2020-09-14)
+        -------------------
+        
+        * Fix deploy step to update pip before deploying to pypi.
+        
+        1.28.4 (2020-09-14)
+        -------------------
+        
+        * The `SUPERFLUOUS_NO_LINT` warning has been removed from the glinter.
+          It likely did more harm than good, and makes it hard to make
+          `metrics.yaml` files that pass across different versions of `glean_parser`.
+        * Expired metrics will now produce a linter warning, `EXPIRED_METRIC`.
+        * Expiry dates that are more than 730 days (~2 years) in the future will produce a linter warning,
+          `EXPIRATION_DATE_TOO_FAR`.
+        * Allow using the Quantity metric type outside of Gecko.
+        * New parser configs `custom_is_expired` and `custom_validate_expires` added.
+          These are both functions that take the `expires` value of the metric and return a bool.
+          (See `Metric.is_expired` and `Metric.validate_expires`).
+          These will allow FOG to provide custom validation for its version-based `expires` values.
+        
+        1.28.3 (2020-07-28)
+        -------------------
+        
+        * BUGFIX: Support HashSet and Dictionary in the C# generated code.
+        
+        1.28.2 (2020-07-28)
+        -------------------
+        
+        * BUGFIX: Generate valid C# code when using Labeled metric types.
+        
+        1.28.1 (2020-07-24)
+        -------------------
+        
+        * BUGFIX: Add missing column to correctly render markdown tables in generated documentation.
         
         1.28.0 (2020-07-23)
         -------------------

@@ -115,7 +115,9 @@ def _get_schema(
     if schema_id not in schemas:
         raise ValueError(
             util.format_error(
-                filepath, "", f"$schema key must be one of {', '.join(schemas.keys())}",
+                filepath,
+                "",
+                f"$schema key must be one of {', '.join(schemas.keys())}",
             )
         )
     return schemas[schema_id]
@@ -204,7 +206,9 @@ def _instantiate_metrics(
                 )
             except Exception as e:
                 yield util.format_error(
-                    filepath, f"On instance {category_key}.{metric_key}", str(e),
+                    filepath,
+                    f"On instance {category_key}.{metric_key}",
+                    str(e),
                 )
                 metric_obj = None
             else:

@@ -3,7 +3,7 @@
 Jinja2 template is not. Please file bugs! #}
 
 # Metrics
-This document enumerates the metrics collected by {{ project_title }}.
+This document enumerates the metrics collected by {{ project_title }} using the [Glean SDK](https://mozilla.github.io/glean/book/index.html).
 This project may depend on other projects which also collect metrics.
 This means you might have to go searching through the dependency tree to get a full picture of everything collected by this project.
 
@@ -61,8 +61,8 @@ This ping includes the [client id](https://mozilla.github.io/glean/book/user/pin
 {% if metrics_by_pings[ping_name] %}
 The following metrics are added to the ping:
 
-| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefix/Data_Collection) |
-| --- | --- | --- | --- | --- | --- |
+| Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
+| --- | --- | --- | --- | --- | --- | --- |
 {% for metric in metrics_by_pings[ping_name] %}
 | {{ metric.identifier() }} |
 {{- '['}}{{ metric.type }}]({{ metric.type|metrics_docs }}) |
