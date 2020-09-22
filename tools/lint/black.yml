@@ -3,6 +3,7 @@ black:
     description: Reformat python
     include:
         - python/mozbuild/mozbuild/code_analysis
+        - python/mozbuild/mozbuild/compilation/database.py
         - python/mozperftest/mozperftest
         - python/mozrelease/mozrelease/scriptworker_canary.py
         - taskcluster/docker/funsize-update-generator
