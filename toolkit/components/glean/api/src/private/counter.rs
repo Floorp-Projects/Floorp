@@ -2,11 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::sync::Arc;
-
 use super::CommonMetricData;
 
-use crate::dispatcher;
 use crate::ipc::{need_ipc, with_ipc_payload, MetricId};
 
 /// A counter metric.
@@ -15,7 +12,7 @@ use crate::ipc::{need_ipc, with_ipc_payload, MetricId};
 /// The value can only be incremented, not decremented.
 #[derive(Debug)]
 pub enum CounterMetric {
-    Parent(Arc<CounterMetricImpl>),
+    Parent(CounterMetricImpl),
     Child(CounterMetricIpc),
 }
 #[derive(Clone, Debug)]
@@ -29,7 +26,7 @@ impl CounterMetric {
         if need_ipc() {
             CounterMetric::Child(CounterMetricIpc(MetricId::new(meta)))
         } else {
-            CounterMetric::Parent(Arc::new(CounterMetricImpl::new(meta)))
+            CounterMetric::Parent(CounterMetricImpl::new(meta))
         }
     }
 
@@ -44,10 +41,7 @@ impl CounterMetric {
     /// Logs an error if the `amount` is 0 or negative.
     pub fn add(&self, amount: i32) {
         match self {
-            CounterMetric::Parent(p) => {
-                let metric = Arc::clone(&p);
-                dispatcher::launch(move || metric.add(amount));
-            }
+            CounterMetric::Parent(p) => p.add(amount),
             CounterMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
                     if let Some(v) = payload.counters.get_mut(&c.0) {
@@ -74,10 +68,7 @@ impl CounterMetric {
     /// Returns the stored value or `None` if nothing stored.
     pub fn test_get_value(&self, storage_name: &str) -> Option<i32> {
         match self {
-            CounterMetric::Parent(p) => {
-                dispatcher::block_on_queue();
-                p.test_get_value(storage_name)
-            }
+            CounterMetric::Parent(p) => p.test_get_value(storage_name),
             CounterMetric::Child(_c) => panic!(
                 "Cannot get test value for {:?} in non-parent process!",
                 self
