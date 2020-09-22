@@ -138,62 +138,49 @@ CacheIRHealth::Happiness CacheIRHealth::spewJSOpAndCacheIRHealth(
   return entryHappiness;
 }
 
-bool CacheIRHealth::rateMyCacheIR(JSContext* cx, Handle<ScriptVector> scripts) {
-  AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, nullptr);
+bool CacheIRHealth::rateMyCacheIR(JSContext* cx, HandleScript script) {
+  AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, script);
   if (!spew) {
     return true;
   }
 
-  spew->beginListProperty("scripts");
-  for (uint32_t i = 0; i < scripts.length(); i++) {
-    Happiness scriptHappiness = Happy;
-    spew->beginObject();
-    {
-      HandleScript script = scripts[i];
-      jit::JitScript* jitScript = script->jitScript();
-      jsbytecode* next = script->code();
-      jsbytecode* end = script->codeEnd();
+  jit::JitScript* jitScript = script->jitScript();
+  jsbytecode* next = script->code();
+  jsbytecode* end = script->codeEnd();
 
-      spew->property("filename", script->filename());
-      spew->property("line", script->lineno());
-      spew->property("column", script->column());
+  spew->beginListProperty("entries");
+  ICEntry* prevEntry = nullptr;
+  Happiness scriptHappiness = Happy;
+  while (next < end) {
+    uint32_t len = 0;
+    uint32_t pcOffset = script->pcToOffset(next);
 
-      spew->beginListProperty("entries");
-      ICEntry* prevEntry = nullptr;
-      while (next < end) {
-        uint32_t len = 0;
-        uint32_t pcOffset = script->pcToOffset(next);
-
-        jit::ICEntry* entry =
-            jitScript->maybeICEntryFromPCOffset(pcOffset, prevEntry);
-        if (entry) {
-          prevEntry = entry;
-        }
-
-        JSOp op = JSOp(*next);
-        const JSCodeSpec& cs = CodeSpec(op);
-        len = cs.length;
-        MOZ_ASSERT(len);
-
-        if (entry && (entry->firstStub()->isFallback() ||
-                      ICStub::IsCacheIRKind(entry->firstStub()->kind()))) {
-          Happiness entryHappiness =
-              spewJSOpAndCacheIRHealth(spew, script, entry, next, op);
-
-          if (entryHappiness < scriptHappiness) {
-            scriptHappiness = entryHappiness;
-          }
-        }
-
-        next += len;
-      }
-      spew->endList();  // entries
-
-      spew->property("scriptHappiness", uint8_t(scriptHappiness));
+    jit::ICEntry* entry =
+        jitScript->maybeICEntryFromPCOffset(pcOffset, prevEntry);
+    if (entry) {
+      prevEntry = entry;
     }
-    spew->endObject();
+
+    JSOp op = JSOp(*next);
+    const JSCodeSpec& cs = CodeSpec(op);
+    len = cs.length;
+    MOZ_ASSERT(len);
+
+    if (entry && (entry->firstStub()->isFallback() ||
+                  ICStub::IsCacheIRKind(entry->firstStub()->kind()))) {
+      Happiness entryHappiness =
+          spewJSOpAndCacheIRHealth(spew, script, entry, next, op);
+
+      if (entryHappiness < scriptHappiness) {
+        scriptHappiness = entryHappiness;
+      }
+    }
+
+    next += len;
   }
-  spew->endList();  // scripts
+  spew->endList();  // entries
+
+  spew->property("scriptHappiness", uint8_t(scriptHappiness));
 
   return true;
 }
