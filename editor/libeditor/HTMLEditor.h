@@ -4162,7 +4162,7 @@ class HTMLEditor final : public TextEditor,
   // (drag&drop or clipboard)
   virtual nsresult PrepareTransferable(
       nsITransferable** aTransferable) override;
-  nsresult PrepareHTMLTransferable(nsITransferable** aTransferable);
+  nsresult PrepareHTMLTransferable(nsITransferable** aTransferable) const;
   MOZ_CAN_RUN_SCRIPT nsresult InsertFromTransferable(
       nsITransferable* aTransferable, Document* aSourceDoc,
       const nsAString& aContextStr, const nsAString& aInfoStr,
@@ -4177,7 +4177,7 @@ class HTMLEditor final : public TextEditor,
                          Document* aSourceDoc, const EditorDOMPoint& aDroppedAt,
                          bool aDoDeleteSelection);
 
-  bool HavePrivateHTMLFlavor(nsIClipboard* clipboard);
+  static bool HavePrivateHTMLFlavor(nsIClipboard* clipboard);
 
   /**
    * CF_HTML:
