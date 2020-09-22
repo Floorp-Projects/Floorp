@@ -116,7 +116,7 @@ use smallvec::SmallVec;
 
 // Type definitions for interning clip nodes.
 
-#[derive(Copy, Clone, Debug, MallocSizeOf)]
+#[derive(Copy, Clone, Debug, MallocSizeOf, PartialEq)]
 #[cfg_attr(any(feature = "serde"), derive(Deserialize, Serialize))]
 pub enum ClipIntern {}
 
@@ -125,7 +125,7 @@ pub type ClipDataHandle = intern::Handle<ClipIntern>;
 
 /// Defines a clip that is positioned by a specific spatial node
 #[cfg_attr(feature = "capture", derive(Serialize))]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct ClipInstance {
     /// Handle to the interned clip
     pub handle: ClipDataHandle,
