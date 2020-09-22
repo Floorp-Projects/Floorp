@@ -390,18 +390,20 @@ nsresult Http3Stream::Finish0RTT(bool aRestart) {
     if (trans) {
       trans->Refused0RTT();
     }
+
+    // Reset Http3Sream states as well.
+    mSendState = PREPARING_HEADERS;
+    mRecvState = READING_HEADERS;
+    mStreamId = UINT64_MAX;
+    mQueued = false;
+    mRequestBlockedOnRead = false;
+    mDataReceived = false;
+    mResetRecv = false;
+    mRequestBodyLenRemaining = 0;
+    mTotalSent = 0;
+    mTotalRead = 0;
+    mFin = false;
   }
-  mSendState = PREPARING_HEADERS;
-  mRecvState = READING_HEADERS;
-  mStreamId = UINT64_MAX;
-  mQueued = false;
-  mRequestBlockedOnRead = false;
-  mDataReceived = false;
-  mResetRecv = false;
-  mRequestBodyLenRemaining = 0;
-  mTotalSent = 0;
-  mTotalRead = 0;
-  mFin = false;
 
   return rv;
 }
