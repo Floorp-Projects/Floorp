@@ -17,6 +17,9 @@ pull_request_rules:
       - status-success=complete-pr
       - files~=(strings.xml)
     actions:
+      review:
+        type: APPROVE
+        message: LGTM 😎
       merge:
         method: rebase
         strict: true
