@@ -43,6 +43,7 @@ UNIFIED_SOURCES += [
     "/media/webrtc/trunk/webrtc/media/engine/apm_helpers.cc",
     "/media/webrtc/trunk/webrtc/media/engine/constants.cc",
     "/media/webrtc/trunk/webrtc/media/engine/convert_legacy_video_factory.cc",
+    "/media/webrtc/trunk/webrtc/media/engine/encoder_simulcast_proxy.cc",
     "/media/webrtc/trunk/webrtc/media/engine/internaldecoderfactory.cc",
     "/media/webrtc/trunk/webrtc/media/engine/internalencoderfactory.cc",
     "/media/webrtc/trunk/webrtc/media/engine/payload_type_mapper.cc",
@@ -52,7 +53,6 @@ UNIFIED_SOURCES += [
     "/media/webrtc/trunk/webrtc/media/engine/simulcast_encoder_adapter.cc",
     "/media/webrtc/trunk/webrtc/media/engine/videodecodersoftwarefallbackwrapper.cc",
     "/media/webrtc/trunk/webrtc/media/engine/videoencodersoftwarefallbackwrapper.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/vp8_encoder_simulcast_proxy.cc",
     "/media/webrtc/trunk/webrtc/media/engine/webrtcvideodecoderfactory.cc",
     "/media/webrtc/trunk/webrtc/media/engine/webrtcvideoencoderfactory.cc"
 ]
