@@ -15,10 +15,10 @@ job-defaults:
     require-build:
         win64-shippable/opt: build-win64-shippable/opt
 
-try:
+try-browsertime:
     description: Run ./mach perftest on windows
     treeherder:
-        symbol: perftest(win)
+        symbol: perftest(win-bt)
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&

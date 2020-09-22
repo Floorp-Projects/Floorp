@@ -62,8 +62,9 @@ class Options:
             "help": "Pushin the test to try",
         },
         "--try-platform": {
+            "nargs": "*",
             "type": str,
-            "default": "g5",
+            "default": "linux",
             "help": "Platform to use on try",
             "choices": ["g5", "pixel2", "linux", "mac", "win"],
         },

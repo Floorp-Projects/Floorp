@@ -16,6 +16,7 @@ var perfMetadata = {
       ],
       xpcshell_cycles: 13,
       verbose: true,
+      try_platform: ["linux", "mac"],
     },
   },
   tags: ["network", "http3", "quic"],

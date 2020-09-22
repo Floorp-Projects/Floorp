@@ -101,6 +101,8 @@ def run_tests(mach_cmd, kwargs, client_args):
     # trying to get the arguments from the task params
     if on_try:
         try_options = json.loads(os.environ["PERFTEST_OPTIONS"])
+        print("Loading options from $PERFTEST_OPTIONS")
+        print(json.dumps(try_options, indent=4, sort_keys=True))
         kwargs.update(try_options)
 
     from mozperftest.utils import build_test_list
