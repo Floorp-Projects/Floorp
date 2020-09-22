@@ -248,17 +248,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
     // Testing the magic "min-main-size:auto" keyword
     // and other intrinsic min/max sizes
     { desc: "flex-min-inline-size-auto",
-      candStyle: "flex:0 5px;min-inline-size:auto",
+      candStyle: "flex:0 5px; inline-size:auto; min-inline-size:auto",
     },
     { desc: "flex-min-inline-size-min-content",
-      candStyle: "flex:0 5px;min-inline-size:min-content",
+      candStyle: "flex:0 5px; inline-size:auto; min-inline-size:min-content",
     },
     { desc: "flex-min-block-size-auto",
-      candStyle: "flex:0 5px;min-block-size:auto",
+      candStyle: "flex:0 5px; block-size:auto; min-block-size:auto",
       isContainerColumnOriented: true,
     },
     { desc: "flex-min-block-size-auto",
-      candStyle: "flex:0 5px;min-block-size:min-content",
+      candStyle: "flex:0 5px; block-size:auto; min-block-size:min-content",
       isContainerColumnOriented: true,
     },
   ];
