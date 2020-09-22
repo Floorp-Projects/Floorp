@@ -339,17 +339,43 @@ function synthesizeNativeWheelAndWaitForWheelEvent(
   aDeltaY,
   aCallback
 ) {
-  var targetWindow = windowForTarget(aTarget);
-  targetWindow.addEventListener(
-    "wheel",
-    function(e) {
-      if (aCallback) {
-        setTimeout(aCallback, 0);
-      }
-    },
-    { once: true }
+  let p = promiseNativeWheelAndWaitForWheelEvent(
+    aTarget,
+    aX,
+    aY,
+    aDeltaX,
+    aDeltaY
   );
-  return synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY);
+  if (aCallback) {
+    p.then(aCallback);
+  }
+  return true;
+}
+
+// Same as synthesizeNativeWheelAndWaitForWheelEvent, except returns a promise
+// instead of taking a callback
+function promiseNativeWheelAndWaitForWheelEvent(
+  aTarget,
+  aX,
+  aY,
+  aDeltaX,
+  aDeltaY
+) {
+  return new Promise((resolve, reject) => {
+    var targetWindow = windowForTarget(aTarget);
+    targetWindow.addEventListener(
+      "wheel",
+      function(e) {
+        setTimeout(resolve, 0);
+      },
+      { once: true }
+    );
+    try {
+      synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY);
+    } catch (e) {
+      reject();
+    }
+  });
 }
 
 // Synthesizes a native mousewheel event and invokes the callback once the
@@ -365,15 +391,40 @@ function synthesizeNativeWheelAndWaitForScrollEvent(
   aDeltaY,
   aCallback
 ) {
-  var targetWindow = windowForTarget(aTarget);
-  targetWindow.addEventListener(
-    "scroll",
-    function() {
-      setTimeout(aCallback, 0);
-    },
-    { capture: true, once: true }
-  ); // scroll events don't always bubble
-  return synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY);
+  promiseNativeWheelAndWaitForScrollEvent(
+    aTarget,
+    aX,
+    aY,
+    aDeltaX,
+    aDeltaY
+  ).then(aCallback);
+  return true;
+}
+
+// Same as synthesizeNativeWheelAndWaitForScrollEvent, but returns a promise
+// instead of taking a callback
+function promiseNativeWheelAndWaitForScrollEvent(
+  aTarget,
+  aX,
+  aY,
+  aDeltaX,
+  aDeltaY
+) {
+  return new Promise((resolve, reject) => {
+    var targetWindow = windowForTarget(aTarget);
+    targetWindow.addEventListener(
+      "scroll",
+      function() {
+        setTimeout(resolve, 0);
+      },
+      { capture: true, once: true }
+    ); // scroll events don't always bubble
+    try {
+      synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY);
+    } catch (e) {
+      reject();
+    }
+  });
 }
 
 // Synthesizes a native mouse move event and returns immediately.
@@ -397,15 +448,28 @@ function synthesizeNativeMouseMoveAndWaitForMoveEvent(
   aY,
   aCallback
 ) {
-  var targetWindow = windowForTarget(aTarget);
-  targetWindow.addEventListener(
-    "mousemove",
-    function(e) {
-      setTimeout(aCallback, 0);
-    },
-    { once: true }
-  );
-  return synthesizeNativeMouseMove(aTarget, aX, aY);
+  promiseNativeMouseMoveAndWaitForMoveEvent(aTarget, aX, aY).then(aCallback);
+  return true;
+}
+
+// Same as synthesizeNativeMouseMoveAndWaitForMoveEvent but returns a promise
+// instead of taking a callback.
+function promiseNativeMouseMoveAndWaitForMoveEvent(aTarget, aX, aY) {
+  return new Promise((resolve, reject) => {
+    var targetWindow = windowForTarget(aTarget);
+    targetWindow.addEventListener(
+      "mousemove",
+      function(e) {
+        setTimeout(resolve, 0);
+      },
+      { once: true }
+    );
+    try {
+      synthesizeNativeMouseMove(aTarget, aX, aY);
+    } catch (e) {
+      reject();
+    }
+  });
 }
 
 // Synthesizes a native touch event and dispatches it. aX and aY in CSS pixels
@@ -655,37 +719,18 @@ function moveMouseAndScrollWheelOver(
   waitForScroll = true,
   scrollDelta = 10
 ) {
-  return synthesizeNativeMouseMoveAndWaitForMoveEvent(
+  promiseMoveMouseAndScrollWheelOver(
     target,
     dx,
     dy,
-    function() {
-      if (waitForScroll) {
-        synthesizeNativeWheelAndWaitForScrollEvent(
-          target,
-          dx,
-          dy,
-          0,
-          -scrollDelta,
-          testDriver
-        );
-      } else {
-        synthesizeNativeWheelAndWaitForWheelEvent(
-          target,
-          dx,
-          dy,
-          0,
-          -scrollDelta,
-          testDriver
-        );
-      }
-    }
-  );
+    waitForScroll,
+    scrollDelta
+  ).then(testDriver);
+  return true;
 }
 
 // Same as moveMouseAndScrollWheelOver, but returns a promise instead of taking
-// a callback function. Eventually we should convert all these callback-taking
-// functions into promise-producing functions but for now this is a stopgap.
+// a callback function.
 function promiseMoveMouseAndScrollWheelOver(
   target,
   dx,
@@ -693,16 +738,17 @@ function promiseMoveMouseAndScrollWheelOver(
   waitForScroll = true,
   scrollDelta = 10
 ) {
-  return new Promise(resolve => {
-    moveMouseAndScrollWheelOver(
-      target,
-      dx,
-      dy,
-      resolve,
-      waitForScroll,
-      scrollDelta
+  let p = promiseNativeMouseMoveAndWaitForMoveEvent(target, dx, dy);
+  if (waitForScroll) {
+    p = p.then(() =>
+      promiseNativeWheelAndWaitForScrollEvent(target, dx, dy, 0, -scrollDelta)
     );
-  });
+  } else {
+    p = p.then(() =>
+      promiseNativeWheelAndWaitForWheelEvent(target, dx, dy, 0, -scrollDelta)
+    );
+  }
+  return p;
 }
 
 // Synthesizes events to drag |target|'s vertical scrollbar by the distance
