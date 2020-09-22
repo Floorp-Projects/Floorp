@@ -18,10 +18,27 @@ job-defaults:
     require-build:
         linux64-shippable/opt: build-linux64-shippable/opt
 
-try:
+try-xpcshell:
     description: Run ./mach perftest on Linux
     treeherder:
-        symbol: perftest(linux)
+        symbol: perftest(linux-xpcshell)
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.8 python/mozperftest/mozperftest/runner.py
+            --on-try
+            --flavor desktop-browser
+            --output $MOZ_FETCHES_DIR/../artifacts
+            --xpcshell-binary ${MOZ_FETCHES_DIR}/bin/xpcshell
+            --xpcshell-mozinfo ${MOZ_FETCHES_DIR}/target.mozinfo.json
+            --xpcshell-nodejs ${MOZ_FETCHES_DIR}/node/bin/node
+            --xpcshell-xre-path ${MOZ_FETCHES_DIR}/firefox
+
+try-browsertime:
+    description: Run ./mach perftest on Linux
+    treeherder:
+        symbol: perftest(linux-bt)
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&

@@ -4,12 +4,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import mozunit
 import os
+import sys
 from unittest import mock
 import tempfile
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
 
+import pytest
 from mach.registrar import Registrar
 
 Registrar.categories = {"testing": []}
@@ -43,6 +45,20 @@ class _TestMachEnvironment(MachEnvironment):
 
 
 @contextmanager
+def running_on_try(on_try=True):
+    old = utils.ON_TRY
+    utils.ON_TRY = on_try
+    try:
+        if on_try:
+            with temporary_env(MOZ_AUTOMATION="1"):
+                yield
+        else:
+            yield
+    finally:
+        utils.ON_TRY = old
+
+
+@contextmanager
 def _get_command(klass=Perftest):
     from mozbuild.base import MozbuildObject
     from mozperftest.argparser import PerftestArgumentParser
@@ -56,9 +72,23 @@ def _get_command(klass=Perftest):
         log_manager = mock.Mock()
         state_dir = tempfile.mkdtemp()
 
+    # used to make arguments passed by the test as
+    # being set by the user.
+    def _run_perftest(func):
+        def _run(**kwargs):
+            parser.set_by_user = list(kwargs.keys())
+            return func(**kwargs)
+
+        return _run
+
     try:
         obj = klass(context())
-        obj.get_parser = lambda: PerftestArgumentParser()
+        parser = PerftestArgumentParser()
+        obj.get_parser = lambda: parser
+
+        if isinstance(obj, Perftest):
+            obj.run_perftest = _run_perftest(obj.run_perftest)
+
         yield obj
     finally:
         shutil.rmtree(context.state_dir)
@@ -103,6 +133,38 @@ def test_push_command(push_to_try, venv):
 
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
+@mock.patch("tryselect.push.push_to_try")
+def test_push_command_unknown_platforms(push_to_try, venv):
+    # full stop when a platform is unknown
+    with _get_command() as test, pytest.raises(NotImplementedError):
+        test.run_perftest(
+            tests=[EXAMPLE_TEST],
+            flavor="desktop-browser",
+            push_to_try=True,
+            try_platform=["solaris", "linux", "mac"],
+        )
+
+
+@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
+@mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
+@mock.patch("tryselect.push.push_to_try")
+def test_push_command_several_platforms(push_to_try, venv):
+    with running_on_try(False), _get_command() as test:  # , silence(test):
+        test.run_perftest(
+            tests=[EXAMPLE_TEST],
+            flavor="desktop-browser",
+            push_to_try=True,
+            try_platform=["linux", "mac"],
+        )
+        push_to_try.assert_called()
+        name, args, kwargs = push_to_try.mock_calls[0]
+        params = kwargs["try_task_config"]["parameters"]["try_task_config"]
+        assert "perftest-linux-try-browsertime" in params["tasks"]
+        assert "perftest-macosx-try-browsertime" in params["tasks"]
+
+
+@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
+@mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
 def test_doc_flavor(mocked_func):
     with _get_command() as test, silence(test):
         test.run_perftest(tests=[EXAMPLE_TEST], flavor="doc")
@@ -110,17 +172,33 @@ def test_doc_flavor(mocked_func):
 
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
-@mock.patch("mozperftest.mach_commands.PerftestTests._run_python_script")
+@mock.patch("mozperftest.mach_commands.PerftestTests._run_script")
 def test_test_runner(*mocked):
+    with running_on_try(False), _get_command(PerftestTests) as test:
+        test.run_tests(tests=[EXAMPLE_TEST], verbose=True)
+
+
+@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
+@mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
+@mock.patch("mozperftest.mach_commands.PerftestTests._run_python_script")
+def test_test_runner_on_try(*mocked):
     # simulating on try to run the paths parser
-    old = utils.ON_TRY
-    utils.ON_TRY = True
-    with _get_command(PerftestTests) as test, silence(test), temporary_env(
-        MOZ_AUTOMATION="1"
-    ):
+    with running_on_try(), _get_command(PerftestTests) as test:
         test.run_tests(tests=[EXAMPLE_TEST])
 
-    utils.ON_TRY = old
+
+@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
+@mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
+@mock.patch("mozperftest.mach_commands.PerftestTests._run_script")
+def test_test_runner_coverage(*mocked):
+    # simulating with coverage not installed
+    with running_on_try(False), _get_command(PerftestTests) as test:
+        old = list(sys.meta_path)
+        sys.meta_path = []
+        try:
+            test.run_tests(tests=[EXAMPLE_TEST])
+        finally:
+            sys.meta_path = old
 
 
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
@@ -165,24 +243,12 @@ def resolve_tests(tests=None):
     return _resolve
 
 
-@contextmanager
-def not_on_try():
-    # forcing ON_TRY to false, so when the test runs in the CI,
-    # we test the desktop behavior (fzf is a UI that is deactivated in the CI)
-    old = utils.ON_TRY
-    utils.ON_TRY = False
-    try:
-        yield
-    finally:
-        utils.ON_TRY = old
-
-
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
 @mock.patch("mozperftest.fzf.fzf.select", new=fzf_selection)
 @mock.patch("moztest.resolve.TestResolver.resolve_tests", new=resolve_tests())
 def test_fzf_flavor(*mocked):
-    with not_on_try(), _get_command() as test:  # , silence():
+    with running_on_try(False), _get_command() as test:  # , silence():
         test.run_perftest(flavor="desktop-browser")
 
 
@@ -191,7 +257,7 @@ def test_fzf_flavor(*mocked):
 @mock.patch("mozperftest.fzf.fzf.select", new=fzf_selection)
 @mock.patch("moztest.resolve.TestResolver.resolve_tests", new=resolve_tests([]))
 def test_fzf_nothing_selected(*mocked):
-    with not_on_try(), _get_command() as test, silence():
+    with running_on_try(False), _get_command() as test, silence():
         test.run_perftest(flavor="desktop-browser")
 
 
