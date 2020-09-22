@@ -171,9 +171,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsSocketTransport::Close\n"
          "race:nsSocketTransport::OnSocketDetached\n"
 
-         // Bug 1607212
-         "race:CacheEntry::InvokeCallback\n"
-
          // Bug 1607138
          "race:gXPCOMThreadsShutDown\n"
 
@@ -221,10 +218,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1615123
          "race:_dl_deallocate_tls\n"
          "race:__libc_memalign\n"
-
-         // Bug 1615121
-         "race:CacheEntry::Purge\n"
-         "race:CacheEntry::MetaDataReady\n"
 
          // Bug 1615265
          "race:ScriptPreloader::OffThreadDecodeCallback\n"
