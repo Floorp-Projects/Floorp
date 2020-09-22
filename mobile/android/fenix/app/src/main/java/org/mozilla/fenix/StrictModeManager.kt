@@ -46,11 +46,11 @@ object StrictModeManager {
     }
 
     /**
-     * Revert strict mode to disable penalty. Tied to fragment lifecycle since strict mode
+     * Revert strict mode to disable penalty based on fragment lifecycle since strict mode
      * needs to switch to penalty logs. Using the fragment life cycle allows decoupling from any
      * specific fragment.
      */
-    fun changeStrictModePolicies(fragmentManager: FragmentManager) {
+    fun attachListenerToDisablePenaltyDeath(fragmentManager: FragmentManager) {
         fragmentManager.registerFragmentLifecycleCallbacks(object :
             FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {

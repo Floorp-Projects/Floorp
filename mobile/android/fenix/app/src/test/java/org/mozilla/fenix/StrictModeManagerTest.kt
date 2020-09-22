@@ -63,7 +63,7 @@ class StrictModeManagerTest {
     fun `test changeStrictModePolicies`() {
         val callbacks = slot<FragmentManager.FragmentLifecycleCallbacks>()
 
-        StrictModeManager.changeStrictModePolicies(fragmentManager)
+        StrictModeManager.attachListenerToDisablePenaltyDeath(fragmentManager)
         verify { fragmentManager.registerFragmentLifecycleCallbacks(capture(callbacks), false) }
         confirmVerified(fragmentManager)
 
