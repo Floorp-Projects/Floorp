@@ -35,7 +35,7 @@ class SearchWidgetCFR(
 
     fun displayIfNecessary() {
         if (settings.isInSearchWidgetExperiment &&
-            settings.shouldDisplaySearchWidgetCFR() &&
+            settings.shouldDisplaySearchWidgetCfr() &&
             !isShown
         ) {
             isShown = true
@@ -45,6 +45,7 @@ class SearchWidgetCFR(
 
     @Suppress("InflateParams")
     private fun showSearchWidgetCFR() {
+        settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
         settings.incrementSearchWidgetCFRDisplayed()
 
         val searchWidgetCFRDialog = Dialog(context)

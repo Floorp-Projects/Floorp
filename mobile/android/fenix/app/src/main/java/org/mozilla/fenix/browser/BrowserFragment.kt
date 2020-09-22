@@ -160,7 +160,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
         session?.register(toolbarSessionObserver, viewLifecycleOwner, autoPause = true)
 
-        if (settings.shouldShowOpenInAppBanner && session != null) {
+        if (settings.shouldShowOpenInAppCfr && session != null) {
             openInAppOnboardingObserver = OpenInAppOnboardingObserver(
                 context = context,
                 navController = findNavController(),

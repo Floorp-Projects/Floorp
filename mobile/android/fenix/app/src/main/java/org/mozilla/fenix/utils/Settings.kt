@@ -62,6 +62,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         private const val CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED = 3
 
         const val ONE_DAY_MS = 60 * 60 * 24 * 1000L
+        const val THREE_DAYS_MS = 3 * ONE_DAY_MS
         const val ONE_WEEK_MS = 60 * 60 * 24 * 7 * 1000L
         const val ONE_MONTH_MS = (60 * 60 * 24 * 365 * 1000L) / 12
 
@@ -114,6 +115,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_last_review_prompt_shown_time),
         default = 0L
     )
+
+    var lastCfrShownTimeInMillis by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_last_cfr_shown_time),
+        default = 0L
+    )
+
+    val canShowCfr: Boolean
+        get() = (System.currentTimeMillis() - lastCfrShownTimeInMillis) > THREE_DAYS_MS
 
     var waitToShowPageUntilFirstPaint by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_wait_first_paint),
@@ -191,11 +200,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     private val isActiveSearcher: Boolean
         get() = activeSearchCount.value > 2
 
-    fun shouldDisplaySearchWidgetCFR(): Boolean =
-        isActiveSearcher &&
-                searchWidgetCFRDismissCount.underMaxCount() &&
-                !searchWidgetInstalled &&
-                !searchWidgetCFRManuallyDismissed
+    fun shouldDisplaySearchWidgetCfr(): Boolean = canShowCfr && isActiveSearcher &&
+            searchWidgetCFRDismissCount.underMaxCount() &&
+            !searchWidgetInstalled &&
+            !searchWidgetCFRManuallyDismissed
 
     private val searchWidgetCFRDisplayCount = counterPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_widget_cfr_display_count)
@@ -284,8 +292,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     private var trackingProtectionOnboardingShownThisSession = false
     var isOverrideTPPopupsForPerformanceTest = false
 
-    val shouldShowTrackingProtectionOnboarding: Boolean
-        get() = !isOverrideTPPopupsForPerformanceTest &&
+    val shouldShowTrackingProtectionCfr: Boolean
+        get() = !isOverrideTPPopupsForPerformanceTest && canShowCfr &&
                 (trackingProtectionOnboardingCount.underMaxCount() &&
                         !trackingProtectionOnboardingShownThisSession)
 
@@ -650,8 +658,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     private val userNeedsToVisitInstallableSites: Boolean
         get() = pwaInstallableVisitCount.underMaxCount()
 
-    val shouldShowPwaOnboarding: Boolean
+    val shouldShowPwaCfr: Boolean
         get() {
+            if (!canShowCfr) return false
             // We only want to show this on the 3rd time a user visits a site
             if (userNeedsToVisitInstallableSites) return false
 
@@ -676,6 +685,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_should_show_open_in_app_banner),
         default = true
     )
+
+    val shouldShowOpenInAppCfr: Boolean
+        get() = canShowCfr && shouldShowOpenInAppBanner
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal val trackingProtectionOnboardingCount = counterPreference(
@@ -833,8 +845,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_private_mode_opened)
     )
 
-    val showPrivateModeContextualFeatureRecommender: Boolean
+    val showPrivateModeCfr: Boolean
         get() {
+            if (!canShowCfr) return false
             val focusInstalled = MozillaProductDetector
                 .getInstalledMozillaProducts(appContext as Application)
                 .contains(MozillaProductDetector.MozillaProducts.FOCUS.productName)

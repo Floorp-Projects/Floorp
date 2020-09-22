@@ -44,7 +44,7 @@ class TrackingProtectionOverlayTest {
 
     @Test
     fun `no-op when loading`() {
-        every { settings.shouldShowTrackingProtectionOnboarding } returns true
+        every { settings.shouldShowTrackingProtectionCfr } returns true
         every { session.trackerBlockingEnabled } returns true
         every { session.trackersBlocked } returns listOf(mockk())
 
@@ -54,7 +54,7 @@ class TrackingProtectionOverlayTest {
 
     @Test
     fun `no-op when should not show onboarding`() {
-        every { settings.shouldShowTrackingProtectionOnboarding } returns false
+        every { settings.shouldShowTrackingProtectionCfr } returns false
 
         overlay.onLoadingStateChanged(session, loading = false)
         verify(exactly = 0) { settings.incrementTrackingProtectionOnboardingCount() }
@@ -62,7 +62,7 @@ class TrackingProtectionOverlayTest {
 
     @Test
     fun `no-op when tracking protection disabled`() {
-        every { settings.shouldShowTrackingProtectionOnboarding } returns true
+        every { settings.shouldShowTrackingProtectionCfr } returns true
         every { session.trackerBlockingEnabled } returns false
 
         overlay.onLoadingStateChanged(session, loading = false)
@@ -71,7 +71,7 @@ class TrackingProtectionOverlayTest {
 
     @Test
     fun `no-op when no trackers blocked`() {
-        every { settings.shouldShowTrackingProtectionOnboarding } returns true
+        every { settings.shouldShowTrackingProtectionCfr } returns true
         every { session.trackerBlockingEnabled } returns true
         every { session.trackersBlocked } returns emptyList()
 
@@ -82,7 +82,7 @@ class TrackingProtectionOverlayTest {
     @Test
     fun `show onboarding when trackers are blocked`() {
         every { toolbar.hasWindowFocus() } returns true
-        every { settings.shouldShowTrackingProtectionOnboarding } returns true
+        every { settings.shouldShowTrackingProtectionCfr } returns true
         every { session.trackerBlockingEnabled } returns true
         every { session.trackersBlocked } returns listOf(mockk())
 
@@ -93,7 +93,7 @@ class TrackingProtectionOverlayTest {
     @Test
     fun `no-op when toolbar doesn't have focus`() {
         every { toolbar.hasWindowFocus() } returns false
-        every { settings.shouldShowTrackingProtectionOnboarding } returns true
+        every { settings.shouldShowTrackingProtectionCfr } returns true
         every { session.trackerBlockingEnabled } returns true
         every { session.trackersBlocked } returns listOf(mockk())
 

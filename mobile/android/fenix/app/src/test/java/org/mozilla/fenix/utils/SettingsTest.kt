@@ -118,6 +118,20 @@ class SettingsTest {
     }
 
     @Test
+    fun canShowCfrTest() {
+        // When just created
+        // Then
+        assertEquals(0L, settings.lastCfrShownTimeInMillis)
+        assertTrue(settings.canShowCfr)
+
+        // When
+        settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
+
+        // Then
+        assertFalse(settings.canShowCfr)
+    }
+
+    @Test
     fun isTelemetryEnabled() {
         // When just created
         // Then
@@ -394,25 +408,25 @@ class SettingsTest {
     fun showPwaFragment() {
         // When just created
         // Then
-        assertFalse(settings.shouldShowPwaOnboarding)
+        assertFalse(settings.shouldShowPwaCfr)
 
         // When visited once
         settings.incrementVisitedInstallableCount()
 
         // Then
-        assertFalse(settings.shouldShowPwaOnboarding)
+        assertFalse(settings.shouldShowPwaCfr)
 
         // When visited twice
         settings.incrementVisitedInstallableCount()
 
         // Then
-        assertFalse(settings.shouldShowPwaOnboarding)
+        assertFalse(settings.shouldShowPwaCfr)
 
         // When visited thrice
         settings.incrementVisitedInstallableCount()
 
         // Then
-        assertTrue(settings.shouldShowPwaOnboarding)
+        assertTrue(settings.shouldShowPwaCfr)
     }
 
     @Test

@@ -42,7 +42,7 @@ class OpenInAppOnboardingObserver(
 
         if (!loading &&
             !settings.openLinksInExternalApp &&
-            settings.shouldShowOpenInAppBanner &&
+            settings.shouldShowOpenInAppCfr &&
             appLink(session.url).hasExternalApp()
         ) {
             infoBanner = InfoBanner(
@@ -60,6 +60,7 @@ class OpenInAppOnboardingObserver(
 
             infoBanner?.showBanner()
             sessionDomainForDisplayedBanner = session.url.tryGetHostFromUrl()
+            settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
             settings.shouldShowOpenInAppBanner = false
         }
     }

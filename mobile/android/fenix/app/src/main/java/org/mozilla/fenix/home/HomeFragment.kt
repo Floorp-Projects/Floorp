@@ -320,7 +320,8 @@ class HomeFragment : Fragment() {
                 )
 
                 view.homeAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                    topMargin = resources.getDimensionPixelSize(R.dimen.home_fragment_top_toolbar_header_margin)
+                    topMargin =
+                        resources.getDimensionPixelSize(R.dimen.home_fragment_top_toolbar_header_margin)
                 }
             }
             ToolbarPosition.BOTTOM -> {
@@ -471,7 +472,8 @@ class HomeFragment : Fragment() {
     private fun removeAllTabsAndShowSnackbar(sessionCode: String) {
         val tabs = sessionManager.sessionsOfType(private = sessionCode == ALL_PRIVATE_TABS).toList()
         val selectedIndex = sessionManager
-            .selectedSession?.let { sessionManager.sessions.indexOf(it) } ?: SessionManager.NO_SELECTION
+            .selectedSession?.let { sessionManager.sessions.indexOf(it) }
+            ?: SessionManager.NO_SELECTION
 
         val snapshot = tabs
             .map(sessionManager::createSessionSnapshot)
@@ -597,8 +599,8 @@ class HomeFragment : Fragment() {
             }, owner = this@HomeFragment.viewLifecycleOwner)
         }
 
-        if (context.settings().showPrivateModeContextualFeatureRecommender &&
-            browsingModeManager.mode.isPrivate
+        if (browsingModeManager.mode.isPrivate &&
+            context.settings().showPrivateModeCfr
         ) {
             recommendPrivateBrowsingShortcut()
         }
@@ -683,8 +685,8 @@ class HomeFragment : Fragment() {
     }
 
     private fun recommendPrivateBrowsingShortcut() {
-        context?.let {
-            val layout = LayoutInflater.from(it)
+        context?.let { context ->
+            val layout = LayoutInflater.from(context)
                 .inflate(R.layout.pbm_shortcut_popup, null)
             val privateBrowsingRecommend =
                 PopupWindow(
@@ -712,6 +714,7 @@ class HomeFragment : Fragment() {
             // We want to show the popup only after privateBrowsingButton is available.
             // Otherwise, we will encounter an activity token error.
             privateBrowsingButton.post {
+                context.settings().lastCfrShownTimeInMillis = System.currentTimeMillis()
                 privateBrowsingRecommend.showAsDropDown(
                     privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END
                 )

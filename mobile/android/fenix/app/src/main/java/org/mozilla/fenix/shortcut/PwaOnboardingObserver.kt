@@ -24,10 +24,11 @@ class PwaOnboardingObserver(
     override fun onLoadingStateChanged(session: Session, loading: Boolean) {
         if (!loading && webAppUseCases.isInstallable() && !settings.userKnowsAboutPwas) {
             settings.incrementVisitedInstallableCount()
-            if (settings.shouldShowPwaOnboarding) {
+            if (settings.shouldShowPwaCfr) {
                 val directions =
                     BrowserFragmentDirections.actionBrowserFragmentToPwaOnboardingDialogFragment()
                 navController.nav(R.id.browserFragment, directions)
+                settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
                 settings.userKnowsAboutPwas = true
             }
         }

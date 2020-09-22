@@ -43,9 +43,9 @@ class TrackingProtectionOverlay(
     }
 
     private fun shouldShowTrackingProtectionOnboarding(session: Session) =
-        settings.shouldShowTrackingProtectionOnboarding &&
-            session.trackerBlockingEnabled &&
-            session.trackersBlocked.isNotEmpty()
+        session.trackerBlockingEnabled &&
+                session.trackersBlocked.isNotEmpty() &&
+                settings.shouldShowTrackingProtectionCfr
 
     @Suppress("MagicNumber", "InflateParams")
     private fun showTrackingProtectionOnboarding() {
@@ -57,9 +57,9 @@ class TrackingProtectionOverlay(
                 if (event.action == MotionEvent.ACTION_DOWN) {
                     metrics.track(Event.ContextualHintETPOutsideTap)
                 }
-                    return super.onTouchEvent(event)
-                }
+                return super.onTouchEvent(event)
             }
+        }
 
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.tracking_protection_onboarding_popup, null)
@@ -121,6 +121,7 @@ class TrackingProtectionOverlay(
 
         metrics.track(Event.ContextualHintETPDisplayed)
         trackingOnboardingDialog.show()
+        settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
         settings.incrementTrackingProtectionOnboardingCount()
     }
 
