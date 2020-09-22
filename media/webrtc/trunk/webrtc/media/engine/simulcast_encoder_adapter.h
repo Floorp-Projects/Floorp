@@ -41,8 +41,7 @@ class SimulcastEncoderAdapter : public VP8Encoder {
 
   // Implements VideoEncoder.
   int Release() override;
-  int InitEncode(const VideoCodec* inst,
-                 int number_of_cores,
+  int InitEncode(const VideoCodec* inst, int number_of_cores,
                  size_t max_payload_size) override;
   int Encode(const VideoFrame& input_image,
              const CodecSpecificInfo* codec_specific_info,
@@ -56,8 +55,7 @@ class SimulcastEncoderAdapter : public VP8Encoder {
   // called from an internal helper that also knows the correct stream
   // index.
   EncodedImageCallback::Result OnEncodedImage(
-      size_t stream_idx,
-      const EncodedImage& encoded_image,
+      size_t stream_idx, const EncodedImage& encoded_image,
       const CodecSpecificInfo* codec_specific_info,
       const RTPFragmentationHeader* fragmentation);
 
@@ -69,10 +67,8 @@ class SimulcastEncoderAdapter : public VP8Encoder {
  private:
   struct StreamInfo {
     StreamInfo(std::unique_ptr<VideoEncoder> encoder,
-               std::unique_ptr<EncodedImageCallback> callback,
-               uint16_t width,
-               uint16_t height,
-               bool send_stream)
+               std::unique_ptr<EncodedImageCallback> callback, uint16_t width,
+               uint16_t height, bool send_stream)
         : encoder(std::move(encoder)),
           callback(std::move(callback)),
           width(width),
@@ -87,11 +83,16 @@ class SimulcastEncoderAdapter : public VP8Encoder {
     bool send_stream;
   };
 
+  enum class StreamResolution {
+    OTHER,
+    HIGHEST,
+    LOWEST,
+  };
+
   // Populate the codec settings for each simulcast stream.
   static void PopulateStreamCodec(const webrtc::VideoCodec& inst,
-                                  int stream_index,
-                                  uint32_t start_bitrate_kbps,
-                                  bool highest_resolution_stream,
+                                  int stream_index, uint32_t start_bitrate_kbps,
+                                  StreamResolution stream_resolution,
                                   webrtc::VideoCodec* stream_codec);
 
   bool Initialized() const;

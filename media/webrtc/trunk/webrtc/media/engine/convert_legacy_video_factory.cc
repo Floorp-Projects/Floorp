@@ -16,6 +16,7 @@
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "media/base/h264_profile_level_id.h"
+#include "media/engine/encoder_simulcast_proxy.h"
 #include "media/engine/internaldecoderfactory.h"
 #include "media/engine/internalencoderfactory.h"
 #include "media/engine/scopedvideodecoder.h"
@@ -23,7 +24,6 @@
 #include "media/engine/simulcast_encoder_adapter.h"
 #include "media/engine/videodecodersoftwarefallbackwrapper.h"
 #include "media/engine/videoencodersoftwarefallbackwrapper.h"
-#include "media/engine/vp8_encoder_simulcast_proxy.h"
 #include "media/engine/webrtcvideodecoderfactory.h"
 #include "media/engine/webrtcvideoencoderfactory.h"
 #include "rtc_base/checks.h"
@@ -58,8 +58,7 @@ class CricketToWebRtcEncoderFactory : public webrtc::VideoEncoderFactory {
     CodecInfo info;
     info.has_internal_source = false;
     info.is_hardware_accelerated = false;
-    if (!external_encoder_factory_)
-      return info;
+    if (!external_encoder_factory_) return info;
 
     info.has_internal_source =
         external_encoder_factory_->EncoderTypeHasInternalSource(
@@ -123,22 +122,16 @@ class EncoderAdapter : public webrtc::VideoEncoderFactory {
     std::unique_ptr<webrtc::VideoEncoder> internal_encoder;
     if (IsFormatSupported(internal_encoder_factory_->GetSupportedFormats(),
                           format)) {
-      internal_encoder =
-          CodecNamesEq(format.name.c_str(), kVp8CodecName)
-              ? rtc::MakeUnique<webrtc::VP8EncoderSimulcastProxy>(
-                    internal_encoder_factory_.get())
-              : internal_encoder_factory_->CreateVideoEncoder(format);
+      internal_encoder = rtc::MakeUnique<webrtc::EncoderSimulcastProxy>(
+          internal_encoder_factory_.get(), format);
     }
 
     // Try creating external encoder.
     std::unique_ptr<webrtc::VideoEncoder> external_encoder;
     if (IsFormatSupported(external_encoder_factory_->GetSupportedFormats(),
                           format)) {
-      external_encoder =
-          CodecNamesEq(format.name.c_str(), kVp8CodecName)
-              ? rtc::MakeUnique<webrtc::SimulcastEncoderAdapter>(
-                    external_encoder_factory_.get())
-              : external_encoder_factory_->CreateVideoEncoder(format);
+      external_encoder = rtc::MakeUnique<webrtc::EncoderSimulcastProxy>(
+          internal_encoder_factory_.get(), format);
     }
 
     if (internal_encoder && external_encoder) {
@@ -159,8 +152,7 @@ class EncoderAdapter : public webrtc::VideoEncoderFactory {
     for (const webrtc::SdpVideoFormat& format :
          external_encoder_factory_->GetSupportedFormats()) {
       // Don't add same codec twice.
-      if (!IsFormatSupported(formats, format))
-        formats.push_back(format);
+      if (!IsFormatSupported(formats, format)) formats.push_back(format);
     }
 
     return formats;
@@ -195,8 +187,7 @@ class DecoderAdapter : public webrtc::VideoDecoderFactory {
           CreateScopedVideoDecoder(external_decoder_factory_.get(), codec,
                                    params);
       if (external_decoder) {
-        if (!internal_decoder)
-          return external_decoder;
+        if (!internal_decoder) return external_decoder;
         // Both external and internal decoder available - create fallback
         // wrapper.
         return std::unique_ptr<webrtc::VideoDecoder>(

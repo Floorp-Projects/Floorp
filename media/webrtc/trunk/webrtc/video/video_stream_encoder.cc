@@ -579,8 +579,13 @@ void VideoStreamEncoder::ReconfigureEncoder() {
 
   // Stream dimensions may be not equal to given because of a simulcast
   // restrictions.
-  int highest_stream_width = static_cast<int>(streams.back().width);
-  int highest_stream_height = static_cast<int>(streams.back().height);
+  auto highest_stream = std::max_element(
+      streams.begin(), streams.end(),
+      [](const webrtc::VideoStream& a, const webrtc::VideoStream& b) {
+        return std::tie(a.width, a.height) < std::tie(b.width, b.height);
+      });
+  int highest_stream_width = static_cast<int>(highest_stream->width);
+  int highest_stream_height = static_cast<int>(highest_stream->height);
   // Dimension may be reduced to be, e.g. divisible by 4.
   RTC_CHECK_GE(last_frame_info_->width, highest_stream_width);
   RTC_CHECK_GE(last_frame_info_->height, highest_stream_height);
