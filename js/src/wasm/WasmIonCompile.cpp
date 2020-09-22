@@ -450,42 +450,20 @@ class FunctionCompiler {
       // Do this for Int32 only since Int64 is not subject to the same
       // issues.
       //
-      // Note the offsets passed to MWasmBuiltinTruncateToInt32 are wrong here,
-      // but it doesn't matter: they're not codegen'd to calls since inputs
+      // Note the offsets passed to MTruncateToInt32 are wrong here, but
+      // it doesn't matter: they're not codegen'd to calls since inputs
       // already are int32.
-      auto* lhs2 = createTruncateToInt32(lhs);
+      auto* lhs2 = MTruncateToInt32::New(alloc(), lhs);
       curBlock_->add(lhs2);
       lhs = lhs2;
-      auto* rhs2 = createTruncateToInt32(rhs);
+      auto* rhs2 = MTruncateToInt32::New(alloc(), rhs);
       curBlock_->add(rhs2);
       rhs = rhs2;
     }
-
-    // For x86 and arm we implement i64 div via c++ builtin.
-    // A call to c++ builtin requires tls pointer.
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-    if (type == MIRType::Int64) {
-      auto* ins =
-          MWasmBuiltinDivI64::New(alloc(), lhs, rhs, tlsPointer_, unsignd,
-                                  trapOnError, bytecodeOffset());
-      curBlock_->add(ins);
-      return ins;
-    }
-#endif
-
     auto* ins = MDiv::New(alloc(), lhs, rhs, type, unsignd, trapOnError,
                           bytecodeOffset(), mustPreserveNaN(type));
     curBlock_->add(ins);
     return ins;
-  }
-
-  MInstruction* createTruncateToInt32(MDefinition* op) {
-    // See declaration of LWasmBuiltinTruncateFToInt32.
-    if (op->type() == MIRType::Double || op->type() == MIRType::Float32) {
-      return MWasmBuiltinTruncateToInt32::New(alloc(), op, tlsPointer_);
-    }
-
-    return MTruncateToInt32::New(alloc(), op);
   }
 
   MDefinition* mod(MDefinition* lhs, MDefinition* rhs, MIRType type,
@@ -496,35 +474,13 @@ class FunctionCompiler {
     bool trapOnError = !env().isAsmJS();
     if (!unsignd && type == MIRType::Int32) {
       // See block comment in div().
-      auto* lhs2 = createTruncateToInt32(lhs);
+      auto* lhs2 = MTruncateToInt32::New(alloc(), lhs);
       curBlock_->add(lhs2);
       lhs = lhs2;
-      auto* rhs2 = createTruncateToInt32(rhs);
+      auto* rhs2 = MTruncateToInt32::New(alloc(), rhs);
       curBlock_->add(rhs2);
       rhs = rhs2;
     }
-
-    // For x86 and arm we implement i64 mod via c++ builtin.
-    // A call to c++ builtin requires tls pointer.
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-    if (type == MIRType::Int64) {
-      auto* ins =
-          MWasmBuiltinModI64::New(alloc(), lhs, rhs, tlsPointer_, unsignd,
-                                  trapOnError, bytecodeOffset());
-      curBlock_->add(ins);
-      return ins;
-    }
-#endif
-
-    // Should be handled separately because we call BuiltinThunk for this case
-    // and so, need to add the dependency from tlsPointer.
-    if (type == MIRType::Double) {
-      auto* ins = MWasmBuiltinModD::New(alloc(), lhs, rhs, tlsPointer_, type,
-                                        bytecodeOffset());
-      curBlock_->add(ins);
-      return ins;
-    }
-
     auto* ins = MMod::New(alloc(), lhs, rhs, type, unsignd, trapOnError,
                           bytecodeOffset());
     curBlock_->add(ins);
@@ -612,13 +568,8 @@ class FunctionCompiler {
     if (inDeadCode()) {
       return nullptr;
     }
-#if defined(JS_CODEGEN_ARM)
-    auto* ins = MBuiltinInt64ToFloatingPoint::New(
-        alloc(), op, tlsPointer_, type, bytecodeOffset(), isUnsigned);
-#else
     auto* ins = MInt64ToFloatingPoint::New(alloc(), op, type, bytecodeOffset(),
                                            isUnsigned);
-#endif
     curBlock_->add(ins);
     return ins;
   }
@@ -639,16 +590,6 @@ class FunctionCompiler {
       return nullptr;
     }
     auto* ins = T::New(alloc(), op, flags, bytecodeOffset());
-    curBlock_->add(ins);
-    return ins;
-  }
-
-  MDefinition* truncateWithTls(MDefinition* op, TruncFlags flags) {
-    if (inDeadCode()) {
-      return nullptr;
-    }
-    auto* ins = MWasmBuiltinTruncateToInt64::New(alloc(), op, tlsPointer_,
-                                                 flags, bytecodeOffset());
     curBlock_->add(ins);
     return ins;
   }
@@ -1630,7 +1571,7 @@ class FunctionCompiler {
     }
 
     if (values.empty()) {
-      curBlock_->end(MWasmReturnVoid::New(alloc(), tlsPointer_));
+      curBlock_->end(MWasmReturnVoid::New(alloc()));
     } else {
       ResultType resultType = ResultType::Vector(funcType().results());
       ABIResultIter iter(resultType);
@@ -1662,7 +1603,7 @@ class FunctionCompiler {
         } else {
           MOZ_ASSERT(iter.remaining() == 1);
           MOZ_ASSERT(i + 1 == values.length());
-          curBlock_->end(MWasmReturn::New(alloc(), values[i], tlsPointer_));
+          curBlock_->end(MWasmReturn::New(alloc(), values[i]));
         }
       }
     }
@@ -2217,13 +2158,11 @@ MDefinition* FunctionCompiler::unary<MToFloat32>(MDefinition* op) {
 }
 
 template <>
-MDefinition* FunctionCompiler::unary<MWasmBuiltinTruncateToInt32>(
-    MDefinition* op) {
+MDefinition* FunctionCompiler::unary<MTruncateToInt32>(MDefinition* op) {
   if (inDeadCode()) {
     return nullptr;
   }
-  auto* ins = MWasmBuiltinTruncateToInt32::New(alloc(), op, tlsPointer_,
-                                               bytecodeOffset());
+  auto* ins = MTruncateToInt32::New(alloc(), op, bytecodeOffset());
   curBlock_->add(ins);
   return ins;
 }
@@ -2775,7 +2714,7 @@ static bool EmitConversionWithType(FunctionCompiler& f, ValType operandType,
 static bool EmitTruncate(FunctionCompiler& f, ValType operandType,
                          ValType resultType, bool isUnsigned,
                          bool isSaturating) {
-  MDefinition* input = nullptr;
+  MDefinition* input;
   if (!f.iter().readConversion(operandType, resultType, &input)) {
     return false;
   }
@@ -2789,23 +2728,14 @@ static bool EmitTruncate(FunctionCompiler& f, ValType operandType,
   }
   if (resultType == ValType::I32) {
     if (f.env().isAsmJS()) {
-      if (input && (input->type() == MIRType::Double ||
-                    input->type() == MIRType::Float32)) {
-        f.iter().setResult(f.unary<MWasmBuiltinTruncateToInt32>(input));
-      } else {
-        f.iter().setResult(f.unary<MTruncateToInt32>(input));
-      }
+      f.iter().setResult(f.unary<MTruncateToInt32>(input));
     } else {
       f.iter().setResult(f.truncate<MWasmTruncateToInt32>(input, flags));
     }
   } else {
     MOZ_ASSERT(resultType == ValType::I64);
     MOZ_ASSERT(!f.env().isAsmJS());
-#if defined(JS_CODEGEN_ARM)
-    f.iter().setResult(f.truncateWithTls(input, flags));
-#else
     f.iter().setResult(f.truncate<MWasmTruncateToInt64>(input, flags));
-#endif
   }
   return true;
 }
