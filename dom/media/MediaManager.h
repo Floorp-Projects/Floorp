@@ -41,6 +41,7 @@ class nsIPrefBranch;
 
 namespace mozilla {
 class TaskQueue;
+class MediaTimer;
 namespace dom {
 struct MediaStreamConstraints;
 struct MediaTrackConstraints;
@@ -343,6 +344,7 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
   nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
   nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
+  RefPtr<MediaTimer> mDeviceChangeTimer;
   bool mCamerasMuted = false;
   bool mMicrophonesMuted = false;
 
