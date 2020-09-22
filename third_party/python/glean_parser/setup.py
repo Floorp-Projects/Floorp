@@ -53,7 +53,11 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     description="Parser tools for Mozilla's Glean telemetry",
-    entry_points={"console_scripts": ["glean_parser=glean_parser.__main__:main",],},
+    entry_points={
+        "console_scripts": [
+            "glean_parser=glean_parser.__main__:main",
+        ],
+    },
     install_requires=requirements,
     long_description=readme + "\n\n" + history,
     include_package_data=True,

@@ -336,6 +336,26 @@ def format_error(filepath: Union[str, Path], header: str, content: str) -> str:
         return f"{filepath}:\n{_utils.indent(content)}"
 
 
+def parse_expires(expires: str) -> datetime.date:
+    """
+    Parses the expired field date (yyyy-mm-dd) as a date.
+    Raises a ValueError in case the string is not properly formatted.
+    """
+    try:
+        if sys.version_info < (3, 7):
+            try:
+                return iso8601.parse_date(expires).date()
+            except iso8601.ParseError:
+                raise ValueError()
+        else:
+            return datetime.date.fromisoformat(expires)
+    except ValueError:
+        raise ValueError(
+            f"Invalid expiration date '{expires}'. "
+            "Must be of the form yyyy-mm-dd in UTC."
+        )
+
+
 def is_expired(expires: str) -> bool:
     """
     Parses the `expires` field in a metric or ping and returns whether
@@ -346,29 +366,27 @@ def is_expired(expires: str) -> bool:
     elif expires == "expired":
         return True
     else:
-        try:
-            if sys.version_info < (3, 7):
-                date = iso8601.parse_date(expires).date()
-            else:
-                date = datetime.date.fromisoformat(expires)
-        except ValueError:
-            raise ValueError(
-                f"Invalid expiration date '{expires}'. "
-                "Must be of the form yyyy-mm-dd in UTC."
-            )
+        date = parse_expires(expires)
         return date <= datetime.datetime.utcnow().date()
 
 
 def validate_expires(expires: str) -> None:
     """
-    Raises ValueError if `expires` is not valid.
+    Raises a ValueError in case the `expires` is not ISO8601 parseable,
+    or in case the date is more than 730 days (~2 years) in the future.
     """
     if expires in ("never", "expired"):
         return
-    if sys.version_info < (3, 7):
-        iso8601.parse_date(expires)
-    else:
-        datetime.date.fromisoformat(expires)
+
+    date = parse_expires(expires)
+    max_date = datetime.datetime.now() + datetime.timedelta(days=730)
+    if date > max_date.date():
+        raise ValueError(
+            f"'{expires}' is more than 730 days (~2 years) in the future.",
+            "Please make sure this is intentional.",
+            "You can supress this warning by adding EXPIRATION_DATE_TOO_FAR to no_lint",
+            "See: https://mozilla.github.io/glean_parser/metrics-yaml.html#no_lint",
+        )
 
 
 def report_validation_errors(all_objects):

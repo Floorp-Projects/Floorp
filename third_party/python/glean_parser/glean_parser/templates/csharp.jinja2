@@ -20,6 +20,7 @@ Jinja2 template is not. Please file bugs! #}
             ){% if lazy %});{% else %};{% endif %}{% endmacro %}
 
 using System;
+using System.Collections.Generic;
 using {{ glean_namespace }}.Private;
 
 {# The C# metrics design require the class name to have a 'Definition'
@@ -56,21 +57,21 @@ namespace {{ namespace }}
     {% for obj in objs.values() %}
         {% if obj.labeled %}
         {{ obj_declaration(obj, 'Label', 'private ') }}
-        private readonly Lazy<LabeledMetricType<{{ obj|type_name }}>> {{ obj.name|camelize }}Lazy = new Lazy<LabeledMetricType<{{ obj|type_name }}>>(() => new LabeledMetricType(
-                category = {{ obj.category|csharp }},
-                name = {{ obj.name|csharp }},
-                subMetric = {{ obj.name|camelize }}Label,
-                disabled = {{ obj.is_disabled()|csharp }},
-                lifetime = {{ obj.lifetime|csharp }},
-                sendInPings = {{ obj.send_in_pings|csharp }},
-                labels = {{ obj.labels|csharp }}
+        private readonly Lazy<LabeledMetricType<{{ obj|type_name }}>> {{ obj.name|camelize }}Lazy = new Lazy<LabeledMetricType<{{ obj|type_name }}>>(() => new LabeledMetricType<{{ obj|type_name }}>(
+                category: {{ obj.category|csharp }},
+                name: {{ obj.name|csharp }},
+                submetric: {{ category_name|Camelize }}.{{ obj.name|camelize }}Label,
+                disabled: {{ obj.is_disabled()|csharp }},
+                lifetime: {{ obj.lifetime|csharp }},
+                sendInPings: {{ obj.send_in_pings|csharp }},
+                labels: {{ obj.labels|csharp }}
             )
         );
 
         /// <summary>
         /// {{ obj.description|wordwrap() | replace('\n', '\n        /// ') }}
         /// </summary>
-        public {{ obj|type_name }} {{ obj.name|camelize }} => {{ obj.name|camelize }}Lazy.Value;
+        public LabeledMetricType<{{ obj|type_name }}> {{ obj.name|camelize }} => {{ obj.name|camelize }}Lazy.Value;
 
         {% else %}
         {# Deal with non-ping objects first. We need them to be lazy and we

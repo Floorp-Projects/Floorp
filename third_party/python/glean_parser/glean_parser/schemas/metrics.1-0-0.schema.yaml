@@ -83,8 +83,7 @@ definitions:
 
             - `counter`: A numeric value that can only be incremented.
 
-            - `quantity`: A numeric value that is set directly. Only allowed for
-              metrics coming from GeckoView.
+            - `quantity`: A numeric value that is set directly.
 
             - `timespan`: Represents a time interval. Additional properties:
               `time_unit`.
@@ -240,15 +239,17 @@ definitions:
         description: |
           **Required.**
 
-          May be one of the following values:
+          By default it may be one of the following values:
             - `<build date>`: An ISO date `yyyy-mm-dd` in UTC on which the
               metric expires. For example, `2019-03-13`. This date is checked at
               build time. Except in special cases, this form should be used so
               that the metric automatically "sunsets" after a period of time.
             - `never`: This metric never expires.
             - `expired`: This metric is manually expired.
+
+          The default may be overriden in certain applications by the
+          `custom_validate_expires` and `custom_is_expired` configs.
         type: string
-        pattern: "(never)|(expired)|([0-9]{4}-[0-9]{2}-[0-9]{2})"
 
       version:
         title: Metric version
@@ -548,12 +549,11 @@ additionalProperties:
             type:
               enum:
                 - custom_distribution
-                - quantity
         then:
           required:
             - gecko_datapoint
           description: |
-            `custom_distribution` and `quantity` is only allowed for Gecko
+            `custom_distribution` is only allowed for Gecko
             metrics.
       -
         if:

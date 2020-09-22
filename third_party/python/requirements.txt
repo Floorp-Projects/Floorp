@@ -90,19 +90,10 @@ fluent.syntax==0.18.1 \
     --hash=sha256:0e63679fa4f1b3042565220a5127b4bab842424f07d6a13c12299e3b3835486a \
     --hash=sha256:3a55f5e605d1b029a65cc8b6492c86ec4608e15447e73db1495de11fd46c104f \
     # via -r requirements-mach-vendor-python.in, compare-locales, fluent.migrate
-glean_parser==1.28.0 \
-    --hash=sha256:994c1d12b686ffe49321496497990e24609e11a8edb27d3afbe0b1f86b01fed3 \
-    --hash=sha256:a8402d210fd5a50b05cc64d96a8506be972b35a47c78195f04e745756f75db61 \
+glean_parser==1.28.5 \
+    --hash=sha256:29ac33298898e0fd607163b704d68f598c1d118c5056852246d621ec26f973bb \
+    --hash=sha256:330e045fd8410f661e8e4a67edc8ab4a125996381e5519c40ca98b34b9dc5ec8 \
     # via -r requirements-mach-vendor-python.in
-importlib-metadata==1.7.0 \
-    --hash=sha256:90bb658cdbbf6d1735b6341ce708fc7024a3e14e99ffdc5783edea9f9b077f83 \
-    --hash=sha256:dc15b2969b4ce36305c51eebe62d418ac7791e9a157911d58bfb1f9ccd8e2070 \
-    # via jsonschema
-iso8601==0.1.12 \
-    --hash=sha256:210e0134677cc0d02f6028087fee1df1e1d76d372ee1db0bf30bf66c5c1c89a3 \
-    --hash=sha256:49c4b20e1f38aa5cf109ddcd39647ac419f928512c869dc01d5c7098eddede82 \
-    --hash=sha256:bbbae5fb4a7abfe71d4688fd64bff70b91bbd74ef6a99d964bab18f7fdf286dd \
-    # via glean-parser
 jinja2==2.11.2 \
     --hash=sha256:89aab215427ef59c34ad58735269eb58b1a5808103067f7bb9d5836c651b3bb0 \
     --hash=sha256:f0a4641d3cf955324a89c04f3d94663aa4d638abe8f733ecd3582848e1c37035 \
@@ -251,7 +242,7 @@ sentry-sdk==0.14.3 \
 six==1.13.0 \
     --hash=sha256:1f1b7d42e254082a9db6279deae68afb421ceba6158efa6131de7b3003ee93fd \
     --hash=sha256:30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66 \
-    # via -r requirements-mach-vendor-python.in, blessings, compare-locales, ecdsa, fluent.migrate, jsonschema, more-itertools, pathlib2, pip-tools, pyrsistent, pytest, responses
+    # via -r requirements-mach-vendor-python.in, blessings, compare-locales, ecdsa, fluent.migrate, jsonschema, more-itertools, pathlib2, pip-tools, pytest, responses
 urllib3==1.25.9 \
     --hash=sha256:3018294ebefce6572a474f0604c2021e33b3fd8006ecd11d62107a5d2a963527 \
     --hash=sha256:88206b0eb87e6d677d424843ac5209e3fb9d0190d0ee169599165ec25e9d9115 \
@@ -268,10 +259,6 @@ yamllint==1.23 \
     --hash=sha256:0fa69bf8a86182b7fe14918bdd3a30354c869966bbc7cbfff176af71bda9c806 \
     --hash=sha256:59f3ff77f44e7f46be6aecdb985830f73a1c51e290b7082a7d38c2ae1940f4a9 \
     # via -r requirements-mach-vendor-python.in, glean-parser
-zipp==3.1.0 \
-    --hash=sha256:aa36550ff0c0b7ef7fa639055d797116ee891440eac1a56f378e2d3179e0320b \
-    --hash=sha256:c599e4d75c98f6798c509911d08a22e6c021d074469042177c8c86fb92eefd96 \
-    # via importlib-metadata
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.

@@ -12,6 +12,10 @@ import sys
 
 import click
 
+
+import glean_parser
+
+
 from . import lint
 from . import translate as mod_translate
 from . import validate_ping
@@ -116,7 +120,7 @@ def glinter(input, allow_reserved):
 
 
 @click.group()
-@click.version_option()
+@click.version_option(glean_parser.__version__, prog_name="glean_parser")
 def main(args=None):
     """Command line utility for glean_parser."""
     pass

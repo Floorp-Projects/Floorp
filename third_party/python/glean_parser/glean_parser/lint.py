@@ -235,6 +235,22 @@ def check_user_lifetime_expiration(
         )
 
 
+def check_expired_date(
+    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+) -> LintGenerator:
+    try:
+        metric.validate_expires()
+    except ValueError as e:
+        yield (str(e))
+
+
+def check_expired_metric(
+    metric: metrics.Metric, parser_config: Dict[str, Any] = {}
+) -> LintGenerator:
+    if metric.is_expired():
+        yield ("Metric has expired. Please consider removing it.")
+
+
 # The checks that operate on an entire category of metrics:
 #    {NAME: (function, is_error)}
 CATEGORY_CHECKS: Dict[
@@ -254,7 +270,9 @@ INDIVIDUAL_CHECKS: Dict[
     "BUG_NUMBER": (check_bug_number, CheckType.error),
     "BASELINE_PING": (check_valid_in_baseline, CheckType.error),
     "MISSPELLED_PING": (check_misspelled_pings, CheckType.error),
+    "EXPIRATION_DATE_TOO_FAR": (check_expired_date, CheckType.warning),
     "USER_LIFETIME_EXPIRATION": (check_user_lifetime_expiration, CheckType.warning),
+    "EXPIRED": (check_expired_metric, CheckType.warning),
 }
 
 
@@ -317,22 +335,6 @@ def lint_metrics(
                                 check_type,
                             )
                             for msg in new_nits
-                        )
-                else:
-                    if (
-                        check_name not in CATEGORY_CHECKS
-                        and check_name in metric.no_lint
-                    ):
-                        nits.append(
-                            GlinterNit(
-                                "SUPERFLUOUS_NO_LINT",
-                                ".".join([metric.category, metric.name]),
-                                (
-                                    f"Superfluous no_lint entry '{check_name}'. "
-                                    "Please remove it."
-                                ),
-                                CheckType.warning,
-                            )
                         )
 
     if len(nits):
