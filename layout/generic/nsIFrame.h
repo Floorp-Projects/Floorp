@@ -4690,7 +4690,8 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
-   * Helper function - computes the content-box inline size for aSize.
+   * Helper function - computes the content-box inline size for aSize, which is
+   * a more complex version to resolve a StyleExtremumLength.
    */
   nscoord ComputeISizeValue(gfxContext* aRenderingContext,
                             nscoord aContainingBlockISize,
@@ -4699,12 +4700,13 @@ class nsIFrame : public nsQueryFrame {
                             StyleExtremumLength aSize,
                             mozilla::ComputeSizeFlags aFlags);
 
-  nscoord ComputeISizeValue(gfxContext* aRenderingContext,
-                            nscoord aContainingBlockISize,
+  /**
+   * Helper function - computes the content-box inline size for aSize, which is
+   * a simpler version to resolve a LengthPercentage.
+   */
+  nscoord ComputeISizeValue(nscoord aContainingBlockISize,
                             nscoord aContentEdgeToBoxSizing,
-                            nscoord aBoxSizingToMarginEdge,
-                            const LengthPercentage& aSize,
-                            mozilla::ComputeSizeFlags aFlags);
+                            const LengthPercentage& aSize);
 
   template <typename SizeOrMaxSize>
   nscoord ComputeISizeValue(gfxContext* aRenderingContext,
@@ -4716,9 +4718,8 @@ class nsIFrame : public nsQueryFrame {
     MOZ_ASSERT(aSize.IsExtremumLength() || aSize.IsLengthPercentage(),
                "This doesn't handle auto / none");
     if (aSize.IsLengthPercentage()) {
-      return ComputeISizeValue(aRenderingContext, aContainingBlockISize,
-                               aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
-                               aSize.AsLengthPercentage(), aFlags);
+      return ComputeISizeValue(aContainingBlockISize, aContentEdgeToBoxSizing,
+                               aSize.AsLengthPercentage());
     }
     return ComputeISizeValue(aRenderingContext, aContainingBlockISize,
                              aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
