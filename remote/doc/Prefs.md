@@ -26,3 +26,7 @@ Defines the verbosity of the internal logger.  Available levels
 are, in descending order of severity, `Trace`, `Debug`, `Config`,
 `Info`, `Warn`, `Error`, and `Fatal`.  Note that the value is
 treated case-sensitively.
+
+### `remote.log.truncate`
+
+Defines whether long log messages should be truncated. Defaults to true.
