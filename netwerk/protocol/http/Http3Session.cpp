@@ -143,11 +143,11 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
        gHttpHandler->DefaultQpackTableSize(),
        gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
 
-  nsresult rv =
-      NeqoHttp3Conn::Init(aOrigin, aAlpnToken, selfAddrStr, peerAddrStr,
-                          gHttpHandler->DefaultQpackTableSize(),
-                          gHttpHandler->DefaultHttp3MaxBlockedStreams(),
-                          getter_AddRefs(mHttp3Connection));
+  nsresult rv = NeqoHttp3Conn::Init(
+      aOrigin, aAlpnToken, selfAddrStr, peerAddrStr,
+      gHttpHandler->DefaultQpackTableSize(),
+      gHttpHandler->DefaultHttp3MaxBlockedStreams(),
+      gHttpHandler->Http3QlogDir(), getter_AddRefs(mHttp3Connection));
   if (NS_FAILED(rv)) {
     return rv;
   }
