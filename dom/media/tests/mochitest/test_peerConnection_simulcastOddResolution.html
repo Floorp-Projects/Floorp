@@ -185,6 +185,20 @@
         await setParameters(test, emitter, encodings);
         await checkResolutions(test, emitter);
       },
+      async function PC_LOCAL_CHANGE_PARAMS_3() {
+        encodings.find(({rid}) => rid == "foo").scaleResolutionDownBy = 6;
+        encodings.find(({rid}) => rid == "bar").scaleResolutionDownBy = 5;
+        encodings.find(({rid}) => rid == "baz").scaleResolutionDownBy = 4;
+        await setParameters(test, emitter, encodings);
+        await checkResolutions(test, emitter);
+      },
+      async function PC_LOCAL_CHANGE_PARAMS_4() {
+        encodings.find(({rid}) => rid == "foo").scaleResolutionDownBy = 4;
+        encodings.find(({rid}) => rid == "bar").scaleResolutionDownBy = 1;
+        encodings.find(({rid}) => rid == "baz").scaleResolutionDownBy = 2;
+        await setParameters(test, emitter, encodings);
+        await checkResolutions(test, emitter);
+      },
     ]);
 
     await test.run();
