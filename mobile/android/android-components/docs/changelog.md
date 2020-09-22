@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 60.0.0-SNAPSHOT (In Development)
+# 61.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v59.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/120?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v60.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/121?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
+
+# 60.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v59.0.0...v60.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/120?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v60.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v60.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v60.0.0/.config.yml)
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * 🚒 Bug fixed [issue #8431](https://github.com/mozilla-mobile/android-components/issues/8431) update `Session.trackerBlockingEnabled` and `SessionState#trackingProtection#enabled` with the initial tracking protection state.
