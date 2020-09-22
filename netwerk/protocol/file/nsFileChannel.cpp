@@ -334,8 +334,8 @@ nsresult nsFileChannel::OpenContentStream(bool async, nsIInputStream** result,
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIURI> newURI;
-  rv = fileHandler->ReadURLFile(file, getter_AddRefs(newURI));
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(fileHandler->ReadURLFile(file, getter_AddRefs(newURI))) ||
+      NS_SUCCEEDED(fileHandler->ReadShellLink(file, getter_AddRefs(newURI)))) {
     nsCOMPtr<nsIChannel> newChannel;
     rv = NS_NewChannel(getter_AddRefs(newChannel), newURI,
                        nsContentUtils::GetSystemPrincipal(),
