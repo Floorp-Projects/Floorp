@@ -9,7 +9,7 @@ A guide to searching crash reports
 
 The Mozilla `crash-stats <https://crash-stats.mozilla.com/>`__ site
 provides facilities for investigating large numbers of Firefox `crash
-reports <Understanding crash reports>`__ . This guide to
+reports <Understanding crash reports>`__. This guide to
 searching through crash reports may help you locate the crash reports
 that will help you find and fix the Firefox bug you're working on.
 
@@ -38,7 +38,7 @@ by clicking on the "Super Search" link near the toolbar at the top right
 of any page in crash-stats. This brings up a search form like the one in
 the following screenshot.
 
-|Results of a default search in crash-stats|
+|Search in crash-stats|
 
 Fields are provided for four common search criteria: product, version,
 platform, and process type. The product field is pre-populated with
@@ -246,7 +246,7 @@ documentation <https://crash-stats.mozilla.com/documentation/supersearch/>`__
 for full details; note that it uses the term "aggregation" for
 grouping/faceting.
 
-.. |Results of a default search in crash-stats| image:: img/super-search-form.png
+.. |Search in crash-stats| image:: img/super-search-form.png
 .. |Results of a default search in crash-stats| image:: img/default-search-results.png
 .. |Results of a default search in crash-stats (crash reports tab)| image:: img/default-search-results2.png
 .. |crash-stats Super Search form with additional criteria| image:: img/super-search-form2.png

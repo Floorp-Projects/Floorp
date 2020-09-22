@@ -31,9 +31,9 @@ access and where to find minidump files for crash reports, consult the
 Using the MS Visual Studio debugger
 -----------------------------------
 
-#. Set up the debugger to `use the Mozilla symbol
-   server <https://developer.mozilla.org/en/Using_the_Mozilla_symbol_server>`__ and `source
-   server <https://developer.mozilla.org/en-US/docs/Mozilla/Using_the_Mozilla_source_server>`__\.
+#. Set up the debugger to :ref:`use the Mozilla symbol
+   server <Using The Mozilla Symbol Server>` and
+   :ref:`source server <Using The Mozilla Source Server>`.
 #. Double-click on the minidump file to open it in the debugger.
 #. When it loads, click the green icon in the visual studio debugger
    toolbar that looks like a play button.
