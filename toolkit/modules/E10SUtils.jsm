@@ -638,11 +638,11 @@ var E10SUtils = {
     // non-content principal.
     let currentURI =
       aCurrentPrincipal && aCurrentPrincipal.isContentPrincipal
-        ? aCurrentPrincipal.URI
+        ? Services.io.newURI(aCurrentPrincipal.spec)
         : null;
 
     return E10SUtils.getRemoteTypeForURIObject(
-      useOriginalURI ? aOriginalURI : aPrincipal.URI,
+      useOriginalURI ? aOriginalURI : Services.io.newURI(aPrincipal.spec),
       aMultiProcess,
       aRemoteSubframes,
       aPreferredRemoteType,
