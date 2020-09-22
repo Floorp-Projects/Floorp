@@ -15,7 +15,7 @@ Unit tests
 Because tests are run in parallel and [xpcshell] itself is quite
 chatty, it can sometimes be useful to run the tests in sequence:
 
-	% ./mach xcpshell-test --sequential remote/test/unit/test_Assert.js
+	% ./mach xpcshell-test --sequential remote/test/unit/test_DomainCache.js
 
 The unit tests will appear as part of the `X` (for _xpcshell_) jobs
 on Treeherder.

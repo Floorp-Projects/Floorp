@@ -1,6 +1,7 @@
 Debugging
 =========
 
+For other debugging resources, see also: Remote project [wiki]
 
 Increasing the logging verbosity
 --------------------------------
@@ -10,8 +11,10 @@ To increase the internal logging verbosity you can use the
 
 If you use mach to start Firefox:
 
-	./mach run --setpref "remote.log.level=Debug" --remote-debugger
+	./mach run --setpref "remote.log.level=Trace" --remote-debugger
 
+By default, long log lines are truncated. To print long lines in full, you
+can set `remote.log.truncate` to false.
 
 Enabling logging of emitted events
 ----------------------------------
@@ -20,7 +23,7 @@ To dump events produced by EventEmitter,
 including CDP events produced by the remote agent,
 you can use the `toolkit.dump.emit` [preference]:
 
-    ./mach run --setpref "toolkit.dump.emit=true" --remote-debugger
+  ./mach run --setpref "toolkit.dump.emit=true" --remote-debugger
 
 
 Logging observer notifications
@@ -47,3 +50,4 @@ output in the file service.log in your current working directory.
 [preference]: ./Prefs.html
 [System observer notifications]: https://developer.mozilla.org/en-US/docs/Archive/Add-ons/Overlay_Extensions/XUL_School/Observer_Notifications
 [prlog.h]: https://searchfox.org/mozilla-central/source/nsprpub/pr/include/prlog.h
+[wiki]: https://wiki.mozilla.org/Remote/Developer_Resources
