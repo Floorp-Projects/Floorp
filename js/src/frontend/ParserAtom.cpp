@@ -504,13 +504,11 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
   MOZ_ASSERT(FindSmallestEncoding(UTF8Chars(str, len)) ==
              JS::SmallestEncoding::ASCII);
 
-  // If we already reserved a tiny name, reuse the allocation but still point
-  // the fixed `name` reference at it.
-  if (const ParserAtom* tiny = lookupTiny(str, len)) {
-    MOZ_ASSERT(len == 1 || len == 2);
-    *name = tiny->asName();
-    return true;
-  }
+  // Strings matched by lookupTiny are stored in static table and aliases should
+  // only be added using initTinyStringAlias.
+  MOZ_ASSERT(lookupTiny(str, len) == nullptr,
+             "Well-known atom matches a tiny StaticString. Did you add it to "
+             "the wrong CommonPropertyNames.h list?");
 
   InflatedChar16Sequence<Latin1Char> seq(
       reinterpret_cast<const Latin1Char*>(str), len);
@@ -535,70 +533,50 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
   return true;
 }
 
-bool WellKnownParserAtoms::initStaticStrings(JSContext* cx) {
-  // Create known ParserAtoms for length-1 Latin1 strings.
-  static_assert(WellKnownParserAtoms::ASCII_STATIC_LIMIT <=
-                StaticStrings::UNIT_STATIC_LIMIT);
-  constexpr size_t NUM_LENGTH1 = WellKnownParserAtoms::ASCII_STATIC_LIMIT;
-  for (size_t i = 0; i < NUM_LENGTH1; ++i) {
-    JS::AutoCheckCannotGC nogc;
-    JSAtom* atom = cx->staticStrings().getUnit(char16_t(i));
+bool WellKnownParserAtoms::initTinyStringAlias(JSContext* cx,
+                                               const ParserName** name,
+                                               const char* str) {
+  MOZ_ASSERT(name != nullptr);
 
-    constexpr size_t len = 1;
-    MOZ_ASSERT(atom->length() == len);
+  unsigned int len = strlen(str);
 
-    InflatedChar16Sequence<Latin1Char> seq(atom->latin1Chars(nogc), len);
-    SpecificParserAtomLookup<Latin1Char> lookup(seq);
-    HashNumber hash = lookup.hash();
+  // Well-known atoms are all currently ASCII with length <= MaxWellKnownLength.
+  MOZ_ASSERT(len <= MaxWellKnownLength);
+  MOZ_ASSERT(FindSmallestEncoding(UTF8Chars(str, len)) ==
+             JS::SmallestEncoding::ASCII);
 
-    auto maybeEntry = ParserAtomEntry::allocate<Latin1Char>(cx, seq, len, hash);
-    if (maybeEntry.isErr()) {
-      return false;
-    }
+  // NOTE: If this assert fails, you may need to change which list is it belongs
+  //       to in CommonPropertyNames.h.
+  const ParserAtom* tiny = lookupTiny(str, len);
+  MOZ_ASSERT(tiny, "Tiny common name was not found");
 
-    length1StaticTable_[i] = maybeEntry.unwrap();
-    length1StaticTable_[i]->setStaticParserString1(StaticParserString1(i));
-  }
-
-  // Create known ParserAtoms for length-2 alpha-num strings.
-  constexpr size_t NUM_LENGTH2 = NUM_SMALL_CHARS * NUM_SMALL_CHARS;
-  for (size_t i = 0; i < NUM_LENGTH2; ++i) {
-    JS::AutoCheckCannotGC nogc;
-    JSAtom* atom = cx->staticStrings().getLength2FromIndex(i);
-
-    constexpr size_t len = 2;
-    MOZ_ASSERT(atom->length() == len);
-
-    InflatedChar16Sequence<Latin1Char> seq(atom->latin1Chars(nogc), len);
-    SpecificParserAtomLookup<Latin1Char> lookup(seq);
-    HashNumber hash = lookup.hash();
-
-    auto maybeEntry = ParserAtomEntry::allocate<Latin1Char>(cx, seq, len, hash);
-    if (maybeEntry.isErr()) {
-      return false;
-    }
-
-    length2StaticTable_[i] = maybeEntry.unwrap();
-    length2StaticTable_[i]->setStaticParserString2(StaticParserString2(i));
-  }
-
+  // Set alias to existing atom.
+  *name = tiny->asName();
   return true;
 }
 
 bool WellKnownParserAtoms::init(JSContext* cx) {
-  // Initialize the tiny strings before common names since there are some short
-  // common names.
-  if (!initStaticStrings(cx)) {
-    return false;
-  }
+  // NOTE: Well-known tiny strings (with length <= 2) are stored in the
+  // WellKnownParserAtoms_ROM table. This uses static constexpr initialization
+  // so we don't need to do anything here.
 
+  // Tiny strings with a common name need a named alias to an entry in the
+  // WellKnownParserAtoms_ROM.
+#define COMMON_NAME_INIT_(idpart, id, text)    \
+  if (!initTinyStringAlias(cx, &(id), text)) { \
+    return false;                              \
+  }
+  FOR_EACH_TINY_PROPERTYNAME(COMMON_NAME_INIT_)
+#undef COMMON_NAME_INIT_
+
+  // Initialize well-known ParserAtoms that use hash set lookup. These also
+  // point the compile-time names to the own atoms.
 #define COMMON_NAME_INIT_(idpart, id, text)                \
   if (!initSingle(cx, &(id), text, WellKnownAtomId::id)) { \
     return false;                                          \
   }
-  FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INIT_)
+  FOR_EACH_NONTINY_COMMON_PROPERTYNAME(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
-
 #define COMMON_NAME_INIT_(name, clasp)                          \
   if (!initSingle(cx, &(name), #name, WellKnownAtomId::name)) { \
     return false;                                               \
