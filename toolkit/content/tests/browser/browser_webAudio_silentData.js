@@ -35,10 +35,14 @@ add_task(async function testSilentAudioContext() {
     content.ac = new content.AudioContext();
     const ac = content.ac;
     const dest = ac.destination;
-    const source = new content.OscillatorNode(content.ac);
-    const gain = new content.GainNode(content.ac);
-    gain.gain.value = 0.0;
-    source.connect(gain).connect(dest);
+    const source = ac.createBufferSource();
+    const buf = ac.createBuffer(1, 3 * ac.sampleRate, ac.sampleRate);
+    const bufData = Cu.cloneInto(buf.getChannelData(0), {});
+    for (let idx = 0; idx < buf.length; idx++) {
+      bufData[idx] = 0.0;
+    }
+    source.buffer = buf;
+    source.connect(dest);
     source.start();
   });
   info(`- check AudioContext's state -`);
