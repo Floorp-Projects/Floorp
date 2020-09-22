@@ -1043,6 +1043,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void truncDoubleToInt32(FloatRegister src, Register dest,
                           Label* fail) PER_SHARED_ARCH;
 
+  void nearbyIntDouble(RoundingMode mode, FloatRegister src,
+                       FloatRegister dest) PER_SHARED_ARCH;
+  void nearbyIntFloat32(RoundingMode mode, FloatRegister src,
+                        FloatRegister dest) PER_SHARED_ARCH;
+
   void signInt32(Register input, Register output);
   void signDouble(FloatRegister input, FloatRegister output);
   void signDoubleToInt32(FloatRegister input, Register output,
