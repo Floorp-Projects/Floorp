@@ -73,4 +73,15 @@ interface nsIFileProtocolHandler : nsIProtocolHandler
      * @throw NS_ERROR_NOT_AVAILABLE if this file is not an internet shortcut.
      */
     nsIURI readURLFile(in nsIFile file);
+
+    /**
+     * Takes a local file and tries to interpret it as a shell link file
+     * (.lnk files on Windows)
+     * @param file The local file to read
+     * @return The URI the file refers to
+     *
+     * @throw NS_ERROR_NOT_AVAILABLE if the OS does not support such files.
+     * @throw NS_ERROR_NOT_AVAILABLE if this file is not a shell link.
+     */
+    nsIURI readShellLink(in nsIFile file);
 };

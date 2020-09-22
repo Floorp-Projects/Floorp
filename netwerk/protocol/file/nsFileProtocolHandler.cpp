@@ -15,6 +15,8 @@
 
 #include "FileChannelChild.h"
 
+#include "mozilla/ResultExtensions.h"
+
 // URL file handling, copied and modified from
 // xpfe/components/bookmarks/src/nsBookmarksService.cpp
 #ifdef XP_WIN
@@ -122,6 +124,38 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 #endif  // ReadURLFile()
+
+NS_IMETHODIMP
+nsFileProtocolHandler::ReadShellLink(nsIFile* aFile, nsIURI** aURI) {
+#if defined(XP_WIN)
+  nsAutoString path;
+  MOZ_TRY(aFile->GetPath(path));
+
+  if (path.Length() < 4 ||
+      !StringTail(path, 4).LowerCaseEqualsLiteral(".lnk")) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<IPersistFile> persistFile;
+  RefPtr<IShellLinkW> shellLink;
+  WCHAR lpTemp[MAX_PATH];
+  // Get a pointer to the IPersistFile interface.
+  if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+                              IID_IShellLinkW, getter_AddRefs(shellLink))) ||
+      FAILED(shellLink->QueryInterface(IID_IPersistFile,
+                                       getter_AddRefs(persistFile))) ||
+      FAILED(persistFile->Load(path.get(), STGM_READ)) ||
+      FAILED(shellLink->Resolve(nullptr, SLR_NO_UI)) ||
+      FAILED(shellLink->GetPath(lpTemp, MAX_PATH, nullptr, SLGP_UNCPRIORITY))) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIFile> linkedFile;
+  MOZ_TRY(NS_NewLocalFile(nsDependentString(lpTemp), false,
+                          getter_AddRefs(linkedFile)));
+  return NS_NewFileURI(aURI, linkedFile);
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
 
 NS_IMETHODIMP
 nsFileProtocolHandler::GetScheme(nsACString& result) {
