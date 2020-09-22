@@ -450,27 +450,6 @@ void LIRGeneratorX86Shared::lowerPowOfTwoI(MPow* mir) {
   define(lir, mir);
 }
 
-void LIRGeneratorX86Shared::lowerWasmBuiltinTruncateToInt32(
-    MWasmBuiltinTruncateToInt32* ins) {
-  MDefinition* opd = ins->input();
-  MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
-
-  LDefinition maybeTemp =
-      Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempDouble();
-  if (opd->type() == MIRType::Double) {
-    define(new (alloc()) LWasmBuiltinTruncateDToInt32(
-               useRegister(opd), useFixedAtStart(ins->tls(), WasmTlsReg),
-               maybeTemp),
-           ins);
-    return;
-  }
-
-  define(
-      new (alloc()) LWasmBuiltinTruncateFToInt32(
-          useRegister(opd), useFixedAtStart(ins->tls(), WasmTlsReg), maybeTemp),
-      ins);
-}
-
 void LIRGeneratorX86Shared::lowerTruncateDToInt32(MTruncateToInt32* ins) {
   MDefinition* opd = ins->input();
   MOZ_ASSERT(opd->type() == MIRType::Double);
