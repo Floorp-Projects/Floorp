@@ -47,11 +47,7 @@ object StrictModeManager {
                 builder.detectContentUriWithoutPermission()
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                if (setPenaltyDeath || setPenaltyDialog) {
-                    builder.permitNonSdkApiUsage()
-                } else {
-                    builder.detectNonSdkApiUsage()
-                }
+                builder.detectNonSdkApiUsage()
             }
             StrictMode.setVmPolicy(builder.build())
         }
