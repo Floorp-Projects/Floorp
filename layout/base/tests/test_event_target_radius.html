@@ -102,6 +102,20 @@ function testMouseClick(idPosition, dx, dy, idTarget, msg, options) {
   }
 }
 
+var touchTarget;
+document.addEventListener('touchstart', event => { touchTarget = event.target; });
+
+function testTouch(idPosition, dx, dy, idTarget, msg, options) {
+  touchTarget = null;
+  synthesizeTouch(document.getElementById(idPosition), dx, dy, options || {});
+  try {
+    is(touchTarget.id, idTarget,
+       "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]");
+  } catch (ex) {
+    ok(false, "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]; got " + touchTarget);
+  }
+}
+
 function setShowing(id, show) {
   var e = document.getElementById(id);
   e.hidden = !show;
@@ -325,6 +339,40 @@ function test3() {
   // Not yet tested:
   // -- visited link weight
   // -- "Closest" using Euclidean distance
+
+
+  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_touch_events.enabled", 1],
+                                     ["ui.touch.radius.enabled", true],
+                                     ["ui.touch.radius.leftmm", 12],
+                                     ["ui.touch.radius.topmm", 8],
+                                     ["ui.touch.radius.rightmm", 4],
+                                     ["ui.touch.radius.bottommm", 4],
+                                     ["ui.touch.radius.visitedweight", 50]]}, testTouchable);
+}
+
+function testTouchable() {
+  // Element "t" has a mousedown listener but no touch listener. So the touches
+  // that land immediately outside "t" should not hit "t"; only the touches
+  // directly aimed at "t" should hit it.
+  setShowing("t", true);
+  var rect = document.getElementById("t").getBoundingClientRect();
+  testTouch("t", rect.width - 1, 10, "t", "touch inside t right edge");
+  testTouch("t", rect.width + 1, 10, "body", "touch outside t right edge");
+  testTouch("t", 10, rect.height - 1, "t", "touch inside t bottom edge");
+  testTouch("t", 10, rect.height + 1, "body", "touch outside t bottom edge");
+  testTouch("t", 1, 10, "t", "touch inside t left edge");
+  testTouch("t", -1, 10, "body", "touch outside t left edge");
+  testTouch("t", 10, 1, "t", "touch inside t top edge");
+  testTouch("t", 10, -1, "body", "touch outside t top edge");
+  setShowing("t", false);
+
+  // Element "t9" has a touchend listener, so touches within the radius
+  // distance from it should hit it.
+  setShowing("t9", true);
+  testTouch("t9", -5*mm, 10, "body", "touch outside t9 left edge radius");
+  testTouch("t9", -3*mm, 10, "t9", "touch inside t9 left edge radius");
+  setShowing("t9", false);
+
   endTest();
 }
 </script>
