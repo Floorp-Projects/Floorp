@@ -231,10 +231,6 @@ async function doTest(actions, startIdx, navigate) {
         !awaitingPrompt,
         "Navigation should not complete while we're still expecting a prompt"
       );
-      ok(
-        !awaitingBeforeUnload,
-        "Navigation should not complete while we're still expecting beforeunload events"
-      );
 
       is(
         result.eventLoopSpun,
