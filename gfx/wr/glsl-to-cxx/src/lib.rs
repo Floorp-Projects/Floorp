@@ -626,7 +626,7 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
 
     write!(state,
         "static void read_interp_inputs(\
-            Self *self, const InterpInputs *init, const InterpInputs *step, float step_width) {{\n");
+            Self *self, const InterpInputs *init, const InterpInputs *step) {{\n");
     for i in inputs {
         let sym = state.hir.sym(*i);
         match &sym.decl {
@@ -640,7 +640,7 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
                     );
                     write!(
                         state,
-                        "  self->interp_step.{0} = step->{0} * step_width;\n",
+                        "  self->interp_step.{0} = step->{0} * 4.0f;\n",
                         name
                     );
                 }
@@ -657,7 +657,7 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
     if state.use_perspective {
         write!(state,
             "static void read_perspective_inputs(\
-                Self *self, const InterpInputs *init, const InterpInputs *step, float step_width) {{\n");
+                Self *self, const InterpInputs *init, const InterpInputs *step) {{\n");
         if has_varying {
             write!(state, "  Float w = 1.0f / self->gl_FragCoord.w;\n");
         }
@@ -675,7 +675,7 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
                         write!(state, "  self->{0} = self->interp_perspective.{0} * w;\n", name);
                         write!(
                             state,
-                            "  self->interp_step.{0} = step->{0} * step_width;\n",
+                            "  self->interp_step.{0} = step->{0} * 4.0f;\n",
                             name
                         );
                     }
@@ -686,9 +686,12 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
         write!(state, "}}\n");
     }
 
-    write!(state, "ALWAYS_INLINE void step_interp_inputs() {{\n");
+    write!(state, "ALWAYS_INLINE void step_interp_inputs(int steps = 4) {{\n");
     if (used_fragcoord & 1) != 0 {
-        write!(state, "  step_fragcoord();\n");
+        write!(state, "  step_fragcoord(steps);\n");
+    }
+    if !inputs.is_empty() {
+        write!(state, "  float chunks = steps * 0.25f;\n");
     }
     for i in inputs {
         let sym = state.hir.sym(*i);
@@ -696,7 +699,7 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
             hir::SymDecl::Global(_, _, _, run_class) => {
                 if *run_class != hir::RunClass::Scalar {
                     let name = sym.name.as_str();
-                    write!(state, "  {0} += interp_step.{0};\n", name);
+                    write!(state, "  {0} += interp_step.{0} * chunks;\n", name);
                 }
             }
             _ => panic!(),
@@ -705,11 +708,14 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
     write!(state, "}}\n");
 
     if state.use_perspective {
-        write!(state, "ALWAYS_INLINE void step_perspective_inputs() {{\n");
+        write!(state, "ALWAYS_INLINE void step_perspective_inputs(int steps = 4) {{\n");
         if (used_fragcoord & 1) != 0 {
-            write!(state, "  step_fragcoord();\n");
+            write!(state, "  step_fragcoord(steps);\n");
         }
-        write!(state, "  step_perspective();\n");
+        write!(state, "  step_perspective(steps);\n");
+        if !inputs.is_empty() {
+            write!(state, "  float chunks = steps * 0.25f;\n");
+        }
         if has_varying {
             write!(state, "  Float w = 1.0f / gl_FragCoord.w;\n");
         }
@@ -719,31 +725,8 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
                 hir::SymDecl::Global(_, _, _, run_class) => {
                     if *run_class != hir::RunClass::Scalar {
                         let name = sym.name.as_str();
-                        write!(state, "  interp_perspective.{0} += interp_step.{0};\n", name);
+                        write!(state, "  interp_perspective.{0} += interp_step.{0} * chunks;\n", name);
                         write!(state, "  {0} = w * interp_perspective.{0};\n", name);
-                    }
-                }
-                _ => panic!(),
-            }
-        }
-        write!(state, "}}\n");
-    }
-
-    if state.has_draw_span_rgba8 || state.has_draw_span_r8 {
-        write!(
-            state,
-            "ALWAYS_INLINE void step_interp_inputs(int chunks) {{\n"
-        );
-        if (used_fragcoord & 1) != 0 {
-            write!(state, "  step_fragcoord(chunks);\n");
-        }
-        for i in inputs {
-            let sym = state.hir.sym(*i);
-            match &sym.decl {
-                hir::SymDecl::Global(_, _, _, run_class) => {
-                    if *run_class != hir::RunClass::Scalar {
-                        let name = sym.name.as_str();
-                        write!(state, "  {0} += interp_step.{0} * chunks;\n", name);
                     }
                 }
                 _ => panic!(),
@@ -3579,9 +3562,8 @@ fn write_abi(state: &mut OutputState) {
             state.write(" self->main();\n");
             state.write(" self->step_interp_inputs();\n");
             state.write("}\n");
-            state.write("static void skip(Self* self, int chunks) {\n");
-            state.write(" self->step_interp_inputs();\n");
-            state.write(" while (--chunks > 0) self->step_interp_inputs();\n");
+            state.write("static void skip(Self* self, int steps) {\n");
+            state.write(" self->step_interp_inputs(steps);\n");
             state.write("}\n");
             if state.use_perspective {
                 state.write("static void run_perspective(Self *self) {\n");
@@ -3591,9 +3573,8 @@ fn write_abi(state: &mut OutputState) {
                 state.write(" self->main();\n");
                 state.write(" self->step_perspective_inputs();\n");
                 state.write("}\n");
-                state.write("static void skip_perspective(Self* self, int chunks) {\n");
-                state.write(" self->step_perspective_inputs();\n");
-                state.write(" while (--chunks > 0) self->step_perspective_inputs();\n");
+                state.write("static void skip_perspective(Self* self, int steps) {\n");
+                state.write(" self->step_perspective_inputs(steps);\n");
                 state.write("}\n");
             }
             if state.has_draw_span_rgba8 {

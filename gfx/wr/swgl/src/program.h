@@ -74,13 +74,13 @@ struct VertexShaderImpl {
 
 struct FragmentShaderImpl {
   typedef void (*InitSpanFunc)(FragmentShaderImpl*, const void* interps,
-                               const void* step, float step_width);
+                               const void* step);
   typedef void (*RunFunc)(FragmentShaderImpl*);
-  typedef void (*SkipFunc)(FragmentShaderImpl*, int chunks);
+  typedef void (*SkipFunc)(FragmentShaderImpl*, int steps);
   typedef void (*InitSpanWFunc)(FragmentShaderImpl*, const void* interps,
-                                const void* step, float step_width);
+                                const void* step);
   typedef void (*RunWFunc)(FragmentShaderImpl*);
-  typedef void (*SkipWFunc)(FragmentShaderImpl*, int chunks);
+  typedef void (*SkipWFunc)(FragmentShaderImpl*, int steps);
   typedef void (*DrawSpanRGBA8Func)(FragmentShaderImpl*, uint32_t* buf,
                                     int len);
   typedef void (*DrawSpanR8Func)(FragmentShaderImpl*, uint8_t* buf, int len);
@@ -112,26 +112,16 @@ struct FragmentShaderImpl {
   vec4 gl_FragColor;
   vec4 gl_SecondaryFragColor;
 
-  ALWAYS_INLINE void step_fragcoord() { gl_FragCoord.x += 4; }
+  ALWAYS_INLINE void step_fragcoord(int steps = 4) { gl_FragCoord.x += steps; }
 
-  ALWAYS_INLINE void step_fragcoord(int chunks) {
-    gl_FragCoord.x += 4 * chunks;
-  }
-
-  ALWAYS_INLINE void step_perspective() {
-    gl_FragCoord.z += stepZW.x;
-    gl_FragCoord.w += stepZW.y;
-  }
-
-  ALWAYS_INLINE void step_perspective(int chunks) {
-    gl_FragCoord.z += stepZW.x * chunks;
-    gl_FragCoord.w += stepZW.y * chunks;
+  ALWAYS_INLINE void step_perspective(int steps = 4) {
+    gl_FragCoord.z += stepZW.x * steps;
+    gl_FragCoord.w += stepZW.y * steps;
   }
 
   template <bool W = false>
-  ALWAYS_INLINE void init_span(const void* interps, const void* step,
-                               float step_width) {
-    (*(W ? init_span_w_func : init_span_func))(this, interps, step, step_width);
+  ALWAYS_INLINE void init_span(const void* interps, const void* step) {
+    (*(W ? init_span_w_func : init_span_func))(this, interps, step);
   }
 
   template <bool W = false>
@@ -140,8 +130,8 @@ struct FragmentShaderImpl {
   }
 
   template <bool W = false>
-  ALWAYS_INLINE void skip(int chunks = 1) {
-    (*(W ? skip_w_func : skip_func))(this, chunks);
+  ALWAYS_INLINE void skip(int steps = 4) {
+    (*(W ? skip_w_func : skip_func))(this, steps);
   }
 
   ALWAYS_INLINE void draw_span(uint32_t* buf, int len) {
