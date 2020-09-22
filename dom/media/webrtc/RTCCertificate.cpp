@@ -18,7 +18,7 @@
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
-#include "mtransport/dtlsidentity.h"
+#include "transport/dtlsidentity.h"
 
 namespace mozilla {
 namespace dom {

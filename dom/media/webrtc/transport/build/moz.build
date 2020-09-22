@@ -6,7 +6,7 @@
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
-EXPORTS.mtransport += [
+EXPORTS.transport += [
     '../dtlsidentity.h',
     '../m_cpp_utils.h',
     '../mediapacket.h',
@@ -39,6 +39,6 @@ include('/tools/fuzzing/libfuzzer-config.mozbuild')
 # getLogModule, UNIMPLEMENTED, nr_socket_long_term_violation_time,
 # nr_socket_short_term_violation_time, nrappkit/IPDL typedef conflicts in
 # PBrowserOrId and WebrtcTCPSocketChild.
-SOURCES += mtransport_cppsrcs
+SOURCES += transport_cppsrcs
 
 FINAL_LIBRARY = 'xul'

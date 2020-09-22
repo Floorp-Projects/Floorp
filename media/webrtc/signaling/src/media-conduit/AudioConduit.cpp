@@ -17,7 +17,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
-#include "mtransport/runnable_utils.h"
+#include "transport/runnable_utils.h"
 
 #include "pk11pub.h"
 

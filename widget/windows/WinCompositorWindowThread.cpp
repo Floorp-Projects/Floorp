@@ -8,7 +8,7 @@
 #include "WinCompositorWindowThread.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/StaticPtr.h"
-#include "mtransport/runnable_utils.h"
+#include "transport/runnable_utils.h"
 #include "mozilla/StaticPrefs_apz.h"
 
 #if WINVER < 0x0602

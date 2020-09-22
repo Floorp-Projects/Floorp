@@ -15,9 +15,8 @@ SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
+    '/dom/media/webrtc/transport',
     '/ipc/chromium/src',
-    '/media/mtransport',
-    '/media/mtransport',
     '/media/webrtc/',
     '/media/webrtc/signaling/src/common/time_profiling',
     '/media/webrtc/signaling/src/media-conduit',

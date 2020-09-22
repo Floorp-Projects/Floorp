@@ -8,9 +8,9 @@ include('/media/webrtc/webrtc.mozbuild')
 LOCAL_INCLUDES += [
     '!/ipc/ipdl/_ipdlheaders',
     '/dom/media',
+    '/dom/media/webrtc/transport',
     '/ipc/chromium/src',
     '/media/libyuv/libyuv/include',
-    '/media/mtransport',
     '/media/webrtc',
     '/media/webrtc/signaling/src/media-conduit',
     '/media/webrtc/signaling/src/peerconnection',

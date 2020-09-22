@@ -1061,7 +1061,7 @@ nsUDPSocket::AsyncListen(nsIUDPSocketListener* aListener) {
       // PNecko usage
       mListener = new SocketListenerProxy(aListener);
     } else {
-      // PBackground usage from media/mtransport
+      // PBackground usage from dom/media/webrtc/transport
       mListener = new SocketListenerProxyBackground(aListener);
     }
   }

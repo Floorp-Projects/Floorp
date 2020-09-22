@@ -10,7 +10,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 LOCAL_INCLUDES += [
-    '/media/mtransport/third_party/nrappkit/src/util/libekr',
+    '/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr',
     '/media/webrtc/trunk',
     '/media/webrtc/trunk/webrtc',
 ]

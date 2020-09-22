@@ -31,8 +31,8 @@
 #include "DataChannelLog.h"
 
 #ifdef SCTP_DTLS_SUPPORTED
-#  include "mtransport/sigslot.h"
-#  include "mtransport/transportlayer.h"  // For TransportLayer::State
+#  include "transport/sigslot.h"
+#  include "transport/transportlayer.h"  // For TransportLayer::State
 #endif
 
 #ifndef EALREADY

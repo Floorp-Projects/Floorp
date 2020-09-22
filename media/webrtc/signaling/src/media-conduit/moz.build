@@ -8,9 +8,9 @@ include('../../../webrtc.mozbuild')
 LOCAL_INCLUDES += [
     '!/ipc/ipdl/_ipdlheaders',
     '/dom/media/gmp', # for GMPLog.h
+    '/dom/media/webrtc/transport',
     '/ipc/chromium/src',
     '/media/libyuv/libyuv/include',
-    '/media/mtransport',
     '/media/webrtc',
     '/media/webrtc/signaling/src/common',
     '/media/webrtc/signaling/src/common/browser_logging',

@@ -229,7 +229,7 @@ inline bool isIgnoredPathForSprintfLiteral(const CallExpr *Call,
         Begin->compare_lower(StringRef("icu")) == 0 ||
         Begin->compare_lower(StringRef("jsoncpp")) == 0 ||
         Begin->compare_lower(StringRef("libstagefright")) == 0 ||
-        Begin->compare_lower(StringRef("mtransport")) == 0 ||
+        Begin->compare_lower(StringRef("transport")) == 0 ||
         Begin->compare_lower(StringRef("protobuf")) == 0 ||
         Begin->compare_lower(StringRef("skia")) == 0 ||
         Begin->compare_lower(StringRef("sfntly")) == 0 ||

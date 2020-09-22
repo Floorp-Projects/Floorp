@@ -6,7 +6,7 @@
 include('/media/webrtc/webrtc.mozbuild')
 
 LOCAL_INCLUDES += [
-    '/media/mtransport',
+    '/dom/media/webrtc/transport',
     '/media/webrtc',
     '/media/webrtc/trunk',
     '/media/webrtc/trunk/webrtc',

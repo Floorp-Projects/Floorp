@@ -34,7 +34,7 @@
 #include "DOMMediaStream.h"
 
 #ifdef MOZ_WEBRTC
-#  include "mtransport/runnable_utils.h"
+#  include "transport/runnable_utils.h"
 #endif
 
 class nsIPrefBranch;

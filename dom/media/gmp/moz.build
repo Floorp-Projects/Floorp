@@ -140,9 +140,9 @@ if CONFIG['MOZ_SANDBOX']:
 
 
 FINAL_LIBRARY = 'xul'
-# media/mtransport so we work with --disable-webrtc
+# dom/media/webrtc/transport so we work with --disable-webrtc
 LOCAL_INCLUDES += [
-    '/media/mtransport',
+    '/dom/media/webrtc/transport',
     '/xpcom/base',
     '/xpcom/build',
     '/xpcom/threads',

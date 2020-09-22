@@ -63,7 +63,7 @@ extern "C" {
 #include "nsCOMPtr.h"
 #include "nriceresolver.h"
 #include "nr_socket_prsock.h"
-#include "mtransport/runnable_utils.h"
+#include "transport/runnable_utils.h"
 
 namespace mozilla {
 

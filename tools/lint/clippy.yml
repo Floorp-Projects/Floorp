@@ -89,7 +89,7 @@ clippy:
         - xpcom/rust/moz_task/
         - xpcom/rust/gkrust_utils/
         - netwerk/socket/neqo_glue/
-        - media/mtransport/mdns_service/
+        - dom/media/webrtc/transport/mdns_service/
         - media/audioipc/client/
         - media/audioipc/audioipc/
         - media/audioipc/server/
