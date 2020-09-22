@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Downloading .lnk through HTTP should always download the file without parsing it</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  SimpleTest.waitForExplicitFinish();
+  // Download .lnk which points to a system executable
+  fetch("file_lnk.lnk").then(async res => {
+    ok(res.ok, "Download success");
+    ok(res.url.endsWith("file_lnk.lnk"), "file name should be of the lnk file");
+    is(res.headers.get("Content-Length"), "1531", "The size should be of the lnk file");
+    SimpleTest.finish();
+  }, () => {
+    ok(false, "Unreachable code");
+  })
+</script>
