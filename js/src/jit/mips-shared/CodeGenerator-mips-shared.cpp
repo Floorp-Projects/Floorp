@@ -1130,16 +1130,6 @@ void CodeGenerator::visitTruncateFToInt32(LTruncateFToInt32* ins) {
                       ins->mir());
 }
 
-void CodeGenerator::visitWasmBuiltinTruncateDToInt32(
-    LWasmBuiltinTruncateDToInt32* lir) {
-  MOZ_CRASH("NYI");
-}
-
-void CodeGenerator::visitWasmBuiltinTruncateFToInt32(
-    LWasmBuiltinTruncateFToInt32* lir) {
-  MOZ_CRASH("NYI");
-}
-
 void CodeGenerator::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir) {
   auto input = ToFloatRegister(lir->input());
   auto output = ToRegister(lir->output());

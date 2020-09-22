@@ -194,10 +194,6 @@ void LIRGeneratorMIPS::lowerDivI64(MDiv* div) {
   defineReturn(lir, div);
 }
 
-void LIRGeneratorMIPS::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
-  MOZ_CRASH("We don't use runtime div for this architecture");
-}
-
 void LIRGeneratorMIPS::lowerModI64(MMod* mod) {
   if (mod->isUnsigned()) {
     lowerUModI64(mod);
@@ -208,10 +204,6 @@ void LIRGeneratorMIPS::lowerModI64(MMod* mod) {
       useInt64RegisterAtStart(mod->lhs()), useInt64RegisterAtStart(mod->rhs()));
 
   defineReturn(lir, mod);
-}
-
-void LIRGeneratorMIPS::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
-  MOZ_CRASH("We don't use runtime mod for this architecture");
 }
 
 void LIRGeneratorMIPS::lowerUDivI64(MDiv* div) {
@@ -234,11 +226,6 @@ void LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins) {
                ins);
 }
 
-void LIRGeneratorMIPS::lowerWasmBuiltinTruncateToInt64(
-    MWasmBuiltinTruncateToInt64* ins) {
-  MOZ_CRASH("We don't use it for this architecture");
-}
-
 void LIRGenerator::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins) {
   MDefinition* opd = ins->input();
   MOZ_ASSERT(opd->type() == MIRType::Int64);
@@ -246,9 +233,4 @@ void LIRGenerator::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins) {
 
   defineReturn(
       new (alloc()) LInt64ToFloatingPoint(useInt64RegisterAtStart(opd)), ins);
-}
-
-void LIRGeneratorMIPS::lowerBuiltinInt64ToFloatingPoint(
-    MBuiltinInt64ToFloatingPoint* ins) {
-  MOZ_CRASH("We don't use it for this architecture");
 }
