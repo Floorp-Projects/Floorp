@@ -71,6 +71,13 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void ClearInFlightProcessId(uint64_t aProcessId);
   uint64_t GetInFlightProcessId() const { return mInFlightProcessId; }
 
+  // The ID of the BrowsingContext which caused this BrowsingContext to be
+  // opened, or `0` if this is unknown.
+  // Only set for toplevel content BrowsingContexts, and may be from a different
+  // BrowsingContextGroup.
+  uint64_t GetCrossGroupOpenerId() const { return mCrossGroupOpenerId; }
+  void SetCrossGroupOpenerId(uint64_t aOpenerId);
+
   void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
 
   // The current active WindowGlobal.
@@ -300,6 +307,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // The ID of the former owner process during an ownership change, which may
   // have in-flight messages that assume it is still the owner.
   uint64_t mInFlightProcessId = 0;
+
+  uint64_t mCrossGroupOpenerId = 0;
 
   // The current remoteness change which is in a pending state.
   RefPtr<PendingRemotenessChange> mPendingRemotenessChange;

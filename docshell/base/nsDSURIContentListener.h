@@ -30,9 +30,9 @@ class MaybeCloseWindowHelper final : public nsITimerCallback {
    * Closes the provided window async (if mShouldCloseWindow is true) and
    * returns a valid browsingContext to be used instead as parent for dialogs or
    * similar things.
-   * In case mShouldCloseWindow is true, the final browsing context will be the
-   * a valid new chrome window to use. It can be the opener, or the opener's
-   * top, or the top chrome window.
+   * In case mShouldCloseWindow is true, the returned BrowsingContext will be
+   * the window's opener (or original cross-group opener in the case of a
+   * `noopener` popup).
    */
   mozilla::dom::BrowsingContext* MaybeCloseWindow();
 
