@@ -225,6 +225,13 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
     txn.SetEmbedderPolicy(policy.ref());
   }
 
+  if (nsCOMPtr<nsIChannel> channel = aDocument->GetChannel()) {
+    nsCOMPtr<nsILoadInfo> loadInfo(channel->LoadInfo());
+    txn.SetIsOriginalFrameSource(loadInfo->GetOriginalFrameSrcLoad());
+  } else {
+    txn.SetIsOriginalFrameSource(false);
+  }
+
   // Init Mixed Content Fields
   nsCOMPtr<nsIURI> innerDocURI =
       NS_GetInnermostURI(aDocument->GetDocumentURI());

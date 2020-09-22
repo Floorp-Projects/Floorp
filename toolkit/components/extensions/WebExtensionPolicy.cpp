@@ -801,33 +801,19 @@ bool DocInfo::IsTopLevel() const {
 }
 
 bool WindowShouldMatchActiveTab(nsPIDOMWindowOuter* aWin) {
-  if (aWin->GetBrowsingContext()->IsTopContent()) {
-    return true;
-  }
+  for (WindowContext* wc = aWin->GetCurrentInnerWindow()->GetWindowContext();
+       wc; wc = wc->GetParentWindowContext()) {
+    BrowsingContext* bc = wc->GetBrowsingContext();
+    if (bc->IsTopContent()) {
+      return true;
+    }
 
-  nsIDocShell* docshell = aWin->GetDocShell();
-  if (!docshell || docshell->GetCreatedDynamically()) {
-    return false;
+    if (bc->GetCreatedDynamically() || !wc->GetIsOriginalFrameSource()) {
+      return false;
+    }
   }
-
-  Document* doc = aWin->GetExtantDoc();
-  if (!doc) {
-    return false;
-  }
-
-  nsIChannel* channel = doc->GetChannel();
-  if (!channel) {
-    return false;
-  }
-
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-  if (!loadInfo->GetOriginalFrameSrcLoad()) {
-    return false;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> parent = aWin->GetInProcessParent();
-  MOZ_ASSERT(parent != nullptr);
-  return WindowShouldMatchActiveTab(parent);
+  MOZ_ASSERT_UNREACHABLE("Should reach top content before end of loop");
+  return false;
 }
 
 bool DocInfo::ShouldMatchActiveTabPermission() const {

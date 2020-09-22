@@ -191,6 +191,12 @@ bool WindowContext::CanSet(FieldIndex<IDX_IsSecureContext>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_IsOriginalFrameSource>,
+                           const bool& aIsOriginalFrameSource,
+                           ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
 bool WindowContext::CanSet(FieldIndex<IDX_DocTreeHadAudibleMedia>,
                            const bool& aValue, ContentParent* aSource) {
   return IsTop();

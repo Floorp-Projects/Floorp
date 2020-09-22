@@ -49,6 +49,7 @@ class BrowsingContextGroup;
    * tracking resource */                                              \
   FIELD(IsThirdPartyTrackingResourceWindow, bool)                      \
   FIELD(IsSecureContext, bool)                                         \
+  FIELD(IsOriginalFrameSource, bool)                                   \
   /* Mixed-Content: If the corresponding documentURI is https,         \
    * then this flag is true. */                                        \
   FIELD(IsSecure, bool)                                                \
@@ -215,6 +216,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsSecureContext>, const bool& aIsSecureContext,
               ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_IsOriginalFrameSource>,
+              const bool& aIsOriginalFrameSource, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_DocTreeHadAudibleMedia>, const bool& aValue,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AutoplayPermission>, const uint32_t& aValue,
