@@ -13,8 +13,6 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 
-extern mozilla::LazyLogModule gSHLog;
-
 namespace mozilla {
 namespace dom {
 
@@ -266,8 +264,6 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
     SessionHistoryEntry::sLoadIdToEntry =
         new nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>();
   }
-  MOZ_LOG(gSHLog, LogLevel::Verbose,
-          ("SHEntry::AddLoadId(%lu) - %p", mLoadId, aEntry));
   SessionHistoryEntry::sLoadIdToEntry->Put(mLoadId, aEntry);
 }
 
@@ -307,7 +303,6 @@ void SessionHistoryEntry::RemoveLoadId(uint64_t aLoadId) {
     return;
   }
 
-  MOZ_LOG(gSHLog, LogLevel::Verbose, ("SHEntry::RemoveLoadId(%lu)", aLoadId));
   sLoadIdToEntry->Remove(aLoadId);
 }
 
