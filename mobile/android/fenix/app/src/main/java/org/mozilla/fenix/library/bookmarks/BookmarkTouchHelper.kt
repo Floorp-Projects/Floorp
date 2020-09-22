@@ -30,8 +30,12 @@ class BookmarkTouchCallback(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder
     ): Int {
+        // Swiping separators is currently not supported.
+        if (viewHolder is BookmarkSeparatorViewHolder) {
+            return 0
+        }
         val item = (viewHolder as BookmarkNodeViewHolder).item
-        return if (viewHolder is BookmarkSeparatorViewHolder || item?.inRoots() == true) {
+        return if (item?.inRoots() == true) {
             0
         } else {
             super.getSwipeDirs(recyclerView, viewHolder)
