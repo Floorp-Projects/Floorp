@@ -10,7 +10,7 @@ pull_request_rules:
         message: MickeyMoz 💪
       merge:
         method: rebase
-        strict: true
+        strict: smart
   - name: L10N - Auto Merge
     conditions:
       - author=mozilla-l10n-automation-bot
@@ -22,7 +22,7 @@ pull_request_rules:
         message: LGTM 😎
       merge:
         method: rebase
-        strict: true
+        strict: smart
   - name: Needs landing - Merge
     conditions:
       - status-success=complete-pr
@@ -31,4 +31,4 @@ pull_request_rules:
     actions:
       merge:
         method: rebase
-        strict: true
+        strict: smart
