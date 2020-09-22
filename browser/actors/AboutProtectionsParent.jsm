@@ -49,6 +49,16 @@ const SCOPE_MONITOR = [
   "https://identity.mozilla.com/apps/monitor",
 ];
 
+const SCOPE_VPN = "profile https://identity.mozilla.com/account/subscriptions";
+const VPN_ENDPOINT = `${Services.prefs.getStringPref(
+  "identity.fxaccounts.auth.uri"
+)}oauth/subscriptions/active`;
+
+// The ID of the vpn subscription, if we see this ID attached to a user's account then they have subscribed to vpn.
+const VPN_SUB_ID = Services.prefs.getStringPref(
+  "browser.contentblocking.report.vpn_sub_id"
+);
+
 // Error messages
 const INVALID_OAUTH_TOKEN = "Invalid OAuth token";
 const USER_UNSUBSCRIBED_TO_MONITOR = "User is not subscribed to Monitor";
@@ -301,6 +311,57 @@ class AboutProtectionsParent extends JSWindowActorParent {
     );
   }
 
+  async VPNSubStatus() {
+    // For testing, set vpn sub status manually
+    if (gTestOverride && "vpnOverrides" in gTestOverride) {
+      return gTestOverride.vpnOverrides().hasSubscription;
+    }
+
+    const vpnToken = await fxAccounts.getOAuthToken({ scope: SCOPE_VPN });
+    let headers = new Headers();
+    headers.append("Authorization", `Bearer ${vpnToken}`);
+    const request = new Request(VPN_ENDPOINT, { headers });
+    const res = await fetch(request);
+    if (res.ok) {
+      const result = await res.json();
+      for (let sub of result) {
+        if (sub.subscriptionId == VPN_SUB_ID) {
+          return true;
+        }
+      }
+      return false;
+    }
+    // there was an error, assume user is not subscribed to VPN
+    return false;
+  }
+
+  // VPN shows if we are in a supported region and supported languages
+  // VPN does not show in China - VPNs are illegal there, this is a requirement to hardcode, and not use in a pref.
+  VPNShouldShow() {
+    let currentRegion = "";
+    if (gTestOverride && "vpnOverrides" in gTestOverride) {
+      currentRegion = gTestOverride.vpnOverrides().location;
+    } else {
+      // The region we have detected the user to be in
+      // We cannot run this in tests due to it using a request
+      currentRegion = Region.current ? Region.current.toLowerCase() : "";
+    }
+
+    // The region that the user has set as their home region
+    const homeRegion = Region.home.toLowerCase() || "";
+    const regionsWithVPN = Services.prefs.getStringPref(
+      "browser.contentblocking.report.vpn_regions"
+    );
+    const language = Services.locale.appLocaleAsBCP47;
+
+    return (
+      currentRegion != "cn" &&
+      homeRegion != "cn" &&
+      regionsWithVPN.includes(currentRegion) &&
+      language.includes("en-")
+    );
+  }
+
   async receiveMessage(aMessage) {
     let win = this.browsingContext.top.embedderElement.ownerGlobal;
     switch (aMessage.name) {
@@ -386,6 +447,12 @@ class AboutProtectionsParent extends JSWindowActorParent {
 
       case "FetchEntryPoint":
         return entrypoint;
+
+      case "FetchVPNSubStatus":
+        return this.VPNSubStatus();
+
+      case "FetchShowVPNCard":
+        return this.VPNShouldShow();
     }
 
     return undefined;
