@@ -8,6 +8,7 @@
 #define ZoomConstraintsClient_h_
 
 #include "mozilla/layers/ScrollableLayerGuid.h"
+#include "mozilla/layers/ZoomConstraints.h"
 #include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
@@ -46,6 +47,7 @@ class ZoomConstraintsClient final : public nsIDOMEventListener,
   mozilla::PresShell* MOZ_NON_OWNING_REF mPresShell;
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
   mozilla::Maybe<mozilla::layers::ScrollableLayerGuid> mGuid;
+  mozilla::layers::ZoomConstraints mZoomConstraints;
 };
 
 #endif
