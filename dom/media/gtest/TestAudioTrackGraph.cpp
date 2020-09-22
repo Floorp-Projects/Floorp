@@ -10,7 +10,9 @@
 #include "gtest/gtest.h"
 
 #include "CrossGraphPort.h"
-#include "MediaEngineWebRTCAudio.h"
+#ifdef MOZ_WEBRTC
+#  include "MediaEngineWebRTCAudio.h"
+#endif  // MOZ_WEBRTC
 #include "MockCubeb.h"
 #include "mozilla/Preferences.h"
 
@@ -96,6 +98,7 @@ void WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF) {
 #define DispatchMethod(t, m, args...) \
   NS_DispatchToCurrentThread(NewRunnableMethod(__func__, t, m, ##args))
 
+#ifdef MOZ_WEBRTC
 /*
  * Common ControlMessages
  */
@@ -116,6 +119,7 @@ class StopInputProcessing : public ControlMessage {
       : ControlMessage(nullptr), mInputProcessing(aInputProcessing) {}
   void Run() override { mInputProcessing->Stop(); }
 };
+#endif  // MOZ_WEBRTC
 
 class GoFaster : public ControlMessage {
   MockCubeb* mCubeb;
@@ -279,6 +283,7 @@ TEST(TestAudioTrackGraph, ErrorStateCrash)
   WaitFor(cubeb->StreamDestroyEvent());
 }
 
+#ifdef MOZ_WEBRTC
 TEST(TestAudioTrackGraph, SourceTrack)
 {
   MockCubeb* cubeb = new MockCubeb();
@@ -526,3 +531,4 @@ TEST(TestAudioTrackGraph, CrossGraphPortLargeBuffer)
 
   Preferences::SetInt(DRIFT_BUFFERING_PREF, oldBuffering);
 }
+#endif  // MOZ_WEBRTC
