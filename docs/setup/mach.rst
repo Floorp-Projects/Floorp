@@ -44,9 +44,8 @@ Try building the tree:
 
    $ ./mach build
 
-If you get error messages, make sure that you have all of the `build
-requisites </en-US/docs/Developer_Guide/Build_Instructions#Build_prerequisites>`__
-for your system.
+If you get error messages, make sure that you have all of the :ref:`build
+requisites <Getting Set Up To Work On The Firefox Codebase>` for your system.
 
 If it works, you can look at compiler warnings:
 
@@ -82,7 +81,7 @@ You run mach from the source directory, so you should be able to use
 your shell's tab completion to tab-complete paths to tests. Mach figures
 out how to execute the tests for you!
 
-Check out the linting and analysis tools:
+Check out the :ref:`linting` and :ref:`Static analysis` tools:
 
 .. code-block:: shell
 
@@ -207,7 +206,7 @@ client.mk:
    warnings are currently detected. Do not rely on mach as a substitute
    for raw build output.
 -  mach will invoke make in silent mode. This suppresses excessive
-   (often unncessary) output.
+   (often unnecessary) output.
 
 
 Is mach a build system?

@@ -200,4 +200,6 @@ SPHINX_TREES['bug-mgmt'] = 'docs/bug-mgmt'
 
 SPHINX_TREES['setup'] = 'docs/setup'
 
+SPHINX_TREES['crash-reporting'] = 'docs/crash-reporting'
+
 include('build/templates.mozbuild')

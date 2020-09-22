@@ -328,8 +328,7 @@ couple hundred megabytes of data over the internet.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In your checked out source tree create a new file, ``mozconfig``, which
-will contain your build options. For more on this file, see `Configuring
-Build Options <https://developer.mozilla.org/en/Configuring_Build_Options>`_.
+will contain your build options. For more on this file, see :ref:`Configuring Build Options`.
 
 To get started quickly, create the file with the following contents:
 
@@ -407,7 +406,7 @@ Software requirements
 
 These options are specific to Mozilla builds for macOS. For a more
 general overview of build options and the ``mozconfig`` file, see
-`Configuring Build Options <https://developer.mozilla.org/en/Configuring_Build_Options>`_. For
+:ref:`Configuring Build Options`. For
 specific information on configuring to build a universal binary, see
 `Mac OS X Universal Binaries <https://developer.mozilla.org/en/Mac_OS_X_Universal_Binaries>`_.
 
@@ -444,8 +443,8 @@ are intended to be added to your ``mozconfig`` file.
 
        ac_add_options --with-macos-sdk=/path/to/SDK
 
-   Official trunk builds use ``/Developer/SDKs/MacOSX10.11.sdk``. Check
-   ```build/macosx/universal/mozconfig.common`` <https://dxr.mozilla.org/mozilla-central/source/build/macosx/cross-mozconfig.common#23>`_
+   Official trunk builds use `/Developer/SDKs/MacOSX10.11.sdk`. Check
+   `build/macosx/universal/mozconfig.common <https://searchfox.org/mozilla-central/source/build/macosx/cross-mozconfig.common>`__
    for the SDK version used for official builds of any particular source
    release.
 
@@ -484,4 +483,3 @@ Troubleshooting
    configuration file you're using for your chosen shell. Removing all
    modifications and then re-adding them one-by-one can narrow down
    problems.
-

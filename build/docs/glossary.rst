@@ -1,6 +1,5 @@
-========
-Glossary
-========
+Build Glossary
+==============
 
 .. glossary::
    :sorted:
