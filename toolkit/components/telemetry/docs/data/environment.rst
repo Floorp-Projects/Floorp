@@ -49,7 +49,6 @@ Structure:
         defaultPrivateSearchEngine: {,
           // data about the current default engine for private browsing mode. Same as defaultSearchEngineData.
         },
-        searchCohort: <string>, // optional, contains an identifier for any active search A/B experiments
         launcherProcessState: <integer>, // optional, values correspond to values of mozilla::LauncherRegistryInfo::EnabledState enum
         e10sEnabled: <bool>, // whether e10s is on, i.e. browser tabs open by default in a different process
         e10sMultiProcesses: <integer>, // Maximum number of processes that will be launched for regular web content
@@ -377,11 +376,6 @@ mode.
 This object contains the same information as ``defaultSearchEngineData``. It
 is only reported if the ``browser.search.separatePrivateDefault`` preference is
 set to ``true``.
-
-searchCohort
-~~~~~~~~~~~~
-
-If the user has been enrolled into a search default change experiment, this contains the string identifying the experiment the user is taking part in. Most user profiles will never be part of any search default change experiment, and will not send this value.
 
 userPrefs
 ~~~~~~~~~
