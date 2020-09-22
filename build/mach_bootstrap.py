@@ -427,7 +427,7 @@ def _finalize_telemetry_legacy(context, instance, handler, success, start_time,
 
     # The user is performing a maintenance command, skip the upload
     if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'vcs-setup',
-                        'create-mach-environment',
+                        'create-mach-environment', 'install-moz-phab',
                         # We call mach environment in client.mk which would cause the
                         # data submission to block the forward progress of make.
                         'environment'):
