@@ -7699,16 +7699,13 @@ void DatabaseConnection::CachedStatement::Reset() {
 
 DatabaseConnection::CachedStatement::CachedStatement(
     DatabaseConnection* aConnection, nsCOMPtr<mozIStorageStatement> aStatement)
-    : mStatement(std::move(aStatement))
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
-      ,
+    : mStatement(std::move(aStatement)),
       mScoper(mStatement
                   ? Maybe<mozStorageStatementScoper>{std::in_place, mStatement}
                   : Nothing{})
-#  ifdef DEBUG
+#ifdef DEBUG
       ,
       mDEBUGConnection(aConnection)
-#  endif
 #endif
 {
 #ifdef DEBUG
