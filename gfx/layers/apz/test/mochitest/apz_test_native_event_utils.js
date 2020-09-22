@@ -935,6 +935,11 @@ function promiseTopic(aTopic) {
   });
 }
 
+// Returns a promise that is resolved when a APZ transform ends.
+function promiseTransformEnd() {
+  return promiseTopic("APZ:TransformEnd");
+}
+
 // This generates a touch-based pinch zoom-in gesture that is expected
 // to succeed. It returns after APZ has completed the zoom and reaches the end
 // of the transform.
