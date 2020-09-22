@@ -79,7 +79,7 @@ Implementing a fixed Javascript property
 A static property is made available to extensions via Javascript
 entirely from the schema, using a fragment like this one:
 
-.. code-block:: json
+.. code-block:: js
 
    [
      "namespace": "myapi",
