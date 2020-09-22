@@ -50,7 +50,7 @@ avoid-blacklist-and-whitelist:
         - browser/components/migration/ChromeMigrationUtils.jsm
         - browser/components/migration/ChromeProfileMigrator.jsm
         - browser/components/newtab/data/content/activity-stream.bundle.js
-        - browser/components/pioneer/content/pioneer.js
+        - browser/components/ion/content/ion.js
         - browser/components/preferences/privacy.inc.xhtml
         - browser/components/preferences/privacy.js
         - browser/components/resistfingerprinting/test/mochitest/test_bug1354633_media_error.html
