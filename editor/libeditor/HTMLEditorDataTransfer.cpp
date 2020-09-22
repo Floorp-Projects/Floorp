@@ -1062,7 +1062,8 @@ nsresult HTMLEditor::PrepareTransferable(nsITransferable** aTransferable) {
   return NS_OK;
 }
 
-nsresult HTMLEditor::PrepareHTMLTransferable(nsITransferable** aTransferable) {
+nsresult HTMLEditor::PrepareHTMLTransferable(
+    nsITransferable** aTransferable) const {
   MOZ_ASSERT(aTransferable);
   MOZ_ASSERT(!*aTransferable);
 
@@ -1913,6 +1914,7 @@ nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
   return NS_OK;
 }
 
+// static
 bool HTMLEditor::HavePrivateHTMLFlavor(nsIClipboard* aClipboard) {
   if (NS_WARN_IF(!aClipboard)) {
     return false;
