@@ -13,24 +13,6 @@ XPCOMUtils.defineLazyScriptGetter(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
 });
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "NEWTAB_ENABLED",
-  "browser.newtabpage.enabled",
-  false
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "SHOW_BOOKMARKS_TOOLBAR_ON_NEWTAB",
-  "browser.toolbars.bookmarks.2h2020",
-  false
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "BOOKMARKS_TOOLBAR_PERSIST_OPEN",
-  "browser.toolbars.bookmarks.persist_open",
-  500
-);
 ChromeUtils.defineModuleGetter(
   this,
   "PanelMultiView",
@@ -1651,21 +1633,15 @@ var BookmarkingUI = {
   },
 
   toggleBookmarksToolbar(reason) {
-    // The PersonalToolbar is always visible on the newtab page,
-    // though a user can enable/disable the showing of it on other pages.
-    let toggled = AutoShowBookmarksToolbar.toggleVisibility({
-      currentURI: gBrowser.currentURI,
-      isNullPrincipal: gBrowser.contentPrincipal.isNullPrincipal,
-      animated: true,
-      persist: true,
-    });
-    if (toggled) {
-      BrowserUsageTelemetry.recordToolbarVisibility(
-        "PersonalToolbar",
-        document.getElementById("PersonalToolbar").collapsed,
-        reason
-      );
-    }
+    CustomizableUI.setToolbarVisibility(
+      "PersonalToolbar",
+      document.getElementById("PersonalToolbar").collapsed
+    );
+    BrowserUsageTelemetry.recordToolbarVisibility(
+      "PersonalToolbar",
+      document.getElementById("PersonalToolbar").collapsed,
+      reason
+    );
   },
 
   attachPlacesView(event, node) {
@@ -2262,71 +2238,17 @@ var AutoShowBookmarksToolbar = {
   },
 
   observe(subject, topic, data) {
-    this.toggleVisibility({
-      show: true,
-      animated: true,
-      persist: false,
-    });
-  },
-
-  isOnNewTabPage({ currentURI, isNullPrincipal }) {
-    if (!NEWTAB_ENABLED && currentURI.spec == "about:blank") {
-      return isNullPrincipal;
-    }
-    return [AboutNewTab.newTabURL, "about:home"].some(uri =>
-      currentURI.spec.startsWith(uri)
-    );
-  },
-
-  /**
-   * Toggle the visibility of the bookmarks toolbar.
-   *
-   * @param {URI} [options.currentURI] The URI of the selected tab. Must not
-   *              be provided if show is provided. Used to calculate if the
-   *              toolbar will be shown.
-   * @param {Boolean} [options.isNullPrincipal] If the content principal of the
-   *              selected tab is the null principal. Used to determine if
-   *              about:blank is being used as the new tab page versus a
-   *              content-generated load. Required if currentURI is provided.
-   * @param {Boolean} [options.show] If the toolbar should be shown or hidden.
-   *                  Must not be provided if currentURI is provided.
-   * @param {Boolean} [options.animated] If the opening or closing should be animated.
-   * @param {Boolean} [options.persist] If the visibility of the toolbar should be persisted.
-   * @return {Boolean} False if the toggle was rejected, true otherwise.
-   */
-  toggleVisibility({ currentURI, isNullPrincipal, show, animated, persist }) {
-    if (
-      (currentURI && show !== undefined) ||
-      (!currentURI && show === undefined)
-    ) {
-      throw new Error("Only one of currentURI and show must be provided");
-    }
-
-    if (currentURI) {
-      show = this.isOnNewTabPage({ currentURI, isNullPrincipal });
-    }
-
     let toolbar = document.getElementById("PersonalToolbar");
-    if (toolbar.collapsed != show) {
-      // No work needed if the toolbar is already in the state we want.
-      return false;
-    }
-
-    if (
-      !show &&
-      SHOW_BOOKMARKS_TOOLBAR_ON_NEWTAB &&
-      BOOKMARKS_TOOLBAR_PERSIST_OPEN
-    ) {
-      return false;
+    if (!toolbar.collapsed) {
+      return;
     }
 
     let placement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
     let area = placement && placement.area;
     if (area != CustomizableUI.AREA_BOOKMARKS) {
-      return false;
+      return;
     }
 
-    setToolbarVisibility(toolbar, show, persist, animated);
-    return true;
+    setToolbarVisibility(toolbar, true);
   },
 };
