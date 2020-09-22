@@ -46,7 +46,6 @@ const prefs = {
   DOORHANGER_USER_DECISION_PREF: "doh-rollout.doorhanger-decision",
   DISABLED_PREF: "doh-rollout.disable-heuristics",
   SKIP_HEURISTICS_PREF: "doh-rollout.skipHeuristicsCheck",
-  CLEAR_ON_SHUTDOWN_PREF: "doh-rollout.clearModeOnShutdown",
   FIRST_RUN_PREF: "doh-rollout.doneFirstRun",
   BALROG_MIGRATION_PREF: "doh-rollout.balrog-migration-done",
   PREVIOUS_TRR_MODE_PREF: "doh-rollout.previous.trr.mode",
@@ -89,16 +88,6 @@ async function setup() {
   // Enable provider steering. This pref ships false by default so it can be
   // controlled e.g. via Normandy, but for testing let's enable.
   Preferences.set(prefs.PROVIDER_STEERING_PREF, true);
-
-  // Check that the default value of the clearModeOnShutdown pref is true. This
-  // forces us to update tests in the future if/when we change the defaut. When
-  // the time comes, browser_cleanFlow.js needs to be updated to test when this
-  // pref is true. Currently since the default is true, it tests the false case.
-  is(
-    Preferences.get(prefs.CLEAR_ON_SHUTDOWN_PREF),
-    true,
-    "Clear mode on shutdown is enabled."
-  );
 
   // Set up heuristics, all passing by default.
 
@@ -240,15 +229,7 @@ async function waitForStateTelemetry(expectedStates) {
 }
 
 async function restartDoHController() {
-  let oldMode = Preferences.get(prefs.ROLLOUT_TRR_MODE_PREF);
   await DoHController._uninit();
-  let newMode = Preferences.get(prefs.ROLLOUT_TRR_MODE_PREF);
-  let expectClear = Preferences.get(prefs.CLEAR_ON_SHUTDOWN_PREF);
-  is(
-    newMode,
-    expectClear ? undefined : oldMode,
-    `Mode was ${expectClear ? "cleared" : "persisted"} on shutdown.`
-  );
   await DoHController.init();
 }
 
