@@ -52,6 +52,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/AutoPrintEventDispatcher.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocGroup.h"
@@ -1007,6 +1008,52 @@ mozilla::ipc::IPCResult BrowserChild::RecvResumeLoad(
   nsresult rv = WebNavigation()->ResumeRedirectedLoad(aPendingSwitchID, -1);
   if (NS_FAILED(rv)) {
     NS_WARNING("WebNavigation()->ResumeRedirectedLoad failed");
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
+    const MaybeDiscarded<BrowsingContext>& aSourceBC) {
+  if (NS_WARN_IF(aSourceBC.IsNullOrDiscarded())) {
+    return IPC_OK();
+  }
+  nsCOMPtr<Document> sourceDocument = aSourceBC.get()->GetDocument();
+  if (NS_WARN_IF(!sourceDocument)) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
+  if (NS_WARN_IF(!ourDocShell)) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIContentViewer> cv;
+  ourDocShell->GetContentViewer(getter_AddRefs(cv));
+  if (NS_WARN_IF(!cv)) {
+    return IPC_OK();
+  }
+
+  RefPtr<Document> clone;
+  {
+    AutoPrintEventDispatcher dispatcher(*sourceDocument);
+    nsAutoScriptBlocker scriptBlocker;
+    bool hasInProcessCallbacks = false;
+    clone = sourceDocument->CreateStaticClone(ourDocShell, cv,
+                                              &hasInProcessCallbacks);
+    if (NS_WARN_IF(!clone)) {
+      return IPC_OK();
+    }
+  }
+
+  // Since the clone document is not parsed-created, we need to initialize
+  // layout manually. This is usually done in ReflowPrintObject for non-remote
+  // documents.
+  if (RefPtr<PresShell> ps = clone->GetPresShell()) {
+    if (!ps->DidInitialize()) {
+      nsresult rv = ps->Initialize();
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+    }
   }
 
   return IPC_OK();

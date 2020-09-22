@@ -180,31 +180,33 @@ void nsSubDocumentFrame::ShowViewer() {
     return;
   }
 
-  if (!PresContext()->IsDynamic()) {
-    // We let the printing code take care of loading the document; just
-    // create the inner view for it to use.
+  RefPtr<nsFrameLoader> frameloader = FrameLoader();
+  if (!frameloader) {
+    return;
+  }
+
+  if (!frameloader->IsRemoteFrame() && !PresContext()->IsDynamic()) {
+    // We let the printing code take care of loading the document and
+    // initializing the shell; just create the inner view for it to use.
     (void)EnsureInnerView();
   } else {
-    RefPtr<nsFrameLoader> frameloader = FrameLoader();
-    if (frameloader) {
-      AutoWeakFrame weakThis(this);
-      mCallingShow = true;
-      bool didCreateDoc = frameloader->Show(this);
-      if (!weakThis.IsAlive()) {
-        return;
-      }
-      mCallingShow = false;
-      mDidCreateDoc = didCreateDoc;
-
-      if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-        frameloader->UpdatePositionAndSize(this);
-      }
-
-      if (!weakThis.IsAlive()) {
-        return;
-      }
-      InvalidateFrame();
+    AutoWeakFrame weakThis(this);
+    mCallingShow = true;
+    bool didCreateDoc = frameloader->Show(this);
+    if (!weakThis.IsAlive()) {
+      return;
     }
+    mCallingShow = false;
+    mDidCreateDoc = didCreateDoc;
+
+    if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
+      frameloader->UpdatePositionAndSize(this);
+    }
+
+    if (!weakThis.IsAlive()) {
+      return;
+    }
+    InvalidateFrame();
   }
 }
 
@@ -324,7 +326,9 @@ static void WrapBackgroundColorInOwnLayer(nsDisplayListBuilder* aBuilder,
 
 void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                           const nsDisplayListSet& aLists) {
-  if (!IsVisibleForPainting()) return;
+  if (!IsVisibleForPainting()) {
+    return;
+  }
 
   nsFrameLoader* frameLoader = FrameLoader();
   bool isRemoteFrame = frameLoader && frameLoader->IsRemoteFrame();
@@ -920,15 +924,14 @@ void nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot,
 }
 
 nsFrameLoader* nsSubDocumentFrame::FrameLoader() const {
-  nsIContent* content = GetContent();
-  if (!content) return nullptr;
-
-  if (!mFrameLoader) {
-    RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(content);
-    if (loaderOwner) {
-      mFrameLoader = loaderOwner->GetFrameLoader();
-    }
+  if (mFrameLoader) {
+    return mFrameLoader;
   }
+
+  if (RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(GetContent())) {
+    mFrameLoader = loaderOwner->GetFrameLoader();
+  }
+
   return mFrameLoader;
 }
 
