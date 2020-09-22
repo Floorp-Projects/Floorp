@@ -1950,6 +1950,7 @@ dependencies = [
  "fog-gtest",
  "gecko-fuzz-targets",
  "gkrust-shared",
+ "moz_task-gtest",
  "mozglue-static",
  "mp4parse-gtest",
  "nsstring-gtest",
@@ -3059,10 +3060,19 @@ name = "moz_task"
 version = "0.1.0"
 dependencies = [
  "cstr",
+ "futures-task",
  "libc",
  "nserror",
  "nsstring",
+ "thiserror",
  "xpcom",
+]
+
+[[package]]
+name = "moz_task-gtest"
+version = "0.1.0"
+dependencies = [
+ "moz_task",
 ]
 
 [[package]]

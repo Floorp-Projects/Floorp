@@ -69,8 +69,14 @@ impl<T: RefCounted + 'static> RefPtr<T> {
     /// Write this RefPtr's value into an outparameter.
     #[inline]
     pub fn forget(self, into: &mut *const T) {
-        *into = &*self;
-        mem::forget(self);
+        *into = Self::forget_into_raw(self);
+    }
+
+    #[inline]
+    pub fn forget_into_raw(this: RefPtr<T>) -> *const T {
+        let into = &*this as *const T;
+        mem::forget(this);
+        into
     }
 }
 

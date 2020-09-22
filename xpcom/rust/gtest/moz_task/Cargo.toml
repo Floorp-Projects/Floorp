@@ -1,0 +1,13 @@
+[package]
+name = "moz_task-gtest"
+version = "0.1.0"
+authors = ["nobody@mozilla.com"]
+license = "MPL-2.0"
+description = "Tests for rust bindings to xpcom event target types"
+edition = "2018"
+
+[dependencies]
+moz_task = { path = "../../moz_task" }
+
+[lib]
+path = "test.rs"
