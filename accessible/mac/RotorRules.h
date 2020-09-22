@@ -63,6 +63,17 @@ class RotorImageRule final : public PivotRoleRule {
   explicit RotorImageRule(AccessibleOrProxy& aDirectDescendantsFrom);
 };
 
+class RotorStaticTextRule : public PivotRule {
+ public:
+  explicit RotorStaticTextRule();
+  explicit RotorStaticTextRule(AccessibleOrProxy& aDirectDescendantsFrom);
+
+  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+
+ protected:
+  AccessibleOrProxy mDirectDescendantsFrom;
+};
+
 class RotorControlRule final : public PivotRule {
  public:
   explicit RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom);
