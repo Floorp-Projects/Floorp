@@ -1,0 +1,84 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file is FOR TESTING PURPOSES ONLY.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+test:
+  expired1:
+    type: boolean
+    expires: "41"
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1664306
+    data_reviews:
+      - https://example.com
+    no_lint:
+      - EXPIRED
+
+  expired2:
+    type: labeled_boolean
+    expires: "42"
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1664306
+    data_reviews:
+      - https://example.com
+    no_lint:
+      - EXPIRED
+
+  unexpired:
+    type: labeled_boolean
+    expires: "100"
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1664306
+    data_reviews:
+      - https://example.com
+    labels:
+      - one_label
+      - two_labels
+
+  never:
+    type: string
+    expires: never
+    description: A never-expiring metric
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1664306
+    data_reviews:
+      - https://example.com
+
+  always:
+    type: string
+    expires: expired
+    description: An already-expired metric
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1664306
+    data_reviews:
+      - https://example.com
+    no_lint:
+      - EXPIRED

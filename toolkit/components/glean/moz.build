@@ -30,12 +30,12 @@ if CONFIG['MOZ_GLEAN']:
 
     GeneratedFile('api/src/metrics.rs',
                   script='build_scripts/glean_parser_ext/run_glean_parser.py',
-                  flags=['METRICS'],
+                  flags=['METRICS', CONFIG['MOZ_APP_VERSION']],
                   inputs=['metrics_index.py'])
 
     GeneratedFile('api/src/pings.rs',
                   script='build_scripts/glean_parser_ext/run_glean_parser.py',
-                  flags=['PINGS'],
+                  flags=['PINGS', CONFIG['MOZ_APP_VERSION']],
                   inputs=['metrics_index.py'])
 
     DIRS += [
