@@ -17,6 +17,7 @@ import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonsProvider
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlin.sanitizeFileName
 import mozilla.components.support.ktx.kotlin.sanitizeURL
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.ktx.util.writeString
@@ -32,6 +33,7 @@ import java.util.Locale
 
 internal const val API_VERSION = "api/v4"
 internal const val DEFAULT_SERVER_URL = "https://addons.mozilla.org"
+internal const val DEFAULT_COLLECTION_USER = "mozilla"
 internal const val DEFAULT_COLLECTION_NAME = "7e8d6dc651b54ab385fb8791bf9dac"
 internal const val COLLECTION_FILE_NAME = "mozilla_components_addon_collection_%s.json"
 internal const val MINUTE_IN_MS = 60 * 1000
@@ -41,19 +43,24 @@ internal const val DEFAULT_READ_TIMEOUT_IN_SECONDS = 20L
  * Provide access to the AMO collections API.
  * https://addons-server.readthedocs.io/en/latest/topics/api/collections.html
  *
+ * @property context A reference to the application context.
+ * @property client A [Client] for interacting with the AMO HTTP api.
  * @property serverURL The url of the endpoint to interact with e.g production, staging
  * or testing. Defaults to [DEFAULT_SERVER_URL].
+ * @property collectionUser The id or name of the user owning the collection specified in
+ * [collectionName], defaults to [DEFAULT_COLLECTION_USER].
  * @property collectionName The name of the collection to access, defaults
  * to [DEFAULT_COLLECTION_NAME].
  * @property maxCacheAgeInMinutes maximum time (in minutes) the collection cache
  * should remain valid before a refresh is attempted. Defaults to -1, meaning no
- * cache is being used by default.
- * @property client A reference of [Client] for interacting with the AMO HTTP api.
+ * cache is being used by default
  */
+@Suppress("LongParameterList")
 class AddonCollectionProvider(
     private val context: Context,
     private val client: Client,
     private val serverURL: String = DEFAULT_SERVER_URL,
+    private val collectionUser: String = DEFAULT_COLLECTION_USER,
     private val collectionName: String = DEFAULT_COLLECTION_NAME,
     private val maxCacheAgeInMinutes: Long = -1
 ) : AddonsProvider {
@@ -113,7 +120,7 @@ class AddonCollectionProvider(
     private fun fetchAvailableAddons(readTimeoutInSeconds: Long?): List<Addon> {
         client.fetch(
             Request(
-                url = "$serverURL/$API_VERSION/accounts/account/mozilla/collections/$collectionName/addons",
+                url = "$serverURL/$API_VERSION/accounts/account/$collectionUser/collections/$collectionName/addons",
                 readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
             )
         )
@@ -192,7 +199,25 @@ class AddonCollectionProvider(
     }
 
     private fun getBaseCacheFile(context: Context): File {
-        return File(context.filesDir, COLLECTION_FILE_NAME.format(collectionName))
+        return File(context.filesDir, getCacheFileName())
+    }
+
+    @VisibleForTesting
+    internal fun getCacheFileName(): String {
+        val collectionUser = collectionUser.sanitizeFileName()
+        val collectionName = collectionName.sanitizeFileName()
+
+        // Prefix with collection user in case it was customized. We don't want
+        // to do this for the default "mozilla" user so we don't break out of
+        // the existing cache when we're introducing this. Plus mozilla is
+        // already in the file name anyway.
+        val collection = if (collectionUser != DEFAULT_COLLECTION_USER) {
+            "${collectionUser}_$collectionName"
+        } else {
+            collectionName
+        }
+
+        return COLLECTION_FILE_NAME.format(collection).sanitizeFileName()
     }
 }
 

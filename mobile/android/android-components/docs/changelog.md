@@ -18,8 +18,20 @@ permalink: /changelog/
   * Added `TabsUseCases.UndoTabRemovalUseCase` for undoing the removal of tabs.
 * **feature-webcompat-reporter**
   * Added the ability to automatically add a screenshot as well as more technical details when submitting a WebCompat report.  
-* **feature-addons**
+* **feature-addons**  
+  * ⚠️ This is a breaking change for call sites that don't rely on named arguments: `AddonCollectionProvider` now supports configuring a custom collection owner (via AMO user ID or name).  
+  ```kotlin
+   val addonCollectionProvider by lazy {
+        AddonCollectionProvider(
+            applicationContext,
+            client,
+            collectionUser = "16314372"
+            collectionName = "myCollection",
+            maxCacheAgeInMinutes = DAY_IN_MINUTES
+        )
+    }
   * 🚒 Bug fixed [issue #8267](https://github.com/mozilla-mobile/android-components/issues/8267) Devtools permission had wrong translation.
+  ```
 
 # 60.0.0
 
