@@ -64,7 +64,8 @@ browsertime-tp6:
         - paypal
         - pinterest
         - reddit
-        - tumblr
+        # Bug 1665925 - Permafailing
+        # - tumblr
         - twitch
         - twitter
         - wikipedia
@@ -76,22 +77,16 @@ browsertime-tp6:
     apps: ['firefox', 'chrome', 'chromium']
     variants:
         by-app:
-            firefox: ['webrender', 'fission']
+            firefox: ['fission']
             default: []
-    pageload:
-        by-app:
-            firefox: 'both'
-            chrome: 'both'
-            chromium: 'both'
-            default: 'cold'
+    pageload: cold
+    fission-run-on-projects: ["mozilla-central"]
     run-on-projects:
         by-app:
             firefox:
-                by-subtest:
-                    amazon:
-                        by-test-platform:
-                            linux.*shippable[^-qr].*: ['mozilla-central']
-                            default: []
+                by-test-platform:
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    linux.*shippable[^-qr].*: ["mozilla-central"]
                     default: []
             default: []
     limit-platforms:
@@ -104,6 +99,9 @@ browsertime-tp6:
     treeherder-symbol: Btime(tp6)
     max-run-time: 4000
     run-visual-metrics: true
+    mozharness:
+        extra-options:
+            - --chimera
 
 browsertime-speedometer:
     description: "Raptor (browsertime) Speedometer on Firefox"
