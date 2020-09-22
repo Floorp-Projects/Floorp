@@ -46,16 +46,6 @@ class BrowserTabChild extends JSWindowActorChild {
         this.handledFirstPaint = true;
         this.sendAsyncMessage("Browser:FirstPaint", {});
         break;
-
-      case "MozDOMPointerLock:Entered":
-        this.sendAsyncMessage("PointerLock:Entered", {
-          originNoSuffix: event.target.nodePrincipal.originNoSuffix,
-        });
-        break;
-
-      case "MozDOMPointerLock:Exited":
-        this.sendAsyncMessage("PointerLock:Exited");
-        break;
     }
   }
 
