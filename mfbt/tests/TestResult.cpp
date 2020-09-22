@@ -268,6 +268,16 @@ static Result<Ok, Failed*> ErrorGeneralization() {
 
 static void TypeConversionTests() {
   MOZ_RELEASE_ASSERT(ErrorGeneralization().isErr());
+
+  {
+    const Result<Ok, Failed*> res = Explode();
+    MOZ_RELEASE_ASSERT(res.isErr());
+  }
+
+  {
+    const Result<Ok, Failed*> res = Result<Ok, Snafu*>{Ok{}};
+    MOZ_RELEASE_ASSERT(res.isOk());
+  }
 }
 
 static void EmptyValueTest() {

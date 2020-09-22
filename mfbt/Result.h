@@ -490,6 +490,15 @@ class MOZ_MUST_USE_TYPE Result final {
   }
 
   /**
+   * Create a (success/error) result from another (success/error) result with a
+   * different but convertible error type. */
+  template <typename E2,
+            typename = std::enable_if_t<std::is_convertible_v<E2, E>>>
+  MOZ_IMPLICIT Result(Result<V, E2>&& aOther)
+      : mImpl(aOther.isOk() ? Impl{aOther.unwrap()}
+                            : Impl{aOther.unwrapErr()}) {}
+
+  /**
    * Implementation detail of MOZ_TRY().
    * Create an error result from another error result.
    */
