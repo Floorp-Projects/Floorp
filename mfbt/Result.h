@@ -10,6 +10,7 @@
 #define mozilla_Result_h
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include "mozilla/Alignment.h"
