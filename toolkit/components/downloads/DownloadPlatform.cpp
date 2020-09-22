@@ -167,19 +167,24 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer,
       }
 #    endif
 #    ifdef MOZ_WIDGET_GTK
-      // Use GIO to store the source URI for later display in the file manager.
-      GFile* gio_file = g_file_new_for_path(NS_ConvertUTF16toUTF8(path).get());
-      nsCString source_uri;
-      nsresult rv = aSource->GetSpec(source_uri);
-      NS_ENSURE_SUCCESS(rv, rv);
-      GFileInfo* file_info = g_file_info_new();
-      g_file_info_set_attribute_string(file_info, "metadata::download-uri",
-                                       source_uri.get());
-      g_file_set_attributes_async(gio_file, file_info, G_FILE_QUERY_INFO_NONE,
-                                  G_PRIORITY_DEFAULT, nullptr,
-                                  gio_set_metadata_done, nullptr);
-      g_object_unref(file_info);
-      g_object_unref(gio_file);
+      // Private window should not leak URI to the system (Bug 1535950)
+      if (!aIsPrivate) {
+        // Use GIO to store the source URI for later display in the file
+        // manager.
+        GFile* gio_file =
+            g_file_new_for_path(NS_ConvertUTF16toUTF8(path).get());
+        nsCString source_uri;
+        nsresult rv = aSource->GetSpec(source_uri);
+        NS_ENSURE_SUCCESS(rv, rv);
+        GFileInfo* file_info = g_file_info_new();
+        g_file_info_set_attribute_string(file_info, "metadata::download-uri",
+                                         source_uri.get());
+        g_file_set_attributes_async(gio_file, file_info, G_FILE_QUERY_INFO_NONE,
+                                    G_PRIORITY_DEFAULT, nullptr,
+                                    gio_set_metadata_done, nullptr);
+        g_object_unref(file_info);
+        g_object_unref(gio_file);
+      }
 #    endif
     }
 #  endif
