@@ -1570,9 +1570,11 @@ static bool ResolveAutoFlexBasisFromRatio(
     const FlexboxAxisTracker& aAxisTracker) {
   MOZ_ASSERT(NS_UNCONSTRAINEDSIZE == aFlexItem.FlexBaseSize(),
              "Should only be called to resolve an 'auto' flex-basis");
+  // This implements the Flex Layout Algorithm Step 3B:
+  // https://drafts.csswg.org/css-flexbox-1/#algo-main-item
   // If the flex item has ...
   //  - an intrinsic aspect ratio,
-  //  - a [used] flex-basis of 'main-size' [auto?]
+  //  - a [used] flex-basis of 'content', and
   //    [We have this, if we're here.]
   //  - a definite cross size
   // then the flex base size is calculated from its inner cross size and the
