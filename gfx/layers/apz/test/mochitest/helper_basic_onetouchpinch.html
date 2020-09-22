@@ -10,7 +10,7 @@
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript">
 
-function* test(testDriver) {
+async function* test() {
   let visResEvt = new EventCounter(window.visualViewport, "resize");
   let visScrEvt = new EventCounter(window.visualViewport, "scroll");
   // Our internal visual viewport events aren't restricted to the visual view-
@@ -29,7 +29,7 @@ function* test(testDriver) {
 
   // This listener will trigger the test to continue once APZ is done with
   // processing the scroll.
-  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
+  let transformEndPromise = promiseTransformEnd();
 
   var zoom_in = [
       [ { x: 150, y: 300 } ],
@@ -46,14 +46,10 @@ function* test(testDriver) {
   yield* synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
 
   // Wait for the APZ:TransformEnd to be fired after touch events are processed.
-  yield true;
-
-  // We get here once the APZ:TransformEnd has fired, so we don't need that
-  // observer any more.
-  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
+  await transformEndPromise;
 
   // Flush state and get the resolution we're at now
-  yield waitForApzFlushedRepaints(testDriver);
+  await promiseApzFlushedRepaints();
   let final_resolution = getResolution();
   ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
 
@@ -81,7 +77,7 @@ function* test(testDriver) {
 }
 
 waitUntilApzStable()
-.then(runContinuation(test))
+.then(runAsyncContinuation(test))
 .then(subtestDone);
 
   </script>
