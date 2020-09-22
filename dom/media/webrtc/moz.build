@@ -11,8 +11,6 @@ with Files('*'):
 with Files('PeerIdentity.*'):
     BUG_COMPONENT = ('Core', 'WebRTC: Signaling')
 
-XPIDL_MODULE = 'content_webrtc'
-
 EXPORTS += [
     'CubebDeviceEnumerator.h',
     'MediaEngine.h',
@@ -58,10 +56,6 @@ if CONFIG['MOZ_WEBRTC']:
 PREPROCESSED_IPDL_SOURCES += [
     'PMediaTransport.ipdl',
     'PWebrtcGlobal.ipdl',
-]
-
-XPIDL_SOURCES += [
-    'nsITabSource.idl'
 ]
 
 UNIFIED_SOURCES += [
