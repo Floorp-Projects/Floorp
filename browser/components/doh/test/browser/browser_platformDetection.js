@@ -20,7 +20,7 @@ add_task(async function testPlatformIndications() {
   let mockedLinkService = {
     isLinkUp: true,
     linkStatusKnown: true,
-    linkType: Ci.nsINetworkLinkService.NS_NETWORK_LINK_TYPE_WIFI,
+    linkType: Ci.nsINetworkLinkService.LINK_TYPE_WIFI,
     networkID: "abcd",
     dnsSuffixList: [],
     platformDNSIndications: Ci.nsINetworkLinkService.NONE_DETECTED,
