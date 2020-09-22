@@ -247,4 +247,6 @@ class ScriptInfo(defaultdict):
         result = options.get("default", {})
         result.update(options.get(simple_platform(), {}))
         result.update(args)
+        if self.script_type == ScriptType.xpcshell:
+            result["flavor"] = "xpcshell"
         return result

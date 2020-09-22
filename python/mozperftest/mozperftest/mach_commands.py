@@ -6,17 +6,20 @@ import sys
 from functools import partial
 import subprocess
 import shlex
+import json
 
 from mach.decorators import CommandProvider, Command, CommandArgument
 from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
 
 
 _TRY_PLATFORMS = {
-    "g5": "perftest-android-hw-g5",
-    "p2": "perftest-android-hw-p2",
-    "linux": "perftest-linux-try",
-    "mac": "perftest-macosx-try",
-    "win": "perftest-windows-try",
+    "g5-browsertime": "perftest-android-hw-g5-browsertime",
+    "p2-browsertime": "perftest-android-hw-p2-browsertime",
+    "linux-xpcshell": "perftest-linux-try-xpcshell",
+    "mac-xpcshell": "perftest-macosx-try-xpcshell",
+    "linux-browsertime": "perftest-linux-try-browsertime",
+    "mac-browsertime": "perftest-macosx-try-browsertime",
+    "win-browsertimee": "perftest-windows-try-browsertime",
 }
 
 
@@ -57,6 +60,7 @@ class Perftest(MachCommandBase):
 
             resolver = self._spawn(TestResolver)
             test_objects = list(resolver.resolve_tests(paths=None, flavor="perftest"))
+            selected = select(test_objects)
 
             def full_path(selection):
                 __, script_name, __, location = selection.split(" ")
@@ -68,7 +72,7 @@ class Perftest(MachCommandBase):
                     )
                 )
 
-            kwargs["tests"] = [full_path(s) for s in select(test_objects)]
+            kwargs["tests"] = [full_path(s) for s in selected]
 
             if kwargs["tests"] == []:
                 print("\nNo selection. Bye!")
@@ -80,7 +84,6 @@ class Perftest(MachCommandBase):
 
         sel = "\n".join(kwargs["tests"])
         print("\nGood job! Best selection.\n%s" % sel)
-
         # if the script is xpcshell, we can force the flavor here
         # XXX on multi-selection,  what happens if we have seeveral flavors?
         try:
@@ -105,31 +108,51 @@ class Perftest(MachCommandBase):
 
             from tryselect.push import push_to_try
 
-            platform = kwargs.pop("try_platform")
-            if platform not in _TRY_PLATFORMS:
-                # we can extend platform support here: linux, win, macOs, pixel2
-                # by adding more jobs in taskcluster/ci/perftest/kind.yml
-                # then picking up the right one here
-                raise NotImplementedError("%r not supported yet" % platform)
-
             perftest_parameters = {}
             args = script_info.update_args(**original_parser.get_user_args(kwargs))
+            platform = args.pop("try_platform", "linux")
+            if isinstance(platform, str):
+                platform = [platform]
+
+            platform = [
+                "%s-%s" % (plat, script_info.script_type.name) for plat in platform
+            ]
+
+            for plat in platform:
+                if plat not in _TRY_PLATFORMS:
+                    # we can extend platform support here: linux, win, macOs, pixel2
+                    # by adding more jobs in taskcluster/ci/perftest/kind.yml
+                    # then picking up the right one here
+                    raise NotImplementedError(
+                        "%r doesn't exist or is not yet supported" % plat
+                    )
+
+            def relative(path):
+                if path.startswith(self.topsrcdir):
+                    return path[len(self.topsrcdir) :].lstrip(os.sep)
+                return path
 
             for name, value in args.items():
                 # ignore values that are set to default
                 if original_parser.get_default(name) == value:
                     continue
+                if name == "tests":
+                    value = [relative(path) for path in value]
                 perftest_parameters[name] = value
 
             parameters = {
                 "try_task_config": {
-                    "tasks": [_TRY_PLATFORMS[platform]],
+                    "tasks": [_TRY_PLATFORMS[plat] for plat in platform],
                     "perftest-options": perftest_parameters,
                 },
                 "try_mode": "try_task_config",
             }
 
             task_config = {"parameters": parameters, "version": 2}
+            if args["verbose"]:
+                print("Pushing run to try...")
+                print(json.dumps(task_config, indent=4, sort_keys=True))
+
             push_to_try("perftest", "perftest", try_task_config=task_config)
             return
 

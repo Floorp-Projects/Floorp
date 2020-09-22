@@ -19,10 +19,28 @@ job-defaults:
     require-build:
         macosx64-shippable/opt: build-macosx64-shippable/opt
 
-try:
+try-xpcshell:
     description: Run ./mach perftest on macOs
     treeherder:
-        symbol: perftest(macos)
+        symbol: perftest(macos-xpcshell)
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3 -m venv . &&
+            bin/python3 python/mozperftest/mozperftest/runner.py
+            --on-try
+            --flavor desktop-browser
+            --output $MOZ_FETCHES_DIR/../artifacts
+            --xpcshell-binary ${MOZ_FETCHES_DIR}/bin/xpcshell
+            --xpcshell-mozinfo ${MOZ_FETCHES_DIR}/target.mozinfo.json
+            --xpcshell-nodejs ${MOZ_FETCHES_DIR}/node/bin/node
+            --xpcshell-xre-path ${MOZ_FETCHES_DIR}/target.dmg
+
+try-browsertime:
+    description: Run ./mach perftest on macOs
+    treeherder:
+        symbol: perftest(macos-bt)
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
