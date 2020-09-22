@@ -2,6 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * Control panel for the Ion project, formerly known as Pioneer.
+ * This lives in `about:ion` and provides a UI for users to un/enroll in the
+ * overall program, and to un/enroll from individual studies.
+ *
+ * NOTE - prefs and Telemetry both still mention Pioneer for backwards-compatibility,
+ *        this may change in the future.
+ */
+
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -16,10 +25,10 @@ const { TelemetryController } = ChromeUtils.import(
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
-const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
+const PREF_ION_ID = "toolkit.telemetry.pioneerId";
+const PREF_ION_NEW_STUDIES_AVAILABLE =
   "toolkit.telemetry.pioneer-new-studies-available";
-const PREF_PIONEER_COMPLETED_STUDIES =
+const PREF_ION_COMPLETED_STUDIES =
   "toolkit.telemetry.pioneer-completed-studies";
 
 /**
@@ -38,15 +47,15 @@ const PREF_TEST_CACHED_ADDONS = "toolkit.pioneer.testCachedAddons";
 const PREF_TEST_ADDONS = "toolkit.pioneer.testAddons";
 
 function showEnrollmentStatus() {
-  const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+  const ionId = Services.prefs.getStringPref(PREF_ION_ID, null);
 
   const enrollmentButton = document.getElementById("enrollment-button");
 
   document.l10n.setAttributes(
     enrollmentButton,
-    `pioneer-${pioneerId ? "un" : ""}enrollment-button`
+    `ion-${ionId ? "un" : ""}enrollment-button`
   );
-  enrollmentButton.classList.toggle("primary", !pioneerId);
+  enrollmentButton.classList.toggle("primary", !ionId);
 }
 
 function toggleContentBasedOnLocale() {
@@ -102,7 +111,7 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
   }
 
   const completedStudies = Services.prefs.getStringPref(
-    PREF_PIONEER_COMPLETED_STUDIES,
+    PREF_ION_COMPLETED_STUDIES,
     "{}"
   );
 
@@ -114,7 +123,7 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
     await addon.uninstall();
     await sendDeletionPing(studyAddonId);
 
-    document.l10n.setAttributes(joinBtn, "pioneer-join-study");
+    document.l10n.setAttributes(joinBtn, "ion-join-study");
     joinBtn.disabled = false;
 
     // Record that the user abandoned this study, since it may not be re-join-able.
@@ -122,7 +131,7 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
       const studies = JSON.parse(completedStudies);
       studies[studyAddonId] = STUDY_LEAVE_REASONS.USER_ABANDONED;
       Services.prefs.setStringPref(
-        PREF_PIONEER_COMPLETED_STUDIES,
+        PREF_ION_COMPLETED_STUDIES,
         JSON.stringify(studies)
       );
     }
@@ -142,7 +151,7 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
     }
     joinBtn.disabled = true;
     await install.install();
-    document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
+    document.l10n.setAttributes(joinBtn, "ion-leave-study");
     joinBtn.disabled = false;
 
     // Send an enrollment ping for this study. Note that this could be sent again
@@ -154,9 +163,9 @@ async function toggleEnrolled(studyAddonId, cachedAddons) {
 }
 
 async function showAvailableStudies(cachedAddons) {
-  const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+  const ionId = Services.prefs.getStringPref(PREF_ION_ID, null);
   const defaultAddons = cachedAddons.filter(a => a.isDefault);
-  if (pioneerId) {
+  if (ionId) {
     for (const defaultAddon of defaultAddons) {
       let addon;
       let install;
@@ -165,8 +174,7 @@ async function showAvailableStudies(cachedAddons) {
         install = {
           install: async () => {
             if (
-              defaultAddon.addon_id ==
-              "pioneer-v2-bad-default-example@mozilla.org"
+              defaultAddon.addon_id == "ion-v2-bad-default-example@mozilla.org"
             ) {
               throw new Error("Bad test default add-on");
             }
@@ -190,7 +198,7 @@ async function showAvailableStudies(cachedAddons) {
   for (const cachedAddon of studyAddons) {
     if (!cachedAddon) {
       console.error(
-        `about:pioneer - Study addon ID not found in cache: ${studyAddonId}`
+        `about:ion - Study addon ID not found in cache: ${studyAddonId}`
       );
       return;
     }
@@ -230,7 +238,7 @@ async function showAvailableStudies(cachedAddons) {
     joinBtn.setAttribute("id", `${studyAddonId}-join-button`);
     joinBtn.classList.add("primary");
     joinBtn.classList.add("join-button");
-    document.l10n.setAttributes(joinBtn, "pioneer-join-study");
+    document.l10n.setAttributes(joinBtn, "ion-join-study");
 
     joinBtn.addEventListener("click", async () => {
       let addon;
@@ -319,7 +327,7 @@ async function showAvailableStudies(cachedAddons) {
   }
 
   const availableStudies = document.getElementById("header-available-studies");
-  document.l10n.setAttributes(availableStudies, "pioneer-current-studies");
+  document.l10n.setAttributes(availableStudies, "ion-current-studies");
 }
 
 async function updateStudy(studyAddonId) {
@@ -341,10 +349,10 @@ async function updateStudy(studyAddonId) {
 
   const joinBtn = study.querySelector(".join-button");
 
-  const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+  const ionId = Services.prefs.getStringPref(PREF_ION_ID, null);
 
   const completedStudies = Services.prefs.getStringPref(
-    PREF_PIONEER_COMPLETED_STUDIES,
+    PREF_ION_COMPLETED_STUDIES,
     "{}"
   );
 
@@ -352,21 +360,21 @@ async function updateStudy(studyAddonId) {
   if (studyAddonId in studies) {
     study.style.opacity = 0.5;
     joinBtn.disabled = true;
-    document.l10n.setAttributes(joinBtn, "pioneer-ended-study");
+    document.l10n.setAttributes(joinBtn, "ion-ended-study");
     return;
   }
 
-  if (pioneerId) {
+  if (ionId) {
     study.style.opacity = 1;
     joinBtn.disabled = false;
 
     if (addon) {
-      document.l10n.setAttributes(joinBtn, "pioneer-leave-study");
+      document.l10n.setAttributes(joinBtn, "ion-leave-study");
     } else {
-      document.l10n.setAttributes(joinBtn, "pioneer-join-study");
+      document.l10n.setAttributes(joinBtn, "ion-join-study");
     }
   } else {
-    document.l10n.setAttributes(joinBtn, "pioneer-study-prompt");
+    document.l10n.setAttributes(joinBtn, "ion-study-prompt");
     study.style.opacity = 0.5;
     joinBtn.disabled = true;
   }
@@ -386,28 +394,28 @@ async function setup(cachedAddons) {
   document
     .getElementById("enrollment-button")
     .addEventListener("click", async () => {
-      const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+      const ionId = Services.prefs.getStringPref(PREF_ION_ID, null);
 
-      if (pioneerId) {
-        let dialog = document.getElementById("leave-pioneer-consent-dialog");
+      if (ionId) {
+        let dialog = document.getElementById("leave-ion-consent-dialog");
         dialog.showModal();
         dialog.scrollTop = 0;
       } else {
-        let dialog = document.getElementById("join-pioneer-consent-dialog");
+        let dialog = document.getElementById("join-ion-consent-dialog");
         dialog.showModal();
         dialog.scrollTop = 0;
       }
     });
 
   document
-    .getElementById("join-pioneer-cancel-dialog-button")
+    .getElementById("join-ion-cancel-dialog-button")
     .addEventListener("click", () =>
-      document.getElementById("join-pioneer-consent-dialog").close()
+      document.getElementById("join-ion-consent-dialog").close()
     );
   document
-    .getElementById("leave-pioneer-cancel-dialog-button")
+    .getElementById("leave-ion-cancel-dialog-button")
     .addEventListener("click", () =>
-      document.getElementById("leave-pioneer-consent-dialog").close()
+      document.getElementById("leave-ion-consent-dialog").close()
     );
   document
     .getElementById("join-study-cancel-dialog-button")
@@ -421,13 +429,13 @@ async function setup(cachedAddons) {
     );
 
   document
-    .getElementById("join-pioneer-accept-dialog-button")
+    .getElementById("join-ion-accept-dialog-button")
     .addEventListener("click", async event => {
-      const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+      const ionId = Services.prefs.getStringPref(PREF_ION_ID, null);
 
-      if (!pioneerId) {
+      if (!ionId) {
         let uuid = generateUUID();
-        Services.prefs.setStringPref(PREF_PIONEER_ID, uuid);
+        Services.prefs.setStringPref(PREF_ION_ID, uuid);
         for (const cachedAddon of cachedAddons) {
           if (cachedAddon.isDefault) {
             let install;
@@ -436,7 +444,7 @@ async function setup(cachedAddons) {
                 install: async () => {
                   if (
                     cachedAddon.addon_id ==
-                    "pioneer-v2-bad-default-example@mozilla.org"
+                    "ion-v2-bad-default-example@mozilla.org"
                   ) {
                     throw new Error("Bad test default add-on");
                   }
@@ -460,7 +468,7 @@ async function setup(cachedAddons) {
               );
               document.l10n.setAttributes(
                 availableStudies,
-                "pioneer-no-current-studies"
+                "ion-no-current-studies"
               );
             }
           }
@@ -471,7 +479,7 @@ async function setup(cachedAddons) {
         }
         document.querySelector("dialog").close();
       }
-      // A this point we should have a valid pioneer id, so we should be able to send
+      // A this point we should have a valid ion id, so we should be able to send
       // the enrollment ping.
       await sendEnrollmentPing();
 
@@ -479,10 +487,10 @@ async function setup(cachedAddons) {
     });
 
   document
-    .getElementById("leave-pioneer-accept-dialog-button")
+    .getElementById("leave-ion-accept-dialog-button")
     .addEventListener("click", async event => {
       const completedStudies = Services.prefs.getStringPref(
-        PREF_PIONEER_COMPLETED_STUDIES,
+        PREF_ION_COMPLETED_STUDIES,
         "{}"
       );
       const studies = JSON.parse(completedStudies);
@@ -492,7 +500,7 @@ async function setup(cachedAddons) {
         await sendDeletionPing(studyAddonId);
       }
 
-      Services.prefs.clearUserPref(PREF_PIONEER_COMPLETED_STUDIES);
+      Services.prefs.clearUserPref(PREF_ION_COMPLETED_STUDIES);
 
       for (const cachedAddon of cachedAddons) {
         // Record any studies that have been marked as concluded on the server, in case they re-enroll.
@@ -500,7 +508,7 @@ async function setup(cachedAddons) {
           studies[cachedAddon.addon_id] = STUDY_LEAVE_REASONS.STUDY_ENDED;
 
           Services.prefs.setStringPref(
-            PREF_PIONEER_COMPLETED_STUDIES,
+            PREF_ION_COMPLETED_STUDIES,
             JSON.stringify(studies)
           );
         }
@@ -532,7 +540,7 @@ async function setup(cachedAddons) {
         }
       }
 
-      Services.prefs.clearUserPref(PREF_PIONEER_ID);
+      Services.prefs.clearUserPref(PREF_ION_ID);
       for (const cachedAddon of cachedAddons) {
         const study = document.getElementById(cachedAddon.addon_id);
         if (study) {
@@ -540,7 +548,7 @@ async function setup(cachedAddons) {
         }
       }
 
-      document.getElementById("leave-pioneer-consent-dialog").close();
+      document.getElementById("leave-ion-consent-dialog").close();
       showEnrollmentStatus();
     });
 
@@ -582,23 +590,19 @@ async function setup(cachedAddons) {
 }
 
 function removeBadge() {
-  Services.prefs.setBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, false);
+  Services.prefs.setBoolPref(PREF_ION_NEW_STUDIES_AVAILABLE, false);
 
   for (let win of Services.wm.getEnumerator("navigator:browser")) {
     const badge = win.document
-      .getElementById("pioneer-button")
+      .getElementById("ion-button")
       .querySelector(".toolbarbutton-badge");
     badge.classList.remove("feature-callout");
   }
 }
 
-// Updates Pioneer HTML page contents from RemoteSettings.
+// Updates Ion HTML page contents from RemoteSettings.
 function updateContents(contents) {
-  for (const section of [
-    "title",
-    "joinPioneerConsent",
-    "leavePioneerConsent",
-  ]) {
+  for (const section of ["title", "joinIonConsent", "leaveIonConsent"]) {
     if (contents && section in contents) {
       // Generate a corresponding dom-id style ID for a camel-case domId style JS attribute.
       // Dynamically set the tag type based on which section is getting updated.
@@ -684,14 +688,14 @@ document.addEventListener("DOMContentLoaded", async domEvent => {
     // Record any studies that have been marked as concluded on the server.
     if ("studyEnded" in cachedAddon && cachedAddon.studyEnded === true) {
       const completedStudies = Services.prefs.getStringPref(
-        PREF_PIONEER_COMPLETED_STUDIES,
+        PREF_ION_COMPLETED_STUDIES,
         "{}"
       );
       const studies = JSON.parse(completedStudies);
       studies[cachedAddon.addon_id] = STUDY_LEAVE_REASONS.STUDY_ENDED;
 
       Services.prefs.setStringPref(
-        PREF_PIONEER_COMPLETED_STUDIES,
+        PREF_ION_COMPLETED_STUDIES,
         JSON.stringify(studies)
       );
     }
