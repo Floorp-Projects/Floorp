@@ -106,7 +106,8 @@ class FirefoxAccount internal constructor(
 
     override suspend fun beginPairingFlow(
         pairingUrl: String,
-        scopes: Set<String>, entryPoint: String
+        scopes: Set<String>,
+        entryPoint: String
     ) = withContext(scope.coroutineContext) {
         // Eventually we should specify this as a param here, but for now, let's
         // use a generic value (it's used only for server-side telemetry, so the

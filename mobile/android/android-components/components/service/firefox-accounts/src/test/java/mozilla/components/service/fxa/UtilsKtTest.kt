@@ -307,8 +307,8 @@ class UtilsKtTest {
     fun `as auth flow pairing`() = runBlocking {
         val account: OAuthAccount = mock()
         val authFlowUrl: AuthFlowUrl = mock()
-        `when`(account.beginPairingFlow("http://pairing.url", emptySet())).thenReturn(authFlowUrl)
-        verify(account, never()).beginOAuthFlow(emptySet())
+        `when`(account.beginPairingFlow(eq("http://pairing.url"), eq(emptySet()), anyString())).thenReturn(authFlowUrl)
+        verify(account, never()).beginOAuthFlow(eq(emptySet()), anyString())
         assertEquals(authFlowUrl, "http://pairing.url".asAuthFlowUrl(account, emptySet()))
     }
 
@@ -316,8 +316,8 @@ class UtilsKtTest {
     fun `as auth flow regular`() = runBlocking {
         val account: OAuthAccount = mock()
         val authFlowUrl: AuthFlowUrl = mock()
-        `when`(account.beginOAuthFlow(emptySet())).thenReturn(authFlowUrl)
-        verify(account, never()).beginPairingFlow(anyString(), eq(emptySet()))
+        `when`(account.beginOAuthFlow(eq(emptySet()), anyString())).thenReturn(authFlowUrl)
+        verify(account, never()).beginPairingFlow(anyString(), eq(emptySet()), anyString())
         assertEquals(authFlowUrl, null.asAuthFlowUrl(account, emptySet()))
     }
 

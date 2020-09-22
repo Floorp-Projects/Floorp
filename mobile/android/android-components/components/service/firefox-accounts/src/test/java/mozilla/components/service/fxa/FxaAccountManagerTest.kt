@@ -1065,7 +1065,7 @@ class FxaAccountManagerTest {
 
         // Try again, without any network problems this time.
         `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
-        `when`(constellation.finalizeDevice(any(), any(), any())).thenReturn(ServiceResult.Ok)
+        `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
 
         assertEquals("auth://url", manager.beginAuthentication())
 
@@ -1112,7 +1112,7 @@ class FxaAccountManagerTest {
 
         // Try again, without any network problems this time.
         `when`(mockAccount.beginPairingFlow(anyString(), any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
-        `when`(constellation.finalizeDevice(any(), any(), any())).thenReturn(ServiceResult.Ok)
+        `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
 
         assertEquals("auth://url", manager.beginAuthentication(pairingUrl = "auth://pairing"))
 
@@ -1330,7 +1330,7 @@ class FxaAccountManagerTest {
 
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
-        `when`(constellation.finalizeDevice(any(), any(), any())).thenReturn(ServiceResult.Ok)
+        `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(null)
         `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
@@ -1589,7 +1589,7 @@ class FxaAccountManagerTest {
 
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
-        `when`(constellation.finalizeDevice(any(), any(), any())).thenReturn(ServiceResult.Ok)
+        `when`(constellation.finalizeDevice(any(), any())).thenReturn(ServiceResult.Ok)
         doAnswer {
             throw FxaPanicException("500")
         }.`when`(mockAccount).getProfile(ignoreCache = false)
