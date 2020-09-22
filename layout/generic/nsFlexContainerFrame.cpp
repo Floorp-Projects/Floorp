@@ -1418,21 +1418,9 @@ static bool IsCrossSizeDefinite(const ReflowInput& aItemReflowInput,
 // If aFlexItem has a definite cross size, this function returns it, for usage
 // (in combination with an intrinsic ratio) for resolving the item's main size
 // or main min-size.
-//
-// The parameter "aMinSizeFallback" indicates whether we should fall back to
-// returning the cross min-size, when the cross size is indefinite. (This param
-// should be set IFF the caller intends to resolve the main min-size.) If this
-// param is true, then this function is guaranteed to return a definite value
-// (i.e. not NS_UNCONSTRAINEDSIZE, excluding cases where huge sizes are
-// involved).
-//
-// XXXdholbert the min-size behavior here is based on my understanding in
-//   http://lists.w3.org/Archives/Public/www-style/2014Jul/0053.html
-// If my understanding there ends up being wrong, we'll need to update this.
-static nscoord CrossSizeToUseWithRatio(const FlexItem& aFlexItem,
-                                       const ReflowInput& aItemReflowInput,
-                                       bool aMinSizeFallback,
-                                       const FlexboxAxisTracker& aAxisTracker) {
+static nscoord SpecifiedCrossSizeIfDefinite(
+    const FlexItem& aFlexItem, const ReflowInput& aItemReflowInput,
+    const FlexboxAxisTracker& aAxisTracker) {
   if (aFlexItem.IsStretched()) {
     // Definite cross-size, imposed via 'align-self:stretch' & flex container.
     return aFlexItem.CrossSize();
@@ -1440,17 +1428,7 @@ static nscoord CrossSizeToUseWithRatio(const FlexItem& aFlexItem,
 
   if (IsCrossSizeDefinite(aItemReflowInput, aAxisTracker)) {
     // Definite cross size.
-    return GET_CROSS_COMPONENT_LOGICAL(aAxisTracker, aFlexItem.GetWritingMode(),
-                                       aItemReflowInput.ComputedISize(),
-                                       aItemReflowInput.ComputedBSize());
-  }
-
-  if (aMinSizeFallback) {
-    // Indefinite cross-size, and we're resolving main min-size, so we'll fall
-    // back to ussing the cross min-size (which should be definite).
-    return GET_CROSS_COMPONENT_LOGICAL(aAxisTracker, aFlexItem.GetWritingMode(),
-                                       aItemReflowInput.ComputedMinISize(),
-                                       aItemReflowInput.ComputedMinBSize());
+    return aFlexItem.CrossSize();
   }
 
   // Indefinite cross-size.
@@ -1566,14 +1544,12 @@ static nscoord PartiallyResolveAutoMinSize(
   nscoord transferredSizeSuggestion = nscoord_MAX;
   if (aFlexItem.HasIntrinsicRatio()) {
     // We have a usable aspect ratio. (not going to divide by 0)
-    const bool useMinSizeIfCrossSizeIsIndefinite = false;
-    nscoord crossSizeToUseWithRatio = CrossSizeToUseWithRatio(
-        aFlexItem, aItemReflowInput, useMinSizeIfCrossSizeIsIndefinite,
-        aAxisTracker);
+    const nscoord crossSize =
+        SpecifiedCrossSizeIfDefinite(aFlexItem, aItemReflowInput, aAxisTracker);
 
-    if (crossSizeToUseWithRatio != NS_UNCONSTRAINEDSIZE) {
+    if (crossSize != NS_UNCONSTRAINEDSIZE) {
       transferredSizeSuggestion = MainSizeFromAspectRatio(
-          crossSizeToUseWithRatio, aFlexItem.IntrinsicRatio(), aAxisTracker);
+          crossSize, aFlexItem.IntrinsicRatio(), aAxisTracker);
     }
 
     // Clamp the transferred size suggestion by any definite min and max
@@ -1603,14 +1579,12 @@ static bool ResolveAutoFlexBasisFromRatio(
   // flex item’s intrinsic aspect ratio.
   if (aFlexItem.IntrinsicRatio()) {
     // We have a usable aspect ratio. (not going to divide by 0)
-    const bool useMinSizeIfCrossSizeIsIndefinite = false;
-    nscoord crossSizeToUseWithRatio = CrossSizeToUseWithRatio(
-        aFlexItem, aItemReflowInput, useMinSizeIfCrossSizeIsIndefinite,
-        aAxisTracker);
-    if (crossSizeToUseWithRatio != NS_UNCONSTRAINEDSIZE) {
+    const nscoord crossSize =
+        SpecifiedCrossSizeIfDefinite(aFlexItem, aItemReflowInput, aAxisTracker);
+    if (crossSize != NS_UNCONSTRAINEDSIZE) {
       // We have a definite cross-size
       nscoord mainSizeFromRatio = MainSizeFromAspectRatio(
-          crossSizeToUseWithRatio, aFlexItem.IntrinsicRatio(), aAxisTracker);
+          crossSize, aFlexItem.IntrinsicRatio(), aAxisTracker);
       aFlexItem.SetFlexBaseSizeAndMainSize(mainSizeFromRatio);
       return true;
     }
