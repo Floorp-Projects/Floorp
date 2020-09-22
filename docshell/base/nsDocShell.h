@@ -1101,7 +1101,6 @@ class nsDocShell final : public nsDocLoader,
   void MoveLoadingToActiveEntry(bool aCommit);
 
  private:  // data members
-  nsID mHistoryID;
   nsString mTitle;
   nsCString mOriginalUriString;
   nsTObserverArray<nsWeakPtr> mPrivacyObservers;
@@ -1252,6 +1251,7 @@ class nsDocShell final : public nsDocLoader,
   bool mCreatingDocument;  // (should be) debugging only
 #ifdef DEBUG
   bool mInEnsureScriptEnv;
+  uint64_t mDocShellID = 0;
 #endif
 
   bool mInitialized : 1;

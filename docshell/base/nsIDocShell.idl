@@ -512,12 +512,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * The ID of the docshell in the session history.
    */
-  readonly attribute nsIDPtr historyID;
+  readonly attribute nsIDRef historyID;
 
   /**
    * Helper method for accessing this value from C++
    */
-  [noscript, notxpcom] nsID HistoryID();
+  [noscript, notxpcom] nsIDRef HistoryID();
 
   /**
    * Sets whether a docshell is an app tab. An app tab docshell may behave
