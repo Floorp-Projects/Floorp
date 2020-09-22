@@ -141,6 +141,7 @@ EXPORTS.mozilla.dom += [
     'AncestorIterator.h',
     'AnonymousContent.h',
     'Attr.h',
+    'AutoPrintEventDispatcher.h',
     'BarProps.h',
     'BindContext.h',
     'BodyConsumer.h',

@@ -2754,6 +2754,23 @@ void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
   }
 }
 
+nsresult nsFrameLoader::DoRemoteStaticClone(nsFrameLoader* aStaticCloneOf) {
+  MOZ_ASSERT(aStaticCloneOf->IsRemoteFrame());
+  MOZ_DIAGNOSTIC_ASSERT(GetBrowsingContext());
+  auto* cc = ContentChild::GetSingleton();
+  if (!cc) {
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+    // TODO: Could possibly be implemented without too much effort.
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  BrowsingContext* bcToClone = aStaticCloneOf->GetBrowsingContext();
+  if (NS_WARN_IF(!bcToClone)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  cc->SendCloneDocumentTreeInto(bcToClone, GetBrowsingContext());
+  return NS_OK;
+}
+
 nsresult nsFrameLoader::FinishStaticClone(
     nsFrameLoader* aStaticCloneOf, bool* aOutHasInProcessPrintCallbacks) {
   MOZ_DIAGNOSTIC_ASSERT(
@@ -2772,16 +2789,16 @@ nsresult nsFrameLoader::FinishStaticClone(
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (NS_WARN_IF(aStaticCloneOf->IsRemoteFrame())) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   MaybeCreateDocShell();
   RefPtr<nsDocShell> docShell = GetDocShell();
   NS_ENSURE_STATE(docShell);
 
   nsCOMPtr<Document> kungFuDeathGrip = docShell->GetDocument();
   Unused << kungFuDeathGrip;
+
+  if (aStaticCloneOf->IsRemoteFrame()) {
+    return DoRemoteStaticClone(aStaticCloneOf);
+  }
 
   nsCOMPtr<nsIContentViewer> viewer;
   docShell->GetContentViewer(getter_AddRefs(viewer));

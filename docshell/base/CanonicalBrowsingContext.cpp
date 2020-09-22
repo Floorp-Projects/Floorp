@@ -26,6 +26,7 @@
 #include "mozilla/MozPromiseInlines.h"
 #include "nsDocShell.h"
 #include "nsFrameLoader.h"
+#include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsNetUtil.h"
@@ -1078,7 +1079,9 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
   }
 
   // Resume the pending load in our new process.
-  newBrowser->ResumeLoad(mPendingSwitchId);
+  if (mPendingSwitchId) {
+    newBrowser->ResumeLoad(mPendingSwitchId);
+  }
 
   // We did it! The process switch is complete.
   mPromise->Resolve(newBrowser, __func__);
@@ -1148,6 +1151,9 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
                         "Cannot replace BrowsingContext for subframes");
   MOZ_DIAGNOSTIC_ASSERT(aSpecificGroupId == 0 || aReplaceBrowsingContext,
                         "Cannot specify group ID unless replacing BC");
+  MOZ_DIAGNOSTIC_ASSERT(aPendingSwitchId || !IsTop(),
+                        "Should always have aPendingSwitchId for top-level "
+                        "frames");
 
   if (!AncestorsAreCurrent()) {
     NS_WARNING("An ancestor context is no longer current");
@@ -1182,6 +1188,11 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
   // Switching to local. No new process, so perform switch sync.
   if (embedderBrowser &&
       aRemoteType.Equals(embedderBrowser->Manager()->GetRemoteType())) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        aPendingSwitchId,
+        "We always have a PendingSwitchId, except for print-preview loads, "
+        "which will never perform a process-switch to being in-process with "
+        "their embedder");
     if (GetCurrentWindowGlobal()) {
       MOZ_DIAGNOSTIC_ASSERT(GetCurrentWindowGlobal()->IsProcessRoot());
       RefPtr<BrowserParent> oldBrowser =

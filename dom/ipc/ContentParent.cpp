@@ -3522,6 +3522,72 @@ bool ContentParent::CanOpenBrowser(const IPCTabContext& aContext) {
   return true;
 }
 
+static bool CloneIsLegal(ContentParent* aCp, CanonicalBrowsingContext& aSource,
+                         CanonicalBrowsingContext& aTarget) {
+  // Source and target must be in the same BCG
+  if (NS_WARN_IF(aSource.Group() != aTarget.Group())) {
+    return false;
+  }
+  // The source and target must be in different toplevel <browser>s
+  if (NS_WARN_IF(aSource.Top() == aTarget.Top())) {
+    return false;
+  }
+
+  // Neither source nor target must be toplevel.
+  if (NS_WARN_IF(aSource.IsTop()) || NS_WARN_IF(aTarget.IsTop())) {
+    return false;
+  }
+
+  // Both should be embedded by the same process.
+  auto* sourceEmbedder = aSource.GetParentWindowContext();
+  if (NS_WARN_IF(!sourceEmbedder) ||
+      NS_WARN_IF(sourceEmbedder->GetContentParent() != aCp)) {
+    return false;
+  }
+
+  auto* targetEmbedder = aSource.GetParentWindowContext();
+  if (NS_WARN_IF(!targetEmbedder) ||
+      NS_WARN_IF(targetEmbedder->GetContentParent() != aCp)) {
+    return false;
+  }
+
+  // All seems sane.
+  return true;
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvCloneDocumentTreeInto(
+    const MaybeDiscarded<BrowsingContext>& aSource,
+    const MaybeDiscarded<BrowsingContext>& aTarget) {
+  if (aSource.IsNullOrDiscarded() || aTarget.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  auto* source = aSource.get_canonical();
+  auto* target = aTarget.get_canonical();
+
+  if (!CloneIsLegal(this, *source, *target)) {
+    return IPC_FAIL(this, "Illegal subframe clone");
+  }
+
+  ContentParent* cp = source->GetContentParent();
+  if (NS_WARN_IF(!cp)) {
+    return IPC_OK();
+  }
+
+  target
+      ->ChangeRemoteness(cp->GetRemoteType(), /* aLoadID = */ 0,
+                         /* aReplaceBC = */ false, /* aSpecificGroupId = */ 0)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [source = RefPtr{source}](BrowserParent* aBp) {
+            Unused << aBp->SendCloneDocumentTreeIntoSelf(source);
+          },
+          [](nsresult aRv) {
+            NS_WARNING(nsPrintfCString("Remote clone failed: %x\n", aRv).get());
+          });
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     ManagedEndpoint<PBrowserParent>&& aBrowserEp,
     ManagedEndpoint<PWindowGlobalParent>&& aWindowEp, const TabId& aTabId,

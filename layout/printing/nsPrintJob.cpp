@@ -278,6 +278,10 @@ static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
 
   for (auto& bc : aParentPO->mDocShell->GetBrowsingContext()->Children()) {
     nsCOMPtr<nsIDocShell> docShell = bc->GetDocShell();
+    if (!docShell) {
+      continue;
+    }
+
     RefPtr<Document> doc = docShell->GetDocument();
 
     auto childPO = MakeUnique<nsPrintObject>();

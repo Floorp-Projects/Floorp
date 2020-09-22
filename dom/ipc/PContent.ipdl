@@ -453,6 +453,12 @@ parent:
                                 WindowGlobalInit windowInit,
                                 uint32_t chromeFlags);
 
+    // TODO: Do I need to make this return something to watch for completion?
+    // Guess we'll see how we end up triggering the actual print, for preview
+    // this should be enough...
+    async CloneDocumentTreeInto(MaybeDiscardedBrowsingContext aSourceBc,
+                                MaybeDiscardedBrowsingContext aTargetBc);
+
 child:
     async ConstructBrowser(ManagedEndpoint<PBrowserChild> browserEp,
                            ManagedEndpoint<PWindowGlobalChild> windowEp,
