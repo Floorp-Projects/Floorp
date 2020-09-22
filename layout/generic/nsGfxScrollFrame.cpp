@@ -2225,10 +2225,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
         mOuter->GetContent(), mOuter->PresShell(), ScreenMargin(), 0);
     nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(mOuter);
   }
-
-  if (mIsRoot) {
-    mZoomableByAPZ = mOuter->PresShell()->GetZoomableByAPZ();
-  }
 }
 
 ScrollFrameHelper::~ScrollFrameHelper() {
