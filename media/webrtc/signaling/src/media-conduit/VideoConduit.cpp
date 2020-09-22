@@ -26,9 +26,10 @@
 #include "pk11pub.h"
 
 #include "api/video_codecs/sdp_video_format.h"
-#include "media/engine/vp8_encoder_simulcast_proxy.h"
+#include "media/engine/encoder_simulcast_proxy.h"
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/media/base/mediaconstants.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
@@ -1743,7 +1744,8 @@ std::unique_ptr<webrtc::VideoEncoder> WebrtcVideoConduit::CreateEncoder(
       break;
 
     case webrtc::VideoCodecType::kVideoCodecVP8:
-      encoder.reset(new webrtc::VP8EncoderSimulcastProxy(this));
+      encoder.reset(new webrtc::EncoderSimulcastProxy(
+          this, webrtc::SdpVideoFormat(cricket::kVp8CodecName)));
       break;
 
     case webrtc::VideoCodecType::kVideoCodecVP9:
