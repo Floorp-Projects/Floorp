@@ -17,10 +17,8 @@ object StrictModeManager {
     /***
      * Enables strict mode for debug purposes. meant to be run only in the main process.
      * @param setPenaltyDeath boolean value to decide setting the penaltyDeath as a penalty.
-     * @param setPenaltyDialog boolean value to decide setting the dialog box as a penalty.
-     * Note: dialog penalty cannot be set with penaltyDeath
      */
-    fun enableStrictMode(setPenaltyDeath: Boolean, setPenaltyDialog: Boolean = false) {
+    fun enableStrictMode(setPenaltyDeath: Boolean) {
         if (Config.channel.isDebug) {
             val threadPolicy = StrictMode.ThreadPolicy.Builder()
                 .detectAll()
@@ -28,12 +26,6 @@ object StrictModeManager {
             if (setPenaltyDeath && Build.MANUFACTURER !in strictModeExceptionList) {
                 threadPolicy.penaltyDeath()
             }
-
-            // dialog penalty cannot be set with penaltyDeath
-            if (!setPenaltyDeath && setPenaltyDialog) {
-                threadPolicy.penaltyDialog()
-            }
-
             StrictMode.setThreadPolicy(threadPolicy.build())
 
             val builder = StrictMode.VmPolicy.Builder()
@@ -62,7 +54,7 @@ object StrictModeManager {
         fragmentManager.registerFragmentLifecycleCallbacks(object :
             FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
-                enableStrictMode(setPenaltyDeath = false, setPenaltyDialog = false)
+                enableStrictMode(setPenaltyDeath = false)
                 fm.unregisterFragmentLifecycleCallbacks(this)
             }
         }, false)
