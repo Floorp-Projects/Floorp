@@ -7,6 +7,8 @@ package org.mozilla.fenix.addons
 import androidx.navigation.NavController
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
+import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.navigateSafe
 
 /**
  * View used for managing add-ons.
@@ -37,7 +39,7 @@ class AddonsManagementView(
             AddonsManagementFragmentDirections.actionAddonsManagementFragmentToInstalledAddonDetails(
                 addon
             )
-        navController.navigate(directions)
+        navController.navigateSafe(R.id.addonsManagementFragment, directions)
     }
 
     private fun showDetailsFragment(addon: Addon) {
@@ -45,7 +47,7 @@ class AddonsManagementView(
             AddonsManagementFragmentDirections.actionAddonsManagementFragmentToAddonDetailsFragment(
                 addon
             )
-        navController.navigate(directions)
+        navController.navigateSafe(R.id.addonsManagementFragment, directions)
     }
 
     private fun showNotYetSupportedAddonFragment(unsupportedAddons: List<Addon>) {
