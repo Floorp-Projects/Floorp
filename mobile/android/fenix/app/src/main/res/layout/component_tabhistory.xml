@@ -13,8 +13,8 @@
     <View
         android:id="@+id/handle"
         android:layout_width="0dp"
-        android:layout_height="3dp"
-        android:layout_marginTop="8dp"
+        android:layout_height="@dimen/bottom_sheet_handle_height"
+        android:layout_marginTop="@dimen/bottom_sheet_handle_top_margin"
         android:background="@color/secondary_text_normal_theme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

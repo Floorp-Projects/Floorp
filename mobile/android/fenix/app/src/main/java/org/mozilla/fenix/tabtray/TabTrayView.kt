@@ -433,14 +433,14 @@ class TabTrayView(
                 if (multiselect) {
                     R.dimen.tab_tray_multiselect_handle_height
                 } else {
-                    R.dimen.tab_tray_normal_handle_height
+                    R.dimen.bottom_sheet_handle_height
                 }
             )
             topMargin = view.resources.getDimensionPixelSize(
                 if (multiselect) {
                     R.dimen.tab_tray_multiselect_handle_top_margin
                 } else {
-                    R.dimen.tab_tray_normal_handle_top_margin
+                    R.dimen.bottom_sheet_handle_top_margin
                 }
             )
         }

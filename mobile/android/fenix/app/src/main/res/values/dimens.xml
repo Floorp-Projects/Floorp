@@ -70,6 +70,9 @@
     <!-- Bottom Sheet Fragment card -->
     <dimen name="bottom_sheet_corner_radius">8dp</dimen>
     <dimen name="bottom_sheet_top_padding">8dp</dimen>
+    <dimen name="bottom_sheet_handle_height">3dp</dimen>
+    <dimen name="bottom_sheet_handle_top_margin">8dp</dimen>
+
 
     <!-- Browser Toolbar -->
     <dimen name="browser_toolbar_height">56dp</dimen>
@@ -172,9 +175,7 @@
     <dimen name="tab_tray_thumbnail_height">69dp</dimen>
     <dimen name="tab_tray_favicon_border_radius">4dp</dimen>
     <dimen name="tab_tray_multiselect_handle_height">11dp</dimen>
-    <dimen name="tab_tray_normal_handle_height">11dp</dimen>
     <dimen name="tab_tray_multiselect_handle_top_margin">0dp</dimen>
-    <dimen name="tab_tray_normal_handle_top_margin">8dp</dimen>
     <dimen name="tab_tray_new_collection_padding_start">24dp</dimen>
     <dimen name="tab_tray_new_collection_drawable_padding">28dp</dimen>
 
