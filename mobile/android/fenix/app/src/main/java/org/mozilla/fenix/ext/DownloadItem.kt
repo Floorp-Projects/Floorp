@@ -14,6 +14,7 @@ fun DownloadItem.getIcon(): Int {
         return when {
             fileName?.endsWith("apk") == true -> R.drawable.ic_file_type_apk
             fileName?.endsWith("zip") == true -> R.drawable.ic_file_type_zip
+            fileName?.endsWith("pdf") == true -> R.drawable.ic_file_type_document
             else -> R.drawable.ic_file_type_default
         }
     }

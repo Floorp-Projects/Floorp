@@ -23,6 +23,7 @@ class DownloadItemKtTest {
         assertEquals(R.drawable.ic_file_type_zip, downloadItem.copy(contentType = "application/gzip").getIcon())
         assertEquals(R.drawable.ic_file_type_apk, downloadItem.copy(contentType = null, fileName = "Fenix.apk").getIcon())
         assertEquals(R.drawable.ic_file_type_zip, downloadItem.copy(contentType = null, fileName = "Fenix.zip").getIcon())
+        assertEquals(R.drawable.ic_file_type_document, downloadItem.copy(contentType = null, fileName = "Fenix.pdf").getIcon())
         assertEquals(R.drawable.ic_file_type_default, downloadItem.copy(contentType = null, fileName = null).getIcon())
     }
 }
