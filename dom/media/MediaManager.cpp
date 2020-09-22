@@ -2219,14 +2219,38 @@ void MediaManager::DeviceListChanged() {
 
   // On some Windows machines, if we call EnumerateRawDevices immediately after
   // receiving devicechange event, we would get an outdated devices list.
-  PR_Sleep(PR_MillisecondsToInterval(200));
+
+  if (mDeviceChangeTimer) {
+    mDeviceChangeTimer->Cancel();
+  } else {
+    mDeviceChangeTimer = MakeRefPtr<MediaTimer>();
+  }
+  RefPtr<MediaManager> self = this;
   auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
-  EnumerateRawDevices(0, MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
-                      MediaSinkEnum::Speaker, DeviceEnumerationType::Normal,
-                      DeviceEnumerationType::Normal, false, devices)
+  mDeviceChangeTimer->WaitFor(TimeDuration::FromMilliseconds(200), __func__)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr<MediaManager>(this), this, devices](bool) {
+          [self, this, devices] {
+            if (!MediaManager::GetIfExists()) {
+              return MgrPromise::CreateAndReject(
+                  MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
+                                            u"In shutdown"_ns),
+                  __func__);
+            }
+            return EnumerateRawDevices(
+                0, MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
+                MediaSinkEnum::Speaker, DeviceEnumerationType::Normal,
+                DeviceEnumerationType::Normal, false, devices);
+          },
+          []() {
+            // Timer was canceled by us, or we're in shutdown.
+            return MgrPromise::CreateAndReject(
+                MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
+                __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self, this, devices](bool) {
             if (!MediaManager::GetIfExists()) {
               return;
             }
@@ -3616,6 +3640,12 @@ void MediaManager::Shutdown() {
                           this);
     prefs->RemoveObserver("media.getusermedia.channels", this);
 #endif
+  }
+
+  if (mDeviceChangeTimer) {
+    mDeviceChangeTimer->Cancel();
+    // Drop ref to MediaTimer early to avoid blocking SharedThreadPool shutdown
+    mDeviceChangeTimer = nullptr;
   }
 
   {
