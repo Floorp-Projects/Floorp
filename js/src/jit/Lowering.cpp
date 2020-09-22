@@ -1867,32 +1867,6 @@ void LIRGenerator::visitDiv(MDiv* ins) {
   MOZ_CRASH("Unhandled number specialization");
 }
 
-void LIRGenerator::visitWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
-  lowerWasmBuiltinDivI64(div);
-}
-
-void LIRGenerator::visitWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
-  lowerWasmBuiltinModI64(mod);
-}
-
-void LIRGenerator::visitWasmBuiltinModD(MWasmBuiltinModD* ins) {
-  MOZ_ASSERT(gen->compilingWasm());
-  LWasmBuiltinModD* lir = new (alloc()) LWasmBuiltinModD(
-      useRegisterAtStart(ins->lhs()), useRegisterAtStart(ins->rhs()),
-      useFixedAtStart(ins->tls(), WasmTlsReg));
-  defineReturn(lir, ins);
-}
-
-void LIRGenerator::visitBuiltinInt64ToFloatingPoint(
-    MBuiltinInt64ToFloatingPoint* ins) {
-  lowerBuiltinInt64ToFloatingPoint(ins);
-}
-
-void LIRGenerator::visitWasmBuiltinTruncateToInt64(
-    MWasmBuiltinTruncateToInt64* ins) {
-  lowerWasmBuiltinTruncateToInt64(ins);
-}
-
 void LIRGenerator::visitMod(MMod* ins) {
   MOZ_ASSERT(ins->lhs()->type() == ins->rhs()->type());
   MOZ_ASSERT(IsNumberType(ins->type()));
@@ -1916,13 +1890,13 @@ void LIRGenerator::visitMod(MMod* ins) {
     MOZ_ASSERT(ins->lhs()->type() == MIRType::Double);
     MOZ_ASSERT(ins->rhs()->type() == MIRType::Double);
 
-    MOZ_ASSERT(!gen->compilingWasm());
+    // Ion does an unaligned ABI call and thus needs a temp register. Wasm
+    // doesn't.
+    LDefinition maybeTemp = gen->compilingWasm() ? LDefinition::BogusTemp()
+                                                 : tempFixed(CallTempReg0);
 
-    // Ion does an unaligned ABI call and thus needs a temp register.
-    // Note: useRegisterAtStart is safe here, the temp is not a FP register.
-    LModD* lir = new (alloc())
-        LModD(useRegisterAtStart(ins->lhs()), useRegisterAtStart(ins->rhs()),
-              tempFixed(CallTempReg0));
+    LModD* lir = new (alloc()) LModD(useRegisterAtStart(ins->lhs()),
+                                     useRegisterAtStart(ins->rhs()), maybeTemp);
     defineReturn(lir, ins);
     return;
   }
@@ -2377,16 +2351,6 @@ void LIRGenerator::visitWasmTruncateToInt32(MWasmTruncateToInt32* ins) {
     default:
       MOZ_CRASH("unexpected type in WasmTruncateToInt32");
   }
-}
-
-void LIRGenerator::visitWasmBuiltinTruncateToInt32(
-    MWasmBuiltinTruncateToInt32* truncate) {
-  mozilla::DebugOnly<MDefinition*> opd = truncate->input();
-  MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
-
-  // May call into JS::ToInt32() on the slow OOL path.
-  gen->setNeedsStaticStackAlignment();
-  lowerWasmBuiltinTruncateToInt32(truncate);
 }
 
 void LIRGenerator::visitWasmBoxValue(MWasmBoxValue* ins) {
@@ -5111,11 +5075,9 @@ void LIRGenerator::visitWasmParameter(MWasmParameter* ins) {
 
 void LIRGenerator::visitWasmReturn(MWasmReturn* ins) {
   MDefinition* rval = ins->getOperand(0);
-  MDefinition* tlsParam = ins->getOperand(1);
 
   if (rval->type() == MIRType::Int64) {
-    add(new (alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64),
-                                     useFixed(tlsParam, WasmTlsReg)));
+    add(new (alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64)));
     return;
   }
 
@@ -5135,16 +5097,11 @@ void LIRGenerator::visitWasmReturn(MWasmReturn* ins) {
     MOZ_CRASH("Unexpected wasm return type");
   }
 
-  lir->setOperand(1, useFixed(tlsParam, WasmTlsReg));
-
   add(lir);
 }
 
 void LIRGenerator::visitWasmReturnVoid(MWasmReturnVoid* ins) {
-  MDefinition* tlsParam = ins->getOperand(0);
-  LWasmReturnVoid* lir = new (alloc()) LWasmReturnVoid;
-  lir->setOperand(0, useFixed(tlsParam, WasmTlsReg));
-  add(lir);
+  add(new (alloc()) LWasmReturnVoid);
 }
 
 void LIRGenerator::visitWasmStackArg(MWasmStackArg* ins) {

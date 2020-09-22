@@ -2778,30 +2778,6 @@ class LModD : public LBinaryMath<1> {
   MMod* mir() const { return mir_->toMod(); }
 };
 
-class LWasmBuiltinModD : public LInstructionHelper<1, 3, 0> {
-  static const size_t LhsIndex = 0;
-  static const size_t RhsIndex = 1;
-  static const size_t TlsIndex = 2;
-
- public:
-  LIR_HEADER(WasmBuiltinModD)
-
-  LWasmBuiltinModD(const LAllocation& lhs, const LAllocation& rhs,
-                   const LAllocation& tls)
-      : LInstructionHelper(classOpcode) {
-    setOperand(LhsIndex, lhs);
-    setOperand(RhsIndex, rhs);
-    setOperand(TlsIndex, tls);
-    setIsCall();
-  }
-
-  const LAllocation* lhs() { return this->getOperand(LhsIndex); }
-  const LAllocation* rhs() { return this->getOperand(RhsIndex); }
-  const LAllocation* tls() { return this->getOperand(TlsIndex); }
-
-  MWasmBuiltinModD* mir() const { return mir_->toWasmBuiltinModD(); }
-};
-
 // Adds two string, returning a string.
 class LConcat : public LInstructionHelper<1, 2, 5> {
  public:
@@ -3155,27 +3131,6 @@ class LTruncateDToInt32 : public LInstructionHelper<1, 1, 1> {
   MTruncateToInt32* mir() const { return mir_->toTruncateToInt32(); }
 };
 
-// Convert a double to a truncated int32, carrying the tls value because we need
-// it for the slow ool path.
-class LWasmBuiltinTruncateDToInt32 : public LInstructionHelper<1, 2, 1> {
- public:
-  LIR_HEADER(WasmBuiltinTruncateDToInt32)
-
-  LWasmBuiltinTruncateDToInt32(const LAllocation& in, const LAllocation& tls,
-                               const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-    setOperand(1, tls);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* tempFloat() { return getTemp(0); }
-
-  MWasmBuiltinTruncateToInt32* mir() const {
-    return mir_->toWasmBuiltinTruncateToInt32();
-  }
-};
-
 // Convert a float32 to a truncated int32.
 //   Input: floating-point register
 //   Output: 32-bit integer
@@ -3192,27 +3147,6 @@ class LTruncateFToInt32 : public LInstructionHelper<1, 1, 1> {
   const LDefinition* tempFloat() { return getTemp(0); }
 
   MTruncateToInt32* mir() const { return mir_->toTruncateToInt32(); }
-};
-
-// Convert a float32 to a truncated int32, carrying the tls value because we
-// need it for the slow ool path.
-class LWasmBuiltinTruncateFToInt32 : public LInstructionHelper<1, 2, 1> {
- public:
-  LIR_HEADER(WasmBuiltinTruncateFToInt32)
-
-  LWasmBuiltinTruncateFToInt32(const LAllocation& in, const LAllocation& tls,
-                               const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-    setOperand(1, tls);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* tempFloat() { return getTemp(0); }
-
-  MWasmBuiltinTruncateToInt32* mir() const {
-    return mir_->toWasmBuiltinTruncateToInt32();
-  }
 };
 
 class LWasmTruncateToInt32 : public LInstructionHelper<1, 1, 0> {
@@ -7559,26 +7493,24 @@ class LWasmParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0> {
   LWasmParameterI64() : LInstructionHelper(classOpcode) {}
 };
 
-class LWasmReturn : public LInstructionHelper<0, 2, 0> {
+class LWasmReturn : public LInstructionHelper<0, 1, 0> {
  public:
   LIR_HEADER(WasmReturn);
 
   LWasmReturn() : LInstructionHelper(classOpcode) {}
 };
 
-// +1 for tls.
-class LWasmReturnI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0> {
+class LWasmReturnI64 : public LInstructionHelper<0, INT64_PIECES, 0> {
  public:
   LIR_HEADER(WasmReturnI64)
 
-  LWasmReturnI64(const LInt64Allocation& input, const LAllocation& tls)
+  explicit LWasmReturnI64(const LInt64Allocation& input)
       : LInstructionHelper(classOpcode) {
     setInt64Operand(0, input);
-    setOperand(INT64_PIECES, tls);
   }
 };
 
-class LWasmReturnVoid : public LInstructionHelper<0, 1, 0> {
+class LWasmReturnVoid : public LInstructionHelper<0, 0, 0> {
  public:
   LIR_HEADER(WasmReturnVoid);
 
