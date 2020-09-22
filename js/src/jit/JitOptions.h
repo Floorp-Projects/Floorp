@@ -57,7 +57,6 @@ struct DefaultJitOptions {
   bool baselineInterpreter;
   bool baselineJit;
   bool ion;
-  bool typeInference;
   bool warpBuilder;
   bool jitForTrustedPrincipals;
   bool nativeRegExp;
@@ -149,7 +148,7 @@ inline bool IsBaselineInterpreterEnabled() {
 
 }  // namespace jit
 
-inline bool IsTypeInferenceEnabled() { return jit::JitOptions.typeInference; }
+inline bool IsTypeInferenceEnabled() { return !jit::JitOptions.warpBuilder; }
 
 }  // namespace js
 
