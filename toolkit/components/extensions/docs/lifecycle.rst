@@ -38,7 +38,7 @@ Handling lifecycle events
 To be notified of update and uninstall events, an extension lists these
 events in the API manifest:
 
-.. code-block:: json
+.. code-block:: js
 
    "myapi": {
      "schema": "...",

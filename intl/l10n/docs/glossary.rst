@@ -1,6 +1,5 @@
-========
-Glossary
-========
+L10N Glossary
+=============
 
 .. glossary::
     :sorted:

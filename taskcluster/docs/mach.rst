@@ -1,5 +1,5 @@
-Mach commands
-=============
+Taskcluster Mach commands
+=========================
 
 A number of mach subcommands are available aside from ``mach taskgraph
 decision`` to make this complex system more accessible to those trying to

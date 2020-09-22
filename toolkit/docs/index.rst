@@ -8,6 +8,7 @@ This is the nascent documentation of the Toolkit code that is shared across Fire
    :maxdepth: 1
 
    mozapps/extensions/addon-manager/index
+   crash-reporting/index
    components/crashes/crash-manager/index
    crashreporter/crashreporter/index
    components/featuregates/featuregates/index
