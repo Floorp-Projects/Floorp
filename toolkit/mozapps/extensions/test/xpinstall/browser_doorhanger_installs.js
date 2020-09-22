@@ -497,12 +497,8 @@ var TESTS = [
   },
 
   async function test_recommendedPostDownload() {
-    // recommended.xpi is dev root signed
     SpecialPowers.pushPrefEnv({
-      set: [
-        ["extensions.postDownloadThirdPartyPrompt", true],
-        ["xpinstall.signatures.dev-root", true],
-      ],
+      set: [["extensions.postDownloadThirdPartyPrompt", true]],
     });
 
     let triggers = encodeURIComponent(
@@ -519,7 +515,7 @@ var TESTS = [
 
     let notificationPromise = acceptAppMenuNotificationWhenShown(
       "addon-installed",
-      "recommended-xpi@tests.mozilla.orgs"
+      "{811d77f1-f306-4187-9251-b4ff99bad60b}"
     );
 
     installDialog.button.click();
@@ -529,7 +525,7 @@ var TESTS = [
     is(installs.length, 0, "Should be no pending installs");
 
     let addon = await AddonManager.getAddonByID(
-      "recommended-xpi@tests.mozilla.orgs"
+      "{811d77f1-f306-4187-9251-b4ff99bad60b}"
     );
     await addon.uninstall();
 
