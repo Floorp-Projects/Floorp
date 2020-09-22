@@ -128,6 +128,9 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
 
   nsCOMPtr<nsITransportSecurityInfo> securityInfo;
   if (nsCOMPtr<nsIChannel> channel = doc->GetChannel()) {
+    nsCOMPtr<nsILoadInfo> loadInfo(channel->LoadInfo());
+    fields.mIsOriginalFrameSource = loadInfo->GetOriginalFrameSrcLoad();
+
     nsCOMPtr<nsISupports> securityInfoSupports;
     channel->GetSecurityInfo(getter_AddRefs(securityInfoSupports));
     securityInfo = do_QueryInterface(securityInfoSupports);
