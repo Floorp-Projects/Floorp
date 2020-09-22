@@ -294,6 +294,7 @@
     handleSearchCommand(aEvent, aEngine, aForceNewTab) {
       let where = "current";
       let params;
+      const newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
 
       // Open ctrl/cmd clicks on one-off buttons in a new background tab.
       if (
@@ -304,13 +305,21 @@
           return;
         }
         where = whereToOpenLink(aEvent, false, true);
+        if (
+          newTabPref &&
+          !aEvent.altKey &&
+          !aEvent.getModifierState("AltGraph") &&
+          where == "current" &&
+          !gBrowser.selectedTab.isEmpty
+        ) {
+          where = "tab";
+        }
       } else if (aForceNewTab) {
         where = "tab";
         if (Services.prefs.getBoolPref("browser.tabs.loadInBackground")) {
           where += "-background";
         }
       } else {
-        let newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
         if (
           (aEvent instanceof KeyboardEvent &&
             (aEvent.altKey || aEvent.getModifierState("AltGraph"))) ^
@@ -329,7 +338,6 @@
           };
         }
       }
-
       this.handleSearchCommandWhere(aEvent, aEngine, where, params);
     }
 
