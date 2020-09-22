@@ -5,6 +5,7 @@
 package org.mozilla.fenix.addons
 
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.RelaxedMockK
@@ -15,6 +16,8 @@ import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.AddonsManagementFragmentDirections.Companion.actionAddonsManagementFragmentToAddonDetailsFragment
 import org.mozilla.fenix.addons.AddonsManagementFragmentDirections.Companion.actionAddonsManagementFragmentToInstalledAddonDetails
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -37,12 +40,16 @@ class AddonsManagementViewTest {
         val addon = mockk<Addon> {
             every { isInstalled() } returns true
         }
+
+        every { navController.currentDestination } returns NavDestination("").apply {
+            id = R.id.addonsManagementFragment
+        }
+
         managementView.onAddonItemClicked(addon)
 
+        val expected = actionAddonsManagementFragmentToInstalledAddonDetails(addon)
         verify {
-            navController.navigate(
-                directionsEq(actionAddonsManagementFragmentToInstalledAddonDetails(addon))
-            )
+            navController.navigate(directionsEq(expected))
         }
     }
 
@@ -51,10 +58,51 @@ class AddonsManagementViewTest {
         val addon = mockk<Addon> {
             every { isInstalled() } returns false
         }
+
+        every { navController.currentDestination } returns NavDestination("").apply {
+            id = R.id.addonsManagementFragment
+        }
+
         managementView.onAddonItemClicked(addon)
 
-        val expected = AddonsManagementFragmentDirections.actionAddonsManagementFragmentToAddonDetailsFragment(addon)
+        val expected = actionAddonsManagementFragmentToAddonDetailsFragment(addon)
         verify {
+            navController.navigate(directionsEq(expected))
+        }
+    }
+
+    @Test
+    fun `onAddonItemClicked on not installed addon does not navigate if not currently on addonsManagementFragment`() {
+        val addon = mockk<Addon> {
+            every { isInstalled() } returns false
+        }
+
+        every { navController.currentDestination } returns NavDestination("").apply {
+            id = R.id.settingsFragment
+        }
+
+        managementView.onAddonItemClicked(addon)
+
+        val expected = actionAddonsManagementFragmentToAddonDetailsFragment(addon)
+        verify(exactly = 0) {
+            navController.navigate(directionsEq(expected))
+        }
+    }
+
+    @Test
+    fun `onAddonItemClicked on installed addon does not navigate if not currently on addonsManagementFragment`() {
+        val addon = mockk<Addon> {
+            every { isInstalled() } returns true
+        }
+
+        every { navController.currentDestination } returns NavDestination("").apply {
+            id = R.id.settingsFragment
+        }
+
+        managementView.onAddonItemClicked(addon)
+
+        val expected = actionAddonsManagementFragmentToAddonDetailsFragment(addon)
+        verify(exactly = 0) {
             navController.navigate(directionsEq(expected))
         }
     }
