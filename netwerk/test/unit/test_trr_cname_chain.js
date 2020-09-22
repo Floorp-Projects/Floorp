@@ -78,14 +78,7 @@ add_task(async function test_follow_cnames_same_response() {
       data: "1.2.3.4",
     },
   ]);
-  let [inRequest, inRecord, inStatus] = await new TRRDNSListener(
-    "something.foo",
-    {
-      expectedAnswer: "1.2.3.4",
-      flags: Ci.nsIDNSService.RESOLVE_CANONICAL_NAME,
-    }
-  );
-  equal(inRecord.QueryInterface(Ci.nsIDNSAddrRecord).canonicalName, "xyz.foo");
+  await new TRRDNSListener("something.foo", "1.2.3.4");
 
   await trrServer.registerDoHAnswers("a.foo", "A", [
     {
@@ -105,7 +98,7 @@ add_task(async function test_follow_cnames_same_response() {
       data: "2.3.4.5",
     },
   ]);
-  await new TRRDNSListener("a.foo", { expectedAnswer: "2.3.4.5" });
+  await new TRRDNSListener("a.foo", "2.3.4.5");
 
   await trrServer.stop();
 });
