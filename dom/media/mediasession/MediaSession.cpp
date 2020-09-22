@@ -27,12 +27,40 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaSession)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaSession)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaSession)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentActivity)
 NS_INTERFACE_MAP_END
 
-MediaSession::MediaSession(nsPIDOMWindowInner* aParent) : mParent(aParent) {
+MediaSession::MediaSession(nsPIDOMWindowInner* aParent)
+    : mParent(aParent), mDoc(mParent->GetExtantDoc()) {
   MOZ_ASSERT(mParent);
-  NotifyMediaSessionStatus(SessionStatus::eCreated);
+  MOZ_ASSERT(mDoc);
+  mDoc->RegisterActivityObserver(this);
+  if (mDoc->IsCurrentActiveDocument()) {
+    SetMediaSessionDocStatus(SessionDocStatus::eActive);
+  }
+}
+
+void MediaSession::Shutdown() {
+  mDoc->UnregisterActivityObserver(this);
+  SetMediaSessionDocStatus(SessionDocStatus::eInactive);
+}
+
+void MediaSession::NotifyOwnerDocumentActivityChanged() {
+  const bool isDocActive = mDoc->IsCurrentActiveDocument();
+  LOG("Document activity changed, isActive=%d", isDocActive);
+  if (isDocActive) {
+    SetMediaSessionDocStatus(SessionDocStatus::eActive);
+  } else {
+    SetMediaSessionDocStatus(SessionDocStatus::eInactive);
+  }
+}
+
+void MediaSession::SetMediaSessionDocStatus(SessionDocStatus aState) {
+  if (mSessionDocState == aState) {
+    return;
+  }
+  mSessionDocState = aState;
+  NotifyMediaSessionDocStatus(mSessionDocState);
 }
 
 nsPIDOMWindowInner* MediaSession::GetParentObject() const { return mParent; }
@@ -45,12 +73,14 @@ JSObject* MediaSession::WrapObject(JSContext* aCx,
 MediaMetadata* MediaSession::GetMetadata() const { return mMediaMetadata; }
 
 void MediaSession::SetMetadata(MediaMetadata* aMetadata) {
+  MOZ_ASSERT(mSessionDocState == SessionDocStatus::eActive);
   mMediaMetadata = aMetadata;
   NotifyMetadataUpdated();
 }
 
 void MediaSession::SetPlaybackState(
     const MediaSessionPlaybackState& aPlaybackState) {
+  MOZ_ASSERT(mSessionDocState == SessionDocStatus::eActive);
   if (mDeclaredPlaybackState == aPlaybackState) {
     return;
   }
@@ -70,6 +100,7 @@ MediaSessionPlaybackState MediaSession::PlaybackState() const {
 
 void MediaSession::SetActionHandler(MediaSessionAction aAction,
                                     MediaSessionActionHandler* aHandler) {
+  MOZ_ASSERT(mSessionDocState == SessionDocStatus::eActive);
   MOZ_ASSERT(size_t(aAction) < ArrayLength(mActionHandlers));
   // If the media session changes its supported action, then we would propagate
   // this information to the chrome process in order to run the media session
@@ -92,6 +123,7 @@ MediaSessionActionHandler* MediaSession::GetActionHandler(
 
 void MediaSession::SetPositionState(const MediaPositionState& aState,
                                     ErrorResult& aRv) {
+  MOZ_ASSERT(mSessionDocState == SessionDocStatus::eActive);
   // https://w3c.github.io/mediasession/#dom-mediasession-setpositionstate
   // If the state is an empty dictionary then clear the position state.
   if (!aState.IsAnyMemberPresent()) {
@@ -190,11 +222,7 @@ bool MediaSession::IsActive() const {
   return *activeSessionContextId == currentBC->Id();
 }
 
-void MediaSession::Shutdown() {
-  NotifyMediaSessionStatus(SessionStatus::eDestroyed);
-}
-
-void MediaSession::NotifyMediaSessionStatus(SessionStatus aState) {
+void MediaSession::NotifyMediaSessionDocStatus(SessionDocStatus aState) {
   RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
   MOZ_ASSERT(currentBC, "Update session status after context destroyed!");
 
@@ -202,7 +230,7 @@ void MediaSession::NotifyMediaSessionStatus(SessionStatus aState) {
   if (!updater) {
     return;
   }
-  if (aState == SessionStatus::eCreated) {
+  if (aState == SessionDocStatus::eActive) {
     updater->NotifySessionCreated(currentBC->Id());
   } else {
     updater->NotifySessionDestroyed(currentBC->Id());
