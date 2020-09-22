@@ -57,9 +57,7 @@ struct DefaultJitOptions {
   bool baselineInterpreter;
   bool baselineJit;
   bool ion;
-#ifdef NIGHTLY_BUILD
   bool typeInference;
-#endif
   bool warpBuilder;
   bool jitForTrustedPrincipals;
   bool nativeRegExp;
@@ -151,14 +149,7 @@ inline bool IsBaselineInterpreterEnabled() {
 
 }  // namespace jit
 
-inline bool IsTypeInferenceEnabled() {
-#ifdef NIGHTLY_BUILD
-  return jit::JitOptions.typeInference;
-#else
-  // Always enable TI on non-Nightly for now to avoid performance overhead.
-  return true;
-#endif
-}
+inline bool IsTypeInferenceEnabled() { return jit::JitOptions.typeInference; }
 
 }  // namespace js
 
