@@ -39,6 +39,8 @@ class ZoomConstraintsClient final : public nsIDOMEventListener,
   void Destroy();
   void ScreenSizeChanged();
 
+  bool GetAllowZoom() const { return mZoomConstraints.mAllowZoom; }
+
  private:
   void RefreshZoomConstraints();
 
