@@ -150,7 +150,7 @@ internal class AsyncDrawableMenuIconViewHolder(
     parent: ConstraintLayout,
     inflater: LayoutInflater,
     side: Side,
-    private val logger: Logger = Logger("mozac-menu2")
+    private val logger: Logger = Logger("mozac-menu2-AsyncDrawableMenuIconViewHolder")
 ) : MenuIconWithDrawableViewHolder<AsyncDrawableMenuIcon>(parent, inflater) {
 
     private val scope = MainScope()
