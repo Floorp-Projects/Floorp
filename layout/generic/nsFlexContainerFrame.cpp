@@ -1560,18 +1560,26 @@ static nscoord PartiallyResolveAutoMinSize(
     return specifiedSizeSuggestion;
   }
 
-  // * if the item has an intrinsic aspect ratio, the width (height) calculated
-  //   from the aspect ratio and any definite size constraints in the opposite
-  //   dimension.
+  // Compute the transferred size suggestion, which is the cross size converted
+  // through the aspect ratio (if the item has an aspect ratio and a definite
+  // cross size).
   nscoord transferredSizeSuggestion = nscoord_MAX;
   if (aFlexItem.HasIntrinsicRatio()) {
     // We have a usable aspect ratio. (not going to divide by 0)
-    const bool useMinSizeIfCrossSizeIsIndefinite = true;
+    const bool useMinSizeIfCrossSizeIsIndefinite = false;
     nscoord crossSizeToUseWithRatio = CrossSizeToUseWithRatio(
         aFlexItem, aItemReflowInput, useMinSizeIfCrossSizeIsIndefinite,
         aAxisTracker);
-    transferredSizeSuggestion = MainSizeFromAspectRatio(
-        crossSizeToUseWithRatio, aFlexItem.IntrinsicRatio(), aAxisTracker);
+
+    if (crossSizeToUseWithRatio != NS_UNCONSTRAINEDSIZE) {
+      transferredSizeSuggestion = MainSizeFromAspectRatio(
+          crossSizeToUseWithRatio, aFlexItem.IntrinsicRatio(), aAxisTracker);
+    }
+
+    // Clamp the transferred size suggestion by any definite min and max
+    // cross size converted through the aspect ratio.
+    transferredSizeSuggestion = ClampMainSizeViaCrossAxisConstraints(
+        transferredSizeSuggestion, aFlexItem, aAxisTracker);
   }
 
   return transferredSizeSuggestion;
