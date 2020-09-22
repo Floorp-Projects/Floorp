@@ -34,6 +34,10 @@ javascript:
     notifications:
         subject: '{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} linux64 codeql-javascript status'
         message: '{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} linux64 codeql-javascript status'
+        status-types:
+            - on-completed
+            - on-failed
+            - on-exception
         emails:
             by-project:
                 mozilla-release: ["tom@mozilla.com", "freddy@mozilla.com"]
