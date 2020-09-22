@@ -692,7 +692,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * principals match, or we are in a editor context where this doesn't matter.
    * Otherwise, the data must be sanitized first.
    */
-  bool IsSafeToInsertData(Document* aSourceDoc);
+  bool IsSafeToInsertData(const Document* aSourceDoc) const;
 
   /**
    * GetAndInitDocEncoder() returns a document encoder instance for aFormatType
