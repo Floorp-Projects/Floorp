@@ -811,6 +811,9 @@ class MOZ_RAII CacheIRCompiler {
                                           JSOp op,
                                           const AutoOutputRegister& output);
 
+  MOZ_MUST_USE bool emitMathFunctionNumberResultShared(
+      UnaryMathFunction fun, FloatRegister inputScratch, ValueOperand output);
+
   template <typename Fn, Fn fn>
   MOZ_MUST_USE bool emitBigIntBinaryOperationShared(BigIntOperandId lhsId,
                                                     BigIntOperandId rhsId);

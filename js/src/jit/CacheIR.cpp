@@ -6907,7 +6907,7 @@ AttachDecision CallIRGenerator::tryAttachMathFloor(HandleFunction callee) {
   if (resultIsInt32) {
     writer.mathFloorToInt32Result(numberId);
   } else {
-    writer.mathFunctionNumberResult(numberId, UnaryMathFunction::Floor);
+    writer.mathFloorNumberResult(numberId);
   }
 
   writer.typeMonitorResult();
@@ -6941,7 +6941,7 @@ AttachDecision CallIRGenerator::tryAttachMathCeil(HandleFunction callee) {
   if (resultIsInt32) {
     writer.mathCeilToInt32Result(numberId);
   } else {
-    writer.mathFunctionNumberResult(numberId, UnaryMathFunction::Ceil);
+    writer.mathCeilNumberResult(numberId);
   }
 
   writer.typeMonitorResult();
@@ -6975,7 +6975,7 @@ AttachDecision CallIRGenerator::tryAttachMathTrunc(HandleFunction callee) {
   if (resultIsInt32) {
     writer.mathTruncToInt32Result(numberId);
   } else {
-    writer.mathFunctionNumberResult(numberId, UnaryMathFunction::Trunc);
+    writer.mathTruncNumberResult(numberId);
   }
 
   writer.typeMonitorResult();
