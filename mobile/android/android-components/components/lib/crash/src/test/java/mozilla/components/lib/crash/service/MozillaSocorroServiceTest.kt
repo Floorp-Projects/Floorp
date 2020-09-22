@@ -145,6 +145,69 @@ class MozillaSocorroServiceTest {
     }
 
     @Test
+    fun `MozillaSocorroService parameters is reported correctly`() {
+        val mockWebServer = MockWebServer()
+
+        try {
+            mockWebServer.enqueue(
+                MockResponse().setResponseCode(200)
+                    .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928")
+            )
+            mockWebServer.start()
+            val serverUrl = mockWebServer.url("/")
+            val service = spy(
+                MozillaSocorroService(
+                    testContext,
+                    "Test App",
+                    appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
+                    version = "test version",
+                    buildId = "test build id",
+                    vendor = "test vendor",
+                    serverUrl = serverUrl.toString(),
+                    versionName = "1.0.1",
+                    versionCode = "1000",
+                    releaseChannel = "test channel"
+                )
+            )
+
+            val crash = Crash.NativeCodeCrash(
+                123456,
+                "dump.path",
+                true,
+                "extras.path",
+                isFatal = true,
+                breadcrumbs = arrayListOf()
+            )
+            service.report(crash)
+
+            val fileInputStream =
+                ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
+            val inputStream = GZIPInputStream(fileInputStream)
+            val reader = InputStreamReader(inputStream)
+            val bufferedReader = BufferedReader(reader)
+            val request = bufferedReader.readText()
+
+            assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
+            assert(request.contains("name=ProductID\r\n\r\n{aa3c5121-dab2-40e2-81ca-7ea25febc110}"))
+            assert(request.contains("name=Vendor\r\n\r\ntest vendor"))
+            assert(request.contains("name=ReleaseChannel\r\n\r\ntest channel"))
+            assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
+            assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
+            assert(request.contains("name=CrashType\r\n\r\n$FATAL_NATIVE_CRASH_TYPE"))
+            assert(request.contains("name=CrashTime\r\n\r\n123"))
+            assert(request.contains("name=GeckoViewVersion\r\n\r\ntest version"))
+            assert(request.contains("name=BuildID\r\n\r\ntest build id"))
+            assert(request.contains("name=Version\r\n\r\n1.0.1"))
+            assert(request.contains("name=VersionCode\r\n\r\n1000"))
+
+            verify(service).report(crash)
+            verify(service).sendReport(123456, null, "dump.path", "extras.path", true, true, crash.breadcrumbs)
+        } finally {
+            mockWebServer.shutdown()
+        }
+    }
+
+    @Test
     fun `MozillaSocorroService native non-fatal crash request is correct`() {
         val mockWebServer = MockWebServer()
 
@@ -434,6 +497,7 @@ class MozillaSocorroServiceTest {
                 "Mozilla Test",
                 mockWebServer.url("/").toString(),
                 "0.0.1",
+                "123",
                 "test channel"
             )
 
