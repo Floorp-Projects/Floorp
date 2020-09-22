@@ -6245,7 +6245,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   result.ISize(aWM) = std::max(minISize, result.ISize(aWM));
 
   // Compute block-axis size
-  // (but not if we have auto bsize or if we received the "eUseAutoBSize"
+  // (but not if we have auto bsize or if we received the "UseAutoBSize"
   // flag -- then, we'll just stick with the bsize that we already calculated
   // in the initial ComputeAutoSize() call.)
   if (!aFlags.contains(ComputeSizeFlag::UseAutoBSize)) {

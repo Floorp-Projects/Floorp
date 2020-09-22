@@ -2478,7 +2478,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
 
   const bool isAutoISize = inlineStyleCoord->IsAuto();
   const bool isAutoBSize =
-      nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM));
+      nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM)) ||
+      aFlags.contains(ComputeSizeFlag::UseAutoBSize);
 
   const auto boxSizingAdjust = stylePos->mBoxSizing == StyleBoxSizing::Border
                                    ? aBorderPadding
