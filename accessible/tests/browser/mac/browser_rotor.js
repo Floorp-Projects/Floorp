@@ -1050,6 +1050,86 @@ addAccessibleTask(
 );
 
 /**
+ * Test rotor with static text
+ */
+addAccessibleTask(
+  `
+  <h1>Hello I am a heading</h1>
+  This is some regular text.<p>this is some paragraph text</p><br>
+  This is a list:<ul>
+    <li>List item one</li>
+    <li>List item two</li>
+  </ul>
+
+  <a href="http://example.com">This is a link</a>
+  `,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXStaticTextSearchKey",
+      AXImmediateDescendants: 0,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const textCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(7, textCount, "Found 7 pieces of text");
+
+    const text = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    is(
+      "Hello I am a heading",
+      text[0].getAttributeValue("AXValue"),
+      "Found correct text node for heading"
+    );
+    is(
+      "This is some regular text.",
+      text[1].getAttributeValue("AXValue"),
+      "Found correct text node"
+    );
+    is(
+      "this is some paragraph text",
+      text[2].getAttributeValue("AXValue"),
+      "Found correct text node for paragraph"
+    );
+    is(
+      "This is a list:",
+      text[3].getAttributeValue("AXValue"),
+      "Found correct text node for pre-list text node"
+    );
+    is(
+      "List item one",
+      text[4].getAttributeValue("AXValue"),
+      "Found correct text node for list item one"
+    );
+    is(
+      "List item two",
+      text[5].getAttributeValue("AXValue"),
+      "Found correct text node for list item two"
+    );
+    is(
+      "This is a link",
+      text[6].getAttributeValue("AXValue"),
+      "Found correct text node for link"
+    );
+  }
+);
+
+/**
  * Test rotor with lists
  */
 addAccessibleTask(

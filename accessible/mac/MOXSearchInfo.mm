@@ -206,6 +206,13 @@ using namespace mozilla::a11y;
                                 : RotorImageRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
+
+    if ([key isEqualToString:@"AXStaticTextSearchKey"]) {
+      RotorStaticTextRule rule = mImmediateDescendantsOnly
+                                     ? RotorStaticTextRule(geckoStartAcc)
+                                     : RotorStaticTextRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
   }
 
   return matches;
