@@ -38,6 +38,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
@@ -499,6 +500,101 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
   }
 
   return hyperTextOffset;
+}
+
+uint32_t HyperTextAccessible::FindWordBoundary(
+    uint32_t aOffset, nsDirection aDirection,
+    EWordMovementType aWordMovementType) {
+  uint32_t orig =
+      FindOffset(aOffset, aDirection, eSelectWord, aWordMovementType);
+  if (aWordMovementType != eStartWord) {
+    return orig;
+  }
+  if (aDirection == eDirPrevious) {
+    // When layout.word_select.stop_at_punctuation is true (the default),
+    // for a word beginning with punctuation, layout treats the punctuation
+    // as the start of the word when moving next. However, when moving
+    // previous, layout stops *after* the punctuation. We want to be
+    // consistent regardless of movement direction and always treat punctuation
+    // as the start of a word.
+    if (!StaticPrefs::layout_word_select_stop_at_punctuation()) {
+      return orig;
+    }
+    // Case 1: Example: "a @"
+    // If aOffset is 2 or 3, orig will be 0, but it should be 2. That is,
+    // previous word moved back too far.
+    Accessible* child = GetChildAtOffset(orig);
+    if (child && child->IsHyperText()) {
+      // For a multi-word embedded object, previous word correctly goes back
+      // to the start of the word (the embedded object). Next word (below)
+      // incorrectly stops after the embedded object in this case, so return
+      // the already correct result.
+      // Example: "a x y b", where "x y" is an embedded link
+      // If aOffset is 4, orig will be 2, which is correct.
+      // If we get the next word (below), we'll end up returning 3 instead.
+      return orig;
+    }
+    uint32_t next = FindOffset(orig, eDirNext, eSelectWord, eStartWord);
+    if (next < aOffset) {
+      // Next word stopped on punctuation.
+      return next;
+    }
+    // case 2: example: "a @@b"
+    // If aOffset is 2, 3 or 4, orig will be 4, but it should be 2. That is,
+    // previous word didn't go back far enough.
+    if (orig == 0) {
+      return orig;
+    }
+    // Walk backwards by offset, getting the next word.
+    // In the loop, o is unsigned, so o >= 0 will always be true and won't
+    // prevent us from decrementing at 0. Instead, we check that o doesn't
+    // wrap around.
+    for (uint32_t o = orig - 1; o < orig; --o) {
+      next = FindOffset(o, eDirNext, eSelectWord, eStartWord);
+      if (next == orig) {
+        // Next word and previous word were consistent. This
+        // punctuation problem isn't applicable here.
+        break;
+      }
+      if (next < orig) {
+        // Next word stopped on punctuation.
+        return next;
+      }
+    }
+  } else {
+    // When layout.word_select.stop_at_punctuation is true (the default),
+    // when positioned on punctuation in the middle of a word, next word skips
+    // the rest of the word. However, when positioned before the punctuation,
+    // next word moves just after the punctuation. We want to be consistent
+    // regardless of starting position and always stop just after the
+    // punctuation.
+    // Next word can move too far when positioned on white space too.
+    // Example: "a b@c"
+    // If aOffset is 3, orig will be 5, but it should be 4. That is, next word
+    // moved too far.
+    if (aOffset == 0) {
+      return orig;
+    }
+    uint32_t prev = FindOffset(orig, eDirPrevious, eSelectWord, eStartWord);
+    if (prev <= aOffset) {
+      // orig definitely isn't too far forward.
+      return orig;
+    }
+    // Walk backwards by offset, getting the next word.
+    // In the loop, o is unsigned, so o >= 0 will always be true and won't
+    // prevent us from decrementing at 0. Instead, we check that o doesn't
+    // wrap around.
+    for (uint32_t o = aOffset - 1; o < aOffset; --o) {
+      uint32_t next = FindOffset(o, eDirNext, eSelectWord, eStartWord);
+      if (next > aOffset && next < orig) {
+        return next;
+      }
+      if (next <= aOffset) {
+        break;
+      }
+    }
+  }
+  return orig;
 }
 
 uint32_t HyperTextAccessible::FindLineBoundary(
