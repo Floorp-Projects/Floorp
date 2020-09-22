@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.app.Activity
 import android.content.Context
+import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_CANCEL
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
@@ -13,17 +14,20 @@ import android.view.MotionEvent.ACTION_UP
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat.SCROLL_AXIS_VERTICAL
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.mockMotionEvent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.any
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_HANDLED
 import org.robolectric.Robolectric.buildActivity
 
 @RunWith(AndroidJUnit4::class)
@@ -71,19 +75,29 @@ class NestedGeckoViewTest {
 
     @Test
     fun `verify onTouchEvent when ACTION_DOWN`() {
-        val nestedWebView = NestedGeckoView(context)
+        val nestedWebView = spy(NestedGeckoView(context))
         val mockChildHelper: NestedScrollingChildHelper = mock()
+        val downEvent = mockMotionEvent(ACTION_DOWN)
+        val eventCaptor = argumentCaptor<MotionEvent>()
         nestedWebView.childHelper = mockChildHelper
 
-        nestedWebView.onTouchEvent(mockMotionEvent(ACTION_DOWN))
+        nestedWebView.onTouchEvent(downEvent)
+
+        // We pass a deep copy to `updateInputResult`.
+        // Can't easily check for equality, `eventTime` should be good enough.
+        verify(nestedWebView).updateInputResult(eventCaptor.capture())
+        assertEquals(downEvent.eventTime, eventCaptor.value.eventTime)
         verify(mockChildHelper).startNestedScroll(SCROLL_AXIS_VERTICAL)
+        verify(nestedWebView, times(0)).callSuperOnTouchEvent(any())
     }
 
     @Test
     fun `verify onTouchEvent when ACTION_MOVE`() {
-        val nestedWebView = NestedGeckoView(context)
+        val nestedWebView = spy(NestedGeckoView(context))
         val mockChildHelper: NestedScrollingChildHelper = mock()
         nestedWebView.childHelper = mockChildHelper
+        nestedWebView.inputResult = INPUT_RESULT_HANDLED
+        doReturn(true).`when`(nestedWebView).callSuperOnTouchEvent(any())
 
         doReturn(true).`when`(mockChildHelper).dispatchNestedPreScroll(
             anyInt(), anyInt(), any(),
@@ -104,18 +118,25 @@ class NestedGeckoViewTest {
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_MOVE, y = 10f))
         assertEquals(nestedWebView.nestedOffsetY, 6)
         assertEquals(nestedWebView.lastY, 6)
+
+        // onTouchEventForResult should be called only for ACTION_DOWN
+        verify(nestedWebView, times(0)).updateInputResult(any())
     }
 
     @Test
     fun `verify onTouchEvent when ACTION_UP or ACTION_CANCEL`() {
-        val nestedWebView = NestedGeckoView(context)
+        val nestedWebView = spy(NestedGeckoView(context))
         val mockChildHelper: NestedScrollingChildHelper = mock()
         nestedWebView.childHelper = mockChildHelper
+        doReturn(true).`when`(nestedWebView).callSuperOnTouchEvent(any())
 
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_UP))
         verify(mockChildHelper).stopNestedScroll()
 
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_CANCEL))
         verify(mockChildHelper, times(2)).stopNestedScroll()
+
+        // onTouchEventForResult should be called only for ACTION_DOWN
+        verify(nestedWebView, times(0)).updateInputResult(any())
     }
 }

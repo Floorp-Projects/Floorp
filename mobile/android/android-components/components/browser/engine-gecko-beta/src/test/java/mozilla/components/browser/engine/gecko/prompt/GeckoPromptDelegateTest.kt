@@ -26,9 +26,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
-import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.never
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.Autocomplete
 import org.mozilla.geckoview.GeckoResult
@@ -1091,7 +1092,7 @@ class GeckoPromptDelegateTest {
 
         prompt.dismissSafely(geckoResult)
 
-        Mockito.verify(geckoResult).complete(any())
+        verify(geckoResult).complete(any())
     }
 
     @Test
@@ -1103,7 +1104,7 @@ class GeckoPromptDelegateTest {
 
         prompt.dismissSafely(geckoResult)
 
-        Mockito.verify(geckoResult, Mockito.never()).complete(any())
+        verify(geckoResult, never()).complete(any())
     }
 
     class GeckoChoicePrompt(

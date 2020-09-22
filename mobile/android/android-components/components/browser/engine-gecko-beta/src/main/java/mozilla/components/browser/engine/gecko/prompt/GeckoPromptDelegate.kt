@@ -578,6 +578,7 @@ internal fun Date.toString(format: String): String {
  * Only dismiss if the prompt is not already dismissed.
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+
 internal fun PromptDelegate.BasePrompt.dismissSafely(geckoResult: GeckoResult<PromptResponse>) {
     if (!this.isComplete) {
         geckoResult.complete(dismiss())

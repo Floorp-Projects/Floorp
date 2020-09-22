@@ -10,8 +10,11 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.view.NestedScrollingChild
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
+import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.support.ktx.android.view.toScope
 import org.mozilla.geckoview.GeckoView
+import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_HANDLED
 import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_UNHANDLED
 
 /**
@@ -25,7 +28,7 @@ import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_UNHANDLED
  * https://github.com/takahirom/webview-in-coordinatorlayout
  */
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "ClickableViewAccessibility")
 open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrollingChild {
 
     @VisibleForTesting
@@ -42,6 +45,8 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
     @VisibleForTesting
     internal var childHelper: NestedScrollingChildHelper = NestedScrollingChildHelper(this)
 
+    private val coroutineScope = toScope()
+
     /**
      * Integer indicating how user's MotionEvent was handled.
      *
@@ -54,21 +59,14 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
     }
 
     @Suppress("ComplexMethod")
-    override fun onTouchEventForResult(ev: MotionEvent): Int {
+    override fun onTouchEvent(ev: MotionEvent): Boolean {
         val event = MotionEvent.obtain(ev)
         val action = ev.actionMasked
         val eventY = event.y.toInt()
 
-        if (action == MotionEvent.ACTION_DOWN) {
-            nestedOffsetY = 0
-        }
-
-        // Execute event handler from parent class in all cases
-        inputResult = handleEvent(event)
-
         when (action) {
             MotionEvent.ACTION_MOVE -> {
-                val allowScroll = !shouldPinOnScreen()
+                val allowScroll = !shouldPinOnScreen() && inputResult == INPUT_RESULT_HANDLED
                 var deltaY = lastY - eventY
 
                 if (allowScroll && dispatchNestedPreScroll(0, deltaY, scrollConsumed, scrollOffset)) {
@@ -87,23 +85,46 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
             }
 
             MotionEvent.ACTION_DOWN -> {
+                // A new gesture started. Reset handled status and ask GV if it can handle this.
+                inputResult = INPUT_RESULT_UNHANDLED
+                updateInputResult(event)
+
+                nestedOffsetY = 0
                 lastY = eventY
-                startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
+
+                // The event should be handled either by onTouchEvent,
+                // either by onTouchEventForResult, never by both.
+                // Early return if we sent it to updateInputResult(..) which calls onTouchEventForResult.
+                event.recycle()
+                return true
             }
 
             // We don't care about other touch events
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> stopNestedScroll()
         }
 
+        // Execute event handler from parent class in all cases
+        val eventHandled = callSuperOnTouchEvent(event)
+
         // Recycle previously obtained event
         event.recycle()
 
-        return inputResult
+        return eventHandled
     }
 
-    // Helper function to make testing of this method easier
-    internal fun handleEvent(event: MotionEvent): Int {
-        return super.onTouchEventForResult(event)
+    @VisibleForTesting
+    internal fun callSuperOnTouchEvent(event: MotionEvent): Boolean {
+        return super.onTouchEvent(event)
+    }
+
+    @VisibleForTesting
+    internal fun updateInputResult(event: MotionEvent) {
+        coroutineScope.launch {
+            super.onTouchEventForResult(event).await()?.let {
+                inputResult = it
+                startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
+            }
+        }
     }
 
     override fun setNestedScrollingEnabled(enabled: Boolean) {

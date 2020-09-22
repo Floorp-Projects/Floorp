@@ -11,7 +11,6 @@ import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
-import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -138,7 +137,6 @@ class GeckoEngineViewTest {
         engineView.render(engineSession)
 
         verify(geckoView, never()).releaseSession()
-        verify(engineSession, never()).unregister(any())
 
         engineView.release()
 

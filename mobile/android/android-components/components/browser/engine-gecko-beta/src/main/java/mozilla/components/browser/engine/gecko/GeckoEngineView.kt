@@ -38,12 +38,12 @@ class GeckoEngineView @JvmOverloads constructor(
                 val otherActivityClassName =
                     this.session?.accessibility?.view?.context?.javaClass?.simpleName
                 val otherActivityClassHashcode =
-                    this.session?.accessibility?.view?.context?.hashCode()
+                        this.session?.accessibility?.view?.context?.hashCode()
                 val activityClassName = context.javaClass.simpleName
                 val activityClassHashCode = context.hashCode()
                 val msg = "ATTACH VIEW: Current activity: $activityClassName hashcode " +
-                    "$activityClassHashCode Other activity: $otherActivityClassName " +
-                    "hashcode $otherActivityClassHashcode"
+                        "$activityClassHashCode Other activity: $otherActivityClassName " +
+                        "hashcode $otherActivityClassHashcode"
                 throw IllegalStateException(msg, e)
             }
         }
@@ -101,8 +101,8 @@ class GeckoEngineView @JvmOverloads constructor(
                 val activityClassName = context.javaClass.simpleName
                 val activityClassHashCode = context.hashCode()
                 val msg = "SET SESSION: Current activity: $activityClassName hashcode " +
-                    "$activityClassHashCode Other activity: $otherActivityClassName " +
-                    "hashcode $otherActivityClassHashcode"
+                        "$activityClassHashCode Other activity: $otherActivityClassName " +
+                        "hashcode $otherActivityClassHashcode"
                 throw IllegalStateException(msg, e)
             }
         }

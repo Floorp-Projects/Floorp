@@ -150,7 +150,6 @@ class GeckoEngine(
      */
     override fun createSession(private: Boolean, contextId: String?): EngineSession {
         ThreadUtils.assertOnUiThread()
-
         val speculativeSession = speculativeConnectionFactory.get(private, contextId)
         return speculativeSession ?: GeckoEngineSession(runtime, private, defaultSettings, contextId)
     }
@@ -166,6 +165,7 @@ class GeckoEngine(
      * See [Engine.speculativeCreateSession].
      */
     override fun speculativeCreateSession(private: Boolean, contextId: String?) {
+        ThreadUtils.assertOnUiThread()
         speculativeConnectionFactory.create(runtime, private, contextId, defaultSettings)
     }
 
