@@ -659,11 +659,8 @@ Result<mozilla::Ok, nsresult> CollectEachFileEntry(
 
   return CollectEach(
       [&entries]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
-        QM_TRY_VAR(const auto file,
-                   MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
-                                              GetNextFile));
-
-        return file;
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
+                                                 GetNextFile));
       },
       [&aFileFunc, &aDirectoryFunc](
           const nsCOMPtr<nsIFile>& file) -> Result<mozilla::Ok, nsresult> {
