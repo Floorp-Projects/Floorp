@@ -193,10 +193,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1607706
          "race:TemporaryIPCBlobParent::CreateAndShareFile\n"
 
-         // Bug 1607712
-         "race:GtkCompositorWidget::NotifyClientSizeChanged\n"
-         "race:GtkCompositorWidget::GetClientSize\n"
-
          // Bug 1607762
          "race:nsHtml5OwningUTF16Buffer::Release\n"
 
