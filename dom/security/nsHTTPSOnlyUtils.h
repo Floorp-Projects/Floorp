@@ -144,6 +144,9 @@ class TestHTTPAnswerRunnable final : public mozilla::Runnable,
 
  private:
   RefPtr<nsIURI> mURI;
+  // We're keeping a reference to DocumentLoadListener instead of a specific
+  // channel, because the current top-level channel can change (for example
+  // through redirects)
   RefPtr<mozilla::net::DocumentLoadListener> mDocumentLoadListener;
   RefPtr<nsITimer> mTimer;
 };
