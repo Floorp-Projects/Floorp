@@ -8,6 +8,8 @@ description = "Rust wrappers around XPCOM threading functions"
 [dependencies]
 cstr = "0.1"
 libc = "0.2"
+futures-task = { version = "0.3" }
 nserror = { path = "../nserror" }
 nsstring = { path = "../nsstring" }
+thiserror = "1.0"
 xpcom = { path = "../xpcom" }
