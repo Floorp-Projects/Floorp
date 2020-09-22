@@ -17,7 +17,6 @@
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "rtc_base/constructormagic.h"
-#include "nsITabSource.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/Monitor.h"
