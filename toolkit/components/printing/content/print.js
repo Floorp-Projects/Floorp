@@ -159,10 +159,6 @@ var PrintEventHandler = {
       sourceBrowsingContext = existingBrowser.browsingContext;
       this.previewBrowser.swapDocShells(existingBrowser);
       existingBrowser.remove();
-    } else {
-      this.previewBrowser.loadURI("about:printpreview", {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
     }
 
     this.originalSourceContentTitle =
@@ -302,7 +298,7 @@ var PrintEventHandler = {
       remoteType: sourceBrowsingContext.currentRemoteType,
       userContextId: sourceBrowsingContext.originAttributes.userContextId,
       initialBrowsingContextGroupId: sourceBrowsingContext.group.id,
-      skipLoad: false,
+      skipLoad: true,
     });
     printPreviewBrowser.classList.add("printPreviewBrowser");
     printPreviewBrowser.setAttribute("flex", "1");
