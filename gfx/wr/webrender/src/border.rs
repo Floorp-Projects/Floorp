@@ -35,7 +35,7 @@ pub const MAX_DASH_COUNT: u32 = 2048;
 //           all the border structs with hashable
 //           variants...
 
-#[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BorderRadiusAu {

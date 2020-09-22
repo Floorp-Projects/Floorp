@@ -146,6 +146,18 @@ impl ClipInstance {
     }
 }
 
+/// Defines a clip instance with some extra information that is available
+/// during scene building (since interned clips cannot retrieve the underlying
+/// data from the scene building thread).
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[derive(Copy, Clone)]
+pub struct SceneClipInstance {
+    /// The interned clip + positioning information that is used during frame building.
+    pub clip: ClipInstance,
+    /// The definition of the clip, used during scene building to optimize clip-chains.
+    pub key: ClipItemKeyKind,
+}
+
 /// A clip template defines clips in terms of the public API. Specifically,
 /// this is a parent `ClipId` and some number of clip instances. See the
 /// CLIPPING_AND_POSITIONING.md document in doc/ for more information.
@@ -154,7 +166,7 @@ pub struct ClipTemplate {
     /// Parent of this clip, in terms of the public clip API
     pub parent: ClipId,
     /// List of instances that define this clip template
-    pub instances: SmallVec<[ClipInstance; 2]>,
+    pub clips: SmallVec<[SceneClipInstance; 2]>,
 }
 
 /// A helper used during scene building to construct (internal) clip chains from
@@ -233,8 +245,8 @@ impl ClipChainBuilder {
         let template = &templates[&clip_id];
         let mut clip_chain_id = parent_clip_chain_id;
 
-        for clip in &template.instances {
-            let key = (clip.handle.uid(), clip.spatial_node_index);
+        for clip in &template.clips {
+            let key = (clip.clip.handle.uid(), clip.clip.spatial_node_index);
 
             // If this clip chain already has this clip instance, skip it
             if existing_clips.contains(&key) {
@@ -245,8 +257,8 @@ impl ClipChainBuilder {
             let new_clip_chain_id = ClipChainId(clip_chain_nodes.len() as u32);
             existing_clips.insert(key);
             clip_chain_nodes.push(ClipChainNode {
-                handle: clip.handle,
-                spatial_node_index: clip.spatial_node_index,
+                handle: clip.clip.handle,
+                spatial_node_index: clip.clip.spatial_node_index,
                 parent_clip_chain_id: clip_chain_id,
             });
             clip_chain_id = new_clip_chain_id;
@@ -941,11 +953,11 @@ impl ClipStore {
         &mut self,
         clip_id: ClipId,
         parent: ClipId,
-        instances: &[ClipInstance],
+        clips: &[SceneClipInstance],
     ) {
         self.templates.insert(clip_id, ClipTemplate {
             parent,
-            instances: instances.into(),
+            clips: clips.into(),
         });
     }
 
@@ -1294,7 +1306,7 @@ impl ClipRegion<Option<ComplexClipRegion>> {
 // the uploaded GPU cache handle to be retained between display lists.
 // TODO(gw): Maybe we should consider constructing these directly
 //           in the DL builder?
-#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
+#[derive(Copy, Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ClipItemKeyKind {
