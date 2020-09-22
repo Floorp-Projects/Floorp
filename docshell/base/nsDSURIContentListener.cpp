@@ -72,24 +72,20 @@ BrowsingContext* MaybeCloseWindowHelper::MaybeCloseWindow() {
 
 already_AddRefed<BrowsingContext>
 MaybeCloseWindowHelper::ChooseNewBrowsingContext(BrowsingContext* aBC) {
-  RefPtr<BrowsingContext> bc = aBC;
-
-  RefPtr<BrowsingContext> opener = bc->GetOpener();
+  RefPtr<BrowsingContext> opener = aBC->GetOpener();
   if (opener && !opener->IsDiscarded()) {
     return opener.forget();
   }
 
   if (!XRE_IsParentProcess()) {
-    return bc.forget();
+    return nullptr;
   }
 
-  CanonicalBrowsingContext* cbc = CanonicalBrowsingContext::Cast(aBC);
-  RefPtr<WindowGlobalParent> wgp = cbc->GetEmbedderWindowGlobal();
-  if (!wgp) {
-    return bc.forget();
+  opener = BrowsingContext::Get(aBC->Canonical()->GetCrossGroupOpenerId());
+  if (!opener || opener->IsDiscarded()) {
+    return nullptr;
   }
-
-  return do_AddRef(wgp->BrowsingContext());
+  return opener.forget();
 }
 
 NS_IMETHODIMP
