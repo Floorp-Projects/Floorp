@@ -133,7 +133,15 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
   std::vector<webrtc::VideoStream> streams;
   streams.reserve(streamCount);
 
-  // We assume that the first stream is the full-resolution stream.
+  // Find the highest-resolution stream
+  int highestResolutionIndex = 0;
+  for (size_t i = 1; i < streamCount; ++i) {
+    if (mCodecConfig.mEncodings[i].constraints.scaleDownBy <
+        mCodecConfig.mEncodings[highestResolutionIndex]
+            .constraints.scaleDownBy) {
+      highestResolutionIndex = i;
+    }
+  }
 
   // This ensures all simulcast layers will be of the same aspect ratio as the
   // input.
@@ -149,7 +157,7 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     // Note that the first stream might already have been scaled by us.
     // Webrtc.org doesn't know this, so we have to adjust lower layers manually.
     int unusedCropWidth, unusedCropHeight, outWidth, outHeight;
-    if (idx == 0) {
+    if (idx == highestResolutionIndex) {
       // This is the highest-resolution stream. We avoid calling
       // AdaptFrameResolution on this because precision errors in VideoAdapter
       // can cause the out-resolution to be an odd pixel smaller than the
@@ -159,7 +167,8 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     } else {
       float effectiveScaleDownBy =
           encoding.constraints.scaleDownBy /
-          mCodecConfig.mEncodings[0].constraints.scaleDownBy;
+          mCodecConfig.mEncodings[highestResolutionIndex]
+              .constraints.scaleDownBy;
       MOZ_ASSERT(effectiveScaleDownBy >= 1.0);
       mSimulcastAdapter->OnScaleResolutionBy(
           effectiveScaleDownBy > 1.0
