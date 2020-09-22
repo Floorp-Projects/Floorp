@@ -1,8 +1,8 @@
 [
   {
-    "size": 55439914,
+    "size": 51574956,
     "visibility": "public",
-    "digest": "784a5b8ec1c6820429ed60cb1aed7bdbac9d120366ec2ac80a1de1799c04f0804419e4cf9efc01a974e8a96c501e62650acc7c6d9223f3dc4eefad0a6e99310d",
+    "digest": "996586f9e20cface8337be4b8c6d4fdd6515c25efb58b5dfeb52c73d4d748b4580de58d8119f60fde393c59a53b6e8dded024d67e4b73f60aa71937a6b12aafb",
     "algorithm": "sha512",
     "filename": "mitm5-linux-firefox-google-docs.zip",
     "unpack": true
