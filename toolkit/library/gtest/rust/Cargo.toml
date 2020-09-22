@@ -38,6 +38,7 @@ with_dbus = ["gkrust-shared/with_dbus"]
 
 [dependencies]
 bench-collections-gtest = { path = "../../../../xpcom/rust/gtest/bench-collections" }
+moz_task-gtest = { path = "../../../../xpcom/rust/gtest/moz_task" }
 mp4parse-gtest = { path = "../../../../dom/media/gtest" }
 nsstring-gtest = { path = "../../../../xpcom/rust/gtest/nsstring" }
 xpcom-gtest = { path = "../../../../xpcom/rust/gtest/xpcom" }

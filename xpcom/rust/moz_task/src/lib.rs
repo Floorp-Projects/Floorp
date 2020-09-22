@@ -9,12 +9,16 @@
 
 #[macro_use]
 extern crate cstr;
+extern crate futures_task;
 extern crate libc;
 extern crate nserror;
 extern crate nsstring;
+extern crate thiserror;
 extern crate xpcom;
 
 mod event_loop;
+mod executor;
+pub use executor::spawn_current_thread;
 
 // Expose functions intended to be used only in gtest via this module.
 // We don't use a feature gate here to stop the need to compile all crates that
@@ -88,6 +92,40 @@ pub fn create_background_task_queue(
     name: &'static CStr,
 ) -> Result<RefPtr<nsISerialEventTarget>, nsresult> {
     getter_addrefs(|p| unsafe { NS_CreateBackgroundTaskQueue(name.as_ptr(), p) })
+}
+
+/// Dispatches a one-shot runnable to an event target with the default options.
+///
+/// # Safety
+///
+/// As there is no guarantee that the runnable is actually `Send + Sync`, we
+/// can't know that it's safe to dispatch an `nsIRunnable` to any
+/// `nsIEventTarget`.
+#[inline]
+pub unsafe fn dispatch(runnable: &nsIRunnable, target: &nsIEventTarget) -> Result<(), nsresult> {
+    dispatch_with_options(runnable, target, DispatchOptions::default())
+}
+
+/// Dispatches a one-shot runnable to an event target, like a thread or a
+/// task queue, with the given options.
+///
+/// This function leaks the runnable if dispatch fails.
+///
+/// # Safety
+///
+/// As there is no guarantee that the runnable is actually `Send + Sync`, we
+/// can't know that it's safe to dispatch an `nsIRunnable` to any
+/// `nsIEventTarget`.
+pub unsafe fn dispatch_with_options(
+    runnable: &nsIRunnable,
+    target: &nsIEventTarget,
+    options: DispatchOptions,
+) -> Result<(), nsresult> {
+    // NOTE: DispatchFromScript performs an AddRef on `runnable` which is
+    // why this function leaks on failure.
+    target
+        .DispatchFromScript(runnable, options.flags())
+        .to_result()
 }
 
 /// Dispatches a one-shot task runnable to the background thread pool with the
@@ -208,8 +246,6 @@ impl TaskRunnable {
     /// an owned reference to the runnable, and must be called like
     /// `TaskRunnable::dispatch_with_options(runnable, options)` and *not*
     /// `runnable.dispatch_with_options(options)`.
-    ///
-    /// ### Safety
     ///
     /// This function leaks the runnable if dispatch fails.
     pub fn dispatch_with_options(
