@@ -1235,6 +1235,27 @@
     lhs: NumberId
     rhs: NumberId
 
+- name: MathFloorNumberResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    input: NumberId
+
+- name: MathCeilNumberResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    input: NumberId
+
+- name: MathTruncNumberResult
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    input: NumberId
+
 - name: MathFloorToInt32Result
   shared: true
   transpile: true
