@@ -180,11 +180,6 @@ void LIRGeneratorMIPSShared::lowerForBitAndAndBranch(LBitAndAndBranch* baab,
   add(baab, mir);
 }
 
-void LIRGeneratorMIPSShared::lowerWasmBuiltinTruncateToInt32(
-    MWasmBuiltinTruncateToInt32* ins) {
-  MOZ_CRASH("NYI");
-}
-
 void LIRGeneratorMIPSShared::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
                                            MDefinition* mir, MDefinition* lhs,
                                            MDefinition* rhs) {

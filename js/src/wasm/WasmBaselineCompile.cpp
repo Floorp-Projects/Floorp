@@ -1886,8 +1886,6 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     masm.storePtr(tls, Address(sp_, stackOffset(tlsPointerOffset_)));
   }
 
-  int32_t getTlsPtrOffset() { return stackOffset(tlsPointerOffset_); }
-
   // An outgoing stack result area pointer is for stack results of callees of
   // the function being compiled.
   void computeOutgoingStackResultAreaPtr(const StackResultsLoc& results,
@@ -10313,8 +10311,7 @@ bool BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee,
   masm.passABIArg(srcDest.low);
   masm.passABIArg(rhs.high);
   masm.passABIArg(rhs.low);
-  CodeOffset raOffset = masm.callWithABI(bytecodeOffset(), callee,
-                                         mozilla::Some(fr.getTlsPtrOffset()));
+  CodeOffset raOffset = masm.callWithABI(bytecodeOffset(), callee);
   if (!createStackMap("emitDivOrModI64Bui[..]", raOffset)) {
     return false;
   }
@@ -10345,7 +10342,7 @@ bool BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee,
   masm.passABIArg(input.low);
 #  endif
   CodeOffset raOffset = masm.callWithABI(
-      bytecodeOffset(), callee, mozilla::Some(fr.getTlsPtrOffset()),
+      bytecodeOffset(), callee,
       resultType == ValType::F32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
   if (!createStackMap("emitConvertInt64To[..]", raOffset)) {
     return false;
@@ -10389,8 +10386,7 @@ bool BaseCompiler::emitConvertFloatingToInt64Callout(SymbolicAddress callee,
 
   masm.setupWasmABICall();
   masm.passABIArg(doubleInput, MoveOp::DOUBLE);
-  CodeOffset raOffset = masm.callWithABI(bytecodeOffset(), callee,
-                                         mozilla::Some(fr.getTlsPtrOffset()));
+  CodeOffset raOffset = masm.callWithABI(bytecodeOffset(), callee);
   if (!createStackMap("emitConvertFloatin[..]", raOffset)) {
     return false;
   }

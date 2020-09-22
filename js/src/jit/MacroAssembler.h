@@ -10,7 +10,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Maybe.h"
 
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/MacroAssembler-x86.h"
@@ -623,7 +622,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
                           MoveOp::Type result = MoveOp::GENERAL);
 
   CodeOffset callWithABI(wasm::BytecodeOffset offset, wasm::SymbolicAddress fun,
-                         mozilla::Maybe<int32_t> tlsOffset,
                          MoveOp::Type result = MoveOp::GENERAL);
   void callDebugWithABI(wasm::SymbolicAddress fun,
                         MoveOp::Type result = MoveOp::GENERAL);
@@ -3963,8 +3961,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void outOfLineTruncateSlow(FloatRegister src, Register dest,
                              bool widenFloatToDouble, bool compilingWasm,
-                             wasm::BytecodeOffset callOffset,
-                             mozilla::Maybe<int32_t> tlsOffset);
+                             wasm::BytecodeOffset callOffset);
 
   void convertInt32ValueToDouble(const Address& address, Register scratch,
                                  Label* done);
