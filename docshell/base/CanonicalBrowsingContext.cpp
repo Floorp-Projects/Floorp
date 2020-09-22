@@ -39,6 +39,7 @@
 using namespace mozilla::ipc;
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
+extern mozilla::LazyLogModule gSHLog;
 
 #define AUTOPLAY_LOG(msg, ...) \
   MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
@@ -354,6 +355,9 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       aLoadState->GetLoadingSessionHistoryInfo();
   if (existingLoadingInfo) {
     entry = SessionHistoryEntry::GetByLoadId(existingLoadingInfo->mLoadId);
+    MOZ_LOG(gSHLog, LogLevel::Verbose,
+            ("SHEntry::GetByLoadId(%" PRIu64 ") -> %p",
+             existingLoadingInfo->mLoadId, entry.get()));
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
     entry->SetDocshellID(GetHistoryID());
