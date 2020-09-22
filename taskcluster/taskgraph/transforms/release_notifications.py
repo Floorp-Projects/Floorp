@@ -53,7 +53,7 @@ def add_notifications(config, jobs):
             status_types = notifications.get('status-types', ['on-completed'])
             for s in status_types:
                 job.setdefault('routes', []).extend(
-                    ['notify.email.{}.{}}'.format(email, s) for email in emails]
+                    ['notify.email.{}.{}'.format(email, s) for email in emails]
                 )
 
             # Customize the email subject to include release name and build number
