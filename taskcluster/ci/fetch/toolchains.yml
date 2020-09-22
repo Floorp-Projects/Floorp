@@ -433,13 +433,11 @@ clang-11:
 
 civet-source:
     description: Repository for external static analysis checks
-    artifact-prefix: project/civet
     fetch:
         type: git
         repo: git@github.com:mozilla-services/civet.git
         revision: 1a7a27f0a3bede8f94ac1e7c73f400de797296b5
         ssh-key: project/civet/github-deploy-key
-        artifact-name: civet-source.tar.zst
 
 wasi-sdk:
     description: wasi-sdk source code
