@@ -129,13 +129,6 @@ inline void RunOnShutdown(CallableT&& aCallable,
       new FunctionInvoker(std::forward<CallableT>(aCallable)), aPhase);
 }
 
-inline bool PastShutdownPhase(ShutdownPhase aPhase) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return size_t(ClearOnShutdown_Internal::sCurrentShutdownPhase) >=
-         size_t(aPhase);
-}
-
 // Called when XPCOM is shutting down, after all shutdown notifications have
 // been sent and after all threads' event loops have been purged.
 void KillClearOnShutdown(ShutdownPhase aPhase);

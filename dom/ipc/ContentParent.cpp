@@ -2565,14 +2565,6 @@ ContentParent::~ContentParent() {
 }
 
 bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
-  // We can't access the locale service after shutdown has started. Since we
-  // can't init the process without it, and since we're going to be canceling
-  // whatever load attempt that initiated this process creation anyway, just
-  // bail out now if shutdown has already started.
-  if (PastShutdownPhase(ShutdownPhase::Shutdown)) {
-    return false;
-  }
-
   XPCOMInitData xpcomInit;
 
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
