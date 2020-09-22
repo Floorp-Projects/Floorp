@@ -53,9 +53,14 @@ promise_test(() => {
       'FinalizationRegistry.prototype.cleanupSome is not implemented.'
     );
 
+    assert_implements(
+      typeof queueMicrotask === 'function',
+      'queueMicrotask is not implemented.'
+    );
+
     let ticks = 0;
     await emptyCells();
-    await ticks++;
+    await queueMicrotask(() => ticks++);
 
     finalizationRegistry.cleanupSome(cb);
 
@@ -78,7 +83,7 @@ promise_test(() => {
     cleanupCallback = 0;
 
     await maybeGarbageCollectAsync();
-    await ticks++;
+    await queueMicrotask(() => ticks++);
 
     finalizationRegistry.cleanupSome(cb);
 
@@ -86,7 +91,7 @@ promise_test(() => {
     assert_equals(cleanupCallback, 0, 'cleanupCallback is not called again #1');
 
     await maybeGarbageCollectAsync();
-    await ticks++;
+    await queueMicrotask(() => ticks++);
 
     finalizationRegistry.cleanupSome(cb);
 
