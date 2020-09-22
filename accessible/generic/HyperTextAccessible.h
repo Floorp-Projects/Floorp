@@ -445,9 +445,7 @@ class HyperTextAccessible : public AccessibleWrap {
    * Return an offset of the found word boundary.
    */
   uint32_t FindWordBoundary(uint32_t aOffset, nsDirection aDirection,
-                            EWordMovementType aWordMovementType) {
-    return FindOffset(aOffset, aDirection, eSelectWord, aWordMovementType);
-  }
+                            EWordMovementType aWordMovementType);
 
   /**
    * Used to get begin/end of previous/this/next line. Note: end of line
