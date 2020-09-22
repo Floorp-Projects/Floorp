@@ -1827,7 +1827,11 @@ i?86-apple-darwin*|x86_64-apple-darwin*)
 *-android*|*-linuxandroid*)
   dnl Android/arm is arm-unknown-linux-androideabi, so android condition should
   dnl be before Linux condition
-  MOZ_CRASHREPORTER=1
+  dnl The crash reporter prevents crash stacktraces to be logged in the
+  dnl logs so we leave it out by default in developer builds.
+  if test -z "$DEVELOPER_OPTIONS"; then
+    MOZ_CRASHREPORTER=1
+  fi
   ;;
 i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
   if test "$MOZ_ENABLE_GTK"; then
