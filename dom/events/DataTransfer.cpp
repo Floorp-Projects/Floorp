@@ -1540,12 +1540,5 @@ void DataTransfer::SetMode(DataTransfer::Mode aMode) {
   }
 }
 
-/* static */
-bool DataTransfer::MozAtAPIsEnabled(JSContext* aCx, JSObject* aObj /*unused*/) {
-  // We can expose moz* APIs if we are chrome code or if pref is enabled
-  return nsContentUtils::IsSystemCaller(aCx) ||
-         StaticPrefs::dom_datatransfer_mozAtAPIs_DoNotUseDirectly();
-}
-
 }  // namespace dom
 }  // namespace mozilla
