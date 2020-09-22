@@ -560,6 +560,7 @@ class nsFlexContainerFrame::FlexItem final {
   // ==========================
   // Returns the total space occupied by this item's borders and padding in
   // the given axis
+  LogicalMargin BorderPadding() const { return mBorderPadding; }
   nscoord BorderPaddingSizeInMainAxis() const {
     return mBorderPadding.StartEnd(MainAxis(), mCBWM);
   }
@@ -1471,46 +1472,93 @@ static nscoord MainSizeFromAspectRatio(nscoord aCrossSize,
   return ratio.ApplyTo(aCrossSize);
 }
 
+// Returns a main size, clamped by any definite min and max cross size converted
+// through the intrinsic ratio. The caller is responsible for ensuring that the
+// passed-in intrinsic ratio is not zero.
+static nscoord ClampMainSizeViaCrossAxisConstraints(
+    nscoord aMainSize, const FlexItem& aFlexItem,
+    const FlexboxAxisTracker& aAxisTracker) {
+  MOZ_ASSERT(aFlexItem.HasIntrinsicRatio(),
+             "Caller should've checked the ratio is valid!");
+
+  const auto& aspectRatio = aFlexItem.IntrinsicRatio();
+  const nscoord mainMinSizeFromRatio = MainSizeFromAspectRatio(
+      aFlexItem.CrossMinSize(), aspectRatio, aAxisTracker);
+  nscoord clampedMainSize = std::max(aMainSize, mainMinSizeFromRatio);
+
+  if (aFlexItem.CrossMaxSize() != NS_UNCONSTRAINEDSIZE) {
+    const nscoord mainMaxSizeFromRatio = MainSizeFromAspectRatio(
+        aFlexItem.CrossMaxSize(), aspectRatio, aAxisTracker);
+    clampedMainSize = std::min(clampedMainSize, mainMaxSizeFromRatio);
+  }
+
+  return clampedMainSize;
+}
+
 // Partially resolves "min-[width|height]:auto" and returns the resulting value.
 // By "partially", I mean we don't consider the min-content size (but we do
-// consider flex-basis, main max-size, and the intrinsic aspect ratio).
-// The caller is responsible for computing & considering the min-content size
-// in combination with the partially-resolved value that this function returns.
+// consider the main-size and main max-size properties, and the intrinsic aspect
+// ratio). The caller is responsible for computing & considering the min-content
+// size in combination with the partially-resolved value that this function
+// returns.
 //
-// Basically, this function gets the minimum from the specified size suggestion
-// and the transferred size suggestion.
+// Basically, this function gets the specified size suggestion; if not, the
+// transferred size suggestion; if both sizes do not exist, return nscoord_MAX.
 //
-// Spec reference: http://dev.w3.org/csswg/css-flexbox/#min-size-auto
+// Spec reference: https://drafts.csswg.org/css-flexbox-1/#min-size-auto
 static nscoord PartiallyResolveAutoMinSize(
     const FlexItem& aFlexItem, const ReflowInput& aItemReflowInput,
     const FlexboxAxisTracker& aAxisTracker) {
   MOZ_ASSERT(aFlexItem.NeedsMinSizeAutoResolution(),
              "only call for FlexItems that need min-size auto resolution");
 
+  const auto itemWM = aFlexItem.GetWritingMode();
+  const auto cbWM = aAxisTracker.GetWritingMode();
+  const auto cbSize =
+      aItemReflowInput.mContainingBlockSize.ConvertTo(cbWM, itemWM);
+  const auto& mainStyleSize =
+      aItemReflowInput.mStylePosition->Size(aAxisTracker.MainAxis(), cbWM);
+  const auto boxSizingAdjust =
+      aItemReflowInput.mStylePosition->mBoxSizing == StyleBoxSizing::Border
+          ? aFlexItem.BorderPadding().Size(cbWM)
+          : LogicalSize(cbWM);
+
+  // Compute the specified size suggestion, which is the main-size property if
+  // it's definite.
   nscoord specifiedSizeSuggestion = nscoord_MAX;
 
-  // Compute the specified size suggestion, which is the minimum of:
-  // * the used flex-basis, if the computed flex-basis was 'auto':
-  if (aItemReflowInput.mStylePosition->mFlexBasis.IsAuto() &&
-      aFlexItem.FlexBaseSize() != NS_UNCONSTRAINEDSIZE) {
-    // NOTE: We skip this if the flex base size depends on content & isn't yet
-    // resolved. This is OK, because the caller is responsible for computing
-    // the min-content height and min()'ing it with the value we return, which
-    // is equivalent to what would happen if we min()'d that at this point.
+  if (aAxisTracker.IsRowOriented()) {
+    if (mainStyleSize.IsLengthPercentage()) {
+      // NOTE: We ignore extremum inline-size. This is OK because the caller is
+      // responsible for computing the min-content inline-size and min()'ing it
+      // with the value we return.
+      specifiedSizeSuggestion = aFlexItem.Frame()->ComputeISizeValue(
+          cbSize.ISize(cbWM), boxSizingAdjust.ISize(cbWM),
+          mainStyleSize.AsLengthPercentage());
+    }
+  } else {
+    if (!nsLayoutUtils::IsAutoBSize(mainStyleSize, cbSize.BSize(cbWM))) {
+      // NOTE: We ignore auto and extremum block-size. This is OK because the
+      // caller is responsible for computing the min-content block-size and
+      // min()'ing it with the value we return.
+      specifiedSizeSuggestion = nsLayoutUtils::ComputeBSizeValue(
+          cbSize.BSize(cbWM), boxSizingAdjust.BSize(cbWM),
+          mainStyleSize.AsLengthPercentage());
+    }
+  }
+
+  // Clamp specified size suggestion by the max main-size property if it’s
+  // definite.
+  if (aFlexItem.MainMaxSize() != NS_UNCONSTRAINEDSIZE) {
     specifiedSizeSuggestion =
-        std::min(specifiedSizeSuggestion, aFlexItem.FlexBaseSize());
+        std::min(specifiedSizeSuggestion, aFlexItem.MainMaxSize());
   }
 
-  // * clamped by its max main size property if it’s definite:
-  nscoord maxSize = GET_MAIN_COMPONENT_LOGICAL(
-      aAxisTracker, aFlexItem.GetWritingMode(),
-      aItemReflowInput.ComputedMaxISize(), aItemReflowInput.ComputedMaxBSize());
-  if (maxSize != NS_UNCONSTRAINEDSIZE) {
-    specifiedSizeSuggestion = std::min(specifiedSizeSuggestion, maxSize);
+  if (specifiedSizeSuggestion != nscoord_MAX) {
+    // We have the specified size suggestion. Return it now since we don't need
+    // to consider transferred size suggestion.
+    return specifiedSizeSuggestion;
   }
-
-  // * if the item has no intrinsic aspect ratio, its min-content size:
-  //  --- SKIPPING THIS IN THIS FUNCTION --- caller's responsibility.
 
   // * if the item has an intrinsic aspect ratio, the width (height) calculated
   //   from the aspect ratio and any definite size constraints in the opposite
@@ -1526,7 +1574,7 @@ static nscoord PartiallyResolveAutoMinSize(
         crossSizeToUseWithRatio, aFlexItem.IntrinsicRatio(), aAxisTracker);
   }
 
-  return std::min(specifiedSizeSuggestion, transferredSizeSuggestion);
+  return transferredSizeSuggestion;
 }
 
 // Resolves flex-basis:auto, using the given intrinsic ratio and the flex
@@ -1620,12 +1668,9 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
     // (We'll consider that later, if we need to.)
     resolvedMinSize =
         PartiallyResolveAutoMinSize(aFlexItem, aItemReflowInput, aAxisTracker);
-    if (resolvedMinSize > 0 && !aFlexItem.IntrinsicRatio()) {
-      // We don't have a usable aspect ratio, so we need to consider our
-      // min-content size as another candidate min-size, which we'll have to
-      // min() with the current resolvedMinSize.
-      // (If resolvedMinSize were already at 0, we could skip this measurement
-      // because it can't go any lower. But it's not 0, so we need it.)
+    if (resolvedMinSize > 0) {
+      // If resolvedMinSize were already at 0, we could skip calculating content
+      // size suggestion because it can't go any lower.
       minSizeNeedsToMeasureContent = true;
     }
   }
@@ -1640,11 +1685,14 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
 
   // Measure content, if needed (w/ intrinsic-width method or a reflow)
   if (minSizeNeedsToMeasureContent || flexBasisNeedsToMeasureContent) {
+    // Compute the content size suggestion, which is the min-content size in the
+    // main axis.
+    nscoord contentSizeSuggestion = nscoord_MAX;
+
     if (aFlexItem.IsInlineAxisMainAxis()) {
       if (minSizeNeedsToMeasureContent) {
-        nscoord frameMinISize =
+        contentSizeSuggestion =
             aFlexItem.Frame()->GetMinISize(aItemReflowInput.mRenderingContext);
-        resolvedMinSize = std::min(resolvedMinSize, frameMinISize);
       }
       NS_ASSERTION(!flexBasisNeedsToMeasureContent,
                    "flex-basis:auto should have been resolved in the "
@@ -1672,11 +1720,27 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
           MeasureFlexItemContentBSize(aFlexItem, forceBResizeForMeasuringReflow,
                                       aHasLineClampEllipsis, *flexContainerRI);
       if (minSizeNeedsToMeasureContent) {
-        resolvedMinSize = std::min(resolvedMinSize, contentBSize);
+        contentSizeSuggestion = contentBSize;
       }
       if (flexBasisNeedsToMeasureContent) {
         aFlexItem.SetFlexBaseSizeAndMainSize(contentBSize);
       }
+    }
+
+    if (minSizeNeedsToMeasureContent) {
+      // Clamp the content size suggestion by any definite min and max cross
+      // size converted through the aspect ratio.
+      if (aFlexItem.IntrinsicRatio()) {
+        contentSizeSuggestion = ClampMainSizeViaCrossAxisConstraints(
+            contentSizeSuggestion, aFlexItem, aAxisTracker);
+      }
+      // Further clamp it by the max main-size property if it's definite.
+      if (aFlexItem.MainMaxSize() != NS_UNCONSTRAINEDSIZE) {
+        contentSizeSuggestion =
+            std::min(contentSizeSuggestion, aFlexItem.MainMaxSize());
+      }
+
+      resolvedMinSize = std::min(resolvedMinSize, contentSizeSuggestion);
     }
   }
 
