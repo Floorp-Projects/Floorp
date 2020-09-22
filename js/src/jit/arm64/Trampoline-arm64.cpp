@@ -464,8 +464,16 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
       argumentsRectifierReturnOffset_ = masm.callJitNoProfiler(r3);
       break;
     case ArgumentsRectifierKind::TrialInlining:
-      masm.loadBaselineJitCodeRaw(r5, r3);
+      Label noBaselineScript, done;
+      masm.loadBaselineJitCodeRaw(r5, r3, &noBaselineScript);
       masm.callJitNoProfiler(r3);
+      masm.jump(&done);
+
+      // See BaselineCacheIRCompiler::emitCallInlinedFunction.
+      masm.bind(&noBaselineScript);
+      masm.loadJitCodeRaw(r5, r3);
+      masm.callJitNoProfiler(r3);
+      masm.bind(&done);
       break;
   }
 
