@@ -454,6 +454,10 @@ var PlacesUIUtils = {
       return null;
     }
     if (popupNode) {
+      let isManaged = !!popupNode.closest("#managed-bookmarks");
+      if (isManaged) {
+        return this.managedBookmarksController;
+      }
       let view = this.getViewForNode(popupNode);
       if (view && view._contextMenuShown) {
         return view.controllers.getControllerForCommand(command);
@@ -1212,6 +1216,196 @@ var PlacesUIUtils = {
     ) {
       this.maybeToggleBookmarkToolbarVisibility(true);
     }
+  },
+
+  async managedPlacesContextShowing(event) {
+    let menupopup = event.target;
+    let document = menupopup.ownerDocument;
+    let window = menupopup.ownerGlobal;
+    // We need to populate the submenus in order to have information
+    // to show the context menu.
+    if (
+      menupopup.triggerNode.id == "managed-bookmarks" &&
+      !menupopup.triggerNode.menupopup.hasAttribute("hasbeenopened")
+    ) {
+      await window.PlacesToolbarHelper.populateManagedBookmarks(
+        menupopup.triggerNode.menupopup
+      );
+    }
+    let linkItems = [
+      "placesContext_open:newtab",
+      "placesContext_open:newwindow",
+      "placesContext_open:newprivatewindow",
+      "placesContext_openSeparator",
+      "placesContext_copy",
+    ];
+    Array.from(menupopup.children).forEach(function(child) {
+      if (!(child.id in linkItems)) {
+        child.hidden = true;
+      }
+    });
+    // Store triggerNode in controller for checking if commands are enabled
+    this.managedBookmarksController.triggerNode = menupopup.triggerNode;
+    // Container in this context means a folder.
+    let isFolder = menupopup.triggerNode.hasAttribute("container");
+    let openContainerInTabs_menuitem = document.getElementById(
+      "placesContext_openContainer:tabs"
+    );
+    if (isFolder) {
+      // Disable the openContainerInTabs menuitem if there
+      // are no children of the menu that have links.
+      let menuitems = menupopup.triggerNode.menupopup.children;
+      let openContainerInTabs = Array.from(menuitems).some(
+        menuitem => menuitem.link
+      );
+      openContainerInTabs_menuitem.disabled = !openContainerInTabs;
+    } else {
+      document.getElementById(
+        "placesContext_open:newprivatewindow"
+      ).hidden = PrivateBrowsingUtils.isWindowPrivate(window);
+    }
+    openContainerInTabs_menuitem.hidden = !isFolder;
+    linkItems.forEach(id => (document.getElementById(id).hidden = isFolder));
+
+    event.target.ownerGlobal.updateCommands("places");
+  },
+
+  placesContextShowing(event) {
+    let menupopup = event.target;
+    let isManaged = !!menupopup.triggerNode.closest("#managed-bookmarks");
+    if (isManaged) {
+      this.managedPlacesContextShowing(event);
+      return true;
+    }
+    let document = menupopup.ownerDocument;
+    menupopup._view = this.getViewForNode(document.popupNode);
+    if (!this.openInTabClosesMenu) {
+      document
+        .getElementById("placesContext_open:newtab")
+        .setAttribute("closemenu", "single");
+    }
+    return menupopup._view.buildContextMenu(menupopup);
+  },
+
+  placesContextHiding(event) {
+    let menupopup = event.target;
+    if (menupopup._view) {
+      menupopup._view.destroyContextMenu();
+    }
+  },
+
+  openSelectionInTabs(event) {
+    let isManaged = !!event.target.parentNode.triggerNode.closest(
+      "#managed-bookmarks"
+    );
+    let controller;
+    if (isManaged) {
+      controller = this.managedBookmarksController;
+    } else {
+      let document = event.target.ownerDocument;
+      controller = PlacesUIUtils.getViewForNode(document.popupNode).controller;
+    }
+    controller.openSelectionInTabs(event);
+  },
+
+  managedBookmarksController: {
+    triggerNode: null,
+
+    openSelectionInTabs(event) {
+      let window = event.target.ownerGlobal;
+      let menuitems = event.target.parentNode.triggerNode.menupopup.children;
+      let items = [];
+      for (let i = 0; i < menuitems.length; i++) {
+        if (menuitems[i].link) {
+          let item = {};
+          item.uri = menuitems[i].link;
+          item.isBookmark = true;
+          items.push(item);
+        }
+      }
+      PlacesUIUtils.openTabset(items, event, window);
+    },
+
+    isCommandEnabled(command) {
+      switch (command) {
+        case "placesCmd_copy":
+        case "placesCmd_open:window":
+        case "placesCmd_open:privatewindow":
+        case "placesCmd_open:tab": {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    doCommand(command) {
+      let window = this.triggerNode.ownerGlobal;
+      switch (command) {
+        case "placesCmd_copy":
+          // This is a little hacky, but there is a lot of code in Places that handles
+          // clipboard stuff, so it's easier to reuse.
+          let node = {};
+          node.type = 0;
+          node.title = this.triggerNode.label;
+          node.uri = this.triggerNode.link;
+
+          // Copied from _populateClipboard in controller.js
+
+          // This order is _important_! It controls how this and other applications
+          // select data to be inserted based on type.
+          let contents = [
+            { type: PlacesUtils.TYPE_X_MOZ_URL, entries: [] },
+            { type: PlacesUtils.TYPE_HTML, entries: [] },
+            { type: PlacesUtils.TYPE_UNICODE, entries: [] },
+          ];
+
+          contents.forEach(function(content) {
+            content.entries.push(PlacesUtils.wrapNode(node, content.type));
+          });
+
+          let xferable = Cc[
+            "@mozilla.org/widget/transferable;1"
+          ].createInstance(Ci.nsITransferable);
+          xferable.init(null);
+
+          function addData(type, data) {
+            xferable.addDataFlavor(type);
+            xferable.setTransferData(
+              type,
+              PlacesUtils.toISupportsString(data),
+              data.length * 2
+            );
+          }
+
+          contents.forEach(function(content) {
+            addData(content.type, content.entries.join(PlacesUtils.endl));
+          });
+
+          Services.clipboard.setData(
+            xferable,
+            null,
+            Ci.nsIClipboard.kGlobalClipboard
+          );
+          break;
+        case "placesCmd_open:privatewindow":
+          window.openUILinkIn(this.triggerNode.link, "window", {
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            private: true,
+          });
+          break;
+        case "placesCmd_open:window":
+          window.openUILinkIn(this.triggerNode.link, "window", {
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            private: false,
+          });
+          break;
+        case "placesCmd_open:tab": {
+          window.openUILinkIn(this.triggerNode.link, "tab", {
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          });
+        }
+      }
+    },
   },
 };
 
