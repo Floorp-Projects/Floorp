@@ -158,7 +158,7 @@ application to build. Firefox is the default.
 Choose one of the following options to add to your ``mozconfig`` file:
 
 Browser (Firefox)
-   .. code:: eval
+   .. code::
 
       ac_add_options --enable-application=browser
 
@@ -167,17 +167,17 @@ Browser (Firefox)
       **Note**: This is the default
 
 Mail (Thunderbird)
-   .. code:: eval
+   .. code::
 
       ac_add_options --enable-application=comm/mail
 
 Mozilla Suite (SeaMonkey)
-   .. code:: eval
+   .. code::
 
       ac_add_options --enable-application=suite
 
 Calendar (Lightning Extension, uses Thunderbird)
-   .. code:: eval
+   .. code::
 
       ac_add_options --enable-application=comm/mail
       ac_add_options --enable-calendar
@@ -347,7 +347,7 @@ applications in each object directory.
 
 For example:
 
-.. code:: eval
+.. code::
 
     ac_add_options --disable-optimize --enable-debug
     mk_add_options MOZ_OBJDIR=/mozilla/src/obj-@CONFIG_GUESS@
@@ -358,7 +358,7 @@ For example:
 If you want to build only one project using this ``mozconfig``, use the
 following command line:
 
-.. code:: eval
+.. code::
 
    MOZ_CURRENT_PROJECT=browser ./mach build
 
@@ -374,7 +374,7 @@ Thunderbird. You should first create three ``mozconfig`` files.
 
 ``mozconfig-common``:
 
-.. code:: eval
+.. code::
 
    # add common options here, such as making an optimized release build
    mk_add_options MOZ_MAKE_FLAGS="-j4"
@@ -382,7 +382,7 @@ Thunderbird. You should first create three ``mozconfig`` files.
 
 ``mozconfig-firefox``:
 
-.. code:: eval
+.. code::
 
    # include the common mozconfig
    . ./mozconfig-common
@@ -393,7 +393,7 @@ Thunderbird. You should first create three ``mozconfig`` files.
 
 ``mozconfig-thunderbird``:
 
-.. code:: eval
+.. code::
 
    # include the common mozconfig
    . ./mozconfig-common
@@ -404,14 +404,14 @@ Thunderbird. You should first create three ``mozconfig`` files.
 
 To build Firefox, run the following commands:
 
-.. code:: eval
+.. code::
 
    export MOZCONFIG=/path/to/mozilla/mozconfig-firefox
    ./mach build
 
 To build Thunderbird, run the following commands:
 
-.. code:: eval
+.. code::
 
    export MOZCONFIG=/path/to/mozilla/mozconfig-thunderbird
    ./mach build

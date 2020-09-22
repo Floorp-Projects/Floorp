@@ -74,12 +74,10 @@ We leave this in your hands. Here are some further resources to help:
    `https://developer.mozilla.org/docs/Developer_Guide <https://developer.mozilla.org/docs/Developer_Guide>`_
    and its parent document,
    https://developer.mozilla.org/docs/Mozilla
--  Our `reviewer
-   checklist <https://developer.mozilla.org/docs/Developer_Guide/Reviewer_Checklist>`_ is very
+-  Our :ref:`reviewer checklist <Reviewer_Checklist>` is very
    useful, if you have a patch near completion, and seek a favorable
    review
--  Utilize our build tool
-   `Mach <https://developer.mozilla.org/docs/Mozilla/Developer_guide/mach>`_, its linting,
+-  Utilize our build tool :ref:`mach`, its linting,
    static analysis, and other code checking features
 
 Getting your code reviewed
@@ -199,4 +197,3 @@ form:
 -  `Mozilla platform development
    cheatsheet <https://web.archive.org/web/20160813112326/http://www.codefirefox.com:80/cheatsheet>`_
    (archive.org)
-
