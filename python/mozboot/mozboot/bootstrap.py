@@ -150,14 +150,6 @@ If you would like to opt out of data collection, select (N) at the prompt.
 Would you like to enable build system telemetry?'''
 
 
-MOZ_PHAB_ADVERTISE = '''
-If you plan on submitting changes to Firefox use the following command to
-install the review submission tool "moz-phab":
-
-  mach install-moz-phab
-'''
-
-
 OLD_REVISION_WARNING = '''
 WARNING! You appear to be running `mach bootstrap` from an old revision.
 bootstrap is meant primarily for getting developer environments up-to-date to
@@ -325,6 +317,16 @@ class Bootstrapper(object):
                       'any time by editing the config file `{}`\n'.format(cfg_file))
         return choice
 
+    def check_code_submission(self, checkout_root):
+        if self.instance.no_interactive or which('moz-phab'):
+            return
+
+        if not self.instance.prompt_yesno('Will you be submitting commits to Mozilla?'):
+            return
+
+        mach_binary = os.path.join(checkout_root, 'mach')
+        subprocess.check_call((sys.executable, mach_binary, 'install-moz-phab'))
+
     def bootstrap(self):
         if sys.version_info[0] < 3:
             print('This script must be run with Python 3. \n'
@@ -407,14 +409,12 @@ class Bootstrapper(object):
 
         self.check_telemetry_opt_in(state_dir)
         self.maybe_install_private_packages_or_exit(state_dir, checkout_root)
+        self.check_code_submission(checkout_root)
 
         print(FINISHED % name)
         if not (which('rustc') and self.instance._parse_version('rustc')
                 >= MODERN_RUST_VERSION):
             print("To build %s, please restart the shell (Start a new terminal window)" % name)
-
-        if not which('moz-phab'):
-            print(MOZ_PHAB_ADVERTISE)
 
         self._output_mozconfig(application, mozconfig_builder)
 
