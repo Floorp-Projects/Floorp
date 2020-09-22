@@ -3583,7 +3583,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCloneDocumentTreeInto(
             Unused << aBp->SendCloneDocumentTreeIntoSelf(source);
           },
           [](nsresult aRv) {
-            NS_WARNING(nsPrintfCString("Remote clone failed: %x\n", aRv).get());
+            NS_WARNING(
+                nsPrintfCString("Remote clone failed: %x\n", unsigned(aRv))
+                    .get());
           });
   return IPC_OK();
 }
