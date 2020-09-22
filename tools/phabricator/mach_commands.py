@@ -27,6 +27,7 @@ class PhabricatorCommandProvider(MachCommandBase):
         import os
         import subprocess
         import sys
+        import pkg_resources
 
         existing = mozfile.which("moz-phab")
         if existing and not force:
@@ -90,3 +91,23 @@ class PhabricatorCommandProvider(MachCommandBase):
 
         self.log(logging.INFO, "run", {}, "Installing moz-phab")
         subprocess.run(command)
+
+        dist = pkg_resources.get_distribution('mozphab')
+
+        # "get_metadata_lines('RECORD')" shows us all the files (paths and hashes) used by this
+        # package. Fetch them and strip off the hash.
+        package_files = [file.split(',')[0] for file in dist.get_metadata_lines('RECORD')]
+        potential_cli_paths = [file for file in package_files
+                               if os.path.basename(file) in ('moz-phab.exe', 'moz-phab')]
+
+        if len(potential_cli_paths) != 1:
+            self.log(
+                logging.WARNING,
+                "no_mozphab_console_script",
+                {},
+                "Could not find the CLI script for moz-phab. Skipping install-certificate step."
+            )
+            sys.exit(1)
+
+        console_script = os.path.realpath(os.path.join(dist.location, potential_cli_paths[0]))
+        subprocess.run([console_script, 'install-certificate'])
