@@ -92,7 +92,7 @@ add_task(async function test_trr_casing() {
       data: "1.2.3.4",
     },
   ]);
-  await new TRRDNSListener("a.example.com", "1.2.3.4");
+  await new TRRDNSListener("a.example.com", { expectedAnswer: "1.2.3.4" });
 
   await trrServer.registerDoHAnswers("a.test.com", "A", [
     {
@@ -123,7 +123,7 @@ add_task(async function test_trr_casing() {
       data: "8.8.8.8",
     },
   ]);
-  await new TRRDNSListener("a.test.com", "8.8.8.8");
+  await new TRRDNSListener("a.test.com", { expectedAnswer: "8.8.8.8" });
 
   await trrServer.registerDoHAnswers("CAPITAL.COM", "A", [
     {
@@ -134,8 +134,8 @@ add_task(async function test_trr_casing() {
       data: "2.2.2.2",
     },
   ]);
-  await new TRRDNSListener("CAPITAL.COM", "2.2.2.2");
-  await new TRRDNSListener("CAPITAL.COM.", "2.2.2.2");
+  await new TRRDNSListener("CAPITAL.COM", { expectedAnswer: "2.2.2.2" });
+  await new TRRDNSListener("CAPITAL.COM.", { expectedAnswer: "2.2.2.2" });
 
   await trrServer.stop();
 });
