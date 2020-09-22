@@ -22,6 +22,7 @@
 #include "js/HashTable.h"
 #include "js/RealmOptions.h"
 #include "js/SourceText.h"
+#include "js/Transcoding.h"
 #include "js/Vector.h"
 #include "js/WasmModule.h"
 #include "vm/GlobalObject.h"  // GlobalObject
@@ -383,6 +384,11 @@ struct CompilationInfo {
 
   MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
                                         CompilationGCOutput& gcOutput);
+  MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
+                                      bool* succeededOut = nullptr);
+  MOZ_MUST_USE bool deserializeStencils(JSContext* cx,
+                                        const JS::TranscodeRange& range,
+                                        bool* succeededOut = nullptr);
 
   JSAtom* liftParserAtomToJSAtom(JSContext* cx, const ParserAtom* parserAtom) {
     return parserAtom->toJSAtom(cx, *this).unwrapOr(nullptr);

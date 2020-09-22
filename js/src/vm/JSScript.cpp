@@ -843,8 +843,8 @@ ImmutableScriptData::ImmutableScriptData(uint32_t codeLength,
 }
 
 template <XDRMode mode>
-static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
-                                        UniquePtr<ImmutableScriptData>& isd) {
+XDRResult js::XDRImmutableScriptData(XDRState<mode>* xdr,
+                                     UniquePtr<ImmutableScriptData>& isd) {
   uint32_t codeLength = 0;
   uint32_t noteLength = 0;
   uint32_t numResumeOffsets = 0;
@@ -913,6 +913,11 @@ static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
 
   return Ok();
 }
+
+template XDRResult js::XDRImmutableScriptData(
+    XDRState<XDR_ENCODE>* xdr, UniquePtr<ImmutableScriptData>& isd);
+template XDRResult js::XDRImmutableScriptData(
+    XDRState<XDR_DECODE>* xdr, UniquePtr<ImmutableScriptData>& isd);
 
 template <XDRMode mode>
 /* static */

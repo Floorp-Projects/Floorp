@@ -81,7 +81,7 @@ class AbstractBindingName {
   template <typename OtherNameT>
   friend class AbstractBindingName;
 
-  // A JSAtom* with its low bit used as a tag for the:
+  // A JSAtom* or ParserAtom* with its low bit used as a tag for the:
   //  * whether it is closed over (i.e., exists in the environment shape)
   //  * whether it is a top-level function binding in global or eval scope,
   //    instead of var binding (both are in the same range in Scope data)
