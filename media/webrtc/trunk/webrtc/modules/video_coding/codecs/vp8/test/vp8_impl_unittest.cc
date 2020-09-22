@@ -341,6 +341,16 @@ TEST_F(TestVp8Impl, ChecksSimulcastSettings) {
                                         3000,   2000,    80};
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
             encoder_->InitEncode(&codec_settings_, kNumCores, kMaxPayloadSize));
+  // Everything fine: custom scaling, top resolution matches video, temporal
+  // settings are the same for all layers.
+  codec_settings_.simulcastStream[0] = {
+      kWidth / 4, kHeight / 4, kFramerateFps, 1, 4000, 3000, 2000, 80};
+  codec_settings_.simulcastStream[1] = {kWidth, kHeight, kFramerateFps, 1,
+                                        4000,   3000,    2000,          80};
+  codec_settings_.simulcastStream[2] = {kWidth, kHeight, kFramerateFps, 1,
+                                        4000,   3000,    2000,          80};
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
+            encoder_->InitEncode(&codec_settings_, kNumCores, kMaxPayloadSize));
 }
 
 #if defined(WEBRTC_ANDROID)
