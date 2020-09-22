@@ -46,6 +46,7 @@ file-whitespace:
         - dom/media/test
         - dom/media/tests
         - dom/media/webaudio/test
+        - dom/media/webrtc/transport/nricectx.cpp
         - dom/media/webspeech/synth/test
         - dom/plugins/test
         - dom/smil/crashtests
@@ -105,7 +106,6 @@ file-whitespace:
         - layout/xul/reftest
         - layout/xul/test
         - layout/xul/tree
-        - media/mtransport/nricectx.cpp
         - modules/libjar/zipwriter/test/unit/data/test_bug399727.html
         - netwerk/test/crashtests
         - netwerk/dns/prepare_tlds.py

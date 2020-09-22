@@ -49,7 +49,7 @@
 #include "mozilla/dom/RTCDataChannelBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #ifdef MOZ_PEERCONNECTION
-#  include "mtransport/runnable_utils.h"
+#  include "transport/runnable_utils.h"
 #  include "signaling/src/peerconnection/MediaTransportHandler.h"
 #  include "mediapacket.h"
 #endif
@@ -226,7 +226,7 @@ class DataChannelRegistry : public nsIObserver {
 #ifdef MOZ_PEERCONNECTION
     usrsctp_init(0, DataChannelRegistry::SctpDtlsOutput, debug_printf);
 #else
-    MOZ_CRASH("Trying to use SCTP/DTLS without mtransport");
+    MOZ_CRASH("Trying to use SCTP/DTLS without dom/media/webrtc/transport");
 #endif
 
     // Set logging to SCTP:LogLevel::Debug to get SCTP debugs

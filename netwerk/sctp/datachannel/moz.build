@@ -20,7 +20,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/media/mtransport',
+    '/dom/media/webrtc/transport',
     '/media/webrtc',
     '/netwerk/sctp/src',
 ]

@@ -20,7 +20,7 @@ using mozilla::dom::RTCIceServer from "mozilla/dom/RTCConfigurationBinding.h";
 using mozilla::dom::RTCIceTransportPolicy from "mozilla/dom/RTCConfigurationBinding.h";
 
 // ParamTraits stuff for our own classes
-using MediaPacket from "mtransport/mediapacket.h";
+using MediaPacket from "transport/mediapacket.h";
 include "mozilla/net/NrIceStunAddrMessageUtils.h";
 using net::NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
 #endif // MOZ_WEBRTC

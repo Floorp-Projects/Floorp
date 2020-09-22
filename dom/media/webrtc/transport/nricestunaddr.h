@@ -22,7 +22,7 @@ class NrIceStunAddr {
   const nr_local_addr& localAddr() const { return *localAddr_; }
 
   // serialization/deserialization helper functions for use
-  // in media/mtransport/ipc/NrIceStunAddrMessagUtils.h
+  // in dom/media/webrtc/transport/ipc/NrIceStunAddrMessagUtils.h
   size_t SerializationBufferSize() const;
   nsresult Serialize(char* buffer, size_t buffer_size) const;
   nsresult Deserialize(const char* buffer, size_t buffer_size);

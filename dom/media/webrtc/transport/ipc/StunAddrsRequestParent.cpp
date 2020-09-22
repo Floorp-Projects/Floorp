@@ -7,9 +7,9 @@
 #include "../runnable_utils.h"
 #include "nsNetUtil.h"
 
-#include "mtransport/nricectx.h"
-#include "mtransport/nricemediastream.h"  // needed only for including nricectx.h
-#include "mtransport/nricestunaddr.h"
+#include "transport/nricectx.h"
+#include "transport/nricemediastream.h"  // needed only for including nricectx.h
+#include "transport/nricestunaddr.h"
 
 #include "../mdns_service/mdns_service.h"
 

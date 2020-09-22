@@ -9,7 +9,7 @@
 #include "GLContext.h"
 #include "RenderThread.h"
 #include "nsThreadUtils.h"
-#include "mtransport/runnable_utils.h"
+#include "transport/runnable_utils.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
