@@ -115,6 +115,7 @@ function getWebCompatInfoForTab(tab) {
     browser.browserInfo.getGraphicsPrefs(),
     browser.browserInfo.getUpdateChannel(),
     browser.browserInfo.hasTouchScreen(),
+    browser.tabExtras.getWebcompatInfo(id),
     checkForFrameworks(id),
     browser.tabs.captureVisibleTab(null, Config.screenshotFormat).catch(e => {
       console.error("WebCompat Reporter: getting a screenshot failed", e);
@@ -127,28 +128,37 @@ function getWebCompatInfoForTab(tab) {
       graphicsPrefs,
       channel,
       hasTouchScreen,
+      frameInfo,
       frameworks,
-      screenshot
+      screenshot,
     ]) => {
       if (channel !== "linux") {
         delete graphicsPrefs["layers.acceleration.force-enabled"];
       }
 
-      return Object.assign(
-        {},
-        {
+      const consoleLog = frameInfo.log;
+      delete frameInfo.log;
+
+      return Object.assign(frameInfo, {
           tabId: id,
           blockList,
           details: Object.assign(graphicsPrefs, {
             buildID,
             channel,
+          consoleLog,
             frameworks,
             hasTouchScreen,
+          "mixed active content blocked":
+            frameInfo.hasMixedActiveContentBlocked,
+          "mixed passive content blocked":
+            frameInfo.hasMixedDisplayContentBlocked,
+          "tracking content blocked": frameInfo.hasTrackingContentBlocked
+            ? `true (${blockList})`
+            : "false",
           }),
           screenshot,
           url,
-        }
-      );
+      });
     }
   );
 }

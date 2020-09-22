@@ -1,0 +1,19 @@
+[
+  {
+    "namespace": "tabExtras",
+    "description": "experimental tab API extensions",
+    "functions": [
+      {
+        "name": "getWebcompatInfo",
+        "type": "function",
+        "description": "Gets the content blocking status and script log for a given tab",
+        "parameters": [{
+          "type": "integer",
+          "name": "tabId",
+          "minimum": 0
+        }],
+        "async": true
+      }
+    ]
+  }
+]

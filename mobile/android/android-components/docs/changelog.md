@@ -32,6 +32,8 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: Removed `TabsUseCases.removeAllTabsOfType()`.
 * **browser-session**
   * Added `SessionManager.removeNormalSessions()` and `SessionManager.removePrivateSessions()`.
+* **feature-webcompat-reporter**
+  * Added the ability to automatically add a screenshot as well as more technical details when submitting a WebCompat report.
 
 * **service-glean**
   * Glean was upgraded to v32.4.0
