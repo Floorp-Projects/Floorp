@@ -116,6 +116,10 @@ function getWebCompatInfoForTab(tab) {
     browser.browserInfo.getUpdateChannel(),
     browser.browserInfo.hasTouchScreen(),
     checkForFrameworks(id),
+    browser.tabs.captureVisibleTab(null, Config.screenshotFormat).catch(e => {
+      console.error("WebCompat Reporter: getting a screenshot failed", e);
+      return Promise.resolve(undefined);
+    }),
   ]).then(
     ([
       blockList,
@@ -124,6 +128,7 @@ function getWebCompatInfoForTab(tab) {
       channel,
       hasTouchScreen,
       frameworks,
+      screenshot
     ]) => {
       if (channel !== "linux") {
         delete graphicsPrefs["layers.acceleration.force-enabled"];
@@ -140,6 +145,7 @@ function getWebCompatInfoForTab(tab) {
             frameworks,
             hasTouchScreen,
           }),
+          screenshot,
           url,
         }
       );
@@ -188,14 +194,16 @@ async function openWebCompatTab(compatInfo) {
   await browser.tabs.executeScript(tab.id, {
     runAt: "document_end",
     code: `(function() {
-      async function postMessageData(metadata) {
+      async function postMessageData(dataURI, metadata) {
+        const res = await fetch(dataURI);
+        const blob = await res.blob();
         const data = {
-           screenshot: null,
+           screenshot: blob,
            message: metadata
         };
         postMessage(data, "${url.origin}");
       }
-      postMessageData(${json});
+      postMessageData("${compatInfo.screenshot}", ${json});
     })()`,
   });
 }
