@@ -271,6 +271,9 @@ static int32_t gNumberOfDocumentsLoading = 0;
 static uint32_t gNumberOfPrivateDocShells = 0;
 
 #ifdef DEBUG
+unsigned long nsDocShell::gNumberOfDocShells = 0;
+static uint64_t gDocshellIDCounter = 0;
+
 static mozilla::LazyLogModule gDocShellLog("nsDocShell");
 static mozilla::LazyLogModule gDocShellAndDOMWindowLeakLogging(
     "DocShellAndDOMWindowLeak");
@@ -354,7 +357,6 @@ static bool IsUrgentStart(BrowsingContext* aBrowsingContext,
 nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
                        uint64_t aContentWindowID)
     : nsDocLoader(),
-      mHistoryID(aBrowsingContext->GetHistoryID()),
       mContentWindowID(aContentWindowID),
       mBrowsingContext(aBrowsingContext),
       mForcedCharset(nullptr),
@@ -421,11 +423,12 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p created\n", this));
 
 #ifdef DEBUG
+  mDocShellID = gDocshellIDCounter++;
   // We're counting the number of |nsDocShells| to help find leaks
   ++gNumberOfDocShells;
   MOZ_LOG(gDocShellAndDOMWindowLeakLogging, LogLevel::Info,
-          ("++DOCSHELL %p == %ld [pid = %d] [id = %s]\n", (void*)this,
-           gNumberOfDocShells, getpid(), nsIDToCString(mHistoryID).get()));
+          ("++DOCSHELL %p == %ld [pid = %d] [id = %" PRIu64 "]\n", (void*)this,
+           gNumberOfDocShells, getpid(), mDocShellID));
 #endif
 }
 
@@ -460,10 +463,10 @@ nsDocShell::~nsDocShell() {
 
     // We're counting the number of |nsDocShells| to help find leaks
     --gNumberOfDocShells;
-    MOZ_LOG(gDocShellAndDOMWindowLeakLogging, LogLevel::Info,
-            ("--DOCSHELL %p == %ld [pid = %d] [id = %s] [url = %s]\n",
-             (void*)this, gNumberOfDocShells, getpid(),
-             nsIDToCString(mHistoryID).get(), url.get()));
+    MOZ_LOG(
+        gDocShellAndDOMWindowLeakLogging, LogLevel::Info,
+        ("--DOCSHELL %p == %ld [pid = %d] [id = %" PRIu64 "] [url = %s]\n",
+         (void*)this, gNumberOfDocShells, getpid(), mDocShellID, url.get()));
   }
 #endif
 }
@@ -2887,12 +2890,12 @@ void nsDocShell::SetChildOffset(int32_t aChildOffset) {
 int32_t nsDocShell::GetChildOffset() { return mChildOffset; }
 
 NS_IMETHODIMP
-nsDocShell::GetHistoryID(nsID** aID) {
-  *aID = mHistoryID.Clone();
+nsDocShell::GetHistoryID(nsID& aID) {
+  aID = mBrowsingContext->GetHistoryID();
   return NS_OK;
 }
 
-const nsID nsDocShell::HistoryID() { return mHistoryID; }
+const nsID& nsDocShell::HistoryID() { return mBrowsingContext->GetHistoryID(); }
 
 NS_IMETHODIMP
 nsDocShell::GetIsInUnload(bool* aIsInUnload) {
@@ -9269,9 +9272,10 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
         !StaticPrefs::fission_sessionHistoryInParent()) {
       // We're making history navigation or a reload. Make sure our history ID
       // points to the same ID as SHEntry's docshell ID.
-      aLoadState->SHEntry()->GetDocshellID(mHistoryID);
+      nsID historyID = {};
+      aLoadState->SHEntry()->GetDocshellID(historyID);
 
-      MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetHistoryID(mHistoryID));
+      MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetHistoryID(historyID));
     }
   }
 
@@ -12716,10 +12720,6 @@ NS_IMETHODIMP nsDocShell::ExitPrintPreview() {
   return NS_OK;
 #endif
 }
-
-#ifdef DEBUG
-unsigned long nsDocShell::gNumberOfDocShells = 0;
-#endif
 
 NS_IMETHODIMP
 nsDocShell::GetCanExecuteScripts(bool* aResult) {
