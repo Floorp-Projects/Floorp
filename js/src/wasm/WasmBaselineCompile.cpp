@@ -6379,7 +6379,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void roundF32(RoundingMode roundingMode, RegF32 f0) {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-    masm.vroundss(Assembler::ToX86RoundingMode(roundingMode), f0, f0);
+    masm.nearbyIntFloat32(roundingMode, f0, f0);
 #else
     MOZ_CRASH("NYI");
 #endif
@@ -6387,7 +6387,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void roundF64(RoundingMode roundingMode, RegF64 f0) {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-    masm.vroundsd(Assembler::ToX86RoundingMode(roundingMode), f0, f0);
+    masm.nearbyIntDouble(roundingMode, f0, f0);
 #else
     MOZ_CRASH("NYI");
 #endif

@@ -1923,7 +1923,7 @@ void CodeGenerator::visitNearbyInt(LNearbyInt* lir) {
   FloatRegister output = ToFloatRegister(lir->output());
 
   RoundingMode roundingMode = lir->mir()->roundingMode();
-  masm.vroundsd(Assembler::ToX86RoundingMode(roundingMode), input, output);
+  masm.nearbyIntDouble(roundingMode, input, output);
 }
 
 void CodeGenerator::visitNearbyIntF(LNearbyIntF* lir) {
@@ -1931,7 +1931,7 @@ void CodeGenerator::visitNearbyIntF(LNearbyIntF* lir) {
   FloatRegister output = ToFloatRegister(lir->output());
 
   RoundingMode roundingMode = lir->mir()->roundingMode();
-  masm.vroundss(Assembler::ToX86RoundingMode(roundingMode), input, output);
+  masm.nearbyIntFloat32(roundingMode, input, output);
 }
 
 void CodeGenerator::visitEffectiveAddress(LEffectiveAddress* ins) {

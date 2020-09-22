@@ -2315,6 +2315,16 @@ void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
   bind(&done);
 }
 
+void MacroAssembler::nearbyIntDouble(RoundingMode mode, FloatRegister src,
+                                     FloatRegister dest) {
+  MOZ_CRASH("not supported on this platform");
+}
+
+void MacroAssembler::nearbyIntFloat32(RoundingMode mode, FloatRegister src,
+                                      FloatRegister dest) {
+  MOZ_CRASH("not supported on this platform");
+}
+
 //}}} check_macroassembler_style
 
 }  // namespace jit
