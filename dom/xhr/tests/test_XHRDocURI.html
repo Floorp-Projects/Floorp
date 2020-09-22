@@ -470,8 +470,10 @@ function* runTest() {
 
   yield undefined;
 
+  window.onpopstate = function() {
+    gen.next();
+  }
   history.back();
-  SimpleTest.executeSoon(function() { gen.next(); });
 
   yield undefined;
 
