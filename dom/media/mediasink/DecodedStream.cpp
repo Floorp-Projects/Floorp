@@ -679,7 +679,7 @@ void DecodedStream::SendAudio(double aVolume,
 void DecodedStream::CheckIsDataAudible(const AudioData* aData) {
   MOZ_ASSERT(aData);
 
-  mAudibilityMonitor->Process(aData);
+  mAudibilityMonitor->ProcessAudioData(aData);
   bool isAudible = mAudibilityMonitor->RecentlyAudible();
 
   if (isAudible != mIsAudioDataAudible) {

@@ -64,7 +64,7 @@ async function waitForTabPlayingEvent(tab, expectPlaying) {
   if (tab.soundPlaying == expectPlaying) {
     ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
   } else {
-    info("Playing state doesn't match, wait for attributes changes.");
+    info("Playing state doens't match, wait for attributes changes.");
     await BrowserTestUtils.waitForEvent(
       tab,
       "TabAttrModified",

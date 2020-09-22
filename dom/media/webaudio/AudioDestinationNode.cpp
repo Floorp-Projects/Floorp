@@ -5,28 +5,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioDestinationNode.h"
-
+#include "AudioContext.h"
 #include "AlignmentUtils.h"
-#include "AudibilityMonitor.h"
-#include "AudioChannelService.h"
 #include "AudioContext.h"
-#include "AudioContext.h"
-#include "AudioNodeEngine.h"
-#include "AudioNodeTrack.h"
 #include "CubebUtils.h"
-#include "MediaTrackGraph.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/AudioDestinationNodeBinding.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/dom/OfflineAudioCompletionEvent.h"
-#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WakeLock.h"
-#include "mozilla/dom/power/PowerManagerService.h"
+#include "AudioChannelService.h"
+#include "AudioNodeEngine.h"
+#include "AudioNodeTrack.h"
+#include "MediaTrackGraph.h"
 #include "nsContentUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/dom/Promise.h"
 
 extern mozilla::LazyLogModule gAudioChannelLog;
 
@@ -190,13 +187,10 @@ class DestinationNodeEngine final : public AudioNodeEngine {
  public:
   explicit DestinationNodeEngine(AudioDestinationNode* aNode)
       : AudioNodeEngine(aNode),
-        mSampleRate(CubebUtils::PreferredSampleRate()),
         mVolume(1.0f),
-        mAudibilityMonitor(
-            mSampleRate,
-            StaticPrefs::dom_media_silence_duration_for_audibility()),
+        mLastInputAudible(false),
         mSuspended(false),
-        mLastInputAudible(false) {
+        mSampleRate(CubebUtils::PreferredSampleRate()) {
     MOZ_ASSERT(aNode);
   }
 
@@ -210,10 +204,32 @@ class DestinationNodeEngine final : public AudioNodeEngine {
       return;
     }
 
-    mAudibilityMonitor.Process(aInput);
-    bool isInputAudible = mAudibilityMonitor.RecentlyAudible();
+    bool isInputAudible =
+        !aInput.IsNull() && !aInput.IsMuted() && aInput.IsAudible();
 
-    if (isInputAudible != mLastInputAudible) {
+    auto shouldNotifyChanged = [&]() {
+      // We don't want to notify state changed frequently if the input track is
+      // consist of interleaving audible and inaudible blocks. This situation is
+      // really common, especially when user is using OscillatorNode to produce
+      // sound. Sending unnessary runnable frequently would cause performance
+      // debasing. If the track contains 10 interleaving samples and 5 of them
+      // are audible, others are inaudible, user would tend to feel the track
+      // is audible. Therefore, we have the loose checking when track is
+      // changing from inaudible to audible, but have strict checking when
+      // streaming is changing from audible to inaudible. If the inaudible
+      // blocks continue over a speicific time threshold, then we will treat the
+      // track as inaudible.
+      if (isInputAudible && !mLastInputAudible) {
+        return true;
+      }
+      // Use more strict condition, choosing 1 seconds as a threshold.
+      if (!isInputAudible && mLastInputAudible &&
+          aFrom - mLastInputAudibleTime >= mSampleRate) {
+        return true;
+      }
+      return false;
+    };
+    if (shouldNotifyChanged()) {
       mLastInputAudible = isInputAudible;
       RefPtr<AudioNodeTrack> track = aTrack;
       auto r = [track, isInputAudible]() -> void {
@@ -229,6 +245,10 @@ class DestinationNodeEngine final : public AudioNodeEngine {
       aTrack->Graph()->DispatchToMainThreadStableState(NS_NewRunnableFunction(
           "dom::WebAudioAudibleStateChangedRunnable", r));
     }
+
+    if (isInputAudible) {
+      mLastInputAudibleTime = aFrom;
+    }
   }
 
   bool IsActive() const override {
@@ -242,7 +262,7 @@ class DestinationNodeEngine final : public AudioNodeEngine {
 
   void SetDoubleParameter(uint32_t aIndex, double aParam) override {
     if (aIndex == VOLUME) {
-      mVolume = static_cast<float>(aParam);
+      mVolume = aParam;
     }
   }
 
@@ -265,11 +285,11 @@ class DestinationNodeEngine final : public AudioNodeEngine {
   }
 
  private:
-  int mSampleRate;
   float mVolume;
-  AudibilityMonitor mAudibilityMonitor;
-  bool mSuspended;
   bool mLastInputAudible;
+  GraphTime mLastInputAudibleTime = 0;
+  bool mSuspended;
+  int mSampleRate;
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioDestinationNode, AudioNode,
@@ -493,7 +513,7 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted) {
       "aVolume = %f, aMuted = %s\n",
       this, aVolume, aMuted ? "true" : "false");
 
-  float volume = aMuted ? 0.0f : aVolume;
+  float volume = aMuted ? 0.0 : aVolume;
   mTrack->SetAudioOutputVolume(nullptr, volume);
 
   AudioChannelService::AudibleState audible =
@@ -639,7 +659,6 @@ void AudioDestinationNode::NotifyAudibleStateChanged(bool aAudible) {
     if (IsCapturingAudio()) {
       StopAudioCapturingTrack();
     }
-    ReleaseAudioWakeLockIfExists();
     return;
   }
 
