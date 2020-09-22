@@ -81,22 +81,40 @@ internal sealed class Result<out T> {
     object Failure : Result<Nothing>()
 }
 
+/**
+ * A helper function which allows retrying a [block] of suspend code for a few times in case it fails.
+ *
+ * @param logger [Logger] that will be used to log retry attempts/results
+ * @param retryCount How many retry attempts are allowed
+ * @param block A suspend function to execute
+ * @return A [Result.Success] wrapping result of execution of [block] on (eventual) success,
+ * or [Result.Failure] otherwise.
+ */
 internal suspend fun <T> withRetries(logger: Logger, retryCount: Int, block: suspend () -> T): Result<T> {
     var attempt = 0
     var res: T? = null
     while (attempt < retryCount && (res == null || res == false)) {
         attempt += 1
-        logger.info("attempt $attempt/$retryCount")
+        logger.info("withRetries: attempt $attempt/$retryCount")
         res = block()
     }
     return if (res == null || res == false) {
-        logger.warn("all attempts failed")
+        logger.warn("withRetries: all attempts failed")
         Result.Failure
     } else {
         Result.Success(res)
     }
 }
 
+/**
+ * A helper function which allows retrying a [block] of suspend code for a few times in case it fails.
+ * Short-circuits execution if [block] returns [ServiceResult.AuthError] during any of its attempts.
+ *
+ * @param logger [Logger] that will be used to log retry attempts/results
+ * @param retryCount How many retry attempts are allowed
+ * @param block A suspend function to execute
+ * @return A [ServiceResult] representing result of [block] execution.
+ */
 internal suspend fun withServiceRetries(
     logger: Logger,
     retryCount: Int,
@@ -105,14 +123,14 @@ internal suspend fun withServiceRetries(
     var attempt = 0
     do {
         attempt += 1
-        logger.info("attempt $attempt/$retryCount")
+        logger.info("withServiceRetries: attempt $attempt/$retryCount")
         when (val res = block()) {
             ServiceResult.Ok, ServiceResult.AuthError -> return res
             ServiceResult.OtherError -> {}
         }
     } while (attempt < retryCount)
 
-    logger.warn("all attempts failed")
+    logger.warn("withServiceRetries: all attempts failed")
     return ServiceResult.OtherError
 }
 
