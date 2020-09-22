@@ -1435,8 +1435,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   mozilla::UniquePtr<mozilla::dom::ClientSource> mClientSource;
 
-  nsTArray<RefPtr<mozilla::dom::Promise>> mPendingPromises;
-
   nsTArray<mozilla::UniquePtr<PromiseDocumentFlushedResolver>>
       mDocumentFlushedResolvers;
 
