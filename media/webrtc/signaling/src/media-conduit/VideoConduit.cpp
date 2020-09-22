@@ -849,6 +849,14 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
 
   size_t streamCount = std::min(codecConfig->mEncodings.size(),
                                 (size_t)webrtc::kMaxSimulcastStreams);
+  size_t highestResolutionIndex = 0;
+  for (size_t i = 1; i < streamCount; ++i) {
+    if (codecConfig->mEncodings[i].constraints.scaleDownBy <
+        codecConfig->mEncodings[highestResolutionIndex]
+            .constraints.scaleDownBy) {
+      highestResolutionIndex = i;
+    }
+  }
 
   MOZ_RELEASE_ASSERT(streamCount >= 1, "streamCount should be at least one");
 
@@ -895,9 +903,10 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
   mVideoAdapter = MakeUnique<cricket::VideoAdapter>(
       streamCount > 1 ? SIMULCAST_RESOLUTION_ALIGNMENT : 1);
   mVideoAdapter->OnScaleResolutionBy(
-      codecConfig->mEncodings[0].constraints.scaleDownBy > 1.0
-          ? rtc::Optional<float>(
-                codecConfig->mEncodings[0].constraints.scaleDownBy)
+      codecConfig->mEncodings[highestResolutionIndex].constraints.scaleDownBy >
+              1.0
+          ? rtc::Optional<float>(codecConfig->mEncodings[highestResolutionIndex]
+                                     .constraints.scaleDownBy)
           : rtc::Optional<float>());
 
   // XXX parse the encoded SPS/PPS data and set spsData/spsLen/ppsData/ppsLen
