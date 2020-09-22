@@ -53,9 +53,10 @@ import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -79,6 +80,7 @@ import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
 import java.security.Principal
 import java.security.cert.X509Certificate
+
 typealias GeckoAntiTracking = ContentBlocking.AntiTracking
 typealias GeckoSafeBrowsing = ContentBlocking.SafeBrowsing
 typealias GeckoCookieBehavior = ContentBlocking.CookieBehavior
@@ -1158,7 +1160,7 @@ class GeckoEngineSessionTest {
         val policy = TrackingProtectionPolicy.strict()
 
         for (x in 1..5) {
-            observers.add(Mockito.spy(object : EngineSession.Observer {}))
+            observers.add(spy(object : EngineSession.Observer {}))
         }
 
         session.enableTrackingProtection(policy)
@@ -1792,14 +1794,14 @@ class GeckoEngineSessionTest {
     fun `toggleDesktopMode should reload a non-mobile url when set to desktop mode`() {
         val mobileUrl = "https://m.example.com"
         val nonMobileUrl = "https://example.com"
-        val engineSession = Mockito.spy(GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider))
+        val engineSession = spy(GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider))
         engineSession.currentUrl = mobileUrl
 
         engineSession.toggleDesktopMode(true, reload = true)
-        verify(engineSession, Mockito.atLeastOnce()).loadUrl(nonMobileUrl, null, LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY), null)
+        verify(engineSession, atLeastOnce()).loadUrl(nonMobileUrl, null, LoadUrlFlags.select(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY), null)
 
         engineSession.toggleDesktopMode(false, reload = true)
-        verify(engineSession, Mockito.atLeastOnce()).reload()
+        verify(engineSession, atLeastOnce()).reload()
     }
 
     @Test
@@ -2190,6 +2192,25 @@ class GeckoEngineSessionTest {
         })
 
         contentDelegate.value.onFirstContentfulPaint(mock())
+        assertTrue(observed)
+    }
+
+    @Test
+    fun `onPaintStatusReset notifies observers`() {
+        val engineSession = GeckoEngineSession(mock(),
+                geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observed = false
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPaintStatusReset() {
+                observed = true
+            }
+        })
+
+        contentDelegate.value.onPaintStatusReset(mock())
         assertTrue(observed)
     }
 
@@ -2620,6 +2641,29 @@ class GeckoEngineSessionTest {
         assertEquals(LoadUrlFlags.BYPASS_CLASSIFIER, GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
         assertEquals(LoadUrlFlags.LOAD_FLAGS_FORCE_ALLOW_DATA_URI, GeckoSession.LOAD_FLAGS_FORCE_ALLOW_DATA_URI)
         assertEquals(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY, GeckoSession.LOAD_FLAGS_REPLACE_HISTORY)
+    }
+
+    @Test
+    fun `onKill will notify observers`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observerNotified = false
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onProcessKilled() {
+                observerNotified = true
+            }
+        })
+
+        val mockedState: GeckoSession.SessionState = mock()
+        progressDelegate.value.onSessionStateChange(geckoSession, mockedState)
+
+        contentDelegate.value.onKill(geckoSession)
+
+        assertTrue(observerNotified)
     }
 
     @Test

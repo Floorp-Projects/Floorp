@@ -268,7 +268,7 @@ class GeckoWebExtension(
             }
 
             override fun onOpenOptionsPage(ext: GeckoNativeWebExtension) {
-                ext.metaData?.optionsPageUrl?.let { optionsPageUrl ->
+                ext.metaData.optionsPageUrl?.let { optionsPageUrl ->
                     tabHandler.onNewTab(
                         this@GeckoWebExtension,
                         GeckoEngineSession(runtime),
@@ -340,7 +340,7 @@ class GeckoWebExtension(
      * See [WebExtension.getMetadata].
      */
     override fun getMetadata(): Metadata? {
-        return nativeExtension.metaData?.let {
+        return nativeExtension.metaData.let {
             Metadata(
                 name = it.name,
                 description = it.description,
@@ -364,11 +364,11 @@ class GeckoWebExtension(
     }
 
     override fun isEnabled(): Boolean {
-        return nativeExtension.metaData?.enabled ?: true
+        return nativeExtension.metaData.enabled
     }
 
     override fun isAllowedInPrivateBrowsing(): Boolean {
-        return isBuiltIn() || nativeExtension.metaData?.allowedInPrivateBrowsing ?: false
+        return isBuiltIn() || nativeExtension.metaData.allowedInPrivateBrowsing
     }
 }
 

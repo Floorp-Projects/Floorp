@@ -70,9 +70,8 @@ class GeckoEngine(
 ) : Engine, WebExtensionRuntime {
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
-    @VisibleForTesting internal val speculativeConnectionFactory = SpeculativeSessionFactory()
     private val sharedPref = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
-
+    @VisibleForTesting internal val speculativeConnectionFactory = SpeculativeSessionFactory()
     private var webExtensionDelegate: WebExtensionDelegate? = null
     private val webExtensionActionHandler = object : ActionHandler {
         override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: Action) {
@@ -151,6 +150,7 @@ class GeckoEngine(
      */
     override fun createSession(private: Boolean, contextId: String?): EngineSession {
         ThreadUtils.assertOnUiThread()
+
         val speculativeSession = speculativeConnectionFactory.get(private, contextId)
         return speculativeSession ?: GeckoEngineSession(runtime, private, defaultSettings, contextId)
     }
@@ -530,6 +530,10 @@ class GeckoEngine(
 
                         if (cookieBehavior != value.cookiePolicy.id) {
                             cookieBehavior = value.cookiePolicy.id
+                        }
+
+                        if (cookiePurging != value.cookiePurging) {
+                            setCookiePurging(value.cookiePurging)
                         }
                     }
 
