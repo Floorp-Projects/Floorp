@@ -123,7 +123,7 @@ avoid-blacklist-and-whitelist:
         - dom/media/test/test_autoplay_policy_key_blacklist.html
         - dom/media/test/test_autoplay_policy_permission.html
         - dom/media/webm/WebMDecoder.cpp
-        - dom/media/webrtc/media-conduit/VideoConduit.cpp
+        - dom/media/webrtc/libwebrtcglue/VideoConduit.cpp
         - dom/media/webrtc/peerconnection/PeerConnectionMedia.cpp
         - dom/media/webrtc/transport/stun_socket_filter.cpp
         - dom/media/webrtc/transport/test/ice_unittest.cpp

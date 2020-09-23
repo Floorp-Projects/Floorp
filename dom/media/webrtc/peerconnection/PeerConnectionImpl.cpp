@@ -28,8 +28,8 @@
 #include "nsProxyRelease.h"
 #include "prtime.h"
 
-#include "media-conduit/AudioConduit.h"
-#include "media-conduit/VideoConduit.h"
+#include "libwebrtcglue/AudioConduit.h"
+#include "libwebrtcglue/VideoConduit.h"
 #include "MediaTrackGraph.h"
 #include "transport/runnable_utils.h"
 #include "IPeerConnection.h"

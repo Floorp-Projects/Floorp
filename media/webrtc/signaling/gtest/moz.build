@@ -21,7 +21,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit' and CONFIG['OS_TARGET'] != 'Android' 
       '/dom/media/webrtc',
       '/dom/media/webrtc/common',
       '/dom/media/webrtc/common/time_profiling',
-      '/dom/media/webrtc/media-conduit',
+      '/dom/media/webrtc/libwebrtcglue',
       '/dom/media/webrtc/mediapipeline',
       '/dom/media/webrtc/peerconnection',
       '/dom/media/webrtc/transport',

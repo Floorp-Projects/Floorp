@@ -28,7 +28,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/WebrtcProxyConfig.h"
 #include "MediaManager.h"
-#include "media-conduit/WebrtcGmpVideoCodec.h"
+#include "libwebrtcglue/WebrtcGmpVideoCodec.h"
 
 namespace mozilla {
 using namespace dom;

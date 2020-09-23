@@ -6,8 +6,8 @@
 #include "mozilla/UniquePtr.h"
 #include <string>
 #include <vector>
-#include "media-conduit/AudioConduit.h"
-#include "media-conduit/VideoConduit.h"
+#include "libwebrtcglue/AudioConduit.h"
+#include "libwebrtcglue/VideoConduit.h"
 #include "MediaTrackGraph.h"
 #include "mediapipeline/MediaPipeline.h"
 #include "mediapipeline/MediaPipelineFilter.h"
@@ -19,7 +19,7 @@
 #include "nsIPrincipal.h"
 #include "MediaSegment.h"
 #include "RemoteTrackSource.h"
-#include "media-conduit/RtpRtcpConfig.h"
+#include "libwebrtcglue/RtpRtcpConfig.h"
 #include "MediaTransportHandler.h"
 #include "mozilla/dom/RTCRtpReceiverBinding.h"
 #include "mozilla/dom/RTCRtpSenderBinding.h"
@@ -27,7 +27,7 @@
 #include "mozilla/dom/TransceiverImplBinding.h"
 #include "RTCRtpReceiver.h"
 #include "RTCDTMFSender.h"
-#include "media-conduit/WebrtcGmpVideoCodec.h"
+#include "libwebrtcglue/WebrtcGmpVideoCodec.h"
 
 namespace mozilla {
 

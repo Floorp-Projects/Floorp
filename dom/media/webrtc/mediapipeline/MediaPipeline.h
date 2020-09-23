@@ -13,7 +13,7 @@
 #include "transport/sigslot.h"
 #include "transport/transportlayer.h"  // For TransportLayer::State
 
-#include "media-conduit/MediaConduitInterface.h"
+#include "libwebrtcglue/MediaConduitInterface.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Atomics.h"
 #include "transport/SrtpFlow.h"  // For SRTP_MAX_EXPANSION

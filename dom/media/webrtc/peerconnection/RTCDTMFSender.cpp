@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RTCDTMFSender.h"
-#include "media-conduit/MediaConduitInterface.h"
+#include "libwebrtcglue/MediaConduitInterface.h"
 #include "transport/logging.h"
 #include "TransceiverImpl.h"
 #include "nsITimer.h"

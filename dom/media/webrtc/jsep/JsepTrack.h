@@ -21,7 +21,7 @@
 #include "sdp/Sdp.h"
 #include "sdp/SdpAttribute.h"
 #include "sdp/SdpMediaSection.h"
-#include "media-conduit/RtpRtcpConfig.h"
+#include "libwebrtcglue/RtpRtcpConfig.h"
 namespace mozilla {
 
 class JsepTrackNegotiatedDetails {
