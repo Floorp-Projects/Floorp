@@ -522,6 +522,12 @@ nsresult nsFileInputStream::SeekInternal(int32_t aWhence, int64_t aOffset,
         aWhence = NS_SEEK_SET;
         aOffset += mCachedPosition;
       }
+      // If we're trying to seek to the start then we're done, so
+      // return early to avoid Seek from calling DoPendingOpen and
+      // opening the underlying file earlier than necessary.
+      if (aWhence == NS_SEEK_SET && aOffset == 0) {
+        return NS_OK;
+      }
     } else {
       return NS_BASE_STREAM_CLOSED;
     }
