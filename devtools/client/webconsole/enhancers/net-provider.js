@@ -15,7 +15,7 @@ const {
 
 const {
   MESSAGE_OPEN,
-  NETWORK_MESSAGE_UPDATE,
+  NETWORK_MESSAGES_UPDATE,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -45,7 +45,7 @@ function enableNetProvider(webConsoleUI) {
       // from the backend. It can happen (especially in test) that
       // the message is opened before all network event updates are
       // received. The rest of updates will be handled below, see:
-      // NETWORK_MESSAGE_UPDATE action handler.
+      // NETWORK_MESSAGES_UPDATE action handler.
       if (type == MESSAGE_OPEN) {
         const updates = getAllNetworkMessagesUpdateById(newState);
         const message = updates[action.id];
@@ -63,14 +63,16 @@ function enableNetProvider(webConsoleUI) {
       // NETWORK_MESSAGES_UPDATE action.
       // Make sure to call `dataProvider.onNetworkResourceUpdated`
       // to fetch data from the backend.
-      if (type == NETWORK_MESSAGE_UPDATE) {
-        const { actor } = action.message;
-        const open = getAllMessagesUiById(newState).includes(actor);
-        if (open) {
-          const message = getMessage(newState, actor);
-          message.updates.forEach(updateType => {
-            dataProvider.onNetworkResourceUpdated(message, { updateType });
-          });
+      if (type == NETWORK_MESSAGES_UPDATE) {
+        const allMessages = getAllMessagesUiById(newState);
+        for (const { actor } of action.messages) {
+          const open = allMessages.includes(actor);
+          if (open) {
+            const message = getMessage(newState, actor);
+            message.updates.forEach(updateType => {
+              dataProvider.onNetworkResourceUpdated(message, { updateType });
+            });
+          }
         }
       }
 
