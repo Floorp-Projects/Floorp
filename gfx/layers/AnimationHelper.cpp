@@ -681,7 +681,31 @@ bool AnimationHelper::ShouldBeJank(const LayoutDeviceRect& aPrerenderedRect,
       return true;
     }
   }
-  return false;
+
+  // With step timing functions there are cases the transform jumps to a
+  // position where the partial pre-render area is totally outside of the clip
+  // rect without any intersection of the partial pre-render area and the clip
+  // rect happened in previous compositions but there remains visible area of
+  // the entire transformed area.
+  //
+  // So now all four points of the transformed partial pre-render rect are
+  // outside of the clip rect, if all these four points are in either side of
+  // the clip rect, we consider it's jank so that on the main-thread we will
+  // either a) rebuild the up-to-date display item if there remains visible area
+  // or b) no longer rebuild the display item if it's totally outside of the
+  // clip rect.
+  //
+  // Note that RegionBits::Left and Right are mutually exclusive,
+  // RegionBits::Top and Bottom are also mutually exclusive, so if there remains
+  // any bits, it means all four points are in the same side.
+  return GetRegionBitsForPoint(prerenderedQuad.mPoints[0].x,
+                               prerenderedQuad.mPoints[0].y, clipRect) &
+         GetRegionBitsForPoint(prerenderedQuad.mPoints[1].x,
+                               prerenderedQuad.mPoints[1].y, clipRect) &
+         GetRegionBitsForPoint(prerenderedQuad.mPoints[2].x,
+                               prerenderedQuad.mPoints[2].y, clipRect) &
+         GetRegionBitsForPoint(prerenderedQuad.mPoints[3].x,
+                               prerenderedQuad.mPoints[3].y, clipRect);
 }
 
 }  // namespace layers
