@@ -13,7 +13,7 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
 #include "webrtc/common_types.h"
-#include "peerconnection/RTCStatsReport.h"
+#include "jsapi/RTCStatsReport.h"
 
 // Unit Test class
 namespace test {

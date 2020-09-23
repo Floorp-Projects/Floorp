@@ -50,7 +50,7 @@
 #include "GMPVideoDecoderProxy.h"
 #include "GMPVideoEncoderProxy.h"
 
-#include "peerconnection/PeerConnectionImpl.h"
+#include "jsapi/PeerConnectionImpl.h"
 
 namespace mozilla {
 
