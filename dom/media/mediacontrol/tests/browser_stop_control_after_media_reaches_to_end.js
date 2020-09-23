@@ -10,15 +10,32 @@ add_task(async function setupTestingPref() {
 
 /**
  * This test is used to ensure that we would stop controlling media after it
- * reaches to the end.
+ * reaches to the end when a controller doesn't have an active media session.
+ * If a controller has an active media session, it would keep active despite
+ * media reaches to the end.
  */
-add_task(async function testControlShouldStopAfterMediaReachesToTheEnd() {
+add_task(async function testControllerShouldStopAfterMediaReachesToTheEnd() {
   info(`open media page and play media until the end`);
   const tab = await createTabAndLoad(PAGE_URL);
   await Promise.all([
     checkIfMediaControllerBecomeInactiveAfterMediaEnds(tab),
     playMediaUntilItReachesToTheEnd(tab),
   ]);
+
+  info(`remove tab`);
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function testControllerWontStopAfterMediaReachesToTheEnd() {
+  info(`open media page and create media session`);
+  const tab = await createTabAndLoad(PAGE_URL);
+  await createMediaSession(tab);
+
+  info(`play media until the end`);
+  await playMediaUntilItReachesToTheEnd(tab);
+
+  info(`controller is still active because of having active media session`);
+  await checkControllerIsActive(tab);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -76,4 +93,16 @@ function playMediaUntilItReachesToTheEnd(tab) {
     video.play();
     await new Promise(r => (video.onended = r));
   });
+}
+
+function createMediaSession(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], _ => {
+    // simply create a media session, which would become the active media session later.
+    content.navigator.mediaSession;
+  });
+}
+
+function checkControllerIsActive(tab) {
+  const controller = tab.linkedBrowser.browsingContext.mediaController;
+  ok(controller.isActive, `controller is active`);
 }
