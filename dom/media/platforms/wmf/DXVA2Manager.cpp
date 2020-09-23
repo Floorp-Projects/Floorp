@@ -17,6 +17,7 @@
 #include "gfxCrashReporterUtils.h"
 #include "gfxWindowsPlatform.h"
 #include "mfapi.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
@@ -965,6 +966,11 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
 
   if (!mutex && mDevice != DeviceManagerDx::Get()->GetCompositorDevice() &&
       mSyncObject) {
+    static StaticMutex sMutex;
+    // Ensure that we only ever attempt to synchronise via the sync object
+    // serially as when using the same D3D11 device for multiple video decoders
+    // it can lead to deadlocks.
+    StaticMutexAutoLock lock(sMutex);
     // It appears some race-condition may allow us to arrive here even when
     // mSyncObject is null. It's better to avoid that crash.
     client->SyncWithObject(mSyncObject);
