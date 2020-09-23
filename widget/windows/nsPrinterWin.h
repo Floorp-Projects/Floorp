@@ -7,6 +7,8 @@
 #define nsPrinterWin_h_
 
 #include "nsPrinterBase.h"
+#include "mozilla/DataMutex.h"
+#include "nsTArrayForwardDeclare.h"
 
 class nsPrinterWin final : public nsPrinterBase {
  public:
@@ -27,9 +29,10 @@ class nsPrinterWin final : public nsPrinterBase {
   explicit nsPrinterWin(const nsAString& aName);
   ~nsPrinterWin() = default;
 
-  nsresult EnsurePaperList();
+  nsTArray<uint8_t> CopyDefaultDevmodeW() const;
 
   const nsString mName;
+  mutable mozilla::DataMutex<nsTArray<uint8_t>> mDefaultDevmodeWStorage;
 };
 
 #endif  // nsPrinterWin_h_
