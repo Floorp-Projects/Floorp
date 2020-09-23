@@ -481,9 +481,9 @@ set_define('MOZ_RUST_SIMD', rust_simd)
 # Support for wasm code generation with Cranelift
 # ==============================================================
 
-@depends(milestone.is_nightly, target, simulator)
-def cranelift_default(is_nightly, target, simulator):
-    if is_nightly or target.cpu == 'aarch64' or (simulator is not None and simulator.arm64):
+@depends(milestone.is_nightly, target, simulator.arm64)
+def cranelift_default(is_nightly, target, simulator_arm64):
+    if is_nightly or target.cpu == 'aarch64' or simulator_arm64:
         return True
 
 js_option('--enable-cranelift',
