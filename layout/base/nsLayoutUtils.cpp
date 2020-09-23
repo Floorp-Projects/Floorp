@@ -10328,7 +10328,10 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
     aSystemFont->stretch = fontStyle.stretch;
     aSystemFont->size = Length::FromPixels(fontStyle.size);
 
-    if (aDocument->ShouldAvoidNativeTheme()) {
+    if (aDocument->ShouldAvoidNativeTheme() &&
+        (aFontID == LookAndFeel::FontID::Field ||
+         aFontID == LookAndFeel::FontID::Button ||
+         aFontID == LookAndFeel::FontID::List)) {
       auto newSize = aDefaultVariableFont->size.ToCSSPixels() - CSSCoord(3.0f);
       aSystemFont->size = Length::FromPixels(std::max(float(newSize), 0.0f));
     }
