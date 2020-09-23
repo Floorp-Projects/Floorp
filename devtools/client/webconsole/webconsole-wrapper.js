@@ -332,15 +332,14 @@ class WebConsoleWrapper {
           await store.dispatch(
             actions.networkMessageUpdates(this.queuedMessageUpdates, null)
           );
-          for (const message of this.queuedMessageUpdates) {
-            this.webConsoleUI.emitForTests("network-message-updated", message);
-          }
+          this.webConsoleUI.emitForTests("network-messages-updated");
           this.queuedMessageUpdates = [];
         }
         if (this.queuedRequestUpdates.length > 0) {
-          for (const { id, data } of this.queuedRequestUpdates) {
-            await store.dispatch(actions.networkUpdateRequest(id, data));
-          }
+          await store.dispatch(
+            actions.networkUpdateRequests(this.queuedRequestUpdates)
+          );
+          const updateCount = this.queuedRequestUpdates.length;
           this.queuedRequestUpdates = [];
 
           // Fire an event indicating that all data fetched from
@@ -350,7 +349,11 @@ class WebConsoleWrapper {
           // (netmonitor/src/connector/firefox-data-provider).
           // This event might be utilized in tests to find the right
           // time when to finish.
-          this.webConsoleUI.emitForTests("network-request-payload-ready");
+
+          this.webConsoleUI.emitForTests(
+            "network-request-payload-ready",
+            updateCount
+          );
         }
         done();
       }, 50);
