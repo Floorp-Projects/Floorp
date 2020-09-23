@@ -157,7 +157,8 @@ class WindowProxyHolder;
   FIELD(IsSingleToplevelInHistory, bool)                                     \
   FIELD(UseErrorPages, bool)                                                 \
   FIELD(PlatformOverride, nsString)                                          \
-  FIELD(HasLoadedNonInitialDocument, bool)
+  FIELD(HasLoadedNonInitialDocument, bool)                                   \
+  FIELD(CreatedDynamically, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -221,8 +222,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // DocShell, BrowserParent, or BrowserBridgeChild.
   static already_AddRefed<BrowsingContext> CreateDetached(
       nsGlobalWindowInner* aParent, BrowsingContext* aOpener,
-      BrowsingContextGroup* aSpecificGroup, const nsAString& aName, Type aType,
-      bool aCreatedDynamically = false);
+      BrowsingContextGroup* aSpecificGroup, const nsAString& aName, Type aType);
 
   void EnsureAttached();
 
@@ -599,7 +599,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     bool mWindowless = false;
     bool mUseRemoteTabs = false;
     bool mUseRemoteSubframes = false;
-    bool mCreatedDynamically = false;
     int32_t mSessionHistoryIndex = -1;
     int32_t mSessionHistoryCount = 0;
     OriginAttributes mOriginAttributes;
@@ -635,8 +634,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     mFields.SetWithoutSyncing<IDX_PendingInitialization>(
         aPendingInitialization);
   }
-
-  bool CreatedDynamically() const { return mCreatedDynamically; }
 
   const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   nsresult SetOriginAttributes(const OriginAttributes& aAttrs);
@@ -964,9 +961,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // Determines if out-of-process iframes should be used. May not be changed
   // after this BrowsingContext is attached.
   bool mUseRemoteSubframes : 1;
-
-  // True if this BrowsingContext is for a frame that was added dynamically.
-  bool mCreatedDynamically : 1;
 
   // The start time of user gesture, this is only available if the browsing
   // context is in process.
