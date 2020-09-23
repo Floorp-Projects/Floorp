@@ -50,6 +50,42 @@ NS_IMPL_ISUPPORTS_CI(ReferrerInfo, nsIReferrerInfo, nsISerializable)
 #define MIN_CROSS_ORIGIN_SENDING_POLICY 0
 #define MIN_TRIMMING_POLICY 0
 
+/*
+ * Default referrer policy to use
+ */
+enum DefaultReferrerPolicy : uint32_t {
+  eDefaultPolicyNoReferrer = 0,
+  eDefaultPolicySameOrgin = 1,
+  eDefaultPolicyStrictWhenXorigin = 2,
+  eDefaultPolicyNoReferrerWhenDownGrade = 3,
+};
+
+static uint32_t GetDefaultFirstPartyReferrerPolicyPref(bool privateBrowsing) {
+  return privateBrowsing
+             ? StaticPrefs::network_http_referer_defaultPolicy_pbmode()
+             : StaticPrefs::network_http_referer_defaultPolicy();
+}
+
+static uint32_t GetDefaultThirdPartyReferrerPolicyPref(bool privateBrowsing) {
+  return privateBrowsing
+             ? StaticPrefs::network_http_referer_defaultPolicy_trackers_pbmode()
+             : StaticPrefs::network_http_referer_defaultPolicy_trackers();
+}
+
+static ReferrerPolicy DefaultReferrerPolicyToReferrerPolicy(
+    uint32_t defaultToUse) {
+  switch (defaultToUse) {
+    case DefaultReferrerPolicy::eDefaultPolicyNoReferrer:
+      return ReferrerPolicy::No_referrer;
+    case DefaultReferrerPolicy::eDefaultPolicySameOrgin:
+      return ReferrerPolicy::Same_origin;
+    case DefaultReferrerPolicy::eDefaultPolicyStrictWhenXorigin:
+      return ReferrerPolicy::Strict_origin_when_cross_origin;
+  }
+
+  return ReferrerPolicy::No_referrer_when_downgrade;
+}
+
 struct LegacyReferrerPolicyTokenMap {
   const char* mToken;
   ReferrerPolicy mPolicy;
@@ -218,32 +254,17 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
     }
   }
 
-  uint32_t defaultToUse;
-  if (thirdPartyTrackerIsolated) {
-    if (privateBrowsing) {
-      defaultToUse =
-          StaticPrefs::network_http_referer_defaultPolicy_trackers_pbmode();
-    } else {
-      defaultToUse = StaticPrefs::network_http_referer_defaultPolicy_trackers();
-    }
-  } else {
-    if (privateBrowsing) {
-      defaultToUse = StaticPrefs::network_http_referer_defaultPolicy_pbmode();
-    } else {
-      defaultToUse = StaticPrefs::network_http_referer_defaultPolicy();
-    }
-  }
+  return DefaultReferrerPolicyToReferrerPolicy(
+      thirdPartyTrackerIsolated
+          ? GetDefaultThirdPartyReferrerPolicyPref(privateBrowsing)
+          : GetDefaultFirstPartyReferrerPolicyPref(privateBrowsing));
+}
 
-  switch (defaultToUse) {
-    case DefaultReferrerPolicy::eDefaultPolicyNoReferrer:
-      return ReferrerPolicy::No_referrer;
-    case DefaultReferrerPolicy::eDefaultPolicySameOrgin:
-      return ReferrerPolicy::Same_origin;
-    case DefaultReferrerPolicy::eDefaultPolicyStrictWhenXorigin:
-      return ReferrerPolicy::Strict_origin_when_cross_origin;
-  }
-
-  return ReferrerPolicy::No_referrer_when_downgrade;
+/* static */
+ReferrerPolicy ReferrerInfo::GetDefaultThirdPartyReferrerPolicy(
+    bool privateBrowsing) {
+  uint32_t pref = GetDefaultThirdPartyReferrerPolicyPref(privateBrowsing);
+  return DefaultReferrerPolicyToReferrerPolicy(pref);
 }
 
 /* static */
