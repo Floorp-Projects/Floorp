@@ -19,12 +19,10 @@
         <activity-alias
             android:name="${applicationId}.App"
             android:targetActivity="org.mozilla.fenix.MigrationDecisionActivity"
-            android:taskAffinity="${applicationId}.BROWSER"
             tools:replace="android:targetActivity" />
 
         <activity
             android:name="org.mozilla.fenix.MigrationDecisionActivity"
-            android:taskAffinity="${applicationId}.BROWSER"
             android:exported="false" />
 
         <service android:name="org.mozilla.fenix.MigrationService" />
