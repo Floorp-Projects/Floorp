@@ -433,8 +433,6 @@ class UrlbarView {
       this.input.getAttribute("pageproxystate") == "valid"
     ) {
       if (
-        // Do not show Top Sites in private windows.
-        !this.input.isPrivate &&
         !this.isOpen &&
         ["mousedown", "command"].includes(queryOptions.event.type)
       ) {

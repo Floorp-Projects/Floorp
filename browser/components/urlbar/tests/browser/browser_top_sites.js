@@ -463,25 +463,51 @@ add_task(async function topSitesDisabled() {
   });
   await checkDoesNotOpenOnFocus();
   await SpecialPowers.popPrefEnv();
+});
 
-  // Top Sites should not be shown in private windows.
+add_task(async function topSitesPrivateWindow() {
+  // Top Sites should also be shown in private windows.
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  await checkDoesNotOpenOnFocus(privateWin);
+  await addTestVisits();
+  let sites = AboutNewTab.getTopSites();
+  Assert.equal(
+    sites.length,
+    7,
+    "The test suite browser should have 7 Top Sites."
+  );
+  let urlbar = privateWin.gURLBar;
+  await UrlbarTestUtils.promisePopupOpen(privateWin, () => {
+    if (urlbar.getAttribute("pageproxystate") == "invalid") {
+      urlbar.handleRevert();
+    }
+    EventUtils.synthesizeMouseAtCenter(urlbar.inputField, {}, privateWin);
+  });
+  Assert.ok(urlbar.view.isOpen, "UrlbarView should be open.");
+  await UrlbarTestUtils.promiseSearchComplete(privateWin);
 
-  // Top sites should also not be shown in a private window if the search string
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(privateWin),
+    7,
+    "The number of results should be the same as the number of Top Sites (7)."
+  );
+
+  // Top sites should also be shown in a private window if the search string
   // gets cleared.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: privateWin,
     value: "example",
   });
-  privateWin.gURLBar.select();
+  urlbar.select();
   EventUtils.synthesizeKey("KEY_Backspace", {}, privateWin);
-  // Because the panel opening may not be immediate, we must wait a bit.
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(resolve => setTimeout(resolve, 500));
-  Assert.ok(!privateWin.gURLBar.view.isOpen, "check urlbar panel is not open");
+  Assert.ok(urlbar.view.isOpen, "UrlbarView should be open.");
+  await UrlbarTestUtils.promiseSearchComplete(privateWin);
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(privateWin),
+    7,
+    "The number of results should be the same as the number of Top Sites (7)."
+  );
 
   await BrowserTestUtils.closeWindow(privateWin);
 
