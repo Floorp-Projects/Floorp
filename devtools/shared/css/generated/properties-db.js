@@ -2946,6 +2946,7 @@ exports.CSS_PROPERTIES = {
       "font-variation-settings",
       "font-language-override",
       "font-optical-sizing",
+      "math-style",
       "-moz-osx-font-smoothing",
       "visibility",
       "writing-mode",
@@ -7999,6 +8000,21 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "math-style": {
+    "isInherited": true,
+    "subproperties": [
+      "math-style"
+    ],
+    "supports": [],
+    "values": [
+      "compact",
+      "inherit",
+      "initial",
+      "normal",
+      "revert",
+      "unset"
+    ]
+  },
   "max-block-size": {
     "isInherited": false,
     "subproperties": [
@@ -10836,6 +10852,10 @@ exports.PREFERENCES = [
   [
     "masonry-auto-flow",
     "layout.css.grid-template-masonry-value.enabled"
+  ],
+  [
+    "math-style",
+    "layout.css.math-style.enabled"
   ],
   [
     "-moz-osx-font-smoothing",
