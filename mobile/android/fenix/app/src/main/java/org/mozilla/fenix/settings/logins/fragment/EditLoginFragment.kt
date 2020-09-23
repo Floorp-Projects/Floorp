@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.logins.fragment
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -13,6 +14,8 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.view.menu.ActionMenuItemView
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -114,6 +117,8 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
 
         usernameChanged = false
         passwordChanged = false
+
+        clearUsernameTextButton.isEnabled = oldLogin.username.isNotEmpty()
     }
 
     private fun formatEditableValues() {
@@ -140,7 +145,6 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             passwordText.isCursorVisible = true
             passwordText.hasFocus()
             inputLayoutPassword.hasFocus()
-            it.isEnabled = false
         }
         revealPasswordButton.setOnClickListener {
             togglePasswordReveal(passwordText, revealPasswordButton)
@@ -168,13 +172,14 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
                         validUsername = true
                         inputLayoutUsername.error = null
                         inputLayoutUsername.errorIconDrawable = null
+                        clearUsernameTextButton.isVisible = true
                     }
                     else -> {
                         usernameChanged = true
-                        clearUsernameTextButton.isEnabled = true
                         setDupeError()
                     }
                 }
+                clearUsernameTextButton.isEnabled = u.toString().isNotEmpty()
                 setSaveButtonState()
             }
 
@@ -192,7 +197,8 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
                 when {
                     p.toString().isEmpty() -> {
                         passwordChanged = true
-                        clearPasswordTextButton.isEnabled = false
+                        revealPasswordButton.isVisible = false
+                        clearPasswordTextButton.isVisible = false
                         setPasswordError()
                     }
                     p.toString() == oldLogin.password -> {
@@ -200,14 +206,16 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
                         validPassword = true
                         inputLayoutPassword.error = null
                         inputLayoutPassword.errorIconDrawable = null
-                        clearPasswordTextButton.isEnabled = true
+                        revealPasswordButton.isVisible = true
+                        clearPasswordTextButton.isVisible = true
                     }
                     else -> {
                         passwordChanged = true
                         validPassword = true
                         inputLayoutPassword.error = null
                         inputLayoutPassword.errorIconDrawable = null
-                        clearPasswordTextButton.isEnabled = true
+                        revealPasswordButton.isVisible = true
+                        clearPasswordTextButton.isVisible = true
                     }
                 }
                 setSaveButtonState()
@@ -231,13 +239,21 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             inputLayoutUsername?.let {
                 usernameChanged = true
                 validUsername = false
-                it.setErrorIconDrawable(R.drawable.mozac_ic_warning)
                 it.error = context?.getString(R.string.saved_login_duplicate)
+                it.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
+                it.setErrorIconTintList(
+                    ColorStateList.valueOf(
+                        ContextCompat.getColor(requireContext(), R.color.design_error)
+                    )
+                )
+                clearUsernameTextButton.isVisible = false
             }
         } else {
             usernameChanged = true
             validUsername = true
             inputLayoutUsername.error = null
+            inputLayoutUsername.errorIconDrawable = null
+            clearUsernameTextButton.isVisible = true
         }
     }
 
@@ -245,7 +261,12 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         inputLayoutPassword?.let { layout ->
             validPassword = false
             layout.error = context?.getString(R.string.saved_login_password_required)
-            layout.setErrorIconDrawable(R.drawable.mozac_ic_warning)
+            layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
+            layout.setErrorIconTintList(
+                ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.design_error)
+                )
+            )
         }
     }
 
