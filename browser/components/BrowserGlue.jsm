@@ -2207,14 +2207,14 @@ BrowserGlue.prototype = {
     _checkHTTPSOnlyPBMPref();
   },
 
-  _monitorPioneerPref() {
-    const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
+  _monitorIonPref() {
+    const PREF_ION_ID = "toolkit.telemetry.pioneerId";
 
-    const _checkPioneerPref = async () => {
+    const _checkIonPref = async () => {
       for (let win of Services.wm.getEnumerator("navigator:browser")) {
         win.document.getElementById(
-          "pioneer-button"
-        ).hidden = !Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+          "ion-button"
+        ).hidden = !Services.prefs.getStringPref(PREF_ION_ID, null);
       }
     };
 
@@ -2222,32 +2222,29 @@ BrowserGlue.prototype = {
       onOpenWindow(xulWindow) {
         const win = xulWindow.docShell.domWindow;
         win.addEventListener("load", () => {
-          const pioneerButton = win.document.getElementById("pioneer-button");
-          if (pioneerButton) {
-            pioneerButton.hidden = !Services.prefs.getStringPref(
-              PREF_PIONEER_ID,
-              null
-            );
+          const ionButton = win.document.getElementById("ion-button");
+          if (ionButton) {
+            ionButton.hidden = !Services.prefs.getStringPref(PREF_ION_ID, null);
           }
         });
       },
       onCloseWindow() {},
     };
 
-    Services.prefs.addObserver(PREF_PIONEER_ID, _checkPioneerPref);
+    Services.prefs.addObserver(PREF_ION_ID, _checkIonPref);
     Services.wm.addListener(windowListener);
-    _checkPioneerPref();
+    _checkIonPref();
   },
 
-  _monitorPioneerStudies() {
+  _monitorIonStudies() {
     const STUDY_ADDON_COLLECTION_KEY = "pioneer-study-addons-v1";
-    const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
+    const PREF_ION_NEW_STUDIES_AVAILABLE =
       "toolkit.telemetry.pioneer-new-studies-available";
 
     const _badgeIcon = async () => {
       for (let win of Services.wm.getEnumerator("navigator:browser")) {
         win.document
-          .getElementById("pioneer-button")
+          .getElementById("ion-button")
           .querySelector(".toolbarbutton-badge")
           .classList.add("feature-callout");
       }
@@ -2257,14 +2254,11 @@ BrowserGlue.prototype = {
       onOpenWindow(xulWindow) {
         const win = xulWindow.docShell.domWindow;
         win.addEventListener("load", () => {
-          const pioneerButton = win.document.getElementById("pioneer-button");
-          if (pioneerButton) {
-            const badge = pioneerButton.querySelector(".toolbarbutton-badge");
+          const ionButton = win.document.getElementById("ion-button");
+          if (ionButton) {
+            const badge = ionButton.querySelector(".toolbarbutton-badge");
             if (
-              Services.prefs.getBoolPref(
-                PREF_PIONEER_NEW_STUDIES_AVAILABLE,
-                false
-              )
+              Services.prefs.getBoolPref(PREF_ION_NEW_STUDIES_AVAILABLE, false)
             ) {
               badge.classList.add("feature-callout");
             } else {
@@ -2277,15 +2271,15 @@ BrowserGlue.prototype = {
     };
 
     // Update all open windows if the pref changes.
-    Services.prefs.addObserver(PREF_PIONEER_NEW_STUDIES_AVAILABLE, _badgeIcon);
+    Services.prefs.addObserver(PREF_ION_NEW_STUDIES_AVAILABLE, _badgeIcon);
 
     // Badge any currently-open windows.
-    if (Services.prefs.getBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, false)) {
+    if (Services.prefs.getBoolPref(PREF_ION_NEW_STUDIES_AVAILABLE, false)) {
       _badgeIcon();
     }
 
     RemoteSettings(STUDY_ADDON_COLLECTION_KEY).on("sync", async event => {
-      Services.prefs.setBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, true);
+      Services.prefs.setBoolPref(PREF_ION_NEW_STUDIES_AVAILABLE, true);
     });
 
     // When a new window opens, check if we need to badge the icon.
@@ -2382,8 +2376,8 @@ BrowserGlue.prototype = {
     this._monitorScreenshotsPref();
     this._monitorWebcompatReporterPref();
     this._monitorHTTPSOnlyPref();
-    this._monitorPioneerPref();
-    this._monitorPioneerStudies();
+    this._monitorIonPref();
+    this._monitorIonStudies();
 
     let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
       Ci.nsIToolkitProfileService

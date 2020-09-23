@@ -159,7 +159,7 @@
     "browser/components/newtab/test/browser/abouthomecache/browser.ini": 10.38,
     "browser/components/newtab/test/browser/browser.ini": 52.48,
     "browser/components/originattributes/test/browser/browser.ini": 58.43,
-    "browser/components/pioneer/test/browser/browser.ini": 1.63,
+    "browser/components/ion/test/browser/browser.ini": 1.63,
     "browser/components/places/tests/browser/browser.ini": 106.52,
     "browser/components/pocket/test/browser.ini": 3.48,
     "browser/components/preferences/tests/browser.ini": 295.7,
