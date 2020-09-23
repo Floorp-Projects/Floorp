@@ -193,7 +193,14 @@ pub fn set_debug_view_tag(value: &str) -> bool {
 }
 
 pub fn submit_ping(ping_name: &str) -> Result<bool> {
-    with_glean_mut(|glean| glean.submit_ping_by_name(ping_name, None)).unwrap_or(Ok(false))
+    match with_glean_mut(|glean| glean.submit_ping_by_name(ping_name, None)) {
+        Some(Ok(true)) => {
+            ping_upload::check_for_uploads();
+            Ok(true)
+        }
+        Some(result) => result,
+        None => Ok(false),
+    }
 }
 
 pub fn set_log_pings(value: bool) -> bool {
