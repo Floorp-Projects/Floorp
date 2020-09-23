@@ -310,7 +310,9 @@ interface nsIApplicationUpdateService : nsISupports
   /**
    * Adds a listener that receives progress and state information about the
    * update that is currently being downloaded, e.g. to update a user
-   * interface.
+   * interface. Registered listeners will be called for all downloads and all
+   * updates during a browser session; they are not automatically removed
+   * following the first (successful or failed) download.
    * @param   listener
    *          An object implementing nsIRequestObserver and optionally
    *          nsIProgressEventSink that is to be notified of state and
