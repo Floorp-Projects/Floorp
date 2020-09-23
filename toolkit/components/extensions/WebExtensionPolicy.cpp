@@ -808,7 +808,7 @@ bool WindowShouldMatchActiveTab(nsPIDOMWindowOuter* aWin) {
       return true;
     }
 
-    if (bc->GetCreatedDynamically() || !wc->GetIsOriginalFrameSource()) {
+    if (bc->CreatedDynamically() || !wc->GetIsOriginalFrameSource()) {
       return false;
     }
   }

@@ -366,7 +366,7 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
           nsDocShell::ShouldAddToSessionHistory(aLoadState->URI(), aChannel));
     }
     entry->SetDocshellID(GetHistoryID());
-    entry->SetIsDynamicallyAdded(GetCreatedDynamically());
+    entry->SetIsDynamicallyAdded(CreatedDynamically());
     entry->SetForInitialLoad(true);
   }
   MOZ_DIAGNOSTIC_ASSERT(entry);

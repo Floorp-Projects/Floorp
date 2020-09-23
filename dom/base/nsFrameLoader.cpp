@@ -273,7 +273,7 @@ static bool IsTopContent(BrowsingContext* aParent, Element* aOwner) {
 
 static already_AddRefed<BrowsingContext> CreateBrowsingContext(
     Element* aOwner, nsIOpenWindowInfo* aOpenWindowInfo,
-    BrowsingContextGroup* aSpecificGroup) {
+    BrowsingContextGroup* aSpecificGroup, bool aNetworkCreated = false) {
   MOZ_ASSERT(!aOpenWindowInfo || !aSpecificGroup,
              "Only one of SpecificGroup and OpenWindowInfo may be provided!");
 
@@ -326,7 +326,8 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   MOZ_ASSERT(!aSpecificGroup,
              "Can't force BrowsingContextGroup for non-toplevel context");
   return BrowsingContext::CreateDetached(parentInner, nullptr, nullptr,
-                                         frameName, parentBC->GetType());
+                                         frameName, parentBC->GetType(),
+                                         !aNetworkCreated);
 }
 
 static bool InitialLoadIsRemote(Element* aOwner) {
@@ -410,7 +411,7 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
 
   RefPtr<BrowsingContextGroup> group = InitialBrowsingContextGroup(aOwner);
   RefPtr<BrowsingContext> context =
-      CreateBrowsingContext(aOwner, aOpenWindowInfo, group);
+      CreateBrowsingContext(aOwner, aOpenWindowInfo, group, aNetworkCreated);
   NS_ENSURE_TRUE(context, nullptr);
 
   bool isRemoteFrame = InitialLoadIsRemote(aOwner);
@@ -2125,11 +2126,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
 
   InvokeBrowsingContextReadyCallback();
 
-  mIsTopLevelContent = mPendingBrowsingContext->IsContent() &&
-                       !mPendingBrowsingContext->GetParent();
-  if (!mNetworkCreated && !mIsTopLevelContent) {
-    docShell->SetCreatedDynamically(true);
-  }
+  mIsTopLevelContent = mPendingBrowsingContext->IsTopContent();
 
   if (mIsTopLevelContent) {
     // Manually add ourselves to our parent's docshell, as BrowsingContext won't

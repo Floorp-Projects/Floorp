@@ -314,22 +314,12 @@ TabListener::HandleEvent(Event* aEvent) {
   }
 
   nsPIDOMWindowOuter* outer = target->GetOwnerGlobalForBindingsInternal();
-  if (!outer) {
+  if (!outer || !outer->GetDocShell()) {
     return NS_OK;
   }
 
-  nsIDocShell* docShell = outer->GetDocShell();
-  if (!docShell) {
-    return NS_OK;
-  }
-
-  bool isDynamic = false;
-  nsresult rv = docShell->GetCreatedDynamically(&isDynamic);
-  if (NS_FAILED(rv)) {
-    return NS_OK;
-  }
-
-  if (isDynamic) {
+  RefPtr<BrowsingContext> context = outer->GetBrowsingContext();
+  if (!context || context->CreatedDynamically()) {
     return NS_OK;
   }
 
@@ -457,13 +447,12 @@ nsCString CollectPosition(Document& aDocument) {
 int CollectPositions(BrowsingContext* aBrowsingContext,
                      nsTArray<nsCString>& aPositions,
                      nsTArray<int32_t>& aPositionDescendants) {
-  nsPIDOMWindowOuter* window = aBrowsingContext->GetDOMWindow();
-  if (!window) {
+  if (aBrowsingContext->CreatedDynamically()) {
     return 0;
   }
 
-  nsIDocShell* docShell = window->GetDocShell();
-  if (!docShell || docShell->GetCreatedDynamically()) {
+  nsPIDOMWindowOuter* window = aBrowsingContext->GetDOMWindow();
+  if (!window) {
     return 0;
   }
 
@@ -542,13 +531,12 @@ int CollectInputs(BrowsingContext* aBrowsingContext,
                   nsTArray<InputFormData>& aInputs,
                   nsTArray<CollectedInputDataValue>& aIdVals,
                   nsTArray<CollectedInputDataValue>& aXPathVals) {
-  nsPIDOMWindowOuter* window = aBrowsingContext->GetDOMWindow();
-  if (!window) {
+  if (aBrowsingContext->CreatedDynamically()) {
     return 0;
   }
 
-  nsIDocShell* docShell = window->GetDocShell();
-  if (!docShell || docShell->GetCreatedDynamically()) {
+  nsPIDOMWindowOuter* window = aBrowsingContext->GetDOMWindow();
+  if (!window || !window->GetDocShell()) {
     return 0;
   }
 
