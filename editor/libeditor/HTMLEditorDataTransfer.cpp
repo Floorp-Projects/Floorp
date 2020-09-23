@@ -1071,12 +1071,15 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLTransferablePreparer {
 
  private:
   const HTMLEditor& mHTMLEditor;
-  nsITransferable** aTransferable;
+  nsITransferable** mTransferable;
 };
 
 HTMLEditor::HTMLTransferablePreparer::HTMLTransferablePreparer(
     const HTMLEditor& aHTMLEditor, nsITransferable** aTransferable)
-    : mHTMLEditor{aHTMLEditor}, aTransferable{aTransferable} {}
+    : mHTMLEditor{aHTMLEditor}, mTransferable{aTransferable} {
+  MOZ_ASSERT(mTransferable);
+  MOZ_ASSERT(!*mTransferable);
+}
 
 nsresult HTMLEditor::PrepareHTMLTransferable(
     nsITransferable** aTransferable) const {
@@ -1085,9 +1088,6 @@ nsresult HTMLEditor::PrepareHTMLTransferable(
 }
 
 nsresult HTMLEditor::HTMLTransferablePreparer::Run() {
-  MOZ_ASSERT(aTransferable);
-  MOZ_ASSERT(!*aTransferable);
-
   // Create generic Transferable for getting the data
   nsresult rv;
   RefPtr<nsITransferable> transferable =
@@ -1193,7 +1193,7 @@ nsresult HTMLEditor::HTMLTransferablePreparer::Run() {
       NS_SUCCEEDED(rv),
       "nsITransferable::AddDataFlavor(kMozTextInternal) failed, but ignored");
 
-  transferable.forget(aTransferable);
+  transferable.forget(mTransferable);
 
   return NS_OK;
 }
