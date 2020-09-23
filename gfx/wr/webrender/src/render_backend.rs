@@ -663,7 +663,7 @@ impl Document {
             &self.dynamic_properties,
         );
 
-        let hit_tester = Arc::new(self.scene.create_hit_tester(&self.data_stores.clip));
+        let hit_tester = Arc::new(self.scene.create_hit_tester());
         self.hit_tester = Some(Arc::clone(&hit_tester));
         self.shared_hit_tester.update(hit_tester);
         self.hit_tester_is_valid = true;
