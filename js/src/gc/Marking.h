@@ -136,7 +136,6 @@ namespace gc {
 
 template <typename T>
 inline bool IsForwarded(const T* t);
-inline bool IsForwarded(const JS::Value& value);
 
 template <typename T>
 inline T* Forwarded(const T* t);
@@ -172,8 +171,6 @@ inline void CheckGCThingAfterMovingGC(T* t);
 
 template <typename T>
 inline void CheckGCThingAfterMovingGC(const WeakHeapPtr<T*>& t);
-
-inline void CheckValueAfterMovingGC(const JS::Value& value);
 
 #endif  // JSGC_HASH_TABLE_CHECKS
 

@@ -14,8 +14,9 @@
 #include <type_traits>
 
 #include "gc/RelocationOverlay.h"
-#include "vm/BigIntType.h"
-#include "vm/RegExpShared.h"
+#include "js/Id.h"
+#include "js/Value.h"
+#include "vm/TaggedProto.h"
 
 #include "gc/Nursery-inl.h"
 
@@ -59,17 +60,14 @@ struct TaggedPtr<TaggedProto> {
 
 template <typename T>
 struct MightBeForwarded {
-  static_assert(std::is_base_of_v<Cell, T>, "T must derive from Cell");
-  static_assert(!std::is_same_v<Cell, T> && !std::is_same_v<TenuredCell, T>,
-                "T must not be Cell or TenuredCell");
+  static_assert(std::is_base_of_v<Cell, T>);
+  static_assert(!std::is_same_v<Cell, T> && !std::is_same_v<TenuredCell, T>);
 
-  static const bool value =
-      std::is_base_of_v<JSObject, T> || std::is_base_of_v<Shape, T> ||
-      std::is_base_of_v<BaseShape, T> || std::is_base_of_v<JSString, T> ||
-      std::is_base_of_v<JS::BigInt, T> ||
-      std::is_base_of_v<js::BaseScript, T> || std::is_base_of_v<js::Scope, T> ||
-      std::is_base_of_v<js::RegExpShared, T> ||
-      std::is_base_of_v<js::ObjectGroup, T>;
+#define CAN_FORWARD_KIND_OR(_1, _2, Type, _3, _4, _5, canCompact) \
+  (std::is_base_of_v<Type, T> && canCompact) ||
+
+  static constexpr bool value = FOR_EACH_ALLOCKIND(CAN_FORWARD_KIND_OR) true;
+#undef CAN_FORWARD_KIND_OR
 };
 
 template <typename T>
@@ -82,21 +80,11 @@ inline bool IsForwarded(const T* t) {
   return t->isForwarded();
 }
 
-inline bool IsForwarded(const JS::Value& value) {
-  auto isForwarded = [](auto t) { return IsForwarded(t); };
-  return MapGCThingTyped(value, isForwarded).valueOr(false);
-}
-
 template <typename T>
 inline T* Forwarded(const T* t) {
   const RelocationOverlay* overlay = RelocationOverlay::fromCell(t);
   MOZ_ASSERT(overlay->isForwarded());
   return reinterpret_cast<T*>(overlay->forwardingAddress());
-}
-
-inline Value Forwarded(const JS::Value& value) {
-  auto forward = [](auto t) { return TaggedPtr<Value>::wrap(Forwarded(t)); };
-  return MapGCThingTyped(value, forward).valueOr(value);
 }
 
 template <typename T>
@@ -164,10 +152,6 @@ inline void CheckGCThingAfterMovingGC(T* t) {
 template <typename T>
 inline void CheckGCThingAfterMovingGC(const WeakHeapPtr<T*>& t) {
   CheckGCThingAfterMovingGC(t.unbarrieredGet());
-}
-
-inline void CheckValueAfterMovingGC(const JS::Value& value) {
-  ApplyGCThingTyped(value, [](auto t) { CheckGCThingAfterMovingGC(t); });
 }
 
 #endif  // JSGC_HASH_TABLE_CHECKS
