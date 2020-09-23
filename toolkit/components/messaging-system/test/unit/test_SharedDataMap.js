@@ -128,3 +128,29 @@ with_sharedDataMap(async function test_parentChildSync_async({
     "Parent and child should be in sync"
   );
 });
+
+with_sharedDataMap(async function test_earlyChildSync({
+  instance: parentInstance,
+  sandbox,
+}) {
+  const childInstance = new SharedDataMap("xpcshell", {
+    path: PATH,
+    isParent: false,
+  });
+
+  Assert.equal(childInstance.has("baz"), false, "Should not fail");
+
+  parentInstance.init(true);
+  parentInstance.set("baz", { bar: 1 });
+
+  await TestUtils.waitForCondition(
+    () => childInstance.get("baz"),
+    "Wait for child to sync"
+  );
+
+  Assert.deepEqual(
+    childInstance.get("baz"),
+    parentInstance.get("baz"),
+    "Parent and child should be in sync"
+  );
+});
