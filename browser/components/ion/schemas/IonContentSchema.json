@@ -6,8 +6,8 @@
     "title",
     "summary",
     "details",
-    "joinPioneerConsent",
-    "leavePioneerConsent",
+    "joinIonConsent",
+    "leaveIonConsent",
     "privacyPolicy"
   ],
   "properties": {
@@ -26,14 +26,14 @@
       "title": "Details",
       "type": "string"
     },
-    "joinPioneerConsent": {
-      "$id": "#root/joinPioneerConsent",
-      "title": "Joinpioneerconsent",
+    "joinIonConsent": {
+      "$id": "#root/joinIonConsent",
+      "title": "JoinIonconsent",
       "type": "string"
     },
-    "leavePioneerConsent": {
-      "$id": "#root/leavePioneerConsent",
-      "title": "Leavepioneerconsent",
+    "leaveIonConsent": {
+      "$id": "#root/leaveIonConsent",
+      "title": "LeaveIonconsent",
       "type": "string"
     },
     "privacyPolicy": {
