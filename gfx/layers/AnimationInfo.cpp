@@ -711,20 +711,26 @@ static PartialPrerenderData GetPartialPrerenderData(
 
   ScrollableLayerGuid::ViewID scrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
 
-  const nsIFrame* clipFrame = nullptr;
-  const nsIScrollableFrame* scrollFrame =
-      nsLayoutUtils::GetNearestScrollableFrame(
-          aFrame->GetParent(), nsLayoutUtils::SCROLLABLE_SAME_DOC |
-                                   nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
-  // If the nearest scrollable frame has overflow:hidden styles for both
-  // direction, it's the clip frame.
+  const nsIFrame* clipFrame =
+      nsLayoutUtils::GetNearestOverflowClipFrame(aFrame->GetParent());
+  const nsIScrollableFrame* scrollFrame = do_QueryFrame(clipFrame);
+
+  if (!clipFrame) {
+    // If there is no suitable clip frame in the same document, use the
+    // root one.
+    scrollFrame = aFrame->PresShell()->GetRootScrollFrameAsScrollable();
+    if (scrollFrame) {
+      clipFrame = do_QueryFrame(scrollFrame);
+    } else {
+      // If there is no root scroll frame, use the viewport frame.
+      clipFrame = aFrame->PresShell()->GetRootFrame();
+    }
+  }
+
+  // If the scroll frame is asyncronously scrollable, try to find the scroll id.
   if (scrollFrame &&
-      scrollFrame->GetScrollStyles().IsHiddenInBothDirections()) {
-    clipFrame = do_QueryFrame(scrollFrame);
-    // The scrollId should be as it is (i.e. NULL_SCROLL_ID) since it's not
-    // going to be asyncronously scrolled.
-  } else if (nsLayoutUtils::AsyncPanZoomEnabled(
-                 const_cast<nsIFrame*>(aFrame))) {
+      !scrollFrame->GetScrollStyles().IsHiddenInBothDirections() &&
+      nsLayoutUtils::AsyncPanZoomEnabled(aFrame)) {
     const bool isInPositionFixed =
         nsLayoutUtils::IsInPositionFixedSubtree(aFrame);
     const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
@@ -733,31 +739,15 @@ static PartialPrerenderData GetPartialPrerenderData(
     if (!isInPositionFixed && asr &&
         aFrame->PresContext() == asrScrollableFrame->PresContext()) {
       scrollId = asr->GetViewId();
-      clipFrame = asrScrollableFrame;
+      MOZ_ASSERT(clipFrame == asrScrollableFrame);
     } else {
       // Use the root scroll id in the same document if the target frame is in
       // position:fixed subtree or there is no ASR or the ASR is in a different
       // ancestor document.
       scrollId =
           nsLayoutUtils::ScrollIdForRootScrollFrame(aFrame->PresContext());
-      clipFrame = aFrame->PresShell()->GetRootScrollFrame();
+      MOZ_ASSERT(clipFrame == aFrame->PresShell()->GetRootScrollFrame());
     }
-  }
-
-  if (!clipFrame) {
-    if (!scrollFrame) {
-      // If there is no suitable scrollable frame in the same document, use the
-      // root one.
-      scrollFrame = aFrame->PresShell()->GetRootScrollFrameAsScrollable();
-    }
-    if (scrollFrame) {
-      clipFrame = do_QueryFrame(scrollFrame);
-    } else {
-      // If there is no root scroll frame, use the viewport frame.
-      clipFrame = aFrame->PresShell()->GetRootFrame();
-    }
-  } else {
-    scrollFrame = do_QueryFrame(clipFrame);
   }
 
   int32_t devPixelsToAppUnits = aFrame->PresContext()->AppUnitsPerDevPixel();
