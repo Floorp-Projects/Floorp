@@ -5,7 +5,13 @@
 import mozunit
 import pytest
 
-from mozperftest.script import ScriptInfo, MissingFieldError, ScriptType, ParseError
+from mozperftest.script import (
+    BadOptionTypeError,
+    ScriptInfo,
+    MissingFieldError,
+    ScriptType,
+    ParseError,
+)
 from mozperftest.tests.support import (
     EXAMPLE_TEST,
     HERE,
@@ -16,9 +22,15 @@ from mozperftest.tests.support import (
 
 def check_options(info):
     assert info["options"]["default"]["perfherder"]
-    assert info["options"]["linux"]["perfherder_metrics"] == "name:speed,unit:bps_lin"
-    assert info["options"]["win"]["perfherder_metrics"] == "name:speed,unit:bps_win"
-    assert info["options"]["mac"]["perfherder_metrics"] == "name:speed,unit:bps_mac"
+    assert info["options"]["linux"]["perfherder_metrics"] == [
+        {"name": "speed", "unit": "bps_lin"}
+    ]
+    assert info["options"]["win"]["perfherder_metrics"] == [
+        {"name": "speed", "unit": "bps_win"}
+    ]
+    assert info["options"]["mac"]["perfherder_metrics"] == [
+        {"name": "speed", "unit": "bps_mac"}
+    ]
 
 
 def test_scriptinfo_bt():
@@ -55,16 +67,32 @@ def test_parserror():
 
 
 def test_update_args():
-    args = {"perfherder_metrics": "yey"}
+    args = {"perfherder_metrics": [{"name": "yey"}]}
     info = ScriptInfo(EXAMPLE_TEST)
     new_args = info.update_args(**args)
 
     # arguments should not be overriden
-    assert new_args["perfherder_metrics"] == "yey"
+    assert new_args["perfherder_metrics"] == [{"name": "yey"}]
 
     # arguments in platform-specific options should
     # override default options
     assert new_args["verbose"]
+
+
+def test_update_args_metrics_list_failure():
+    args = {"perfherder_metrics": "yey"}
+    info = ScriptInfo(EXAMPLE_TEST)
+
+    with pytest.raises(BadOptionTypeError):
+        info.update_args(**args)
+
+
+def test_update_args_metrics_json_failure():
+    args = {"perfherder_metrics": ["yey"]}
+    info = ScriptInfo(EXAMPLE_TEST)
+
+    with pytest.raises(BadOptionTypeError):
+        info.update_args(**args)
 
 
 if __name__ == "__main__":

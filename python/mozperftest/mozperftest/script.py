@@ -42,6 +42,12 @@ _INFO = """\
 XPCSHELL_FUNCS = "add_task", "run_test", "run_next_test"
 
 
+class BadOptionTypeError(Exception):
+    """Raised when an option defined in a test has an incorrect type."""
+
+    pass
+
+
 class MissingFieldError(Exception):
     def __init__(self, script, field):
         super().__init__(f"Missing metadata {field}")
@@ -247,6 +253,18 @@ class ScriptInfo(defaultdict):
         result = options.get("default", {})
         result.update(options.get(simple_platform(), {}))
         result.update(args)
+
+        # Ensure special-typed options are correct here
+        for opt, val in result.items():
+            if "metrics" in opt:
+                if not isinstance(val, list):
+                    raise BadOptionTypeError("Metrics should be defined within a list")
+                for metric in val:
+                    if not isinstance(metric, dict):
+                        raise BadOptionTypeError(
+                            "Each individual metrics must be defined within a JSON-like object"
+                        )
+
         if self.script_type == ScriptType.xpcshell:
             result["flavor"] = "xpcshell"
         return result
