@@ -1684,6 +1684,7 @@ package org.mozilla.geckoview {
     field @NonNull public final String[] origins;
     field @NonNull public final String[] permissions;
     field public final int signedState;
+    field public final boolean temporary;
     field @NonNull public final String version;
   }
 

@@ -14,6 +14,11 @@ exclude: true
 ⚠️  breaking change and deprecation notices
 
 ## v83
+- Added [`WebExtension.MetaData.temporary`][83.1] which exposes whether an extension
+  has been installed temporarily, e.g. when using web-ext.
+  ([bug 1624410]({{bugzilla}}1624410))
+
+[83.1]: {{javadoc_uri}}/WebExtension.MetaData.html#temporary
 
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
@@ -803,4 +808,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: e62341ace2541ae9fbd4f08f7c2d03ba28bf416a
+[api-version]: 8a8ae9a25f36172359421f78ec83bb8613621541
