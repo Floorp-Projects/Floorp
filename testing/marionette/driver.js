@@ -266,7 +266,6 @@ GeckoDriver.prototype.QueryInterface = ChromeUtils.generateQI([
 ]);
 
 GeckoDriver.prototype.init = function() {
-  this.mm.addMessageListener("Marionette:WebDriver:GetCapabilities", this);
   this.mm.addMessageListener("Marionette:ListenersAttached", this);
   this.mm.addMessageListener("Marionette:Register", this);
   this.mm.addMessageListener("Marionette:switchedToFrame", this);
@@ -275,7 +274,6 @@ GeckoDriver.prototype.init = function() {
 };
 
 GeckoDriver.prototype.uninit = function() {
-  this.mm.removeMessageListener("Marionette:WebDriver:GetCapabilities", this);
   this.mm.removeMessageListener("Marionette:ListenersAttached", this);
   this.mm.removeMessageListener("Marionette:Register", this);
   this.mm.removeMessageListener("Marionette:switchedToFrame", this);
@@ -1889,7 +1887,7 @@ GeckoDriver.prototype.singleTap = async function(cmd) {
       );
 
     case Context.Content:
-      await this.listener.singleTap(webEl, x, y);
+      await this.listener.singleTap(webEl, x, y, this.capabilities);
       break;
   }
 };
@@ -1916,7 +1914,7 @@ GeckoDriver.prototype.performActions = async function(cmd) {
   await this._handleUserPrompts();
 
   let actions = cmd.parameters.actions;
-  await this.listener.performActions({ actions });
+  await this.listener.performActions({ actions }, this.capabilities);
 };
 
 /**
@@ -2172,7 +2170,7 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
       await navigate.waitForNavigationCompleted(
         this,
         async () => {
-          await this.listener.clickElement(webEl);
+          await this.listener.clickElement(webEl, this.capabilities);
         },
         {
           browsingContext: this.getBrowsingContext(),
@@ -2396,7 +2394,7 @@ GeckoDriver.prototype.isElementDisplayed = async function(cmd) {
       return interaction.isElementDisplayed(el, this.a11yChecks);
 
     case Context.Content:
-      return this.listener.isElementDisplayed(webEl);
+      return this.listener.isElementDisplayed(webEl, this.capabilities);
 
     default:
       throw new TypeError(`Unknown context: ${this.context}`);
@@ -2482,7 +2480,7 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd) {
       return interaction.isElementEnabled(el, this.a11yChecks);
 
     case Context.Content:
-      return this.listener.isElementEnabled(webEl);
+      return this.listener.isElementEnabled(webEl, this.capabilities);
 
     default:
       throw new TypeError(`Unknown context: ${this.context}`);
@@ -2521,7 +2519,7 @@ GeckoDriver.prototype.isElementSelected = async function(cmd) {
       return interaction.isElementSelected(el, this.a11yChecks);
 
     case Context.Content:
-      return this.listener.isElementSelected(webEl);
+      return this.listener.isElementSelected(webEl, this.capabilities);
 
     default:
       throw new TypeError(`Unknown context: ${this.context}`);
@@ -2599,7 +2597,7 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd) {
       break;
 
     case Context.Content:
-      await this.listener.sendKeysToElement(webEl, text);
+      await this.listener.sendKeysToElement(webEl, text, this.capabilities);
       break;
 
     default:
@@ -3586,9 +3584,6 @@ GeckoDriver.prototype.receiveMessage = function(message) {
         }
       }
       break;
-
-    case "Marionette:WebDriver:GetCapabilities":
-      return this.capabilities.toJSON();
   }
 };
 /* eslint-enable consistent-return */
