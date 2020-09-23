@@ -3406,6 +3406,16 @@ class Document : public nsINode,
   bool Hidden() const { return mVisibilityState != VisibilityState::Visible; }
   dom::VisibilityState VisibilityState() const { return mVisibilityState; }
 
+ private:
+  int32_t mPictureInPictureChildElementCount = 0;
+
+ public:
+  void EnableChildElementInPictureInPictureMode();
+  void DisableChildElementInPictureInPictureMode();
+
+  // True if any child element is being used in picture in picture mode.
+  bool HasPictureInPictureChildElement() const;
+
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   void SetSelectedStyleSheetSet(const nsAString& aSheetSet);
   void GetLastStyleSheetSet(nsAString& aSheetSet) {
