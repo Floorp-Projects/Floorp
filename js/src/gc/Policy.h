@@ -30,12 +30,12 @@ struct InternalGCPointerPolicy : public JS::GCPointerPolicy<T> {
 
   static void preBarrier(T v) {
     if (v) {
-      Type::writeBarrierPre(v);
+      Type::preWriteBarrier(v);
     }
   }
   static void postBarrier(T* vp, T prev, T next) {
     if (*vp) {
-      Type::writeBarrierPost(vp, prev, next);
+      Type::postWriteBarrier(vp, prev, next);
     }
   }
   static void readBarrier(T v) {

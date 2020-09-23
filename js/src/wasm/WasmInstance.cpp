@@ -1289,7 +1289,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                                 gc::Cell** location) {
   MOZ_ASSERT(SASigPreBarrierFiltering.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(location);
-  JSObject::writeBarrierPre(*reinterpret_cast<JSObject**>(location));
+  JSObject::preWriteBarrier(*reinterpret_cast<JSObject**>(location));
 }
 
 /* static */ void Instance::postBarrier(Instance* instance,
@@ -1446,7 +1446,7 @@ void CopyValPostBarriered(uint8_t* dst, const Val& src) {
       AnyRef x = src.ref();
       memcpy(dst, x.asJSObjectAddress(), sizeof(*x.asJSObjectAddress()));
       if (!x.isNull()) {
-        JSObject::writeBarrierPost((JSObject**)dst, nullptr, x.asJSObject());
+        JSObject::postWriteBarrier((JSObject**)dst, nullptr, x.asJSObject());
       }
       break;
     }

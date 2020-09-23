@@ -382,7 +382,7 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
     return offsetof(BaselineScript, resumeEntriesOffset_);
   }
 
-  static void writeBarrierPre(Zone* zone, BaselineScript* script);
+  static void preWriteBarrier(Zone* zone, BaselineScript* script);
 
   bool hasPendingIonCompileTask() const { return !!pendingIonCompileTask_; }
 

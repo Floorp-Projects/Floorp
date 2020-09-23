@@ -1328,7 +1328,7 @@ class NativeObject : public JSObject {
  private:
   // Run a post write barrier that encompasses multiple contiguous elements in a
   // single step.
-  inline void elementsRangeWriteBarrierPost(uint32_t start, uint32_t count);
+  inline void elementsRangePostWriteBarrier(uint32_t start, uint32_t count);
 
  public:
   void shrinkCapacityToInitializedLength(JSContext* cx);
@@ -1540,9 +1540,9 @@ class NativeObject : public JSObject {
    */
   inline uint8_t* fixedData(size_t nslots) const;
 
-  inline void privateWriteBarrierPre(void** oldval);
+  inline void privatePreWriteBarrier(void** oldval);
 
-  void privateWriteBarrierPost(void** pprivate) {
+  void privatePostWriteBarrier(void** pprivate) {
     gc::Cell** cellp = reinterpret_cast<gc::Cell**>(pprivate);
     MOZ_ASSERT(cellp);
     MOZ_ASSERT(*cellp);
@@ -1571,7 +1571,7 @@ class NativeObject : public JSObject {
   void* getPrivate() const { return privateRef(numFixedSlots()); }
   void setPrivate(void* data) {
     void** pprivate = &privateRef(numFixedSlots());
-    privateWriteBarrierPre(pprivate);
+    privatePreWriteBarrier(pprivate);
     *pprivate = data;
   }
 
@@ -1582,9 +1582,9 @@ class NativeObject : public JSObject {
     }
 #endif
     void** pprivate = &privateRef(numFixedSlots());
-    privateWriteBarrierPre(pprivate);
+    privatePreWriteBarrier(pprivate);
     *pprivate = reinterpret_cast<void*>(cell);
-    privateWriteBarrierPost(pprivate);
+    privatePostWriteBarrier(pprivate);
   }
 
   void setPrivateUnbarriered(void* data) {
@@ -1638,7 +1638,7 @@ class NativeObject : public JSObject {
   static size_t offsetOfSlots() { return offsetof(NativeObject, slots_); }
 };
 
-inline void NativeObject::privateWriteBarrierPre(void** oldval) {
+inline void NativeObject::privatePreWriteBarrier(void** oldval) {
   JS::shadow::Zone* shadowZone = this->shadowZoneFromAnyThread();
   if (shadowZone->needsIncrementalBarrier() && *oldval &&
       getClass()->hasTrace()) {

@@ -46,7 +46,7 @@ bool HeapSlot::preconditionForSet(NativeObject* owner, Kind kind,
   return &owner->getDenseElement(slot - numShifted) == (const Value*)this;
 }
 
-void HeapSlot::assertPreconditionForWriteBarrierPost(
+void HeapSlot::assertPreconditionForPostWriteBarrier(
     NativeObject* obj, Kind kind, uint32_t slot, const Value& target) const {
   if (kind == Slot) {
     MOZ_ASSERT(obj->getSlotAddressUnchecked(slot)->get() == target);
@@ -108,11 +108,11 @@ AutoTouchingGrayThings::~AutoTouchingGrayThings() {
 }
 
 /* static */ void InternalBarrierMethods<Value>::preBarrier(const Value& v) {
-  ApplyGCThingTyped(v, [](auto t) { t->writeBarrierPre(t); });
+  ApplyGCThingTyped(v, [](auto t) { t->preWriteBarrier(t); });
 }
 
 /* static */ void InternalBarrierMethods<jsid>::preBarrier(jsid id) {
-  ApplyGCThingTyped(id, [](auto t) { t->writeBarrierPre(t); });
+  ApplyGCThingTyped(id, [](auto t) { t->preWriteBarrier(t); });
 }
 
 template <typename T>

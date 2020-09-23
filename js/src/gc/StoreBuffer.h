@@ -620,9 +620,9 @@ class ArenaCellSet {
 };
 
 // Implement the post-write barrier for nursery allocateable cell type |T|. Call
-// this from |T::writeBarrierPost|.
+// this from |T::postWriteBarrier|.
 template <typename T>
-MOZ_ALWAYS_INLINE void WriteBarrierPostImpl(void* cellp, T* prev, T* next) {
+MOZ_ALWAYS_INLINE void PostWriteBarrierImpl(void* cellp, T* prev, T* next) {
   MOZ_ASSERT(cellp);
 
   // If the target needs an entry, add it.

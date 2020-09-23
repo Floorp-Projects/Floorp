@@ -287,9 +287,9 @@ class JSObject
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZoneFromAnyThread() const {
     return JS::shadow::Zone::from(zoneFromAnyThread());
   }
-  static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, JSObject* prev,
+  static MOZ_ALWAYS_INLINE void postWriteBarrier(void* cellp, JSObject* prev,
                                                  JSObject* next) {
-    js::gc::WriteBarrierPostImpl<JSObject>(cellp, prev, next);
+    js::gc::PostWriteBarrierImpl<JSObject>(cellp, prev, next);
   }
 
   /* Return the allocKind we would use if we were to tenure this object. */

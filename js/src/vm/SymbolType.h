@@ -95,9 +95,9 @@ class Symbol
   }
   inline void finalize(JSFreeOp*) {}
 
-  static MOZ_ALWAYS_INLINE void writeBarrierPre(Symbol* thing) {
+  static MOZ_ALWAYS_INLINE void preWriteBarrier(Symbol* thing) {
     if (thing && !thing->isWellKnownSymbol()) {
-      thing->asTenured().writeBarrierPre(thing);
+      thing->asTenured().preWriteBarrier(thing);
     }
   }
 

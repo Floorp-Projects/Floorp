@@ -670,15 +670,15 @@ class JSString : public js::gc::CellWithLengthAndFlags {
     }
   }
 
-  static MOZ_ALWAYS_INLINE void writeBarrierPre(JSString* thing) {
+  static MOZ_ALWAYS_INLINE void preWriteBarrier(JSString* thing) {
     if (thing && !thing->isPermanentAtom()) {
-      Cell::writeBarrierPre(thing);
+      Cell::preWriteBarrier(thing);
     }
   }
 
-  static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, JSString* prev,
+  static MOZ_ALWAYS_INLINE void postWriteBarrier(void* cellp, JSString* prev,
                                                  JSString* next) {
-    js::gc::WriteBarrierPostImpl<JSString>(cellp, prev, next);
+    js::gc::PostWriteBarrierImpl<JSString>(cellp, prev, next);
   }
 
   static void addCellAddressToStoreBuffer(js::gc::StoreBuffer* buffer,

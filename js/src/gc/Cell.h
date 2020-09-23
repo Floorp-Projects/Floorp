@@ -171,7 +171,7 @@ struct Cell {
 
   inline JS::TraceKind getTraceKind() const;
 
-  static MOZ_ALWAYS_INLINE bool needWriteBarrierPre(JS::Zone* zone);
+  static MOZ_ALWAYS_INLINE bool needPreWriteBarrier(JS::Zone* zone);
 
   template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   inline bool is() const {
@@ -204,7 +204,7 @@ struct Cell {
   // Default barrier implementations for nursery allocatable cells. These may be
   // overriden by derived classes.
   static MOZ_ALWAYS_INLINE void readBarrier(Cell* thing);
-  static MOZ_ALWAYS_INLINE void writeBarrierPre(Cell* thing);
+  static MOZ_ALWAYS_INLINE void preWriteBarrier(Cell* thing);
 
 #ifdef DEBUG
   static inline void assertThingIsNotGray(Cell* cell);
@@ -287,8 +287,8 @@ class TenuredCell : public Cell {
   }
 
   static MOZ_ALWAYS_INLINE void readBarrier(TenuredCell* thing);
-  static MOZ_ALWAYS_INLINE void writeBarrierPre(TenuredCell* thing);
-  static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp,
+  static MOZ_ALWAYS_INLINE void preWriteBarrier(TenuredCell* thing);
+  static MOZ_ALWAYS_INLINE void postWriteBarrier(void* cellp,
                                                  TenuredCell* prior,
                                                  TenuredCell* next);
 
@@ -398,7 +398,7 @@ inline JS::TraceKind Cell::getTraceKind() const {
   return NurseryCellHeader::from(this)->traceKind();
 }
 
-/* static */ MOZ_ALWAYS_INLINE bool Cell::needWriteBarrierPre(JS::Zone* zone) {
+/* static */ MOZ_ALWAYS_INLINE bool Cell::needPreWriteBarrier(JS::Zone* zone) {
   return JS::shadow::Zone::from(zone)->needsIncrementalBarrier();
 }
 
@@ -409,10 +409,10 @@ inline JS::TraceKind Cell::getTraceKind() const {
   }
 }
 
-/* static */ MOZ_ALWAYS_INLINE void Cell::writeBarrierPre(Cell* thing) {
+/* static */ MOZ_ALWAYS_INLINE void Cell::preWriteBarrier(Cell* thing) {
   MOZ_ASSERT(!CurrentThreadIsGCMarking());
   if (thing && thing->isTenured()) {
-    TenuredCell::writeBarrierPre(&thing->asTenured());
+    TenuredCell::preWriteBarrier(&thing->asTenured());
   }
 }
 
@@ -504,7 +504,7 @@ bool TenuredCell::isInsideZone(JS::Zone* zone) const {
 
 void AssertSafeToSkipBarrier(TenuredCell* thing);
 
-/* static */ MOZ_ALWAYS_INLINE void TenuredCell::writeBarrierPre(
+/* static */ MOZ_ALWAYS_INLINE void TenuredCell::preWriteBarrier(
     TenuredCell* thing) {
   MOZ_ASSERT(!CurrentThreadIsIonCompiling());
   MOZ_ASSERT(!CurrentThreadIsGCMarking());
@@ -547,7 +547,7 @@ static MOZ_ALWAYS_INLINE void AssertValidToSkipBarrier(TenuredCell* thing) {
   MOZ_ASSERT_IF(thing, !IsNurseryAllocable(thing->getAllocKind()));
 }
 
-/* static */ MOZ_ALWAYS_INLINE void TenuredCell::writeBarrierPost(
+/* static */ MOZ_ALWAYS_INLINE void TenuredCell::postWriteBarrier(
     void* cellp, TenuredCell* prior, TenuredCell* next) {
   AssertValidToSkipBarrier(next);
 }
@@ -743,7 +743,7 @@ class alignas(gc::CellAlignBytes) CellWithTenuredGCPointer : public BaseCell {
   void setHeaderPtr(PtrT* newValue) {
     // As above, no flags are expected to be set here.
     MOZ_ASSERT(!IsInsideNursery(newValue));
-    PtrT::writeBarrierPre(headerPtr());
+    PtrT::preWriteBarrier(headerPtr());
     unbarrieredSetHeaderPtr(newValue);
   }
 

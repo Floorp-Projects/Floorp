@@ -183,7 +183,7 @@
  * extra branch.
  *
  * In practice, we implement the pre-barrier differently based on the type of
- * value0. E.g., see JSObject::writeBarrierPre, which is used if obj->field is
+ * value0. E.g., see JSObject::preWriteBarrier, which is used if obj->field is
  * a JSObject*. It takes value0 as a parameter.
  *
  * Post-write barrier
@@ -268,15 +268,15 @@
  *
  * WriteBarriered<T>::pre
  *  -> InternalBarrierMethods<T*>::preBarrier
- *      -> T::writeBarrierPre
+ *      -> T::preWriteBarrier
  *  -> InternalBarrierMethods<Value>::preBarrier
  *  -> InternalBarrierMethods<jsid>::preBarrier
  *      -> InternalBarrierMethods<T*>::preBarrier
- *          -> T::writeBarrierPre
+ *          -> T::preWriteBarrier
  *
  * GCPtr<T>::post and HeapPtr<T>::post
  *  -> InternalBarrierMethods<T*>::postBarrier
- *      -> T::writeBarrierPost
+ *      -> T::postWriteBarrier
  *  -> InternalBarrierMethods<Value>::postBarrier
  *      -> StoreBuffer::put
  *
@@ -328,10 +328,10 @@ template <typename T>
 struct InternalBarrierMethods<T*> {
   static bool isMarkable(const T* v) { return v != nullptr; }
 
-  static void preBarrier(T* v) { T::writeBarrierPre(v); }
+  static void preBarrier(T* v) { T::preWriteBarrier(v); }
 
   static void postBarrier(T** vp, T* prev, T* next) {
-    T::writeBarrierPost(vp, prev, next);
+    T::postWriteBarrier(vp, prev, next);
   }
 
   static void readBarrier(T* v) { T::readBarrier(v); }
@@ -452,7 +452,7 @@ class WriteBarriered : public BarrieredBase<T>,
   void unbarrieredSet(const T& v) { this->value = v; }
 
   // For users who need to manually barrier the raw types.
-  static void writeBarrierPre(const T& v) {
+  static void preWriteBarrier(const T& v) {
     InternalBarrierMethods<T>::preBarrier(v);
   }
 
@@ -864,7 +864,7 @@ class HeapSlot : public WriteBarriered<Value> {
 
 #ifdef DEBUG
   bool preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot) const;
-  void assertPreconditionForWriteBarrierPost(NativeObject* obj, Kind kind,
+  void assertPreconditionForPostWriteBarrier(NativeObject* obj, Kind kind,
                                              uint32_t slot,
                                              const Value& target) const;
 #endif
@@ -881,7 +881,7 @@ class HeapSlot : public WriteBarriered<Value> {
   void post(NativeObject* owner, Kind kind, uint32_t slot,
             const Value& target) {
 #ifdef DEBUG
-    assertPreconditionForWriteBarrierPost(owner, kind, slot, target);
+    assertPreconditionForPostWriteBarrier(owner, kind, slot, target);
 #endif
     if (this->value.isObject() || this->value.isString() ||
         this->value.isBigInt()) {
@@ -967,7 +967,7 @@ static inline void BarrieredSetPair(Zone* zone, HeapPtr<T1*>& v1, T1* val1,
                                     HeapPtr<T2*>& v2, T2* val2) {
   AssertTargetIsNotGray(val1);
   AssertTargetIsNotGray(val2);
-  if (T1::needWriteBarrierPre(zone)) {
+  if (T1::needPreWriteBarrier(zone)) {
     v1.pre();
     v2.pre();
   }
