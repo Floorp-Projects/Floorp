@@ -8,7 +8,7 @@
 # having to create the same entry for each locale.
 
 [localization] @AB_CD@.jar:
-  preview/pioneer.ftl                              (../components/pioneer/content/pioneer.ftl)
+  preview/ion.ftl                                  (../components/ion/content/ion.ftl)
   preview/protections.ftl                          (../components/protections/content/protections.ftl)
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   browser                                          (%browser/**/*.ftl)

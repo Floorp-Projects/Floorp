@@ -21,10 +21,10 @@ const { TelemetryStorage } = ChromeUtils.import(
 const ORIG_AVAILABLE_LOCALES = Services.locale.availableLocales;
 const ORIG_REQUESTED_LOCALES = Services.locale.requestedLocales;
 
-const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
-const PREF_PIONEER_NEW_STUDIES_AVAILABLE =
+const PREF_ION_ID = "toolkit.telemetry.pioneerId";
+const PREF_ION_NEW_STUDIES_AVAILABLE =
   "toolkit.telemetry.pioneer-new-studies-available";
-const PREF_PIONEER_COMPLETED_STUDIES =
+const PREF_ION_COMPLETED_STUDIES =
   "toolkit.telemetry.pioneer-completed-studies";
 
 const PREF_TEST_CACHED_CONTENT = "toolkit.pioneer.testCachedContent";
@@ -36,15 +36,15 @@ const CACHED_CONTENT = [
     title: "test title\ntest title line 2",
     summary: "test summary\ntest summary line 2",
     details: "1. test details\n2. test details line 2\n3. test details line 3",
-    joinPioneerConsent: "test join consent\njoin consent line 2",
-    leavePioneerConsent: "test leave consent\ntest leave consent line 2",
+    joinIonConsent: "test join consent\njoin consent line 2",
+    leaveIonConsent: "test leave consent\ntest leave consent line 2",
     privacyPolicy: "http://localhost",
   },
 ];
 
 const CACHED_ADDONS = [
   {
-    addon_id: "pioneer-v2-example@mozilla.org",
+    addon_id: "ion-v2-example@mozilla.org",
     icons: {
       "32":
         "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
@@ -58,13 +58,13 @@ const CACHED_ADDONS = [
     sourceURI: {
       spec: "https://localhost",
     },
-    description: "Study purpose: Testing Pioneer.",
+    description: "Study purpose: Testing Ion.",
     privacyPolicy: {
       spec: "http://localhost",
     },
     studyType: "extension",
     authors: {
-      name: "Pioneer Developers",
+      name: "Ion Developers",
       url: "https://addons.mozilla.org/en-US/firefox/user/6510522/",
     },
     dataCollectionDetails: ["test123", "test345"],
@@ -77,7 +77,7 @@ const CACHED_ADDONS = [
     leaveStudyConsent: "test345",
   },
   {
-    addon_id: "pioneer-v2-default-example@mozilla.org",
+    addon_id: "ion-v2-default-example@mozilla.org",
     icons: {
       "32":
         "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
@@ -91,13 +91,13 @@ const CACHED_ADDONS = [
     sourceURI: {
       spec: "https://localhost",
     },
-    description: "Study purpose: Testing Pioneer.",
+    description: "Study purpose: Testing Ion.",
     privacyPolicy: {
       spec: "http://localhost",
     },
     studyType: "extension",
     authors: {
-      name: "Pioneer Developers",
+      name: "Ion Developers",
       url: "https://addons.mozilla.org/en-US/firefox/user/6510522/",
     },
     dataCollectionDetails: ["test123", "test345"],
@@ -124,7 +124,7 @@ const CACHED_ADDONS = [
     sourceURI: {
       spec: "https://localhost",
     },
-    description: "Study purpose: Testing Pioneer.",
+    description: "Study purpose: Testing Ion.",
     privacyPolicy: {
       spec: "http://localhost",
     },
@@ -157,7 +157,7 @@ const CACHED_ADDONS = [
     sourceURI: {
       spec: "https://localhost",
     },
-    description: "Study purpose: Testing Pioneer.",
+    description: "Study purpose: Testing Ion.",
     privacyPolicy: {
       spec: "http://localhost",
     },
@@ -179,7 +179,7 @@ const CACHED_ADDONS = [
 
 const CACHED_ADDONS_BAD_DEFAULT = [
   {
-    addon_id: "pioneer-v2-bad-default-example@mozilla.org",
+    addon_id: "ion-v2-bad-default-example@mozilla.org",
     icons: {
       "32":
         "https://localhost/user-media/addon_icons/2644/2644632-32.png?modified=4a64e2bc",
@@ -193,13 +193,13 @@ const CACHED_ADDONS_BAD_DEFAULT = [
     sourceURI: {
       spec: "https://localhost",
     },
-    description: "Study purpose: Testing Pioneer.",
+    description: "Study purpose: Testing Ion.",
     privacyPolicy: {
       spec: "http://localhost",
     },
     studyType: "extension",
     authors: {
-      name: "Pioneer Developers",
+      name: "Ion Developers",
       url: "https://addons.mozilla.org/en-US/firefox/user/6510522/",
     },
     dataCollectionDetails: ["test123", "test345"],
@@ -226,7 +226,7 @@ const CACHED_ADDONS_BAD_DEFAULT = [
     sourceURI: {
       spec: "https://localhost",
     },
-    description: "Study purpose: Testing Pioneer.",
+    description: "Study purpose: Testing Ion.",
     privacyPolicy: {
       spec: "http://localhost",
     },
@@ -259,7 +259,7 @@ const CACHED_ADDONS_BAD_DEFAULT = [
     sourceURI: {
       spec: "https://localhost",
     },
-    description: "Study purpose: Testing Pioneer.",
+    description: "Study purpose: Testing Ion.",
     privacyPolicy: {
       spec: "http://localhost",
     },
@@ -280,8 +280,8 @@ const CACHED_ADDONS_BAD_DEFAULT = [
 ];
 
 const TEST_ADDONS = [
-  { id: "pioneer-v2-example@pioneer.mozilla.org" },
-  { id: "pioneer-v2-default-example@mozilla.org" },
+  { id: "ion-v2-example@ion.mozilla.org" },
+  { id: "ion-v2-default-example@mozilla.org" },
   { id: "study@partner" },
   { id: "second-study@parnter" },
 ];
@@ -298,8 +298,8 @@ const clearLocale = async () => {
 
 add_task(async function testMockSchema() {
   for (const [schemaName, values] of [
-    ["PioneerContentSchema", CACHED_CONTENT],
-    ["PioneerStudyAddonsSchema", CACHED_ADDONS],
+    ["IonContentSchema", CACHED_CONTENT],
+    ["IonStudyAddonsSchema", CACHED_ADDONS],
   ]) {
     const response = await fetch(
       `resource://testing-common/${schemaName}.json`
@@ -333,27 +333,25 @@ add_task(async function testBadDefaultAddon() {
       [PREF_TEST_ADDONS, "[]"],
     ],
     clear: [
-      [PREF_PIONEER_ID, ""],
-      [PREF_PIONEER_COMPLETED_STUDIES, "[]"],
+      [PREF_ION_ID, ""],
+      [PREF_ION_COMPLETED_STUDIES, "[]"],
     ],
   });
 
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:pioneer",
+      url: "about:ion",
       gBrowser,
     },
     async function taskFn(browser) {
-      const beforePref = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
-      ok(beforePref === null, "before enrollment, Pioneer pref is null.");
+      const beforePref = Services.prefs.getStringPref(PREF_ION_ID, null);
+      ok(beforePref === null, "before enrollment, Ion pref is null.");
       const enrollmentButton = content.document.getElementById(
         "enrollment-button"
       );
       enrollmentButton.click();
 
-      const dialog = content.document.getElementById(
-        "join-pioneer-consent-dialog"
-      );
+      const dialog = content.document.getElementById("join-ion-consent-dialog");
       ok(dialog.open, "after clicking enrollment, consent dialog is open.");
 
       // When a modal dialog is cancelled, the inertness for other elements
@@ -367,7 +365,7 @@ add_task(async function testBadDefaultAddon() {
       ok(dialog.open, "after retrying enrollment, consent dialog is open.");
 
       const acceptDialogButton = content.document.getElementById(
-        "join-pioneer-accept-dialog-button"
+        "join-ion-accept-dialog-button"
       );
       // Wait for the enrollment button to change its label to "leave", meaning
       // that the policy was accepted.
@@ -377,17 +375,14 @@ add_task(async function testBadDefaultAddon() {
       );
       acceptDialogButton.click();
 
-      const pioneerEnrolled = Services.prefs.getStringPref(
-        PREF_PIONEER_ID,
-        null
-      );
-      ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
+      const ionEnrolled = Services.prefs.getStringPref(PREF_ION_ID, null);
+      ok(ionEnrolled, "after enrollment, Ion pref is set.");
 
       await promiseDialogAccepted;
       ok(
         document.l10n.getAttributes(enrollmentButton).id ==
-          "pioneer-unenrollment-button",
-        "After Pioneer enrollment, join button is now leave button"
+          "ion-unenrollment-button",
+        "After Ion enrollment, join button is now leave button"
       );
 
       const availableStudies = content.document.getElementById(
@@ -395,7 +390,7 @@ add_task(async function testBadDefaultAddon() {
       );
       ok(
         document.l10n.getAttributes(availableStudies).id ==
-          "pioneer-no-current-studies",
+          "ion-no-current-studies",
         "No studies are available if default add-on install fails."
       );
     }
@@ -413,24 +408,24 @@ add_task(async function testAboutPage() {
       [PREF_TEST_ADDONS, "[]"],
     ],
     clear: [
-      [PREF_PIONEER_ID, ""],
-      [PREF_PIONEER_COMPLETED_STUDIES, "[]"],
+      [PREF_ION_ID, ""],
+      [PREF_ION_COMPLETED_STUDIES, "[]"],
     ],
   });
 
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:pioneer",
+      url: "about:ion",
       gBrowser,
     },
     async function taskFn(browser) {
-      const beforePref = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
-      ok(beforePref === null, "before enrollment, Pioneer pref is null.");
+      const beforePref = Services.prefs.getStringPref(PREF_ION_ID, null);
+      ok(beforePref === null, "before enrollment, Ion pref is null.");
 
-      const beforeToolbarButton = document.getElementById("pioneer-button");
+      const beforeToolbarButton = document.getElementById("ion-button");
       ok(
         beforeToolbarButton.hidden,
-        "before enrollment, Pioneer toolbar button is hidden."
+        "before enrollment, Ion toolbar button is hidden."
       );
 
       const enrollmentButton = content.document.getElementById(
@@ -438,13 +433,11 @@ add_task(async function testAboutPage() {
       );
       enrollmentButton.click();
 
-      const dialog = content.document.getElementById(
-        "join-pioneer-consent-dialog"
-      );
+      const dialog = content.document.getElementById("join-ion-consent-dialog");
       ok(dialog.open, "after clicking enrollment, consent dialog is open.");
 
       const cancelDialogButton = content.document.getElementById(
-        "join-pioneer-cancel-dialog-button"
+        "join-ion-cancel-dialog-button"
       );
       cancelDialogButton.click();
 
@@ -454,13 +447,13 @@ add_task(async function testAboutPage() {
       );
 
       const canceledEnrollment = Services.prefs.getStringPref(
-        PREF_PIONEER_ID,
+        PREF_ION_ID,
         null
       );
 
       ok(
         !canceledEnrollment,
-        "after cancelling enrollment, Pioneer is not enrolled."
+        "after cancelling enrollment, Ion is not enrolled."
       );
 
       // When a modal dialog is cancelled, the inertness for other elements
@@ -474,7 +467,7 @@ add_task(async function testAboutPage() {
       ok(dialog.open, "after retrying enrollment, consent dialog is open.");
 
       const acceptDialogButton = content.document.getElementById(
-        "join-pioneer-accept-dialog-button"
+        "join-ion-accept-dialog-button"
       );
       // Wait for the enrollment button to change its label to "leave", meaning
       // that the policy was accepted.
@@ -484,23 +477,20 @@ add_task(async function testAboutPage() {
       );
       acceptDialogButton.click();
 
-      const pioneerEnrolled = Services.prefs.getStringPref(
-        PREF_PIONEER_ID,
-        null
-      );
-      ok(pioneerEnrolled, "after enrollment, Pioneer pref is set.");
+      const ionEnrolled = Services.prefs.getStringPref(PREF_ION_ID, null);
+      ok(ionEnrolled, "after enrollment, Ion pref is set.");
 
       await promiseDialogAccepted;
       ok(
         document.l10n.getAttributes(enrollmentButton).id ==
-          "pioneer-unenrollment-button",
-        "After Pioneer enrollment, join button is now leave button"
+          "ion-unenrollment-button",
+        "After Ion enrollment, join button is now leave button"
       );
 
-      const enrolledToolbarButton = document.getElementById("pioneer-button");
+      const enrolledToolbarButton = document.getElementById("ion-button");
       ok(
         !enrolledToolbarButton.hidden,
-        "after enrollment, Pioneer toolbar button is not hidden."
+        "after enrollment, Ion toolbar button is not hidden."
       );
 
       for (const cachedAddon of CACHED_ADDONS) {
@@ -515,7 +505,7 @@ add_task(async function testAboutPage() {
         }
 
         const completedStudies = Services.prefs.getStringPref(
-          PREF_PIONEER_COMPLETED_STUDIES,
+          PREF_ION_COMPLETED_STUDIES,
           "{}"
         );
 
@@ -597,7 +587,7 @@ add_task(async function testAboutPage() {
         await promiseJoinTurnsToLeave;
 
         ok(
-          document.l10n.getAttributes(joinButton).id == "pioneer-leave-study",
+          document.l10n.getAttributes(joinButton).id == "ion-leave-study",
           "After study enrollment, join button is now leave button"
         );
 
@@ -677,58 +667,49 @@ add_task(async function testAboutPage() {
       enrollmentButton.click();
 
       const cancelUnenrollmentDialogButton = content.document.getElementById(
-        "leave-pioneer-cancel-dialog-button"
+        "leave-ion-cancel-dialog-button"
       );
       cancelUnenrollmentDialogButton.click();
 
-      const pioneerStillEnrolled = Services.prefs.getStringPref(
-        PREF_PIONEER_ID,
-        null
-      );
+      const ionStillEnrolled = Services.prefs.getStringPref(PREF_ION_ID, null);
 
       ok(
-        pioneerStillEnrolled,
-        "after canceling unenrollment, Pioneer pref is still set."
+        ionStillEnrolled,
+        "after canceling unenrollment, Ion pref is still set."
       );
 
       enrollmentButton.click();
 
       const acceptUnenrollmentDialogButton = content.document.getElementById(
-        "leave-pioneer-accept-dialog-button"
+        "leave-ion-accept-dialog-button"
       );
 
       acceptUnenrollmentDialogButton.click();
 
       // Wait for deletion ping, uninstalls, and UI updates...
-      const pioneerUnenrolled = await new Promise((resolve, reject) => {
-        Services.prefs.addObserver(PREF_PIONEER_ID, function observer(
+      const ionUnenrolled = await new Promise((resolve, reject) => {
+        Services.prefs.addObserver(PREF_ION_ID, function observer(
           subject,
           topic,
           data
         ) {
           try {
-            const prefValue = Services.prefs.getStringPref(
-              PREF_PIONEER_ID,
-              null
-            );
-            Services.prefs.removeObserver(PREF_PIONEER_ID, observer);
+            const prefValue = Services.prefs.getStringPref(PREF_ION_ID, null);
+            Services.prefs.removeObserver(PREF_ION_ID, observer);
             resolve(prefValue);
           } catch (ex) {
-            Services.prefs.removeObserver(PREF_PIONEER_ID, observer);
+            Services.prefs.removeObserver(PREF_ION_ID, observer);
             reject(ex);
           }
         });
       });
 
-      ok(
-        !pioneerUnenrolled,
-        "after accepting unenrollment, Pioneer pref is null."
-      );
+      ok(!ionUnenrolled, "after accepting unenrollment, Ion pref is null.");
 
-      const unenrolledToolbarButton = document.getElementById("pioneer-button");
+      const unenrolledToolbarButton = document.getElementById("ion-button");
       ok(
         unenrolledToolbarButton.hidden,
-        "after unenrollment, Pioneer toolbar button is hidden."
+        "after unenrollment, Ion toolbar button is hidden."
       );
 
       await TelemetryStorage.testClearPendingPings();
@@ -783,8 +764,8 @@ add_task(async function testEnrollmentPings() {
       [PREF_TEST_ADDONS, "[]"],
     ],
     clear: [
-      [PREF_PIONEER_ID, ""],
-      [PREF_PIONEER_COMPLETED_STUDIES, "[]"],
+      [PREF_ION_ID, ""],
+      [PREF_ION_COMPLETED_STUDIES, "[]"],
     ],
   });
 
@@ -793,30 +774,39 @@ add_task(async function testEnrollmentPings() {
 
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:pioneer",
+      url: "about:ion",
       gBrowser,
     },
     async function taskFn(browser) {
-      const beforePref = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
-      ok(beforePref === null, "before enrollment, Pioneer pref is null.");
+      const beforePref = Services.prefs.getStringPref(PREF_ION_ID, null);
+      ok(beforePref === null, "before enrollment, Ion pref is null.");
 
-      // Enroll in pioneer.
+      // Enroll in ion.
       const enrollmentButton = content.document.getElementById(
         "enrollment-button"
       );
-      enrollmentButton.click();
 
-      const acceptDialogButton = content.document.getElementById(
-        "join-pioneer-accept-dialog-button"
-      );
       let promiseDialogAccepted = BrowserTestUtils.waitForAttribute(
         "data-l10n-id",
         enrollmentButton
       );
+
+      // When a modal dialog is cancelled, the inertness for other elements
+      // is reverted. However, in order to have the new state (non-inert)
+      // effective, Firefox needs to do a frame flush. This flush is taken
+      // place when it's really needed.
+      // getBoundingClientRect forces a frame flush here to ensure the
+      // following click is going to work properly.
+      enrollmentButton.getBoundingClientRect();
+      enrollmentButton.click();
+
+      const acceptDialogButton = content.document.getElementById(
+        "join-ion-accept-dialog-button"
+      );
       acceptDialogButton.click();
 
-      const pioneerId = Services.prefs.getStringPref(PREF_PIONEER_ID, null);
-      ok(pioneerId, "after enrollment, Pioneer pref is set.");
+      const ionId = Services.prefs.getStringPref(PREF_ION_ID, null);
+      ok(ionId, "after enrollment, Ion pref is set.");
 
       await promiseDialogAccepted;
 
@@ -866,17 +856,17 @@ add_task(async function testEnrollmentPings() {
         });
       }
 
-      // We expect 1 ping with just the pioneer id (pioneer consent) and another
-      // with both the pioneer id and the study id (study consent).
+      // We expect 1 ping with just the ion id (ion consent) and another
+      // with both the ion id and the study id (study consent).
       ok(
         pingDetails.find(
           p =>
             p.schemaName == "pioneer-enrollment" &&
             p.schemaNamespace == "pioneer-meta" &&
-            p.pioneerId == pioneerId &&
+            p.pioneerId == ionId &&
             p.studyName == "pioneer-meta"
         ),
-        "We expect the Pioneer program consent to be present"
+        "We expect the Ion program consent to be present"
       );
 
       ok(
@@ -884,7 +874,7 @@ add_task(async function testEnrollmentPings() {
           p =>
             p.schemaName == "pioneer-enrollment" &&
             p.schemaNamespace == CACHED_TEST_ADDON.addon_id &&
-            p.pioneerId == pioneerId &&
+            p.pioneerId == ionId &&
             p.studyName == CACHED_TEST_ADDON.addon_id
         ),
         "We expect the study consent to be present"
@@ -893,17 +883,17 @@ add_task(async function testEnrollmentPings() {
   );
 });
 
-add_task(async function testPioneerBadge() {
+add_task(async function testIonBadge() {
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_PIONEER_NEW_STUDIES_AVAILABLE, true]],
+    set: [[PREF_ION_NEW_STUDIES_AVAILABLE, true]],
     clear: [
-      [PREF_PIONEER_NEW_STUDIES_AVAILABLE, false],
-      [PREF_PIONEER_ID, ""],
+      [PREF_ION_NEW_STUDIES_AVAILABLE, false],
+      [PREF_ION_ID, ""],
     ],
   });
 
-  let pioneerTab = await BrowserTestUtils.openNewForegroundTab({
-    url: "about:pioneer",
+  let ionTab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:ion",
     gBrowser,
   });
 
@@ -915,37 +905,37 @@ add_task(async function testPioneerBadge() {
     gBrowser,
   });
 
-  Services.prefs.setBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, true);
+  Services.prefs.setBoolPref(PREF_ION_NEW_STUDIES_AVAILABLE, true);
 
-  const toolbarButton = document.getElementById("pioneer-button");
+  const toolbarButton = document.getElementById("ion-button");
   const toolbarBadge = toolbarButton.querySelector(".toolbarbutton-badge");
 
   ok(
     toolbarBadge.classList.contains("feature-callout"),
-    "When pref is true, Pioneer toolbar button is called out in the current window."
+    "When pref is true, Ion toolbar button is called out in the current window."
   );
 
   toolbarButton.click();
 
-  await pioneerTab;
+  await ionTab;
 
   ok(
     !toolbarBadge.classList.contains("feature-callout"),
-    "When about:pioneer toolbar button is pressed, call-out is removed."
+    "When about:ion toolbar button is pressed, call-out is removed."
   );
 
-  Services.prefs.setBoolPref(PREF_PIONEER_NEW_STUDIES_AVAILABLE, true);
+  Services.prefs.setBoolPref(PREF_ION_NEW_STUDIES_AVAILABLE, true);
 
   const newWin = await BrowserTestUtils.openNewBrowserWindow();
   const newToolbarBadge = toolbarButton.querySelector(".toolbarbutton-badge");
 
   ok(
     newToolbarBadge.classList.contains("feature-callout"),
-    "When pref is true, Pioneer toolbar button is called out in a new window."
+    "When pref is true, Ion toolbar button is called out in a new window."
   );
 
   await BrowserTestUtils.closeWindow(newWin);
-  await BrowserTestUtils.removeTab(pioneerTab);
+  await BrowserTestUtils.removeTab(ionTab);
   await BrowserTestUtils.removeTab(blankTab);
 });
 
@@ -957,12 +947,12 @@ add_task(async function testContentReplacement() {
       [PREF_TEST_CACHED_CONTENT, cachedContent],
       [PREF_TEST_ADDONS, "[]"],
     ],
-    clear: [[PREF_PIONEER_ID, ""]],
+    clear: [[PREF_ION_ID, ""]],
   });
 
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:pioneer",
+      url: "about:ion",
       gBrowser,
     },
     async function taskFn(browser) {
@@ -987,8 +977,8 @@ add_task(async function testLocaleGating() {
       [PREF_TEST_ADDONS, "[]"],
     ],
     clear: [
-      [PREF_PIONEER_ID, ""],
-      [PREF_PIONEER_COMPLETED_STUDIES, "[]"],
+      [PREF_ION_ID, ""],
+      [PREF_ION_COMPLETED_STUDIES, "[]"],
     ],
   });
 
@@ -996,7 +986,7 @@ add_task(async function testLocaleGating() {
 
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:pioneer",
+      url: "about:ion",
       gBrowser,
     },
     async function taskFn(browser) {
@@ -1022,7 +1012,7 @@ add_task(async function testLocaleGating() {
 
   await BrowserTestUtils.withNewTab(
     {
-      url: "about:pioneer",
+      url: "about:ion",
       gBrowser,
     },
     async function taskFn(browser) {
