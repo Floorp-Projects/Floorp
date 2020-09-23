@@ -1323,16 +1323,6 @@ class SearchEngine {
     return this._loadPath;
   }
 
-  get _isDistribution() {
-    return !!(
-      this._extensionID &&
-      Services.prefs.getCharPref(
-        `extensions.installedDistroAddon.${this._extensionID}`,
-        ""
-      )
-    );
-  }
-
   get isAppProvided() {
     return !!(this._extensionID && this._isAppProvided);
   }
