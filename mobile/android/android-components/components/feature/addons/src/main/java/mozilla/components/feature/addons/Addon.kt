@@ -187,7 +187,7 @@ data class Addon(
             "sessions" to R.string.mozac_feature_addons_permissions_sessions_description,
             "tabHide" to R.string.mozac_feature_addons_permissions_tab_hide_description,
             "topSites" to R.string.mozac_feature_addons_permissions_top_sites_description,
-            "devtools" to R.string.mozac_feature_addons_permissions_top_sites_description
+            "devtools" to R.string.mozac_feature_addons_permissions_devtools_description
         )
 
         /**

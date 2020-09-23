@@ -78,7 +78,7 @@ class AddonTest {
             R.string.mozac_feature_addons_permissions_top_sites_description,
             R.string.mozac_feature_addons_permissions_unlimited_storage_description,
             R.string.mozac_feature_addons_permissions_web_navigation_description,
-            R.string.mozac_feature_addons_permissions_top_sites_description
+            R.string.mozac_feature_addons_permissions_devtools_description
         ).map { testContext.getString(it) }
         assertEquals(expectedPermissions, translatedPermissions)
     }

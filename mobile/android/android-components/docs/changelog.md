@@ -18,6 +18,8 @@ permalink: /changelog/
   * Added `TabsUseCases.UndoTabRemovalUseCase` for undoing the removal of tabs.
 * **feature-webcompat-reporter**
   * Added the ability to automatically add a screenshot as well as more technical details when submitting a WebCompat report.  
+* **feature-addons**
+  * 🚒 Bug fixed [issue #8267](https://github.com/mozilla-mobile/android-components/issues/8267) Devtools permission had wrong translation.
 
 # 60.0.0
 
