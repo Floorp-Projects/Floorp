@@ -4151,6 +4151,9 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * InsertObject() inserts given object at aPointToInsert.
+   *
+   * @param aType one of kFileMime, kJPEGImageMime, kJPGImageMime,
+   *              kPNGImageMime, kGIFImageMime.
    */
   MOZ_CAN_RUN_SCRIPT nsresult InsertObject(const nsACString& aType,
                                            nsISupports* aObject, bool aIsSafe,
@@ -4171,6 +4174,8 @@ class HTMLEditor final : public TextEditor,
   /**
    * InsertFromDataTransfer() is called only when user drops data into
    * this editor.  Don't use this method for other purposes.
+   *
+   * @param aIndex index of aDataTransfer's item to insert.
    */
   MOZ_CAN_RUN_SCRIPT nsresult
   InsertFromDataTransfer(const dom::DataTransfer* aDataTransfer, int32_t aIndex,
