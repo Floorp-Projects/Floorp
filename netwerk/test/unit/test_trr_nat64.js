@@ -85,7 +85,9 @@ add_task(async function test_add_nat64_prefix_to_trr() {
       data: "1.2.3.4",
     },
   ]);
-  let [, inRecord] = await new TRRDNSListener("xyz.foo", undefined, false);
+  let [, inRecord] = await new TRRDNSListener("xyz.foo", {
+    expectedSuccess: false,
+  });
 
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   inRecord.getNextAddrAsString();
