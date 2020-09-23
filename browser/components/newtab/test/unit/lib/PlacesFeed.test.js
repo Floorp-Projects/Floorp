@@ -53,6 +53,19 @@ describe("PlacesFeed", () => {
     sandbox.spy(global.Services.obs, "removeObserver");
     sandbox.spy(global.Cu, "reportError");
 
+    global.Services.io.newURI = spec => ({
+      mutate: () => ({
+        setRef: ref => ({
+          finalize: () => ({
+            ref,
+            spec,
+          }),
+        }),
+      }),
+      spec,
+      scheme: "https",
+    });
+
     global.Cc["@mozilla.org/timer;1"] = {
       createInstance() {
         return {
@@ -196,77 +209,78 @@ describe("PlacesFeed", () => {
         pocket_id: undefined,
       });
     });
-    it("should call openLinkIn with the correct url and where on OPEN_NEW_WINDOW", () => {
-      const openLinkIn = sinon.stub();
+    it("should call openTrustedLinkIn with the correct url and where on OPEN_NEW_WINDOW", () => {
+      const openTrustedLinkIn = sinon.stub();
       const openWindowAction = {
         type: at.OPEN_NEW_WINDOW,
-        data: { url: "foo.com" },
-        _target: { browser: { ownerGlobal: { openLinkIn } } },
+        data: { url: "https://foo.com" },
+        _target: { browser: { ownerGlobal: { openTrustedLinkIn } } },
       };
 
       feed.onAction(openWindowAction);
 
-      assert.calledOnce(openLinkIn);
-      const [url, where, params] = openLinkIn.firstCall.args;
-      assert.equal(url, "foo.com");
+      assert.calledOnce(openTrustedLinkIn);
+      const [url, where, params] = openTrustedLinkIn.firstCall.args;
+      assert.equal(url, "https://foo.com");
       assert.equal(where, "window");
       assert.propertyVal(params, "private", false);
     });
-    it("should call openLinkIn with the correct url, where and privacy args on OPEN_PRIVATE_WINDOW", () => {
-      const openLinkIn = sinon.stub();
+    it("should call openTrustedLinkIn with the correct url, where and privacy args on OPEN_PRIVATE_WINDOW", () => {
+      const openTrustedLinkIn = sinon.stub();
       const openWindowAction = {
         type: at.OPEN_PRIVATE_WINDOW,
-        data: { url: "foo.com" },
-        _target: { browser: { ownerGlobal: { openLinkIn } } },
+        data: { url: "https://foo.com" },
+        _target: { browser: { ownerGlobal: { openTrustedLinkIn } } },
       };
 
       feed.onAction(openWindowAction);
 
-      assert.calledOnce(openLinkIn);
-      const [url, where, params] = openLinkIn.firstCall.args;
-      assert.equal(url, "foo.com");
+      assert.calledOnce(openTrustedLinkIn);
+      const [url, where, params] = openTrustedLinkIn.firstCall.args;
+      assert.equal(url, "https://foo.com");
       assert.equal(where, "window");
       assert.propertyVal(params, "private", true);
     });
     it("should open link on OPEN_LINK", () => {
-      const openLinkIn = sinon.stub();
+      const openTrustedLinkIn = sinon.stub();
       const openLinkAction = {
         type: at.OPEN_LINK,
-        data: { url: "foo.com" },
+        data: { url: "https://foo.com" },
         _target: {
           browser: {
-            ownerGlobal: { openLinkIn, whereToOpenLink: e => "current" },
+            ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "current" },
           },
         },
       };
 
       feed.onAction(openLinkAction);
 
-      assert.calledOnce(openLinkIn);
-      const [url, where, params] = openLinkIn.firstCall.args;
-      assert.equal(url, "foo.com");
+      assert.calledOnce(openTrustedLinkIn);
+      const [url, where, params] = openTrustedLinkIn.firstCall.args;
+      assert.equal(url, "https://foo.com");
       assert.equal(where, "current");
       assert.propertyVal(params, "private", false);
-      assert.propertyVal(params, "triggeringPrincipal", undefined);
     });
     it("should open link with referrer on OPEN_LINK", () => {
-      const openLinkIn = sinon.stub();
+      const openTrustedLinkIn = sinon.stub();
       const openLinkAction = {
         type: at.OPEN_LINK,
-        data: { url: "foo.com", referrer: "foo.com/ref" },
+        data: { url: "https://foo.com", referrer: "https://foo.com/ref" },
         _target: {
-          browser: { ownerGlobal: { openLinkIn, whereToOpenLink: e => "tab" } },
+          browser: {
+            ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "tab" },
+          },
         },
       };
 
       feed.onAction(openLinkAction);
 
-      const [, , params] = openLinkIn.firstCall.args;
+      const [, , params] = openTrustedLinkIn.firstCall.args;
       assert.nestedPropertyVal(params, "referrerInfo.referrerPolicy", 5);
       assert.nestedPropertyVal(
         params,
         "referrerInfo.originalReferrer.spec",
-        "foo.com/ref"
+        "https://foo.com/ref"
       );
     });
     it("should mark link with typed bonus as typed before opening OPEN_LINK", () => {
@@ -276,44 +290,83 @@ describe("PlacesFeed", () => {
         .callsFake(() => {
           callOrder.push("markPageAsTyped");
         });
-      const openLinkIn = sinon.stub().callsFake(() => {
-        callOrder.push("openLinkIn");
+      const openTrustedLinkIn = sinon.stub().callsFake(() => {
+        callOrder.push("openTrustedLinkIn");
       });
       const openLinkAction = {
         type: at.OPEN_LINK,
         data: {
           typedBonus: true,
-          url: "foo.com",
+          url: "https://foo.com",
         },
-        _target: {
-          browser: { ownerGlobal: { openLinkIn, whereToOpenLink: e => "tab" } },
-        },
-      };
-
-      feed.onAction(openLinkAction);
-
-      assert.sameOrderedMembers(callOrder, ["markPageAsTyped", "openLinkIn"]);
-    });
-    it("should open the pocket link if it's a pocket story on OPEN_LINK", () => {
-      const openLinkIn = sinon.stub();
-      const openLinkAction = {
-        type: at.OPEN_LINK,
-        data: { url: "foo.com", open_url: "getpocket.com/foo", type: "pocket" },
         _target: {
           browser: {
-            ownerGlobal: { openLinkIn, whereToOpenLink: e => "current" },
+            ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "tab" },
           },
         },
       };
 
       feed.onAction(openLinkAction);
 
-      assert.calledOnce(openLinkIn);
-      const [url, where, params] = openLinkIn.firstCall.args;
+      assert.sameOrderedMembers(callOrder, [
+        "markPageAsTyped",
+        "openTrustedLinkIn",
+      ]);
+    });
+    it("should open the pocket link if it's a pocket story on OPEN_LINK", () => {
+      const openTrustedLinkIn = sinon.stub();
+      const openLinkAction = {
+        type: at.OPEN_LINK,
+        data: {
+          url: "https://foo.com",
+          open_url: "getpocket.com/foo",
+          type: "pocket",
+        },
+        _target: {
+          browser: {
+            ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "current" },
+          },
+        },
+      };
+
+      feed.onAction(openLinkAction);
+
+      assert.calledOnce(openTrustedLinkIn);
+      const [url, where, params] = openTrustedLinkIn.firstCall.args;
       assert.equal(url, "getpocket.com/foo");
       assert.equal(where, "current");
       assert.propertyVal(params, "private", false);
-      assert.propertyVal(params, "triggeringPrincipal", undefined);
+    });
+    it("should not open link if not http", () => {
+      const openTrustedLinkIn = sinon.stub();
+      global.Services.io.newURI = spec => ({
+        mutate: () => ({
+          setRef: ref => ({
+            finalize: () => ({
+              ref,
+              spec,
+            }),
+          }),
+        }),
+        spec,
+        scheme: "file",
+      });
+      const openLinkAction = {
+        type: at.OPEN_LINK,
+        data: { url: "file://,foo.com" },
+        _target: {
+          browser: {
+            ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "current" },
+          },
+        },
+      };
+
+      feed.onAction(openLinkAction);
+      const [e] = global.Cu.reportError.firstCall.args;
+      assert.equal(
+        e.message,
+        "Can't open link using file protocol from the new tab page."
+      );
     });
     it("should call fillSearchTopSiteTerm on FILL_SEARCH_TERM", () => {
       sinon.stub(feed, "fillSearchTopSiteTerm");
