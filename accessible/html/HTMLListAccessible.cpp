@@ -154,7 +154,9 @@ ENameValueFlag HTMLListBulletAccessible::Name(nsString& aName) const {
   return eNameOK;
 }
 
-role HTMLListBulletAccessible::NativeRole() const { return roles::STATICTEXT; }
+role HTMLListBulletAccessible::NativeRole() const {
+  return roles::LISTITEM_MARKER;
+}
 
 uint64_t HTMLListBulletAccessible::NativeState() const {
   return LeafAccessible::NativeState() | states::READONLY;
