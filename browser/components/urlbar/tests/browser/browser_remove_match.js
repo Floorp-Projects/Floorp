@@ -171,3 +171,59 @@ add_task(async function test_remove_bookmark_doesnt() {
     "Should still have the URL bookmarked."
   );
 });
+
+add_task(async function test_searchMode_removeRestyledHistory() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.maxHistoricalSearchSuggestions", 1],
+      ["browser.urlbar.update2", true],
+      ["browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true],
+    ],
+  });
+
+  let engine = await Services.search.addEngineWithDetails("test", {
+    method: "GET",
+    template: "http://example.com/",
+    searchGetParams: "q={searchTerms}",
+  });
+  let originalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+  await Services.search.moveEngine(engine, 0);
+
+  let query = "ciao";
+  let url = `http://example.com/?q=${query}bar`;
+  await PlacesTestUtils.addVisits(url);
+
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: query,
+    });
+    await UrlbarTestUtils.enterSearchMode(window);
+
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH);
+    Assert.equal(result.source, UrlbarUtils.RESULT_SOURCE.HISTORY);
+
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 1);
+    EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
+    await TestUtils.waitForCondition(
+      async () => !(await PlacesTestUtils.isPageInDB(url)),
+      "Wait for url to be removed from history"
+    );
+    Assert.equal(
+      UrlbarTestUtils.getResultCount(window),
+      1,
+      "Urlbar result should be removed"
+    );
+
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+  await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
+  await Services.search.setDefault(originalEngine);
+  await Services.search.removeEngine(engine);
+});

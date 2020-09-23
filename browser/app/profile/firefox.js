@@ -350,11 +350,16 @@ pref("browser.urlbar.update2.localOneOffs", true);
 // Whether the urlbar one-offs act as search filters instead of executing a
 // search immediately.
 pref("browser.urlbar.update2.oneOffsRefresh", true);
+// Whether browsing history that is recognized as a previous search should
+// be restyled and deduped against form history. This only happens when
+// search mode is active.
+pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true);
 #else
 pref("browser.urlbar.update2", false);
 pref("browser.urlbar.update2.disableOneOffsHorizontalKeyNavigation", false);
 pref("browser.urlbar.update2.localOneOffs", false);
 pref("browser.urlbar.update2.oneOffsRefresh", false);
+pref("browser.urlbar.update2.restyleBrowsingHistoryAsSearch", false);
 #endif
 
 // Controls the empty search behavior in Search Mode:

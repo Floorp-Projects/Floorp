@@ -181,6 +181,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // search immediately.
   ["update2.oneOffsRefresh", false],
 
+  // Whether browsing history that is recognized as a previous search should
+  // be restyled and deduped against form history. This only happens when
+  // search mode is active.
+  ["update2.restyleBrowsingHistoryAsSearch", true],
+
   // Whether we display a tab-to-complete result when the user types an engine
   // name.
   ["update2.tabToComplete", false],

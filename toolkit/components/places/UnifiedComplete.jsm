@@ -1229,8 +1229,8 @@ Search.prototype = {
   _maybeRestyleSearchMatch(match) {
     // Return if the URL does not represent a search result.
     let parseResult = Services.search.parseSubmissionURL(match.value);
-    if (!parseResult) {
-      return;
+    if (!parseResult?.engine) {
+      return false;
     }
 
     // Here we check that the user typed all or part of the search string in the
@@ -1240,7 +1240,7 @@ Search.prototype = {
       this._searchTokens.length &&
       this._searchTokens.every(token => !terms.includes(token.value))
     ) {
-      return;
+      return false;
     }
 
     // The URL for the search suggestion formed by the user's typed query.
@@ -1269,7 +1269,7 @@ Search.prototype = {
           value === typedParams.get(key)
       )
     ) {
-      return;
+      return false;
     }
 
     // Turn the match into a searchengine action with a favicon.
@@ -1283,6 +1283,7 @@ Search.prototype = {
     match.comment = parseResult.engine.name;
     match.icon = match.icon || match.iconUrl;
     match.style = "action searchengine favicon suggestion";
+    return true;
   },
 
   _addMatch(match) {
@@ -1305,8 +1306,17 @@ Search.prototype = {
     match.style = match.style || "favicon";
 
     // Restyle past searches, unless they are bookmarks or special results.
-    if (UrlbarPrefs.get("restyleSearches") && match.style == "favicon") {
-      this._maybeRestyleSearchMatch(match);
+    if (
+      match.style == "favicon" &&
+      (UrlbarPrefs.get("restyleSearches") ||
+        (this._searchModeEngine &&
+          UrlbarPrefs.get("update2.restyleBrowsingHistoryAsSearch")))
+    ) {
+      let restyled = this._maybeRestyleSearchMatch(match);
+      if (restyled && UrlbarPrefs.get("maxHistoricalSearchSuggestions") == 0) {
+        // The user doesn't want search history.
+        return;
+      }
     }
 
     if (this._addingHeuristicResult) {
@@ -1648,17 +1658,54 @@ Search.prototype = {
     let conditions = [];
     if (this._filterOnHost) {
       conditions.push("h.rev_host = get_unreversed_host(:host || '.') || '.'");
-      // Also skip redirects to return more useful results, indeed many search
-      // engines tend to use intermediate redirects that are uninteresting for
-      // the user.
-      // Check the last 10 visits are not redirects.
-      conditions.push(`NOT EXISTS (
-        SELECT 1 FROM moz_historyvisits src
-        JOIN moz_historyvisits dest ON src.id = dest.from_visit
-        WHERE src.place_id = h.id AND dest.visit_type IN (5,6)
-        ORDER BY src.visit_date DESC
-        LIMIT 10
-      )`);
+      // When filtering on a host we are in some sort of site specific search,
+      // thus we want a cleaner set of results, compared to a general search.
+      // This means removing less interesting urls, like redirects or
+      // non-bookmarked title-less pages.
+
+      if (
+        UrlbarPrefs.get("restyleSearches") ||
+        (this._searchModeEngine &&
+          UrlbarPrefs.get("update2.restyleBrowsingHistoryAsSearch"))
+      ) {
+        // If restyle is enabled, we want to filter out redirect targets,
+        // because sources are urls built using search engines definitions that
+        // we can reverse-parse.
+        // In this case we can't filter on title-less pages because redirect
+        // sources likely don't have a title and recognizing sources is costly.
+        // Bug 468710 may help with this.
+        conditions.push(`NOT EXISTS (
+          WITH visits(type) AS (
+            SELECT visit_type
+            FROM moz_historyvisits
+            WHERE place_id = h.id
+            ORDER BY visit_date DESC
+            LIMIT 10 /* limit to the last 10 visits */
+          )
+          SELECT 1 FROM visits
+          WHERE type IN (5,6)
+        )`);
+      } else {
+        // If instead restyle is disabled, we want to keep redirect targets,
+        // because sources are often unreadable title-less urls.
+        conditions.push(`NOT EXISTS (
+          WITH visits(id) AS (
+            SELECT id
+            FROM moz_historyvisits
+            WHERE place_id = h.id
+            ORDER BY visit_date DESC
+            LIMIT 10 /* limit to the last 10 visits */
+            )
+           SELECT 1
+           FROM visits src
+           JOIN moz_historyvisits dest ON src.id = dest.from_visit
+           WHERE dest.visit_type IN (5,6)
+        )`);
+        // Filter out empty-titled pages, they could be redirect sources that
+        // we can't recognize anymore because their target was wrongly expired
+        // due to Bug 1664252.
+        conditions.push("(h.foreign_count > 0 OR h.title NOTNULL)");
+      }
     }
 
     if (
