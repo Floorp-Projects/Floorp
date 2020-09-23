@@ -121,7 +121,7 @@ void* ImageCacheKey::GetSpecialCaseDocumentToken(Document* aDocument) {
 /* static */
 nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
   if (!aDocument || !aDocument->GetInnerWindow()) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   // Network-state isolation
@@ -141,7 +141,7 @@ nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
                                                   nullptr, nullptr)) {
     return StorageDisabledByAntiTracking(aDocument, aURI)
                ? aDocument->GetBaseDomain()
-               : EmptyCString();
+               : ""_ns;
   }
 
   // Another scenario is if this image is a 3rd party resource loaded by a
@@ -160,10 +160,10 @@ nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
           ->GetBaseDomain();  // because we don't have anything better!
     }
     return topInner->GetExtantDoc() ? topInner->GetExtantDoc()->GetBaseDomain()
-                                    : EmptyCString();
+                                    : ""_ns;
   }
 
-  return EmptyCString();
+  return ""_ns;
 }
 
 }  // namespace image

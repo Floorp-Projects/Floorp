@@ -730,7 +730,7 @@ class NotifyCompletion : public Runnable {
  *        The callback to notify if the URI cannot be added to history.
  * @return true if the URI can be added to history, false otherwise.
  */
-bool CanAddURI(nsIURI* aURI, const nsCString& aGUID = EmptyCString(),
+bool CanAddURI(nsIURI* aURI, const nsCString& aGUID = ""_ns,
                mozIVisitInfoCallback* aCallback = nullptr) {
   MOZ_ASSERT(NS_IsMainThread());
   nsNavHistory* navHistory = nsNavHistory::GetHistoryService();

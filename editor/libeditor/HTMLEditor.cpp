@@ -1938,7 +1938,7 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
   MOZ_ASSERT(tagName);
   if (tagName == nsGkAtoms::dd || tagName == nsGkAtoms::dt) {
     EditActionResult result = MakeOrChangeListAndListItemAsSubAction(
-        *tagName, EmptyString(), SelectAllOfCurrentList::No);
+        *tagName, u""_ns, SelectAllOfCurrentList::No);
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "HTMLEditor::MakeOrChangeListAndListItemAsSubAction("
                          "SelectAllOfCurrentList::No) failed");
@@ -2832,7 +2832,7 @@ already_AddRefed<Element> HTMLEditor::CreateElementWithDefaults(
   // Mark the new element dirty, so it will be formatted
   // XXX Don't we need to check the error result of setting _moz_dirty attr?
   IgnoredErrorResult ignoredError;
-  newElement->SetAttribute(u"_moz_dirty"_ns, EmptyString(), ignoredError);
+  newElement->SetAttribute(u"_moz_dirty"_ns, u""_ns, ignoredError);
   NS_WARNING_ASSERTION(!ignoredError.Failed(),
                        "Element::SetAttribute(_moz_dirty) failed, but ignored");
   ignoredError.SuppressException();

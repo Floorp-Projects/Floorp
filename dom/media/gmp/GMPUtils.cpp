@@ -171,7 +171,7 @@ nsCString GMPInfoFileParser::Get(const nsCString& aKey) const {
   if (mValues.Get(key, &p)) {
     return nsCString(*p);
   }
-  return EmptyCString();
+  return ""_ns;
 }
 
 bool HaveGMPFor(const nsCString& aAPI, nsTArray<nsCString>&& aTags) {

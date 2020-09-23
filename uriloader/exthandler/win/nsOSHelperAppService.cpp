@@ -210,7 +210,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry(const nsString& fileType,
 
   // OK, the default value here is the description of the type.
   nsAutoString description;
-  rv = regKey->ReadStringValue(EmptyString(), description);
+  rv = regKey->ReadStringValue(u""_ns, description);
   if (NS_SUCCEEDED(rv)) pInfo->SetDescription(description);
 
   return NS_OK;
@@ -294,7 +294,7 @@ nsresult nsOSHelperAppService::GetDefaultAppInfo(
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     // OK, the default value here is the description of the type.
-    rv = regKey->ReadStringValue(EmptyString(), handlerCommand);
+    rv = regKey->ReadStringValue(u""_ns, handlerCommand);
     if (NS_FAILED(rv)) {
       // Check if there is a DelegateExecute string
       nsAutoString delegateExecute;
@@ -310,7 +310,7 @@ nsresult nsOSHelperAppService::GetDefaultAppInfo(
                         delegateExecuteRegPath,
                         nsIWindowsRegKey::ACCESS_QUERY_VALUE);
       if (NS_SUCCEEDED(rv)) {
-        rv = chkKey->ReadStringValue(EmptyString(), handlerCommand);
+        rv = chkKey->ReadStringValue(u""_ns, handlerCommand);
       }
 
       if (NS_FAILED(rv)) {
@@ -322,7 +322,7 @@ nsresult nsOSHelperAppService::GetDefaultAppInfo(
                           delegateExecuteRegPath,
                           nsIWindowsRegKey::ACCESS_QUERY_VALUE);
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = chkKey->ReadStringValue(EmptyString(), handlerCommand);
+        rv = chkKey->ReadStringValue(u""_ns, handlerCommand);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }

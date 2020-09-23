@@ -1053,7 +1053,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     if (nameSpecified && !name.LowerCaseEqualsLiteral("_blank")) {
       MOZ_ALWAYS_SUCCEEDS(newBC->SetName(name));
     } else {
-      MOZ_ALWAYS_SUCCEEDS(newBC->SetName(EmptyString()));
+      MOZ_ALWAYS_SUCCEEDS(newBC->SetName(u""_ns));
     }
   }
 

@@ -160,7 +160,7 @@ UrlClassifierFeatureTrackingProtection::ProcessChannel(
   }
 
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_TRACKING_URI, list,
-                                         EmptyCString(), EmptyCString());
+                                         ""_ns, ""_ns);
 
   UC_LOG(
       ("UrlClassifierFeatureTrackingProtection::ProcessChannel - "

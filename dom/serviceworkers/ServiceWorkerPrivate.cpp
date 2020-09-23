@@ -1286,7 +1286,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     MOZ_ASSERT(httpChannel, "How come we don't have an HTTP channel?");
 
     mReferrerPolicy = ReferrerPolicy::_empty;
-    mReferrer = EmptyString();
+    mReferrer.Truncate();
     nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
     if (referrerInfo) {
       mReferrerPolicy = referrerInfo->ReferrerPolicy();
@@ -1749,7 +1749,7 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 
   mWorkerPrivate = WorkerPrivate::Constructor(jsapi.cx(), scriptSpec, false,
                                               WorkerTypeService, VoidString(),
-                                              EmptyCString(), &info, error);
+                                              ""_ns, &info, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }

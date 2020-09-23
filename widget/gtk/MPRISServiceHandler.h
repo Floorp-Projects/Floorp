@@ -119,7 +119,7 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
     }
     void Clear() {
       UpdateFromMetadataBase(MediaMetadataBase::EmptyData());
-      mArtUrl = EmptyCString();
+      mArtUrl.Truncate();
     }
 
     nsCString mArtUrl;

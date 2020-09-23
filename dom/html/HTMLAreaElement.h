@@ -103,7 +103,7 @@ class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
     SetHTMLAttr(nsGkAtoms::referrerpolicy, aValue, rv);
   }
   void GetReferrerPolicy(nsAString& aReferrer) {
-    GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
+    GetEnumAttr(nsGkAtoms::referrerpolicy, "", aReferrer);
   }
 
   // The Link::GetOrigin is OK for us

@@ -5284,8 +5284,8 @@ nsresult ScrollFrameHelper::CreateAnonymousContent(
       case StyleResize::Vertical:
         dir.AssignLiteral("bottom");
         if (!IsScrollbarOnRight()) {
-          mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::flip,
-                                   EmptyString(), false);
+          mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::flip, u""_ns,
+                                   false);
           key |= AnonymousContentKey::Flag_Resizer_Bottom_Flip;
         } else {
           key |= AnonymousContentKey::Flag_Resizer_Bottom;

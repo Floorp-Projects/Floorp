@@ -252,7 +252,7 @@ nsJAR::FindEntries(const nsACString& aPattern,
 
 NS_IMETHODIMP
 nsJAR::GetInputStream(const nsACString& aFilename, nsIInputStream** result) {
-  return GetInputStreamWithSpec(EmptyCString(), aFilename, result);
+  return GetInputStreamWithSpec(""_ns, aFilename, result);
 }
 
 NS_IMETHODIMP

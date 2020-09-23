@@ -49,7 +49,7 @@ nsISupports* SpeechSynthesisUtterance::GetParentObject() const {
 
 already_AddRefed<SpeechSynthesisUtterance>
 SpeechSynthesisUtterance::Constructor(GlobalObject& aGlobal, ErrorResult& aRv) {
-  return Constructor(aGlobal, EmptyString(), aRv);
+  return Constructor(aGlobal, u""_ns, aRv);
 }
 
 already_AddRefed<SpeechSynthesisUtterance>

@@ -219,9 +219,9 @@ bool nsCSPContext::permitsInternal(
             aOriginalURIIfRedirect, /* in case of redirect originalURI is not
                                        null */
             violatedDirective, p,   /* policy index        */
-            EmptyString(),          /* no observer subject */
+            u""_ns,                 /* no observer subject */
             spec,                   /* source file      */
-            EmptyString(),          /* no script sample    */
+            u""_ns,                 /* no script sample    */
             lineNumber,             /* line number      */
             columnNumber);          /*  column number    */
       }
@@ -449,7 +449,7 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
 
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     if (!mPolicies[i]->allows(nsIContentPolicy::TYPE_SCRIPT, CSP_UNSAFE_EVAL,
-                              EmptyString(), false)) {
+                              u""_ns, false)) {
       // policy is violated: must report the violation and allow the inline
       // script if the policy is report-only.
       *outShouldReportViolation = true;
@@ -538,12 +538,12 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
   }
 
   EnsureIPCPoliciesRead();
-  nsAutoString content(EmptyString());
+  nsAutoString content(u""_ns);
 
   // always iterate all policies, otherwise we might not send out all reports
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     bool allowed =
-        mPolicies[i]->allows(aContentType, CSP_UNSAFE_INLINE, EmptyString(),
+        mPolicies[i]->allows(aContentType, CSP_UNSAFE_INLINE, u""_ns,
                              aParserCreated) ||
         mPolicies[i]->allows(aContentType, CSP_NONCE, aNonce, aParserCreated);
 
@@ -661,9 +661,9 @@ nsCSPContext::GetAllowsNavigateTo(nsIURI* aURI, bool aIsFormSubmission,
           nullptr,                                    // aOriginalURI
           u"navigate-to"_ns,                          // aViolatedDirective
           i,                                          // aViolatedPolicyIndex
-          EmptyString(),                              // aObserverSubject
+          u""_ns,                                     // aObserverSubject
           NS_ConvertUTF8toUTF16(spec),                // aSourceFile
-          EmptyString(),                              // aScriptSample
+          u""_ns,                                     // aScriptSample
           lineNumber,                                 // aLineNum
           columnNumber);                              // aColumnNum
       NS_ENSURE_SUCCESS(rv, rv);
@@ -715,11 +715,11 @@ nsCSPContext::GetAllowsNavigateTo(nsIURI* aURI, bool aIsFormSubmission,
       mPolicies[p]->getDirectiveStringAndReportSampleForContentType(           \
           nsIContentPolicy::TYPE_##contentPolicyType, violatedDirective,       \
           &reportSample);                                                      \
-      AsyncReportViolation(                                                    \
-          aTriggeringElement, aCSPEventListener, nullptr,                      \
-          blockedContentSource, nullptr, violatedDirective, p,                 \
-          NS_LITERAL_STRING_FROM_CSTRING(observerTopic), aSourceFile,          \
-          reportSample ? aScriptSample : EmptyString(), aLineNum, aColumnNum); \
+      AsyncReportViolation(aTriggeringElement, aCSPEventListener, nullptr,     \
+                           blockedContentSource, nullptr, violatedDirective,   \
+                           p, NS_LITERAL_STRING_FROM_CSTRING(observerTopic),   \
+                           aSourceFile, reportSample ? aScriptSample : u""_ns, \
+                           aLineNum, aColumnNum);                              \
     }                                                                          \
     PR_END_MACRO;                                                              \
     break
@@ -1570,8 +1570,8 @@ nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
       currentURI->GetSpec(spec);
       // delete the userpass from the URI.
       rv = NS_MutateURI(currentURI)
-               .SetRef(EmptyCString())
-               .SetUserPass(EmptyCString())
+               .SetRef(""_ns)
+               .SetUserPass(""_ns)
                .Finalize(uriClone);
 
       // If setUserPass fails for some reason, just return a clone of the
@@ -1607,11 +1607,11 @@ nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
                         nullptr,  // triggering element
                         nullptr,  // nsICSPEventListener
                         ancestorsArray[a],
-                        nullptr,        // no redirect here.
-                        EmptyString(),  // no nonce
-                        false,          // not a preload.
-                        true,           // specific, do not use default-src
-                        true,           // send violation reports
+                        nullptr,  // no redirect here.
+                        u""_ns,   // no nonce
+                        false,    // not a preload.
+                        true,     // specific, do not use default-src
+                        true,     // send violation reports
                         okToSendAncestor,
                         false);  // not parser created
     if (!permits) {
@@ -1644,9 +1644,9 @@ nsCSPContext::Permits(Element* aTriggeringElement,
 
   *outPermits =
       permitsInternal(aDir, aTriggeringElement, aCSPEventListener, aURI,
-                      nullptr,        // no original (pre-redirect) URI
-                      EmptyString(),  // no nonce
-                      false,          // not a preload.
+                      nullptr,  // no original (pre-redirect) URI
+                      u""_ns,   // no nonce
+                      false,    // not a preload.
                       aSpecific,
                       true,    // send violation reports
                       true,    // send blocked URI in violation reports
@@ -1716,8 +1716,8 @@ nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags) {
            NS_ConvertUTF16toUTF8(policy).get()));
 
       AutoTArray<nsString, 1> params = {policy};
-      logToConsole("ignoringReportOnlyDirective", params, EmptyString(),
-                   EmptyString(), 0, 0, nsIScriptError::warningFlag);
+      logToConsole("ignoringReportOnlyDirective", params, u""_ns, u""_ns, 0, 0,
+                   nsIScriptError::warningFlag);
     }
   }
 

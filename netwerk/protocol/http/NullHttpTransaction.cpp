@@ -127,7 +127,7 @@ void NullHttpTransaction::OnTransportStatus(nsITransport* transport,
                      mConnectionInfo->OriginPort(),
                      mConnectionInfo->EndToEndSSL()),
         NS_HTTP_ACTIVITY_TYPE_SOCKET_TRANSPORT, static_cast<uint32_t>(status),
-        PR_Now(), progress, EmptyCString());
+        PR_Now(), progress, ""_ns);
   }
 }
 
@@ -208,8 +208,7 @@ void NullHttpTransaction::Close(nsresult reason) {
                      mConnectionInfo->OriginPort(),
                      mConnectionInfo->EndToEndSSL()),
         NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
-        NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE, PR_Now(), 0,
-        EmptyCString());
+        NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE, PR_Now(), 0, ""_ns);
   }
 }
 

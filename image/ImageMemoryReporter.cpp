@@ -130,9 +130,8 @@ void ImageMemoryReporter::ReportSharedSurface(
   }
 
   constexpr auto desc = "Decoded image data stored in shared memory."_ns;
-  aHandleReport->Callback(EmptyCString(), path, kind,
-                          nsIMemoryReporter::UNITS_BYTES, surfaceSize, desc,
-                          aData);
+  aHandleReport->Callback(""_ns, path, kind, nsIMemoryReporter::UNITS_BYTES,
+                          surfaceSize, desc, aData);
 }
 
 /* static */

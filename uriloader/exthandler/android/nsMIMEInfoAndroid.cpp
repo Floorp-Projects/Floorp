@@ -30,14 +30,14 @@ nsMIMEInfoAndroid::LoadUriInternal(nsIURI* aURI) {
 
   nsAutoString mimeType;
   if (mType.Equals(uriScheme) || mType.Equals(uriSpec)) {
-    mimeType = EmptyString();
+    mimeType.Truncate();
   } else {
     CopyUTF8toUTF16(mType, mimeType);
   }
 
-  if (java::GeckoAppShell::OpenUriExternal(
-          NS_ConvertUTF8toUTF16(uriSpec), mimeType, EmptyString(),
-          EmptyString(), EmptyString(), EmptyString())) {
+  if (java::GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec),
+                                           mimeType, u""_ns, u""_ns, u""_ns,
+                                           u""_ns)) {
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -197,7 +197,7 @@ nsMIMEInfoAndroid::GetHasDefaultHandler(bool* aHasDefault) {
 
 NS_IMETHODIMP
 nsMIMEInfoAndroid::GetDefaultDescription(nsAString& aDesc) {
-  aDesc.Assign(EmptyString());
+  aDesc.Assign(u""_ns);
   return NS_OK;
 }
 

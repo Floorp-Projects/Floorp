@@ -309,7 +309,7 @@ nsresult SetupDurability(nsCOMPtr<mozIStorageConnection>& aDBConn,
       Preferences::GetInt(PREF_GROWTH_INCREMENT_KIB, 5 * BYTES_PER_KIBIBYTE);
   if (growthIncrementKiB > 0) {
     (void)aDBConn->SetGrowthIncrement(growthIncrementKiB * BYTES_PER_KIBIBYTE,
-                                      EmptyCString());
+                                      ""_ns);
   }
   return NS_OK;
 }
@@ -1421,8 +1421,8 @@ nsresult Database::EnsureBookmarkRoots(const int32_t startPosition,
 
   if (mRootId < 1) {
     // The first root's title is an empty string.
-    rv = CreateRoot(mMainConn, "places"_ns, "root________"_ns, EmptyCString(),
-                    0, mRootId);
+    rv = CreateRoot(mMainConn, "places"_ns, "root________"_ns, ""_ns, 0,
+                    mRootId);
 
     if (NS_FAILED(rv)) return rv;
   }

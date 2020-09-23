@@ -1798,7 +1798,7 @@ void nsPluginHost::UpdatePluginBlocklistState(nsPluginTag* aPluginTag,
   }
   // Asynchronously get the blocklist state.
   RefPtr<Promise> promise;
-  blocklist->GetPluginBlocklistState(aPluginTag, EmptyString(), EmptyString(),
+  blocklist->GetPluginBlocklistState(aPluginTag, u""_ns, u""_ns,
                                      getter_AddRefs(promise));
   MOZ_ASSERT(promise,
              "Should always get a promise for plugin blocklist state.");
@@ -2321,7 +2321,7 @@ nsresult nsPluginHost::NewPluginURLStream(
       nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
       NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
-      uploadChannel->SetUploadStream(aPostStream, EmptyCString(), -1);
+      uploadChannel->SetUploadStream(aPostStream, ""_ns, -1);
     }
 
     if (aHeadersData) {

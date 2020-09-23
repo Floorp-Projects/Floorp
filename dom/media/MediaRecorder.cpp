@@ -114,9 +114,9 @@ class MediaRecorderReporter final : public nsIMemoryReporter {
                 sum += size;
               }
 
-              handleReport->Callback(
-                  EmptyCString(), "explicit/media/recorder"_ns, KIND_HEAP,
-                  UNITS_BYTES, sum, "Memory used by media recorder."_ns, data);
+              handleReport->Callback(""_ns, "explicit/media/recorder"_ns,
+                                     KIND_HEAP, UNITS_BYTES, sum,
+                                     "Memory used by media recorder."_ns, data);
 
               manager->EndReport();
             },

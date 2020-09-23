@@ -193,9 +193,8 @@ nsresult HTMLEditor::InsertHTMLAsAction(const nsAString& aInString,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = DoInsertHTMLWithContext(aInString, EmptyString(), EmptyString(),
-                               EmptyString(), nullptr, EditorDOMPoint(), true,
-                               true, false);
+  rv = DoInsertHTMLWithContext(aInString, u""_ns, u""_ns, u""_ns, nullptr,
+                               EditorDOMPoint(), true, true, false);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::DoInsertHTMLWithContext() failed");
   return EditorBase::ToGenericNSResult(rv);
@@ -1426,7 +1425,7 @@ nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
   RefPtr<Document> sourceDocument(mSourceDoc);
   EditorDOMPoint pointToInsert(mPointToInsert);
   rv = MOZ_KnownLive(mHTMLEditor)
-           ->DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
+           ->DoInsertHTMLWithContext(stuffToPaste, u""_ns, u""_ns,
                                      NS_LITERAL_STRING_FROM_CSTRING(kFileMime),
                                      sourceDocument, pointToInsert,
                                      mDoDeleteSelection, mIsSafe, false);
@@ -1626,10 +1625,9 @@ nsresult HTMLEditor::InsertObject(const nsACString& aType, nsISupports* aObject,
 
     AutoPlaceholderBatch treatAsOneTransaction(*this,
                                                ScrollSelectionIntoView::Yes);
-    rv = DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
-                                 NS_LITERAL_STRING_FROM_CSTRING(kFileMime),
-                                 aSourceDoc, aPointToInsert, aDoDeleteSelection,
-                                 aIsSafe, false);
+    rv = DoInsertHTMLWithContext(
+        stuffToPaste, u""_ns, u""_ns, NS_LITERAL_STRING_FROM_CSTRING(kFileMime),
+        aSourceDoc, aPointToInsert, aDoDeleteSelection, aIsSafe, false);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::DoInsertHTMLWithContext() failed, but ignored");
@@ -2148,7 +2146,7 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
     return rv;
   }
 
-  const nsString& empty = EmptyString();
+  const nsString& empty = u""_ns;
   rv = InsertFromTransferable(transferable, nullptr, empty, empty, false, true);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::InsertFromTransferable() failed");

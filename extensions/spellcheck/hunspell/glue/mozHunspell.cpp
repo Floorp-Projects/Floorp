@@ -304,7 +304,7 @@ void mozHunspell::DictionariesChanged(bool aNotifyChildProcesses) {
   // If the current dictionary has gone, and we don't have a good replacement,
   // set no current dictionary.
   if (!mDictionary.IsEmpty()) {
-    SetDictionary(EmptyString());
+    SetDictionary(u""_ns);
   }
 }
 

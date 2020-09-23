@@ -262,7 +262,7 @@ void ScriptPreloader::StartCacheWrite() {
 
   nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
   barrier->AddBlocker(this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-                      EmptyString());
+                      u""_ns);
 }
 
 void ScriptPreloader::InvalidateCache() {

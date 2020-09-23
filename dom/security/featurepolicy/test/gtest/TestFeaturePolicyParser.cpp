@@ -44,7 +44,7 @@ TEST(FeaturePolicyParser, Basic)
   nsTArray<Feature> parsedFeatures;
 
   // Empty string is a valid policy.
-  CheckParser(EmptyString(), true, 0, parsedFeatures);
+  CheckParser(u""_ns, true, 0, parsedFeatures);
 
   // Empty string with spaces is still valid.
   CheckParser(u"   "_ns, true, 0, parsedFeatures);

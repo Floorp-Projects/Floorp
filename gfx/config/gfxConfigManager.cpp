@@ -303,8 +303,7 @@ void gfxConfigManager::ConfigureWebRender() {
       // already have been forced disabled (e.g. safe mode, headless). It may
       // still be forced on by the user, and if so, this should have no effect.
       mFeatureHwCompositing->Disable(FeatureStatus::Blocked,
-                                     "Acceleration blocked by platform",
-                                     EmptyCString());
+                                     "Acceleration blocked by platform", ""_ns);
     }
 
     if (!mFeatureHwCompositing->IsEnabled() &&
@@ -313,7 +312,7 @@ void gfxConfigManager::ConfigureWebRender() {
       // for basic compositor, and it wasn't disabled already.
       mFeatureGPUProcess->Disable(FeatureStatus::Unavailable,
                                   "Hardware compositing is unavailable.",
-                                  EmptyCString());
+                                  ""_ns);
     }
   }
 

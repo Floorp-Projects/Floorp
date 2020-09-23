@@ -125,7 +125,7 @@ class SharedMap : public DOMEventTargetHelper {
    public:
     Entry(Entry&&) = delete;
 
-    explicit Entry(SharedMap& aMap, const nsACString& aName = EmptyCString())
+    explicit Entry(SharedMap& aMap, const nsACString& aName = ""_ns)
         : mMap(aMap), mName(aName), mData(AsVariant(uint32_t(0))) {}
 
     ~Entry() = default;

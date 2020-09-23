@@ -75,8 +75,7 @@ void nsDOMSerializer::SerializeToString(nsINode& aRoot, nsAString& aStr,
     return;
   }
 
-  nsCOMPtr<nsIDocumentEncoder> encoder =
-      SetUpEncoder(aRoot, EmptyString(), aRv);
+  nsCOMPtr<nsIDocumentEncoder> encoder = SetUpEncoder(aRoot, u""_ns, aRv);
   if (aRv.Failed()) {
     return;
   }

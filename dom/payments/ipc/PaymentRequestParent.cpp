@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 PaymentRequestParent::PaymentRequestParent()
-    : mActorAlive(true), mRequestId(EmptyString()) {}
+    : mActorAlive(true), mRequestId(u""_ns) {}
 
 mozilla::ipc::IPCResult PaymentRequestParent::RecvRequestPayment(
     const IPCPaymentActionRequest& aRequest) {
@@ -335,7 +335,7 @@ void PaymentRequestParent::ActorDestroy(ActorDestroyReason aWhy) {
   nsCOMPtr<nsIPaymentRequestService> service =
       do_GetService(NS_PAYMENT_REQUEST_SERVICE_CONTRACT_ID);
   MOZ_ASSERT(service);
-  if (!mRequestId.Equals(EmptyString())) {
+  if (!mRequestId.Equals(u""_ns)) {
     nsCOMPtr<nsIPaymentRequest> request;
     nsresult rv =
         service->GetPaymentRequestById(mRequestId, getter_AddRefs(request));

@@ -1257,9 +1257,9 @@ nsresult EventSourceImpl::PrintErrorOnConsole(
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = errObj->InitWithWindowID(
-      message, mScriptFile, EmptyString(), mScriptLine, mScriptColumn,
-      nsIScriptError::errorFlag, "Event Source", mInnerWindowID);
+  rv = errObj->InitWithWindowID(message, mScriptFile, u""_ns, mScriptLine,
+                                mScriptColumn, nsIScriptError::errorFlag,
+                                "Event Source", mInnerWindowID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // print the error message directly to the JS console

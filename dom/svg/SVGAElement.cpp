@@ -111,7 +111,7 @@ void SVGAElement::SetRel(const nsAString& aRel, ErrorResult& rv) {
 }
 
 void SVGAElement::GetReferrerPolicy(nsAString& aPolicy) {
-  GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aPolicy);
+  GetEnumAttr(nsGkAtoms::referrerpolicy, "", aPolicy);
 }
 
 void SVGAElement::SetReferrerPolicy(const nsAString& aPolicy,

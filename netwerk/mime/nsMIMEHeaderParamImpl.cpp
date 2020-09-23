@@ -121,8 +121,8 @@ nsMIMEHeaderParamImpl::GetParameterHTTP(const nsACString& aHeaderVal,
 nsresult nsMIMEHeaderParamImpl::GetParameterHTTP(const nsACString& aHeaderVal,
                                                  const char* aParamName,
                                                  nsAString& aResult) {
-  return DoGetParameter(aHeaderVal, aParamName, HTTP_FIELD_ENCODING,
-                        EmptyCString(), false, nullptr, aResult);
+  return DoGetParameter(aHeaderVal, aParamName, HTTP_FIELD_ENCODING, ""_ns,
+                        false, nullptr, aResult);
 }
 
 // XXX : aTryLocaleCharset is not yet effective.
@@ -147,7 +147,7 @@ nsresult nsMIMEHeaderParamImpl::DoGetParameter(
   // if necessary.
 
   nsAutoCString str1;
-  rv = internalDecodeParameter(med, charset, EmptyCString(), false,
+  rv = internalDecodeParameter(med, charset, ""_ns, false,
                                // was aDecoding == MIME_FIELD_ENCODING
                                // see bug 875615
                                true, str1);

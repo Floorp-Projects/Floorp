@@ -208,7 +208,7 @@ ExtensionPolicyService::CollectReports(nsIHandleReportCallback* aHandleReport,
     nsCString path("extensions/");
     path.Append(desc);
 
-    aHandleReport->Callback(EmptyCString(), path, KIND_NONHEAP, UNITS_COUNT, 1,
+    aHandleReport->Callback(""_ns, path, KIND_NONHEAP, UNITS_COUNT, 1,
                             "WebExtensions that are active in this session"_ns,
                             aData);
   }

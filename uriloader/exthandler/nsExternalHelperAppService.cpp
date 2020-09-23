@@ -685,9 +685,9 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
 
   uint32_t reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
 
-  RefPtr<nsExternalAppHandler> handler = new nsExternalAppHandler(
-      nullptr, EmptyCString(), aContentContext, aWindowContext, this, fileName,
-      reason, aForceSave);
+  RefPtr<nsExternalAppHandler> handler =
+      new nsExternalAppHandler(nullptr, ""_ns, aContentContext, aWindowContext,
+                               this, fileName, reason, aForceSave);
   if (!handler) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -768,7 +768,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
                               nsCaseInsensitiveCStringComparator)) {
     nsAutoCString mimeType;
     if (!fileExtension.IsEmpty()) {
-      mimeSvc->GetFromTypeAndExtension(EmptyCString(), fileExtension,
+      mimeSvc->GetFromTypeAndExtension(""_ns, fileExtension,
                                        getter_AddRefs(mimeInfo));
       if (mimeInfo) {
         mimeInfo->GetMIMEType(mimeType);
@@ -1149,7 +1149,7 @@ nsExternalHelperAppService::GetProtocolHandlerInfo(
     bool hasHandler = false;
     (void)handlerSvc->Exists(*aHandlerInfo, &hasHandler);
     if (hasHandler) {
-      rv = handlerSvc->FillHandlerInfo(*aHandlerInfo, EmptyCString());
+      rv = handlerSvc->FillHandlerInfo(*aHandlerInfo, ""_ns);
       if (NS_SUCCEEDED(rv)) return NS_OK;
     }
   }
@@ -2219,11 +2219,11 @@ nsresult nsExternalAppHandler::CreateTransfer() {
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
   if (mBrowsingContext) {
     rv = transfer->InitWithBrowsingContext(
-        mSourceUrl, target, EmptyString(), mMimeInfo, mTimeDownloadStarted,
-        mTempFile, this, channel && NS_UsePrivateBrowsing(channel),
+        mSourceUrl, target, u""_ns, mMimeInfo, mTimeDownloadStarted, mTempFile,
+        this, channel && NS_UsePrivateBrowsing(channel),
         mDownloadClassification, mBrowsingContext, mHandleInternally);
   } else {
-    rv = transfer->Init(mSourceUrl, target, EmptyString(), mMimeInfo,
+    rv = transfer->Init(mSourceUrl, target, u""_ns, mMimeInfo,
                         mTimeDownloadStarted, mTempFile, this,
                         channel && NS_UsePrivateBrowsing(channel),
                         mDownloadClassification);
@@ -2288,12 +2288,11 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
   if (mBrowsingContext) {
     rv = transfer->InitWithBrowsingContext(
-        mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
-        mTimeDownloadStarted, nullptr, this,
-        channel && NS_UsePrivateBrowsing(channel), mDownloadClassification,
-        mBrowsingContext, mHandleInternally);
+        mSourceUrl, pseudoTarget, u""_ns, mMimeInfo, mTimeDownloadStarted,
+        nullptr, this, channel && NS_UsePrivateBrowsing(channel),
+        mDownloadClassification, mBrowsingContext, mHandleInternally);
   } else {
-    rv = transfer->Init(mSourceUrl, pseudoTarget, EmptyString(), mMimeInfo,
+    rv = transfer->Init(mSourceUrl, pseudoTarget, u""_ns, mMimeInfo,
                         mTimeDownloadStarted, nullptr, this,
                         channel && NS_UsePrivateBrowsing(channel),
                         mDownloadClassification);
@@ -2628,7 +2627,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     bool hasHandler = false;
     (void)handlerSvc->Exists(*_retval, &hasHandler);
     if (hasHandler) {
-      rv = handlerSvc->FillHandlerInfo(*_retval, EmptyCString());
+      rv = handlerSvc->FillHandlerInfo(*_retval, ""_ns);
       LOG(("Data source: Via type: retval 0x%08" PRIx32 "\n",
            static_cast<uint32_t>(rv)));
       trustMIMEType = trustMIMEType || NS_SUCCEEDED(rv);
@@ -2994,8 +2993,8 @@ bool nsExternalHelperAppService::GetMIMETypeFromOSForExtension(
     const nsACString& aExtension, nsACString& aMIMEType) {
   bool found = false;
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  nsresult rv = GetMIMEInfoFromOS(EmptyCString(), aExtension, &found,
-                                  getter_AddRefs(mimeInfo));
+  nsresult rv =
+      GetMIMEInfoFromOS(""_ns, aExtension, &found, getter_AddRefs(mimeInfo));
   return NS_SUCCEEDED(rv) && found && mimeInfo &&
          NS_SUCCEEDED(mimeInfo->GetMIMEType(aMIMEType));
 }

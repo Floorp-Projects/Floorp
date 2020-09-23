@@ -691,8 +691,7 @@ nsresult PersistNodeFixup::FixupAnchor(nsINode* aNode) {
     nsresult rv = NS_NewURI(getter_AddRefs(newURI), oldCValue,
                             mParent->GetCharacterSet(), relativeURI);
     if (NS_SUCCEEDED(rv) && newURI) {
-      Unused
-          << NS_MutateURI(newURI).SetUserPass(EmptyCString()).Finalize(newURI);
+      Unused << NS_MutateURI(newURI).SetUserPass(""_ns).Finalize(newURI);
       nsAutoCString uriSpec;
       rv = newURI->GetSpec(uriSpec);
       NS_ENSURE_SUCCESS(rv, rv);

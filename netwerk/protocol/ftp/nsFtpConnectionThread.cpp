@@ -665,7 +665,7 @@ nsresult nsFtpState::S_user() {
       if (!prompter) return NS_ERROR_NOT_INITIALIZED;
 
       RefPtr<nsAuthInformationHolder> info = new nsAuthInformationHolder(
-          nsIAuthInformation::AUTH_HOST, EmptyString(), EmptyCString());
+          nsIAuthInformation::AUTH_HOST, u""_ns, ""_ns);
 
       bool retval;
       rv = prompter->PromptAuth(mChannel, nsIAuthPrompt2::LEVEL_NONE, info,
@@ -748,7 +748,7 @@ nsresult nsFtpState::S_pass() {
 
       RefPtr<nsAuthInformationHolder> info = new nsAuthInformationHolder(
           nsIAuthInformation::AUTH_HOST | nsIAuthInformation::ONLY_PASSWORD,
-          EmptyString(), EmptyCString());
+          u""_ns, ""_ns);
 
       info->SetUserInternal(mUsername);
 
@@ -1044,7 +1044,7 @@ nsresult nsFtpState::S_list() {
   // dir listings aren't resumable
   NS_ENSURE_TRUE(!mChannel->ResumeRequested(), NS_ERROR_NOT_RESUMABLE);
 
-  mChannel->SetEntityID(EmptyCString());
+  mChannel->SetEntityID(""_ns);
 
   const char* listString;
   if (mServerType == FTP_VMS_TYPE) {
@@ -1139,7 +1139,7 @@ FTP_STATE
 nsFtpState::R_rest() {
   if (mResponseCode / 100 == 4) {
     // If REST fails, then we can't resume
-    mChannel->SetEntityID(EmptyCString());
+    mChannel->SetEntityID(""_ns);
 
     mInternalError = NS_ERROR_NOT_RESUMABLE;
     mResponseMsg.Truncate();

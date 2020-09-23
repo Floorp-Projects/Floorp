@@ -160,7 +160,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
     SetHTMLAttr(nsGkAtoms::referrerpolicy, aReferrer, aError);
   }
   void GetReferrerPolicy(nsAString& aReferrer) {
-    GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
+    GetEnumAttr(nsGkAtoms::referrerpolicy, "", aReferrer);
   }
   void GetImageSrcset(nsAString& aImageSrcset) {
     GetHTMLAttr(nsGkAtoms::imagesrcset, aImageSrcset);

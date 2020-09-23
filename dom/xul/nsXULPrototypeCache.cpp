@@ -484,7 +484,7 @@ static void ReportSize(const nsCString& aPath, size_t aAmount,
                        nsISupports* aData) {
   nsAutoCString path("explicit/xul-prototype-cache/");
   path += aPath;
-  aHandleReport->Callback(EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,
+  aHandleReport->Callback(""_ns, path, nsIMemoryReporter::KIND_HEAP,
                           nsIMemoryReporter::UNITS_BYTES, aAmount, aDescription,
                           aData);
 }

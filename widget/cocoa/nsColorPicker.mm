@@ -150,7 +150,7 @@ void nsColorPicker::Done() {
   [mColorPanelWrapper close];
   [mColorPanelWrapper release];
   mColorPanelWrapper = nullptr;
-  mCallback->Done(EmptyString());
+  mCallback->Done(u""_ns);
   mCallback = nullptr;
   NS_RELEASE_THIS();
 }

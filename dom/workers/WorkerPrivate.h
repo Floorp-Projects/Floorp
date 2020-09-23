@@ -123,7 +123,7 @@ class WorkerPrivate : public RelativeTimeline {
       JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
       WorkerType aWorkerType, const nsAString& aWorkerName,
       const nsACString& aServiceWorkerScope, WorkerLoadInfo* aLoadInfo,
-      ErrorResult& aRv, nsString aId = EmptyString());
+      ErrorResult& aRv, nsString aId = u""_ns);
 
   enum LoadGroupBehavior { InheritLoadGroup, OverrideLoadGroup };
 

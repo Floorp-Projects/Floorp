@@ -78,7 +78,7 @@ void HTMLMenuElement::Build(nsIMenuBuilder* aBuilder) {
     return;
   }
 
-  BuildSubmenu(EmptyString(), this, aBuilder);
+  BuildSubmenu(u""_ns, this, aBuilder);
 }
 
 nsresult HTMLMenuElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,

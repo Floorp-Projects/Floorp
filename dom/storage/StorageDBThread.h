@@ -157,8 +157,8 @@ class StorageDBThread final {
 
     explicit DBOperation(const OperationType aType,
                          LocalStorageCacheBridge* aCache = nullptr,
-                         const nsAString& aKey = EmptyString(),
-                         const nsAString& aValue = EmptyString());
+                         const nsAString& aKey = u""_ns,
+                         const nsAString& aValue = u""_ns);
     DBOperation(const OperationType aType, StorageUsageBridge* aUsage);
     DBOperation(const OperationType aType, const nsACString& aOriginNoSuffix);
     DBOperation(const OperationType aType,

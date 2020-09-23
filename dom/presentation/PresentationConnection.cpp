@@ -144,7 +144,7 @@ JSObject* PresentationConnection::WrapObject(
 
 void PresentationConnection::GetId(nsAString& aId) const {
   if (nsContentUtils::ShouldResistFingerprinting()) {
-    aId = EmptyString();
+    aId.Truncate();
     return;
   }
 
@@ -153,7 +153,7 @@ void PresentationConnection::GetId(nsAString& aId) const {
 
 void PresentationConnection::GetUrl(nsAString& aUrl) const {
   if (nsContentUtils::ShouldResistFingerprinting()) {
-    aUrl = EmptyString();
+    aUrl.Truncate();
     return;
   }
 
@@ -510,7 +510,7 @@ nsresult PresentationConnection::DoReceiveMessage(const nsACString& aData,
   if (aIsBinary) {
     if (mBinaryType == PresentationConnectionBinaryType::Blob) {
       RefPtr<Blob> blob =
-          Blob::CreateStringBlob(GetOwnerGlobal(), aData, EmptyString());
+          Blob::CreateStringBlob(GetOwnerGlobal(), aData, u""_ns);
       if (NS_WARN_IF(!blob)) {
         return NS_ERROR_FAILURE;
       }
@@ -587,7 +587,7 @@ nsresult PresentationConnection::DispatchMessageEvent(
 
   messageEvent->InitMessageEvent(
       nullptr, u"message"_ns, CanBubble::eNo, Cancelable::eNo, aData, origin,
-      EmptyString(), nullptr, Sequence<OwningNonNull<MessagePort>>());
+      u""_ns, nullptr, Sequence<OwningNonNull<MessagePort>>());
   messageEvent->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =

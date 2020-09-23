@@ -53,7 +53,7 @@ class nsURIHashKey : public PLDHashEntryHdr {
   static PLDHashNumber HashKey(const nsIURI* aKey) {
     if (!aKey) {
       // If the key is null, return hash for empty string.
-      return mozilla::HashString(EmptyCString());
+      return mozilla::HashString(""_ns);
     }
     nsAutoCString spec;
     // If GetSpec() fails, ignoring the failure and proceeding with an

@@ -508,8 +508,7 @@ RefPtr<GenericPromise> GeckoMediaPluginServiceParent::LoadFromEnvironment() {
 
 class NotifyObserversTask final : public mozilla::Runnable {
  public:
-  explicit NotifyObserversTask(const char* aTopic,
-                               nsString aData = EmptyString())
+  explicit NotifyObserversTask(const char* aTopic, nsString aData = u""_ns)
       : Runnable(aTopic), mTopic(aTopic), mData(aData) {}
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());

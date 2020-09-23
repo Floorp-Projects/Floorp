@@ -939,7 +939,7 @@ HashNumber ReferrerInfo::Hash() const {
       static_cast<uint32_t>(mPolicy), mSendReferrer, mOverridePolicyByDefault,
       mozilla::HashString(originalReferrerSpec),
       mozilla::HashString(mComputedReferrer.isSome() ? mComputedReferrer.value()
-                                                     : EmptyCString()));
+                                                     : ""_ns));
 }
 
 NS_IMETHODIMP
@@ -1163,7 +1163,7 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
   // computed the referrer and the result referrer value is empty (not send
   // referrer). So any early return later than this line will use that empty
   // referrer.
-  mComputedReferrer.emplace(EmptyCString());
+  mComputedReferrer.emplace(""_ns);
 
   if (!mSendReferrer || !mOriginalReferrer ||
       mPolicy == ReferrerPolicy::No_referrer) {

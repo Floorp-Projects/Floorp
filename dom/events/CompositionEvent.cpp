@@ -44,7 +44,7 @@ already_AddRefed<CompositionEvent> CompositionEvent::Constructor(
   RefPtr<CompositionEvent> e = new CompositionEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   e->InitCompositionEvent(aType, aParam.mBubbles, aParam.mCancelable,
-                          aParam.mView, aParam.mData, EmptyString());
+                          aParam.mView, aParam.mData, u""_ns);
   e->mDetail = aParam.mDetail;
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);

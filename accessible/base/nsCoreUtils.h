@@ -61,7 +61,7 @@ class nsCoreUtils {
   MOZ_CAN_RUN_SCRIPT
   static void DispatchClickEvent(mozilla::dom::XULTreeElement* aTree,
                                  int32_t aRowIndex, nsTreeColumn* aColumn,
-                                 const nsAString& aPseudoElt = EmptyString());
+                                 const nsAString& aPseudoElt = u""_ns);
 
   /**
    * Send mouse event to the given element.

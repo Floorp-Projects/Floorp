@@ -1354,8 +1354,8 @@ NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run() {
       return rv;
     }
   }
-  nsresult rv = gfxUtils::EncodeSourceSurface(
-      surface, ImageType::ICO, EmptyString(), gfxUtils::eBinaryEncode, file);
+  nsresult rv = gfxUtils::EncodeSourceSurface(surface, ImageType::ICO, u""_ns,
+                                              gfxUtils::eBinaryEncode, file);
   fclose(file);
   NS_ENSURE_SUCCESS(rv, rv);
 

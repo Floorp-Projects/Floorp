@@ -696,7 +696,7 @@ TEST(TArray, test_string_array)
     ASSERT_EQ(strArray.BinaryIndexOf(strArray[i]), i);
   }
   auto no_index = strArray.NoIndex;  // Fixes gtest compilation error
-  ASSERT_EQ(strArray.BinaryIndexOf(EmptyCString()), no_index);
+  ASSERT_EQ(strArray.BinaryIndexOf(""_ns), no_index);
 
   nsCString rawArray[MOZ_ARRAY_LENGTH(kdata) - 1];
   for (i = 0; i < ArrayLength(rawArray); ++i)

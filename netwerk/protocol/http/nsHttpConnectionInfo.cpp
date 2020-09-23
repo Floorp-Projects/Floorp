@@ -365,15 +365,14 @@ nsHttpConnectionInfo::CloneAndAdoptHTTPSSVCRecord(
   RefPtr<nsHttpConnectionInfo> clone;
   if (name.IsEmpty()) {
     clone = new nsHttpConnectionInfo(
-        mOrigin, mOriginPort, alpn ? *alpn : EmptyCString(), mUsername,
-        mTopWindowOrigin, mProxyInfo, mOriginAttributes, mEndToEndSSL,
-        mIsolated, mIsHttp3);
+        mOrigin, mOriginPort, alpn ? *alpn : ""_ns, mUsername, mTopWindowOrigin,
+        mProxyInfo, mOriginAttributes, mEndToEndSSL, mIsolated, mIsHttp3);
   } else {
     MOZ_ASSERT(mEndToEndSSL);
     clone = new nsHttpConnectionInfo(
-        mOrigin, mOriginPort, alpn ? *alpn : EmptyCString(), mUsername,
-        mTopWindowOrigin, mProxyInfo, mOriginAttributes, name,
-        port ? *port : mRoutedPort, mIsolated, mIsHttp3);
+        mOrigin, mOriginPort, alpn ? *alpn : ""_ns, mUsername, mTopWindowOrigin,
+        mProxyInfo, mOriginAttributes, name, port ? *port : mRoutedPort,
+        mIsolated, mIsHttp3);
   }
 
   // Make sure the anonymous, insecure-scheme, and private flags are transferred
@@ -478,8 +477,8 @@ void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo** outCI) {
   }
 
   RefPtr<nsHttpConnectionInfo> clone = new nsHttpConnectionInfo(
-      mOrigin, mOriginPort, EmptyCString(), mUsername, mTopWindowOrigin,
-      mProxyInfo, mOriginAttributes, mEndToEndSSL, mIsolated);
+      mOrigin, mOriginPort, ""_ns, mUsername, mTopWindowOrigin, mProxyInfo,
+      mOriginAttributes, mEndToEndSSL, mIsolated);
   // Make sure the anonymous, insecure-scheme, and private flags are transferred
   clone->SetAnonymous(GetAnonymous());
   clone->SetPrivate(GetPrivate());

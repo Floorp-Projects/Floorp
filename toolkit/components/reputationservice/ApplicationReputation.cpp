@@ -1433,7 +1433,7 @@ nsresult PendingLookup::DoLookupInternal() {
     nsAutoCString errorName;
     mozilla::GetErrorName(rv, errorName);
     LOG(("No suggested filename [rv = %s, this = %p]", errorName.get(), this));
-    mFileName = EmptyCString();
+    mFileName.Truncate();
   }
 
   // We can skip parsing certificate for non-binary files because we only

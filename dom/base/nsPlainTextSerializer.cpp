@@ -1088,7 +1088,7 @@ bool nsPlainTextSerializer::MustSuppressLeaf() const {
   return false;
 }
 
-void nsPlainTextSerializer::DoAddText() { DoAddText(true, EmptyString()); }
+void nsPlainTextSerializer::DoAddText() { DoAddText(true, u""_ns); }
 
 void nsPlainTextSerializer::DoAddText(bool aIsLineBreak,
                                       const nsAString& aText) {

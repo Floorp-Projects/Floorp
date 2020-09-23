@@ -157,7 +157,7 @@ InterceptedChannelBase::SaveTimeStamps() {
   nsCString navigationOrSubresource =
       isNonSubresourceRequest ? "navigation"_ns : "subresource"_ns;
 
-  nsAutoCString subresourceKey(EmptyCString());
+  nsAutoCString subresourceKey(""_ns);
   GetSubresourceTimeStampKey(channel, subresourceKey);
 
   // We may have null timestamps if the fetch dispatch runnable was cancelled

@@ -597,7 +597,7 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
   }
 
   // Limit fragmentation by growing the database by many pages at once.
-  rv = aConn.SetGrowthIncrement(kGrowthSize, EmptyCString());
+  rv = aConn.SetGrowthIncrement(kGrowthSize, ""_ns);
   if (rv == NS_ERROR_FILE_TOO_BIG) {
     NS_WARNING("Not enough disk space to set sqlite growth increment.");
     rv = NS_OK;

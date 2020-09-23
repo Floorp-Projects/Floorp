@@ -81,7 +81,7 @@ static nsCString getId(const char* bin_name) {
     return IDtoUUIDString(identifier);
   }
 
-  return EmptyCString();
+  return ""_ns;
 }
 
 static SharedLibrary SharedLibraryAtPath(const char* path,
@@ -99,7 +99,7 @@ static SharedLibrary SharedLibraryAtPath(const char* path,
   }
 
   return SharedLibrary(libStart, libEnd, offset, getId(path), nameStr, pathStr,
-                       nameStr, pathStr, EmptyCString(), "");
+                       nameStr, pathStr, ""_ns, "");
 }
 
 static int dl_iterate_callback(struct dl_phdr_info* dl_info, size_t size,

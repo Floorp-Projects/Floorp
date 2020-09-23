@@ -153,7 +153,7 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
   }
 
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_CRYPTOMINING_URI,
-                                         list, EmptyCString(), EmptyCString());
+                                         list, ""_ns, ""_ns);
 
   UC_LOG(
       ("UrlClassifierFeatureCryptominingProtection::ProcessChannel - "

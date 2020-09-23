@@ -33,7 +33,7 @@ nsresult nsHttpHeaderArray::SetHeader(
 nsresult nsHttpHeaderArray::SetHeader(
     nsHttpAtom header, const nsACString& value, bool merge,
     nsHttpHeaderArray::HeaderVariety variety) {
-  return SetHeader(header, EmptyCString(), value, merge, variety);
+  return SetHeader(header, ""_ns, value, merge, variety);
 }
 
 nsresult nsHttpHeaderArray::SetHeader(
@@ -125,7 +125,7 @@ nsresult nsHttpHeaderArray::SetEmptyHeader(const nsACString& headerName,
     entry->variety = eVarietyResponseNetOriginal;
   }
 
-  return SetHeader_internal(header, headerName, EmptyCString(), variety);
+  return SetHeader_internal(header, headerName, ""_ns, variety);
 }
 
 nsresult nsHttpHeaderArray::SetHeaderFromNet(

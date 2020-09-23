@@ -152,10 +152,10 @@ void ConvertDetailsInit(JSContext* aCx, const PaymentDetailsInit& aDetails,
 
   aIPCDetails =
       IPCPaymentDetails(id, total, displayItems, shippingOptions, modifiers,
-                        EmptyString(),   // error message
-                        EmptyString(),   // shippingAddressErrors
-                        EmptyString(),   // payerErrors
-                        EmptyString());  // paymentMethodErrors
+                        u""_ns,   // error message
+                        u""_ns,   // shippingAddressErrors
+                        u""_ns,   // payerErrors
+                        u""_ns);  // paymentMethodErrors
 }
 
 void ConvertDetailsUpdate(JSContext* aCx, const PaymentDetailsUpdate& aDetails,
@@ -211,7 +211,7 @@ void ConvertDetailsUpdate(JSContext* aCx, const PaymentDetailsUpdate& aDetails,
     }
   }
 
-  aIPCDetails = IPCPaymentDetails(EmptyString(),  // id
+  aIPCDetails = IPCPaymentDetails(u""_ns,  // id
                                   total, displayItems, shippingOptions,
                                   modifiers, error, shippingAddressErrors,
                                   payerErrors, paymentMethodErrors);
