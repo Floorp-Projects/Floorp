@@ -83,8 +83,8 @@ class MacWakeLockListener final : public nsIDOMMozWakeLockListener {
         shouldKeepDisplayOn ? kIOPMAssertionTypeNoDisplaySleep : kIOPMAssertionTypeNoIdleSleep;
     IOPMAssertionID& assertionId =
         shouldKeepDisplayOn ? mAssertionNoDisplaySleepID : mAssertionNoIdleSleepID;
-    WAKE_LOCK_LOG("topic=%s, shouldKeepDisplayOn=%d", NS_ConvertUTF16toUTF8(aTopic).get(),
-                  shouldKeepDisplayOn);
+    WAKE_LOCK_LOG("topic=%s, state=%s, shouldKeepDisplayOn=%d", NS_ConvertUTF16toUTF8(aTopic).get(),
+                  NS_ConvertUTF16toUTF8(aState).get(), shouldKeepDisplayOn);
 
     // Note the wake lock code ensures that we're not sent duplicate
     // "locked-foreground" notifications when multiple wake locks are held.
