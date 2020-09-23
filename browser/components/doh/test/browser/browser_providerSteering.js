@@ -4,7 +4,7 @@
 
 "use strict";
 
-const TEST_DOMAIN = "doh.test";
+const TEST_DOMAIN = "doh.test.";
 const AUTO_TRR_URI = "https://dummytrr.com/query";
 
 add_task(setup);
@@ -82,7 +82,7 @@ add_task(async function testProviderSteering() {
   await testNetChangeResult(provider.uri, "enable_doh", provider.name);
 
   // Trigger safesearch heuristics and ensure provider steering is disabled.
-  let googleDomain = "google.com";
+  let googleDomain = "google.com.";
   let googleIP = "1.1.1.1";
   let googleSafeSearchIP = "1.1.1.2";
   gDNSOverride.clearHostOverride(googleDomain);

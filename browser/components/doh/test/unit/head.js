@@ -77,12 +77,12 @@ function setup() {
 
   Services.prefs.setCharPref(
     "doh-rollout.trrRace.popularDomains",
-    "foo.example.com, bar.example.com"
+    "foo.example.com., bar.example.com."
   );
 
   Services.prefs.setCharPref(
     "doh-rollout.trrRace.canonicalDomain",
-    "firefox-dns-perf-test.net"
+    "firefox-dns-perf-test.net."
   );
 
   let defaultPrefBranch = Services.prefs.getDefaultBranch("");

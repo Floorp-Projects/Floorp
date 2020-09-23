@@ -19,8 +19,8 @@ async function helper_SuccessfulLookupAggregator(
   // popular domains.
   Assert.equal(aggregator.domains[0], null);
   Assert.equal(aggregator.domains[1], null);
-  Assert.equal(aggregator.domains[2], "foo.example.com");
-  Assert.equal(aggregator.domains[3], "bar.example.com");
+  Assert.equal(aggregator.domains[2], "foo.example.com.");
+  Assert.equal(aggregator.domains[3], "bar.example.com.");
   Assert.equal(aggregator.totalLookups, 8); // 2 TRRs * 4 domains.
 
   if (networkUnstable) {
@@ -58,12 +58,12 @@ async function helper_SuccessfulLookupAggregator(
   for (let trr of [trrServer1, trrServer2]) {
     // There should be two results for random subdomains.
     let results = aggregator.results.filter(r => {
-      return r.trr == trr && r.domain.endsWith(".firefox-dns-perf-test.net");
+      return r.trr == trr && r.domain.endsWith(".firefox-dns-perf-test.net.");
     });
     Assert.equal(results.length, 2);
 
     for (let result of results) {
-      Assert.ok(result.domain.endsWith(".firefox-dns-perf-test.net"));
+      Assert.ok(result.domain.endsWith(".firefox-dns-perf-test.net."));
       Assert.equal(result.trr, trr);
       Assert.ok(Components.isSuccessCode(result.status));
       Assert.greater(result.time, 0);
@@ -83,15 +83,15 @@ async function helper_SuccessfulLookupAggregator(
 
     // There should be two results for the popular domains.
     results = aggregator.results.filter(r => {
-      return r.trr == trr && !r.domain.endsWith(".firefox-dns-perf-test.net");
+      return r.trr == trr && !r.domain.endsWith(".firefox-dns-perf-test.net.");
     });
     Assert.equal(results.length, 2);
 
     Assert.ok(
-      [results[0].domain, results[1].domain].includes("foo.example.com")
+      [results[0].domain, results[1].domain].includes("foo.example.com.")
     );
     Assert.ok(
-      [results[0].domain, results[1].domain].includes("bar.example.com")
+      [results[0].domain, results[1].domain].includes("bar.example.com.")
     );
     for (let result of results) {
       Assert.equal(result.trr, trr);
@@ -130,8 +130,8 @@ add_task(async function test_AbortedLookupAggregator() {
   // popular domains.
   Assert.equal(aggregator.domains[0], null);
   Assert.equal(aggregator.domains[1], null);
-  Assert.equal(aggregator.domains[2], "foo.example.com");
-  Assert.equal(aggregator.domains[3], "bar.example.com");
+  Assert.equal(aggregator.domains[2], "foo.example.com.");
+  Assert.equal(aggregator.domains[3], "bar.example.com.");
   Assert.equal(aggregator.totalLookups, 8); // 2 TRRs * 4 domains.
 
   // The aggregator should never call the onComplete callback. To test
