@@ -4,6 +4,10 @@
     <string name="mozac_feature_addons_permissions_privacy_description">قراءة إعدادات الخصوصية وتعديلها</string>
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">الوصول إلى بياناتك في المواقع كافة</string>
+    <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
+    <string name="mozac_feature_addons_permissions_one_site_description">الوصول إلى بياناتك لموقع %1$s</string>
+    <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
+    <string name="mozac_feature_addons_permissions_sites_in_domain_description">الوصول إلى بياناتك للمواقع في النطاق %1$s</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">الوصول إلى ألسنة المتصفح</string>
     <!-- Description for unlimited_storage permission. -->
@@ -116,6 +120,8 @@
     <string name="mozac_feature_addons_updater_notification_title">تملك %1$s تحديثًا جديدًا</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">تحديثات الإضافات</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">أداة فحص الإضافات المدعومة</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title">تتوفّر إضافة جديدة</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->

@@ -103,6 +103,8 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">لا يوجد اتصال بالإنترنت</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">افحص اتصال الشبكة أو جرّب إعادة تحميل الصفحة بعد قليل.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">أعِد التحميل</string>
 
@@ -140,6 +142,8 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">لم يُعثر على خادوم وسيط</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>ضُبط المتصفّح ليستخدم خادوما وسيطا، لكن لم يوجد الوسيط.</p><ul><li>هل إعدادات الوسيط سليمة؟ تأكد من الإعدادات وأعد المحاولة.</li><li>هل الجهاز متصل بشبكة نشطة؟</li><li>أما زلت تواجه المشاكل؟ راجع مدير الشبكة أو مزود الخدمة للمساعدة.</li></ul>]]></string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[أُبلِغ عن أن الموقع %1$s موقع هجمات و حُجب بناء على تفضيلات الأمن.]]></string>
