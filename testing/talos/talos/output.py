@@ -130,8 +130,11 @@ class Output(object):
                         if test.test_config.get('unit'):
                             subtest['unit'] = test.test_config['unit']
 
+                # if there is only one subtest, carry alerting setting from the suite
+                if len(subtests) == 1:
+                    subtests[0]['shouldAlert'] = suite['shouldAlert']
                 # if there is more than one subtest, calculate a summary result
-                if len(subtests) > 1:
+                elif len(subtests) > 1:
                     suite['value'] = self.construct_results(
                         vals, testname=test.name())
                 if test.test_config.get('lower_is_better') is not None:
