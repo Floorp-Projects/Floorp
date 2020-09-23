@@ -2314,6 +2314,12 @@ void nsWebBrowserPersist::FinishDownload() {
 void nsWebBrowserPersist::EndDownload(nsresult aResult) {
   MOZ_ASSERT(NS_IsMainThread(), "Should end download on the main thread.");
 
+  if (mCancel && mEndCalled) {
+    // If we're cancelled, it's possible for us to be called multiple times.
+    // This is hard to prevent, but either way we do not need to do anything.
+    return;
+  }
+
   MOZ_DIAGNOSTIC_ASSERT(!mEndCalled, "Should only end the download once.");
   // Really this should just never happen, but if it does, at least avoid
   // no-op notifications or pretending we succeeded if we already failed.
