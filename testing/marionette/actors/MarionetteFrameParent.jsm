@@ -68,6 +68,12 @@ class MarionetteFrameParent extends JSWindowActorParent {
   // Proxying methods for WebDriver commands
   // TODO: Maybe using a proxy class instead similar to proxy.js
 
+  clearElement(webEl) {
+    return this.sendQuery("MarionetteFrameParent:clearElement", {
+      webEl,
+    });
+  }
+
   findElement(strategy, selector, opts) {
     return this.sendQuery("MarionetteFrameParent:findElement", {
       strategy,
