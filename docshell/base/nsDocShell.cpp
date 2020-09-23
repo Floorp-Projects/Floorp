@@ -11192,12 +11192,13 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
 
 NS_IMETHODIMP
 nsDocShell::GetCurrentScrollRestorationIsManual(bool* aIsManual) {
+  if (StaticPrefs::fission_sessionHistoryInParent()) {
+    *aIsManual = mActiveEntry && mActiveEntry->GetScrollRestorationIsManual();
+    return NS_OK;
+  }
+
   *aIsManual = false;
   if (mOSHE) {
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
-      *aIsManual = mActiveEntry->GetScrollRestorationIsManual();
-      return NS_OK;
-    }
     return mOSHE->GetScrollRestorationIsManual(aIsManual);
   }
 
