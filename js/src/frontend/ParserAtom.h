@@ -65,111 +65,9 @@ enum class StaticParserString2 : uint16_t;
  *  1. Inline Latin1Char storage (immediately after the ParserAtomEntry memory).
  *  2. Inline char16_t storage (immediately after the ParserAtomEntry memory).
  */
-class alignas(alignof(void*)) ParserAtomEntry {
+class alignas(alignof(uint32_t)) ParserAtomEntry {
   friend class ParserAtomsTable;
   friend class WellKnownParserAtoms;
-
-  /**
-   * This single-word variant struct multiplexes between four representations.
-   *    1. An owned pointer to a heap-allocated Latin1Char buffer.
-   *    2. An owned pointer to a heap-allocated char16_t buffer.
-   *    3. A weak Latin1Char pointer to the inline buffer in an entry.
-   *    4. A weak char16_t pointer to the inline buffer in an entry.
-   *
-   * The lowest bit of the tagged pointer is used to distinguish between
-   * character widths.
-   *
-   * The second lowest bit of the tagged pointer is used to distinguish
-   * between heap-ptr contents and inline contents.
-   */
-  struct ContentPtrVariant {
-    uintptr_t taggedPtr;
-
-    static const uintptr_t CHARTYPE_MASK = 0x1;
-    static const uintptr_t CHARTYPE_LATIN1 = 0x0;
-    static const uintptr_t CHARTYPE_TWO_BYTE = 0x1;
-
-    static const uintptr_t LOCATION_MASK = 0x2;
-    static const uintptr_t LOCATION_INLINE = 0x0;
-    static const uintptr_t LOCATION_HEAP = 0x2;
-
-    static const uintptr_t LOWBITS_MASK = CHARTYPE_MASK | LOCATION_MASK;
-
-    // A tagged ptr representation for no contents.  The taggedPtr
-    // field is set to when contents are moved out of a ParserAtomEntry,
-    // so that the original atom (moved from) does not try to destroy/free
-    // its contents.
-    static const uintptr_t EMPTY_TAGGED_PTR =
-        CHARTYPE_LATIN1 | LOCATION_INLINE | (0x0 /* nullptr */);
-
-    template <typename CharT>
-    static uintptr_t Tag(const CharT* ptr, bool isInline) {
-      static_assert(std::is_same_v<CharT, Latin1Char> ||
-                    std::is_same_v<CharT, char16_t>);
-      return uintptr_t(ptr) |
-             (std::is_same_v<CharT, Latin1Char> ? CHARTYPE_LATIN1
-                                                : CHARTYPE_TWO_BYTE) |
-             (isInline ? LOCATION_INLINE : LOCATION_HEAP);
-    }
-
-    // The variant owns data, so move semantics apply.
-    ContentPtrVariant(const ContentPtrVariant& other) = delete;
-
-    // Raw pointer constructor.
-    template <typename CharT>
-    ContentPtrVariant(const CharT* weakContents, bool isInline)
-        : taggedPtr(Tag(weakContents, isInline)) {
-      static_assert(std::is_same_v<CharT, Latin1Char> ||
-                    std::is_same_v<CharT, char16_t>);
-      MOZ_ASSERT((reinterpret_cast<uintptr_t>(weakContents) & LOWBITS_MASK) ==
-                 0);
-    }
-
-    // Owned pointer construction.
-    template <typename CharT>
-    explicit ContentPtrVariant(
-        mozilla::UniquePtr<CharT[], JS::FreePolicy> owned)
-        : ContentPtrVariant(owned.release(), false) {}
-
-    // Move construction.
-    // Clear the other variant's contents to not free content after move.
-    ContentPtrVariant(ContentPtrVariant&& other) : taggedPtr(other.taggedPtr) {
-      other.taggedPtr = EMPTY_TAGGED_PTR;
-    }
-
-    ~ContentPtrVariant() {
-      if (isInline()) {
-        return;
-      }
-
-      // Re-construct UniqueChars<CharT[]> and destroy them.
-      if (hasCharType<Latin1Char>()) {
-        UniqueLatin1Chars chars(getUnchecked<Latin1Char>());
-      } else {
-        UniqueTwoByteChars chars(getUnchecked<char16_t>());
-      }
-    }
-
-    template <typename T>
-    const T* getUnchecked() const {
-      return reinterpret_cast<const T*>(taggedPtr & ~LOWBITS_MASK);
-    }
-    template <typename T>
-    T* getUnchecked() {
-      return reinterpret_cast<T*>(taggedPtr & ~LOWBITS_MASK);
-    }
-    template <typename CharT>
-    bool hasCharType() const {
-      static_assert(std::is_same_v<CharT, Latin1Char> ||
-                    std::is_same_v<CharT, char16_t>);
-      return (taggedPtr & CHARTYPE_MASK) ==
-             (std::is_same_v<CharT, Latin1Char> ? CHARTYPE_LATIN1
-                                                : CHARTYPE_TWO_BYTE);
-    }
-    bool isInline() const {
-      return (taggedPtr & LOCATION_MASK) == LOCATION_INLINE;
-    }
-  };
 
   static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
@@ -196,50 +94,38 @@ class alignas(alignof(void*)) ParserAtomEntry {
   }
 
  private:
-  // Owned characters, either 8-bit Latin1Char, or 16-bit char16_t
-  ContentPtrVariant variant_;
+  // The JSAtom-compatible hash of the string.
+  HashNumber hash_ = 0;
 
   // The length of the buffer in chars_.
-  uint32_t length_;
+  uint32_t length_ = 0;
 
-  // The JSAtom-compatible hash of the string.
-  HashNumber hash_;
+  // Mapping into from ParserAtoms to JSAtoms.
+  enum class AtomIndexKind : uint8_t {
+    Unresolved,  // Not yet resolved
+    AtomIndex,   // Index into CompilationInfo atoms map
+    WellKnown,   // WellKnownAtomId to index into cx->names() set
+    Static1,     // Index into StaticStrings length-1 set
+    Static2,     // Index into StaticStrings length-2 set
+  };
+  uint32_t atomIndex_ = 0;
+  AtomIndexKind atomIndexKind_ = AtomIndexKind::Unresolved;
 
-  // Used to dynamically optimize the mapping of ParserAtoms to JSAtom*s.
-  //
-  // If this ParserAtomEntry is a part of WellKnownParserAtoms, this should
-  // hold WellKnownAtomId that maps to an item in cx->names().
-  //
-  // Otherwise, this should hold AtomIndex into CompilationInfo.atoms,
-  // or empty if the JSAtom isn't yet allocated.
-  using AtomIndexType =
-      mozilla::Variant<mozilla::Nothing, AtomIndex, WellKnownAtomId,
-                       StaticParserString1, StaticParserString2>;
-  mutable AtomIndexType atomIndex_ = AtomIndexType(mozilla::Nothing());
+  // Encoding type.
+  bool hasTwoByteChars_ = false;
 
   // End of fields.
 
   static const uint32_t MAX_LENGTH = JSString::MAX_LENGTH;
 
-  template <typename CharT>
-  ParserAtomEntry(mozilla::UniquePtr<CharT[], JS::FreePolicy> chars,
-                  uint32_t length, HashNumber hash)
-      : variant_(std::move(chars)), length_(length), hash_(hash) {}
+  ParserAtomEntry(uint32_t length, HashNumber hash, bool hasTwoByteChars)
+      : hash_(hash), length_(length), hasTwoByteChars_(hasTwoByteChars) {}
 
-  template <typename CharT>
-  ParserAtomEntry(const CharT* chars, uint32_t length, HashNumber hash)
-      : variant_(chars, /* isInline = */ true), length_(length), hash_(hash) {}
+ protected:
+  // The constexpr constructor is used by StaticParserAtomEntry.
+  constexpr ParserAtomEntry() = default;
 
  public:
-  template <typename CharT>
-  static CharT* inlineBufferPtr(ParserAtomEntry* entry) {
-    return reinterpret_cast<CharT*>(entry + 1);
-  }
-  template <typename CharT>
-  static const CharT* inlineBufferPtr(const ParserAtomEntry* entry) {
-    return reinterpret_cast<const CharT*>(entry + 1);
-  }
-
   // ParserAtomEntries may own their content buffers in variant_, and thus
   // cannot be copy-constructed - as a new chars would need to be allocated.
   ParserAtomEntry(const ParserAtomEntry&) = delete;
@@ -258,17 +144,23 @@ class alignas(alignof(void*)) ParserAtomEntry {
   inline ParserName* asName();
   inline const ParserName* asName() const;
 
-  bool hasLatin1Chars() const { return variant_.hasCharType<Latin1Char>(); }
-  bool hasTwoByteChars() const { return variant_.hasCharType<char16_t>(); }
+  bool hasLatin1Chars() const { return !hasTwoByteChars_; }
+  bool hasTwoByteChars() const { return hasTwoByteChars_; }
 
-  const Latin1Char* latin1Chars() const {
-    MOZ_ASSERT(hasLatin1Chars());
-    return variant_.getUnchecked<Latin1Char>();
+  template <typename CharT>
+  const CharT* chars() const {
+    MOZ_ASSERT(sizeof(CharT) == (hasTwoByteChars() ? 2 : 1));
+    return reinterpret_cast<const CharT*>(this + 1);
   }
-  const char16_t* twoByteChars() const {
-    MOZ_ASSERT(hasTwoByteChars());
-    return variant_.getUnchecked<char16_t>();
+
+  template <typename CharT>
+  CharT* chars() {
+    MOZ_ASSERT(sizeof(CharT) == (hasTwoByteChars() ? 2 : 1));
+    return reinterpret_cast<CharT*>(this + 1);
   }
+
+  const Latin1Char* latin1Chars() const { return chars<Latin1Char>(); }
+  const char16_t* twoByteChars() const { return chars<char16_t>(); }
   mozilla::Range<const Latin1Char> latin1Range() const {
     return mozilla::Range(latin1Chars(), length_);
   }
@@ -290,19 +182,31 @@ class alignas(alignof(void*)) ParserAtomEntry {
   template <typename CharT>
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
-  void setAtomIndex(AtomIndex index) const {
-    atomIndex_ = mozilla::AsVariant(index);
+ private:
+  void setAtomIndex(AtomIndex index) {
+    atomIndex_ = index;
+    atomIndexKind_ = AtomIndexKind::AtomIndex;
   }
-  void setWellKnownAtomId(WellKnownAtomId kind) const {
-    atomIndex_ = mozilla::AsVariant(kind);
+  constexpr void setWellKnownAtomId(WellKnownAtomId kind) {
+    atomIndex_ = static_cast<uint32_t>(kind);
+    atomIndexKind_ = AtomIndexKind::WellKnown;
   }
-  void setStaticParserString1(StaticParserString1 s) const {
-    atomIndex_ = mozilla::AsVariant(s);
+  constexpr void setStaticParserString1(StaticParserString1 s) {
+    atomIndex_ = static_cast<uint32_t>(s);
+    atomIndexKind_ = AtomIndexKind::Static1;
   }
-  void setStaticParserString2(StaticParserString2 s) const {
-    atomIndex_ = mozilla::AsVariant(s);
+  constexpr void setStaticParserString2(StaticParserString2 s) {
+    atomIndex_ = static_cast<uint32_t>(s);
+    atomIndexKind_ = AtomIndexKind::Static2;
+  }
+  constexpr void setHashAndLength(HashNumber hash, uint32_t length,
+                                  bool hasTwoByteChars = false) {
+    hash_ = hash;
+    length_ = length;
+    hasTwoByteChars_ = hasTwoByteChars;
   }
 
+ public:
   // Convert this entry to a js-atom.  The first time this method is called
   // the entry will cache the JSAtom pointer to return later.
   JS::Result<JSAtom*, OOM> toJSAtom(JSContext* cx,
@@ -337,6 +241,30 @@ inline const ParserName* ParserAtomEntry::asName() const {
   MOZ_ASSERT(!isIndex());
   return static_cast<const ParserName*>(this);
 }
+
+// A ParserAtomEntry with explicit inline storage. This is compatible with
+// constexpr to have builtin atoms. Care must be taken to ensure these atoms are
+// unique.
+template <size_t Length>
+class StaticParserAtomEntry : public ParserAtomEntry {
+  alignas(alignof(ParserAtomEntry)) char storage_[Length] = {};
+
+ public:
+  constexpr StaticParserAtomEntry() = default;
+
+  constexpr char* storage() {
+    static_assert(
+        offsetof(StaticParserAtomEntry, storage_) == sizeof(ParserAtomEntry),
+        "StaticParserAtomEntry storage should follow ParserAtomEntry");
+    return storage_;
+  }
+};
+
+template <>
+class StaticParserAtomEntry<0> : public ParserAtomEntry {
+ public:
+  constexpr StaticParserAtomEntry() = default;
+};
 
 /**
  * A lookup structure that allows for querying ParserAtoms in
