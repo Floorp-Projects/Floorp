@@ -155,7 +155,7 @@ pub struct SceneClipInstance {
     /// The interned clip + positioning information that is used during frame building.
     pub clip: ClipInstance,
     /// The definition of the clip, used during scene building to optimize clip-chains.
-    pub key: ClipItemKeyKind,
+    pub key: ClipItemKey,
 }
 
 /// A clip template defines clips in terms of the public API. Specifically,
@@ -704,7 +704,7 @@ pub struct ClipStore {
 
     /// Map of all clip templates defined by the public API to templates
     #[ignore_malloc_size_of = "range missing"]
-    templates: FastHashMap<ClipId, ClipTemplate>,
+    pub templates: FastHashMap<ClipId, ClipTemplate>,
 
     /// A stack of current clip-chain builders. A new clip-chain builder is
     /// typically created each time a clip root (such as an iframe or stacking
@@ -1378,7 +1378,7 @@ impl ClipItemKeyKind {
     }
 }
 
-#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ClipItemKey {
