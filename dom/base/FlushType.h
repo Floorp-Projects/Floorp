@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "X11UndefineNone.h"
+#include "mozilla/EnumeratedArray.h"
 
 namespace mozilla {
 
@@ -17,7 +18,7 @@ namespace mozilla {
  * decide what to flush.
  *
  * Please note that if you change these values, you should sync it with the
- * flushTypeNames array inside PresShell::FlushPendingNotifications.
+ * kFlushTypeNames array below.
  */
 enum class FlushType : uint8_t {
   None,             /* Actually don't flush anything */
@@ -36,6 +37,25 @@ enum class FlushType : uint8_t {
   Display,             /* As above, plus flush painting */
   Count
 };
+
+// Flush type strings that will be displayed in the profiler
+// clang-format off
+const EnumeratedArray<FlushType, FlushType::Count, const char*>
+    kFlushTypeNames = {
+  "",
+  "Event",
+  "Content",
+  "ContentAndNotify",
+  "Style",
+  // As far as the profiler is concerned, EnsurePresShellInitAndFrames and
+  // Frames are the same
+  "Style",
+  "Style",
+  "InterruptibleLayout",
+  "Layout",
+  "Display"
+};
+// clang-format on
 
 struct ChangesToFlush {
   ChangesToFlush(FlushType aFlushType, bool aFlushAnimations)
