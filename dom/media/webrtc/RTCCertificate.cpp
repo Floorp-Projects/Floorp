@@ -72,7 +72,7 @@ class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask {
     }
 
     char buf[sizeof(randomName) * 2 + 4];
-    PL_strncpy(buf, "CN=", 3);
+    strncpy(buf, "CN=", 4);
     for (size_t i = 0; i < sizeof(randomName); ++i) {
       snprintf(&buf[i * 2 + 3], 3, "%.2x", randomName[i]);
     }
