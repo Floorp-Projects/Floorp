@@ -248,7 +248,7 @@ add_task(async function test_aliasform() {
     },
   ]);
 
-  await new TRRDNSListener("test.com", "1.2.3.4");
+  await new TRRDNSListener("test.com", { expectedAnswer: "1.2.3.4" });
 
   // Test a chain of HTTPSSVC AliasForm and CNAMEs
   await trrServer.registerDoHAnswers("x.com", "A", [
@@ -297,7 +297,7 @@ add_task(async function test_aliasform() {
     },
   ]);
 
-  await new TRRDNSListener("x.com", "4.3.2.1");
+  await new TRRDNSListener("x.com", { expectedAnswer: "4.3.2.1" });
 
   // We get a ServiceForm instead of a A answer, CNAME or AliasForm
   await trrServer.registerDoHAnswers("no-ip-host.com", "A", [
@@ -321,11 +321,9 @@ add_task(async function test_aliasform() {
     },
   ]);
 
-  let [, , inStatus] = await new TRRDNSListener(
-    "no-ip-host.com",
-    undefined,
-    false
-  );
+  let [, , inStatus] = await new TRRDNSListener("no-ip-host.com", {
+    expectedSuccess: false,
+  });
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -356,7 +354,9 @@ add_task(async function test_aliasform() {
     },
   ]);
 
-  [, , inStatus] = await new TRRDNSListener("loop.com", undefined, false);
+  [, , inStatus] = await new TRRDNSListener("loop.com", {
+    expectedSuccess: false,
+  });
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -377,7 +377,9 @@ add_task(async function test_aliasform() {
     },
   ]);
 
-  [, , inStatus] = await new TRRDNSListener("empty.com", undefined, false);
+  [, , inStatus] = await new TRRDNSListener("empty.com", {
+    expectedSuccess: false,
+  });
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
