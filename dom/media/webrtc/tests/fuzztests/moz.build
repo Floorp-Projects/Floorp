@@ -7,11 +7,12 @@
 Library('FuzzingSdp')
 
 LOCAL_INCLUDES += [
+  '/dom/media/webrtc',
+  '/dom/media/webrtc/common/time_profiling',
+  '/dom/media/webrtc/peerconnection',
   '/dom/media/webrtc/transport',
   '/ipc/chromium/src',
-  '/media/webrtc/',
-  '/media/webrtc/signaling/src/common/time_profiling',
-  '/media/webrtc/signaling/src/peerconnection',
+  '/media/webrtc',
 ]
 
 # Add libFuzzer configuration directives

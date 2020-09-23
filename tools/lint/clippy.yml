@@ -68,7 +68,7 @@ clippy:
         - toolkit/library/gtest/rust/
         # not_unsafe_ptr_arg_deref
         - remote/
-        - media/webrtc/signaling/src/sdp/rsdparsa_capi/
+        - dom/media/webrtc/sdp/rsdparsa_capi/
         - intl/encoding_glue/
         # not_unsafe_ptr_arg_deref
         - js/rust/
@@ -99,7 +99,7 @@ clippy:
         - servo/ports/geckolib/tests/
         - servo/tests/unit/malloc_size_of/
         - servo/components/malloc_size_of/
-        - media/webrtc/signaling/src/sdp/rsdparsa_capi/
+        - dom/media/webrtc/sdp/rsdparsa_capi/
         - servo/components/fallible/
         - testing/geckodriver/marionette/
         - toolkit/components/bitsdownload/bits_client/

@@ -50,7 +50,7 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #ifdef MOZ_PEERCONNECTION
 #  include "transport/runnable_utils.h"
-#  include "signaling/src/peerconnection/MediaTransportHandler.h"
+#  include "peerconnection/MediaTransportHandler.h"
 #  include "mediapacket.h"
 #endif
 

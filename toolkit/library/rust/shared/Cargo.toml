@@ -28,7 +28,7 @@ audioipc-server = { path = "../../../../media/audioipc/server", optional = true 
 authenticator = "0.3.0" 
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
 gecko_logger = { path = "../../../../xpcom/rust/gecko_logger" }
-rsdparsa_capi = { path = "../../../../media/webrtc/signaling/src/sdp/rsdparsa_capi" }
+rsdparsa_capi = { path = "../../../../dom/media/webrtc/sdp/rsdparsa_capi" }
 xulstore = { path = "../../../components/xulstore", optional = true }
 # We have these to enforce common feature sets for said crates.
 log = {version = "0.4", features = ["release_max_level_info"]}

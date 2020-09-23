@@ -178,6 +178,7 @@ LOCAL_INCLUDES += [
     '/dom/events',
     '/dom/filesystem',
     '/dom/geolocation',
+    '/dom/media/webrtc',
     '/dom/media/webspeech/synth/ipc',
     '/dom/security',
     '/dom/storage',

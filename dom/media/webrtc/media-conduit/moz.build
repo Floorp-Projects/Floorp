@@ -1,0 +1,43 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+include('/media/webrtc/webrtc.mozbuild')
+
+LOCAL_INCLUDES += [
+    '!/ipc/ipdl/_ipdlheaders',
+    '/dom/media/gmp', # for GMPLog.h,
+    '/dom/media/webrtc',
+    '/dom/media/webrtc/common',
+    '/dom/media/webrtc/common/browser_logging',
+    '/dom/media/webrtc/common/time_profiling',
+    '/dom/media/webrtc/media-conduit',
+    '/dom/media/webrtc/peerconnection',
+    '/dom/media/webrtc/transport',
+    '/ipc/chromium/src',
+    '/media/libyuv/libyuv/include',
+    '/media/webrtc',
+    '/media/webrtc/trunk',
+    '/media/webrtc/trunk/webrtc',
+]
+
+UNIFIED_SOURCES += [
+    'AudioConduit.cpp',
+    'GmpVideoCodec.cpp',
+    'MediaDataCodec.cpp',
+    'RtpSourceObserver.cpp',
+    'VideoConduit.cpp',
+    'VideoStreamFactory.cpp',
+    'WebrtcGmpVideoCodec.cpp',
+    'WebrtcMediaDataDecoderCodec.cpp',
+    'WebrtcMediaDataEncoderCodec.cpp',
+]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    UNIFIED_SOURCES += [
+        'MediaCodecVideoCodec.cpp',
+        'WebrtcMediaCodecVP8VideoCodec.cpp',
+    ]
+
+FINAL_LIBRARY = 'xul'

@@ -1,0 +1,44 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+include('/media/webrtc/webrtc.mozbuild')
+
+LOCAL_INCLUDES += [
+    '!/ipc/ipdl/_ipdlheaders',
+    '/dom/base',
+    '/dom/media',
+    '/dom/media/webrtc',
+    '/dom/media/webrtc/common',
+    '/dom/media/webrtc/common/browser_logging',
+    '/dom/media/webrtc/common/time_profiling',
+    '/dom/media/webrtc/jsep',
+    '/dom/media/webrtc/media-conduit',
+    '/dom/media/webrtc/mediapipeline',
+    '/dom/media/webrtc/transport',
+    '/ipc/chromium/src',
+    '/media/webrtc',
+    '/media/webrtc/trunk',
+    '/media/webrtc/trunk/webrtc',
+    '/netwerk/srtp/src/include',
+]
+
+UNIFIED_SOURCES += [
+    'MediaTransportHandler.cpp',
+    'MediaTransportHandlerIPC.cpp',
+    'MediaTransportParent.cpp',
+    'PacketDumper.cpp',
+    'PeerConnectionCtx.cpp',
+    'PeerConnectionImpl.cpp',
+    'PeerConnectionMedia.cpp',
+    'RTCDtlsTransport.cpp',
+    'RTCDTMFSender.cpp',
+    'RTCRtpReceiver.cpp',
+    'RTCStatsIdGenerator.cpp',
+    'RTCStatsReport.cpp',
+    'TransceiverImpl.cpp',
+    'WebrtcGlobalInformation.cpp',
+]
+
+FINAL_LIBRARY = 'xul'

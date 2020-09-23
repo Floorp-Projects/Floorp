@@ -5,11 +5,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 include('/media/webrtc/webrtc.mozbuild')
 
-with Files('*'):
+with Files('**'):
     BUG_COMPONENT = ('Core', 'WebRTC: Audio/Video')
 
 with Files('PeerIdentity.*'):
     BUG_COMPONENT = ('Core', 'WebRTC: Signaling')
+
+with Files('common/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('jsep/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('media-conduit/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('mediapipeline/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('peerconnection/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
+with Files('sdp/**'):
+    BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
 
 EXPORTS += [
     'CubebDeviceEnumerator.h',
@@ -46,12 +59,31 @@ if CONFIG['MOZ_WEBRTC']:
         '..',
         '/dom/base',
         '/dom/media',
+        '/dom/media/webrtc/common',
+        '/dom/media/webrtc/common/browser_logging',
         '/media/libyuv/libyuv/include',
-        '/media/webrtc/signaling/src/common',
-        '/media/webrtc/signaling/src/common/browser_logging',
         '/media/webrtc/trunk',
         '/media/webrtc/trunk/webrtc'
     ]
+
+if CONFIG['MOZ_WEBRTC_SIGNALING']:
+    DIRS += [
+        'common',
+        'jsep',
+        'media-conduit',
+        'mediapipeline',
+        'peerconnection',
+        'sdp'
+    ]
+#    GYP_DIRS += ['trunk/third_party/gflags']
+#    GYP_DIRS['trunk/third_party/gflags'].input = 'trunk/third_party/gflags/gflags.gyp'
+#    GYP_DIRS['trunk/third_party/gflags'].variables = gyp_vars_copy
+#    GYP_DIRS['trunk/third_party/gflags'].sandbox_vars['COMPILE_FLAGS'] = {'WARNINGS_AS_ERRORS': []}
+
+    # Avoid warnings from third-party code that we can not modify.
+    if CONFIG['CC_TYPE'] == 'clang-cl':
+        CXXFLAGS += ['-Wno-invalid-source-encoding']
+
 
 PREPROCESSED_IPDL_SOURCES += [
     'PMediaTransport.ipdl',

@@ -18,13 +18,13 @@
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
-#include "signaling/src/sdp/SdpMediaSection.h"
-#include "signaling/src/sdp/SipccSdpParser.h"
-#include "signaling/src/jsep/JsepCodecDescription.h"
-#include "signaling/src/jsep/JsepTrack.h"
-#include "signaling/src/jsep/JsepSession.h"
-#include "signaling/src/jsep/JsepSessionImpl.h"
-#include "signaling/src/jsep/JsepTrack.h"
+#include "sdp/SdpMediaSection.h"
+#include "sdp/SipccSdpParser.h"
+#include "jsep/JsepCodecDescription.h"
+#include "jsep/JsepTrack.h"
+#include "jsep/JsepSession.h"
+#include "jsep/JsepSessionImpl.h"
+#include "jsep/JsepTrack.h"
 
 namespace mozilla {
 static std::string kAEqualsCandidate("a=candidate:");

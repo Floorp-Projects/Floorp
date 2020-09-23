@@ -10,7 +10,7 @@
 
 #include "FuzzingInterface.h"
 
-#include "signaling/src/sdp/SipccSdpParser.h"
+#include "sdp/SipccSdpParser.h"
 
 using namespace mozilla;
 
