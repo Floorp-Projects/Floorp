@@ -117,7 +117,7 @@ already_AddRefed<AnalyserNode> AnalyserNode::Create(
 }
 
 AnalyserNode::AnalyserNode(AudioContext* aContext)
-    : AudioNode(aContext, 2, ChannelCountMode::Max,
+    : AudioNode(aContext, 1, ChannelCountMode::Max,
                 ChannelInterpretation::Speakers),
       mAnalysisBlock(2048),
       mMinDecibels(-100.),
