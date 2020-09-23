@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "RTCStatsReport.h"
-#include "RtcpEventObserver.h"
+#include "media-conduit/RtcpEventObserver.h"
 #include <vector>
 
 class nsPIDOMWindowInner;

@@ -12,7 +12,7 @@
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "ErrorList.h"
 #include "jsep/JsepTransceiver.h"
-#include "transportlayer.h"  // For TransportLayer::State
+#include "transport/transportlayer.h"  // For TransportLayer::State
 
 class nsIPrincipal;
 

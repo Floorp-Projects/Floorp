@@ -9,9 +9,9 @@
 #include <sstream>
 #include <vector>
 
-#include "CSFLog.h"
+#include "common/browser_logging/CSFLog.h"
 #include "base/histogram.h"
-#include "timecard.h"
+#include "common/time_profiling/timecard.h"
 
 #include "jsapi.h"
 #include "nspr.h"
@@ -28,17 +28,17 @@
 #include "nsProxyRelease.h"
 #include "prtime.h"
 
-#include "AudioConduit.h"
-#include "VideoConduit.h"
+#include "media-conduit/AudioConduit.h"
+#include "media-conduit/VideoConduit.h"
 #include "MediaTrackGraph.h"
-#include "runnable_utils.h"
+#include "transport/runnable_utils.h"
 #include "IPeerConnection.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
 #include "RemoteTrackSource.h"
 #include "nsDOMDataChannelDeclarations.h"
-#include "dtlsidentity.h"
+#include "transport/dtlsidentity.h"
 #include "sdp/SdpAttribute.h"
 
 #include "jsep/JsepTrack.h"
