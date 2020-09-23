@@ -27,6 +27,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import java.io.File
 import java.io.IOException
 import java.util.Date
 import java.io.InputStream
@@ -217,6 +218,38 @@ class AddonCollectionProviderTest {
 
         cachingProvider.getAvailableAddons()
         verify(cachingProvider).writeToDiskCache(jsonResponse)
+    }
+
+    @Test
+    fun `getAvailableAddons - deletes unused cache files`() = runBlocking {
+        val jsonResponse = loadResourceAsString("/collection.json")
+        val mockedClient = prepareClient(jsonResponse)
+
+        val provider = spy(AddonCollectionProvider(testContext, client = mockedClient, maxCacheAgeInMinutes = 1))
+
+        provider.getAvailableAddons()
+        verify(provider).deleteUnusedCacheFiles()
+    }
+
+    @Test
+    fun `deleteUnusedCacheFiles - only deletes collection cache files`() {
+        val regularFile = File(testContext.filesDir, "test.json")
+        regularFile.createNewFile()
+        assertTrue(regularFile.exists())
+
+        val regularDir = File(testContext.filesDir, "testDir")
+        regularDir.mkdir()
+        assertTrue(regularDir.exists())
+
+        val collectionFile = File(testContext.filesDir, COLLECTION_FILE_NAME.format("testCollection"))
+        collectionFile.createNewFile()
+        assertTrue(collectionFile.exists())
+
+        val provider = AddonCollectionProvider(testContext, client = prepareClient(), maxCacheAgeInMinutes = 1)
+        provider.deleteUnusedCacheFiles()
+        assertTrue(regularFile.exists())
+        assertTrue(regularDir.exists())
+        assertFalse(collectionFile.exists())
     }
 
     @Test

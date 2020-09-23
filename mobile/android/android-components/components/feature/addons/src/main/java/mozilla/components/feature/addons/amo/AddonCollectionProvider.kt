@@ -35,7 +35,8 @@ internal const val API_VERSION = "api/v4"
 internal const val DEFAULT_SERVER_URL = "https://addons.mozilla.org"
 internal const val DEFAULT_COLLECTION_USER = "mozilla"
 internal const val DEFAULT_COLLECTION_NAME = "7e8d6dc651b54ab385fb8791bf9dac"
-internal const val COLLECTION_FILE_NAME = "mozilla_components_addon_collection_%s.json"
+internal const val COLLECTION_FILE_NAME_PREFIX = "mozilla_components_addon_collection"
+internal const val COLLECTION_FILE_NAME = "${COLLECTION_FILE_NAME_PREFIX}_%s.json"
 internal const val MINUTE_IN_MS = 60 * 1000
 internal const val DEFAULT_READ_TIMEOUT_IN_SECONDS = 20L
 
@@ -132,6 +133,7 @@ class AddonCollectionProvider(
                         if (maxCacheAgeInMinutes > 0) {
                             writeToDiskCache(responseBody)
                         }
+                        deleteUnusedCacheFiles()
                     }
                 } catch (e: JSONException) {
                     throw IOException(e)
@@ -181,6 +183,22 @@ class AddonCollectionProvider(
                 JSONObject(it).getAddons()
             }
         }
+    }
+
+    /**
+     * Deletes cache files from previous (now unused) collections.
+     */
+    @VisibleForTesting
+    internal fun deleteUnusedCacheFiles() {
+        val currentCacheFileName = getCacheFileName()
+        context.filesDir
+            .listFiles {
+                _, s -> s.startsWith(COLLECTION_FILE_NAME_PREFIX) && s != currentCacheFileName
+            }
+            ?.forEach {
+                logger.debug("Deleting unused collection cache: " + it.name)
+                it.delete()
+            }
     }
 
     @VisibleForTesting
