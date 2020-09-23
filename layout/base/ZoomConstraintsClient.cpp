@@ -40,7 +40,10 @@ using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 ZoomConstraintsClient::ZoomConstraintsClient()
-    : mDocument(nullptr), mPresShell(nullptr) {}
+    : mDocument(nullptr),
+      mPresShell(nullptr),
+      mZoomConstraints(false, false, CSSToParentLayerScale(1.f),
+                       CSSToParentLayerScale(1.f)) {}
 
 ZoomConstraintsClient::~ZoomConstraintsClient() = default;
 
@@ -186,6 +189,9 @@ static mozilla::layers::ZoomConstraints ComputeZoomConstraintsFromViewportInfo(
 }
 
 void ZoomConstraintsClient::RefreshZoomConstraints() {
+  mZoomConstraints = ZoomConstraints(false, false, CSSToParentLayerScale(1.f),
+                                     CSSToParentLayerScale(1.f));
+
   nsIWidget* widget = GetWidget(mPresShell);
   if (!widget) {
     return;
