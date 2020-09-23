@@ -7,9 +7,9 @@
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
-#include "signaling/src/jsep/JsepTrack.h"
-#include "signaling/src/sdp/SipccSdp.h"
-#include "signaling/src/sdp/SdpHelper.h"
+#include "jsep/JsepTrack.h"
+#include "sdp/SipccSdp.h"
+#include "sdp/SdpHelper.h"
 
 namespace mozilla {
 

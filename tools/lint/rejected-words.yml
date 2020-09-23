@@ -123,6 +123,8 @@ avoid-blacklist-and-whitelist:
         - dom/media/test/test_autoplay_policy_key_blacklist.html
         - dom/media/test/test_autoplay_policy_permission.html
         - dom/media/webm/WebMDecoder.cpp
+        - dom/media/webrtc/media-conduit/VideoConduit.cpp
+        - dom/media/webrtc/peerconnection/PeerConnectionMedia.cpp
         - dom/media/webrtc/transport/stun_socket_filter.cpp
         - dom/media/webrtc/transport/test/ice_unittest.cpp
         - dom/plugins/base/nsPluginHost.h
@@ -199,8 +201,6 @@ avoid-blacklist-and-whitelist:
         - layout/tools/reftest/reftestcommandline.py
         - layout/tools/reftest/runreftest.py
         - layout/tools/reftest/selftest/conftest.py
-        - media/webrtc/signaling/src/media-conduit/VideoConduit.cpp
-        - media/webrtc/signaling/src/peerconnection/PeerConnectionMedia.cpp
         - mfbt/Attributes.h
         - mobile/android/app/geckoview-prefs.js
         - mobile/android/app/mobile.js

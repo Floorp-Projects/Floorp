@@ -240,7 +240,7 @@
 #include "nsOpenWindowInfo.h"
 
 #ifdef MOZ_WEBRTC
-#  include "signaling/src/peerconnection/WebrtcGlobalParent.h"
+#  include "peerconnection/WebrtcGlobalParent.h"
 #endif
 
 #if defined(XP_MACOSX)
