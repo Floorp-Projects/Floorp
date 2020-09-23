@@ -37,10 +37,10 @@ def print_array_entry(output, histogram, name_index, exp_index,
                  label_index,
                  key_index,
                  store_index,
+                 " | ".join(histogram.record_in_processes_enum()),
                  "true" if histogram.keyed() else "false",
                  histogram.nsITelemetry_kind(),
                  histogram.dataset(),
-                 " | ".join(histogram.record_in_processes_enum()),
                  " | ".join(histogram.products_enum())), file=output)
 
 
