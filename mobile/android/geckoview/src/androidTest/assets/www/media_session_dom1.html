@@ -3,6 +3,9 @@
   <body>
     <script>
       function updatePositionState(event) {
+        if (event.target != active) {
+          return;
+        }
         navigator.mediaSession.setPositionState({
           duration: parseFloat(event.target.duration),
           position: parseFloat(event.target.currentTime),
@@ -10,11 +13,7 @@
         });
       }
 
-      function updateMetadata(event) {
-        active.removeEventListener("timeupdate", updatePositionState);
-        active = event.target;
-        updatePositionState(event);
-        active.addEventListener("timeupdate", updatePositionState);
+      function updateMetadata() {
         navigator.mediaSession.metadata = active.metadata;
       }
 
@@ -25,8 +24,9 @@
         return tracks[nextId];
       }
 
-      navigator.mediaSession.setActionHandler("play", () => {
-        active.play();
+      navigator.mediaSession.setActionHandler("play", async () => {
+        await active.play();
+        updateMetadata();
       });
 
       navigator.mediaSession.setActionHandler("pause", () => {
@@ -34,18 +34,16 @@
       });
 
       navigator.mediaSession.setActionHandler("previoustrack", () => {
-        active.pause();
-        getTrack(-1).play();
+        active = getTrack(-1);
       });
 
       navigator.mediaSession.setActionHandler("nexttrack", () => {
-        active.pause();
-        getTrack(1).play();
+        active = getTrack(1);
       });
 
       const audio1 = document.createElement("audio");
       audio1.src = "audio/owl.mp3";
-      audio1.addEventListener("play", updateMetadata);
+      audio1.addEventListener("timeupdate", updatePositionState);
       audio1.metadata = new window.MediaMetadata({
         title: "hoot",
         artist: "owl",
@@ -60,7 +58,7 @@
 
       const audio2 = document.createElement("audio");
       audio2.src = "audio/owl.mp3";
-      audio2.addEventListener("play", updateMetadata);
+      audio2.addEventListener("timeupdate", updatePositionState);
       audio2.metadata = new window.MediaMetadata({
         title: "hoot2",
         artist: "stillowl",
@@ -75,7 +73,7 @@
 
       const audio3 = document.createElement("audio");
       audio3.src = "audio/owl.mp3";
-      audio3.addEventListener("play", updateMetadata);
+      audio3.addEventListener("timeupdate", updatePositionState);
       audio3.metadata = new window.MediaMetadata({
         title: "hoot3",
         artist: "immaowl",
@@ -91,8 +89,10 @@
       const tracks = [audio1, audio2, audio3];
       let active = audio1;
 
-      window.onload = () => {
-        getTrack(0).play();
+      window.onload = async () => {
+        active = getTrack(0);
+        await active.play();
+        updateMetadata();
       };
     </script>
   </body>
