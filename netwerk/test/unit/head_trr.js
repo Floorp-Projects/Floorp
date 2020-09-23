@@ -89,7 +89,8 @@ class TRRDNSListener {
     expectedSuccess = true,
     delay,
     trrServer = "",
-    expectEarlyFail = false
+    expectEarlyFail = false,
+    options = {}
   ) {
     this.name = name;
     this.expectedAnswer = expectedAnswer;
@@ -98,6 +99,7 @@ class TRRDNSListener {
     this.promise = new Promise(resolve => {
       this.resolve = resolve;
     });
+    this.options = options;
 
     const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
       Ci.nsIDNSService
@@ -113,7 +115,7 @@ class TRRDNSListener {
       this.request = dns.asyncResolve(
         name,
         Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
-        0,
+        this.options.flags || 0,
         resolverInfo,
         this,
         currentThread,

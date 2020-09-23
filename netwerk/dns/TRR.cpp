@@ -1520,6 +1520,7 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
         new AddrInfo(mHost, mType, nsTArray<NetAddr>(), mDNS.mTtl));
     auto builder = ai->Build();
     builder.SetAddresses(std::move(mDNS.mAddresses));
+    builder.SetCanonicalHostname(mCname);
 
     // Set timings.
     nsCOMPtr<nsITimedChannel> timedChan = do_QueryInterface(aChannel);
