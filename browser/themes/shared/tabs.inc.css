@@ -433,6 +433,7 @@
   list-style-image: url(chrome://global/skin/media/pictureinpicture.svg);
   width: 14px;
   height: 14px;
+  opacity: .8;
 }
 
 .tab-icon-sound[pictureinpicture]:-moz-locale-dir(rtl) {
@@ -453,7 +454,6 @@
   filter: drop-shadow(1px 1px 1px black);
 }
 
-.tab-icon-sound[pictureinpicture]:not(:hover),
 .tab-icon-sound[soundplaying]:not(:hover),
 .tab-icon-sound[muted]:not(:hover),
 .tab-icon-sound[activemedia-blocked]:not(:hover) {
