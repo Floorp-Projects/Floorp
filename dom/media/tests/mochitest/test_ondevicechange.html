@@ -15,23 +15,10 @@ createHTML({
 
 const RESPONSE_WAIT_TIME_MS = 3000;
 
-function OnDeviceChangeEvent() {
-  return new Promise(resolve => navigator.mediaDevices.ondevicechange = resolve);
-}
-
-function OnDeviceChangeEventReceived() {
+async function maybeReceiveDevicechangeEvent() {
   return Promise.race([
-    OnDeviceChangeEvent(),
-    wait(RESPONSE_WAIT_TIME_MS).then(() =>
-      Promise.reject(new Error("Timed out waiting for devicechange"))),
-  ]);
-}
-
-function OnDeviceChangeEventNotReceived() {
-  return Promise.race([
-    OnDeviceChangeEvent().then(() =>
-      Promise.reject(new Error("devicechange fired unexpectedly"))),
-    wait(RESPONSE_WAIT_TIME_MS),
+    new Promise(r => navigator.mediaDevices.ondevicechange = () => r(true)),
+    wait(RESPONSE_WAIT_TIME_MS).then(() => false)
   ]);
 }
 
@@ -41,30 +28,32 @@ runTest(async () => {
   await pushPrefs(
     // Ensure there are continuous fake devicechange events throughout this test
     ["media.ondevicechange.fakeDeviceChangeEvent.enabled", true],
-    // Enforce gUM permission prompts initially
-    ["media.navigator.permission.disabled", false],
     // Make fake devices count as real, permission-wise, or devicechange events
     // won't be exposed
     ["media.navigator.permission.fake", true],
+    // Ensure this precondition to the below tests
+    ["media.navigator.permission.disabled", true]
   );
 
-  info("assure devicechange event is NOT fired when gUM is NOT in use and permanent permission is NOT granted");
-  await OnDeviceChangeEventNotReceived();
-  ok(true, "devicechange event is NOT fired when gUM is NOT in use and permanent permission is NOT granted");
+  const stream = await getUserMedia({video: true, fake: true});
+  const [track] = stream.getVideoTracks();
+  await pushPrefs(["media.navigator.permission.disabled", false]);
+  try {
+    ok(await maybeReceiveDevicechangeEvent(),
+        "devicechange event is fired when gUM is in use without permanent " +
+        "permission granted");
+  } finally {
+    track.stop();
+  }
 
-  await pushPrefs(['media.navigator.permission.disabled', true]);
+  ok(!await maybeReceiveDevicechangeEvent(),
+     "devicechange event is NOT fired when gUM is NOT in use and " +
+     "permanent permission is NOT granted");
 
-  info("assure devicechange event is fired when gUM is NOT in use and permanent permission is granted");
-  await OnDeviceChangeEventReceived();
-  ok(true, "devicechange event is fired when gUM is NOT in use and permanent permission is granted");
-
-  info("assure devicechange event is fired when gUM is in use");
-  const st = await getUserMedia({video: true});
-  const videoTracks = st.getVideoTracks();
-  await pushPrefs(['media.navigator.permission.disabled', false]);
-  await OnDeviceChangeEventReceived();
-  ok(true, "devicechange event is fired when gUM is in use");
-  videoTracks.forEach(track => track.stop());
+  await pushPrefs(["media.navigator.permission.disabled", true]);
+  ok(await maybeReceiveDevicechangeEvent(),
+     "devicechange event is fired when gUM is NOT in use and permanent "+
+     "permission is granted");
 });
 
 </script>
