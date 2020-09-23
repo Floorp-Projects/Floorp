@@ -74,7 +74,10 @@ impl CounterMetric {
     /// Returns the stored value or `None` if nothing stored.
     pub fn test_get_value(&self, storage_name: &str) -> Option<i32> {
         match self {
-            CounterMetric::Parent(p) => p.test_get_value(storage_name),
+            CounterMetric::Parent(p) => {
+                dispatcher::block_on_queue();
+                p.test_get_value(storage_name)
+            }
             CounterMetric::Child(_c) => panic!(
                 "Cannot get test value for {:?} in non-parent process!",
                 self

@@ -13,9 +13,9 @@ use crate::ipc::need_ipc;
 ///
 /// We wrap it in a private module that is inaccessible outside of this module.
 mod private {
-    use std::sync::Arc;
     use super::{BooleanMetric, CommonMetricData, CounterMetric, StringMetric};
     use crate::ipc::need_ipc;
+    use std::sync::Arc;
 
     /// The sealed trait.
     ///
