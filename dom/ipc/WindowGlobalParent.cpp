@@ -994,7 +994,6 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
     }
     Accumulate(Telemetry::MIXED_CONTENT_PAGE_LOAD, mixedContentLevel);
 
-    ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_COUNT, 1);
     if (GetDocTreeHadAudibleMedia()) {
       ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_HAD_MEDIA_COUNT, 1);
     }
