@@ -60,14 +60,15 @@ class CSSEditUtils final {
     eCSSEditableProperty_width
   };
 
+  // Nb: keep these fields in an order that minimizes padding.
   struct CSSEquivTable {
     nsCSSEditableProperty cssProperty;
+    bool gettable;
+    bool caseSensitiveValue;
     nsProcessValueFunc processValueFunctor;
     const char* defaultValue;
     const char* prependValue;
     const char* appendValue;
-    bool gettable;
-    bool caseSensitiveValue;
   };
 
   /**

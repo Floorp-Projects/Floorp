@@ -166,111 +166,116 @@ static void ProcessMarginRightValue(const nsAString* aInputString,
   }
 }
 
+#define CSS_EQUIV_TABLE_NONE \
+  { CSSEditUtils::eCSSEditableProperty_NONE, 0 }
+
 const CSSEditUtils::CSSEquivTable boldEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_font_weight, ProcessBValue, nullptr,
-     nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_font_weight, true, false, ProcessBValue,
+     nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable italicEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_font_style, ProcessDefaultValue,
-     "italic", nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_font_style, true, false,
+     ProcessDefaultValue, "italic", nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable underlineEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue,
-     "underline", nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_text_decoration, true, false,
+     ProcessDefaultValue, "underline", nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable strikeEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue,
-     "line-through", nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_text_decoration, true, false,
+     ProcessDefaultValue, "line-through", nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable ttEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_font_family, ProcessDefaultValue,
-     "monospace", nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_font_family, true, false,
+     ProcessDefaultValue, "monospace", nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable fontColorEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_color, ProcessSameValue, nullptr,
-     nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_color, true, false, ProcessSameValue,
+     nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable fontFaceEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_font_family, ProcessSameValue, nullptr,
-     nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_font_family, true, false,
+     ProcessSameValue, nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable bgcolorEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_background_color, ProcessSameValue,
-     nullptr, nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_background_color, true, false,
+     ProcessSameValue, nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable backgroundImageEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_background_image, ProcessExtendedValue,
-     nullptr, "url(", ")", true, true},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_background_image, true, true,
+     ProcessExtendedValue, nullptr, "url(", ")"},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable textColorEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_color, ProcessSameValue, nullptr,
-     nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_color, true, false, ProcessSameValue,
+     nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable borderEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_border, ProcessExtendedValue, nullptr,
-     nullptr, "px solid", true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_border, true, false,
+     ProcessExtendedValue, nullptr, nullptr, "px solid"},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable textAlignEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_text_align, ProcessSameValue, nullptr,
-     nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_text_align, true, false,
+     ProcessSameValue, nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable captionAlignEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_caption_side, ProcessSameValue, nullptr,
-     nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_caption_side, true, false,
+     ProcessSameValue, nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable verticalAlignEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_vertical_align, ProcessSameValue,
-     nullptr, nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_vertical_align, true, false,
+     ProcessSameValue, nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable nowrapEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_whitespace, ProcessDefaultValue,
-     "nowrap", nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_whitespace, true, false,
+     ProcessDefaultValue, "nowrap", nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable widthEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_width, ProcessLengthValue, nullptr,
-     nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_width, true, false, ProcessLengthValue,
+     nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable heightEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_height, ProcessLengthValue, nullptr,
-     nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_height, true, false, ProcessLengthValue,
+     nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable listStyleTypeEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_list_style_type,
-     ProcessListStyleTypeValue, nullptr, nullptr, nullptr, true, true},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_list_style_type, true, true,
+     ProcessListStyleTypeValue, nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable tableAlignEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_text_align, ProcessDefaultValue, "left",
-     nullptr, nullptr, false, false},
-    {CSSEditUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue,
-     nullptr, nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue,
-     nullptr, nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_text_align, false, false,
+     ProcessDefaultValue, "left", nullptr, nullptr},
+    {CSSEditUtils::eCSSEditableProperty_margin_left, true, false,
+     ProcessMarginLeftValue, nullptr, nullptr, nullptr},
+    {CSSEditUtils::eCSSEditableProperty_margin_right, true, false,
+     ProcessMarginRightValue, nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
 
 const CSSEditUtils::CSSEquivTable hrAlignEquivTable[] = {
-    {CSSEditUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue,
-     nullptr, nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue,
-     nullptr, nullptr, nullptr, true, false},
-    {CSSEditUtils::eCSSEditableProperty_NONE, 0}};
+    {CSSEditUtils::eCSSEditableProperty_margin_left, true, false,
+     ProcessMarginLeftValue, nullptr, nullptr, nullptr},
+    {CSSEditUtils::eCSSEditableProperty_margin_right, true, false,
+     ProcessMarginRightValue, nullptr, nullptr, nullptr},
+    CSS_EQUIV_TABLE_NONE};
+
+#undef CSS_EQUIV_TABLE_NONE
 
 CSSEditUtils::CSSEditUtils(HTMLEditor* aHTMLEditor)
     : mHTMLEditor(aHTMLEditor), mIsCSSPrefChecked(true) {
