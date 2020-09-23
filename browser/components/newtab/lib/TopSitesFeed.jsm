@@ -645,13 +645,15 @@ this.TopSitesFeed = class TopSitesFeed {
     const withPinned = insertPinned(checkedAdult, pinned).slice(0, numItems);
 
     let searchTileOverrideURLs = new Map();
-    for (let [pref, hostname] of SEARCH_TILE_OVERRIDE_PREFS) {
-      let url = Services.prefs.getStringPref(pref, "");
-      if (url) {
-        url = url
-          .replace("%YYYYMMDD%", yyyymmdd)
-          .replace("%YYYYMMDDHH%", yyyymmddhh);
-        searchTileOverrideURLs.set(hostname, url);
+    if (!this._useRemoteSetting) {
+      for (let [pref, hostname] of SEARCH_TILE_OVERRIDE_PREFS) {
+        let url = Services.prefs.getStringPref(pref, "");
+        if (url) {
+          url = url
+            .replace("%YYYYMMDD%", yyyymmdd)
+            .replace("%YYYYMMDDHH%", yyyymmddhh);
+          searchTileOverrideURLs.set(hostname, url);
+        }
       }
     }
 
