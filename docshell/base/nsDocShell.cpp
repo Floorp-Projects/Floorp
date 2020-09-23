@@ -2943,7 +2943,8 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild) {
                "child list must not be empty after a successful add");
 
   nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(aChild);
-  bool dynamic = nsDocShell::Cast(childDocShell)->GetCreatedDynamically();
+  bool dynamic = false;
+  childDocShell->GetCreatedDynamically(&dynamic);
   if (!dynamic) {
     nsCOMPtr<nsISHEntry> currentSH;
     bool oshe = false;
@@ -3122,6 +3123,20 @@ nsresult nsDocShell::AddChildSHEntryToParent(nsISHEntry* aNewEntry,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetCreatedDynamically(bool aDynamic) {
+  if (mBrowsingContext) {
+    Unused << mBrowsingContext->SetCreatedDynamically(aDynamic);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetCreatedDynamically(bool* aDynamic) {
+  *aDynamic = mBrowsingContext && mBrowsingContext->GetCreatedDynamically();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

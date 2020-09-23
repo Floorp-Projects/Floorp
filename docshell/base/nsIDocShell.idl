@@ -704,6 +704,11 @@ interface nsIDocShell : nsIDocShellTreeItem
   void makeEditable(in boolean inWaitForUriLoad);
 
   /**
+   * Set when an iframe/frame is added dynamically.
+   */
+  [infallible] attribute boolean createdDynamically;
+
+  /**
    * Returns false for mLSHE, true for mOSHE
    */
   boolean getCurrentSHEntry(out nsISHEntry aEntry);
