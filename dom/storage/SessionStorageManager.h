@@ -56,7 +56,8 @@ class SessionStorageManager final : public nsIDOMSessionStorageManager,
 
   RefPtr<BrowsingContext> GetBrowsingContext() const;
 
-  void SendSessionStorageDataToParentProcess();
+  void SendSessionStorageDataToParentProcess(nsIPrincipal& aPrincipal,
+                                             SessionStorageCache& aSSCache);
   void SendSessionStorageDataToContentProcess(ContentParent* aActor,
                                               nsIPrincipal* aPrincipal);
 

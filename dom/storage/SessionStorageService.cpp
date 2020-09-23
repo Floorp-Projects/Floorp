@@ -62,7 +62,6 @@ NS_IMETHODIMP SessionStorageService::Observe(nsISupports* const aSubject,
                                              const char* const aTopic,
                                              const char16_t* const aData) {
   if (std::strcmp(aTopic, kContentProcessShutdownTopic) == 0) {
-    SendSessionStorageDataToParentProcess();
     ShutDown();
   }
   return NS_OK;
@@ -77,12 +76,6 @@ void SessionStorageService::UnregisterSessionStorageManager(
     SessionStorageManager* aManager) {
   if (const auto entry = mManagers.GetEntry(aManager)) {
     mManagers.RemoveEntry(entry);
-  }
-}
-
-void SessionStorageService::SendSessionStorageDataToParentProcess() {
-  for (auto iter = mManagers.Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->SendSessionStorageDataToParentProcess();
   }
 }
 

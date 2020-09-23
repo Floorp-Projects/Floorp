@@ -110,6 +110,8 @@ void SessionStorage::SetItem(const nsAString& aKey, const nsAString& aValue,
   }
 
   BroadcastChangeNotification(aKey, oldValue, aValue);
+
+  mManager->SendSessionStorageDataToParentProcess(*Principal(), *mCache);
 }
 
 void SessionStorage::RemoveItem(const nsAString& aKey,
@@ -129,6 +131,8 @@ void SessionStorage::RemoveItem(const nsAString& aKey,
   }
 
   BroadcastChangeNotification(aKey, oldValue, VoidString());
+
+  mManager->SendSessionStorageDataToParentProcess(*Principal(), *mCache);
 }
 
 void SessionStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
@@ -139,6 +143,8 @@ void SessionStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
 
   mCache->Clear(DATASET);
   BroadcastChangeNotification(VoidString(), VoidString(), VoidString());
+
+  mManager->SendSessionStorageDataToParentProcess(*Principal(), *mCache);
 }
 
 void SessionStorage::BroadcastChangeNotification(const nsAString& aKey,
