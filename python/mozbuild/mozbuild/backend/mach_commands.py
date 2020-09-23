@@ -189,7 +189,7 @@ class MachCommands(MachCommandBase):
                 "--background-index",
                 "--all-scopes-completion",
                 "--log",
-                "error",
+                "info",
                 "--pch-storage",
                 "memory",
                 "--clang-tidy",
