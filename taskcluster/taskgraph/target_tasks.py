@@ -210,10 +210,32 @@ def filter_out_missing_signoffs(task, parameters):
     return True
 
 
+def filter_tests_without_manifests(task, parameters):
+    """Remove test tasks that have an empty 'test_manifests' attribute.
+
+    This situation can arise when the test loader (e.g bugbug) decided there
+    weren't any important manifests to run for the given push. We filter tasks
+    out here rather than in the transforms so that the full task graph is still
+    aware that the task exists (which is needed by the backfill action).
+    """
+    if (
+        task.kind == "test"
+        and "test_manifests" in task.attributes
+        and not task.attributes["test_manifests"]
+    ):
+        return False
+    return True
+
+
 def standard_filter(task, parameters):
     return all(
         filter_func(task, parameters) for filter_func in
-        (filter_out_cron, filter_for_project, filter_for_hg_branch)
+        (
+            filter_out_cron,
+            filter_for_project,
+            filter_for_hg_branch,
+            filter_tests_without_manifests,
+        )
     )
 
 
