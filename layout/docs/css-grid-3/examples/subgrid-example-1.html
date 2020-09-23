@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Testcase for bug </title>
+
+<style>
+.grid {
+  display: inline-grid;
+  grid: auto auto 100px / masonry;
+  align-content: center;
+  height: 300px;
+  border: 1px solid;
+}
+
+.grid > * {
+  margin: 5px;
+  background: silver;
+}
+.grid > :nth-child(2n) {
+  background: pink;
+}
+
+.grid subgrid {
+  display: grid;
+  grid: subgrid / subgrid;
+  grid-row: 2 / span 2;
+  grid-gap: 30px;
+}
+.grid subgrid > * { background: cyan; }
+</style>
+
+<div class="grid">
+  <item>1</item>
+  <item>2</item>
+  <item>3</item>
+  <subgrid>
+    <item style="height:100px">subgrid.1</item>
+    <item>sub.2</item>
+    <item>s.3</item>
+  </subgrid>
+  <item>4</item>
+  <item>5</item>
+  <item style="width: 80px">6</item>
+  <item>7</item>
+</div>
+
+</body>
+</html>
