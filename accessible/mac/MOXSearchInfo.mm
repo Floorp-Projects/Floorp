@@ -213,6 +213,13 @@ using namespace mozilla::a11y;
                                      : RotorStaticTextRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
+
+    if ([key isEqualToString:@"AXCheckboxSearchKey"]) {
+      RotorCheckboxRule rule = mImmediateDescendantsOnly
+                                   ? RotorCheckboxRule(geckoStartAcc)
+                                   : RotorCheckboxRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
   }
 
   return matches;

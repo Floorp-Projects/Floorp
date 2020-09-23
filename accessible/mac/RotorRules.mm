@@ -88,6 +88,11 @@ uint16_t RotorStaticTextRule::Match(const AccessibleOrProxy& aAccOrProxy) {
   return result;
 }
 
+RotorCheckboxRule::RotorCheckboxRule() : PivotRoleRule(roles::CHECKBUTTON) {}
+
+RotorCheckboxRule::RotorCheckboxRule(AccessibleOrProxy& aDirectDescendantsFrom)
+    : PivotRoleRule(roles::CHECKBUTTON, aDirectDescendantsFrom) {}
+
 RotorControlRule::RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom)
     : mDirectDescendantsFrom(aDirectDescendantsFrom) {}
 
