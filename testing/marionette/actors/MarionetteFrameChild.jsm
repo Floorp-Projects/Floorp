@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   evaluate: "chrome://marionette/content/evaluate.js",
+  interaction: "chrome://marionette/content/interaction.js",
   Log: "chrome://marionette/content/log.js",
   pprint: "chrome://marionette/content/format.js",
   WebElement: "chrome://marionette/content/element.js",
@@ -65,6 +66,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
       let result;
 
       switch (name) {
+        case "MarionetteFrameParent:clearElement":
+          this.clearElement(data);
+          break;
         case "MarionetteFrameParent:findElement":
           result = await this.findElement(data);
           break;
@@ -160,6 +164,17 @@ class MarionetteFrameChild extends JSWindowActorChild {
   }
 
   // Implementation of WebDriver commands
+
+  /** Clear the text of an element.
+   *
+   * @param {Object} options
+   * @param {ElementIdentifier} options.webEl
+   */
+  clearElement(options = {}) {
+    const { webEl } = options;
+    const el = this.resolveElement(webEl);
+    interaction.clearElement(el);
+  }
 
   /**
    * Find an element in the current browsing context's document using the

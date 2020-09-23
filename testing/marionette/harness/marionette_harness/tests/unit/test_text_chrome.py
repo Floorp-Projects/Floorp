@@ -12,6 +12,8 @@ class TestTextChrome(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestTextChrome, self).setUp()
+        win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
+        self.marionette.switch_to_window(win)
 
         self.marionette.set_context("chrome")
 
@@ -21,8 +23,11 @@ class TestTextChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestTextChrome, self).tearDown()
 
     def test_get_text(self):
-        win = self.open_chrome_window("chrome://marionette/content/test.xhtml")
-        self.marionette.switch_to_window(win)
-
         elem = self.marionette.find_element(By.ID, "testBox")
         self.assertEqual(elem.text, "box")
+
+    def test_clear_text(self):
+        input = self.marionette.find_element(By.ID, "textInput3")
+        self.assertEqual("test", self.marionette.execute_script("return arguments[0].value;", [input]))
+        input.clear()
+        self.assertEqual("", self.marionette.execute_script("return arguments[0].value;", [input]))
