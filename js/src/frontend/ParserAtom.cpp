@@ -451,6 +451,9 @@ static void FillChar16Buffer(char16_t* buf, const ParserAtomEntry* ent) {
 
 JS::Result<const ParserAtom*, OOM> ParserAtomsTable::concatAtoms(
     JSContext* cx, mozilla::Range<const ParserAtom*> atoms) {
+  MOZ_ASSERT(atoms.length() >= 2,
+             "concatAtoms should only be used for multiple inputs");
+
   bool latin1 = true;
   uint32_t catLen = 0;
   for (const ParserAtom* atom : atoms) {
