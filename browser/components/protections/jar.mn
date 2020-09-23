@@ -9,4 +9,3 @@ browser.jar:
     content/browser/protections.html                      (content/protections.html)
     content/browser/protections.js                        (content/protections.js)
     content/browser/proxy-card.js                         (content/proxy-card.js)
-    content/browser/vpn-card.js                           (content/vpn-card.js)

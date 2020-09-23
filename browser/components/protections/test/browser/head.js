@@ -77,15 +77,3 @@ const mockGetMonitorData = data => {
 registerCleanupFunction(function head_cleanup() {
   Services.logins.removeAllLogins();
 });
-
-// Used to replace AboutProtectionsParent.VPNSubStatus and Region.current
-const getVPNOverrides = (hasSubscription = false, location = "us") => {
-  return {
-    vpnOverrides: () => {
-      return {
-        hasSubscription,
-        location,
-      };
-    },
-  };
-};
