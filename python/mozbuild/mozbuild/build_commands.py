@@ -88,6 +88,7 @@ class Build(MachCommandBase):
 
             append_env = {'MOZ_PROFILE_GENERATE': '1'}
             status = instr.build(
+                self.metrics,
                 what=what,
                 jobs=jobs,
                 directory=directory,
