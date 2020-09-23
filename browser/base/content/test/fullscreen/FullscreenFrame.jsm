@@ -12,23 +12,29 @@ class FullscreenFrameChild extends JSWindowActorChild {
     this.fullscreen_events = [];
   }
 
+  changed() {
+    return new Promise(resolve => {
+      this.contentWindow.document.addEventListener(
+        "fullscreenchange",
+        () => resolve(),
+        {
+          once: true,
+        }
+      );
+    });
+  }
+
   receiveMessage(msg) {
     switch (msg.name) {
+      case "WaitForChange":
+        return this.changed();
       case "ExitFullscreen":
         return this.contentWindow.document.exitFullscreen();
       case "RequestFullscreen":
-        let changed = new Promise(resolve => {
-          this.contentWindow.document.addEventListener(
-            "fullscreenchange",
-            () => resolve(),
-            {
-              once: true,
-            }
-          );
-        });
+        let finished_fullscreen = this.changed();
         this.docShell.isActive = true;
         this.contentWindow.document.getElementById("request").click();
-        return changed;
+        return finished_fullscreen;
       case "CreateChild":
         let child = msg.data;
         let iframe = this.contentWindow.document.createElement("iframe");
