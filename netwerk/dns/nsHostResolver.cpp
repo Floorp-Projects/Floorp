@@ -1865,7 +1865,7 @@ static bool different_rrset(AddrInfo* rrset1, AddrInfo* rrset2) {
 }
 
 void nsHostResolver::AddToEvictionQ(nsHostRecord* rec) {
-  MOZ_ASSERT(!rec->isInList());
+  MOZ_DIAGNOSTIC_ASSERT(!rec->isInList());
   mEvictionQ.insertBack(rec);
   if (mEvictionQSize < mMaxCacheEntries) {
     mEvictionQSize++;
