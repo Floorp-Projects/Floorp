@@ -114,65 +114,49 @@ void blend_brush_vs(
     vFuncs[2] = (prim_user_data.y >> 20) & 0xf; // B
     vFuncs[3] = (prim_user_data.y >> 16) & 0xf; // A
 
-    switch (V_OP) {
-        case FILTER_GRAYSCALE: {
-            vColorMat = mat4(
-                vec4(lumR + oneMinusLumR * invAmount, lumR - lumR * invAmount, lumR - lumR * invAmount, 0.0),
-                vec4(lumG - lumG * invAmount, lumG + oneMinusLumG * invAmount, lumG - lumG * invAmount, 0.0),
-                vec4(lumB - lumB * invAmount, lumB - lumB * invAmount, lumB + oneMinusLumB * invAmount, 0.0),
-                vec4(0.0, 0.0, 0.0, 1.0)
-            );
-            V_COLOR_OFFSET = vec4(0.0);
-            break;
-        }
-        case FILTER_HUE_ROTATE: {
-            float c = cos(amount);
-            float s = sin(amount);
-            vColorMat = mat4(
-                vec4(lumR + oneMinusLumR * c - lumR * s, lumR - lumR * c + 0.143 * s, lumR - lumR * c - oneMinusLumR * s, 0.0),
-                vec4(lumG - lumG * c - lumG * s, lumG + oneMinusLumG * c + 0.140 * s, lumG - lumG * c + lumG * s, 0.0),
-                vec4(lumB - lumB * c + oneMinusLumB * s, lumB - lumB * c - 0.283 * s, lumB + oneMinusLumB * c + lumB * s, 0.0),
-                vec4(0.0, 0.0, 0.0, 1.0)
-            );
-            V_COLOR_OFFSET = vec4(0.0);
-            break;
-        }
-        case FILTER_SATURATE: {
-            vColorMat = mat4(
-                vec4(invAmount * lumR + amount, invAmount * lumR, invAmount * lumR, 0.0),
-                vec4(invAmount * lumG, invAmount * lumG + amount, invAmount * lumG, 0.0),
-                vec4(invAmount * lumB, invAmount * lumB, invAmount * lumB + amount, 0.0),
-                vec4(0.0, 0.0, 0.0, 1.0)
-            );
-            V_COLOR_OFFSET = vec4(0.0);
-            break;
-        }
-        case FILTER_SEPIA: {
-            vColorMat = mat4(
-                vec4(0.393 + 0.607 * invAmount, 0.349 - 0.349 * invAmount, 0.272 - 0.272 * invAmount, 0.0),
-                vec4(0.769 - 0.769 * invAmount, 0.686 + 0.314 * invAmount, 0.534 - 0.534 * invAmount, 0.0),
-                vec4(0.189 - 0.189 * invAmount, 0.168 - 0.168 * invAmount, 0.131 + 0.869 * invAmount, 0.0),
-                vec4(0.0, 0.0, 0.0, 1.0)
-            );
-            V_COLOR_OFFSET = vec4(0.0);
-            break;
-        }
-        case FILTER_COLOR_MATRIX: {
-            vec4 mat_data[4] = fetch_from_gpu_cache_4(prim_user_data.z);
-            vec4 offset_data = fetch_from_gpu_cache_1(prim_user_data.z + 4);
-            vColorMat = mat4(mat_data[0], mat_data[1], mat_data[2], mat_data[3]);
-            V_COLOR_OFFSET = offset_data;
-            break;
-        }
-        case FILTER_COMPONENT_TRANSFER: {
-            V_TABLE_ADDRESS = prim_user_data.z;
-            break;
-        }
-        case FILTER_FLOOD: {
-            V_FLOOD_COLOR = fetch_from_gpu_cache_1(prim_user_data.z);
-            break;
-        }
-        default: break;
+    if (V_OP == FILTER_GRAYSCALE) {
+        vColorMat = mat4(
+            vec4(lumR + oneMinusLumR * invAmount, lumR - lumR * invAmount, lumR - lumR * invAmount, 0.0),
+            vec4(lumG - lumG * invAmount, lumG + oneMinusLumG * invAmount, lumG - lumG * invAmount, 0.0),
+            vec4(lumB - lumB * invAmount, lumB - lumB * invAmount, lumB + oneMinusLumB * invAmount, 0.0),
+            vec4(0.0, 0.0, 0.0, 1.0)
+        );
+        V_COLOR_OFFSET = vec4(0.0);
+    } else if (V_OP ==  FILTER_HUE_ROTATE) {
+        float c = cos(amount);
+        float s = sin(amount);
+        vColorMat = mat4(
+            vec4(lumR + oneMinusLumR * c - lumR * s, lumR - lumR * c + 0.143 * s, lumR - lumR * c - oneMinusLumR * s, 0.0),
+            vec4(lumG - lumG * c - lumG * s, lumG + oneMinusLumG * c + 0.140 * s, lumG - lumG * c + lumG * s, 0.0),
+            vec4(lumB - lumB * c + oneMinusLumB * s, lumB - lumB * c - 0.283 * s, lumB + oneMinusLumB * c + lumB * s, 0.0),
+            vec4(0.0, 0.0, 0.0, 1.0)
+        );
+        V_COLOR_OFFSET = vec4(0.0);
+    } else if (V_OP ==   FILTER_SATURATE) {
+        vColorMat = mat4(
+            vec4(invAmount * lumR + amount, invAmount * lumR, invAmount * lumR, 0.0),
+            vec4(invAmount * lumG, invAmount * lumG + amount, invAmount * lumG, 0.0),
+            vec4(invAmount * lumB, invAmount * lumB, invAmount * lumB + amount, 0.0),
+            vec4(0.0, 0.0, 0.0, 1.0)
+        );
+        V_COLOR_OFFSET = vec4(0.0);
+    } else if (V_OP == FILTER_SEPIA) {
+        vColorMat = mat4(
+            vec4(0.393 + 0.607 * invAmount, 0.349 - 0.349 * invAmount, 0.272 - 0.272 * invAmount, 0.0),
+            vec4(0.769 - 0.769 * invAmount, 0.686 + 0.314 * invAmount, 0.534 - 0.534 * invAmount, 0.0),
+            vec4(0.189 - 0.189 * invAmount, 0.168 - 0.168 * invAmount, 0.131 + 0.869 * invAmount, 0.0),
+            vec4(0.0, 0.0, 0.0, 1.0)
+        );
+        V_COLOR_OFFSET = vec4(0.0);
+    } else if (V_OP == FILTER_COLOR_MATRIX) {
+        vec4 mat_data[4] = fetch_from_gpu_cache_4(prim_user_data.z);
+        vec4 offset_data = fetch_from_gpu_cache_1(prim_user_data.z + 4);
+        vColorMat = mat4(mat_data[0], mat_data[1], mat_data[2], mat_data[3]);
+        V_COLOR_OFFSET = offset_data;
+    } else if (V_OP == FILTER_COMPONENT_TRANSFER) {
+        V_TABLE_ADDRESS = prim_user_data.z;
+    } else if (V_OP == FILTER_FLOOD) {
+        V_FLOOD_COLOR = fetch_from_gpu_cache_1(prim_user_data.z);
     }
 }
 #endif
