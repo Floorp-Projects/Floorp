@@ -100,6 +100,7 @@ js/src/vtune/jitprofiling.c
 js/src/vtune/jitprofiling.h
 js/src/vtune/legacy/
 js/src/zydis/
+layout/docs/css-grid-3/
 media/ffvpx/
 media/kiss_fft/
 media/libaom/
