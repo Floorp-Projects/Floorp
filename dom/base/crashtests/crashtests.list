@@ -248,6 +248,7 @@ skip-if(Android) pref(dom.disable_open_during_load,false) pref(browser.link.open
 load structured_clone_container_throws.html
 load xhr_empty_datauri.html
 load xhr_html_nullresponse.html
+asserts(0-1) load 1517025.html # see bug 1666910 for assert
 load xhr-with-pagehide-1.html
 pref(layout.css.resizeobserver.enabled,true) load 1555786.html
 load 1577191.html
