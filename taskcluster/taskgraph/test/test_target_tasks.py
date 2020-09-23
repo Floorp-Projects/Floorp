@@ -7,12 +7,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 import contextlib
 import unittest
 
+import pytest
+from mozunit import main
+
 from taskgraph import target_tasks
 from taskgraph import try_option_syntax
 from taskgraph.graph import Graph
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.task import Task
-from mozunit import main
 
 
 class FakeTryOptionSyntax(object):
@@ -161,6 +163,46 @@ class TestTargetTasks(unittest.TestCase):
             'try_task_config': {'tasks': ['a']},
         }
         self.assertEqual(method(tg, params, {}), ['a'])
+
+
+# tests for specific filters
+
+@pytest.mark.parametrize(
+    "name,task,params,expected",
+    (
+        pytest.param(
+            "filter_tests_without_manifests",
+            Task(kind="test", label="a", attributes={}, task={}),
+            None,
+            True,
+            id="filter_tests_without_manifests_not_in_attributes",
+        ),
+        pytest.param(
+            "filter_tests_without_manifests",
+            Task(kind="test", label="a", attributes={'test_manifests': ['foo']}, task={}),
+            None,
+            True,
+            id="filter_tests_without_manifests_has_test_manifests",
+        ),
+        pytest.param(
+            "filter_tests_without_manifests",
+            Task(kind="build", label="a", attributes={'test_manifests': None}, task={}),
+            None,
+            True,
+            id="filter_tests_without_manifests_not_a_test",
+        ),
+        pytest.param(
+            "filter_tests_without_manifests",
+            Task(kind="test", label="a", attributes={'test_manifests': None}, task={}),
+            None,
+            False,
+            id="filter_tests_without_manifests_has_no_test_manifests",
+        ),
+    )
+)
+def test_filters(name, task, params, expected):
+    func = getattr(target_tasks, name)
+    assert func(task, params) is expected
 
 
 if __name__ == '__main__':
