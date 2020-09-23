@@ -18,7 +18,7 @@ const {
 const {
   MESSAGES_ADD,
   NETWORK_MESSAGES_UPDATE,
-  NETWORK_UPDATE_REQUEST,
+  NETWORK_UPDATES_REQUEST,
   MESSAGES_CLEAR,
   MESSAGES_CLEAR_LOGPOINT,
   MESSAGE_OPEN,
@@ -159,11 +159,10 @@ function networkMessageUpdates(packets, idGenerator = null) {
   };
 }
 
-function networkUpdateRequest(id, data) {
+function networkUpdateRequests(updates) {
   return {
-    type: NETWORK_UPDATE_REQUEST,
-    id,
-    data,
+    type: NETWORK_UPDATES_REQUEST,
+    updates,
   };
 }
 
@@ -177,6 +176,6 @@ module.exports = {
   messageGetMatchingElements,
   messageUpdatePayload,
   networkMessageUpdates,
-  networkUpdateRequest,
+  networkUpdateRequests,
   privateMessagesClear,
 };
