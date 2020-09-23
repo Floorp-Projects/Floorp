@@ -2119,25 +2119,6 @@ mediarecorder:
       - content
 
 media:
-  page_count:
-    bug_numbers:
-      - 1476456
-      - 1499803
-      - 1570634
-    description: >
-      The number of times a top level document is loaded.
-    expires: "74"
-    kind: uint
-    notification_emails:
-      - cpearce@mozilla.com
-      - alwu@mozilla.com
-      - nohlmeier@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - content
-
   page_had_media_count:
     bug_numbers:
       - 1476456
