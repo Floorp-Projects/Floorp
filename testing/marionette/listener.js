@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   accessibility: "chrome://marionette/content/accessibility.js",
   action: "chrome://marionette/content/action.js",
   atom: "chrome://marionette/content/atom.js",
-  Capabilities: "chrome://marionette/content/capabilities.js",
   ContentEventObserverService: "chrome://marionette/content/dom.js",
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
@@ -30,8 +29,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   interaction: "chrome://marionette/content/interaction.js",
   legacyaction: "chrome://marionette/content/legacyaction.js",
   Log: "chrome://marionette/content/log.js",
-  navigate: "chrome://marionette/content/navigate.js",
-  PageLoadStrategy: "chrome://marionette/content/capabilities.js",
   pprint: "chrome://marionette/content/format.js",
   proxy: "chrome://marionette/content/proxy.js",
   sandbox: "chrome://marionette/content/evaluate.js",
@@ -74,14 +71,6 @@ addEventListener("dblclick", event.DoubleClickTracker.resetClick);
 addEventListener("unload", event.DoubleClickTracker.resetClick, true);
 
 const seenEls = new element.Store();
-
-Object.defineProperty(this, "capabilities", {
-  get() {
-    let payload = sendSyncMessage("Marionette:WebDriver:GetCapabilities");
-    return Capabilities.fromJSON(payload[0]);
-  },
-  configurable: true,
-});
 
 let legacyactions = new legacyaction.Chain();
 
@@ -376,7 +365,7 @@ function emitTouchEvent(type, touch) {
 /**
  * Function that perform a single tap
  */
-async function singleTap(el, corx, cory) {
+async function singleTap(el, corx, cory, capabilities) {
   // after this block, the element will be scrolled into view
   let visible = element.isVisible(el, corx, cory);
   if (!visible) {
@@ -385,7 +374,7 @@ async function singleTap(el, corx, cory) {
     );
   }
 
-  let a11y = accessibility.get(capabilities.get("moz:accessibilityChecks"));
+  let a11y = accessibility.get(capabilities["moz:accessibilityChecks"]);
   let acc = await a11y.getAccessible(el, true);
   a11y.assertVisible(acc, el, visible);
   a11y.assertActionable(acc, el);
@@ -434,16 +423,18 @@ function createATouch(el, corx, cory, touchId) {
 /**
  * Perform a series of grouped actions at the specified points in time.
  *
- * @param {obj} msg
- *      Object with an |actions| attribute that is an Array of objects
- *      each of which represents an action sequence.
+ * @param {Object} msg
+ *     Object with an |actions| attribute that is an Array of objects
+ *     each of which represents an action sequence.
+ * @param {Object} capabilities
+ *     Object with a list of WebDriver session capabilities.
  */
-async function performActions(msg) {
+async function performActions(msg, capabilities) {
   let chain = action.Chain.fromJSON(msg.actions);
   await action.dispatch(
     chain,
     curContainer.frame,
-    !capabilities.get("moz:useNonSpecCompliantPointerOrigin")
+    !capabilities["moz:useNonSpecCompliantPointerOrigin"]
   );
 }
 
@@ -748,12 +739,14 @@ function getCurrentUrl() {
  *
  * @param {WebElement} el
  *     Element to click.
+ * @param {Object} capabilities
+ *     Object with a list of WebDriver session capabilities.
  */
-function clickElement(el) {
+function clickElement(el, capabilities) {
   return interaction.clickElement(
     el,
-    capabilities.get("moz:accessibilityChecks"),
-    capabilities.get("moz:webdriverClick")
+    capabilities["moz:accessibilityChecks"],
+    capabilities["moz:webdriverClick"]
   );
 }
 
@@ -798,10 +791,10 @@ function getElementTagName(el) {
  * Also performs additional accessibility checks if enabled by session
  * capability.
  */
-function isElementDisplayed(el) {
+function isElementDisplayed(el, capabilities) {
   return interaction.isElementDisplayed(
     el,
-    capabilities.get("moz:accessibilityChecks")
+    capabilities["moz:accessibilityChecks"]
   );
 }
 
@@ -830,10 +823,10 @@ function getElementRect(el) {
   };
 }
 
-function isElementEnabled(el) {
+function isElementEnabled(el, capabilities) {
   return interaction.isElementEnabled(
     el,
-    capabilities.get("moz:accessibilityChecks")
+    capabilities["moz:accessibilityChecks"]
   );
 }
 
@@ -843,18 +836,18 @@ function isElementEnabled(el) {
  * This operation only makes sense on input elements of the Checkbox-
  * and Radio Button states, or option elements.
  */
-function isElementSelected(el) {
+function isElementSelected(el, capabilities) {
   return interaction.isElementSelected(
     el,
-    capabilities.get("moz:accessibilityChecks")
+    capabilities["moz:accessibilityChecks"]
   );
 }
 
-async function sendKeysToElement(el, val) {
+async function sendKeysToElement(el, val, capabilities) {
   let opts = {
-    strictFileInteractability: capabilities.get("strictFileInteractability"),
-    accessibilityChecks: capabilities.get("moz:accessibilityChecks"),
-    webdriverClick: capabilities.get("moz:webdriverClick"),
+    strictFileInteractability: capabilities.strictFileInteractability,
+    accessibilityChecks: capabilities["moz:accessibilityChecks"],
+    webdriverClick: capabilities["moz:webdriverClick"],
   };
   await interaction.sendKeysToElement(el, val, opts);
 }
