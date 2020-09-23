@@ -152,6 +152,9 @@ enum class BailoutKind : uint8_t {
   // has a lazy script) or did not fit in int32.
   FunctionLength,
 
+  // Function name not available ("name" property was redefined)
+  FunctionName,
+
   // END Normal bailouts
 
   // Bailouts caused by invalid assumptions based on Baseline code.
@@ -303,6 +306,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "BailoutKind::NonInt32ArrayLength";
     case BailoutKind::FunctionLength:
       return "BailoutKind::FunctionLength";
+    case BailoutKind::FunctionName:
+      return "BailoutKind::FunctionName";
 
     // Bailouts caused by invalid assumptions.
     case BailoutKind::OverflowInvalidate:

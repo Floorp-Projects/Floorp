@@ -3057,6 +3057,14 @@ void LIRGenerator::visitFunctionLength(MFunctionLength* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitFunctionName(MFunctionName* ins) {
+  MOZ_ASSERT(ins->function()->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LFunctionName(useRegister(ins->function()));
+  assignSnapshot(lir, BailoutKind::FunctionName);
+  define(lir, ins);
+}
+
 void LIRGenerator::visitGetNextEntryForIterator(MGetNextEntryForIterator* ins) {
   MOZ_ASSERT(ins->iter()->type() == MIRType::Object);
   MOZ_ASSERT(ins->result()->type() == MIRType::Object);

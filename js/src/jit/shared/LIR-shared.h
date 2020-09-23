@@ -3878,6 +3878,19 @@ class LFunctionLength : public LInstructionHelper<1, 1, 0> {
   const LAllocation* function() { return getOperand(0); }
 };
 
+// Load the "name" property of a function.
+class LFunctionName : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(FunctionName)
+
+  explicit LFunctionName(const LAllocation& function)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, function);
+  }
+
+  const LAllocation* function() { return getOperand(0); }
+};
+
 class LGetNextEntryForIterator : public LInstructionHelper<1, 2, 3> {
  public:
   LIR_HEADER(GetNextEntryForIterator)
