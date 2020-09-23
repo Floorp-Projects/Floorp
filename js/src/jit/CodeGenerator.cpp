@@ -8236,6 +8236,18 @@ void CodeGenerator::visitFunctionLength(LFunctionLength* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitFunctionName(LFunctionName* lir) {
+  Register function = ToRegister(lir->function());
+  Register output = ToRegister(lir->output());
+
+  Label bail;
+
+  const JSAtomState& names = gen->runtime->names();
+  masm.loadFunctionName(function, output, ImmGCPtr(names.empty), &bail);
+
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 template <class OrderedHashTable>
 static void RangeFront(MacroAssembler&, Register, Register, Register);
 

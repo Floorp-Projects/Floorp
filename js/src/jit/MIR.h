@@ -7392,6 +7392,34 @@ class MFunctionLength : public MUnaryInstruction,
   }
 };
 
+// Load the function name. Bails for bound functions when the bound function
+// name prefix isn't present or functions with a resolved "name" property.
+class MFunctionName : public MUnaryInstruction,
+                      public SingleObjectPolicy::Data {
+  explicit MFunctionName(MDefinition* fun)
+      : MUnaryInstruction(classOpcode, fun) {
+    setResultType(MIRType::String);
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(FunctionName)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, function))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    // Even though the "name" property is lazily resolved, it acts similar to
+    // a normal property load, so we can treat this operation like any other
+    // property read.
+    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                          AliasSet::DynamicSlot);
+  }
+};
+
 class MGetNextEntryForIterator
     : public MBinaryInstruction,
       public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>>::Data {
