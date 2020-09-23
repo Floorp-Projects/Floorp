@@ -26,7 +26,6 @@ registerCleanupFunction(async () => {
 });
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
   const toolbox = await openNewTabAndToolbox(TEST_URI, "netmonitor");
   info("Network panel is open.");
 

@@ -13,7 +13,6 @@ const TEST_DOC =
 const SAMPLE_MSG = "specified a header that could not be parsed successfully.";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
   await navigateTo(TEST_DOC);

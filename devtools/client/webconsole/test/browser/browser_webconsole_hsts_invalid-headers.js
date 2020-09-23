@@ -16,8 +16,6 @@ const LEARN_MORE_URI =
   DOCS_GA_PARAMS;
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
-
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await navigateAndCheckWarningMessage(

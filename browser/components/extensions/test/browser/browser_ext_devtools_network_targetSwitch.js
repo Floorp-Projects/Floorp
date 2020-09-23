@@ -20,17 +20,10 @@ async function testOnNavigatedEvent(uri, tab, toolbox, extension) {
   is(result, uri, "devtools.network.onNavigated works correctly");
 }
 
-async function pushPref(preferenceName, value) {
-  const options = { set: [[preferenceName, value]] };
-  await SpecialPowers.pushPrefEnv(options);
-}
-
 /**
  * This test checks whether network works well even target-switching happens.
  */
 add_task(async () => {
-  await pushPref("devtools.target-switching.enabled", true);
-
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     CONTENT_PROCESS_PAGE

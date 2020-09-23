@@ -14,8 +14,6 @@ const EXAMPLE_NET_URI =
   "http://example.net/document-builder.sjs?html=<div id=net>net";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
-
   const tab = await addTab(EXAMPLE_COM_URI);
   const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target);

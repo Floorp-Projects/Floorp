@@ -30,8 +30,6 @@ registerCleanupFunction(async () => {
 });
 
 add_task(async function task() {
-  await pushPref("devtools.target-switching.enabled", true);
-
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const currentTab = gBrowser.selectedTab;

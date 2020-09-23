@@ -20,7 +20,6 @@ registerCleanupFunction(async function() {
 });
 
 add_task(async function task() {
-  await pushPref("devtools.target-switching.enabled", true);
   await pushPref("devtools.webconsole.filter.net", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);

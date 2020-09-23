@@ -464,7 +464,7 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   // event to make sure everything is ready.
   // Navigating from/to pages loaded in the parent process, like about:robots,
   // also spawn new targets.
-  // (If target-switching pref is false, the toolbox will reboot)
+  // (If target switching is disabled, the toolbox will reboot)
   const onTargetSwitched = toolbox.targetList.once("switched-target");
   // Otherwise, if we don't switch target, it is safe to wait for navigate event.
   const onNavigate = target.once("navigate");
@@ -500,13 +500,10 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   // If we switched to another process and the target switching pref is false,
   // the toolbox will close and reopen.
   // For now, this helper doesn't support this case
-  if (
-    switchedToAnotherProcess &&
-    !Services.prefs.getBoolPref("devtools.target-switching.enabled", false)
-  ) {
+  if (switchedToAnotherProcess && !isTargetSwitchingEnabled()) {
     ok(
       false,
-      `navigateTo(${uri}) navigated to another process, but the target-switching preference is false`
+      `navigateTo(${uri}) navigated to another process, but the target switching is disabled`
     );
     return;
   }
@@ -570,10 +567,7 @@ function isFissionEnabled() {
 }
 
 function isTargetSwitchingEnabled() {
-  return (
-    isFissionEnabled() &&
-    Services.prefs.getBoolPref("devtools.target-switching.enabled", false)
-  );
+  return Services.prefs.getBoolPref("devtools.target-switching.enabled", false);
 }
 
 /**

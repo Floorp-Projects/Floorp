@@ -8,8 +8,6 @@
 const TEST_URL = URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
-
   const { inspector, tab } = await openInspectorForURL("about:blank");
   await selectNode("body", inspector);
 

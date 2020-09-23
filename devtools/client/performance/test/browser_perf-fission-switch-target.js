@@ -26,10 +26,6 @@ const {
 } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["devtools.target-switching.enabled", true]],
-  });
-
   info("Open a page running on content process");
   const tab = await addTab({
     url: CONTENT_PROCESS_URL,
