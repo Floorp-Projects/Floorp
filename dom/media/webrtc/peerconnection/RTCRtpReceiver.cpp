@@ -14,7 +14,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "MediaTrackGraph.h"
 #include "RemoteTrackSource.h"
-#include "media-conduit/RtpRtcpConfig.h"
+#include "libwebrtcglue/RtpRtcpConfig.h"
 #include "nsString.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/VideoStreamTrack.h"
@@ -25,7 +25,7 @@
 #include "RTCStatsReport.h"
 #include "mozilla/Preferences.h"
 #include "TransceiverImpl.h"
-#include "media-conduit/AudioConduit.h"
+#include "libwebrtcglue/AudioConduit.h"
 
 namespace mozilla {
 

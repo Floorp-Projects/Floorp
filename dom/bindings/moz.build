@@ -80,7 +80,7 @@ LOCAL_INCLUDES += [
     '/dom/media/webaudio',
     '/dom/media/webrtc',
     '/dom/media/webrtc/common/time_profiling',
-    '/dom/media/webrtc/media-conduit',
+    '/dom/media/webrtc/libwebrtcglue',
     '/dom/media/webrtc/peerconnection',
     '/dom/media/webrtc/transport',
     '/dom/media/webspeech/recognition',
