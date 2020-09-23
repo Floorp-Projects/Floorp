@@ -33,6 +33,7 @@
 /* ::::: Alert icons :::::*/
 
 .message-icon,
+.alert-dialog #infoIcon,
 .alert-icon,
 .error-icon,
 .question-icon {
@@ -47,8 +48,6 @@
 .alert-dialog #infoIcon,
 .alert-icon {
   list-style-image: url("chrome://global/skin/icons/warning.svg");
-  width: 32px;
-  height: 32px;
 }
 
 .error-icon {
@@ -57,6 +56,9 @@
 
 .question-icon {
   list-style-image: url("chrome://global/skin/icons/help.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
 }
 
 /* ::::: iframe ::::: */
