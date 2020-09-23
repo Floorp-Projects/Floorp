@@ -38,7 +38,6 @@ class AudioBlock : private AudioChunk {
   using AudioChunk::ChannelCount;
   using AudioChunk::ChannelData;
   using AudioChunk::GetDuration;
-  using AudioChunk::IsAudible;
   using AudioChunk::IsNull;
   using AudioChunk::SizeOfExcludingThis;
   using AudioChunk::SizeOfExcludingThisIfUnshared;
