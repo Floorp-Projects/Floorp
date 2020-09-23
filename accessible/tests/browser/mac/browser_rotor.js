@@ -1050,6 +1050,82 @@ addAccessibleTask(
 );
 
 /**
+ * Test rotor with inputs
+ */
+addAccessibleTask(
+  `
+  <input type="text" value="I'm a text field." id="text"><br>
+  <input type="text" value="me too" id="implText"><br>
+  <textarea id="textarea">this is some text in a text area</textarea><br>
+  <input type="tel" value="0000000000" id="tel"><br>
+  <input type="url" value="https://example.com" id="url"><br>
+  <input type="email" value="hi@example.com" id="email"><br>
+  <input type="password" value="blah" id="password"><br>
+  <input type="month" value="2020-01" id="month"><br>
+  <input type="week" value="2020-W01" id="week"><br>
+  `,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXTextFieldSearchKey",
+      AXImmediateDescendants: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const textfieldCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    is(9, textfieldCount, "Found 9 fields");
+
+    const fields = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    const text = getNativeInterface(accDoc, "text");
+    const implText = getNativeInterface(accDoc, "implText");
+    const textarea = getNativeInterface(accDoc, "textarea");
+    const tel = getNativeInterface(accDoc, "tel");
+    const url = getNativeInterface(accDoc, "url");
+    const email = getNativeInterface(accDoc, "email");
+    const password = getNativeInterface(accDoc, "password");
+    const month = getNativeInterface(accDoc, "month");
+    const week = getNativeInterface(accDoc, "week");
+
+    const toCheck = [
+      text,
+      implText,
+      textarea,
+      tel,
+      url,
+      email,
+      password,
+      month,
+      week,
+    ];
+
+    for (let i = 0; i < toCheck.length; i++) {
+      is(
+        toCheck[i].getAttributeValue("AXValue"),
+        fields[i].getAttributeValue("AXValue"),
+        "Found correct input control"
+      );
+    }
+  }
+);
+
+/**
  * Test rotor with checkboxes
  */
 addAccessibleTask(
