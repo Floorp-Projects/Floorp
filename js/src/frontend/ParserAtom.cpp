@@ -109,16 +109,18 @@ template <typename CharT, typename SeqCharT>
 /* static */ JS::Result<UniquePtr<ParserAtomEntry>, OOM>
 ParserAtomEntry::allocate(JSContext* cx, InflatedChar16Sequence<SeqCharT> seq,
                           uint32_t length, HashNumber hash) {
-  ParserAtomEntry* uninitEntry =
-      cx->pod_malloc_with_extra<ParserAtomEntry, CharT>(length);
-  if (!uninitEntry) {
+  constexpr size_t HeaderSize = sizeof(ParserAtomEntry);
+  uint8_t* raw = cx->pod_malloc<uint8_t>(HeaderSize + (sizeof(CharT) * length));
+  if (!raw) {
     return RaiseParserAtomsOOMError(cx);
   }
 
-  CharT* entryBuf = ParserAtomEntry::inlineBufferPtr<CharT>(
-      reinterpret_cast<ParserAtomEntry*>(uninitEntry));
-  UniquePtr<ParserAtomEntry> entry(new (uninitEntry)
-                                       ParserAtomEntry(entryBuf, length, hash));
+  constexpr bool hasTwoByteChars = (sizeof(CharT) == 2);
+  static_assert(sizeof(CharT) == 1 || sizeof(CharT) == 2,
+                "CharT should be 1 or 2 byte type");
+  UniquePtr<ParserAtomEntry> entry(
+      new (raw) ParserAtomEntry(length, hash, hasTwoByteChars));
+  CharT* entryBuf = entry->chars<CharT>();
   drainChar16Seq(entryBuf, seq, length);
   return entry;
 }
@@ -181,19 +183,23 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
 
 JS::Result<JSAtom*, OOM> ParserAtomEntry::toJSAtom(
     JSContext* cx, CompilationInfo& compilationInfo) const {
-  if (atomIndex_.is<AtomIndex>()) {
-    return compilationInfo.input.atoms[atomIndex_.as<AtomIndex>()];
-  }
-  if (atomIndex_.is<WellKnownAtomId>()) {
-    return GetWellKnownAtom(cx, atomIndex_.as<WellKnownAtomId>());
-  }
-  if (atomIndex_.is<StaticParserString1>()) {
-    char16_t ch = static_cast<char16_t>(atomIndex_.as<StaticParserString1>());
-    return cx->staticStrings().getUnit(ch);
-  }
-  if (atomIndex_.is<StaticParserString2>()) {
-    size_t index = static_cast<size_t>(atomIndex_.as<StaticParserString2>());
-    return cx->staticStrings().getLength2FromIndex(index);
+  switch (atomIndexKind_) {
+    case AtomIndexKind::AtomIndex:
+      return compilationInfo.input.atoms[atomIndex_];
+
+    case AtomIndexKind::WellKnown:
+      return GetWellKnownAtom(cx, WellKnownAtomId(atomIndex_));
+
+    case AtomIndexKind::Static1: {
+      char16_t ch = static_cast<char16_t>(atomIndex_);
+      return cx->staticStrings().getUnit(ch);
+    }
+
+    case AtomIndexKind::Static2:
+      return cx->staticStrings().getLength2FromIndex(atomIndex_);
+
+    case AtomIndexKind::Unresolved:
+      break;
   }
 
   JSAtom* atom;
@@ -209,7 +215,9 @@ JS::Result<JSAtom*, OOM> ParserAtomEntry::toJSAtom(
   if (!compilationInfo.input.atoms.append(atom)) {
     return RaiseParserAtomsOOMError(cx);
   }
-  atomIndex_ = mozilla::AsVariant(AtomIndex(index));
+
+  const_cast<ParserAtomEntry*>(this)->setAtomIndex(AtomIndex(index));
+
   return atom;
 }
 
@@ -409,25 +417,20 @@ JS::Result<const ParserAtom*, OOM> ParserAtomsTable::internJSAtom(
     id = result.unwrap();
   }
 
-  if (id->atomIndex_.is<mozilla::Nothing>()) {
+  if (id->atomIndexKind_ == ParserAtomEntry::AtomIndexKind::Unresolved) {
     MOZ_ASSERT(id->equalsJSAtom(atom));
 
     auto index = AtomIndex(compilationInfo.input.atoms.length());
     if (!compilationInfo.input.atoms.append(atom)) {
       return RaiseParserAtomsOOMError(cx);
     }
-    id->setAtomIndex(index);
-  } else {
-#ifdef DEBUG
-    if (id->atomIndex_.is<AtomIndex>()) {
-      MOZ_ASSERT(compilationInfo.input.atoms[id->atomIndex_.as<AtomIndex>()] ==
-                 atom);
-    } else if (id->atomIndex_.is<WellKnownAtomId>()) {
-      MOZ_ASSERT(GetWellKnownAtom(cx, id->atomIndex_.as<WellKnownAtomId>()) ==
-                 atom);
-    }
-#endif
+
+    const_cast<ParserAtom*>(id)->setAtomIndex(AtomIndex(index));
   }
+
+  // We should (infallibly) map back to the same JSAtom.
+  MOZ_ASSERT(id->toJSAtom(cx, compilationInfo).unwrap() == atom);
+
   return id;
 }
 
