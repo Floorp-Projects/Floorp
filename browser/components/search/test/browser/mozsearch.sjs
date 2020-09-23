@@ -3,7 +3,7 @@
 
 function handleRequest(req, resp) {
   resp.setHeader("Content-Type", "text/html", false);
-  if (req.hasHeader("Origin")) {
+  if (req.hasHeader("Origin") && req.getHeader("Origin") != "null") {
     resp.write("error");
     return;
   }
