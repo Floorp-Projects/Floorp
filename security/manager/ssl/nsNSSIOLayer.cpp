@@ -1982,9 +1982,10 @@ class ClientAuthCertNonverifyingTrustDomain final : public TrustDomain {
 
   virtual mozilla::pkix::Result CheckRevocation(
       EndEntityOrCA endEntityOrCA, const CertID& certID, Time time,
-      Time validityPeriodBeginning, Duration validityDuration,
+      Duration validityDuration,
       /*optional*/ const Input* stapledOCSPresponse,
-      /*optional*/ const Input* aiaExtension) override {
+      /*optional*/ const Input* aiaExtension,
+      /*optional*/ const Input* sctExtension) override {
     return Success;
   }
 
