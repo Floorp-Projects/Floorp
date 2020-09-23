@@ -1180,7 +1180,7 @@ bool NativeObject::CopyElementsForWrite(JSContext* cx, NativeObject* obj) {
   // COPY_ON_WRITE flags is set only if obj is a dense array.
   MOZ_ASSERT(newCapacity <= MAX_DENSE_ELEMENTS_COUNT);
 
-  JSObject::writeBarrierPre(obj->getElementsHeader()->ownerObject());
+  JSObject::preWriteBarrier(obj->getElementsHeader()->ownerObject());
 
   HeapSlot* newHeaderSlots =
       AllocateObjectBuffer<HeapSlot>(cx, obj, newAllocated);

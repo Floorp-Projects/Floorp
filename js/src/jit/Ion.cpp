@@ -738,7 +738,7 @@ void IonScript::trace(JSTracer* trc) {
 }
 
 /* static */
-void IonScript::writeBarrierPre(Zone* zone, IonScript* ionScript) {
+void IonScript::preWriteBarrier(Zone* zone, IonScript* ionScript) {
   if (zone->needsIncrementalBarrier()) {
     ionScript->trace(zone->barrierTracer());
   }

@@ -131,7 +131,7 @@ inline void Shape::updateBaseShapeAfterMovingGC() {
   }
 }
 
-static inline void GetterSetterWriteBarrierPost(AccessorShape* shape) {
+static inline void GetterSetterPostWriteBarrier(AccessorShape* shape) {
   // If the shape contains any nursery pointers then add it to a vector on the
   // zone that we fixup on minor GC. Prevent this vector growing too large
   // since we don't tolerate OOM here.
@@ -156,7 +156,7 @@ static inline void GetterSetterWriteBarrierPost(AccessorShape* shape) {
   {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!nurseryShapes.append(shape)) {
-      oomUnsafe.crash("GetterSetterWriteBarrierPost");
+      oomUnsafe.crash("GetterSetterPostWriteBarrier");
     }
   }
 
@@ -172,7 +172,7 @@ inline AccessorShape::AccessorShape(const StackShape& other, uint32_t nfixed)
       rawGetter(other.rawGetter),
       rawSetter(other.rawSetter) {
   MOZ_ASSERT(getAllocKind() == gc::AllocKind::ACCESSOR_SHAPE);
-  GetterSetterWriteBarrierPost(this);
+  GetterSetterPostWriteBarrier(this);
 }
 
 inline void Shape::initDictionaryShape(const StackShape& child, uint32_t nfixed,
@@ -211,7 +211,7 @@ inline void Shape::setDictionaryNextPtr(DictionaryShapeLink next) {
 inline void Shape::dictNextPreWriteBarrier() {
   // Only object pointers are traced, so we only need to barrier those.
   if (dictNext.isObject()) {
-    JSObject::writeBarrierPre(dictNext.toObject());
+    JSObject::preWriteBarrier(dictNext.toObject());
   }
 }
 

@@ -1739,7 +1739,7 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   }
 
   if (isSelfHostedBuiltin()) {
-    BaseScript::writeBarrierPre(script);
+    BaseScript::preWriteBarrier(script);
     initSelfHostedLazyScript(&rt->selfHostedLazyScript.ref());
   } else {
     script->relazify(rt);

@@ -612,7 +612,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static void readBarrier(Debugger* dbg) {
     InternalBarrierMethods<JSObject*>::readBarrier(dbg->object);
   }
-  static void writeBarrierPost(Debugger** vp, Debugger* prev, Debugger* next) {}
+  static void postWriteBarrier(Debugger** vp, Debugger* prev, Debugger* next) {}
 #ifdef DEBUG
   static void assertThingIsNotGray(Debugger* dbg) { return; }
 #endif

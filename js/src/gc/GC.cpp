@@ -1741,7 +1741,7 @@ bool GCRuntime::addRoot(Value* vp, const char* name) {
    * cases.
    */
   if (isIncrementalGCInProgress()) {
-    GCPtrValue::writeBarrierPre(*vp);
+    GCPtrValue::preWriteBarrier(*vp);
   }
 
   return rootsHash.ref().put(vp, name);
@@ -8528,7 +8528,7 @@ JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(JSObject* obj) {
   AutoGeckoProfilerEntry profilingStackFrame(
       TlsContext.get(), "IncrementalPreWriteBarrier(JSObject*)",
       JS::ProfilingCategoryPair::GCCC_Barrier);
-  JSObject::writeBarrierPre(obj);
+  JSObject::preWriteBarrier(obj);
 }
 
 JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(GCCellPtr thing) {
@@ -8539,7 +8539,7 @@ JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(GCCellPtr thing) {
   AutoGeckoProfilerEntry profilingStackFrame(
       TlsContext.get(), "IncrementalPreWriteBarrier(GCCellPtr)",
       JS::ProfilingCategoryPair::GCCC_Barrier);
-  TenuredCell::writeBarrierPre(&thing.asCell()->asTenured());
+  TenuredCell::preWriteBarrier(&thing.asCell()->asTenured());
 }
 
 JS_PUBLIC_API bool JS::WasIncrementalGC(JSRuntime* rt) {

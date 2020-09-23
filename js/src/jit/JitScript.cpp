@@ -698,7 +698,7 @@ void JitScript::setBaselineScriptImpl(JSScript* script,
 void JitScript::setBaselineScriptImpl(JSFreeOp* fop, JSScript* script,
                                       BaselineScript* baselineScript) {
   if (hasBaselineScript()) {
-    BaselineScript::writeBarrierPre(script->zone(), baselineScript_);
+    BaselineScript::preWriteBarrier(script->zone(), baselineScript_);
     fop->removeCellMemory(script, baselineScript_->allocBytes(),
                           MemoryUse::BaselineScript);
     baselineScript_ = nullptr;
@@ -727,7 +727,7 @@ void JitScript::setIonScriptImpl(JSFreeOp* fop, JSScript* script,
                 !baselineScript()->hasPendingIonCompileTask());
 
   if (hasIonScript()) {
-    IonScript::writeBarrierPre(script->zone(), ionScript_);
+    IonScript::preWriteBarrier(script->zone(), ionScript_);
     fop->removeCellMemory(script, ionScript_->allocBytes(),
                           MemoryUse::IonScript);
     ionScript_ = nullptr;

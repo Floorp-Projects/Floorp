@@ -102,9 +102,9 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 
   void traceChildren(JSTracer* trc);
 
-  static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, BigInt* prev,
+  static MOZ_ALWAYS_INLINE void postWriteBarrier(void* cellp, BigInt* prev,
                                                  BigInt* next) {
-    js::gc::WriteBarrierPostImpl<BigInt>(cellp, prev, next);
+    js::gc::PostWriteBarrierImpl<BigInt>(cellp, prev, next);
   }
 
   void finalize(JSFreeOp* fop);

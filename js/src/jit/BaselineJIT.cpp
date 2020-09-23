@@ -504,7 +504,7 @@ void BaselineScript::trace(JSTracer* trc) {
 }
 
 /* static */
-void BaselineScript::writeBarrierPre(Zone* zone, BaselineScript* script) {
+void BaselineScript::preWriteBarrier(Zone* zone, BaselineScript* script) {
   if (zone->needsIncrementalBarrier()) {
     script->trace(zone->barrierTracer());
   }

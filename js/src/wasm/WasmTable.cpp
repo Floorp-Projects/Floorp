@@ -166,14 +166,14 @@ void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
 
   FunctionTableElem& elem = functions_[index];
   if (elem.tls) {
-    JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+    JSObject::preWriteBarrier(elem.tls->instance->objectUnbarriered());
   }
 
   if (!isAsmJS_) {
     elem.code = code;
     elem.tls = instance->tlsData();
     MOZ_ASSERT(elem.tls->instance->objectUnbarriered()->isTenured(),
-               "no writeBarrierPost (Table::set)");
+               "no postWriteBarrier (Table::set)");
   } else {
     elem.code = code;
     elem.tls = nullptr;
@@ -239,7 +239,7 @@ void Table::setNull(uint32_t index) {
       MOZ_RELEASE_ASSERT(!isAsmJS_);
       FunctionTableElem& elem = functions_[index];
       if (elem.tls) {
-        JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+        JSObject::preWriteBarrier(elem.tls->instance->objectUnbarriered());
       }
 
       elem.code = nullptr;
@@ -260,7 +260,7 @@ bool Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
       MOZ_RELEASE_ASSERT(elemType().isFunc() && srcTable.elemType().isFunc());
       FunctionTableElem& dst = functions_[dstIndex];
       if (dst.tls) {
-        JSObject::writeBarrierPre(dst.tls->instance->objectUnbarriered());
+        JSObject::preWriteBarrier(dst.tls->instance->objectUnbarriered());
       }
 
       FunctionTableElem& src = srcTable.functions_[srcIndex];
@@ -270,7 +270,7 @@ bool Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
       if (dst.tls) {
         MOZ_ASSERT(dst.code);
         MOZ_ASSERT(dst.tls->instance->objectUnbarriered()->isTenured(),
-                   "no writeBarrierPost (Table::copy)");
+                   "no postWriteBarrier (Table::copy)");
       } else {
         MOZ_ASSERT(!dst.code);
       }
