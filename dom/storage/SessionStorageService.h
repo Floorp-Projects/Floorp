@@ -33,8 +33,6 @@ class SessionStorageService final : public nsIObserver {
 
   static void ShutDown();
 
-  void SendSessionStorageDataToParentProcess();
-
   static RefPtr<SessionStorageService> sService;
   static bool sShutdown;
 

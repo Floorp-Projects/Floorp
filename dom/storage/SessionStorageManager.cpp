@@ -286,18 +286,23 @@ void SessionStorageManager::ClearStorages(
   }
 }
 
-void SessionStorageManager::SendSessionStorageDataToParentProcess() {
+void SessionStorageManager::SendSessionStorageDataToParentProcess(
+    nsIPrincipal& aPrincipal, SessionStorageCache& aSSCache) {
   if (!mBrowsingContext || mBrowsingContext->IsDiscarded()) {
     return;
   }
 
-  for (auto oaIter = mOATable.Iter(); !oaIter.Done(); oaIter.Next()) {
-    for (auto originIter = oaIter.Data()->Iter(); !originIter.Done();
-         originIter.Next()) {
-      SendSessionStorageCache(ContentChild::GetSingleton(), oaIter.Key(),
-                              originIter.Key(), originIter.Data()->mCache);
-    }
+  nsAutoCString originKey;
+  nsresult rv = aPrincipal.GetStorageOriginKey(originKey);
+  if (NS_FAILED(rv)) {
+    return;
   }
+
+  nsAutoCString originAttributes;
+  aPrincipal.OriginAttributesRef().CreateSuffix(originAttributes);
+
+  SendSessionStorageCache(ContentChild::GetSingleton(), originAttributes,
+                          originKey, &aSSCache);
 }
 
 void SessionStorageManager::SendSessionStorageDataToContentProcess(
