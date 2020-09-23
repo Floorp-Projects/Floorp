@@ -22,6 +22,7 @@
 .tab-icon-overlay[soundplaying][pinned],
 .tab-icon-overlay[muted][pinned],
 .tab-icon-overlay[activemedia-blocked][pinned],
+.tab-icon-overlay[pictureinpicture],
 .tab-icon-overlay[crashed] {
   display: -moz-box;
 }
