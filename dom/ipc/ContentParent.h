@@ -1313,7 +1313,7 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext);
 
   mozilla::ipc::IPCResult RecvNotifyOnHistoryReload(
-      const MaybeDiscarded<BrowsingContext>& aContext,
+      const MaybeDiscarded<BrowsingContext>& aContext, const bool& aForceReload,
       NotifyOnHistoryReloadResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvHistoryCommit(
