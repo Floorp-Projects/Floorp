@@ -4258,20 +4258,6 @@ void HTMLMediaElement::SetPlayedOrSeeked(bool aValue) {
 
 void HTMLMediaElement::NotifyXPCOMShutdown() { ShutdownDecoder(); }
 
-void HTMLMediaElement::UpdateHadAudibleAutoplayState() {
-  // If we're audible, and autoplaying...
-  if ((Volume() > 0.0 && !Muted()) &&
-      (!OwnerDoc()->HasBeenUserGestureActivated() || Autoplay())) {
-    if (AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
-            *this)) {
-      ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_BE_ALLOWED_COUNT, 1);
-    } else {
-      ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_NOT_BE_ALLOWED_COUNT,
-                1);
-    }
-  }
-}
-
 already_AddRefed<Promise> HTMLMediaElement::Play(ErrorResult& aRv) {
   LOG(LogLevel::Debug,
       ("%p Play() called by JS readyState=%d", this, mReadyState.Ref()));
@@ -4325,8 +4311,6 @@ already_AddRefed<Promise> HTMLMediaElement::Play(ErrorResult& aRv) {
     mPendingPlayPromises.AppendElement(promise);
     return promise.forget();
   }
-
-  UpdateHadAudibleAutoplayState();
 
   const bool handlingUserInput = UserActivation::IsHandlingUserInput();
   mPendingPlayPromises.AppendElement(promise);
@@ -6140,7 +6124,6 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
     return;
   }
 
-  UpdateHadAudibleAutoplayState();
   if (!AutoplayPolicy::IsAllowedToPlay(*this)) {
     DispatchEventsWhenPlayWasNotAllowed();
     return;

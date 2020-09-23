@@ -2138,44 +2138,6 @@ media:
     record_in_processes:
       - main
 
-  autoplay_would_not_be_allowed_count:
-    bug_numbers:
-      - 1476456
-      - 1499803
-      - 1570634
-    description: >
-      The number of HTMLMediaElement autoplays on audible HTMLMediaElements which would not be allowed to play if block autoplay was enabled; we'd either prompt for permission to play or block outright depending on user preferences.
-    expires: "74"
-    kind: uint
-    notification_emails:
-      - cpearce@mozilla.com
-      - alwu@mozilla.com
-      - nohlmeier@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - content
-
-  autoplay_would_be_allowed_count:
-    bug_numbers:
-      - 1476456
-      - 1499803
-      - 1570634
-    description: >
-      The number of HTMLMediaElement autoplays on audible HTMLMediaElements that would have been allowed (not blocked) by the autoplay policy if block autoplay was enabled.
-    expires: "74"
-    kind: uint
-    notification_emails:
-      - cpearce@mozilla.com
-      - alwu@mozilla.com
-      - nohlmeier@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - content
-
 # The following section contains content process base counters.
 dom.contentprocess:
   buildID_mismatch:
