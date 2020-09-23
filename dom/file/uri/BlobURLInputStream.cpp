@@ -342,12 +342,7 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
     NotifyWaitTargets(aProofOfLock);
   });
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  if (NS_WARN_IF(NS_FAILED(mChannel->GetLoadInfo(getter_AddRefs(loadInfo))))) {
-    NS_WARNING("Failed to get owning channel's loadinfo");
-    return;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   nsCOMPtr<nsIPrincipal> loadingPrincipal;
   if (NS_WARN_IF(NS_FAILED(loadInfo->GetTriggeringPrincipal(

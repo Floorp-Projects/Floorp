@@ -711,10 +711,7 @@ Result<IPCInternalRequest, nsresult> GetIPCInternalRequest(
   uint32_t loadFlags;
   MOZ_TRY(underlyingChannel->GetLoadFlags(&loadFlags));
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_TRY(underlyingChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
-  MOZ_ASSERT(loadInfo);
-
+  nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->LoadInfo();
   nsContentPolicyType contentPolicyType = loadInfo->InternalContentPolicyType();
 
   nsAutoString integrity;
