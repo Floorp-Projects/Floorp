@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "peerconnection/PacketDumper.h"
-#include "peerconnection/PeerConnectionImpl.h"
+#include "jsapi/PacketDumper.h"
+#include "jsapi/PeerConnectionImpl.h"
 #include "mozilla/media/MediaUtils.h"  // NewRunnableFrom
 #include "nsThreadUtils.h"             // NS_DispatchToMainThread
 
