@@ -141,7 +141,7 @@ class AnimationHelper {
    * composited in |aClipRect| there appears area which wasn't pre-rendered
    * on the main-thread. I.e. checkerboarding.
    */
-  static bool ShouldBeJank(const LayoutDeviceIntRect& aPrerenderedRect,
+  static bool ShouldBeJank(const LayoutDeviceRect& aPrerenderedRect,
                            SideBits aOverflowedSides,
                            const gfx::Matrix4x4& aTransform,
                            const ParentLayerRect& aClipRect);
