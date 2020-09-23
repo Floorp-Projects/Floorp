@@ -199,10 +199,6 @@ class AddrInfo {
       mInfo->mAddresses = std::move(addresses);
     }
 
-    void SetCanonicalHostname(const nsACString& aCname) {
-      mInfo->mCanonicalName = aCname;
-    }
-
     already_AddRefed<AddrInfo> Finish() { return mInfo.forget(); }
 
    private:
