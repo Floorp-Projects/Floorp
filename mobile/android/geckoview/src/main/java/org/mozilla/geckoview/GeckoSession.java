@@ -1125,6 +1125,14 @@ public class GeckoSession {
         @WrapForJNI(dispatchTo = "proxy")
         public native void attachAccessibility(SessionAccessibility.NativeProvider sessionAccessibility);
 
+        @WrapForJNI(dispatchTo = "proxy")
+        public native void attachMediaSessionController(
+            final MediaSession.Controller controller, final long id);
+
+        @WrapForJNI(dispatchTo = "proxy")
+        public native void detachMediaSessionController(
+            final MediaSession.Controller controller);
+
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void onReady(final @Nullable NativeQueue queue) {
             // onReady is called the first time the Gecko window is ready, with a null queue
@@ -2608,6 +2616,61 @@ public class GeckoSession {
     @AnyThread
     public @Nullable MediaSession.Delegate getMediaSessionDelegate() {
         return mMediaSessionHandler.getDelegate();
+    }
+
+    @UiThread
+    /* package */ void attachMediaSessionController(
+            final MediaSession.Controller controller) {
+        ThreadUtils.assertOnUiThread();
+
+        if (DEBUG) {
+            Log.d(LOGTAG,
+                    "attachMediaSessionController" +
+                    " isOpen=" + isOpen() +
+                    ", isEnabled=" + mMediaSessionHandler.isEnabled());
+        }
+
+        if (!isOpen() || !mMediaSessionHandler.isEnabled()) {
+            return;
+        }
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            mWindow.attachMediaSessionController(controller, controller.getId());
+        } else {
+            GeckoThread.queueNativeCallUntil(
+                    GeckoThread.State.PROFILE_READY,
+                    mWindow, "attachMediaSessionController",
+                    MediaSession.Controller.class,
+                    controller,
+                    controller.getId());
+        }
+    }
+
+    @UiThread
+    /* package */ void detachMediaSessionController(
+            final MediaSession.Controller controller) {
+        ThreadUtils.assertOnUiThread();
+
+        if (DEBUG) {
+            Log.d(LOGTAG,
+                    "detachMediaSessionController" +
+                    " isOpen=" + isOpen() +
+                    ", isEnabled=" + mMediaSessionHandler.isEnabled());
+        }
+
+        if (!isOpen() || !mMediaSessionHandler.isEnabled()) {
+            return;
+        }
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            mWindow.detachMediaSessionController(controller);
+        } else {
+            GeckoThread.queueNativeCallUntil(
+                    GeckoThread.State.PROFILE_READY,
+                    mWindow, "detachMediaSessionController",
+                    MediaSession.Controller.class,
+                    controller);
+        }
     }
 
     /**

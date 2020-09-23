@@ -61,6 +61,13 @@ class MediaSessionTest : BaseSessionTest() {
                         DOM_TEST_TITLE3,
                         DOM_TEST_ARTIST3,
                         DOM_TEST_ALBUM3))
+
+        val DEFAULT_META = arrayOf(
+                Metadata(
+                        DEFAULT_TEST_TITLE1,
+                        // TODO: enforce null for empty strings?
+                        "",
+                        ""))
     }
 
     @Before
@@ -116,8 +123,7 @@ class MediaSessionTest : BaseSessionTest() {
         //    a. Ensure onMetadata (1) is called.
         //    b. Ensure onPlay (1) is called.
         val completedStep4 = GeckoResult.allOf(
-                onPlayCalled[1],
-                onMetadataCalled[1])
+                onPlayCalled[1])
 
         // 5. Wait for track 1 end.
         //    a. Ensure onPause (1) is called.
@@ -128,7 +134,7 @@ class MediaSessionTest : BaseSessionTest() {
         //    a. Ensure onMetadata (2) is called.
         //    b. Ensure onPlay (2) is called.
         val completedStep6 = GeckoResult.allOf(
-                onMetadataCalled[2],
+                onMetadataCalled[1],
                 onPlayCalled[2])
 
         // 7. Play next track (3).
@@ -137,18 +143,16 @@ class MediaSessionTest : BaseSessionTest() {
         //    c. Ensure onPlay (3) is called.
         val completedStep7 = GeckoResult.allOf(
                 onPauseCalled[2],
-                onMetadataCalled[3],
+                onMetadataCalled[2],
                 onPlayCalled[3])
 
         // 8. Play previous track (2).
         //    a. Ensure onPause (3) is called.
         //    b. Ensure onMetadata (2) is called.
         //    c. Ensure onPlay (2) is called.
-        val completedStep8a = GeckoResult.allOf(
-                onPauseCalled[3])
-        // Without the split, this seems to race and we don't get the pause event.
-        val completedStep8b = GeckoResult.allOf(
-                onMetadataCalled[4],
+        val completedStep8 = GeckoResult.allOf(
+                onPauseCalled[3],
+                onMetadataCalled[3],
                 onPlayCalled[4])
 
         // 9. Wait for track 2 end.
@@ -170,12 +174,6 @@ class MediaSessionTest : BaseSessionTest() {
                     mediaSession: MediaSession) {
                 onActivatedCalled[0].complete(null)
                 mediaSession1 = mediaSession
-            }
-
-            @AssertCalled(false)
-            override fun onDeactivated(
-                    session: GeckoSession,
-                    mediaSession: MediaSession) {
             }
 
             @AssertCalled
@@ -284,29 +282,27 @@ class MediaSessionTest : BaseSessionTest() {
 
         sessionRule.waitForResult(completedStep4)
         sessionRule.waitForResult(completedStep5)
-        mediaSession1!!.pause()
         mediaSession1!!.nextTrack()
-        mediaSession1!!.play()
 
         sessionRule.waitForResult(completedStep6)
-        mediaSession1!!.pause()
         mediaSession1!!.nextTrack()
-        mediaSession1!!.play()
 
         sessionRule.waitForResult(completedStep7)
-        mediaSession1!!.pause()
-
-        sessionRule.waitForResult(completedStep8a)
         mediaSession1!!.previousTrack()
-        mediaSession1!!.play()
 
-        sessionRule.waitForResult(completedStep8b)
+        sessionRule.waitForResult(completedStep8)
         sessionRule.waitForResult(completedStep9)
     }
 
     @Test
     fun defaultMetadataPlayback() {
         val onActivatedCalled = arrayOf(GeckoResult<Void>())
+        val onMetadataCalled = arrayOf(
+                GeckoResult<Void>(),
+                GeckoResult<Void>(),
+                GeckoResult<Void>(),
+                GeckoResult<Void>(),
+                GeckoResult<Void>())
         val onPlayCalled = arrayOf(GeckoResult<Void>(),
                 GeckoResult<Void>(),
                 GeckoResult<Void>(),
@@ -324,9 +320,11 @@ class MediaSessionTest : BaseSessionTest() {
         // 1. Load Media Session page which contains 1 audio track.
         // 2. Track 1 is played on page load.
         //    a. Ensure onActivated is called.
+        //    a. Ensure onMetadata (1) is called.
         //    b. Ensure onPlay (1) is called.
         val completedStep2 = GeckoResult.allOf(
                 onActivatedCalled[0],
+                onMetadataCalled[0],
                 onPlayCalled[0])
 
         // 3. Pause playback of track 1.
@@ -358,6 +356,47 @@ class MediaSessionTest : BaseSessionTest() {
                     mediaSession: MediaSession) {
                 onActivatedCalled[0].complete(null)
                 mediaSession1 = mediaSession
+            }
+
+            /*
+            TODO: currently not called for non-media-session content.
+            @AssertCalled
+            override fun onFeatures(
+                    session: GeckoSession,
+                    mediaSession: MediaSession,
+                    features: Long) {
+
+                val play = (features and MediaSession.Feature.PLAY) != 0L
+                val pause = (features and MediaSession.Feature.PAUSE) != 0L
+                val stop = (features and MediaSession.Feature.PAUSE) != 0L
+
+                assertThat(
+                        "Core playback constrols should be supported",
+                        play && pause && stop,
+                        equalTo(true))
+            }
+            */
+
+            @AssertCalled(count = 1)
+            override fun onMetadata(
+                    session: GeckoSession,
+                    mediaSession: MediaSession,
+                    meta: MediaSession.Metadata) {
+                assertThat(
+                        "Title should match",
+                        meta.title,
+                        equalTo(DEFAULT_META[0].title))
+                assertThat(
+                        "Artist should match",
+                        meta.artist,
+                        equalTo(DEFAULT_META[0].artist))
+                assertThat(
+                        "Album should match",
+                        meta.album,
+                        equalTo(DEFAULT_META[0].album))
+
+                onMetadataCalled[sessionRule.currentCall.counter - 1]
+                        .complete(null)
             }
 
             @AssertCalled(count = 2)
@@ -660,9 +699,7 @@ class MediaSessionTest : BaseSessionTest() {
         mediaSession2!!.pause()
         sessionRule.waitForResult(completedStep6)
 
-        mediaSession1!!.pause()
         mediaSession1!!.nextTrack()
-        mediaSession1!!.play()
         sessionRule.waitForResult(completedStep7)
         sessionRule.waitForResult(completedStep8)
     }
