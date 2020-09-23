@@ -2106,46 +2106,81 @@ nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
   return nullptr;
 }
 
-// static
-nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame,
-                                                             uint32_t aFlags) {
-  NS_ASSERTION(aFrame, "GetNearestScrollableFrame expects a non-null frame");
+static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
+    nsIFrame* aFrame, uint32_t aFlags,
+    const std::function<bool(const nsIFrame* aCurrentFrame)>& aClipFrameCheck =
+        nullptr) {
+  MOZ_ASSERT(
+      aFrame,
+      "GetNearestScrollableOrOverflowClipFrame expects a non-null frame");
+
   for (nsIFrame* f = aFrame; f;
-       f = (aFlags & SCROLLABLE_SAME_DOC)
+       f = (aFlags & nsLayoutUtils::SCROLLABLE_SAME_DOC)
                ? f->GetParent()
                : nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    if ((aFlags & SCROLLABLE_STOP_AT_PAGE) && f->IsPageFrame()) {
+    if (aClipFrameCheck && aClipFrameCheck(f)) {
+      return f;
+    }
+
+    if ((aFlags & nsLayoutUtils::SCROLLABLE_STOP_AT_PAGE) && f->IsPageFrame()) {
       break;
     }
-    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
-    if (scrollableFrame) {
-      if (aFlags & SCROLLABLE_ONLY_ASYNC_SCROLLABLE) {
+    if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(f)) {
+      if (aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE) {
         if (scrollableFrame->WantAsyncScroll()) {
-          return scrollableFrame;
+          return f;
         }
       } else {
         ScrollStyles ss = scrollableFrame->GetScrollStyles();
-        if ((aFlags & SCROLLABLE_INCLUDE_HIDDEN) ||
+        if ((aFlags & nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN) ||
             ss.mVertical != StyleOverflow::Hidden ||
             ss.mHorizontal != StyleOverflow::Hidden) {
-          return scrollableFrame;
+          return f;
         }
       }
-      if (aFlags & SCROLLABLE_ALWAYS_MATCH_ROOT) {
+      if (aFlags & nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT) {
         PresShell* presShell = f->PresShell();
         if (presShell->GetRootScrollFrame() == f && presShell->GetDocument() &&
             presShell->GetDocument()->IsRootDisplayDocument()) {
-          return scrollableFrame;
+          return f;
         }
       }
     }
-    if ((aFlags & SCROLLABLE_FIXEDPOS_FINDS_ROOT) &&
+    if ((aFlags & nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT) &&
         f->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
         nsLayoutUtils::IsReallyFixedPos(f)) {
-      return f->PresShell()->GetRootScrollFrameAsScrollable();
+      return f->PresShell()->GetRootScrollFrame();
     }
   }
   return nullptr;
+}
+
+// static
+nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame,
+                                                             uint32_t aFlags) {
+  nsIFrame* found = GetNearestScrollableOrOverflowClipFrame(aFrame, aFlags);
+  if (!found) {
+    return nullptr;
+  }
+
+  return do_QueryFrame(found);
+}
+
+// static
+nsIFrame* nsLayoutUtils::GetNearestOverflowClipFrame(nsIFrame* aFrame) {
+  return GetNearestScrollableOrOverflowClipFrame(
+      aFrame, SCROLLABLE_SAME_DOC | SCROLLABLE_INCLUDE_HIDDEN,
+      [](const nsIFrame* currentFrame) -> bool {
+        // In cases of SVG Inner/Outer frames it basically clips descendants
+        // unless overflow: visible is explicitly specified.
+        LayoutFrameType type = currentFrame->Type();
+        return ((type == LayoutFrameType::SVGOuterSVG ||
+                 type == LayoutFrameType::SVGInnerSVG) &&
+                (currentFrame->StyleDisplay()->mOverflowX !=
+                     StyleOverflow::Visible &&
+                 currentFrame->StyleDisplay()->mOverflowY !=
+                     StyleOverflow::Visible));
+      });
 }
 
 // static
