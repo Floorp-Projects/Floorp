@@ -80,6 +80,9 @@ class SharedDataMap extends EventEmitter {
   }
 
   get(key) {
+    if (!this._data) {
+      return null;
+    }
     return this._data[key];
   }
 
@@ -111,7 +114,7 @@ class SharedDataMap extends EventEmitter {
   }
 
   has(key) {
-    return Boolean(this._data[key]);
+    return Boolean(this.get(key));
   }
 
   /**
@@ -119,7 +122,7 @@ class SharedDataMap extends EventEmitter {
    * Called both from Main and Content process
    */
   _notifyUpdate() {
-    for (let key of Object.keys(this._data)) {
+    for (let key of Object.keys(this._data || {})) {
       this.emit(`update:${key}`, this._data[key]);
     }
   }
