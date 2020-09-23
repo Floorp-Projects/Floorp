@@ -2821,13 +2821,15 @@ UpdateService.prototype = {
       return;
     }
 
-    if (this._downloader && this._downloader.patchIsStaged) {
-      let readState = readStatusFile(getUpdatesDir());
-      if (
-        readState == STATE_PENDING ||
-        readState == STATE_PENDING_SERVICE ||
-        readState == STATE_PENDING_ELEVATE
-      ) {
+    let readState = readStatusFile(getUpdatesDir());
+    let updatePending =
+      readState == STATE_PENDING ||
+      readState == STATE_PENDING_SERVICE ||
+      readState == STATE_PENDING_ELEVATE;
+    let updateApplied =
+      readState == STATE_APPLIED || readState == STATE_APPLIED_SERVICE;
+    if (updatePending || updateApplied) {
+      if (updatePending) {
         AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
       } else {
         AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_STAGED);
@@ -3218,25 +3220,68 @@ UpdateService.prototype = {
   },
 
   /**
+   * A set of download listeners to be notified by this._downloader when it
+   * receives nsIRequestObserver or nsIProgressEventSink method calls.
+   *
+   * These are stored on the UpdateService rather than on the Downloader,
+   * because they ought to persist across multiple Downloader instances.
+   */
+  _downloadListeners: new Set(),
+
+  /**
    * See nsIUpdateService.idl
    */
   addDownloadListener: function AUS_addDownloadListener(listener) {
-    if (!this._downloader) {
-      LOG("UpdateService:addDownloadListener - no downloader!");
+    let oldSize = this._downloadListeners.size;
+    this._downloadListeners.add(listener);
+
+    if (this._downloadListeners.size == oldSize) {
+      LOG(
+        "UpdateService:addDownloadListener - Warning: Didn't add duplicate " +
+          "listener"
+      );
       return;
     }
-    this._downloader.addDownloadListener(listener);
+
+    if (this._downloader) {
+      this._downloader.onDownloadListenerAdded();
+    }
   },
 
   /**
    * See nsIUpdateService.idl
    */
   removeDownloadListener: function AUS_removeDownloadListener(listener) {
-    if (!this._downloader) {
-      LOG("UpdateService:removeDownloadListener - no downloader!");
+    let elementRemoved = this._downloadListeners.delete(listener);
+
+    if (!elementRemoved) {
+      LOG(
+        "UpdateService:removeDownloadListener - Warning: Didn't remove " +
+          "non-existent listener"
+      );
       return;
     }
-    this._downloader.removeDownloadListener(listener);
+
+    if (this._downloader) {
+      this._downloader.onDownloadListenerRemoved();
+    }
+  },
+
+  /**
+   * Returns a boolean indicating whether there are any download listeners
+   */
+  get hasDownloadListeners() {
+    return !!this._downloadListeners.length;
+  },
+
+  /*
+   * Calls the provided function once with each download listener that is
+   * currently registered.
+   */
+  forEachDownloadListener: function AUS_forEachDownloadListener(fn) {
+    // Make a shallow copy in case listeners remove themselves.
+    let listeners = new Set(this._downloadListeners);
+    listeners.forEach(fn);
   },
 
   /**
@@ -3308,6 +3353,7 @@ UpdateService.prototype = {
         this._downloader.cancel();
       }
     }
+    this._downloader = null;
   },
 
   /**
@@ -4311,23 +4357,6 @@ Downloader.prototype = {
   },
 
   /**
-   * Whether or not a patch has been downloaded and staged for installation.
-   */
-  get patchIsStaged() {
-    var readState = readStatusFile(getUpdatesDir());
-    // Note that if we decide to download and apply new updates after another
-    // update has been successfully applied in the background, we need to stop
-    // checking for the APPLIED state here.
-    return (
-      readState == STATE_PENDING ||
-      readState == STATE_PENDING_SERVICE ||
-      readState == STATE_PENDING_ELEVATE ||
-      readState == STATE_APPLIED ||
-      readState == STATE_APPLIED_SERVICE
-    );
-  },
-
-  /**
    * Verify the downloaded file.  We assume that the download is complete at
    * this point.
    */
@@ -4804,53 +4833,25 @@ Downloader.prototype = {
   },
 
   /**
-   * An array of download listeners to notify when we receive
-   * nsIRequestObserver or nsIProgressEventSink method calls.
+   * This is run when a download listener is added.
    */
-  _listeners: [],
-
-  /**
-   * Adds a listener to the download process
-   * @param   listener
-   *          A download listener, implementing nsIRequestObserver and
-   *          nsIProgressEventSink
-   */
-  addDownloadListener: function Downloader_addDownloadListener(listener) {
-    for (var i = 0; i < this._listeners.length; ++i) {
-      if (this._listeners[i] == listener) {
-        return;
-      }
-    }
-    this._listeners.push(listener);
-
+  onDownloadListenerAdded: function Downloader_onDownloadListenerAdded() {
     // Increase the status update frequency when someone starts listening
     this._maybeStartActiveNotifications();
   },
 
   /**
-   * Removes a download listener
-   * @param   listener
-   *          The listener to remove.
+   * This is run when a download listener is removed.
    */
-  removeDownloadListener: function Downloader_removeDownloadListener(listener) {
-    for (let i = 0; i < this._listeners.length; ++i) {
-      if (this._listeners[i] == listener) {
-        this._listeners.splice(i, 1);
-
-        // Decrease the status update frequency when no one is listening
-        if (!this._listeners.length) {
-          this._maybeStopActiveNotifications();
-        }
-        return;
-      }
+  onDownloadListenerRemoved: function Downloader_onDownloadListenerRemoved() {
+    // Decrease the status update frequency when no one is listening
+    if (!this.hasDownloadListeners) {
+      this._maybeStopActiveNotifications();
     }
   },
 
-  /**
-   * Returns a boolean indicating whether there are any download listeners
-   */
   get hasDownloadListeners() {
-    return !!this._listeners.length;
+    return this.updateService.hasDownloadListeners;
   },
 
   /**
@@ -4953,12 +4954,9 @@ Downloader.prototype = {
       }
     }
 
-    // Make shallow copy in case listeners remove themselves when called.
-    let listeners = this._listeners.concat();
-    let listenerCount = listeners.length;
-    for (let i = 0; i < listenerCount; ++i) {
-      listeners[i].onStartRequest(request);
-    }
+    this.updateService.forEachDownloadListener(listener => {
+      listener.onStartRequest(request);
+    });
   },
 
   /**
@@ -5006,15 +5004,11 @@ Downloader.prototype = {
       return;
     }
 
-    // Make shallow copy in case listeners remove themselves when called.
-    var listeners = this._listeners.concat();
-    var listenerCount = listeners.length;
-    for (var i = 0; i < listenerCount; ++i) {
-      var listener = listeners[i];
+    this.updateService.forEachDownloadListener(listener => {
       if (listener instanceof Ci.nsIProgressEventSink) {
         listener.onProgress(request, progress, maxProgress);
       }
-    }
+    });
     this.updateService._consecutiveSocketErrors = 0;
   },
 
@@ -5032,15 +5026,11 @@ Downloader.prototype = {
       "Downloader:onStatus - status: " + status + ", statusText: " + statusText
     );
 
-    // Make shallow copy in case listeners remove themselves when called.
-    var listeners = this._listeners.concat();
-    var listenerCount = listeners.length;
-    for (var i = 0; i < listenerCount; ++i) {
-      var listener = listeners[i];
+    this.updateService.forEachDownloadListener(listener => {
       if (listener instanceof Ci.nsIProgressEventSink) {
         listener.onStatus(request, status, statusText);
       }
-    }
+    });
   },
 
   /**
@@ -5292,12 +5282,9 @@ Downloader.prototype = {
     // Only notify listeners about the stopped state if we
     // aren't handling an internal retry.
     if (!shouldRetrySoon && !shouldRegisterOnlineObserver) {
-      // Make shallow copy in case listeners remove themselves when called.
-      var listeners = this._listeners.concat();
-      var listenerCount = listeners.length;
-      for (var i = 0; i < listenerCount; ++i) {
-        listeners[i].onStopRequest(request, status);
-      }
+      this.updateService.forEachDownloadListener(listener => {
+        listener.onStopRequest(request, status);
+      });
     }
 
     this._request = null;
@@ -5393,9 +5380,21 @@ Downloader.prototype = {
 
         // Prevent leaking the update object (bug 454964).
         this._update = null;
+
+        // allFailed indicates that we didn't (successfully) call downloadUpdate
+        // to try to download a different MAR. In this case, this Downloader
+        // is no longer being used.
+        this.updateService._downloader = null;
       }
       // A complete download has been initiated or the failure was handled.
       return;
+    }
+
+    // If the download has succeeded or failed, we are done with this Downloader
+    // object. However, in some cases (ex: network disconnection), we will
+    // attempt to resume using this same Downloader.
+    if (state != STATE_DOWNLOADING) {
+      this.updateService._downloader = null;
     }
 
     if (
