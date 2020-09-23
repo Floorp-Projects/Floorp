@@ -36,6 +36,12 @@ function getWakeLockState(topic, needLock, isTabInForeground) {
   return {
     check: async () => {
       if (needLock) {
+        const lockState = powerManager.getWakeLockState(topic);
+        info(`topic=${topic}, state=${lockState}`);
+        if (lockState == `locked-${tabState}`) {
+          ok(true, `requested '${topic}' wakelock in ${tabState}`);
+          return;
+        }
         await promise;
         ok(true, `requested '${topic}' wakelock in ${tabState}`);
       } else {
@@ -68,24 +74,63 @@ async function waitUntilVideoStarted({ muted, volume } = {}) {
   );
 }
 
+async function initializeWebAudio({ suspend } = {}) {
+  if (suspend) {
+    await content.ac.suspend();
+  } else {
+    const ac = content.ac;
+    if (ac.state == "running") {
+      return;
+    }
+    while (ac.state != "running") {
+      await new Promise(r => (ac.onstatechange = r));
+    }
+  }
+}
+
+function webaudioDocument() {
+  content.ac = new content.AudioContext();
+  const ac = content.ac;
+  const dest = ac.destination;
+  const source = new content.OscillatorNode(ac);
+  source.start(ac.currentTime);
+  source.connect(dest);
+}
+
 async function test_media_wakelock({
   description,
-  url,
-  videoAttsParams,
+  urlOrFunction,
+  additionalParams,
   lockAudio,
   lockVideo,
 }) {
   info(`- start a new test for '${description}' -`);
   info(`- open new foreground tab -`);
-  url = LOCATION + url;
+  var url;
+  if (typeof urlOrFunction == "string") {
+    url = LOCATION + urlOrFunction;
+  } else {
+    url = "about:blank";
+  }
   const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
   const browser = tab.linkedBrowser;
+
+  if (typeof urlOrFunction == "function") {
+    await SpecialPowers.spawn(browser, [], urlOrFunction);
+  }
 
   let audioWakeLock = getWakeLockState("audio-playing", lockAudio, true);
   let videoWakeLock = getWakeLockState("video-playing", lockVideo, true);
 
+  var initFunction = null;
+  if (description.includes("web audio")) {
+    initFunction = initializeWebAudio;
+  } else {
+    initFunction = waitUntilVideoStarted;
+  }
+
   info(`- wait for media starting playing -`);
-  await SpecialPowers.spawn(browser, [videoAttsParams], waitUntilVideoStarted);
+  await SpecialPowers.spawn(browser, [additionalParams], initFunction);
   await audioWakeLock.check();
   await videoWakeLock.check();
 
@@ -114,14 +159,14 @@ async function test_media_wakelock({
 add_task(async function start_tests() {
   await test_media_wakelock({
     description: "playing video",
-    url: "file_video.html",
+    urlOrFunction: "file_video.html",
     lockAudio: true,
     lockVideo: true,
   });
   await test_media_wakelock({
     description: "playing muted video",
-    url: "file_video.html",
-    videoAttsParams: {
+    urlOrFunction: "file_video.html",
+    additionalParams: {
       muted: true,
     },
     lockAudio: false,
@@ -129,8 +174,8 @@ add_task(async function start_tests() {
   });
   await test_media_wakelock({
     description: "playing volume=0 video",
-    url: "file_video.html",
-    videoAttsParams: {
+    urlOrFunction: "file_video.html",
+    additionalParams: {
       volume: 0.0,
     },
     lockAudio: false,
@@ -138,32 +183,99 @@ add_task(async function start_tests() {
   });
   await test_media_wakelock({
     description: "playing video without audio in it",
-    url: "file_videoWithoutAudioTrack.html",
+    urlOrFunction: "file_videoWithoutAudioTrack.html",
     lockAudio: false,
     lockVideo: false,
   });
   await test_media_wakelock({
     description: "playing audio in video element",
-    url: "file_videoWithAudioOnly.html",
+    urlOrFunction: "file_videoWithAudioOnly.html",
     lockAudio: true,
     lockVideo: false,
   });
   await test_media_wakelock({
     description: "playing audio in audio element",
-    url: "file_mediaPlayback2.html",
+    urlOrFunction: "file_mediaPlayback2.html",
     lockAudio: true,
     lockVideo: false,
   });
   await test_media_wakelock({
     description: "playing video from media stream with audio and video tracks",
-    url: "browser_mediaStreamPlayback.html",
+    urlOrFunction: "browser_mediaStreamPlayback.html",
     lockAudio: true,
     lockVideo: true,
   });
   await test_media_wakelock({
     description: "playing video from media stream without audio track",
-    url: "browser_mediaStreamPlaybackWithoutAudio.html",
+    urlOrFunction: "browser_mediaStreamPlaybackWithoutAudio.html",
     lockAudio: true,
     lockVideo: true,
   });
+  await test_media_wakelock({
+    description: "playing audible web audio",
+    urlOrFunction: webaudioDocument,
+    lockAudio: true,
+    lockVideo: false,
+  });
+  await test_media_wakelock({
+    description: "suspended web audio",
+    urlOrFunction: webaudioDocument,
+    additionalParams: {
+      suspend: true,
+    },
+    lockAudio: false,
+    lockVideo: false,
+  });
 });
+
+async function waitUntilAudioContextStarts() {
+  const ac = content.ac;
+  if (ac.state == "running") {
+    return;
+  }
+
+  while (ac.state != "running") {
+    await new Promise(r => (ac.onstatechange = r));
+  }
+}
+
+add_task(
+  async function testBrieflyAudibleAudioContextReleasesAudioWakeLockWhenInaudible() {
+    const tab = await BrowserTestUtils.openNewForegroundTab(
+      window.gBrowser,
+      "about:blank"
+    );
+
+    const browser = tab.linkedBrowser;
+
+    let audioWakeLock = getWakeLockState("audio-playing", true, true);
+    let videoWakeLock = getWakeLockState("video-playing", false, true);
+
+    // Make a short noise
+    await SpecialPowers.spawn(browser, [], () => {
+      content.ac = new content.AudioContext();
+      const ac = content.ac;
+      const dest = ac.destination;
+      const source = new content.OscillatorNode(ac);
+      source.start(ac.currentTime);
+      source.stop(ac.currentTime + 0.1);
+      source.connect(dest);
+    });
+
+    await SpecialPowers.spawn(browser, [], waitUntilAudioContextStarts);
+    info("AudioContext is running.");
+
+    await audioWakeLock.check();
+    await videoWakeLock.check();
+
+    await waitForTabPlayingEvent(tab, false);
+
+    audioWakeLock = getWakeLockState("audio-playing", false, true);
+    videoWakeLock = getWakeLockState("video-playing", false, true);
+
+    await audioWakeLock.check();
+    await videoWakeLock.check();
+
+    await BrowserTestUtils.removeTab(tab);
+  }
+);
