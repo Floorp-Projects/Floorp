@@ -43,7 +43,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Preferences.jsm"
 );
 
-const GLOBAL_CANARY = "use-application-dns.net";
+const GLOBAL_CANARY = "use-application-dns.net.";
 
 const NXDOMAIN_ERR = "NS_ERROR_UNKNOWN_HOST";
 
@@ -261,19 +261,19 @@ async function safeSearch() {
   const providerList = [
     {
       name: "google",
-      unfiltered: ["www.google.com", "google.com"],
-      safeSearch: ["forcesafesearch.google.com"],
+      unfiltered: ["www.google.com.", "google.com."],
+      safeSearch: ["forcesafesearch.google.com."],
     },
     {
       name: "youtube",
       unfiltered: [
-        "www.youtube.com",
-        "m.youtube.com",
-        "youtubei.googleapis.com",
-        "youtube.googleapis.com",
-        "www.youtube-nocookie.com",
+        "www.youtube.com.",
+        "m.youtube.com.",
+        "youtubei.googleapis.com.",
+        "youtube.googleapis.com.",
+        "www.youtube-nocookie.com.",
       ],
-      safeSearch: ["restrict.youtube.com", "restrictmoderate.youtube.com"],
+      safeSearch: ["restrict.youtube.com.", "restrictmoderate.youtube.com."],
     },
   ];
 
@@ -300,7 +300,7 @@ async function safeSearch() {
 }
 
 async function zscalerCanary() {
-  const ZSCALER_CANARY = "sitereview.zscaler.com";
+  const ZSCALER_CANARY = "sitereview.zscaler.com.";
 
   let { addresses } = await dnsLookup(ZSCALER_CANARY);
   for (let address of addresses) {
@@ -355,7 +355,7 @@ async function providerSteering() {
   if (!Preferences.get(kProviderSteeringEnabledPref, false)) {
     return null;
   }
-  const TEST_DOMAIN = "doh.test";
+  const TEST_DOMAIN = "doh.test.";
 
   // Array of { name, canonicalName, uri } where name is an identifier for
   // telemetry, canonicalName is the expected CNAME when looking up doh.test,
