@@ -61,22 +61,13 @@ enum class StaticParserString2 : uint16_t;
  * A ParserAtomEntry is an in-parser representation of an interned atomic
  * string.  It mostly mirrors the information carried by a JSAtom*.
  *
- * The atom contents are stored in one of four locations:
+ * The atom contents are stored in one of two locations:
  *  1. Inline Latin1Char storage (immediately after the ParserAtomEntry memory).
  *  2. Inline char16_t storage (immediately after the ParserAtomEntry memory).
- *  3. An owned pointer to a heap-allocated Latin1Char buffer.
- *  4. An owned pointer to a heap-allocated char16_t buffer.
  */
 class alignas(alignof(void*)) ParserAtomEntry {
   friend class ParserAtomsTable;
   friend class WellKnownParserAtoms;
-
-  template <typename CharT>
-  static constexpr uint32_t MaxInline() {
-    return std::is_same_v<CharT, Latin1Char>
-               ? JSFatInlineString::MAX_LENGTH_LATIN1
-               : JSFatInlineString::MAX_LENGTH_TWO_BYTE;
-  }
 
   /**
    * This single-word variant struct multiplexes between four representations.
@@ -226,7 +217,8 @@ class alignas(alignof(void*)) ParserAtomEntry {
                        StaticParserString1, StaticParserString2>;
   mutable AtomIndexType atomIndex_ = AtomIndexType(mozilla::Nothing());
 
- public:
+  // End of fields.
+
   static const uint32_t MAX_LENGTH = JSString::MAX_LENGTH;
 
   template <typename CharT>
@@ -238,6 +230,7 @@ class alignas(alignof(void*)) ParserAtomEntry {
   ParserAtomEntry(const CharT* chars, uint32_t length, HashNumber hash)
       : variant_(chars, /* isInline = */ true), length_(length), hash_(hash) {}
 
+ public:
   template <typename CharT>
   static CharT* inlineBufferPtr(ParserAtomEntry* entry) {
     return reinterpret_cast<CharT*>(entry + 1);
@@ -247,22 +240,15 @@ class alignas(alignof(void*)) ParserAtomEntry {
     return reinterpret_cast<const CharT*>(entry + 1);
   }
 
-  template <typename CharT>
-  static JS::Result<UniquePtr<ParserAtomEntry>, OOM> allocate(
-      JSContext* cx, mozilla::UniquePtr<CharT[], JS::FreePolicy>&& ptr,
-      uint32_t length, HashNumber hash);
-
-  template <typename CharT, typename SeqCharT>
-  static JS::Result<UniquePtr<ParserAtomEntry>, OOM> allocateInline(
-      JSContext* cx, InflatedChar16Sequence<SeqCharT> seq, uint32_t length,
-      HashNumber hash);
-
- public:
   // ParserAtomEntries may own their content buffers in variant_, and thus
   // cannot be copy-constructed - as a new chars would need to be allocated.
   ParserAtomEntry(const ParserAtomEntry&) = delete;
-
   ParserAtomEntry(ParserAtomEntry&& other) = delete;
+
+  template <typename CharT, typename SeqCharT>
+  static JS::Result<UniquePtr<ParserAtomEntry>, OOM> allocate(
+      JSContext* cx, InflatedChar16Sequence<SeqCharT> seq, uint32_t length,
+      HashNumber hash);
 
   ParserAtom* asAtom() { return reinterpret_cast<ParserAtom*>(this); }
   const ParserAtom* asAtom() const {
