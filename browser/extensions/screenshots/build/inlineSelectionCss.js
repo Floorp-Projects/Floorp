@@ -260,7 +260,7 @@ window.inlineSelectionCss = `
 .mover-target.direction-topLeft {
   cursor: nwse-resize;
   height: 60px;
-  inset-inline-start: -30px;
+  left: -30px;
   top: -30px;
   width: 60px; }
 
@@ -275,14 +275,14 @@ window.inlineSelectionCss = `
 .mover-target.direction-topRight {
   cursor: nesw-resize;
   height: 60px;
-  inset-inline-end: -30px;
+  right: -30px;
   top: -30px;
   width: 60px; }
 
 .mover-target.direction-left {
   cursor: ew-resize;
   height: 100%;
-  inset-inline-start: -30px;
+  left: -30px;
   top: 0;
   width: 60px;
   z-index: 4; }
@@ -290,7 +290,7 @@ window.inlineSelectionCss = `
 .mover-target.direction-right {
   cursor: ew-resize;
   height: 100%;
-  inset-inline-end: -30px;
+  right: -30px;
   top: 0;
   width: 60px;
   z-index: 4; }
@@ -299,7 +299,7 @@ window.inlineSelectionCss = `
   bottom: -30px;
   cursor: nesw-resize;
   height: 60px;
-  inset-inline-start: -30px;
+  left: -30px;
   width: 60px; }
 
 .mover-target.direction-bottom {
@@ -314,7 +314,7 @@ window.inlineSelectionCss = `
   bottom: -30px;
   cursor: nwse-resize;
   height: 60px;
-  inset-inline-end: -30px;
+  right: -30px;
   width: 60px; }
 
 .mover-target:hover .mover {
@@ -336,7 +336,7 @@ window.inlineSelectionCss = `
 .direction-topLeft .mover,
 .direction-left .mover,
 .direction-bottomLeft .mover {
-  inset-inline-start: -1px; }
+  left: -1px; }
 
 .direction-topLeft .mover,
 .direction-top .mover,
@@ -346,7 +346,7 @@ window.inlineSelectionCss = `
 .direction-topRight .mover,
 .direction-right .mover,
 .direction-bottomRight .mover {
-  inset-inline-end: -1px; }
+  right: -1px; }
 
 .direction-bottomRight .mover,
 .direction-bottom .mover,
