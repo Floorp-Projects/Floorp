@@ -12,6 +12,6 @@ with Files('**'):
     BUG_COMPONENT = ('Firefox', 'General')
 
 TESTING_JS_MODULES += [
-    'schemas/IonContentSchema.json',
-    'schemas/IonStudyAddonsSchema.json',
+    'schemas/PioneerContentSchema.json',
+    'schemas/PioneerStudyAddonsSchema.json',
 ]
