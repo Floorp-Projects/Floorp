@@ -15,7 +15,7 @@ object Versions {
     const val androidx_appcompat = "1.2.0-rc01"
     const val androidx_biometric = "1.1.0-alpha01"
     const val androidx_coordinator_layout = "1.1.0-rc01"
-    const val androidx_constraint_layout = "2.0.0-beta6"
+    const val androidx_constraint_layout = "2.0.0"
     const val androidx_preference = "1.1.0"
     const val androidx_legacy = "1.0.0"
     const val androidx_annotation = "1.1.0"

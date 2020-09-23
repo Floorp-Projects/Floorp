@@ -106,4 +106,10 @@ class TabTrayFragmentInteractorTest {
         interactor.onEnterMultiselect()
         verify { controller.handleEnterMultiselect() }
     }
+
+    @Test
+    fun onSetUpAutoCloseTabsClicked() {
+        interactor.onSetUpAutoCloseTabsClicked()
+        verify { controller.handleSetUpAutoCloseTabsClicked() }
+    }
 }

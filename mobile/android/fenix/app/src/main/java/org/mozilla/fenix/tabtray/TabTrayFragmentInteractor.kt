@@ -55,6 +55,11 @@ interface TabTrayInteractor {
     fun onModeRequested(): TabTrayDialogFragmentState.Mode
 
     /**
+     * Called when user clicks on the "set it up" prompt for automatically closing tabs
+     */
+    fun onSetUpAutoCloseTabsClicked()
+
+    /**
      * Called when a tab should be opened in the browser.
      */
     fun onOpenTab(tab: Tab)
@@ -139,5 +144,9 @@ class TabTrayFragmentInteractor(private val controller: TabTrayController) : Tab
 
     override fun onEnterMultiselect() {
         controller.handleEnterMultiselect()
+    }
+
+    override fun onSetUpAutoCloseTabsClicked() {
+        controller.handleSetUpAutoCloseTabsClicked()
     }
 }

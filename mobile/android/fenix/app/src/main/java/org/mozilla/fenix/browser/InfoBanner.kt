@@ -13,6 +13,7 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import kotlinx.android.synthetic.main.info_banner.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 
 /**
  * Displays an Info Banner in the specified container with a message and an optional action.
@@ -25,12 +26,15 @@ import org.mozilla.fenix.R
  * @param actionText - The text on the action to perform button
  * @param actionToPerform - The action to be performed on action button press
  */
+@SuppressWarnings("LongParameterList")
 class InfoBanner(
     private val context: Context,
     private val container: ViewGroup,
     private val message: String,
     private val dismissText: String,
     private val actionText: String? = null,
+    private val dismissByHiding: Boolean = false,
+    private val dismissAction: (() -> Unit)? = null,
     private val actionToPerform: (() -> Unit)? = null
 ) {
     @SuppressLint("InflateParams")
@@ -54,12 +58,15 @@ class InfoBanner(
         params.width = MATCH_PARENT
 
         bannerLayout.dismiss.setOnClickListener {
-            dismiss()
+            dismissAction?.invoke()
+            if (dismissByHiding) { bannerLayout.visibility = GONE } else { dismiss() }
         }
 
         bannerLayout.action.setOnClickListener {
             actionToPerform?.invoke()
         }
+
+        context.settings().lastCfrShownTimeInMillis = System.currentTimeMillis()
     }
 
     internal fun dismiss() {

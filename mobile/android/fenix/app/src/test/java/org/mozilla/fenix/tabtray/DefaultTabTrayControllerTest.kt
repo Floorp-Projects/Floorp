@@ -248,4 +248,14 @@ class DefaultTabTrayControllerTest {
             showChooseCollectionDialog(listOf(session))
         }
     }
+
+    @Test
+    fun handleSetUpAutoCloseTabsClicked() {
+        controller.handleSetUpAutoCloseTabsClicked()
+        val directions = TabTrayDialogFragmentDirections.actionGlobalCloseTabSettingsFragment()
+
+        verify {
+            navController.navigate(directions)
+        }
+    }
 }

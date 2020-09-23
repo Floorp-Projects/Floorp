@@ -689,6 +689,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val shouldShowOpenInAppCfr: Boolean
         get() = canShowCfr && shouldShowOpenInAppBanner
 
+    var shouldShowAutoCloseTabsBanner by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_auto_close_tabs_banner),
+        default = true
+    )
+
     @VisibleForTesting(otherwise = PRIVATE)
     internal val trackingProtectionOnboardingCount = counterPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_onboarding),

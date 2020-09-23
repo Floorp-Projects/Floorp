@@ -24,6 +24,15 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent="0.1" />
 
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/infoBanner"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/foundation_normal_theme"
+        app:layout_constraintTop_toBottomOf="@+id/topBar"/>
+
     <TextView
         android:id="@+id/tab_tray_empty_view"
         android:layout_width="0dp"
@@ -38,7 +47,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/topBar" />
+        app:layout_constraintTop_toBottomOf="@id/infoBanner" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/topBar"
@@ -164,7 +173,7 @@
         android:background="@color/tab_tray_item_divider_normal_theme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/topBar" />
+        app:layout_constraintTop_toBottomOf="@+id/infoBanner" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/tabsTray"

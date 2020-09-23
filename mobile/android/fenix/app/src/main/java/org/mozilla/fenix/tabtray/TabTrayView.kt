@@ -43,6 +43,7 @@ import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.feature.syncedtabs.SyncedTabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.InfoBanner
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.TabCounter.Companion.INFINITE_CHAR_PADDING_BOTTOM
 import org.mozilla.fenix.components.toolbar.TabCounter.Companion.MAX_VISIBLE_TABS
@@ -239,6 +240,28 @@ class TabTrayView(
         }
 
         adjustNewTabButtonsForNormalMode()
+
+        if (
+            view.context.settings().shouldShowAutoCloseTabsBanner &&
+            view.context.settings().canShowCfr &&
+            tabs.size >= TAB_COUNT_SHOW_CFR
+        ) {
+            InfoBanner(
+                context = view.context,
+                message = view.context.getString(R.string.tab_tray_close_tabs_banner_message),
+                dismissText = view.context.getString(R.string.tab_tray_close_tabs_banner_negative_button_text),
+                actionText = view.context.getString(R.string.tab_tray_close_tabs_banner_positive_button_text),
+                container = view.infoBanner,
+                dismissByHiding = true,
+                dismissAction = { view.context.settings().shouldShowAutoCloseTabsBanner = false }
+            ) {
+                interactor.onSetUpAutoCloseTabsClicked()
+                view.context.settings().shouldShowAutoCloseTabsBanner = false
+            }.apply {
+                view.infoBanner.visibility = View.VISIBLE
+                showBanner()
+            }
+        }
     }
 
     private fun handleTabClicked(tab: SyncTab) {
@@ -578,6 +601,7 @@ class TabTrayView(
     }
 
     companion object {
+        private const val TAB_COUNT_SHOW_CFR = 6
         private const val DEFAULT_TAB_ID = 0
         private const val PRIVATE_TAB_ID = 1
         private const val EXPAND_AT_SIZE = 3

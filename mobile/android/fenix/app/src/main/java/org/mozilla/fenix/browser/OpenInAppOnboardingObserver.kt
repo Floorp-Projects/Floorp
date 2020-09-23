@@ -60,7 +60,6 @@ class OpenInAppOnboardingObserver(
 
             infoBanner?.showBanner()
             sessionDomainForDisplayedBanner = session.url.tryGetHostFromUrl()
-            settings.lastCfrShownTimeInMillis = System.currentTimeMillis()
             settings.shouldShowOpenInAppBanner = false
         }
     }
