@@ -3137,6 +3137,12 @@ class nsLayoutUtils {
   static nsSize ExpandHeightForDynamicToolbar(nsPresContext* aPresContext,
                                               const nsSize& aSize);
 
+  /**
+   * Returns the nsIFrame which clips overflow regions of the given |aFrame|.
+   * Note CSS clip or clip-path isn't accounted for.
+   **/
+  static nsIFrame* GetNearestOverflowClipFrame(nsIFrame* aFrame);
+
  private:
   /**
    * Helper function for LogTestDataForPaint().
