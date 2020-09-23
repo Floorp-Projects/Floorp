@@ -60,13 +60,9 @@ const ExperimentAPI = {
    * @returns {boolean}
    */
   isFeatureEnabled(featureId, defaultValue) {
-    try {
-      const featureConfig = this._store.getFeature(featureId);
-      if (featureConfig && featureConfig.enabled !== undefined) {
-        return featureConfig.enabled;
-      }
-    } catch (e) {
-      Cu.reportError(e);
+    const featureConfig = this._store.getFeature(featureId);
+    if (featureConfig && featureConfig.enabled !== undefined) {
+      return featureConfig.enabled;
     }
     return defaultValue;
   },
