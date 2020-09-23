@@ -1,6 +1,9 @@
 const { ChromeMigrationUtils } = ChromeUtils.import(
   "resource:///modules/ChromeMigrationUtils.jsm"
 );
+const { ExperimentAPI } = ChromeUtils.import(
+  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+);
 const { MigrationUtils } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"
 );
@@ -46,6 +49,9 @@ add_task(async function test_initialize() {
   const migrator = sinon
     .stub(MigrationUtils, "getMigrator")
     .resolves(gTestMigrator);
+  const experiment = sinon
+    .stub(ExperimentAPI, "getFeatureValue")
+    .returns({ directMigrateSingleProfile: true });
 
   // This makes the last autocomplete test *not* show import suggestions.
   Services.prefs.setIntPref("signon.suggestImportCount", 3);
@@ -54,6 +60,7 @@ add_task(async function test_initialize() {
     debounce.restore();
     importable.restore();
     migrator.restore();
+    experiment.restore();
     Services.prefs.clearUserPref("signon.suggestImportCount");
   });
 });
