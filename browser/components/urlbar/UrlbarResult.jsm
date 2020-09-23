@@ -321,4 +321,25 @@ class UrlbarResult {
   static getDynamicResultType(name) {
     return this._dynamicResultTypesByName.get(name);
   }
+
+  /**
+   * This is useful for logging results. If you need the full payload, then it's
+   * better to JSON.stringify the result object itself.
+   * @returns {string} string representation of the result.
+   */
+  toString() {
+    if (this.payload.url) {
+      return this.payload.title + " - " + this.payload.url.substr(0, 100);
+    }
+    if (this.payload.keyword) {
+      return this.payload.keyword + " - " + this.payload.query;
+    }
+    if (this.payload.suggestion) {
+      return this.payload.engine + " - " + this.payload.suggestion;
+    }
+    if (this.payload.engine) {
+      return this.payload.engine + " - " + this.payload.query;
+    }
+    return JSON.stringify(this);
+  }
 }

@@ -631,11 +631,15 @@ class UrlbarController {
     queryContext.results.splice(index, 1);
     this.notify(NOTIFICATIONS.QUERY_RESULT_REMOVED, index);
 
-    // form history
+    // Form history or url restyled as search.
     if (selectedResult.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
       if (!queryContext.formHistoryName) {
         return false;
       }
+      // Generate the search url to remove it from browsing history.
+      let { url } = UrlbarUtils.getUrlFromResult(selectedResult);
+      PlacesUtils.history.remove(url).catch(Cu.reportError);
+      // Now remove form history.
       FormHistory.update(
         {
           op: "remove",
@@ -651,7 +655,7 @@ class UrlbarController {
       return true;
     }
 
-    // Places history
+    // Remove browsing history entries from Places.
     PlacesUtils.history
       .remove(selectedResult.payload.url)
       .catch(Cu.reportError);

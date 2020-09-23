@@ -129,6 +129,18 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       context.heuristicResult?.type == UrlbarUtils.RESULT_TYPE.SEARCH
         ? UrlbarPrefs.get("matchBucketsSearch")
         : UrlbarPrefs.get("matchBuckets");
+    // In search mode for an engine, we always want to show search suggestions
+    // before general results.
+    if (context.searchMode?.engineName) {
+      let suggestionsIndex = buckets.findIndex(b => b[0] == "suggestion");
+      let generalIndex = buckets.findIndex(b => b[0] == "general");
+      if (generalIndex < suggestionsIndex) {
+        // Copy the array, otherwise we'd end up modifying the cached pref.
+        buckets = buckets.slice();
+        buckets[generalIndex] = "suggestion";
+        buckets[suggestionsIndex] = "general";
+      }
+    }
     logger.debug(`Buckets: ${buckets}`);
 
     // Do the second pass to fill each bucket.  We'll build a list where each
@@ -288,11 +300,13 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
-    // Discard form history that dupes the heuristic.
+    // Discard form history that dupes the heuristic or previous added form
+    // history (for restyleSearch).
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
       result.source == UrlbarUtils.RESULT_SOURCE.HISTORY &&
-      result.payload.lowerCaseSuggestion === state.heuristicResultQuery
+      (result.payload.lowerCaseSuggestion === state.heuristicResultQuery ||
+        state.formHistorySuggestions.has(result.payload.lowerCaseSuggestion))
     ) {
       return false;
     }

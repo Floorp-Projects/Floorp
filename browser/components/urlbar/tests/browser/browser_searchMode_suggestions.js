@@ -99,12 +99,17 @@ add_task(async function emptySearch() {
   });
 });
 
-add_task(async function emptySearch_withHistory() {
+add_task(async function emptySearch_withHistory_noRestyle() {
   // URLs with the same host as the search engine.
   await PlacesTestUtils.addVisits([
     `http://mochi.test/`,
     // Should not be returned because it's a redirect source.
     `http://mochi.test/redirect`,
+    // Should not be returned because of empty title.
+    {
+      uri: `http://mochi.test/notitle`,
+      title: "",
+    },
     {
       uri: `http://mochi.test/target`,
       transition: PlacesUtils.history.TRANSITIONS.REDIRECT_TEMPORARY,
@@ -113,7 +118,13 @@ add_task(async function emptySearch_withHistory() {
   ]);
   await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.update2.emptySearchBehavior", 2]],
+      set: [
+        ["browser.urlbar.update2.emptySearchBehavior", 2],
+        ["browser.urlbar.update2.restyleBrowsingHistoryAsSearch", false],
+        // Also check results are sorted with search suggestions first, even if
+        // "Show search suggestions before history results" is unchecked.
+        ["browser.urlbar.matchBuckets", "general:5,suggestion:Infinity"],
+      ],
     });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -130,6 +141,117 @@ add_task(async function emptySearch_withHistory() {
         type: UrlbarUtils.RESULT_TYPE.URL,
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         url: `http://mochi.test/target`,
+      },
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/`,
+      },
+    ]);
+
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
+  });
+
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function emptySearch_withRestyledHistory() {
+  // URLs with the same host as the search engine.
+  await PlacesTestUtils.addVisits([
+    `http://mochi.test/`,
+    `http://mochi.test/redirect`,
+    // Should not be returned because it's a redirect target.
+    {
+      uri: `http://mochi.test/target`,
+      transition: PlacesUtils.history.TRANSITIONS.REDIRECT_TEMPORARY,
+      referrer: `http://mochi.test/redirect`,
+    },
+    // Can be restyled and dupes form history.
+    "http://mochi.test:8888/?terms=hello+formHistory+0",
+    // Can be restyled but does not dupe form history.
+    "http://mochi.test:8888/?terms=ciao",
+  ]);
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update2.emptySearchBehavior", 2],
+        ["browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true],
+      ],
+    });
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+    await UrlbarTestUtils.enterSearchMode(window);
+    Assert.equal(gURLBar.value, "", "Urlbar value should be cleared.");
+    // For the empty search case, we expect to get the form history relative to
+    // the picked engine, history without redirects, and no heuristic.
+    await checkResults([
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.SEARCH,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        searchParams: {
+          suggestion: "ciao",
+          engine: suggestionsEngine.name,
+        },
+      },
+      ...expectedFormHistoryResults,
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/redirect`,
+      },
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/`,
+      },
+    ]);
+
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
+  });
+
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function emptySearch_withRestyledHistory_noSearchHistory() {
+  // URLs with the same host as the search engine.
+  await PlacesTestUtils.addVisits([
+    `http://mochi.test/`,
+    `http://mochi.test/redirect`,
+    // Can be restyled but does not dupe form history.
+    "http://mochi.test:8888/?terms=ciao",
+  ]);
+  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update2.emptySearchBehavior", 2],
+        ["browser.urlbar.update2.restyleBrowsingHistoryAsSearch", true],
+        ["browser.urlbar.maxHistoricalSearchSuggestions", 0],
+      ],
+    });
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+    await UrlbarTestUtils.enterSearchMode(window);
+    Assert.equal(gURLBar.value, "", "Urlbar value should be cleared.");
+    // For the empty search case, we expect to get the form history relative to
+    // the picked engine, history without redirects, and no heuristic.
+    await checkResults([
+      {
+        heuristic: false,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        url: `http://mochi.test/redirect`,
       },
       {
         heuristic: false,

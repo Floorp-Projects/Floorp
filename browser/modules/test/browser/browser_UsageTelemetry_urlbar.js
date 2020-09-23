@@ -135,6 +135,7 @@ add_task(async function setup() {
     await Services.search.removeEngine(engine);
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
     await PlacesUtils.history.clear();
+    await UrlbarTestUtils.formHistory.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
     UrlbarTestUtils.uninit();
   });
@@ -1120,7 +1121,7 @@ add_task(async function test_searchmode_suggestion_click() {
     );
 
     // Check the histograms as well.
-    TelemetryTestUtils.assertHistogram(resultIndexHist, 3, 1);
+    TelemetryTestUtils.assertHistogram(resultIndexHist, 1, 1);
 
     TelemetryTestUtils.assertHistogram(
       resultTypeHist,
@@ -1131,7 +1132,7 @@ add_task(async function test_searchmode_suggestion_click() {
     TelemetryTestUtils.assertKeyedHistogramValue(
       resultIndexByTypeHist,
       "searchsuggestion",
-      3,
+      1,
       1
     );
 
@@ -1682,4 +1683,5 @@ add_task(async function test_privateWindow() {
 
   // Reset the search provider info.
   SearchTelemetry.overrideSearchTelemetryForTests();
+  await UrlbarTestUtils.formHistory.clear();
 });
