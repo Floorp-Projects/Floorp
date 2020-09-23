@@ -5,7 +5,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+from datetime import datetime, timedelta
 import logging
+from operator import itemgetter
 import sys
 
 from mach.decorators import (
@@ -18,24 +20,35 @@ from mach.decorators import (
 from mozbuild.base import MachCommandBase, MozbuildObject
 
 
+def _get_busted_bugs(payload):
+    import requests
+    payload = dict(payload)
+    payload['include_fields'] = 'id,summary,last_change_time,resolution'
+    payload['blocks'] = 1543241
+    response = requests.get('https://bugzilla.mozilla.org/rest/bug', payload)
+    response.raise_for_status()
+    return response.json().get('bugs', [])
+
+
 @CommandProvider
 class BustedProvider(MachCommandBase):
     @Command('busted', category='misc',
              description='Query known bugs in our tooling, and file new ones.')
     def busted_default(self):
-        import requests
-        payload = {'include_fields': 'id,summary,last_change_time',
-                   'blocks': 1543241,
-                   'resolution': '---'}
-        response = requests.get('https://bugzilla.mozilla.org/rest/bug', payload)
-        response.raise_for_status()
-        json_response = response.json()
-        if 'bugs' in json_response and len(json_response['bugs']) > 0:
-            # Display most recently modifed bugs first.
-            bugs = sorted(json_response['bugs'], key=lambda item: item['last_change_time'],
-                          reverse=True)
-            for bug in bugs:
-                print("Bug %s - %s" % (bug['id'], bug['summary']))
+        unresolved = _get_busted_bugs({'resolution': '---'})
+        creation_time = datetime.now() - timedelta(days=15)
+        creation_time = creation_time.strftime('%Y-%m-%dT%H-%M-%SZ')
+        resolved = _get_busted_bugs({'creation_time': creation_time})
+        resolved = [bug for bug in resolved if bug['resolution']]
+        all_bugs = sorted(
+            unresolved + resolved, key=itemgetter('last_change_time'),
+            reverse=True)
+        if all_bugs:
+            for bug in all_bugs:
+                print("[%s] Bug %s - %s" % (
+                    'UNRESOLVED' if not bug['resolution']
+                    else 'RESOLVED - %s' % bug['resolution'], bug['id'],
+                    bug['summary']))
         else:
             print("No known tooling issues found.")
 
