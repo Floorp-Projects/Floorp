@@ -14,16 +14,6 @@ exclude: true
 ⚠️  breaking change and deprecation notices
 
 ## v83
-- ⚠️  Removing unsupported `MediaSession.Delegate.onPictureInPicture` for now.
-  Also, [`MediaSession.Delegate.onMetadata`][83.1] is no longer dispatched for
-  plain media elements.
-  ([bug 1658937]({{bugzilla}}1658937))
-- Added [`WebExtension.MetaData.temporary`][83.2] which exposes whether an extension
-  has been installed temporarily, e.g. when using web-ext.
-  ([bug 1624410]({{bugzilla}}1624410))
-
-[83.1]: {{javadoc_uri}}/MediaSession.Delegate.html#onMetadata-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.MediaSession-org.mozilla.geckoview.MediaSession.Metadata-
-[83.2]: {{javadoc_uri}}/WebExtension.MetaData.html#temporary
 
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
@@ -813,4 +803,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 01fdaf45cfe4dc5974de314cbdb79584781eb282
+[api-version]: e62341ace2541ae9fbd4f08f7c2d03ba28bf416a
