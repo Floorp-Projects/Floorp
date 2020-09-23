@@ -2770,11 +2770,9 @@ class UrlbarInput {
       this.setPageProxyState("invalid", true);
     }
 
-    let canShowTopSites =
-      !this.isPrivate && UrlbarPrefs.get("suggest.topsites");
     if (!this.view.isOpen) {
       this.view.clear();
-    } else if (!value && !canShowTopSites) {
+    } else if (!value && !UrlbarPrefs.get("suggest.topsites")) {
       this.view.clear();
       if (!this.searchMode) {
         this.view.close();
