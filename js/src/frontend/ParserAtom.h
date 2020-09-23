@@ -404,7 +404,7 @@ class WellKnownParserAtoms {
  private:
   using EntrySet = HashSet<UniquePtr<ParserAtomEntry>, ParserAtomLookupHasher,
                            js::SystemAllocPolicy>;
-  EntrySet entrySet_;
+  EntrySet wellKnownSet_;
 
   static const size_t ASCII_STATIC_LIMIT = 128U;
   static const size_t NUM_SMALL_CHARS = StaticStrings::NUM_SMALL_CHARS;
@@ -481,54 +481,18 @@ class ParserAtomsTable {
   explicit ParserAtomsTable(JSRuntime* rt);
 
  private:
-  // Custom AddPtr for the ParserAtomsTable.
-  struct AddPtr {
-    struct InnerAddPtr {
-      EntrySet::AddPtr entrySetAddPtr;
-      HashNumber hash;
-      InnerAddPtr(EntrySet::AddPtr e, HashNumber h)
-          : entrySetAddPtr(e), hash(h) {}
-    };
-    using VariantType = mozilla::Variant<const ParserAtomEntry*, InnerAddPtr>;
-    VariantType atomOrAdd;
-
-    explicit AddPtr(const ParserAtomEntry* atom) : atomOrAdd(atom) {}
-
-    AddPtr(EntrySet::AddPtr entrySetAddPtr, HashNumber hash)
-        : atomOrAdd((const ParserAtomEntry*)nullptr) {
-      if (entrySetAddPtr) {
-        atomOrAdd = VariantType(
-            const_cast<const ParserAtomEntry*>(entrySetAddPtr->get()));
-      } else {
-        atomOrAdd = VariantType(InnerAddPtr(entrySetAddPtr, hash));
-      }
-    }
-
-    explicit operator bool() const {
-      return atomOrAdd.is<const ParserAtomEntry*>();
-    }
-    const ParserAtomEntry* get() const {
-      return atomOrAdd.as<const ParserAtomEntry*>();
-    }
-    InnerAddPtr& inner() { return atomOrAdd.as<InnerAddPtr>(); }
-  };
-
-  // Look up a sequence pointer for add.  Returns either the found
-  // parser-atom pointer, or and AddPtr to insert into the entry-set.
-  template <typename CharT>
-  AddPtr lookupForAdd(JSContext* cx, InflatedChar16Sequence<CharT> seq);
-
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.
-  JS::Result<const ParserAtom*, OOM> addEntry(JSContext* cx, AddPtr& addPtr,
+  JS::Result<const ParserAtom*, OOM> addEntry(JSContext* cx,
+                                              EntrySet::AddPtr& addPtr,
                                               UniquePtr<ParserAtomEntry> entry);
   JS::Result<const ParserAtom*, OOM> internLatin1Seq(
-      JSContext* cx, AddPtr& addPtr, const Latin1Char* latin1Ptr,
-      uint32_t length);
+      JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
+      const Latin1Char* latin1Ptr, uint32_t length);
   template <typename AtomCharT, typename SeqCharT>
   JS::Result<const ParserAtom*, OOM> internChar16Seq(
-      JSContext* cx, AddPtr& addPtr, InflatedChar16Sequence<SeqCharT> seq,
-      uint32_t length);
+      JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
+      InflatedChar16Sequence<SeqCharT> seq, uint32_t length);
 
  public:
   JS::Result<const ParserAtom*, OOM> internAscii(JSContext* cx,
