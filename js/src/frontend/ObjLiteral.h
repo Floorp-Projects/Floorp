@@ -144,8 +144,7 @@ class JSONPrinter;
 
 namespace frontend {
 struct CompilationInfo;
-class StencilXDR;
-}  // namespace frontend
+}
 
 // Object-literal instruction opcodes. An object literal is constructed by a
 // straight-line sequence of these ops, each adding one property to the
@@ -260,11 +259,8 @@ struct ObjLiteralWriterBase {
   static const uint32_t INDEXED_PROP = 0x00800000;
   static const int OP_SHIFT = 24;
 
- public:
-  using CodeVector = Vector<uint8_t, 64, js::SystemAllocPolicy>;
-
  protected:
-  CodeVector code_;
+  Vector<uint8_t, 64, js::SystemAllocPolicy> code_;
 
  public:
   ObjLiteralWriterBase() = default;
@@ -322,13 +318,6 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   ObjLiteralWriter() = default;
 
   void clear() { code_.clear(); }
-
-  // For XDR decoding.
-  using CodeVector = typename ObjLiteralWriterBase::CodeVector;
-  void initializeForXDR(CodeVector&& code, uint8_t flags) {
-    code_ = std::move(code);
-    flags_.deserialize(flags);
-  }
 
   mozilla::Span<const uint8_t> getCode() const { return code_; }
   ObjLiteralFlags getFlags() const { return flags_; }
@@ -580,8 +569,7 @@ inline JSObject* InterpretObjLiteral(JSContext* cx,
 }
 
 class ObjLiteralStencil {
-  friend class frontend::StencilXDR;
-
+ private:
   ObjLiteralWriter writer_;
   ObjLiteralAtomVector atoms_;
 
