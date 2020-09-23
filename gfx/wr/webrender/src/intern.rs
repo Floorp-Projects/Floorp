@@ -110,7 +110,7 @@ impl ItemUid {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, MallocSizeOf, PartialEq)]
+#[derive(Debug, MallocSizeOf)]
 pub struct Handle<I> {
     index: u32,
     epoch: Epoch,
