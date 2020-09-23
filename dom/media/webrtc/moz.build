@@ -15,7 +15,7 @@ with Files('common/**'):
     BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
 with Files('jsep/**'):
     BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
-with Files('media-conduit/**'):
+with Files('libwebrtcglue/**'):
     BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
 with Files('mediapipeline/**'):
     BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
@@ -70,7 +70,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
     DIRS += [
         'common',
         'jsep',
-        'media-conduit',
+        'libwebrtcglue',
         'mediapipeline',
         'peerconnection',
         'sdp'

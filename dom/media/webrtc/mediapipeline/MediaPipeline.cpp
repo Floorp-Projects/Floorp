@@ -46,7 +46,7 @@
 #include "transport/runnable_utils.h"
 #include "peerconnection/MediaTransportHandler.h"
 #include "Tracing.h"
-#include "media-conduit/WebrtcImageBuffer.h"
+#include "libwebrtcglue/WebrtcImageBuffer.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 
