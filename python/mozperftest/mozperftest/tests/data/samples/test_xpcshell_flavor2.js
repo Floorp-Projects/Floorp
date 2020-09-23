@@ -20,9 +20,9 @@ var perfMetadata = {
   supportedPlatforms: ["Desktop"],
   options: {
       default: {perfherder: true},
-      linux: {perfherder_metrics: "name:speed,unit:bps_lin"},
-      mac: {perfherder_metrics: "name:speed,unit:bps_mac"},
-      win: {perfherder_metrics: "name:speed,unit:bps_win"}
+      linux: {perfherder_metrics: [{name:"speed",unit: "bps_lin"}]},
+      mac: {perfherder_metrics: [{name:"speed",unit: "bps_mac"}]},
+      win: {perfherder_metrics: [{name:"speed",unit: "bps_win"}]}
   }
 };
 

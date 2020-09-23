@@ -7,4 +7,4 @@ include =
 [report]
 sort = Cover
 show_missing = True
-fail_under = 87
+fail_under = 91
