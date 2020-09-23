@@ -1144,11 +1144,8 @@
     <string name="sign_in_with_camera">Sign in with your camera</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Use email instead</string>
-    <!-- Text shown for settings option for create new account description.
-    'Firefox' intentionally hardcoded here. %s is to be replaced with the create account link text-->
-    <string name="sign_in_create_account_text">No account? %s to sync Firefox between devices.</string>
-    <!--Text shown for settings option for create new account link -->
-    <string name="sign_in_create_account_link">Create one</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[No account? <u>Create one</u> to sync Firefox between devices.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox will stop syncing with your account, but won’t delete any of your browsing data on this device.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
