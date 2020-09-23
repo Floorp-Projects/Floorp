@@ -20,10 +20,25 @@
     <script type="module" src="chrome://browser/content/lockwise-card.js"></script>
     <script type="module" src="chrome://browser/content/monitor-card.js"></script>
     <script type="module" src="chrome://browser/content/proxy-card.js"></script>
+    <script type="module" src="chrome://browser/content/vpn-card.js"></script>
     <title data-l10n-id="protection-report-webpage-title"></title>
   </head>
 
   <body>
+    <div class="new-banner vpn-banner hidden">
+      <div class=banner-wrapper>
+        <img class="icon light" src="chrome://browser/content/logos/vpn-light.svg"/>
+        <img class="icon dark" src="chrome://browser/content/logos/vpn-dark.svg"/>
+        <div class="wrapper">
+          <div>
+            <h3 class="banner-title" data-l10n-id="vpn-banner-header"></h3>
+            <span class="content" data-l10n-id="vpn-banner-content"></span>
+          </div>
+          <a target="_blank" id="vpn-banner-link" data-l10n-id="get-vpn-link"></a>
+          <button class="exit-icon" data-l10n-id="protections-close-button2"></button>
+        </div>
+      </div>
+    </div>
     <div id="report-content">
       <h1 id="report-title" data-l10n-id="protection-report-page-content-title"></h1>
       <p id="report-summary" data-l10n-id="protection-report-page-summary-default"></p>
@@ -284,6 +299,27 @@
               <p class="content" data-l10n-id="proxy-header-content"></p>
             </div>
             <a target="_blank" id="get-proxy-extension-link" data-l10n-id="get-proxy-extension-link"></a>
+          </div>
+         </div>
+       </section>
+
+       <section class="card card-no-hover vpn-card hidden">
+        <div class="card-header">
+          <img class="icon light" src="chrome://browser/content/logos/vpn-light.svg"/>
+          <img class="icon dark" src="chrome://browser/content/logos/vpn-dark.svg"/>
+          <div class="wrapper">
+            <div>
+              <div class="title-wrapper">
+                <img id="check-icon" src="chrome://browser/skin/protections/resolved-breach.svg">
+                <h3 class="card-title" data-l10n-id="vpn-title"></h3>
+              </div>
+              <p class="content" data-l10n-id="vpn-header-content"></p>
+              <p class="content subscribed" data-l10n-id="vpn-header-content-subscribed">
+                <a target="_blank" id="vpn-google-playstore-link" data-l10n-name="vpn-google-playstore-link"></a>
+                <a target="_blank" id="vpn-app-store-link" data-l10n-name="vpn-app-store-link"></a>
+              </p>
+            </div>
+            <a target="_blank" id="get-vpn-link" data-l10n-id="get-vpn-link"></a>
           </div>
          </div>
        </section>

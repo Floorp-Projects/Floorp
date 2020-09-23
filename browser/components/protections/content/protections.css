@@ -33,10 +33,10 @@
 
   --gear-icon-fill: var(--grey-90-a60);
   --hover-grey-link: var(--grey-70);
+  --feature-banner-color: rgba(0, 0, 0, 0.05);
 }
 
 body {
-  margin-block: 40px 80px;
   box-sizing: border-box;
 }
 
@@ -85,9 +85,11 @@ h2 {
 #report-content {
   width: 763px;
   margin: 0 auto;
+  margin-block: 40px 80px;
 }
 
-.card-header .wrapper {
+.card-header .wrapper,
+.new-banner .wrapper {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   align-items: center;
@@ -97,6 +99,8 @@ h2 {
 .card-header > button,
 #save-passwords-button,
 #get-proxy-extension-link,
+#get-vpn-link,
+#vpn-banner-link,
 #manage-passwords-button,
 #sign-up-for-monitor-link {
   grid-area: 1 / 5 / 1 / -1;
@@ -106,6 +110,15 @@ h2 {
   padding: 10px;
   text-align: center;
   line-height: initial;
+}
+
+#vpn-banner-link {
+  grid-area: 1 / 6 / 1 / -1;
+}
+
+.new-banner .wrapper div:nth-child(1) {
+  grid-area: 1 / 1 / 1 / 6;
+  padding-inline-end: 15px;
 }
 
 .lockwise-card.has-logins .wrapper div:nth-child(1) {
@@ -126,6 +139,11 @@ h2 {
   grid-area: 1 / 1 / 1 / -1;
 }
 
+.vpn-card.subscribed .wrapper div:nth-child(1) {
+  padding-inline-end: 29px;
+  grid-area: 1 / 1 / 1 / 7;
+}
+
 /* We want to hide certain components depending on its state. */
 .no-logins .monitor-scanned-wrapper,
 .etp-card.custom-not-blocking .card-body,
@@ -133,6 +151,8 @@ h2 {
 #manage-protections,
 .etp-card .icon.dark,
 .proxy-card .icon.dark,
+.vpn-card .icon.dark,
+.vpn-banner .icon.dark,
 a.hidden,
 .loading .card-body,
 .lockwise-card.hidden,
@@ -156,6 +176,7 @@ a.hidden,
 .loading button,
 .loading .wrapper,
 .proxy-card.hidden,
+.vpn-card.hidden,
 .card-body.hidden,
 .hidden {
   display: none;
@@ -169,6 +190,15 @@ a.hidden,
   z-index: 1;
 }
 
+.vpn-card .icon {
+  width: 56px;
+  height: 56px;
+}
+
+.new-banner .icon {
+  width: 50px;
+  height: 50px;
+}
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -179,16 +209,21 @@ a.hidden,
     --cryptominer-highlight-color: #BEBECA;
 
     --gear-icon-fill: rgba(249, 249, 250, 0.60);
-    --hover-grey-link: var(--grey-30)
+    --hover-grey-link: var(--grey-30);
+    --feature-banner-color: rgba(255, 255, 255, 0.1);
   }
 
   .etp-card .icon.dark,
-  .proxy-card .icon.dark {
+  .proxy-card .icon.dark,
+  .vpn-card .icon.dark,
+  .vpn-banner .icon.dark {
     display: block;
   }
 
   .etp-card .icon.light,
-  .proxy-card .icon.light {
+  .proxy-card .icon.light,
+  .vpn-card .icon.light,
+  .vpn-banner .icon.light {
     display: none;
   }
 }
@@ -658,7 +693,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
 .lockwise-scanned-wrapper {
   display: grid;
-  grid-template-columns: 7% auto;
+  grid-template-columns: 24px auto;
   margin-block-start: 24px;
   grid-area: 2 / 1 / 2 / 5;
   padding-bottom: 1.7em;
@@ -675,6 +710,18 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #manage-passwords-button {
   grid-area: 2 / 5 / 2 / 7;
   margin-inline-end: 15px;
+}
+
+.vpn-card.subscribed #get-vpn-link {
+  display: none;
+}
+
+.vpn-card:not(.subscribed) .content.subscribed {
+  display: none;
+}
+
+.vpn-card.subscribed .content:not(.subscribed) {
+  display: none;
 }
 
 /* Monitor card */
@@ -947,6 +994,8 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #manage-protections,
 #sign-up-for-monitor-link,
 #get-proxy-extension-link,
+#get-vpn-link,
+#vpn-banner-link,
 .monitor-partial-breaches-link-wrapper,
 .monitor-breaches-link-wrapper {
   background-color: var(--in-content-primary-button-background);
@@ -959,6 +1008,8 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #manage-protections:active,
 #sign-up-for-monitor-link:active,
 #get-proxy-extension-link:active,
+#get-vpn-link:active,
+#vpn-banner-link:active,
 #monitor-partial-breaches-link:active,
 #monitor-breaches-link:active {
   background-color: var(--in-content-primary-button-background-active);
@@ -967,6 +1018,8 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #manage-protections:hover,
 #sign-up-for-monitor-link:hover,
 #get-proxy-extension-link:hover,
+#get-vpn-link:hover,
+#vpn-banner-link:hover,
 #monitor-partial-breaches-link:hover,
 #monitor-breaches-link:hover {
   background-color: var(--in-content-primary-button-background-hover);
@@ -975,6 +1028,8 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #manage-protections:focus,
 #sign-up-for-monitor-link:focus,
 #get-proxy-extension-link:focus,
+#get-vpn-link:focus,
+#vpn-banner-link:focus,
 #monitor-partial-breaches-link:focus,
 .monitor-block > a:focus,
 #monitor-breaches-link:focus {
@@ -1024,4 +1079,55 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
     background-position-x: right 700px;
     opacity: 0.02;
   }
+}
+
+.new-banner {
+  width: 100%;
+  background: var(--feature-banner-color);
+}
+
+.banner-wrapper {
+  width: 763px;
+  display: grid;
+  grid-template-columns: 1fr 7fr;
+  grid-gap: var(--card-padding);
+  line-height: 1.3em;
+  margin: 0 auto;
+  padding: 12px var(--card-padding);
+}
+
+.new-banner .banner-title {
+  margin: 0;
+  line-height: 1.25;
+  cursor: default;
+  font-size: inherit;
+}
+
+.new-banner .content {
+  margin-block: 5px 0;
+  font-size: 0.88em;
+  cursor: default;
+  color: var(--in-content-deemphasized-text);
+}
+
+.new-banner .exit-icon {
+  top: auto;
+  inset-inline-end: 30px;
+}
+
+.vpn-card .title-wrapper {
+  display: grid;
+  grid-template-columns: 24px auto;
+}
+
+.vpn-card:not(.subscribed) .card-title {
+  grid-area: 1 / 1 / 1 / -1;
+}
+
+.vpn-card.subscribed .card-title {
+  margin-inline-start: 3px;
+}
+
+.vpn-card:not(.subscribed) #check-icon {
+  display: none;
 }

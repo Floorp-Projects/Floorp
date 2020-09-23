@@ -22,6 +22,8 @@ browser.jar:
         content/browser/logos/send.svg                (content/logos/send.svg)
         content/browser/logos/tracking-protection.svg (content/logos/tracking-protection.svg)
         content/browser/logos/tracking-protection-dark-theme.svg (content/logos/tracking-protection-dark-theme.svg)
+        content/browser/logos/vpn-dark.svg            (content/logos/vpn-dark.svg)
+        content/browser/logos/vpn-light.svg           (content/logos/vpn-light.svg)
         content/browser/aboutNetErrorCodes.js         (content/aboutNetErrorCodes.js)
         content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
         content/browser/aboutNetError.js               (content/aboutNetError.js)
