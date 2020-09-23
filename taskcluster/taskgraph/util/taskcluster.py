@@ -97,12 +97,15 @@ def get_session():
     return requests_retry_session(retries=5)
 
 
-def _do_request(url, force_get=False, **kwargs):
+def _do_request(url, method=None, **kwargs):
+    if method is None:
+        method = "post" if kwargs else "get"
+
     session = get_session()
-    if kwargs and not force_get:
-        response = session.post(url, **kwargs)
-    else:
-        response = session.get(url, stream=True, **kwargs)
+    if method == "get":
+        kwargs["stream"] = True
+    response = getattr(session, method)(url, **kwargs)
+
     if response.status_code >= 400:
         # Consume content before raise_for_status, so that the connection can be
         # reused.
@@ -312,7 +315,7 @@ def list_task_group_tasks(task_group_id):
     while True:
         url = liburls.api(get_root_url(False), 'queue', 'v1',
                           'task-group/{}/list'.format(task_group_id))
-        resp = _do_request(url, force_get=True, params=params).json()
+        resp = _do_request(url, method="get", params=params).json()
         for task in resp['tasks']:
             yield task
         if resp.get('continuationToken'):
