@@ -10,14 +10,14 @@
 
 #include <map>
 
-#include "sigslot.h"
-#include "transportlayer.h"  // For TransportLayer::State
+#include "transport/sigslot.h"
+#include "transport/transportlayer.h"  // For TransportLayer::State
 
 #include "media-conduit/MediaConduitInterface.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Atomics.h"
-#include "SrtpFlow.h"  // For SRTP_MAX_EXPANSION
-#include "mediapacket.h"
+#include "transport/SrtpFlow.h"  // For SRTP_MAX_EXPANSION
+#include "transport/mediapacket.h"
 #include "transport/runnable_utils.h"
 #include "AudioPacketizer.h"
 #include "MediaPipelineFilter.h"

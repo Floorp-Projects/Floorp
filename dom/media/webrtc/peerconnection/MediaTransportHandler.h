@@ -7,14 +7,14 @@
 
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
-#include "sigslot.h"
-#include "transportlayer.h"  // Need the State enum
-#include "dtlsidentity.h"    // For DtlsDigest
+#include "transport/sigslot.h"
+#include "transport/transportlayer.h"  // Need the State enum
+#include "transport/dtlsidentity.h"    // For DtlsDigest
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
-#include "nricectx.h"  // Need some enums
+#include "transport/nricectx.h"  // Need some enums
 #include "common/CandidateInfo.h"
-#include "nr_socket_proxy_config.h"
+#include "transport/nr_socket_proxy_config.h"
 #include "RTCStatsReport.h"
 
 #include "nsString.h"

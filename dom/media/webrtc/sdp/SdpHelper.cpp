@@ -8,7 +8,7 @@
 
 #include "sdp/Sdp.h"
 #include "sdp/SdpMediaSection.h"
-#include "logging.h"
+#include "transport/logging.h"
 
 #include "nsDebug.h"
 #include "nsError.h"

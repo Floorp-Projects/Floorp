@@ -5,8 +5,8 @@
 #include "mozilla/dom/MediaTransportParent.h"
 #include "peerconnection/MediaTransportHandler.h"
 
-#include "sigslot.h"
-#include "CSFLog.h"
+#include "transport/sigslot.h"
+#include "common/browser_logging/CSFLog.h"
 
 namespace mozilla {
 

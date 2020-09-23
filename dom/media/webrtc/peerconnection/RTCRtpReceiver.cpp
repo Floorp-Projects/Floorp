@@ -3,10 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RTCRtpReceiver.h"
-#include "logging.h"
+#include "transport/logging.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/Promise.h"
-#include "MediaPipeline.h"
+#include "mediapipeline/MediaPipeline.h"
 #include "nsPIDOMWindow.h"
 #include "PrincipalHandle.h"
 #include "nsIPrincipal.h"
@@ -14,7 +14,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "MediaTrackGraph.h"
 #include "RemoteTrackSource.h"
-#include "RtpRtcpConfig.h"
+#include "media-conduit/RtpRtcpConfig.h"
 #include "nsString.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/VideoStreamTrack.h"
@@ -25,7 +25,7 @@
 #include "RTCStatsReport.h"
 #include "mozilla/Preferences.h"
 #include "TransceiverImpl.h"
-#include "AudioConduit.h"
+#include "media-conduit/AudioConduit.h"
 
 namespace mozilla {
 

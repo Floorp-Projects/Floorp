@@ -13,10 +13,10 @@
 #include "nsITimer.h"
 
 #include "MediaConduitInterface.h"
-#include "MediaEngineWrapper.h"
+#include "common/MediaEngineWrapper.h"
 #include "RunningStat.h"
 #include "RtpPacketQueue.h"
-#include "runnable_utils.h"
+#include "transport/runnable_utils.h"
 
 // conflicts with #include of scoped_ptr.h
 #undef FF

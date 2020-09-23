@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-#include "logging.h"
+#include "transport/logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"

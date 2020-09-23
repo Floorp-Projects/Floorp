@@ -45,7 +45,6 @@ DEFINES['R_DEFINED_INT8'] = 'int8_t'
 DEFINES['R_DEFINED_UINT8'] = 'uint8_t'
 
 LOCAL_INCLUDES += [
-    '/dom/media/webrtc/peerconnection',
     '/dom/media/webrtc/transport/third_party/nICEr/src/net',
     '/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr',
     '/media/webrtc',

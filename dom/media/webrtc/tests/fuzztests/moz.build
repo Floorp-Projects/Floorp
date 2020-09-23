@@ -8,9 +8,6 @@ Library('FuzzingSdp')
 
 LOCAL_INCLUDES += [
   '/dom/media/webrtc',
-  '/dom/media/webrtc/common/time_profiling',
-  '/dom/media/webrtc/peerconnection',
-  '/dom/media/webrtc/transport',
   '/ipc/chromium/src',
   '/media/webrtc',
 ]

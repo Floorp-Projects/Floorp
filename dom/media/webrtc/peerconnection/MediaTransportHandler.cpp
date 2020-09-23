@@ -4,12 +4,12 @@
 
 #include "MediaTransportHandler.h"
 #include "MediaTransportHandlerIPC.h"
-#include "nricemediastream.h"
-#include "nriceresolver.h"
-#include "transportflow.h"
-#include "transportlayerice.h"
-#include "transportlayerdtls.h"
-#include "transportlayersrtp.h"
+#include "transport/nricemediastream.h"
+#include "transport/nriceresolver.h"
+#include "transport/transportflow.h"
+#include "transport/transportlayerice.h"
+#include "transport/transportlayerdtls.h"
+#include "transport/transportlayersrtp.h"
 
 // Config stuff
 #include "mozilla/dom/RTCConfigurationBinding.h"
@@ -21,15 +21,15 @@
 #include "nsIURLParser.h"
 
 // Logging stuff
-#include "CSFLog.h"
+#include "common/browser_logging/CSFLog.h"
 
 // For fetching ICE logging
-#include "rlogconnector.h"
+#include "transport/rlogconnector.h"
 
 // DTLS
 #include "sdp/SdpAttribute.h"
 
-#include "runnable_utils.h"
+#include "transport/runnable_utils.h"
 
 #include "mozilla/Algorithm.h"
 #include "mozilla/Telemetry.h"

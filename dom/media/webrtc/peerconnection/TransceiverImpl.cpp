@@ -2,25 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TransceiverImpl.h"
+#include "peerconnection/TransceiverImpl.h"
 #include "mozilla/UniquePtr.h"
 #include <string>
 #include <vector>
-#include "AudioConduit.h"
-#include "VideoConduit.h"
+#include "media-conduit/AudioConduit.h"
+#include "media-conduit/VideoConduit.h"
 #include "MediaTrackGraph.h"
-#include "MediaPipeline.h"
-#include "MediaPipelineFilter.h"
+#include "mediapipeline/MediaPipeline.h"
+#include "mediapipeline/MediaPipelineFilter.h"
 #include "jsep/JsepTrack.h"
 #include "sdp/SdpHelper.h"
 #include "MediaTrackGraphImpl.h"
-#include "logging.h"
+#include "transport/logging.h"
 #include "MediaEngine.h"
 #include "nsIPrincipal.h"
 #include "MediaSegment.h"
 #include "RemoteTrackSource.h"
-#include "RtpRtcpConfig.h"
-#include "MediaConduitInterface.h"
+#include "media-conduit/RtpRtcpConfig.h"
 #include "MediaTransportHandler.h"
 #include "mozilla/dom/RTCRtpReceiverBinding.h"
 #include "mozilla/dom/RTCRtpSenderBinding.h"
@@ -28,7 +27,7 @@
 #include "mozilla/dom/TransceiverImplBinding.h"
 #include "RTCRtpReceiver.h"
 #include "RTCDTMFSender.h"
-#include "WebrtcGmpVideoCodec.h"
+#include "media-conduit/WebrtcGmpVideoCodec.h"
 
 namespace mozilla {
 

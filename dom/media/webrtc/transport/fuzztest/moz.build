@@ -9,7 +9,6 @@ Library('FuzzingStun')
 DEFINES['HAVE_STRDUP'] = True
 
 LOCAL_INCLUDES += [
-  '/dom/media/webrtc/transport',
   '/dom/media/webrtc/transport/third_party/nICEr/src/net',
   '/dom/media/webrtc/transport/third_party/nICEr/src/stun',
   '/dom/media/webrtc/transport/third_party/nrappkit/src/event',

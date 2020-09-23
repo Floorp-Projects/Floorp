@@ -6,7 +6,7 @@
 
 #include "VideoStreamFactory.h"
 
-#include "CSFLog.h"
+#include "common/browser_logging/CSFLog.h"
 #include "nsThreadUtils.h"
 #include "VideoConduit.h"
 

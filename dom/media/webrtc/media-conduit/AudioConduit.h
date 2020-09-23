@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 
 #include "MediaConduitInterface.h"
-#include "MediaEngineWrapper.h"
+#include "common/MediaEngineWrapper.h"
 #include "RtpSourceObserver.h"
 #include "RtpPacketQueue.h"
 
