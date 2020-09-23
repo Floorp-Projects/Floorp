@@ -192,7 +192,7 @@ static void SetBaseTargetUsingFirstBaseWithTarget(Document* aDocument,
     }
   }
 
-  aDocument->SetBaseTarget(EmptyString());
+  aDocument->SetBaseTarget(u""_ns);
 }
 
 nsresult HTMLSharedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,

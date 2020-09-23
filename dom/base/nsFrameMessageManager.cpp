@@ -394,7 +394,7 @@ bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
     error->Init(
         u"Sending message that cannot be cloned. Are "
         "you trying to send an XPCOM object?"_ns,
-        filename, EmptyString(), lineno, column, nsIScriptError::warningFlag,
+        filename, u""_ns, lineno, column, nsIScriptError::warningFlag,
         "chrome javascript", false /* from private window */,
         true /* from chrome context */);
     console->LogMessage(error);
@@ -752,9 +752,8 @@ void nsFrameMessageManager::ReceiveMessage(
           if (console) {
             nsCOMPtr<nsIScriptError> error(
                 do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-            error->Init(msg, EmptyString(), EmptyString(), 0, 0,
-                        nsIScriptError::warningFlag, "chrome javascript",
-                        false /* from private window */,
+            error->Init(msg, u""_ns, u""_ns, 0, 0, nsIScriptError::warningFlag,
+                        "chrome javascript", false /* from private window */,
                         true /* from chrome context */);
             console->LogMessage(error);
           }
@@ -998,11 +997,11 @@ void MessageManagerReporter::CountReferents(
 static void ReportReferentCount(
     const char* aManagerType, const MessageManagerReferentCount& aReferentCount,
     nsIHandleReportCallback* aHandleReport, nsISupports* aData) {
-#define REPORT(_path, _amount, _desc)                           \
-  do {                                                          \
-    aHandleReport->Callback(                                    \
-        EmptyCString(), _path, nsIMemoryReporter::KIND_OTHER,   \
-        nsIMemoryReporter::UNITS_COUNT, _amount, _desc, aData); \
+#define REPORT(_path, _amount, _desc)                                       \
+  do {                                                                      \
+    aHandleReport->Callback(""_ns, _path, nsIMemoryReporter::KIND_OTHER,    \
+                            nsIMemoryReporter::UNITS_COUNT, _amount, _desc, \
+                            aData);                                         \
   } while (0)
 
   REPORT(nsPrintfCString("message-manager/referent/%s/strong", aManagerType),
@@ -1227,7 +1226,7 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
 
       uint32_t size = (uint32_t)std::min(written, (uint64_t)UINT32_MAX);
       ScriptLoader::ConvertToUTF16(channel, (uint8_t*)buffer.get(), size,
-                                   EmptyString(), nullptr, dataStringBuf,
+                                   u""_ns, nullptr, dataStringBuf,
                                    dataStringLength);
     }
 

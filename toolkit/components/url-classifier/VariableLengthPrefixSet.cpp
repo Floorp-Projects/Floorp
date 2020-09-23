@@ -458,7 +458,7 @@ VariableLengthPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
   size_t amount = SizeOfIncludingThis(UrlClassifierMallocSizeOf);
 
   return aHandleReport->Callback(
-      EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES, amount,
+      ""_ns, mMemoryReportPath, KIND_HEAP, UNITS_BYTES, amount,
       nsLiteralCString("Memory used by the variable-length prefix set for a "
                        "URL classifier."),
       aData);

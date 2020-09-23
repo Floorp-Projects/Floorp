@@ -81,7 +81,7 @@ class MediaDocument : public nsHTMLDocument {
   void UpdateTitleAndCharset(const nsACString& aTypeStr, nsIChannel* aChannel,
                              const char* const* aFormatNames = sFormatNames,
                              int32_t aWidth = 0, int32_t aHeight = 0,
-                             const nsAString& aStatus = EmptyString());
+                             const nsAString& aStatus = u""_ns);
 
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIStringBundle> mStringBundleEnglish;

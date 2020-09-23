@@ -100,13 +100,13 @@ nsresult nsIconLoaderService::LoadIcon(nsIURI* aIconURI, bool aIsInternalIcon = 
   nsresult rv;
   if (aIsInternalIcon) {
     rv = loader->LoadImage(aIconURI, nullptr, nullptr, nullptr, 0, loadGroup, this, nullptr,
-                           nullptr, nsIRequest::LOAD_NORMAL, nullptr, mContentType, EmptyString(),
+                           nullptr, nsIRequest::LOAD_NORMAL, nullptr, mContentType, u""_ns,
                            /* aUseUrgentStartForChannel */ false, /* aLinkPreload */ false,
                            getter_AddRefs(mIconRequest));
   } else {
     rv = loader->LoadImage(aIconURI, nullptr, nullptr, mContent->NodePrincipal(), 0, loadGroup,
                            this, mContent, document, nsIRequest::LOAD_NORMAL, nullptr, mContentType,
-                           EmptyString(), /* aUseUrgentStartForChannel */ false,
+                           u""_ns, /* aUseUrgentStartForChannel */ false,
                            /* aLinkPreload */ false, getter_AddRefs(mIconRequest));
   }
   if (NS_FAILED(rv)) {

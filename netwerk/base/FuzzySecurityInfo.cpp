@@ -331,7 +331,7 @@ bool FuzzySecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
 
 NS_IMETHODIMP
 FuzzySecurityInfo::GetPeerId(nsACString& aResult) {
-  aResult.Assign(EmptyCString());
+  aResult.Assign(""_ns);
   return NS_OK;
 }
 

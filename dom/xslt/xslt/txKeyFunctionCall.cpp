@@ -242,7 +242,7 @@ nsresult txXSLKey::indexSubtreeRoot(const txXPathNode& aRoot,
                                     txKeyValueHash& aKeyValueHash,
                                     txExecutionState& aEs) {
   txKeyValueHashKey key(mName, txXPathNodeUtils::getUniqueIdentifier(aRoot),
-                        EmptyString());
+                        u""_ns);
   return indexTree(aRoot, key, aKeyValueHash, aEs);
 }
 

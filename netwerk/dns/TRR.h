@@ -87,7 +87,7 @@ class TRR : public Runnable,
         mType(aType),
         mPB(aPB),
         mCnameLoop(aLoopCount),
-        mOriginSuffix(aRec ? aRec->originSuffix : EmptyCString()) {
+        mOriginSuffix(aRec ? aRec->originSuffix : ""_ns) {
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess(),
                           "TRR must be in parent or socket process");
   }

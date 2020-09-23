@@ -315,7 +315,7 @@ class StartResponse final : public Runnable {
         mInternalResponse->GetTainting());
 
     // Get the preferred alternative data type of outter channel
-    nsAutoCString preferredAltDataType(EmptyCString());
+    nsAutoCString preferredAltDataType(""_ns);
     nsCOMPtr<nsICacheInfoChannel> outerChannel =
         do_QueryInterface(underlyingChannel);
     if (outerChannel &&
@@ -377,7 +377,7 @@ class StartResponse final : public Runnable {
     rv = NS_NewURI(getter_AddRefs(uri), url);
     NS_ENSURE_SUCCESS(rv, false);
     int16_t decision = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(uri, aLoadInfo, EmptyCString(), &decision);
+    rv = NS_CheckContentLoadPolicy(uri, aLoadInfo, ""_ns, &decision);
     NS_ENSURE_SUCCESS(rv, false);
     return decision == nsIContentPolicy::ACCEPT;
   }
@@ -928,7 +928,7 @@ class WaitUntilHandler final : public PromiseNativeHandler {
     // because there is no documeny yet, and the navigation is no longer
     // being intercepted.
 
-    swm->ReportToAllClients(mScope, message, mSourceSpec, EmptyString(), mLine,
+    swm->ReportToAllClients(mScope, message, mSourceSpec, u""_ns, mLine,
                             mColumn, nsIScriptError::errorFlag);
   }
 };
@@ -1103,8 +1103,8 @@ void PushMessageData::ArrayBuffer(JSContext* cx,
 already_AddRefed<mozilla::dom::Blob> PushMessageData::Blob(ErrorResult& aRv) {
   uint8_t* data = GetContentsCopy();
   if (data) {
-    RefPtr<mozilla::dom::Blob> blob = BodyUtil::ConsumeBlob(
-        mOwner, EmptyString(), mBytes.Length(), data, aRv);
+    RefPtr<mozilla::dom::Blob> blob =
+        BodyUtil::ConsumeBlob(mOwner, u""_ns, mBytes.Length(), data, aRv);
     if (blob) {
       return blob.forget();
     }

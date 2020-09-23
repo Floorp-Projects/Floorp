@@ -492,7 +492,7 @@ nsresult gfxPlatformFontList::InitFontList() {
       }
       i.Data()->mShmemCharacterMap = nullptr;
       i.Data()->mShmemFace = nullptr;
-      i.Data()->mFamilyName = ""_ns;
+      i.Data()->mFamilyName.Truncate();
     }
     mFontEntries.Clear();
     mShmemCharMaps.Clear();

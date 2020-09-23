@@ -351,9 +351,9 @@ nsUrlClassifierUtils::GetProvider(const nsACString& aTableName,
   if (IsTestTable(aTableName)) {
     aProvider = nsLiteralCString(TESTING_TABLE_PROVIDER_NAME);
   } else if (mProviderDict.Get(aTableName, &provider)) {
-    aProvider = provider ? *provider : EmptyCString();
+    aProvider = provider ? *provider : ""_ns;
   } else {
-    aProvider = EmptyCString();
+    aProvider.Truncate();
   }
   return NS_OK;
 }
@@ -530,9 +530,9 @@ static nsresult GetSpecWithoutSensitiveData(nsIURI* aUri, nsACString& aSpec) {
   if (url) {
     nsCOMPtr<nsIURI> clone;
     rv = NS_MutateURI(url)
-             .SetQuery(EmptyCString())
-             .SetRef(EmptyCString())
-             .SetUserPass(EmptyCString())
+             .SetQuery(""_ns)
+             .SetRef(""_ns)
+             .SetUserPass(""_ns)
              .Finalize(clone);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = clone->GetAsciiSpec(aSpec);

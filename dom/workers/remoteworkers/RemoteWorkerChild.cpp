@@ -402,7 +402,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
     return rv;
   }
 
-  nsString workerPrivateId = EmptyString();
+  nsString workerPrivateId;
 
   if (mIsServiceWorker) {
     ServiceWorkerData& data = aData.serviceWorkerData().get_ServiceWorkerData();

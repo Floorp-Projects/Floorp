@@ -186,8 +186,8 @@ void WindowsSMTCProvider::Close() {
   CancelPendingStoreAsyncOperation();
 
   // Clear the cached image urls
-  mThumbnailUrl = EmptyString();
-  mProcessingUrl = EmptyString();
+  mThumbnailUrl.Truncate();
+  mProcessingUrl.Truncate();
 
   mNextImageIndex = 0;
 
@@ -475,7 +475,7 @@ void WindowsSMTCProvider::LoadImageAtIndex(const size_t aIndex) {
   if (aIndex >= mArtwork.Length()) {
     LOG("Stop loading thumbnail. No more available images");
     mImageFetchRequest.DisconnectIfExists();
-    mProcessingUrl = EmptyString();
+    mProcessingUrl.Truncate();
     return;
   }
 
@@ -645,7 +645,7 @@ bool WindowsSMTCProvider::SetThumbnail(const nsAString& aUrl) {
   auto cleanup =
       MakeScopeExit([this, self = RefPtr<WindowsSMTCProvider>(this)] {
         LOG("Clean mThumbnailUrl");
-        mThumbnailUrl = EmptyString();
+        mThumbnailUrl.Truncate();
       });
 
   if (FAILED(hr)) {
@@ -687,7 +687,7 @@ void WindowsSMTCProvider::ClearThumbnail() {
   hr = mDisplay->Update();
   MOZ_ASSERT(SUCCEEDED(hr));
   Unused << hr;
-  mThumbnailUrl = EmptyString();
+  mThumbnailUrl.Truncate();
 }
 
 bool WindowsSMTCProvider::UpdateThumbnail(const nsAString& aUrl) {
@@ -704,7 +704,7 @@ bool WindowsSMTCProvider::UpdateThumbnail(const nsAString& aUrl) {
     return false;
   }
 
-  mProcessingUrl = EmptyString();
+  mProcessingUrl.Truncate();
 
   if (!SetThumbnail(aUrl)) {
     LOG("Failed to update thumbnail");

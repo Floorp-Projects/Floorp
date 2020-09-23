@@ -2048,7 +2048,7 @@ static void SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow) {
   // If we used the startup ID, that already contains the focus timestamp;
   // we don't want to reuse the timestamp next time we raise the window
   GTKToolkit->SetFocusTimestamp(0);
-  GTKToolkit->SetDesktopStartupID(EmptyCString());
+  GTKToolkit->SetDesktopStartupID(""_ns);
 }
 
 /* static */

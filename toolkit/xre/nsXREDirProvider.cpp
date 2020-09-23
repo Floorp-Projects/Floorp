@@ -1419,7 +1419,7 @@ nsresult nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile,
   OSErr err = ::FSFindFolder(kUserDomain, folderType, kCreateFolder, &fsRef);
   NS_ENSURE_FALSE(err, NS_ERROR_FAILURE);
 
-  rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localDir));
+  rv = NS_NewNativeLocalFile(""_ns, true, getter_AddRefs(localDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILocalFileMac> dirFileMac = do_QueryInterface(localDir);

@@ -53,7 +53,7 @@ already_AddRefed<EmptyBody> EmptyBody::Create(
     AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
     ErrorResult& aRv) {
   nsCOMPtr<nsIInputStream> bodyStream;
-  aRv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), EmptyCString());
+  aRv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), ""_ns);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

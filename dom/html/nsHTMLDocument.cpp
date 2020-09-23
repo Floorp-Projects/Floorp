@@ -223,7 +223,7 @@ void nsHTMLDocument::TryUserForcedCharset(nsIContentViewer* aCv,
       }
       aEncoding = WrapNotNull(encoding);
       aCharsetSource = kCharsetFromUserForced;
-      aDocShell->SetCharset(EmptyCString());
+      aDocShell->SetCharset(""_ns);
     }
   }
 }

@@ -835,7 +835,7 @@ GetUnreversedHostFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
     ReverseString(src, dest);
     result->SetAsAString(dest);
   } else {
-    result->SetAsAString(EmptyString());
+    result->SetAsAString(u""_ns);
   }
   result.forget(_result);
   return NS_OK;

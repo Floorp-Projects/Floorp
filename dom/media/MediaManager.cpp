@@ -1558,8 +1558,8 @@ class GetUserMediaTask : public Runnable {
     }
   }
 
-  void Fail(MediaMgrError::Name aName, const nsString& aMessage = EmptyString(),
-            const nsString& aConstraint = EmptyString()) {
+  void Fail(MediaMgrError::Name aName, const nsString& aMessage = u""_ns,
+            const nsString& aConstraint = u""_ns) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "GetUserMediaTask::Fail",
         [aName, aMessage, aConstraint, holder = std::move(mHolder)]() mutable {
@@ -1658,7 +1658,7 @@ class GetUserMediaTask : public Runnable {
   }
 
   nsresult Denied(MediaMgrError::Name aName,
-                  const nsString& aMessage = EmptyString()) {
+                  const nsString& aMessage = u""_ns) {
     // We add a disabled listener to the StreamListeners array until accepted
     // If this was the only active MediaStream, remove the window from the list.
     if (NS_IsMainThread()) {

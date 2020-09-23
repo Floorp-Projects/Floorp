@@ -82,7 +82,7 @@ TEST(TestURIMutator, Mutator)
 
   // Check that calling Finalize twice will fail.
   NS_MutateURI mutator(newURL);
-  rv = mutator.SetQuery(EmptyCString()).Finalize(uri2);
+  rv = mutator.SetQuery(""_ns).Finalize(uri2);
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(uri2->GetSpec(out), NS_OK);
   ASSERT_TRUE(out == "https://mozilla.org/path#newref"_ns);

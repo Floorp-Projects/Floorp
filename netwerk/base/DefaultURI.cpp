@@ -408,7 +408,7 @@ DefaultURI::Mutator::SetUserPass(const nsACString& aUserPass,
   int32_t index = aUserPass.FindChar(':');
   if (index == kNotFound) {
     mMutator->SetUsername(aUserPass);
-    mMutator->SetPassword(EmptyCString());
+    mMutator->SetPassword(""_ns);
     return mMutator->GetStatus();
   }
 
@@ -487,9 +487,9 @@ DefaultURI::Mutator::SetPathQueryRef(const nsACString& aPathQueryRef,
     return NS_ERROR_NULL_POINTER;
   }
   if (aPathQueryRef.IsEmpty()) {
-    mMutator->SetFilePath(EmptyCString());
-    mMutator->SetQuery(EmptyCString());
-    mMutator->SetRef(EmptyCString());
+    mMutator->SetFilePath(""_ns);
+    mMutator->SetQuery(""_ns);
+    mMutator->SetRef(""_ns);
     return mMutator->GetStatus();
   }
 

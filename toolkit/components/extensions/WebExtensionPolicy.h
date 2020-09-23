@@ -211,7 +211,7 @@ class WebExtensionPolicy final : public nsISupports,
   MatchGlobSet mWebAccessiblePaths;
 
   dom::Nullable<nsTArray<nsString>> mBackgroundScripts;
-  nsString mBackgroundWorkerScript = EmptyString();
+  nsString mBackgroundWorkerScript;
 
   nsTArray<RefPtr<WebExtensionContentScript>> mContentScripts;
 

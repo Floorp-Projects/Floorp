@@ -820,7 +820,7 @@ void nsHtml5TreeOpExecutor::MaybeComplainAboutCharset(const char* aMsgId,
   nsContentUtils::ReportToConsole(
       aError ? nsIScriptError::errorFlag : nsIScriptError::warningFlag,
       "HTML parser"_ns, mDocument, nsContentUtils::eHTMLPARSER_PROPERTIES,
-      aMsgId, nsTArray<nsString>(), nullptr, EmptyString(), aLineNumber);
+      aMsgId, nsTArray<nsString>(), nullptr, u""_ns, aLineNumber);
 }
 
 void nsHtml5TreeOpExecutor::ComplainAboutBogusProtocolCharset(Document* aDoc) {
@@ -840,7 +840,7 @@ void nsHtml5TreeOpExecutor::MaybeComplainAboutDeepTree(uint32_t aLineNumber) {
   nsContentUtils::ReportToConsole(
       nsIScriptError::errorFlag, "HTML parser"_ns, mDocument,
       nsContentUtils::eHTMLPARSER_PROPERTIES, "errDeepTree",
-      nsTArray<nsString>(), nullptr, EmptyString(), aLineNumber);
+      nsTArray<nsString>(), nullptr, u""_ns, aLineNumber);
 }
 
 nsHtml5Parser* nsHtml5TreeOpExecutor::GetParser() {

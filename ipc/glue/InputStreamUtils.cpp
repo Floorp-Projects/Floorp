@@ -333,7 +333,7 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
   switch (aParams.type()) {
     case InputStreamParams::TStringInputStreamParams: {
       nsCOMPtr<nsIInputStream> stream;
-      NS_NewCStringInputStream(getter_AddRefs(stream), EmptyCString());
+      NS_NewCStringInputStream(getter_AddRefs(stream), ""_ns);
       serializable = do_QueryInterface(stream);
     } break;
 

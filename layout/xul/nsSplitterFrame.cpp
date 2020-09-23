@@ -356,8 +356,8 @@ void nsSplitterFrameInner::MouseUp(nsPresContext* aPresContext,
     State newState = GetState();
     // if the state is dragging then make it Open.
     if (newState == Dragging) {
-      mOuter->mContent->AsElement()->SetAttr(
-          kNameSpaceID_None, nsGkAtoms::state, EmptyString(), true);
+      mOuter->mContent->AsElement()->SetAttr(kNameSpaceID_None,
+                                             nsGkAtoms::state, u""_ns, true);
     }
 
     mPressed = false;

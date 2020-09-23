@@ -221,8 +221,6 @@ static nsCString CollectProfileOrEmptyString(bool aIsShuttingDown) {
   if (profile) {
     size_t len = strlen(profile.get());
     profileCString.Adopt(profile.release(), len);
-  } else {
-    profileCString = EmptyCString();
   }
   return profileCString;
 }

@@ -1297,8 +1297,8 @@ bool Element::ToggleAttribute(const nsAString& aName,
       aError.Throw(NS_ERROR_OUT_OF_MEMORY);
       return false;
     }
-    aError = SetAttr(kNameSpaceID_None, nameAtom, EmptyString(),
-                     aTriggeringPrincipal, true);
+    aError = SetAttr(kNameSpaceID_None, nameAtom, u""_ns, aTriggeringPrincipal,
+                     true);
     return true;
   }
   if (aForce.WasPassed() && aForce.Value()) {
@@ -3678,7 +3678,7 @@ TextEditor* Element::GetTextEditorInternal() {
 
 nsresult Element::SetBoolAttr(nsAtom* aAttr, bool aValue) {
   if (aValue) {
-    return SetAttr(kNameSpaceID_None, aAttr, EmptyString(), true);
+    return SetAttr(kNameSpaceID_None, aAttr, u""_ns, true);
   }
 
   return UnsetAttr(kNameSpaceID_None, aAttr, true);

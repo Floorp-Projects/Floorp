@@ -504,7 +504,7 @@ TEST_F(GfxConfigManager, WebRenderForceAngleDisabled) {
 }
 
 TEST_F(GfxConfigManager, WebRenderD3D11HwAngleDisabled) {
-  mFeatures.mD3D11HwAngle.UserDisable("", EmptyCString());
+  mFeatures.mD3D11HwAngle.UserDisable("", ""_ns);
   ConfigureWebRender();
 
   EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
@@ -520,7 +520,7 @@ TEST_F(GfxConfigManager, WebRenderD3D11HwAngleDisabled) {
 
 TEST_F(GfxConfigManager, WebRenderD3D11HwAngleAndForceAngleDisabled) {
   mWrForceAngle = false;
-  mFeatures.mD3D11HwAngle.UserDisable("", EmptyCString());
+  mFeatures.mD3D11HwAngle.UserDisable("", ""_ns);
   ConfigureWebRender();
 
   EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
@@ -535,7 +535,7 @@ TEST_F(GfxConfigManager, WebRenderD3D11HwAngleAndForceAngleDisabled) {
 }
 
 TEST_F(GfxConfigManager, WebRenderGPUProcessDisabled) {
-  mFeatures.mGPUProcess.UserDisable("", EmptyCString());
+  mFeatures.mGPUProcess.UserDisable("", ""_ns);
   ConfigureWebRender();
 
   EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());

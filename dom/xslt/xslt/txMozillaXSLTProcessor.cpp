@@ -81,7 +81,7 @@ nsresult txToDocHandlerFactory::createHandlerWith(
           new txMozillaXMLOutput(aFormat, mObserver));
 
       nsresult rv = handler->createResultDocument(
-          EmptyString(), kNameSpaceID_None, mSourceDocument, mDocumentIsData);
+          u""_ns, kNameSpaceID_None, mSourceDocument, mDocumentIsData);
       if (NS_SUCCEEDED(rv)) {
         *aHandler = handler.release();
       }
@@ -935,7 +935,7 @@ void txMozillaXSLTProcessor::reportError(nsresult aResult,
         mozilla::services::GetStringBundleService();
     if (sbs) {
       nsString errorText;
-      sbs->FormatStatusMessage(aResult, EmptyString().get(), errorText);
+      sbs->FormatStatusMessage(aResult, u"", errorText);
 
       nsAutoString errorMessage;
       nsCOMPtr<nsIStringBundle> bundle;

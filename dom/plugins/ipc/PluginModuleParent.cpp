@@ -977,7 +977,7 @@ bool PluginModuleChromeParent::ShouldContinueFromReplyTimeout() {
 #endif  // XP_WIN
 
   TerminateChildProcess(MessageLoop::current(), mozilla::ipc::kInvalidProcessId,
-                        "ModalHangUI"_ns, EmptyString());
+                        "ModalHangUI"_ns, u""_ns);
   GetIPCChannel()->CloseWithTimeout();
   return false;
 }
@@ -1077,7 +1077,7 @@ void PluginModuleChromeParent::TerminateChildProcess(
   // support recursive locking.
   nsAutoString dumpId;
   if (aDumpId.IsEmpty()) {
-    TakeFullMinidump(aContentPid, EmptyString(), dumpId);
+    TakeFullMinidump(aContentPid, u""_ns, dumpId);
   }
 
   mozilla::MutexAutoLock lock(mCrashReporterMutex);

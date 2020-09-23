@@ -1980,8 +1980,7 @@ WSRunScanner::TextFragmentData::GetReplaceRangeDataAtEndOfDeletionRange(
     }
     // XXX Why don't we remove all invisible white-spaces?
     MOZ_ASSERT(invisibleTrailingWhiteSpaceRangeAtEnd.StartRef() == endToDelete);
-    return ReplaceRangeData(invisibleTrailingWhiteSpaceRangeAtEnd,
-                            EmptyString());
+    return ReplaceRangeData(invisibleTrailingWhiteSpaceRangeAtEnd, u""_ns);
   }
 
   if (IsPreformatted()) {
@@ -2060,8 +2059,7 @@ WSRunScanner::TextFragmentData::GetReplaceRangeDataAtStartOfDeletionRange(
     }
 
     // XXX Why don't we remove all leading white-spaces?
-    return ReplaceRangeData(invisibleLeadingWhiteSpaceRangeAtStart,
-                            EmptyString());
+    return ReplaceRangeData(invisibleLeadingWhiteSpaceRangeAtStart, u""_ns);
   }
 
   if (IsPreformatted()) {

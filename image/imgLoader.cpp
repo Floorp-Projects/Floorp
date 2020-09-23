@@ -525,8 +525,8 @@ class imgMemoryReporter final : public nsIMemoryReporter {
     nsAutoCString path(aPathPrefix);
     path.Append(aPathSuffix);
 
-    aHandleReport->Callback(EmptyCString(), path, aKind, UNITS_BYTES, aValue,
-                            desc, aData);
+    aHandleReport->Callback(""_ns, path, aKind, UNITS_BYTES, aValue, desc,
+                            aData);
   }
 
   static void RecordCounterForRequest(imgRequest* aRequest,
@@ -702,7 +702,7 @@ static bool ShouldLoadCachedImage(imgRequest* aImgRequest,
 
   int16_t decision = nsIContentPolicy::REJECT_REQUEST;
   rv = NS_CheckContentLoadPolicy(contentLocation, secCheckLoadInfo,
-                                 EmptyCString(),  // mime guess
+                                 ""_ns,  // mime guess
                                  &decision, nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
     return false;
@@ -731,8 +731,8 @@ static bool ShouldLoadCachedImage(imgRequest* aImgRequest,
       decision = nsIContentPolicy::REJECT_REQUEST;
       rv = nsMixedContentBlocker::ShouldLoad(insecureRedirect, contentLocation,
                                              secCheckLoadInfo,
-                                             EmptyCString(),  // mime guess
-                                             true,            // aReportError
+                                             ""_ns,  // mime guess
+                                             true,   // aReportError
                                              &decision);
       if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
         return false;
@@ -2112,7 +2112,7 @@ imgLoader::LoadImageXPCOM(
   nsresult rv = LoadImage(
       aURI, aInitialDocumentURI, aReferrerInfo, aTriggeringPrincipal, 0,
       aLoadGroup, aObserver, aLoadingDocument, aLoadingDocument, aLoadFlags,
-      aCacheKey, aContentPolicyType, EmptyString(),
+      aCacheKey, aContentPolicyType, u""_ns,
       /* aUseUrgentStartForChannel */ false, /* aListPreload */ false, &proxy);
   *_retval = proxy;
   return rv;

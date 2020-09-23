@@ -151,10 +151,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIURI> titleURL;
-  rv = NS_MutateURI(uri)
-           .SetQuery(EmptyCString())
-           .SetRef(EmptyCString())
-           .Finalize(titleURL);
+  rv = NS_MutateURI(uri).SetQuery(""_ns).SetRef(""_ns).Finalize(titleURL);
   if (NS_FAILED(rv)) {
     titleURL = uri;
   }
@@ -182,8 +179,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
     if (NS_FAILED(rv)) return rv;
     if (!pw.IsEmpty()) {
       nsCOMPtr<nsIURI> newUri;
-      rv =
-          NS_MutateURI(titleURL).SetPassword(EmptyCString()).Finalize(titleURL);
+      rv = NS_MutateURI(titleURL).SetPassword(""_ns).Finalize(titleURL);
       if (NS_FAILED(rv)) return rv;
     }
 

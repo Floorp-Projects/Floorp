@@ -275,8 +275,8 @@ bool ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type,
   }
   nsString filenameStr(NS_ConvertASCIItoUTF16(filename.get()));
   nsresult rv = errorObject->InitWithWindowID(
-      NS_ConvertASCIItoUTF16(errorMessage.ref()), filenameStr, EmptyString(),
-      line, column, nsIScriptError::warningFlag, "XPConnect", windowId);
+      NS_ConvertASCIItoUTF16(errorMessage.ref()), filenameStr, u""_ns, line,
+      column, nsIScriptError::warningFlag, "XPConnect", windowId);
   NS_ENSURE_SUCCESS(rv, true);
   rv = consoleService->LogMessage(errorObject);
   NS_ENSURE_SUCCESS(rv, true);

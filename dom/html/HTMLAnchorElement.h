@@ -102,7 +102,7 @@ class HTMLAnchorElement final : public nsGenericHTMLElement, public Link {
     SetHTMLAttr(nsGkAtoms::referrerpolicy, aValue, rv);
   }
   void GetReferrerPolicy(DOMString& aPolicy) {
-    GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aPolicy);
+    GetEnumAttr(nsGkAtoms::referrerpolicy, "", aPolicy);
   }
   nsDOMTokenList* RelList();
   void GetHreflang(DOMString& aValue) {

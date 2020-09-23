@@ -331,7 +331,7 @@ void nsExpatDriver::HandleStartElementForSystemPrincipal(
 
     nsContentUtils::ReportToConsoleNonLocalized(
         error, nsIScriptError::warningFlag, "XML Document"_ns, doc, nullptr,
-        EmptyString(), lineNumber, colNumber);
+        u""_ns, lineNumber, colNumber);
   }
 }
 

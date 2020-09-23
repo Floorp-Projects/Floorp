@@ -325,7 +325,7 @@ already_AddRefed<InternalResponse> InternalResponse::Unfiltered() {
 already_AddRefed<InternalResponse> InternalResponse::OpaqueResponse() {
   MOZ_ASSERT(!mWrappedResponse,
              "Can't OpaqueResponse a already wrapped response");
-  RefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
+  RefPtr<InternalResponse> response = new InternalResponse(0, ""_ns);
   response->mType = ResponseType::Opaque;
   response->mChannelInfo = mChannelInfo;
   if (mPrincipalInfo) {

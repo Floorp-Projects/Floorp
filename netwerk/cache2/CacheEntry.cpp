@@ -256,7 +256,7 @@ nsresult CacheEntry::HashingKeyWithStorage(nsACString& aResult) const {
 }
 
 nsresult CacheEntry::HashingKey(nsACString& aResult) const {
-  return HashingKey(EmptyCString(), mEnhanceID, mURI, aResult);
+  return HashingKey(""_ns, mEnhanceID, mURI, aResult);
 }
 
 // static

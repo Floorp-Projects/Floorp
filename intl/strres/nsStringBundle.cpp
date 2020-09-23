@@ -390,14 +390,14 @@ nsStringBundleBase::CollectReports(nsIHandleReportCallback* aHandleReport,
       "localized) .properties file. Data may be shared between "
       "processes."_ns;
 
-  aHandleReport->Callback(EmptyCString(), path, KIND_HEAP, UNITS_BYTES,
-                          heapSize, desc, aData);
+  aHandleReport->Callback(""_ns, path, KIND_HEAP, UNITS_BYTES, heapSize, desc,
+                          aData);
 
   if (sharedSize) {
     path.ReplaceLiteral(0, sizeof("explicit/") - 1, "shared-");
 
-    aHandleReport->Callback(EmptyCString(), path, KIND_OTHER, UNITS_BYTES,
-                            sharedSize, desc, aData);
+    aHandleReport->Callback(""_ns, path, KIND_OTHER, UNITS_BYTES, sharedSize,
+                            desc, aData);
   }
 
   return NS_OK;

@@ -914,8 +914,7 @@ class LoadRunnable : public Runnable {
   LoadRunnable(StorageDBParent* aParent, TaskType aType,
                const nsACString& aOriginSuffix,
                const nsACString& aOriginNoSuffix,
-               const nsAString& aKey = EmptyString(),
-               const nsAString& aValue = EmptyString())
+               const nsAString& aKey = u""_ns, const nsAString& aValue = u""_ns)
       : Runnable("dom::LoadRunnable"),
         mParent(aParent),
         mType(aType),

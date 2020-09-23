@@ -1210,7 +1210,7 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
         }
       }
     } else {
-      mDeviceModelId = EmptyCString();
+      mDeviceModelId.Truncate();
     }
     mUserAgentIsDirty = true;
   }
@@ -2625,13 +2625,13 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
   nsAutoCString username;
   aURI->GetUsername(username);
 
-  // TODO For now pass EmptyCString() for topWindowOrigin for all speculative
+  // TODO For now pass ""_ns for topWindowOrigin for all speculative
   // connection attempts, but ideally we should pass the accurate top window
   // origin here.  This would require updating the nsISpeculativeConnect API
   // and all of its consumers.
-  RefPtr<nsHttpConnectionInfo> ci = new nsHttpConnectionInfo(
-      host, port, EmptyCString(), username, EmptyCString(), nullptr,
-      originAttributes, aURI->SchemeIs("https"));
+  RefPtr<nsHttpConnectionInfo> ci =
+      new nsHttpConnectionInfo(host, port, ""_ns, username, ""_ns, nullptr,
+                               originAttributes, aURI->SchemeIs("https"));
   ci->SetAnonymous(anonymous);
 
   return SpeculativeConnect(ci, aCallbacks);

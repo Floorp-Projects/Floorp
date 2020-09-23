@@ -1906,7 +1906,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
 
   nsIPrincipal* principal = aParentSheet.Principal();
   nsresult rv = CheckContentPolicy(LoaderPrincipal(), principal, aURL, context,
-                                   EmptyString(), IsPreload::No);
+                                   u""_ns, IsPreload::No);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (aParentData) {
       MarkLoadTreeFailed(*aParentData);
@@ -1946,9 +1946,9 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
     std::tie(sheet, state) =
         CreateSheet(aURL, nullptr, principal, aParentSheet.ParsingMode(),
                     CORS_NONE, aParentData ? aParentData->mEncoding : nullptr,
-                    EmptyString(),  // integrity is only checked on main sheet
+                    u""_ns,  // integrity is only checked on main sheet
                     aParentData && aParentData->mSyncLoad, IsPreload::No);
-    PrepareSheet(*sheet, EmptyString(), EmptyString(), aMedia, IsAlternate::No,
+    PrepareSheet(*sheet, u""_ns, u""_ns, aMedia, IsAlternate::No,
                  IsExplicitlyEnabled::No);
   }
 
@@ -1989,9 +1989,9 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheetSync(
     UseSystemPrincipal aUseSystemPrincipal) {
   LOG(("css::Loader::LoadSheetSync"));
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
-  return InternalLoadNonDocumentSheet(
-      aURL, IsPreload::No, aParsingMode, aUseSystemPrincipal, nullptr,
-      referrerInfo, nullptr, CORS_NONE, EmptyString());
+  return InternalLoadNonDocumentSheet(aURL, IsPreload::No, aParsingMode,
+                                      aUseSystemPrincipal, nullptr,
+                                      referrerInfo, nullptr, CORS_NONE, u""_ns);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
@@ -2000,7 +2000,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
       aURI, IsPreload::No, aParsingMode, aUseSystemPrincipal, nullptr,
-      referrerInfo, aObserver, CORS_NONE, EmptyString());
+      referrerInfo, aObserver, CORS_NONE, u""_ns);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
@@ -2033,7 +2033,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   nsIPrincipal* loadingPrincipal = LoaderPrincipal();
   nsIPrincipal* triggeringPrincipal = loadingPrincipal;
   nsresult rv = CheckContentPolicy(loadingPrincipal, triggeringPrincipal, aURL,
-                                   mDocument, EmptyString(), aIsPreload);
+                                   mDocument, u""_ns, aIsPreload);
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
@@ -2043,7 +2043,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
       CreateSheet(aURL, nullptr, triggeringPrincipal, aParsingMode, aCORSMode,
                   aPreloadEncoding, aIntegrity, syncLoad, aIsPreload);
 
-  PrepareSheet(*sheet, EmptyString(), EmptyString(), nullptr, IsAlternate::No,
+  PrepareSheet(*sheet, u""_ns, u""_ns, nullptr, IsAlternate::No,
                IsExplicitlyEnabled::No);
 
   auto data = MakeRefPtr<SheetLoadData>(

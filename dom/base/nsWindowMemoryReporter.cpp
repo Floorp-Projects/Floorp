@@ -183,8 +183,8 @@ static void ReportAmount(const nsCString& aBasePath, const char* aPathTail,
   nsAutoCString path(aBasePath);
   path += aPathTail;
 
-  aHandleReport->Callback(EmptyCString(), path, aKind, aUnits, aAmount,
-                          aDescription, aData);
+  aHandleReport->Callback(""_ns, path, aKind, aUnits, aAmount, aDescription,
+                          aData);
 }
 
 static void ReportSize(const nsCString& aBasePath, const char* aPathTail,
@@ -525,7 +525,7 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
     AppendWindowURI(window, path, aAnonymize);
 
     aHandleReport->Callback(
-        /* process = */ EmptyCString(), path, nsIMemoryReporter::KIND_OTHER,
+        /* process = */ ""_ns, path, nsIMemoryReporter::KIND_OTHER,
         nsIMemoryReporter::UNITS_COUNT,
         /* amount = */ 1,
         /* description = */ "A ghost window."_ns, aData);
@@ -565,9 +565,9 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   nsXULPrototypeCache::CollectMemoryReports(aHandleReport, aData);
 #endif
 
-#define REPORT(_path, _amount, _desc)                                          \
-  aHandleReport->Callback(EmptyCString(), nsLiteralCString(_path), KIND_OTHER, \
-                          UNITS_BYTES, _amount, nsLiteralCString(_desc),       \
+#define REPORT(_path, _amount, _desc)                                    \
+  aHandleReport->Callback(""_ns, nsLiteralCString(_path), KIND_OTHER,    \
+                          UNITS_BYTES, _amount, nsLiteralCString(_desc), \
                           aData);
 
   REPORT("window-objects/dom/element-nodes",

@@ -1351,8 +1351,8 @@ nsresult EditorBase::MarkElementDirty(Element& aElement) {
   if (!OutputsMozDirty()) {
     return NS_OK;
   }
-  DebugOnly<nsresult> rvIgnored = aElement.SetAttr(
-      kNameSpaceID_None, nsGkAtoms::mozdirty, EmptyString(), false);
+  DebugOnly<nsresult> rvIgnored =
+      aElement.SetAttr(kNameSpaceID_None, nsGkAtoms::mozdirty, u""_ns, false);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "Element::SetAttr(nsGkAtoms::mozdirty) failed, but ignored");
@@ -2359,7 +2359,7 @@ nsresult EditorBase::InsertTextWithTransaction(
     CheckedInt<int32_t> newOffset;
     if (!pointToInsert.IsInTextNode()) {
       // create a text node
-      RefPtr<nsTextNode> newNode = CreateTextNode(EmptyString());
+      RefPtr<nsTextNode> newNode = CreateTextNode(u""_ns);
       if (NS_WARN_IF(!newNode)) {
         return NS_ERROR_FAILURE;
       }
@@ -5189,8 +5189,8 @@ void EditorBase::AutoEditActionDataSetter::SetColorData(
 
   if (aData.IsEmpty()) {
     // When removing color/background-color, let's use empty string.
-    MOZ_ASSERT(!EmptyString().IsVoid());
-    mData = EmptyString();
+    mData.Truncate();
+    MOZ_ASSERT(!mData.IsVoid());
     return;
   }
 

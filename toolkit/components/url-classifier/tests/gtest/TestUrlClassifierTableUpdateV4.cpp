@@ -207,7 +207,7 @@ static void testOpenLookupCache() {
 
   RunTestInNewThread([&]() -> void {
     RefPtr<LookupCacheV4> cache =
-        new LookupCacheV4(nsCString(GTEST_TABLE), EmptyCString(), file);
+        new LookupCacheV4(nsCString(GTEST_TABLE), ""_ns, file);
     nsresult rv = cache->Init();
     ASSERT_EQ(rv, NS_OK);
 

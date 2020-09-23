@@ -100,10 +100,10 @@ class GfxInfoBase : public nsIGfxInfo,
   static bool sDriverInfoObserverInitialized;
   static bool sShutdownOccurred;
 
-  virtual nsString Model() { return EmptyString(); }
-  virtual nsString Hardware() { return EmptyString(); }
-  virtual nsString Product() { return EmptyString(); }
-  virtual nsString Manufacturer() { return EmptyString(); }
+  virtual nsString Model() { return u""_ns; }
+  virtual nsString Hardware() { return u""_ns; }
+  virtual nsString Product() { return u""_ns; }
+  virtual nsString Manufacturer() { return u""_ns; }
   virtual uint32_t OperatingSystemVersion() { return 0; }
   virtual uint32_t OperatingSystemBuild() { return 0; }
 

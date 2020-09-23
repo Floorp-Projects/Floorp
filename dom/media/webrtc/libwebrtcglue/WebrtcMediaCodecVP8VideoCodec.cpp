@@ -1073,8 +1073,8 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
     res = format->SetInteger(nsCString("frame-rate"), 30);
     res = format->SetInteger(nsCString("i-frame-interval"), 100);
 
-    mJavaEncoder = java::CodecProxy::Create(true, format, nullptr,
-                                            mJavaCallbacks, EmptyString());
+    mJavaEncoder =
+        java::CodecProxy::Create(true, format, nullptr, mJavaCallbacks, u""_ns);
 
     if (mJavaEncoder == nullptr) {
       return WEBRTC_VIDEO_CODEC_ERROR;

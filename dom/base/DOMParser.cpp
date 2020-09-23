@@ -309,9 +309,9 @@ already_AddRefed<Document> DOMParser::SetUpDocument(DocumentFlavor aFlavor,
   NS_ASSERTION(mDocumentURI, "Must have document URI by now");
 
   nsCOMPtr<Document> doc;
-  nsresult rv = NS_NewDOMDocument(
-      getter_AddRefs(doc), EmptyString(), EmptyString(), nullptr, mDocumentURI,
-      mBaseURI, mPrincipal, true, scriptHandlingObject, aFlavor);
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(doc), u""_ns, u""_ns, nullptr,
+                                  mDocumentURI, mBaseURI, mPrincipal, true,
+                                  scriptHandlingObject, aFlavor);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return nullptr;

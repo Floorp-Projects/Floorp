@@ -157,8 +157,8 @@ class PostMessageRunnable final : public CancelableRunnable {
     }
 
     event->InitMessageEvent(nullptr, u"message"_ns, CanBubble::eNo,
-                            Cancelable::eNo, value, EmptyString(),
-                            EmptyString(), nullptr, ports);
+                            Cancelable::eNo, value, u""_ns, u""_ns, nullptr,
+                            ports);
     event->SetTrusted(true);
 
     mPort->DispatchEvent(*event);

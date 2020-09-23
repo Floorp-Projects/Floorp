@@ -8307,7 +8307,7 @@ class InternalLoadEvent : public Runnable {
     // expect. By the time the event is fired, both window targeting and file
     // downloading have been handled, so we should never have an internal load
     // event that retargets or had a download.
-    mLoadState->SetTarget(EmptyString());
+    mLoadState->SetTarget(u""_ns);
     mLoadState->SetFileName(VoidString());
   }
 
@@ -8425,7 +8425,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
 
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(aLoadState->URI(), secCheckLoadInfo,
-                                   EmptyCString(),  // mime guess
+                                   ""_ns,  // mime guess
                                    &shouldLoad);
 
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
@@ -8525,7 +8525,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
 
       rv = win->Open(NS_ConvertUTF8toUTF16(spec),
                      aLoadState->Target(),  // window name
-                     EmptyString(),         // Features
+                     u""_ns,                // Features
                      loadState,
                      true,  // aForceNoOpener
                      getter_AddRefs(newBC));
@@ -8535,7 +8535,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
 
     rv = win->OpenNoNavigate(NS_ConvertUTF8toUTF16(spec),
                              aLoadState->Target(),  // window name
-                             EmptyString(),         // Features
+                             u""_ns,                // Features
                              getter_AddRefs(newBC));
 
     // In some cases the Open call doesn't actually result in a new
@@ -8570,7 +8570,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
   // name to the empty string to prevent recursive retargeting!
   //
   // No window target
-  aLoadState->SetTarget(EmptyString());
+  aLoadState->SetTarget(u""_ns);
   // No forced download
   aLoadState->SetFileName(VoidString());
   return targetContext->InternalLoad(aLoadState);
@@ -9713,8 +9713,7 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
       }
 
       // we really need to have a content type associated with this stream!!
-      postChannel->SetUploadStream(aLoadState->PostDataStream(), EmptyCString(),
-                                   -1);
+      postChannel->SetUploadStream(aLoadState->PostDataStream(), ""_ns, -1);
     }
 
     /* If there is a valid postdata *and* it is a History Load,
@@ -10519,7 +10518,7 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
     }
   } else {
     // Tell the shell it's at an anchor, without scrolling.
-    presShell->GoToAnchor(EmptyString(), false);
+    presShell->GoToAnchor(u""_ns, false);
 
     // An empty anchor was found, but if it's a load from history,
     // we don't have to jump to the top of the page. Scrollbar
@@ -11081,7 +11080,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
             ("document %p UpdateActiveEntry non-replace", this));
     UpdateActiveEntry(
         true, /* aPreviousScrollPos = */ Nothing(), aNewURI, aNewURI,
-        aDocument->NodePrincipal(), aDocument->GetCsp(), EmptyString(),
+        aDocument->NodePrincipal(), aDocument->GetCsp(), u""_ns,
         /* aScrollRestorationIsManual = */ Nothing(), aData, uriWasModified);
   } else {
     // Step 3.
@@ -11438,7 +11437,7 @@ nsresult nsDocShell::AddToSessionHistory(
 
   // Title is set in nsDocShell::SetTitle()
   entry->Create(aURI,                 // uri
-                EmptyString(),        // Title
+                u""_ns,               // Title
                 inputStream,          // Post data stream
                 cacheKey,             // CacheKey
                 mContentTypeHint,     // Content-type
@@ -12622,7 +12621,7 @@ nsresult nsDocShell::OnLeaveLink() {
   nsresult rv = NS_ERROR_FAILURE;
 
   if (browserChrome) {
-    rv = browserChrome->SetLinkStatus(EmptyString());
+    rv = browserChrome->SetLinkStatus(u""_ns);
   }
   return rv;
 }

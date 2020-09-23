@@ -486,7 +486,7 @@ void ReadStream::Inner::OpenStreamFailed() {
   MOZ_DIAGNOSTIC_ASSERT(!mStream);
   MOZ_DIAGNOSTIC_ASSERT(!mSnappyStream);
   mMutex.AssertCurrentThreadOwns();
-  Unused << NS_NewCStringInputStream(getter_AddRefs(mStream), EmptyCString());
+  Unused << NS_NewCStringInputStream(getter_AddRefs(mStream), ""_ns);
   mSnappyStream = mStream;
   mStream->Close();
   NoteClosed();

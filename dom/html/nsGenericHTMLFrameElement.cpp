@@ -279,8 +279,7 @@ void nsGenericHTMLFrameElement::AfterMaybeChangeAttr(
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::src) {
       mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
-          this, aValue ? aValue->String() : EmptyString(),
-          aMaybeScriptedPrincipal);
+          this, aValue ? aValue->String() : u""_ns, aMaybeScriptedPrincipal);
       if (!IsHTMLElement(nsGkAtoms::iframe) ||
           !HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc)) {
         // Don't propagate error here. The attribute was successfully
@@ -292,11 +291,7 @@ void nsGenericHTMLFrameElement::AfterMaybeChangeAttr(
       RefPtr<BrowsingContext> bc =
           mFrameLoader ? mFrameLoader->GetExtantBrowsingContext() : nullptr;
       if (bc) {
-        if (aValue) {
-          MOZ_ALWAYS_SUCCEEDS(bc->SetName(aValue->String()));
-        } else {
-          MOZ_ALWAYS_SUCCEEDS(bc->SetName(EmptyString()));
-        }
+        MOZ_ALWAYS_SUCCEEDS(bc->SetName(aValue ? aValue->String() : u""_ns));
       }
     }
   }

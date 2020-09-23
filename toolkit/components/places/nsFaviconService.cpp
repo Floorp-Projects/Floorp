@@ -751,7 +751,7 @@ nsresult nsFaviconService::OptimizeIconSizes(IconData& aIcon) {
         nsCOMPtr<nsIInputStream> iconStream;
         rv = GetImgTools()->EncodeScaledImage(
             container, newPayload.mimeType, newPayload.width, newPayload.width,
-            EmptyString(), getter_AddRefs(iconStream));
+            u""_ns, getter_AddRefs(iconStream));
         NS_ENSURE_SUCCESS(rv, rv);
         // Read the stream into the new buffer.
         rv = NS_ConsumeStream(iconStream, UINT32_MAX, newPayload.data);

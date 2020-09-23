@@ -65,7 +65,7 @@ nsresult CachePushChecker::DoCheck() {
   }
 
   return ds->AsyncOpenURI(
-      mPushedURL, EmptyCString(),
+      mPushedURL, ""_ns,
       nsICacheStorage::OPEN_READONLY | nsICacheStorage::OPEN_SECRETLY, this);
 }
 

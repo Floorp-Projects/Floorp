@@ -49,7 +49,7 @@ already_AddRefed<nsICSSDeclaration> nsWinUtils::GetComputedStyleDeclaration(
   ErrorResult dummy;
   nsCOMPtr<Element> domElement(do_QueryInterface(elm));
   nsCOMPtr<nsICSSDeclaration> cssDecl =
-      window->GetComputedStyle(*domElement, EmptyString(), dummy);
+      window->GetComputedStyle(*domElement, u""_ns, dummy);
   dummy.SuppressException();
   return cssDecl.forget();
 }

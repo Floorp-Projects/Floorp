@@ -195,9 +195,8 @@ SessionStorageManager::GetStorage(mozIDOMWindow* aWindow,
 
   nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
-  RefPtr<SessionStorage> storage =
-      new SessionStorage(inner, aPrincipal, aStoragePrincipal, cache, this,
-                         EmptyString(), aPrivate);
+  RefPtr<SessionStorage> storage = new SessionStorage(
+      inner, aPrincipal, aStoragePrincipal, cache, this, u""_ns, aPrivate);
 
   storage.forget(aRetval);
   return NS_OK;
@@ -367,7 +366,7 @@ nsresult SessionStorageManager::Observe(
 
   // Clear everything, caches + database
   if (!strcmp(aTopic, "cookie-cleared")) {
-    ClearStorages(eAll, pattern, EmptyCString());
+    ClearStorages(eAll, pattern, ""_ns);
     return NS_OK;
   }
 
@@ -387,7 +386,7 @@ nsresult SessionStorageManager::Observe(
 
   if (!strcmp(aTopic, "profile-change")) {
     // For case caches are still referenced - clear them completely
-    ClearStorages(eAll, pattern, EmptyCString());
+    ClearStorages(eAll, pattern, ""_ns);
     mOATable.Clear();
     return NS_OK;
   }

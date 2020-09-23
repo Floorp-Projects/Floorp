@@ -108,7 +108,7 @@ TEST(ServiceWorkerRegistrar, TestNoFile)
 
 TEST(ServiceWorkerRegistrar, TestEmptyFile)
 {
-  ASSERT_TRUE(CreateFile(EmptyCString()))
+  ASSERT_TRUE(CreateFile(""_ns))
   << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;

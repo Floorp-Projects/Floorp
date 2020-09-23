@@ -9771,7 +9771,7 @@ nsresult HTMLEditor::CreateStyleForInsertText(
             *pointToPutCaret.ContainerAsContent())) {
       return NS_OK;
     }
-    RefPtr<Text> newEmptyTextNode = CreateTextNode(EmptyString());
+    RefPtr<Text> newEmptyTextNode = CreateTextNode(u""_ns);
     if (!newEmptyTextNode) {
       NS_WARNING("EditorBase::CreateTextNode() failed");
       return NS_ERROR_FAILURE;

@@ -258,10 +258,10 @@ class BlobURLsReporter final : public nsIMemoryReporter {
             specialDesc.IsEmpty() ? static_cast<const nsACString&>(desc)
                                   : static_cast<const nsACString&>(specialDesc);
         if (isMemoryFile) {
-          aCallback->Callback(EmptyCString(), path, KIND_OTHER, UNITS_BYTES,
+          aCallback->Callback(""_ns, path, KIND_OTHER, UNITS_BYTES,
                               size / refCount, descString, aData);
         } else {
-          aCallback->Callback(EmptyCString(), path, KIND_OTHER, UNITS_COUNT, 1,
+          aCallback->Callback(""_ns, path, KIND_OTHER, UNITS_COUNT, 1,
                               descString, aData);
         }
         continue;
@@ -277,8 +277,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
           "data cannot be freed until all URLs for it have been explicitly "
           "invalidated with URL.revokeObjectURL."_ns;
 
-      aCallback->Callback(EmptyCString(), path, KIND_OTHER, UNITS_COUNT, 1,
-                          desc, aData);
+      aCallback->Callback(""_ns, path, KIND_OTHER, UNITS_COUNT, 1, desc, aData);
     }
 
     return NS_OK;

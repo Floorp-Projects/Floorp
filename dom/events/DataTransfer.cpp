@@ -411,7 +411,7 @@ void DataTransfer::ClearData(const Optional<nsAString>& aFormat,
   if (aFormat.WasPassed()) {
     MozClearDataAtHelper(aFormat.Value(), 0, aSubjectPrincipal, aRv);
   } else {
-    MozClearDataAtHelper(EmptyString(), 0, aSubjectPrincipal, aRv);
+    MozClearDataAtHelper(u""_ns, 0, aSubjectPrincipal, aRv);
   }
 }
 

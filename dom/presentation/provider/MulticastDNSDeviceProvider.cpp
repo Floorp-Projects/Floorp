@@ -466,11 +466,11 @@ bool MulticastDNSDeviceProvider::FindDeviceById(const nsACString& aId,
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<Device> device = new Device(aId,
-                                     /* aName = */ EmptyCString(),
-                                     /* aType = */ EmptyCString(),
-                                     /* aHost = */ EmptyCString(),
+                                     /* aName = */ ""_ns,
+                                     /* aType = */ ""_ns,
+                                     /* aHost = */ ""_ns,
                                      /* aPort = */ 0,
-                                     /* aCertFingerprint */ EmptyCString(),
+                                     /* aCertFingerprint */ ""_ns,
                                      /* aState = */ DeviceState::eUnknown,
                                      /* aProvider = */ nullptr);
   size_t index = mDevices.IndexOf(device, 0, DeviceIdComparator());
@@ -487,11 +487,11 @@ bool MulticastDNSDeviceProvider::FindDeviceByAddress(const nsACString& aAddress,
                                                      uint32_t& aIndex) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<Device> device = new Device(/* aId = */ EmptyCString(),
-                                     /* aName = */ EmptyCString(),
-                                     /* aType = */ EmptyCString(), aAddress,
+  RefPtr<Device> device = new Device(/* aId = */ ""_ns,
+                                     /* aName = */ ""_ns,
+                                     /* aType = */ ""_ns, aAddress,
                                      /* aPort = */ 0,
-                                     /* aCertFingerprint */ EmptyCString(),
+                                     /* aCertFingerprint */ ""_ns,
                                      /* aState = */ DeviceState::eUnknown,
                                      /* aProvider = */ nullptr);
   size_t index = mDevices.IndexOf(device, 0, DeviceAddressComparator());
@@ -919,12 +919,11 @@ MulticastDNSDeviceProvider::GetOrCreateDevice(nsITCPDeviceInfo* aDeviceInfo) {
     uint16_t port;
     Unused << aDeviceInfo->GetPort(&port);
 
-    device =
-        new Device(id,
-                   /* aName = */ id,
-                   /* aType = */ EmptyCString(), address, port,
-                   /* aCertFingerprint */ EmptyCString(), DeviceState::eActive,
-                   /* aProvider = */ nullptr);
+    device = new Device(id,
+                        /* aName = */ id,
+                        /* aType = */ ""_ns, address, port,
+                        /* aCertFingerprint */ ""_ns, DeviceState::eActive,
+                        /* aProvider = */ nullptr);
   }
 
   return device.forget();

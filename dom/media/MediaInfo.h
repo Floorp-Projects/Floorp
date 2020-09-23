@@ -145,8 +145,7 @@ class VideoInfo : public TrackInfo {
       : VideoInfo(gfx::IntSize(aWidth, aHeight)) {}
 
   explicit VideoInfo(const gfx::IntSize& aSize)
-      : TrackInfo(kVideoTrack, u"2"_ns, u"main"_ns, EmptyString(),
-                  EmptyString(), true, 2),
+      : TrackInfo(kVideoTrack, u"2"_ns, u"main"_ns, u""_ns, u""_ns, true, 2),
         mDisplay(aSize),
         mStereoMode(StereoMode::MONO),
         mImage(aSize),
@@ -268,8 +267,7 @@ class VideoInfo : public TrackInfo {
 class AudioInfo : public TrackInfo {
  public:
   AudioInfo()
-      : TrackInfo(kAudioTrack, u"1"_ns, u"main"_ns, EmptyString(),
-                  EmptyString(), true, 1),
+      : TrackInfo(kAudioTrack, u"1"_ns, u"main"_ns, u""_ns, u""_ns, true, 1),
         mRate(0),
         mChannels(0),
         mChannelMap(AudioConfig::ChannelLayout::UNKNOWN_MAP),

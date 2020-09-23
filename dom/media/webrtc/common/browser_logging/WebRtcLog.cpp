@@ -128,7 +128,7 @@ void StopWebRtcLog() {
 nsCString ConfigAecLog() {
   nsCString aecLogDir;
   if (rtc::LogMessage::aec_debug()) {
-    return EmptyCString();
+    return ""_ns;
   }
 #if defined(ANDROID)
   aecLogDir.Assign(default_tmp_dir);
@@ -154,7 +154,7 @@ nsCString ConfigAecLog() {
 nsCString StartAecLog() {
   nsCString aecLogDir;
   if (rtc::LogMessage::aec_debug()) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   GetWebRtcLogPrefs();

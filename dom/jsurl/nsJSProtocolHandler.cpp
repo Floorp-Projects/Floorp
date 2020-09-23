@@ -135,10 +135,10 @@ static bool AllowedByCSP(nsIContentSecurityPolicy* aCSP,
 
   bool allowsInlineScript = true;
   nsresult rv = aCSP->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
-                                      EmptyString(),  // aNonce
-                                      true,           // aParserCreated
-                                      nullptr,        // aElement,
-                                      nullptr,        // nsICSPEventListener
+                                      u""_ns,   // aNonce
+                                      true,     // aParserCreated
+                                      nullptr,  // aElement,
+                                      nullptr,  // nsICSPEventListener
                                       aContentOfPseudoScript,  // aContent
                                       0,                       // aLineNumber
                                       0,                       // aColumnNumber
@@ -439,8 +439,8 @@ nsresult nsJSChannel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
   nsCOMPtr<nsIChannel> channel;
   RefPtr<nsJSThunk> thunk = mIOThunk;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel), aURI,
-                                        thunk.forget(), "text/html"_ns,
-                                        EmptyCString(), aLoadInfo);
+                                        thunk.forget(), "text/html"_ns, ""_ns,
+                                        aLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mIOThunk->Init(aURI);

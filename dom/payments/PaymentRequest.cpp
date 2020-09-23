@@ -873,8 +873,8 @@ void PaymentRequest::RespondAbortPayment(bool aSuccess) {
   if (mUpdateError.Failed()) {
     // Respond show with mUpdateError, set mUpdating to false.
     mUpdating = false;
-    RespondShowPayment(EmptyString(), ResponseData(), EmptyString(),
-                       EmptyString(), EmptyString(), std::move(mUpdateError));
+    RespondShowPayment(u""_ns, ResponseData(), u""_ns, u""_ns, u""_ns,
+                       std::move(mUpdateError));
     return;
   }
 
@@ -1009,7 +1009,7 @@ nsresult PaymentRequest::DispatchMerchantValidationEvent(
   MerchantValidationEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mValidationURL = EmptyString();
+  init.mValidationURL.Truncate();
 
   ErrorResult rv;
   RefPtr<MerchantValidationEvent> event =
@@ -1056,10 +1056,9 @@ nsresult PaymentRequest::UpdateShippingAddress(
     const nsAString& aOrganization, const nsAString& aRecipient,
     const nsAString& aPhone) {
   nsTArray<nsString> emptyArray;
-  mShippingAddress =
-      new PaymentAddress(GetOwner(), aCountry, emptyArray, aRegion, aRegionCode,
-                         aCity, aDependentLocality, aPostalCode, aSortingCode,
-                         EmptyString(), EmptyString(), EmptyString());
+  mShippingAddress = new PaymentAddress(
+      GetOwner(), aCountry, emptyArray, aRegion, aRegionCode, aCity,
+      aDependentLocality, aPostalCode, aSortingCode, u""_ns, u""_ns, u""_ns);
   mFullShippingAddress =
       new PaymentAddress(GetOwner(), aCountry, aAddressLine, aRegion,
                          aRegionCode, aCity, aDependentLocality, aPostalCode,

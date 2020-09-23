@@ -268,7 +268,7 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
         it->mValue.type() != ResponseType::Opaqueredirect) {
       continue;
     }
-    corp.Assign(EmptyCString());
+    corp.Assign(""_ns);
     for (auto headerIt = it->mValue.headers().cbegin();
          headerIt != it->mValue.headers().cend(); ++headerIt) {
       if (headerIt->name().Equals("Cross-Origin-Resource-Policy"_ns)) {

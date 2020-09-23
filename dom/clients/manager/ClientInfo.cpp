@@ -18,10 +18,11 @@ using mozilla::ipc::PrincipalInfoToPrincipal;
 ClientInfo::ClientInfo(const nsID& aId, ClientType aType,
                        const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                        const TimeStamp& aCreationTime)
-    : mData(MakeUnique<IPCClientInfo>(
-          aId, mozilla::Nothing(), aType, aPrincipalInfo, aCreationTime,
-          EmptyCString(), mozilla::dom::FrameType::None, mozilla::Nothing(),
-          mozilla::Nothing())) {}
+    : mData(MakeUnique<IPCClientInfo>(aId, mozilla::Nothing(), aType,
+                                      aPrincipalInfo, aCreationTime, ""_ns,
+                                      mozilla::dom::FrameType::None,
+                                      mozilla::Nothing(), mozilla::Nothing())) {
+}
 
 ClientInfo::ClientInfo(const IPCClientInfo& aData)
     : mData(MakeUnique<IPCClientInfo>(aData)) {}

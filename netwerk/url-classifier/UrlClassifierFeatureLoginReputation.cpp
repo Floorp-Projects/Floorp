@@ -23,13 +23,13 @@ StaticRefPtr<UrlClassifierFeatureLoginReputation> gFeatureLoginReputation;
 
 UrlClassifierFeatureLoginReputation::UrlClassifierFeatureLoginReputation()
     : UrlClassifierFeatureBase(nsLiteralCString(LOGIN_REPUTATION_FEATURE_NAME),
-                               EmptyCString(),  // blocklist tables
+                               ""_ns,  // blocklist tables
                                nsLiteralCString(PREF_PASSWORD_ALLOW_TABLE),
-                               EmptyCString(),  // blocklist pref
-                               EmptyCString(),  // entitylist pref
-                               EmptyCString(),  // blocklist pref table name
-                               EmptyCString(),  // entitylist pref table name
-                               EmptyCString())  // exception host pref
+                               ""_ns,  // blocklist pref
+                               ""_ns,  // entitylist pref
+                               ""_ns,  // blocklist pref table name
+                               ""_ns,  // entitylist pref table name
+                               ""_ns)  // exception host pref
 {}
 
 /* static */ const char* UrlClassifierFeatureLoginReputation::Name() {

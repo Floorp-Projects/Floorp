@@ -98,8 +98,8 @@ bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
 
   RefPtr<MessageEvent> event = new MessageEvent(aTarget, nullptr, nullptr);
   event->InitMessageEvent(nullptr, u"message"_ns, CanBubble::eNo,
-                          Cancelable::eNo, messageData, EmptyString(),
-                          EmptyString(), nullptr, ports);
+                          Cancelable::eNo, messageData, u""_ns, u""_ns, nullptr,
+                          ports);
 
   event->SetTrusted(true);
 

@@ -101,7 +101,7 @@ nsresult nsBaseChannel::Redirect(nsIChannel* newChannel, uint32_t redirectFlags,
   // nsBaseChannel hst no thing to do with HttpBaseChannel, we would not care
   // about referrer and remote address in this case
   nsCOMPtr<nsIRedirectHistoryEntry> entry =
-      new net::nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
+      new net::nsRedirectHistoryEntry(uriPrincipal, nullptr, ""_ns);
 
   newLoadInfo->AppendRedirectHistoryEntry(entry, isInternalRedirect);
 

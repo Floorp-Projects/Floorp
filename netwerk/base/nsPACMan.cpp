@@ -453,7 +453,7 @@ nsresult nsPACMan::AsyncGetProxyForURI(nsIURI* uri, nsPACManCallback* callback,
       TimeStamp::Now() > mScheduledReload) {
     LOG(("nsPACMan::AsyncGetProxyForURI reload as scheduled\n"));
 
-    LoadPACFromURI(mAutoDetect ? EmptyCString() : mPACURISpec, false);
+    LoadPACFromURI(mAutoDetect ? ""_ns : mPACURISpec, false);
   }
 
   RefPtr<PendingPACQuery> query =
@@ -461,7 +461,7 @@ nsresult nsPACMan::AsyncGetProxyForURI(nsIURI* uri, nsPACManCallback* callback,
 
   if (IsPACURI(uri)) {
     // deal with this directly instead of queueing it
-    query->Complete(NS_OK, EmptyCString());
+    query->Complete(NS_OK, ""_ns);
     return NS_OK;
   }
 
@@ -472,7 +472,7 @@ nsresult nsPACMan::PostQuery(PendingPACQuery* query) {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
 
   if (mShutdown) {
-    query->Complete(NS_ERROR_NOT_AVAILABLE, EmptyCString());
+    query->Complete(NS_ERROR_NOT_AVAILABLE, ""_ns);
     return NS_OK;
   }
 
@@ -753,7 +753,7 @@ void nsPACMan::CancelPendingQ(nsresult status, bool aShutdown) {
 
   while (!mPendingQ.isEmpty()) {
     query = dont_AddRef(mPendingQ.popLast());
-    query->Complete(status, EmptyCString());
+    query->Complete(status, ""_ns);
   }
 
   if (aShutdown) mPAC.Shutdown();
@@ -783,7 +783,7 @@ bool nsPACMan::ProcessPending() {
   RefPtr<PendingPACQuery> query(dont_AddRef(mPendingQ.popFirst()));
 
   if (mShutdown || IsLoading()) {
-    query->Complete(NS_ERROR_NOT_AVAILABLE, EmptyCString());
+    query->Complete(NS_ERROR_NOT_AVAILABLE, ""_ns);
     return true;
   }
 

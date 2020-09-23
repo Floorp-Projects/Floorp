@@ -615,7 +615,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvOnAuthAvailable(
   CallbackMap().erase(aCallbackId);
 
   RefPtr<nsAuthInformationHolder> holder =
-      new nsAuthInformationHolder(0, EmptyString(), EmptyCString());
+      new nsAuthInformationHolder(0, u""_ns, ""_ns);
   holder->SetUsername(aUser);
   holder->SetPassword(aPassword);
   holder->SetDomain(aDomain);

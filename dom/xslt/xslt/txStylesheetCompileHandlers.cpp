@@ -986,7 +986,7 @@ static nsresult txFnEndTopVariable(txStylesheetCompilerState& aState) {
   if (prev == gTxTopVariableHandler) {
     // No children were found.
     NS_ASSERTION(!var->mValue, "There shouldn't be a select-expression here");
-    var->mValue = MakeUnique<txLiteralExpr>(EmptyString());
+    var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   } else if (!var->mValue) {
     // If we don't have a select-expression there mush be children.
     UniquePtr<txInstruction> instr(new txReturn());
@@ -1788,7 +1788,7 @@ static nsresult txFnEndParam(txStylesheetCompilerState& aState) {
   if (prev == gTxVariableHandler) {
     // No children were found.
     NS_ASSERTION(!var->mValue, "There shouldn't be a select-expression here");
-    var->mValue = MakeUnique<txLiteralExpr>(EmptyString());
+    var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   }
 
   nsresult rv = aState.addVariable(var->mName);
@@ -2015,7 +2015,7 @@ static nsresult txFnEndVariable(txStylesheetCompilerState& aState) {
   if (prev == gTxVariableHandler) {
     // No children were found.
     NS_ASSERTION(!var->mValue, "There shouldn't be a select-expression here");
-    var->mValue = MakeUnique<txLiteralExpr>(EmptyString());
+    var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   }
 
   nsresult rv = aState.addVariable(var->mName);
@@ -2145,7 +2145,7 @@ static nsresult txFnEndWithParam(txStylesheetCompilerState& aState) {
   if (prev == gTxVariableHandler) {
     // No children were found.
     NS_ASSERTION(!var->mValue, "There shouldn't be a select-expression here");
-    var->mValue = MakeUnique<txLiteralExpr>(EmptyString());
+    var->mValue = MakeUnique<txLiteralExpr>(u""_ns);
   }
 
   UniquePtr<txInstruction> instr(var.release());

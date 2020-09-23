@@ -176,7 +176,7 @@ class HTMLImageElement final : public nsGenericHTMLElement,
     SetHTMLAttr(nsGkAtoms::referrerpolicy, aReferrer, aError);
   }
   void GetReferrerPolicy(nsAString& aReferrer) {
-    GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
+    GetEnumAttr(nsGkAtoms::referrerpolicy, "", aReferrer);
   }
   void SetDecoding(const nsAString& aDecoding, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::decoding, aDecoding, aError);

@@ -28,7 +28,7 @@ static nsresult HandleFlagWithOptionalArgument(nsICommandLine* aCmdLine,
                                                const nsAString& aDefaultValue,
                                                nsAString& aValue,
                                                bool& aFlagPresent) {
-  aValue = EmptyString();
+  aValue.Truncate();
   aFlagPresent = false;
 
   nsresult rv;
@@ -50,7 +50,7 @@ static nsresult HandleFlagWithOptionalArgument(nsICommandLine* aCmdLine,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!aValue.IsEmpty() && aValue.CharAt(0) == '-') {
-      aValue = EmptyString();
+      aValue.Truncate();
     } else {
       argPresent = true;
     }

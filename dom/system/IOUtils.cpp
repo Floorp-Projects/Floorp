@@ -995,7 +995,7 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(
 
   rv = aDest->IsDirectory(&destIsDir);
   if (NS_SUCCEEDED(rv) && destIsDir) {
-    rv = (aSource->*aMethod)(aDest, EmptyString());
+    rv = (aSource->*aMethod)(aDest, u""_ns);
     if (NS_FAILED(rv)) {
       return Err(IOError(rv).WithMessage(
           "Could not %s source file(%s) to destination directory(%s)",

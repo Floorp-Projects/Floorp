@@ -1221,9 +1221,8 @@ void SessionStoreUtils::RestoreSessionStorage(
     // followup bug to bug 600307.
     // Null window because the current window doesn't match the principal yet
     // and loads about:blank.
-    storageManager->CreateStorage(nullptr, principal, storagePrincipal,
-                                  EmptyString(), false,
-                                  getter_AddRefs(storage));
+    storageManager->CreateStorage(nullptr, principal, storagePrincipal, u""_ns,
+                                  false, getter_AddRefs(storage));
     if (!storage) {
       continue;
     }

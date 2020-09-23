@@ -7639,8 +7639,7 @@ bool PresShell::EventHandler::MaybeDiscardOrDelayMouseEvent(
 
   nsCOMPtr<EventTarget> eventTarget = aGUIEvent->mTarget;
   RefPtr<Event> event = EventDispatcher::CreateEvent(
-      eventTarget, aFrameToHandleEvent->PresContext(), aGUIEvent,
-      EmptyString());
+      eventTarget, aFrameToHandleEvent->PresContext(), aGUIEvent, u""_ns);
 
   suppressedListener->HandleEvent(*event);
   return true;

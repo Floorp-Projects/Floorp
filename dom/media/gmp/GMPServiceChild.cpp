@@ -76,7 +76,7 @@ GeckoMediaPluginServiceChild::GetContentParent(
         nsCString displayName;
         uint32_t pluginId = 0;
         ipc::Endpoint<PGMPContentParent> endpoint;
-        nsCString errorDescription = ""_ns;
+        nsCString errorDescription;
 
         bool ok = child->SendLaunchGMP(
             nodeIdString, api, tags, alreadyBridgedTo, &pluginId, &otherProcess,
@@ -152,7 +152,7 @@ GeckoMediaPluginServiceChild::GetContentParent(
         nsCString displayName;
         uint32_t pluginId = 0;
         ipc::Endpoint<PGMPContentParent> endpoint;
-        nsCString errorDescription = ""_ns;
+        nsCString errorDescription;
 
         bool ok = child->SendLaunchGMPForNodeId(
             nodeId, api, tags, alreadyBridgedTo, &pluginId, &otherProcess,
@@ -331,7 +331,7 @@ GeckoMediaPluginServiceChild::GetNodeId(
         UniquePtr<GetNodeIdCallback> callback(rawCallback);
         nsCString outId;
         if (!child->SendGetGMPNodeId(origin, topLevelOrigin, gmpName, &outId)) {
-          callback->Done(NS_ERROR_FAILURE, EmptyCString());
+          callback->Done(NS_ERROR_FAILURE, ""_ns);
           return;
         }
 
@@ -339,7 +339,7 @@ GeckoMediaPluginServiceChild::GetNodeId(
       },
       [rawCallback](nsresult rv) {
         UniquePtr<GetNodeIdCallback> callback(rawCallback);
-        callback->Done(NS_ERROR_FAILURE, EmptyCString());
+        callback->Done(NS_ERROR_FAILURE, ""_ns);
       });
 
   return NS_OK;

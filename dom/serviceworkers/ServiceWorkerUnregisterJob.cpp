@@ -45,7 +45,7 @@ NS_IMPL_ISUPPORTS(ServiceWorkerUnregisterJob::PushUnsubscribeCallback,
 ServiceWorkerUnregisterJob::ServiceWorkerUnregisterJob(nsIPrincipal* aPrincipal,
                                                        const nsACString& aScope,
                                                        bool aSendToParent)
-    : ServiceWorkerJob(Type::Unregister, aPrincipal, aScope, EmptyCString()),
+    : ServiceWorkerJob(Type::Unregister, aPrincipal, aScope, ""_ns),
       mResult(false),
       mSendToParent(aSendToParent) {}
 

@@ -144,7 +144,7 @@ BasicCardResponseData::InitData(const nsAString& aCardholderName,
 NS_IMPL_ISUPPORTS(PaymentActionResponse, nsIPaymentActionResponse)
 
 PaymentActionResponse::PaymentActionResponse()
-    : mRequestId(EmptyString()), mType(nsIPaymentActionResponse::NO_TYPE) {}
+    : mRequestId(u""_ns), mType(nsIPaymentActionResponse::NO_TYPE) {}
 
 NS_IMETHODIMP
 PaymentActionResponse::GetRequestId(nsAString& aRequestId) {

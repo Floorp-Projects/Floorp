@@ -318,7 +318,7 @@ bool PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse) {
     // User clicked Stop
     mModule->TerminateChildProcess(mMainThreadMessageLoop,
                                    mozilla::ipc::kInvalidProcessId,
-                                   "ModalHangUI"_ns, EmptyString());
+                                   "ModalHangUI"_ns, u""_ns);
     responseCode = 1;
   } else if (aResponse & HANGUI_USER_RESPONSE_CONTINUE) {
     mModule->OnHangUIContinue();

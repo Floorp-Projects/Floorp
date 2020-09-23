@@ -409,8 +409,7 @@ nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   if (kSQLiteGrowthIncrement) {
     // This is just an optimization so ignore the failure if the disk is
     // currently too full.
-    rv =
-        aConnection->SetGrowthIncrement(kSQLiteGrowthIncrement, EmptyCString());
+    rv = aConnection->SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns);
     if (rv != NS_ERROR_FILE_TOO_BIG && NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8593,7 +8592,7 @@ void ArchivedOriginScope::GetBindingClause(nsACString& aBindingClause) const {
           " WHERE originAttributes MATCH :originAttributesPattern");
     }
 
-    void operator()(const Null& aNull) { *mBindingClause = EmptyCString(); }
+    void operator()(const Null& aNull) { mBindingClause->Truncate(); }
   };
 
   mData.match(Matcher(&aBindingClause));

@@ -4117,8 +4117,7 @@ class Document : public nsINode,
    *                            sInternalCommandDataHashtable.
    */
   static InternalCommandData ConvertToInternalCommand(
-      const nsAString& aHTMLCommandName,
-      const nsAString& aValue = EmptyString(),
+      const nsAString& aHTMLCommandName, const nsAString& aValue = u""_ns,
       nsAString* aAdjustedValue = nullptr);
 
   /**

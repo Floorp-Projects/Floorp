@@ -1526,7 +1526,7 @@ nsresult nsStandardURL::SetSpecWithEncoding(const nsACString& input,
 
   // Make a backup of the current URL
   nsStandardURL prevURL(false, false);
-  prevURL.CopyMembers(this, eHonorRef, EmptyCString());
+  prevURL.CopyMembers(this, eHonorRef, ""_ns);
   Clear();
 
   if (IsSpecialProtocol(filteredURI)) {
@@ -1568,7 +1568,7 @@ nsresult nsStandardURL::SetSpecWithEncoding(const nsACString& input,
     Clear();
     // If parsing the spec has failed, restore the old URL
     // so we don't end up with an empty URL.
-    CopyMembers(&prevURL, eHonorRef, EmptyCString());
+    CopyMembers(&prevURL, eHonorRef, ""_ns);
     return rv;
   }
 
@@ -2297,7 +2297,7 @@ nsStandardURL::SchemeIs(const char* scheme, bool* result) {
 }
 
 nsresult nsStandardURL::Clone(nsIURI** aURI) {
-  return CloneInternal(eHonorRef, EmptyCString(), aURI);
+  return CloneInternal(eHonorRef, ""_ns, aURI);
 }
 
 nsresult nsStandardURL::CloneInternal(
@@ -2349,7 +2349,7 @@ nsresult nsStandardURL::CopyMembers(
   }
 
   if (refHandlingMode == eIgnoreRef) {
-    SetRef(EmptyCString());
+    SetRef(""_ns);
   } else if (refHandlingMode == eReplaceRef) {
     SetRef(newRef);
   }
@@ -3507,7 +3507,7 @@ nsStandardURL::Write(nsIObjectOutputStream* stream) {
   }
 
   // former origin charset
-  rv = NS_WriteOptionalStringZ(stream, EmptyCString().get());
+  rv = NS_WriteOptionalStringZ(stream, "");
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -200,8 +200,7 @@ bool nsXHTMLContentSerializer::SerializeAttributes(
     if (aTagPrefix.IsEmpty()) {
       // Serialize default namespace decl
       NS_ENSURE_TRUE(
-          SerializeAttr(EmptyString(), xmlnsStr, aTagNamespaceURI, aStr, true),
-          false);
+          SerializeAttr(u""_ns, xmlnsStr, aTagNamespaceURI, aStr, true), false);
     } else {
       // Serialize namespace decl
       NS_ENSURE_TRUE(
@@ -686,9 +685,8 @@ bool nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
   if (offset == 0 && found) {
     // offset = 0 => LI itself has the value attribute and we did not need to
     // traverse back. Just serialize value attribute like other tags.
-    NS_ENSURE_TRUE(
-        SerializeAttr(EmptyString(), u"value"_ns, valueStr, aStr, false),
-        false);
+    NS_ENSURE_TRUE(SerializeAttr(u""_ns, u"value"_ns, valueStr, aStr, false),
+                   false);
   } else if (offset == 1 && !found) {
     /*(offset = 1 && !found) means either LI is the first child node of OL
     and LI is not having "value" attribute.
@@ -702,9 +700,8 @@ bool nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
 
     // As serializer needs to use this valueAttr we are creating here,
     valueStr.AppendInt(startVal + offset);
-    NS_ENSURE_TRUE(
-        SerializeAttr(EmptyString(), u"value"_ns, valueStr, aStr, false),
-        false);
+    NS_ENSURE_TRUE(SerializeAttr(u""_ns, u"value"_ns, valueStr, aStr, false),
+                   false);
   }
 
   return true;

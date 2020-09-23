@@ -1917,7 +1917,7 @@ static void InitializeAnnotationFacilities() {
 
 static void TeardownAnnotationFacilities() {
   std::fill(crashReporterAPIData_Table.begin(),
-            crashReporterAPIData_Table.end(), EmptyCString());
+            crashReporterAPIData_Table.end(), ""_ns);
 
   delete crashReporterAPILock;
   crashReporterAPILock = nullptr;
@@ -2440,7 +2440,7 @@ nsresult AnnotateCrashReport(Annotation key, const nsACString& data) {
 }
 
 nsresult RemoveCrashReportAnnotation(Annotation key) {
-  return AnnotateCrashReport(key, EmptyCString());
+  return AnnotateCrashReport(key, ""_ns);
 }
 
 AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key, bool data)
@@ -3224,11 +3224,11 @@ static bool MoveToPending(nsIFile* dumpFile, nsIFile* extraFile,
   nsCOMPtr<nsIFile> pendingDir;
   if (!GetPendingDir(getter_AddRefs(pendingDir))) return false;
 
-  if (NS_FAILED(dumpFile->MoveTo(pendingDir, EmptyString()))) {
+  if (NS_FAILED(dumpFile->MoveTo(pendingDir, u""_ns))) {
     return false;
   }
 
-  if (extraFile && NS_FAILED(extraFile->MoveTo(pendingDir, EmptyString()))) {
+  if (extraFile && NS_FAILED(extraFile->MoveTo(pendingDir, u""_ns))) {
     return false;
   }
 

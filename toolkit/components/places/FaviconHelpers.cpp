@@ -1121,8 +1121,8 @@ NotifyIconObservers::Run() {
                                  TO_INTBUFFER(payload.data), payload.mimeType,
                                  payload.width);
   }
-  return mCallback->OnComplete(iconURI, 0, TO_INTBUFFER(EmptyCString()),
-                               EmptyCString(), 0);
+  return mCallback->OnComplete(iconURI, 0, TO_INTBUFFER(EmptyCString()), ""_ns,
+                               0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1298,7 +1298,7 @@ nsresult FetchAndConvertUnsupportedPayloads::ConvertPayload(
   }
   rv = encoder->InitFromData(map.mData, map.mStride * size, size, size,
                              map.mStride, imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                             EmptyString());
+                             u""_ns);
   targetDataSurface->Unmap();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1380,7 +1380,7 @@ AsyncCopyFavicons::Run() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get just one icon, to check whether the page has any, and to notify later.
-  rv = FetchIconPerSpec(DB, mFromPage.spec, EmptyCString(), icon, UINT16_MAX);
+  rv = FetchIconPerSpec(DB, mFromPage.spec, ""_ns, icon, UINT16_MAX);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (icon.spec.IsEmpty()) {

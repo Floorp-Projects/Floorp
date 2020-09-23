@@ -285,7 +285,7 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
     // crash. Make this code against robust against this by treating void
     // strings as the empty string.
     if (mFilename.IsVoid()) {
-      mFilename.Assign(EmptyCString());
+      mFilename.Assign(""_ns);
     }
 
     if (!ToJSString(aCx, mFilename, &filename) ||

@@ -2490,7 +2490,7 @@ nsresult nsImageFrame::LoadIcon(const nsAString& aSpec,
       nullptr,                          /* principal (not relevant for icons) */
       0, loadGroup, gIconLoad, nullptr, /* No context */
       nullptr, /* Not associated with any particular document */
-      loadFlags, nullptr, contentPolicyType, EmptyString(),
+      loadFlags, nullptr, contentPolicyType, u""_ns,
       false, /* aUseUrgentStartForChannel */
       false, /* aLinkPreload */
       aRequest);

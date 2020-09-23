@@ -288,7 +288,7 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
     } else {
       // clear "print to file" info
       aPrintSettings->SetPrintToFile(false);
-      aPrintSettings->SetToFileName(EmptyString());
+      aPrintSettings->SetToFileName(u""_ns);
     }
 
     nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));

@@ -98,12 +98,12 @@ class AndroidBridge final {
   bool GetHandlersForURL(const nsAString& aURL,
                          nsIMutableArray* handlersArray = nullptr,
                          nsIHandlerApp** aDefaultApp = nullptr,
-                         const nsAString& aAction = EmptyString());
+                         const nsAString& aAction = u""_ns);
 
   bool GetHandlersForMimeType(const nsAString& aMimeType,
                               nsIMutableArray* handlersArray = nullptr,
                               nsIHandlerApp** aDefaultApp = nullptr,
-                              const nsAString& aAction = EmptyString());
+                              const nsAString& aAction = u""_ns);
 
   bool HasHWVP8Encoder();
   bool HasHWVP8Decoder();

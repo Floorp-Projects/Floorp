@@ -358,7 +358,7 @@ class Loader final {
   Result<RefPtr<StyleSheet>, nsresult> LoadSheet(
       nsIURI* aURI, IsPreload, const Encoding* aPreloadEncoding,
       nsIReferrerInfo* aReferrerInfo, nsICSSLoaderObserver* aObserver,
-      CORSMode = CORS_NONE, const nsAString& aIntegrity = EmptyString());
+      CORSMode = CORS_NONE, const nsAString& aIntegrity = u""_ns);
 
   /**
    * As above, but without caring for a couple things.

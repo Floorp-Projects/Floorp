@@ -16,7 +16,7 @@ nsAboutBlank::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   NS_ENSURE_ARG_POINTER(aURI);
 
   nsCOMPtr<nsIInputStream> in;
-  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(in), EmptyCString());
+  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(in), ""_ns);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIChannel> channel;

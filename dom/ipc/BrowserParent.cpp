@@ -470,7 +470,7 @@ ParentShowInfo BrowserParent::GetShowInfo() {
                           mDefaultScale.scale);
   }
 
-  return ParentShowInfo(EmptyString(), false, false, mDPI, mRounding,
+  return ParentShowInfo(u""_ns, false, false, mDPI, mRounding,
                         mDefaultScale.scale);
 }
 
@@ -3889,7 +3889,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvAsyncAuthPrompt(
   uint32_t promptFlags = nsIAuthInformation::AUTH_HOST;
 
   RefPtr<nsAuthInformationHolder> holder =
-      new nsAuthInformationHolder(promptFlags, aRealm, EmptyCString());
+      new nsAuthInformationHolder(promptFlags, aRealm, ""_ns);
 
   uint32_t level = nsIAuthPrompt2::LEVEL_NONE;
   nsCOMPtr<nsICancelable> dummy;

@@ -74,8 +74,7 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
     if (NS_FAILED(mStatus)) {
-      mSheetLoadData->VerifySheetReadyToParse(mStatus, EmptyCString(),
-                                              EmptyCString(), channel);
+      mSheetLoadData->VerifySheetReadyToParse(mStatus, ""_ns, ""_ns, channel);
       return mStatus;
     }
 

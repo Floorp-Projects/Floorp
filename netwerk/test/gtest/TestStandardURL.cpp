@@ -348,7 +348,7 @@ TEST(TestStandardURL, Deserialize_Bug1392739)
 {
   mozilla::ipc::StandardURLParams standard_params;
   standard_params.urlType() = nsIStandardURL::URLTYPE_STANDARD;
-  standard_params.spec() = ""_ns;
+  standard_params.spec().Truncate();
   standard_params.host() = mozilla::ipc::StandardURLSegment(4294967295, 1);
 
   mozilla::ipc::URIParams params(standard_params);

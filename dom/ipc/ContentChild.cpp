@@ -919,7 +919,7 @@ nsresult ContentChild::ProvideWindowCommon(
     }
 
     if (name.LowerCaseEqualsLiteral("_blank")) {
-      name = EmptyString();
+      name.Truncate();
     }
 
     MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(name));
@@ -1061,7 +1061,7 @@ nsresult ContentChild::ProvideWindowCommon(
     }
 
     ParentShowInfo showInfo(
-        EmptyString(), /* fakeShowInfo = */ true, /* isTransparent = */ false,
+        u""_ns, /* fakeShowInfo = */ true, /* isTransparent = */ false,
         aTabOpener->WebWidget()->GetDPI(),
         aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
         aTabOpener->WebWidget()->GetDefaultScale().scale);
@@ -4124,7 +4124,7 @@ mozilla::ipc::IPCResult ContentChild::RecvLoadURI(
     nsCOMPtr<nsIURI> annotationURI;
 
     nsresult rv = NS_MutateURI(aLoadState->URI())
-                      .SetUserPass(EmptyCString())
+                      .SetUserPass(""_ns)
                       .Finalize(annotationURI);
 
     if (NS_FAILED(rv)) {
@@ -4164,7 +4164,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInternalLoad(
     nsCOMPtr<nsIURI> annotationURI;
 
     nsresult rv = NS_MutateURI(aLoadState->URI())
-                      .SetUserPass(EmptyCString())
+                      .SetUserPass(""_ns)
                       .Finalize(annotationURI);
 
     if (NS_FAILED(rv)) {

@@ -72,16 +72,15 @@ nsAndroidHandlerApp::LaunchWithURI(
   nsCString uriSpec;
   aURI->GetSpec(uriSpec);
   return java::GeckoAppShell::OpenUriExternal(uriSpec, mMimeType, mPackageName,
-                                              mClassName, mAction,
-                                              EmptyString())
+                                              mClassName, mAction, u""_ns)
              ? NS_OK
              : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsAndroidHandlerApp::Share(const nsAString& data, const nsAString& title) {
-  return java::GeckoAppShell::OpenUriExternal(
-             data, mMimeType, mPackageName, mClassName, mAction, EmptyString())
+  return java::GeckoAppShell::OpenUriExternal(data, mMimeType, mPackageName,
+                                              mClassName, mAction, u""_ns)
              ? NS_OK
              : NS_ERROR_FAILURE;
 }

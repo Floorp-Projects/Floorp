@@ -1282,7 +1282,7 @@ void DocumentLoadListener::SerializeRedirectData(
     sm->GetChannelURIPrincipal(mChannel, getter_AddRefs(uriPrincipal));
 
     nsCOMPtr<nsIRedirectHistoryEntry> entry =
-        new nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
+        new nsRedirectHistoryEntry(uriPrincipal, nullptr, ""_ns);
 
     redirectLoadInfo->AppendRedirectHistoryEntry(entry, true);
   }

@@ -98,7 +98,7 @@ static void AddStaticElement(const nsCString& name, const nsCString& value) {
 }
 
 static void AddStaticElement(const nsCString& name) {
-  AddStaticElement(name, EmptyCString());
+  AddStaticElement(name, ""_ns);
 }
 
 static void InitializeStaticHeaders() {
@@ -190,9 +190,7 @@ void nvFIFO::AddElement(const nsCString& name, const nsCString& value) {
   mTable.PushFront(pair);
 }
 
-void nvFIFO::AddElement(const nsCString& name) {
-  AddElement(name, EmptyCString());
-}
+void nvFIFO::AddElement(const nsCString& name) { AddElement(name, ""_ns); }
 
 void nvFIFO::RemoveElement() {
   nvPair* pair = mTable.Pop();

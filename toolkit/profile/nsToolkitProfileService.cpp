@@ -480,7 +480,7 @@ bool nsToolkitProfileService::IsProfileForCurrentInstall(
   }
 
   nsCOMPtr<nsIFile> lastGreDir;
-  rv = NS_NewNativeLocalFile(EmptyCString(), false, getter_AddRefs(lastGreDir));
+  rv = NS_NewNativeLocalFile(""_ns, false, getter_AddRefs(lastGreDir));
   NS_ENSURE_SUCCESS(rv, false);
 
   rv = lastGreDir->SetPersistentDescriptor(lastGreDirStr);
@@ -865,7 +865,7 @@ nsresult nsToolkitProfileService::Init() {
     }
 
     nsCOMPtr<nsIFile> rootDir;
-    rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(rootDir));
+    rv = NS_NewNativeLocalFile(""_ns, true, getter_AddRefs(rootDir));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (isRelative) {
@@ -877,8 +877,7 @@ nsresult nsToolkitProfileService::Init() {
 
     nsCOMPtr<nsIFile> localDir;
     if (isRelative) {
-      rv =
-          NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localDir));
+      rv = NS_NewNativeLocalFile(""_ns, true, getter_AddRefs(localDir));
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = localDir->SetRelativeDescriptor(mTempData, filePath);
@@ -1757,7 +1756,7 @@ nsToolkitProfileService::CreateProfile(nsIFile* aRootDir,
     rv = rootDir->GetRelativeDescriptor(mAppData, path);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localDir));
+    rv = NS_NewNativeLocalFile(""_ns, true, getter_AddRefs(localDir));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = localDir->SetRelativeDescriptor(mTempData, path);
@@ -2046,7 +2045,7 @@ nsresult XRE_GetFileFromPath(const char* aPath, nsIFile** aResult) {
   if (!fullPath) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIFile> lf;
-  nsresult rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(lf));
+  nsresult rv = NS_NewNativeLocalFile(""_ns, true, getter_AddRefs(lf));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsILocalFileMac> lfMac = do_QueryInterface(lf, &rv);
     if (NS_SUCCEEDED(rv)) {

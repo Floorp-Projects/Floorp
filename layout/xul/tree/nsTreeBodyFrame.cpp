@@ -1927,7 +1927,7 @@ nsresult nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol,
       // view?  I guess we should assume that it's the node's principal...
       nsresult rv = nsContentUtils::LoadImage(
           srcURI, mContent, doc, mContent->NodePrincipal(), 0, referrerInfo,
-          imgNotificationObserver, nsIRequest::LOAD_NORMAL, EmptyString(),
+          imgNotificationObserver, nsIRequest::LOAD_NORMAL, u""_ns,
           getter_AddRefs(imageRequest));
       NS_ENSURE_SUCCESS(rv, rv);
 

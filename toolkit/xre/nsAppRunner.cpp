@@ -812,7 +812,7 @@ NS_IMETHODIMP
 nsXULAppInfo::GetAccessibilityInstantiator(nsAString& aInstantiator) {
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
   if (!GetAccService()) {
-    aInstantiator = u""_ns;
+    aInstantiator.Truncate();
     return NS_OK;
   }
   nsAutoString ipClientInfo;
@@ -828,7 +828,7 @@ nsXULAppInfo::GetAccessibilityInstantiator(nsAString& aInstantiator) {
     }
   }
 #else
-  aInstantiator = u""_ns;
+  aInstantiator.Truncate();
 #endif
   return NS_OK;
 }
@@ -2666,7 +2666,7 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
   if (NS_FAILED(rv)) return false;
 
   nsCOMPtr<nsIFile> lf;
-  rv = NS_NewNativeLocalFile(EmptyCString(), false, getter_AddRefs(lf));
+  rv = NS_NewNativeLocalFile(""_ns, false, getter_AddRefs(lf));
   if (NS_FAILED(rv)) return false;
 
   rv = lf->SetPersistentDescriptor(buf);
@@ -2680,7 +2680,7 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
     rv = parser.GetString("Compatibility", "LastAppDir", buf);
     if (NS_FAILED(rv)) return false;
 
-    rv = NS_NewNativeLocalFile(EmptyCString(), false, getter_AddRefs(lf));
+    rv = NS_NewNativeLocalFile(""_ns, false, getter_AddRefs(lf));
     if (NS_FAILED(rv)) return false;
 
     rv = lf->SetPersistentDescriptor(buf);

@@ -434,7 +434,7 @@ nsresult nsDumpUtils::OpenTempFile(const nsACString& aFilename, nsIFile** aFile,
   // but only the user which created the file can remove it.  We want non-root
   // users to be able to remove these files, so we write them into a
   // subdirectory of the temp directory and chmod 777 that directory.
-  if (aFoldername != EmptyCString()) {
+  if (!aFoldername.IsEmpty()) {
     rv = (*aFile)->AppendNative(aFoldername);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

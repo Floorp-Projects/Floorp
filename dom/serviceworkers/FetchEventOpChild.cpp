@@ -70,7 +70,7 @@ bool CSPPermitsResponse(nsILoadInfo* aLoadInfo, InternalResponse* aResponse,
   }
 
   int16_t decision = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(uri, aLoadInfo, EmptyCString(), &decision);
+  rv = NS_CheckContentLoadPolicy(uri, aLoadInfo, ""_ns, &decision);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
@@ -348,7 +348,7 @@ nsresult FetchEventOpChild::StartSynthesizedResponse(
   castLoadInfo->SynthesizeServiceWorkerTainting(response->GetTainting());
 
   // Get the preferred alternative data type of the outer channel
-  nsAutoCString preferredAltDataType(EmptyCString());
+  nsAutoCString preferredAltDataType(""_ns);
   nsCOMPtr<nsICacheInfoChannel> outerChannel =
       do_QueryInterface(underlyingChannel);
   if (outerChannel &&

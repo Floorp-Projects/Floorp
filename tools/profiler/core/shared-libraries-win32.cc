@@ -82,22 +82,22 @@ static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge,
 static nsCString GetVersion(WCHAR* dllPath) {
   DWORD infoSize = GetFileVersionInfoSizeW(dllPath, nullptr);
   if (infoSize == 0) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   mozilla::UniquePtr<unsigned char[]> infoData =
       mozilla::MakeUnique<unsigned char[]>(infoSize);
   if (!GetFileVersionInfoW(dllPath, 0, infoSize, infoData.get())) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   VS_FIXEDFILEINFO* vInfo;
   UINT vInfoLen;
   if (!VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)) {
-    return EmptyCString();
+    return ""_ns;
   }
   if (!vInfo) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   nsPrintfCString version("%d.%d.%d.%d", vInfo->dwFileVersionMS >> 16,

@@ -25,7 +25,7 @@ void EmptyBlobImpl::CreateInputStream(nsIInputStream** aStream,
     return;
   }
 
-  nsresult rv = NS_NewCStringInputStream(aStream, EmptyCString());
+  nsresult rv = NS_NewCStringInputStream(aStream, ""_ns);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;

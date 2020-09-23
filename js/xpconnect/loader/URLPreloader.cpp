@@ -66,7 +66,7 @@ nsresult URLPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
                          elem->TypeString(), pathName.get());
 
     aHandleReport->Callback(
-        EmptyCString(), path, KIND_HEAP, UNITS_BYTES,
+        ""_ns, path, KIND_HEAP, UNITS_BYTES,
         elem->SizeOfIncludingThis(MallocSizeOf),
         nsLiteralCString("Memory used to hold cache data for files which "
                          "have been read or pre-loaded during this session."),

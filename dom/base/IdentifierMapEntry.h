@@ -206,7 +206,7 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
         // and only assign to it if aOther.mString is not null, but having it be
         // const is nice.
         : mAtom(aOther.mAtom),
-          mString(aOther.mString ? *aOther.mString : EmptyString()) {}
+          mString(aOther.mString ? *aOther.mString : u""_ns) {}
 
     RefPtr<nsAtom> mAtom;
     nsString mString;

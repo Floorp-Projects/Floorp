@@ -1274,8 +1274,7 @@ void gfxUserFontSet::UserFontCache::Entry::ReportMemory(
   path.Append(')');
 
   aHandleReport->Callback(
-      EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,
-      nsIMemoryReporter::UNITS_BYTES,
+      ""_ns, path, nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
       mFontEntry->ComputedSizeOfExcludingThis(UserFontsMallocSizeOf),
       "Memory used by @font-face resource."_ns, aData);
 }

@@ -622,7 +622,7 @@ bool WebrtcGlobalInformation::AecDebug(const GlobalObject& aGlobal) {
 
 void WebrtcGlobalInformation::GetAecDebugLogDir(const GlobalObject& aGlobal,
                                                 nsAString& aDir) {
-  aDir = NS_ConvertASCIItoUTF16(sAecDebugLogDir.valueOr(EmptyCString()));
+  aDir = NS_ConvertASCIItoUTF16(sAecDebugLogDir.valueOr(""_ns));
 }
 
 mozilla::ipc::IPCResult WebrtcGlobalParent::RecvGetStatsResult(

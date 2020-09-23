@@ -89,8 +89,8 @@ nsresult runTest(
 
   // for testing the parser we only need to set a principal which is needed
   // to translate the keyword 'self' into an actual URI.
-  rv = csp->SetRequestContextWithPrincipal(selfURIPrincipal, selfURI,
-                                           EmptyString(), 0);
+  rv =
+      csp->SetRequestContextWithPrincipal(selfURIPrincipal, selfURI, u""_ns, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // append a policy

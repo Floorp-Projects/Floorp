@@ -679,7 +679,7 @@ void KeyEventHandler::ReportKeyConflict(const char16_t* aKey,
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   "Key Event Handler"_ns, doc,
                                   nsContentUtils::eDOM_PROPERTIES, aMessageName,
-                                  params, nullptr, EmptyString(), 0);
+                                  params, nullptr, u""_ns, 0);
 }
 
 bool KeyEventHandler::ModifiersMatchMask(

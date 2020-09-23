@@ -1606,8 +1606,8 @@ nsProtocolProxyService::NewProxyInfo(
     const nsACString& aConnectionIsolationKey, uint32_t aFlags,
     uint32_t aFailoverTimeout, nsIProxyInfo* aFailoverProxy,
     nsIProxyInfo** aResult) {
-  return NewProxyInfoWithAuth(aType, aHost, aPort, EmptyCString(),
-                              EmptyCString(), aProxyAuthorizationHeader,
+  return NewProxyInfoWithAuth(aType, aHost, aPort, ""_ns, ""_ns,
+                              aProxyAuthorizationHeader,
                               aConnectionIsolationKey, aFlags, aFailoverTimeout,
                               aFailoverProxy, aResult);
 }
@@ -2206,8 +2206,7 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
   }
 
   if (type) {
-    rv = NewProxyInfo_Internal(type, *host, port, EmptyCString(),
-                               EmptyCString(), EmptyCString(), EmptyCString(),
+    rv = NewProxyInfo_Internal(type, *host, port, ""_ns, ""_ns, ""_ns, ""_ns,
                                proxyFlags, UINT32_MAX, nullptr, flags, result);
     if (NS_FAILED(rv)) return rv;
   }

@@ -1274,87 +1274,83 @@ NS_IMPL_ISUPPORTS(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
 
 #define SUNDRIES_THRESHOLD js::MemoryReportingSundriesThreshold()
 
-#define REPORT(_path, _kind, _units, _amount, _desc)                      \
-  handleReport->Callback(EmptyCString(), _path, nsIMemoryReporter::_kind, \
-                         nsIMemoryReporter::_units, _amount,              \
+#define REPORT(_path, _kind, _units, _amount, _desc)             \
+  handleReport->Callback(""_ns, _path, nsIMemoryReporter::_kind, \
+                         nsIMemoryReporter::_units, _amount,     \
                          nsLiteralCString(_desc), data);
 
 #define REPORT_BYTES(_path, _kind, _amount, _desc) \
   REPORT(_path, _kind, UNITS_BYTES, _amount, _desc);
 
-#define REPORT_GC_BYTES(_path, _amount, _desc)                     \
-  do {                                                             \
-    size_t amount = _amount; /* evaluate _amount only once */      \
-    handleReport->Callback(EmptyCString(), _path,                  \
-                           nsIMemoryReporter::KIND_NONHEAP,        \
-                           nsIMemoryReporter::UNITS_BYTES, amount, \
-                           nsLiteralCString(_desc), data);         \
-    gcTotal += amount;                                             \
+#define REPORT_GC_BYTES(_path, _amount, _desc)                            \
+  do {                                                                    \
+    size_t amount = _amount; /* evaluate _amount only once */             \
+    handleReport->Callback(""_ns, _path, nsIMemoryReporter::KIND_NONHEAP, \
+                           nsIMemoryReporter::UNITS_BYTES, amount,        \
+                           nsLiteralCString(_desc), data);                \
+    gcTotal += amount;                                                    \
   } while (0)
 
 // Report realm/zone non-GC (KIND_HEAP) bytes.
-#define ZRREPORT_BYTES(_path, _amount, _desc)                         \
-  do {                                                                \
-    /* Assign _descLiteral plus "" into a char* to prove that it's */ \
-    /* actually a literal. */                                         \
-    size_t amount = _amount; /* evaluate _amount only once */         \
-    if (amount >= SUNDRIES_THRESHOLD) {                               \
-      handleReport->Callback(EmptyCString(), _path,                   \
-                             nsIMemoryReporter::KIND_HEAP,            \
-                             nsIMemoryReporter::UNITS_BYTES, amount,  \
-                             nsLiteralCString(_desc), data);          \
-    } else {                                                          \
-      sundriesMallocHeap += amount;                                   \
-    }                                                                 \
+#define ZRREPORT_BYTES(_path, _amount, _desc)                            \
+  do {                                                                   \
+    /* Assign _descLiteral plus "" into a char* to prove that it's */    \
+    /* actually a literal. */                                            \
+    size_t amount = _amount; /* evaluate _amount only once */            \
+    if (amount >= SUNDRIES_THRESHOLD) {                                  \
+      handleReport->Callback(""_ns, _path, nsIMemoryReporter::KIND_HEAP, \
+                             nsIMemoryReporter::UNITS_BYTES, amount,     \
+                             nsLiteralCString(_desc), data);             \
+    } else {                                                             \
+      sundriesMallocHeap += amount;                                      \
+    }                                                                    \
   } while (0)
 
 // Report realm/zone GC bytes.
-#define ZRREPORT_GC_BYTES(_path, _amount, _desc)                     \
-  do {                                                               \
-    size_t amount = _amount; /* evaluate _amount only once */        \
-    if (amount >= SUNDRIES_THRESHOLD) {                              \
-      handleReport->Callback(EmptyCString(), _path,                  \
-                             nsIMemoryReporter::KIND_NONHEAP,        \
-                             nsIMemoryReporter::UNITS_BYTES, amount, \
-                             nsLiteralCString(_desc), data);         \
-      gcTotal += amount;                                             \
-    } else {                                                         \
-      sundriesGCHeap += amount;                                      \
-    }                                                                \
+#define ZRREPORT_GC_BYTES(_path, _amount, _desc)                            \
+  do {                                                                      \
+    size_t amount = _amount; /* evaluate _amount only once */               \
+    if (amount >= SUNDRIES_THRESHOLD) {                                     \
+      handleReport->Callback(""_ns, _path, nsIMemoryReporter::KIND_NONHEAP, \
+                             nsIMemoryReporter::UNITS_BYTES, amount,        \
+                             nsLiteralCString(_desc), data);                \
+      gcTotal += amount;                                                    \
+    } else {                                                                \
+      sundriesGCHeap += amount;                                             \
+    }                                                                       \
   } while (0)
 
 // Report realm/zone non-heap bytes.
-#define ZRREPORT_NONHEAP_BYTES(_path, _amount, _desc)                \
-  do {                                                               \
-    size_t amount = _amount; /* evaluate _amount only once */        \
-    if (amount >= SUNDRIES_THRESHOLD) {                              \
-      handleReport->Callback(EmptyCString(), _path,                  \
-                             nsIMemoryReporter::KIND_NONHEAP,        \
-                             nsIMemoryReporter::UNITS_BYTES, amount, \
-                             nsLiteralCString(_desc), data);         \
-    } else {                                                         \
-      sundriesNonHeap += amount;                                     \
-    }                                                                \
+#define ZRREPORT_NONHEAP_BYTES(_path, _amount, _desc)                       \
+  do {                                                                      \
+    size_t amount = _amount; /* evaluate _amount only once */               \
+    if (amount >= SUNDRIES_THRESHOLD) {                                     \
+      handleReport->Callback(""_ns, _path, nsIMemoryReporter::KIND_NONHEAP, \
+                             nsIMemoryReporter::UNITS_BYTES, amount,        \
+                             nsLiteralCString(_desc), data);                \
+    } else {                                                                \
+      sundriesNonHeap += amount;                                            \
+    }                                                                       \
   } while (0)
 
 // Report runtime bytes.
-#define RREPORT_BYTES(_path, _kind, _amount, _desc)                         \
-  do {                                                                      \
-    size_t amount = _amount; /* evaluate _amount only once */               \
-    handleReport->Callback(EmptyCString(), _path, nsIMemoryReporter::_kind, \
-                           nsIMemoryReporter::UNITS_BYTES, amount,          \
-                           nsLiteralCString(_desc), data);                  \
-    rtTotal += amount;                                                      \
+#define RREPORT_BYTES(_path, _kind, _amount, _desc)                \
+  do {                                                             \
+    size_t amount = _amount; /* evaluate _amount only once */      \
+    handleReport->Callback(""_ns, _path, nsIMemoryReporter::_kind, \
+                           nsIMemoryReporter::UNITS_BYTES, amount, \
+                           nsLiteralCString(_desc), data);         \
+    rtTotal += amount;                                             \
   } while (0)
 
 // Report GC thing bytes.
-#define MREPORT_BYTES(_path, _kind, _amount, _desc)                         \
-  do {                                                                      \
-    size_t amount = _amount; /* evaluate _amount only once */               \
-    handleReport->Callback(EmptyCString(), _path, nsIMemoryReporter::_kind, \
-                           nsIMemoryReporter::UNITS_BYTES, amount,          \
-                           nsLiteralCString(_desc), data);                  \
-    gcThingTotal += amount;                                                 \
+#define MREPORT_BYTES(_path, _kind, _amount, _desc)                \
+  do {                                                             \
+    size_t amount = _amount; /* evaluate _amount only once */      \
+    handleReport->Callback(""_ns, _path, nsIMemoryReporter::_kind, \
+                           nsIMemoryReporter::UNITS_BYTES, amount, \
+                           nsLiteralCString(_desc), data);         \
+    gcThingTotal += amount;                                        \
   } while (0)
 
 MOZ_DEFINE_MALLOC_SIZE_OF(JSMallocSizeOf)

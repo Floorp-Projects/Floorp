@@ -793,9 +793,9 @@ BasePrincipal::GetExposableSpec(nsACString& aSpec) {
   }
   nsCOMPtr<nsIURI> clone;
   rv = NS_MutateURI(prinURI)
-           .SetQuery(EmptyCString())
-           .SetRef(EmptyCString())
-           .SetUserPass(EmptyCString())
+           .SetQuery(""_ns)
+           .SetRef(""_ns)
+           .SetUserPass(""_ns)
            .Finalize(clone);
   NS_ENSURE_SUCCESS(rv, rv);
   return clone->GetAsciiSpec(aSpec);

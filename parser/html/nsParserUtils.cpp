@@ -50,9 +50,9 @@ nsParserUtils::Sanitize(const nsAString& aFromStr, uint32_t aFlags,
   nsCOMPtr<nsIPrincipal> principal =
       mozilla::NullPrincipal::CreateWithoutOriginAttributes();
   RefPtr<Document> document;
-  nsresult rv = NS_NewDOMDocument(getter_AddRefs(document), EmptyString(),
-                                  EmptyString(), nullptr, uri, uri, principal,
-                                  true, nullptr, DocumentFlavorHTML);
+  nsresult rv =
+      NS_NewDOMDocument(getter_AddRefs(document), u""_ns, u""_ns, nullptr, uri,
+                        uri, principal, true, nullptr, DocumentFlavorHTML);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsContentUtils::ParseDocumentHTML(aFromStr, document, false);

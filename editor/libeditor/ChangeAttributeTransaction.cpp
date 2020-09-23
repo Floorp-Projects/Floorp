@@ -37,7 +37,7 @@ ChangeAttributeTransaction::ChangeAttributeTransaction(Element& aElement,
     : EditTransactionBase(),
       mElement(&aElement),
       mAttribute(&aAttribute),
-      mValue(aValue ? *aValue : EmptyString()),
+      mValue(aValue ? *aValue : u""_ns),
       mRemoveAttribute(!aValue),
       mAttributeWasSet(false) {}
 

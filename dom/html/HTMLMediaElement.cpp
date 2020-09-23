@@ -5386,7 +5386,7 @@ static already_AddRefed<AudioTrack> CreateAudioTrack(
   aStreamTrack->GetLabel(label, CallerType::System);
 
   return MediaTrackList::CreateAudioTrack(aOwnerGlobal, id, u"main"_ns, label,
-                                          EmptyString(), true, aStreamTrack);
+                                          u""_ns, true, aStreamTrack);
 }
 
 static already_AddRefed<VideoTrack> CreateVideoTrack(
@@ -5397,7 +5397,7 @@ static already_AddRefed<VideoTrack> CreateVideoTrack(
   aStreamTrack->GetLabel(label, CallerType::System);
 
   return MediaTrackList::CreateVideoTrack(aOwnerGlobal, id, u"main"_ns, label,
-                                          EmptyString(), aStreamTrack);
+                                          u""_ns, aStreamTrack);
 }
 
 void HTMLMediaElement::NotifyMediaStreamTrackAdded(
@@ -6775,7 +6775,7 @@ void HTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel) {
   // and from seeking. So, disable the standard "Accept-Encoding: gzip,deflate"
   // that we usually send. See bug 614760.
   DebugOnly<nsresult> rv =
-      aChannel->SetRequestHeader("Accept-Encoding"_ns, EmptyCString(), false);
+      aChannel->SetRequestHeader("Accept-Encoding"_ns, ""_ns, false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Set the Referrer header

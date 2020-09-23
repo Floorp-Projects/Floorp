@@ -1243,7 +1243,7 @@ WorkerPrivate::MemoryReporter::FinishCollectRunnable::Run() {
       nsCString path = mCxStats.Path();
       path.AppendLiteral("dom/performance/user-entries");
       mHandleReport->Callback(
-          EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,
+          ""_ns, path, nsIMemoryReporter::KIND_HEAP,
           nsIMemoryReporter::UNITS_BYTES, mPerformanceUserEntries,
           "Memory used for performance user entries."_ns, mHandlerData);
     }
@@ -1252,7 +1252,7 @@ WorkerPrivate::MemoryReporter::FinishCollectRunnable::Run() {
       nsCString path = mCxStats.Path();
       path.AppendLiteral("dom/performance/resource-entries");
       mHandleReport->Callback(
-          EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,
+          ""_ns, path, nsIMemoryReporter::KIND_HEAP,
           nsIMemoryReporter::UNITS_BYTES, mPerformanceResourceEntries,
           "Memory used for performance resource entries."_ns, mHandlerData);
     }
@@ -1336,7 +1336,7 @@ nsresult WorkerPrivate::SetCSPFromHeaderValues(
   MOZ_ASSERT(selfURI, "need a self URI for CSP");
 
   rv = csp->SetRequestContextWithPrincipal(mLoadInfo.mPrincipal, selfURI,
-                                           EmptyString(), 0);
+                                           u""_ns, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   csp->EnsureEventTarget(mMainThreadEventTarget);

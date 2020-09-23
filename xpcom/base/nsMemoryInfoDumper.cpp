@@ -159,7 +159,7 @@ void doMemoryReport(const uint8_t aRecvSig) {
   bool minimize = aRecvSig == sDumpAboutMemoryAfterMMUSignum;
   LOG("SignalWatcher(sig %d) dispatching memory report runnable.", aRecvSig);
   RefPtr<DumpMemoryInfoToTempDirRunnable> runnable =
-      new DumpMemoryInfoToTempDirRunnable(/* identifier = */ EmptyString(),
+      new DumpMemoryInfoToTempDirRunnable(/* identifier = */ u""_ns,
                                           /* anonymize = */ false, minimize);
   NS_DispatchToMainThread(runnable);
 }
@@ -168,7 +168,7 @@ void doGCCCDump(const uint8_t aRecvSig) {
   LOG("SignalWatcher(sig %d) dispatching GC/CC log runnable.", aRecvSig);
   // Dump GC and CC logs (from the main thread).
   RefPtr<GCAndCCLogDumpRunnable> runnable =
-      new GCAndCCLogDumpRunnable(/* identifier = */ EmptyString(),
+      new GCAndCCLogDumpRunnable(/* identifier = */ u""_ns,
                                  /* allTraces = */ true,
                                  /* dumpChildProcesses = */ true);
   NS_DispatchToMainThread(runnable);
@@ -185,7 +185,7 @@ void doMemoryReport(const nsCString& aInputStr) {
   LOG("FifoWatcher(command:%s) dispatching memory report runnable.",
       aInputStr.get());
   RefPtr<DumpMemoryInfoToTempDirRunnable> runnable =
-      new DumpMemoryInfoToTempDirRunnable(/* identifier = */ EmptyString(),
+      new DumpMemoryInfoToTempDirRunnable(/* identifier = */ u""_ns,
                                           /* anonymize = */ false, minimize);
   NS_DispatchToMainThread(runnable);
 }
@@ -195,7 +195,7 @@ void doGCCCDump(const nsCString& aInputStr) {
   LOG("FifoWatcher(command:%s) dispatching GC/CC log runnable.",
       aInputStr.get());
   RefPtr<GCAndCCLogDumpRunnable> runnable = new GCAndCCLogDumpRunnable(
-      /* identifier = */ EmptyString(), doAllTracesGCCCDump,
+      /* identifier = */ u""_ns, doAllTracesGCCCDump,
       /* dumpChildProcesses = */ true);
   NS_DispatchToMainThread(runnable);
 }
@@ -638,7 +638,7 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
     }
   }
 
-  nsString dmdIdent = EmptyString();
+  nsString dmdIdent;
   return DumpMemoryInfoToFile(reportsFile, aFinishDumping, aFinishDumpingData,
                               aAnonymize, aMinimizeMemoryUsage, dmdIdent);
 }

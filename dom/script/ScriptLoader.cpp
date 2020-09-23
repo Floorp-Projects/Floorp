@@ -1416,7 +1416,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
       // registered.
       LOG(("ScriptLoadRequest (%p): Maybe request bytecode", aRequest));
       cic->PreferAlternativeDataType(nsContentUtils::JSBytecodeMimeType(),
-                                     EmptyCString(), true);
+                                     ""_ns, true);
     } else {
       // If we are explicitly loading from the sources, such as after a
       // restarted request, we might still want to save the bytecode after.
@@ -1425,7 +1425,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
       // does not exist, such that we can later save the bytecode with a
       // different alternative data type.
       LOG(("ScriptLoadRequest (%p): Request saving bytecode later", aRequest));
-      cic->PreferAlternativeDataType(kNullMimeType, EmptyCString(), true);
+      cic->PreferAlternativeDataType(kNullMimeType, ""_ns, true);
     }
   }
 
@@ -1588,7 +1588,7 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
   bool allowInlineScript = false;
   rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT, nonce, parserCreated,
                             scriptContent, nullptr /* nsICSPEventListener */,
-                            EmptyString(), aElement->GetScriptLineNumber(),
+                            u""_ns, aElement->GetScriptLineNumber(),
                             aElement->GetScriptColumnNumber(),
                             &allowInlineScript);
   return NS_SUCCEEDED(rv) && allowInlineScript;
@@ -3616,10 +3616,10 @@ void ScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
   uint32_t lineNo = element ? element->GetScriptLineNumber() : 0;
   uint32_t columnNo = element ? element->GetScriptColumnNumber() : 0;
 
-  nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, "Script Loader"_ns, mDocument,
-      nsContentUtils::eDOM_PROPERTIES, message, params, nullptr, EmptyString(),
-      lineNo, columnNo);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "Script Loader"_ns, mDocument,
+                                  nsContentUtils::eDOM_PROPERTIES, message,
+                                  params, nullptr, u""_ns, lineNo, columnNo);
 }
 
 void ScriptLoader::ReportPreloadErrorsToConsole(ScriptLoadRequest* aRequest) {

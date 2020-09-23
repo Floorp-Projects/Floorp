@@ -2076,7 +2076,7 @@ class HTMLEditor final : public TextEditor,
   ReplaceContainerAndCloneAttributesWithTransaction(Element& aOldContainer,
                                                     nsAtom& aTagName) {
     return ReplaceContainerWithTransactionInternal(
-        aOldContainer, aTagName, *nsGkAtoms::_empty, EmptyString(), true);
+        aOldContainer, aTagName, *nsGkAtoms::_empty, u""_ns, true);
   }
 
   /**
@@ -2110,7 +2110,7 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> ReplaceContainerWithTransaction(
       Element& aOldContainer, nsAtom& aTagName) {
     return ReplaceContainerWithTransactionInternal(
-        aOldContainer, aTagName, *nsGkAtoms::_empty, EmptyString(), false);
+        aOldContainer, aTagName, *nsGkAtoms::_empty, u""_ns, false);
   }
 
   /**
@@ -2137,8 +2137,8 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> InsertContainerWithTransaction(
       nsIContent& aContent, nsAtom& aTagName) {
-    return InsertContainerWithTransactionInternal(
-        aContent, aTagName, *nsGkAtoms::_empty, EmptyString());
+    return InsertContainerWithTransactionInternal(aContent, aTagName,
+                                                  *nsGkAtoms::_empty, u""_ns);
   }
 
   /**

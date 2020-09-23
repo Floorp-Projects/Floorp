@@ -91,7 +91,7 @@ already_AddRefed<WheelEvent> WheelEvent::Constructor(
   e->InitWheelEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
                     aParam.mDetail, aParam.mScreenX, aParam.mScreenY,
                     aParam.mClientX, aParam.mClientY, aParam.mButton,
-                    aParam.mRelatedTarget, EmptyString(), aParam.mDeltaX,
+                    aParam.mRelatedTarget, u""_ns, aParam.mDeltaX,
                     aParam.mDeltaY, aParam.mDeltaZ, aParam.mDeltaMode);
   e->InitializeExtraMouseEventDictionaryMembers(aParam);
   e->SetTrusted(trusted);

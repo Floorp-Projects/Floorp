@@ -3715,9 +3715,8 @@ NS_IMETHODIMP BrowserChild::OnLocationChange(nsIWebProgress* aWebProgress,
     if (CrashReporter::GetEnabled()) {
       nsCOMPtr<nsIURI> annotationURI;
 
-      nsresult rv = NS_MutateURI(aLocation)
-                        .SetUserPass(EmptyCString())
-                        .Finalize(annotationURI);
+      nsresult rv =
+          NS_MutateURI(aLocation).SetUserPass(""_ns).Finalize(annotationURI);
 
       if (NS_FAILED(rv)) {
         // Ignore failures on about: URIs.

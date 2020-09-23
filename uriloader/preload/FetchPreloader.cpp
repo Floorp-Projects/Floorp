@@ -130,9 +130,9 @@ nsresult FetchPreloader::CheckContentPolicy(nsIURI* aURI,
       nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK, mContentPolicyType);
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(aURI, secCheckLoadInfo,
-                                          EmptyCString(), &shouldLoad,
-                                          nsContentUtils::GetContentPolicy());
+  nsresult rv =
+      NS_CheckContentLoadPolicy(aURI, secCheckLoadInfo, ""_ns, &shouldLoad,
+                                nsContentUtils::GetContentPolicy());
   if (NS_SUCCEEDED(rv) && NS_CP_ACCEPTED(shouldLoad)) {
     return NS_OK;
   }

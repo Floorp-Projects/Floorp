@@ -303,7 +303,7 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
         storageChild->SendClearMatchingOrigin(originScope);
       }
 
-      Notify(topic, EmptyString(), originScope);
+      Notify(topic, u""_ns, originScope);
     } else {
       StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
       if (NS_WARN_IF(!storageChild)) {
@@ -330,9 +330,9 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
         return rv;
       }
 
-      Notify(aTopic, EmptyString(), originScope);
+      Notify(aTopic, u""_ns, originScope);
     } else {
-      Notify(aTopic, EmptyString(), EmptyCString());
+      Notify(aTopic, u""_ns, ""_ns);
     }
 
     return NS_OK;

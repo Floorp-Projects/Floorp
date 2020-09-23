@@ -459,8 +459,7 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
         [self = RefPtr<nsGenericHTMLElement>(this)]() {
           nsAutoString nonce;
           self->GetNonce(nonce);
-          self->SetAttr(kNameSpaceID_None, nsGkAtoms::nonce, EmptyString(),
-                        true);
+          self->SetAttr(kNameSpaceID_None, nsGkAtoms::nonce, u""_ns, true);
           self->SetNonce(nonce);
         }));
   }
@@ -693,16 +692,16 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
     } else if (aName == nsGkAtoms::contenteditable) {
       int32_t editableCountDelta = 0;
       if (aOldValue && (aOldValue->Equals(u"true"_ns, eIgnoreCase) ||
-                        aOldValue->Equals(EmptyString(), eIgnoreCase))) {
+                        aOldValue->Equals(u""_ns, eIgnoreCase))) {
         editableCountDelta = -1;
       }
       if (aValue && (aValue->Equals(u"true"_ns, eIgnoreCase) ||
-                     aValue->Equals(EmptyString(), eIgnoreCase))) {
+                     aValue->Equals(u""_ns, eIgnoreCase))) {
         ++editableCountDelta;
       }
       ChangeEditableState(editableCountDelta);
     } else if (aName == nsGkAtoms::accesskey) {
-      if (aValue && !aValue->Equals(EmptyString(), eIgnoreCase)) {
+      if (aValue && !aValue->Equals(u""_ns, eIgnoreCase)) {
         SetFlags(NODE_HAS_ACCESSKEY);
         RegAccessKey();
       }
@@ -714,7 +713,7 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
         RemoveStates(NS_EVENT_STATE_MOZINERT);
       }
     } else if (aName == nsGkAtoms::name) {
-      if (aValue && !aValue->Equals(EmptyString(), eIgnoreCase)) {
+      if (aValue && !aValue->Equals(u""_ns, eIgnoreCase)) {
         // This may not be quite right because we can have subclass code run
         // before here. But in practice subclasses don't care about this flag,
         // and in particular selector matching does not care.  Otherwise we'd

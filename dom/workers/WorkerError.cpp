@@ -98,9 +98,9 @@ class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
           if (swm) {
             swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
                              aWorkerPrivate->ServiceWorkerScope(),
-                             aWorkerPrivate->ScriptURL(), EmptyString(),
-                             EmptyString(), EmptyString(), 0, 0,
-                             nsIScriptError::errorFlag, JSEXN_ERR);
+                             aWorkerPrivate->ScriptURL(), u""_ns, u""_ns,
+                             u""_ns, 0, 0, nsIScriptError::errorFlag,
+                             JSEXN_ERR);
           }
         }
 
@@ -189,9 +189,8 @@ class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable {
         if (swm) {
           swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
                            aWorkerPrivate->ServiceWorkerScope(),
-                           aWorkerPrivate->ScriptURL(), EmptyString(),
-                           EmptyString(), EmptyString(), 0, 0,
-                           nsIScriptError::errorFlag, JSEXN_ERR);
+                           aWorkerPrivate->ScriptURL(), u""_ns, u""_ns, u""_ns,
+                           0, 0, nsIScriptError::errorFlag, JSEXN_ERR);
         }
       }
 

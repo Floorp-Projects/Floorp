@@ -1112,8 +1112,7 @@ nsresult XPCConvert::ConstructException(nsresult rv, const char* message,
     msgStr.AppendPrintf(format, msg, ifaceName, methodName);
   }
 
-  RefPtr<Exception> e =
-      new Exception(msgStr, rv, EmptyCString(), nullptr, data);
+  RefPtr<Exception> e = new Exception(msgStr, rv, ""_ns, nullptr, data);
 
   if (cx && jsExceptionPtr) {
     e->StowJSVal(*jsExceptionPtr);

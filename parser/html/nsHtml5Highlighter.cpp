@@ -68,8 +68,7 @@ nsHtml5Highlighter::~nsHtml5Highlighter() {
 
 void nsHtml5Highlighter::Start(const nsAutoString& aTitle) {
   // Doctype
-  opAppendDoctypeToDocument operation(nsGkAtoms::html, EmptyString(),
-                                      EmptyString());
+  opAppendDoctypeToDocument operation(nsGkAtoms::html, u""_ns, u""_ns);
   mOpQueue.AppendElement()->Init(mozilla::AsVariant(operation));
 
   mOpQueue.AppendElement()->Init(mozilla::AsVariant(STANDARDS_MODE));

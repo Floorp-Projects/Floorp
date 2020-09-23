@@ -591,8 +591,8 @@ nsresult LookupCache::GetLookupFragments(const nsACString& aSpec,
     paths.AppendElement(path);
   }
   // Check an empty path (for whole-domain blocklist entries)
-  if (!paths.Contains(EmptyCString())) {
-    paths.AppendElement(EmptyCString());
+  if (!paths.Contains(""_ns)) {
+    paths.AppendElement(""_ns);
   }
 
   for (uint32_t hostIndex = 0; hostIndex < hosts.Length(); hostIndex++) {

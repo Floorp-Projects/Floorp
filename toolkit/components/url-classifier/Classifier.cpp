@@ -1165,7 +1165,7 @@ nsresult Classifier::CopyDirectoryInterruptible(nsCOMPtr<nsIFile>& aDestDir,
       rv = CopyDirectoryInterruptible(dest, source);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      rv = source->CopyToNative(aDestDir, EmptyCString());
+      rv = source->CopyToNative(aDestDir, ""_ns);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -1268,13 +1268,13 @@ bool Classifier::CheckValidUpdate(TableUpdateArray& aUpdates,
 nsCString Classifier::GetProvider(const nsACString& aTableName) {
   nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
   if (NS_WARN_IF(!urlUtil)) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   nsCString provider;
   nsresult rv = urlUtil->GetProvider(aTableName, provider);
 
-  return NS_SUCCEEDED(rv) ? provider : EmptyCString();
+  return NS_SUCCEEDED(rv) ? provider : ""_ns;
 }
 
 /*

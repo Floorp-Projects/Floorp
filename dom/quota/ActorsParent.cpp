@@ -6625,7 +6625,7 @@ already_AddRefed<DirectoryLock> QuotaManager::OpenDirectoryInternal(
 
   bool blocked;
   RefPtr<DirectoryLockImpl> lock =
-      CreateDirectoryLock(aPersistenceType, EmptyCString(), aOriginScope,
+      CreateDirectoryLock(aPersistenceType, ""_ns, aOriginScope,
                           Nullable<Client::Type>(aClientType), aExclusive, true,
                           aOpenListener, blocked);
   MOZ_ASSERT(lock);
@@ -7314,7 +7314,7 @@ nsresult QuotaManager::GetInfoFromWindow(nsPIDOMWindowOuter* aWindow,
 void QuotaManager::GetInfoForChrome(nsACString* aSuffix, nsACString* aGroup,
                                     nsACString* aOrigin) {
   if (aSuffix) {
-    aSuffix->Assign(EmptyCString());
+    aSuffix->Assign(""_ns);
   }
   if (aGroup) {
     ChromeOrigin(*aGroup);
@@ -10964,7 +10964,7 @@ void OriginParser::HandleToken(const nsDependentCSubstring& aToken) {
       MOZ_ASSERT(mSchemeType == eFile);
 
       if (aToken.IsEmpty()) {
-        mPathnameComponents.AppendElement(EmptyCString());
+        mPathnameComponents.AppendElement(""_ns);
 
         mState = mTokenizer.hasMoreTokens()
                      ? eExpectingEmptyTokenOrPathnameComponent
@@ -11002,7 +11002,7 @@ void OriginParser::HandleToken(const nsDependentCSubstring& aToken) {
 
           mMaybeDriveLetter = false;
         } else {
-          mPathnameComponents.AppendElement(EmptyCString());
+          mPathnameComponents.AppendElement(""_ns);
         }
 
         mState = mTokenizer.hasMoreTokens()
@@ -11056,7 +11056,7 @@ void OriginParser::HandleTrailingSeparator() {
   MOZ_ASSERT(mState == eComplete);
   MOZ_ASSERT(mSchemeType == eFile);
 
-  mPathnameComponents.AppendElement(EmptyCString());
+  mPathnameComponents.AppendElement(""_ns);
 
   mState = eHandledTrailingSeparator;
 }
@@ -11254,7 +11254,7 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
       }
 
       if (!leafName.Equals(idbDirectoryName)) {
-        rv = file->MoveTo(idbDirectory, EmptyString());
+        rv = file->MoveTo(idbDirectory, u""_ns);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -11367,8 +11367,7 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
 
         rv = aOriginProps.mDirectory->Remove(/* recursive */ true);
       } else {
-        rv = aOriginProps.mDirectory->MoveTo(mPermanentStorageDir,
-                                             EmptyString());
+        rv = aOriginProps.mDirectory->MoveTo(mPermanentStorageDir, u""_ns);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;

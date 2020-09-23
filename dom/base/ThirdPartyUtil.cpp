@@ -112,7 +112,7 @@ nsCString ThirdPartyUtil::GetBaseDomainFromWindow(nsPIDOMWindowOuter* aWindow) {
   mozilla::dom::Document* doc = aWindow ? aWindow->GetExtantDoc() : nullptr;
 
   if (!doc) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   return doc->GetBaseDomain();

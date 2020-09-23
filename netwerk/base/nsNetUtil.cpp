@@ -224,7 +224,7 @@ nsresult NS_GetURIWithNewRef(nsIURI* aInput, const nsACString& aRef,
 }
 
 nsresult NS_GetURIWithoutRef(nsIURI* aInput, nsIURI** aOutput) {
-  return NS_GetURIWithNewRef(aInput, EmptyCString(), aOutput);
+  return NS_GetURIWithNewRef(aInput, ""_ns, aOutput);
 }
 
 nsresult NS_NewChannelInternal(
@@ -740,8 +740,8 @@ nsresult NS_NewInputStreamChannel(
     nsIChannel** outChannel, nsIURI* aUri,
     already_AddRefed<nsIInputStream> aStream, nsIPrincipal* aLoadingPrincipal,
     nsSecurityFlags aSecurityFlags, nsContentPolicyType aContentPolicyType,
-    const nsACString& aContentType /* = EmptyCString() */,
-    const nsACString& aContentCharset /* = EmptyCString() */) {
+    const nsACString& aContentType /* = ""_ns */,
+    const nsACString& aContentCharset /* = ""_ns */) {
   nsCOMPtr<nsIInputStream> stream = aStream;
   return NS_NewInputStreamChannelInternal(outChannel, aUri, stream.forget(),
                                           aContentType, aContentCharset,
@@ -1088,8 +1088,8 @@ nsresult NS_NewProxyInfo(const nsACString& type, const nsACString& host,
   nsCOMPtr<nsIProtocolProxyService> pps =
       do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
-    rv = pps->NewProxyInfo(type, host, port, EmptyCString(), EmptyCString(),
-                           flags, UINT32_MAX, nullptr, result);
+    rv = pps->NewProxyInfo(type, host, port, ""_ns, ""_ns, flags, UINT32_MAX,
+                           nullptr, result);
   return rv;
 }
 
@@ -2609,7 +2609,7 @@ uint32_t NS_GetContentDispositionFromHeader(const nsACString& aHeader,
   if (NS_FAILED(rv)) return nsIChannel::DISPOSITION_ATTACHMENT;
 
   nsAutoString dispToken;
-  rv = mimehdrpar->GetParameterHTTP(aHeader, "", EmptyCString(), true, nullptr,
+  rv = mimehdrpar->GetParameterHTTP(aHeader, "", ""_ns, true, nullptr,
                                     dispToken);
 
   if (NS_FAILED(rv)) {
@@ -2632,8 +2632,8 @@ nsresult NS_GetFilenameFromDisposition(nsAString& aFilename,
   if (NS_FAILED(rv)) return rv;
 
   // Get the value of 'filename' parameter
-  rv = mimehdrpar->GetParameterHTTP(aDisposition, "filename", EmptyCString(),
-                                    true, nullptr, aFilename);
+  rv = mimehdrpar->GetParameterHTTP(aDisposition, "filename", ""_ns, true,
+                                    nullptr, aFilename);
 
   if (NS_FAILED(rv)) {
     aFilename.Truncate();
@@ -2824,10 +2824,10 @@ nsresult NS_ShouldSecureUpgrade(
           uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
           CSP_LogLocalizedStr(
               "upgradeInsecureRequest", params,
-              EmptyString(),  // aSourceFile
-              EmptyString(),  // aScriptSample
-              0,              // aLineNumber
-              0,              // aColumnNumber
+              u""_ns,  // aSourceFile
+              u""_ns,  // aScriptSample
+              0,       // aLineNumber
+              0,       // aColumnNumber
               nsIScriptError::warningFlag, "upgradeInsecureRequest"_ns,
               innerWindowId,
               !!aLoadInfo->GetOriginAttributes().mPrivateBrowsingId);

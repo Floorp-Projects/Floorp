@@ -194,7 +194,7 @@ static nsCString GetCLSIDNameStr(REFCLSID aCLSID) {
   LPOLESTR str = nullptr;
   HRESULT hr = ::StringFromCLSID(aCLSID, &str);
   if (FAILED(hr) || !str || !str[0]) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   nsCString result;
@@ -207,7 +207,7 @@ static nsCString GetGUIDNameStr(REFGUID aGUID) {
   OLECHAR str[40];
   int len = ::StringFromGUID2(aGUID, str, ArrayLength(str));
   if (!len || !str[0]) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   return NS_ConvertUTF16toUTF8(str);
@@ -314,7 +314,7 @@ static nsCString GetRIIDNameStr(REFIID aRIID) {
   LPOLESTR str = nullptr;
   HRESULT hr = ::StringFromIID(aRIID, &str);
   if (FAILED(hr) || !str || !str[0]) {
-    return EmptyCString();
+    return ""_ns;
   }
 
   nsAutoString key(L"Interface\\");

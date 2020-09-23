@@ -73,8 +73,8 @@ nsDeviceContextSpecWin::~nsDeviceContextSpecWin() {
   }
 
   if (nsCOMPtr<nsIPrintSettingsWin> ps = do_QueryInterface(mPrintSettings)) {
-    ps->SetDeviceName(EmptyString());
-    ps->SetDriverName(EmptyString());
+    ps->SetDeviceName(u""_ns);
+    ps->SetDriverName(u""_ns);
     ps->SetDevMode(nullptr);
   }
 }

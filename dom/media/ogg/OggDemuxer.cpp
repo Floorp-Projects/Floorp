@@ -130,7 +130,7 @@ const nsString OggDemuxer::GetKind(const nsCString& aRole) {
   } else if (aRole.Find("video/subtitled") != -1) {
     return u"subtitles"_ns;
   }
-  return EmptyString();
+  return u""_ns;
 }
 
 void OggDemuxer::InitTrack(MessageField* aMsgInfo, TrackInfo* aInfo,
@@ -143,7 +143,7 @@ void OggDemuxer::InitTrack(MessageField* aMsgInfo, TrackInfo* aInfo,
   nsCString* sTitle = aMsgInfo->mValuesStore.Get(eTitle);
   nsCString* sLanguage = aMsgInfo->mValuesStore.Get(eLanguage);
   aInfo->Init(sName ? NS_ConvertUTF8toUTF16(*sName) : EmptyString(),
-              sRole ? GetKind(*sRole) : EmptyString(),
+              sRole ? GetKind(*sRole) : u""_ns,
               sTitle ? NS_ConvertUTF8toUTF16(*sTitle) : EmptyString(),
               sLanguage ? NS_ConvertUTF8toUTF16(*sLanguage) : EmptyString(),
               aEnable);

@@ -297,7 +297,7 @@ static void SetOpacityOnElement(nsIContent* aContent, double aOpacity) {
     nsICSSDeclaration* decl = inlineStyleContent->Style();
     nsAutoCString str;
     str.AppendFloat(aOpacity);
-    decl->SetProperty("opacity"_ns, str, EmptyString(), IgnoreErrors());
+    decl->SetProperty("opacity"_ns, str, u""_ns, IgnoreErrors());
   }
 }
 

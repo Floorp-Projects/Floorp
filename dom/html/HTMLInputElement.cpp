@@ -1624,7 +1624,7 @@ void HTMLInputElement::SetValue(Decimal aValue, CallerType aCallerType) {
   MOZ_ASSERT(!aValue.isInfinity(), "aValue must not be Infinity!");
 
   if (aValue.isNaN()) {
-    SetValue(EmptyString(), aCallerType, IgnoreErrors());
+    SetValue(u""_ns, aCallerType, IgnoreErrors());
     return;
   }
 
@@ -1752,7 +1752,7 @@ void HTMLInputElement::SetValueAsDate(JSContext* aCx,
   // system" as the caller type, since the caller type only matters in the file
   // input case.
   if (IsNaN(milliseconds)) {
-    SetValue(EmptyString(), CallerType::NonSystem, aRv);
+    SetValue(u""_ns, CallerType::NonSystem, aRv);
     return;
   }
 
@@ -1766,7 +1766,7 @@ void HTMLInputElement::SetValueAsDate(JSContext* aCx,
   double month = JS::MonthFromTime(milliseconds);
 
   if (IsNaN(year) || IsNaN(month)) {
-    SetValue(EmptyString(), CallerType::NonSystem, aRv);
+    SetValue(u""_ns, CallerType::NonSystem, aRv);
     return;
   }
 
@@ -3043,7 +3043,7 @@ void HTMLInputElement::SelectAll(nsPresContext* aPresContext) {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
 
   if (formControlFrame) {
-    formControlFrame->SetFormProperty(nsGkAtoms::select, EmptyString());
+    formControlFrame->SetFormProperty(nsGkAtoms::select, u""_ns);
   }
 }
 
@@ -6742,10 +6742,10 @@ void HTMLInputElement::SetFilePickerFiltersFromAccept(
     } else {
       //... if no image/audio/video filter is found, check mime types filters
       nsCOMPtr<nsIMIMEInfo> mimeInfo;
-      if (NS_FAILED(mimeService->GetFromTypeAndExtension(
-              NS_ConvertUTF16toUTF8(token),
-              EmptyCString(),  // No extension
-              getter_AddRefs(mimeInfo))) ||
+      if (NS_FAILED(
+              mimeService->GetFromTypeAndExtension(NS_ConvertUTF16toUTF8(token),
+                                                   ""_ns,  // No extension
+                                                   getter_AddRefs(mimeInfo))) ||
           !mimeInfo) {
         allMimeTypeFiltersAreValid = false;
         continue;

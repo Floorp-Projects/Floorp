@@ -253,7 +253,7 @@ void nsImageBoxFrame::UpdateImage() {
       auto referrerInfo = MakeRefPtr<ReferrerInfo>(*mContent->AsElement());
       nsresult rv = nsContentUtils::LoadImage(
           uri, mContent, doc, triggeringPrincipal, requestContextID,
-          referrerInfo, mListener, mLoadFlags, EmptyString(),
+          referrerInfo, mListener, mLoadFlags, u""_ns,
           getter_AddRefs(mImageRequest), contentPolicyType);
 
       if (NS_SUCCEEDED(rv) && mImageRequest) {

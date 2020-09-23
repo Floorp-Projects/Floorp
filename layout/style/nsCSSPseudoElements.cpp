@@ -124,7 +124,7 @@ nsString nsCSSPseudoElements::PseudoTypeAsString(Type aPseudoType) {
     default:
       MOZ_ASSERT(aPseudoType == PseudoStyleType::NotPseudo,
                  "Unexpected pseudo type");
-      return EmptyString();
+      return u""_ns;
   }
 }
 

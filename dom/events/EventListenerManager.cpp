@@ -817,8 +817,8 @@ nsresult EventListenerManager::SetEventHandler(nsAtom* aName,
       bool allowsInlineScript = true;
       rv = csp->GetAllowsInline(
           nsIContentPolicy::TYPE_SCRIPT,
-          EmptyString(),  // aNonce
-          true,  // aParserCreated (true because attribute event handler)
+          u""_ns,  // aNonce
+          true,    // aParserCreated (true because attribute event handler)
           aElement,
           nullptr,  // nsICSPEventListener
           aBody, lineNum, columnNum, &allowsInlineScript);
@@ -1218,8 +1218,8 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             // This is tiny bit slow, but happens only once per event.
             // Similar code also in EventDispatcher.
             nsCOMPtr<EventTarget> et = aEvent->mOriginalTarget;
-            RefPtr<Event> event = EventDispatcher::CreateEvent(
-                et, aPresContext, aEvent, EmptyString());
+            RefPtr<Event> event =
+                EventDispatcher::CreateEvent(et, aPresContext, aEvent, u""_ns);
             event.forget(aDOMEvent);
           }
           if (*aDOMEvent) {

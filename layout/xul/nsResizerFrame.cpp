@@ -439,14 +439,14 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
       if (!widthstr.IsEmpty() &&
           !Substring(widthstr, widthstr.Length() - 2, 2).EqualsLiteral("px"))
         widthstr.AppendLiteral("px");
-      decl->SetProperty("width"_ns, widthstr, EmptyString(), IgnoreErrors());
+      decl->SetProperty("width"_ns, widthstr, u""_ns, IgnoreErrors());
     }
     if (aDirection.mVertical) {
       NS_ConvertUTF16toUTF8 heightstr(aSizeInfo.height);
       if (!heightstr.IsEmpty() &&
           !Substring(heightstr, heightstr.Length() - 2, 2).EqualsLiteral("px"))
         heightstr.AppendLiteral("px");
-      decl->SetProperty("height"_ns, heightstr, EmptyString(), IgnoreErrors());
+      decl->SetProperty("height"_ns, heightstr, u""_ns, IgnoreErrors());
     }
   }
 }

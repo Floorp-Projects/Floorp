@@ -1239,11 +1239,11 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
     // whether we really need to in PushMessageDispatcher::NotifyWorkers.  Since
     // in practice this only affects JS callers that pass data, and we don't
     // have any right now, let's not worry about it.
-    return SendPushEvent(aOriginAttributes, aScope, EmptyString(),
+    return SendPushEvent(aOriginAttributes, aScope, u""_ns,
                          Some(aDataBytes.Clone()));
   }
   MOZ_ASSERT(optional_argc == 0);
-  return SendPushEvent(aOriginAttributes, aScope, EmptyString(), Nothing());
+  return SendPushEvent(aOriginAttributes, aScope, u""_ns, Nothing());
 }
 
 nsresult ServiceWorkerManager::SendPushEvent(
@@ -2629,9 +2629,8 @@ void ServiceWorkerManager::Update(
       new UpdateRunnable(aPrincipal, aScope, std::move(aNewestWorkerScriptUrl),
                          aCallback, UpdateRunnable::eSuccess, promise);
 
-  RefPtr<CancelableRunnable> failureRunnable =
-      new UpdateRunnable(aPrincipal, aScope, EmptyCString(), aCallback,
-                         UpdateRunnable::eFailure, promise);
+  RefPtr<CancelableRunnable> failureRunnable = new UpdateRunnable(
+      aPrincipal, aScope, ""_ns, aCallback, UpdateRunnable::eFailure, promise);
 
   ServiceWorkerUpdaterChild* actor =
       new ServiceWorkerUpdaterChild(promise, successRunnable, failureRunnable);
@@ -2868,7 +2867,7 @@ ServiceWorkerManager::RegisterForAddonPrincipal(nsIPrincipal* aPrincipal,
   }
 
   nsCString scope;
-  auto result = addonPolicy->GetURL(EmptyString());
+  auto result = addonPolicy->GetURL(u""_ns);
   if (result.isOk()) {
     scope.Assign(NS_ConvertUTF16toUTF8(result.unwrap()));
   } else {

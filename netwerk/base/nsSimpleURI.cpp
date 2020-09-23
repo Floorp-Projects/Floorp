@@ -557,7 +557,7 @@ void nsSimpleURI::SetRefOnClone(nsSimpleURI* url,
 }
 
 nsresult nsSimpleURI::Clone(nsIURI** result) {
-  return CloneInternal(eHonorRef, EmptyCString(), result);
+  return CloneInternal(eHonorRef, ""_ns, result);
 }
 
 nsresult nsSimpleURI::CloneInternal(

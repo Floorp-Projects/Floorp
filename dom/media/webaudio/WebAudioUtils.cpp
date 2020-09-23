@@ -136,7 +136,7 @@ void WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID,
     return;
   }
 
-  errorObject->InitWithWindowID(result, spec, EmptyString(), aLineNumber,
+  errorObject->InitWithWindowID(result, spec, u""_ns, aLineNumber,
                                 aColumnNumber, nsIScriptError::warningFlag,
                                 "Web Audio", aWindowID);
   console->LogMessage(errorObject);

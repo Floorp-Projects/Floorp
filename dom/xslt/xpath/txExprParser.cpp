@@ -136,7 +136,7 @@ nsresult txExprParser::createAVT(const nsAString& aAttrValue,
   }
 
   if (!expr) {
-    expr = MakeUnique<txLiteralExpr>(EmptyString());
+    expr = MakeUnique<txLiteralExpr>(u""_ns);
   }
 
   *aResult = expr.release();

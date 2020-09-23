@@ -156,7 +156,7 @@ UrlClassifierFeatureSocialTrackingProtection::ProcessChannel(
   }
 
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_SOCIALTRACKING_URI,
-                                         list, EmptyCString(), EmptyCString());
+                                         list, ""_ns, ""_ns);
 
   UC_LOG(
       ("UrlClassifierFeatureSocialTrackingProtection::ProcessChannel - "

@@ -138,7 +138,7 @@ already_AddRefed<DocumentFragment> Sanitizer::Sanitize(
 void Sanitizer::SanitizeToString(
     const Optional<StringOrDocumentFragmentOrDocument>& aInput,
     nsAString& outSanitized, ErrorResult& aRv) {
-  outSanitized = EmptyString();
+  outSanitized.Truncate();
   if (!aInput.WasPassed()) {
     AutoTArray<nsString, 1> params = {};
     LogLocalizedString("SanitizerRcvdNoInput", params,

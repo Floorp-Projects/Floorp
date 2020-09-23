@@ -18,7 +18,7 @@ namespace mozilla {
 /*static*/
 nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
 #ifndef SUPPORT_STORAGE_ID
-  return EmptyCString();
+  return ""_ns;
 #else
   GMP_LOG_DEBUG("CDMStorageIdProvider::ComputeStorageId");
 
@@ -26,7 +26,7 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
   if (!rlz_lib::GetMachineId(&machineId)) {
     GMP_LOG_DEBUG(
         "CDMStorageIdProvider::ComputeStorageId: get machineId failed.");
-    return EmptyCString();
+    return ""_ns;
   }
 
   std::string originSalt(aOriginSalt.BeginReading(), aOriginSalt.Length());
@@ -40,7 +40,7 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
         "CDMStorageIdProvider::ComputeStorageId: no crypto hash(0x%08" PRIx32
         ")",
         static_cast<uint32_t>(rv));
-    return EmptyCString();
+    return ""_ns;
   }
 
   rv = hasher->Init(nsICryptoHash::SHA256);
@@ -49,7 +49,7 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
         "CDMStorageIdProvider::ComputeStorageId: failed to initialize "
         "hash(0x%08" PRIx32 ")",
         static_cast<uint32_t>(rv));
-    return EmptyCString();
+    return ""_ns;
   }
 
   rv = hasher->Update(reinterpret_cast<const uint8_t*>(input.c_str()),
@@ -59,7 +59,7 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
         "CDMStorageIdProvider::ComputeStorageId: failed to update "
         "hash(0x%08" PRIx32 ")",
         static_cast<uint32_t>(rv));
-    return EmptyCString();
+    return ""_ns;
   }
 
   nsCString storageId;
@@ -69,7 +69,7 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
         "CDMStorageIdProvider::ComputeStorageId: failed to get the final hash "
         "result(0x%08" PRIx32 ")",
         static_cast<uint32_t>(rv));
-    return EmptyCString();
+    return ""_ns;
   }
   return storageId;
 #endif

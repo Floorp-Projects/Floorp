@@ -1420,7 +1420,7 @@ nsresult HTMLEditor::SetFinalSizeWithTransaction(int32_t aX, int32_t aY) {
     if (resizedStyleElement) {
       if (setWidth) {
         nsresult rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-            *resizedStyleElement, *nsGkAtoms::width, EmptyString());
+            *resizedStyleElement, *nsGkAtoms::width, u""_ns);
         if (rv == NS_ERROR_EDITOR_DESTROYED) {
           NS_WARNING(
               "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::width)"
@@ -1434,7 +1434,7 @@ nsresult HTMLEditor::SetFinalSizeWithTransaction(int32_t aX, int32_t aY) {
       }
       if (setHeight) {
         nsresult rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-            *resizedStyleElement, *nsGkAtoms::height, EmptyString());
+            *resizedStyleElement, *nsGkAtoms::height, u""_ns);
         if (rv == NS_ERROR_EDITOR_DESTROYED) {
           NS_WARNING(
               "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::"

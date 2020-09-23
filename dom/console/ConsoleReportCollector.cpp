@@ -79,7 +79,7 @@ void ConsoleReportCollector::FlushReportsToConsole(uint64_t aInnerWindowID,
 
     nsContentUtils::ReportToConsoleByWindowID(
         errorText, report.mErrorFlags, report.mCategory, aInnerWindowID, uri,
-        EmptyString(), report.mLineNumber, report.mColumnNumber);
+        u""_ns, report.mLineNumber, report.mColumnNumber);
   }
 }
 

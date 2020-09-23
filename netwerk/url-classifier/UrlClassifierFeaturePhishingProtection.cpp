@@ -37,12 +37,12 @@ UrlClassifierFeaturePhishingProtection::UrlClassifierFeaturePhishingProtection(
     : UrlClassifierFeatureBase(
           nsDependentCString(aFeature.mName),
           nsDependentCString(aFeature.mBlocklistPrefTables),
-          EmptyCString(),    // aPrefEntitylistPrefTbles,
-          EmptyCString(),    // aPrefBlocklistHosts
-          EmptyCString(),    // aPrefEntitylistHosts
-          EmptyCString(),    // aPrefBlocklistTableName
-          EmptyCString(),    // aPrefEntitylistTableName
-          EmptyCString()) {  // aPrefExceptionHosts
+          ""_ns,    // aPrefEntitylistPrefTbles,
+          ""_ns,    // aPrefBlocklistHosts
+          ""_ns,    // aPrefEntitylistHosts
+          ""_ns,    // aPrefBlocklistTableName
+          ""_ns,    // aPrefEntitylistTableName
+          ""_ns) {  // aPrefExceptionHosts
 }
 
 /* static */
