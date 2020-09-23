@@ -1,8 +1,12 @@
 <hr/>
 
 <header>
+  {{#if recommendations.[1] }}
   <h4>Similar Stories</h4>
-  <a target="_blank" href="https://getpocket.com/story_recommendations_learn_more">Learn More</a>
+  {{else}}
+  <h4>Similar Story</h4>
+  {{/if}}
+  <a target="_blank" href="https://getpocket.com/story_recommendations_learn_more">Learn more</a>
 </header>
 
 <ol>
