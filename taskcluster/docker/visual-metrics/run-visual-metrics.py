@@ -84,7 +84,12 @@ def run_command(log, cmd):
         log.info("Command succeeded", result=res)
         return 0, res
     except subprocess.CalledProcessError as e:
-        log.info("Command failed", cmd=cmd, status=e.returncode, output=e.output)
+        log.info(
+            "[TEST-UNEXPECTED FAIL] Command failed",
+            cmd=cmd,
+            status=e.returncode,
+            output=e.output
+        )
         return e.returncode, e.output
 
 
@@ -351,7 +356,7 @@ def run_visual_metrics(job, visualmetrics_path, options):
     Returns:
        A returncode and a string containing the output of visualmetrics.py
     """
-    cmd = ["/usr/bin/python", str(visualmetrics_path), "--video", str(job.video_path)]
+    cmd = ["/usr/bin/python", str(visualmetrics_path), "-v", "--video", str(job.video_path)]
     cmd.extend(options)
     return run_command(log, cmd)
 
