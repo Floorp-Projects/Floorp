@@ -516,7 +516,8 @@ static already_AddRefed<nsDocShellLoadState> CreateLoadInfo(
 }
 
 void CanonicalBrowsingContext::NotifyOnHistoryReload(
-    bool& aCanReload, Maybe<RefPtr<nsDocShellLoadState>>& aLoadState,
+    bool aForceReload, bool& aCanReload,
+    Maybe<RefPtr<nsDocShellLoadState>>& aLoadState,
     Maybe<bool>& aReloadActiveEntry) {
   MOZ_DIAGNOSTIC_ASSERT(!aLoadState);
 
@@ -529,12 +530,22 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
   if (mActiveEntry) {
     aLoadState.emplace(CreateLoadInfo(mActiveEntry, Nothing()));
     aReloadActiveEntry.emplace(true);
+    if (aForceReload) {
+      shistory->RemoveFrameEntries(mActiveEntry);
+    }
   } else if (!mLoadingEntries.IsEmpty()) {
     const LoadingSessionHistoryEntry& loadingEntry =
         mLoadingEntries.LastElement();
     aLoadState.emplace(
         CreateLoadInfo(loadingEntry.mEntry, Some(loadingEntry.mLoadId)));
     aReloadActiveEntry.emplace(false);
+    if (aForceReload) {
+      SessionHistoryEntry* entry =
+          SessionHistoryEntry::GetByLoadId(loadingEntry.mLoadId);
+      if (entry) {
+        shistory->RemoveFrameEntries(entry);
+      }
+    }
   }
 
   if (aLoadState) {

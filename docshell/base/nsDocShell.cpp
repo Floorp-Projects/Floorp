@@ -4037,6 +4037,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   if (StaticPrefs::fission_sessionHistoryInParent()) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("document %p Reload", this));
+    bool forceReload = IsForceReloadType(loadType);
     if (!XRE_IsParentProcess()) {
       RefPtr<nsDocShell> docShell(this);
       RefPtr<Document> doc(GetDocument());
@@ -4044,7 +4045,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
       nsCOMPtr<nsIURI> currentURI(mCurrentURI);
       nsCOMPtr<nsIReferrerInfo> referrerInfo(mReferrerInfo);
       ContentChild::GetSingleton()->SendNotifyOnHistoryReload(
-          mBrowsingContext,
+          mBrowsingContext, forceReload,
           [docShell, doc, loadType, browsingContext, currentURI, referrerInfo](
               Tuple<bool, Maybe<RefPtr<nsDocShellLoadState>>, Maybe<bool>>&&
                   aResult) {
@@ -4079,7 +4080,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
       Maybe<bool> reloadingActiveEntry;
       if (!mBrowsingContext->IsDiscarded()) {
         mBrowsingContext->Canonical()->NotifyOnHistoryReload(
-            canReload, loadState, reloadingActiveEntry);
+            forceReload, canReload, loadState, reloadingActiveEntry);
       }
       if (canReload) {
         if (loadState.isSome()) {

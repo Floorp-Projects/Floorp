@@ -6890,14 +6890,14 @@ mozilla::ipc::IPCResult ContentParent::RecvReportServiceWorkerShutdownProgress(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyOnHistoryReload(
-    const MaybeDiscarded<BrowsingContext>& aContext,
+    const MaybeDiscarded<BrowsingContext>& aContext, const bool& aForceReload,
     NotifyOnHistoryReloadResolver&& aResolver) {
   bool canReload = false;
   Maybe<RefPtr<nsDocShellLoadState>> loadState;
   Maybe<bool> reloadActiveEntry;
   if (!aContext.IsDiscarded()) {
-    aContext.get_canonical()->NotifyOnHistoryReload(canReload, loadState,
-                                                    reloadActiveEntry);
+    aContext.get_canonical()->NotifyOnHistoryReload(
+        aForceReload, canReload, loadState, reloadActiveEntry);
   }
   aResolver(Tuple<const bool&, const Maybe<RefPtr<nsDocShellLoadState>>&,
                   const Maybe<bool>&>(canReload, loadState, reloadActiveEntry));
