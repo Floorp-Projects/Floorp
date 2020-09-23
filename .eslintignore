@@ -144,9 +144,6 @@ js/src/Y.js
 # Fuzzing code for testing only, targeting the JS shell
 js/src/fuzz-tests/
 
-# Ignore generated code from csswg
-layout/docs/css-grid-3/Overview.html
-
 # Uses `#filter substitution`
 mobile/android/app/mobile.js
 mobile/android/app/geckoview-prefs.js
