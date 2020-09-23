@@ -53,7 +53,8 @@ static void scale_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
   dest += destStride * bandOffset;
   src += srcStride * (frac / dstHeight);
   frac %= dstHeight;
-  for (int rows = min(dstBounds.height(), bandHeight); rows > 0; rows--) {
+  for (int rows = min(dstBounds.height() - bandOffset, bandHeight); rows > 0;
+       rows--) {
     if (srcWidth == dstWidth) {
       // No scaling, so just do a fast copy.
       memcpy(dest, src, span * bpp);
@@ -173,7 +174,8 @@ static void linear_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
   dest += destStride * bandOffset;
   srcUV.y += srcDUV.y * bandOffset;
   int span = dstBounds.width();
-  for (int rows = min(dstBounds.height(), bandHeight); rows > 0; rows--) {
+  for (int rows = min(dstBounds.height() - bandOffset, bandHeight); rows > 0;
+       rows--) {
     switch (bpp) {
       case 1:
         linear_row_blit((uint8_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
@@ -384,13 +386,16 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
 
   if (opaque) {
     if (!srcReq.same_size(dstReq) && filter == GL_LINEAR) {
-      linear_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, bandOffset, bandHeight);
+      linear_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, bandOffset,
+                  bandHeight);
     } else {
-      scale_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, bandOffset, bandHeight);
+      scale_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, bandOffset,
+                 bandHeight);
     }
   } else {
     if (!srcReq.same_size(dstReq) || filter == GL_LINEAR) {
-      linear_composite(srctex, srcReq, dsttex, dstReq, flip, bandOffset, bandHeight);
+      linear_composite(srctex, srcReq, dsttex, dstReq, flip, bandOffset,
+                       bandHeight);
     } else {
       const int bpp = 4;
       IntRect bounds = dsttex.sample_bounds(dstReq, flip);
@@ -404,7 +409,8 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
       }
       dest += destStride * bandOffset;
       src += srcStride * bandOffset;
-      for (int rows = min(bounds.height(), bandHeight); rows > 0; rows--) {
+      for (int rows = min(bounds.height() - bandOffset, bandHeight); rows > 0;
+           rows--) {
         char* end = src + bounds.width() * bpp;
         while (src + 4 * bpp <= end) {
           WideRGBA8 srcpx = unpack(unaligned_load<PackedRGBA8>(src));
@@ -809,8 +815,8 @@ void CompositeYUV(LockedTexture* lockedDst, LockedTexture* lockedY,
   // For now, always use a linear filter path that would be required for
   // scaling. Further fast-paths for non-scaled video might be desirable in the
   // future.
-  linear_convert_yuv(ytex, utex, vtex, colorSpace, srcReq, dsttex, dstReq,
-                     flip, bandOffset, bandHeight);
+  linear_convert_yuv(ytex, utex, vtex, colorSpace, srcReq, dsttex, dstReq, flip,
+                     bandOffset, bandHeight);
 }
 
 }  // extern "C"
