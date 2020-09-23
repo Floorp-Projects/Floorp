@@ -5,8 +5,8 @@
 #include "common/browser_logging/CSFLog.h"
 
 #include "transport/nr_socket_proxy_config.h"
-#include "mediapipeline/MediaPipelineFilter.h"
-#include "mediapipeline/MediaPipeline.h"
+#include "transportbridge/MediaPipelineFilter.h"
+#include "transportbridge/MediaPipeline.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
 #include "RTCDtlsTransport.h"

@@ -31,7 +31,7 @@
 #include "gtest/gtest.h"
 
 using namespace mozilla;
-MOZ_MTLOG_MODULE("mediapipeline")
+MOZ_MTLOG_MODULE("transportbridge")
 
 static MtransportTestUtils* test_utils;
 
