@@ -1117,11 +1117,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
         respectedCOEP = mWorkerPrivate->GetOwnerEmbedderPolicy();
       }
 
-      nsCOMPtr<nsILoadInfo> channelLoadInfo;
-      rv = channel->GetLoadInfo(getter_AddRefs(channelLoadInfo));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      nsCOMPtr<nsILoadInfo> channelLoadInfo = channel->LoadInfo();
       channelLoadInfo->SetLoadingEmbedderPolicy(respectedCOEP);
     }
 

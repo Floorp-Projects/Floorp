@@ -1533,8 +1533,7 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
   if (isNonSubresourceRequest) {
     registration = swm->GetRegistration(mInfo->Principal(), mInfo->Scope());
   } else {
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    channel->GetLoadInfo(getter_AddRefs(loadInfo));
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
 
     // We'll check for a null registration below rather than an error code here.
     Unused << swm->GetClientRegistration(loadInfo->GetClientInfo().ref(),
