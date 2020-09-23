@@ -81,7 +81,7 @@ extern crate libc;
    transform(profile, srgb_profile, size);
  
    // Firefox only checks the display (destination) profile.
-   if !qcms_profile_is_bogus(profile) {
+   if !qcms_profile_is_bogus(&mut *profile) {
  
      transform(srgb_profile, profile, size);
  
