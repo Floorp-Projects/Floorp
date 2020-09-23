@@ -68,6 +68,7 @@ enum class StaticParserString2 : uint16_t;
 class alignas(alignof(uint32_t)) ParserAtomEntry {
   friend class ParserAtomsTable;
   friend class WellKnownParserAtoms;
+  friend class WellKnownParserAtoms_ROM;
 
   static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
@@ -293,6 +294,80 @@ struct ParserAtomLookupHasher {
   }
 };
 
+class WellKnownParserAtoms_ROM {
+ public:
+  static const size_t ASCII_STATIC_LIMIT = 128U;
+  static const size_t NUM_SMALL_CHARS = StaticStrings::NUM_SMALL_CHARS;
+  static const size_t NUM_LENGTH2_ENTRIES = NUM_SMALL_CHARS * NUM_SMALL_CHARS;
+
+  StaticParserAtomEntry<0> emptyAtom;
+  StaticParserAtomEntry<1> length1Table[ASCII_STATIC_LIMIT];
+  StaticParserAtomEntry<2> length2Table[NUM_LENGTH2_ENTRIES];
+
+  constexpr WellKnownParserAtoms_ROM() {
+    // Empty atom
+    emptyAtom.setHashAndLength(mozilla::HashString(u""), 0);
+    emptyAtom.setWellKnownAtomId(WellKnownAtomId::empty);
+
+    // Length-1 static atoms
+    for (size_t i = 0; i < ASCII_STATIC_LIMIT; ++i) {
+      constexpr size_t len = 1;
+      char16_t buf[] = {static_cast<char16_t>(i),
+                        /* null-terminator */ 0};
+      length1Table[i].setHashAndLength(mozilla::HashString(buf), len);
+      length1Table[i].setStaticParserString1(StaticParserString1(i));
+      length1Table[i].storage()[0] = buf[0];
+    }
+
+    // Length-2 static atoms
+    for (size_t i = 0; i < NUM_LENGTH2_ENTRIES; ++i) {
+      constexpr size_t len = 2;
+      char16_t buf[] = {StaticStrings::fromSmallChar(i >> 6),
+                        StaticStrings::fromSmallChar(i & 0x003F),
+                        /* null-terminator */ 0};
+      length2Table[i].setHashAndLength(mozilla::HashString(buf), len);
+      length2Table[i].setStaticParserString2(StaticParserString2(i));
+      length2Table[i].storage()[0] = buf[0];
+      length2Table[i].storage()[1] = buf[1];
+    }
+  }
+
+  // Fast-path tiny strings since they are abundant in minified code.
+  template <typename CharsT>
+  const ParserAtom* lookupTiny(CharsT chars, size_t length) const {
+    static_assert(std::is_same_v<CharsT, const Latin1Char*> ||
+                      std::is_same_v<CharsT, const char16_t*> ||
+                      std::is_same_v<CharsT, const char*> ||
+                      std::is_same_v<CharsT, char16_t*> ||
+                      std::is_same_v<CharsT, LittleEndianChars>,
+                  "This assert mostly explicitly documents the calling types, "
+                  "and forces that to be updated if new types show up.");
+    switch (length) {
+      case 0:
+        return emptyAtom.asAtom();
+
+      case 1: {
+        if (char16_t(chars[0]) < ASCII_STATIC_LIMIT) {
+          size_t index = static_cast<size_t>(chars[0]);
+          return length1Table[index].asAtom();
+        }
+        break;
+      }
+
+      case 2:
+        if (StaticStrings::fitsInSmallChar(chars[0]) &&
+            StaticStrings::fitsInSmallChar(chars[1])) {
+          size_t index = StaticStrings::getLength2Index(chars[0], chars[1]);
+          return length2Table[index].asAtom();
+        }
+        break;
+    }
+
+    // No match on tiny Atoms
+    return nullptr;
+  }
+};
+
 /**
  * WellKnownParserAtoms reserves a set of common ParserAtoms on the JSRuntime
  * in a read-only format to be used by parser. These reserved atoms can be
@@ -315,31 +390,20 @@ class WellKnownParserAtoms {
   JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
- private:
+  // Common tiny strings (such as identifiers in minified code) have ParserAtoms
+  // generated into constexpr tables.
+  static constexpr WellKnownParserAtoms_ROM rom_ = {};
+
+  // Common property and prototype names are tracked in a hash table. This table
+  // is does not key for any items already in a direct-indexing table above.
   using EntrySet = HashSet<UniquePtr<ParserAtomEntry>, ParserAtomLookupHasher,
                            js::SystemAllocPolicy>;
   EntrySet wellKnownSet_;
 
-  static const size_t ASCII_STATIC_LIMIT = 128U;
-  static const size_t NUM_SMALL_CHARS = StaticStrings::NUM_SMALL_CHARS;
-  UniquePtr<ParserAtomEntry> length1StaticTable_[ASCII_STATIC_LIMIT] = {};
-  UniquePtr<ParserAtomEntry>
-      length2StaticTable_[NUM_SMALL_CHARS * NUM_SMALL_CHARS] = {};
-
+  bool initTinyStringAlias(JSContext* cx, const ParserName** name,
+                           const char* str);
   bool initSingle(JSContext* cx, const ParserName** name, const char* str,
                   WellKnownAtomId kind);
-
-  bool initStaticStrings(JSContext* cx);
-
-  const ParserAtom* getLength1String(char16_t ch) const {
-    MOZ_ASSERT(ch < ASCII_STATIC_LIMIT);
-    size_t index = static_cast<size_t>(ch);
-    return length1StaticTable_[index]->asAtom();
-  }
-  const ParserAtom* getLength2String(char16_t ch0, char16_t ch1) const {
-    size_t index = StaticStrings::getLength2Index(ch0, ch1);
-    return length2StaticTable_[index]->asAtom();
-  }
 
  public:
   WellKnownParserAtoms() = default;
@@ -353,30 +417,9 @@ class WellKnownParserAtoms {
   const ParserAtom* lookupChar16Seq(
       const SpecificParserAtomLookup<CharT>& lookup) const;
 
-  // Fast-path tiny strings since they are abundant in minified code.
-  template <typename CharT>
-  const ParserAtom* lookupTiny(const CharT* charPtr, uint32_t length) const {
-    switch (length) {
-      case 0:
-        return empty;
-
-      case 1: {
-        if (char16_t(charPtr[0]) < ASCII_STATIC_LIMIT) {
-          return getLength1String(charPtr[0]);
-        }
-        break;
-      }
-
-      case 2:
-        if (StaticStrings::fitsInSmallChar(charPtr[0]) &&
-            StaticStrings::fitsInSmallChar(charPtr[1])) {
-          return getLength2String(charPtr[0], charPtr[1]);
-        }
-        break;
-    }
-
-    // No match on tiny Atoms
-    return nullptr;
+  template <typename CharsT>
+  const ParserAtom* lookupTiny(CharsT chars, size_t length) const {
+    return rom_.lookupTiny(chars, length);
   }
 };
 
