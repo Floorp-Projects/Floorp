@@ -1949,7 +1949,8 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  if (!JSID_IS_ATOM(id, cx_->names().length)) {
+  bool isLength = JSID_IS_ATOM(id, cx_->names().length);
+  if (!isLength && !JSID_IS_ATOM(id, cx_->names().name)) {
     return AttachDecision::NoAction;
   }
 
@@ -1962,30 +1963,54 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
 
   JSFunction* fun = &obj->as<JSFunction>();
 
-  // length was probably deleted from the function.
-  if (fun->hasResolvedLength()) {
-    return AttachDecision::NoAction;
-  }
+  if (isLength) {
+    // length was probably deleted from the function.
+    if (fun->hasResolvedLength()) {
+      return AttachDecision::NoAction;
+    }
 
-  // Lazy functions don't store the length.
-  if (!fun->hasBytecode()) {
-    return AttachDecision::NoAction;
-  }
+    // Lazy functions don't store the length.
+    if (!fun->hasBytecode()) {
+      return AttachDecision::NoAction;
+    }
 
-  // Length can be non-int32 for bound functions.
-  if (fun->isBoundFunction()) {
-    constexpr auto lengthSlot = FunctionExtended::BOUND_FUNCTION_LENGTH_SLOT;
-    if (!fun->getExtendedSlot(lengthSlot).isInt32()) {
+    // Length can be non-int32 for bound functions.
+    if (fun->isBoundFunction()) {
+      constexpr auto lengthSlot = FunctionExtended::BOUND_FUNCTION_LENGTH_SLOT;
+      if (!fun->getExtendedSlot(lengthSlot).isInt32()) {
+        return AttachDecision::NoAction;
+      }
+    }
+  } else {
+    // name was probably deleted from the function.
+    if (fun->hasResolvedName()) {
+      return AttachDecision::NoAction;
+    }
+
+    // Unless the bound function name prefix is present, we need to call into
+    // the VM to compute the full name.
+    if (fun->isBoundFunction() && !fun->hasBoundFunctionNamePrefix()) {
       return AttachDecision::NoAction;
     }
   }
 
   maybeEmitIdGuard(id);
   writer.guardClass(objId, GuardClassKind::JSFunction);
-  writer.loadFunctionLengthResult(objId);
-  writer.returnFromIC();
+  if (isLength) {
+    writer.loadFunctionLengthResult(objId);
 
-  trackAttached("FunctionLength");
+    // Doesn't need to be monitored, because it always returns an int32.
+    writer.returnFromIC();
+
+    trackAttached("FunctionLength");
+  } else {
+    writer.loadFunctionNameResult(objId);
+
+    // Doesn't need to be monitored, because it always returns a string.
+    writer.returnFromIC();
+
+    trackAttached("FunctionName");
+  }
   return AttachDecision::Attach;
 }
 
