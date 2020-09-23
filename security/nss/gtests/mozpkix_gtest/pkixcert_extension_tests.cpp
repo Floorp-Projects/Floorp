@@ -70,8 +70,9 @@ private:
     return Success;
   }
 
-  Result CheckRevocation(EndEntityOrCA, const CertID&, Time, Time, Duration,
-                         /*optional*/ const Input*, /*optional*/ const Input*)
+  Result CheckRevocation(EndEntityOrCA, const CertID&, Time, Duration,
+                         /*optional*/ const Input*, /*optional*/ const Input*,
+                         /*optional*/ const Input*)
                          override
   {
     return Success;
