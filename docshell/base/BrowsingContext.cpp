@@ -224,7 +224,8 @@ bool BrowsingContext::SameOriginWithTop() {
 /* static */
 already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     nsGlobalWindowInner* aParent, BrowsingContext* aOpener,
-    BrowsingContextGroup* aSpecificGroup, const nsAString& aName, Type aType) {
+    BrowsingContextGroup* aSpecificGroup, const nsAString& aName, Type aType,
+    bool aCreatedDynamically) {
   if (aParent) {
     MOZ_DIAGNOSTIC_ASSERT(aParent->GetWindowContext());
     MOZ_DIAGNOSTIC_ASSERT(aParent->GetBrowsingContext()->mType == aType);
@@ -336,6 +337,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   }
 
   context->mEmbeddedByThisProcess = XRE_IsParentProcess() || aParent;
+  context->mCreatedDynamically = aCreatedDynamically;
   if (inherit) {
     context->mPrivateBrowsingId = inherit->mPrivateBrowsingId;
     context->mUseRemoteTabs = inherit->mUseRemoteTabs;
@@ -409,6 +411,7 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
   }
 
   context->mWindowless = aInit.mWindowless;
+  context->mCreatedDynamically = aInit.mCreatedDynamically;
   if (context->GetHasSessionHistory()) {
     context->CreateChildSHistory();
     if (StaticPrefs::fission_sessionHistoryInParent()) {
@@ -447,7 +450,8 @@ BrowsingContext::BrowsingContext(WindowContext* aParentWindow,
       mDanglingRemoteOuterProxies(false),
       mEmbeddedByThisProcess(false),
       mUseRemoteTabs(false),
-      mUseRemoteSubframes(false) {
+      mUseRemoteSubframes(false),
+      mCreatedDynamically(false) {
   MOZ_RELEASE_ASSERT(!mParentWindow || mParentWindow->Group() == mGroup);
   MOZ_RELEASE_ASSERT(mBrowsingContextId != 0);
   MOZ_RELEASE_ASSERT(mGroup);
@@ -2078,6 +2082,7 @@ BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
   init.mWindowless = mWindowless;
   init.mUseRemoteTabs = mUseRemoteTabs;
   init.mUseRemoteSubframes = mUseRemoteSubframes;
+  init.mCreatedDynamically = mCreatedDynamically;
   init.mOriginAttributes = mOriginAttributes;
   if (mChildSessionHistory && StaticPrefs::fission_sessionHistoryInParent()) {
     init.mSessionHistoryIndex = mChildSessionHistory->Index();
