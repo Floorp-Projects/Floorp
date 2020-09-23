@@ -397,7 +397,8 @@ interaction.flushEventLoop = async function(el) {
 
   let spinEventLoop = resolve => {
     unloadEv = resolve;
-    clickEv = () => {
+    clickEv = event => {
+      logger.trace(`Received DOM event click for ${event.target}`);
       if (win.closed) {
         resolve();
       } else {
