@@ -15,7 +15,6 @@ from marionette_driver.marionette import Alert
 from marionette_harness import (
     MarionetteTestCase,
     run_if_manage_instance,
-    skip_unless_browser_pref,
     WindowManagerMixin,
 )
 
@@ -163,10 +162,6 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.navigate(self.test_page_frameset)
         self.marionette.find_element(By.NAME, "third")
 
-    @skip_unless_browser_pref(
-        "Bug 1665210 - Early return from navigation with Fission enabled",
-        "fission.autostart",
-        lambda value: value is False)
     def test_navigate_top_frame_from_nested_context(self):
         sub_frame = inline("""
           <title>bar</title>
@@ -184,7 +179,9 @@ class TestNavigate(BaseNavigationTestCase):
         link = self.marionette.find_element(By.TAG_NAME, "a")
         link.click()
 
-        self.assertEqual(self.marionette.get_url(), self.test_page_remote)
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            lambda mn: mn.get_url() == self.test_page_remote,
+            message="{} hasn't been loaded".format(self.test_page_remote))
 
     def test_invalid_url(self):
         with self.assertRaises(errors.MarionetteException):
