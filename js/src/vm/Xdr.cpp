@@ -19,8 +19,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
-#include "frontend/ParserAtom.h"  // XDRParserAtom
-#include "js/BuildId.h"           // JS::BuildIdCharVector
+#include "js/BuildId.h"  // JS::BuildIdCharVector
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
 #include "vm/TraceLogging.h"
@@ -282,22 +281,11 @@ static XDRResult AtomTable(XDRState<mode>* xdr) {
     MOZ_TRY(XDRAtomCount(xdr, &atomCount));
     MOZ_ASSERT(!xdr->hasAtomTable());
 
-    if (xdr->isForStencil()) {
-      for (uint32_t i = 0; i < atomCount; i++) {
-        const frontend::ParserAtom* atom = nullptr;
-        MOZ_TRY(XDRParserAtom(xdr, &atom));
-        if (!xdr->parserAtomTable().append(atom)) {
-          ReportOutOfMemory(xdr->cx());
-          return xdr->fail(JS::TranscodeResult_Throw);
-        }
-      }
-    } else {
-      for (uint32_t i = 0; i < atomCount; i++) {
-        RootedAtom atom(xdr->cx());
-        MOZ_TRY(XDRAtom(xdr, &atom));
-        if (!xdr->atomTable().append(atom)) {
-          return xdr->fail(JS::TranscodeResult_Throw);
-        }
+    for (uint32_t i = 0; i < atomCount; i++) {
+      RootedAtom atom(xdr->cx());
+      MOZ_TRY(XDRAtom(xdr, &atom));
+      if (!xdr->atomTable().append(atom)) {
+        return xdr->fail(JS::TranscodeResult_Throw);
       }
     }
     xdr->finishAtomTable();
@@ -373,30 +361,6 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
   MOZ_TRY(XDRScript(this, nullptr, nullptr, nullptr, scriptp));
 
   guard.release();
-  return Ok();
-}
-
-template <XDRMode mode>
-XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
-#ifdef DEBUG
-  auto sanityCheck = mozilla::MakeScopeExit(
-      [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
-#endif
-  AutoXDRTree scriptTree(this, getTopLevelTreeKey());
-
-  // As with codeScript, use header buffer when incrementally encoding.
-  bool useHeader = this->hasAtomMap();
-  if (useHeader) {
-    switchToHeaderBuf();
-  }
-  MOZ_TRY(VersionCheck(this));
-  MOZ_TRY(AtomTable(this));
-  if (useHeader) {
-    switchToMainBuf();
-  }
-  MOZ_ASSERT(isMainBuf());
-  MOZ_TRY(XDRCompilationStencil(this, stencil));
-
   return Ok();
 }
 

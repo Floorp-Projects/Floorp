@@ -43,8 +43,6 @@
 #ifdef DEBUG
 #  include "frontend/TokenStream.h"
 #endif
-#include "frontend/BytecodeCompilation.h"
-#include "frontend/CompilationInfo.h"
 #include "gc/Allocator.h"
 #include "gc/Zone.h"
 #include "jit/BaselineJIT.h"
@@ -102,7 +100,6 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseSlot_*
 #include "vm/ProxyObject.h"
 #include "vm/SavedStacks.h"
-#include "vm/ScopeKind.h"
 #include "vm/Stack.h"
 #include "vm/StringType.h"
 #include "vm/TraceLogging.h"
@@ -4875,122 +4872,6 @@ static bool SetLazyParsingDisabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool ParseAndDumpStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (!args.requireAtLeast(cx, "parseAndDumpStencilXDR", 1)) {
-    return false;
-  }
-
-  RootedString src(cx, ToString<CanGC>(cx, args[0]));
-  if (!src) {
-    return false;
-  }
-
-  const char* filename = "parseAndDumpStencilXDR-DATA.js";
-  uint32_t lineno = 1;
-
-  /* Linearize the string to obtain a char16_t* range. */
-  AutoStableStringChars linearChars(cx);
-  if (!linearChars.initTwoByte(cx, src)) {
-    return false;
-  }
-  JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, linearChars.twoByteChars(), src->length(),
-                   JS::SourceOwnership::Borrowed)) {
-    return false;
-  }
-
-  /* TODO: StencilXDR - Add option to select between full and syntax parse. */
-  /* Compile the script text to stencil. */
-  CompileOptions options(cx);
-  options.setFileAndLine(filename, lineno);
-  options.setForceFullParse();
-
-  Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, frontend::CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForGlobal(cx)) {
-    return false;
-  }
-  if (!frontend::CompileGlobalScriptToStencil(cx, compilationInfo.get(), srcBuf,
-                                              ScopeKind::Global)) {
-    return false;
-  }
-
-  /* Serialize the stencil to XDR. */
-  JS::TranscodeBuffer xdrBytes;
-  if (!compilationInfo.get().serializeStencils(cx, xdrBytes)) {
-    return false;
-  }
-
-  /* Dump the bytes into a javascript ArrayBuffer and return a UInt8Array. */
-  RootedObject arrayBuf(cx, JS::NewArrayBuffer(cx, xdrBytes.length()));
-  if (!arrayBuf) {
-    return false;
-  }
-
-  {
-    JS::AutoAssertNoGC nogc;
-    bool isSharedMemory = false;
-    uint8_t* data = JS::GetArrayBufferData(arrayBuf, &isSharedMemory, nogc);
-    std::copy(xdrBytes.begin(), xdrBytes.end(), data);
-  }
-
-  args.rval().setObject(*arrayBuf);
-  return true;
-}
-
-static bool LoadFromStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (!args.requireAtLeast(cx, "loadFromStencilXDR", 1)) {
-    return false;
-  }
-
-  /* Prepare the input byte array. */
-  if (!args[0].isObject() || !args[0].toObject().is<ArrayBufferObject>()) {
-    JS_ReportErrorASCII(cx, "loadFromStencilXDR: ArrayBuffer expected");
-    return false;
-  }
-  RootedArrayBufferObject src(cx, &args[0].toObject().as<ArrayBufferObject>());
-
-  const char* filename = "parseAndDumpStencilXDR-DATA.js";
-  uint32_t lineno = 1;
-
-  /* Prepare the CompilationInfo for decoding. */
-  CompileOptions options(cx);
-  options.setFileAndLine(filename, lineno);
-  options.setForceFullParse();
-
-  Rooted<frontend::CompilationInfo> compilationInfo(
-      cx, frontend::CompilationInfo(cx, options));
-  if (!compilationInfo.get().input.initForGlobal(cx)) {
-    return false;
-  }
-
-  /* Deserialize the stencil from XDR. */
-  JS::TranscodeRange xdrRange(src->dataPointer(), src->byteLength());
-  if (!compilationInfo.get().deserializeStencils(cx, xdrRange)) {
-    return false;
-  }
-
-  /* Instantiate the stencil. */
-  frontend::CompilationGCOutput output(cx);
-  if (!compilationInfo.get().instantiateStencils(cx, output)) {
-    return false;
-  }
-
-  /* Obtain the JSScript, construct a scope chain, and evaluate it. */
-  RootedScript script(cx, output.script);
-  RootedValue retVal(cx, UndefinedValue());
-  if (!JS_ExecuteScript(cx, script, &retVal)) {
-    return false;
-  }
-
-  args.rval().set(retVal);
-  return true;
-}
-
 static bool SetDiscardSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -7306,16 +7187,6 @@ JS_FN_HELP("setDefaultLocale", SetDefaultLocale, 1, 0,
 "  Set the runtime default locale to the given value.\n"
 "  An empty string or undefined resets the runtime locale to its default value.\n"
 "  NOTE: The input string is not fully validated, it must be a valid BCP-47 language tag."),
-
-    JS_FN_HELP("parseAndDumpStencilXDR", ParseAndDumpStencilXDR, 1, 0,
-"parseAndDumpStencilXDR(string)",
-"  Parses the given string argument as js script, produces the stencil"
-"  for it, and returns an ArrayBuf of the XDR-encoded contents."),
-
-    JS_FN_HELP("loadFromStencilXDR", LoadFromStencilXDR, 1, 0,
-"loadFromStencilXDR(arrayBuf)",
-"  Reads the given stencil XDR and executes the top-level script defined"
-"  within."),
 
     JS_FS_HELP_END
 };

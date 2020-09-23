@@ -437,30 +437,23 @@ class WellKnownParserAtoms {
       const SpecificParserAtomLookup<CharT>& lookup) const;
 
   // Fast-path tiny strings since they are abundant in minified code.
-  template <typename CharsT>
-  const ParserAtom* lookupTiny(CharsT chars, size_t length) const {
-    static_assert(std::is_same_v<CharsT, const Latin1Char*> ||
-                      std::is_same_v<CharsT, const char16_t*> ||
-                      std::is_same_v<CharsT, const char*> ||
-                      std::is_same_v<CharsT, char16_t*> ||
-                      std::is_same_v<CharsT, LittleEndianChars>,
-                  "This assert mostly explicitly documents the calling types, "
-                  "and forces that to be updated if new types show up.");
+  template <typename CharT>
+  const ParserAtom* lookupTiny(const CharT* charPtr, uint32_t length) const {
     switch (length) {
       case 0:
         return empty;
 
       case 1: {
-        if (char16_t(chars[0]) < ASCII_STATIC_LIMIT) {
-          return getLength1String(chars[0]);
+        if (char16_t(charPtr[0]) < ASCII_STATIC_LIMIT) {
+          return getLength1String(charPtr[0]);
         }
         break;
       }
 
       case 2:
-        if (StaticStrings::fitsInSmallChar(chars[0]) &&
-            StaticStrings::fitsInSmallChar(chars[1])) {
-          return getLength2String(chars[0], chars[1]);
+        if (StaticStrings::fitsInSmallChar(charPtr[0]) &&
+            StaticStrings::fitsInSmallChar(charPtr[1])) {
+          return getLength2String(charPtr[0], charPtr[1]);
         }
         break;
     }
@@ -535,8 +528,6 @@ class ParserAtomsTable {
       uint32_t length);
 
  public:
-  bool empty() const { return entrySet_.empty(); }
-
   JS::Result<const ParserAtom*, OOM> internAscii(JSContext* cx,
                                                  const char* asciiPtr,
                                                  uint32_t length);
@@ -550,11 +541,6 @@ class ParserAtomsTable {
   JS::Result<const ParserAtom*, OOM> internChar16(JSContext* cx,
                                                   const char16_t* char16Ptr,
                                                   uint32_t length);
-
-  // This only exists for XDR support.
-  JS::Result<const ParserAtom*, OOM> internChar16LE(JSContext* cx,
-                                                    LittleEndianChars twoByteLE,
-                                                    uint32_t length);
 
   JS::Result<const ParserAtom*, OOM> internJSAtom(
       JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom);
