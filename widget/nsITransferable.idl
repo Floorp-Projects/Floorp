@@ -100,8 +100,7 @@ interface nsITransferable : nsISupports
    * debug builds.
    *
    * The load context is used to track whether the transferable is storing privacy-
-   * sensitive information.  For example, we try to delete data that you copy
-   * to the clipboard when you close a Private Browsing window.
+   * sensitive information.
    *
    * To get the appropriate load context in Javascript callers, one needs to get
    * to the document that the transferable corresponds to, and then get the load
