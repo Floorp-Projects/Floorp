@@ -418,10 +418,6 @@ function pushPrefs(...p) {
   return SpecialPowers.pushPrefEnv({ set: p });
 }
 
-function popPrefs() {
-  return SpecialPowers.popPrefEnv();
-}
-
 function setupEnvironment() {
   var defaultMochitestPrefs = {
     set: [

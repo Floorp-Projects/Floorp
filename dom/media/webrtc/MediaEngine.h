@@ -47,9 +47,7 @@ class MediaEngine {
 
   virtual void Shutdown() = 0;
 
-  virtual void SetFakeDeviceChangeEventsEnabled(bool aEnable) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "Fake events may not have started/stopped");
-  }
+  virtual void SetFakeDeviceChangeEventsEnabled(bool aEnable) {}
 
   virtual MediaEventSource<void>& DeviceListChangeEvent() = 0;
 
