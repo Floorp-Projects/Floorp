@@ -352,14 +352,7 @@ bool MediaController::ShouldActivateController() const {
 
 bool MediaController::ShouldDeactivateController() const {
   MOZ_ASSERT(!mShutdown);
-  // If we don't have an active media session and no controlled media exists,
-  // then we don't need to keep controller active, because there is nothing to
-  // control. However, if we still have an active media session, then we should
-  // keep controller active in order to receive media keys even if we don't have
-  // any controlled media existing, because a website might start other media
-  // when media session receives media keys.
-  return !IsAnyMediaBeingControlled() && mIsActive &&
-         !mActiveMediaSessionContextId;
+  return !IsAnyMediaBeingControlled() && mIsActive;
 }
 
 void MediaController::Activate() {
@@ -506,11 +499,6 @@ void MediaController::HandleMetadataChanged(
   // to use `getMetadata()` to get metadata, because it would throw an error if
   // we fail to allocate artwork.
   DispatchAsyncEvent(u"metadatachange"_ns);
-  // If metadata change is because of resetting active media session, then we
-  // should check if controller needs to be deactivated.
-  if (ShouldDeactivateController()) {
-    Deactivate();
-  }
 }
 
 void MediaController::DispatchAsyncEvent(const nsAString& aName) {
