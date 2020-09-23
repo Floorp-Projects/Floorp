@@ -26,6 +26,7 @@ from mozperftest.utils import temporary_env, silence, ON_TRY  # noqa
 
 
 ITERATION_HOOKS = Path(__file__).parent / "data" / "hooks_iteration.py"
+STATE_HOOKS = Path(__file__).parent / "data" / "hooks_state.py"
 
 
 class _TestMachEnvironment(MachEnvironment):
@@ -114,6 +115,18 @@ def test_command_iterations(venv, env):
     # the hook changes the iteration value to 5.
     # each iteration generates 5 calls, so we want to see 25
     assert len(env.mock_calls) == 25
+
+
+@mock.patch("mozperftest.MachEnvironment")
+@mock.patch("mozperftest.mach_commands.MachCommandBase.activate_virtualenv")
+def test_hooks_state(venv, env):
+    kwargs = {
+        "tests": [EXAMPLE_TEST],
+        "hooks": STATE_HOOKS,
+        "flavor": "desktop-browser",
+    }
+    with _get_command() as test, silence(test):
+        test.run_perftest(**kwargs)
 
 
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)

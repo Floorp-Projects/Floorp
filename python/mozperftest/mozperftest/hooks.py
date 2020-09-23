@@ -9,6 +9,9 @@ import shutil
 from mozperftest.utils import download_file, MachLogger
 
 
+_LOADED_MODULES = {}
+
+
 class Hooks(MachLogger):
     def __init__(self, mach_cmd, hook_module=None):
         MachLogger.__init__(self, mach_cmd)
@@ -26,10 +29,13 @@ class Hooks(MachLogger):
                 hook_module = Path(hook_module)
 
         if hook_module.exists():
-            spec = importlib.util.spec_from_file_location("hooks", str(hook_module))
-            hook_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(hook_module)
-            self._hooks = hook_module
+            path = str(hook_module)
+            if path not in _LOADED_MODULES:
+                spec = importlib.util.spec_from_file_location("hooks", path)
+                hook_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(hook_module)
+                _LOADED_MODULES[path] = hook_module
+            self._hooks = _LOADED_MODULES[path]
         else:
             raise IOError(str(hook_module))
 
