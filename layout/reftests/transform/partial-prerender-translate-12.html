@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+<!--
+  A test for a partial pre-rendered transform animation moves to a place where
+  the partial pre-render area of the transform animation is out of the viewport,
+  but part of the element is still visible.
+  -->
+<style>
+html {
+  overflow: hidden;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+@keyframes anim {
+  /* jump to a position where the element is completely outside of the */
+  /* partial pre-render area but the element is still visible */
+  to { transform: translateX(-200vw); }
+}
+#target {
+  width: 400vw;
+  height: 400vh;
+  position: absolute;
+}
+</style>
+<div id="target">
+  <!--
+    Put an SVG element so that the transform display item has a blob on
+    WebRender which means this test properly fails without the proper fix.
+    -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+    <rect fill="green" width="16" height="16"></rect>
+  </svg>
+</div>
+<script>
+document.addEventListener("MozReftestInvalidate", () => {
+  target.style.animation = "anim 100s 1s step-start";
+  target.addEventListener("animationstart", () => {
+    // animtionstart event is fired just before requestAnimationFrame callbacks,
+    // so we need to wait two rAF to make sure the initial animation value is
+    // composited on the compositor.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove("reftest-wait");
+      });
+    });
+  });
+}, { once: true });
+</script>
+</html>
