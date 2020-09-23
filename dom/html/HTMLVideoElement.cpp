@@ -526,6 +526,7 @@ void HTMLVideoElement::MaybeBeginCloningVisually() {
     mDecoder->SetSecondaryVideoContainer(
         mVisualCloneTarget->GetVideoFrameContainer());
     UpdateMediaControlAfterPictureInPictureModeChanged();
+    OwnerDoc()->EnableChildElementInPictureInPictureMode();
   } else if (mSrcStream) {
     VideoFrameContainer* container =
         mVisualCloneTarget->GetVideoFrameContainer();
@@ -538,6 +539,7 @@ void HTMLVideoElement::MaybeBeginCloningVisually() {
       SetSecondaryMediaStreamRenderer(container, mSecondaryVideoOutput);
     }
     UpdateMediaControlAfterPictureInPictureModeChanged();
+    OwnerDoc()->EnableChildElementInPictureInPictureMode();
   }
 }
 
@@ -546,6 +548,7 @@ void HTMLVideoElement::EndCloningVisually() {
 
   if (mDecoder) {
     mDecoder->SetSecondaryVideoContainer(nullptr);
+    OwnerDoc()->DisableChildElementInPictureInPictureMode();
   } else if (mSrcStream) {
     if (mSecondaryVideoOutput) {
       mVideoWatchManager.Unwatch(
@@ -554,6 +557,7 @@ void HTMLVideoElement::EndCloningVisually() {
       mSecondaryVideoOutput = nullptr;
     }
     SetSecondaryMediaStreamRenderer(nullptr);
+    OwnerDoc()->DisableChildElementInPictureInPictureMode();
   }
 
   Unused << mVisualCloneTarget->SetVisualCloneSource(nullptr);
