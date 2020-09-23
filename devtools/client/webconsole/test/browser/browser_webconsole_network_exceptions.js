@@ -12,7 +12,6 @@ const TEST_URI2 =
   "test/browser/test-network-exceptions.html";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // On e10s, the exception is triggered in child process

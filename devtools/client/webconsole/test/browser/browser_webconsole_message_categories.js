@@ -91,7 +91,6 @@ const TESTS = [
 add_task(async function() {
   requestLongerTimeout(2);
 
-  await pushPref("devtools.target-switching.enabled", true);
   await pushPref("devtools.webconsole.filter.css", true);
   await pushPref("devtools.webconsole.filter.net", true);
 

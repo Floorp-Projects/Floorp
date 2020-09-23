@@ -16,7 +16,6 @@ const CSP_VIOLATION_MSG =
   "Content Security Policy: Couldn\u2019t process unknown directive \u2018navigate-to\u2019";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
 

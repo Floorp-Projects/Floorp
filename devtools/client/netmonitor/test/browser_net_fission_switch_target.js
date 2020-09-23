@@ -11,8 +11,6 @@ const REQUEST_URL = SEARCH_SJS + "?value=test";
 const PARENT_PROCESS_URL = "about:blank";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
-
   info("Open a page that runs on the content process and the netmonitor");
   const { monitor } = await initNetMonitor(EXAMPLE_COM_URL, {
     requestCount: 1,

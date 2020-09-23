@@ -40,8 +40,6 @@ const CONTENT_PROCESS_EXPECTED = [
 ];
 
 add_task(async () => {
-  await pushPref("devtools.target-switching.enabled", true);
-
   info(
     "Open a test page running on the content process and accessibility panel"
   );

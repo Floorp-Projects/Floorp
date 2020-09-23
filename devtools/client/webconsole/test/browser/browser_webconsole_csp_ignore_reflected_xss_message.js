@@ -17,7 +17,6 @@ const TEST_URI =
   "data:text/html;charset=utf8,Web Console CSP ignoring reflected XSS (bug 1045902)";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
   await navigateTo(TEST_FILE);
 

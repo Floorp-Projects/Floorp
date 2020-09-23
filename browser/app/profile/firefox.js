@@ -2077,8 +2077,7 @@ pref("devtools.contenttoolbox.fission", true);
 // about:sessionrestore and another one running in the content process like
 // any web page. Or between two distinct domain when running with fission turned
 // on. See bug 1565263.
-// ⚠ This is a work in progress. Expect weirdness when the pref is flipped on ⚠
-pref("devtools.target-switching.enabled", false);
+pref("devtools.target-switching.enabled", true);
 
 // Toolbox Button preferences
 pref("devtools.command-button-pick.enabled", true);

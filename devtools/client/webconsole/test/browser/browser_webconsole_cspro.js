@@ -29,7 +29,6 @@ const CSP_REPORT_MSG =
   "(\u201cscript-src\u201d). A CSP report is being sent.";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const onCspViolationMessage = waitForMessage(

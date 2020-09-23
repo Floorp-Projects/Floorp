@@ -40,17 +40,10 @@ async function navigateTo(uri, tab, toolbox, extension) {
   );
 }
 
-async function pushPref(preferenceName, value) {
-  const options = { set: [[preferenceName, value]] };
-  await SpecialPowers.pushPrefEnv(options);
-}
-
 /**
  * This test checks whether inspectedWindow works well even target-switching happens.
  */
 add_task(async () => {
-  await pushPref("devtools.target-switching.enabled", true);
-
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     CONTENT_PROCESS_PAGE

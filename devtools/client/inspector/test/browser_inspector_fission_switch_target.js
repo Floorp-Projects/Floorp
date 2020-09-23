@@ -12,8 +12,6 @@ const EXAMPLE_NET_URI =
   "http://example.net/document-builder.sjs?html=<div id=net>net";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
-
   const { inspector } = await openInspectorForURL(PARENT_PROCESS_URI);
   const aboutRobotsNodeFront = await getNodeFront(".title-text", inspector);
   ok(!!aboutRobotsNodeFront, "Can retrieve a node front from about:robots");

@@ -7,8 +7,6 @@
 const PARENT_PROCESS_URI = "about:robots";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
-
   // Start the debugger on a parent process URL
   const dbg = await initDebuggerWithAbsoluteURL(
     PARENT_PROCESS_URI,

@@ -8,8 +8,6 @@ const PARENT_PROCESS_URI = "about:robots";
 const CONTENT_PROCESS_URI = TEST_BASE_HTTPS + "simple.html";
 
 add_task(async function() {
-  await pushPref("devtools.target-switching.enabled", true);
-
   // We use about:robots, because this page will run in the parent process.
   // Navigating from about:robots to a regular content page will always trigger a target
   // switch, with or without fission.
