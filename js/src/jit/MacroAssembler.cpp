@@ -3479,6 +3479,52 @@ void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
   bind(&lengthLoaded);
 }
 
+void MacroAssembler::loadFunctionName(Register func, Register output,
+                                      ImmGCPtr emptyString, Label* slowPath) {
+  MOZ_ASSERT(func != output);
+
+  // Get the JSFunction flags.
+  load16ZeroExtend(Address(func, JSFunction::offsetOfFlags()), output);
+
+  // If the name was previously resolved, the name property may be shadowed.
+  branchTest32(Assembler::NonZero, output, Imm32(FunctionFlags::RESOLVED_NAME),
+               slowPath);
+
+  Label notBoundTarget, loadName;
+  branchTest32(Assembler::Zero, output, Imm32(FunctionFlags::BOUND_FUN),
+               &notBoundTarget);
+  {
+    // Call into the VM if the target's name atom doesn't contain the bound
+    // function prefix.
+    branchTest32(Assembler::Zero, output,
+                 Imm32(FunctionFlags::HAS_BOUND_FUNCTION_NAME_PREFIX),
+                 slowPath);
+
+    // Bound functions reuse HAS_GUESSED_ATOM for
+    // HAS_BOUND_FUNCTION_NAME_PREFIX, so skip the guessed atom check below.
+    static_assert(
+        FunctionFlags::HAS_BOUND_FUNCTION_NAME_PREFIX ==
+            FunctionFlags::HAS_GUESSED_ATOM,
+        "HAS_BOUND_FUNCTION_NAME_PREFIX is shared with HAS_GUESSED_ATOM");
+    jump(&loadName);
+  }
+  bind(&notBoundTarget);
+
+  Label guessed, hasName;
+  branchTest32(Assembler::NonZero, output,
+               Imm32(FunctionFlags::HAS_GUESSED_ATOM), &guessed);
+  bind(&loadName);
+  loadPtr(Address(func, JSFunction::offsetOfAtom()), output);
+  branchTestPtr(Assembler::NonZero, output, output, &hasName);
+  {
+    bind(&guessed);
+
+    // An absent name property defaults to the empty string.
+    movePtr(emptyString, output);
+  }
+  bind(&hasName);
+}
+
 void MacroAssembler::branchTestObjGroupNoSpectreMitigations(
     Condition cond, Register obj, const Address& group, Register scratch,
     Label* label) {

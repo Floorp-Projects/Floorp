@@ -1756,6 +1756,13 @@
   args:
     obj: ObjId
 
+- name: LoadFunctionNameResult
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
 - name: LoadTypedArrayLengthResult
   shared: true
   transpile: true

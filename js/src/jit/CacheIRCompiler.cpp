@@ -3184,6 +3184,24 @@ bool CacheIRCompiler::emitLoadFunctionLengthResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadFunctionNameResult(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadFunctionName(obj, scratch, ImmGCPtr(cx_->names().empty),
+                        failure->label());
+
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_STRING, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadStringLengthResult(StringOperandId strId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);

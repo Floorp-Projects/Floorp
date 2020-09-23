@@ -1422,6 +1422,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadFunctionLength(Register func, Register funFlags, Register output,
                           Label* slowPath);
 
+  // Loads the function name. This handles interpreted, native, and bound
+  // functions.
+  void loadFunctionName(Register func, Register output, ImmGCPtr emptyString,
+                        Label* slowPath);
+
   inline void branchFunctionKind(Condition cond,
                                  FunctionFlags::FunctionKind kind, Register fun,
                                  Register scratch, Label* label);
