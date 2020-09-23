@@ -73,8 +73,8 @@ add_task(async function test_parse_additional_section() {
     ]
   );
 
-  await new TRRDNSListener("something.foo", "1.2.3.4");
-  await new TRRDNSListener("else.foo", "2.3.4.5");
+  await new TRRDNSListener("something.foo", { expectedAnswer: "1.2.3.4" });
+  await new TRRDNSListener("else.foo", { expectedAnswer: "2.3.4.5" });
 
   await trrServer.registerDoHAnswers(
     "a.foo",
@@ -108,14 +108,14 @@ add_task(async function test_parse_additional_section() {
     },
   ]);
 
-  let req1 = new TRRDNSListener("a.foo", "1.2.3.4");
+  let req1 = new TRRDNSListener("a.foo", { expectedAnswer: "1.2.3.4" });
 
   // A request for b.foo will be in progress by the time we parse the additional
   // record. To keep things simple we don't end up saving the record, instead
   // we wait for the in-progress request to complete.
   // This check is also racy - if the response for a.foo completes before we make
   // this request, we'll put the other IP in the cache. But that is very unlikely.
-  let req2 = new TRRDNSListener("b.foo", "3.4.5.6");
+  let req2 = new TRRDNSListener("b.foo", { expectedAnswer: "3.4.5.6" });
 
   await Promise.all([req1, req2]);
 
@@ -143,8 +143,8 @@ add_task(async function test_parse_additional_section() {
     ]
   );
 
-  await new TRRDNSListener("xyz.foo", "1.2.3.4");
-  await new TRRDNSListener("abc.foo", "::1:2:3:4");
+  await new TRRDNSListener("xyz.foo", { expectedAnswer: "1.2.3.4" });
+  await new TRRDNSListener("abc.foo", { expectedAnswer: "::1:2:3:4" });
 
   // IPv6 additional
   await trrServer.registerDoHAnswers(
@@ -170,8 +170,8 @@ add_task(async function test_parse_additional_section() {
     ]
   );
 
-  await new TRRDNSListener("ipv6.foo", "2001::a:b:c:d");
-  await new TRRDNSListener("def.foo", "::a:b:c:d");
+  await new TRRDNSListener("ipv6.foo", { expectedAnswer: "2001::a:b:c:d" });
+  await new TRRDNSListener("def.foo", { expectedAnswer: "::a:b:c:d" });
 
   // IPv6 additional
   await trrServer.registerDoHAnswers(
@@ -197,8 +197,8 @@ add_task(async function test_parse_additional_section() {
     ]
   );
 
-  await new TRRDNSListener("ipv6b.foo", "2001::a:b:c:d");
-  await new TRRDNSListener("qqqq.foo", "9.8.7.6");
+  await new TRRDNSListener("ipv6b.foo", { expectedAnswer: "2001::a:b:c:d" });
+  await new TRRDNSListener("qqqq.foo", { expectedAnswer: "9.8.7.6" });
 
   // Multiple IPs and multiple additional records
   await trrServer.registerDoHAnswers(
@@ -249,7 +249,7 @@ add_task(async function test_parse_additional_section() {
 
   let [inRequest, inRecord, inStatus] = await new TRRDNSListener(
     "multiple.foo",
-    "9.9.9.9"
+    { expectedAnswer: "9.9.9.9" }
   );
   let IPs = [];
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
@@ -260,11 +260,9 @@ add_task(async function test_parse_additional_section() {
   equal(IPs.length, 1);
   equal(IPs[0], "9.9.9.9");
   IPs = [];
-  [inRequest, inRecord, inStatus] = await new TRRDNSListener(
-    "yuiop.foo",
-    undefined,
-    false
-  );
+  [inRequest, inRecord, inStatus] = await new TRRDNSListener("yuiop.foo", {
+    expectedSuccess: false,
+  });
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   inRecord.rewind();
   while (inRecord.hasMore()) {
@@ -285,7 +283,7 @@ add_task(async function test_additional_after_resolve() {
       data: "3.4.5.6",
     },
   ]);
-  await new TRRDNSListener("first.foo", "3.4.5.6");
+  await new TRRDNSListener("first.foo", { expectedAnswer: "3.4.5.6" });
 
   await trrServer.registerDoHAnswers(
     "second.foo",
@@ -310,6 +308,6 @@ add_task(async function test_additional_after_resolve() {
     ]
   );
 
-  await new TRRDNSListener("second.foo", "1.2.3.4");
-  await new TRRDNSListener("first.foo", "2.3.4.5");
+  await new TRRDNSListener("second.foo", { expectedAnswer: "1.2.3.4" });
+  await new TRRDNSListener("first.foo", { expectedAnswer: "2.3.4.5" });
 });
