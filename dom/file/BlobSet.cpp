@@ -26,7 +26,7 @@ nsresult BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength) {
 
   memcpy((char*)data, aData, aLength);
 
-  RefPtr<BlobImpl> blobImpl = new MemoryBlobImpl(data, aLength, EmptyString());
+  RefPtr<BlobImpl> blobImpl = new MemoryBlobImpl(data, aLength, u""_ns);
   return AppendBlobImpl(blobImpl);
 }
 
@@ -46,8 +46,7 @@ nsresult BlobSet::AppendString(const nsAString& aString, bool nativeEOL) {
 #endif
   }
 
-  RefPtr<StringBlobImpl> blobImpl =
-      StringBlobImpl::Create(utf8Str, EmptyString());
+  RefPtr<StringBlobImpl> blobImpl = StringBlobImpl::Create(utf8Str, u""_ns);
   return AppendBlobImpl(blobImpl);
 }
 

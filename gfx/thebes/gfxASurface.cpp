@@ -426,8 +426,8 @@ class SurfaceMemoryReporter final : public nsIMemoryReporter {
           desc = sDefaultSurfaceDescription;
         }
 
-        aHandleReport->Callback(EmptyCString(), nsCString(path), KIND_OTHER,
-                                UNITS_BYTES, amount, nsCString(desc), aData);
+        aHandleReport->Callback(""_ns, nsCString(path), KIND_OTHER, UNITS_BYTES,
+                                amount, nsCString(desc), aData);
       }
     }
 

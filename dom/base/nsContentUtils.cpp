@@ -3279,7 +3279,7 @@ bool nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
   int16_t decision = nsIContentPolicy::ACCEPT;
 
   rv = NS_CheckContentLoadPolicy(aURI, secCheckLoadInfo,
-                                 EmptyCString(),  // mime guess
+                                 ""_ns,  // mime guess
                                  &decision, GetContentPolicy());
 
   return NS_SUCCEEDED(rv) && NS_CP_ACCEPTED(decision);
@@ -3754,10 +3754,9 @@ void nsContentUtils::LogSimpleConsoleError(const nsAString& aErrorText,
   if (scriptError) {
     nsCOMPtr<nsIConsoleService> console =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (console &&
-        NS_SUCCEEDED(scriptError->Init(
-            aErrorText, EmptyString(), EmptyString(), 0, 0, aErrorFlags,
-            aCategory, aFromPrivateWindow, aFromChromeContext))) {
+    if (console && NS_SUCCEEDED(scriptError->Init(
+                       aErrorText, u""_ns, u""_ns, 0, 0, aErrorFlags, aCategory,
+                       aFromPrivateWindow, aFromChromeContext))) {
       console->LogMessage(scriptError);
     }
   }
@@ -4983,9 +4982,9 @@ nsresult nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   nsCOMPtr<nsIPrincipal> principal =
       NullPrincipal::CreateWithoutOriginAttributes();
   RefPtr<Document> document;
-  nsresult rv = NS_NewDOMDocument(getter_AddRefs(document), EmptyString(),
-                                  EmptyString(), nullptr, uri, uri, principal,
-                                  true, nullptr, DocumentFlavorHTML);
+  nsresult rv =
+      NS_NewDOMDocument(getter_AddRefs(document), u""_ns, u""_ns, nullptr, uri,
+                        uri, principal, true, nullptr, DocumentFlavorHTML);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsContentUtils::ParseDocumentHTML(
@@ -5285,9 +5284,9 @@ void nsContentUtils::TriggerLink(nsIContent* aContent, nsIURI* aLinkURI,
       fileName.ReplaceChar(char16_t(0), '_');
     }
     nsDocShell::Cast(docShell)->OnLinkClick(
-        aContent, aLinkURI, fileName.IsVoid() ? aTargetSpec : EmptyString(),
-        fileName, nullptr, nullptr, UserActivation::IsHandlingUserInput(),
-        aIsTrusted, triggeringPrincipal, csp);
+        aContent, aLinkURI, fileName.IsVoid() ? aTargetSpec : u""_ns, fileName,
+        nullptr, nullptr, UserActivation::IsHandlingUserInput(), aIsTrusted,
+        triggeringPrincipal, csp);
   }
 }
 
@@ -5876,7 +5875,7 @@ nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
 
     nsAutoCString prePath;
     if (!userPass.IsEmpty()) {
-      rv = NS_MutateURI(uri).SetUserPass(EmptyCString()).Finalize(uri);
+      rv = NS_MutateURI(uri).SetUserPass(""_ns).Finalize(uri);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 

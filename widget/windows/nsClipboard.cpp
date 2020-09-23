@@ -484,9 +484,8 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject* aDataObject,
                 }
 
                 nsCOMPtr<nsIInputStream> inputStream;
-                result =
-                    imgTools->EncodeImage(container, mimeType, EmptyString(),
-                                          getter_AddRefs(inputStream));
+                result = imgTools->EncodeImage(container, mimeType, u""_ns,
+                                               getter_AddRefs(inputStream));
                 if (NS_FAILED(result)) {
                   break;
                 }

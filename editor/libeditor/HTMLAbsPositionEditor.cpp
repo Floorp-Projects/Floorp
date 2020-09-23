@@ -700,7 +700,7 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
   // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
   // by the caller because of MOZ_CAN_RUN_SCRIPT method.
   rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-      MOZ_KnownLive(*styledElement), *nsGkAtoms::position, EmptyString());
+      MOZ_KnownLive(*styledElement), *nsGkAtoms::position, u""_ns);
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
         "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::position) "
@@ -714,7 +714,7 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
   // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
   // by the caller because of MOZ_CAN_RUN_SCRIPT method.
   rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-      MOZ_KnownLive(*styledElement), *nsGkAtoms::top, EmptyString());
+      MOZ_KnownLive(*styledElement), *nsGkAtoms::top, u""_ns);
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
         "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::top) "
@@ -728,7 +728,7 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
   // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
   // by the caller because of MOZ_CAN_RUN_SCRIPT method.
   rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-      MOZ_KnownLive(*styledElement), *nsGkAtoms::left, EmptyString());
+      MOZ_KnownLive(*styledElement), *nsGkAtoms::left, u""_ns);
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
         "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::left) "
@@ -742,7 +742,7 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
   // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
   // by the caller because of MOZ_CAN_RUN_SCRIPT method.
   rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-      MOZ_KnownLive(*styledElement), *nsGkAtoms::z_index, EmptyString());
+      MOZ_KnownLive(*styledElement), *nsGkAtoms::z_index, u""_ns);
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
         "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::z_index) "
@@ -758,7 +758,7 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
     // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
     // by the caller because of MOZ_CAN_RUN_SCRIPT method.
     rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-        MOZ_KnownLive(*styledElement), *nsGkAtoms::width, EmptyString());
+        MOZ_KnownLive(*styledElement), *nsGkAtoms::width, u""_ns);
     if (rv == NS_ERROR_EDITOR_DESTROYED) {
       NS_WARNING(
           "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::width) "
@@ -772,7 +772,7 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
     // MOZ_KnownLive(*styledElement): aElement's lifetime must be guarantted
     // by the caller because of MOZ_CAN_RUN_SCRIPT method.
     rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-        MOZ_KnownLive(*styledElement), *nsGkAtoms::height, EmptyString());
+        MOZ_KnownLive(*styledElement), *nsGkAtoms::height, u""_ns);
     if (rv == NS_ERROR_EDITOR_DESTROYED) {
       NS_WARNING(
           "CSSEditUtils::RemoveCSSPropertyWithTransaction(nsGkAtoms::height) "

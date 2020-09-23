@@ -743,7 +743,7 @@ nsUrlClassifierDBServiceWorker::FinishUpdate() {
           self->mClassifier->DumpRawTableUpdates(self->mRawTableUpdates);
         }
         // Invalidate the raw table updates.
-        self->mRawTableUpdates = EmptyCString();
+        self->mRawTableUpdates.Truncate();
 #endif
 
         self->NotifyUpdateObserver(aRv);
@@ -784,7 +784,7 @@ nsresult nsUrlClassifierDBServiceWorker::NotifyUpdateObserver(
 
   nsCString provider;
   // Assume that all the tables in update should have the same provider.
-  urlUtil->GetTelemetryProvider(mUpdateTables.SafeElementAt(0, EmptyCString()),
+  urlUtil->GetTelemetryProvider(mUpdateTables.SafeElementAt(0, ""_ns),
                                 provider);
 
   nsresult updateStatus = mUpdateStatus;
@@ -1520,10 +1520,9 @@ nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables) {
     }
   }
 
-  nsCString provider =
-      matchedInfo ? matchedInfo->provider.name : EmptyCString();
-  nsCString fullhash = matchedInfo ? matchedInfo->fullhash : EmptyCString();
-  nsCString table = matchedInfo ? matchedInfo->table : EmptyCString();
+  nsCString provider = matchedInfo ? matchedInfo->provider.name : ""_ns;
+  nsCString fullhash = matchedInfo ? matchedInfo->fullhash : ""_ns;
+  nsCString table = matchedInfo ? matchedInfo->table : ""_ns;
 
   mCallback->OnClassifyComplete(response, table, provider, fullhash);
   return NS_OK;
@@ -1554,7 +1553,7 @@ nsUrlClassifierClassifyCallback::HandleResult(const nsACString& aTable,
   nsCString provider;
   nsresult rv = urlUtil->GetProvider(aTable, provider);
 
-  matchedInfo->provider.name = NS_SUCCEEDED(rv) ? provider : EmptyCString();
+  matchedInfo->provider.name = NS_SUCCEEDED(rv) ? provider : ""_ns;
   matchedInfo->provider.priority = 0;
   for (uint8_t i = 0; i < ArrayLength(kBuiltInProviders); i++) {
     if (kBuiltInProviders[i].name.Equals(matchedInfo->provider.name)) {

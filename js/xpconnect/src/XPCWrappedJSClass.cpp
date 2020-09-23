@@ -714,7 +714,7 @@ nsresult nsXPCWrappedJS::CheckForException(XPCCallContext& ccx,
             }
 
             nsresult rv = scriptError->InitWithWindowID(
-                NS_ConvertUTF8toUTF16(newMessage), sourceName, EmptyString(),
+                NS_ConvertUTF8toUTF16(newMessage), sourceName, u""_ns,
                 lineNumber, 0, 0, "XPConnect JavaScript",
                 nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
             if (NS_FAILED(rv)) {

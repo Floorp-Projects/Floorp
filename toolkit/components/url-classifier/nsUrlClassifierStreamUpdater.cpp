@@ -69,7 +69,7 @@ static MOZ_FORMAT_PRINTF(1, 2) void TrimAndLog(const char* aFmt, ...) {
   nsString trimmed;
   nsresult rv = urlFormatter->TrimSensitiveURLs(raw, trimmed);
   if (NS_FAILED(rv)) {
-    trimmed = EmptyString();
+    trimmed.Truncate();
   }
 
   // Use %s so we aren't exposing random strings to printf interpolation.
@@ -321,7 +321,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
 
   nsTArray<nsCString> tables;
   mozilla::safebrowsing::Classifier::SplitTables(aRequestTables, tables);
-  urlUtil->GetTelemetryProvider(tables.SafeElementAt(0, EmptyCString()),
+  urlUtil->GetTelemetryProvider(tables.SafeElementAt(0, ""_ns),
                                 mTelemetryProvider);
 
   mCurrentRequest = MakeUnique<UpdateRequest>();
@@ -334,8 +334,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
 
   LOG(("FetchUpdate: %s", mCurrentRequest->mUrl.Data()));
 
-  return FetchUpdate(aUpdateUrl, aRequestPayload, aIsPostRequest,
-                     EmptyCString());
+  return FetchUpdate(aUpdateUrl, aRequestPayload, aIsPostRequest, ""_ns);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -378,7 +377,7 @@ nsresult nsUrlClassifierStreamUpdater::FetchNext() {
   PendingUpdate& update = mPendingUpdates[0];
   LOG(("Fetching update url: %s\n", update.mUrl.get()));
   nsresult rv =
-      FetchUpdate(update.mUrl, EmptyCString(),
+      FetchUpdate(update.mUrl, ""_ns,
                   true,  // This method is for v2 and v2 is always a POST.
                   update.mTable);
   if (NS_FAILED(rv)) {
@@ -493,7 +492,7 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(uint32_t requestedTimeout) {
     successCallback->HandleEvent(strTimeout);
   } else if (downloadErrorCallback) {
     downloadErrorCallback->HandleEvent(mDownloadErrorStatusStr);
-    mDownloadErrorStatusStr = EmptyCString();
+    mDownloadErrorStatusStr.Truncate();
     LOG(("Notify download error callback in UpdateSuccess [this=%p]", this));
   }
   // Now fetch the next request
@@ -521,7 +520,7 @@ nsUrlClassifierStreamUpdater::UpdateError(nsresult result) {
   } else if (downloadErrorCallback) {
     LOG(("Notify download error callback in UpdateError [this=%p]", this));
     downloadErrorCallback->HandleEvent(mDownloadErrorStatusStr);
-    mDownloadErrorStatusStr = EmptyCString();
+    mDownloadErrorStatusStr.Truncate();
   }
 
   return NS_OK;

@@ -43,7 +43,7 @@ class GMPRemoveTest : public nsIObserver, public GMPVideoDecoderCallbackProxy {
   // gets re-added at destruction.
   void Setup();
 
-  bool CreateVideoDecoder(nsCString aNodeId = EmptyCString());
+  bool CreateVideoDecoder(nsCString aNodeId = ""_ns);
   void CloseVideoDecoder();
 
   void DeletePluginDirectory(bool aCanDefer);

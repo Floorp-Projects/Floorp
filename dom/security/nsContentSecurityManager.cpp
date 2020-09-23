@@ -392,7 +392,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
 
   switch (contentPolicyType) {
     case nsIContentPolicy::TYPE_OTHER: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
@@ -402,7 +402,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_IMAGE: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
@@ -412,12 +412,12 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_OBJECT: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
     case nsIContentPolicy::TYPE_DOCUMENT: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
@@ -432,7 +432,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_PING: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
@@ -450,7 +450,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
       if (internalContentPolicyType ==
               nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST ||
           internalContentPolicyType == nsIContentPolicy::TYPE_XMLHTTPREQUEST) {
-        mimeTypeGuess = EmptyCString();
+        mimeTypeGuess.Truncate();
       } else {
         MOZ_ASSERT(internalContentPolicyType ==
                        nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE,
@@ -461,7 +461,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = aLoadInfo->LoadingNode();
@@ -474,7 +474,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_DTD: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = aLoadInfo->LoadingNode();
@@ -486,7 +486,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_FONT: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
@@ -494,7 +494,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
       if (internalContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_TRACK) {
         mimeTypeGuess = "text/vtt"_ns;
       } else {
-        mimeTypeGuess = EmptyCString();
+        mimeTypeGuess.Truncate();
       }
 #ifdef DEBUG
       {
@@ -516,12 +516,12 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
         rv = httpChannelInternal->GetProxyURI(getter_AddRefs(uri));
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
     case nsIContentPolicy::TYPE_CSP_REPORT: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
@@ -538,7 +538,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_BEACON: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
 #ifdef DEBUG
       {
         nsCOMPtr<nsINode> node = aLoadInfo->LoadingNode();
@@ -550,12 +550,12 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_FETCH: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
     case nsIContentPolicy::TYPE_IMAGESET: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
@@ -565,12 +565,12 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     }
 
     case nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 
     case nsIContentPolicy::TYPE_SPECULATIVE: {
-      mimeTypeGuess = EmptyCString();
+      mimeTypeGuess.Truncate();
       break;
     }
 

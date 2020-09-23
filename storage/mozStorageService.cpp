@@ -75,7 +75,7 @@ static void ReportConn(nsIHandleReportCallback* aHandleReport,
   path.AppendLiteral("-used");
 
   int32_t val = aConn->getSqliteRuntimeStatus(aOption);
-  aHandleReport->Callback(EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,
+  aHandleReport->Callback(""_ns, path, nsIMemoryReporter::KIND_HEAP,
                           nsIMemoryReporter::UNITS_BYTES, int64_t(val), aDesc,
                           aData);
   *aTotal += val;
@@ -431,7 +431,7 @@ class AsyncInitDatabase final : public Runnable {
 
     if (mGrowthIncrement >= 0) {
       // Ignore errors. In the future, we might wish to log them.
-      (void)mConnection->SetGrowthIncrement(mGrowthIncrement, EmptyCString());
+      (void)mConnection->SetGrowthIncrement(mGrowthIncrement, ""_ns);
     }
 
     return DispatchResult(

@@ -490,7 +490,7 @@ nsresult nsHttpChannelAuthProvider::PrepareForAuthentication(bool proxyAuth) {
     if (NS_FAILED(rv)) {
       // delete the proxy authorization header because we weren't
       // asked to authenticate
-      rv = mAuthChannel->SetProxyCredentials(EmptyCString());
+      rv = mAuthChannel->SetProxyCredentials(""_ns);
       if (NS_FAILED(rv)) return rv;
       LOG(("  cleared proxy authorization header"));
     }

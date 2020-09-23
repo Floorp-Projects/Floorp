@@ -355,7 +355,7 @@ RemoteLazyInputStream::CloneWithRange(uint64_t aStart, uint64_t aLength,
 
   // Too short or out of range.
   if (aLength == 0 || aStart >= mLength) {
-    return NS_NewCStringInputStream(aResult, EmptyCString());
+    return NS_NewCStringInputStream(aResult, ""_ns);
   }
 
   MOZ_ASSERT(mActor);

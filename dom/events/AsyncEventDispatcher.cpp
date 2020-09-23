@@ -26,7 +26,7 @@ AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
       mEventMessage(eUnidentifiedEvent) {
   MOZ_ASSERT(mTarget);
   RefPtr<Event> event =
-      EventDispatcher::CreateEvent(aTarget, nullptr, &aEvent, EmptyString());
+      EventDispatcher::CreateEvent(aTarget, nullptr, &aEvent, u""_ns);
   mEvent = std::move(event);
   mEventType.SetIsVoid(true);
   NS_ASSERTION(mEvent, "Should never fail to create an event");

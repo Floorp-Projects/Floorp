@@ -219,7 +219,7 @@ void UDPSocket::JoinMulticastGroup(const nsAString& aMulticastGroupAddress,
   if (mSocket) {
     MOZ_ASSERT(!mSocketChild);
 
-    aRv = mSocket->JoinMulticast(address, EmptyCString());
+    aRv = mSocket->JoinMulticast(address, ""_ns);
     NS_WARNING_ASSERTION(!aRv.Failed(), "JoinMulticast failed");
 
     return;
@@ -227,7 +227,7 @@ void UDPSocket::JoinMulticastGroup(const nsAString& aMulticastGroupAddress,
 
   MOZ_ASSERT(mSocketChild);
 
-  mSocketChild->JoinMulticast(address, EmptyCString());
+  mSocketChild->JoinMulticast(address, ""_ns);
 }
 
 void UDPSocket::LeaveMulticastGroup(const nsAString& aMulticastGroupAddress,
@@ -250,14 +250,14 @@ void UDPSocket::LeaveMulticastGroup(const nsAString& aMulticastGroupAddress,
   if (mSocket) {
     MOZ_ASSERT(!mSocketChild);
 
-    aRv = mSocket->LeaveMulticast(address, EmptyCString());
+    aRv = mSocket->LeaveMulticast(address, ""_ns);
     NS_WARNING_ASSERTION(!aRv.Failed(), "mSocket->LeaveMulticast failed");
     return;
   }
 
   MOZ_ASSERT(mSocketChild);
 
-  mSocketChild->LeaveMulticast(address, EmptyCString());
+  mSocketChild->LeaveMulticast(address, ""_ns);
 }
 
 nsresult UDPSocket::DoPendingMcastCommand() {

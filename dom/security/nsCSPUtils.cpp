@@ -1366,8 +1366,7 @@ nsCSPPolicy::~nsCSPPolicy() {
 bool nsCSPPolicy::permits(CSPDirective aDir, nsIURI* aUri,
                           bool aSpecific) const {
   nsString outp;
-  return this->permits(aDir, aUri, EmptyString(), false, aSpecific, false,
-                       outp);
+  return this->permits(aDir, aUri, u""_ns, false, aSpecific, false, outp);
 }
 
 bool nsCSPPolicy::permits(CSPDirective aDir, nsIURI* aUri,
@@ -1507,13 +1506,12 @@ bool nsCSPPolicy::allowsNavigateTo(nsIURI* aURI, bool aWasRedirected,
       // Early return if we can skip the allowlist AND 'unsafe-allow-redirects'
       // is present.
       if (!aEnforceAllowlist &&
-          mDirectives[i]->allows(CSP_UNSAFE_ALLOW_REDIRECTS, EmptyString(),
-                                 false)) {
+          mDirectives[i]->allows(CSP_UNSAFE_ALLOW_REDIRECTS, u""_ns, false)) {
         return true;
       }
       // Otherwise, check against the allowlist.
-      if (!mDirectives[i]->permits(aURI, EmptyString(), aWasRedirected, false,
-                                   false, false)) {
+      if (!mDirectives[i]->permits(aURI, u""_ns, aWasRedirected, false, false,
+                                   false)) {
         allowsNavigateTo = false;
       }
     }

@@ -2559,7 +2559,7 @@ nsresult HttpBaseChannel::AddSecurityMessage(
 
   nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
   error->InitWithSourceURI(
-      errorText, mURI, EmptyString(), 0, 0, nsIScriptError::warningFlag,
+      errorText, mURI, u""_ns, 0, 0, nsIScriptError::warningFlag,
       NS_ConvertUTF16toUTF8(aMessageCategory), innerWindowID);
 
   console->LogMessage(error);
@@ -3675,7 +3675,7 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
             config.uploadStreamHasHeaders);
       } else {
         if (config.uploadStreamHasHeaders) {
-          uploadChannel->SetUploadStream(config.uploadStream, EmptyCString(),
+          uploadChannel->SetUploadStream(config.uploadStream, ""_ns,
                                          config.uploadStreamLength);
         } else {
           nsAutoCString ctype;

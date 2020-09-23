@@ -148,7 +148,7 @@ bool FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
   nsCOMPtr<nsIInputStream> upload = DeserializeIPCStream(aUploadStream);
   if (upload) {
     // contentType and contentLength are ignored
-    rv = ftpChan->SetUploadStream(upload, EmptyCString(), 0);
+    rv = ftpChan->SetUploadStream(upload, ""_ns, 0);
     if (NS_FAILED(rv)) return SendFailedAsyncOpen(rv);
   }
 

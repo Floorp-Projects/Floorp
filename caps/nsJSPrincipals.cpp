@@ -350,7 +350,7 @@ bool nsJSPrincipals::WritePrincipalInfo(JSStructuredCloneWriter* aWriter,
     const NullPrincipalInfo& nullInfo = aInfo;
     return JS_WriteUint32Pair(aWriter, SCTAG_DOM_NULL_PRINCIPAL, 0) &&
            ::WritePrincipalInfo(aWriter, nullInfo.attrs(), nullInfo.spec(),
-                                EmptyCString(), EmptyCString());
+                                ""_ns, ""_ns);
   }
   if (aInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     return JS_WriteUint32Pair(aWriter, SCTAG_DOM_SYSTEM_PRINCIPAL, 0);

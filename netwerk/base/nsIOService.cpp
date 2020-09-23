@@ -1037,8 +1037,7 @@ already_AddRefed<nsIURI> nsIOService::CreateExposableURI(nsIURI* aURI) {
   nsAutoCString userPass;
   uri->GetUserPass(userPass);
   if (!userPass.IsEmpty()) {
-    DebugOnly<nsresult> rv =
-        NS_MutateURI(uri).SetUserPass(EmptyCString()).Finalize(uri);
+    DebugOnly<nsresult> rv = NS_MutateURI(uri).SetUserPass(""_ns).Finalize(uri);
     MOZ_ASSERT(NS_SUCCEEDED(rv) && uri, "Mutating URI should never fail");
   }
   return uri.forget();

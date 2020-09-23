@@ -432,7 +432,7 @@ nsresult TabListener::Observe(nsISupports* aSubject, const char* aTopic,
 nsCString CollectPosition(Document& aDocument) {
   PresShell* presShell = aDocument.GetPresShell();
   if (!presShell) {
-    return EmptyCString();
+    return ""_ns;
   }
   nsPoint scrollPos = presShell->GetVisualViewportOffset();
   int scrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
@@ -441,7 +441,7 @@ nsCString CollectPosition(Document& aDocument) {
     return nsPrintfCString("%d,%d", scrollX, scrollY);
   }
 
-  return EmptyCString();
+  return ""_ns;
 }
 
 int CollectPositions(BrowsingContext* aBrowsingContext,
@@ -480,7 +480,7 @@ void ContentSessionStore::GetScrollPositions(
     nsTArray<nsCString>& aPositions, nsTArray<int32_t>& aPositionDescendants) {
   if (mScrollChanged == PAGELOADEDSTART) {
     aPositionDescendants.AppendElement(0);
-    aPositions.AppendElement(EmptyCString());
+    aPositions.AppendElement(""_ns);
   } else {
     CollectPositions(mDocShell->GetBrowsingContext(), aPositions,
                      aPositionDescendants);
@@ -572,8 +572,8 @@ nsTArray<InputFormData> ContentSessionStore::GetInputs(
     mFormDataChanged = NO_CHANGE;
     InputFormData input;
     input.descendants = 0;
-    input.innerHTML = EmptyString();
-    input.url = EmptyCString();
+    input.innerHTML.Truncate();
+    input.url.Truncate();
     input.numId = 0;
     input.numXPath = 0;
     inputs.AppendElement(input);

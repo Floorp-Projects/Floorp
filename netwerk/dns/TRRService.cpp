@@ -565,8 +565,7 @@ void TRRService::MaybeConfirm_locked() {
   } else {
     LOG(("TRRService starting confirmation test %s %s\n", mPrivateURI.get(),
          mConfirmationNS.get()));
-    mConfirmer =
-        new TRR(this, mConfirmationNS, TRRTYPE_NS, EmptyCString(), false);
+    mConfirmer = new TRR(this, mConfirmationNS, TRRTYPE_NS, ""_ns, false);
     DispatchTRRRequestInternal(mConfirmer, false);
   }
 }

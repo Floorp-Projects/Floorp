@@ -806,7 +806,7 @@ NS_IMETHODIMP CacheStorageService::Clear() {
 
   // Passing null as a load info means to evict all contexts.
   // EvictByContext() respects the entry pinning.  EvictAll() does not.
-  rv = CacheFileIOManager::EvictByContext(nullptr, false, EmptyString());
+  rv = CacheFileIOManager::EvictByContext(nullptr, false, u""_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1541,7 +1541,7 @@ nsresult CacheStorageService::AddStorageEntry(
   nsresult rv;
 
   nsAutoCString entryKey;
-  rv = CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURI, entryKey);
+  rv = CacheEntry::HashingKey(""_ns, aIdExtension, aURI, entryKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("CacheStorageService::AddStorageEntry [entryKey=%s, contextKey=%s]",
@@ -1641,7 +1641,7 @@ nsresult CacheStorageService::CheckStorageEntry(CacheStorage const* aStorage,
     NS_ENSURE_FALSE(mShutdown, NS_ERROR_NOT_INITIALIZED);
 
     nsAutoCString entryKey;
-    rv = CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURI, entryKey);
+    rv = CacheEntry::HashingKey(""_ns, aIdExtension, aURI, entryKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
     CacheEntryTable* entries;
@@ -1791,8 +1791,7 @@ nsresult CacheStorageService::DoomStorageEntry(
   CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   nsAutoCString entryKey;
-  nsresult rv =
-      CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURI, entryKey);
+  nsresult rv = CacheEntry::HashingKey(""_ns, aIdExtension, aURI, entryKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<CacheEntry> entry;
@@ -1927,7 +1926,7 @@ nsresult CacheStorageService::DoomStorageEntries(
 
     if (aContext && !aContext->IsPrivate()) {
       LOG(("  dooming disk entries"));
-      CacheFileIOManager::EvictByContext(aContext, aPinned, EmptyString());
+      CacheFileIOManager::EvictByContext(aContext, aPinned, u""_ns);
     }
   } else {
     LOG(("  dooming memory-only storage of %s", aContextKey.BeginReading()));
@@ -2019,7 +2018,7 @@ void CacheStorageService::CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
   CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, contextKey);
 
   nsAutoCString entryKey;
-  CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURISpec, entryKey);
+  CacheEntry::HashingKey(""_ns, aIdExtension, aURISpec, entryKey);
 
   mozilla::MutexAutoLock lock(mLock);
 
@@ -2054,7 +2053,7 @@ bool CacheStorageService::GetCacheEntryInfo(
   CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, contextKey);
 
   nsAutoCString entryKey;
-  CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURISpec, entryKey);
+  CacheEntry::HashingKey(""_ns, aIdExtension, aURISpec, entryKey);
 
   RefPtr<CacheEntry> entry;
   {
@@ -2288,7 +2287,7 @@ CacheStorageService::CollectReports(nsIHandleReportCallback* aHandleReport,
       }
 
       aHandleReport->Callback(
-          EmptyCString(),
+          ""_ns,
           nsPrintfCString(
               "explicit/network/cache2/%s-storage(%s)",
               table->Type() == CacheEntryTable::MEMORY_ONLY ? "memory" : "disk",

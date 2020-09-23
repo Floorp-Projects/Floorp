@@ -1520,7 +1520,7 @@ class nsINode : public mozilla::dom::EventTarget {
   void LookupPrefix(const nsAString& aNamespace, nsAString& aResult);
   bool IsDefaultNamespace(const nsAString& aNamespaceURI) {
     nsAutoString defaultNamespace;
-    LookupNamespaceURI(EmptyString(), defaultNamespace);
+    LookupNamespaceURI(u""_ns, defaultNamespace);
     return aNamespaceURI.Equals(defaultNamespace);
   }
   void LookupNamespaceURI(const nsAString& aNamespacePrefix,

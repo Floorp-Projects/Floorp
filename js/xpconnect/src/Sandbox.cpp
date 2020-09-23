@@ -1144,8 +1144,7 @@ nsresult ApplyAddonContentScriptCSP(nsISupports* prinOrSop) {
 #endif
 
   csp = new nsCSPContext();
-  MOZ_TRY(
-      csp->SetRequestContextWithPrincipal(expanded, selfURI, EmptyString(), 0));
+  MOZ_TRY(csp->SetRequestContextWithPrincipal(expanded, selfURI, u""_ns, 0));
 
   bool reportOnly = StaticPrefs::extensions_content_script_csp_report_only();
 

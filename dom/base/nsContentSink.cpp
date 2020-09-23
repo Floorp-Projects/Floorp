@@ -702,7 +702,7 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
       aTitle,
       aMedia,
       aIntegrity,
-      /* nonce = */ EmptyString(),
+      /* nonce = */ u""_ns,
       aAlternate ? Loader::HasAlternateRel::Yes : Loader::HasAlternateRel::No,
       Loader::IsInline::No,
       Loader::IsExplicitlyEnabled::No,
@@ -1505,11 +1505,10 @@ void nsContentSink::NotifyDocElementCreated(Document* aDoc) {
   }
   if (fireInitialInsertion) {
     observerService->NotifyObservers(ToSupports(aDoc),
-                                     "initial-document-element-inserted",
-                                     EmptyString().get());
+                                     "initial-document-element-inserted", u"");
   }
-  observerService->NotifyObservers(
-      ToSupports(aDoc), "document-element-inserted", EmptyString().get());
+  observerService->NotifyObservers(ToSupports(aDoc),
+                                   "document-element-inserted", u"");
 
   nsContentUtils::DispatchChromeEvent(aDoc, ToSupports(aDoc),
                                       u"DOMDocElementInserted"_ns,

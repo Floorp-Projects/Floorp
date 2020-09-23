@@ -713,7 +713,7 @@ nsresult nsLocalFile::CopyDirectoryTo(nsIFile* aNewParent) {
     return rv;
   }
   if (!dirCheck) {
-    return CopyToNative(aNewParent, EmptyCString());
+    return CopyToNative(aNewParent, ""_ns);
   }
 
   if (NS_FAILED(rv = Equals(aNewParent, &dirCheck))) {
@@ -772,7 +772,7 @@ nsresult nsLocalFile::CopyDirectoryTo(nsIFile* aNewParent) {
       nsCOMPtr<nsIFile> destClone;
       rv = aNewParent->Clone(getter_AddRefs(destClone));
       if (NS_SUCCEEDED(rv)) {
-        if (NS_FAILED(rv = entry->CopyToNative(destClone, EmptyCString()))) {
+        if (NS_FAILED(rv = entry->CopyToNative(destClone, ""_ns))) {
 #ifdef DEBUG
           nsresult rv2;
           nsAutoCString pathName;
@@ -788,7 +788,7 @@ nsresult nsLocalFile::CopyDirectoryTo(nsIFile* aNewParent) {
         }
       }
     } else {
-      if (NS_FAILED(rv = entry->CopyToNative(aNewParent, EmptyCString()))) {
+      if (NS_FAILED(rv = entry->CopyToNative(aNewParent, ""_ns))) {
 #ifdef DEBUG
         nsresult rv2;
         nsAutoCString pathName;
@@ -2030,9 +2030,9 @@ nsLocalFile::Launch() {
   }
 
   nsAutoCString fileUri = "file://"_ns + mPath;
-  return java::GeckoAppShell::OpenUriExternal(
-             NS_ConvertUTF8toUTF16(fileUri), NS_ConvertUTF8toUTF16(type),
-             EmptyString(), EmptyString(), EmptyString(), EmptyString())
+  return java::GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(fileUri),
+                                              NS_ConvertUTF8toUTF16(type),
+                                              u""_ns, u""_ns, u""_ns, u""_ns)
              ? NS_OK
              : NS_ERROR_FAILURE;
 #elif defined(MOZ_WIDGET_COCOA)

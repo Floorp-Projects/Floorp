@@ -134,10 +134,9 @@ void DomainPolicy::ApplyClone(const DomainPolicyClone* aClone) {
 
 static already_AddRefed<nsIURI> GetCanonicalClone(nsIURI* aURI) {
   nsCOMPtr<nsIURI> clone;
-  nsresult rv = NS_MutateURI(aURI)
-                    .SetUserPass(EmptyCString())
-                    .SetPathQueryRef(EmptyCString())
-                    .Finalize(clone);
+  nsresult rv =
+      NS_MutateURI(aURI).SetUserPass(""_ns).SetPathQueryRef(""_ns).Finalize(
+          clone);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return clone.forget();
 }

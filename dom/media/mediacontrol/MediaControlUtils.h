@@ -173,7 +173,7 @@ inline nsresult GetEncodedImageBuffer(imgIContainer* aImage,
   }
 
   nsCOMPtr<nsIInputStream> inputStream;
-  nsresult rv = imgTools->EncodeImage(aImage, aMimeType, EmptyString(),
+  nsresult rv = imgTools->EncodeImage(aImage, aMimeType, u""_ns,
                                       getter_AddRefs(inputStream));
   if (NS_FAILED(rv)) {
     return rv;

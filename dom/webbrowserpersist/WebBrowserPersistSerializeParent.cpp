@@ -69,7 +69,7 @@ void WebBrowserPersistSerializeParent::ActorDestroy(ActorDestroyReason aWhy) {
                           nsCOMPtr<nsIOutputStream>, nsCString, nsresult>(
             "nsIWebBrowserPersistWriteCompletion::OnFinish", mFinish,
             &nsIWebBrowserPersistWriteCompletion::OnFinish, mDocument, mStream,
-            EmptyCString(), NS_ERROR_FAILURE);
+            ""_ns, NS_ERROR_FAILURE);
     NS_DispatchToCurrentThread(errorLater);
     mFinish = nullptr;
   }

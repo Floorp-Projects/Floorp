@@ -717,7 +717,7 @@ uint32_t nsXMLContentSerializer::ScanNamespaceDeclarations(
           skipAttr = index;
         } else {
           // Default NS attribute does not have prefix (and the name is "xmlns")
-          PushNameSpaceDecl(EmptyString(), uriStr, aOriginalElement);
+          PushNameSpaceDecl(u""_ns, uriStr, aOriginalElement);
         }
       } else {
         PushNameSpaceDecl(nsDependentAtomString(attrName), uriStr,
@@ -770,8 +770,7 @@ bool nsXMLContentSerializer::SerializeAttributes(
     if (aTagPrefix.IsEmpty()) {
       // Serialize default namespace decl
       NS_ENSURE_TRUE(
-          SerializeAttr(EmptyString(), xmlnsStr, aTagNamespaceURI, aStr, true),
-          false);
+          SerializeAttr(u""_ns, xmlnsStr, aTagNamespaceURI, aStr, true), false);
     } else {
       // Serialize namespace decl
       NS_ENSURE_TRUE(

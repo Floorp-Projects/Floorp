@@ -89,7 +89,7 @@ CollectedFrames CompositionRecorder::GetCollectedFrames() {
     RefPtr<DataSourceSurface> surf = frame->GetSourceSurface();
     double offset = (frame->GetTimeStamp() - mRecordingStart).ToMilliseconds();
 
-    gfxUtils::EncodeSourceSurface(surf, ImageType::PNG, EmptyString(),
+    gfxUtils::EncodeSourceSurface(surf, ImageType::PNG, u""_ns,
                                   gfxUtils::eDataURIEncode, nullptr, &buffer);
 
     frames.EmplaceBack(offset, std::move(buffer));

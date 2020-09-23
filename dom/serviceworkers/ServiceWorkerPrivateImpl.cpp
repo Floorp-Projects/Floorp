@@ -1007,9 +1007,8 @@ void ServiceWorkerPrivateImpl::ErrorReceived(const ErrorValue& aError) {
   ServiceWorkerInfo* info = mOuter->mInfo;
 
   swm->HandleError(nullptr, info->Principal(), info->Scope(),
-                   NS_ConvertUTF8toUTF16(info->ScriptSpec()), EmptyString(),
-                   EmptyString(), EmptyString(), 0, 0,
-                   nsIScriptError::errorFlag, JSEXN_ERR);
+                   NS_ConvertUTF8toUTF16(info->ScriptSpec()), u""_ns, u""_ns,
+                   u""_ns, 0, 0, nsIScriptError::errorFlag, JSEXN_ERR);
 }
 
 void ServiceWorkerPrivateImpl::Terminated() {

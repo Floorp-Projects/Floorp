@@ -491,7 +491,7 @@ JSObject* HTMLLinkElement::WrapNode(JSContext* aCx,
 }
 
 void HTMLLinkElement::GetAs(nsAString& aResult) {
-  GetEnumAttr(nsGkAtoms::as, EmptyCString().get(), aResult);
+  GetEnumAttr(nsGkAtoms::as, "", aResult);
 }
 
 static const nsAttrValue::EnumTable kAsAttributeTable[] = {
@@ -698,8 +698,6 @@ void HTMLLinkElement::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     nsAutoString notUsed;
     if (aOldValue) {
       aOldValue->ToString(oldType);
-    } else {
-      oldType = EmptyString();
     }
     nsAutoString oldMimeType;
     nsContentUtils::SplitMimeType(oldType, oldMimeType, notUsed);
@@ -713,8 +711,6 @@ void HTMLLinkElement::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     nsAutoString oldMedia;
     if (aOldValue) {
       aOldValue->ToString(oldMedia);
-    } else {
-      oldMedia = EmptyString();
     }
     if (CheckPreloadAttrs(asAttr, mimeType, oldMedia, OwnerDoc())) {
       oldPolicyType = asPolicyType;

@@ -4619,7 +4619,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
                                          stringFromPboardType:(NSString*)
                                                                   kPasteboardTypeFileURLPromise]]) {
         nsCOMPtr<nsIFile> targFile;
-        NS_NewLocalFile(EmptyString(), true, getter_AddRefs(targFile));
+        NS_NewLocalFile(u""_ns, true, getter_AddRefs(targFile));
         nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(targFile);
         if (!macLocalFile) {
           NS_ERROR("No Mac local file");

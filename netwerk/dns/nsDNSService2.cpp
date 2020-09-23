@@ -1205,7 +1205,7 @@ nsresult nsDNSService::ResolveInternal(
     flags |= RESOLVE_DISABLE_TRR;
   }
 
-  rv = res->ResolveHost(hostname, EmptyCString(), RESOLVE_TYPE_DEFAULT,
+  rv = res->ResolveHost(hostname, ""_ns, RESOLVE_TYPE_DEFAULT,
                         aOriginAttributes, flags, af, syncReq);
   if (NS_SUCCEEDED(rv)) {
     // wait for result

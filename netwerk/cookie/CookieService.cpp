@@ -256,7 +256,7 @@ CookieService::Observe(nsISupports* /*aSubject*/, const char* aTopic,
     // Flush all the cookies stored by private browsing contexts
     OriginAttributesPattern pattern;
     pattern.mPrivateBrowsingId.Construct(1);
-    RemoveCookiesWithOriginAttributes(pattern, EmptyCString());
+    RemoveCookiesWithOriginAttributes(pattern, ""_ns);
     mPrivateStorage = CookiePrivateStorage::Create();
   }
 
@@ -2357,7 +2357,7 @@ bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
         Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
     storage->AddCookie(nullptr, aBaseDomain, aAttrs, cookie, currentTimeInUsec,
-                       aHostURI, EmptyCString(), aFromHttp);
+                       aHostURI, ""_ns, aFromHttp);
   }
 
   return true;

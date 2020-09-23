@@ -1816,8 +1816,8 @@ void RasterImage::ReportDecoderError() {
       }
       CopyUTF8toUTF16(uri, src);
     }
-    if (NS_SUCCEEDED(errorObject->InitWithWindowID(msg, src, EmptyString(), 0,
-                                                   0, nsIScriptError::errorFlag,
+    if (NS_SUCCEEDED(errorObject->InitWithWindowID(msg, src, u""_ns, 0, 0,
+                                                   nsIScriptError::errorFlag,
                                                    "Image", InnerWindowID()))) {
       consoleService->LogMessage(errorObject);
     }

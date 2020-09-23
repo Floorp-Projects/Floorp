@@ -1040,7 +1040,7 @@ nsCString SelectAlpnFromAlpnList(const nsACString& aAlpnList, bool aNoHttp2,
   }
 
   // If we are here, there is no supported alpn can be used.
-  return EmptyCString();
+  return {};
 }
 
 }  // namespace net

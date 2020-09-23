@@ -344,8 +344,8 @@ nsresult nsXULPopupListener::LaunchPopup(MouseEvent* aEvent) {
       (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::position) ||
        (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupanchor) &&
         mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupalign)))) {
-    pm->ShowPopup(mPopupContent, mElement, EmptyString(), 0, 0, false, true,
-                  false, aEvent);
+    pm->ShowPopup(mPopupContent, mElement, u""_ns, 0, 0, false, true, false,
+                  aEvent);
   } else {
     int32_t xPos = aEvent->ScreenX(CallerType::System);
     int32_t yPos = aEvent->ScreenY(CallerType::System);

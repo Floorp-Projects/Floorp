@@ -1907,15 +1907,15 @@ nsresult nsLocalFile::CopyMove(nsIFile* aParentDir, const nsAString& aNewName,
           return NS_ERROR_FAILURE;
         }
 
-        rv = file->MoveTo(target, EmptyString());
+        rv = file->MoveTo(target, u""_ns);
         if (NS_FAILED(rv)) {
           return rv;
         }
       } else {
         if (followSymlinks) {
-          rv = file->CopyToFollowingLinks(target, EmptyString());
+          rv = file->CopyToFollowingLinks(target, u""_ns);
         } else {
-          rv = file->CopyTo(target, EmptyString());
+          rv = file->CopyTo(target, u""_ns);
         }
         if (NS_FAILED(rv)) {
           return rv;
@@ -3167,7 +3167,7 @@ nsLocalFile::CopyToNative(nsIFile* aNewParentDir, const nsACString& aNewName) {
   CHECK_mWorkingPath();
 
   if (aNewName.IsEmpty()) {
-    return CopyTo(aNewParentDir, EmptyString());
+    return CopyTo(aNewParentDir, u""_ns);
   }
 
   nsAutoString tmp;
@@ -3183,7 +3183,7 @@ NS_IMETHODIMP
 nsLocalFile::CopyToFollowingLinksNative(nsIFile* aNewParentDir,
                                         const nsACString& aNewName) {
   if (aNewName.IsEmpty()) {
-    return CopyToFollowingLinks(aNewParentDir, EmptyString());
+    return CopyToFollowingLinks(aNewParentDir, u""_ns);
   }
 
   nsAutoString tmp;
@@ -3201,7 +3201,7 @@ nsLocalFile::MoveToNative(nsIFile* aNewParentDir, const nsACString& aNewName) {
   CHECK_mWorkingPath();
 
   if (aNewName.IsEmpty()) {
-    return MoveTo(aNewParentDir, EmptyString());
+    return MoveTo(aNewParentDir, u""_ns);
   }
 
   nsAutoString tmp;

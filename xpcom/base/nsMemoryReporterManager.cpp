@@ -884,7 +884,7 @@ class WindowsAddressSpaceReporter final : public nsIMemoryReporter {
       // Append the segment count.
       path.AppendPrintf("(segments=%u)", entry->mCount);
 
-      aHandleReport->Callback(EmptyCString(), path, KIND_OTHER, UNITS_BYTES,
+      aHandleReport->Callback(""_ns, path, KIND_OTHER, UNITS_BYTES,
                               entry->mSize, "From MEMORY_BASIC_INFORMATION."_ns,
                               aData);
     }
@@ -1412,7 +1412,7 @@ class ThreadsReporter final : public nsIMemoryReporter {
                            thread.mName.get(), thread.mThreadId);
 
       aHandleReport->Callback(
-          EmptyCString(), path, KIND_NONHEAP, UNITS_BYTES, thread.mPrivateSize,
+          ""_ns, path, KIND_NONHEAP, UNITS_BYTES, thread.mPrivateSize,
           nsLiteralCString("The sizes of thread stacks which have been "
                            "committed to memory."),
           aData);
@@ -1697,7 +1697,7 @@ nsMemoryReporterManager::GetReports(
   return GetReportsExtended(aHandleReport, aHandleReportData, aFinishReporting,
                             aFinishReportingData, aAnonymize,
                             /* minimize = */ false,
-                            /* DMDident = */ EmptyString());
+                            /* DMDident = */ u""_ns);
 }
 
 NS_IMETHODIMP

@@ -423,7 +423,7 @@ void TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
 
   if (queryLen < 0) {
     *aUrlWithoutQueryOut = aUrl;
-    *aUrlQueryOut = EmptyCString();
+    aUrlQueryOut->Truncate();
     return;
   }
 

@@ -255,7 +255,7 @@ nsresult nsAppFileLocationProvider::GetProductDirectory(nsIFile** aLocalFile,
   if (err) {
     return NS_ERROR_FAILURE;
   }
-  NS_NewLocalFile(EmptyString(), true, getter_AddRefs(localDir));
+  NS_NewLocalFile(u""_ns, true, getter_AddRefs(localDir));
   if (!localDir) {
     return NS_ERROR_FAILURE;
   }

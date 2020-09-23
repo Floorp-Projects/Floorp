@@ -177,7 +177,7 @@ nsresult CheckAndGetExtensionForMime(const nsCString& aExtension,
   }
 
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  rv = mimeService->GetFromTypeAndExtension(aMimeType, EmptyCString(),
+  rv = mimeService->GetFromTypeAndExtension(aMimeType, ""_ns,
                                             getter_AddRefs(mimeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -448,7 +448,7 @@ nsresult DragDataProducer::GetImageData(imgIContainer* aImage,
     }
 
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
-    mimeService->GetFromTypeAndExtension(mimeType, EmptyCString(),
+    mimeService->GetFromTypeAndExtension(mimeType, ""_ns,
                                          getter_AddRefs(mimeInfo));
     if (mimeInfo) {
       nsAutoCString extension;

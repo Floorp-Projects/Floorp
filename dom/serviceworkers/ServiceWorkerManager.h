@@ -206,9 +206,8 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   static void LocalizeAndReportToAllClients(
       const nsCString& aScope, const char* aStringKey,
       const nsTArray<nsString>& aParamArray, uint32_t aFlags = 0x0,
-      const nsString& aFilename = EmptyString(),
-      const nsString& aLine = EmptyString(), uint32_t aLineNumber = 0,
-      uint32_t aColumnNumber = 0);
+      const nsString& aFilename = u""_ns, const nsString& aLine = u""_ns,
+      uint32_t aLineNumber = 0, uint32_t aColumnNumber = 0);
 
   // Always consumes the error by reporting to consoles of all controlled
   // documents.

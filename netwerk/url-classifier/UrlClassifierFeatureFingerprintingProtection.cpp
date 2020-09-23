@@ -160,7 +160,7 @@ UrlClassifierFeatureFingerprintingProtection::ProcessChannel(
   }
 
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_FINGERPRINTING_URI,
-                                         list, EmptyCString(), EmptyCString());
+                                         list, ""_ns, ""_ns);
 
   UC_LOG(
       ("UrlClassifierFeatureFingerprintingProtection::ProcessChannel - "

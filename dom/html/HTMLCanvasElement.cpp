@@ -767,7 +767,7 @@ nsresult HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
   // If there are unrecognized custom parse options, we should fall back to
   // the default values for the encoder without any options at all.
   if (rv == NS_ERROR_INVALID_ARG && usingCustomParseOptions) {
-    rv = ExtractData(aCx, aSubjectPrincipal, type, EmptyString(),
+    rv = ExtractData(aCx, aSubjectPrincipal, type, u""_ns,
                      getter_AddRefs(stream));
   }
 
@@ -885,7 +885,7 @@ nsresult HTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
   nsAutoString type(aType);
   nsresult rv =
       ExtractData(nsContentUtils::GetCurrentJSContext(), aSubjectPrincipal,
-                  type, EmptyString(), getter_AddRefs(stream));
+                  type, u""_ns, getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t imgSize;

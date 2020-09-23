@@ -42,7 +42,7 @@ class nsSoundPlayer : public mozilla::Runnable {
         mSoundData(nullptr) {}
 
   nsSoundPlayer(const uint8_t* aData, size_t aSize)
-      : mozilla::Runnable("nsSoundPlayer"), mSoundName(EmptyString()) {
+      : mozilla::Runnable("nsSoundPlayer"), mSoundName(u""_ns) {
     MOZ_ASSERT(aSize > 0, "Size should not be zero");
     MOZ_ASSERT(aData, "Data shoud not be null");
 

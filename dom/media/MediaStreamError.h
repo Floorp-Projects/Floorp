@@ -61,8 +61,8 @@ class BaseMediaMgrError {
 
 class MediaMgrError final : public nsISupports, public BaseMediaMgrError {
  public:
-  explicit MediaMgrError(Name aName, const nsAString& aMessage = EmptyString(),
-                         const nsAString& aConstraint = EmptyString())
+  explicit MediaMgrError(Name aName, const nsAString& aMessage = u""_ns,
+                         const nsAString& aConstraint = u""_ns)
       : BaseMediaMgrError(aName, aMessage, aConstraint) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -77,8 +77,8 @@ class MediaStreamError final : public nsISupports,
                                public nsWrapperCache {
  public:
   MediaStreamError(nsPIDOMWindowInner* aParent, Name aName,
-                   const nsAString& aMessage = EmptyString(),
-                   const nsAString& aConstraint = EmptyString());
+                   const nsAString& aMessage = u""_ns,
+                   const nsAString& aConstraint = u""_ns);
 
   MediaStreamError(nsPIDOMWindowInner* aParent, const BaseMediaMgrError& aOther)
       : BaseMediaMgrError(aOther.mName, aOther.mMessage, aOther.mConstraint),

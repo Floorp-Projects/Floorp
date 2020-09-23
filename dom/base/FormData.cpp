@@ -18,7 +18,7 @@ using namespace mozilla::dom;
 
 FormData::FormData(nsISupports* aOwner, NotNull<const Encoding*> aEncoding,
                    Element* aSubmitter)
-    : HTMLFormSubmission(nullptr, EmptyString(), aEncoding, aSubmitter),
+    : HTMLFormSubmission(nullptr, u""_ns, aEncoding, aSubmitter),
       mOwner(aOwner) {}
 
 FormData::FormData(const FormData& aFormData)
@@ -170,7 +170,7 @@ nsresult FormData::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) {
 
   if (!aBlob) {
     FormDataTuple* data = mFormData.AppendElement();
-    SetNameValuePair(data, aName, EmptyString(), true /* aWasNullBlob */);
+    SetNameValuePair(data, aName, u""_ns, true /* aWasNullBlob */);
     return NS_OK;
   }
 
@@ -315,7 +315,7 @@ already_AddRefed<FormData> FormData::Constructor(
 nsresult FormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                                nsACString& aContentTypeWithCharset,
                                nsACString& aCharset) const {
-  FSMultipartFormData fs(nullptr, EmptyString(), UTF_8_ENCODING, nullptr);
+  FSMultipartFormData fs(nullptr, u""_ns, UTF_8_ENCODING, nullptr);
   nsresult rv = CopySubmissionDataTo(&fs);
   NS_ENSURE_SUCCESS(rv, rv);
 

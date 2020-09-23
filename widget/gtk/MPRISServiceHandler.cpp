@@ -351,8 +351,8 @@ void MPRISServiceHandler::Close() {
   RemoveAllLocalImages();
   mMPRISMetadata.Clear();
 
-  mCurrentImageUrl = EmptyString();
-  mFetchingUrl = EmptyString();
+  mCurrentImageUrl.Truncate();
+  mFetchingUrl.Truncate();
 
   mNextImageIndex = 0;
 
@@ -479,7 +479,7 @@ void MPRISServiceHandler::SetMediaMetadataInternal(
     const dom::MediaMetadataBase& aMetadata, bool aClearArtUrl) {
   mMPRISMetadata.UpdateFromMetadataBase(aMetadata);
   if (aClearArtUrl) {
-    mMPRISMetadata.mArtUrl = EmptyCString();
+    mMPRISMetadata.mArtUrl.Truncate();
   }
   EmitMetadataChanged();
 }
@@ -531,15 +531,15 @@ void MPRISServiceHandler::LoadImageAtIndex(const size_t aIndex) {
                   NS_ConvertUTF16toUTF8(mCurrentImageUrl).get());
             } else {
               LOG("Failed to set image to MPRIS");
-              mCurrentImageUrl = EmptyString();
+              mCurrentImageUrl.Truncate();
             }
 
-            mFetchingUrl = EmptyString();
+            mFetchingUrl.Truncate();
           },
           [this, self](bool) {
             LOG("Failed to fetch image. Try next image");
             mImageFetchRequest.Complete();
-            mFetchingUrl = EmptyString();
+            mFetchingUrl.Truncate();
             LoadImageAtIndex(mNextImageIndex++);
           })
       ->Track(mImageFetchRequest);
@@ -684,7 +684,7 @@ void MPRISServiceHandler::RemoveAllLocalImages() {
 
   LOG("Abandon %s",
       mLocalImageFile ? mLocalImageFile->NativePath().get() : "nothing");
-  mMPRISMetadata.mArtUrl = EmptyCString();
+  mMPRISMetadata.mArtUrl.Truncate();
   mLocalImageFile = nullptr;
   mLocalImageFolder = nullptr;
 }

@@ -1549,8 +1549,7 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
 
       auto initializer = MakeUnique<nsGenConInitializer>(
           std::move(node), counterList, &nsCSSFrameConstructor::CountersDirty);
-      return CreateGenConTextNode(aState, EmptyString(),
-                                  std::move(initializer));
+      return CreateGenConTextNode(aState, u""_ns, std::move(initializer));
     }
     case Type::OpenQuote:
     case Type::CloseQuote:
@@ -1559,8 +1558,7 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
       auto node = MakeUnique<nsQuoteNode>(type, aContentIndex);
       auto initializer = MakeUnique<nsGenConInitializer>(
           std::move(node), &mQuoteList, &nsCSSFrameConstructor::QuotesDirty);
-      return CreateGenConTextNode(aState, EmptyString(),
-                                  std::move(initializer));
+      return CreateGenConTextNode(aState, u""_ns, std::move(initializer));
     }
 
     case Type::MozAltContent: {

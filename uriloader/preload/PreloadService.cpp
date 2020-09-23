@@ -135,7 +135,7 @@ void PreloadService::PreloadLinkHeader(
     return;
   }
 
-  PreloadOrCoalesce(aURI, aURL, aPolicyType, aAs, aType, EmptyString(), aSrcset,
+  PreloadOrCoalesce(aURI, aURL, aPolicyType, aAs, aType, u""_ns, aSrcset,
                     aSizes, aIntegrity, aCORS, aReferrerPolicy);
 }
 

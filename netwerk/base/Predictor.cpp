@@ -598,7 +598,7 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
   uint32_t openFlags =
       nsICacheStorage::OPEN_READONLY | nsICacheStorage::OPEN_SECRETLY |
       nsICacheStorage::OPEN_PRIORITY | nsICacheStorage::CHECK_MULTITHREADED;
-  cacheDiskStorage->AsyncOpenURI(uriKey, EmptyCString(), openFlags, uriAction);
+  cacheDiskStorage->AsyncOpenURI(uriKey, ""_ns, openFlags, uriAction);
 
   // Now we do the origin-only (and therefore predictor-only) entry
   nsCOMPtr<nsIURI> targetOrigin;
@@ -749,7 +749,7 @@ bool Predictor::PredictForPageload(nsICacheEntry* entry, nsIURI* targetURI,
     uint32_t openFlags =
         nsICacheStorage::OPEN_READONLY | nsICacheStorage::OPEN_SECRETLY |
         nsICacheStorage::OPEN_PRIORITY | nsICacheStorage::CHECK_MULTITHREADED;
-    cacheDiskStorage->AsyncOpenURI(redirectURI, EmptyCString(), openFlags,
+    cacheDiskStorage->AsyncOpenURI(redirectURI, ""_ns, openFlags,
                                    redirectAction);
     return RunPredictions(nullptr, *lci->OriginAttributesPtr(), verifier);
   }
@@ -1373,8 +1373,7 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
     // opened ASAP.
     uriOpenFlags |= nsICacheStorage::OPEN_PRIORITY;
   }
-  cacheDiskStorage->AsyncOpenURI(uriKey, EmptyCString(), uriOpenFlags,
-                                 uriAction);
+  cacheDiskStorage->AsyncOpenURI(uriKey, ""_ns, uriOpenFlags, uriAction);
 
   // Now we open the origin-only (and therefore predictor-only) entry
   RefPtr<Predictor::Action> originAction = new Predictor::Action(
@@ -1898,7 +1897,7 @@ Predictor::Resetter::OnCacheEntryVisitCompleted() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     urisToVisit[i]->GetAsciiSpec(u);
-    cacheDiskStorage->AsyncOpenURI(urisToVisit[i], EmptyCString(),
+    cacheDiskStorage->AsyncOpenURI(urisToVisit[i], ""_ns,
                                    nsICacheStorage::OPEN_READONLY |
                                        nsICacheStorage::OPEN_SECRETLY |
                                        nsICacheStorage::CHECK_MULTITHREADED,
@@ -2303,7 +2302,7 @@ void Predictor::UpdateCacheabilityInternal(
   nsAutoCString uri;
   targetURI->GetAsciiSpec(uri);
   PREDICTOR_LOG(("    uri=%s action=%p", uri.get(), action.get()));
-  cacheDiskStorage->AsyncOpenURI(sourceURI, EmptyCString(), openFlags, action);
+  cacheDiskStorage->AsyncOpenURI(sourceURI, ""_ns, openFlags, action);
 }
 
 NS_IMPL_ISUPPORTS(Predictor::CacheabilityAction, nsICacheEntryOpenCallback,

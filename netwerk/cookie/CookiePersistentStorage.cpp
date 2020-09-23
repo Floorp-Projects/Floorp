@@ -1786,7 +1786,7 @@ nsresult CookiePersistentStorage::InitDBConnInternal() {
   mCloseListener = new CloseCookieDBListener(this);
 
   // Grow cookie db in 512KB increments
-  mDBConn->SetGrowthIncrement(512 * 1024, EmptyCString());
+  mDBConn->SetGrowthIncrement(512 * 1024, ""_ns);
 
   // make operations on the table asynchronous, for performance
   mDBConn->ExecuteSimpleSQL("PRAGMA synchronous = OFF"_ns);

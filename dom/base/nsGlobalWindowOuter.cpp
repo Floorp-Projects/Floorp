@@ -2604,7 +2604,7 @@ void nsGlobalWindowOuter::DispatchDOMWindowCreated() {
   }
 }
 
-void nsGlobalWindowOuter::ClearStatus() { SetStatusOuter(EmptyString()); }
+void nsGlobalWindowOuter::ClearStatus() { SetStatusOuter(u""_ns); }
 
 void nsGlobalWindowOuter::SetDocShell(nsDocShell* aDocShell) {
   MOZ_ASSERT(aDocShell);
@@ -5369,7 +5369,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       AutoNoJSAPI nojsapi;
       auto printKind = aIsPreview == IsPreview::Yes ? PrintKind::PrintPreview
                                                     : PrintKind::Print;
-      aError = OpenInternal(EmptyString(), EmptyString(), EmptyString(),
+      aError = OpenInternal(u""_ns, u""_ns, u""_ns,
                             false,             // aDialog
                             false,             // aContentModal
                             true,              // aCalledNoScript
@@ -6039,8 +6039,8 @@ bool nsGlobalWindowOuter::GatherPostMessageData(
     }
 
     nsresult rv = NS_MutateURI(targetOriginURI)
-                      .SetUserPass(EmptyCString())
-                      .SetPathQueryRef(EmptyCString())
+                      .SetUserPass(""_ns)
+                      .SetPathQueryRef(""_ns)
                       .Finalize(aTargetOriginURI);
     if (NS_FAILED(rv)) {
       return false;

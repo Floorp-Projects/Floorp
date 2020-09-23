@@ -284,7 +284,7 @@ nsresult nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
   if (aBinary) {
     if (mBinaryType == DC_BINARY_TYPE_BLOB) {
       RefPtr<Blob> blob =
-          Blob::CreateStringBlob(GetOwnerGlobal(), aData, EmptyString());
+          Blob::CreateStringBlob(GetOwnerGlobal(), aData, u""_ns);
       if (NS_WARN_IF(!blob)) {
         return NS_ERROR_FAILURE;
       }
@@ -313,8 +313,8 @@ nsresult nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
   RefPtr<MessageEvent> event = new MessageEvent(this, nullptr, nullptr);
 
   event->InitMessageEvent(nullptr, u"message"_ns, CanBubble::eNo,
-                          Cancelable::eNo, jsData, mOrigin, EmptyString(),
-                          nullptr, Sequence<OwningNonNull<MessagePort>>());
+                          Cancelable::eNo, jsData, mOrigin, u""_ns, nullptr,
+                          Sequence<OwningNonNull<MessagePort>>());
   event->SetTrusted(true);
 
   DC_DEBUG(

@@ -1741,12 +1741,12 @@ nsresult HTMLEditor::RemoveInlinePropertyAsAction(nsStaticAtom& aHTMLProperty,
       aPrincipal);
   switch (editActionData.GetEditAction()) {
     case EditAction::eRemoveFontFamilyProperty:
-      MOZ_ASSERT(!EmptyString().IsVoid());
-      editActionData.SetData(EmptyString());
+      MOZ_ASSERT(!u""_ns.IsVoid());
+      editActionData.SetData(u""_ns);
       break;
     case EditAction::eRemoveColorProperty:
     case EditAction::eRemoveBackgroundColorPropertyInline:
-      editActionData.SetColorData(EmptyString());
+      editActionData.SetColorData(u""_ns);
       break;
     default:
       break;
@@ -1776,12 +1776,12 @@ NS_IMETHODIMP HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
       HTMLEditUtils::GetEditActionForFormatText(*property, attribute, false));
   switch (editActionData.GetEditAction()) {
     case EditAction::eRemoveFontFamilyProperty:
-      MOZ_ASSERT(!EmptyString().IsVoid());
-      editActionData.SetData(EmptyString());
+      MOZ_ASSERT(!u""_ns.IsVoid());
+      editActionData.SetData(u""_ns);
       break;
     case EditAction::eRemoveColorProperty:
     case EditAction::eRemoveBackgroundColorPropertyInline:
-      editActionData.SetColorData(EmptyString());
+      editActionData.SetColorData(u""_ns);
       break;
     default:
       break;
@@ -2241,7 +2241,7 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
 
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    mTypeInState->SetProp(&atom, nullptr, EmptyString());
+    mTypeInState->SetProp(&atom, nullptr, u""_ns);
     return NS_OK;
   }
 

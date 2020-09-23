@@ -367,7 +367,7 @@ void SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
     if (!event) {
       event = EventDispatcher::CreateEvent(aVisitor.mEvent->mOriginalTarget,
                                            aVisitor.mPresContext,
-                                           aVisitor.mEvent, EmptyString());
+                                           aVisitor.mEvent, u""_ns);
     }
 
     QueueEvent(event);

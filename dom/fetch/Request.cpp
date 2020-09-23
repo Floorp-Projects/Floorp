@@ -225,7 +225,7 @@ void GetRequestURLFromWorker(nsIGlobalObject* aGlobal, const nsAString& aInput,
     CopyUTF16toUTF8(Substring(fragment, 1), aURLfragment);
   }
 
-  url->SetHash(EmptyString());
+  url->SetHash(u""_ns);
   url->GetHref(aRequestURL);
 }
 

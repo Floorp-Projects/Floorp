@@ -98,7 +98,7 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
     nsPrintfCString suspectPath("observer-service-suspect/referent(topic=%s)",
                                 suspect.mTopic);
     aHandleReport->Callback(
-        /* process */ EmptyCString(), suspectPath, KIND_OTHER, UNITS_COUNT,
+        /* process */ ""_ns, suspectPath, KIND_OTHER, UNITS_COUNT,
         suspect.mReferentCount,
         nsLiteralCString("A topic with a suspiciously large number of "
                          "referents.  This may be symptomatic of a leak "
@@ -191,7 +191,7 @@ nsresult nsObserverService::FilterHttpOnTopics(const char* aTopic) {
     nsCOMPtr<nsIScriptError> error(
         do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
     error->Init(u"http-on-* observers only work in the parent process"_ns,
-                EmptyString(), EmptyString(), 0, 0, nsIScriptError::warningFlag,
+                u""_ns, u""_ns, 0, 0, nsIScriptError::warningFlag,
                 "chrome javascript", false /* from private window */,
                 true /* from chrome context */);
     console->LogMessage(error);

@@ -61,8 +61,7 @@ nsresult CheckInternal(nsIContentSecurityPolicy* aCSP,
     aCSP->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                               nullptr,  // triggering element
                               aCSPEventListener, aFileNameString, aExpression,
-                              aLineNum, aColumnNum, EmptyString(),
-                              EmptyString());
+                              aLineNum, aColumnNum, u""_ns, u""_ns);
   }
 
   return NS_OK;

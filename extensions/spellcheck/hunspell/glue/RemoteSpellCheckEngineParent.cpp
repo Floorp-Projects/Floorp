@@ -32,7 +32,7 @@ mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionaryFromList(
       return IPC_OK();
     }
   }
-  aResolve(Tuple<const bool&, const nsString&>(false, EmptyString()));
+  aResolve(Tuple<const bool&, const nsString&>(false, u""_ns));
   return IPC_OK();
 }
 

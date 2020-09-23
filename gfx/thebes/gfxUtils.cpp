@@ -1081,7 +1081,7 @@ nsresult gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
 
 static nsCString EncodeSourceSurfaceAsPNGURI(SourceSurface* aSurface) {
   nsCString string;
-  gfxUtils::EncodeSourceSurface(aSurface, ImageType::PNG, EmptyString(),
+  gfxUtils::EncodeSourceSurface(aSurface, ImageType::PNG, u""_ns,
                                 gfxUtils::eDataURIEncode, nullptr, &string);
   return string;
 }
@@ -1221,8 +1221,7 @@ void gfxUtils::WriteAsPNG(SourceSurface* aSurface, const char* aFile) {
     }
   }
 
-  EncodeSourceSurface(aSurface, ImageType::PNG, EmptyString(), eBinaryEncode,
-                      file);
+  EncodeSourceSurface(aSurface, ImageType::PNG, u""_ns, eBinaryEncode, file);
   fclose(file);
 }
 
@@ -1243,8 +1242,7 @@ void gfxUtils::WriteAsPNG(DrawTarget* aDT, const char* aFile) {
 
 /* static */
 void gfxUtils::DumpAsDataURI(SourceSurface* aSurface, FILE* aFile) {
-  EncodeSourceSurface(aSurface, ImageType::PNG, EmptyString(), eDataURIEncode,
-                      aFile);
+  EncodeSourceSurface(aSurface, ImageType::PNG, u""_ns, eDataURIEncode, aFile);
 }
 
 /* static */
@@ -1281,7 +1279,7 @@ nsCString gfxUtils::GetAsLZ4Base64Str(DataSourceSurface* aSourceSurface) {
       }
     }
   }
-  return EmptyCString();
+  return {};
 }
 
 /* static */
@@ -1297,7 +1295,7 @@ nsCString gfxUtils::GetAsDataURI(DrawTarget* aDT) {
 
 /* static */
 void gfxUtils::CopyAsDataURI(SourceSurface* aSurface) {
-  EncodeSourceSurface(aSurface, ImageType::PNG, EmptyString(), eDataURIEncode,
+  EncodeSourceSurface(aSurface, ImageType::PNG, u""_ns, eDataURIEncode,
                       nullptr);
 }
 

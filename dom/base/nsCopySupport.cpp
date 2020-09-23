@@ -621,7 +621,7 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  mimeService->GetFromTypeAndExtension(mimeType, EmptyCString(),
+  mimeService->GetFromTypeAndExtension(mimeType, ""_ns,
                                        getter_AddRefs(mimeInfo));
   NS_ENSURE_TRUE(mimeInfo, NS_OK);
 

@@ -322,7 +322,7 @@ AddrInfo::AddrInfo(const nsACString& host, unsigned int aTRR,
                    nsTArray<NetAddr>&& addresses, uint32_t aTTL)
     : ttl(aTTL),
       mHostName(host),
-      mCanonicalName(EmptyCString()),
+      mCanonicalName(),
       mFromTRR(aTRR),
       mAddresses(std::move(addresses)) {}
 

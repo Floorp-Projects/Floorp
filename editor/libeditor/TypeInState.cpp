@@ -193,7 +193,7 @@ void TypeInState::ClearProp(nsAtom* aProp, nsAtom* aAttr) {
   }
 
   // make a new propitem
-  PropItem* item = new PropItem(aProp, aAttr, EmptyString());
+  PropItem* item = new PropItem(aProp, aAttr, u""_ns);
 
   // remove it from the list of set properties, if we have a match
   RemovePropFromSetList(aProp, aAttr);

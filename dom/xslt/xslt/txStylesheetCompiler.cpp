@@ -832,7 +832,7 @@ static nsresult findFunction(nsAtom* aName, int32_t aNamespaceID,
 
 extern bool TX_XSLTFunctionAvailable(nsAtom* aName, int32_t aNameSpaceID) {
   RefPtr<txStylesheetCompiler> compiler =
-      new txStylesheetCompiler(EmptyString(), ReferrerPolicy::_empty, nullptr);
+      new txStylesheetCompiler(u""_ns, ReferrerPolicy::_empty, nullptr);
   NS_ENSURE_TRUE(compiler, false);
 
   UniquePtr<FunctionCall> fnCall;

@@ -595,8 +595,7 @@ nsresult TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard) {
   // Otherwise, synthesize the commit in content.
   nsAutoString data(aDiscard ? EmptyString() : lastData);
   if (data == mLastData) {
-    DispatchCompositionEventRunnable(eCompositionCommitAsIs, EmptyString(),
-                                     true);
+    DispatchCompositionEventRunnable(eCompositionCommitAsIs, u""_ns, true);
   } else {
     DispatchCompositionEventRunnable(eCompositionCommit, data, true);
   }

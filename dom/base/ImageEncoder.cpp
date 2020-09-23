@@ -168,9 +168,8 @@ class EncodingRunnable : public Runnable {
     // the default values for the encoder without any options at all.
     if (rv == NS_ERROR_INVALID_ARG && mUsingCustomOptions) {
       rv = ImageEncoder::ExtractDataInternal(
-          mType, EmptyString(), mImageBuffer.get(), mFormat, mSize,
-          mUsePlaceholder, mImage, nullptr, nullptr, getter_AddRefs(stream),
-          mEncoder);
+          mType, u""_ns, mImageBuffer.get(), mFormat, mSize, mUsePlaceholder,
+          mImage, nullptr, nullptr, getter_AddRefs(stream), mEncoder);
     }
     NS_ENSURE_SUCCESS(rv, rv);
 

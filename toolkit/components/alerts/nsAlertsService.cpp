@@ -195,7 +195,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(
 
 NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification* aAlert,
                                          nsIObserver* aAlertListener) {
-  return ShowPersistentNotification(EmptyString(), aAlert, aAlertListener);
+  return ShowPersistentNotification(u""_ns, aAlert, aAlertListener);
 }
 
 NS_IMETHODIMP nsAlertsService::ShowPersistentNotification(

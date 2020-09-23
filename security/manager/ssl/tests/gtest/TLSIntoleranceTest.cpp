@@ -360,7 +360,7 @@ TEST_F(psm_TLSIntoleranceTest, TLSPerSiteFallbackLimit) {
   ASSERT_TRUE(
       helpers.fallbackLimitReached(example_org, SSL_LIBRARY_VERSION_TLS_1_0));
 
-  helpers.setInsecureFallbackSites(EmptyCString());
+  helpers.setInsecureFallbackSites(""_ns);
 
   ASSERT_TRUE(
       helpers.fallbackLimitReached(example_com, SSL_LIBRARY_VERSION_TLS_1_2));

@@ -475,7 +475,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
           opProcessOfflineManifest operation(ToNewUnicode(urlString));
           treeOp->Init(mozilla::AsVariant(operation));
         } else {
-          opProcessOfflineManifest operation(ToNewUnicode(EmptyString()));
+          opProcessOfflineManifest operation(ToNewUnicode(u""_ns));
           treeOp->Init(mozilla::AsVariant(operation));
         }
       } else if (nsGkAtoms::base == aName && mViewSource) {

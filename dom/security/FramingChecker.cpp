@@ -150,10 +150,10 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
   AutoTArray<nsString, 2> params = {u"x-frame-options"_ns,
                                     u"frame-ancestors"_ns};
   CSP_LogLocalizedStr("IgnoringSrcBecauseOfDirective", params,
-                      EmptyString(),  // no sourcefile
-                      EmptyString(),  // no scriptsample
-                      0,              // no linenumber
-                      0,              // no columnnumber
+                      u""_ns,  // no sourcefile
+                      u""_ns,  // no scriptsample
+                      0,       // no linenumber
+                      0,       // no columnnumber
                       nsIScriptError::warningFlag,
                       "IgnoringSrcBecauseOfDirective"_ns, innerWindowID,
                       privateWindow);

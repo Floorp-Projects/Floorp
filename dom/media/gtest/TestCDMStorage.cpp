@@ -906,7 +906,7 @@ class CDMStorageTest {
     if (mCDM) {
       mCDM->Shutdown();
       mCDM = nullptr;
-      mNodeId = EmptyCString();
+      mNodeId.Truncate();
     }
   }
 

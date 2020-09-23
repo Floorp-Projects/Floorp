@@ -1166,7 +1166,7 @@ nsFormFillController::ShowPopup() {
   input->GetTextValue(value);
   if (value.Length() > 0) {
     // Show the popup with a filtered result set
-    controller->SetSearchString(EmptyString());
+    controller->SetSearchString(u""_ns);
     bool unused = false;
     controller->HandleText(&unused);
   } else {

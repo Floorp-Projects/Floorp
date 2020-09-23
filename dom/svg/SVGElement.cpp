@@ -262,8 +262,7 @@ nsresult SVGElement::BindToTree(BindContext& aContext, nsINode& aParent) {
         [self = RefPtr<SVGElement>(this)]() {
           nsAutoString nonce;
           self->GetNonce(nonce);
-          self->SetAttr(kNameSpaceID_None, nsGkAtoms::nonce, EmptyString(),
-                        true);
+          self->SetAttr(kNameSpaceID_None, nsGkAtoms::nonce, u""_ns, true);
           self->SetNonce(nonce);
         }));
   }

@@ -297,7 +297,7 @@ static nsresult SetupHttpChannel(nsIHttpChannel* aHttpChannel,
   // Headers
   const auto keys = reqBase->GetHeaderKeys();
   const auto values = reqBase->GetHeaderValues();
-  auto contentType = EmptyCString();
+  nsCString contentType;
   for (size_t i = 0; i < keys->Length(); i++) {
     const auto key = jni::String::LocalRef(keys->GetElement(i))->ToCString();
     const auto value =

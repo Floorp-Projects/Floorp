@@ -483,7 +483,7 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                              nullptr,  // triggering element
                              cspEventListener, fileName, scriptSample, lineNum,
-                             columnNum, EmptyString(), EmptyString());
+                             columnNum, u""_ns, u""_ns);
   }
 
   return evalOK;
@@ -1033,12 +1033,11 @@ nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
   // using category of "SOP" so we can link to MDN
   if (aInnerWindowID != 0) {
     rv = error->InitWithWindowID(
-        message, EmptyString(), EmptyString(), 0, 0, nsIScriptError::errorFlag,
-        "SOP"_ns, aInnerWindowID, true /* From chrome context */);
+        message, u""_ns, u""_ns, 0, 0, nsIScriptError::errorFlag, "SOP"_ns,
+        aInnerWindowID, true /* From chrome context */);
   } else {
-    rv = error->Init(message, EmptyString(), EmptyString(), 0, 0,
-                     nsIScriptError::errorFlag, "SOP", aFromPrivateWindow,
-                     true /* From chrome context */);
+    rv = error->Init(message, u""_ns, u""_ns, 0, 0, nsIScriptError::errorFlag,
+                     "SOP", aFromPrivateWindow, true /* From chrome context */);
   }
   NS_ENSURE_SUCCESS(rv, rv);
   console->LogMessage(error);

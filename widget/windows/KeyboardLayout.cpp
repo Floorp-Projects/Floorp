@@ -451,7 +451,7 @@ static const nsCString GetKeyLocationName(uint32_t aLocation) {
 static const nsCString GetCharacterCodeName(const char16_t* aChars,
                                             uint32_t aLength) {
   if (!aLength) {
-    return EmptyCString();
+    return ""_ns;
   }
   nsCString result;
   for (uint32_t i = 0; i < aLength; ++i) {
@@ -469,7 +469,7 @@ static const nsCString GetCharacterCodeName(const char16_t* aChars,
 static const nsCString GetCharacterCodeName(
     const UniCharsAndModifiers& aUniCharsAndModifiers) {
   if (aUniCharsAndModifiers.IsEmpty()) {
-    return EmptyCString();
+    return ""_ns;
   }
   nsCString result;
   for (uint32_t i = 0; i < aUniCharsAndModifiers.Length(); i++) {
@@ -4357,18 +4357,18 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
   nsCOMPtr<nsIWindowsRegKey> regKey =
       do_CreateInstance("@mozilla.org/windows-registry-key;1");
   if (NS_WARN_IF(!regKey)) {
-    return EmptyCString();
+    return ""_ns;
   }
   nsresult rv =
       regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
                    nsString(kKeyboardLayouts), nsIWindowsRegKey::ACCESS_READ);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EmptyCString();
+    return ""_ns;
   }
   uint32_t childCount = 0;
   if (NS_WARN_IF(NS_FAILED(regKey->GetChildCount(&childCount))) ||
       NS_WARN_IF(!childCount)) {
-    return EmptyCString();
+    return ""_ns;
   }
   for (uint32_t i = 0; i < childCount; i++) {
     nsAutoString childName;
@@ -4407,7 +4407,7 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
     }
     return NS_ConvertUTF16toUTF8(buf);
   }
-  return EmptyCString();
+  return ""_ns;
 }
 
 void KeyboardLayout::LoadLayout(HKL aLayout) {

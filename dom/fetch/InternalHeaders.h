@@ -136,7 +136,7 @@ class InternalHeaders final {
   bool IsForbiddenResponseHeader(const nsCString& aName) const;
 
   bool IsInvalidMutableHeader(const nsCString& aName, ErrorResult& aRv) const {
-    return IsInvalidMutableHeader(aName, EmptyCString(), aRv);
+    return IsInvalidMutableHeader(aName, ""_ns, aRv);
   }
 
   bool IsInvalidMutableHeader(const nsCString& aName, const nsACString& aValue,

@@ -187,7 +187,7 @@ TEST_F(TestPACMan,
        WhenTheDHCPClientExistsAndDHCPIsNonEmptyDHCPOptionIsUsedAsPACUri) {
   SetOptionResult(TEST_WPAD_DHCP_OPTION);
 
-  mPACMan->LoadPACFromURI(EmptyCString());
+  mPACMan->LoadPACFromURI(""_ns);
   ProcessAllEventsTenTimes();
 
   ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, WPADOptionResult.Data());
@@ -195,9 +195,9 @@ TEST_F(TestPACMan,
 }
 
 TEST_F(TestPACMan, WhenTheDHCPResponseIsEmptyWPADDefaultsToStandardURL) {
-  SetOptionResult(EmptyCString().Data());
+  SetOptionResult(""_ns.Data());
 
-  mPACMan->LoadPACFromURI(EmptyCString());
+  mPACMan->LoadPACFromURI(""_ns);
   ASSERT_TRUE(NS_HasPendingEvents(nullptr));
   ProcessAllEventsTenTimes();
 
@@ -209,7 +209,7 @@ TEST_F(TestPACMan, WhenThereIsNoDHCPClientWPADDefaultsToStandardURL) {
   SetOptionResult(TEST_WPAD_DHCP_OPTION);
   SetPACManDHCPCient(nullptr);
 
-  mPACMan->LoadPACFromURI(EmptyCString());
+  mPACMan->LoadPACFromURI(""_ns);
   ProcessAllEventsTenTimes();
 
   ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, WPADOptionResult.Data());
@@ -220,7 +220,7 @@ TEST_F(TestPACMan, WhenWPADOverDHCPIsPreffedOffWPADDefaultsToStandardURL) {
   SetOptionResult(TEST_WPAD_DHCP_OPTION);
   mPACMan->SetWPADOverDHCPEnabled(false);
 
-  mPACMan->LoadPACFromURI(EmptyCString());
+  mPACMan->LoadPACFromURI(""_ns);
   ProcessAllEventsTenTimes();
 
   ASSERT_STREQ(TEST_WPAD_DHCP_OPTION, WPADOptionResult.Data());

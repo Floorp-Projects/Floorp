@@ -403,8 +403,7 @@ bool nsMIMEInfoWin::GetAppsVerbCommandHandler(const nsAString& appExeName,
   if (NS_FAILED(rv)) return false;
 
   nsAutoString appFilesystemCommand;
-  if (NS_SUCCEEDED(
-          appKey->ReadStringValue(EmptyString(), appFilesystemCommand))) {
+  if (NS_SUCCEEDED(appKey->ReadStringValue(u""_ns, appFilesystemCommand))) {
     // Expand environment vars, clean up any misc.
     if (!nsLocalFile::CleanupCmdHandlerPath(appFilesystemCommand)) return false;
 
@@ -463,8 +462,7 @@ bool nsMIMEInfoWin::GetDllLaunchInfo(nsIFile* aDll, nsIFile* aFile,
   if (NS_FAILED(rv)) return false;
 
   nsAutoString appFilesystemCommand;
-  if (NS_SUCCEEDED(
-          appKey->ReadStringValue(EmptyString(), appFilesystemCommand))) {
+  if (NS_SUCCEEDED(appKey->ReadStringValue(u""_ns, appFilesystemCommand))) {
     // Replace embedded environment variables.
     uint32_t bufLength =
         ::ExpandEnvironmentStringsW(appFilesystemCommand.get(), nullptr, 0);
@@ -530,8 +528,7 @@ bool nsMIMEInfoWin::GetProgIDVerbCommandHandler(const nsAString& appProgIDName,
   if (NS_FAILED(rv)) return false;
 
   nsAutoString appFilesystemCommand;
-  if (NS_SUCCEEDED(
-          appKey->ReadStringValue(EmptyString(), appFilesystemCommand))) {
+  if (NS_SUCCEEDED(appKey->ReadStringValue(u""_ns, appFilesystemCommand))) {
     // Expand environment vars, clean up any misc.
     if (!nsLocalFile::CleanupCmdHandlerPath(appFilesystemCommand)) return false;
 
@@ -631,7 +628,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
                         nsIWindowsRegKey::ACCESS_QUERY_VALUE);
       if (NS_SUCCEEDED(rv)) {
         nsAutoString mimeFileExt;
-        if (NS_SUCCEEDED(regKey->ReadStringValue(EmptyString(), mimeFileExt))) {
+        if (NS_SUCCEEDED(regKey->ReadStringValue(u""_ns, mimeFileExt))) {
           CopyUTF16toUTF8(mimeFileExt, fileExt);
           extKnown = false;
         }
@@ -657,7 +654,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
                      workingRegistryPath, nsIWindowsRegKey::ACCESS_QUERY_VALUE);
     if (NS_SUCCEEDED(rv)) {
       nsAutoString appProgId;
-      if (NS_SUCCEEDED(regKey->ReadStringValue(EmptyString(), appProgId))) {
+      if (NS_SUCCEEDED(regKey->ReadStringValue(u""_ns, appProgId))) {
         // Bug 358297 - ignore the embedded internet explorer handler
         if (appProgId != u"XPSViewer.Document"_ns) {
           nsAutoString appFilesystemCommand;

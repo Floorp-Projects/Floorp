@@ -46,11 +46,11 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(
           nsDependentCString(aFlashFeature.mName),
           nsDependentCString(aFlashFeature.mBlocklistPrefTables),
           nsDependentCString(aFlashFeature.mEntitylistPrefTables),
-          EmptyCString(),  // aPrefBlocklistHosts
-          EmptyCString(),  // aPrefEntitylistHosts
-          EmptyCString(),  // aPrefBlocklistTableName
-          EmptyCString(),  // aPrefEntitylistTableName
-          EmptyCString())  // aPrefExceptionHosts
+          ""_ns,  // aPrefBlocklistHosts
+          ""_ns,  // aPrefEntitylistHosts
+          ""_ns,  // aPrefBlocklistTableName
+          ""_ns,  // aPrefEntitylistTableName
+          ""_ns)  // aPrefExceptionHosts
       ,
       mFlashPluginState(aFlashFeature.mFlashPluginState) {
   static_assert(nsIHttpChannel::FlashPluginDeniedInSubdocuments ==

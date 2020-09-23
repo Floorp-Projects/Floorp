@@ -67,7 +67,7 @@ nsString KeySystemToGMPName(const nsAString& aKeySystem) {
     return u"gmp-widevinecdm"_ns;
   }
   MOZ_ASSERT(false, "We should only call this for known GMPs");
-  return EmptyString();
+  return u""_ns;
 }
 
 }  // namespace mozilla

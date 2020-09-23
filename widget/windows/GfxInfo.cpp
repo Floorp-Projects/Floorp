@@ -505,7 +505,7 @@ nsresult GfxInfo::Init() {
     mDeviceKey[0] =
         displayDevice.DeviceKey + ArrayLength(DEVICE_KEY_PREFIX) - 1;
   } else {
-    mDeviceKey[0] = EmptyString();
+    mDeviceKey[0].Truncate();
   }
 
   mDeviceID[0] = displayDevice.DeviceID;

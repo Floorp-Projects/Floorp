@@ -805,7 +805,7 @@ PrototypeDocumentContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
                                         !mOffThreadCompileStringBuf),
                "PrototypeDocument can't load multiple scripts at once");
 
-    rv = ScriptLoader::ConvertToUTF16(channel, string, stringLen, EmptyString(),
+    rv = ScriptLoader::ConvertToUTF16(channel, string, stringLen, u""_ns,
                                       mDocument, mOffThreadCompileStringBuf,
                                       mOffThreadCompileStringLength);
     if (NS_SUCCEEDED(rv)) {

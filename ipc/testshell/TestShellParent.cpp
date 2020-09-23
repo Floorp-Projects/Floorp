@@ -86,6 +86,6 @@ bool TestShellCommandParent::ExecuteCallback(const nsString& aResponse) {
 
 void TestShellCommandParent::ActorDestroy(ActorDestroyReason why) {
   if (why == AbnormalShutdown) {
-    ExecuteCallback(EmptyString());
+    ExecuteCallback(u""_ns);
   }
 }

@@ -389,7 +389,7 @@ bool InternalHeaders::IsForbiddenRequestHeader(const nsCString& aName) const {
 bool InternalHeaders::IsForbiddenRequestNoCorsHeader(
     const nsCString& aName) const {
   return mGuard == HeadersGuardEnum::Request_no_cors &&
-         !IsSimpleHeader(aName, EmptyCString());
+         !IsSimpleHeader(aName, ""_ns);
 }
 
 bool InternalHeaders::IsForbiddenRequestNoCorsHeader(

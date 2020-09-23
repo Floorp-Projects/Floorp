@@ -434,7 +434,7 @@ nsresult PushErrorDispatcher::NotifyWorkers() {
     return nsContentUtils::ReportToConsoleNonLocalized(
         mMessage, mFlags, "Push"_ns, nullptr, /* aDocument */
         nullptr,                              /* aURI */
-        EmptyString(),                        /* aLine */
+        u""_ns,                               /* aLine */
         0,                                    /* aLineNumber */
         0,                                    /* aColumnNumber */
         nsContentUtils::eOMIT_LOCATION);
@@ -445,7 +445,7 @@ nsresult PushErrorDispatcher::NotifyWorkers() {
   if (swm) {
     swm->ReportToAllClients(mScope, mMessage,
                             NS_ConvertUTF8toUTF16(mScope), /* aFilename */
-                            EmptyString(),                 /* aLine */
+                            u""_ns,                        /* aLine */
                             0,                             /* aLineNumber */
                             0,                             /* aColumnNumber */
                             mFlags);
@@ -473,7 +473,7 @@ nsresult PushErrorDispatcher::HandleNoChildProcesses() {
   return nsContentUtils::ReportToConsoleNonLocalized(
       mMessage, mFlags, "Push"_ns, nullptr, /* aDocument */
       scopeURI,                             /* aURI */
-      EmptyString(),                        /* aLine */
+      u""_ns,                               /* aLine */
       0,                                    /* aLineNumber */
       0,                                    /* aColumnNumber */
       nsContentUtils::eOMIT_LOCATION);
