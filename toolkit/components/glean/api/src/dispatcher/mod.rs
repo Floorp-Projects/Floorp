@@ -123,21 +123,6 @@ impl DispatchGuard {
 /// The dispatch queue will enqueue tasks while not flushed, up to the maximum queue size.
 /// Processing will start after flushing once, processing already enqueued tasks first, then
 /// waiting for further tasks to be enqueued.
-///
-/// # Example
-///
-/// ```rust
-/// # use dispatcher::Dispatcher;
-/// let mut dispatcher = Dispatcher::new(5);
-/// dispatcher.flush_init();
-///
-/// dispatcher.launch(|| {
-///     println!("A task of the main thread");
-/// }).unwrap();
-///
-/// dispatcher.try_shutdown().unwrap();
-/// dispatcher.join().unwrap();
-/// ```
 pub struct Dispatcher {
     /// Whether to queue on the preinit buffer or on the unbounded queue
     queue_preinit: Arc<AtomicBool>,
