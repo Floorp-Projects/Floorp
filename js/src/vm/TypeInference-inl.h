@@ -432,7 +432,7 @@ class TypeNewScript {
     initializedGroup_ = nullptr;
   }
 
-  static void writeBarrierPre(TypeNewScript* newScript);
+  static void preWriteBarrier(TypeNewScript* newScript);
 
   bool analyzed() const { return preliminaryObjects == nullptr; }
 

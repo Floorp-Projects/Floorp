@@ -3601,7 +3601,7 @@ void PreliminaryObjectArrayWithTemplate::trace(JSTracer* trc) {
 }
 
 /* static */
-void PreliminaryObjectArrayWithTemplate::writeBarrierPre(
+void PreliminaryObjectArrayWithTemplate::preWriteBarrier(
     PreliminaryObjectArrayWithTemplate* objects) {
   Shape* shape = objects->shape();
 
@@ -4201,7 +4201,7 @@ void TypeNewScript::trace(JSTracer* trc) {
 }
 
 /* static */
-void TypeNewScript::writeBarrierPre(TypeNewScript* newScript) {
+void TypeNewScript::preWriteBarrier(TypeNewScript* newScript) {
   if (JS::RuntimeHeapIsCollecting()) {
     return;
   }

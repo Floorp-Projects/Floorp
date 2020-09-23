@@ -142,7 +142,7 @@ inline void NativeObject::markDenseElementsNotPacked(JSContext* cx) {
   }
 }
 
-inline void NativeObject::elementsRangeWriteBarrierPost(uint32_t start,
+inline void NativeObject::elementsRangePostWriteBarrier(uint32_t start,
                                                         uint32_t count) {
   if (!isTenured()) {
     return;
@@ -182,7 +182,7 @@ inline void NativeObject::copyDenseElements(uint32_t dstStart, const Value* src,
   } else {
     memcpy(reinterpret_cast<Value*>(&elements_[dstStart]), src,
            count * sizeof(Value));
-    elementsRangeWriteBarrierPost(dstStart, count);
+    elementsRangePostWriteBarrier(dstStart, count);
   }
 }
 
@@ -226,7 +226,7 @@ inline void NativeObject::initDenseElements(const Value* src, uint32_t count) {
 #endif
 
   memcpy(reinterpret_cast<Value*>(elements_), src, count * sizeof(Value));
-  elementsRangeWriteBarrierPost(0, count);
+  elementsRangePostWriteBarrier(0, count);
 }
 
 inline bool NativeObject::tryShiftDenseElements(uint32_t count) {
@@ -301,7 +301,7 @@ inline void NativeObject::moveDenseElements(uint32_t dstStart,
   } else {
     memmove(elements_ + dstStart, elements_ + srcStart,
             count * sizeof(HeapSlot));
-    elementsRangeWriteBarrierPost(dstStart, count);
+    elementsRangePostWriteBarrier(dstStart, count);
   }
 }
 
@@ -326,7 +326,7 @@ inline void NativeObject::reverseDenseElementsNoPreBarrier(uint32_t length) {
     --valHi;
   } while (valLo < valHi);
 
-  elementsRangeWriteBarrierPost(0, length);
+  elementsRangePostWriteBarrier(0, length);
 }
 
 inline void NativeObject::ensureDenseInitializedLength(JSContext* cx,

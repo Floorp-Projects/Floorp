@@ -427,7 +427,7 @@ class alignas(8) IonScript final : public TrailingArray {
 
   size_t allocBytes() const { return allocBytes_; }
 
-  static void writeBarrierPre(Zone* zone, IonScript* ionScript);
+  static void preWriteBarrier(Zone* zone, IonScript* ionScript);
 };
 
 // Execution information for a basic block which may persist after the

@@ -117,11 +117,11 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
     AutoSweepObjectGroup sweep(this);
     switch (addendumKind()) {
       case Addendum_PreliminaryObjects:
-        PreliminaryObjectArrayWithTemplate::writeBarrierPre(
+        PreliminaryObjectArrayWithTemplate::preWriteBarrier(
             maybePreliminaryObjects(sweep));
         break;
       case Addendum_NewScript:
-        TypeNewScript::writeBarrierPre(newScript(sweep));
+        TypeNewScript::preWriteBarrier(newScript(sweep));
         break;
       case Addendum_None:
         break;
