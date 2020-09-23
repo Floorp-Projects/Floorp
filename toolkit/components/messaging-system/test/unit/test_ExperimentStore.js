@@ -4,6 +4,27 @@ const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/MSTestUtils.jsm"
 );
 
+add_task(async function test_usageBeforeInitialization() {
+  const store = ExperimentFakes.store();
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+
+  Assert.equal(store.getAll().length, 0, "It should not fail");
+
+  await store.init();
+  store.addExperiment(experiment);
+
+  Assert.equal(
+    store.getExperimentForFeature("purple"),
+    experiment,
+    "should return a matching experiment for the given feature"
+  );
+});
+
 add_task(async function test_getExperimentForGroup() {
   const store = ExperimentFakes.store();
   const experiment = ExperimentFakes.experiment("foo", {

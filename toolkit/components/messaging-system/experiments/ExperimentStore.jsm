@@ -74,12 +74,11 @@ class ExperimentStore extends SharedDataMap {
    * @returns {Enrollment[]}
    */
   getAll() {
-    try {
-      return Object.values(this._data);
-    } catch (e) {
-      Cu.reportError(e);
+    if (!this._data) {
+      return [];
     }
-    return [];
+
+    return Object.values(this._data);
   }
 
   /**
