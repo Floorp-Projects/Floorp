@@ -950,6 +950,7 @@ button {
 
 .pkt_ext_containersaved .pkt_ext_item_recs ol {
     padding: 0;
+    margin: 0 0 10px;
     list-style: none;
 }
 
@@ -961,15 +962,25 @@ button {
     font-size: 15px;
     line-height: 18px;
     margin: 0 -1em;
-    padding: 8px 1em;
+}
+
+.pkt_ext_containersaved .pkt_ext_item_recs li a {
+    padding-block: 8px;
+    padding-inline: 1em 40px;
+    background: url(../img/open.svg) 318px 8px no-repeat;
+    flex-grow: 1;
+}
+
+.pkt_ext_containersaved .pkt_ext_item_recs li a:dir(rtl) {
+    background-position-x: right 318px;
 }
 
 .pkt_ext_containersaved .pkt_ext_item_recs li:hover {
-    background: rgba(12, 12, 13, 0.1);
+    background-color: rgba(12, 12, 13, 0.1);
 }
 
 .pkt_ext_containersaved .pkt_ext_item_recs li:active {
-    background: rgba(12, 12, 13, 0.2);
+    background-color: rgba(12, 12, 13, 0.2);
 }
 
 .pkt_ext_containersaved .pkt_ext_item_recs .pkt_ext_item_recs_link:hover {
@@ -983,6 +994,10 @@ button {
     margin: 0;
     margin-inline-end: 12px;
     border-radius: 2px;
+}
+
+.pkt_ext_containersaved .pkt_ext_item_recs .rec-thumb:-moz-broken {
+    display: none;
 }
 
 .pkt_ext_containersaved .pkt_ext_item_recs p {
