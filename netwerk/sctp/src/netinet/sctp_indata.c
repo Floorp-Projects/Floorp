@@ -34,7 +34,7 @@
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 362581 2020-06-24 14:47:51Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 363076 2020-07-10 11:15:10Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -1707,6 +1707,7 @@ sctp_process_a_data_chunk(struct sctp_tcb *stcb, struct sctp_association *asoc,
 			  int *break_flag, int last_chunk, uint8_t chk_type)
 {
 	struct sctp_tmit_chunk *chk = NULL; /* make gcc happy */
+	struct sctp_stream_in *strm;
 	uint32_t tsn, fsn, gap, mid;
 	struct mbuf *dmbuf;
 	int the_len;
@@ -2345,12 +2346,13 @@ finish_express_del:
 			/* All can be removed */
 			TAILQ_FOREACH_SAFE(control, &asoc->pending_reply_queue, next, ncontrol) {
 				TAILQ_REMOVE(&asoc->pending_reply_queue, control, next);
+				strm = &asoc->strmin[control->sinfo_stream];
 				sctp_queue_data_to_stream(stcb, asoc, control, abort_flag, &need_reasm_check);
 				if (*abort_flag) {
 					return (0);
 				}
 				if (need_reasm_check) {
-					(void)sctp_deliver_reasm_check(stcb, asoc, &asoc->strmin[control->sinfo_stream], SCTP_READ_LOCK_NOT_HELD);
+					(void)sctp_deliver_reasm_check(stcb, asoc, strm, SCTP_READ_LOCK_NOT_HELD);
 					need_reasm_check = 0;
 				}
 			}
@@ -2365,12 +2367,13 @@ finish_express_del:
 				 * control->sinfo_tsn > liste->tsn
 				 */
 				TAILQ_REMOVE(&asoc->pending_reply_queue, control, next);
+				strm = &asoc->strmin[control->sinfo_stream];
 				sctp_queue_data_to_stream(stcb, asoc, control, abort_flag, &need_reasm_check);
 				if (*abort_flag) {
 					return (0);
 				}
 				if (need_reasm_check) {
-					(void)sctp_deliver_reasm_check(stcb, asoc, &asoc->strmin[control->sinfo_stream], SCTP_READ_LOCK_NOT_HELD);
+					(void)sctp_deliver_reasm_check(stcb, asoc, strm, SCTP_READ_LOCK_NOT_HELD);
 					need_reasm_check = 0;
 				}
 			}
