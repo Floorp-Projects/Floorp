@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SessionStorage.h"
+
 #include "SessionStorageCache.h"
 #include "SessionStorageManager.h"
 
@@ -39,7 +40,8 @@ SessionStorage::SessionStorage(nsPIDOMWindowInner* aWindow,
       mCache(aCache),
       mManager(aManager),
       mDocumentURI(aDocumentURI),
-      mIsPrivate(aIsPrivate) {
+      mIsPrivate(aIsPrivate),
+      mHasPendingStableStateCallback(false) {
   MOZ_ASSERT(aCache);
 }
 
@@ -110,8 +112,6 @@ void SessionStorage::SetItem(const nsAString& aKey, const nsAString& aValue,
   }
 
   BroadcastChangeNotification(aKey, oldValue, aValue);
-
-  mManager->SendSessionStorageDataToParentProcess(*Principal(), *mCache);
 }
 
 void SessionStorage::RemoveItem(const nsAString& aKey,
@@ -131,8 +131,6 @@ void SessionStorage::RemoveItem(const nsAString& aKey,
   }
 
   BroadcastChangeNotification(aKey, oldValue, VoidString());
-
-  mManager->SendSessionStorageDataToParentProcess(*Principal(), *mCache);
 }
 
 void SessionStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
@@ -143,8 +141,6 @@ void SessionStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
 
   mCache->Clear(DATASET);
   BroadcastChangeNotification(VoidString(), VoidString(), VoidString());
-
-  mManager->SendSessionStorageDataToParentProcess(*Principal(), *mCache);
 }
 
 void SessionStorage::BroadcastChangeNotification(const nsAString& aKey,
@@ -152,6 +148,12 @@ void SessionStorage::BroadcastChangeNotification(const nsAString& aKey,
                                                  const nsAString& aNewValue) {
   NotifyChange(this, StoragePrincipal(), aKey, aOldValue, aNewValue,
                u"sessionStorage", mDocumentURI, mIsPrivate, false);
+
+  // Sync changes on SessionStorageCache to the parent process at the next
+  // statble state.
+  if (XRE_IsContentProcess()) {
+    MaybeScheduleStableStateCallback();
+  }
 }
 
 bool SessionStorage::IsForkOf(const Storage* aOther) const {
@@ -161,6 +163,28 @@ bool SessionStorage::IsForkOf(const Storage* aOther) const {
   }
 
   return mCache == static_cast<const SessionStorage*>(aOther)->mCache;
+}
+
+void SessionStorage::MaybeScheduleStableStateCallback() {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  AssertIsOnOwningThread();
+
+  if (!mHasPendingStableStateCallback) {
+    nsContentUtils::RunInStableState(
+        NewRunnableMethod("SessionStorage::StableStateCallback", this,
+                          &SessionStorage::StableStateCallback));
+
+    mHasPendingStableStateCallback = true;
+  }
+}
+
+void SessionStorage::StableStateCallback() {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mHasPendingStableStateCallback);
+
+  mHasPendingStableStateCallback = false;
+  mManager->SendSessionStorageDataToParentProcess(*Principal(), *mCache);
 }
 
 }  // namespace dom
