@@ -1796,8 +1796,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
  private:
   already_AddRefed<PlayPromise> CreatePlayPromise(ErrorResult& aRv) const;
 
-  void UpdateHadAudibleAutoplayState();
-
   virtual void MaybeBeginCloningVisually(){};
 
   uint32_t GetPreloadDefault() const;
