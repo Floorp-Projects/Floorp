@@ -756,8 +756,8 @@ static PartialPrerenderData GetPartialPrerenderData(
       aFrame, devPixelsToAppUnits, clipFrame, scrollFrame);
 
   return PartialPrerenderData{
-      LayoutDeviceIntRect::FromAppUnitsToInside(partialPrerenderedRect,
-                                                devPixelsToAppUnits),
+      LayoutDeviceRect::FromAppUnits(partialPrerenderedRect,
+                                     devPixelsToAppUnits),
       GetOverflowedSides(overflow, partialPrerenderedRect),
       scrollId,
       clipRect,

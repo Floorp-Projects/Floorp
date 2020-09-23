@@ -658,7 +658,7 @@ static bool LineSegmentIntersectsClip(double aX0, double aY0, double aX1,
 }
 
 // static
-bool AnimationHelper::ShouldBeJank(const LayoutDeviceIntRect& aPrerenderedRect,
+bool AnimationHelper::ShouldBeJank(const LayoutDeviceRect& aPrerenderedRect,
                                    SideBits aOverflowSides,
                                    const gfx::Matrix4x4& aTransform,
                                    const ParentLayerRect& aClipRect) {
