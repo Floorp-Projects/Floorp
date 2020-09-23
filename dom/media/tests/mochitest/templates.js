@@ -153,48 +153,43 @@ function waitForAnIceCandidate(pc) {
   });
 }
 
-function checkTrackStats(pc, track, outbound) {
-  var audio = track.kind == "audio";
-  var msg =
-    pc +
-    " stats " +
-    (outbound ? "outbound " : "inbound ") +
-    (audio ? "audio" : "video") +
-    " rtp track id " +
-    track.id;
-  return pc.getStats(track).then(stats => {
-    ok(
-      pc.hasStat(stats, {
-        type: outbound ? "outbound-rtp" : "inbound-rtp",
-        kind: audio ? "audio" : "video",
-      }),
-      msg + " - found expected stats"
-    );
-    ok(
-      !pc.hasStat(stats, {
-        type: outbound ? "inbound-rtp" : "outbound-rtp",
-      }),
-      msg + " - did not find extra stats with wrong direction"
-    );
-    ok(
-      !pc.hasStat(stats, {
-        kind: audio ? "video" : "audio",
-      }),
-      msg + " - did not find extra stats with wrong media type"
-    );
-  });
+async function checkTrackStats(pc, track, outbound) {
+  const audio = track.kind == "audio";
+  const msg =
+    `${pc} stats ${outbound ? "outbound " : "inbound "}` +
+    `${audio ? "audio" : "video"} rtp track id ${track.id}`;
+  const stats = await pc.getStats(track);
+  ok(
+    pc.hasStat(stats, {
+      type: outbound ? "outbound-rtp" : "inbound-rtp",
+      kind: audio ? "audio" : "video",
+    }),
+    `${msg} - found expected stats`
+  );
+  ok(
+    !pc.hasStat(stats, {
+      type: outbound ? "inbound-rtp" : "outbound-rtp",
+    }),
+    `${msg} - did not find extra stats with wrong direction`
+  );
+  ok(
+    !pc.hasStat(stats, {
+      kind: audio ? "video" : "audio",
+    }),
+    `${msg} - did not find extra stats with wrong media type`
+  );
 }
 
-var checkAllTrackStats = pc => {
-  return Promise.all(
-    [].concat(
-      pc
-        .getExpectedActiveReceiveTracks()
-        .map(track => checkTrackStats(pc, track, false)),
-      pc.getExpectedSendTracks().map(track => checkTrackStats(pc, track, true))
-    )
-  );
-};
+function checkAllTrackStats(pc) {
+  return Promise.all([
+    ...pc
+      .getExpectedActiveReceivers()
+      .map(({ track }) => checkTrackStats(pc, track, false)),
+    ...pc
+      .getExpectedSenders()
+      .map(({ track }) => checkTrackStats(pc, track, true)),
+  ]);
+}
 
 // Commands run once at the beginning of each test, even when performing a
 // renegotiation test.
