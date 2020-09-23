@@ -39,8 +39,8 @@ module.exports = {
   supportedPlatforms: ["Android", "Desktop"],
   options: {
       default: {perfherder: true, verbose: false},
-      linux: {perfherder_metrics: "name:speed,unit:bps_lin", verbose: true},
-      mac: {perfherder_metrics: "name:speed,unit:bps_mac", verbose: true},
-      win: {perfherder_metrics: "name:speed,unit:bps_win", verbose: true}
+      linux: {perfherder_metrics: [{name:"speed",unit:"bps_lin"}], verbose: true},
+      mac: {perfherder_metrics: [{name:"speed",unit:"bps_mac"}], verbose: true},
+      win: {perfherder_metrics: [{name:"speed",unit:"bps_win"}], verbose: true}
   }
 };
