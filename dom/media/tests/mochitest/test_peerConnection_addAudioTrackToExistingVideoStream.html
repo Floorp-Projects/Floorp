@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+﻿<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -12,7 +12,6 @@
   });
 
   runNetworkTest(function (options) {
-    SimpleTest.requestCompleteLog();
     var test = new PeerConnectionTest(options);
     test.chain.replace("PC_LOCAL_GUM",
       [
