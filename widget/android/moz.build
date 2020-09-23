@@ -62,7 +62,6 @@ classes_with_WrapForJNI = [
     'HardwareCodecCapabilityUtils',
     'ImageDecoder',
     'MediaDrmProxy',
-    'MediaSession',
     'PanZoomController',
     'PrefsHelper',
     'RuntimeTelemetry',
