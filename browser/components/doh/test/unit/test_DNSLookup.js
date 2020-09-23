@@ -17,7 +17,7 @@ add_task(async function test_SuccessfulRandomDNSLookup() {
   );
   lookup.doLookup();
   let result = await deferred.promise;
-  Assert.ok(result.usedDomain.endsWith(".firefox-dns-perf-test.net"));
+  Assert.ok(result.usedDomain.endsWith(".firefox-dns-perf-test.net."));
   Assert.equal(result.status, Cr.NS_OK);
   Assert.ok(result.record.QueryInterface(Ci.nsIDNSAddrRecord));
   Assert.ok(result.record.IsTRR());
@@ -55,7 +55,7 @@ add_task(async function test_FailedDNSLookup() {
   );
   lookup.doLookup();
   let result = await deferred.promise;
-  Assert.ok(result.usedDomain.endsWith(".firefox-dns-perf-test.net"));
+  Assert.ok(result.usedDomain.endsWith(".firefox-dns-perf-test.net."));
   Assert.notEqual(result.status, Cr.NS_OK);
   Assert.equal(result.record, null);
   Assert.equal(result.retryCount, 3);

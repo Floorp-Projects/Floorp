@@ -68,7 +68,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "kCanonicalDomain",
   "doh-rollout.trrRace.canonicalDomain",
-  "firefox-dns-perf-test.net"
+  "firefox-dns-perf-test.net."
 );
 
 // The number of random subdomains to resolve per TRR.
@@ -89,7 +89,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   val =>
     val
       ? val.split(",").map(t => t.trim())
-      : ["google.com", "youtube.com", "amazon.com", "facebook.com", "yahoo.com"]
+      : [
+          "google.com.",
+          "youtube.com.",
+          "amazon.com.",
+          "facebook.com.",
+          "yahoo.com.",
+        ]
 );
 
 function getRandomSubdomain() {

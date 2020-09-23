@@ -92,24 +92,24 @@ async function setup() {
   // Set up heuristics, all passing by default.
 
   // Google safesearch overrides
-  gDNSOverride.addIPOverride("www.google.com", "1.1.1.1");
-  gDNSOverride.addIPOverride("google.com", "1.1.1.1");
-  gDNSOverride.addIPOverride("forcesafesearch.google.com", "1.1.1.2");
+  gDNSOverride.addIPOverride("www.google.com.", "1.1.1.1");
+  gDNSOverride.addIPOverride("google.com.", "1.1.1.1");
+  gDNSOverride.addIPOverride("forcesafesearch.google.com.", "1.1.1.2");
 
   // YouTube safesearch overrides
-  gDNSOverride.addIPOverride("www.youtube.com", "2.1.1.1");
-  gDNSOverride.addIPOverride("m.youtube.com", "2.1.1.1");
-  gDNSOverride.addIPOverride("youtubei.googleapis.com", "2.1.1.1");
-  gDNSOverride.addIPOverride("youtube.googleapis.com", "2.1.1.1");
-  gDNSOverride.addIPOverride("www.youtube-nocookie.com", "2.1.1.1");
-  gDNSOverride.addIPOverride("restrict.youtube.com", "2.1.1.2");
-  gDNSOverride.addIPOverride("restrictmoderate.youtube.com", "2.1.1.2");
+  gDNSOverride.addIPOverride("www.youtube.com.", "2.1.1.1");
+  gDNSOverride.addIPOverride("m.youtube.com.", "2.1.1.1");
+  gDNSOverride.addIPOverride("youtubei.googleapis.com.", "2.1.1.1");
+  gDNSOverride.addIPOverride("youtube.googleapis.com.", "2.1.1.1");
+  gDNSOverride.addIPOverride("www.youtube-nocookie.com.", "2.1.1.1");
+  gDNSOverride.addIPOverride("restrict.youtube.com.", "2.1.1.2");
+  gDNSOverride.addIPOverride("restrictmoderate.youtube.com.", "2.1.1.2");
 
   // Zscaler override
-  gDNSOverride.addIPOverride("sitereview.zscaler.com", "3.1.1.1");
+  gDNSOverride.addIPOverride("sitereview.zscaler.com.", "3.1.1.1");
 
   // Global canary
-  gDNSOverride.addIPOverride("use-application-dns.net", "4.1.1.1");
+  gDNSOverride.addIPOverride("use-application-dns.net.", "4.1.1.1");
 
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = oldCanRecord;
@@ -237,13 +237,13 @@ async function restartDoHController() {
 // or disabled correctly. We use the zscaler canary arbitrarily here, individual
 // heuristics are tested separately.
 function setPassingHeuristics() {
-  gDNSOverride.clearHostOverride("sitereview.zscaler.com");
-  gDNSOverride.addIPOverride("sitereview.zscaler.com", "3.1.1.1");
+  gDNSOverride.clearHostOverride("sitereview.zscaler.com.");
+  gDNSOverride.addIPOverride("sitereview.zscaler.com.", "3.1.1.1");
 }
 
 function setFailingHeuristics() {
-  gDNSOverride.clearHostOverride("sitereview.zscaler.com");
-  gDNSOverride.addIPOverride("sitereview.zscaler.com", "213.152.228.242");
+  gDNSOverride.clearHostOverride("sitereview.zscaler.com.");
+  gDNSOverride.addIPOverride("sitereview.zscaler.com.", "213.152.228.242");
 }
 
 async function waitForDoorhanger() {
