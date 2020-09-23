@@ -14,29 +14,23 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibrarySiteItemView
+import org.mozilla.fenix.library.bookmarks.BookmarkNodeWithDepth
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
+import org.mozilla.fenix.library.bookmarks.flatNodeList
 import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderAdapter.BookmarkFolderViewHolder
-import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderAdapter.BookmarkNodeWithDepth
 
 class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedViewModel) :
     ListAdapter<BookmarkNodeWithDepth, BookmarkFolderViewHolder>(DiffCallback) {
 
     fun updateData(tree: BookmarkNode?, hideFolderGuid: String?) {
         val updatedData = tree
-            ?.convertToFolderDepthTree()
+            ?.flatNodeList(hideFolderGuid)
             ?.drop(1)
             .orEmpty()
 
-        val filteredData = if (hideFolderGuid != null && updatedData.isNotEmpty()) {
-            updatedData.filter { it.node.guid != hideFolderGuid }
-        } else {
-            updatedData
-        }
-
-        submitList(filteredData)
+        submitList(updatedData)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkFolderViewHolder {
@@ -99,16 +93,6 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
         companion object {
             const val viewType = 1
         }
-    }
-
-    data class BookmarkNodeWithDepth(val depth: Int, val node: BookmarkNode, val parent: String?)
-
-    private fun BookmarkNode.convertToFolderDepthTree(depth: Int = 0): List<BookmarkNodeWithDepth> {
-        val newList = listOf(BookmarkNodeWithDepth(depth, this, this.parentGuid))
-        return newList + children
-            ?.filter { it.type == BookmarkNodeType.FOLDER }
-            ?.flatMap { it.convertToFolderDepthTree(depth = depth + 1) }
-            .orEmpty()
     }
 
     private fun getSelectedItemIndex(): Int? {

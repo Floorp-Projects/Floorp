@@ -6,6 +6,7 @@ package org.mozilla.fenix.library.bookmarks
 
 import android.content.Context
 import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
 
 fun rootTitles(context: Context, withMobileRoot: Boolean): Map<String, String> = if (withMobileRoot) {
@@ -34,4 +35,17 @@ fun friendlyRootTitle(
     !node.inRoots() -> node.title
     rootTitles.containsKey(node.title) -> rootTitles[node.title]
     else -> node.title
+}
+
+data class BookmarkNodeWithDepth(val depth: Int, val node: BookmarkNode, val parent: String?)
+
+fun BookmarkNode.flatNodeList(excludeSubtreeRoot: String?, depth: Int = 0): List<BookmarkNodeWithDepth> {
+    if (this.type != BookmarkNodeType.FOLDER || this.guid == excludeSubtreeRoot) {
+        return emptyList()
+    }
+    val newList = listOf(BookmarkNodeWithDepth(depth, this, this.parentGuid))
+    return newList + children
+        ?.filter { it.type == BookmarkNodeType.FOLDER }
+        ?.flatMap { it.flatNodeList(excludeSubtreeRoot = excludeSubtreeRoot, depth = depth + 1) }
+        .orEmpty()
 }
