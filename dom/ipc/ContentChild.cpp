@@ -211,7 +211,7 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 
 #ifdef MOZ_WEBRTC
-#  include "signaling/src/peerconnection/WebrtcGlobalChild.h"
+#  include "peerconnection/WebrtcGlobalChild.h"
 #endif
 
 #include "mozilla/Permission.h"
