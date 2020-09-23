@@ -61,7 +61,7 @@ add_task(async function test_extended_error_bogus() {
     },
   ]);
 
-  await new TRRDNSListener("something.foo", { expectedAnswer: "1.2.3.4" });
+  await new TRRDNSListener("something.foo", "1.2.3.4");
 
   await trrServer.registerDoHAnswers(
     "a.foo",
@@ -84,9 +84,7 @@ add_task(async function test_extended_error_bogus() {
   );
 
   // Check that we don't fall back to DNS
-  let [, , inStatus] = await new TRRDNSListener("a.foo", {
-    expectedSuccess: false,
-  });
+  let [, , inStatus] = await new TRRDNSListener("a.foo", undefined, false);
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -115,9 +113,7 @@ add_task(async function test_extended_error_filtered() {
   );
 
   // Check that we don't fall back to DNS
-  let [, , inStatus] = await new TRRDNSListener("b.foo", {
-    expectedSuccess: false,
-  });
+  let [, , inStatus] = await new TRRDNSListener("b.foo", undefined, false);
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -146,7 +142,7 @@ add_task(async function test_extended_error_not_ready() {
   );
 
   // For this code it's OK to fallback
-  await new TRRDNSListener("c.foo", { expectedAnswer: "127.0.0.1" });
+  await new TRRDNSListener("c.foo", "127.0.0.1");
 });
 
 add_task(async function ipv6_answer_and_delayed_ipv4_error() {
@@ -183,7 +179,7 @@ add_task(async function ipv6_answer_and_delayed_ipv4_error() {
   );
 
   // Check that we don't fall back to DNS
-  await new TRRDNSListener("delay1.com", { expectedAnswer: "::a:b:c:d" });
+  await new TRRDNSListener("delay1.com", "::a:b:c:d");
 });
 
 add_task(async function ipv4_error_and_delayed_ipv6_answer() {
@@ -225,7 +221,7 @@ add_task(async function ipv4_error_and_delayed_ipv6_answer() {
   );
 
   // Check that we don't fall back to DNS
-  await new TRRDNSListener("delay2.com", { expectedAnswer: "::a:b:c:d" });
+  await new TRRDNSListener("delay2.com", "::a:b:c:d");
 });
 
 add_task(async function ipv4_answer_and_delayed_ipv6_error() {
@@ -262,7 +258,7 @@ add_task(async function ipv4_answer_and_delayed_ipv6_error() {
   );
 
   // Check that we don't fall back to DNS
-  await new TRRDNSListener("delay3.com", { expectedAnswer: "1.2.3.4" });
+  await new TRRDNSListener("delay3.com", "1.2.3.4");
 });
 
 add_task(async function delayed_ipv4_answer_and_ipv6_error() {
@@ -304,5 +300,5 @@ add_task(async function delayed_ipv4_answer_and_ipv6_error() {
   );
 
   // Check that we don't fall back to DNS
-  await new TRRDNSListener("delay4.com", { expectedAnswer: "1.2.3.4" });
+  await new TRRDNSListener("delay4.com", "1.2.3.4");
 });
