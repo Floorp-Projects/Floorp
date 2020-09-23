@@ -1417,6 +1417,20 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
       return nullptr;
     }
     url = result.unwrap();
+    // Check that we only share loadable URLs (e.g., http/https).
+    // we also exclude blobs, as it doesn't make sense to share those outside
+    // the context of the browser.
+    const uint32_t flags =
+        nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL |
+        nsIScriptSecurityManager::DISALLOW_SCRIPT;
+    if (NS_FAILED(
+            nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
+                doc->NodePrincipal(), url, flags, doc->InnerWindowID())) ||
+        url->SchemeIs("blob")) {
+      aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>("Share",
+                                                 url->GetSpecOrDefault());
+      return nullptr;
+    }
   }
 
   // Process the title member...
