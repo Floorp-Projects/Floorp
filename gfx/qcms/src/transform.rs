@@ -243,7 +243,7 @@ impl GrayFormat for Gray {
 
 pub struct GrayAlpha;
 impl GrayFormat for GrayAlpha {
-    const has_alpha: bool = false;
+    const has_alpha: bool = true;
 }
 
 #[inline]

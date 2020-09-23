@@ -1227,6 +1227,22 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
     (*profile).pcs = XYZ_TYPE;
     return Box::into_raw(profile);
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn qcms_profile_create_gray_with_gamma(mut gamma: f32) -> *mut qcms_profile {
+    let mut profile = qcms_profile_create();
+
+    (*profile).grayTRC = curve_from_gamma(gamma);
+    if (*profile).grayTRC.is_null() {
+        return 0 as *mut qcms_profile;
+    }
+    (*profile).class_type = DISPLAY_DEVICE_PROFILE;
+    (*profile).rendering_intent = QCMS_INTENT_PERCEPTUAL;
+    (*profile).color_space = GRAY_SIGNATURE;
+    (*profile).pcs = XYZ_TYPE;
+    return Box::into_raw(profile);
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma(
     mut white_point: qcms_CIE_xyY,

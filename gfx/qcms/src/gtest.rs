@@ -2,13 +2,9 @@
 mod test {
 
     use crate::{
-        iccread::qcms_CIE_xyY, iccread::qcms_CIE_xyYTRIPLE,
-        iccread::qcms_profile_create_rgb_with_gamma, iccread::qcms_profile_from_memory,
-        iccread::qcms_profile_release, iccread::qcms_white_point_sRGB,
-        transform::qcms_enable_iccv4, transform::qcms_profile_precache_output_transform,
-        transform::qcms_transform, transform::qcms_transform_create,
-        transform::qcms_transform_data, transform::qcms_transform_release,
-        transform::QCMS_DATA_RGB_8, transform_util::lut_inverse_interp16, QCMS_INTENT_PERCEPTUAL,
+        iccread::*,
+        transform::*,
+        transform_util::lut_inverse_interp16, QCMS_INTENT_PERCEPTUAL,
     };
 
     #[test]
@@ -200,6 +196,41 @@ mod test {
         }
     }
 
+    #[test]
+    fn gray_alpha() {
+        let sRGB_profile = unsafe { crate::iccread::qcms_profile_sRGB() };
+        let other = unsafe { qcms_profile_create_gray_with_gamma(2.2) };
+        unsafe { qcms_profile_precache_output_transform(other) };
+
+        let transform = unsafe {
+            qcms_transform_create(
+                other,
+                QCMS_DATA_GRAYA_8,
+                sRGB_profile,
+                QCMS_DATA_RGBA_8,
+                QCMS_INTENT_PERCEPTUAL,
+            )
+        };
+        assert!(!transform.is_null());
+
+        let mut in_data: [u8; 4] = [0, 255, 255, 0];
+        let mut out_data: [u8; 2 * 4] = [0; 8];
+        unsafe {
+            qcms_transform_data(
+                transform,
+                in_data.as_ptr() as *const libc::c_void,
+                out_data.as_mut_ptr() as *mut libc::c_void,
+                in_data.len() / 2,
+            )
+        };
+
+        assert_eq!(out_data, [0, 0, 0, 255, 255, 255, 255, 0]);
+        unsafe {
+            qcms_transform_release(transform);
+            qcms_profile_release(sRGB_profile);
+            qcms_profile_release(other);
+        }
+    }
     #[test]
     fn samples() {
         use libc::c_void;
