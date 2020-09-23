@@ -28,11 +28,7 @@ registerCleanupFunction(async function() {
 add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const currentTab = gBrowser.selectedTab;
-  const target = await TargetFactory.forTab(currentTab);
-  const toolbox = gDevTools.getToolbox(target);
-  const { ui } = toolbox.getCurrentPanel().hud;
-  const onNetworkMessageUpdate = ui.once("network-message-updated");
+  const onNetworkMessageUpdate = hud.ui.once("network-messages-updated");
 
   // Fire an XHR POST request.
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
