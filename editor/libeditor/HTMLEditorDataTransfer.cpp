@@ -22,6 +22,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EditAction.h"
@@ -1061,8 +1062,29 @@ nsresult HTMLEditor::PrepareTransferable(nsITransferable** aTransferable) {
   return NS_OK;
 }
 
+class MOZ_STACK_CLASS HTMLEditor::HTMLTransferablePreparer {
+ public:
+  HTMLTransferablePreparer(const HTMLEditor& aHTMLEditor,
+                           nsITransferable** aTransferable);
+
+  nsresult Run();
+
+ private:
+  const HTMLEditor& mHTMLEditor;
+  nsITransferable** aTransferable;
+};
+
+HTMLEditor::HTMLTransferablePreparer::HTMLTransferablePreparer(
+    const HTMLEditor& aHTMLEditor, nsITransferable** aTransferable)
+    : mHTMLEditor{aHTMLEditor}, aTransferable{aTransferable} {}
+
 nsresult HTMLEditor::PrepareHTMLTransferable(
     nsITransferable** aTransferable) const {
+  HTMLTransferablePreparer htmlTransferablePreparer{*this, aTransferable};
+  return htmlTransferablePreparer.Run();
+}
+
+nsresult HTMLEditor::HTMLTransferablePreparer::Run() {
   MOZ_ASSERT(aTransferable);
   MOZ_ASSERT(!*aTransferable);
 
@@ -1081,7 +1103,7 @@ nsresult HTMLEditor::PrepareHTMLTransferable(
   }
 
   // Get the nsITransferable interface for getting the data from the clipboard
-  RefPtr<Document> destdoc = GetDocument();
+  RefPtr<Document> destdoc = mHTMLEditor.GetDocument();
   nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
   DebugOnly<nsresult> rvIgnored = transferable->Init(loadContext);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -1090,7 +1112,7 @@ nsresult HTMLEditor::PrepareHTMLTransferable(
   // Create the desired DataFlavor for the type of data
   // we want to get out of the transferable
   // This should only happen in html editors, not plaintext
-  if (!IsPlaintextEditor()) {
+  if (!mHTMLEditor.IsPlaintextEditor()) {
     rvIgnored = transferable->AddDataFlavor(kNativeHTMLMime);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
