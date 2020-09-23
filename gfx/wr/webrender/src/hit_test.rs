@@ -3,13 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, HitTestItem, HitTestResult, ItemTag, PrimitiveFlags};
-use api::{PipelineId, ApiHitTester};
+use api::{PipelineId, ApiHitTester, ClipId};
 use api::units::*;
-use crate::clip::{ClipChainId, ClipDataStore, ClipNode, ClipItemKind, ClipStore};
-use crate::clip::{rounded_rectangle_contains_point};
+use crate::clip::{ClipItemKind, ClipStore, ClipNode, rounded_rectangle_contains_point};
 use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo};
-use std::{ops, u32};
+use std::ops;
 use std::sync::{Arc, Mutex};
 use crate::util::LayoutToWorldFastTransform;
 
@@ -52,7 +51,7 @@ impl ApiHitTester for SharedHitTester {
 /// data from the SpatialTree that will persist as a new frame is under construction,
 /// allowing hit tests consistent with the currently rendered frame.
 #[derive(MallocSizeOf)]
-pub struct HitTestSpatialNode {
+struct HitTestSpatialNode {
     /// The pipeline id of this node.
     pipeline_id: PipelineId,
 
@@ -67,14 +66,19 @@ pub struct HitTestSpatialNode {
 }
 
 #[derive(MallocSizeOf)]
-pub struct HitTestClipNode {
+struct HitTestClipNode {
     /// A particular point must be inside all of these regions to be considered clipped in
     /// for the purposes of a hit test.
     region: HitTestRegion,
+    /// The positioning node for this clip
+    spatial_node_index: SpatialNodeIndex,
 }
 
 impl HitTestClipNode {
-    fn new(node: &ClipNode) -> Self {
+    fn new(
+        node: ClipNode,
+        spatial_node_index: SpatialNodeIndex,
+    ) -> Self {
         let region = match node.item.kind {
             ClipItemKind::Rectangle { rect, mode } => {
                 HitTestRegion::Rectangle(rect, mode)
@@ -90,50 +94,28 @@ impl HitTestClipNode {
 
         HitTestClipNode {
             region,
+            spatial_node_index,
         }
     }
 }
 
-#[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq, Eq, Hash)]
-pub struct HitTestClipChainId(u32);
-
-impl HitTestClipChainId {
-    pub const NONE: Self = HitTestClipChainId(u32::MAX);
-}
-
-/// A hit testing clip chain node is the same as a
-/// normal clip chain node, except that the clip
-/// node is embedded inside the clip chain, rather
-/// than referenced. This means we don't need to
-/// copy the complete interned clip data store for
-/// hit testing.
-#[derive(MallocSizeOf)]
-pub struct HitTestClipChainNode {
-    pub region: HitTestClipNode,
-    pub spatial_node_index: SpatialNodeIndex,
-    pub parent_clip_chain_id: HitTestClipChainId,
-}
-
-#[derive(Copy, Clone, Debug, MallocSizeOf)]
-pub struct HitTestingClipChainIndex(u32);
-
 #[derive(Clone, MallocSizeOf)]
-pub struct HitTestingItem {
+struct HitTestingItem {
     rect: LayoutRect,
     clip_rect: LayoutRect,
     tag: ItemTag,
     is_backface_visible: bool,
-    #[ignore_malloc_size_of = "simple"]
-    clip_chain_range: ops::Range<HitTestingClipChainIndex>,
     spatial_node_index: SpatialNodeIndex,
+    #[ignore_malloc_size_of = "Range"]
+    clip_nodes_range: ops::Range<ClipNodeIndex>,
 }
 
 impl HitTestingItem {
-    pub fn new(
+    fn new(
         tag: ItemTag,
         info: &LayoutPrimitiveInfo,
         spatial_node_index: SpatialNodeIndex,
-        clip_chain_range: ops::Range<HitTestingClipChainIndex>,
+        clip_nodes_range: ops::Range<ClipNodeIndex>,
     ) -> HitTestingItem {
         HitTestingItem {
             rect: info.rect,
@@ -141,7 +123,7 @@ impl HitTestingItem {
             tag,
             is_backface_visible: info.flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE),
             spatial_node_index,
-            clip_chain_range,
+            clip_nodes_range,
         }
     }
 }
@@ -149,18 +131,21 @@ impl HitTestingItem {
 /// Statistics about allocation sizes of current hit tester,
 /// used to pre-allocate size of the next hit tester.
 pub struct HitTestingSceneStats {
-    pub clip_chain_roots_count: usize,
+    pub clip_nodes_count: usize,
     pub items_count: usize,
 }
 
 impl HitTestingSceneStats {
     pub fn empty() -> Self {
         HitTestingSceneStats {
-            clip_chain_roots_count: 0,
+            clip_nodes_count: 0,
             items_count: 0,
         }
     }
 }
+
+#[derive(MallocSizeOf, Debug, Copy, Clone)]
+pub struct ClipNodeIndex(u32);
 
 /// Defines the immutable part of a hit tester for a given scene.
 /// The hit tester is recreated each time a frame is built, since
@@ -170,11 +155,15 @@ impl HitTestingSceneStats {
 /// hit tester instances via Arc.
 #[derive(MallocSizeOf)]
 pub struct HitTestingScene {
-    /// The list of variable clip chain roots referenced by the items.
-    pub clip_chain_roots: Vec<HitTestClipChainId>,
+    /// Packed array of all hit test clip nodes
+    clip_nodes: Vec<HitTestClipNode>,
 
     /// List of hit testing primitives.
-    pub items: Vec<HitTestingItem>,
+    items: Vec<HitTestingItem>,
+
+    /// Current stack of clip ids from stacking context
+    #[ignore_malloc_size_of = "ClipId"]
+    clip_id_stack: Vec<ClipId>,
 }
 
 impl HitTestingScene {
@@ -182,39 +171,75 @@ impl HitTestingScene {
     /// provided by previous scene stats.
     pub fn new(stats: &HitTestingSceneStats) -> Self {
         HitTestingScene {
-            clip_chain_roots: Vec::with_capacity(stats.clip_chain_roots_count),
+            clip_nodes: Vec::with_capacity(stats.clip_nodes_count),
             items: Vec::with_capacity(stats.items_count),
+            clip_id_stack: Vec::with_capacity(8),
         }
     }
 
     /// Get stats about the current scene allocation sizes.
     pub fn get_stats(&self) -> HitTestingSceneStats {
         HitTestingSceneStats {
-            clip_chain_roots_count: self.clip_chain_roots.len(),
+            clip_nodes_count: self.clip_nodes.len(),
             items_count: self.items.len(),
         }
     }
 
     /// Add a hit testing primitive.
-    pub fn add_item(&mut self, item: HitTestingItem) {
+    pub fn add_item(
+        &mut self,
+        tag: ItemTag,
+        info: &LayoutPrimitiveInfo,
+        spatial_node_index: SpatialNodeIndex,
+        clip_id: ClipId,
+        clip_store: &ClipStore,
+    ) {
+        let start = ClipNodeIndex(self.clip_nodes.len() as u32);
+
+        // Flatten all clips from the stacking context hierarchy
+        for clip_id in &self.clip_id_stack {
+            add_clips(
+                *clip_id,
+                clip_store,
+                &mut self.clip_nodes,
+            );
+        }
+
+        // Add the primitive clip
+        add_clips(
+            clip_id,
+            clip_store,
+            &mut self.clip_nodes,
+        );
+
+        let end = ClipNodeIndex(self.clip_nodes.len() as u32);
+
+        let item = HitTestingItem::new(
+            tag,
+            info,
+            spatial_node_index,
+            ops::Range {
+                start,
+                end,
+            },
+        );
+
         self.items.push(item);
     }
 
-    /// Add a clip chain to the clip chain roots list.
-    pub fn add_clip_chain(&mut self, clip_chain_id: ClipChainId) {
-        if clip_chain_id != ClipChainId::INVALID {
-            self.clip_chain_roots.push(HitTestClipChainId(clip_chain_id.0));
-        }
+    /// Push a clip onto the current stack
+    pub fn push_clip(
+        &mut self,
+        clip_id: ClipId,
+    ) {
+        self.clip_id_stack.push(clip_id);
     }
 
-    /// Get the slice of clip chain roots for a given hit test primitive.
-    fn get_clip_chains_for_item(&self, item: &HitTestingItem) -> &[HitTestClipChainId] {
-        &self.clip_chain_roots[item.clip_chain_range.start.0 as usize .. item.clip_chain_range.end.0 as usize]
-    }
-
-    /// Get the next index of the clip chain roots list.
-    pub fn next_clip_chain_index(&self) -> HitTestingClipChainIndex {
-        HitTestingClipChainIndex(self.clip_chain_roots.len() as u32)
+    /// Pop a clip from the current stack
+    pub fn pop_clip(
+        &mut self,
+    ) {
+        self.clip_id_stack.pop().unwrap();
     }
 }
 
@@ -246,7 +271,6 @@ pub struct HitTester {
     #[ignore_malloc_size_of = "Arc"]
     scene: Arc<HitTestingScene>,
     spatial_nodes: Vec<HitTestSpatialNode>,
-    clip_chains: Vec<HitTestClipChainNode>,
     pipeline_root_nodes: FastHashMap<PipelineId, SpatialNodeIndex>,
 }
 
@@ -255,7 +279,6 @@ impl HitTester {
         HitTester {
             scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             spatial_nodes: Vec::new(),
-            clip_chains: Vec::new(),
             pipeline_root_nodes: FastHashMap::default(),
         }
     }
@@ -263,31 +286,21 @@ impl HitTester {
     pub fn new(
         scene: Arc<HitTestingScene>,
         spatial_tree: &SpatialTree,
-        clip_store: &ClipStore,
-        clip_data_store: &ClipDataStore,
     ) -> HitTester {
         let mut hit_tester = HitTester {
             scene,
             spatial_nodes: Vec::new(),
-            clip_chains: Vec::new(),
             pipeline_root_nodes: FastHashMap::default(),
         };
-        hit_tester.read_spatial_tree(
-            spatial_tree,
-            clip_store,
-            clip_data_store,
-        );
+        hit_tester.read_spatial_tree(spatial_tree);
         hit_tester
     }
 
     fn read_spatial_tree(
         &mut self,
         spatial_tree: &SpatialTree,
-        clip_store: &ClipStore,
-        clip_data_store: &ClipDataStore,
     ) {
         self.spatial_nodes.clear();
-        self.clip_chains.clear();
 
         self.spatial_nodes.reserve(spatial_tree.spatial_nodes.len());
         for (index, node) in spatial_tree.spatial_nodes.iter().enumerate() {
@@ -312,97 +325,11 @@ impl HitTester {
                 external_scroll_offset: spatial_tree.external_scroll_offset(index),
             });
         }
-
-        // For each clip chain node, extract the clip node from the clip
-        // data store, and store it inline with the clip chain node.
-        self.clip_chains.reserve(clip_store.clip_chain_nodes.len());
-        for node in &clip_store.clip_chain_nodes {
-            let clip_node = &clip_data_store[node.handle];
-            self.clip_chains.push(HitTestClipChainNode {
-                region: HitTestClipNode::new(clip_node),
-                spatial_node_index: node.spatial_node_index,
-                parent_clip_chain_id: HitTestClipChainId(node.parent_clip_chain_id.0),
-            });
-        }
     }
 
-    fn is_point_clipped_in_for_clip_chain(
-        &self,
-        point: WorldPoint,
-        clip_chain_id: HitTestClipChainId,
-        test: &mut HitTest
-    ) -> bool {
-        if clip_chain_id == HitTestClipChainId::NONE {
-            return true;
-        }
-
-        if let Some(result) = test.get_from_clip_chain_cache(clip_chain_id) {
-            return result == ClippedIn::ClippedIn;
-        }
-
-        let descriptor = &self.clip_chains[clip_chain_id.0 as usize];
-        let parent_clipped_in = self.is_point_clipped_in_for_clip_chain(
-            point,
-            descriptor.parent_clip_chain_id,
-            test,
-        );
-
-        if !parent_clipped_in {
-            test.set_in_clip_chain_cache(clip_chain_id, ClippedIn::NotClippedIn);
-            return false;
-        }
-
-        if !self.is_point_clipped_in_for_clip_node(
-            point,
-            clip_chain_id,
-            descriptor.spatial_node_index,
-            test,
-        ) {
-            test.set_in_clip_chain_cache(clip_chain_id, ClippedIn::NotClippedIn);
-            return false;
-        }
-
-        test.set_in_clip_chain_cache(clip_chain_id, ClippedIn::ClippedIn);
-        true
-    }
-
-    fn is_point_clipped_in_for_clip_node(
-        &self,
-        point: WorldPoint,
-        clip_chain_node_id: HitTestClipChainId,
-        spatial_node_index: SpatialNodeIndex,
-        test: &mut HitTest
-    ) -> bool {
-        if let Some(clipped_in) = test.node_cache.get(&clip_chain_node_id) {
-            return *clipped_in == ClippedIn::ClippedIn;
-        }
-
-        let node = &self.clip_chains[clip_chain_node_id.0 as usize].region;
-        let transform = self
-            .spatial_nodes[spatial_node_index.0 as usize]
-            .world_content_transform;
-        let transformed_point = match transform
-            .inverse()
-            .and_then(|inverted| inverted.transform_point2d(point))
-        {
-            Some(point) => point,
-            None => {
-                test.node_cache.insert(clip_chain_node_id, ClippedIn::NotClippedIn);
-                return false;
-            }
-        };
-
-        if !node.region.contains(&transformed_point) {
-            test.node_cache.insert(clip_chain_node_id, ClippedIn::NotClippedIn);
-            return false;
-        }
-
-        test.node_cache.insert(clip_chain_node_id, ClippedIn::ClippedIn);
-        true
-    }
-
-    pub fn hit_test(&self, mut test: HitTest) -> HitTestResult {
+    pub fn hit_test(&self, test: HitTest) -> HitTestResult {
         let mut result = HitTestResult::default();
+
         let mut current_spatial_node_index = SpatialNodeIndex::INVALID;
         let mut point_in_layer = None;
         let mut current_root_spatial_node_index = SpatialNodeIndex::INVALID;
@@ -438,12 +365,23 @@ impl HitTester {
                     continue;
                 }
 
-                // See if any of the clip chain roots for this primitive
-                // cull out the item.
-                let clip_chains = self.scene.get_clip_chains_for_item(item);
+                // See if any of the clips for this primitive cull out the item.
                 let mut is_valid = true;
-                for clip_chain_id in clip_chains {
-                    if !self.is_point_clipped_in_for_clip_chain(test.point, *clip_chain_id, &mut test) {
+                let clip_nodes = &self.scene.clip_nodes[item.clip_nodes_range.start.0 as usize .. item.clip_nodes_range.end.0 as usize];
+                for clip_node in clip_nodes {
+                    let transform = self
+                        .spatial_nodes[clip_node.spatial_node_index.0 as usize]
+                        .world_content_transform;
+                    let transformed_point = match transform
+                        .inverse()
+                        .and_then(|inverted| inverted.transform_point2d(test.point))
+                    {
+                        Some(point) => point,
+                        None => {
+                            continue;
+                        }
+                    };
+                    if !clip_node.region.contains(&transformed_point) {
                         is_valid = false;
                         break;
                     }
@@ -489,18 +427,10 @@ impl HitTester {
     }
 }
 
-#[derive(Clone, Copy, MallocSizeOf, PartialEq)]
-enum ClippedIn {
-    ClippedIn,
-    NotClippedIn,
-}
-
 #[derive(MallocSizeOf)]
 pub struct HitTest {
     pipeline_id: Option<PipelineId>,
     point: WorldPoint,
-    node_cache: FastHashMap<HitTestClipChainId, ClippedIn>,
-    clip_chain_cache: Vec<Option<ClippedIn>>,
 }
 
 impl HitTest {
@@ -511,25 +441,34 @@ impl HitTest {
         HitTest {
             pipeline_id,
             point,
-            node_cache: FastHashMap::default(),
-            clip_chain_cache: Vec::new(),
         }
     }
+}
 
-    fn get_from_clip_chain_cache(&mut self, index: HitTestClipChainId) -> Option<ClippedIn> {
-        let index = index.0 as usize;
-        if index >= self.clip_chain_cache.len() {
-            None
-        } else {
-            self.clip_chain_cache[index]
-        }
+/// Collect clips for a given ClipId, convert and add them to the hit testing
+/// scene, if not already present.
+fn add_clips(
+    clip_id: ClipId,
+    clip_store: &ClipStore,
+    clip_nodes: &mut Vec<HitTestClipNode>,
+) {
+    let template = &clip_store.templates[&clip_id];
+
+    for clip in &template.clips {
+        let hit_test_clip_node = HitTestClipNode::new(
+            clip.key.into(),
+            clip.clip.spatial_node_index,
+        );
+
+        clip_nodes.push(hit_test_clip_node);
     }
 
-    fn set_in_clip_chain_cache(&mut self, index: HitTestClipChainId, value: ClippedIn) {
-        let index = index.0 as usize;
-        if index >= self.clip_chain_cache.len() {
-            self.clip_chain_cache.resize(index + 1, None);
-        }
-        self.clip_chain_cache[index] = Some(value);
+    // The ClipId parenting is terminated when we reach the root ClipId
+    if clip_id != template.parent {
+        add_clips(
+            template.parent,
+            clip_store,
+            clip_nodes,
+        );
     }
 }

@@ -19,7 +19,7 @@ use crate::clip::{ClipInternData, ClipNodeKind, ClipInstance, SceneClipInstance}
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_rasterizer::FontInstance;
-use crate::hit_test::{HitTestingItem, HitTestingScene};
+use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
@@ -42,7 +42,7 @@ use crate::space::SpaceSnapper;
 use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind};
 use crate::tile_cache::TileCacheBuilder;
 use euclid::approxeq::ApproxEq;
-use std::{f32, mem, usize, ops};
+use std::{f32, mem, usize};
 use std::collections::vec_deque::VecDeque;
 use std::sync::Arc;
 use crate::util::{MaxRect, VecHelper};
@@ -931,7 +931,9 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::HitTest(ref info) => {
                 profile_scope!("hit_test");
 
-                let (layout, _, spatial_node_index, clip_chain_id) = self.process_common_properties(
+                // TODO(gw): We could skip building the clip-chain here completely, as it's not used by
+                //           hit-test items.
+                let (layout, _, spatial_node_index, _) = self.process_common_properties(
                     &info.common,
                     None,
                 );
@@ -942,7 +944,7 @@ impl<'a> SceneBuilder<'a> {
                 self.add_primitive_to_hit_testing_list(
                     &layout,
                     spatial_node_index,
-                    clip_chain_id,
+                    info.common.clip_id,
                     info.tag,
                 );
             }
@@ -1352,37 +1354,16 @@ impl<'a> SceneBuilder<'a> {
         &mut self,
         info: &LayoutPrimitiveInfo,
         spatial_node_index: SpatialNodeIndex,
-        clip_chain_id: ClipChainId,
+        clip_id: ClipId,
         tag: ItemTag,
     ) {
-        // We want to get a range of clip chain roots that apply to this
-        // hit testing primitive.
-
-        // Get the start index for the clip chain root range for this primitive.
-        let start = self.hit_testing_scene.next_clip_chain_index();
-
-        // Add the clip chain root for the primitive itself.
-        self.hit_testing_scene.add_clip_chain(clip_chain_id);
-
-        // Append any clip chain roots from enclosing stacking contexts.
-        for sc in &self.sc_stack {
-            self.hit_testing_scene.add_clip_chain(sc.clip_chain_id);
-        }
-
-        // Construct a clip chain roots range to be stored with the item.
-        let clip_chain_range = ops::Range {
-            start,
-            end: self.hit_testing_scene.next_clip_chain_index(),
-        };
-
-        // Create and store the hit testing primitive itself.
-        let new_item = HitTestingItem::new(
+        self.hit_testing_scene.add_item(
             tag,
             info,
             spatial_node_index,
-            clip_chain_range,
+            clip_id,
+            &self.clip_store,
         );
-        self.hit_testing_scene.add_item(new_item);
     }
 
     /// Add an already created primitive to the draw lists.
@@ -1670,6 +1651,9 @@ impl<'a> SceneBuilder<'a> {
             } else {
                 self.clip_store.push_clip_root(None, false);
             }
+
+            // Push this clip id into the hit-testing scene for child primitives
+            self.hit_testing_scene.push_clip(clip_id);
         }
 
         // If not redundant, create a stacking context to hold primitive clusters
@@ -1710,6 +1694,7 @@ impl<'a> SceneBuilder<'a> {
         // If the stacking context established a clip root, pop off the stack
         if info.pop_clip_root {
             self.clip_store.pop_clip_root();
+            self.hit_testing_scene.pop_clip();
         }
 
         // If the stacking context was otherwise redundant, early exit
@@ -2043,7 +2028,7 @@ impl<'a> SceneBuilder<'a> {
             });
 
         let instance = SceneClipInstance {
-            key: item.kind,
+            key: item,
             clip: ClipInstance::new(handle, spatial_node_index),
         };
 
@@ -2081,7 +2066,7 @@ impl<'a> SceneBuilder<'a> {
             });
 
         let instance = SceneClipInstance {
-            key: item.kind,
+            key: item,
             clip: ClipInstance::new(handle, spatial_node_index),
         };
 
@@ -2123,7 +2108,7 @@ impl<'a> SceneBuilder<'a> {
             });
 
         let instance = SceneClipInstance {
-            key: item.kind,
+            key: item,
             clip: ClipInstance::new(handle, spatial_node_index),
         };
 
@@ -2171,7 +2156,7 @@ impl<'a> SceneBuilder<'a> {
             });
         instances.push(
             SceneClipInstance {
-                key: item.kind,
+                key: item,
                 clip: ClipInstance::new(handle, spatial_node_index),
             },
         );
@@ -2197,7 +2182,7 @@ impl<'a> SceneBuilder<'a> {
 
             instances.push(
                 SceneClipInstance {
-                    key: item.kind,
+                    key: item,
                     clip: ClipInstance::new(handle, spatial_node_index),
                 },
             );
