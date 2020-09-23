@@ -118,6 +118,17 @@ class RotorUnvisitedLinkRule final : public RotorLinkRule {
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
 };
 
+class RotorTextFieldRule : public PivotRule {
+ public:
+  explicit RotorTextFieldRule();
+  explicit RotorTextFieldRule(AccessibleOrProxy& aDirectDescendantsFrom);
+
+  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+
+ protected:
+  AccessibleOrProxy mDirectDescendantsFrom;
+};
+
 /**
  * This rule matches all accessibles, filtering out non-direct
  * descendants if necessary.

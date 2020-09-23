@@ -220,6 +220,13 @@ using namespace mozilla::a11y;
                                    : RotorCheckboxRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
+
+    if ([key isEqualToString:@"AXTextFieldSearchKey"]) {
+      RotorTextFieldRule rule = mImmediateDescendantsOnly
+                                    ? RotorTextFieldRule(geckoStartAcc)
+                                    : RotorTextFieldRule();
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
   }
 
   return matches;
