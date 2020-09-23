@@ -351,6 +351,10 @@ bool StoragePrincipalHelper::GetOriginAttributesForHSTS(
   bool ok = FindCharInReadable(',', iter, end);
   MOZ_DIAGNOSTIC_ASSERT(ok);
 
+  if (!ok) {
+    return false;
+  }
+
   nsAutoString scheme;
   scheme.Assign(Substring(start, iter));
 
