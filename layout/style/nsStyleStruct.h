@@ -114,8 +114,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   int8_t mScriptLevel;
   // MathML  mathvariant support
   uint8_t mMathVariant;
-  // MathML displaystyle support
-  uint8_t mMathDisplay;
+  // math-style support (used for MathML displaystyle)
+  uint8_t mMathStyle;
 
   // allow different min font-size for certain cases
   uint8_t mMinFontSizeRatio;  // percent * 100
