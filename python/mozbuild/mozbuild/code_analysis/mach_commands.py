@@ -312,14 +312,7 @@ class StaticAnalysis(MachCommandBase):
         if rc != 0:
             return rc
 
-        if self._is_version_eligible() is False:
-            self.log(
-                logging.ERROR,
-                "static-analysis",
-                {},
-                "ERROR: You're using an old version of clang-format binary."
-                " Please update to a more recent one by running: './mach bootstrap'",
-            )
+        if not self._is_version_eligible():
             return 1
 
         rc = self._build_compile_db(verbose=verbose)
@@ -1217,38 +1210,62 @@ class StaticAnalysis(MachCommandBase):
             return None
         return config
 
-    def _is_version_eligible(self):
+    def _get_required_version(self):
         version = self.get_clang_tidy_config.version
-
         if version is None:
             self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
-                "ERROR: Unable to find 'package_version' in the config.yml",
+                "ERROR: Unable to find 'package_version' in config.yml",
             )
-            return False
+        return version
 
+    def _get_current_version(self):
         # Because the fact that we ship together clang-tidy and clang-format
         # we are sure that these two will always share the same version.
         # Thus in order to determine that the version is compatible we only
         # need to check one of them, going with clang-format
         cmd = [self._clang_format_path, "--version"]
+        version_info = None
         try:
-            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode(
-                "utf-8"
+            version_info = (
+                subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+                .decode("utf-8")
+                .strip()
             )
-            version_string = "clang-format version " + version
-            if version_string in output:
-                return True
+
         except subprocess.CalledProcessError as e:
             self.log(
                 logging.ERROR,
                 "static-analysis",
                 {},
-                "ERROR: Error determining the version clang-tidy/format binary, "
-                "please see the attached exception: \n{}".format(e.output),
+                "Error determining the version clang-tidy/format binary, please see the "
+                "attached exception: \n{}".format(e.output),
             )
+        return version_info
+
+    def _is_version_eligible(self):
+        version = self._get_required_version()
+        if version is None:
+            return False
+
+        current_version = self._get_current_version()
+        if current_version is None:
+            return False
+        version = "clang-format version " + version
+        if version in current_version:
+            return True
+        self.log(
+            logging.ERROR,
+            "static-analysis",
+            {},
+            "ERROR: You're using an old or incorrect version ({}) of clang-format binary. "
+            "Please update to a more recent one (at least > {}) "
+            "by running: './mach bootstrap' ".format(
+                self._get_current_version(), self._get_required_version()
+            ),
+        )
         return False
 
     def _get_clang_tidy_command(self, checks, header_filter, sources, jobs, fix):
@@ -2272,14 +2289,7 @@ class StaticAnalysis(MachCommandBase):
             if rc != 0:
                 return rc
 
-        if self._is_version_eligible() is False:
-            self.log(
-                logging.ERROR,
-                "static-analysis",
-                {},
-                "ERROR: You're using an old version of clang-format binary."
-                " Please update to a more recent one by running: './mach bootstrap'",
-            )
+        if not self._is_version_eligible():
             return 1
 
         if path is None:
