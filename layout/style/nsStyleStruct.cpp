@@ -228,7 +228,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
       mGenericID(aSrc.mGenericID),
       mScriptLevel(aSrc.mScriptLevel),
       mMathVariant(aSrc.mMathVariant),
-      mMathStyle(aSrc.mMathStyle),
+      mMathDisplay(aSrc.mMathDisplay),
       mMinFontSizeRatio(aSrc.mMinFontSizeRatio),
       mExplicitLanguage(aSrc.mExplicitLanguage),
       mAllowZoomAndMinSize(aSrc.mAllowZoomAndMinSize),
@@ -249,7 +249,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mGenericID(StyleGenericFontFamily::None),
       mScriptLevel(0),
       mMathVariant(NS_MATHML_MATHVARIANT_NONE),
-      mMathStyle(NS_STYLE_MATH_STYLE_NORMAL),
+      mMathDisplay(NS_MATHML_DISPLAYSTYLE_INLINE),
       mMinFontSizeRatio(100),  // 100%
       mExplicitLanguage(false),
       mAllowZoomAndMinSize(true),
@@ -276,7 +276,7 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
   if (mSize != aNewData.mSize || mLanguage != aNewData.mLanguage ||
       mExplicitLanguage != aNewData.mExplicitLanguage ||
       mMathVariant != aNewData.mMathVariant ||
-      mMathStyle != aNewData.mMathStyle ||
+      mMathDisplay != aNewData.mMathDisplay ||
       mMinFontSizeRatio != aNewData.mMinFontSizeRatio) {
     return NS_STYLE_HINT_REFLOW;
   }

@@ -216,7 +216,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "margin-block-start",
       "margin-inline-end",
       "margin-inline-start",
-      "math-style",
+      "-moz-math-display",
       "max-block-size",
       "max-inline-size",
       "min-block-size",
