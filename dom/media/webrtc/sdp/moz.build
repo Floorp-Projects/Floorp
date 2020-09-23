@@ -16,8 +16,6 @@ include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '/dom/media/webrtc',
-    '/dom/media/webrtc/common/browser_logging',
-    '/dom/media/webrtc/transport',
     '/media/webrtc',
     '/media/webrtc/trunk',
     '/third_party/sipcc',

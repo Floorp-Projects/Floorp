@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CSFLog.h"
+#include "common/browser_logging/CSFLog.h"
 
-#include "nr_socket_proxy_config.h"
-#include "MediaPipelineFilter.h"
-#include "MediaPipeline.h"
+#include "transport/nr_socket_proxy_config.h"
+#include "mediapipeline/MediaPipelineFilter.h"
+#include "mediapipeline/MediaPipeline.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
 #include "RTCDtlsTransport.h"
-#include "runnable_utils.h"
+#include "transport/runnable_utils.h"
 #include "jsep/JsepSession.h"
 #include "jsep/JsepTransport.h"
 
@@ -28,7 +28,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/WebrtcProxyConfig.h"
 #include "MediaManager.h"
-#include "WebrtcGmpVideoCodec.h"
+#include "media-conduit/WebrtcGmpVideoCodec.h"
 
 namespace mozilla {
 using namespace dom;

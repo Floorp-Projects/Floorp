@@ -15,8 +15,8 @@
 #include <queue>
 #include <type_traits>
 
-#include "CSFLog.h"
-#include "WebRtcLog.h"
+#include "common/browser_logging/CSFLog.h"
+#include "common/browser_logging/WebRtcLog.h"
 #include "mozilla/dom/WebrtcGlobalInformationBinding.h"
 #include "mozilla/dom/ContentChild.h"
 
@@ -30,7 +30,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/RefPtr.h"
 
-#include "runnable_utils.h"
+#include "transport/runnable_utils.h"
 #include "MediaTransportHandler.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"

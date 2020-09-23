@@ -16,7 +16,7 @@
 #include "CodecConfig.h"
 #include "VideoTypes.h"
 #include "MediaConduitErrors.h"
-#include "RTCStatsReport.h"
+#include "peerconnection/RTCStatsReport.h"
 
 #include "ImageContainer.h"
 

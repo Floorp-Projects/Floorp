@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <queue>
 
-#include "CSFLog.h"
+#include "common/browser_logging/CSFLog.h"
 #include "nspr.h"
 
 #include "JavaCallbacksSupport.h"
@@ -14,7 +14,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Monitor.h"
-#include "runnable_utils.h"
+#include "transport/runnable_utils.h"
 #include "MediaResult.h"
 
 #include "AudioConduit.h"
