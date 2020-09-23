@@ -115,6 +115,10 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
             if let Err(e) = api::initialize(configuration, client_info) {
                 log::error!("Failed to init FOG due to {:?}", e);
             }
+
+            if let Err(e) = fog::flush_init() {
+                log::error!("Failed to flush pre-init buffer due to {:?}", e);
+            }
         });
     }
 
