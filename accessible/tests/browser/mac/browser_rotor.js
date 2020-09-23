@@ -1050,6 +1050,75 @@ addAccessibleTask(
 );
 
 /**
+ * Test rotor with checkboxes
+ */
+addAccessibleTask(
+  `
+  <fieldset id="checkboxes">
+    <legend>Checkboxes</legend>
+      <input id="checkbox1" type="checkbox" name="g2"> Checkbox 1
+      <input id="checkbox2" type="checkbox" name="g2" checked="checked">Checkbox 2
+      <div id="checkbox3" role="checkbox">Checkbox 3</div>
+      <div id="checkbox4" role="checkbox" aria-checked="true">Checkbox 4</div>
+  </fieldset>
+  `,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXCheckboxSearchKey",
+      AXImmediateDescendantsOnly: 0,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const checkboxCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(4, checkboxCount, "Found 4 checkboxes");
+
+    const checkboxes = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    const checkbox1 = getNativeInterface(accDoc, "checkbox1");
+    const checkbox2 = getNativeInterface(accDoc, "checkbox2");
+    const checkbox3 = getNativeInterface(accDoc, "checkbox3");
+    const checkbox4 = getNativeInterface(accDoc, "checkbox4");
+
+    is(
+      checkbox1.getAttributeValue("AXValue"),
+      checkboxes[0].getAttributeValue("AXValue"),
+      "Found correct checkbox 1"
+    );
+    is(
+      checkbox2.getAttributeValue("AXValue"),
+      checkboxes[1].getAttributeValue("AXValue"),
+      "Found correct checkbox 2"
+    );
+    is(
+      checkbox3.getAttributeValue("AXValue"),
+      checkboxes[2].getAttributeValue("AXValue"),
+      "Found correct checkbox 3"
+    );
+    is(
+      checkbox4.getAttributeValue("AXValue"),
+      checkboxes[3].getAttributeValue("AXValue"),
+      "Found correct checkbox 4"
+    );
+  }
+);
+
+/**
  * Test rotor with static text
  */
 addAccessibleTask(

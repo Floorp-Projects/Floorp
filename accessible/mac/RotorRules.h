@@ -74,6 +74,12 @@ class RotorStaticTextRule : public PivotRule {
   AccessibleOrProxy mDirectDescendantsFrom;
 };
 
+class RotorCheckboxRule final : public PivotRoleRule {
+ public:
+  explicit RotorCheckboxRule();
+  explicit RotorCheckboxRule(AccessibleOrProxy& aDirectDescendantsFrom);
+};
+
 class RotorControlRule final : public PivotRule {
  public:
   explicit RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom);
