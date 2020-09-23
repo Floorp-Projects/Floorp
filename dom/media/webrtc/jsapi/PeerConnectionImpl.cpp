@@ -46,7 +46,7 @@
 #include "jsep/JsepSessionImpl.h"
 
 #include "transportbridge/MediaPipeline.h"
-#include "peerconnection/RTCRtpReceiver.h"
+#include "jsapi/RTCRtpReceiver.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"

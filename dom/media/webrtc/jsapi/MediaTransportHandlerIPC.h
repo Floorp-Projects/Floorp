@@ -5,7 +5,7 @@
 #ifndef _MTRANSPORTHANDLER_IPC_H__
 #define _MTRANSPORTHANDLER_IPC_H__
 
-#include "peerconnection/MediaTransportHandler.h"
+#include "jsapi/MediaTransportHandler.h"
 #include "mozilla/dom/PMediaTransportChild.h"
 
 namespace mozilla {

@@ -19,7 +19,7 @@ with Files('libwebrtcglue/**'):
     BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
 with Files('transportbridge/**'):
     BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
-with Files('peerconnection/**'):
+with Files('jsapi/**'):
     BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
 with Files('sdp/**'):
     BUG_COMPONENT = ('CORE', 'WebRTC: Signaling')
@@ -69,10 +69,10 @@ if CONFIG['MOZ_WEBRTC']:
 if CONFIG['MOZ_WEBRTC_SIGNALING']:
     DIRS += [
         'common',
+        'jsapi',
         'jsep',
         'libwebrtcglue',
         'transportbridge',
-        'peerconnection',
         'sdp'
     ]
 #    GYP_DIRS += ['trunk/third_party/gflags']

@@ -22,7 +22,7 @@
 #include "AudioPacketizer.h"
 #include "MediaPipelineFilter.h"
 #include "MediaSegment.h"
-#include "peerconnection/PacketDumper.h"
+#include "jsapi/PacketDumper.h"
 
 #include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 
