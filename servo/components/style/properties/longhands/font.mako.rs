@@ -239,14 +239,14 @@ ${helpers.predefined_type(
 )}
 
 ${helpers.single_keyword(
-    "math-style",
-    "normal compact",
+    "-moz-math-display",
+    "inline block",
     engines="gecko",
-    gecko_pref="layout.css.math-style.enabled",
-    spec="https://mathml-refresh.github.io/mathml-core/#the-math-style-property",
-    has_effect_on_gecko_scrollbars=False,
-    animation_value_type="none",
+    gecko_constant_prefix="NS_MATHML_DISPLAYSTYLE",
+    gecko_ffi_name="mMathDisplay",
     enabled_in="ua",
+    spec="Internal (not web-exposed)",
+    animation_value_type="none",
 )}
 
 ${helpers.single_keyword(

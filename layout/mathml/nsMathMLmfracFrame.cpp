@@ -51,7 +51,7 @@ eMathMLFrameType nsMathMLmfracFrame::GetMathMLFrameType() {
 }
 
 uint8_t nsMathMLmfracFrame::ScriptIncrement(nsIFrame* aFrame) {
-  if (StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_COMPACT && aFrame &&
+  if (!StyleFont()->mMathDisplay && aFrame &&
       (mFrames.FirstChild() == aFrame || mFrames.LastChild() == aFrame)) {
     return 1;
   }
@@ -67,7 +67,7 @@ nsMathMLmfracFrame::TransmitAutomaticData() {
 
   // If displaystyle is false, then scriptlevel is incremented, so notify the
   // children of this.
-  if (StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_COMPACT) {
+  if (!StyleFont()->mMathDisplay) {
     PropagateFrameFlagFor(mFrames.FirstChild(),
                           NS_FRAME_MATHML_SCRIPT_DESCENDANT);
     PropagateFrameFlagFor(mFrames.LastChild(),
@@ -264,7 +264,7 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
     }
   }
 
-  bool displayStyle = StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_NORMAL;
+  bool displayStyle = StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_BLOCK;
 
   if (!mIsBevelled) {
     mLineRect.height = mLineThickness;
@@ -511,7 +511,7 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
       denShift += delta;
     }
 
-    if (StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_NORMAL) {
+    if (StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_BLOCK) {
       delta =
           std::min(bmDen.ascent + bmDen.descent, bmNum.ascent + bmNum.descent) /
           2;
