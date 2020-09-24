@@ -157,6 +157,7 @@ tasks:
                       - 'assume:repo:${repoUrl[8:]}:branch:default'
                       - 'queue:route:notify.email.${ownerEmail}.*'
                       - 'in-tree:hook-action:project-${trustDomain}/in-tree-action-${repository.level}-*'
+                      - 'index:insert-task:${trustDomain}.v2.${repository.project}.*'
                   else:
                       $if: 'tasks_for == "action"'
                       then:

@@ -220,6 +220,21 @@ def list_tasks(index_path, use_proxy=False):
     return [t['taskId'] for t in results]
 
 
+def insert_index(index_path, task_id, data=None, use_proxy=False):
+    index_url = get_index_url(index_path, use_proxy=use_proxy)
+
+    # Find task expiry.
+    expires = get_task_definition(task_id, use_proxy=use_proxy)["expires"]
+
+    response = _do_request(index_url, method="put", json={
+        "taskId": task_id,
+        "rank": 0,
+        "data": data or {},
+        "expires": expires,
+    })
+    return response
+
+
 def parse_time(timestamp):
     """Turn a "JSON timestamp" as used in TC APIs into a datetime"""
     return datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
