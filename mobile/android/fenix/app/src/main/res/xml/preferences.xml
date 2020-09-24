@@ -136,6 +136,11 @@
             android:key="@string/pref_key_addons"
             android:title="@string/preferences_addons" />
 
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_addons_extensions"
+            android:key="@string/pref_key_override_amo_collection"
+            android:title="@string/preferences_customize_amo_collection"/>
+
         <androidx.preference.SwitchPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_open_in_app"

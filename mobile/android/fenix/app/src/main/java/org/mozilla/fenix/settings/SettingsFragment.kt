@@ -6,13 +6,16 @@ package org.mozilla.fenix.settings
 
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.provider.Settings
+import android.view.LayoutInflater
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
@@ -20,6 +23,8 @@ import androidx.navigation.fragment.navArgs
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.amo_collection_override_dialog.view.*
+import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -28,6 +33,7 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -43,6 +49,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.account.AccountUiView
+import org.mozilla.fenix.utils.Settings
 import kotlin.system.exitProcess
 
 @Suppress("LargeClass", "TooManyFunctions")
@@ -304,6 +311,41 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_debug_settings) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSecretSettingsFragment()
             }
+            resources.getString(R.string.pref_key_override_amo_collection) -> {
+                val context = requireContext()
+                val dialogView = LayoutInflater.from(context).inflate(R.layout.amo_collection_override_dialog, null)
+
+                AlertDialog.Builder(context).apply {
+                    setTitle(context.getString(R.string.preferences_customize_amo_collection))
+                    setView(dialogView)
+                    setNegativeButton(R.string.customize_addon_collection_cancel) { dialog: DialogInterface, _ ->
+                        dialog.cancel()
+                    }
+
+                    setPositiveButton(R.string.customize_addon_collection_ok) { _, _ ->
+                        context.settings().overrideAmoUser = dialogView.custom_amo_user.text.toString()
+                        context.settings().overrideAmoCollection = dialogView.custom_amo_collection.text.toString()
+
+                        Toast.makeText(
+                            context,
+                            getString(R.string.toast_customize_addon_collection_done),
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        Handler().postDelayed({
+                            exitProcess(0)
+                        }, AMO_COLLECTION_OVERRIDE_EXIT_DELAY)
+                    }
+
+                    dialogView.custom_amo_collection.setText(context.settings().overrideAmoCollection)
+                    dialogView.custom_amo_user.setText(context.settings().overrideAmoUser)
+                    dialogView.custom_amo_user.requestFocus()
+                    dialogView.custom_amo_user.showKeyboard()
+                    create()
+                }.show()
+
+                null
+            }
             else -> null
         }
         directions?.let { navigateFromSettings(directions) }
@@ -374,12 +416,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>(
             getPreferenceKey(R.string.pref_key_debug_settings)
         )?.isVisible = requireContext().settings().showSecretDebugMenuThisSession
+
+        setupAmoCollectionOverridePreference(requireContext().settings())
     }
 
     private fun getClickListenerForMakeDefaultBrowser(): Preference.OnPreferenceClickListener {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Preference.OnPreferenceClickListener {
-                val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
+                val intent = Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
                 startActivity(intent)
                 true
             }
@@ -446,8 +490,23 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
+    @VisibleForTesting
+    internal fun setupAmoCollectionOverridePreference(settings: Settings) {
+        val preferenceAmoCollectionOverride =
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_amo_collection))
+
+        val show = (Config.channel.isNightlyOrDebug && (
+            settings.amoCollectionOverrideConfigured() || settings.showSecretDebugMenuThisSession)
+        )
+        preferenceAmoCollectionOverride?.apply {
+            isVisible = show
+            summary = settings.overrideAmoCollection.ifEmpty { null }
+        }
+    }
+
     companion object {
         private const val SCROLL_INDICATOR_DELAY = 10L
         private const val FXA_SYNC_OVERRIDE_EXIT_DELAY = 2000L
+        private const val AMO_COLLECTION_OVERRIDE_EXIT_DELAY = 3000L
     }
 }

@@ -886,6 +886,20 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = ""
     )
 
+    var overrideAmoUser by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_override_amo_user),
+        default = ""
+    )
+
+    var overrideAmoCollection by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_override_amo_collection),
+        default = ""
+    )
+
+    fun amoCollectionOverrideConfigured(): Boolean {
+        return overrideAmoUser.isNotEmpty() || overrideAmoCollection.isNotEmpty()
+    }
+
     val topSitesSize by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_top_sites_size),
         default = 0

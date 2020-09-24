@@ -576,4 +576,34 @@ class SettingsTest {
             settings.getSitePermissionsCustomSettingsRules()
         )
     }
+
+    @Test
+    fun overrideAmoCollection() {
+        // When just created
+        // Then
+        assertEquals("", settings.overrideAmoCollection)
+        assertFalse(settings.amoCollectionOverrideConfigured())
+
+        // When
+        settings.overrideAmoCollection = "testCollection"
+
+        // Then
+        assertEquals("testCollection", settings.overrideAmoCollection)
+        assertTrue(settings.amoCollectionOverrideConfigured())
+    }
+
+    @Test
+    fun overrideAmoUser() {
+        // When just created
+        // Then
+        assertEquals("", settings.overrideAmoUser)
+        assertFalse(settings.amoCollectionOverrideConfigured())
+
+        // When
+        settings.overrideAmoUser = "testAmoUser"
+
+        // Then
+        assertEquals("testAmoUser", settings.overrideAmoUser)
+        assertTrue(settings.amoCollectionOverrideConfigured())
+    }
 }

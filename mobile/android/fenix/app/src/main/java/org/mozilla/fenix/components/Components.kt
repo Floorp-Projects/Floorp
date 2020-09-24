@@ -17,8 +17,10 @@ import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.AppStartupTelemetry
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.Settings
@@ -71,14 +73,26 @@ class Components(private val context: Context) {
     }
 
     val addonCollectionProvider by lazy {
-        if (!BuildConfig.AMO_COLLECTION.isNullOrEmpty()) {
+        // Check if we have a customized (overridden) AMO collection (only supported in Nightly)
+        if (Config.channel.isNightlyOrDebug && context.settings().amoCollectionOverrideConfigured()) {
+            AddonCollectionProvider(
+                context,
+                core.client,
+                collectionUser = context.settings().overrideAmoUser,
+                collectionName = context.settings().overrideAmoCollection
+            )
+        }
+        // Use build config otherwise
+        else if (!BuildConfig.AMO_COLLECTION.isNullOrEmpty()) {
             AddonCollectionProvider(
                 context,
                 core.client,
                 collectionName = BuildConfig.AMO_COLLECTION,
                 maxCacheAgeInMinutes = DAY_IN_MINUTES
             )
-        } else {
+        }
+        // Fall back to defaults
+        else {
             AddonCollectionProvider(context, core.client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
         }
     }
