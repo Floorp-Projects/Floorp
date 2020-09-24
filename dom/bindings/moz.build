@@ -95,9 +95,9 @@ LOCAL_INCLUDES += [
     '/layout/style',
     '/layout/xul/tree',
     '/media/webrtc/',
-    '/media/webrtc/trunk/',
-    '/media/webrtc/trunk/webrtc/',
     '/netwerk/base/',
+    '/third_party/libwebrtc',
+    '/third_party/libwebrtc/webrtc',
 ]
 
 LOCAL_INCLUDES += ['/third_party/msgpack/include']
