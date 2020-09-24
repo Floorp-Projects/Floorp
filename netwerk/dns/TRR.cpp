@@ -1097,6 +1097,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
             }
             if (value.mValue.is<SvcParamEchConfig>()) {
               parsed.mHasEchConfig = true;
+              parsed.mEchConfig = value.mValue.as<SvcParamEchConfig>().mValue;
             }
             parsed.mSvcFieldValue.AppendElement(value);
           }

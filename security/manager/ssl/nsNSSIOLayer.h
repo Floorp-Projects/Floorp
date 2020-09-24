@@ -66,8 +66,8 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   void SetDenyClientCert(bool aDenyClientCert) override;
   NS_IMETHOD GetClientCert(nsIX509Cert** aClientCert) override;
   NS_IMETHOD SetClientCert(nsIX509Cert* aClientCert) override;
-  NS_IMETHOD GetEsniTxt(nsACString& aEsniTxt) override;
-  NS_IMETHOD SetEsniTxt(const nsACString& aEsniTxt) override;
+  NS_IMETHOD GetEchConfig(nsACString& aEchConfig) override;
+  NS_IMETHOD SetEchConfig(const nsACString& aEchConfig) override;
   NS_IMETHOD GetPeerId(nsACString& aResult) override;
 
   PRStatus CloseSocketAndDestroy();
@@ -180,7 +180,7 @@ class nsNSSSocketInfo final : public CommonSocketControl {
 
   nsresult ActivateSSL();
 
-  nsCString mEsniTxt;
+  nsCString mEchConfig;
   nsCString mPeerId;
   bool mEarlyDataAccepted;
   bool mDenyClientCert;

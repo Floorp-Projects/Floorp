@@ -276,12 +276,12 @@ CommonSocketControl::GetFailedVerification(bool* arg) {
 }
 
 NS_IMETHODIMP
-CommonSocketControl::GetEsniTxt(nsACString& aEsniTxt) {
+CommonSocketControl::GetEchConfig(nsACString& aEchConfig) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-CommonSocketControl::SetEsniTxt(const nsACString& aEsniTxt) {
+CommonSocketControl::SetEchConfig(const nsACString& aEchConfig) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
