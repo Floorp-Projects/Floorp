@@ -82,9 +82,7 @@ struct SVCB {
            mSvcDomainName == aOther.mSvcDomainName &&
            mSvcFieldValue == aOther.mSvcFieldValue;
   }
-  bool operator<(const SVCB& aOther) const {
-    return mSvcFieldPriority < aOther.mSvcFieldPriority;
-  }
+  bool operator<(const SVCB& aOther) const;
   Maybe<uint16_t> GetPort() const;
   bool NoDefaultAlpn() const;
   Maybe<nsCString> GetAlpn(bool aNoHttp2, bool aNoHttp3) const;
@@ -92,6 +90,7 @@ struct SVCB {
   uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
   bool mHasIPHints = false;
+  bool mHasEchConfig = false;
   CopyableTArray<SvcFieldValue> mSvcFieldValue;
 };
 
