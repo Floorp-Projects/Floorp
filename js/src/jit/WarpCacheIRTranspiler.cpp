@@ -780,6 +780,25 @@ bool WarpCacheIRTranspiler::emitGuardFunctionHasNoJitEntry(ObjOperandId funId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardFunctionIsNonBuiltinCtor(
+    ObjOperandId funId) {
+  MDefinition* fun = getOperand(funId);
+
+  // Guard the function has the BASESCRIPT and CONSTRUCTOR flags and does NOT
+  // have the SELF_HOSTED flag.
+  // This is equivalent to JSFunction::isNonBuiltinConstructor.
+  uint16_t expectedFlags =
+      FunctionFlags::BASESCRIPT | FunctionFlags::CONSTRUCTOR;
+  uint16_t unexpectedFlags = FunctionFlags::SELF_HOSTED;
+
+  auto* ins =
+      MGuardFunctionFlags::New(alloc(), fun, expectedFlags, unexpectedFlags);
+  add(ins);
+
+  setOperand(funId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardFunctionIsConstructor(ObjOperandId funId) {
   MDefinition* fun = getOperand(funId);
   uint16_t expectedFlags = FunctionFlags::CONSTRUCTOR;
