@@ -105,12 +105,6 @@ async function run_test() {
     Assert.equal(failureId.value, "FEATURE_FAILURE_DL_BLOCKLIST_NO_ID");
 
     status = gfxInfo.getFeatureStatus(
-      Ci.nsIGfxInfo.FEATURE_WEBGL_MSAA,
-      failureId
-    );
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-
-    status = gfxInfo.getFeatureStatus(
       Ci.nsIGfxInfo.FEATURE_STAGEFRIGHT,
       failureId
     );
