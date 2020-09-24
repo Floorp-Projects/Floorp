@@ -7,8 +7,8 @@
  */
 
 async function runTest(callback, locationSearch) {
-  const INCREMENT = 2;
-  const MAX = 300;
+  const INCREMENT = 3;
+  const MAX = 200;
 
   // Measure the time it take for the provided action to trigger a
   // MozAfterPaint event.  This function ensures that the event being
