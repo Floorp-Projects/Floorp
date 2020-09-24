@@ -9,24 +9,24 @@ import android.os.StrictMode
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 
+private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
+private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
+
 /**
  * Manages strict mode settings for the application.
- *
- * Due to the static dependencies in this class, it's getting hard to test: if this class takes any
- * many more static dependencies, consider switching it, and other code that uses [StrictMode] like
- * [StrictMode.ThreadPolicy].resetPoliciesAfter, to a class with dependency injection.
  */
-object StrictModeManager {
+class StrictModeManager(config: Config) {
+
+    // The expression in this if is duplicated in StrictMode.ThreadPolicy.resetPoliciesAfter
+    // because we don't want to have to pass in a dependency each time the ext fn is called.
+    private val isEnabledByBuildConfig = config.channel.isDebug
 
     /***
      * Enables strict mode for debug purposes. meant to be run only in the main process.
      * @param setPenaltyDeath boolean value to decide setting the penaltyDeath as a penalty.
      */
     fun enableStrictMode(setPenaltyDeath: Boolean) {
-        // The expression in this if is duplicated in StrictMode.ThreadPolicy.resetPoliciesAfter
-        // because the tests break in unexpected ways if the value is shared as a constant in this
-        // class. It wasn't worth the time to address it.
-        if (Config.channel.isDebug) {
+        if (isEnabledByBuildConfig) {
             val threadPolicy = StrictMode.ThreadPolicy.Builder()
                 .detectAll()
                 .penaltyLog()
@@ -66,9 +66,6 @@ object StrictModeManager {
             }
         }, false)
     }
-
-    private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
-    private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
 
     /**
      * There are certain manufacturers that have custom font classes for the OS systems.

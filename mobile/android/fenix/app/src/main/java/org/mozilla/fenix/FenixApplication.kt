@@ -40,7 +40,6 @@ import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.utils.logElapsedTime
 import mozilla.components.support.webextensions.WebExtensionSupport
-import org.mozilla.fenix.StrictModeManager.enableStrictMode
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.components
@@ -126,7 +125,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             val megazordSetup = setupMegazord()
 
             setDayNightTheme()
-            enableStrictMode(true)
+            components.strictMode.enableStrictMode(true)
             warmBrowsersCache()
 
             // Make sure the engine is initialized and ready to use.

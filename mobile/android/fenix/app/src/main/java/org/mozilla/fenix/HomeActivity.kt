@@ -150,7 +150,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private lateinit var navigationToolbar: Toolbar
 
     final override fun onCreate(savedInstanceState: Bundle?) {
-        StrictModeManager.attachListenerToDisablePenaltyDeath(supportFragmentManager)
+        components.strictMode.attachListenerToDisablePenaltyDeath(supportFragmentManager)
         // There is disk read violations on some devices such as samsung and pixel for android 9/10
         StrictMode.allowThreadDiskReads().resetPoliciesAfter {
             super.onCreate(savedInstanceState)

@@ -19,6 +19,7 @@ import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.StrictModeManager
 import org.mozilla.fenix.components.metrics.AppStartupTelemetry
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.ClipboardHandler
@@ -126,6 +127,7 @@ class Components(private val context: Context) {
     val performance by lazy { PerformanceComponent() }
     val push by lazy { Push(context, analytics.crashReporter) }
     val wifiConnectionMonitor by lazy { WifiConnectionMonitor(context as Application) }
+    val strictMode by lazy { StrictModeManager(Config) }
 
     val settings by lazy { Settings(context) }
 
