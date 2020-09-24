@@ -4,7 +4,6 @@
 
 "use strict";
 
-
 function testRangeAtMarker(macDoc, marker, attribute, expected, msg) {
   let range = macDoc.getParameterizedAttributeValue(attribute, marker);
   is(stringForRange(macDoc, range), expected, msg);
@@ -144,7 +143,8 @@ function testMarkerIntegrity(accDoc, expectedMarkerValues) {
     is(index, i, `Correct index in "AXTextMarkerForIndex": ${i}`);
   }
 
-  ok(!macDoc.getParameterizedAttributeValue(
+  ok(
+    !macDoc.getParameterizedAttributeValue(
       "AXNextTextMarkerForTextMarker",
       marker
     ),
