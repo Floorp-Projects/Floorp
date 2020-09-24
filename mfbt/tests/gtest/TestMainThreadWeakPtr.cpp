@@ -17,7 +17,7 @@ struct C : public SupportsWeakPtr {
 };
 
 struct HasWeakPtrToC {
-  HasWeakPtrToC(C* c) : mPtr(c) {}
+  explicit HasWeakPtrToC(C* c) : mPtr(c) {}
 
   MainThreadWeakPtr<C> mPtr;
 
