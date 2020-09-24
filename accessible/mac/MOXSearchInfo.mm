@@ -206,27 +206,6 @@ using namespace mozilla::a11y;
                                 : RotorImageRule();
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
-
-    if ([key isEqualToString:@"AXStaticTextSearchKey"]) {
-      RotorStaticTextRule rule = mImmediateDescendantsOnly
-                                     ? RotorStaticTextRule(geckoStartAcc)
-                                     : RotorStaticTextRule();
-      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
-    }
-
-    if ([key isEqualToString:@"AXCheckboxSearchKey"]) {
-      RotorCheckboxRule rule = mImmediateDescendantsOnly
-                                   ? RotorCheckboxRule(geckoStartAcc)
-                                   : RotorCheckboxRule();
-      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
-    }
-
-    if ([key isEqualToString:@"AXTextFieldSearchKey"]) {
-      RotorTextFieldRule rule = mImmediateDescendantsOnly
-                                    ? RotorTextFieldRule(geckoStartAcc)
-                                    : RotorTextFieldRule();
-      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
-    }
   }
 
   return matches;

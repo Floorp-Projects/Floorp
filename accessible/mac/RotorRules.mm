@@ -54,45 +54,6 @@ RotorImageRule::RotorImageRule() : PivotRoleRule(roles::GRAPHIC) {}
 RotorImageRule::RotorImageRule(AccessibleOrProxy& aDirectDescendantsFrom)
     : PivotRoleRule(roles::GRAPHIC, aDirectDescendantsFrom) {}
 
-RotorStaticTextRule::RotorStaticTextRule() : mDirectDescendantsFrom(nullptr) {}
-
-RotorStaticTextRule::RotorStaticTextRule(
-    AccessibleOrProxy& aDirectDescendantsFrom)
-    : mDirectDescendantsFrom(aDirectDescendantsFrom) {}
-
-uint16_t RotorStaticTextRule::Match(const AccessibleOrProxy& aAccOrProxy) {
-  uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
-
-  if (nsAccUtils::MustPrune(aAccOrProxy)) {
-    result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-  }
-
-  if (!mDirectDescendantsFrom.IsNull() &&
-      (aAccOrProxy != mDirectDescendantsFrom)) {
-    // If we've specified mDirectDescendantsFrom, we should ignore
-    // non-direct descendants of from the specified AoP. Because
-    // pivot performs a preorder traversal, the first aAccOrProxy
-    // object(s) that don't equal mDirectDescendantsFrom will be
-    // mDirectDescendantsFrom's children. We'll process them, but ignore
-    // their subtrees thereby processing direct descendants of
-    // mDirectDescendantsFrom only.
-    result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-  }
-
-  if (mozAccessible* nativeMatch = GetNativeFromGeckoAccessible(aAccOrProxy)) {
-    if ([[nativeMatch moxRole] isEqualToString:@"AXStaticText"]) {
-      result |= nsIAccessibleTraversalRule::FILTER_MATCH;
-    }
-  }
-
-  return result;
-}
-
-RotorCheckboxRule::RotorCheckboxRule() : PivotRoleRule(roles::CHECKBUTTON) {}
-
-RotorCheckboxRule::RotorCheckboxRule(AccessibleOrProxy& aDirectDescendantsFrom)
-    : PivotRoleRule(roles::CHECKBUTTON, aDirectDescendantsFrom) {}
-
 RotorControlRule::RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom)
     : mDirectDescendantsFrom(aDirectDescendantsFrom) {}
 
@@ -257,40 +218,6 @@ uint16_t RotorUnvisitedLinkRule::Match(const AccessibleOrProxy& aAccOrProxy) {
   if (mozAccessible* nativeMatch = GetNativeFromGeckoAccessible(aAccOrProxy)) {
     if ([[nativeMatch moxRole] isEqualToString:@"AXLink"] &&
         [[nativeMatch moxVisited] boolValue] == NO) {
-      result |= nsIAccessibleTraversalRule::FILTER_MATCH;
-    }
-  }
-
-  return result;
-}
-
-RotorTextFieldRule::RotorTextFieldRule() : mDirectDescendantsFrom(nullptr) {}
-
-RotorTextFieldRule::RotorTextFieldRule(
-    AccessibleOrProxy& aDirectDescendantsFrom)
-    : mDirectDescendantsFrom(aDirectDescendantsFrom) {}
-
-uint16_t RotorTextFieldRule::Match(const AccessibleOrProxy& aAccOrProxy) {
-  uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
-
-  if (nsAccUtils::MustPrune(aAccOrProxy)) {
-    result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-  }
-
-  if (!mDirectDescendantsFrom.IsNull() &&
-      (aAccOrProxy != mDirectDescendantsFrom)) {
-    // If we've specified mDirectDescendantsFrom, we should ignore
-    // non-direct descendants of from the specified AoP. Because
-    // pivot performs a preorder traversal, the first aAccOrProxy
-    // object(s) that don't equal mDirectDescendantsFrom will be
-    // mDirectDescendantsFrom's children. We'll process them, but ignore
-    // their subtrees thereby processing direct descendants of
-    // mDirectDescendantsFrom only.
-    result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-  }
-
-  if (mozAccessible* nativeMatch = GetNativeFromGeckoAccessible(aAccOrProxy)) {
-    if ([[nativeMatch moxRole] isEqualToString:@"AXTextField"]) {
       result |= nsIAccessibleTraversalRule::FILTER_MATCH;
     }
   }
