@@ -60,6 +60,7 @@ fun CoroutineScope.allowUndo(
     // writing a volatile variable.
     val requestedUndo = AtomicBoolean(false)
 
+    @Suppress("ComplexCondition")
     fun showUndoSnackbar() {
         val snackbar = FenixSnackbar
             .make(
@@ -82,6 +83,7 @@ fun CoroutineScope.allowUndo(
 
         val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
         val toolbarHeight = view.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+        val dynamicToolbarEnabled = view.context.settings().isDynamicToolbarEnabled
 
         snackbar.view.updatePadding(
             bottom = if (
@@ -92,7 +94,7 @@ fun CoroutineScope.allowUndo(
                 // can't intelligently position the snackbar on the upper most view.
                 // Ideally we should not pass ContentFrameLayout in, but it's the only
                 // way to display snackbars through a fragment transition.
-                view is ContentFrameLayout
+                (view is ContentFrameLayout || !dynamicToolbarEnabled)
             ) {
                 toolbarHeight
             } else {

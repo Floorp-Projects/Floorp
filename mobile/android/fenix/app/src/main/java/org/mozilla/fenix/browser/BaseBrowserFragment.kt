@@ -275,6 +275,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         {
                             requireComponents.useCases.tabsUseCases.undo.invoke()
                         },
+                        paddedForBottomToolbar = true,
                         operation = { }
                     )
                 }
