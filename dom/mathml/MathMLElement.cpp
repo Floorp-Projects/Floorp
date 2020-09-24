@@ -441,7 +441,7 @@ void MathMLElement::MapMathMLAttributesInto(
   //
   value = aAttributes->GetAttr(nsGkAtoms::scriptlevel_);
   if (value && value->Type() == nsAttrValue::eString &&
-      !aDecls.PropertyIsSet(eCSSProperty__moz_script_level)) {
+      !aDecls.PropertyIsSet(eCSSProperty_math_depth)) {
     auto str = value->GetStringValue();
     str.CompressWhitespace();
     if (str.Length() > 0) {
@@ -452,11 +452,13 @@ void MathMLElement::MapMathMLAttributesInto(
         // then it's a relative value and we store the nsCSSValue as an
         // Integer to indicate that. Otherwise we store it as a Number
         // to indicate that the scriptlevel is absolute.
+        // XXX Bug 1667090: Use math-depth: add(<integer>) for relative values
+        // and and math-depth: <integer> for absolute values.
         char16_t ch = str.CharAt(0);
         if (ch == '+' || ch == '-') {
-          aDecls.SetIntValue(eCSSProperty__moz_script_level, intValue);
+          aDecls.SetIntValue(eCSSProperty_math_depth, intValue);
         } else {
-          aDecls.SetNumberValue(eCSSProperty__moz_script_level, intValue);
+          aDecls.SetNumberValue(eCSSProperty_math_depth, intValue);
         }
       } else {
         ReportParseErrorNoTag(str, nsGkAtoms::scriptlevel_, aDecls.Document());
