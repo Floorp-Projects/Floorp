@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1318988
 
       window.addEventListener("message", listener);
 
-      ifrr.setAttribute('allow', 'payment');
+      ifrr.setAttribute('allowpaymentrequest', 'true');
       ifrr.src = "https://test1.example.com:443/tests/dom/payments/test/simple_payment_request.html";
       document.body.appendChild(ifrr);
 
@@ -85,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1318988
 
       ifrr.addEventListener('load', function() {
         if (i === 0) {
-          ifrr.removeAttribute("allow");
+          ifrr.removeAttribute("allowpaymentrequest");
         }
         ifrr.contentWindow.postMessage('new PaymentRequest', '*');
       });
@@ -94,18 +94,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1318988
         i++;
         if (i === 1) {
           is(event.data, "successful",
-             "Expected successful when running with allow=payment attribute.");
+             "Expected successful when running with allowpayment attribute.");
           ifrr.contentWindow.location.href = ifrr.src;
         } else {
           is(event.data, "SecurityError",
-             "Expected SecurityError when running without allow=payment attribute.");
+             "Expected SecurityError when running without allowpayment attribute.");
           window.removeEventListener("message", listener);
           resolve();
         }
       }
       window.addEventListener("message", listener);
 
-      ifrr.setAttribute("allow", "payment");
+      ifrr.setAttribute('allowpaymentrequest', "true");
       ifrr.src = "https://test1.example.com:443/tests/dom/payments/test/echo_payment_request.html";
 
       document.body.appendChild(ifrr);
@@ -117,14 +117,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1318988
       var ifrr = document.createElement('iframe');
 
       let listener = function(event) {
-        if (ifrr.allow =! 'payment') {
+        if (!ifrr.hasAttribute('allowpaymentrequest')) {
           is(event.data, "SecurityError",
-            "Expected 'SecurityError' without allow=payment in nested iframe");
-          ifrr.setAttribute('allow', "payment");
+            "Expected 'SecurityError' without allowpaymentrequest in nested iframe");
+          ifrr.setAttribute('allowpaymentrequest', true);
           ifrr.contentWindow.location.href = ifrr.src;
         } else {
           is(event.data, "successful",
-             "Expected 'successful' with allow='payment' in nested iframe");
+             "Expected 'successful' with allowpaymentrequest in nested iframe");
           window.removeEventListener("message", listener);
           resolve();
         }
