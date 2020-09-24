@@ -35,8 +35,7 @@ class SessionHistoryInfo {
   SessionHistoryInfo() = default;
   SessionHistoryInfo(const SessionHistoryInfo& aInfo) = default;
   SessionHistoryInfo(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
-  SessionHistoryInfo(const SessionHistoryInfo& aSharedStateFrom, nsIURI* aURI,
-                     const nsID& aDocShellID);
+  SessionHistoryInfo(const SessionHistoryInfo& aSharedStateFrom, nsIURI* aURI);
   SessionHistoryInfo(nsIURI* aURI, const nsID& aDocShellID,
                      nsIPrincipal* aTriggeringPrincipal,
                      nsIContentSecurityPolicy* aCsp,

@@ -45,8 +45,7 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
 }
 
 SessionHistoryInfo::SessionHistoryInfo(
-    const SessionHistoryInfo& aSharedStateFrom, nsIURI* aURI,
-    const nsID& aDocShellID)
+    const SessionHistoryInfo& aSharedStateFrom, nsIURI* aURI)
     : mURI(aURI), mSharedState(aSharedStateFrom.mSharedState) {
   MaybeUpdateTitleFromURI();
 }

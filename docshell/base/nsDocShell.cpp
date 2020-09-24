@@ -1146,13 +1146,13 @@ void nsDocShell::FirePageHideNotificationInternal(
       if (rootSH) {
         MOZ_LOG(
             gSHLog, LogLevel::Debug,
-            ("document %p unloading, remove dynamic subframe entries", this));
+            ("nsDocShell %p unloading, remove dynamic subframe entries", this));
         if (StaticPrefs::fission_sessionHistoryInParent()) {
           if (mActiveEntry) {
             mBrowsingContext->RemoveDynEntriesFromActiveSessionHistoryEntry();
           }
           MOZ_LOG(gSHLog, LogLevel::Debug,
-                  ("document %p unloading, no active entries", this));
+                  ("nsDocShell %p unloading, no active entries", this));
         } else if (mOSHE) {
           int32_t index = rootSH->Index();
           rootSH->LegacySHistory()->RemoveDynEntries(index, mOSHE);
@@ -1409,10 +1409,10 @@ bool nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
     if (mLoadingEntry) {
       isSubFrame = mLoadingEntry->mInfo.IsSubFrame();
       MOZ_LOG(gSHLog, LogLevel::Debug,
-              ("document %p SetCurrentURI, isSubFrame=%d", this, isSubFrame));
+              ("nsDocShell %p SetCurrentURI, isSubFrame=%d", this, isSubFrame));
     }
     MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("document %p SetCurrentURI, no mLoadingEntry", this));
+            ("nsDocShell %p SetCurrentURI, no mLoadingEntry", this));
   } else {
     if (mLSHE) {
       isSubFrame = mLSHE->GetIsSubFrame();
@@ -4018,7 +4018,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
   // reload
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   if (StaticPrefs::fission_sessionHistoryInParent()) {
-    MOZ_LOG(gSHLog, LogLevel::Debug, ("document %p Reload", this));
+    MOZ_LOG(gSHLog, LogLevel::Debug, ("nsDocShell %p Reload", this));
     bool forceReload = IsForceReloadType(loadType);
     if (!XRE_IsParentProcess()) {
       RefPtr<nsDocShell> docShell(this);
@@ -4044,12 +4044,12 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
             if (loadState.isSome()) {
               MOZ_LOG(
                   gSHLog, LogLevel::Debug,
-                  ("document %p Reload - LoadHistoryEntry", docShell.get()));
+                  ("nsDocShell %p Reload - LoadHistoryEntry", docShell.get()));
               docShell->LoadHistoryEntry(loadState.ref(), loadType,
                                          reloadingActiveEntry.ref());
             } else {
               MOZ_LOG(gSHLog, LogLevel::Debug,
-                      ("document %p ReloadDocument", docShell.get()));
+                      ("nsDocShell %p ReloadDocument", docShell.get()));
               ReloadDocument(docShell, doc, loadType, browsingContext,
                              currentURI, referrerInfo);
             }
@@ -4067,12 +4067,12 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
       if (canReload) {
         if (loadState.isSome()) {
           MOZ_LOG(gSHLog, LogLevel::Debug,
-                  ("document %p Reload - LoadHistoryEntry", this));
+                  ("nsDocShell %p Reload - LoadHistoryEntry", this));
           LoadHistoryEntry(loadState.ref(), loadType,
                            reloadingActiveEntry.ref());
         } else {
           MOZ_LOG(gSHLog, LogLevel::Debug,
-                  ("document %p ReloadDocument", this));
+                  ("nsDocShell %p ReloadDocument", this));
           ReloadDocument(this, GetDocument(), loadType, mBrowsingContext,
                          mCurrentURI, mReferrerInfo);
         }
@@ -8199,7 +8199,7 @@ void nsDocShell::SetDocCurrentStateObj(nsISHEntry* aShEntry,
       scContainer = aInfo->GetStateData();
     }
     MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("document %p SetCurrentDocState %p", this, scContainer.get()));
+            ("nsDocShell %p SetCurrentDocState %p", this, scContainer.get()));
   } else {
     if (aShEntry) {
       scContainer = aShEntry->GetStateData();
@@ -8627,7 +8627,7 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
           aLoadState->GetLoadingSessionHistoryInfo()->mInfo);
     }
     MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("document %p NavBetweenSameDoc=%d", this,
+            ("nsDocShell %p NavBetweenSameDoc=%d", this,
              aState.mHistoryNavBetweenSameDoc));
   } else {
     if (mOSHE && aLoadState->LoadIsFromSessionHistory()) {
@@ -8672,7 +8672,7 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
          aState.mSameExceptHashes && aState.mNewURIHasRef);
 
     MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("document %p NavBetweenSameDoc=%d is same doc = %d", this,
+            ("nsDocShell %p NavBetweenSameDoc=%d is same doc = %d", this,
              aState.mHistoryNavBetweenSameDoc, doSameDocumentNavigation));
     return doSameDocumentNavigation;
   }
@@ -11034,7 +11034,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
 
     if (StaticPrefs::fission_sessionHistoryInParent()) {
       MOZ_LOG(gSHLog, LogLevel::Debug,
-              ("document %p UpdateActiveEntry replace", this));
+              ("nsDocShell %p UpdateActiveEntry (not replacing)", this));
       nsString title(mActiveEntry->GetTitle());
       UpdateActiveEntry(false,
                         /* aPreviousScrollPos = */ Some(scrollPos), aNewURI,
@@ -11074,7 +11074,10 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     }
   } else if (StaticPrefs::fission_sessionHistoryInParent()) {
     MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("document %p UpdateActiveEntry non-replace", this));
+            ("nsDocShell %p UpdateActiveEntry (replacing)", this));
+    // Setting the resultPrincipalURI to nullptr is fine here: it will cause
+    // NS_GetFinalChannelURI to use the originalURI as the URI, which is aNewURI
+    // in our case.  We could also set it to aNewURI, with the same result.
     UpdateActiveEntry(
         true, /* aPreviousScrollPos = */ Nothing(), aNewURI, aNewURI,
         aDocument->NodePrincipal(), aDocument->GetCsp(), u""_ns,
@@ -11083,7 +11086,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     // Step 3.
     newSHEntry = mOSHE;
 
-    MOZ_LOG(gSHLog, LogLevel::Debug, ("document %p step 3", this));
+    MOZ_LOG(gSHLog, LogLevel::Debug, ("nsDocShell %p step 3", this));
     // Since we're not changing which page we have loaded, pass
     // true for aCloneChildren.
     if (!newSHEntry) {
@@ -11504,25 +11507,36 @@ void nsDocShell::UpdateActiveEntry(
              "This code only deals with pushState");
   MOZ_ASSERT_IF(aPreviousScrollPos.isSome(), !aReplace);
 
-  if (!aReplace || !mActiveEntry) {
-    MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("Creating an active entry on nsDocShell %p to %s", this,
-             aURI->GetSpecOrDefault().get()));
-    if (mActiveEntry) {
-      // Link this entry to the previous active entry.
-      mActiveEntry =
-          MakeUnique<SessionHistoryInfo>(*mActiveEntry, aURI, HistoryID());
-    } else {
-      mActiveEntry = MakeUnique<SessionHistoryInfo>(
-          aURI, HistoryID(), aTriggeringPrincipal, aCsp, mContentTypeHint);
-    }
-    mActiveEntry->SetTitle(aTitle);
-    mActiveEntry->SetStateData(static_cast<nsStructuredCloneContainer*>(aData));
-    mActiveEntry->SetURIWasModified(aURIWasModified);
-    if (aScrollRestorationIsManual.isSome()) {
-      mActiveEntry->SetScrollRestorationIsManual(
-          aScrollRestorationIsManual.value());
-    }
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          ("Creating an active entry on nsDocShell %p to %s", this,
+           aURI->GetSpecOrDefault().get()));
+
+  // Even if we're replacing an existing entry we create new a
+  // SessionHistoryInfo. In the parent process we'll keep the existing
+  // SessionHistoryEntry, but just replace its SessionHistoryInfo, that way the
+  // entry keeps identity but its data is replaced.
+  bool replace = aReplace && mActiveEntry;
+  if (mActiveEntry) {
+    // Link this entry to the previous active entry.
+    mActiveEntry = MakeUnique<SessionHistoryInfo>(*mActiveEntry, aURI);
+    // FIXME Assert that mTriggeringPrincipal/mContentType/mDocShellID/
+    //       mDynamicallyCreated are correct?
+  } else {
+    mActiveEntry = MakeUnique<SessionHistoryInfo>(
+        aURI, HistoryID(), aTriggeringPrincipal, aCsp, mContentTypeHint);
+  }
+  mActiveEntry->SetOriginalURI(aOriginalURI);
+  mActiveEntry->SetTitle(aTitle);
+  mActiveEntry->SetStateData(static_cast<nsStructuredCloneContainer*>(aData));
+  mActiveEntry->SetURIWasModified(aURIWasModified);
+  if (aScrollRestorationIsManual.isSome()) {
+    mActiveEntry->SetScrollRestorationIsManual(
+        aScrollRestorationIsManual.value());
+  }
+
+  if (replace) {
+    mBrowsingContext->ReplaceActiveSessionHistoryEntry(mActiveEntry.get());
+  } else {
     if (mBrowsingContext->IsTop()) {
       mBrowsingContext->SetActiveSessionHistoryEntryForTop(
           aPreviousScrollPos, mActiveEntry.get(), mLoadType);
@@ -11533,17 +11547,6 @@ void nsDocShell::UpdateActiveEntry(
       mBrowsingContext->SetActiveSessionHistoryEntryForFrame(
           aPreviousScrollPos, mActiveEntry.get(), mChildOffset);
     }
-  } else {
-    mActiveEntry->SetResultPrincipalURI(nullptr);
-    mActiveEntry->SetLoadReplace(false);
-    mActiveEntry->SetStateData(static_cast<nsStructuredCloneContainer*>(aData));
-    mActiveEntry->SetPostData(nullptr);
-    mActiveEntry->SetURIWasModified(aURIWasModified);
-    if (aScrollRestorationIsManual.isSome()) {
-      mActiveEntry->SetScrollRestorationIsManual(
-          aScrollRestorationIsManual.value());
-    }
-    mBrowsingContext->ReplaceActiveSessionHistoryEntry(mActiveEntry.get());
   }
 }
 
