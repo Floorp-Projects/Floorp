@@ -60,7 +60,7 @@ bool nsWinUtils::MaybeStartWindowEmulation() {
   if (IPCAccessibilityActive()) return false;
 
   if (Compatibility::IsJAWS() || Compatibility::IsWE() ||
-      Compatibility::IsDolphin()) {
+      Compatibility::IsDolphin() || Compatibility::IsVisperoShared()) {
     RegisterNativeWindow(kClassNameTabContent);
     sWindowEmulationStarted = true;
     return true;
