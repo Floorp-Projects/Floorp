@@ -358,7 +358,21 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
   static StaticRefPtr<MediaManager> sSingleton;
   static StaticMutex sSingletonMutex;
 
-  nsTArray<nsString> mDeviceIDs;
+  struct nsStringHasher {
+    using Key = nsString;
+    using Lookup = nsString;
+
+    static HashNumber hash(const Lookup& aLookup) {
+      return HashString(aLookup.get());
+    }
+
+    static bool match(const Key& aKey, const Lookup& aLookup) {
+      return aKey == aLookup;
+    }
+  };
+
+  using DeviceIdSet = HashSet<nsString, nsStringHasher, InfallibleAllocPolicy>;
+  DeviceIdSet mDeviceIDs;
 
   // Connect/Disconnect on media thread only
   MediaEventListener mDeviceListChangeListener;
