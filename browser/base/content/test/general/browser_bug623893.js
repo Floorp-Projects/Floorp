@@ -22,9 +22,8 @@ add_task(async function test() {
 async function promiseGetIndex(browser) {
   if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
     return SpecialPowers.spawn(browser, [], function() {
-      let shistory = docShell
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsISHistory);
+      let shistory =
+        docShell.browsingContext.childSessionHistory.legacySHistory;
       return shistory.index;
     });
   }
