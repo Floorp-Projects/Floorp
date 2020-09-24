@@ -17,66 +17,106 @@ from taskgraph.util.backstop import (
     BACKSTOP_PUSH_INTERVAL,
     BACKSTOP_TIME_INTERVAL,
 )
-from taskgraph.util.taskcluster import get_index_url
+from taskgraph.util.taskcluster import (
+    get_index_url,
+)
+
+LAST_BACKSTOP_ID = 0
+LAST_BACKSTOP_PUSHDATE = mktime(datetime.now().timetuple())
+DEFAULT_RESPONSES = {
+    "artifact": {
+        "status": 200,
+        "body": dedent("""
+            pushdate: {}
+        """.format(LAST_BACKSTOP_PUSHDATE))
+    },
+}
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def params():
     return {
         'branch': 'integration/autoland',
         'head_repository': 'https://hg.mozilla.org/integration/autoland',
         'head_rev': 'abcdef',
         'project': 'autoland',
-        'pushdate': mktime(datetime.now().timetuple()),
+        'pushdate': LAST_BACKSTOP_PUSHDATE + 1,
+        'pushlog_id': LAST_BACKSTOP_ID + 1,
     }
 
 
-def test_is_backstop(responses, params):
-    url = get_index_url(
-        BACKSTOP_INDEX.format(project=params["project"])
-    ) + "/artifacts/public/parameters.yml"
+@pytest.mark.parametrize(
+    "response_args,extra_params,expected",
+    (
+        pytest.param(
+            {
+                "artifact": {"status": 404},
+            },
+            {"pushlog_id": 1},
+            True,
+            id="no previous backstop",
+        ),
+        pytest.param(
+            DEFAULT_RESPONSES,
+            {
+                "pushlog_id": LAST_BACKSTOP_ID + 1,
+                "pushdate": LAST_BACKSTOP_PUSHDATE + 1,
+            },
+            False,
+            id="not a backstop",
+        ),
+        pytest.param(
+            {},
+            {
+                "pushlog_id": BACKSTOP_PUSH_INTERVAL,
+            },
+            True,
+            id="backstop interval",
+        ),
+        pytest.param(
+            DEFAULT_RESPONSES,
+            {
+                "pushdate": LAST_BACKSTOP_PUSHDATE + (BACKSTOP_TIME_INTERVAL * 60),
+            },
+            True,
+            id="time elapsed",
+        ),
+        pytest.param(
+            {},
+            {
+                "project": "try",
+                "pushlog_id": BACKSTOP_PUSH_INTERVAL,
+            },
+            False,
+            id="try not a backstop",
+        ),
+        pytest.param(
+            {},
+            {
+                "project": "mozilla-central",
+            },
+            True,
+            id="release branches always a backstop",
+        ),
+    ),
+)
+def test_is_backstop(responses, params, response_args, extra_params, expected):
+    index = BACKSTOP_INDEX.format(project=params["project"])
+    urls = {
+        "artifact": get_index_url(index) + "/artifacts/public/parameters.yml",
+    }
 
-    responses.add(
-        responses.GET,
-        url,
-        status=404,
-    )
+    for key in ("index", "status", "artifact"):
+        if key in response_args:
+            print(urls[key])
+            responses.add(
+                responses.GET,
+                urls[key],
+                **response_args[key]
+            )
 
-    # If there's no previous push date, run tasks
-    params["pushlog_id"] = 1
-    assert is_backstop(params)
-
-    responses.replace(
-        responses.GET,
-        url,
-        body=dedent("""
-        pushdate: {pushdate}
-        """.format(pushdate=params["pushdate"])),
-        status=200,
-    )
-
-    # Only multiples of push interval schedule tasks.
-    params['pushlog_id'] = BACKSTOP_PUSH_INTERVAL - 1
-    params['pushdate'] += 1
-    assert not is_backstop(params)
-
-    params['pushlog_id'] = BACKSTOP_PUSH_INTERVAL
-    params['pushdate'] += 1
-    assert is_backstop(params)
-
-    # Tasks are also scheduled if the time interval has passed.
-    params['pushlog_id'] = BACKSTOP_PUSH_INTERVAL + 1
-    params['pushdate'] += BACKSTOP_TIME_INTERVAL * 60
-    assert is_backstop(params)
-
-    # Try is never considered a backstop.
-    params['project'] = 'try'
-    assert not is_backstop(params)
-
-    # Non autoland branches are always considered a backstop.
-    params['project'] = 'mozilla-central'
-    params['pushdate'] -= BACKSTOP_TIME_INTERVAL * 60
-    assert is_backstop(params)
+    params.update(extra_params)
+    assert is_backstop(params) is expected
 
 
 if __name__ == '__main__':
