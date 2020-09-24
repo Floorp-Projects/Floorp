@@ -220,16 +220,23 @@ AccessibleHandler::MaybeUpdateCachedData() {
     return E_POINTER;
   }
 
-  // Clean up the old data.
-  CleanupDynamicIA2Data(mCachedData.mDynamicData,
-                        mCachedDynamicDataMarshaledByCom);
-  HRESULT hr =
-      mCachedData.mGeckoBackChannel->Refresh(&mCachedData.mDynamicData);
+  // While we're making the outgoing COM call below, an incoming COM call can
+  // be handled which calls ReadHandlerPayload or re-enters this function.
+  // Therefore, we mustn't update the cached data directly lest it be mutated
+  // elsewhere before the outgoing COM call returns and cause corruption or
+  // memory leaks. Instead, pass a temporary struct and update the cached data
+  // only after this call completes.
+  DynamicIA2Data newData;
+  HRESULT hr = mCachedData.mGeckoBackChannel->Refresh(&newData);
   if (SUCCEEDED(hr)) {
+    // Clean up the old data.
+    CleanupDynamicIA2Data(mCachedData.mDynamicData,
+                          mCachedDynamicDataMarshaledByCom);
+    mCachedData.mDynamicData = newData;
+    mCachedDynamicDataMarshaledByCom = true;
     // We just updated the cache, so update this object's cache generation
     // so we only update the cache again after the next change.
     mCacheGen = gen;
-    mCachedDynamicDataMarshaledByCom = true;
   }
   return hr;
 }
