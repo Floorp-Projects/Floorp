@@ -467,10 +467,10 @@
     "dom/media/mediasession/test/mochitest.ini": 12.29,
     "dom/media/mediasource/test/mochitest.ini": 179.03,
     "dom/media/test/mochitest.ini": 1466.05,
+    "dom/media/tests/mochitest/identity/mochitest.ini": 26.38,
+    "dom/media/tests/mochitest/mochitest.ini": 723.27,
     "dom/media/webaudio/test/blink/mochitest.ini": 3.24,
     "dom/media/webaudio/test/mochitest.ini": 285.46,
-    "dom/media/webrtc/tests/mochitests/identity/mochitest.ini": 26.38,
-    "dom/media/webrtc/tests/mochitests/mochitest.ini": 723.27,
     "dom/media/webspeech/recognition/test/mochitest.ini": 50.98,
     "dom/media/webspeech/synth/test/mochitest.ini": 5.86,
     "dom/media/webspeech/synth/test/startup/mochitest.ini": 1.23
