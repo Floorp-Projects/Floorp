@@ -11,6 +11,10 @@ import androidx.fragment.app.FragmentManager
 
 /**
  * Manages strict mode settings for the application.
+ *
+ * Due to the static dependencies in this class, it's getting hard to test: if this class takes any
+ * many more static dependencies, consider switching it, and other code that uses [StrictMode] like
+ * [StrictMode.ThreadPolicy].resetPoliciesAfter, to a class with dependency injection.
  */
 object StrictModeManager {
 
@@ -19,6 +23,9 @@ object StrictModeManager {
      * @param setPenaltyDeath boolean value to decide setting the penaltyDeath as a penalty.
      */
     fun enableStrictMode(setPenaltyDeath: Boolean) {
+        // The expression in this if is duplicated in StrictMode.ThreadPolicy.resetPoliciesAfter
+        // because the tests break in unexpected ways if the value is shared as a constant in this
+        // class. It wasn't worth the time to address it.
         if (Config.channel.isDebug) {
             val threadPolicy = StrictMode.ThreadPolicy.Builder()
                 .detectAll()

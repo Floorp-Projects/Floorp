@@ -17,6 +17,9 @@ import org.mozilla.fenix.Config
 inline fun <R> StrictMode.ThreadPolicy.resetPoliciesAfter(functionBlock: () -> R): R {
     // Calling resetAfter takes 1-2ms (unknown device) so we only execute it if StrictMode can
     // actually be enabled. https://github.com/mozilla-mobile/fenix/issues/11617
+    //
+    // The expression in this if is duplicated in StrictModeManager.enableStrictMode: see that method
+    // for details.
     return if (Config.channel.isDebug) {
         resetAfter { functionBlock() }
     } else {
