@@ -11217,22 +11217,33 @@ void PresShell::ResetVisualViewportSize() {
 
 bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
                                         const nsPoint& aPrevLayoutScrollPos) {
+  nsPoint newOffset = aScrollOffset;
+  nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable();
+  if (rootScrollFrame) {
+    // See the comment in nsHTMLScrollFrame::Reflow above the call to
+    // SetVisualViewportOffset for why we need to do this.
+    nsRect scrollRange = rootScrollFrame->GetScrollRangeForUserInputEvents();
+    if (!scrollRange.Contains(newOffset)) {
+      newOffset.x = std::min(newOffset.x, scrollRange.XMost());
+      newOffset.x = std::max(newOffset.x, scrollRange.x);
+      newOffset.y = std::min(newOffset.y, scrollRange.YMost());
+      newOffset.y = std::max(newOffset.y, scrollRange.y);
+    }
+  }
+
   nsPoint prevOffset = GetVisualViewportOffset();
-  if (prevOffset == aScrollOffset) {
+  if (prevOffset == newOffset) {
     return false;
   }
 
-  mVisualViewportOffset = Some(aScrollOffset);
+  mVisualViewportOffset = Some(newOffset);
 
   if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
     window->VisualViewport()->PostScrollEvent(prevOffset, aPrevLayoutScrollPos);
   }
 
-  if (IsVisualViewportSizeSet()) {
-    if (nsIScrollableFrame* rootScrollFrame =
-            GetRootScrollFrameAsScrollable()) {
-      rootScrollFrame->Anchor()->UserScrolled();
-    }
+  if (IsVisualViewportSizeSet() && rootScrollFrame) {
+    rootScrollFrame->Anchor()->UserScrolled();
   }
 
   if (gfxPlatform::UseDesktopZoomingScrollbars()) {
