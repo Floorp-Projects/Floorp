@@ -153,6 +153,7 @@ avoid-blacklist-and-whitelist:
         - dom/security/test/csp/test_worker_src.html
         - dom/security/test/unit/test_isOriginPotentiallyTrustworthy.js
         - dom/serviceworkers/test/test_error_reporting.html
+        - dom/serviceworkers/test/test_openWindow.html
         - dom/smil/SMILTimeValueSpec.cpp
         - dom/smil/SMILTimeValueSpec.h
         - dom/tests/mochitest/dom-level0/idn_child.html
