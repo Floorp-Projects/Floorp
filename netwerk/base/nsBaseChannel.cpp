@@ -22,7 +22,6 @@
 #include "LoadInfo.h"
 #include "nsServiceManagerUtils.h"
 #include "nsRedirectHistoryEntry.h"
-#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
 
 using namespace mozilla;
@@ -701,8 +700,6 @@ nsBaseChannel::AsyncOpen(nsIStreamListener* aListener) {
     mCallbacks = nullptr;
     return rv;
   }
-
-  AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(this);
 
   // Store the listener and context early so that OpenContentStream and the
   // stream's AsyncWait method (called by AsyncRead) can have access to them
