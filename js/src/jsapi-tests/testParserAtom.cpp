@@ -20,20 +20,22 @@ BEGIN_TEST(testParserAtom_empty) {
 
   ParserAtomsTable atomTable(cx->runtime());
 
-  constexpr size_t len = 0;
-
   const char ascii[] = {};
   const JS::Latin1Char latin1[] = {};
   const mozilla::Utf8Unit utf8[] = {};
   const char16_t char16[] = {};
 
+  const uint8_t bytes[] = {};
+  const js::LittleEndianChars leTwoByte(bytes);
+
   // Check that the well-known empty atom matches for different entry points.
   const ParserAtom* ref = cx->parserNames().empty;
   CHECK(ref);
-  CHECK(atomTable.internAscii(cx, ascii, len).unwrap() == ref);
-  CHECK(atomTable.internLatin1(cx, latin1, len).unwrap() == ref);
-  CHECK(atomTable.internUtf8(cx, utf8, len).unwrap() == ref);
-  CHECK(atomTable.internChar16(cx, char16, len).unwrap() == ref);
+  CHECK(atomTable.internAscii(cx, ascii, 0).unwrap() == ref);
+  CHECK(atomTable.internLatin1(cx, latin1, 0).unwrap() == ref);
+  CHECK(atomTable.internUtf8(cx, utf8, 0).unwrap() == ref);
+  CHECK(atomTable.internChar16(cx, char16, 0).unwrap() == ref);
+  CHECK(atomTable.internChar16LE(cx, leTwoByte, 0).unwrap() == ref);
 
   // Check concatenation works on empty atoms.
   const ParserAtom* concat[] = {
@@ -60,12 +62,16 @@ BEGIN_TEST(testParserAtom_tiny1) {
   const mozilla::Utf8Unit utf8[] = {mozilla::Utf8Unit('a')};
   char16_t char16[] = {'a'};
 
+  const uint8_t bytes[] = {'a', 0};
+  const js::LittleEndianChars leTwoByte(bytes);
+
   const ParserAtom* ref = cx->parserNames().lookupTiny(&a, 1);
   CHECK(ref);
   CHECK(atomTable.internAscii(cx, ascii, 1).unwrap() == ref);
   CHECK(atomTable.internLatin1(cx, latin1, 1).unwrap() == ref);
   CHECK(atomTable.internUtf8(cx, utf8, 1).unwrap() == ref);
   CHECK(atomTable.internChar16(cx, char16, 1).unwrap() == ref);
+  CHECK(atomTable.internChar16LE(cx, leTwoByte, 1).unwrap() == ref);
 
   const ParserAtom* concat[] = {
       ref,
@@ -96,12 +102,16 @@ BEGIN_TEST(testParserAtom_tiny2) {
                                     mozilla::Utf8Unit('0')};
   char16_t char16[] = {'a', '0'};
 
+  const uint8_t bytes[] = {'a', 0, '0', 0};
+  const js::LittleEndianChars leTwoByte(bytes);
+
   const ParserAtom* ref = cx->parserNames().lookupTiny(ascii, 2);
   CHECK(ref);
   CHECK(atomTable.internAscii(cx, ascii, 2).unwrap() == ref);
   CHECK(atomTable.internLatin1(cx, latin1, 2).unwrap() == ref);
   CHECK(atomTable.internUtf8(cx, utf8, 2).unwrap() == ref);
   CHECK(atomTable.internChar16(cx, char16, 2).unwrap() == ref);
+  CHECK(atomTable.internChar16LE(cx, leTwoByte, 2).unwrap() == ref);
 
   const ParserAtom* concat[] = {
       cx->parserNames().lookupTiny(ascii + 0, 1),
