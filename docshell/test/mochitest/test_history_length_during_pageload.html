@@ -30,10 +30,7 @@
     }
 
     async function runTests() {
-      await SpecialPowers.pushPrefEnv({set: [["fission.sessionHistoryInParent", false]]});
-      await runTest(true);
-      await SpecialPowers.pushPrefEnv({set: [["fission.sessionHistoryInParent", true]]});
-      await runTest(false);
+      await runTest(!SpecialPowers.getBoolPref("fission.sessionHistoryInParent"));
       SimpleTest.finish();
     }
   </script>
