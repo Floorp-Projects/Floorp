@@ -535,4 +535,11 @@ MFBT_API void SetPreXULSkeletonUIEnabled(bool value) {
   sPreXULSkeletonUIEnabled = true;
 }
 
+MFBT_API void PollPreXULSkeletonUIEvents() {
+  if (sPreXULSkeletonUIEnabled && sPreXULSkeletonUIWindow) {
+    MSG outMsg = {};
+    PeekMessageW(&outMsg, sPreXULSkeletonUIWindow, 0, 0, 0);
+  }
+}
+
 }  // namespace mozilla

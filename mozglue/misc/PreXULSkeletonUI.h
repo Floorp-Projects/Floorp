@@ -19,6 +19,7 @@ MFBT_API void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
                                             double cssToDevPixelScaling);
 MFBT_API bool GetPreXULSkeletonUIEnabled();
 MFBT_API void SetPreXULSkeletonUIEnabled(bool value);
+MFBT_API void PollPreXULSkeletonUIEvents();
 
 }  // namespace mozilla
 
