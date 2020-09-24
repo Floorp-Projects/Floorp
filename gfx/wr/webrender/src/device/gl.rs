@@ -2396,9 +2396,6 @@ impl Device {
 
     /// Notifies the device that the contents of a render target are no longer
     /// needed.
-    ///
-    /// FIXME(bholley): We could/should invalidate the depth targets earlier
-    /// than the color targets, i.e. immediately after each pass.
     pub fn invalidate_render_target(&mut self, texture: &Texture) {
         let (fbos, attachments) = if texture.supports_depth() {
             (&texture.fbos_with_depth,
@@ -2416,6 +2413,16 @@ impl Device {
             self.gl.invalidate_framebuffer(gl::FRAMEBUFFER, attachments);
         }
         self.bind_external_draw_target(original_bound_fbo);
+    }
+
+    /// Notifies the device that the contents of the current framebuffer's depth
+    /// attachment is no longer needed. Unlike invalidate_render_target, this can
+    /// be called even when the contents of the colour attachment is still required.
+    /// This should be called before unbinding the framebuffer at the end of a pass,
+    /// to allow tiled GPUs to avoid writing the contents back to memory.
+    pub fn invalidate_depth_target(&mut self) {
+        assert!(self.depth_available);
+        self.gl.invalidate_framebuffer(gl::DRAW_FRAMEBUFFER, &[gl::DEPTH_ATTACHMENT]);
     }
 
     /// Notifies the device that a render target is about to be reused.
