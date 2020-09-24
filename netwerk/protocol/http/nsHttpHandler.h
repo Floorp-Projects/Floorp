@@ -507,6 +507,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   bool UseHTTPSRRAsAltSvcEnabled() const;
 
+  bool EchConfigEnabled() const;
+
  private:
   nsHttpHandler();
 
