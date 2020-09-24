@@ -3407,18 +3407,29 @@ EditorDOMRange WSRunScanner::GetRangeForDeletingBlockElementBoundaries(
 
   EditorDOMRange range;
   // Include trailing invisible white-spaces in aLeftBlockElement.
-  TextFragmentData textFragmentDataAtEndOfLestBlockElement(
+  TextFragmentData textFragmentDataAtEndOfLeftBlockElement(
       aPointContainingTheOtherBlock.GetContainer() == &aLeftBlockElement
           ? aPointContainingTheOtherBlock
           : EditorDOMPoint::AtEndOf(const_cast<Element&>(aLeftBlockElement)),
       editingHost);
-  const EditorDOMRange& trailingWhiteSpaceRange =
-      textFragmentDataAtEndOfLestBlockElement
-          .InvisibleTrailingWhiteSpaceRangeRef();
-  if (trailingWhiteSpaceRange.StartRef().IsSet()) {
-    range.SetStart(trailingWhiteSpaceRange.StartRef());
+  if (textFragmentDataAtEndOfLeftBlockElement.StartsFromBRElement() &&
+      !aHTMLEditor.IsVisibleBRElement(
+          textFragmentDataAtEndOfLeftBlockElement.StartReasonBRElementPtr())) {
+    // If the left block element ends with an invisible `<br>` element,
+    // it'll be deleted (and it means there is no invisible trailing
+    // white-spaces).  Therefore, the range should start from the invisible
+    // `<br>` element.
+    range.SetStart(EditorDOMPoint(
+        textFragmentDataAtEndOfLeftBlockElement.StartReasonBRElementPtr()));
   } else {
-    range.SetStart(textFragmentDataAtEndOfLestBlockElement.ScanStartRef());
+    const EditorDOMRange& trailingWhiteSpaceRange =
+        textFragmentDataAtEndOfLeftBlockElement
+            .InvisibleTrailingWhiteSpaceRangeRef();
+    if (trailingWhiteSpaceRange.StartRef().IsSet()) {
+      range.SetStart(trailingWhiteSpaceRange.StartRef());
+    } else {
+      range.SetStart(textFragmentDataAtEndOfLeftBlockElement.ScanStartRef());
+    }
   }
   // Include leading invisible white-spaces in aRightBlockElement.
   TextFragmentData textFragmentDataAtStartOfRightBlockElement(
