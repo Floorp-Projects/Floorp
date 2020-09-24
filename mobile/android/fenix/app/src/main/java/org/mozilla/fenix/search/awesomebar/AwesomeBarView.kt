@@ -130,7 +130,7 @@ class AwesomeBarView(
         syncedTabsStorageSuggestionProvider =
             SyncedTabsStorageSuggestionProvider(
                 components.backgroundServices.syncedTabsStorage,
-                components.useCases.tabsUseCases.addTab,
+                loadUrlUseCase,
                 components.core.icons,
                 DeviceIndicators(
                     getDrawable(activity, R.drawable.ic_search_results_device_desktop),
