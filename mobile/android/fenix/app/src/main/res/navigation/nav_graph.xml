@@ -132,11 +132,6 @@
             android:name="focusOnAddressBar"
             android:defaultValue="false"
             app:argType="boolean" />
-        <argument
-            android:name="session_to_delete"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
     </fragment>
 
     <dialog

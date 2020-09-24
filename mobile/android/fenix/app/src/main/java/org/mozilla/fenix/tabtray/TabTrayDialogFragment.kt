@@ -16,6 +16,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -41,8 +43,8 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -53,6 +55,7 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.normalSessionSize
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabtray.TabTrayDialogFragmentState.Mode
 import org.mozilla.fenix.utils.allowUndo
 
@@ -263,7 +266,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
         val session = sessionManager.findSessionById(sessionId) ?: return
 
         // Check if this is the last tab of this session type
-        val isLastOpenTab = store.state.tabs.filter { it.content.private == tab.content.private }.size == 1
+        val isLastOpenTab =
+            store.state.tabs.filter { it.content.private == tab.content.private }.size == 1
         if (isLastOpenTab) {
             dismissTabTrayAndNavigateHome(sessionId)
             return
@@ -282,7 +286,11 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
             snackbarMessage,
             getString(R.string.snackbar_deleted_undo),
             {
-                sessionManager.add(session, isSelected, engineSessionState = tab.engineState.engineSessionState)
+                sessionManager.add(
+                    session,
+                    isSelected,
+                    engineSessionState = tab.engineState.engineSessionState
+                )
                 _tabTrayView?.scrollToTab(session.id)
             },
             operation = { },
@@ -291,8 +299,13 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
         )
     }
 
+    private val homeViewModel: HomeScreenViewModel by activityViewModels {
+        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+    }
+
     private fun dismissTabTrayAndNavigateHome(sessionId: String) {
-        val directions = BrowserFragmentDirections.actionGlobalHome(sessionToDelete = sessionId)
+        homeViewModel.sessionToDelete = sessionId
+        val directions = NavGraphDirections.actionGlobalHome()
         findNavController().navigate(directions)
         dismissAllowingStateLoss()
     }

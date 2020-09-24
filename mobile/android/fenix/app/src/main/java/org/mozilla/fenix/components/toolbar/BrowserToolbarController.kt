@@ -11,7 +11,6 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -22,6 +21,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.HomeScreenViewModel
 
 /**
  * An interface that handles the view manipulation of the BrowserToolbar, triggered by the Interactor
@@ -43,7 +43,7 @@ class DefaultBrowserToolbarController(
     private val readerModeController: ReaderModeController,
     private val sessionManager: SessionManager,
     private val engineView: EngineView,
-    private val browserAnimator: BrowserAnimator,
+    private val homeViewModel: HomeScreenViewModel,
     private val customTabSession: Session?,
     private val onTabCounterClicked: () -> Unit,
     private val onCloseTab: (Session) -> Unit
@@ -110,10 +110,9 @@ class DefaultBrowserToolbarController(
                     if (sessionManager.sessionsOfType(it.private).count() == 1) {
                         // The tab tray always returns to normal mode so do that here too
                         activity.browsingModeManager.mode = BrowsingMode.Normal
+                        homeViewModel.sessionToDelete = it.id
                         navController.navigate(
-                            BrowserFragmentDirections.actionGlobalHome(
-                                sessionToDelete = it.id
-                            )
+                            BrowserFragmentDirections.actionGlobalHome()
                         )
                     } else {
                         onCloseTab.invoke(it)

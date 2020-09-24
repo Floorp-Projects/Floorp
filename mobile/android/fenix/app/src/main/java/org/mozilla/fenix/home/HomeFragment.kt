@@ -33,7 +33,6 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -118,8 +117,8 @@ class HomeFragment : Fragment() {
     private val args by navArgs<HomeFragmentArgs>()
     private lateinit var bundleArgs: Bundle
 
-    private val homeViewModel: HomeScreenViewModel by viewModels {
-        ViewModelProvider.AndroidViewModelFactory(requireActivity().application)
+    private val homeViewModel: HomeScreenViewModel by activityViewModels {
+        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
     }
 
     private val snackbarAnchorView: View?
@@ -452,13 +451,15 @@ class HomeFragment : Fragment() {
             updateTabCounter(it)
         }
 
-        bundleArgs.getString(SESSION_TO_DELETE)?.also {
+        homeViewModel.sessionToDelete?.also {
             if (it == ALL_NORMAL_TABS || it == ALL_PRIVATE_TABS) {
                 removeAllTabsAndShowSnackbar(it)
             } else {
                 removeTabAndShowSnackbar(it)
             }
         }
+
+        homeViewModel.sessionToDelete = null
 
         updateTabCounter(requireComponents.core.store.state)
 
@@ -989,7 +990,6 @@ class HomeFragment : Fragment() {
         const val ALL_PRIVATE_TABS = "all_private"
 
         private const val FOCUS_ON_ADDRESS_BAR = "focusOnAddressBar"
-        private const val SESSION_TO_DELETE = "session_to_delete"
         private const val ANIMATION_DELAY = 100L
 
         private const val NON_TAB_ITEM_NUM = 3

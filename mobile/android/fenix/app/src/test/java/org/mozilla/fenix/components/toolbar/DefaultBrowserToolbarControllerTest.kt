@@ -38,23 +38,39 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.home.HomeScreenViewModel
 
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultBrowserToolbarControllerTest {
 
-    @RelaxedMockK private lateinit var activity: HomeActivity
-    @MockK(relaxUnitFun = true) private lateinit var navController: NavController
-    @RelaxedMockK private lateinit var onTabCounterClicked: () -> Unit
-    @RelaxedMockK private lateinit var onCloseTab: (Session) -> Unit
-    @RelaxedMockK private lateinit var sessionManager: SessionManager
-    @MockK(relaxUnitFun = true) private lateinit var engineView: EngineView
-    @MockK private lateinit var currentSession: Session
-    @RelaxedMockK private lateinit var metrics: MetricController
-    @RelaxedMockK private lateinit var searchUseCases: SearchUseCases
-    @RelaxedMockK private lateinit var sessionUseCases: SessionUseCases
-    @RelaxedMockK private lateinit var browserAnimator: BrowserAnimator
-    @RelaxedMockK private lateinit var topSitesUseCase: TopSitesUseCases
-    @RelaxedMockK private lateinit var readerModeController: ReaderModeController
+    @RelaxedMockK
+    private lateinit var activity: HomeActivity
+    @MockK(relaxUnitFun = true)
+    private lateinit var navController: NavController
+    @RelaxedMockK
+    private lateinit var onTabCounterClicked: () -> Unit
+    @RelaxedMockK
+    private lateinit var onCloseTab: (Session) -> Unit
+    @RelaxedMockK
+    private lateinit var sessionManager: SessionManager
+    @MockK(relaxUnitFun = true)
+    private lateinit var engineView: EngineView
+    @MockK
+    private lateinit var currentSession: Session
+    @RelaxedMockK
+    private lateinit var metrics: MetricController
+    @RelaxedMockK
+    private lateinit var searchUseCases: SearchUseCases
+    @RelaxedMockK
+    private lateinit var sessionUseCases: SessionUseCases
+    @RelaxedMockK
+    private lateinit var browserAnimator: BrowserAnimator
+    @RelaxedMockK
+    private lateinit var topSitesUseCase: TopSitesUseCases
+    @RelaxedMockK
+    private lateinit var readerModeController: ReaderModeController
+    @RelaxedMockK
+    private lateinit var homeViewModel: HomeScreenViewModel
 
     @Before
     fun setUp() {
@@ -193,7 +209,10 @@ class DefaultBrowserToolbarControllerTest {
 
         val controller = createController()
         controller.handleTabCounterItemInteraction(item)
-        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome(sessionToDelete = "1")) }
+        verify {
+            homeViewModel.sessionToDelete = "1"
+            navController.navigate(BrowserFragmentDirections.actionGlobalHome())
+        }
         assertEquals(BrowsingMode.Normal, browsingModeManager.mode)
     }
 
@@ -262,7 +281,7 @@ class DefaultBrowserToolbarControllerTest {
         navController = navController,
         metrics = metrics,
         engineView = engineView,
-        browserAnimator = browserAnimator,
+        homeViewModel = homeViewModel,
         customTabSession = customTabSession,
         readerModeController = readerModeController,
         sessionManager = sessionManager,

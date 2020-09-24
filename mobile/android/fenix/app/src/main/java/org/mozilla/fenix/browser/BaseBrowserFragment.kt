@@ -19,6 +19,7 @@ import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
@@ -109,6 +110,7 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.allowUndo
@@ -205,6 +207,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
     }
 
+    private val homeViewModel: HomeScreenViewModel by activityViewModels {
+        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+    }
+
     @Suppress("ComplexMethod", "LongMethod")
     @CallSuper
     protected open fun initializeUI(view: View): Session? {
@@ -244,7 +250,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 readerModeController = readerMenuController,
                 sessionManager = requireComponents.core.sessionManager,
                 engineView = engineView,
-                browserAnimator = browserAnimator,
+                homeViewModel = homeViewModel,
                 customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
                 onTabCounterClicked = {
                     thumbnailsFeature.get()?.requestScreenshot()
@@ -811,7 +817,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     @CallSuper
     override fun onSessionSelected(session: Session) {
-        updateThemeForSession(session)
+        if (!this.isRemoving) {
+            updateThemeForSession(session)
+        }
         if (!browserInitialized) {
             // Initializing a new coroutineScope to avoid ConcurrentModificationException in ObserverRegistry
             // This will be removed when ObserverRegistry is deprecated by browser-state.
