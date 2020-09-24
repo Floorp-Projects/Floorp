@@ -84,20 +84,33 @@ async function testWithProperties(props, startTime) {
       ": testWithProperties: testing with " +
       JSON.stringify(props)
   );
-  let rolloutReadyPref = ROLLOUT_SELF_ENABLED_PREF;
+
+  // There are two different signals that the DoHController is ready, depending
+  // on the config being tested. If we're setting the TRR mode pref, we should
+  // expect the disable-heuristics pref to be set as the signal. Else, we can
+  // expect the self-enabled pref as the signal.
+  let rolloutReadyPromise;
   if (props.hasOwnProperty(TRR_MODE_PREF)) {
-    Services.prefs.setIntPref(TRR_MODE_PREF, props[TRR_MODE_PREF]);
-    if ([2, 3, 5].includes(props[TRR_MODE_PREF])) {
-      rolloutReadyPref = HEURISTICS_DISABLED_PREF;
+    if (
+      [2, 3, 5].includes(props[TRR_MODE_PREF]) &&
+      props.hasOwnProperty(ROLLOUT_ENABLED_PREF)
+    ) {
+      // Only initialize the promise if we're going to enable the rollout -
+      // otherwise we will never await it, which could cause a leak if it doesn't
+      // end up resolving.
+      rolloutReadyPromise = waitForPrefObserver(HEURISTICS_DISABLED_PREF);
     }
+    Services.prefs.setIntPref(TRR_MODE_PREF, props[TRR_MODE_PREF]);
   }
   if (props.hasOwnProperty(ROLLOUT_ENABLED_PREF)) {
-    let prefPromise = waitForPrefObserver(rolloutReadyPref);
+    if (!rolloutReadyPromise) {
+      rolloutReadyPromise = waitForPrefObserver(ROLLOUT_SELF_ENABLED_PREF);
+    }
     Services.prefs.setBoolPref(
       ROLLOUT_ENABLED_PREF,
       props[ROLLOUT_ENABLED_PREF]
     );
-    await prefPromise;
+    await rolloutReadyPromise;
   }
   if (props.hasOwnProperty(TRR_CUSTOM_URI_PREF)) {
     Services.prefs.setStringPref(
