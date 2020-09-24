@@ -54,17 +54,14 @@ var PocketPageAction = {
       this.pageAction = PageActions.addAction(
         new PageActions.Action({
           id,
-          title: "pocket-title",
+          panelFluentID: "page-action-pocket-panel",
+          urlbarFluentID: "urlbar-pocket-button",
           pinnedToUrlbar: true,
           wantsIframe: true,
           urlbarIDOverride: "pocket-button",
           anchorIDOverride: "pocket-button",
           _insertBeforeActionID: PageActions.ACTION_ID_PIN_TAB,
           _urlbarNodeInMarkup: true,
-          onBeforePlacedInWindow(window) {
-            let action = PageActions.actionForID("pocket");
-            window.BrowserPageActions.takeActionTitleFromPanel(action);
-          },
           onIframeShowing(iframe, panel) {
             Pocket.onShownInPhotonPageActionPanel(panel, iframe);
 
