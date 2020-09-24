@@ -275,7 +275,7 @@ static void GrantFileAccess(base::ProcessId aClientId, LPOPENFILENAME& aLpofn,
 
 template <>
 template <>
-BOOL GetSaveFileNameWFB::RunFunction(
+BROKER_DISABLE_CFGUARD BOOL GetSaveFileNameWFB::RunFunction(
     GetSaveFileNameWFB::FunctionType* aOrigFunction, base::ProcessId aClientId,
     LPOPENFILENAMEW& aLpofn) const {
   BOOL result = aOrigFunction(aLpofn);
@@ -299,7 +299,7 @@ typedef FileDlgFunctionBroker<ID_GetOpenFileNameW, decltype(GetOpenFileNameW)>
 
 template <>
 template <>
-BOOL GetOpenFileNameWFB::RunFunction(
+BROKER_DISABLE_CFGUARD BOOL GetOpenFileNameWFB::RunFunction(
     GetOpenFileNameWFB::FunctionType* aOrigFunction, base::ProcessId aClientId,
     LPOPENFILENAMEW& aLpofn) const {
   BOOL result = aOrigFunction(aLpofn);
@@ -1332,10 +1332,9 @@ struct CMWReqInfo::ShouldMarshal<2> {
 
 template <>
 template <>
-HANDLE CreateMutexWFB::RunFunction(CreateMutexWFB::FunctionType* aOrigFunction,
-                                   base::ProcessId aClientId,
-                                   LPSECURITY_ATTRIBUTES& aAttribs,
-                                   BOOL& aOwner, LPCWSTR& aName) const {
+BROKER_DISABLE_CFGUARD HANDLE CreateMutexWFB::RunFunction(
+    CreateMutexWFB::FunctionType* aOrigFunction, base::ProcessId aClientId,
+    LPSECURITY_ATTRIBUTES& aAttribs, BOOL& aOwner, LPCWSTR& aName) const {
   // Use CreateMutexW to get the camera mutex and DuplicateHandle to open it
   // for use in the child process.
   // Recall that aAttribs, aOwner and aName are all unmarshaled so they are
