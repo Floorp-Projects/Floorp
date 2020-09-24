@@ -1348,6 +1348,28 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
+  // Note that we need to do this after the
+  // UpdateVisualViewportSizeForPotentialScrollbarChange call above because that
+  // is what updates the visual viewport size and we need it to be up to date.
+  if (mHelper.mIsRoot && !mHelper.UsesOverlayScrollbars() &&
+      (didHaveHScrollbar != state.mShowHScrollbar ||
+       didHaveVScrollbar != state.mShowVScrollbar ||
+       didOnlyHScrollbar != mHelper.mOnlyNeedHScrollbarToScrollVVInsideLV ||
+       didOnlyVScrollbar != mHelper.mOnlyNeedVScrollbarToScrollVVInsideLV)) {
+    // Removing layout/classic scrollbars can make a previously valid vvoffset
+    // invalid. For example, if we are zoomed in on an overflow hidden document
+    // and then zoom back out, when apz reaches the initial resolution (ie 1.0)
+    // it won't know that we can remove the scrollbars, so the vvoffset can
+    // validly be upto the width/height of the scrollbars. After we reflow and
+    // remove the scrollbars the only valid vvoffset is (0,0). We could wait
+    // until we send the new frame metrics to apz and then have it reply with
+    // the new corrected vvoffset but having an inconsistent vvoffset causes
+    // problems so we re-set the vvoffset here, SetVisualViewportOffset will
+    // correct it.
+    PresShell()->SetVisualViewportOffset(GetVisualViewportOffset(),
+                                         GetScrollPosition());
+  }
+
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
   mHelper.UpdateSticky();
