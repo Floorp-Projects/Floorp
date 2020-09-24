@@ -191,6 +191,8 @@ def process_gn_config(gn_config, srcdir, config, output, non_unified_sources,
 
     project_relsrcdir = mozpath.relpath(srcdir, config.topsrcdir)
 
+    non_unified_sources = set([mozpath.normpath(s) for s in non_unified_sources])
+
     def target_info(fullname):
         path, name = target_fullname.split(':')
         # Stripping '//' gives us a path relative to the project root,
