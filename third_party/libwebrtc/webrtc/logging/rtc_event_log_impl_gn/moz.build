@@ -23,13 +23,13 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy.cc",
-    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/rtc_event_log.cc",
-    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/rtc_event_log_factory.cc"
+    "/third_party/libwebrtc/webrtc/logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy.cc",
+    "/third_party/libwebrtc/webrtc/logging/rtc_event_log/rtc_event_log.cc",
+    "/third_party/libwebrtc/webrtc/logging/rtc_event_log/rtc_event_log_factory.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

@@ -23,7 +23,7 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -59,8 +59,8 @@ if CONFIG["OS_TARGET"] == "DragonFly":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/device_info_linux.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/video_capture_linux.cc"
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/device_info_linux.cc",
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/video_capture_linux.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "FreeBSD":
@@ -71,8 +71,8 @@ if CONFIG["OS_TARGET"] == "FreeBSD":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/device_info_linux.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/video_capture_linux.cc"
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/device_info_linux.cc",
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/video_capture_linux.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "Linux":
@@ -88,8 +88,8 @@ if CONFIG["OS_TARGET"] == "Linux":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/device_info_linux.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/video_capture_linux.cc"
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/device_info_linux.cc",
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/video_capture_linux.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "NetBSD":
@@ -100,8 +100,8 @@ if CONFIG["OS_TARGET"] == "NetBSD":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/device_info_linux.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/video_capture_linux.cc"
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/device_info_linux.cc",
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/video_capture_linux.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -112,8 +112,8 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/device_info_linux.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/linux/video_capture_linux.cc"
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/device_info_linux.cc",
+        "/third_party/libwebrtc/webrtc/modules/video_capture/linux/video_capture_linux.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
@@ -147,14 +147,14 @@ if CONFIG["OS_TARGET"] == "WINNT":
     ]
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/device_info_ds.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/help_functions_ds.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc"
+        "/third_party/libwebrtc/webrtc/modules/video_capture/windows/device_info_ds.cc",
+        "/third_party/libwebrtc/webrtc/modules/video_capture/windows/help_functions_ds.cc",
+        "/third_party/libwebrtc/webrtc/modules/video_capture/windows/sink_filter_ds.cc"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/video_capture_ds.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/video_capture_factory_windows.cc"
+        "/third_party/libwebrtc/webrtc/modules/video_capture/windows/video_capture_ds.cc",
+        "/third_party/libwebrtc/webrtc/modules/video_capture/windows/video_capture_factory_windows.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":

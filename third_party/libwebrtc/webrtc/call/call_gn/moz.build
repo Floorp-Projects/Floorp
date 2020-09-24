@@ -23,13 +23,13 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/call/call.cc",
-    "/media/webrtc/trunk/webrtc/call/callfactory.cc",
-    "/media/webrtc/trunk/webrtc/call/flexfec_receive_stream_impl.cc"
+    "/third_party/libwebrtc/webrtc/call/call.cc",
+    "/third_party/libwebrtc/webrtc/call/callfactory.cc",
+    "/third_party/libwebrtc/webrtc/call/flexfec_receive_stream_impl.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

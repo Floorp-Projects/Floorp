@@ -23,15 +23,15 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/include/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/media_file/media_file_impl.cc",
-    "/media/webrtc/trunk/webrtc/modules/media_file/media_file_utility.cc"
+    "/third_party/libwebrtc/webrtc/modules/media_file/media_file_impl.cc",
+    "/third_party/libwebrtc/webrtc/modules/media_file/media_file_utility.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

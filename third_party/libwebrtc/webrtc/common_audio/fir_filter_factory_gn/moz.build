@@ -23,12 +23,12 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/common_audio/fir_filter_c.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/fir_filter_factory.cc"
+    "/third_party/libwebrtc/webrtc/common_audio/fir_filter_c.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/fir_filter_factory.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

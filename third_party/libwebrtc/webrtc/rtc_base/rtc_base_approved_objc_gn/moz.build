@@ -27,7 +27,7 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 OS_LIBS += [
@@ -35,7 +35,7 @@ OS_LIBS += [
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/rtc_base/logging_mac.mm"
+    "/third_party/libwebrtc/webrtc/rtc_base/logging_mac.mm"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

@@ -23,13 +23,13 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/api/audio_codecs/audio_decoder.cc",
-    "/media/webrtc/trunk/webrtc/api/audio_codecs/audio_encoder.cc",
-    "/media/webrtc/trunk/webrtc/api/audio_codecs/audio_format.cc"
+    "/third_party/libwebrtc/webrtc/api/audio_codecs/audio_decoder.cc",
+    "/third_party/libwebrtc/webrtc/api/audio_codecs/audio_encoder.cc",
+    "/third_party/libwebrtc/webrtc/api/audio_codecs/audio_format.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

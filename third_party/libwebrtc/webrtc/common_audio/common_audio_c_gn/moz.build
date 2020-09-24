@@ -23,53 +23,53 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/include/"
 ]
 
 SOURCES += [
-    "/media/webrtc/trunk/webrtc/common_audio/vad/vad_core.c",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/webrtc_vad.c"
+    "/third_party/libwebrtc/webrtc/common_audio/vad/vad_core.c",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/webrtc_vad.c"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/common_audio/fft4g.c",
-    "/media/webrtc/trunk/webrtc/common_audio/ring_buffer.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/auto_corr_to_refl_coef.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/auto_correlation.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_fft.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/copy_set_operations.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/cross_correlation.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/division_operations.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/downsample_fast.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/energy.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ma_fast_q12.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/get_hanning_window.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/get_scaling_square.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/ilbc_specific_functions.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/levinson_durbin.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/lpc_to_refl_coef.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/min_max_operations.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/randomization_functions.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/real_fft.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/refl_coef_to_lpc.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/resample.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/resample_48khz.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/resample_by_2.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/resample_by_2_internal.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/resample_fractional.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_init.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_inl.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/splitting_filter.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/sqrt_of_one_minus_x_squared.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/vector_scaling_operations.c",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/vad_filterbank.c",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/vad_gmm.c",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/vad_sp.c"
+    "/third_party/libwebrtc/webrtc/common_audio/fft4g.c",
+    "/third_party/libwebrtc/webrtc/common_audio/ring_buffer.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/auto_corr_to_refl_coef.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/auto_correlation.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_fft.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/copy_set_operations.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/cross_correlation.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/division_operations.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/downsample_fast.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/energy.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ma_fast_q12.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/get_hanning_window.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/get_scaling_square.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/ilbc_specific_functions.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/levinson_durbin.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/lpc_to_refl_coef.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/min_max_operations.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/randomization_functions.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/real_fft.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/refl_coef_to_lpc.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/resample.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/resample_48khz.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/resample_by_2.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/resample_by_2_internal.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/resample_fractional.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_init.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_inl.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/splitting_filter.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/sqrt_of_one_minus_x_squared.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/vector_scaling_operations.c",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/vad_filterbank.c",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/vad_gmm.c",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/vad_sp.c"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -114,9 +114,9 @@ if CONFIG["OS_TARGET"] == "Darwin":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["OS_TARGET"] == "DragonFly":
@@ -127,9 +127,9 @@ if CONFIG["OS_TARGET"] == "DragonFly":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["OS_TARGET"] == "FreeBSD":
@@ -195,9 +195,9 @@ if CONFIG["OS_TARGET"] == "WINNT":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":
@@ -218,17 +218,17 @@ if CONFIG["CPU_ARCH"] == "arm":
 if CONFIG["CPU_ARCH"] == "mips64":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "ppc64":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
@@ -258,9 +258,9 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
@@ -270,17 +270,17 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Darwin":
@@ -294,9 +294,9 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
@@ -306,17 +306,17 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
@@ -325,9 +325,9 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["NO_TCMALLOC"] = True
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
@@ -337,25 +337,25 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
@@ -365,25 +365,25 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
@@ -393,17 +393,17 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
-        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/third_party/libwebrtc/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
 Library("common_audio_c_gn")

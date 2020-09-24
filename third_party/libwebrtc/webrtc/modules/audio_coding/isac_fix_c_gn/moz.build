@@ -23,42 +23,42 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/include/",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/include/",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/include/"
 ]
 
 SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/decode_plc.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lpc_masking_model.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter.c"
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/decode_plc.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lpc_masking_model.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter.c"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/arith_routines.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/arith_routines_hist.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/arith_routines_logist.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/bandwidth_estimator.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/decode.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/decode_bwe.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/encode.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/entropy_coding.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/filterbank_tables.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/filterbanks.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/filters.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/initialize.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/isacfix.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lpc_tables.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_estimator.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_estimator_c.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_gain_tables.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_lag_tables.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/spectrum_ar_model_tables.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/transform.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/transform_tables.c"
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/arith_routines.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/arith_routines_hist.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/arith_routines_logist.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/bandwidth_estimator.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/decode.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/decode_bwe.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/encode.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/entropy_coding.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/filterbank_tables.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/filterbanks.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/filters.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/initialize.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/isacfix.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lpc_tables.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_estimator.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_estimator_c.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_gain_tables.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_lag_tables.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/spectrum_ar_model_tables.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/transform.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/transform_tables.c"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -103,11 +103,11 @@ if CONFIG["OS_TARGET"] == "Darwin":
     ]
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["OS_TARGET"] == "DragonFly":
@@ -118,11 +118,11 @@ if CONFIG["OS_TARGET"] == "DragonFly":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["OS_TARGET"] == "FreeBSD":
@@ -188,11 +188,11 @@ if CONFIG["OS_TARGET"] == "WINNT":
     ]
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":
@@ -213,21 +213,21 @@ if CONFIG["CPU_ARCH"] == "arm":
 if CONFIG["CPU_ARCH"] == "mips64":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "ppc64":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
@@ -257,11 +257,11 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
@@ -271,21 +271,21 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
     ]
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Darwin":
@@ -299,11 +299,11 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
@@ -313,21 +313,21 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
     ]
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
@@ -336,11 +336,11 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["NO_TCMALLOC"] = True
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
@@ -350,31 +350,31 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
@@ -384,31 +384,31 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
     ]
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
@@ -418,21 +418,21 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
     ]
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/lattice_c.c"
     ]
 
 Library("isac_fix_c_gn")

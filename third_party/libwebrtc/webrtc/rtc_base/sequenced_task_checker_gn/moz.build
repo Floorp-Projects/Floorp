@@ -23,11 +23,11 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/rtc_base/sequenced_task_checker_impl.cc"
+    "/third_party/libwebrtc/webrtc/rtc_base/sequenced_task_checker_impl.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
