@@ -63,9 +63,9 @@ class BrowsingContextGroup;
    * activated by a gesture */                                         \
   FIELD(UserActivationState, UserActivation::State)                    \
   FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)        \
-  /* True if this document tree contained an HTMLMediaElement that     \
-   * played audibly. This should only be set on top level context. */  \
-  FIELD(DocTreeHadAudibleMedia, bool)                                  \
+  /* True if this document tree contained at least a HTMLMediaElement. \
+   * This should only be set on top level context. */                  \
+  FIELD(DocTreeHadMedia, bool)                                         \
   FIELD(AutoplayPermission, uint32_t)                                  \
   FIELD(ShortcutsPermission, uint32_t)                                 \
   /* Store the Id of the browsing context where active media session   \
@@ -218,7 +218,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsOriginalFrameSource>,
               const bool& aIsOriginalFrameSource, ContentParent* aSource);
-  bool CanSet(FieldIndex<IDX_DocTreeHadAudibleMedia>, const bool& aValue,
+  bool CanSet(FieldIndex<IDX_DocTreeHadMedia>, const bool& aValue,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AutoplayPermission>, const uint32_t& aValue,
               ContentParent* aSource);
