@@ -84,27 +84,20 @@ async function testWithProperties(props, startTime) {
       ": testWithProperties: testing with " +
       JSON.stringify(props)
   );
-
-  // There are two different signals that the DoHController is ready, depending
-  // on the config being tested. If we're setting the TRR mode pref, we should
-  // expect the disable-heuristics pref to be set as the signal. Else, we can
-  // expect the self-enabled pref as the signal.
-  let rolloutReadyPromise;
+  let rolloutReadyPref = ROLLOUT_SELF_ENABLED_PREF;
   if (props.hasOwnProperty(TRR_MODE_PREF)) {
-    if ([2, 3, 5].includes(props[TRR_MODE_PREF])) {
-      rolloutReadyPromise = waitForPrefObserver(HEURISTICS_DISABLED_PREF);
-    }
     Services.prefs.setIntPref(TRR_MODE_PREF, props[TRR_MODE_PREF]);
-  }
-  if (!rolloutReadyPromise) {
-    rolloutReadyPromise = waitForPrefObserver(ROLLOUT_SELF_ENABLED_PREF);
+    if ([2, 3, 5].includes(props[TRR_MODE_PREF])) {
+      rolloutReadyPref = HEURISTICS_DISABLED_PREF;
+    }
   }
   if (props.hasOwnProperty(ROLLOUT_ENABLED_PREF)) {
+    let prefPromise = waitForPrefObserver(rolloutReadyPref);
     Services.prefs.setBoolPref(
       ROLLOUT_ENABLED_PREF,
       props[ROLLOUT_ENABLED_PREF]
     );
-    await rolloutReadyPromise;
+    await prefPromise;
   }
   if (props.hasOwnProperty(TRR_CUSTOM_URI_PREF)) {
     Services.prefs.setStringPref(
