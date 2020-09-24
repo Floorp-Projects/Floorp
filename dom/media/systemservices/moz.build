@@ -3,7 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-include('/media/webrtc/webrtc.mozbuild')
+include('/dom/media/webrtc/third_party_build/webrtc.mozbuild')
 
 if CONFIG['MOZ_WEBRTC']:
     EXPORTS += [
@@ -21,8 +21,8 @@ if CONFIG['MOZ_WEBRTC']:
     LOCAL_INCLUDES += [
         '/dom/media/webrtc',
         '/media/libyuv/libyuv/include',
-        '/media/webrtc/trunk',
-        '/media/webrtc/trunk/webrtc',
+        '/third_party/libwebrtc',
+        '/third_party/libwebrtc/webrtc',
     ]
 
     if CONFIG['OS_TARGET'] == 'Android':

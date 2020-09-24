@@ -1,0 +1,16 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("signaling/**"):
+    BUG_COMPONENT = ("Core", "WebRTC: Signaling")
+
+if CONFIG['MOZ_WEBRTC_SIGNALING']:
+    # Avoid warnings from third-party code that we can not modify.
+    if CONFIG['CC_TYPE'] == 'clang-cl':
+        CXXFLAGS += ['-Wno-invalid-source-encoding']
+
+    if CONFIG['ENABLE_TESTS']:
+        TEST_DIRS += [
+            'signaling/gtest',
+        ]

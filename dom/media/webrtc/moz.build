@@ -3,7 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-include('/media/webrtc/webrtc.mozbuild')
+include('/dom/media/webrtc/third_party_build/webrtc.mozbuild')
 
 with Files('**'):
     BUG_COMPONENT = ('Core', 'WebRTC: Audio/Video')
@@ -62,8 +62,8 @@ if CONFIG['MOZ_WEBRTC']:
         '/dom/media/webrtc/common',
         '/dom/media/webrtc/common/browser_logging',
         '/media/libyuv/libyuv/include',
-        '/media/webrtc/trunk',
-        '/media/webrtc/trunk/webrtc'
+        '/third_party/libwebrtc',
+        '/third_party/libwebrtc/webrtc',
     ]
 
 if CONFIG['MOZ_WEBRTC_SIGNALING']:
@@ -72,13 +72,10 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'jsapi',
         'jsep',
         'libwebrtcglue',
+        'sdp',
+        'third_party_build',
         'transportbridge',
-        'sdp'
     ]
-#    GYP_DIRS += ['trunk/third_party/gflags']
-#    GYP_DIRS['trunk/third_party/gflags'].input = 'trunk/third_party/gflags/gflags.gyp'
-#    GYP_DIRS['trunk/third_party/gflags'].variables = gyp_vars_copy
-#    GYP_DIRS['trunk/third_party/gflags'].sandbox_vars['COMPILE_FLAGS'] = {'WARNINGS_AS_ERRORS': []}
 
     # Avoid warnings from third-party code that we can not modify.
     if CONFIG['CC_TYPE'] == 'clang-cl':

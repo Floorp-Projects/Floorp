@@ -37,5 +37,8 @@ with Files('sqlite3/**'):
 with Files('rlbox/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
+with Files("libwebrtc/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
 with Files('WinToast/**'):
     BUG_COMPONENT = ('Toolkit', 'General')
