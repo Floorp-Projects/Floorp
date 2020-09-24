@@ -3519,7 +3519,7 @@ bool BrowserParent::CanCancelContentJS(
     nsIURI* aNavigationURI) const {
   // Pre-checking if we can cancel content js in the parent is only
   // supported when session history in the parent is enabled.
-  if (!StaticPrefs::fission_sessionHistoryInParent()) {
+  if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     // If session history in the parent isn't enabled, this check will
     // be fully done in BrowserChild::CanCancelContentJS
     return true;

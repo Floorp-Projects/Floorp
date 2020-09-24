@@ -834,7 +834,7 @@ nsresult nsDocShell::LoadURI(nsDocShellLoadState* aLoadState,
     MOZ_LOG(gSHLog, LogLevel::Debug,
             ("nsDocShell[%p]: loading from session history", this));
 
-    if (!StaticPrefs::fission_sessionHistoryInParent()) {
+    if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       return LoadHistoryEntry(aLoadState->SHEntry(), aLoadState->LoadType());
     }
 
@@ -929,7 +929,7 @@ bool nsDocShell::MaybeHandleSubframeHistory(
   parentDS->GetLoadType(&parentLoadType);
 
   if (!aContinueHandlingSubframeHistory) {
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       if (nsDocShell::Cast(parentDS.get())->IsLoadingFromSessionHistory() &&
           !GetCreatedDynamically()) {
         if (XRE_IsContentProcess()) {
@@ -1150,7 +1150,7 @@ void nsDocShell::FirePageHideNotificationInternal(
         MOZ_LOG(
             gSHLog, LogLevel::Debug,
             ("document %p unloading, remove dynamic subframe entries", this));
-        if (StaticPrefs::fission_sessionHistoryInParent()) {
+        if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
           if (mActiveEntry) {
             mBrowsingContext->RemoveDynEntriesFromActiveSessionHistoryEntry();
           }
@@ -1408,7 +1408,7 @@ bool nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
   bool isRoot = mBrowsingContext->IsTop();
   bool isSubFrame = false;  // Is this a subframe navigation?
 
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     if (mLoadingEntry) {
       isSubFrame = mLoadingEntry->mInfo.IsSubFrame();
       MOZ_LOG(gSHLog, LogLevel::Debug,
@@ -2724,7 +2724,7 @@ void nsDocShell::StoreWindowNameToSHEntries() {
         mOSHE, [&](nsISHEntry* aEntry) { aEntry->SetName(name); });
   }
 
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     if (XRE_IsParentProcess()) {
       SessionHistoryEntry* entry =
           mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
@@ -3055,7 +3055,7 @@ nsresult nsDocShell::AddChildSHEntry(nsISHEntry* aCloneRef,
                                      nsISHEntry* aNewEntry,
                                      int32_t aChildOffset, uint32_t aLoadType,
                                      bool aCloneChildren) {
-  MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent());
+  MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent_AtStartup());
   nsresult rv = NS_OK;
 
   if (mLSHE && aLoadType != LOAD_PUSHSTATE) {
@@ -3083,7 +3083,7 @@ nsresult nsDocShell::AddChildSHEntry(nsISHEntry* aCloneRef,
 nsresult nsDocShell::AddChildSHEntryToParent(nsISHEntry* aNewEntry,
                                              int32_t aChildOffset,
                                              bool aCloneChildren) {
-  MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent());
+  MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent_AtStartup());
   /* You will get here when you are in a subframe and
    * a new url has been loaded on you.
    * The mOSHE in this subframe will be the previous url's
@@ -3244,7 +3244,7 @@ nsDocShell::GetDeviceSizeIsPageSize(bool* aValue) {
 }
 
 void nsDocShell::ClearFrameHistory(nsISHEntry* aEntry) {
-  MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent());
+  MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent_AtStartup());
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   if (!rootSH || !aEntry) {
     return;
@@ -3984,7 +3984,7 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
     // identifier, the error page won't persist.
     mLSHE->AbandonBFCacheEntry();
   }
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     // Commit the loading entry for the real load here, Embed will not commit
     // the loading entry for the error page. History will then contain an entry
     // for the real load, and the error page won't persist if we try loading
@@ -4020,7 +4020,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
   // Send notifications to the HistoryListener if any, about the impending
   // reload
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("document %p Reload", this));
     bool forceReload = IsForceReloadType(loadType);
     if (!XRE_IsParentProcess()) {
@@ -4286,7 +4286,7 @@ nsDocShell::LoadPageAsViewSource(nsIDocShell* aOtherDocShell,
   RefPtr<nsDocShellLoadState> loadState;
   uint32_t cacheKey;
   auto* otherDocShell = nsDocShell::Cast(aOtherDocShell);
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     loadState = new nsDocShellLoadState(newURI);
     if (!otherDocShell->FillLoadStateFromCurrentEntry(*loadState)) {
       return NS_ERROR_INVALID_POINTER;
@@ -4344,7 +4344,7 @@ nsDocShell::GetCurrentDescriptor(nsISupports** aPageDescriptor) {
 already_AddRefed<nsIInputStream> nsDocShell::GetPostDataFromCurrentEntry()
     const {
   nsCOMPtr<nsIInputStream> postData;
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     if (mActiveEntry) {
       postData = mActiveEntry->GetPostData();
     } else if (mLoadingEntry) {
@@ -4362,7 +4362,7 @@ already_AddRefed<nsIInputStream> nsDocShell::GetPostDataFromCurrentEntry()
 }
 
 Maybe<uint32_t> nsDocShell::GetCacheKeyFromCurrentEntry() const {
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     if (mActiveEntry) {
       return Some(mActiveEntry->GetCacheKey());
     }
@@ -5685,8 +5685,8 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX What if SetupNewViewer fails?
-  if (StaticPrefs::fission_sessionHistoryInParent() ? !!mLoadingEntry
-                                                    : !!mLSHE) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup() ? !!mLoadingEntry
+                                                              : !!mLSHE) {
     // Set history.state
     SetDocCurrentStateObj(mLSHE,
                           mLoadingEntry ? &mLoadingEntry->mInfo : nullptr);
@@ -5702,7 +5702,7 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
   }
 
   if (!aIsTransientAboutBlank &&
-      StaticPrefs::fission_sessionHistoryInParent()) {
+      StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("document %p Embed", this));
     MoveLoadingToActiveEntry(mLoadType != LOAD_ERROR_PAGE);
   }
@@ -7005,7 +7005,7 @@ nsresult nsDocShell::CaptureState() {
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(gPageCacheLog, LogLevel::Debug))) {
     nsAutoCString spec;
     nsCOMPtr<nsIURI> uri;
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       uri = mActiveEntry->GetURI();
     } else {
       uri = mOSHE->GetURI();
@@ -7327,7 +7327,7 @@ nsresult nsDocShell::RestoreFromHistory() {
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   if (rootSH) {
     mPreviousEntryIndex = rootSH->Index();
-    if (!StaticPrefs::fission_sessionHistoryInParent()) {
+    if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       rootSH->LegacySHistory()->UpdateIndex();
     }
     mLoadedEntryIndex = rootSH->Index();
@@ -7856,7 +7856,8 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
     // Be sure to have a correct mLSHE, it may have been cleared by
     // EndPageLoad. See bug 302115.
     ChildSHistory* shistory = GetSessionHistory();
-    if (!StaticPrefs::fission_sessionHistoryInParent() && shistory && !mLSHE) {
+    if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup() && shistory &&
+        !mLSHE) {
       int32_t idx = shistory->LegacySHistory()->GetRequestedIndex();
       if (idx == -1) {
         idx = shistory->Index();
@@ -8196,7 +8197,7 @@ void nsDocShell::SetDocCurrentStateObj(nsISHEntry* aShEntry,
   NS_ENSURE_TRUE_VOID(document);
 
   nsCOMPtr<nsIStructuredCloneContainer> scContainer;
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     // If aInfo is null, just set the document's state object to null.
     if (aInfo) {
       scContainer = aInfo->GetStateData();
@@ -8624,7 +8625,7 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
     }
   }
 
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     if (mActiveEntry && aLoadState->LoadIsFromSessionHistory()) {
       aState.mHistoryNavBetweenSameDoc = mActiveEntry->SharesDocumentWith(
           aLoadState->GetLoadingSessionHistoryInfo()->mInfo);
@@ -8644,7 +8645,7 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
 #ifdef DEBUG
   if (aState.mHistoryNavBetweenSameDoc) {
     nsCOMPtr<nsIInputStream> currentPostData;
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       currentPostData = mActiveEntry->GetPostData();
     } else {
       currentPostData = mOSHE->GetPostData();
@@ -8668,7 +8669,7 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
   // The restriction that the SHEntries in (a) must be different ensures
   // that history.go(0) and the like trigger full refreshes, rather than
   // same document navigations.
-  if (!StaticPrefs::fission_sessionHistoryInParent()) {
+  if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     bool doSameDocumentNavigation =
         (aState.mHistoryNavBetweenSameDoc && mOSHE != aLoadState->SHEntry()) ||
         (!aLoadState->SHEntry() && !aLoadState->PostDataStream() &&
@@ -8745,9 +8746,9 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   nsCOMPtr<nsIPrincipal> newURITriggeringPrincipal, newURIPrincipalToInherit,
       newURIPartitionedPrincipalToInherit;
   nsCOMPtr<nsIContentSecurityPolicy> newCsp;
-  if (StaticPrefs::fission_sessionHistoryInParent() ? !!mActiveEntry
-                                                    : !!mOSHE) {
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup() ? !!mActiveEntry
+                                                              : !!mOSHE) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       newURITriggeringPrincipal = mActiveEntry->GetTriggeringPrincipal();
       newURIPrincipalToInherit = mActiveEntry->GetPrincipalToInherit();
       newURIPartitionedPrincipalToInherit =
@@ -8782,9 +8783,9 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   uint32_t cacheKey = 0;
 
   bool scrollRestorationIsManual = false;
-  if (StaticPrefs::fission_sessionHistoryInParent() ? !!mActiveEntry
-                                                    : !!mOSHE) {
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup() ? !!mActiveEntry
+                                                              : !!mOSHE) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       // FIXME Need to set scroll position on mActiveEntry.
       scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
     } else {
@@ -8799,7 +8800,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     // above -- it filters out some LOAD_CMD_NORMAL cases that we
     // wouldn't want here.
     if (aLoadState->LoadType() & LOAD_CMD_NORMAL) {
-      if (StaticPrefs::fission_sessionHistoryInParent()) {
+      if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
         postData = mActiveEntry->GetPostData();
         cacheKey = mActiveEntry->GetCacheKey();
       } else {
@@ -8832,7 +8833,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
 
   // If we're doing a history load, use its scroll restoration state.
   if (aLoadState->LoadIsFromSessionHistory()) {
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       scrollRestorationIsManual = aLoadState->GetLoadingSessionHistoryInfo()
                                       ->mInfo.GetScrollRestorationIsManual();
     } else {
@@ -8863,7 +8864,8 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       SetCacheKeyOnHistoryEntry(mOSHE, cacheKey);
     }
   }
-  if (StaticPrefs::fission_sessionHistoryInParent() && mLoadingEntry) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup() &&
+      mLoadingEntry) {
     MOZ_LOG(
         gSHLog, LogLevel::Debug,
         ("Moving the loading entry to the active entry on nsDocShell %p to %s",
@@ -8933,13 +8935,13 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   nscoord bx = 0;
   nscoord by = 0;
   bool needsScrollPosUpdate = false;
-  if ((StaticPrefs::fission_sessionHistoryInParent() ? !!mActiveEntry
-                                                     : !!mOSHE) &&
+  if ((StaticPrefs::fission_sessionHistoryInParent_AtStartup() ? !!mActiveEntry
+                                                               : !!mOSHE) &&
       (aLoadState->LoadType() == LOAD_HISTORY ||
        aLoadState->LoadType() == LOAD_RELOAD_NORMAL) &&
       !scrollRestorationIsManual) {
     needsScrollPosUpdate = true;
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       mActiveEntry->GetScrollPosition(&bx, &by);
     } else {
       mOSHE->GetScrollPosition(&bx, &by);
@@ -9257,7 +9259,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     SetHistoryEntryAndUpdateBC(Some<nsISHEntry*>(aLoadState->SHEntry()),
                                Nothing());
     if (aLoadState->LoadIsFromSessionHistory() &&
-        !StaticPrefs::fission_sessionHistoryInParent()) {
+        !StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       // We're making history navigation or a reload. Make sure our history ID
       // points to the same ID as SHEntry's docshell ID.
       nsID historyID = {};
@@ -9283,7 +9285,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     if (shistory) {
       shistory->RemovePendingHistoryNavigations();
     }
-    if (!StaticPrefs::fission_sessionHistoryInParent()) {
+    if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       // It's possible that the previous viewer of mContentViewer is the
       // viewer that will end up in aLoadState->SHEntry() when it gets closed.
       // If that's the case, we need to go ahead and force it into its shentry
@@ -10085,7 +10087,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   uint32_t cacheKey = 0;
   if (aCacheKey) {
     cacheKey = *aCacheKey;
-  } else if (StaticPrefs::fission_sessionHistoryInParent()) {
+  } else if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     if (mLoadingEntry) {
       cacheKey = mLoadingEntry->mInfo.GetCacheKey();
     } else if (mActiveEntry) {  // for reload cases
@@ -10656,8 +10658,8 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
    * Hopefully I don't have to do that.
    */
   if (equalUri &&
-      (StaticPrefs::fission_sessionHistoryInParent() ? !!mActiveEntry
-                                                     : !!mOSHE) &&
+      (StaticPrefs::fission_sessionHistoryInParent_AtStartup() ? !!mActiveEntry
+                                                               : !!mOSHE) &&
       (mLoadType == LOAD_NORMAL || mLoadType == LOAD_LINK ||
        mLoadType == LOAD_STOP_CONTENT) &&
       !inputStream) {
@@ -10691,14 +10693,14 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
 
     SetCacheKeyOnHistoryEntry(mLSHE ? mLSHE : mOSHE, cacheKey);
 
-    if (!StaticPrefs::fission_sessionHistoryInParent()) {
+    if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       // Since we're force-reloading, clear all the sub frame history.
       ClearFrameHistory(mLSHE);
       ClearFrameHistory(mOSHE);
     }
   }
 
-  if (!StaticPrefs::fission_sessionHistoryInParent()) {
+  if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     // Clear subframe history on refresh.
     // XXX: history.go(0) won't go this path as aLoadType is LOAD_HISTORY in
     // this case. One should re-validate after bug 1331865 fixed.
@@ -10748,11 +10750,11 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
   // If this was a history load or a refresh, or it was a history load but
   // later changed to LOAD_NORMAL_REPLACE due to redirection, update the index
   // in session history.
-  if (!StaticPrefs::fission_sessionHistoryInParent() && rootSH &&
+  if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup() && rootSH &&
       ((mLoadType & (LOAD_CMD_HISTORY | LOAD_CMD_RELOAD)) ||
        mLoadType == LOAD_NORMAL_REPLACE)) {
     mPreviousEntryIndex = rootSH->Index();
-    if (!StaticPrefs::fission_sessionHistoryInParent()) {
+    if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       rootSH->LegacySHistory()->UpdateIndex();
     }
     mLoadedEntryIndex = rootSH->Index();
@@ -10998,7 +11000,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
   aNewURI->EqualsExceptRef(aCurrentURI, &sameExceptHashes);
   bool uriWasModified;
   if (sameExceptHashes) {
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       uriWasModified = mActiveEntry && mActiveEntry->GetURIWasModified();
     } else {
       uriWasModified = oldOSHE && oldOSHE->GetURIWasModified();
@@ -11023,7 +11025,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     nsPoint scrollPos = GetCurScrollPos();
 
     bool scrollRestorationIsManual;
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       // FIXME Need to save the current scroll position on mActiveEntry.
       scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
     } else {
@@ -11035,7 +11037,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
 
     nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
 
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       MOZ_LOG(gSHLog, LogLevel::Debug,
               ("document %p UpdateActiveEntry replace", this));
       nsString title(mActiveEntry->GetTitle());
@@ -11075,7 +11077,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
       // we'll just set mOSHE here.
       mOSHE = newSHEntry;
     }
-  } else if (StaticPrefs::fission_sessionHistoryInParent()) {
+  } else if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     MOZ_LOG(gSHLog, LogLevel::Debug,
             ("document %p UpdateActiveEntry non-replace", this));
     UpdateActiveEntry(
@@ -11108,7 +11110,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     newSHEntry->SetLoadReplace(false);
   }
 
-  if (!StaticPrefs::fission_sessionHistoryInParent()) {
+  if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     // Step 2.4 and 3: Modify new/original session history entry and clear its
     // POST data, if there is any.
     newSHEntry->SetStateData(aData);
@@ -11175,7 +11177,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
 
 NS_IMETHODIMP
 nsDocShell::GetCurrentScrollRestorationIsManual(bool* aIsManual) {
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     *aIsManual = mActiveEntry && mActiveEntry->GetScrollRestorationIsManual();
     return NS_OK;
   }
@@ -11283,7 +11285,8 @@ nsresult nsDocShell::AddToSessionHistory(
     nsISHEntry** aNewEntry) {
   MOZ_ASSERT(aURI, "uri is null");
   MOZ_ASSERT(!aChannel || !aTriggeringPrincipal, "Shouldn't have both set");
-  MOZ_DIAGNOSTIC_ASSERT(!StaticPrefs::fission_sessionHistoryInParent());
+  MOZ_DIAGNOSTIC_ASSERT(
+      !StaticPrefs::fission_sessionHistoryInParent_AtStartup());
 
 #if defined(DEBUG)
   if (MOZ_LOG_TEST(gDocShellLog, LogLevel::Debug)) {
@@ -11501,7 +11504,7 @@ void nsDocShell::UpdateActiveEntry(
     nsIContentSecurityPolicy* aCsp, const nsAString& aTitle,
     const Maybe<bool>& aScrollRestorationIsManual,
     nsIStructuredCloneContainer* aData, bool aURIWasModified) {
-  MOZ_ASSERT(StaticPrefs::fission_sessionHistoryInParent());
+  MOZ_ASSERT(StaticPrefs::fission_sessionHistoryInParent_AtStartup());
   MOZ_ASSERT(aURI, "uri is null");
   MOZ_ASSERT(mLoadType == LOAD_PUSHSTATE,
              "This code only deals with pushState");
@@ -11647,10 +11650,10 @@ NS_IMETHODIMP
 nsDocShell::PersistLayoutHistoryState() {
   nsresult rv = NS_OK;
 
-  if (StaticPrefs::fission_sessionHistoryInParent() ? !!mActiveEntry
-                                                    : !!mOSHE) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup() ? !!mActiveEntry
+                                                              : !!mOSHE) {
     bool scrollRestorationIsManual;
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       scrollRestorationIsManual = mActiveEntry->GetScrollRestorationIsManual();
     } else {
       scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
@@ -12098,7 +12101,7 @@ nsDocShell::GetIsExecutingOnLoadHandler(bool* aResult) {
 NS_IMETHODIMP
 nsDocShell::GetLayoutHistoryState(nsILayoutHistoryState** aLayoutHistoryState) {
   nsCOMPtr<nsILayoutHistoryState> state;
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     if (mActiveEntry) {
       state = mActiveEntry->GetLayoutHistoryState();
     }
@@ -12801,7 +12804,7 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
         // If we're performing a history load, locate the correct history entry,
         // and set the relevant bits on our loadState.
         if (aHistoryIndex >= 0 && self->GetSessionHistory() &&
-            !StaticPrefs::fission_sessionHistoryInParent()) {
+            !StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
           nsCOMPtr<nsISHistory> legacySHistory =
               self->GetSessionHistory()->LegacySHistory();
 
@@ -13194,7 +13197,7 @@ void nsDocShell::SetLoadingSessionHistoryInfo(
 }
 
 void nsDocShell::MoveLoadingToActiveEntry(bool aCommit) {
-  MOZ_ASSERT(StaticPrefs::fission_sessionHistoryInParent());
+  MOZ_ASSERT(StaticPrefs::fission_sessionHistoryInParent_AtStartup());
 
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("nsDocShell %p MoveLoadingToActiveEntry", this));

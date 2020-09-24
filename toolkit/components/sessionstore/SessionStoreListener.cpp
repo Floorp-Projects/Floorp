@@ -46,7 +46,8 @@ ContentSessionStore::ContentSessionStore(nsIDocShell* aDocShell)
       mFormDataChanged(NO_CHANGE),
       mStorageStatus(NO_STORAGE),
       mDocCapChanged(false),
-      mSHistoryInParent(StaticPrefs::fission_sessionHistoryInParent()),
+      mSHistoryInParent(
+          StaticPrefs::fission_sessionHistoryInParent_AtStartup()),
       mSHistoryChanged(false),
       mSHistoryChangedFromParent(false) {
   MOZ_ASSERT(mDocShell);
@@ -169,7 +170,8 @@ TabListener::TabListener(nsIDocShell* aDocShell, Element* aElement)
       mTimeoutDisabled(false),
       mUpdateInterval(15000),
       mEpoch(0),
-      mSHistoryInParent(StaticPrefs::fission_sessionHistoryInParent()) {
+      mSHistoryInParent(
+          StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
   MOZ_ASSERT(mDocShell);
 }
 
