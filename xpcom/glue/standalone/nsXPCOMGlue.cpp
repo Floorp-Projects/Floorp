@@ -33,6 +33,7 @@ typedef void (*NSFuncPtr)();
 #  include <windows.h>
 #  include <mbstring.h>
 #  include "mozilla/WindowsVersion.h"
+#  include "mozilla/PreXULSkeletonUI.h"
 
 typedef HINSTANCE LibHandleType;
 
@@ -310,6 +311,18 @@ static nsresult XPCOMGlueLoad(const char* aXPCOMFile,
       XPCOMGlueUnload();
       return NS_ERROR_FAILURE;
     }
+
+#  ifdef XP_WIN
+    // We call PollPreXULSkeletonUIEvents here in order to not get flagged by
+    // Windows as nonresponsive. In order to not be flagged as such, we seem to
+    // simply need to respond to *a* message every few seconds. The halfway
+    // point on slow systems between process start and nsWindow taking over the
+    // skeleton UI window seems to be XUL being loaded. Accordingly, placing
+    // this call here covers the most ground (as we will call this after
+    // prefetching and loading all of the dlls in dependentlibs.list, which
+    // includes xul.dll.)
+    PollPreXULSkeletonUIEvents();
+#  endif
   }
 #endif
   return NS_OK;
