@@ -63,7 +63,7 @@
 #include "mozilla/EventDispatcher.h"
 
 #ifdef XP_WIN
-#  include "mozilla/EarlyBlankWindow.h"
+#  include "mozilla/PreXULSkeletonUI.h"
 #endif
 
 #ifdef MOZ_NEW_XULSTORE
@@ -1797,7 +1797,7 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
     return NS_OK;
   }
 
-  PersistEarlyBlankWindowValues(aRect.X(), aRect.Y(), aRect.Width(),
+  PersistPreXULSkeletonUIValues(aRect.X(), aRect.Y(), aRect.Width(),
                                 aRect.Height(),
                                 mWindow->GetDefaultScale().scale);
 #endif

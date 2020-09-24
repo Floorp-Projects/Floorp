@@ -60,7 +60,7 @@
 
 #include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/EarlyBlankWindow.h"
+#include "mozilla/PreXULSkeletonUI.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MiscEvents.h"
@@ -893,7 +893,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 
   if (aInitData->mWindowType == eWindowType_toplevel && !aParent) {
-    mWnd = ConsumeEarlyBlankWindowHandle();
+    mWnd = ConsumePreXULSkeletonUIHandle();
     if (mWnd) {
       mWasPreXulSkeletonUI = true;
       ::SetWindowLongPtrW(mWnd, GWL_STYLE, style);

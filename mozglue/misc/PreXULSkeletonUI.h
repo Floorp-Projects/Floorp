@@ -4,21 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef EarlyBlankWindow_h_
-#define EarlyBlankWindow_h_
+#ifndef PreXULSkeletonUI_h_
+#define PreXULSkeletonUI_h_
 
 #include <windows.h>
 #include "mozilla/Types.h"
 
 namespace mozilla {
 
-MFBT_API void CreateAndStoreEarlyBlankWindow(HINSTANCE hInstance);
-MFBT_API HWND ConsumeEarlyBlankWindowHandle();
-MFBT_API void PersistEarlyBlankWindowValues(int screenX, int screenY, int width,
+MFBT_API void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance);
+MFBT_API HWND ConsumePreXULSkeletonUIHandle();
+MFBT_API void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
                                             int height,
                                             double cssToDevPixelScaling);
-MFBT_API bool GetEarlyBlankWindowEnabled();
-MFBT_API void SetEarlyBlankWindowEnabled(bool value);
+MFBT_API bool GetPreXULSkeletonUIEnabled();
+MFBT_API void SetPreXULSkeletonUIEnabled(bool value);
 
 }  // namespace mozilla
 

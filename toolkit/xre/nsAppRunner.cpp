@@ -101,7 +101,7 @@
 #  include <intrin.h>
 #  include <math.h>
 #  include "cairo/cairo-features.h"
-#  include "mozilla/EarlyBlankWindow.h"
+#  include "mozilla/PreXULSkeletonUI.h"
 #  include "mozilla/DllPrefetchExperimentRegistryInfo.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WindowsProcessMitigations.h"
@@ -1612,8 +1612,8 @@ static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
     shouldBeEnabled = themeId.EqualsLiteral("default-theme@mozilla.org");
   }
 
-  if (GetEarlyBlankWindowEnabled() != shouldBeEnabled) {
-    SetEarlyBlankWindowEnabled(shouldBeEnabled);
+  if (GetPreXULSkeletonUIEnabled() != shouldBeEnabled) {
+    SetPreXULSkeletonUIEnabled(shouldBeEnabled);
   }
 }
 

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "EarlyBlankWindow.h"
+#include "PreXULSkeletonUI.h"
 
 #include <algorithm>
 
@@ -16,12 +16,12 @@
 
 namespace mozilla {
 
-static const wchar_t kEarlyBlankWindowKeyPath[] =
+static const wchar_t kPreXULSkeletonUIKeyPath[] =
     L"SOFTWARE"
-    L"\\" MOZ_APP_VENDOR L"\\" MOZ_APP_BASENAME L"\\EarlyBlankWindowSettings";
+    L"\\" MOZ_APP_VENDOR L"\\" MOZ_APP_BASENAME L"\\PreXULSkeletonUISettings";
 
-static bool sEarlyBlankWindowEnabled = false;
-static HWND sEarlyBlankWindowHandle;
+static bool sPreXULSkeletonUIEnabled = false;
+static HWND sPreXULSkeletonUIWindow;
 static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
 static LPWSTR const gIDCWait = MAKEINTRESOURCEW(32514);
 
@@ -69,7 +69,7 @@ static double sCSSToDevPixelScaling;
 // window proc to paint into the nonclient area similarly to what we do in
 // nsWindow, but it would be nontrivial code duplication, and the added
 // complexity would not be worth it, given that we can just change the
-// window style to our liking when we consume sEarlyBlankWindowHandle from
+// window style to our liking when we consume sPreXULSkeletonUIWindow from
 // nsWindow.
 static DWORD sWindowStyle = WS_POPUP;
 
@@ -292,7 +292,7 @@ void DrawSkeletonUI(HWND hWnd) {
   free(pixelBuffer);
 }
 
-LRESULT WINAPI EarlyBlankWindowProc(HWND hWnd, UINT msg, WPARAM wParam,
+LRESULT WINAPI PreXULSkeletonUIProc(HWND hWnd, UINT msg, WPARAM wParam,
                                     LPARAM lParam) {
   if (msg == WM_NCCREATE && sEnableNonClientDpiScaling) {
     sEnableNonClientDpiScaling(hWnd);
@@ -301,10 +301,10 @@ LRESULT WINAPI EarlyBlankWindowProc(HWND hWnd, UINT msg, WPARAM wParam,
   return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-bool OpenEarlyBlankWindowRegKey(HKEY& key) {
+bool OpenPreXULSkeletonUIRegKey(HKEY& key) {
   DWORD disposition;
   LSTATUS result =
-      ::RegCreateKeyExW(HKEY_CURRENT_USER, kEarlyBlankWindowKeyPath, 0, nullptr,
+      ::RegCreateKeyExW(HKEY_CURRENT_USER, kPreXULSkeletonUIKeyPath, 0, nullptr,
                         0, KEY_ALL_ACCESS, nullptr, &key, &disposition);
 
   if (result != ERROR_SUCCESS) {
@@ -323,9 +323,9 @@ bool OpenEarlyBlankWindowRegKey(HKEY& key) {
   return false;
 }
 
-void CreateAndStoreEarlyBlankWindow(HINSTANCE hInstance) {
+void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance) {
   HKEY regKey;
-  if (!IsWin10OrLater() || !OpenEarlyBlankWindowRegKey(regKey)) {
+  if (!IsWin10OrLater() || !OpenPreXULSkeletonUIRegKey(regKey)) {
     return;
   }
   AutoCloseRegKey closeKey(regKey);
@@ -338,7 +338,7 @@ void CreateAndStoreEarlyBlankWindow(HINSTANCE hInstance) {
   if (result != ERROR_SUCCESS || enabled == 0) {
     return;
   }
-  sEarlyBlankWindowEnabled = true;
+  sPreXULSkeletonUIEnabled = true;
 
   // EnableNonClientDpiScaling must be called during the initialization of
   // the window, so we have to find it and store it before we create our
@@ -388,7 +388,7 @@ void CreateAndStoreEarlyBlankWindow(HINSTANCE hInstance) {
 
   WNDCLASSW wc;
   wc.style = CS_DBLCLKS;
-  wc.lpfnWndProc = EarlyBlankWindowProc;
+  wc.lpfnWndProc = PreXULSkeletonUIProc;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   wc.hInstance = hInstance;
@@ -444,33 +444,33 @@ void CreateAndStoreEarlyBlankWindow(HINSTANCE hInstance) {
     return;
   }
 
-  sEarlyBlankWindowHandle =
+  sPreXULSkeletonUIWindow =
       sCreateWindowExW(sWindowStyleEx, L"MozillaWindowClass", L"", sWindowStyle,
                        screenX, screenY, sWindowWidth, sWindowHeight, nullptr,
                        nullptr, hInstance, nullptr);
 
-  sShowWindow(sEarlyBlankWindowHandle, SW_SHOWNORMAL);
-  sSetWindowPos(sEarlyBlankWindowHandle, 0, 0, 0, 0, 0,
+  sShowWindow(sPreXULSkeletonUIWindow, SW_SHOWNORMAL);
+  sSetWindowPos(sPreXULSkeletonUIWindow, 0, 0, 0, 0, 0,
                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
                     SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-  DrawSkeletonUI(sEarlyBlankWindowHandle);
-  sRedrawWindow(sEarlyBlankWindowHandle, NULL, NULL, RDW_INVALIDATE);
+  DrawSkeletonUI(sPreXULSkeletonUIWindow);
+  sRedrawWindow(sPreXULSkeletonUIWindow, NULL, NULL, RDW_INVALIDATE);
 }
 
-HWND ConsumeEarlyBlankWindowHandle() {
-  HWND result = sEarlyBlankWindowHandle;
-  sEarlyBlankWindowHandle = nullptr;
+HWND ConsumePreXULSkeletonUIHandle() {
+  HWND result = sPreXULSkeletonUIWindow;
+  sPreXULSkeletonUIWindow = nullptr;
   return result;
 }
 
-void PersistEarlyBlankWindowValues(int screenX, int screenY, int width,
+void PersistPreXULSkeletonUIValues(int screenX, int screenY, int width,
                                    int height, double cssToDevPixelScaling) {
-  if (!sEarlyBlankWindowEnabled) {
+  if (!sPreXULSkeletonUIEnabled) {
     return;
   }
 
   HKEY regKey;
-  if (!OpenEarlyBlankWindowRegKey(regKey)) {
+  if (!OpenPreXULSkeletonUIRegKey(regKey)) {
     return;
   }
   AutoCloseRegKey closeKey(regKey);
@@ -514,11 +514,11 @@ void PersistEarlyBlankWindowValues(int screenX, int screenY, int width,
   }
 }
 
-MFBT_API bool GetEarlyBlankWindowEnabled() { return sEarlyBlankWindowEnabled; }
+MFBT_API bool GetPreXULSkeletonUIEnabled() { return sPreXULSkeletonUIEnabled; }
 
-MFBT_API void SetEarlyBlankWindowEnabled(bool value) {
+MFBT_API void SetPreXULSkeletonUIEnabled(bool value) {
   HKEY regKey;
-  if (!OpenEarlyBlankWindowRegKey(regKey)) {
+  if (!OpenPreXULSkeletonUIRegKey(regKey)) {
     return;
   }
   AutoCloseRegKey closeKey(regKey);
@@ -531,7 +531,7 @@ MFBT_API void SetEarlyBlankWindowEnabled(bool value) {
     return;
   }
 
-  sEarlyBlankWindowEnabled = true;
+  sPreXULSkeletonUIEnabled = true;
 }
 
 }  // namespace mozilla
