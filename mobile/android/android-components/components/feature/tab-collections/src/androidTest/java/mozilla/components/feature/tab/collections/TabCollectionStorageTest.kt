@@ -222,7 +222,7 @@ class TabCollectionStorageTest {
 
     @Test
     @Suppress("ComplexMethod")
-    fun testGettingCollectionsWithLimit() = runBlocking {
+    fun testGettingCollections() = runBlocking {
         storage.createCollection(
             "Articles", listOf(
                 Session("https://www.mozilla.org").apply { title = "Mozilla" }
@@ -251,7 +251,7 @@ class TabCollectionStorageTest {
             )
         )
 
-        val collections = storage.getCollections(limit = 4).first()
+        val collections = storage.getCollections().first()
 
         assertEquals(4, collections.size)
 
@@ -306,7 +306,7 @@ class TabCollectionStorageTest {
 
         assertEquals(2, storage.getTabCollectionsCount())
 
-        val collections = storage.getCollections(limit = 2).first()
+        val collections = storage.getCollections().first()
         assertEquals(2, collections.size)
 
         storage.removeCollection(collections[0])

@@ -119,14 +119,14 @@ class TabCollectionDaoTest {
     }
 
     @Test
-    fun testGettingCollectionsWithLimit() = runBlocking {
+    fun testGettingCollections() = runBlocking {
         val collection1 = TabCollectionEntity(title = "Collection One", updatedAt = 10)
         val collection2 = TabCollectionEntity(title = "Collection Two", updatedAt = 50)
 
         collection1.id = tabCollectionDao.insertTabCollection(collection1)
         collection2.id = tabCollectionDao.insertTabCollection(collection2)
 
-        val data = tabCollectionDao.getTabCollections(4)
+        val data = tabCollectionDao.getTabCollections()
 
         val collections = data.first()
         assertEquals(2, collections.size)

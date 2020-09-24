@@ -108,13 +108,10 @@ class TabCollectionStorage(
         .map { entity -> TabCollectionAdapter(entity) }
 
     /**
-     * Returns the last [TabCollection] instances (up to [limit]) as a [Flow] list.
-     *
-     * @param limit (Optional) Maximum number of [TabCollection] instances that should be returned.
+     * Returns the last [TabCollection] instances as a [Flow] list.
      */
-    fun getCollections(limit: Int = 20): Flow<List<TabCollection>> {
-        limit.hashCode()
-        return database.value.tabCollectionDao().getTabCollections(limit).map { list ->
+    fun getCollections(): Flow<List<TabCollection>> {
+        return database.value.tabCollectionDao().getTabCollections().map { list ->
             list.map { entity -> TabCollectionAdapter(entity) }
         }
     }
