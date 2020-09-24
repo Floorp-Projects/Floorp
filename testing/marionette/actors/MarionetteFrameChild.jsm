@@ -12,10 +12,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   atom: "chrome://marionette/content/atom.js",
+  ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   evaluate: "chrome://marionette/content/evaluate.js",
   Log: "chrome://marionette/content/log.js",
+  pprint: "chrome://marionette/content/format.js",
+  WebElement: "chrome://marionette/content/element.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -23,16 +26,10 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 class MarionetteFrameChild extends JSWindowActorChild {
   constructor() {
     super();
-
-    this.seenEls = new element.Store();
   }
 
   get content() {
     return this.docShell.domWindow;
-  }
-
-  get id() {
-    return this.browsingContext.id;
   }
 
   get innerWindowId() {
@@ -41,7 +38,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
 
   actorCreated() {
     logger.trace(
-      `[${this.id}] Child actor created for window id ${this.innerWindowId}`
+      `[${this.browsingContext.id}] Child actor created for window id ${this.innerWindowId}`
     );
   }
 
@@ -107,11 +104,73 @@ class MarionetteFrameChild extends JSWindowActorChild {
     }
   }
 
+  /**
+   * Wrapper around ContentDOMReference.get with additional steps specific to
+   * Marionette.
+   *
+   * @param {Element} el
+   *     The DOM element to generate the identifier for.
+   *
+   * @return {object} The ContentDOMReference ElementIdentifier for the DOM
+   *     element augmented with a Marionette WebElement reference.
+   */
+  async getElementId(el) {
+    const id = ContentDOMReference.get(el);
+    const webEl = WebElement.from(el);
+    id.webElRef = webEl.toJSON();
+    // Use known WebElement reference if parent process has seen `id` before
+    // TODO - Bug 1666837 - Avoid interprocess element lookup when possible
+    id.webElRef = await this.sendQuery(
+      "MarionetteFrameChild:ElementIdCacheAdd",
+      id
+    );
+    return id;
+  }
+
+  /**
+   * Wrapper around ContentDOMReference.resolve with additional error handling
+   * specific to Marionette.
+   *
+   * @param {ElementIdentifier} id
+   *     The identifier generated via ContentDOMReference.get for a DOM element.
+   *
+   * @return {Element} The DOM element that the identifier was generated for, or
+   *     null if the element does not still exist.
+   *
+   * @throws {StaleElementReferenceError}
+   *     If the element has gone stale, indicating it is no longer
+   *     attached to the DOM, or its node document is no longer the
+   *     active document.
+   */
+  resolveElement(id) {
+    let webEl;
+    if (id.webElRef) {
+      webEl = WebElement.fromJSON(id.webElRef);
+    }
+    const el = ContentDOMReference.resolve(id);
+    if (element.isStale(el, this.content)) {
+      throw new error.StaleElementReferenceError(
+        pprint`The element reference of ${el || webEl?.uuid} is stale; ` +
+          "either the element is no longer attached to the DOM, " +
+          "it is not in the current frame context, " +
+          "or the document has been refreshed"
+      );
+    }
+    return el;
+  }
+
   // Implementation of WebDriver commands
 
   /**
    * Find an element in the current browsing context's document using the
    * given search strategy.
+   *
+   * @param {Object} options
+   * @param {Object} options.opts
+   * @param {ElementIdentifier} opts.startNode
+   * @param {string} opts.strategy
+   * @param {string} opts.selector
+   *
    */
   async findElement(options = {}) {
     const { strategy, selector, opts } = options;
@@ -119,17 +178,24 @@ class MarionetteFrameChild extends JSWindowActorChild {
     opts.all = false;
 
     if (opts.startNode) {
-      opts.startNode = this.seenEls.get(opts.startNode);
+      opts.startNode = this.resolveElement(opts.startNode);
     }
 
     const container = { frame: this.content };
     const el = await element.find(container, strategy, selector, opts);
-    return this.seenEls.add(el);
+    return this.getElementId(el);
   }
 
   /**
    * Find elements in the current browsing context's document using the
    * given search strategy.
+   *
+   * @param {Object} options
+   * @param {Object} options.opts
+   * @param {ElementIdentifier} opts.startNode
+   * @param {string} opts.strategy
+   * @param {string} opts.selector
+   *
    */
   async findElements(options = {}) {
     const { strategy, selector, opts } = options;
@@ -137,12 +203,12 @@ class MarionetteFrameChild extends JSWindowActorChild {
     opts.all = true;
 
     if (opts.startNode) {
-      opts.startNode = this.seenEls.get(opts.startNode);
+      opts.startNode = this.resolveElement(opts.startNode);
     }
 
     const container = { frame: this.content };
-    const el = await element.find(container, strategy, selector, opts);
-    return this.seenEls.addAll(el);
+    const els = await element.find(container, strategy, selector, opts);
+    return Promise.all(els.map(el => this.getElementId(el)));
   }
 
   /**
@@ -157,7 +223,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
    */
   async getElementAttribute(options = {}) {
     const { name, webEl } = options;
-    const el = this.seenEls.get(webEl);
+    const el = this.resolveElement(webEl);
 
     if (element.isBooleanAttribute(el, name)) {
       if (el.hasAttribute(name)) {
@@ -173,7 +239,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
    */
   async getElementProperty(options = {}) {
     const { name, webEl } = options;
-    const el = this.seenEls.get(webEl);
+    const el = this.resolveElement(webEl);
 
     return typeof el[name] != "undefined" ? el[name] : null;
   }
@@ -183,7 +249,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
    */
   async getElementTagName(options = {}) {
     const { webEl } = options;
-    const el = this.seenEls.get(webEl);
+    const el = this.resolveElement(webEl);
     return el.tagName.toLowerCase();
   }
 
@@ -192,7 +258,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
    */
   async getElementText(options = {}) {
     const { webEl } = options;
-    const el = this.seenEls.get(webEl);
+    const el = this.resolveElement(webEl);
     return atom.getElementText(el, this.content);
   }
 
@@ -201,7 +267,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
    */
   async getElementValueOfCssProperty(options = {}) {
     const { name, webEl } = options;
-    const el = this.seenEls.get(webEl);
+    const el = this.resolveElement(webEl);
 
     const style = this.content.getComputedStyle(el);
     return style.getPropertyValue(name);
@@ -211,9 +277,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
    * Switch to the specified frame.
    *
    * @param {Object=} options
-   * @param {(number|WebElement)=} options.id
+   * @param {(number|ElementIdentifier)=} options.id
    *     Identifier of the frame to switch to. If it's a number treat it as
-   *     the index for all the existing frames. If it's a WebElement switch
+   *     the index for all the existing frames. If it's an ElementIdentifier switch
    *     to this specific frame. If not specified or `null` switch to the
    *     top-level browsing context.
    */
@@ -232,9 +298,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         );
       }
       browsingContext = childContexts[id];
-      this.seenEls.add(browsingContext.embedderElement);
+      await this.getElementId(browsingContext.embedderElement);
     } else {
-      const frameElement = this.seenEls.get(id);
+      const frameElement = this.resolveElement(id);
       const context = childContexts.find(context => {
         return context.embedderElement === frameElement;
       });
