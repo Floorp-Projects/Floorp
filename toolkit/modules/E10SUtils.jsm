@@ -142,15 +142,6 @@ function documentChannelPermittedForURI(aURI) {
   );
 }
 
-function canProcessSwitchWithDocumentChannel(
-  aURI,
-  aRemoteSubframes,
-  aDesiredRemoteType,
-  aBrowsingContext
-) {
-  return documentChannelPermittedForURI(aURI);
-}
-
 // Note that even if the scheme fits the criteria for a web-handled scheme
 // (ie it is compatible with the checks registerProtocolHandler uses), it may
 // not be web-handled - it could still be handled via the OS by another app.
@@ -933,15 +924,7 @@ var E10SUtils = {
     // If we already have a content process, and the load will be
     // handled using DocumentChannel, then we can skip switching
     // for now, and let DocumentChannel do it during the response.
-    if (
-      uriObject &&
-      canProcessSwitchWithDocumentChannel(
-        uriObject,
-        remoteSubframes,
-        requiredRemoteType,
-        browser.browsingContext
-      )
-    ) {
+    if (uriObject && documentChannelPermittedForURI(uriObject)) {
       mustChangeProcess = false;
       newFrameloader = false;
     }
@@ -966,13 +949,7 @@ var E10SUtils = {
       `shouldLoadURIInThisProcess: have ${remoteType} want ${wantRemoteType}`
     );
 
-    if (
-      canProcessSwitchWithDocumentChannel(
-        aURI,
-        aRemoteSubframes,
-        wantRemoteType
-      )
-    ) {
+    if (documentChannelPermittedForURI(aURI)) {
       // We can switch later with documentchannel.
       return true;
     }
@@ -1007,12 +984,7 @@ var E10SUtils = {
     // 1640019).
     if (
       AppConstants.MOZ_WIDGET_TOOLKIT != "android" &&
-      canProcessSwitchWithDocumentChannel(
-        aURI,
-        useRemoteSubframes,
-        wantRemoteType,
-        aDocShell.browsingContext
-      )
+      documentChannelPermittedForURI(aURI)
     ) {
       return true;
     }
