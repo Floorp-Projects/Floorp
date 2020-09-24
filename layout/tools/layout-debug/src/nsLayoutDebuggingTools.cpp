@@ -138,6 +138,9 @@ nsLayoutDebuggingTools::SetPagedMode(bool aPagedMode) {
   printSettings->SetFooterStrCenter(u""_ns);
   printSettings->SetFooterStrRight(u""_ns);
 
+  printSettings->SetPrintBGColors(true);
+  printSettings->SetPrintBGImages(true);
+
   nsCOMPtr<nsIContentViewer> contentViewer(doc_viewer(mDocShell));
   contentViewer->SetPageModeForTesting(aPagedMode, printSettings);
 
