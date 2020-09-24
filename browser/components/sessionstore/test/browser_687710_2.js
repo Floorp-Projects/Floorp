@@ -58,7 +58,7 @@ add_task(async function test() {
         }
       }
 
-      let history = docShell.sessionHistory.legacySHistory;
+      let history = docShell.browsingContext.childSessionHistory.legacySHistory;
 
       is(history.count, 2, "history.count");
       for (let i = 0; i < history.count; i++) {
