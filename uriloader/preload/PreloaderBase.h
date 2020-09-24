@@ -150,25 +150,7 @@ class PreloaderBase : public SupportsWeakPtr, public nsISupports {
   // directly is to keep PreloaderBase as simple as possible so that derived
   // classes don't have to deal with calling super when implementing these
   // interfaces from some reason as well.
-  class RedirectSink final : public nsIInterfaceRequestor,
-                             public nsIChannelEventSink,
-                             public nsIRedirectResultListener {
-    RedirectSink() = delete;
-    virtual ~RedirectSink() = default;
-
-   public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSICHANNELEVENTSINK
-    NS_DECL_NSIREDIRECTRESULTLISTENER
-
-    RedirectSink(PreloaderBase* aPreloader, nsIInterfaceRequestor* aCallbacks);
-
-   private:
-    nsMainThreadPtrHandle<PreloaderBase> mPreloader;
-    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    nsCOMPtr<nsIChannel> mRedirectChannel;
-  };
+  class RedirectSink;
 
   // A timer callback to trigger the unuse warning for this preload
   class UsageTimer final : public nsITimerCallback {
