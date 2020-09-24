@@ -7054,10 +7054,22 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   if (!aCaretPoint.IsSet()) {
     // Don't shrink the original range.
     bool noNeedToChangeStart = false;
-    if (aRangesToDelete.GetStartPointOfFirstRange().IsBefore(
-            range.StartRef())) {
-      noNeedToChangeStart = true;
-      range.SetStart(aRangesToDelete.GetStartPointOfFirstRange());
+    EditorDOMPoint atStart(aRangesToDelete.GetStartPointOfFirstRange());
+    if (atStart.IsBefore(range.StartRef())) {
+      // If the range starts from end of a container, and computed block
+      // boundaries range starts from an invisible `<br>` element,  we
+      // may need to shrink the range.
+      nsIContent* nextContent =
+          atStart.IsEndOfContainer() && range.StartRef().GetChild() &&
+                  range.StartRef().GetChild()->IsHTMLElement(nsGkAtoms::br) &&
+                  !aHTMLEditor.IsVisibleBRElement(range.StartRef().GetChild())
+              ? aHTMLEditor.GetNextElementOrTextInBlock(
+                    *atStart.ContainerAsContent())
+              : nullptr;
+      if (!nextContent || nextContent != range.StartRef().GetChild()) {
+        noNeedToChangeStart = true;
+        range.SetStart(aRangesToDelete.GetStartPointOfFirstRange());
+      }
     }
     if (range.EndRef().IsBefore(aRangesToDelete.GetEndPointOfFirstRange())) {
       if (noNeedToChangeStart) {
