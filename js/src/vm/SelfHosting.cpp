@@ -2444,7 +2444,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("ObjectIsTypeDescr", js::ObjectIsTypeDescr, 1, 0),
     JS_FN("ObjectIsTypedObject", js::ObjectIsTypedObject, 1, 0),
-    JS_FN("TypeDescrIsArrayType", js::TypeDescrIsArrayType, 1, 0),
     JS_FN("TypeDescrIsSimpleType", js::TypeDescrIsSimpleType, 1, 0),
 
     JS_FN("IsBoxedWasmAnyRef", js::IsBoxedWasmAnyRef, 1, 0),
