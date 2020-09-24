@@ -7,6 +7,13 @@
  */
 "use strict";
 
+// Import this in order to use `triggerPictureInPicture()`.
+/* import-globals-from ../../../../toolkit/components/pictureinpicture/tests/head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/toolkit/components/pictureinpicture/tests/head.js",
+  this
+);
+
 const LOCATION = "https://example.com/browser/toolkit/content/tests/browser/";
 
 const powerManagerService = Cc["@mozilla.org/power/powermanagerservice;1"];
@@ -30,19 +37,13 @@ function wakeLockObserved(observeTopic, checkFn) {
 
 function getWakeLockState(topic, needLock, isTabInForeground) {
   const tabState = isTabInForeground ? "foreground" : "background";
-  const promise = needLock
-    ? wakeLockObserved(topic, state => state == `locked-${tabState}`)
-    : null;
   return {
     check: async () => {
       if (needLock) {
-        const lockState = powerManager.getWakeLockState(topic);
-        info(`topic=${topic}, state=${lockState}`);
-        if (lockState == `locked-${tabState}`) {
-          ok(true, `requested '${topic}' wakelock in ${tabState}`);
-          return;
+        const expectedLockState = `locked-${tabState}`;
+        if (powerManager.getWakeLockState(topic) != expectedLockState) {
+          await wakeLockObserved(topic, state => state == expectedLockState);
         }
-        await promise;
         ok(true, `requested '${topic}' wakelock in ${tabState}`);
       } else {
         const lockState = powerManager.getWakeLockState(topic);
@@ -103,6 +104,7 @@ async function test_media_wakelock({
   additionalParams,
   lockAudio,
   lockVideo,
+  elementIdForEnteringPIPMode,
 }) {
   info(`- start a new test for '${description}' -`);
   info(`- open new foreground tab -`);
@@ -130,13 +132,29 @@ async function test_media_wakelock({
   }
 
   info(`- wait for media starting playing -`);
+  let winPIP = null;
+  if (elementIdForEnteringPIPMode) {
+    winPIP = await triggerPictureInPicture(
+      browser,
+      elementIdForEnteringPIPMode
+    );
+  }
   await SpecialPowers.spawn(browser, [additionalParams], initFunction);
   await audioWakeLock.check();
   await videoWakeLock.check();
 
   info(`- switch tab to background -`);
-  audioWakeLock = getWakeLockState("audio-playing", lockAudio, false);
-  videoWakeLock = getWakeLockState("video-playing", lockVideo, false);
+  const isPageConsideredAsForeground = !!elementIdForEnteringPIPMode;
+  audioWakeLock = getWakeLockState(
+    "audio-playing",
+    lockAudio,
+    isPageConsideredAsForeground
+  );
+  videoWakeLock = getWakeLockState(
+    "video-playing",
+    lockVideo,
+    isPageConsideredAsForeground
+  );
   const tab2 = await BrowserTestUtils.openNewForegroundTab(
     window.gBrowser,
     "about:blank"
@@ -154,6 +172,9 @@ async function test_media_wakelock({
   info(`- remove tabs -`);
   BrowserTestUtils.removeTab(tab);
   BrowserTestUtils.removeTab(tab2);
+  if (winPIP) {
+    await BrowserTestUtils.closeWindow(winPIP);
+  }
 }
 
 add_task(async function start_tests() {
@@ -225,6 +246,13 @@ add_task(async function start_tests() {
     },
     lockAudio: false,
     lockVideo: false,
+  });
+  await test_media_wakelock({
+    description: "playing a PIP video",
+    urlOrFunction: "file_video.html",
+    elementIdForEnteringPIPMode: "v",
+    lockAudio: true,
+    lockVideo: true,
   });
 });
 
