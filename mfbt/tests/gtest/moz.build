@@ -14,6 +14,7 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'TestAlgorithm.cpp',
     'TestInitializedOnce.cpp',
+    'TestMainThreadWeakPtr.cpp',
     'TestResultExtensions.cpp',
 ]
 
