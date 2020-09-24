@@ -98,12 +98,6 @@ interface BrowsingContext {
 
   [SetterThrows] attribute float textZoom;
 
-  // Default value for nsIContentViewer::authorStyleDisabled in any new
-  // browsing contexts created as a descendant of this one.
-  //
-  // Valid only for top browsing contexts.
-  [SetterThrows] attribute boolean authorStyleDisabledDefault;
-
   /**
    * Whether this docshell should save entries in global history.
    */

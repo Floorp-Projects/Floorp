@@ -7274,8 +7274,10 @@ nsresult nsDocShell::RestoreFromHistory() {
   nsCOMPtr<nsIContentViewer> newCv(viewer);
   float overrideDPPX = 0.0f;
 
-  if (oldCv) {
+  bool styleDisabled = false;
+  if (oldCv && newCv) {
     oldCv->GetOverrideDPPX(&overrideDPPX);
+    oldCv->GetAuthorStyleDisabled(&styleDisabled);
   }
 
   // Protect against mLSHE going away via a load triggered from
@@ -7500,14 +7502,10 @@ nsresult nsDocShell::RestoreFromHistory() {
     FavorPerformanceHint(true);
   }
 
-  if (oldCv) {
+  if (oldCv && newCv) {
     newCv->SetOverrideDPPX(overrideDPPX);
+    newCv->SetAuthorStyleDisabled(styleDisabled);
   }
-
-  // Take the author style disabled state from the top browsing context.
-  // (PageStyleChild.jsm ensures this is up to date.)
-  bool styleDisabled = GetBrowsingContext()->Top()->AuthorStyleDisabledDefault();
-  newCv->SetAuthorStyleDisabled(styleDisabled);
 
   if (document) {
     RefPtr<nsDocShell> parent = GetInProcessParentDocshell();
@@ -8074,6 +8072,7 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
   const Encoding* hintCharset = nullptr;
   int32_t hintCharsetSource = kCharsetUninitialized;
   float overrideDPPX = 1.0;
+  bool styleDisabled = false;
   // |newMUDV| also serves as a flag to set the data from the above vars
   nsCOMPtr<nsIContentViewer> newCv;
 
@@ -8106,6 +8105,8 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
         NS_ENSURE_SUCCESS(oldCv->GetHintCharacterSetSource(&hintCharsetSource),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(oldCv->GetOverrideDPPX(&overrideDPPX),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(oldCv->GetAuthorStyleDisabled(&styleDisabled),
                           NS_ERROR_FAILURE);
       }
     }
@@ -8164,12 +8165,9 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
     NS_ENSURE_SUCCESS(newCv->SetHintCharacterSetSource(hintCharsetSource),
                       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(newCv->SetOverrideDPPX(overrideDPPX), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(newCv->SetAuthorStyleDisabled(styleDisabled),
+                      NS_ERROR_FAILURE);
   }
-
-  // Take the author style disabled state from the top browsing context.
-  // (PageStyleChild.jsm ensures this is up to date.)
-  bool styleDisabled = GetBrowsingContext()->Top()->AuthorStyleDisabledDefault();
-  mContentViewer->SetAuthorStyleDisabled(styleDisabled);
 
   // Stuff the bgcolor from the old pres shell into the new
   // pres shell. This improves page load continuity.
