@@ -1053,27 +1053,42 @@ SearchService.prototype = {
     }
   },
 
-  _loadEnginesFromSettings(engines) {
-    if (!engines) {
+  _loadEnginesFromSettings(enginesCache) {
+    if (!enginesCache) {
       return;
     }
 
     logConsole.debug(
       "_loadEnginesFromSettings: Loading",
-      engines.length,
+      enginesCache.length,
       "engines from settings"
     );
 
     let skippedEngines = 0;
-    for (let engine of engines) {
+    for (let engineJSON of enginesCache) {
       // We renamed isBuiltin to isAppProvided in 1631898,
       // keep checking isBuiltin for older settings.
-      if (engine._isAppProvided || engine._isBuiltin) {
+      if (engineJSON._isAppProvided || engineJSON._isBuiltin) {
         ++skippedEngines;
         continue;
       }
 
-      this._loadEngineFromSettings(engine);
+      try {
+        let engine = new SearchEngine({
+          isAppProvided: false,
+          loadPath: engineJSON._loadPath,
+        });
+        engine._initWithJSON(engineJSON);
+        this._addEngineToStore(engine);
+      } catch (ex) {
+        logConsole.error(
+          "Failed to load",
+          engineJSON._name,
+          "from settings:",
+          ex,
+          engineJSON
+        );
+      }
     }
 
     if (skippedEngines) {
@@ -1082,22 +1097,6 @@ SearchService.prototype = {
         skippedEngines,
         "built-in engines."
       );
-    }
-  },
-
-  _loadEngineFromSettings(json) {
-    try {
-      let engine = new SearchEngine({
-        // We renamed isBuiltin to isAppProvided in 1631898,
-        // keep checking isBuiltin for older settings.
-        isAppProvided: !!json._isAppProvided || !!json._isBuiltin,
-        loadPath: json._loadPath,
-      });
-      engine._initWithJSON(json);
-      this._addEngineToStore(engine);
-    } catch (ex) {
-      logConsole.error("Failed to load", json._name, "from settings:", ex);
-      logConsole.debug("Engine JSON:", json.toSource());
     }
   },
 
