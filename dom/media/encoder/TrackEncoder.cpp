@@ -20,7 +20,6 @@ LazyLogModule gTrackEncoderLog("TrackEncoder");
 #define TRACK_LOG(type, msg) MOZ_LOG(gTrackEncoderLog, type, msg)
 
 static const int DEFAULT_CHANNELS = 1;
-static const int DEFAULT_SAMPLING_RATE = 16000;
 static const int DEFAULT_FRAME_WIDTH = 640;
 static const int DEFAULT_FRAME_HEIGHT = 480;
 // 1 second threshold if the audio encoder cannot be initialized.
@@ -232,8 +231,8 @@ void AudioTrackEncoder::NotifyEndOfStream() {
 
   if (!mCanceled && !mInitialized) {
     // If source audio track is completely silent till the end of encoding,
-    // initialize the encoder with default channel counts and sampling rate.
-    Init(DEFAULT_CHANNELS, DEFAULT_SAMPLING_RATE);
+    // initialize the encoder with a default channel count.
+    Init(DEFAULT_CHANNELS, mTrackRate);
   }
 
   mEndOfStream = true;
