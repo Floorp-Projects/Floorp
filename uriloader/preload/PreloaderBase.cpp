@@ -36,7 +36,7 @@ class PreloaderBase::RedirectSink final : public nsIInterfaceRequestor,
   RedirectSink(PreloaderBase* aPreloader, nsIInterfaceRequestor* aCallbacks);
 
  private:
-  WeakPtr<PreloaderBase> mPreloader;
+  MainThreadWeakPtr<PreloaderBase> mPreloader;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIChannel> mRedirectChannel;
 };
@@ -45,11 +45,7 @@ PreloaderBase::RedirectSink::RedirectSink(PreloaderBase* aPreloader,
                                           nsIInterfaceRequestor* aCallbacks)
     : mPreloader(aPreloader), mCallbacks(aCallbacks) {}
 
-PreloaderBase::RedirectSink::~RedirectSink() {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(),
-                        "Should figure out how to safely drop mPreloader "
-                        "otherwise");
-}
+PreloaderBase::RedirectSink::~RedirectSink() = default;
 
 NS_IMPL_ISUPPORTS(PreloaderBase::RedirectSink, nsIInterfaceRequestor,
                   nsIChannelEventSink, nsIRedirectResultListener)
