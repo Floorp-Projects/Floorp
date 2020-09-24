@@ -1157,6 +1157,8 @@
     <string name="sign_in_with_camera">התחברות באמצעות המצלמה שלך</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">שימוש בדוא״ל במקום</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[אין לך חשבון? <u>באפשרותך ליצור אחד</u> כדי לסנכרן את Firefox בין מכשירים.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">‏Firefox יפסיק להסתנכרן עם החשבון שלך, אבל לא ימחק את נתוני הגלישה שלך ממכשיר זה.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1230,7 +1232,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">עוגיות מעקב חוצות אתרים</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">חסימת עוגיות שרשתות פרסומות וחברות ניתוח תעבורה משתמשות בהן כדי לאסוף פרופיל על נתוני הגלישה שלך על פני מגוון רחב של אתרים.</string>
+    <string name="etp_cookies_description">חוסם עוגיות שרשתות פרסומות וחברות ניתוח תעבורה משתמשות בהן כדי לאסוף פרופיל על נתוני הגלישה שלך על פני מגוון רחב של אתרים.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">כורי מטבעות דיגיטליים</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1265,6 +1267,11 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">‏%s | ספריות OSS</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">רכיבי מעקב של הפניות</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">מנקה עוגיות המוגדרות על־ידי הפניות לאתרי מעקב ידועים.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">תמיכה</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1279,6 +1286,9 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">ספריות בהן אנו משתמשים</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">תפריט ניפוי שגיאות: נותרו %1$d לחיצות כדי להפעיל</string>
     <string name="about_debug_menu_toast_done">תפריט ניפוי שגיאות מופעל</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->

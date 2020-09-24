@@ -1210,6 +1210,8 @@
     <string name="sign_in_with_camera">카메라로 로그인</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">대신 이메일 사용</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[계정이 없습니까? 기기 간에 Firefox를 동기화하려면 <u>하나를 만드세요</u>.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox가 계정과의 동기화를 중단하지만 이 기기의 사용자 탐색 데이터는 삭제하지 않습니다.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1318,6 +1320,12 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS 라이브러리</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">트래커 리디렉션</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">알려진 추적 웹 사이트로 리디렉션하여 설정된 쿠키를 지웁니다.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">지원</string>

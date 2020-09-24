@@ -1178,6 +1178,8 @@
     <string name="sign_in_with_camera">Logg inn med kameraet ditt</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Bruk e-post i stedet</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Ingen konto? <u>Opprett en</u> for å synkronisere Firefox mellom enheter.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox vil stoppe synkroniseringen med kontoen din, men vil ikke slette noen av dine nettleserdata på denne enheten.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1289,6 +1291,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS-bibliotek</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Omdirigeringssporere</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Fjerner infokapsler satt av omdirigeringer til kjente sporingsnettsteder.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Brukerstøtte</string>

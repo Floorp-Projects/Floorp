@@ -1197,6 +1197,8 @@
     <string name="sign_in_with_camera">Melden Sie sich mit Ihrer Kamera an</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Stattdessen E-Mail-Adresse verwenden</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Kein Konto? <u>Erstellen Sie eines</u>, um Firefox zwischen Geräten zu synchronisieren.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox beendet die Synchronisation mit Ihrem Konto, löscht aber keine Surf-Daten auf diesem Gerät.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1303,6 +1305,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS-Bibliotheken</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Weiterleitungs-Tracker</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Löscht Cookies, die durch Weiterleitungen zu bekannten Tracking-Websites gesetzt wurden.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Hilfe</string>

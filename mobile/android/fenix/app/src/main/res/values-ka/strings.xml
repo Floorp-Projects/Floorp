@@ -48,7 +48,7 @@
     <string name="tab_tray_multiselect_selected_content_description">მონიშნულია</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
-    <string name="about_content">%1$s შექმნა Mozilla-მ.</string>
+    <string name="about_content">%1$s შემქმნელი Mozilla.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
@@ -143,6 +143,8 @@
     <string name="browser_menu_install_on_homescreen">დაყენება</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">დასინქრონებული ჩანართები</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">კვლავ დასინქრონება</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">პოვნა გვერდზე</string>
     <!-- Browser menu button that creates a private tab -->
@@ -325,6 +327,8 @@
     <string name="preferences_search_browsing_history">ძიება დათვალიერების ისტორიაში</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">სანიშნების ძიება</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">დასინქრონებული ჩანართების მოძიება</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ანგარიშის პარამეტრები</string>
     <!-- Preference for enabling url autocomplete-->
@@ -1234,7 +1238,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">საიტთაშორისი მეთვალყურე ფუნთუშები</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">ზღუდავს ფუნთუშებს, რომლებსაც სარეკლამო და ანალიტიკური კომპანიები იყენებენ თქვენზე მონაცემების ერთიანად აღრიცხვისთვის ბევრ საიტზე.</string>
+    <string name="etp_cookies_description">ზღუდავს ფუნთუშებს, რომლებსაც სარეკლამო და ანალიტიკური კომპანიები იყენებენ თქვენზე მონაცემების ერთიანად შეგროვებისთვის, სხვადასხვა საიტიდან.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">კრიპტოგამომმუშავებლები</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1405,7 +1409,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">დაიცავით თქვენი ანგარიშები</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">დააყენეთ მოწყობილობის ჩასაკეტად მოსახაზი, PIN-კოდი ან პაროლი, თქვენი შენახული ანგარიშების მონაცემებთან, უცხო პირების წვდომის აღსაკვეთათ.</string>
+    <string name="logins_warning_dialog_message">დააყენეთ მოწყობილობის ჩასაკეტად მოსახაზი, PIN-კოდი ან პაროლი, თქვენი შენახული ანგარიშების მონაცემებთან, უცხო პირების წვდომის აღსაკვეთად.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">მოგვიანებით</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->

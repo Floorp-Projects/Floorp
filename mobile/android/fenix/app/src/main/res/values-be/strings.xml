@@ -282,6 +282,8 @@
     <string name="preferences_theme">Тэма</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Хатняя старонка</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Жэсты</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Уладкаванне</string>
 
@@ -317,8 +319,12 @@
     <string name="preferences_search_browsing_history">Пошук у гісторыі аглядання</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Пошук у закладках</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Шукаць у сінхранізаваных картках</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Налады ўліковага запісу</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Аўтазапаўненне URL-адрасоў</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Адкрываць спасылкі ў праграмах</string>
     <!-- Preference for open download with an external download manager app -->
@@ -449,6 +455,10 @@
     <string name="preference_auto_battery_theme">Паводле рэжыму эканоміі зараду</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Тэма прылады</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Пацягніце, каб абнавіць</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
