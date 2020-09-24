@@ -3701,9 +3701,9 @@ nsresult EditorBase::DeleteSelectionAsAction(
   if (IsHTMLEditor() && editActionData.NeedsToDispatchBeforeInputEvent()) {
     AutoRangeArray rangesToDelete(*SelectionRefPtr());
     if (!rangesToDelete.Ranges().IsEmpty()) {
-      nsresult rv = MOZ_KnownLive(AsHTMLEditor())
-                        ->ComputeTargetRanges(aDirectionAndAmount,
-                                              aStripWrappers, rangesToDelete);
+      nsresult rv =
+          MOZ_KnownLive(AsHTMLEditor())
+              ->ComputeTargetRanges(aDirectionAndAmount, rangesToDelete);
       if (rv == NS_ERROR_EDITOR_DESTROYED) {
         NS_WARNING("HTMLEditor::ComputeTargetRanges() destroyed the editor");
         return NS_ERROR_EDITOR_DESTROYED;
