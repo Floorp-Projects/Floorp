@@ -3268,7 +3268,7 @@ AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
   if (IsPrimitiveArrayTypedObject(obj)) {
     writer.guardGroupForLayout(objId, obj->group());
   } else {
-    writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
+    writer.guardIsTypedArray(objId);
   }
 
   writer.loadTypedElementExistsResult(objId, indexId, layout);
@@ -3293,7 +3293,7 @@ AttachDecision HasPropIRGenerator::tryAttachTypedArrayNonInt32Index(
 
   TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
-  writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
+  writer.guardIsTypedArray(objId);
 
   writer.loadTypedElementExistsResult(objId, indexId, layout);
 

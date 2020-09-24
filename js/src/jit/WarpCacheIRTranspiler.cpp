@@ -582,6 +582,16 @@ bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardIsTypedArray(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGuardIsTypedArray::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardProto(ObjOperandId objId,
                                            uint32_t protoOffset) {
   MDefinition* def = getOperand(objId);

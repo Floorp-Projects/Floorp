@@ -399,6 +399,13 @@
   args:
     obj: ObjId
 
+- name: GuardIsTypedArray
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 - name: GuardHasProxyHandler
   shared: false
   transpile: false
