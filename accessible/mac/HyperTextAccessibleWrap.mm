@@ -261,6 +261,15 @@ void HyperTextAccessibleWrap::RangeAt(int32_t aOffset, EWhichRange aRangeType,
       RightWordAt(aOffset, aStartContainer, aStartOffset, aEndContainer,
                   aEndOffset);
       break;
+    case EWhichRange::eLine:
+    case EWhichRange::eLeftLine:
+      LineAt(aOffset, false, aStartContainer, aStartOffset, aEndContainer,
+             aEndOffset);
+      break;
+    case EWhichRange::eRightLine:
+      LineAt(aOffset, true, aStartContainer, aStartOffset, aEndContainer,
+             aEndOffset);
+      break;
     default:
       break;
   }
@@ -339,6 +348,42 @@ void HyperTextAccessibleWrap::RightWordAt(int32_t aOffset,
     *aStartOffset = start.mOffset;
     *aEndOffset = end.mOffset;
   }
+}
+
+void HyperTextAccessibleWrap::LineAt(int32_t aOffset, bool aNextLine,
+                                     HyperTextAccessible** aStartContainer,
+                                     int32_t* aStartOffset,
+                                     HyperTextAccessible** aEndContainer,
+                                     int32_t* aEndOffset) {
+  TextPoint here(this, aOffset);
+  TextPoint end =
+      FindTextPoint(aOffset, eDirNext, eSelectEndLine, eDefaultBehavior);
+  if (!end.mContainer || end < here) {
+    // If we didn't find a word end, or if we wrapped around (bug 1652833),
+    // return with no result.
+    return;
+  }
+
+  TextPoint start = static_cast<HyperTextAccessibleWrap*>(end.mContainer)
+                        ->FindTextPoint(end.mOffset, eDirPrevious,
+                                        eSelectBeginLine, eDefaultBehavior);
+
+  if (!aNextLine && here < start) {
+    start = FindTextPoint(aOffset, eDirPrevious, eSelectBeginLine,
+                          eDefaultBehavior);
+    if (!start.mContainer) {
+      return;
+    }
+
+    end = static_cast<HyperTextAccessibleWrap*>(start.mContainer)
+              ->FindTextPoint(start.mOffset, eDirNext, eSelectEndLine,
+                              eDefaultBehavior);
+  }
+
+  *aStartContainer = start.mContainer;
+  *aEndContainer = end.mContainer;
+  *aStartOffset = start.mOffset;
+  *aEndOffset = end.mOffset;
 }
 
 void HyperTextAccessibleWrap::NextClusterAt(

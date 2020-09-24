@@ -50,6 +50,39 @@ function testWords(macDoc, marker, msg, expectedLeft, expectedRight) {
   );
 }
 
+function testLines(
+  macDoc,
+  marker,
+  msg,
+  expectedLine,
+  expectedLeft,
+  expectedRight
+) {
+  testRangeAtMarker(
+    macDoc,
+    marker,
+    "AXLineTextMarkerRangeForTextMarker",
+    expectedLine,
+    `${msg}: line matches`
+  );
+
+  testRangeAtMarker(
+    macDoc,
+    marker,
+    "AXLeftLineTextMarkerRangeForTextMarker",
+    expectedLeft,
+    `${msg}: left line matches`
+  );
+
+  testRangeAtMarker(
+    macDoc,
+    marker,
+    "AXRightLineTextMarkerRangeForTextMarker",
+    expectedRight,
+    `${msg}: right line matches`
+  );
+}
+
 // Tests consistency in text markers between:
 // 1. "Linked list" forward navagation
 // 2. Getting markers by index
@@ -80,6 +113,12 @@ function testMarkerIntegrity(accDoc, expectedMarkerValues) {
       marker,
       `At index ${count}`,
       ...expectedMarkerValues[count].words
+    );
+    testLines(
+      macDoc,
+      marker,
+      `At index ${count}`,
+      ...expectedMarkerValues[count].lines
     );
     testUIElement(
       macDoc,

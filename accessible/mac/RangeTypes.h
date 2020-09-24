@@ -11,7 +11,10 @@ namespace a11y {
 
 enum class EWhichRange {
   eLeftWord,
-  eRightWord
+  eRightWord,
+  eLine,
+  eLeftLine,
+  eRightLine
 };
 
 }  // namespace a11y

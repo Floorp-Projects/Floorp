@@ -180,6 +180,35 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
       .CreateAXTextMarkerRange();
 }
 
+- (id)moxLineTextMarkerRangeForTextMarker:(id)textMarker {
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
+
+  return geckoTextMarker.Range(EWhichRange::eLine).CreateAXTextMarkerRange();
+}
+
+- (id)moxLeftLineTextMarkerRangeForTextMarker:(id)textMarker {
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
+
+  return geckoTextMarker.Range(EWhichRange::eLeftLine)
+      .CreateAXTextMarkerRange();
+}
+
+- (id)moxRightLineTextMarkerRangeForTextMarker:(id)textMarker {
+  GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
+  if (!geckoTextMarker.IsValid()) {
+    return nil;
+  }
+
+  return geckoTextMarker.Range(EWhichRange::eRightLine)
+      .CreateAXTextMarkerRange();
+}
+
 - (id)moxNextTextMarkerForTextMarker:(id)textMarker {
   GeckoTextMarker geckoTextMarker(mGeckoDocAccessible, textMarker);
   if (!geckoTextMarker.IsValid()) {
