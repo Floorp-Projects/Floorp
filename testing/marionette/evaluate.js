@@ -179,13 +179,15 @@ evaluate.sandbox = function(
 
 /**
  * Convert any web elements in arbitrary objects to DOM elements by
- * looking them up in the seen element store.
+ * looking them up in the seen element store, or add new ElementIdentifiers to
+ * the seen element reference store.
  *
  * @param {Object} obj
  *     Arbitrary object containing web elements.
- * @param {element.Store=} seenEls
- *     Known element store to look up web elements from.  If undefined,
- *     the web element references are returned instead.
+ * @param {(element.Store|element.ReferenceStore)=} seenEls
+ *     Known element store to look up web elements from. If `seenEls` is
+ *     undefined or an instance of `element.ReferenceStore`, return WebElement.
+ *     If `seenEls` is an instance of `element.Store`, return Element.
  * @param {WindowProxy=} win
  *     Current browsing context, if `seenEls` is provided.
  *
@@ -194,11 +196,11 @@ evaluate.sandbox = function(
  *     replaced by DOM elements.
  *
  * @throws {NoSuchElementError}
- *     If `seenEls` is given and the web element reference has not
+ *     If `seenEls` is an `element.Store` and the web element reference has not
  *     been seen before.
  * @throws {StaleElementReferenceError}
- *     If `seenEls` is given and the element has gone stale, indicating
- *     it is no longer attached to the DOM, or its node document
+ *     If `seenEls` is an `element.Store` and the element has gone stale,
+ *     indicating it is no longer attached to the DOM, or its node document
  *     is no longer the active document.
  */
 evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
@@ -224,6 +226,12 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
           return seenEls.get(webEl, win);
         }
         return webEl;
+        // ElementIdentifier
+      } else if (
+        seenEls instanceof element.ReferenceStore &&
+        WebElement.isReference(obj.webElRef)
+      ) {
+        return seenEls.add(obj);
       }
 
       // arbitrary objects
@@ -237,7 +245,7 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
 
 /**
  * Marshal arbitrary objects to JSON-safe primitives that can be
- * transported over the Marionette protocol.
+ * transported over the Marionette protocol or across processes.
  *
  * The marshaling rules are as follows:
  *
@@ -250,6 +258,9 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
  *   `seenEls` element store.  Once known, the elements' associated
  *   web element representation is returned.
  *
+ * - WebElements are transformed to the corresponding ElementIdentifier
+ *   for use in the content process, if an `element.ReferenceStore` is provided.
+ *
  * - Objects with custom JSON representations, i.e. if they have
  *   a callable `toJSON` function, are returned verbatim.  This means
  *   their internal integrity _are not_ checked.  Be careful.
@@ -259,7 +270,8 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
  *
  * @param {Object} obj
  *     Object to be marshaled.
- * @param {element.Store} seenEls
+ *
+ * @param {(element.Store|element.ReferenceStore)=} seenEls
  *     Element store to use for lookup of web element references.
  *
  * @return {Object}
@@ -291,6 +303,9 @@ evaluate.toJSON = function(obj, seenEls) {
 
     // WebElement
   } else if (WebElement.isReference(obj)) {
+    if (seenEls instanceof element.ReferenceStore) {
+      return seenEls.get(WebElement.fromJSON(obj));
+    }
     return obj;
 
     // Element (HTMLElement, SVGElement, XULElement, et al.)

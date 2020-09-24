@@ -2955,6 +2955,16 @@ GeckoDriver.prototype.deleteSession = function() {
   }
 
   if (MarionettePrefs.useActors) {
+    if (this.getBrowsingContext()) {
+      try {
+        // reset any global state used by parent actor
+        this.getActor().cleanUp();
+      } catch (e) {
+        if (e.result != Cr.NS_ERROR_DOM_NOT_FOUND_ERR) {
+          throw e;
+        }
+      }
+    }
     ChromeUtils.unregisterWindowActor("MarionetteFrame");
   }
 
