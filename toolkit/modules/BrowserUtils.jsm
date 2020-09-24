@@ -180,8 +180,8 @@ var BrowserUtils = {
 
     let secMan = Services.scriptSecurityManager;
     if (principal.isContentPrincipal) {
-      return secMan.createContentPrincipal(
-        principal.URI,
+      return secMan.principalWithOA(
+        principal,
         existingPrincipal.originAttributes
       );
     }
