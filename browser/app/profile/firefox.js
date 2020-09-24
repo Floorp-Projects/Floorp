@@ -1959,9 +1959,6 @@ pref("doh-rollout.provider-steering.enabled", false);
 // DoH Rollout: provider details for automatic steering.
 pref("doh-rollout.provider-steering.provider-list", "[{ \"name\": \"comcast\", \"canonicalName\": \"doh-discovery.xfinity.com\", \"uri\": \"https://doh.xfinity.com/dns-query\" }]");
 
-// DoH Rollout: whether to clear the mode value at shutdown.
-pref("doh-rollout.clearModeOnShutdown", true);
-
 // URL for Learn More link for browser error logging in preferences
 pref("browser.chrome.errorReporter.infoURL",
      "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/nightly-error-collection");
