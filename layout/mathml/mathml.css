@@ -37,12 +37,6 @@ math[display="inline" i] {
   display: inline;
   math-style: compact;
 }
-math[displaystyle="false" i] {
-  math-style: compact;
-}
-math[displaystyle="true" i] {
-  math-style: normal;
-}
 
 /**************************************************************************/
 /* Token elements                                                         */
@@ -227,16 +221,6 @@ mtable[framespacing] > mtr > mtd {
   and display attributes. See the <math> section above.
 */
 
-/*
-  Map mstyle@displaystyle to math-style.
-*/
-mstyle[displaystyle="false" i] {
-  math-style: compact;
-}
-mstyle[displaystyle="true" i] {
-  math-style: normal;
-}
-
 /*  munder, mover and munderover change the scriptlevels of their children
    using -moz-math-increment-script-level because regular CSS rules are
    insufficient to control when the scriptlevel should be incremented. All other
@@ -313,7 +297,6 @@ munderover > :not(:first-child) {
    mtable element sets displaystyle to "false" within the table elements.
 */
 mtable { math-style: compact; }
-mtable[displaystyle="true" i] { math-style: normal; }
 
 /*
    The mscarries element sets displaystyle to "false", and increments
