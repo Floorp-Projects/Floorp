@@ -172,7 +172,7 @@ const BackgroundPageThumbs = {
   },
 
   get useFissionBrowser() {
-    return Services.appinfo.fissionAutostart;
+    return Services.prefs.getBoolPref("fission.autostart");
   },
 
   /**

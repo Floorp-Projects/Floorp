@@ -108,7 +108,7 @@ add_task(async () => {
 
   // Navigate to an url that should switch to another target
   // when fission is enabled.
-  if (SpecialPowers.useRemoteSubframes) {
+  if (Services.prefs.getBoolPref("fission.autostart")) {
     info("Navigate to another page running on content process");
     await navigateTo(CONTENT_PROCESS_PAGE2, tab, toolbox, extension);
 

@@ -456,86 +456,6 @@ static ArgResult CheckArgExists(const char* aArg) {
 bool gSafeMode = false;
 bool gFxREmbedded = false;
 
-// Fission enablement for the current session is determined once, at startup,
-// and then remains the same for the duration of the session.
-//
-// The following factors determine whether or not Fission is enabled for a
-// session, in order of precedence:
-//
-// - Safe mode: In safe mode, Fission is never enabled.
-//
-// - The MOZ_FORCE_ENABLE_FISSION environment variable: If set to any value,
-//   Fission will be enabled.
-//
-// - The following preferences:
-//
-// The current enrollment status as controlled by Normandy. This value is only
-// stored in the default preference branch, and is not persisted across
-// sessions by the preference service. It therefore isn't available early
-// enough at startup, and needs to be synced to a preference in the user
-// branch which is persisted across sessions.
-static const char kPrefFissionExperimentEnrollmentStatus[] =
-    "fission.experiment.enrollmentStatus";
-//
-// The enrollment status to be used at browser startup. This automatically
-// synced from the above enrollmentStatus preference whenever the latter is
-// changed. It can have any of the values defined in the
-// `nsIXULRuntime_ExperimentStatus` enum. Meanings are documented in
-// the declaration of `nsIXULRuntime.fissionExperimentStatus`
-static const char kPrefFissionExperimentStartupEnrollmentStatus[] =
-    "fission.experiment.startupEnrollmentStatus";
-//
-// The "fission.autostart" preference: If none of the above conditions apply,
-// and the experiment enrollment status is unknown, then the value of the
-// "fisison.autostart" preference is used.
-
-static nsIXULRuntime::ExperimentStatus FissionExperimentStatus() {
-  static nsIXULRuntime::ExperimentStatus sExperimentStatus = ([]() {
-    uint32_t value =
-        Preferences::GetUint(kPrefFissionExperimentStartupEnrollmentStatus);
-    if (value >
-        uint32_t(nsIXULRuntime::ExperimentStatus::eExperimentStatusMax)) {
-      return nsIXULRuntime::ExperimentStatus::eUnknown;
-    }
-    return nsIXULRuntime::ExperimentStatus(value);
-  })();
-
-  return sExperimentStatus;
-}
-
-static void OnFissionEnrollmentStatusChanged(const char* aPref, void* aData) {
-  Preferences::SetUint(
-      kPrefFissionExperimentStartupEnrollmentStatus,
-      Preferences::GetUint(kPrefFissionExperimentEnrollmentStatus));
-}
-
-namespace mozilla {
-
-bool FissionAutostart() {
-  static bool sFissionAutostart = ([]() {
-    if (gSafeMode) {
-      return false;
-    }
-
-    if (EnvHasValue("MOZ_FORCE_ENABLE_FISSION")) {
-      return true;
-    }
-
-    switch (FissionExperimentStatus()) {
-      case nsIXULRuntime::ExperimentStatus::eEnrolledControl:
-        return false;
-      case nsIXULRuntime::ExperimentStatus::eEnrolledTreatment:
-        return true;
-      default:
-        return StaticPrefs::fission_autostart_AtStartup_DoNotUseDirectly();
-    }
-  })();
-
-  return sFissionAutostart;
-}
-
-}  // namespace mozilla
-
 /**
  * The nsXULAppInfo object implements nsIFactory so that it can be its own
  * singleton.
@@ -853,18 +773,6 @@ nsXULAppInfo::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::GetFissionAutostart(bool* aResult) {
-  *aResult = FissionAutostart();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::GetFissionExperimentStatus(ExperimentStatus* aResult) {
-  *aResult = FissionExperimentStatus();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4770,9 +4678,6 @@ nsresult XREMain::XRE_mainRun() {
 #  endif  // defined(MOZ_DEFAULT_BROWSER_AGENT)
 #endif
 
-    Preferences::RegisterCallback(&OnFissionEnrollmentStatusChanged,
-                                  kPrefFissionExperimentEnrollmentStatus);
-
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK)
     // Clear the environment variable so it won't be inherited by
     // child processes and confuse things.
@@ -5294,6 +5199,12 @@ bool BrowserTabsRemoteAutostart() {
   gBrowserTabsRemoteStatus = status;
 
   return gBrowserTabsRemoteAutostart;
+}
+
+bool FissionAutostart() {
+  return !gSafeMode &&
+         (StaticPrefs::fission_autostart_AtStartup_DoNotUseDirectly() ||
+          EnvHasValue("MOZ_FORCE_ENABLE_FISSION"));
 }
 
 uint32_t GetMaxWebProcessCount() {

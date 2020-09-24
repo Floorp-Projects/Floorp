@@ -9398,8 +9398,10 @@ var ConfirmationHint = {
 };
 
 function reportRemoteSubframesEnabledTelemetry() {
+  let autostart = Services.prefs.getBoolPref("fission.autostart");
+
   let categoryLabel = gFissionBrowser ? "Enabled" : "Disabled";
-  if (gFissionBrowser == Services.appinfo.fissionAutostart) {
+  if (autostart == gFissionBrowser) {
     categoryLabel += "ByAutostart";
   } else {
     categoryLabel += "ByUser";
@@ -9414,7 +9416,8 @@ if (AppConstants.NIGHTLY_BUILD) {
   var FissionTestingUI = {
     init() {
       // Handle the Fission/Non-Fission testing UI.
-      if (!Services.appinfo.fissionAutostart) {
+      let autostart = Services.prefs.getBoolPref("fission.autostart");
+      if (!autostart) {
         return;
       }
 

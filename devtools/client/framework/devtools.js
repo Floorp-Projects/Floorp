@@ -52,6 +52,7 @@ const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
 
 const CONTENT_FISSION_ENABLED_PREF = "devtools.contenttoolbox.fission";
+const FISSION_AUTOSTART_PREF = "fission.autostart";
 
 /**
  * DevTools is a class that represents a set of developer tools, it holds a
@@ -852,7 +853,10 @@ DevTools.prototype = {
       // Checking fission.autostart is not used to check if the current target
       // is a Fission tab, but only to check if the user is currently dogfooding
       // Fission.
-      const isFissionEnabled = Services.appinfo.fissionAutostart;
+      const isFissionEnabled = Services.prefs.getBoolPref(
+        FISSION_AUTOSTART_PREF,
+        false
+      );
       this._cachedFissionContentToolboxEnabled =
         isFissionEnabled && isContentFissionEnabled;
     }
