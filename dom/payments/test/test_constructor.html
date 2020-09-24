@@ -304,7 +304,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
         gScript.sendAsyncMessage("check-cross-origin-top-level-principal");
       });
 
-      ifrr.setAttribute('allow', 'payment');
+      ifrr.setAttribute('allowpaymentrequest', '');
       ifrr.src = "https://test1.example.com:443/tests/dom/payments/test/simple_payment_request.html";
       document.body.appendChild(ifrr);
     });

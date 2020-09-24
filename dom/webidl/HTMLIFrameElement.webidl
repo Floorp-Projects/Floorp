@@ -28,6 +28,8 @@ interface HTMLIFrameElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
            attribute boolean allowFullscreen;
   [CEReactions, SetterThrows, Pure]
+           attribute boolean allowPaymentRequest;
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString width;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString height;
