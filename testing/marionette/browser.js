@@ -275,15 +275,14 @@ browser.Context = class {
    * @return {Promise}
    *     A promise which is resolved when the current window has been closed.
    */
-  closeWindow() {
-    let destroyed = new MessageManagerDestroyedPromise(
-      this.window.messageManager
-    );
-    let unloaded = waitForEvent(this.window, "unload");
+  async closeWindow() {
+    const destroyed = waitForObserverTopic("xul-window-destroyed", {
+      checkFn: () => this.window && this.window.closed,
+    });
 
     this.window.close();
 
-    return Promise.all([destroyed, unloaded]);
+    return destroyed;
   }
 
   /**
