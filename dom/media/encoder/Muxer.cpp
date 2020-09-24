@@ -78,8 +78,7 @@ void Muxer::AddEncodedAudioFrame(EncodedFrame* aFrame) {
   mEncodedAudioFrames.Push(aFrame);
   LOG(LogLevel::Verbose,
       "%p Added audio frame of type %u, [start %" PRIu64 ", end %" PRIu64 ")",
-      this, aFrame->mFrameType, aFrame->mTime,
-      aFrame->mTime + aFrame->mDuration);
+      this, aFrame->mFrameType, aFrame->mTime, aFrame->GetEndTime());
 }
 
 void Muxer::AddEncodedVideoFrame(EncodedFrame* aFrame) {
@@ -88,8 +87,7 @@ void Muxer::AddEncodedVideoFrame(EncodedFrame* aFrame) {
   mEncodedVideoFrames.Push(aFrame);
   LOG(LogLevel::Verbose,
       "%p Added video frame of type %u, [start %" PRIu64 ", end %" PRIu64 ")",
-      this, aFrame->mFrameType, aFrame->mTime,
-      aFrame->mTime + aFrame->mDuration);
+      this, aFrame->mFrameType, aFrame->mTime, aFrame->GetEndTime());
 }
 
 void Muxer::AudioEndOfStream() {
