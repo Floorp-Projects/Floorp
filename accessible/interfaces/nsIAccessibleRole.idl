@@ -1065,10 +1065,4 @@ interface nsIAccessibleRole : nsISupports
    */
   const unsigned long ROLE_TIME_EDITOR = 183;
 
-  /**
-   * Represents the marker associated with a list item. In unordered lists,
-   * this is a bullet, while in ordered lists this is a number.
-   */
-  const unsigned long ROLE_LISTITEM_MARKER = 184;
-
 };

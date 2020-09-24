@@ -18,7 +18,7 @@
         role: ROLE_LISTITEM,
         children: [
           {
-            role: ROLE_LISTITEM_MARKER,
+            role: ROLE_STATICTEXT,
             name: aBulletText,
           },
           {
@@ -106,7 +106,7 @@
       tree =
         { LIST: [ // ol
           { LISTITEM: [ // li
-            { LISTITEM_MARKER: [ ] },
+            { STATICTEXT: [ ] },
             { DEFINITION_LIST: [ // dl
               { TERM: [ // dt
                 { TEXT_LEAF: [] },
