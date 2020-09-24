@@ -2636,12 +2636,6 @@ nsDocumentViewer::SetAuthorStyleDisabled(bool aStyleDisabled) {
   if (mPresShell) {
     mPresShell->SetAuthorStyleDisabled(aStyleDisabled);
   }
-
-  auto children = [aStyleDisabled](nsDocumentViewer* aChild) {
-    aChild->SetAuthorStyleDisabled(aStyleDisabled);
-  };
-
-  CallChildren(children);
   return NS_OK;
 }
 

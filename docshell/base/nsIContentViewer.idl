@@ -272,7 +272,10 @@ interface nsIContentViewer : nsISupports
    */
   attribute float overrideDPPX;
 
-  /** Disable entire author style level (including HTML presentation hints) */
+  /**
+   * Disable entire author style level (including HTML presentation hints),
+   * for this viewer but not any child viewers.
+   */
   attribute boolean authorStyleDisabled;
 
   /**
