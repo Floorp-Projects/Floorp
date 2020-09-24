@@ -298,8 +298,6 @@ exp_import:
     description: >
       Experimental import logins interface user interactions. Value is the browser suggested.
     expiry_version: "87"
-    extra_keys:
-      profilesCount: Count of profiles found for the selected browser
     notification_emails: ["edilee@mozilla.com"]
     products: ["firefox"]
     record_in_processes: ["main", "content"]

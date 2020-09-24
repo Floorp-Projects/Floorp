@@ -1,28 +1,10 @@
 const { ChromeMigrationUtils } = ChromeUtils.import(
   "resource:///modules/ChromeMigrationUtils.jsm"
 );
-const { ExperimentAPI } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentAPI.jsm"
-);
 const { MigrationUtils } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-
-// Dummy migrator to change and detect importable behavior.
-const gTestMigrator = {
-  profiles: [],
-
-  getSourceProfiles() {
-    return this.profiles;
-  },
-
-  migrate: sinon
-    .stub()
-    .callsFake(() =>
-      LoginTestUtils.addLogin({ username: "import", password: "pass" })
-    ),
-};
 
 add_task(async function check_fluent_ids() {
   await document.l10n.ready;
@@ -46,21 +28,13 @@ add_task(async function test_initialize() {
   const importable = sinon
     .stub(ChromeMigrationUtils, "getImportableLogins")
     .resolves(["chrome"]);
-  const migrator = sinon
-    .stub(MigrationUtils, "getMigrator")
-    .resolves(gTestMigrator);
-  const experiment = sinon
-    .stub(ExperimentAPI, "getFeatureValue")
-    .returns({ directMigrateSingleProfile: true });
 
-  // This makes the last autocomplete test *not* show import suggestions.
-  Services.prefs.setIntPref("signon.suggestImportCount", 3);
+  // This makes the third autocomplete test *not* show import suggestions.
+  Services.prefs.setIntPref("signon.suggestImportCount", 2);
 
   registerCleanupFunction(() => {
     debounce.restore();
     importable.restore();
-    migrator.restore();
-    experiment.restore();
     Services.prefs.clearUserPref("signon.suggestImportCount");
   });
 });
@@ -86,9 +60,6 @@ add_task(async function import_suggestion_wizard() {
         "Wait for importable suggestion to show"
       );
 
-      // Pretend there's 2+ profiles to trigger the wizard.
-      gTestMigrator.profiles.length = 2;
-
       info("Clicking on importable suggestion");
       const wizardPromise = BrowserTestUtils.waitForCondition(
         () => Services.wm.getMostRecentWindow("Browser:MigrationWizard"),
@@ -100,7 +71,6 @@ add_task(async function import_suggestion_wizard() {
 
       const wizard = await wizardPromise;
       ok(wizard, "Wizard opened");
-      is(gTestMigrator.migrate.callCount, 0, "Direct migrate not used");
 
       await closePopup(popup);
       await BrowserTestUtils.closeWindow(wizard);
@@ -139,58 +109,6 @@ add_task(async function import_suggestion_learn_more() {
 
       await closePopup(popup);
       BrowserTestUtils.removeTab(supportTab);
-    }
-  );
-});
-
-add_task(async function import_suggestion_migrate() {
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "https://example.com" + DIRECTORY_PATH + "form_basic.html",
-    },
-    async function(browser) {
-      const popup = document.getElementById("PopupAutoComplete");
-      ok(popup, "Got popup");
-      await openACPopup(popup, browser, "#form-basic-username");
-
-      const importableItem = popup.querySelector(
-        `[originaltype="importableLogins"]`
-      );
-      ok(importableItem, "Got importable suggestion richlistitem");
-
-      await BrowserTestUtils.waitForCondition(
-        () => !importableItem.collapsed,
-        "Wait for importable suggestion to show"
-      );
-
-      // Pretend there's 1 profile to trigger migrate.
-      gTestMigrator.profiles.length = 1;
-
-      info("Clicking on importable suggestion");
-      const migratePromise = BrowserTestUtils.waitForCondition(
-        () => gTestMigrator.migrate.callCount,
-        "Wait for direct migration attempt"
-      );
-      EventUtils.synthesizeMouseAtCenter(importableItem, {});
-
-      const callCount = await migratePromise;
-      is(callCount, 1, "Direct migrate used once");
-
-      const importedItem = await BrowserTestUtils.waitForCondition(
-        () => popup.querySelector(`[originaltype="loginWithOrigin"]`),
-        "Wait for imported login to show"
-      );
-      EventUtils.synthesizeMouseAtCenter(importedItem, {});
-
-      const username = await SpecialPowers.spawn(
-        browser,
-        [],
-        () => content.document.getElementById("form-basic-username").value
-      );
-      is(username, "import", "username from import filled in");
-
-      LoginTestUtils.clearData();
     }
   );
 });
