@@ -12,11 +12,12 @@
 #include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
 #include "frontend/CompilationInfo.h"   // CompilationInfo
 #include "frontend/SharedContext.h"
-#include "gc/AllocKind.h"   // gc::AllocKind
-#include "js/CallArgs.h"    // JSNative
-#include "js/RootingAPI.h"  // Rooted
-#include "js/Value.h"       // ObjectValue
-#include "js/WasmModule.h"  // JS::WasmModule
+#include "gc/AllocKind.h"    // gc::AllocKind
+#include "js/CallArgs.h"     // JSNative
+#include "js/RootingAPI.h"   // Rooted
+#include "js/Transcoding.h"  // JS::TranscodeBuffer
+#include "js/Value.h"        // ObjectValue
+#include "js/WasmModule.h"   // JS::WasmModule
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/JSContext.h"              // JSContext
@@ -29,6 +30,7 @@
 #include "vm/Scope.h"         // Scope, ScopeKindString
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "vm/StringType.h"    // JSAtom, js::CopyChars
+#include "vm/Xdr.h"           // XDRMode, XDRResult, XDREncoder
 #include "wasm/AsmJS.h"       // InstantiateAsmJS
 #include "wasm/WasmModule.h"  // wasm::Module
 
@@ -597,6 +599,64 @@ bool CompilationInfo::instantiateStencils(JSContext* cx,
     LinkEnclosingLazyScript(*this, gcOutput);
   }
 
+  return true;
+}
+
+bool CompilationInfo::serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
+                                        bool* succeededOut) {
+  if (succeededOut) {
+    *succeededOut = false;
+  }
+  XDRIncrementalStencilEncoder encoder(cx, *this);
+
+  XDRResult res = encoder.codeStencil(stencil);
+  if (res.isErr()) {
+    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
+      buf.clear();
+      return true;
+    }
+    MOZ_ASSERT(res.unwrapErr() == JS::TranscodeResult_Throw);
+
+    return false;
+  }
+
+  // Lineareize the endcoder, return empty buffer on failure.
+  res = encoder.linearize(buf);
+  if (res.isErr()) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    buf.clear();
+    return false;
+  }
+
+  if (succeededOut) {
+    *succeededOut = true;
+  }
+  return true;
+}
+
+bool CompilationInfo::deserializeStencils(JSContext* cx,
+                                          const JS::TranscodeRange& range,
+                                          bool* succeededOut) {
+  if (succeededOut) {
+    *succeededOut = false;
+  }
+  MOZ_ASSERT(stencil.parserAtoms.empty());
+  XDRStencilDecoder decoder(cx, &input.options, range, *this,
+                            stencil.parserAtoms);
+
+  XDRResult res = decoder.codeStencil(stencil);
+  if (res.isErr()) {
+    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
+      return true;
+    }
+    MOZ_ASSERT(res.unwrapErr() == JS::TranscodeResult_Throw);
+
+    return false;
+  }
+
+  if (succeededOut) {
+    *succeededOut = true;
+  }
   return true;
 }
 

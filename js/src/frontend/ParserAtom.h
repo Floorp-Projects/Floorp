@@ -452,6 +452,8 @@ class ParserAtomsTable {
       InflatedChar16Sequence<SeqCharT> seq, uint32_t length);
 
  public:
+  bool empty() const { return entrySet_.empty(); }
+
   JS::Result<const ParserAtom*, OOM> internAscii(JSContext* cx,
                                                  const char* asciiPtr,
                                                  uint32_t length);

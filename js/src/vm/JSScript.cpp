@@ -843,8 +843,8 @@ ImmutableScriptData::ImmutableScriptData(uint32_t codeLength,
 }
 
 template <XDRMode mode>
-static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
-                                        UniquePtr<ImmutableScriptData>& isd) {
+XDRResult js::XDRImmutableScriptData(XDRState<mode>* xdr,
+                                     UniquePtr<ImmutableScriptData>& isd) {
   uint32_t codeLength = 0;
   uint32_t noteLength = 0;
   uint32_t numResumeOffsets = 0;
@@ -914,6 +914,11 @@ static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
   return Ok();
 }
 
+template XDRResult js::XDRImmutableScriptData(
+    XDRState<XDR_ENCODE>* xdr, UniquePtr<ImmutableScriptData>& isd);
+template XDRResult js::XDRImmutableScriptData(
+    XDRState<XDR_DECODE>* xdr, UniquePtr<ImmutableScriptData>& isd);
+
 template <XDRMode mode>
 /* static */
 XDRResult RuntimeScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
@@ -958,6 +963,14 @@ XDRResult js::XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent) {
 
   return Ok();
 }
+
+template /* static */
+    XDRResult
+    js::XDRSourceExtent(XDRState<XDR_ENCODE>* xdr, SourceExtent* extent);
+
+template /* static */
+    XDRResult
+    js::XDRSourceExtent(XDRState<XDR_DECODE>* xdr, SourceExtent* extent);
 
 template <XDRMode mode>
 XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
@@ -3131,6 +3144,17 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
 
   return Ok();
 }
+
+template /* static */
+    XDRResult
+    ScriptSource::XDR(XDRState<XDR_ENCODE>* xdr,
+                      const mozilla::Maybe<JS::CompileOptions>& options,
+                      MutableHandle<ScriptSourceHolder> holder);
+template /* static */
+    XDRResult
+    ScriptSource::XDR(XDRState<XDR_DECODE>* xdr,
+                      const mozilla::Maybe<JS::CompileOptions>& options,
+                      MutableHandle<ScriptSourceHolder> holder);
 
 // Format and return a cx->pod_malloc'ed URL for a generated script like:
 //   {filename} line {lineno} > {introducer}

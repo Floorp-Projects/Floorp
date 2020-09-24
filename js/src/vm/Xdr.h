@@ -450,6 +450,7 @@ class XDRState : public XDRCoderBase {
   XDRResult codeFunction(JS::MutableHandleFunction objp,
                          HandleScriptSourceObject sourceObject = nullptr);
   XDRResult codeScript(MutableHandleScript scriptp);
+  XDRResult codeStencil(frontend::CompilationStencil& stencil);
 };
 
 using XDREncoder = XDRState<XDR_ENCODE>;
@@ -696,6 +697,18 @@ XDRResult XDRAtom(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 template <XDRMode mode>
 XDRResult XDRAtomData(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
+
+template <XDRMode mode>
+XDRResult XDRParserAtom(XDRState<mode>* xdr,
+                        const frontend::ParserAtom** atomp);
+
+template <XDRMode mode>
+XDRResult XDRParserAtomOrNull(XDRState<mode>* xdr,
+                              const frontend::ParserAtom** atomp);
+
+template <XDRMode mode>
+XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
+                                frontend::CompilationStencil& stencil);
 
 } /* namespace js */
 
