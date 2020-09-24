@@ -50,8 +50,10 @@ class nsPrinterCUPS final : public nsPrinterBase {
     uint64_t mCUPSMinor = 0;
     uint64_t mCUPSPatch = 0;
 
-    // Tracks whether we have attempted to fetch mPrinterInfo yet.
-    bool mWasInited = false;
+    // Whether we have attempted to fetch mPrinterInfo with CUPS_HTTP_DEFAULT.
+    bool mTriedInitWithDefault = false;
+    // Whether we have attempted to fetch mPrinterInfo with a connection.
+    bool mTriedInitWithConnection = false;
     CUPSPrinterInfo() = default;
     CUPSPrinterInfo(const CUPSPrinterInfo&) = delete;
     CUPSPrinterInfo(CUPSPrinterInfo&&) = delete;
@@ -78,7 +80,15 @@ class nsPrinterCUPS final : public nsPrinterBase {
   bool IsCUPSVersionAtLeast(uint64_t aCUPSMajor, uint64_t aCUPSMinor,
                             uint64_t aCUPSPatch) const;
 
-  void EnsurePrinterInfo(CUPSPrinterInfo& aInOutPrinterInfo) const;
+  /**
+   * Attempts to populate the CUPSPrinterInfo object.
+   * This usually works with the CUPS default connection,
+   * but has been known to require an established connection
+   * on older versions of Ubuntu (18 and below).
+   */
+  void TryEnsurePrinterInfo(
+      CUPSPrinterInfo& aInOutPrinterInfo,
+      http_t* const aConnection = CUPS_HTTP_DEFAULT) const;
 
   const nsCUPSShim& mShim;
   nsString mDisplayName;
