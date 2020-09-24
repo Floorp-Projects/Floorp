@@ -23,15 +23,15 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/call/rtcp_demuxer.cc",
-    "/media/webrtc/trunk/webrtc/call/rtp_demuxer.cc",
-    "/media/webrtc/trunk/webrtc/call/rtp_rtcp_demuxer_helper.cc",
-    "/media/webrtc/trunk/webrtc/call/rtp_stream_receiver_controller.cc",
-    "/media/webrtc/trunk/webrtc/call/rtx_receive_stream.cc"
+    "/third_party/libwebrtc/webrtc/call/rtcp_demuxer.cc",
+    "/third_party/libwebrtc/webrtc/call/rtp_demuxer.cc",
+    "/third_party/libwebrtc/webrtc/call/rtp_rtcp_demuxer_helper.cc",
+    "/third_party/libwebrtc/webrtc/call/rtp_stream_receiver_controller.cc",
+    "/third_party/libwebrtc/webrtc/call/rtx_receive_stream.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

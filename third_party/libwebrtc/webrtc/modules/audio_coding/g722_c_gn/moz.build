@@ -23,16 +23,16 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/g722/g722_decode.c",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/g722/g722_encode.c"
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/g722/g722_decode.c",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/g722/g722_encode.c"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/g722/g722_interface.c"
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/g722/g722_interface.c"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

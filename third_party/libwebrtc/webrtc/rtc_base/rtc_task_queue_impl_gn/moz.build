@@ -23,7 +23,7 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -62,8 +62,8 @@ if CONFIG["OS_TARGET"] == "Android":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_libevent.cc",
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_posix.cc"
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_libevent.cc",
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "Darwin":
@@ -78,8 +78,8 @@ if CONFIG["OS_TARGET"] == "Darwin":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_gcd.cc",
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_posix.cc"
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_gcd.cc",
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "DragonFly":
@@ -95,8 +95,8 @@ if CONFIG["OS_TARGET"] == "DragonFly":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_libevent.cc",
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_posix.cc"
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_libevent.cc",
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "FreeBSD":
@@ -112,8 +112,8 @@ if CONFIG["OS_TARGET"] == "FreeBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_libevent.cc",
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_posix.cc"
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_libevent.cc",
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "Linux":
@@ -130,8 +130,8 @@ if CONFIG["OS_TARGET"] == "Linux":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_libevent.cc",
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_posix.cc"
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_libevent.cc",
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "NetBSD":
@@ -147,8 +147,8 @@ if CONFIG["OS_TARGET"] == "NetBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_libevent.cc",
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_posix.cc"
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_libevent.cc",
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -164,8 +164,8 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_libevent.cc",
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_posix.cc"
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_libevent.cc",
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_posix.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
@@ -194,7 +194,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["__STD_C"] = True
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/task_queue_win.cc"
+        "/third_party/libwebrtc/webrtc/rtc_base/task_queue_win.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":

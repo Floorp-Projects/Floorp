@@ -25,11 +25,11 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/api/audio_codecs/builtin_audio_decoder_factory.cc"
+    "/third_party/libwebrtc/webrtc/api/audio_codecs/builtin_audio_decoder_factory.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

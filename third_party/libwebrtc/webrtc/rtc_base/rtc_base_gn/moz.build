@@ -23,7 +23,7 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -60,7 +60,7 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/noop.mm"
+        "/third_party/libwebrtc/webrtc/rtc_base/noop.mm"
     ]
 
 if CONFIG["OS_TARGET"] == "DragonFly":
@@ -125,7 +125,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["__STD_C"] = True
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/rtc_base/noop.cc"
+        "/third_party/libwebrtc/webrtc/rtc_base/noop.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":

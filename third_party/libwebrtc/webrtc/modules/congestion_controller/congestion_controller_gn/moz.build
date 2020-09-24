@@ -24,23 +24,23 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/trendline_estimator.cc"
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/trendline_estimator.cc"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/acknowledged_bitrate_estimator.cc",
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/bitrate_estimator.cc",
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/delay_based_bwe.cc",
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/median_slope_estimator.cc",
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/probe_bitrate_estimator.cc",
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/probe_controller.cc",
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/receive_side_congestion_controller.cc",
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/send_side_congestion_controller.cc",
-    "/media/webrtc/trunk/webrtc/modules/congestion_controller/transport_feedback_adapter.cc"
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/acknowledged_bitrate_estimator.cc",
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/bitrate_estimator.cc",
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/delay_based_bwe.cc",
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/median_slope_estimator.cc",
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/probe_bitrate_estimator.cc",
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/probe_controller.cc",
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/receive_side_congestion_controller.cc",
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/send_side_congestion_controller.cc",
+    "/third_party/libwebrtc/webrtc/modules/congestion_controller/transport_feedback_adapter.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

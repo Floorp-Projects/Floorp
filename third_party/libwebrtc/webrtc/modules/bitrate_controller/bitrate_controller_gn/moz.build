@@ -24,12 +24,12 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/bitrate_controller/bitrate_controller_impl.cc",
-    "/media/webrtc/trunk/webrtc/modules/bitrate_controller/send_side_bandwidth_estimation.cc"
+    "/third_party/libwebrtc/webrtc/modules/bitrate_controller/bitrate_controller_impl.cc",
+    "/third_party/libwebrtc/webrtc/modules/bitrate_controller/send_side_bandwidth_estimation.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

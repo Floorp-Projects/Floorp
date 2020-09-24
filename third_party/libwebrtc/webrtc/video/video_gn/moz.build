@@ -24,34 +24,34 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/ipc/glue",
     "/media/libyuv/libyuv/include/",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_video/include/",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/include/",
-    "/media/webrtc/trunk/webrtc/modules/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_video/include/",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/include/",
+    "/third_party/libwebrtc/webrtc/modules/include/"
 ]
 
 SOURCES += [
-    "/media/webrtc/trunk/webrtc/video/overuse_frame_detector.cc"
+    "/third_party/libwebrtc/webrtc/video/overuse_frame_detector.cc"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/video/call_stats.cc",
-    "/media/webrtc/trunk/webrtc/video/encoder_rtcp_feedback.cc",
-    "/media/webrtc/trunk/webrtc/video/payload_router.cc",
-    "/media/webrtc/trunk/webrtc/video/quality_threshold.cc",
-    "/media/webrtc/trunk/webrtc/video/receive_statistics_proxy.cc",
-    "/media/webrtc/trunk/webrtc/video/report_block_stats.cc",
-    "/media/webrtc/trunk/webrtc/video/rtp_streams_synchronizer.cc",
-    "/media/webrtc/trunk/webrtc/video/rtp_video_stream_receiver.cc",
-    "/media/webrtc/trunk/webrtc/video/send_delay_stats.cc",
-    "/media/webrtc/trunk/webrtc/video/send_statistics_proxy.cc",
-    "/media/webrtc/trunk/webrtc/video/stats_counter.cc",
-    "/media/webrtc/trunk/webrtc/video/stream_synchronization.cc",
-    "/media/webrtc/trunk/webrtc/video/transport_adapter.cc",
-    "/media/webrtc/trunk/webrtc/video/video_receive_stream.cc",
-    "/media/webrtc/trunk/webrtc/video/video_send_stream.cc",
-    "/media/webrtc/trunk/webrtc/video/video_stream_decoder.cc",
-    "/media/webrtc/trunk/webrtc/video/video_stream_encoder.cc"
+    "/third_party/libwebrtc/webrtc/video/call_stats.cc",
+    "/third_party/libwebrtc/webrtc/video/encoder_rtcp_feedback.cc",
+    "/third_party/libwebrtc/webrtc/video/payload_router.cc",
+    "/third_party/libwebrtc/webrtc/video/quality_threshold.cc",
+    "/third_party/libwebrtc/webrtc/video/receive_statistics_proxy.cc",
+    "/third_party/libwebrtc/webrtc/video/report_block_stats.cc",
+    "/third_party/libwebrtc/webrtc/video/rtp_streams_synchronizer.cc",
+    "/third_party/libwebrtc/webrtc/video/rtp_video_stream_receiver.cc",
+    "/third_party/libwebrtc/webrtc/video/send_delay_stats.cc",
+    "/third_party/libwebrtc/webrtc/video/send_statistics_proxy.cc",
+    "/third_party/libwebrtc/webrtc/video/stats_counter.cc",
+    "/third_party/libwebrtc/webrtc/video/stream_synchronization.cc",
+    "/third_party/libwebrtc/webrtc/video/transport_adapter.cc",
+    "/third_party/libwebrtc/webrtc/video/video_receive_stream.cc",
+    "/third_party/libwebrtc/webrtc/video/video_send_stream.cc",
+    "/third_party/libwebrtc/webrtc/video/video_stream_decoder.cc",
+    "/third_party/libwebrtc/webrtc/video/video_stream_encoder.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
