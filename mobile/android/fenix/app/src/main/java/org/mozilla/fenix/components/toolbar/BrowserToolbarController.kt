@@ -9,7 +9,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.ktx.kotlin.isUrl
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
@@ -46,7 +45,6 @@ class DefaultBrowserToolbarController(
     private val engineView: EngineView,
     private val browserAnimator: BrowserAnimator,
     private val customTabSession: Session?,
-    private val useNewSearchExperience: Boolean = FeatureFlags.newSearchExperience,
     private val onTabCounterClicked: () -> Unit,
     private val onCloseTab: (Session) -> Unit
 ) : BrowserToolbarController {
@@ -55,27 +53,14 @@ class DefaultBrowserToolbarController(
         get() = customTabSession ?: sessionManager.selectedSession
 
     override fun handleToolbarPaste(text: String) {
-        if (useNewSearchExperience) {
-            navController.nav(
-                R.id.browserFragment,
-                BrowserFragmentDirections.actionGlobalSearchDialog(
-                    sessionId = currentSession?.id,
-                    pastedText = text
-                ),
-                getToolbarNavOptions(activity)
-            )
-        } else {
-            browserAnimator.captureEngineViewAndDrawStatically {
-                navController.nav(
-                    R.id.browserFragment,
-                    BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                        sessionId = currentSession?.id,
-                        pastedText = text
-                    ),
-                    getToolbarNavOptions(activity)
-                )
-            }
-        }
+        navController.nav(
+            R.id.browserFragment,
+            BrowserFragmentDirections.actionGlobalSearchDialog(
+                sessionId = currentSession?.id,
+                pastedText = text
+            ),
+            getToolbarNavOptions(activity)
+        )
     }
 
     override fun handleToolbarPasteAndGo(text: String) {
@@ -94,26 +79,13 @@ class DefaultBrowserToolbarController(
 
     override fun handleToolbarClick() {
         metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
-
-        if (useNewSearchExperience) {
-            navController.nav(
-                R.id.browserFragment,
-                BrowserFragmentDirections.actionGlobalSearchDialog(
-                    currentSession?.id
-                ),
-                getToolbarNavOptions(activity)
-            )
-        } else {
-            browserAnimator.captureEngineViewAndDrawStatically {
-                navController.nav(
-                    R.id.browserFragment,
-                    BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                        currentSession?.id
-                    ),
-                    getToolbarNavOptions(activity)
-                )
-            }
-        }
+        navController.nav(
+            R.id.browserFragment,
+            BrowserFragmentDirections.actionGlobalSearchDialog(
+                currentSession?.id
+            ),
+            getToolbarNavOptions(activity)
+        )
     }
 
     override fun handleTabCounterClick() {

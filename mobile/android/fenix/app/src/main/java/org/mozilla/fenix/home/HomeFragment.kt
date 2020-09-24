@@ -72,7 +72,6 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
@@ -431,8 +430,7 @@ class HomeFragment : Fragment() {
         // We call this onLayout so that the bottom bar width is correctly set for us to center
         // the CFR in.
         view.toolbar_wrapper.doOnLayout {
-            val willNavigateToSearch =
-                !bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) && FeatureFlags.newSearchExperience
+            val willNavigateToSearch = !bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)
             if (!browsingModeManager.mode.isPrivate && !willNavigateToSearch) {
                 SearchWidgetCFR(
                     context = view.context,
@@ -464,7 +462,7 @@ class HomeFragment : Fragment() {
 
         updateTabCounter(requireComponents.core.store.state)
 
-        if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR) && FeatureFlags.newSearchExperience) {
+        if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)) {
             navigateToSearch()
         }
     }
@@ -739,15 +737,10 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToSearch() {
-        val directions = if (FeatureFlags.newSearchExperience) {
+        val directions =
             HomeFragmentDirections.actionGlobalSearchDialog(
                 sessionId = null
             )
-        } else {
-            HomeFragmentDirections.actionGlobalSearch(
-                sessionId = null
-            )
-        }
 
         nav(R.id.homeFragment, directions, getToolbarNavOptions(requireContext()))
     }

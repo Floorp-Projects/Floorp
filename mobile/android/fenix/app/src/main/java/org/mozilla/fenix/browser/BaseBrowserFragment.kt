@@ -848,7 +848,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     @CallSuper
     override fun onPause() {
         super.onPause()
-        if (findNavController().currentDestination?.id != R.id.searchFragment) {
+        if (findNavController().currentDestination?.id != R.id.searchDialogFragment) {
             view?.hideKeyboard()
         }
     }

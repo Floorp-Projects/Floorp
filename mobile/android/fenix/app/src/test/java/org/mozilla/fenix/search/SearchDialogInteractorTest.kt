@@ -14,15 +14,15 @@ import org.junit.Before
 import org.junit.Test
 
 @ExperimentalCoroutinesApi
-class SearchInteractorTest {
+class SearchDialogInteractorTest {
 
-    lateinit var searchController: DefaultSearchController
-    lateinit var interactor: SearchInteractor
+    lateinit var searchController: SearchDialogController
+    lateinit var interactor: SearchDialogInteractor
 
     @Before
     fun setup() {
         searchController = mockk(relaxed = true)
-        interactor = SearchInteractor(
+        interactor = SearchDialogInteractor(
             searchController
         )
     }
@@ -47,7 +47,7 @@ class SearchInteractorTest {
 
     @Test
     fun onTextChanged() {
-        val interactor = SearchInteractor(searchController)
+        val interactor = SearchDialogInteractor(searchController)
 
         interactor.onTextChanged("test")
 

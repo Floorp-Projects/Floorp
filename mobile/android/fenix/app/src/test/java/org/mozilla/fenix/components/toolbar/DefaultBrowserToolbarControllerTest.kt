@@ -78,10 +78,10 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleBrowserToolbarPaste() {
         val pastedText = "Mozilla"
-        val controller = createController(useNewSearchExperience = false)
+        val controller = createController()
         controller.handleToolbarPaste(pastedText)
 
-        val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+        val directions = BrowserFragmentDirections.actionGlobalSearchDialog(
             sessionId = "1",
             pastedText = pastedText
         )
@@ -92,7 +92,7 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleBrowserToolbarPaste_useNewSearchExperience() {
         val pastedText = "Mozilla"
-        val controller = createController(useNewSearchExperience = true)
+        val controller = createController()
         controller.handleToolbarPaste(pastedText)
 
         val directions = BrowserFragmentDirections.actionGlobalSearchDialog(
@@ -153,10 +153,10 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarClick() {
-        val controller = createController(useNewSearchExperience = false)
+        val controller = createController()
         controller.handleToolbarClick()
 
-        val expected = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+        val expected = BrowserFragmentDirections.actionGlobalSearchDialog(
             sessionId = "1"
         )
 
@@ -166,7 +166,7 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarClick_useNewSearchExperience() {
-        val controller = createController(useNewSearchExperience = true)
+        val controller = createController()
         controller.handleToolbarClick()
 
         val expected = BrowserFragmentDirections.actionGlobalSearchDialog(
@@ -256,8 +256,7 @@ class DefaultBrowserToolbarControllerTest {
 
     private fun createController(
         activity: HomeActivity = this.activity,
-        customTabSession: Session? = null,
-        useNewSearchExperience: Boolean = false
+        customTabSession: Session? = null
     ) = DefaultBrowserToolbarController(
         activity = activity,
         navController = navController,
@@ -267,7 +266,6 @@ class DefaultBrowserToolbarControllerTest {
         customTabSession = customTabSession,
         readerModeController = readerModeController,
         sessionManager = sessionManager,
-        useNewSearchExperience = useNewSearchExperience,
         onTabCounterClicked = onTabCounterClicked,
         onCloseTab = onCloseTab
     )

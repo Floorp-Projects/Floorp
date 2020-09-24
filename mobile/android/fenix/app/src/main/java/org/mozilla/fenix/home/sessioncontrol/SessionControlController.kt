@@ -428,7 +428,7 @@ class DefaultSessionControlController(
     }
 
     override fun handlePaste(clipboardText: String) {
-        val directions = HomeFragmentDirections.actionGlobalSearch(
+        val directions = HomeFragmentDirections.actionGlobalSearchDialog(
             sessionId = null,
             pastedText = clipboardText
         )

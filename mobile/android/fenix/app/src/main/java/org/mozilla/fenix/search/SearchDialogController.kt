@@ -20,16 +20,12 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.ACTION
-import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.NONE
-import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.SUGGESTION
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.settings.SupportUtils.MozillaPage.MANIFESTO
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -51,13 +47,14 @@ interface SearchController {
 }
 
 @Suppress("TooManyFunctions", "LongParameterList")
-class DefaultSearchController(
+class SearchDialogController(
     private val activity: HomeActivity,
     private val sessionManager: SessionManager,
     private val store: SearchFragmentStore,
     private val navController: NavController,
     private val settings: Settings,
     private val metrics: MetricController,
+    private val dismissDialog: () -> Unit,
     private val clearToolbarFocus: () -> Unit
 ) : SearchController {
 
@@ -70,12 +67,15 @@ class DefaultSearchController(
                 activity.startActivity(Intent(activity, CrashListActivity::class.java))
             }
             "about:addons" -> {
-                val directions = SearchFragmentDirections.actionGlobalAddonsManagementFragment()
-                navController.navigateSafe(R.id.searchFragment, directions)
+                val directions =
+                    SearchDialogFragmentDirections.actionGlobalAddonsManagementFragment()
+                navController.navigateSafe(R.id.searchDialogFragment, directions)
             }
-            "moz://a" -> openSearchOrUrl(SupportUtils.getMozillaPageUrl(MANIFESTO))
+            "moz://a" -> openSearchOrUrl(SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO))
             else -> if (url.isNotBlank()) {
                 openSearchOrUrl(url)
+            } else {
+                dismissDialog()
             }
         }
     }
@@ -84,7 +84,7 @@ class DefaultSearchController(
         activity.openToBrowserAndLoad(
             searchTermOrURL = url,
             newTab = store.state.tabId == null,
-            from = BrowserDirection.FromSearch,
+            from = BrowserDirection.FromSearchDialog,
             engine = store.state.searchEngineSource.searchEngine
         )
 
@@ -94,7 +94,7 @@ class DefaultSearchController(
             settings.incrementActiveSearchCount()
 
             val searchAccessPoint = when (store.state.searchAccessPoint) {
-                NONE -> ACTION
+                Event.PerformedSearch.SearchAccessPoint.NONE -> Event.PerformedSearch.SearchAccessPoint.ACTION
                 else -> store.state.searchAccessPoint
             }
 
@@ -129,18 +129,20 @@ class DefaultSearchController(
         store.dispatch(
             SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
                 text.isNotEmpty() &&
-                activity.browsingModeManager.mode.isPrivate &&
-                !settings.shouldShowSearchSuggestionsInPrivate &&
-                !settings.showSearchSuggestionsInPrivateOnboardingFinished
+                        activity.browsingModeManager.mode.isPrivate &&
+                        !settings.shouldShowSearchSuggestionsInPrivate &&
+                        !settings.showSearchSuggestionsInPrivateOnboardingFinished
             )
         )
     }
 
     override fun handleUrlTapped(url: String) {
+        clearToolbarFocus()
+
         activity.openToBrowserAndLoad(
             searchTermOrURL = url,
             newTab = store.state.tabId == null,
-            from = BrowserDirection.FromSearch
+            from = BrowserDirection.FromSearchDialog
         )
 
         metrics.track(Event.EnteredUrl(false))
@@ -148,17 +150,18 @@ class DefaultSearchController(
 
     override fun handleSearchTermsTapped(searchTerms: String) {
         settings.incrementActiveSearchCount()
+        clearToolbarFocus()
 
         activity.openToBrowserAndLoad(
             searchTermOrURL = searchTerms,
             newTab = store.state.tabId == null,
-            from = BrowserDirection.FromSearch,
+            from = BrowserDirection.FromSearchDialog,
             engine = store.state.searchEngineSource.searchEngine,
             forceSearch = true
         )
 
         val searchAccessPoint = when (store.state.searchAccessPoint) {
-            NONE -> SUGGESTION
+            Event.PerformedSearch.SearchAccessPoint.NONE -> Event.PerformedSearch.SearchAccessPoint.SUGGESTION
             else -> store.state.searchAccessPoint
         }
 
@@ -185,14 +188,16 @@ class DefaultSearchController(
     }
 
     override fun handleClickSearchEngineSettings() {
-        val directions = SearchFragmentDirections.actionGlobalSearchEngineFragment()
-        navController.navigateSafe(R.id.searchFragment, directions)
+        clearToolbarFocus()
+        val directions = SearchDialogFragmentDirections.actionGlobalSearchEngineFragment()
+        navController.navigateSafe(R.id.searchDialogFragment, directions)
     }
 
     override fun handleExistingSessionSelected(session: Session) {
+        clearToolbarFocus()
         sessionManager.select(session)
         activity.openToBrowser(
-            from = BrowserDirection.FromSearch
+            from = BrowserDirection.FromSearchDialog
         )
     }
 
@@ -224,9 +229,8 @@ class DefaultSearchController(
                 activity.resources.getString(R.string.camera_permissions_needed_message)
             )
             setMessage(spannableText)
-            setNegativeButton(R.string.camera_permissions_needed_negative_button_text) {
-                    dialog: DialogInterface, _ ->
-                dialog.cancel()
+            setNegativeButton(R.string.camera_permissions_needed_negative_button_text) { _, _ ->
+                dismissDialog()
             }
             setPositiveButton(R.string.camera_permissions_needed_positive_button_text) {
                     dialog: DialogInterface, _ ->

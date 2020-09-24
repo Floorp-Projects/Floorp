@@ -22,11 +22,6 @@ object FeatureFlags {
     val syncedTabsInTabsTray = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables the new search experience
-     */
-    const val newSearchExperience = true
-
-    /**
      * Enables showing the top frequently visited sites
      */
     const val topFrecentSite = true

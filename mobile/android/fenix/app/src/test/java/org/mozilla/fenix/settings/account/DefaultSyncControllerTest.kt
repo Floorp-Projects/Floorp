@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.account
 
+import androidx.appcompat.app.AlertDialog
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -13,7 +14,6 @@ import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.search.AlertDialogBuilder
 
 class DefaultSyncControllerTest {
 
@@ -28,7 +28,7 @@ class DefaultSyncControllerTest {
 
     @Test
     fun `show camera permissions needed dialog`() {
-        val dialogBuilder: AlertDialogBuilder = mockk(relaxed = true)
+        val dialogBuilder: AlertDialog.Builder = mockk(relaxed = true)
 
         val spyController = spyk(syncController)
         every { spyController.buildDialog() } returns dialogBuilder

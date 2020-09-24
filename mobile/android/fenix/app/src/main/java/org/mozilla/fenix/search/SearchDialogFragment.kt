@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.searchdialog
+package org.mozilla.fenix.search
 
 import android.Manifest
 import android.app.Activity
@@ -56,19 +56,13 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isKeyboardVisible
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.search.SearchFragmentAction
-import org.mozilla.fenix.search.SearchFragmentState
-import org.mozilla.fenix.search.SearchFragmentStore
-import org.mozilla.fenix.search.SearchInteractor
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
-import org.mozilla.fenix.search.createInitialSearchFragmentState
 import org.mozilla.fenix.search.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import org.mozilla.fenix.widget.VoiceSearchActivity
 
 typealias SearchDialogFragmentStore = SearchFragmentStore
-typealias SearchDialogInteractor = SearchInteractor
 
 @SuppressWarnings("LargeClass", "TooManyFunctions")
 class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {

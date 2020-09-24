@@ -410,7 +410,7 @@ class DefaultSessionControlControllerTest {
 
         verify {
             navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_search },
+                match<NavDirections> { it.actionId == R.id.action_global_search_dialog },
                 null
             )
         }

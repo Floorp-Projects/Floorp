@@ -55,7 +55,7 @@ class StartSearchIntentProcessorTest {
         verify { metrics.track(Event.SearchWidgetNewTabPressed) }
         verify {
             navController.navigate(
-                NavGraphDirections.actionGlobalSearch(
+                NavGraphDirections.actionGlobalSearchDialog(
                     sessionId = null,
                     searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.WIDGET
                 ),

@@ -14,8 +14,8 @@ import org.mozilla.fenix.search.toolbar.ToolbarInteractor
  * Provides implementations for the AwesomeBarView and ToolbarView
  */
 @Suppress("TooManyFunctions")
-class SearchInteractor(
-    private val searchController: SearchController
+class SearchDialogInteractor(
+    private val searchController: SearchDialogController
 ) : AwesomeBarInteractor, ToolbarInteractor {
 
     override fun onUrlCommitted(url: String) {

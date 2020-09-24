@@ -31,24 +31,25 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
+import org.mozilla.fenix.search.SearchDialogFragmentDirections.Companion.actionGlobalAddonsManagementFragment
+import org.mozilla.fenix.search.SearchDialogFragmentDirections.Companion.actionGlobalSearchEngineFragment
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
-typealias AlertDialogBuilder = AlertDialog.Builder
-
 @ExperimentalCoroutinesApi
-class DefaultSearchControllerTest {
+class SearchDialogControllerTest {
 
     @MockK(relaxed = true) private lateinit var activity: HomeActivity
-    @MockK(relaxed = true) private lateinit var store: SearchFragmentStore
+    @MockK(relaxed = true) private lateinit var store: SearchDialogFragmentStore
     @MockK(relaxed = true) private lateinit var navController: NavController
     @MockK private lateinit var searchEngine: SearchEngine
     @MockK(relaxed = true) private lateinit var metrics: MetricController
     @MockK(relaxed = true) private lateinit var settings: Settings
     @MockK private lateinit var sessionManager: SessionManager
     @MockK(relaxed = true) private lateinit var clearToolbarFocus: () -> Unit
+    @MockK(relaxed = true) private lateinit var dismissDialog: () -> Unit
 
-    private lateinit var controller: DefaultSearchController
+    private lateinit var controller: SearchDialogController
 
     @Before
     fun setUp() {
@@ -59,16 +60,18 @@ class DefaultSearchControllerTest {
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
         every { sessionManager.select(any()) } just Runs
         every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.searchFragment
+            every { id } returns R.id.searchDialogFragment
         }
         every { MetricsUtils.createSearchEvent(searchEngine, activity, any()) } returns null
-        controller = DefaultSearchController(
+
+        controller = SearchDialogController(
             activity = activity,
             sessionManager = sessionManager,
             store = store,
             navController = navController,
             settings = settings,
             metrics = metrics,
+            dismissDialog = dismissDialog,
             clearToolbarFocus = clearToolbarFocus
         )
     }
@@ -88,11 +91,22 @@ class DefaultSearchControllerTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = url,
                 newTab = false,
-                from = BrowserDirection.FromSearch,
+                from = BrowserDirection.FromSearchDialog,
                 engine = searchEngine
             )
         }
         verify { metrics.track(Event.EnteredUrl(false)) }
+    }
+
+    @Test
+    fun handleBlankUrlCommitted() {
+        val url = ""
+
+        controller.handleUrlCommitted(url)
+
+        verify {
+            dismissDialog()
+        }
     }
 
     @Test
@@ -105,7 +119,7 @@ class DefaultSearchControllerTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = searchTerm,
                 newTab = false,
-                from = BrowserDirection.FromSearch,
+                from = BrowserDirection.FromSearchDialog,
                 engine = searchEngine
             )
         }
@@ -127,7 +141,7 @@ class DefaultSearchControllerTest {
     @Test
     fun handleAddonsUrlCommitted() {
         val url = "about:addons"
-        val directions = SearchFragmentDirections.actionGlobalAddonsManagementFragment()
+        val directions = actionGlobalAddonsManagementFragment()
 
         controller.handleUrlCommitted(url)
 
@@ -144,7 +158,7 @@ class DefaultSearchControllerTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO),
                 newTab = false,
-                from = BrowserDirection.FromSearch,
+                from = BrowserDirection.FromSearchDialog,
                 engine = searchEngine
             )
         }
@@ -240,7 +254,7 @@ class DefaultSearchControllerTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = url,
                 newTab = false,
-                from = BrowserDirection.FromSearch
+                from = BrowserDirection.FromSearchDialog
             )
         }
         verify { metrics.track(Event.EnteredUrl(false)) }
@@ -256,7 +270,7 @@ class DefaultSearchControllerTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = searchTerms,
                 newTab = false,
-                from = BrowserDirection.FromSearch,
+                from = BrowserDirection.FromSearchDialog,
                 engine = searchEngine,
                 forceSearch = true
             )
@@ -275,8 +289,7 @@ class DefaultSearchControllerTest {
 
     @Test
     fun handleClickSearchEngineSettings() {
-        val directions: NavDirections =
-            SearchFragmentDirections.actionGlobalSearchEngineFragment()
+        val directions: NavDirections = actionGlobalSearchEngineFragment()
 
         controller.handleClickSearchEngineSettings()
 
@@ -308,7 +321,7 @@ class DefaultSearchControllerTest {
         controller.handleExistingSessionSelected(session)
 
         verify { sessionManager.select(session) }
-        verify { activity.openToBrowser(from = BrowserDirection.FromSearch) }
+        verify { activity.openToBrowser(from = BrowserDirection.FromSearchDialog) }
     }
 
     @Test
@@ -318,7 +331,7 @@ class DefaultSearchControllerTest {
         controller.handleExistingSessionSelected("tab-id")
 
         verify(inverse = true) { sessionManager.select(any()) }
-        verify(inverse = true) { activity.openToBrowser(from = BrowserDirection.FromSearch) }
+        verify(inverse = true) { activity.openToBrowser(from = BrowserDirection.FromSearchDialog) }
     }
 
     @Test
@@ -329,12 +342,12 @@ class DefaultSearchControllerTest {
         controller.handleExistingSessionSelected("tab-id")
 
         verify { sessionManager.select(any()) }
-        verify { activity.openToBrowser(from = BrowserDirection.FromSearch) }
+        verify { activity.openToBrowser(from = BrowserDirection.FromSearchDialog) }
     }
 
     @Test
     fun `show camera permissions needed dialog`() {
-        val dialogBuilder: AlertDialogBuilder = mockk(relaxed = true)
+        val dialogBuilder: AlertDialog.Builder = mockk(relaxed = true)
 
         val spyController = spyk(controller)
         every { spyController.buildDialog() } returns dialogBuilder

@@ -46,7 +46,7 @@ class StartSearchIntentProcessor(
             out.removeExtra(HomeActivity.OPEN_TO_SEARCH)
 
             val directions = source?.let {
-                NavGraphDirections.actionGlobalSearch(
+                NavGraphDirections.actionGlobalSearchDialog(
                     sessionId = null,
                     searchAccessPoint = it
                 )
