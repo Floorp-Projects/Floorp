@@ -264,7 +264,7 @@ template <typename NameCallback, typename StackCallback>
 
     aWriter.IntElement(static_cast<int64_t>(options.Timing().MarkerPhase()));
 
-    aWriter.IntElement(static_cast<int64_t>(options.Category().Category()));
+    aWriter.IntElement(static_cast<int64_t>(options.Category().GetCategory()));
 
     if (const auto tag =
             aEntryReader.ReadObject<mozilla::base_profiler_markers_detail::
@@ -409,14 +409,12 @@ struct ProfileBufferEntryReader::Deserializer<ProfilerStringView<CHAR>> {
 template <>
 struct ProfileBufferEntryWriter::Serializer<MarkerCategory> {
   static Length Bytes(const MarkerCategory& aCategory) {
-    return ULEB128Size(static_cast<uint32_t>(aCategory.CategoryPair())) +
-           ULEB128Size(static_cast<uint32_t>(aCategory.Category()));
+    return ULEB128Size(static_cast<uint32_t>(aCategory.CategoryPair()));
   }
 
   static void Write(ProfileBufferEntryWriter& aEW,
                     const MarkerCategory& aCategory) {
     aEW.WriteULEB128(static_cast<uint32_t>(aCategory.CategoryPair()));
-    aEW.WriteULEB128(static_cast<uint32_t>(aCategory.Category()));
   }
 };
 
@@ -426,15 +424,11 @@ struct ProfileBufferEntryReader::Deserializer<MarkerCategory> {
                        MarkerCategory& aCategory) {
     aCategory.mCategoryPair = static_cast<baseprofiler::ProfilingCategoryPair>(
         aER.ReadULEB128<uint32_t>());
-    aCategory.mCategory = static_cast<baseprofiler::ProfilingCategory>(
-        aER.ReadULEB128<uint32_t>());
   }
 
   static MarkerCategory Read(ProfileBufferEntryReader& aER) {
     return MarkerCategory(static_cast<baseprofiler::ProfilingCategoryPair>(
-                              aER.ReadULEB128<uint32_t>()),
-                          static_cast<baseprofiler::ProfilingCategory>(
-                              aER.ReadULEB128<uint32_t>()));
+        aER.ReadULEB128<uint32_t>()));
   }
 };
 
