@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
+  ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   PasswordGenerator: "resource://gre/modules/PasswordGenerator.jsm",
@@ -319,8 +320,11 @@ class LoginManagerParent extends JSWindowActorParent {
         // Directly migrate passwords for a single profile.
         const migrator = await MigrationUtils.getMigrator(browserId);
         const profiles = await migrator.getSourceProfiles();
-        // TODO: Bug 1666373 Use ExperimentAPI to enable only for treatment.
-        if (profiles.length == 1) {
+        if (
+          profiles.length == 1 &&
+          ExperimentAPI.getFeatureValue("password-autocomplete")
+            ?.directMigrateSingleProfile
+        ) {
           const loginAdded = new Promise(resolve => {
             const obs = (subject, topic, data) => {
               if (data == "addLogin") {
