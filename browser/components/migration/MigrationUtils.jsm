@@ -527,7 +527,7 @@ var MigratorPrototype = {
   },
 };
 
-var MigrationUtils = Object.seal({
+var MigrationUtils = Object.freeze({
   resourceTypes: {
     COOKIES: Ci.nsIBrowserProfileMigrator.COOKIES,
     HISTORY: Ci.nsIBrowserProfileMigrator.HISTORY,

@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
-  ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   PasswordGenerator: "resource://gre/modules/PasswordGenerator.jsm",
@@ -233,7 +232,7 @@ class LoginManagerParent extends JSWindowActorParent {
     );
   }
 
-  async receiveMessage(msg) {
+  receiveMessage(msg) {
     let data = msg.data;
     if (data.origin || data.formOrigin) {
       throw new Error(
@@ -314,47 +313,13 @@ class LoginManagerParent extends JSWindowActorParent {
         break;
       }
 
-      case "PasswordManager:HandleImportable": {
-        const { browserId, type } = data;
-
-        // Directly migrate passwords for a single profile.
-        const migrator = await MigrationUtils.getMigrator(browserId);
-        const profiles = await migrator.getSourceProfiles();
-        if (
-          profiles.length == 1 &&
-          ExperimentAPI.getFeatureValue("password-autocomplete")
-            ?.directMigrateSingleProfile
-        ) {
-          const loginAdded = new Promise(resolve => {
-            const obs = (subject, topic, data) => {
-              if (data == "addLogin") {
-                Services.obs.removeObserver(obs, "passwordmgr-storage-changed");
-                resolve();
-              }
-            };
-            Services.obs.addObserver(obs, "passwordmgr-storage-changed");
-          });
-
-          await migrator.migrate(
-            MigrationUtils.resourceTypes.PASSWORDS,
-            null,
-            profiles[0]
-          );
-          await loginAdded;
-
-          // Reshow the popup with the imported password.
-          this.sendAsyncMessage("PasswordManager:repopulateAutocompletePopup");
-        } else {
-          // Open the migration wizard pre-selecting the appropriate browser.
-          MigrationUtils.showMigrationWizard(
-            this.getRootBrowser().ownerGlobal,
-            [MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS, browserId]
-          );
-        }
-
-        Services.telemetry.recordEvent("exp_import", "event", type, browserId, {
-          profilesCount: profiles.length + "",
-        });
+      case "PasswordManager:OpenMigrationWizard": {
+        // Open the migration wizard pre-selecting the appropriate browser.
+        let window = this.getRootBrowser().ownerGlobal;
+        MigrationUtils.showMigrationWizard(window, [
+          MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
+          data,
+        ]);
         break;
       }
 
