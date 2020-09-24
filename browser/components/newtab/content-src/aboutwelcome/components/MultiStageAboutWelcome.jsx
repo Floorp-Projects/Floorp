@@ -68,6 +68,18 @@ export const MultiStageAboutWelcome = props => {
     })();
   }, []);
 
+  // Get the active theme so the rendering code can make it selected
+  // by default.
+  const [activeTheme, setActiveTheme] = useState(null);
+  const [initialTheme, setInitialTheme] = useState(null);
+  useEffect(() => {
+    (async () => {
+      let theme = await window.AWGetSelectedTheme();
+      setInitialTheme(theme);
+      setActiveTheme(theme);
+    })();
+  }, []);
+
   const useImportable = props.message_id.includes("IMPORTABLE");
   // Track whether we have already sent the importable sites impression telemetry
   const [importTelemetrySent, setImportTelemetrySent] = useState(null);
@@ -98,6 +110,7 @@ export const MultiStageAboutWelcome = props => {
         {props.screens.map(screen => {
           return index === screen.order ? (
             <WelcomeScreen
+              key={screen.id}
               id={screen.id}
               totalNumberOfScreens={props.screens.length}
               order={screen.order}
@@ -107,6 +120,9 @@ export const MultiStageAboutWelcome = props => {
               messageId={`${props.message_id}_${screen.id}`}
               UTMTerm={props.utm_term}
               flowParams={flowParams}
+              activeTheme={activeTheme}
+              initialTheme={initialTheme}
+              setActiveTheme={setActiveTheme}
             />
           ) : null;
         })}
@@ -148,16 +164,6 @@ export class WelcomeScreen extends React.PureComponent {
     AboutWelcomeUtils.handleUserAction({ type, data });
   }
 
-  highlightTheme(theme) {
-    const themes = document.querySelectorAll("label.theme");
-    themes.forEach(function(element) {
-      element.classList.remove("selected");
-      if (element.firstElementChild.value === theme) {
-        element.classList.add("selected");
-      }
-    });
-  }
-
   async handleAction(event) {
     let { props } = this;
 
@@ -188,10 +194,13 @@ export class WelcomeScreen extends React.PureComponent {
 
     // A special tiles.action.theme value indicates we should use the event's value vs provided value.
     if (action.theme) {
-      this.highlightTheme(event.currentTarget.value);
-      window.AWSelectTheme(
-        action.theme === "<event>" ? event.currentTarget.value : action.theme
-      );
+      let themeToUse =
+        action.theme === "<event>"
+          ? event.currentTarget.value
+          : this.props.initialTheme || action.theme;
+
+      this.props.setActiveTheme(themeToUse);
+      window.AWSelectTheme(themeToUse);
     }
 
     if (action.navigate) {
@@ -278,7 +287,12 @@ export class WelcomeScreen extends React.PureComponent {
                       key={theme + label}
                       text={typeof tooltip === "object" ? tooltip : {}}
                     >
-                      <label className="theme" title={theme + label}>
+                      <label
+                        className={`theme${
+                          theme === this.props.activeTheme ? " selected" : ""
+                        }`}
+                        title={theme + label}
+                      >
                         <Localized
                           text={
                             typeof description === "object" ? description : {}
@@ -288,6 +302,7 @@ export class WelcomeScreen extends React.PureComponent {
                             type="radio"
                             value={theme}
                             name="theme"
+                            checked={theme === this.props.activeTheme}
                             className="sr-only input"
                             onClick={this.handleAction}
                             data-l10n-attrs="aria-description"
