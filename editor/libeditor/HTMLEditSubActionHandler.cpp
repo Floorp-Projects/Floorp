@@ -3504,8 +3504,77 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
         }
         if (!aHTMLEditor.IsVisibleBRElement(
                 scanFromCaretPointResult.BRElementPtr())) {
-          // TODO: When deleting an invisible `<br>` element, we need to its
-          //       adjacent content too.
+          EditorDOMPoint newCaretPosition =
+              aDirectionAndAmount == nsIEditor::eNext
+                  ? EditorDOMPoint::After(
+                        *scanFromCaretPointResult.BRElementPtr())
+                  : EditorDOMPoint(scanFromCaretPointResult.BRElementPtr());
+          if (NS_WARN_IF(!newCaretPosition.IsSet())) {
+            return NS_ERROR_FAILURE;
+          }
+          AutoHideSelectionChanges blockSelectionListeners(
+              aHTMLEditor.SelectionRefPtr());
+          nsresult rv = aHTMLEditor.CollapseSelectionTo(newCaretPosition);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
+            return NS_ERROR_FAILURE;
+          }
+          if (NS_WARN_IF(!aHTMLEditor.SelectionRefPtr()->RangeCount())) {
+            return NS_ERROR_UNEXPECTED;
+          }
+          aRangesToDelete.Initialize(*aHTMLEditor.SelectionRefPtr());
+          AutoDeleteRangesHandler anotherHandler(this);
+          rv = anotherHandler.ComputeRangesToDelete(
+              aHTMLEditor, aDirectionAndAmount, aStripWrappers,
+              aRangesToDelete);
+          NS_WARNING_ASSERTION(
+              NS_SUCCEEDED(rv),
+              "Recursive AutoDeleteRangesHandler::ComputeRangesToDelete() "
+              "failed");
+
+          DebugOnly<nsresult> rvIgnored =
+              aHTMLEditor.CollapseSelectionTo(caretPoint);
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                               "HTMLEditor::CollapseSelectionTo() failed to "
+                               "restore original selection");
+
+          MOZ_ASSERT(aRangesToDelete.Ranges().Length() == 1);
+          // If the range is collapsed, there is no content which should
+          // be removed together.  In this case, only the invisible `<br>`
+          // element should be selected.
+          if (aRangesToDelete.IsCollapsed()) {
+            nsresult rv = aRangesToDelete.SelectNode(
+                *scanFromCaretPointResult.BRElementPtr());
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                                 "AutoRangeArray::SelectNode() failed");
+            return rv;
+          }
+
+          // Otherwise, extend the range to contain the invisible `<br>`
+          // element.
+          if (EditorRawDOMPoint(scanFromCaretPointResult.BRElementPtr())
+                  .IsBefore(aRangesToDelete.GetStartPointOfFirstRange())) {
+            nsresult rv = aRangesToDelete.FirstRangeRef()->SetStartAndEnd(
+                EditorRawDOMPoint(scanFromCaretPointResult.BRElementPtr())
+                    .ToRawRangeBoundary(),
+                aRangesToDelete.FirstRangeRef()->EndRef());
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                                 "nsRange::SetStartAndEnd() failed");
+            return rv;
+          }
+          if (aRangesToDelete.GetEndPointOfFirstRange().IsBefore(
+                  EditorRawDOMPoint::After(
+                      *scanFromCaretPointResult.BRElementPtr()))) {
+            nsresult rv = aRangesToDelete.FirstRangeRef()->SetStartAndEnd(
+                aRangesToDelete.FirstRangeRef()->StartRef(),
+                EditorRawDOMPoint::After(
+                    *scanFromCaretPointResult.BRElementPtr())
+                    .ToRawRangeBoundary());
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                                 "nsRange::SetStartAndEnd() failed");
+            return rv;
+          }
+          NS_WARNING("Was the invisible `<br>` element selected?");
           return NS_OK;
         }
       }
