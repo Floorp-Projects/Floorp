@@ -207,12 +207,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1408234
     await requestChromeAction("test-setup", testName);
     return new Promise(async (resolve) => {
       const outer = document.createElement("iframe");
-      outer.allow = "payment";
+      outer.allowPaymentRequest = true;
       document.body.appendChild(outer);
       await getLoadedPaymentRequest(outer,"blank_page.html");
 
       const inner = outer.contentDocument.createElement("iframe");
-      inner.allow = "payment";
+      inner.allowPaymentRequest = true;
       outer.contentDocument.body.appendChild(inner);
 
       const request = await getLoadedPaymentRequest(inner,"blank_page.html");
