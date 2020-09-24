@@ -82,16 +82,16 @@ struct SVCB {
            mSvcDomainName == aOther.mSvcDomainName &&
            mSvcFieldValue == aOther.mSvcFieldValue;
   }
-  bool operator<(const SVCB& aOther) const;
+  bool operator<(const SVCB& aOther) const {
+    return mSvcFieldPriority < aOther.mSvcFieldPriority;
+  }
   Maybe<uint16_t> GetPort() const;
   bool NoDefaultAlpn() const;
   Maybe<nsCString> GetAlpn(bool aNoHttp2, bool aNoHttp3) const;
   void GetIPHints(CopyableTArray<mozilla::net::NetAddr>& aAddresses) const;
   uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
-  nsCString mEchConfig;
   bool mHasIPHints = false;
-  bool mHasEchConfig = false;
   CopyableTArray<SvcFieldValue> mSvcFieldValue;
 };
 
