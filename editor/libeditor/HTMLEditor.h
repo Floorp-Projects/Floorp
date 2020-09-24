@@ -4165,10 +4165,7 @@ class HTMLEditor final : public TextEditor,
   // (drag&drop or clipboard)
   virtual nsresult PrepareTransferable(
       nsITransferable** aTransferable) override;
-
-  class HTMLTransferablePreparer;
   nsresult PrepareHTMLTransferable(nsITransferable** aTransferable) const;
-
   MOZ_CAN_RUN_SCRIPT nsresult InsertFromTransferable(
       nsITransferable* aTransferable, Document* aSourceDoc,
       const nsAString& aContextStr, const nsAString& aInfoStr,
