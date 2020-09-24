@@ -4366,6 +4366,16 @@ void LIRGenerator::visitGuardIsNotArrayBufferMaybeShared(
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitGuardIsTypedArray(MGuardIsTypedArray* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir =
+      new (alloc()) LGuardIsTypedArray(useRegister(ins->object()), temp());
+  assignSnapshot(lir, BailoutKind::TypedArrayGuard);
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitNurseryObject(MNurseryObject* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
 

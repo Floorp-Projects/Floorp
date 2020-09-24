@@ -2079,6 +2079,22 @@ bool CacheIRCompiler::emitGuardIsNotArrayBufferMaybeShared(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardIsTypedArray(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadObjClassUnsafe(obj, scratch);
+  masm.branchIfClassIsNotTypedArray(scratch, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardIsNotDOMProxy(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
