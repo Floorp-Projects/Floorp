@@ -2159,10 +2159,6 @@ class Document : public nsINode,
   bool IsTopLevelContentDocument() const { return mIsTopLevelContentDocument; }
   void SetIsTopLevelContentDocument(bool aIsTopLevelContentDocument) {
     mIsTopLevelContentDocument = aIsTopLevelContentDocument;
-    // When a document is set as TopLevelContentDocument, it must be
-    // allowpaymentrequest. We handle the false case while a document is
-    // appended in SetSubDocumentFor
-    SetAllowPaymentRequest(aIsTopLevelContentDocument);
   }
 
   bool IsContentDocument() const { return mIsContentDocument; }
@@ -3873,12 +3869,6 @@ class Document : public nsINode,
     --mIgnoreOpensDuringUnloadCounter;
   }
 
-  bool AllowPaymentRequest() const { return mAllowPaymentRequest; }
-
-  void SetAllowPaymentRequest(bool aAllowPaymentRequest) {
-    mAllowPaymentRequest = aAllowPaymentRequest;
-  }
-
   mozilla::dom::FeaturePolicy* FeaturePolicy() const;
 
   bool ModuleScriptsEnabled();
@@ -4501,9 +4491,6 @@ class Document : public nsINode,
 
   // True if we have called BeginLoad and are expecting a paired EndLoad call.
   bool mDidCallBeginLoad : 1;
-
-  // True if the document is allowed to use PaymentRequest.
-  bool mAllowPaymentRequest : 1;
 
   // True if the encoding menu should be disabled.
   bool mEncodingMenuDisabled : 1;
