@@ -605,6 +605,7 @@ this.VideoControlsImplWidget = class {
       updatePictureInPictureToggleDisplay() {
         if (this.isAudioOnly) {
           this.pictureInPictureToggleButton.setAttribute("hidden", true);
+          this.pictureInPictureToggleExperiment.setAttribute("hidden", true);
           return;
         }
 
@@ -3155,6 +3156,7 @@ this.NoControlsDesktopImplWidget = class {
         // Default the Picture-in-Picture toggle button to being hidden. We might unhide it
         // later if we determine that this video is qualified to show it.
         this.pictureInPictureToggleButton.setAttribute("hidden", true);
+        this.pictureInPictureToggleExperiment.setAttribute("hidden", true);
 
         if (this.video.readyState >= this.video.HAVE_METADATA) {
           // According to the spec[1], at the HAVE_METADATA (or later) state, we know
