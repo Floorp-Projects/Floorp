@@ -766,6 +766,10 @@ class MOZ_RAII CacheIRCompiler {
            !allocator.isDeadAfterInstruction(objId);
   }
 
+  bool emitLoadTypedElementExistsResult(ObjOperandId objId,
+                                        Int32OperandId indexId,
+                                        TypedThingLayout layout);
+
   bool emitLoadTypedElementResult(ObjOperandId objId, Int32OperandId indexId,
                                   TypedThingLayout layout,
                                   Scalar::Type elementType, bool handleOOB,

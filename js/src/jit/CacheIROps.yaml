@@ -1666,7 +1666,15 @@
     obj: ObjId
     index: Int32Id
 
-- name: LoadTypedElementExistsResult
+- name: LoadTypedArrayElementExistsResult
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  args:
+    obj: ObjId
+    index: Int32Id
+
+- name: LoadTypedObjectElementExistsResult
   shared: true
   transpile: false
   cost_estimate: 2
