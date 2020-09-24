@@ -530,10 +530,11 @@ class EngineURL {
 
     for (let i = 0; i < json.params.length; ++i) {
       let param = json.params[i];
-      if (param.mozparam) {
-        this._addMozParam(param);
-      } else {
-        this.addParam(param.name, param.value, param.purpose || undefined);
+      // mozparam and purpose are only supported for app-provided engines.
+      // Since we do not store the details for those engines, we don't want
+      // to handle it here.
+      if (!param.mozparam && !param.purpose) {
+        this.addParam(param.name, param.value);
       }
     }
   }
