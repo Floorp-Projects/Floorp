@@ -550,11 +550,6 @@ const JSPropertySpec ArrayMetaTypeDescr::typedObjectProperties[] = {JS_PS_END};
 
 const JSFunctionSpec ArrayMetaTypeDescr::typedObjectMethods[] = {
     {JSFunctionSpec::Name("forEach"), {nullptr, nullptr}, 1, 0, "ArrayForEach"},
-    {JSFunctionSpec::Name("redimension"),
-     {nullptr, nullptr},
-     1,
-     0,
-     "TypedObjectArrayRedimension"},
     JS_FS_END};
 
 bool js::CreateUserSizeAndAlignmentProperties(JSContext* cx,
