@@ -35,3 +35,8 @@
 #loginLabel, #password1Label {
   text-align: end;
 }
+
+#loginTextbox,
+#password1Textbox {
+  text-align: match-parent;
+}
