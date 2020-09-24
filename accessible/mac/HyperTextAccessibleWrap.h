@@ -7,6 +7,7 @@
 #define mozilla_a11y_HyperTextAccessibleWrap_h__
 
 #include "HyperTextAccessible.h"
+#include "RangeTypes.h"
 
 namespace mozilla {
 namespace a11y {
@@ -32,13 +33,9 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
   void OffsetAtIndex(int32_t aIndex, HyperTextAccessible** aContainer,
                      int32_t* aOffset);
 
-  void LeftWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
-                  int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
-                  int32_t* aEndOffset);
-
-  void RightWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
-                   int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
-                   int32_t* aEndOffset);
+  void RangeAt(int32_t aOffset, EWhichRange aRangeType,
+               HyperTextAccessible** aStartContainer, int32_t* aStartOffset,
+               HyperTextAccessible** aEndContainer, int32_t* aEndOffset);
 
   void NextClusterAt(int32_t aOffset, HyperTextAccessible** aNextContainer,
                      int32_t* aNextOffset);
@@ -58,11 +55,20 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
  protected:
   ~HyperTextAccessibleWrap() {}
 
+ private:
   TextPoint FindTextPoint(int32_t aOffset, nsDirection aDirection,
                           nsSelectionAmount aAmount,
                           EWordMovementType aWordMovementType);
 
   HyperTextAccessibleWrap* EditableRoot();
+
+  void LeftWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
+                  int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
+                  int32_t* aEndOffset);
+
+  void RightWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
+                   int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
+                   int32_t* aEndOffset);
 };
 
 }  // namespace a11y

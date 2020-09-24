@@ -6,6 +6,7 @@
 
 include protocol PDocAccessible;
 
+using mozilla::a11y::EWhichRange from "mozilla/a11y/IPCTypes.h";
 using nsIntRect from "nsRect.h";
 
 namespace mozilla {
@@ -17,11 +18,7 @@ nested(upto inside_sync) sync protocol PDocAccessiblePlatformExt {
 child:
   async __delete__();
 
-  nested(inside_sync) sync LeftWordAt(uint64_t aID, int32_t aOffset)
-      returns(uint64_t aStartContainer, int32_t aStartOffset,
-              uint64_t aEndContainer, int32_t aEndOffset);
-
-  nested(inside_sync) sync RightWordAt(uint64_t aID, int32_t aOffset)
+  nested(inside_sync) sync RangeAt(uint64_t aID, int32_t aOffset, EWhichRange aRangeType)
       returns(uint64_t aStartContainer, int32_t aStartOffset,
               uint64_t aEndContainer, int32_t aEndOffset);
 

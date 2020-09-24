@@ -16,12 +16,9 @@ class DocAccessibleChild;
 
 class DocAccessiblePlatformExtChild : public PDocAccessiblePlatformExtChild {
  public:
-  mozilla::ipc::IPCResult RecvLeftWordAt(
-      const uint64_t& aID, const int32_t& aOffset, uint64_t* aStartContainer,
-      int32_t* aStartOffset, uint64_t* aEndContainer, int32_t* aEndOffset);
-
-  mozilla::ipc::IPCResult RecvRightWordAt(
-      const uint64_t& aID, const int32_t& aOffset, uint64_t* aStartContainer,
+  mozilla::ipc::IPCResult RecvRangeAt(
+      const uint64_t& aID, const int32_t& aOffset,
+      const EWhichRange& aRangeType, uint64_t* aStartContainer,
       int32_t* aStartOffset, uint64_t* aEndContainer, int32_t* aEndOffset);
 
   mozilla::ipc::IPCResult RecvNextClusterAt(const uint64_t& aID,

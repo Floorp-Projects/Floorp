@@ -16,9 +16,10 @@
 namespace mozilla {
 namespace a11y {
 
-mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLeftWordAt(
-    const uint64_t& aID, const int32_t& aOffset, uint64_t* aStartContainer,
-    int32_t* aStartOffset, uint64_t* aEndContainer, int32_t* aEndOffset) {
+mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvRangeAt(
+    const uint64_t& aID, const int32_t& aOffset, const EWhichRange& aRangeType,
+    uint64_t* aStartContainer, int32_t* aStartOffset, uint64_t* aEndContainer,
+    int32_t* aEndOffset) {
   *aStartContainer = 0;
   *aStartOffset = 0;
   *aEndContainer = 0;
@@ -32,36 +33,8 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLeftWordAt(
   HyperTextAccessible* startContainer = nullptr;
   HyperTextAccessible* endContainer = nullptr;
 
-  acc->LeftWordAt(aOffset, &startContainer, aStartOffset, &endContainer,
-                  aEndOffset);
-
-  MOZ_ASSERT(!startContainer || startContainer->Document() == acc->Document());
-  MOZ_ASSERT(!endContainer || endContainer->Document() == acc->Document());
-
-  *aStartContainer = UNIQUE_ID(startContainer);
-  *aEndContainer = UNIQUE_ID(endContainer);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvRightWordAt(
-    const uint64_t& aID, const int32_t& aOffset, uint64_t* aStartContainer,
-    int32_t* aStartOffset, uint64_t* aEndContainer, int32_t* aEndOffset) {
-  *aStartContainer = 0;
-  *aStartOffset = 0;
-  *aEndContainer = 0;
-  *aEndOffset = 0;
-
-  HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
-  if (!acc) {
-    return IPC_OK();
-  }
-
-  HyperTextAccessible* startContainer = nullptr;
-  HyperTextAccessible* endContainer = nullptr;
-
-  acc->RightWordAt(aOffset, &startContainer, aStartOffset, &endContainer,
-                   aEndOffset);
+  acc->RangeAt(aOffset, aRangeType, &startContainer, aStartOffset,
+               &endContainer, aEndOffset);
 
   MOZ_ASSERT(!startContainer || startContainer->Document() == acc->Document());
   MOZ_ASSERT(!endContainer || endContainer->Document() == acc->Document());

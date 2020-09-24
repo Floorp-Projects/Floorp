@@ -219,49 +219,26 @@ uint32_t GeckoTextMarker::CharacterCount(const AccessibleOrProxy& aContainer) {
   return 0;
 }
 
-GeckoTextMarkerRange GeckoTextMarker::LeftWordRange() {
+GeckoTextMarkerRange GeckoTextMarker::Range(EWhichRange aRangeType) {
   MOZ_ASSERT(!mContainer.IsNull());
   if (mContainer.IsProxy()) {
     int32_t startOffset = 0, endOffset = 0;
     uint64_t startContainerID = 0, endContainerID = 0;
     DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
-    Unused << ipcDoc->GetPlatformExtension()->SendLeftWordAt(
-        mContainer.AsProxy()->ID(), mOffset, &startContainerID, &startOffset,
-        &endContainerID, &endOffset);
-    return GeckoTextMarkerRange(
-        GeckoTextMarker(ipcDoc->GetAccessible(startContainerID), startOffset),
-        GeckoTextMarker(ipcDoc->GetAccessible(endContainerID), endOffset));
+    bool success = ipcDoc->GetPlatformExtension()->SendRangeAt(
+        mContainer.AsProxy()->ID(), mOffset, aRangeType, &startContainerID,
+        &startOffset, &endContainerID, &endOffset);
+    if (success) {
+      return GeckoTextMarkerRange(
+          GeckoTextMarker(ipcDoc->GetAccessible(startContainerID), startOffset),
+          GeckoTextMarker(ipcDoc->GetAccessible(endContainerID), endOffset));
+    }
   } else if (auto htWrap = ContainerAsHyperTextWrap()) {
     int32_t startOffset = 0, endOffset = 0;
     HyperTextAccessible* startContainer = nullptr;
     HyperTextAccessible* endContainer = nullptr;
-    htWrap->LeftWordAt(mOffset, &startContainer, &startOffset, &endContainer,
-                       &endOffset);
-    return GeckoTextMarkerRange(GeckoTextMarker(startContainer, startOffset),
-                                GeckoTextMarker(endContainer, endOffset));
-  }
-
-  return GeckoTextMarkerRange(GeckoTextMarker(), GeckoTextMarker());
-}
-
-GeckoTextMarkerRange GeckoTextMarker::RightWordRange() {
-  MOZ_ASSERT(!mContainer.IsNull());
-  if (mContainer.IsProxy()) {
-    int32_t startOffset = 0, endOffset = 0;
-    uint64_t startContainerID = 0, endContainerID = 0;
-    DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
-    Unused << ipcDoc->GetPlatformExtension()->SendRightWordAt(
-        mContainer.AsProxy()->ID(), mOffset, &startContainerID, &startOffset,
-        &endContainerID, &endOffset);
-    return GeckoTextMarkerRange(
-        GeckoTextMarker(ipcDoc->GetAccessible(startContainerID), startOffset),
-        GeckoTextMarker(ipcDoc->GetAccessible(endContainerID), endOffset));
-  } else if (auto htWrap = ContainerAsHyperTextWrap()) {
-    int32_t startOffset = 0, endOffset = 0;
-    HyperTextAccessible* startContainer = nullptr;
-    HyperTextAccessible* endContainer = nullptr;
-    htWrap->RightWordAt(mOffset, &startContainer, &startOffset, &endContainer,
-                        &endOffset);
+    htWrap->RangeAt(mOffset, aRangeType, &startContainer, &startOffset,
+                    &endContainer, &endOffset);
     return GeckoTextMarkerRange(GeckoTextMarker(startContainer, startOffset),
                                 GeckoTextMarker(endContainer, endOffset));
   }
