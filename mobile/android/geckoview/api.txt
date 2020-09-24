@@ -1373,7 +1373,6 @@ package org.mozilla.geckoview {
     method default public void onFullscreen(@NonNull GeckoSession, @NonNull MediaSession, boolean, @Nullable MediaSession.ElementMetadata);
     method default public void onMetadata(@NonNull GeckoSession, @NonNull MediaSession, @NonNull MediaSession.Metadata);
     method default public void onPause(@NonNull GeckoSession, @NonNull MediaSession);
-    method default public void onPictureInPicture(@NonNull GeckoSession, @NonNull MediaSession, boolean);
     method default public void onPlay(@NonNull GeckoSession, @NonNull MediaSession);
     method default public void onPositionState(@NonNull GeckoSession, @NonNull MediaSession, @NonNull MediaSession.PositionState);
     method default public void onStop(@NonNull GeckoSession, @NonNull MediaSession);
