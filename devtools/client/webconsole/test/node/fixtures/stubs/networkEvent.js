@@ -25,11 +25,12 @@ rawPackets.set(`GET request`, {
   "node": null,
   "actor": "server0.conn0.netEvent4",
   "discardRequestBody": true,
-  "discardResponseBody": true,
+  "discardResponseBody": false,
   "startedDateTime": "2019-11-04T11:06:34.542Z",
   "request": {
     "url": "http://example.com/inexistent.html",
-    "method": "GET"
+    "method": "GET",
+    "headersSize": 385
   },
   "isXHR": false,
   "cause": {
@@ -44,13 +45,37 @@ rawPackets.set(`GET request`, {
       "asyncCause": null
     }
   },
-  "response": {},
+  "response": {
+    "httpVersion": "HTTP/1.1",
+    "status": "404",
+    "statusText": "Not Found",
+    "headersSize": 160,
+    "remoteAddress": "127.0.0.1",
+    "remotePort": 8888,
+    "content": {
+      "mimeType": "text/html; charset=utf-8"
+    },
+    "waitingTime": 1,
+    "bodySize": 418,
+    "transferredSize": 578
+  },
   "timings": {},
   "private": false,
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "no-referrer-when-downgrade",
   "channelId": 265845590720515,
-  "updates": []
+  "updates": [
+    "eventTimings",
+    "requestCookies",
+    "requestHeaders",
+    "responseContent",
+    "responseCookies",
+    "responseHeaders",
+    "responseStart",
+    "securityInfo"
+  ],
+  "totalTime": 2,
+  "securityState": "insecure"
 });
 
 rawPackets.set(`GET request update`, {
@@ -120,11 +145,12 @@ rawPackets.set(`XHR GET request`, {
   "node": null,
   "actor": "server0.conn0.netEvent21",
   "discardRequestBody": true,
-  "discardResponseBody": true,
+  "discardResponseBody": false,
   "startedDateTime": "2020-07-07T14:41:14.612Z",
   "request": {
     "url": "http://example.com/inexistent.html",
-    "method": "GET"
+    "method": "GET",
+    "headersSize": 385
   },
   "isXHR": true,
   "cause": {
@@ -139,13 +165,37 @@ rawPackets.set(`XHR GET request`, {
       "asyncCause": null
     }
   },
-  "response": {},
+  "response": {
+    "httpVersion": "HTTP/1.1",
+    "status": "404",
+    "statusText": "Not Found",
+    "headersSize": 160,
+    "remoteAddress": "127.0.0.1",
+    "remotePort": 8888,
+    "content": {
+      "mimeType": "text/html; charset=utf-8"
+    },
+    "waitingTime": 2,
+    "bodySize": 418,
+    "transferredSize": 578
+  },
   "timings": {},
   "private": false,
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "no-referrer-when-downgrade",
   "channelId": 202499118071812,
-  "updates": []
+  "updates": [
+    "eventTimings",
+    "requestCookies",
+    "requestHeaders",
+    "responseContent",
+    "responseCookies",
+    "responseHeaders",
+    "responseStart",
+    "securityInfo"
+  ],
+  "totalTime": 1,
+  "securityState": "insecure"
 });
 
 rawPackets.set(`XHR GET request update`, {
@@ -213,11 +263,12 @@ rawPackets.set(`XHR POST request`, {
   "node": null,
   "actor": "server0.conn0.netEvent36",
   "discardRequestBody": true,
-  "discardResponseBody": true,
+  "discardResponseBody": false,
   "startedDateTime": "2019-11-04T11:06:35.007Z",
   "request": {
     "url": "http://example.com/inexistent.html",
-    "method": "POST"
+    "method": "POST",
+    "headersSize": 385
   },
   "isXHR": true,
   "cause": {
@@ -232,13 +283,37 @@ rawPackets.set(`XHR POST request`, {
       "asyncCause": null
     }
   },
-  "response": {},
+  "response": {
+    "httpVersion": "HTTP/1.1",
+    "status": "404",
+    "statusText": "Not Found",
+    "headersSize": 160,
+    "remoteAddress": "127.0.0.1",
+    "remotePort": 8888,
+    "content": {
+      "mimeType": "text/html; charset=utf-8"
+    },
+    "waitingTime": 2,
+    "bodySize": 418,
+    "transferredSize": 578
+  },
   "timings": {},
   "private": false,
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "no-referrer-when-downgrade",
   "channelId": 265845590720517,
-  "updates": []
+  "updates": [
+    "eventTimings",
+    "requestCookies",
+    "requestHeaders",
+    "responseContent",
+    "responseCookies",
+    "responseHeaders",
+    "responseStart",
+    "securityInfo"
+  ],
+  "totalTime": 1,
+  "securityState": "insecure"
 });
 
 rawPackets.set(`XHR POST request update`, {

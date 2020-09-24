@@ -61,7 +61,9 @@ async function testNetworkEventResourcesWithExistingResources() {
           url: `${EXAMPLE_DOMAIN}live_get.html`,
           method: "GET",
         },
-        updates: [],
+        // Throttling makes us receive the available event
+        // after processing all the updates events
+        updates: UPDATES,
       },
     },
     expectedResourcesOnUpdated: {
@@ -92,7 +94,9 @@ async function testNetworkEventResourcesWithoutExistingResources() {
           url: `${EXAMPLE_DOMAIN}live_get.html`,
           method: "GET",
         },
-        updates: [],
+        // Throttling makes us receive the available event
+        // after processing all the updates events
+        updates: UPDATES,
       },
     },
     expectedResourcesOnUpdated: {
