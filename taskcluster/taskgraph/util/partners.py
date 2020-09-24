@@ -364,8 +364,8 @@ def get_partner_config_by_kind(config, kind):
             # TODO - should be fatal to have an unknown partner in partner_subset
             for partner in [p for p in kind_config.keys() if p not in partner_subset]:
                 del(kind_config[partner])
-        elif kind.startswith('release-partner-attribution'):
-            all_configs = deepcopy(kind_config["configs"])
+        elif kind.startswith('release-partner-attribution') and isinstance(kind_config, dict):
+            all_configs = deepcopy(kind_config.get("configs", []))
             kind_config["configs"] = []
             for this_config in all_configs:
                 if this_config["campaign"] in partner_subset:
