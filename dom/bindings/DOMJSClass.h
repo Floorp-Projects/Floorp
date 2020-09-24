@@ -245,6 +245,67 @@ static_assert(
 // aforementioned assertions in the getters. Upcast() is used to convert
 // specific instances to this "base" type.
 //
+// An example
+// ----------
+// NativeProperties points to various things, and it can be hard to keep track.
+// The following example shows the layout.
+//
+// Imagine an example interface, with:
+// - 10 properties
+//   - 6 methods, 3 with no disablers struct, 2 sharing the same disablers
+//     struct, 1 using a different disablers struct
+//   - 4 attributes, all with no disablers
+// - The property order is such that those using the same disablers structs are
+//   together. (This is not guaranteed, but it makes the example simpler.)
+//
+// Each PropertyInfo also contain indices into sMethods/sMethods_specs (for
+// method infos) and sAttributes/sAttributes_specs (for attributes), which let
+// them find their spec, but these are not shown.
+//
+//   sNativeProperties             sNativeProperties_        sNativeProperties_
+//   ----                          sortedPropertyIndices[10] propertyInfos[10]
+//   - <several scalar fields>     ----                      ----
+//   - sortedPropertyIndices ----> <10 indices>         +--> 0 info (method)
+//   - duos[2]                     ----                 |    1 info (method)
+//     ----(methods)                                    |    2 info (method)
+//     0 - mPrefables -------> points to sMethods below |    3 info (method)
+//       - mPropertyInfos ------------------------------+    4 info (method)
+//     1 - mPrefables -------> points to sAttributes below   5 info (method)
+//       - mPropertyInfos ---------------------------------> 6 info (attr)
+//     ----                                                  7 info (attr)
+//   ----                                                    8 info (attr)
+//                                                           9 info (attr)
+//                                                           ----
+//
+// sMethods has three entries (excluding the terminator) because there are
+// three disablers structs. The {nullptr,nullptr} serves as the terminator.
+// There are also END terminators within sMethod_specs; the need for these
+// terminators (as opposed to a length) is deeply embedded in SpiderMonkey.
+// Disablers structs are suffixed with the index of the first spec they cover.
+//
+//   sMethods                               sMethods_specs
+//   ----                                   ----
+//   0 - nullptr                     +----> 0 spec
+//     - specs ----------------------+      1 spec
+//   1 - disablers ---> disablers4          2 spec
+//     - specs ------------------------+    3 END
+//   2 - disablers ---> disablers7     +--> 4 spec
+//     - specs ----------------------+      5 spec
+//   3 - nullptr                     |      6 END
+//     - nullptr                     +----> 7 spec
+//   ----                                   8 END
+//
+// sAttributes has a single entry (excluding the terminator) because all of the
+// specs lack disablers.
+//
+//   sAttributes                            sAttributes_specs
+//   ----                                   ----
+//   0 - nullptr                     +----> 0 spec
+//     - specs ----------------------+      1 spec
+//   1 - nullptr                            2 spec
+//     - nullptr                            3 spec
+//   ----                                   4 END
+//                                          ----
 template <int N>
 struct NativePropertiesN {
   // Duo structs are stored in the duos[] array, and each element in the array
