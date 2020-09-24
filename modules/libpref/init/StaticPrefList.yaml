@@ -6658,20 +6658,20 @@
 # fontsize, fontstyle and fontweight.
 - name: mathml.deprecated_style_attributes.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable deprecated "radical" notation for the menclose element.
 - name: mathml.deprecated_menclose_notation_radical.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable legacy names "small", "normal" and "big" for the
 # mathsize attribute.
 - name: mathml.mathsize_names.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable legacy names "thickmathspace", "mediummathspace",
@@ -6684,7 +6684,7 @@
 # Whether to disable the mfrac bevelled  attribute.
 - name: mathml.mfrac_bevelled_attribute.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable the mfenced element.
@@ -6697,31 +6697,36 @@
 # linethickness attribute of the mfrac element.
 - name: mathml.mfrac_linethickness_names.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable deprecated numalign/denomalign/align attributes
 - name: mathml.deprecated_alignment_attributes.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable subscriptshift and superscriptshift attributes.
 - name: mathml.script_shift_attributes.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable support for XLink on MathML elements.
 - name: mathml.xlink.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable support for stretching operators with STIXGeneral fonts.
+# macos still has the deprecated STIXGeneral font pre-installed.
 - name: mathml.stixgeneral_operator_stretching.disabled
   type: bool
+#if defined(XP_MACOSX)
   value: @IS_NIGHTLY_BUILD@
+#else
+  value: true
+#endif
   mirror: always
 
 #---------------------------------------------------------------------------
