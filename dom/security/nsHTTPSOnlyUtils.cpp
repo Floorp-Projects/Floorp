@@ -125,15 +125,6 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeRequest(nsIURI* aURI,
     return false;
   }
 
-  // All subresources of an exempt triggering principal are also exempt
-  if (aLoadInfo->GetExternalContentPolicyType() !=
-      nsIContentPolicy::TYPE_DOCUMENT) {
-    if (!aLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
-        TestIfPrincipalIsExempt(aLoadInfo->TriggeringPrincipal())) {
-      return false;
-    }
-  }
-
   // We can upgrade the request - let's log it to the console
   // Appending an 's' to the scheme for the logging. (http -> https)
   nsAutoCString scheme;
@@ -234,23 +225,6 @@ bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsIChannel* aChannel,
 }
 
 /* static */
-bool nsHTTPSOnlyUtils::TestIfPrincipalIsExempt(nsIPrincipal* aPrincipal) {
-  static nsCOMPtr<nsIPermissionManager> sPermMgr;
-  if (!sPermMgr) {
-    sPermMgr = mozilla::services::GetPermissionManager();
-  }
-  NS_ENSURE_TRUE(sPermMgr, false);
-
-  uint32_t perm;
-  nsresult rv = sPermMgr->TestExactPermissionFromPrincipal(
-      aPrincipal, "https-only-load-insecure"_ns, &perm);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return perm == nsIHttpsOnlyModePermission::LOAD_INSECURE_ALLOW ||
-         perm == nsIHttpsOnlyModePermission::LOAD_INSECURE_ALLOW_SESSION;
-}
-
-/* static */
 void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
     nsIChannel* aChannel) {
   NS_ENSURE_TRUE_VOID(aChannel);
@@ -279,10 +253,23 @@ void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
       aChannel, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS_VOID(rv);
 
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      mozilla::services::GetPermissionManager();
+  NS_ENSURE_TRUE_VOID(permMgr);
+
+  uint32_t perm;
+  rv = permMgr->TestExactPermissionFromPrincipal(
+      principal, "https-only-load-insecure"_ns, &perm);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  bool isHttpsOnlyExempt =
+      perm == nsIHttpsOnlyModePermission::LOAD_INSECURE_ALLOW ||
+      perm == nsIHttpsOnlyModePermission::LOAD_INSECURE_ALLOW_SESSION;
+
   // We explicitly add or also remove the exemption flag, because this
   // function is also consulted after redirects.
   uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-  if (TestIfPrincipalIsExempt(principal)) {
+  if (isHttpsOnlyExempt) {
     httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
   } else {
     httpsOnlyStatus &= ~nsILoadInfo::HTTPS_ONLY_EXEMPT;
