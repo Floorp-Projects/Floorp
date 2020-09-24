@@ -73,46 +73,34 @@ Result MultiLogCTVerifier::Verify(Input cert, Input issuerSubjectPublicKeyInfo,
   return Success;
 }
 
-void DecodeSCTs(Input encodedSctList,
-                std::vector<SignedCertificateTimestamp>& decodedSCTs,
-                size_t& decodingErrors) {
-  decodedSCTs.clear();
-
+Result MultiLogCTVerifier::VerifySCTs(Input encodedSctList,
+                                      const LogEntry& expectedEntry,
+                                      VerifiedSCT::Origin origin, Time time,
+                                      CTVerifyResult& result) {
   Reader listReader;
   Result rv = DecodeSCTList(encodedSctList, listReader);
   if (rv != Success) {
-    decodingErrors++;
-    return;
+    result.decodingErrors++;
+    return Success;
   }
 
   while (!listReader.AtEnd()) {
     Input encodedSct;
     rv = ReadSCTListItem(listReader, encodedSct);
     if (rv != Success) {
-      decodingErrors++;
-      return;
+      result.decodingErrors++;
+      return Success;
     }
 
     Reader encodedSctReader(encodedSct);
     SignedCertificateTimestamp sct;
     rv = DecodeSignedCertificateTimestamp(encodedSctReader, sct);
     if (rv != Success) {
-      decodingErrors++;
+      result.decodingErrors++;
       continue;
     }
-    decodedSCTs.push_back(std::move(sct));
-  }
-}
 
-Result MultiLogCTVerifier::VerifySCTs(Input encodedSctList,
-                                      const LogEntry& expectedEntry,
-                                      VerifiedSCT::Origin origin, Time time,
-                                      CTVerifyResult& result) {
-  std::vector<SignedCertificateTimestamp> decodedSCTs;
-  DecodeSCTs(encodedSctList, decodedSCTs, result.decodingErrors);
-  for (auto sct : decodedSCTs) {
-    Result rv =
-        VerifySingleSCT(std::move(sct), expectedEntry, origin, time, result);
+    rv = VerifySingleSCT(std::move(sct), expectedEntry, origin, time, result);
     if (rv != Success) {
       return rv;
     }
