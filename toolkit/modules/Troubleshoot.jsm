@@ -115,7 +115,9 @@ const PREFS_BLACKLIST = [
   /^network[.]proxy[.]/,
   /[.]print_to_filename$/,
   /^print[.]macosx[.]pagesetup/,
-  /^print[.]printer/,
+  // Don't filter out the printing prefs for now while the project to overhaul
+  // the printing code is ongoing and causing some unintended disruption:
+  // /^print[.]printer/,
 ];
 
 // Table of getters for various preference types.
