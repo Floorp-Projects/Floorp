@@ -2866,18 +2866,6 @@ already_AddRefed<nsIContent> PresShell::GetSelectedContentForScrolling() const {
   return selectedContent.forget();
 }
 
-nsIScrollableFrame* PresShell::GetNearestScrollableFrame(
-    nsIFrame* aFrame, ScrollableDirection aDirection) {
-  if (aDirection == ScrollableDirection::Either) {
-    return nsLayoutUtils::GetNearestScrollableFrame(aFrame);
-  }
-
-  return nsLayoutUtils::GetNearestScrollableFrameForDirection(
-      aFrame, aDirection == ScrollableDirection::Vertical
-                  ? nsLayoutUtils::eVertical
-                  : nsLayoutUtils::eHorizontal);
-}
-
 nsIScrollableFrame* PresShell::GetScrollableFrameToScrollForContent(
     nsIContent* aContent, ScrollableDirection aDirection) {
   nsIScrollableFrame* scrollFrame = nullptr;
@@ -2888,7 +2876,8 @@ nsIScrollableFrame* PresShell::GetScrollableFrameToScrollForContent(
       if (scrollFrame) {
         startFrame = scrollFrame->GetScrolledFrame();
       }
-      scrollFrame = GetNearestScrollableFrame(startFrame, aDirection);
+      scrollFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
+          startFrame, aDirection);
     }
   }
   if (!scrollFrame) {
@@ -2896,8 +2885,8 @@ nsIScrollableFrame* PresShell::GetScrollableFrameToScrollForContent(
     if (!scrollFrame || !scrollFrame->GetScrolledFrame()) {
       return nullptr;
     }
-    scrollFrame =
-        GetNearestScrollableFrame(scrollFrame->GetScrolledFrame(), aDirection);
+    scrollFrame = nsLayoutUtils::GetNearestScrollableFrameForDirection(
+        scrollFrame->GetScrolledFrame(), aDirection);
   }
   return scrollFrame;
 }

@@ -2087,7 +2087,7 @@ bool nsLayoutUtils::IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame) {
 
 // static
 nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
-    nsIFrame* aFrame, Direction aDirection) {
+    nsIFrame* aFrame, ScrollableDirection aDirection) {
   NS_ASSERTION(
       aFrame, "GetNearestScrollableFrameForDirection expects a non-null frame");
   for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
@@ -2095,12 +2095,20 @@ nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
     if (scrollableFrame) {
       ScrollStyles ss = scrollableFrame->GetScrollStyles();
       uint32_t directions = scrollableFrame->GetAvailableScrollingDirections();
-      if (aDirection == eVertical
-              ? (ss.mVertical != StyleOverflow::Hidden &&
-                 (directions & nsIScrollableFrame::VERTICAL))
-              : (ss.mHorizontal != StyleOverflow::Hidden &&
-                 (directions & nsIScrollableFrame::HORIZONTAL)))
-        return scrollableFrame;
+      if (aDirection == ScrollableDirection::Vertical ||
+          aDirection == ScrollableDirection::Either) {
+        if (ss.mVertical != StyleOverflow::Hidden &&
+            (directions & nsIScrollableFrame::VERTICAL)) {
+          return scrollableFrame;
+        }
+      }
+      if (aDirection == ScrollableDirection::Horizontal ||
+          aDirection == ScrollableDirection::Either) {
+        if (ss.mHorizontal != StyleOverflow::Hidden &&
+            (directions & nsIScrollableFrame::HORIZONTAL)) {
+          return scrollableFrame;
+        }
+      }
     }
   }
   return nullptr;
