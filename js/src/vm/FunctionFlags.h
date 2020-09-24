@@ -175,7 +175,7 @@ class FunctionFlags {
 
   bool isNonBuiltinConstructor() const {
     // Note: keep this in sync with emitGuardFunctionIsNonBuiltinCtor in
-    // CacheIRCompiler.cpp.
+    // {CacheIRCompiler, WarpCacheIRTranspiler}.cpp.
     return hasFlags(BASESCRIPT) && hasFlags(CONSTRUCTOR) &&
            !hasFlags(SELF_HOSTED);
   }
