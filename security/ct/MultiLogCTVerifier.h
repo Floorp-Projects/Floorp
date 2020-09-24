@@ -19,6 +19,10 @@
 namespace mozilla {
 namespace ct {
 
+void DecodeSCTs(Input encodedSctList,
+                std::vector<SignedCertificateTimestamp>& decodedSCTs,
+                size_t& decodingErrors);
+
 // A Certificate Transparency verifier that can verify Signed Certificate
 // Timestamps from multiple logs.
 class MultiLogCTVerifier {
