@@ -53,9 +53,9 @@ class WebProgressListener final : public nsIWebProgressListener,
   WebProgressListener(BrowsingContext* aBrowsingContext, nsIURI* aBaseURI,
                       already_AddRefed<ClientOpPromise::Private> aPromise)
       : mPromise(aPromise),
-        mBrowsingContext(aBrowsingContext),
-        mBaseURI(aBaseURI) {
-    MOZ_ASSERT(aBrowsingContext);
+        mBaseURI(aBaseURI),
+        mBrowserId(aBrowsingContext->GetBrowserId()) {
+    MOZ_ASSERT(mBrowserId != 0);
     MOZ_ASSERT(aBaseURI);
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -63,22 +63,17 @@ class WebProgressListener final : public nsIWebProgressListener,
   NS_IMETHOD
   OnStateChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
                 uint32_t aStateFlags, nsresult aStatus) override {
-    MOZ_ASSERT(mBrowsingContext);
-
     if (!(aStateFlags & STATE_IS_WINDOW) ||
         !(aStateFlags & (STATE_STOP | STATE_TRANSFERRING))) {
       return NS_OK;
     }
 
-    // Our caller keeps a strong reference, so it is safe to remove the listener
-    // from ServiceWorkerPrivate.
-    nsCOMPtr<nsIWebProgress> webProgress =
-        mBrowsingContext->Canonical()->GetWebProgress();
-    webProgress->RemoveProgressListener(this);
-
     // Our browsing context may have been discarded before finishing the load,
     // this is a navigation error.
-    if (mBrowsingContext->IsDiscarded()) {
+    RefPtr<CanonicalBrowsingContext> browsingContext =
+        CanonicalBrowsingContext::Cast(
+            BrowsingContext::GetCurrentTopByBrowserId(mBrowserId));
+    if (!browsingContext || browsingContext->IsDiscarded()) {
       CopyableErrorResult rv;
       rv.ThrowInvalidStateError("Unable to open window");
       mPromise->Reject(rv, __func__);
@@ -86,8 +81,13 @@ class WebProgressListener final : public nsIWebProgressListener,
       return NS_OK;
     }
 
+    // Our caller keeps a strong reference, so it is safe to remove the listener
+    // from the BrowsingContext's nsIWebProgress.
+    nsCOMPtr<nsIWebProgress> webProgress = browsingContext->GetWebProgress();
+    webProgress->RemoveProgressListener(this);
+
     RefPtr<dom::WindowGlobalParent> wgp =
-        mBrowsingContext->Canonical()->GetCurrentWindowGlobal();
+        browsingContext->GetCurrentWindowGlobal();
     if (NS_WARN_IF(!wgp)) {
       CopyableErrorResult rv;
       rv.ThrowInvalidStateError("Unable to open window");
@@ -176,8 +176,8 @@ class WebProgressListener final : public nsIWebProgressListener,
   }
 
   RefPtr<ClientOpPromise::Private> mPromise;
-  RefPtr<BrowsingContext> mBrowsingContext;
   nsCOMPtr<nsIURI> mBaseURI;
+  uint64_t mBrowserId;
 };
 
 NS_IMPL_ISUPPORTS(WebProgressListener, nsIWebProgressListener,
