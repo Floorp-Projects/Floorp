@@ -3057,6 +3057,11 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
         const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
         AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
         const;
+    Result<bool, nsresult>
+    ComputeRangesToDeleteNodesEntirelyInRangeButKeepTableStructure(
+        const HTMLEditor& aHTMLEditor, nsRange& aRange,
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
+        const;
 
     /**
      * DeleteContentButKeepTableStructure() removes aContent if it's an element
@@ -5308,6 +5313,26 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   return EditActionHandled(rv);
 }
 
+Result<bool, nsresult>
+HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
+    ComputeRangesToDeleteNodesEntirelyInRangeButKeepTableStructure(
+        const HTMLEditor& aHTMLEditor, nsRange& aRange,
+        AutoDeleteRangesHandler::SelectionWasCollapsed aSelectionWasCollapsed)
+        const {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+
+  AutoTArray<OwningNonNull<nsIContent>, 10> arrayOfTopChildren;
+  DOMSubtreeIterator iter;
+  nsresult rv = iter.Init(aRange);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("DOMSubtreeIterator::Init() failed");
+    return Err(rv);
+  }
+  iter.AppendAllNodesToArray(arrayOfTopChildren);
+  return NeedsToJoinNodesAfterDeleteNodesEntirelyInRangeButKeepTableStructure(
+      aHTMLEditor, arrayOfTopChildren, aSelectionWasCollapsed);
+}
+
 Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     AutoBlockElementsJoiner::DeleteNodesEntirelyInRangeButKeepTableStructure(
         HTMLEditor& aHTMLEditor, nsRange& aRange,
@@ -5445,7 +5470,45 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
                  ->GetEndContainer()
                  ->IsInclusiveDescendantOf(mRightContent));
 
-  return NS_OK;
+  for (OwningNonNull<nsRange>& range : aRangesToDelete.Ranges()) {
+    Result<bool, nsresult> result =
+        ComputeRangesToDeleteNodesEntirelyInRangeButKeepTableStructure(
+            aHTMLEditor, range, aSelectionWasCollapsed);
+    if (result.isErr()) {
+      NS_WARNING(
+          "AutoBlockElementsJoiner::"
+          "ComputeRangesToDeleteNodesEntirelyInRangeButKeepTableStructure() "
+          "failed");
+      return result.unwrapErr();
+    }
+    if (!result.unwrap()) {
+      return NS_OK;
+    }
+  }
+
+  AutoInclusiveAncestorBlockElementsJoiner joiner(*mLeftContent,
+                                                  *mRightContent);
+  Result<bool, nsresult> canJoinThem = joiner.Prepare(aHTMLEditor);
+  if (canJoinThem.isErr()) {
+    NS_WARNING("AutoInclusiveAncestorBlockElementsJoiner::Prepare() failed");
+    return canJoinThem.unwrapErr();
+  }
+
+  if (!canJoinThem.unwrap()) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+
+  if (!joiner.CanJoinBlocks()) {
+    return NS_OK;
+  }
+
+  nsresult rv = joiner.ComputeRangesToDelete(aHTMLEditor, EditorDOMPoint(),
+                                             aRangesToDelete);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "AutoInclusiveAncestorBlockElementsJoiner::ComputeRangesToDelete() "
+      "failed");
+  return rv;
 }
 
 EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
@@ -6891,10 +6954,14 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     AutoInclusiveAncestorBlockElementsJoiner::ComputeRangesToDelete(
         const HTMLEditor& aHTMLEditor, const EditorDOMPoint& aCaretPoint,
         AutoRangeArray& aRangesToDelete) const {
+  MOZ_ASSERT(!aRangesToDelete.Ranges().IsEmpty());
   MOZ_ASSERT(mLeftBlockElement);
   MOZ_ASSERT(mRightBlockElement);
 
   if (IsSameBlockElement()) {
+    if (!aCaretPoint.IsSet()) {
+      return NS_OK;  // The ranges are not collapsed, keep them as-is.
+    }
     nsresult rv = aRangesToDelete.Collapse(aCaretPoint);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::Collapse() failed");
     return rv;
@@ -6915,8 +6982,25 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
         "WSRunScanner::GetRangeForDeletingBlockElementBoundaries() failed");
     return NS_ERROR_FAILURE;
   }
-  nsresult rv =
-      aRangesToDelete.SetStartAndEnd(range.StartRef(), range.EndRef());
+  if (!aCaretPoint.IsSet()) {
+    // Don't shrink the original range.
+    bool noNeedToChangeStart = false;
+    if (aRangesToDelete.GetStartPointOfFirstRange().IsBefore(
+            range.StartRef())) {
+      noNeedToChangeStart = true;
+      range.SetStart(aRangesToDelete.GetStartPointOfFirstRange());
+    }
+    if (range.EndRef().IsBefore(aRangesToDelete.GetEndPointOfFirstRange())) {
+      if (noNeedToChangeStart) {
+        return NS_OK;  // We don't need to modify the range.
+      }
+      range.SetEnd(aRangesToDelete.GetEndPointOfFirstRange());
+    }
+  }
+  // XXX Oddly, we join blocks only at the first range.
+  nsresult rv = aRangesToDelete.FirstRangeRef()->SetStartAndEnd(
+      range.StartRef().ToRawRangeBoundary(),
+      range.EndRef().ToRawRangeBoundary());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "AutoRangeArray::SetStartAndEnd() failed");
   return rv;
