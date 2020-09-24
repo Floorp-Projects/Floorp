@@ -35,10 +35,10 @@ class CSTrustDomain final : public mozilla::pkix::TrustDomain {
   virtual Result CheckRevocation(
       mozilla::pkix::EndEntityOrCA endEntityOrCA,
       const mozilla::pkix::CertID& certID, mozilla::pkix::Time time,
-      mozilla::pkix::Time validityPeriodBeginning,
       mozilla::pkix::Duration validityDuration,
       /*optional*/ const mozilla::pkix::Input* stapledOCSPresponse,
-      /*optional*/ const mozilla::pkix::Input* aiaExtension) override;
+      /*optional*/ const mozilla::pkix::Input* aiaExtension,
+      /*optional*/ const mozilla::pkix::Input* sctExtension) override;
   virtual Result IsChainValid(
       const mozilla::pkix::DERArray& certChain, mozilla::pkix::Time time,
       const mozilla::pkix::CertPolicyId& requiredPolicy) override;

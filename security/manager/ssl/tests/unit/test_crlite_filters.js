@@ -402,11 +402,15 @@ add_task(
     let revokedInStashIssuer = constructCertFromFile(
       "test_cert_storage_direct/revoked-in-stash-issuer.pem"
     );
+    let noSCTCertIssuer = constructCertFromFile(
+      "test_cert_storage_direct/no-sct-issuer.pem"
+    );
 
     let crliteEnrollmentRecords = [
       getCRLiteEnrollmentRecordFor(validCertIssuer),
       getCRLiteEnrollmentRecordFor(revokedCertIssuer),
       getCRLiteEnrollmentRecordFor(revokedInStashIssuer),
+      getCRLiteEnrollmentRecordFor(noSCTCertIssuer),
     ];
 
     await IntermediatePreloadsClient.onSync({
@@ -521,6 +525,36 @@ add_task(
       "schunk-group.com",
       Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
     );
+
+    // This certificate has no embedded SCTs, so it is not guaranteed to be in
+    // CT, so CRLite can't be guaranteed to give the correct answer, so it is
+    // not consulted.
+    let noSCTCert = constructCertFromFile(
+      "test_cert_storage_direct/no-sct.pem"
+    );
+    // Currently OCSP will always be consulted for certificates that are not
+    // revoked in CRLite, but if/when OCSP gets skipped for all certificates
+    // covered by CRLite, this test will ensure that certificates without
+    // embedded SCTs will cause OCSP to be consulted.
+    // NB: this will cause an OCSP request to be sent to localhost:80, but
+    // since an OCSP responder shouldn't be running on that port, this should
+    // fail safely.
+    Services.prefs.setCharPref("network.dns.localDomains", "ocsp.digicert.com");
+    Services.prefs.setBoolPref("security.OCSP.require", true);
+    Services.prefs.setIntPref("security.OCSP.enabled", 1);
+    await checkCertErrorGenericAtTime(
+      certdb,
+      noSCTCert,
+      SEC_ERROR_OCSP_SERVER_ERROR,
+      certificateUsageSSLServer,
+      new Date("2020-11-20T00:00:00Z").getTime() / 1000,
+      false,
+      "mail233.messagelabs.com",
+      0
+    );
+    Services.prefs.clearUserPref("network.dns.localDomains");
+    Services.prefs.clearUserPref("security.OCSP.require");
+    Services.prefs.clearUserPref("security.OCSP.enabled");
   }
 );
 
