@@ -663,6 +663,13 @@
   args:
     array: ObjId
 
+- name: GuardArgumentsObjectNotOverriddenIterator
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 - name: LoadObject
   shared: true
   transpile: true

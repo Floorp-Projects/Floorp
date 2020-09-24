@@ -369,6 +369,7 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
       TRY_ATTACH(
           tryAttachXrayCrossCompartmentWrapper(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachFunction(obj, objId, id));
+      TRY_ATTACH(tryAttachArgumentsObjectIterator(obj, objId, id));
       TRY_ATTACH(tryAttachProxy(obj, objId, id, receiverId));
 
       trackAttached(IRGenerator::NotAttached);
@@ -2011,6 +2012,46 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
 
     trackAttached("FunctionName");
   }
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectIterator(
+    HandleObject obj, ObjOperandId objId, HandleId id) {
+  if (!obj->is<ArgumentsObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!JSID_IS_SYMBOL(id) ||
+      JSID_TO_SYMBOL(id) != cx_->wellKnownSymbols().iterator) {
+    return AttachDecision::NoAction;
+  }
+
+  auto* args = &obj->as<ArgumentsObject>();
+  if (args->hasOverriddenIterator()) {
+    return AttachDecision::NoAction;
+  }
+
+  RootedValue iterator(cx_);
+  if (!ArgumentsObject::getArgumentsIterator(cx_, &iterator)) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+  MOZ_ASSERT(iterator.isObject());
+
+  maybeEmitIdGuard(id);
+  if (args->is<MappedArgumentsObject>()) {
+    writer.guardClass(objId, GuardClassKind::MappedArguments);
+  } else {
+    MOZ_ASSERT(args->is<UnmappedArgumentsObject>());
+    writer.guardClass(objId, GuardClassKind::UnmappedArguments);
+  }
+  writer.guardArgumentsObjectNotOverriddenIterator(objId);
+
+  ObjOperandId iterId = writer.loadObject(&iterator.toObject());
+  writer.loadObjectResult(iterId);
+  writer.typeMonitorResult();
+
+  trackAttached("ArgumentsObjectIterator");
   return AttachDecision::Attach;
 }
 
