@@ -10,10 +10,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsITrackingDBService"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Region: "resource://gre/modules/Region.jsm",
-});
-
 const { AboutProtectionsParent } = ChromeUtils.import(
   "resource:///actors/AboutProtectionsParent.jsm"
 );
@@ -50,9 +46,10 @@ requestLongerTimeout(2);
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
-      ["browser.contentblocking.report.vpn_platforms", "win"],
-
+      ["browser.contentblocking.database.enabled", true],
+      ["browser.contentblocking.report.monitor.enabled", true],
+      ["browser.contentblocking.report.lockwise.enabled", true],
+      ["browser.contentblocking.report.proxy.enabled", true],
       // Change the endpoints to prevent non-local network connections when landing on the page.
       ["browser.contentblocking.report.monitor.url", ""],
       ["browser.contentblocking.report.monitor.sign_in_url", ""],
@@ -67,10 +64,6 @@ add_task(async function setup() {
       ["browser.contentblocking.report.mobile-android.url", ""],
       ["browser.contentblocking.report.monitor.home_page_url", ""],
       ["browser.contentblocking.report.monitor.preferences_url", ""],
-      ["browser.contentblocking.report.vpn.url", ""],
-      ["browser.contentblocking.report.vpn-promo.url", ""],
-      ["browser.contentblocking.report.vpn-android.url", ""],
-      ["browser.contentblocking.report.vpn-ios.url", ""],
     ],
   });
 
@@ -78,21 +71,16 @@ add_task(async function setup() {
   Services.telemetry.canRecordExtended = true;
   registerCleanupFunction(() => {
     Services.telemetry.canRecordExtended = oldCanRecord;
-    // AboutProtectionsParent.setTestOverride(null);
   });
 });
 
 add_task(async function checkTelemetryLoadEvents() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.contentblocking.database.enabled", false],
-      ["browser.contentblocking.report.monitor.enabled", false],
-      ["browser.contentblocking.report.lockwise.enabled", false],
-      ["browser.contentblocking.report.proxy.enabled", false],
-      ["browser.contentblocking.report.vpn.enabled", false],
-    ],
-  });
-  await addArbitraryTimeout();
+  // There's an arbitrary interval of 2 seconds in which the content
+  // processes sync their event data with the parent process, we wait
+  // this out to ensure that we clear everything that is left over from
+  // previous tests and don't receive random events in the middle of our tests.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(c => setTimeout(c, 2000));
 
   // Clear everything.
   Services.telemetry.clearEvents();
@@ -170,26 +158,13 @@ function waitForTelemetryEventCount(count) {
   }, "waiting for telemetry event count of: " + count);
 }
 
-let addArbitraryTimeout = async () => {
+add_task(async function checkTelemetryClickEvents() {
   // There's an arbitrary interval of 2 seconds in which the content
   // processes sync their event data with the parent process, we wait
   // this out to ensure that we clear everything that is left over from
   // previous tests and don't receive random events in the middle of our tests.
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(c => setTimeout(c, 2000));
-};
-
-add_task(async function checkTelemetryClickEvents() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.contentblocking.database.enabled", true],
-      ["browser.contentblocking.report.monitor.enabled", true],
-      ["browser.contentblocking.report.lockwise.enabled", true],
-      ["browser.contentblocking.report.proxy.enabled", true],
-      ["browser.contentblocking.report.vpn.enabled", false],
-    ],
-  });
-  await addArbitraryTimeout();
 
   // Clear everything.
   Services.telemetry.clearEvents();
@@ -845,16 +820,12 @@ add_task(async function test_save_telemetry() {
 // Test that telemetry is sent if entrypoint param is included,
 // and test that it is recorded as default if entrypoint param is not properly included
 add_task(async function checkTelemetryLoadEventForEntrypoint() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.contentblocking.database.enabled", false],
-      ["browser.contentblocking.report.monitor.enabled", false],
-      ["browser.contentblocking.report.lockwise.enabled", false],
-      ["browser.contentblocking.report.proxy.enabled", false],
-      ["browser.contentblocking.report.vpn.enabled", false],
-    ],
-  });
-  await addArbitraryTimeout();
+  // There's an arbitrary interval of 2 seconds in which the content
+  // processes sync their event data with the parent process, we wait
+  // this out to ensure that we clear everything that is left over from
+  // previous tests and don't receive random events in the middle of our tests.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(c => setTimeout(c, 2000));
 
   // Clear everything.
   Services.telemetry.clearEvents();
@@ -932,248 +903,3 @@ add_task(async function checkTelemetryLoadEventForEntrypoint() {
   // Clean up.
   await BrowserTestUtils.removeTab(tab);
 });
-
-// This test is skipping due to failures on try, it passes locally.
-// Test that telemetry is sent from the vpn card
-add_task(async function checkTelemetryClickEventsVPN() {
-  if (Services.sysinfo.getProperty("name") != "Windows_NT") {
-    ok(true, "User is on an unsupported platform, the vpn card will not show");
-    return;
-  }
-  await addArbitraryTimeout();
-  // Clear everything.
-  Services.telemetry.clearEvents();
-  await TestUtils.waitForCondition(() => {
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).content;
-    return !events || !events.length;
-  });
-  Services.telemetry.setEventRecordingEnabled("security.ui.protections", true);
-
-  // user is not subscribed to VPN, and is in the us
-  AboutProtectionsParent.setTestOverride(getVPNOverrides(false, "us"));
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.contentblocking.database.enabled", false],
-      ["browser.contentblocking.report.monitor.enabled", false],
-      ["browser.contentblocking.report.lockwise.enabled", false],
-      ["browser.contentblocking.report.proxy.enabled", false],
-      ["browser.contentblocking.report.vpn.enabled", true],
-      ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb,cn"],
-      ["browser.contentblocking.report.vpn_platforms", "win"],
-      ["browser.contentblocking.report.hide_vpn_banner", true],
-      ["browser.contentblocking.report.vpn-android.url", ""],
-      ["browser.contentblocking.report.vpn-ios.url", ""],
-      ["browser.contentblocking.report.vpn.url", ""],
-    ],
-  });
-  Services.locale.availableLocales = ["en-US"];
-  Services.locale.requestedLocales = ["en-US"];
-  Region._setHomeRegion("US", false);
-
-  let tab = await BrowserTestUtils.openNewForegroundTab({
-    url: "about:protections",
-    gBrowser,
-  });
-
-  info("checking for vpn link");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const getVPNLink = await ContentTaskUtils.waitForCondition(() => {
-      return content.document.getElementById("get-vpn-link");
-    }, "get vpn link exists");
-    await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(getVPNLink),
-      "get vpn link is visible"
-    );
-    await EventUtils.sendMouseEvent(
-      { type: "click", button: 1 },
-      getVPNLink,
-      content
-    );
-  });
-
-  let events = await waitForTelemetryEventCount(2);
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "vpn_card_link"
-  );
-  is(
-    events.length,
-    1,
-    `recorded telemetry for vpn_card_link when user is not subscribed`
-  );
-
-  // User is subscribed to VPN
-  AboutProtectionsParent.setTestOverride(getVPNOverrides(true, "us"));
-  await reloadTab(tab);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const androidVPNLink = await ContentTaskUtils.waitForCondition(() => {
-      return content.document.getElementById("vpn-google-playstore-link");
-    }, "android vpn link exists");
-    await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(androidVPNLink),
-      "android vpn link is visible"
-    );
-    await ContentTaskUtils.waitForCondition(() => {
-      return content.document
-        .querySelector(".vpn-card")
-        .classList.contains("subscribed");
-    }, "subscribed class is added to the vpn card");
-
-    await EventUtils.sendMouseEvent(
-      { type: "click", button: 1 },
-      androidVPNLink,
-      content
-    );
-  });
-
-  events = await waitForTelemetryEventCount(5);
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "vpn_app_link_android"
-  );
-  is(events.length, 1, `recorded telemetry for vpn_app_link_android link`);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const iosVPNLink = await ContentTaskUtils.waitForCondition(() => {
-      return content.document.getElementById("vpn-app-store-link");
-    }, "ios vpn link exists");
-    await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(iosVPNLink),
-      "ios vpn link is visible"
-    );
-    await ContentTaskUtils.waitForCondition(() => {
-      return content.document
-        .querySelector(".vpn-card")
-        .classList.contains("subscribed");
-    }, "subscribed class is added to the vpn card");
-
-    await EventUtils.sendMouseEvent(
-      { type: "click", button: 1 },
-      iosVPNLink,
-      content
-    );
-  });
-
-  events = await waitForTelemetryEventCount(6);
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "vpn_app_link_ios"
-  );
-  is(events.length, 1, `recorded telemetry for vpn_app_link_ios link`);
-
-  // Clean up.
-  await BrowserTestUtils.removeTab(tab);
-}).skip();
-
-// This test is skipping due to failures on try, it passes locally.
-// Test that telemetry is sent from the vpn banner
-add_task(async function checkTelemetryEventsVPNBanner() {
-  if (Services.sysinfo.getProperty("name") != "Windows_NT") {
-    ok(true, "User is on an unsupported platform, the vpn card will not show");
-    return;
-  }
-  AboutProtectionsParent.setTestOverride(getVPNOverrides(false, "us"));
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.contentblocking.database.enabled", false],
-      ["browser.contentblocking.report.monitor.enabled", false],
-      ["browser.contentblocking.report.lockwise.enabled", false],
-      ["browser.contentblocking.report.proxy.enabled", false],
-      ["browser.contentblocking.report.vpn.enabled", true],
-      ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
-      ["browser.contentblocking.report.vpn_platforms", "win"],
-      ["browser.contentblocking.report.hide_vpn_banner", false],
-      ["browser.contentblocking.report.vpn-promo.url", ""],
-    ],
-  });
-  await addArbitraryTimeout();
-
-  // The VPN banner only shows if the user is in en*
-  Services.locale.availableLocales = ["en-US"];
-  Services.locale.requestedLocales = ["en-US"];
-
-  // Clear everything.
-  Services.telemetry.clearEvents();
-  await TestUtils.waitForCondition(() => {
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).content;
-    return !events || !events.length;
-  });
-
-  Services.telemetry.setEventRecordingEnabled("security.ui.protections", true);
-  // User is not subscribed to VPN
-  AboutProtectionsParent.setTestOverride(getVPNOverrides(false, "us"));
-
-  let tab = await BrowserTestUtils.openNewForegroundTab({
-    url: "about:protections",
-    gBrowser,
-  });
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const bannerVPNLink = await ContentTaskUtils.waitForCondition(() => {
-      return content.document.getElementById("vpn-banner-link");
-    }, "vpn banner link exists");
-    await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(bannerVPNLink),
-      "vpn banner link is visible"
-    );
-    await EventUtils.sendMouseEvent(
-      { type: "click", button: 1 },
-      bannerVPNLink,
-      content
-    );
-  });
-
-  let events = await waitForTelemetryEventCount(3);
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "vpn_banner_link"
-  );
-  is(events.length, 1, `recorded telemetry for vpn_banner_link`);
-
-  // VPN Banner flips this pref each time it shows, flip back between each instruction.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.contentblocking.report.hide_vpn_banner", false]],
-  });
-
-  await reloadTab(tab);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    const bannerExitLink = await ContentTaskUtils.waitForCondition(() => {
-      return content.document.querySelector(".vpn-banner .exit-icon");
-    }, "vpn banner exit link exists");
-    await ContentTaskUtils.waitForCondition(
-      () => ContentTaskUtils.is_visible(bannerExitLink),
-      "vpn banner exit link is visible"
-    );
-    await EventUtils.sendMouseEvent(
-      { type: "click", button: 1 },
-      bannerExitLink,
-      content
-    );
-  });
-
-  events = await waitForTelemetryEventCount(7);
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "vpn_banner_close"
-  );
-  is(events.length, 1, `recorded telemetry for vpn_banner_close`);
-
-  // Clean up.
-  await BrowserTestUtils.removeTab(tab);
-}).skip();
