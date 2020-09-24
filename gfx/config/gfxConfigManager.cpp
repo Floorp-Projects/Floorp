@@ -335,9 +335,9 @@ void gfxConfigManager::ConfigureWebRender() {
   }
 
   if (!mFeatureWrDComp->IsEnabled() && mWrCompositorDCompRequired) {
-    mFeatureWrCompositor->ForceDisable(
-        FeatureStatus::Unavailable, "No DirectComposition usage",
-        "FEATURE_FAILURE_NO_DIRECTCOMPOSITION"_ns);
+    mFeatureWrCompositor->ForceDisable(FeatureStatus::Unavailable,
+                                       "No DirectComposition usage",
+                                       mFeatureWrDComp->GetFailureId());
   }
 
   // Initialize WebRender partial present config.
