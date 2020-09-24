@@ -211,16 +211,13 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromMpathElem(
 
   // Use the path that's the target of our chosen <mpath> child.
   SVGPathElement* pathElem = aMpathElem->GetReferencedPath();
-  if (pathElem) {
-    const SVGPathData& path = pathElem->GetAnimPathSegList()->GetAnimValue();
-    // Path data must contain of at least one path segment (if the path data
-    // doesn't begin with a valid "M", then it's invalid).
-    if (path.Length()) {
-      bool ok =
-          path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
-      if (ok && mPathVertices.Length()) {
-        mPath = pathElem->GetOrBuildPathForMeasuring();
-      }
+  // Path data must contain of at least one path segment (if the path data
+  // doesn't begin with a valid "M", then it's invalid).
+  if (pathElem && pathElem->HasValidDimensions()) {
+    bool ok =
+        pathElem->GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
+    if (ok && mPathVertices.Length()) {
+      mPath = pathElem->GetOrBuildPathForMeasuring();
     }
   }
 }
