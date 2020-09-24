@@ -3263,15 +3263,15 @@ AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
-
   if (IsPrimitiveArrayTypedObject(obj)) {
+    TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+
     writer.guardGroupForLayout(objId, obj->group());
+    writer.loadTypedObjectElementExistsResult(objId, indexId, layout);
   } else {
     writer.guardIsTypedArray(objId);
+    writer.loadTypedArrayElementExistsResult(objId, indexId);
   }
-
-  writer.loadTypedElementExistsResult(objId, indexId, layout);
 
   writer.returnFromIC();
 
@@ -3291,12 +3291,8 @@ AttachDecision HasPropIRGenerator::tryAttachTypedArrayNonInt32Index(
 
   Int32OperandId indexId = writer.guardToTypedArrayIndex(keyId);
 
-  TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
-
   writer.guardIsTypedArray(objId);
-
-  writer.loadTypedElementExistsResult(objId, indexId, layout);
-
+  writer.loadTypedArrayElementExistsResult(objId, indexId);
   writer.returnFromIC();
 
   trackAttached("TypedArrayObjectNonInt32Index");
