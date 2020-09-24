@@ -6028,8 +6028,8 @@ var SessionStoreInternal = {
             let dataPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
               origin
             );
-            let principal = Services.scriptSecurityManager.createContentPrincipal(
-              dataPrincipal.URI,
+            let principal = Services.scriptSecurityManager.principalWithOA(
+              dataPrincipal,
               attrs
             );
             frameLoader.remoteTab.transmitPermissionsForPrincipal(principal);
