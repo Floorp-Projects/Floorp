@@ -155,6 +155,9 @@ enum class BailoutKind : uint8_t {
   // Function name not available ("name" property was redefined)
   FunctionName,
 
+  // Bailout triggered by MFromCodePoint
+  InvalidCodePoint,
+
   // END Normal bailouts
 
   // Bailouts caused by invalid assumptions based on Baseline code.
@@ -311,6 +314,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "BailoutKind::FunctionLength";
     case BailoutKind::FunctionName:
       return "BailoutKind::FunctionName";
+    case BailoutKind::InvalidCodePoint:
+      return "BailoutKind::InvalidCodePoint";
 
     // Bailouts caused by invalid assumptions.
     case BailoutKind::OverflowInvalidate:

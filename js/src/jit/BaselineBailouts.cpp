@@ -2144,6 +2144,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::NonInt32ArrayLength:
     case BailoutKind::FunctionLength:
     case BailoutKind::FunctionName:
+    case BailoutKind::InvalidCodePoint:
     case BailoutKind::ProtoGuard:
     case BailoutKind::ProxyGuard:
     case BailoutKind::NotProxyGuard:

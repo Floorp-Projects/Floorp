@@ -1950,7 +1950,7 @@ void LIRGenerator::visitFromCodePoint(MFromCodePoint* ins) {
 
   LFromCodePoint* lir =
       new (alloc()) LFromCodePoint(useRegister(codePoint), temp(), temp());
-  assignSnapshot(lir, BailoutKind::BoundsCheck);
+  assignSnapshot(lir, BailoutKind::InvalidCodePoint);
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
