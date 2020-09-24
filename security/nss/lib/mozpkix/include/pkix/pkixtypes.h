@@ -278,10 +278,10 @@ class TrustDomain {
 
   virtual Result CheckRevocation(EndEntityOrCA endEntityOrCA,
                                  const CertID& certID, Time time,
-                                 Time validityBeginning,
                                  Duration validityDuration,
                                  /*optional*/ const Input* stapledOCSPresponse,
-                                 /*optional*/ const Input* aiaExtension) = 0;
+                                 /*optional*/ const Input* aiaExtension,
+                                 /*optional*/ const Input* sctExtension) = 0;
 
   // Check that the given digest algorithm is acceptable for use in signatures.
   //
