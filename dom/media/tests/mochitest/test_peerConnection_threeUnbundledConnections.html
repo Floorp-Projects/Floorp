@@ -112,7 +112,7 @@ runNetworkTest(async () => {
     const answerVideo = await pc2.createAnswer();
     const answerAudio = await pc3.createAnswer();
 
-    const answer = combineAnswer(answerAudio, combineAnswer(answerVideo, {}));
+    const answer = combineAnswer(answerAudio, combineAnswer(answerVideo, {})); 
     const fakeAnswer = answer.sessionSection.concat(answer.audioMsection, answer.videoMsection).join('\r\n');
     info("ANSWER: " + fakeAnswer);
 
