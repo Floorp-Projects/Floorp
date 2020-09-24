@@ -1483,6 +1483,23 @@ bool WarpCacheIRTranspiler::emitLoadDenseElementExistsResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadTypedArrayElementExistsResult(
+    ObjOperandId objId, Int32OperandId indexId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  add(length);
+
+  // Unsigned comparison to catch negative indices.
+  auto* ins = MCompare::New(alloc(), index, length, JSOp::Lt);
+  ins->setCompareType(MCompare::Compare_UInt32);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
     ObjOperandId objId, Int32OperandId indexId, Scalar::Type elementType,
     bool handleOOB, bool allowDoubleForUint32) {
