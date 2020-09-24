@@ -4517,34 +4517,34 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                 init=ExprCall(ExprVar('ChannelSend'),
                                               args=[self.replyvar])),
                        failifsendok])
-        if len(md.returns) > 1:
-            resolvedecl = Decl(_tuple([p.moveType(self.side) for p in md.returns],
-                                      const=True, ref=True),
-                               'aParam')
-            destructexpr = ExprCall(ExprVar('Tie'),
-                                    args=[p.var() for p in md.returns])
-        else:
-            resolvedecl = Decl(md.returns[0].moveType(self.side), 'aParam')
-            destructexpr = md.returns[0].var()
         selfvar = ExprVar('self__')
         ifactorisdead = StmtIf(ExprNot(selfvar))
         ifactorisdead.addifstmts([
             _printWarningMessage("Not resolving response because actor is dead."),
             StmtReturn()])
         resolverfn = ExprLambda([ExprVar.THIS, selfvar, routingId, seqno],
-                                [resolvedecl])
+                                [Decl(Type.AUTORVAL, 'aParam')])
         resolverfn.addstmts([ifactorisdead]
                             + [StmtDecl(Decl(Type.BOOL, resolve.name),
-                                        init=ExprLiteral.TRUE)]
-                            + [StmtDecl(Decl(p.bareType(self.side), p.var().name), initargs=[])
-                                for p in md.returns]
-                            + [StmtExpr(ExprAssn(destructexpr, ExprMove(ExprVar('aParam')))),
-                                StmtDecl(Decl(Type('IPC::Message', ptr=True), self.replyvar.name),
-                                         init=ExprCall(ExprVar(md.pqReplyCtorFunc()),
-                                                       args=[routingId]))]
+                                        init=ExprLiteral.TRUE)])
+        fwdparam = ExprCode("std::forward<decltype(aParam)>(aParam)")
+        if len(md.returns) > 1:
+            resolverfn.addstmts([StmtDecl(Decl(p.bareType(self.side), p.var().name), initargs=[])
+                                    for p in md.returns]
+                                + [StmtExpr(ExprAssn(ExprCall(ExprVar('Tie'),
+                                                        args=[p.var() for p in md.returns]),
+                                                     fwdparam))])
+        else:
+            resolverfn.addstmts([StmtDecl(Decl(md.returns[0].bareType(self.side),
+                                               md.returns[0].var().name),
+                                          init=fwdparam)])
+        resolverfn.addstmts([StmtDecl(Decl(Type('IPC::Message', ptr=True),
+                                           self.replyvar.name),
+                                      init=ExprCall(ExprVar(md.pqReplyCtorFunc()),
+                                                    args=[routingId]))]
                             + [_ParamTraits.checkedWrite(None, resolve, self.replyvar,
                                                          sentinelKey=resolve.name, actor=selfvar)]
-                            + [_ParamTraits.checkedWrite(r.ipdltype, r.var(), self.replyvar,
+                            + [_ParamTraits.checkedWrite(r.ipdltype, ExprMove(r.var()), self.replyvar,
                                                          sentinelKey=r.name, actor=selfvar)
                                 for r in md.returns])
         resolverfn.addstmts(sendmsg)
