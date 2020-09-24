@@ -4,7 +4,8 @@
 
 "use strict";
 
-/* exported getNativeInterface, waitForMacEventWithInfo, waitForMacEvent, NSRange, NSDictionary */
+/* exported getNativeInterface, waitForMacEventWithInfo, waitForMacEvent,
+   NSRange, NSDictionary, stringForRange */
 
 // Load the shared-head file first.
 /* import-globals-from ../shared-head.js */
@@ -62,4 +63,15 @@ function NSDictionary(dict) {
     objectType: "NSDictionary",
     object: dict,
   };
+}
+
+function stringForRange(macDoc, range) {
+  if (!range) {
+    return "";
+  }
+
+  return macDoc.getParameterizedAttributeValue(
+    "AXStringForTextMarkerRange",
+    range
+  );
 }
