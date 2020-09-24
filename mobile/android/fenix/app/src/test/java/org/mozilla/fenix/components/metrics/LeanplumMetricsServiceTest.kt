@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context.MODE_PRIVATE
+import io.mockk.mockk
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -30,10 +31,18 @@ class LeanplumMetricsServiceTest {
 
         assertNull(sharedPreferences.getString("LP_DEVICE_ID", null))
 
-        val leanplumMetricService = LeanplumMetricsService(testContext.application, idGenerator)
+        val leanplumMetricService = LeanplumMetricsService(
+            testContext.application,
+            mockk(relaxed = true),
+            idGenerator
+        )
         assertEquals("TEST_DEVICE_ID", leanplumMetricService.deviceId)
 
-        val leanplumMetricService2 = LeanplumMetricsService(testContext.application, idGenerator)
+        val leanplumMetricService2 = LeanplumMetricsService(
+            testContext.application,
+            mockk(relaxed = true),
+            idGenerator
+        )
         assertEquals("TEST_DEVICE_ID", leanplumMetricService2.deviceId)
         assertEquals(1, callCount)
 

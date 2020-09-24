@@ -43,7 +43,6 @@ import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.StorageStatsMetrics
 import org.mozilla.fenix.perf.StartupTimeline
@@ -129,7 +128,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             warmBrowsersCache()
 
             // Make sure the engine is initialized and ready to use.
-            StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+            components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
                 components.core.engine.warmUp()
             }
             initializeWebExtensionSupport()
@@ -435,7 +434,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         applicationContext.resources.configuration.uiMode = config.uiMode
 
         // random StrictMode onDiskRead violation even when Fenix is not running in the background.
-        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+        components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             super.onConfigurationChanged(config)
         }
     }

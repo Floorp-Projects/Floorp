@@ -17,7 +17,11 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 
-class TestCore(context: Context, crashReporter: CrashReporting) : Core(context, crashReporter) {
+class TestCore(context: Context, crashReporter: CrashReporting) : Core(
+    context,
+    crashReporter,
+    mockk()
+) {
 
     override val engine = mockk<Engine>(relaxed = true) {
         every { this@mockk getProperty "settings" } returns mockk<Settings>(relaxed = true)

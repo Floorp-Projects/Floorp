@@ -43,11 +43,12 @@ class Components(private val context: Context) {
             core.lazyHistoryStorage,
             core.lazyBookmarksStorage,
             core.lazyPasswordsStorage,
-            core.lazyRemoteTabsStorage
+            core.lazyRemoteTabsStorage,
+            strictMode
         )
     }
     val services by lazy { Services(context, backgroundServices.accountManager) }
-    val core by lazy { Core(context, analytics.crashReporter) }
+    val core by lazy { Core(context, analytics.crashReporter, strictMode) }
     val search by lazy { Search(context) }
     val useCases by lazy {
         UseCases(
@@ -120,7 +121,7 @@ class Components(private val context: Context) {
         AddonManager(core.store, core.engine, addonCollectionProvider, addonUpdater)
     }
 
-    val analytics by lazy { Analytics(context) }
+    val analytics by lazy { Analytics(context, strictMode) }
     val publicSuffixList by lazy { PublicSuffixList(context) }
     val clipboardHandler by lazy { ClipboardHandler(context) }
     val migrationStore by lazy { MigrationStore() }

@@ -39,7 +39,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
@@ -110,7 +109,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             )
 
             readerViewFeature.set(
-                feature = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+                feature = components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
                     ReaderViewFeature(
                         context,
                         components.core.engine,

@@ -202,6 +202,7 @@ class IntentReceiverActivityTest {
         every { activity.settings() } returns settings
         every { activity.components.analytics } returns mockk(relaxed = true)
         every { activity.components.intentProcessors } returns intentProcessors
+        every { activity.components.strictMode } returns mockk(relaxed = true)
     }
 
     private inline fun <reified T : IntentProcessor> mockIntentProcessor(): T {

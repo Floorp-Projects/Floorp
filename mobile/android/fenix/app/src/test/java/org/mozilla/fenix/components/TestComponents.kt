@@ -28,7 +28,7 @@ class TestComponents(private val context: Context) : Components(context) {
         )
     }
     override val intentProcessors by lazy { mockk<IntentProcessors>(relaxed = true) }
-    override val analytics by lazy { Analytics(context) }
+    override val analytics by lazy { Analytics(context, strictMode) }
 
     override val clipboardHandler by lazy { ClipboardHandler(context) }
 

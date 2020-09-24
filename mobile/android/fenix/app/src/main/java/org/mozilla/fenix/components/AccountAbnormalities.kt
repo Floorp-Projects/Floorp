@@ -16,7 +16,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.ext.resetPoliciesAfter
+import org.mozilla.fenix.StrictModeManager
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -57,6 +57,7 @@ internal abstract class AbnormalFxaEvent : Exception() {
 class AccountAbnormalities(
     context: Context,
     private val crashReporter: CrashReporter,
+    strictMode: StrictModeManager,
     private val coroutineContext: CoroutineContext = Dispatchers.IO
 ) : AccountObserver {
     companion object {
@@ -79,14 +80,14 @@ class AccountAbnormalities(
     private val hadAccountPrior: Boolean
 
     init {
-        val prefPair = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+        val prefPair = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             val p = context.getSharedPreferences(PREF_FXA_ABNORMALITIES, Context.MODE_PRIVATE)
             val a = p.getBoolean(KEY_HAS_ACCOUNT, false)
             Pair(p, a)
         }
         prefs = prefPair.first
         hadAccountPrior = prefPair.second
-}
+    }
 
     /**
      * Once [accountManager] is initialized, queries it to detect abnormal account states.

@@ -91,7 +91,6 @@ import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
@@ -148,7 +147,7 @@ class HomeFragment : Fragment() {
         get() = requireComponents.core.store
 
     private val onboarding by lazy {
-        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+        requireComponents.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             FenixOnboarding(requireContext())
         }
     }
@@ -198,7 +197,7 @@ class HomeFragment : Fragment() {
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
                     topSites = components.core.topSitesStorage.cachedTopSites,
-                    tip = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+                    tip = components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
                         FenixTipManager(
                             listOf(
                                 MasterPasswordTipProvider(
@@ -538,7 +537,7 @@ class HomeFragment : Fragment() {
                 collections = components.core.tabCollectionStorage.cachedTabCollections,
                 mode = currentMode.getCurrentMode(),
                 topSites = components.core.topSitesStorage.cachedTopSites,
-                tip = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+                tip = components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
                     FenixTipManager(
                         listOf(
                             MasterPasswordTipProvider(

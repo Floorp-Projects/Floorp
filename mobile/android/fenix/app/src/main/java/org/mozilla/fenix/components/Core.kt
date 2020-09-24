@@ -60,9 +60,9 @@ import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.StrictModeManager
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.media.MediaService
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
@@ -77,7 +77,11 @@ import java.util.concurrent.TimeUnit
  * Component group for all core browser functionality.
  */
 @Mockable
-class Core(private val context: Context, private val crashReporter: CrashReporting) {
+class Core(
+    private val context: Context,
+    private val crashReporter: CrashReporting,
+    strictMode: StrictModeManager
+) {
     /**
      * The browser engine component initialized based on the build
      * configuration (see build variants).
@@ -268,7 +272,11 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
     val bookmarksStorage by lazy { lazyBookmarksStorage.value }
     val passwordsStorage by lazy { lazyPasswordsStorage.value }
 
-    val tabCollectionStorage by lazy { TabCollectionStorage(context, sessionManager) }
+    val tabCollectionStorage by lazy { TabCollectionStorage(
+        context,
+        sessionManager,
+        strictMode
+    ) }
 
     /**
      * A storage component for persisting thumbnail images of tabs.
@@ -280,7 +288,7 @@ class Core(private val context: Context, private val crashReporter: CrashReporti
     val topSitesStorage by lazy {
         val defaultTopSites = mutableListOf<Pair<String, String>>()
 
-        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+        strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             if (!context.settings().defaultTopSitesAdded) {
                 defaultTopSites.add(
                     Pair(

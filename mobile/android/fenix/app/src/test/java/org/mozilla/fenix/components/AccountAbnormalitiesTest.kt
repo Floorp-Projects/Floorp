@@ -25,7 +25,7 @@ class AccountAbnormalitiesTest {
         val crashReporter: CrashReporter = mockk()
 
         // no account present
-        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter)
+        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, mockk(relaxed = true))
 
         try {
             accountAbnormalities.userRequestedLogout()
@@ -52,7 +52,7 @@ class AccountAbnormalitiesTest {
         val crashReporter: CrashReporter = mockk(relaxed = true)
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
-        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, mockk(relaxed = true), this.coroutineContext)
         accountAbnormalities.accountManagerStarted(accountManager)
 
         // Logout action must be preceded by auth.
@@ -65,7 +65,7 @@ class AccountAbnormalitiesTest {
         val crashReporter: CrashReporter = mockk(relaxed = true)
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
-        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, mockk(relaxed = true), this.coroutineContext)
         accountAbnormalities.accountManagerStarted(accountManager)
 
         accountAbnormalities.onAuthenticated(mockk(), mockk())
@@ -83,7 +83,7 @@ class AccountAbnormalitiesTest {
         val crashReporter: CrashReporter = mockk(relaxed = true)
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
-        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, mockk(relaxed = true), this.coroutineContext)
         accountAbnormalities.accountManagerStarted(accountManager)
 
         // User didn't request this logout.
@@ -96,7 +96,7 @@ class AccountAbnormalitiesTest {
         val crashReporter: CrashReporter = mockk(relaxed = true)
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
-        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, mockk(relaxed = true), this.coroutineContext)
         accountAbnormalities.accountManagerStarted(accountManager)
 
         accountAbnormalities.onAuthenticated(mockk(), mockk())
@@ -104,7 +104,7 @@ class AccountAbnormalitiesTest {
         every { accountManager.authenticatedAccount() } returns null
 
         // Pretend we restart, and instantiate a new middleware instance.
-        val accountAbnormalities2 = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
+        val accountAbnormalities2 = AccountAbnormalities(testContext, crashReporter, mockk(relaxed = true), this.coroutineContext)
         // mock accountManager doesn't have an account, but we expect it to have one since we
         // were authenticated before our "restart".
         accountAbnormalities2.accountManagerStarted(accountManager)
@@ -117,7 +117,7 @@ class AccountAbnormalitiesTest {
         val crashReporter: CrashReporter = mockk()
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
-        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, this.coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(testContext, crashReporter, mockk(relaxed = true), this.coroutineContext)
         accountAbnormalities.accountManagerStarted(accountManager)
 
         // We saw an auth event, then user requested a logout.

@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.StrictModeManager
 import org.mozilla.fenix.components.metrics.MozillaProductDetector.MozillaProducts
-import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
 import java.util.Locale
@@ -58,6 +58,7 @@ private val Event.name: String?
 
 class LeanplumMetricsService(
     private val application: Application,
+    strictMode: StrictModeManager,
     private val deviceIdGenerator: () -> String = { randomUUID().toString() }
 ) : MetricsService, DeepLinkIntentProcessor.DeepLinkVerifier {
     val scope = CoroutineScope(Dispatchers.IO)
@@ -83,7 +84,7 @@ class LeanplumMetricsService(
     override val type = MetricServiceType.Marketing
     private val token = Token(LeanplumId, LeanplumToken)
 
-    private val preferences = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+    private val preferences = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
         application.getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE)
     }
 

@@ -15,7 +15,6 @@ import org.mozilla.fenix.components.IntentProcessorType
 import org.mozilla.fenix.components.getType
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
@@ -28,7 +27,7 @@ class IntentReceiverActivity : Activity() {
     @VisibleForTesting
     override fun onCreate(savedInstanceState: Bundle?) {
         // StrictMode violation on certain devices such as Samsung
-        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+        components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             super.onCreate(savedInstanceState)
         }
 
@@ -68,7 +67,7 @@ class IntentReceiverActivity : Activity() {
             )
         }
         // StrictMode violation on certain devices such as Samsung
-        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
+        components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             startActivity(intent)
         }
         finish() // must finish() after starting the other activity

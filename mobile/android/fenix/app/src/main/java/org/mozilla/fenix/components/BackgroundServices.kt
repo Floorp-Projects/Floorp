@@ -36,6 +36,7 @@ import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.utils.RunWhenReadyQueue
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
+import org.mozilla.fenix.StrictModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
@@ -57,7 +58,8 @@ class BackgroundServices(
     historyStorage: Lazy<PlacesHistoryStorage>,
     bookmarkStorage: Lazy<PlacesBookmarksStorage>,
     passwordsStorage: Lazy<SyncableLoginsStorage>,
-    remoteTabsStorage: Lazy<RemoteTabsStorage>
+    remoteTabsStorage: Lazy<RemoteTabsStorage>,
+    strictMode: StrictModeManager
 ) {
     // Allows executing tasks which depend on the account manager, but do not need to eagerly initialize it.
     val accountManagerAvailableQueue = RunWhenReadyQueue()
@@ -105,7 +107,7 @@ class BackgroundServices(
         context.components.analytics.metrics
     )
 
-    val accountAbnormalities = AccountAbnormalities(context, crashReporter)
+    val accountAbnormalities = AccountAbnormalities(context, crashReporter, strictMode)
 
     val accountManager by lazy { makeAccountManager(context, serverConfig, deviceConfig, syncConfig) }
 

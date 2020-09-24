@@ -18,6 +18,7 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ReleaseChannel
+import org.mozilla.fenix.StrictModeManager
 import org.mozilla.fenix.components.metrics.AdjustMetricsService
 import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.LeanplumMetricsService
@@ -34,7 +35,8 @@ import org.mozilla.geckoview.BuildConfig.MOZ_UPDATE_CHANNEL
  */
 @Mockable
 class Analytics(
-    private val context: Context
+    private val context: Context,
+    strictMode: StrictModeManager
 ) {
     val crashReporter: CrashReporter by lazy {
         val services = mutableListOf<CrashReporterService>()
@@ -84,7 +86,10 @@ class Analytics(
         )
     }
 
-    val leanplumMetricsService by lazy { LeanplumMetricsService(context as Application) }
+    val leanplumMetricsService by lazy { LeanplumMetricsService(
+        context as Application,
+        strictMode
+    ) }
 
     val metrics: MetricController by lazy {
         MetricController.create(
