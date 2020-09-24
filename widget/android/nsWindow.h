@@ -38,7 +38,6 @@ class AndroidView;
 class GeckoEditableSupport;
 class GeckoViewSupport;
 class LayerViewSupport;
-class MediaSessionSupport;
 class NPZCSupport;
 }  // namespace widget
 
@@ -95,9 +94,6 @@ class nsWindow final : public nsBaseWidget {
   // Strong referenced by the Java instance.
   mozilla::jni::NativeWeakPtr<mozilla::a11y::SessionAccessibility>
       mSessionAccessibility;
-
-  mozilla::jni::NativeWeakPtr<mozilla::widget::MediaSessionSupport>
-      mMediaSessionSupport;
 
   // Object that implements native GeckoView calls and associated states.
   // nullptr for nsWindows that were not opened from GeckoView.
