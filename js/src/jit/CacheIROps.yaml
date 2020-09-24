@@ -665,7 +665,7 @@
 
 - name: GuardArgumentsObjectNotOverriddenIterator
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     obj: ObjId

@@ -8099,6 +8099,16 @@ void CodeGenerator::visitArgumentsObjectLength(LArgumentsObjectLength* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitGuardArgumentsObjectNotOverriddenIterator(
+    LGuardArgumentsObjectNotOverriddenIterator* lir) {
+  Register argsObj = ToRegister(lir->getArgsObject());
+  Register temp = ToRegister(lir->temp());
+
+  Label bail;
+  masm.branchArgumentsObjectHasOverridenIterator(argsObj, temp, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitReturnFromCtor(LReturnFromCtor* lir) {
   ValueOperand value = ToValue(lir, LReturnFromCtor::ValueIndex);
   Register obj = ToRegister(lir->getObject());
