@@ -25,11 +25,11 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/ipc/glue",
     "/media/libopus/include/",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/api/audio_codecs/opus/audio_encoder_opus_config.cc"
+    "/third_party/libwebrtc/webrtc/api/audio_codecs/opus/audio_encoder_opus_config.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

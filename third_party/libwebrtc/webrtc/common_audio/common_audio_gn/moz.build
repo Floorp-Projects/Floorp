@@ -23,31 +23,31 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/include/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/common_audio/audio_converter.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/audio_ring_buffer.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/audio_util.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/blocker.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/channel_buffer.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/lapped_transform.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/real_fourier.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/real_fourier_ooura.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/push_resampler.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/push_sinc_resampler.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/resampler.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/sinc_resampler.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/smoothing_filter.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/sparse_fir_filter.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/vad.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/wav_file.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/wav_header.cc",
-    "/media/webrtc/trunk/webrtc/common_audio/window_generator.cc"
+    "/third_party/libwebrtc/webrtc/common_audio/audio_converter.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/audio_ring_buffer.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/audio_util.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/blocker.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/channel_buffer.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/lapped_transform.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/real_fourier.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/real_fourier_ooura.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/push_resampler.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/push_sinc_resampler.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/resampler.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/sinc_resampler.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/smoothing_filter.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/sparse_fir_filter.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/vad.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/wav_file.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/wav_header.cc",
+    "/third_party/libwebrtc/webrtc/common_audio/window_generator.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

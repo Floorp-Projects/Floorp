@@ -24,16 +24,16 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/include/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/cross_correlation_neon.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/downsample_fast_neon.c",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/min_max_operations_neon.c"
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/cross_correlation_neon.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/downsample_fast_neon.c",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/min_max_operations_neon.c"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

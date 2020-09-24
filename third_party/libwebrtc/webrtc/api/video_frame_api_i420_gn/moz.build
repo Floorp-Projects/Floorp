@@ -24,11 +24,11 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/ipc/glue",
     "/media/libyuv/libyuv/include/",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/api/video/i420_buffer.cc"
+    "/third_party/libwebrtc/webrtc/api/video/i420_buffer.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

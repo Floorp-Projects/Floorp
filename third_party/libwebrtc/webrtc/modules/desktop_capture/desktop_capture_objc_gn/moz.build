@@ -27,7 +27,7 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 OS_LIBS += [
@@ -38,11 +38,11 @@ OS_LIBS += [
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_configuration.mm",
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/screen_capturer_mac.mm",
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_capturer_mac.mm",
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_finder_mac.mm"
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/mac/desktop_configuration.mm",
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/screen_capturer_mac.mm",
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/window_capturer_mac.mm",
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/window_finder_mac.mm"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

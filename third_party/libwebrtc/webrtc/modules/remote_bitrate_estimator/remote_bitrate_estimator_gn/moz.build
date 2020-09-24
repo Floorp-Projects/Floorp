@@ -24,22 +24,22 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc"
+    "/third_party/libwebrtc/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/aimd_rate_control.cc",
-    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/bwe_defines.cc",
-    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/inter_arrival.cc",
-    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/overuse_detector.cc",
-    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/overuse_estimator.cc",
-    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.cc",
-    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/remote_estimator_proxy.cc",
-    "/media/webrtc/trunk/webrtc/modules/remote_bitrate_estimator/send_time_history.cc"
+    "/third_party/libwebrtc/webrtc/modules/remote_bitrate_estimator/aimd_rate_control.cc",
+    "/third_party/libwebrtc/webrtc/modules/remote_bitrate_estimator/bwe_defines.cc",
+    "/third_party/libwebrtc/webrtc/modules/remote_bitrate_estimator/inter_arrival.cc",
+    "/third_party/libwebrtc/webrtc/modules/remote_bitrate_estimator/overuse_detector.cc",
+    "/third_party/libwebrtc/webrtc/modules/remote_bitrate_estimator/overuse_estimator.cc",
+    "/third_party/libwebrtc/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.cc",
+    "/third_party/libwebrtc/webrtc/modules/remote_bitrate_estimator/remote_estimator_proxy.cc",
+    "/third_party/libwebrtc/webrtc/modules/remote_bitrate_estimator/send_time_history.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

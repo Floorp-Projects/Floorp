@@ -29,32 +29,32 @@ LOCAL_INCLUDES += [
     "/ipc/glue",
     "/media/libyuv/libyuv/include/",
     "/media/libyuv/libyuv/include/",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_video/include/",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/include/",
-    "/media/webrtc/trunk/webrtc/modules/audio_device/dummy/",
-    "/media/webrtc/trunk/webrtc/modules/audio_device/include/",
-    "/media/webrtc/trunk/webrtc/modules/include/",
-    "/media/webrtc/trunk/webrtc/modules/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_video/include/",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/include/",
+    "/third_party/libwebrtc/webrtc/modules/audio_device/dummy/",
+    "/third_party/libwebrtc/webrtc/modules/audio_device/include/",
+    "/third_party/libwebrtc/webrtc/modules/include/",
+    "/third_party/libwebrtc/webrtc/modules/include/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/media/engine/adm_helpers.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/apm_helpers.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/constants.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/convert_legacy_video_factory.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/encoder_simulcast_proxy.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/internaldecoderfactory.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/internalencoderfactory.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/payload_type_mapper.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/scopedvideodecoder.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/scopedvideoencoder.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/simulcast.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/simulcast_encoder_adapter.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/videodecodersoftwarefallbackwrapper.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/videoencodersoftwarefallbackwrapper.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/webrtcvideodecoderfactory.cc",
-    "/media/webrtc/trunk/webrtc/media/engine/webrtcvideoencoderfactory.cc"
+    "/third_party/libwebrtc/webrtc/media/engine/adm_helpers.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/apm_helpers.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/constants.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/convert_legacy_video_factory.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/encoder_simulcast_proxy.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/internaldecoderfactory.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/internalencoderfactory.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/payload_type_mapper.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/scopedvideodecoder.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/scopedvideoencoder.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/simulcast.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/simulcast_encoder_adapter.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/videodecodersoftwarefallbackwrapper.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/videoencodersoftwarefallbackwrapper.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/webrtcvideodecoderfactory.cc",
+    "/third_party/libwebrtc/webrtc/media/engine/webrtcvideoencoderfactory.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

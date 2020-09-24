@@ -32,16 +32,16 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/include/",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/include/",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/include/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/audio_decoder_isacfix.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/audio_encoder_isacfix.cc"
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/audio_decoder_isacfix.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/codecs/isac/fix/source/audio_encoder_isacfix.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

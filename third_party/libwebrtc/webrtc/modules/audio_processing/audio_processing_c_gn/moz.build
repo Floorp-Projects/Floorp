@@ -23,18 +23,18 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/include/"
 ]
 
 SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/audio_processing/agc/legacy/analog_agc.c"
+    "/third_party/libwebrtc/webrtc/modules/audio_processing/agc/legacy/analog_agc.c"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/audio_processing/agc/legacy/digital_agc.c"
+    "/third_party/libwebrtc/webrtc/modules/audio_processing/agc/legacy/digital_agc.c"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -86,8 +86,8 @@ if CONFIG["OS_TARGET"] == "DragonFly":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["OS_TARGET"] == "FreeBSD":
@@ -158,9 +158,9 @@ if CONFIG["CPU_ARCH"] == "aarch64":
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/nsx_core.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/nsx_core_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "arm":
@@ -174,30 +174,30 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/nsx_core.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/nsx_core_c.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "mips64":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "ppc64":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
@@ -233,8 +233,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Darwin":
@@ -246,8 +246,8 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["CR_XCODE_VERSION"] = "0920"
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
@@ -259,8 +259,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
@@ -277,8 +277,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
@@ -290,8 +290,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
@@ -303,15 +303,15 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "WINNT":
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/third_party/libwebrtc/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 Library("audio_processing_c_gn")

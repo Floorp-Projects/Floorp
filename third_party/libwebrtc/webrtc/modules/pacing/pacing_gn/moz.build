@@ -23,17 +23,17 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/pacing/alr_detector.cc",
-    "/media/webrtc/trunk/webrtc/modules/pacing/bitrate_prober.cc",
-    "/media/webrtc/trunk/webrtc/modules/pacing/interval_budget.cc",
-    "/media/webrtc/trunk/webrtc/modules/pacing/paced_sender.cc",
-    "/media/webrtc/trunk/webrtc/modules/pacing/packet_queue.cc",
-    "/media/webrtc/trunk/webrtc/modules/pacing/packet_queue2.cc",
-    "/media/webrtc/trunk/webrtc/modules/pacing/packet_router.cc"
+    "/third_party/libwebrtc/webrtc/modules/pacing/alr_detector.cc",
+    "/third_party/libwebrtc/webrtc/modules/pacing/bitrate_prober.cc",
+    "/third_party/libwebrtc/webrtc/modules/pacing/interval_budget.cc",
+    "/third_party/libwebrtc/webrtc/modules/pacing/paced_sender.cc",
+    "/third_party/libwebrtc/webrtc/modules/pacing/packet_queue.cc",
+    "/third_party/libwebrtc/webrtc/modules/pacing/packet_queue2.cc",
+    "/third_party/libwebrtc/webrtc/modules/pacing/packet_router.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

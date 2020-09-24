@@ -23,15 +23,15 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/"
+    "/third_party/libwebrtc/webrtc/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_frame.cc",
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_geometry.cc",
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_region.cc",
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/shared_desktop_frame.cc",
-    "/media/webrtc/trunk/webrtc/modules/desktop_capture/shared_memory.cc"
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/desktop_frame.cc",
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/desktop_geometry.cc",
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/desktop_region.cc",
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/shared_desktop_frame.cc",
+    "/third_party/libwebrtc/webrtc/modules/desktop_capture/shared_memory.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

@@ -23,24 +23,24 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
-    "/media/webrtc/trunk/webrtc/common_audio/vad/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_audio/resampler/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/signal_processing/include/",
+    "/third_party/libwebrtc/webrtc/common_audio/vad/include/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/audio_network_adaptor_impl.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/bitrate_controller.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/channel_controller.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/controller.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/debug_dump_writer.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/dtx_controller.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/event_log_writer.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/fec_controller_plr_based.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/fec_controller_rplr_based.cc",
-    "/media/webrtc/trunk/webrtc/modules/audio_coding/audio_network_adaptor/frame_length_controller.cc"
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/audio_network_adaptor_impl.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/bitrate_controller.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/channel_controller.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/controller.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/debug_dump_writer.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/dtx_controller.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/event_log_writer.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/fec_controller_plr_based.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/fec_controller_rplr_based.cc",
+    "/third_party/libwebrtc/webrtc/modules/audio_coding/audio_network_adaptor/frame_length_controller.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

@@ -24,14 +24,14 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/ipc/glue",
     "/media/libyuv/libyuv/include/",
-    "/media/webrtc/trunk/webrtc/",
-    "/media/webrtc/trunk/webrtc/common_video/include/"
+    "/third_party/libwebrtc/webrtc/",
+    "/third_party/libwebrtc/webrtc/common_video/include/"
 ]
 
 UNIFIED_SOURCES += [
-    "/media/webrtc/trunk/webrtc/call/video_config.cc",
-    "/media/webrtc/trunk/webrtc/call/video_receive_stream.cc",
-    "/media/webrtc/trunk/webrtc/call/video_send_stream.cc"
+    "/third_party/libwebrtc/webrtc/call/video_config.cc",
+    "/third_party/libwebrtc/webrtc/call/video_receive_stream.cc",
+    "/third_party/libwebrtc/webrtc/call/video_send_stream.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
