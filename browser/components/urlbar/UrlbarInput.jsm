@@ -1702,6 +1702,7 @@ class UrlbarInput {
   observe(subject, topic, data) {
     switch (topic) {
       case SearchUtils.TOPIC_ENGINE_MODIFIED: {
+        subject.QueryInterface(Ci.nsISearchEngine);
         switch (data) {
           case SearchUtils.MODIFIED_TYPE.CHANGED:
           case SearchUtils.MODIFIED_TYPE.REMOVED:
