@@ -166,7 +166,8 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
     return nil;
   }
 
-  return geckoTextMarker.LeftWordRange().CreateAXTextMarkerRange();
+  return geckoTextMarker.Range(EWhichRange::eLeftWord)
+      .CreateAXTextMarkerRange();
 }
 
 - (id)moxRightWordTextMarkerRangeForTextMarker:(id)textMarker {
@@ -175,7 +176,8 @@ static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
     return nil;
   }
 
-  return geckoTextMarker.RightWordRange().CreateAXTextMarkerRange();
+  return geckoTextMarker.Range(EWhichRange::eRightWord)
+      .CreateAXTextMarkerRange();
 }
 
 - (id)moxNextTextMarkerForTextMarker:(id)textMarker {

@@ -70,4 +70,26 @@ typedef uint32_t IHandlerControlHolder;
 
 #endif  // defined(XP_WIN) && defined(ACCESSIBILITY)
 
+#if defined(MOZ_WIDGET_COCOA)
+#  if defined(ACCESSIBILITY)
+#    include "mozilla/a11y/RangeTypes.h"
+namespace IPC {
+
+template <>
+struct ParamTraits<mozilla::a11y::EWhichRange>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::a11y::EWhichRange, mozilla::a11y::EWhichRange::eLeftWord,
+          mozilla::a11y::EWhichRange::eRightWord> {};
+
+}  // namespace IPC
+
+#  else
+namespace mozilla {
+namespace a11y {
+typedef uint32_t EWhichRange;
+}  // namespace a11y
+}  // namespace mozilla
+#  endif  // defined(ACCESSIBILITY)
+#endif    // defined(MOZ_WIDGET_COCOA)
+
 #endif  // mozilla_a11y_IPCTypes_h

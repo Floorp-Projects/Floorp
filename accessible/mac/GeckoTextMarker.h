@@ -39,11 +39,8 @@ class GeckoTextMarker final {
 
   bool Previous();
 
-  // Return a word range left of the given offset.
-  GeckoTextMarkerRange LeftWordRange();
-
-  // Return a word range right of the given offset.
-  GeckoTextMarkerRange RightWordRange();
+  // Return a range with the given type relative to this marker.
+  GeckoTextMarkerRange Range(EWhichRange aRangeType);
 
   AccessibleOrProxy Leaf();
 

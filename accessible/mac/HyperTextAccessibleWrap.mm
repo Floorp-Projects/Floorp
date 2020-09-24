@@ -247,6 +247,25 @@ void HyperTextAccessibleWrap::OffsetAtIndex(int32_t aIndex,
   }
 }
 
+void HyperTextAccessibleWrap::RangeAt(int32_t aOffset, EWhichRange aRangeType,
+                                      HyperTextAccessible** aStartContainer,
+                                      int32_t* aStartOffset,
+                                      HyperTextAccessible** aEndContainer,
+                                      int32_t* aEndOffset) {
+  switch (aRangeType) {
+    case EWhichRange::eLeftWord:
+      LeftWordAt(aOffset, aStartContainer, aStartOffset, aEndContainer,
+                 aEndOffset);
+      break;
+    case EWhichRange::eRightWord:
+      RightWordAt(aOffset, aStartContainer, aStartOffset, aEndContainer,
+                  aEndOffset);
+      break;
+    default:
+      break;
+  }
+}
+
 void HyperTextAccessibleWrap::LeftWordAt(int32_t aOffset,
                                          HyperTextAccessible** aStartContainer,
                                          int32_t* aStartOffset,
