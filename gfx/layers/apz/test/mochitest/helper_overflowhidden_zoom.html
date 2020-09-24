@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+  <title>Tests that zooming in and out doesn't change the scroll position on an overflow hidden document</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    html,body {
+      overflow: hidden;
+    }
+    div {
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 100%; height: 200%; background-color: green"></div>
+  <div style="width: 100%; height: 100%; background-color: blue"></div>
+  <script type="application/javascript">
+    const utils = SpecialPowers.getDOMWindowUtils(window);
+
+    function* test(testDriver) {
+      is(window.scrollX, 0, "shouldn't have scrolled");
+      is(window.scrollY, 0, "shouldn't have scrolled");
+      is(visualViewport.pageTop, 0, "shouldn't have scrolled");
+      is(visualViewport.pageLeft, 0, "shouldn't have scrolled");
+
+      // Force reconstruction of the root scroll frame to trigger bug 1665332.
+      document.documentElement.style.display = "flex";
+      document.documentElement.offsetLeft;
+      document.documentElement.style.display = "";
+      document.documentElement.offsetLeft;
+
+      is(window.scrollX, 0, "shouldn't have scrolled");
+      is(window.scrollY, 0, "shouldn't have scrolled");
+      is(visualViewport.pageTop, 0, "shouldn't have scrolled");
+      is(visualViewport.pageLeft, 0, "shouldn't have scrolled");
+
+      // Zoom in
+      SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(4.0);
+      yield waitForApzFlushedRepaints(testDriver);
+
+      is(window.scrollX, 0, "shouldn't have scrolled");
+      is(window.scrollY, 0, "shouldn't have scrolled");
+      is(visualViewport.pageTop, 0, "shouldn't have scrolled");
+      is(visualViewport.pageLeft, 0, "shouldn't have scrolled");
+
+      // Scroll so the visual viewport offset is non-zero
+      utils.scrollToVisual(20000, 20000, utils.UPDATE_TYPE_MAIN_THREAD,
+                           utils.SCROLL_MODE_INSTANT);
+
+      yield waitForApzFlushedRepaints(testDriver);
+
+      is(window.scrollX, 0, "shouldn't have scrolled");
+      is(window.scrollY, 0, "shouldn't have scrolled");
+      isnot(visualViewport.pageTop, 0, "should have scrolled");
+      isnot(visualViewport.pageLeft, 0, "should have scrolled");
+
+      // Zoom back out
+      SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(1.0);
+      yield waitForApzFlushedRepaints(testDriver);
+
+      is(window.scrollX, 0, "shouldn't have scrolled");
+      is(window.scrollY, 0, "shouldn't have scrolled");
+      is(visualViewport.pageTop, 0, "shouldn't have scrolled");
+      is(visualViewport.pageLeft, 0, "shouldn't have scrolled");
+    }
+
+    waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+  </script>
+</body>
+</html>
+
