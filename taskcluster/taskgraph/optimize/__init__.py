@@ -546,10 +546,8 @@ class project(object):
                 # The actual test strategy applied to "expanded" pushes.
                 Any(
                     'skip-unless-schedules',
-                    Any(
-                        'bugbug-reduced-manifests-fallback-last-10-pushes',
-                        'platform-disperse',
-                    ),
+                    'bugbug-reduced-manifests-fallback-last-10-pushes',
+                    'platform-disperse',
                     split_args=split_bugbug_arg,
                 ),
             ),
@@ -572,6 +570,7 @@ class project(object):
                 Any(
                     'skip-unless-schedules',
                     'bugbug-reduced-fallback',
+                    split_args=split_bugbug_arg,
                 ),
             ),
         ),
