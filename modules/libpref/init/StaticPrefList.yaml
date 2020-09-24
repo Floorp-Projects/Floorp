@@ -3590,7 +3590,7 @@
 - name: fission.sessionHistoryInParent
   type: bool
   value: false
-  mirror: once
+  mirror: always
 
 # Allow renaming of process names to the origin on nightly
 # Setting this pref creates a privacy leak, but helps greatly with
