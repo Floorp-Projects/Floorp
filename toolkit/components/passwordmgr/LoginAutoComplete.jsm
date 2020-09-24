@@ -796,10 +796,16 @@ let gAutoCompleteListener = {
         );
         break;
       case "importableLogins":
-        loginManager.sendAsyncMessage("PasswordManager:HandleImportable", {
-          browserId: selectedRowComment,
-          type: "enter",
-        });
+        loginManager.sendAsyncMessage(
+          "PasswordManager:OpenMigrationWizard",
+          selectedRowComment
+        );
+        Services.telemetry.recordEvent(
+          "exp_import",
+          "event",
+          "enter",
+          selectedRowComment
+        );
         break;
       case "loginsFooter":
         loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
