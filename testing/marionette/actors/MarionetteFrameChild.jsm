@@ -69,6 +69,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:clearElement":
           this.clearElement(data);
           break;
+        case "MarionetteFrameParent:clickElement":
+          result = await this.clickElement(data);
+          break;
         case "MarionetteFrameParent:findElement":
           result = await this.findElement(data);
           break;
@@ -174,6 +177,20 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const { webEl } = options;
     const el = this.resolveElement(webEl);
     interaction.clearElement(el);
+  }
+
+  /**
+   * Click an element.
+   */
+  async clickElement(options = {}) {
+    const { capabilities, webEl } = options;
+    const el = this.resolveElement(webEl);
+
+    return interaction.clickElement(
+      el,
+      capabilities["moz:accessibilityChecks"],
+      capabilities["moz:webdriverClick"]
+    );
   }
 
   /**

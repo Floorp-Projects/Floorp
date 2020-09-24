@@ -2158,6 +2158,23 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
 
+  if (MarionettePrefs.useActors) {
+    const actor = this.getActor();
+
+    const target = await actor.getElementAttribute(webEl, "target");
+    await navigate.waitForNavigationCompleted(
+      this,
+      () => actor.clickElement(webEl, this.capabilities),
+      {
+        browsingContext: this.getBrowsingContext(),
+        // The click might trigger a navigation, so don't count on it.
+        requireBeforeUnload: false,
+        loadEventExpected: target !== "_blank",
+      }
+    );
+    return;
+  }
+
   switch (this.context) {
     case Context.Chrome:
       let el = this.curBrowser.seenEls.get(webEl);
@@ -2169,11 +2186,10 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
 
       await navigate.waitForNavigationCompleted(
         this,
-        async () => {
-          await this.listener.clickElement(webEl, this.capabilities);
-        },
+        () => this.listener.clickElement(webEl, this.capabilities),
         {
           browsingContext: this.getBrowsingContext(),
+          // The click might trigger a navigation, so don't count on it.
           requireBeforeUnload: false,
           loadEventExpected: target !== "_blank",
         }
