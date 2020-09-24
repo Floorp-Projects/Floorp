@@ -18,17 +18,27 @@ from taskgraph.util.backstop import (
     BACKSTOP_TIME_INTERVAL,
 )
 from taskgraph.util.taskcluster import (
+    get_artifact_url,
     get_index_url,
+    get_task_url,
 )
 
 LAST_BACKSTOP_ID = 0
 LAST_BACKSTOP_PUSHDATE = mktime(datetime.now().timetuple())
 DEFAULT_RESPONSES = {
+    "index": {
+        "status": 200,
+        "json": {"taskId": LAST_BACKSTOP_ID},
+    },
     "artifact": {
         "status": 200,
         "body": dedent("""
             pushdate: {}
         """.format(LAST_BACKSTOP_PUSHDATE))
+    },
+    "status": {
+        "status": 200,
+        "json": {"status": {"state": "complete"}},
     },
 }
 
@@ -50,7 +60,7 @@ def params():
     (
         pytest.param(
             {
-                "artifact": {"status": 404},
+                "index": {"status": 404},
             },
             {"pushlog_id": 1},
             True,
@@ -98,12 +108,25 @@ def params():
             True,
             id="release branches always a backstop",
         ),
+        pytest.param(
+            {
+                "index": DEFAULT_RESPONSES["index"],
+                "status": {
+                    "status": 200,
+                    "json": {"status": {"state": "failed"}},
+                },
+            },
+            {},
+            True,
+            id="last backstop failed",
+        ),
     ),
 )
 def test_is_backstop(responses, params, response_args, extra_params, expected):
-    index = BACKSTOP_INDEX.format(project=params["project"])
     urls = {
-        "artifact": get_index_url(index) + "/artifacts/public/parameters.yml",
+        "index": get_index_url(BACKSTOP_INDEX.format(project=params["project"])),
+        "artifact": get_artifact_url(LAST_BACKSTOP_ID, "public/parameters.yml"),
+        "status": get_task_url(LAST_BACKSTOP_ID) + "/status",
     }
 
     for key in ("index", "status", "artifact"):
