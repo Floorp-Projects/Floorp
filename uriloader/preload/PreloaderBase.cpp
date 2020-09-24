@@ -22,11 +22,35 @@ PreloaderBase::UsageTimer::UsageTimer(PreloaderBase* aPreload,
                                       dom::Document* aDocument)
     : mDocument(aDocument), mPreload(aPreload) {}
 
+class PreloaderBase::RedirectSink final : public nsIInterfaceRequestor,
+                                          public nsIChannelEventSink,
+                                          public nsIRedirectResultListener {
+  RedirectSink() = delete;
+  virtual ~RedirectSink();
+
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIREDIRECTRESULTLISTENER
+
+  RedirectSink(PreloaderBase* aPreloader, nsIInterfaceRequestor* aCallbacks);
+
+ private:
+  WeakPtr<PreloaderBase> mPreloader;
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+  nsCOMPtr<nsIChannel> mRedirectChannel;
+};
+
 PreloaderBase::RedirectSink::RedirectSink(PreloaderBase* aPreloader,
                                           nsIInterfaceRequestor* aCallbacks)
-    : mPreloader(new nsMainThreadPtrHolder<PreloaderBase>(
-          "RedirectSink.mPreloader", aPreloader)),
-      mCallbacks(aCallbacks) {}
+    : mPreloader(aPreloader), mCallbacks(aCallbacks) {}
+
+PreloaderBase::RedirectSink::~RedirectSink() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(),
+                        "Should figure out how to safely drop mPreloader "
+                        "otherwise");
+}
 
 NS_IMPL_ISUPPORTS(PreloaderBase::RedirectSink, nsIInterfaceRequestor,
                   nsIChannelEventSink, nsIRedirectResultListener)
@@ -34,13 +58,17 @@ NS_IMPL_ISUPPORTS(PreloaderBase::RedirectSink, nsIInterfaceRequestor,
 NS_IMETHODIMP PreloaderBase::RedirectSink::AsyncOnChannelRedirect(
     nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aFlags,
     nsIAsyncVerifyRedirectCallback* aCallback) {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
   mRedirectChannel = aNewChannel;
 
   // Deliberately adding this before confirmation.
   nsCOMPtr<nsIURI> uri;
   aNewChannel->GetOriginalURI(getter_AddRefs(uri));
-  mPreloader->mRedirectRecords.AppendElement(
-      RedirectRecord(aFlags, uri.forget()));
+  if (mPreloader) {
+    mPreloader->mRedirectRecords.AppendElement(
+        RedirectRecord(aFlags, uri.forget()));
+  }
 
   if (mCallbacks) {
     nsCOMPtr<nsIChannelEventSink> sink(do_GetInterface(mCallbacks));
