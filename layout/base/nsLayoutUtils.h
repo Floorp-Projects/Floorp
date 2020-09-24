@@ -141,6 +141,8 @@ enum class DrawStringFlags {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DrawStringFlags)
 
+enum class ScrollableDirection { Horizontal, Vertical, Either };
+
 /**
  * nsLayoutUtils is a namespace class used for various helper
  * functions that are useful in multiple places in layout.  The goal
@@ -673,9 +675,8 @@ class nsLayoutUtils {
    * @param  aDirection Whether it's for horizontal or vertical scrolling.
    * @return the nearest scrollable frame or nullptr if not found
    */
-  enum Direction { eHorizontal, eVertical };
   static nsIScrollableFrame* GetNearestScrollableFrameForDirection(
-      nsIFrame* aFrame, Direction aDirection);
+      nsIFrame* aFrame, ScrollableDirection aDirection);
 
   enum {
     /**
