@@ -37,25 +37,16 @@ class EncodedFrame final {
   const nsTArray<uint8_t>& GetFrameData() const { return mFrameData; }
   // Timestamp in microseconds
   uint64_t mTime;
-  // The playback duration of this packet. The unit is determined by the use
-  // case. For VP8 the unit should be microseconds. For opus this is the number
-  // of samples.
+  // The time base of mDuration.
+  uint64_t mDurationBase;
+  // The playback duration of this packet in mDurationBase.
   uint64_t mDuration;
   // Represent what is in the FrameData
   FrameType mFrameType;
 
+  // The end time of the frame in microseconds.
   uint64_t GetEndTime() const {
-    // Defend against untested types. This assert can be removed but we want
-    // to make sure other types are correctly accounted for.
-    MOZ_ASSERT(mFrameType == OPUS_AUDIO_FRAME || mFrameType == VP8_I_FRAME ||
-               mFrameType == VP8_P_FRAME);
-    if (mFrameType == OPUS_AUDIO_FRAME) {
-      // See bug 1356054 for discussion around standardization of time units
-      // (can remove videoutils import when this goes)
-      return mTime + FramesToUsecs(mDuration, 48000).value();
-    } else {
-      return mTime + mDuration;
-    }
+    return mTime + FramesToUsecs(mDuration, mDurationBase).value();
   }
 
  private:
