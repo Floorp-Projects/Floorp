@@ -408,6 +408,7 @@ Type.SIZE = Type('size_t')
 Type.VOID = Type('void')
 Type.VOIDPTR = Type('void', ptr=True)
 Type.AUTO = Type('auto')
+Type.AUTORVAL = Type('auto', rvalref=True)
 
 
 class TypeArray(Node):
