@@ -3707,7 +3707,6 @@ bool CacheIRCompiler::emitLoadDenseElementHoleResult(ObjOperandId objId,
 
 bool CacheIRCompiler::emitLoadTypedElementExistsResult(
     ObjOperandId objId, Int32OperandId indexId, TypedThingLayout layout) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
@@ -3726,6 +3725,19 @@ bool CacheIRCompiler::emitLoadTypedElementExistsResult(
 
   masm.bind(&done);
   return true;
+}
+
+bool CacheIRCompiler::emitLoadTypedArrayElementExistsResult(
+    ObjOperandId objId, Int32OperandId indexId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  return emitLoadTypedElementExistsResult(objId, indexId,
+                                          TypedThingLayout::TypedArray);
+}
+
+bool CacheIRCompiler::emitLoadTypedObjectElementExistsResult(
+    ObjOperandId objId, Int32OperandId indexId, TypedThingLayout layout) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  return emitLoadTypedElementExistsResult(objId, indexId, layout);
 }
 
 bool CacheIRCompiler::emitLoadDenseElementExistsResult(ObjOperandId objId,
