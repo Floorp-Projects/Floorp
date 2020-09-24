@@ -31,7 +31,7 @@ from .util.chunking import resolver
 from .util.hg import get_hg_revision_branch, get_hg_commit_message
 from .util.partials import populate_release_history
 from .util.schema import validate_schema, Schema
-from .util.taskcluster import get_artifact
+from .util.taskcluster import get_artifact, insert_index
 from .util.taskgraph import find_decision_task, find_existing_tasks_from_previous_kinds
 from .util.yaml import load_yaml
 from voluptuous import Required, Optional
@@ -227,6 +227,9 @@ def taskgraph_decision(options, parameters=None):
         decision_task_id=decision_task_id,
         write_artifacts=True,
     )
+
+    # set additional index paths for the decision task
+    set_decision_indexes(decision_task_id, tgg.parameters, tgg.graph_config)
 
     # write out the parameters used to generate this graph
     write_artifact('parameters.yml', dict(**tgg.parameters))
@@ -467,6 +470,19 @@ def set_try_config(parameters, task_config_file):
         # For a try push with no task selection, apply the default optimization
         # process to all of the tasks.
         parameters['optimize_target_tasks'] = True
+
+
+def set_decision_indexes(decision_task_id, params, graph_config):
+    index_paths = []
+    if params["backstop"]:
+        index_paths.append("{trust-domain}.v2.{project}.latest.taskgraph.backstop")
+
+    subs = params.copy()
+    subs["trust-domain"] = graph_config["trust-domain"]
+
+    index_paths = [i.format(**subs) for i in index_paths]
+    for index_path in index_paths:
+        insert_index(index_path, decision_task_id, use_proxy=True)
 
 
 def write_artifact(filename, data):
