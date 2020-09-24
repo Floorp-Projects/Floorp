@@ -57,8 +57,6 @@ add_task(async function() {
   const prop = getTextProperty(ruleView, 1, { color: "red" });
 
   let onTrackChange;
-  let removeDecl;
-  let addDecl;
 
   for (const { value, add, remove } of VALUE_CHANGE_ITERATIONS) {
     onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
@@ -68,29 +66,40 @@ add_task(async function() {
     info("Wait for the change to be tracked");
     await onTrackChange;
 
-    addDecl = getAddedDeclarations(doc);
-    removeDecl = getRemovedDeclarations(doc);
-
     if (add) {
+      await waitFor(() => {
+        const decl = getAddedDeclarations(doc);
+        return decl.length == 1 && decl[0].value == add.value;
+      }, "Only one declaration was tracked as added.");
+      const addDecl = getAddedDeclarations(doc);
       is(
         addDecl[0].value,
         add.value,
         `Added declaration has expected value: ${add.value}`
       );
-      is(addDecl.length, 1, "Only one declaration was tracked as added.");
     } else {
-      is(addDecl.length, 0, "Added declaration was cleared");
+      await waitFor(
+        () => getAddedDeclarations(doc).length == 0,
+        "Added declaration was cleared"
+      );
     }
 
     if (remove) {
+      await waitFor(
+        () => getRemovedDeclarations(doc).length == 1,
+        "Only one declaration was tracked as removed."
+      );
+      const removeDecl = getRemovedDeclarations(doc);
       is(
         removeDecl[0].value,
         remove.value,
         `Removed declaration has expected value: ${remove.value}`
       );
-      is(removeDecl.length, 1, "Only one declaration was tracked as removed.");
     } else {
-      is(removeDecl.length, 0, "Removed declaration was cleared");
+      await waitFor(
+        () => getRemovedDeclarations(doc).length == 0,
+        "Removed declaration was cleared"
+      );
     }
   }
 });

@@ -69,8 +69,10 @@ async function testToggle(ruleView, store, doc, prop) {
   await togglePropStatus(ruleView, prop);
   await onTrackChange;
 
-  const removeDecl = getRemovedDeclarations(doc);
-  is(removeDecl.length, 1, "Still just one declaration tracked as removed");
+  await waitFor(
+    () => getRemovedDeclarations(doc).length == 1,
+    "Still just one declaration tracked as removed"
+  );
 }
 
 async function testRemoveName(ruleView, store, doc, prop) {
@@ -92,8 +94,11 @@ async function testRemoveName(ruleView, store, doc, prop) {
   - one removed by its name from this test
   `);
 
+  await waitFor(
+    () => getRemovedDeclarations(doc).length == 2,
+    "Two declarations tracked as removed"
+  );
   const removeDecl = getRemovedDeclarations(doc);
-  is(removeDecl.length, 2, "Two declarations tracked as removed");
   is(removeDecl[0].property, "background", "First declaration name correct");
   is(removeDecl[0].value, "black", "First declaration value correct");
   is(removeDecl[1].property, "color", "Second declaration name correct");

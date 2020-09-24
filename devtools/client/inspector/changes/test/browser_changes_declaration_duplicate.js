@@ -40,8 +40,11 @@ async function testAddDuplicateDeclarations(ruleView, store, doc) {
   info("Wait for the change to be tracked");
   await onTrackChange;
 
+  await waitFor(() => {
+    const decls = getAddedDeclarations(doc);
+    return decls.length == 2 && decls[1].value == "red";
+  }, "Two declarations were tracked as added");
   const addDecl = getAddedDeclarations(doc);
-  is(addDecl.length, 2, "Two declarations were tracked as added");
   is(addDecl[0].value, "red", "First declaration has correct property value");
   is(
     addDecl[0].value,
@@ -62,6 +65,10 @@ async function testChangeDuplicateDeclarations(ruleView, store, doc) {
   info("Wait for the change to be tracked");
   await onTrackChange;
 
+  await waitFor(
+    () => getAddedDeclarations(doc).length == 2,
+    "Two declarations were tracked as added"
+  );
   const addDecl = getAddedDeclarations(doc);
   is(addDecl[0].value, "black", "First declaration has changed property value");
   is(
@@ -83,6 +90,10 @@ async function testRemoveDuplicateDeclarations(ruleView, store, doc) {
   info("Wait for the change to be tracked");
   await onTrackChange;
 
+  await waitFor(
+    () => getAddedDeclarations(doc).length == 1,
+    "One declaration was tracked as added"
+  );
   const addDecl = getAddedDeclarations(doc);
   const removeDecl = getRemovedDeclarations(doc);
   // Expect no remove operation tracked because it cancels out the original add operation.

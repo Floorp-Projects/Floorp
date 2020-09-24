@@ -33,8 +33,8 @@ add_task(async function() {
   info("Wait for the change to be tracked");
   await onTrackChange;
 
-  let removeDecl = getRemovedDeclarations(doc);
-  let addDecl = getAddedDeclarations(doc);
+  const removeDecl = getRemovedDeclarations(doc);
+  const addDecl = getAddedDeclarations(doc);
 
   is(removeDecl.length, 1, "One declaration tracked as removed");
   is(
@@ -57,9 +57,12 @@ add_task(async function() {
   info("Wait for the change to be tracked");
   await onTrackChange;
 
-  removeDecl = getRemovedDeclarations(doc);
-  addDecl = getAddedDeclarations(doc);
-
-  is(removeDecl.length, 0, "No declaration tracked as removed");
-  is(addDecl.length, 0, "No declaration tracked as added");
+  await waitFor(
+    () => getRemovedDeclarations(doc).length == 0,
+    "No declaration tracked as removed"
+  );
+  await waitFor(
+    () => getAddedDeclarations(doc).length == 0,
+    "No declaration tracked as added"
+  );
 });
