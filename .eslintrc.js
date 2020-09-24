@@ -234,7 +234,6 @@ module.exports = {
         "dom/jsurl/**",
         "dom/media/tests/**",
         "dom/media/webaudio/**",
-        "dom/media/webrtc/tests/**",
         "dom/media/webspeech/**",
         "dom/messagechannel/**",
         "dom/midi/**",

@@ -83,7 +83,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
 
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
-    'webrtc/tests/mochitests/identity/mochitest.ini',
+    'tests/mochitest/identity/mochitest.ini',
 ]
 
 BROWSER_CHROME_MANIFESTS += [
@@ -92,7 +92,7 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 if CONFIG['MOZ_WEBRTC']:
-    MOCHITEST_MANIFESTS += ['webrtc/tests/mochitests/mochitest.ini']
+    MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 
 XPIDL_SOURCES += [
     'nsIAudioDeviceInfo.idl',
