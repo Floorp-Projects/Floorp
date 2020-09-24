@@ -22,7 +22,6 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EditAction.h"
@@ -1062,34 +1061,11 @@ nsresult HTMLEditor::PrepareTransferable(nsITransferable** aTransferable) {
   return NS_OK;
 }
 
-class MOZ_STACK_CLASS HTMLEditor::HTMLTransferablePreparer {
- public:
-  HTMLTransferablePreparer(const HTMLEditor& aHTMLEditor,
-                           nsITransferable** aTransferable);
-
-  nsresult Run();
-
- private:
-  void AddDataFlavorsInBestOrder(nsITransferable& aTransferable) const;
-
-  const HTMLEditor& mHTMLEditor;
-  nsITransferable** mTransferable;
-};
-
-HTMLEditor::HTMLTransferablePreparer::HTMLTransferablePreparer(
-    const HTMLEditor& aHTMLEditor, nsITransferable** aTransferable)
-    : mHTMLEditor{aHTMLEditor}, mTransferable{aTransferable} {
-  MOZ_ASSERT(mTransferable);
-  MOZ_ASSERT(!*mTransferable);
-}
-
 nsresult HTMLEditor::PrepareHTMLTransferable(
     nsITransferable** aTransferable) const {
-  HTMLTransferablePreparer htmlTransferablePreparer{*this, aTransferable};
-  return htmlTransferablePreparer.Run();
-}
+  MOZ_ASSERT(aTransferable);
+  MOZ_ASSERT(!*aTransferable);
 
-nsresult HTMLEditor::HTMLTransferablePreparer::Run() {
   // Create generic Transferable for getting the data
   nsresult rv;
   RefPtr<nsITransferable> transferable =
@@ -1105,105 +1081,99 @@ nsresult HTMLEditor::HTMLTransferablePreparer::Run() {
   }
 
   // Get the nsITransferable interface for getting the data from the clipboard
-  RefPtr<Document> destdoc = mHTMLEditor.GetDocument();
+  RefPtr<Document> destdoc = GetDocument();
   nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
   DebugOnly<nsresult> rvIgnored = transferable->Init(loadContext);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "nsITransferable::Init() failed, but ignored");
 
-  // See `HTMLEditor::InsertFromTransferable`.
-  AddDataFlavorsInBestOrder(*transferable);
-
-  transferable.forget(mTransferable);
-
-  return NS_OK;
-}
-
-void HTMLEditor::HTMLTransferablePreparer::AddDataFlavorsInBestOrder(
-    nsITransferable& aTransferable) const {
   // Create the desired DataFlavor for the type of data
   // we want to get out of the transferable
   // This should only happen in html editors, not plaintext
-  if (!mHTMLEditor.IsPlaintextEditor()) {
-    nsresult rvIgnored = aTransferable.AddDataFlavor(kNativeHTMLMime);
+  if (!IsPlaintextEditor()) {
+    rvIgnored = transferable->AddDataFlavor(kNativeHTMLMime);
     NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
+        NS_SUCCEEDED(rv),
         "nsITransferable::AddDataFlavor(kNativeHTMLMime) failed, but ignored");
-    rvIgnored = aTransferable.AddDataFlavor(kHTMLMime);
+    rvIgnored = transferable->AddDataFlavor(kHTMLMime);
     NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
+        NS_SUCCEEDED(rv),
         "nsITransferable::AddDataFlavor(kHTMLMime) failed, but ignored");
-    rvIgnored = aTransferable.AddDataFlavor(kFileMime);
+    rvIgnored = transferable->AddDataFlavor(kFileMime);
     NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
+        NS_SUCCEEDED(rv),
         "nsITransferable::AddDataFlavor(kFileMime) failed, but ignored");
 
     switch (Preferences::GetInt("clipboard.paste_image_type", 1)) {
       case 0:  // prefer JPEG over PNG over GIF encoding
-        rvIgnored = aTransferable.AddDataFlavor(kJPEGImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kJPEGImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kJPEGImageMime) "
                              "failed, but ignored");
-        rvIgnored = aTransferable.AddDataFlavor(kJPGImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kJPGImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kJPGImageMime) "
                              "failed, but ignored");
-        rvIgnored = aTransferable.AddDataFlavor(kPNGImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kPNGImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kPNGImageMime) "
                              "failed, but ignored");
-        rvIgnored = aTransferable.AddDataFlavor(kGIFImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kGIFImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kGIFImageMime) "
                              "failed, but ignored");
         break;
       case 1:  // prefer PNG over JPEG over GIF encoding (default)
       default:
-        rvIgnored = aTransferable.AddDataFlavor(kPNGImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kPNGImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kPNGImageMime) "
                              "failed, but ignored");
-        rvIgnored = aTransferable.AddDataFlavor(kJPEGImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kJPEGImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kJPEGImageMime) "
                              "failed, but ignored");
-        rvIgnored = aTransferable.AddDataFlavor(kJPGImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kJPGImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kJPGImageMime) "
                              "failed, but ignored");
-        rvIgnored = aTransferable.AddDataFlavor(kGIFImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kGIFImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kGIFImageMime) "
                              "failed, but ignored");
         break;
       case 2:  // prefer GIF over JPEG over PNG encoding
-        rvIgnored = aTransferable.AddDataFlavor(kGIFImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kGIFImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kGIFImageMime) "
                              "failed, but ignored");
-        rvIgnored = aTransferable.AddDataFlavor(kJPEGImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kJPEGImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kJPEGImageMime) "
                              "failed, but ignored");
-        rvIgnored = aTransferable.AddDataFlavor(kJPGImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kJPGImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kJPGImageMime) "
                              "failed, but ignored");
-        rvIgnored = aTransferable.AddDataFlavor(kPNGImageMime);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+        rvIgnored = transferable->AddDataFlavor(kPNGImageMime);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "nsITransferable::AddDataFlavor(kPNGImageMime) "
                              "failed, but ignored");
         break;
     }
   }
-  nsresult rvIgnored = aTransferable.AddDataFlavor(kUnicodeMime);
+  rvIgnored = transferable->AddDataFlavor(kUnicodeMime);
   NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
+      NS_SUCCEEDED(rv),
       "nsITransferable::AddDataFlavor(kUnicodeMime) failed, but ignored");
-  rvIgnored = aTransferable.AddDataFlavor(kMozTextInternal);
+  rvIgnored = transferable->AddDataFlavor(kMozTextInternal);
   NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
+      NS_SUCCEEDED(rv),
       "nsITransferable::AddDataFlavor(kMozTextInternal) failed, but ignored");
+
+  transferable.forget(aTransferable);
+
+  return NS_OK;
 }
 
 bool FindIntegerAfterString(const char* aLeadingString, const nsCString& aCStr,
@@ -1696,8 +1666,6 @@ nsresult HTMLEditor::InsertFromTransferable(nsITransferable* aTransferable,
                                             bool aDoDeleteSelection) {
   nsAutoCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;
-
-  // See `HTMLTransferablePreparer::AddDataFlavorsInBestOrder`.
   nsresult rv = aTransferable->GetAnyTransferData(
       bestFlavor, getter_AddRefs(genericDataObj));
   NS_WARNING_ASSERTION(
