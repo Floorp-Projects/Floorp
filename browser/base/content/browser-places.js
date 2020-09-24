@@ -1946,11 +1946,20 @@ var BookmarkingUI = {
         // We assume that menuItemL10nId has a single attribute.
         let label = l10n[0].attributes[0].value;
 
-        // Update the title and the starred state for the page action panel.
-        PageActions.actionForID(PageActions.ACTION_ID_BOOKMARK).setTitle(
-          label,
-          window
+        // Update the label, tooltip, and the starred state for the
+        // page action panel.
+        let panelButton = BrowserPageActions.panelButtonNodeForActionID(
+          PageActions.ACTION_ID_BOOKMARK
         );
+        if (panelButton) {
+          panelButton.setAttribute("label", label);
+        }
+        let urlbarButton = BrowserPageActions.urlbarButtonNodeForActionID(
+          PageActions.ACTION_ID_BOOKMARK
+        );
+        if (urlbarButton) {
+          urlbarButton.setAttribute("tooltiptext", label);
+        }
       });
     }
   },

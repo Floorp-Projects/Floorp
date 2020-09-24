@@ -10,14 +10,6 @@
 
 <!-- Tab context menu -->
 
-<!-- LOCALIZATION NOTE (pinTab.label, unpinTab.label): "Pin" is being
-used as a metaphor for expressing the fact that these tabs are "pinned" to the
-left edge of the tabstrip. Really we just want the string to express the idea
-that this is a lightweight and reversible action that keeps your tab where you
-can reach it easily. -->
-<!ENTITY  pinTab.label                       "Pin Tab">
-<!ENTITY  unpinTab.label                     "Unpin Tab">
-
 <!ENTITY  listAllTabs.label      "List all tabs">
 
 <!ENTITY tabCmd.label "New Tab">
@@ -187,14 +179,9 @@ this container is a toolbar. This avoids double-speaking. -->
 
 <!ENTITY openLinkCmdInTab.accesskey   "T">
 
-<!ENTITY pageAction.copyLink.label    "Copy Link">
-
 <!-- LOCALIZATION NOTE(pocket-button.tooltiptext, saveToPocketCmd.label, saveLinkToPocketCmd.label, pocketMenuitem.label):
   "Pocket" is a brand name. -->
-<!ENTITY saveToPocketCmd.label        "Save Page to Pocket">
 <!ENTITY pocketMenuitem.label         "View Pocket List">
-
-<!ENTITY emailPageCmd.label           "Email Link…">
 
 <!ENTITY fullZoom.label                 "Zoom">
 
@@ -242,9 +229,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY updateRestart.panelUI.label2 "Restart to update &brandShorterName;">
 
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
-
-<!ENTITY pageAction.shareUrl.label "Share">
-<!ENTITY pageAction.shareMore.label "More…">
 
 <!ENTITY libraryButton.tooltip "View history, saved bookmarks, and more">
 
