@@ -146,10 +146,10 @@ interface nsISSLSocketControl : nsISupports {
     [infallible] readonly attribute boolean failedVerification;
 
     /*
-     * esniTxt is a string that consists of the concatenated _esni. TXT records.
-     * This is a base64 encoded ESNIKeys structure.
+     * echConfig is defined for conveying the ECH configuration.
+     * This is encoded in base64.
      */
-    attribute ACString esniTxt;
+    attribute ACString echConfig;
 
     /**
      * The id used to uniquely identify the connection to the peer.
