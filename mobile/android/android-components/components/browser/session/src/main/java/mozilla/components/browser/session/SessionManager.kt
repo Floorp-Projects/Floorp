@@ -178,7 +178,8 @@ class SessionManager(
                 session = Session(
                     id = it.id,
                     initialUrl = it.url,
-                    contextId = it.contextId
+                    contextId = it.contextId,
+                    private = it.private
                 ).apply {
                     title = it.title
                     parentId = it.parentId

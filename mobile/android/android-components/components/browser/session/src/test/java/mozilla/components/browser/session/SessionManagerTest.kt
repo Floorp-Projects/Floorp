@@ -292,7 +292,7 @@ class SessionManagerTest {
     fun `Restore list of RecoverableTab`() {
         val sessionManager = SessionManager(mock())
 
-        val mozilla = createTab("https://www.mozilla.org", id = "mozilla")
+        val mozilla = createTab("https://www.mozilla.org", id = "mozilla", private = true)
         val pocket = createTab("https://getpocket.com", id = "pocket")
         val wikipedia = createTab("https://www.wikipedia.org", id = "wikipedia", parent = mozilla)
 
@@ -314,6 +314,10 @@ class SessionManagerTest {
         assertNull(sessionManager.sessions[0].parentId)
         assertNull(sessionManager.sessions[1].parentId)
         assertEquals("mozilla", sessionManager.sessions[2].parentId)
+
+        assertTrue(sessionManager.sessions[0].private)
+        assertFalse(sessionManager.sessions[1].private)
+        assertFalse(sessionManager.sessions[2].private)
     }
 
     @Test

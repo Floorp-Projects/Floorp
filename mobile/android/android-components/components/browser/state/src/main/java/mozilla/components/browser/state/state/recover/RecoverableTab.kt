@@ -24,6 +24,7 @@ import mozilla.components.concept.engine.EngineSessionState
  * @param state The [EngineSessionState] needed for restoring the previous state of this tab.
  * @param readerState The last [ReaderState] of the tab.
  * @param lastAccess The last time this tab was selected.
+ * @param private If tab was private.
  */
 data class RecoverableTab(
     val id: String,
@@ -33,7 +34,8 @@ data class RecoverableTab(
     val contextId: String?,
     val state: EngineSessionState?,
     val readerState: ReaderState,
-    val lastAccess: Long
+    val lastAccess: Long,
+    val private: Boolean
 )
 
 /**
@@ -47,5 +49,6 @@ fun TabSessionState.toRecoverableTab() = RecoverableTab(
     contextId = contextId,
     state = engineState.engineSessionState,
     readerState = readerState,
-    lastAccess = lastAccess
+    lastAccess = lastAccess,
+    private = content.private
 )
