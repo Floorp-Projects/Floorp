@@ -27,7 +27,7 @@ add_task(async function testPolicyOverride() {
   );
 
   Preferences.set(prefs.ENABLED_PREF, true);
-  await waitForStateTelemetry(["policyDisabled"]);
+  await waitForStateTelemetry(["shutdown", "policyDisabled"]);
   is(
     Preferences.get(prefs.BREADCRUMB_PREF),
     undefined,
