@@ -2212,53 +2212,6 @@ void HTMLMediaElement::ShutdownDecoder() {
   mDecoder = nullptr;
 }
 
-void HTMLMediaElement::ReportPlayedTimeAfterBlockedTelemetry() {
-  if (!mHasPlayEverBeenBlocked) {
-    return;
-  }
-  mHasPlayEverBeenBlocked = false;
-
-  const double playTimeThreshold = 7.0;
-  const double playTimeAfterBlocked = mCurrentLoadPlayTime.Total();
-  if (playTimeAfterBlocked <= 0.0) {
-    return;
-  }
-
-  const bool isDurationLessThanTimeThresholdAndMediaPlayedToTheEnd =
-      Duration() < playTimeThreshold && Ended();
-  LOG(LogLevel::Debug, ("%p PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED=%f, isVideo=%d",
-                        this, playTimeAfterBlocked, IsVideo()));
-  if (IsVideo() && playTimeAfterBlocked >= playTimeThreshold) {
-    AccumulateCategorical(
-        mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
-            VPlayedMoreThan7s);
-  } else if (IsVideo() && playTimeAfterBlocked < playTimeThreshold) {
-    if (isDurationLessThanTimeThresholdAndMediaPlayedToTheEnd) {
-      AccumulateCategorical(
-          mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
-              VPlayedToTheEnd);
-    } else {
-      AccumulateCategorical(
-          mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
-              VPlayedLessThan7s);
-    }
-  } else if (!IsVideo() && playTimeAfterBlocked >= playTimeThreshold) {
-    AccumulateCategorical(
-        mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
-            APlayedMoreThan7s);
-  } else if (!IsVideo() && playTimeAfterBlocked < playTimeThreshold) {
-    if (isDurationLessThanTimeThresholdAndMediaPlayedToTheEnd) {
-      AccumulateCategorical(
-          mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
-              APlayedToTheEnd);
-    } else {
-      AccumulateCategorical(
-          mozilla::Telemetry::LABELS_MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED::
-              APlayedLessThan7s);
-    }
-  }
-}
-
 void HTMLMediaElement::AbortExistingLoads() {
   // Abort any already-running instance of the resource selection algorithm.
   mLoadWaitStatus = NOT_WAITING;
@@ -4273,7 +4226,6 @@ HTMLMediaElement::~HTMLMediaElement() {
   mMediaControlKeyListener = nullptr;
 
   WakeLockRelease();
-  ReportPlayedTimeAfterBlockedTelemetry();
 
   DecoderDoctorLogger::LogDestruction(this);
 }
@@ -4403,7 +4355,6 @@ void HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed() {
 #endif
   MaybeNotifyAutoplayBlocked();
   ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
-  mHasPlayEverBeenBlocked = true;
   mHasEverBeenBlockedForAutoplay = true;
 }
 
@@ -6365,12 +6316,6 @@ void HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName) {
     mPlayTime.Pause();
     mCurrentLoadPlayTime.Pause();
     HiddenVideoStop();
-  }
-
-  // It would happen when (1) media aborts current load (2) media pauses (3)
-  // media end (4) media unbind from tree (because we would pause it)
-  if (aName.EqualsLiteral("pause")) {
-    ReportPlayedTimeAfterBlockedTelemetry();
   }
 }
 

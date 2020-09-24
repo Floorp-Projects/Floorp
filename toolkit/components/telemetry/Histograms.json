@@ -14949,20 +14949,6 @@
     "description": "The number of times an AudioContext is allowed to start after being blocked, or the number of AudioContexts attempting to start which were never blocked or never allowed.",
     "releaseChannelCollection": "opt-out"
   },
-  "MEDIA_PLAYED_TIME_AFTER_AUTOPLAY_BLOCKED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": [
-      "alwu@mozilla.com",
-      "nohlmeier@mozilla.com"
-    ],
-    "expires_in_version": "72",
-    "kind": "categorical",
-    "labels": ["VPlayedMoreThan7s", "VPlayedLessThan7s", "VPlayedToTheEnd", "APlayedMoreThan7s", "APlayedLessThan7s", "APlayedToTheEnd"],
-    "bug_numbers": [1525156],
-    "description": "The number of times autoplay media (audio and video), which has been blocked by autoplay policy, played exactly 7 seconds or more, or less than 7 seconds after it has been resumed from the blocked state. If media's duration is less than 7 seconds and it played to the end before user pauses it, it would be in another category which is different from 'play >= 7 seconds' and 'play < 7 seconds'.",
-    "releaseChannelCollection": "opt-out"
-  },
   "QM_QUOTA_INFO_LOAD_TIME_V0": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
