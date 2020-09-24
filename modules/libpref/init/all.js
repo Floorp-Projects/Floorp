@@ -344,12 +344,6 @@ pref("browser.chrome.image_icons.max_size", 1024);
 
 pref("browser.triple_click_selects_paragraph", true);
 
-// Print/Preview Shrink-To-Fit won't shrink below 20% for text-ish documents.
-pref("print.shrink-to-fit.scale-limit-percent", 20);
-
-// Whether we should display simplify page checkbox on print preview UI
-pref("print.use_simplify_page", false);
-
 // Enable fillable forms in the PDF viewer.
 #ifdef EARLY_BETA_OR_EARLIER
   pref("pdfjs.renderInteractiveForms", true);
@@ -919,6 +913,12 @@ pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
 pref("browser.fixup.fallback-to-https", true);
 
+// Print/Preview Shrink-To-Fit won't shrink below 20% for text-ish documents.
+pref("print.shrink-to-fit.scale-limit-percent", 20);
+
+// Whether we should display simplify page checkbox on print preview UI
+pref("print.use_simplify_page", false);
+
 // Print header customization
 // Use the following codes:
 // &T - Title
@@ -966,6 +966,13 @@ pref("print.print_edge_bottom", 0);
   pref("print.print_via_parent", true);
 #else
   pref("print.print_via_parent", false);
+#endif
+
+// Should this just be checking for MOZ_WIDGET_GTK?
+#if defined(ANDROID) || defined(XP_UNIX) && !defined(XP_MACOSX)
+  pref("print.print_reversed", false);
+  // This is the default. Probably just remove this.
+  pref("print.print_in_color", true);
 #endif
 
 // Pref used by the spellchecker extension to control the
@@ -3358,12 +3365,6 @@ pref("font.size.monospace.x-math", 13);
   pref("helpers.global_mailcap_file", "/etc/mailcap");
   pref("helpers.private_mime_types_file", "~/.mime.types");
   pref("helpers.private_mailcap_file", "~/.mailcap");
-  pref("print.printer_list", ""); // list of printers, separated by spaces
-  pref("print.print_reversed", false);
-  pref("print.print_in_color", true);
-
-  /* PostScript print module prefs */
-  // pref("print.postscript.enabled",      true);
 
   // Setting default_level_parent to true makes the default level for popup
   // windows "top" instead of "parent".  On GTK2 platform, this is implemented
@@ -3399,9 +3400,6 @@ pref("font.size.monospace.x-math", 13);
   pref("helpers.global_mailcap_file", "/etc/mailcap");
   pref("helpers.private_mime_types_file", "~/.mime.types");
   pref("helpers.private_mailcap_file", "~/.mailcap");
-  pref("print.printer_list", ""); // list of printers, separated by spaces
-  pref("print.print_reversed", false);
-  pref("print.print_in_color", true);
 
   // font names
 
@@ -3555,9 +3553,6 @@ pref("font.size.monospace.x-math", 13);
   pref("font.name-list.sans-serif.zh-TW", "sans-serif");
   pref("font.name-list.monospace.zh-TW", "monospace");
   pref("font.name-list.cursive.zh-TW", "cursive");
-
-  /* PostScript print module prefs */
-  // pref("print.postscript.enabled",      true);
 
   // On GTK2 platform, we should use topmost window level for the default window
   // level of <panel> element of XUL. GTK2 has only two window types. One is
