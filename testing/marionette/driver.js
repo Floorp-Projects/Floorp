@@ -2931,6 +2931,9 @@ GeckoDriver.prototype.closeChromeWindow = async function() {
   }
 
   await this.curBrowser.closeWindow();
+  this.chromeBrowsingContext = null;
+  this.contentBrowsingContext = null;
+
   return this.chromeWindowHandles.map(String);
 };
 
