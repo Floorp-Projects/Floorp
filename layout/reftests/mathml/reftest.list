@@ -365,7 +365,7 @@ pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview&&
 pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview&&webrender,0-239,0-271) == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
 == shadow-dom-1.html shadow-dom-1-ref.html
-pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(webrender&&!gtkWidget,0-255,0-324) fuzzy-if(webrender&&gtkWidget,0-255,0-66) == font-inflation-1.html font-inflation-1-ref.html  # gtkWidget due to Bug 1607294
+pref(ui.useOverlayScrollbars,1) pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(webrender&&!gtkWidget,0-255,0-324) fuzzy-if(webrender&&gtkWidget,0-255,0-66) == font-inflation-1.html font-inflation-1-ref.html  # gtkWidget due to Bug 1607294
 test-pref(font.minimum-size.x-math,40) == default-font.html default-font-ref.html
 != radicalbar-1.html about:blank
 != radicalbar-1a.html about:blank
