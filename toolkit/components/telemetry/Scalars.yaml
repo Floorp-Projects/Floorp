@@ -2119,24 +2119,24 @@ mediarecorder:
       - content
 
 media:
-  page_had_media_count:
+  element_in_page_count:
     bug_numbers:
       - 1476456
       - 1499803
       - 1570634
+      - 1652108
     description: >
-      The number of times a document hierarchy contained at least one audible HTMLMediaElement that had play() called upon it.
-    expires: "74"
+      The number of times a document hierarchy contained at least one HTMLMediaElement. In addition, the telemetry probe 'MIXED_CONTENT_UNBLOCK_COUNTER' records the total number of loaded top level content documents, which can help us calculate the result of the percentage of documents using media.
+    expires: never
     kind: uint
     notification_emails:
-      - cpearce@mozilla.com
       - alwu@mozilla.com
       - nohlmeier@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
-      - content
+      - main
 
   autoplay_would_not_be_allowed_count:
     bug_numbers:
