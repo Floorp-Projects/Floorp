@@ -251,8 +251,7 @@ void MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS) {
   nsISHistory* legacyHistory =
       history ? history->GetLegacySHistory(ignore) : nullptr;
   if (legacyHistory) {
-    MOZ_DIAGNOSTIC_ASSERT(
-        !StaticPrefs::fission_sessionHistoryInParent_AtStartup());
+    MOZ_DIAGNOSTIC_ASSERT(!StaticPrefs::fission_sessionHistoryInParent());
     int32_t historyCount = history->Count();
     for (int32_t i = 0; i < historyCount; ++i) {
       nsCOMPtr<nsISHEntry> shEntry;
