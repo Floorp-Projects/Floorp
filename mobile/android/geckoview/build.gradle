@@ -154,8 +154,8 @@ android {
 
                 if (mozconfig.substs.MOZ_WEBRTC) {
                     srcDir "${topsrcdir}/dom/media/systemservices/android_video_capture/java/src"
-                    srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/sdk/android"
-                    srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/rtc_base/java"
+                    srcDir "${topsrcdir}/third_party/libwebrtc/webrtc/sdk/android"
+                    srcDir "${topsrcdir}/third_party/libwebrtc/webrtc/rtc_base/java"
                 }
             }
 
