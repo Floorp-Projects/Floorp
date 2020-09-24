@@ -107,6 +107,11 @@ async function getDefaultSites(child) {
   return Cu.cloneInto(defaultSites, child.contentWindow);
 }
 
+async function getSelectedTheme(child) {
+  let activeThemeId = await child.sendQuery("AWPage:GET_SELECTED_THEME");
+  return activeThemeId;
+}
+
 class AboutWelcomeChild extends JSWindowActorChild {
   actorCreated() {
     this.exportFunctions();
@@ -175,6 +180,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
     Cu.exportFunction(this.AWGetDefaultSites.bind(this), window, {
       defineAs: "AWGetDefaultSites",
+    });
+
+    Cu.exportFunction(this.AWGetSelectedTheme.bind(this), window, {
+      defineAs: "AWGetSelectedTheme",
     });
 
     Cu.exportFunction(this.AWWaitForRegionChange.bind(this), window, {
@@ -258,6 +267,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
   AWGetDefaultSites() {
     return this.wrapPromise(getDefaultSites(this));
+  }
+
+  AWGetSelectedTheme() {
+    return this.wrapPromise(getSelectedTheme(this));
   }
 
   /**

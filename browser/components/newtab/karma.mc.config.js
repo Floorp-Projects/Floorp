@@ -122,6 +122,18 @@ module.exports = function(config) {
               functions: 0,
               branches: 0,
             },
+            "content-src/lib/aboutwelcome-utils.js": {
+              statements: 50,
+              lines: 50,
+              functions: 100,
+              branches: 0,
+            },
+            "content-src/aboutwelcome/**/*.jsx": {
+              statements: 50,
+              lines: 50,
+              functions: 76,
+              branches: 0,
+            },
             "content-src/components/**/*.jsx": {
               statements: 51.1,
               lines: 52.38,

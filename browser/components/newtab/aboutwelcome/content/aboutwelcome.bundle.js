@@ -329,6 +329,17 @@ const MultiStageAboutWelcome = props => {
     (async () => {
       setRegion((await window.AWWaitForRegionChange()));
     })();
+  }, []); // Get the active theme so the rendering code can make it selected
+  // by default.
+
+  const [activeTheme, setActiveTheme] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
+  const [initialTheme, setInitialTheme] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    (async () => {
+      let theme = await window.AWGetSelectedTheme();
+      setInitialTheme(theme);
+      setActiveTheme(theme);
+    })();
   }, []);
   const useImportable = props.message_id.includes("IMPORTABLE"); // Track whether we have already sent the importable sites impression telemetry
 
@@ -361,6 +372,7 @@ const MultiStageAboutWelcome = props => {
     className: `outer-wrapper multistageContainer`
   }, props.screens.map(screen => {
     return index === screen.order ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
+      key: screen.id,
       id: screen.id,
       totalNumberOfScreens: props.screens.length,
       order: screen.order,
@@ -369,7 +381,10 @@ const MultiStageAboutWelcome = props => {
       topSites: topSites,
       messageId: `${props.message_id}_${screen.id}`,
       UTMTerm: props.utm_term,
-      flowParams: flowParams
+      flowParams: flowParams,
+      activeTheme: activeTheme,
+      initialTheme: initialTheme,
+      setActiveTheme: setActiveTheme
     }) : null;
   })));
 };
@@ -420,17 +435,6 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     });
   }
 
-  highlightTheme(theme) {
-    const themes = document.querySelectorAll("label.theme");
-    themes.forEach(function (element) {
-      element.classList.remove("selected");
-
-      if (element.firstElementChild.value === theme) {
-        element.classList.add("selected");
-      }
-    });
-  }
-
   async handleAction(event) {
     let {
       props
@@ -460,8 +464,9 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
 
 
     if (action.theme) {
-      this.highlightTheme(event.currentTarget.value);
-      window.AWSelectTheme(action.theme === "<event>" ? event.currentTarget.value : action.theme);
+      let themeToUse = action.theme === "<event>" ? event.currentTarget.value : this.props.initialTheme || action.theme;
+      this.props.setActiveTheme(themeToUse);
+      window.AWSelectTheme(themeToUse);
     }
 
     if (action.navigate) {
@@ -531,7 +536,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           key: theme + label,
           text: typeof tooltip === "object" ? tooltip : {}
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
-          className: "theme",
+          className: `theme${theme === this.props.activeTheme ? " selected" : ""}`,
           title: theme + label
         }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           text: typeof description === "object" ? description : {}
@@ -539,6 +544,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           type: "radio",
           value: theme,
           name: "theme",
+          checked: theme === this.props.activeTheme,
           className: "sr-only input",
           onClick: this.handleAction,
           "data-l10n-attrs": "aria-description"
