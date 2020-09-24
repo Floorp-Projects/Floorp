@@ -283,6 +283,7 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
 
     mExtractedDurationUs = totalDuration;
     videoData->mDuration = (uint64_t)duration.value();
+    videoData->mDurationBase = PR_USEC_PER_SEC;
     videoData->SwapInFrameData(frameData);
     VP8LOG(LogLevel::Verbose,
            "GetEncodedPartitions TimeStamp %" PRIu64 ", Duration %" PRIu64

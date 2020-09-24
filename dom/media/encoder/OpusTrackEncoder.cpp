@@ -372,6 +372,7 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
       // The ogg time stamping and pre-skip is always timed at 48000.
       audiodata->mDuration = frameCopied * (kOpusSamplingRate / mSamplingRate);
     }
+    audiodata->mDurationBase = kOpusSamplingRate;
 
     // Remove the raw data which has been pulled to pcm buffer.
     // The value of frameCopied should equal to (or smaller than, if eos)
