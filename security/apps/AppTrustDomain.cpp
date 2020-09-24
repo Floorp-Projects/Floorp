@@ -227,9 +227,8 @@ Result AppTrustDomain::DigestBuf(Input item, DigestAlgorithm digestAlg,
   return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
 }
 
-Result AppTrustDomain::CheckRevocation(EndEntityOrCA, const CertID&, Time,
+Result AppTrustDomain::CheckRevocation(EndEntityOrCA, const CertID&, Time, Time,
                                        Duration,
-                                       /*optional*/ const Input*,
                                        /*optional*/ const Input*,
                                        /*optional*/ const Input*) {
   // We don't currently do revocation checking. If we need to distrust an Apps
