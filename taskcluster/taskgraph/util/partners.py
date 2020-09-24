@@ -153,6 +153,10 @@ def get_token(params):
     level.
     """
 
+    # Allow for local taskgraph debugging
+    if os.environ.get("GITHUB_API_TOKEN"):
+        return os.environ["GITHUB_API_TOKEN"]
+
     # The 'usual' method - via taskClusterProxy for decision tasks
     url = "{secret_root}/project/releng/gecko/build/level-{level}/partner-github-api".format(
         secret_root=TASKCLUSTER_PROXY_SECRET_ROOT, **params
