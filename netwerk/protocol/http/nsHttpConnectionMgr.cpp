@@ -4237,7 +4237,7 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
   }
 
   if (ci->GetLessThanTls13()) {
-    tmpFlags |= nsISocketTransport::DONT_TRY_ECH;
+    tmpFlags |= nsISocketTransport::DONT_TRY_ESNI;
   }
 
   if (((mCaps & NS_HTTP_BE_CONSERVATIVE) || ci->GetBeConservative()) &&
@@ -4329,11 +4329,6 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
 
   rv = socketTransport->SetSecurityCallbacks(this);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (gHttpHandler->EchConfigEnabled()) {
-    rv = socketTransport->SetEchConfig(ci->GetEchConfig());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   Telemetry::Accumulate(Telemetry::HTTP_CONNECTION_ENTRY_CACHE_HIT_1,
                         mEnt->mUsedForConnection);

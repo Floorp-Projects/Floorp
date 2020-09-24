@@ -701,6 +701,19 @@ npnComplete:
     mDid0RTTSpdy = false;
   }
 
+  if (ssl) {
+    // Telemetry for tls failure rate with and without esni;
+    bool esni = false;
+    rv = mSocketTransport->GetEsniUsed(&esni);
+    if (NS_SUCCEEDED(rv)) {
+      Telemetry::Accumulate(
+          Telemetry::ESNI_NOESNI_TLS_SUCCESS_RATE,
+          (esni)
+              ? ((handshakeSucceeded) ? ESNI_SUCCESSFUL : ESNI_FAILED)
+              : ((handshakeSucceeded) ? NO_ESNI_SUCCESSFUL : NO_ESNI_FAILED));
+    }
+  }
+
   if (rv == psm::GetXPCOMFromNSSError(
                 mozilla::pkix::MOZILLA_PKIX_ERROR_MITM_DETECTED)) {
     gSocketTransportService->SetNotTrustedMitmDetected();

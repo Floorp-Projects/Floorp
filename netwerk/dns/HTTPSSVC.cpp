@@ -5,7 +5,6 @@
 #include "HTTPSSVC.h"
 #include "mozilla/net/DNS.h"
 #include "nsHttp.h"
-#include "nsHttpHandler.h"
 #include "nsNetAddr.h"
 
 namespace mozilla {
@@ -131,19 +130,6 @@ SvcParam::GetIpv6Hint(nsTArray<RefPtr<nsINetAddr>>& aIpv6Hint) {
   return NS_OK;
 }
 
-bool SVCB::operator<(const SVCB& aOther) const {
-  if (gHttpHandler->EchConfigEnabled()) {
-    if (mHasEchConfig && !aOther.mHasEchConfig) {
-      return true;
-    }
-    if (!mHasEchConfig && aOther.mHasEchConfig) {
-      return false;
-    }
-  }
-
-  return mSvcFieldPriority < aOther.mSvcFieldPriority;
-}
-
 Maybe<uint16_t> SVCB::GetPort() const {
   Maybe<uint16_t> port;
   for (const auto& value : mSvcFieldValue) {
@@ -213,11 +199,6 @@ NS_IMETHODIMP SVCBRecord::GetName(nsACString& aName) {
 Maybe<uint16_t> SVCBRecord::GetPort() { return mPort; }
 
 Maybe<nsCString> SVCBRecord::GetAlpn() { return mAlpn; }
-
-NS_IMETHODIMP SVCBRecord::GetEchConfig(nsACString& aEchConfig) {
-  aEchConfig = mData.mEchConfig;
-  return NS_OK;
-}
 
 NS_IMETHODIMP SVCBRecord::GetValues(nsTArray<RefPtr<nsISVCParam>>& aValues) {
   for (const auto& v : mData.mSvcFieldValue) {
