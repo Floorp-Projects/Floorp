@@ -3645,6 +3645,73 @@ void PrintMarkers(const mozilla::ProfileChunkedBuffer& aBuffer) {
   StreamMarkers(aBuffer, writer);
 }
 
+static void SubTestMarkerCategory(
+    const mozilla::MarkerCategory& aMarkerCategory,
+    const mozilla::baseprofiler::ProfilingCategoryPair& aProfilingCategoryPair,
+    const mozilla::baseprofiler::ProfilingCategory& aProfilingCategory) {
+  MOZ_RELEASE_ASSERT(aMarkerCategory.CategoryPair() == aProfilingCategoryPair,
+                     "Unexpected MarkerCategory::CategoryPair()");
+
+  MOZ_RELEASE_ASSERT(
+      mozilla::MarkerCategory(aProfilingCategoryPair).CategoryPair() ==
+          aProfilingCategoryPair,
+      "MarkerCategory(<name>).CategoryPair() should return <name>");
+
+  MOZ_RELEASE_ASSERT(aMarkerCategory.GetCategory() == aProfilingCategory,
+                     "Unexpected MarkerCategory::GetCategory()");
+
+  mozilla::ProfileBufferChunkManagerSingle chunkManager(512);
+  mozilla::ProfileChunkedBuffer buffer(
+      mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
+  mozilla::ProfileBufferBlockIndex i = buffer.PutObject(aMarkerCategory);
+  MOZ_RELEASE_ASSERT(i != mozilla::ProfileBufferBlockIndex{},
+                     "Failed serialization");
+  buffer.ReadEach([&](mozilla::ProfileBufferEntryReader& aER,
+                      mozilla::ProfileBufferBlockIndex aIndex) {
+    MOZ_RELEASE_ASSERT(aIndex == i, "Unexpected deserialization index");
+    const auto readCategory = aER.ReadObject<mozilla::MarkerCategory>();
+    MOZ_RELEASE_ASSERT(aER.RemainingBytes() == 0,
+                       "Unexpected extra serialized bytes");
+    MOZ_RELEASE_ASSERT(readCategory.CategoryPair() == aProfilingCategoryPair,
+                       "Incorrect deserialization value");
+  });
+}
+
+void TestMarkerCategory() {
+  printf("TestMarkerCategory...\n");
+
+  mozilla::ProfileBufferChunkManagerSingle chunkManager(512);
+  mozilla::ProfileChunkedBuffer buffer(
+      mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
+
+#  define CATEGORY_ENUM_BEGIN_CATEGORY(name, labelAsString, color)
+#  define CATEGORY_ENUM_SUBCATEGORY(supercategory, name, labelAsString)     \
+    static_assert(                                                          \
+        std::is_same_v<decltype(mozilla::baseprofiler::category::name),     \
+                       const mozilla::MarkerCategory>,                      \
+        "baseprofiler::category::<name> should be a const MarkerCategory"); \
+                                                                            \
+    SubTestMarkerCategory(                                                  \
+        mozilla::baseprofiler::category::name,                              \
+        mozilla::baseprofiler::ProfilingCategoryPair::name,                 \
+        mozilla::baseprofiler::ProfilingCategory::supercategory);
+#  define CATEGORY_ENUM_END_CATEGORY
+  MOZ_PROFILING_CATEGORY_LIST(CATEGORY_ENUM_BEGIN_CATEGORY,
+                              CATEGORY_ENUM_SUBCATEGORY,
+                              CATEGORY_ENUM_END_CATEGORY)
+#  undef CATEGORY_ENUM_BEGIN_CATEGORY
+#  undef CATEGORY_ENUM_SUBCATEGORY
+#  undef CATEGORY_ENUM_END_CATEGORY
+
+  static_assert(
+      std::is_same_v<decltype(
+                         std::declval<mozilla::MarkerCategory>().WithOptions()),
+                     mozilla::MarkerOptions>,
+      "MarkerCategory::WithOptions() should return a MarkerOptions");
+
+  printf("TestMarkerCategory done\n");
+}
+
 void TestMarkerNoPayload() {
   printf("TestMarkerNoPayload...\n");
 
@@ -3852,6 +3919,7 @@ void TestProfilerMarkers() {
          mozilla::baseprofiler::profiler_current_thread_id());
   // ::SleepMilli(10000);
 
+  TestMarkerCategory();
   TestMarkerNoPayload();
   TestUserMarker();
   TestPredefinedMarkers();
