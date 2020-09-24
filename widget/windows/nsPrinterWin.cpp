@@ -46,9 +46,11 @@ nsTArray<uint8_t> nsPrinterWin::CopyDefaultDevmodeW() const {
     // Allocate devmode storage of the correct size.
     LONG bytesNeeded = ::DocumentPropertiesW(nullptr, autoPrinter.get(),
                                              mName.get(), nullptr, nullptr, 0);
-    MOZ_DIAGNOSTIC_ASSERT(bytesNeeded >= sizeof(DEVMODEW),
+    // Note that we must cast the sizeof() to a signed type so that comparison
+    // with the signed, potentially-negative bytesNeeded will work!
+    MOZ_DIAGNOSTIC_ASSERT(bytesNeeded >= LONG(sizeof(DEVMODEW)),
                           "DocumentPropertiesW failed to get valid size");
-    if (bytesNeeded < sizeof(DEVMODEW)) {
+    if (bytesNeeded < LONG(sizeof(DEVMODEW))) {
       return devmodeStorageW;
     }
 
