@@ -9255,11 +9255,11 @@
   "REGION_LOCATION_SERVICES_DIFFERENCE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "84",
+    "expires_in_version": "88",
     "kind": "exponential",
     "n_buckets": 20,
     "high": 12742000,
-    "bug_numbers": [1637402, 1664723],
+    "bug_numbers": [1637402, 1664723, 1666977],
     "alert_emails": ["dharvey@mozilla.com"],
     "releaseChannelCollection": "opt-out",
     "description": "The distance(m) between the the result of 2 services that detect the users location"
