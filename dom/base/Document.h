@@ -3895,8 +3895,8 @@ class Document : public nsINode,
 
   void ReportShadowDOMUsage();
 
-  // Sets flags for media autoplay telemetry.
-  void SetDocTreeHadAudibleMedia();
+  // Sets flags for media telemetry.
+  void SetDocTreeHadMedia();
 
   dom::XPathEvaluator* XPathEvaluator();
 

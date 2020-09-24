@@ -4168,6 +4168,7 @@ void HTMLMediaElement::Init() {
       OwnerDoc()->GetInnerWindow());
 #endif
 
+  OwnerDoc()->SetDocTreeHadMedia();
   mShutdownObserver->Subscribe(this);
   mInitialized = true;
 }
@@ -4261,7 +4262,6 @@ void HTMLMediaElement::UpdateHadAudibleAutoplayState() {
   // If we're audible, and autoplaying...
   if ((Volume() > 0.0 && !Muted()) &&
       (!OwnerDoc()->HasBeenUserGestureActivated() || Autoplay())) {
-    OwnerDoc()->SetDocTreeHadAudibleMedia();
     if (AutoplayPolicyTelemetryUtils::WouldBeAllowedToPlayIfAutoplayDisabled(
             *this)) {
       ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_BE_ALLOWED_COUNT, 1);
