@@ -755,10 +755,11 @@ bool WarpCacheIRTranspiler::emitGuardFrameHasNoArgumentsObject() {
 bool WarpCacheIRTranspiler::emitGuardFunctionHasJitEntry(ObjOperandId funId,
                                                          bool constructing) {
   MDefinition* fun = getOperand(funId);
-  uint16_t flags = FunctionFlags::HasJitEntryFlags(constructing);
+  uint16_t expectedFlags = FunctionFlags::HasJitEntryFlags(constructing);
+  uint16_t unexpectedFlags = 0;
 
-  auto* ins = MGuardFunctionFlags::New(alloc(), fun, flags,
-                                       /*bailWhenSet=*/false);
+  auto* ins =
+      MGuardFunctionFlags::New(alloc(), fun, expectedFlags, unexpectedFlags);
   add(ins);
 
   setOperand(funId, ins);
@@ -767,10 +768,12 @@ bool WarpCacheIRTranspiler::emitGuardFunctionHasJitEntry(ObjOperandId funId,
 
 bool WarpCacheIRTranspiler::emitGuardFunctionHasNoJitEntry(ObjOperandId funId) {
   MDefinition* fun = getOperand(funId);
-  uint16_t flags = FunctionFlags::HasJitEntryFlags(/*isConstructing=*/false);
+  uint16_t expectedFlags = 0;
+  uint16_t unexpectedFlags =
+      FunctionFlags::HasJitEntryFlags(/*isConstructing=*/false);
 
-  auto* ins = MGuardFunctionFlags::New(alloc(), fun, flags,
-                                       /*bailWhenSet=*/true);
+  auto* ins =
+      MGuardFunctionFlags::New(alloc(), fun, expectedFlags, unexpectedFlags);
   add(ins);
 
   setOperand(funId, ins);
@@ -779,9 +782,11 @@ bool WarpCacheIRTranspiler::emitGuardFunctionHasNoJitEntry(ObjOperandId funId) {
 
 bool WarpCacheIRTranspiler::emitGuardFunctionIsConstructor(ObjOperandId funId) {
   MDefinition* fun = getOperand(funId);
+  uint16_t expectedFlags = FunctionFlags::CONSTRUCTOR;
+  uint16_t unexpectedFlags = 0;
 
-  auto* ins = MGuardFunctionFlags::New(alloc(), fun, FunctionFlags::CONSTRUCTOR,
-                                       /*bailWhenSet=*/false);
+  auto* ins =
+      MGuardFunctionFlags::New(alloc(), fun, expectedFlags, unexpectedFlags);
   add(ins);
 
   setOperand(funId, ins);

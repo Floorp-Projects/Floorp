@@ -5189,11 +5189,13 @@ void CodeGenerator::visitGuardNullOrUndefined(LGuardNullOrUndefined* lir) {
 void CodeGenerator::visitGuardFunctionFlags(LGuardFunctionFlags* lir) {
   Register function = ToRegister(lir->function());
 
-  Assembler::Condition cond =
-      lir->mir()->bailWhenSet() ? Assembler::NonZero : Assembler::Zero;
-
   Label bail;
-  masm.branchTestFunctionFlags(function, lir->mir()->flags(), cond, &bail);
+  if (uint16_t flags = lir->mir()->expectedFlags()) {
+    masm.branchTestFunctionFlags(function, flags, Assembler::Zero, &bail);
+  }
+  if (uint16_t flags = lir->mir()->unexpectedFlags()) {
+    masm.branchTestFunctionFlags(function, flags, Assembler::NonZero, &bail);
+  }
   bailoutFrom(&bail, lir->snapshot());
 }
 
