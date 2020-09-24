@@ -79,6 +79,7 @@ class TestWebMWriter : public WebMWriter {
     videoData->mFrameType = aFrameType;
     videoData->mTime = mTimestamp;
     videoData->mDuration = aDuration;
+    videoData->mDurationBase = PR_USEC_PER_SEC;
     videoData->SwapInFrameData(frameData);
     encodedVideoData.AppendElement(videoData);
     WriteEncodedTrack(encodedVideoData, 0);
