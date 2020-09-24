@@ -342,10 +342,10 @@ bool HTMLEditUtils::SupportsAlignAttr(nsINode& aNode) {
 }
 
 // We use bitmasks to test containment of elements. Elements are marked to be
-// in certain groups by setting the mGroup member of the nsElementInfo struct
+// in certain groups by setting the mGroup member of the `ElementInfo` struct
 // to the corresponding GROUP_ values (OR'ed together). Similarly, elements are
 // marked to allow containment of certain groups by setting the
-// mCanContainGroups member of the nsElementInfo struct to the corresponding
+// mCanContainGroups member of the `ElementInfo` struct to the corresponding
 // GROUP_ values (OR'ed together).
 // Testing containment then simply consists of checking whether the
 // mCanContainGroups bitmask of an element and the mGroup bitmask of a
@@ -441,7 +441,9 @@ struct ElementInfo final {
 #ifdef DEBUG
   nsHTMLTag mTag;
 #endif
+  // See `GROUP_NONE`'s comment.
   uint32_t mGroup;
+  // See `GROUP_NONE`'s comment.
   uint32_t mCanContainGroups;
   bool mIsContainer;
   bool mCanContainSelf;
