@@ -410,6 +410,16 @@
 // AXTextMarkerRangeForUIElement
 - (id _Nullable)moxTextMarkerRangeForUIElement:(id _Nonnull)element;
 
+// AXLineTextMarkerRangeForTextMarker
+- (id _Nullable)moxLineTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
+
+// AXLeftLineTextMarkerRangeForTextMarker
+- (id _Nullable)moxLeftLineTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
+
+// AXRightLineTextMarkerRangeForTextMarker
+- (id _Nullable)moxRightLineTextMarkerRangeForTextMarker:
+    (id _Nonnull)textMarker;
+
 #pragma mark - TextAttributeSetters
 
 // AXSelectedTextMarkerRange
