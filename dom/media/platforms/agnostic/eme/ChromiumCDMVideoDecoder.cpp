@@ -79,7 +79,7 @@ RefPtr<MediaDataDecoder::InitPromise> ChromiumCDMVideoDecoder::Init() {
       config.mEncryptionScheme() = cdm::EncryptionScheme::kCenc;
       break;
     case CryptoScheme::Cbcs:
-      config.mEncryptionScheme() = cdm::EncryptionScheme::kCenc;
+      config.mEncryptionScheme() = cdm::EncryptionScheme::kCbcs;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Should not have unrecognized encryption type");
