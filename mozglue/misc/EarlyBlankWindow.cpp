@@ -7,6 +7,7 @@
 #include "EarlyBlankWindow.h"
 
 #include <algorithm>
+#include <math.h>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
