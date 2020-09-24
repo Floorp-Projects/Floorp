@@ -557,6 +557,11 @@ class nsHttpChannel final : public HttpBaseChannel,
   // writing a new entry. The content type is used in cache internally only.
   void SetCachedContentType();
 
+  // This function updates all the fields used by anti-tracking when a channel
+  // is opened. We have to do this in the parent to access cross-origin info
+  // that is not exposed to child processes.
+  void UpdateAntiTrackingInfo();
+
  private:
   // this section is for main-thread-only object
   // all the references need to be proxy released on main thread.
