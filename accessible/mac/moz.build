@@ -11,6 +11,7 @@ EXPORTS += [
 EXPORTS.mozilla.a11y += [
     'AccessibleWrap.h',
     'HyperTextAccessibleWrap.h',
+    'RangeTypes.h',
 ]
 
 UNIFIED_SOURCES += [
