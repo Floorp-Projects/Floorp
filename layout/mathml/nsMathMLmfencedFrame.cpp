@@ -333,19 +333,19 @@ void nsMathMLmfencedFrame::Reflow(nsPresContext* aPresContext,
   /////////////////
   // opening fence ...
   ReflowChar(drawTarget, *fm, fontSizeInflation, mOpenChar,
-             NS_MATHML_OPERATOR_FORM_PREFIX, font->mMathDepth, axisHeight,
+             NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel, axisHeight,
              leading, em, containerSize, ascent, descent, isRTL);
   /////////////////
   // separators ...
   for (i = 0; i < mSeparatorsCount; i++) {
     ReflowChar(drawTarget, *fm, fontSizeInflation, &mSeparatorsChar[i],
-               NS_MATHML_OPERATOR_FORM_INFIX, font->mMathDepth, axisHeight,
+               NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel, axisHeight,
                leading, em, containerSize, ascent, descent, isRTL);
   }
   /////////////////
   // closing fence ...
   ReflowChar(drawTarget, *fm, fontSizeInflation, mCloseChar,
-             NS_MATHML_OPERATOR_FORM_POSTFIX, font->mMathDepth, axisHeight,
+             NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel, axisHeight,
              leading, em, containerSize, ascent, descent, isRTL);
 
   //////////////////
@@ -574,7 +574,7 @@ void nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(
   if (mOpenChar) {
     width += GetMaxCharWidth(
         this, aRenderingContext->GetDrawTarget(), fontSizeInflation, mOpenChar,
-        NS_MATHML_OPERATOR_FORM_PREFIX, font->mMathDepth, em);
+        NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel, em);
   }
 
   int32_t i = 0;
@@ -586,10 +586,10 @@ void nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(
                                                   nsLayoutUtils::PREF_ISIZE);
 
     if (i < mSeparatorsCount) {
-      width +=
-          GetMaxCharWidth(this, aRenderingContext->GetDrawTarget(),
-                          fontSizeInflation, &mSeparatorsChar[i],
-                          NS_MATHML_OPERATOR_FORM_INFIX, font->mMathDepth, em);
+      width += GetMaxCharWidth(this, aRenderingContext->GetDrawTarget(),
+                               fontSizeInflation, &mSeparatorsChar[i],
+                               NS_MATHML_OPERATOR_FORM_INFIX,
+                               font->mScriptLevel, em);
     }
     i++;
   }
@@ -597,7 +597,7 @@ void nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(
   if (mCloseChar) {
     width += GetMaxCharWidth(
         this, aRenderingContext->GetDrawTarget(), fontSizeInflation, mCloseChar,
-        NS_MATHML_OPERATOR_FORM_POSTFIX, font->mMathDepth, em);
+        NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel, em);
   }
 
   aDesiredSize.Width() = width;
