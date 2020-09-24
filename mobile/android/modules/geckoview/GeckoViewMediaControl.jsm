@@ -31,12 +31,26 @@ class GeckoViewMediaControl extends GeckoViewModule {
     this.controller.addEventListener("deactivated", this, options);
     this.controller.addEventListener("supportedkeyschange", this, options);
     this.controller.addEventListener("positionstatechange", this, options);
-    // TODO: Move other events to webidl once supported.
+    this.controller.addEventListener("metadatachange", this, options);
+    this.controller.addEventListener("playbackstatechange", this, options);
 
     this.messageManager.addMessageListener(
       "GeckoView:MediaControl:Fullscreen",
       this
     );
+
+    this.registerListener([
+      "GeckoView:MediaSession:Play",
+      "GeckoView:MediaSession:Pause",
+      "GeckoView:MediaSession:Stop",
+      "GeckoView:MediaSession:NextTrack",
+      "GeckoView:MediaSession:PrevTrack",
+      "GeckoView:MediaSession:SeekForward",
+      "GeckoView:MediaSession:SeekBackward",
+      "GeckoView:MediaSession:SkipAd",
+      "GeckoView:MediaSession:SeekTo",
+      "GeckoView:MediaSession:MuteAudio",
+    ]);
   }
 
   onDisable() {
@@ -46,15 +60,60 @@ class GeckoViewMediaControl extends GeckoViewModule {
     this.controller.removeEventListener("deactivated", this);
     this.controller.removeEventListener("supportedkeyschange", this);
     this.controller.removeEventListener("positionstatechange", this);
+    this.controller.removeEventListener("metadatachange", this);
+    this.controller.removeEventListener("playbackstatechange", this);
 
     this.messageManager.removeMessageListener(
       "GeckoView:MediaControl:Fullscreen",
       this
     );
+
+    this.unregisterListener();
   }
 
   get controller() {
     return this.browser.browsingContext.mediaController;
+  }
+
+  onEvent(aEvent, aData, aCallback) {
+    debug`onEvent: event=${aEvent}, data=${aData}`;
+
+    switch (aEvent) {
+      case "GeckoView:MediaSession:Play":
+        this.controller.play();
+        break;
+      case "GeckoView:MediaSession:Pause":
+        this.controller.pause();
+        break;
+      case "GeckoView:MediaSession:Stop":
+        this.controller.stop();
+        break;
+      case "GeckoView:MediaSession:NextTrack":
+        this.controller.nextTrack();
+        break;
+      case "GeckoView:MediaSession:PrevTrack":
+        this.controller.prevTrack();
+        break;
+      case "GeckoView:MediaSession:SeekForward":
+        this.controller.seekForward();
+        break;
+      case "GeckoView:MediaSession:SeekBackward":
+        this.controller.seekBackward();
+        break;
+      case "GeckoView:MediaSession:SkipAd":
+        this.controller.skipAd();
+        break;
+      case "GeckoView:MediaSession:SeekTo":
+        this.controller.seekTo(aData.time, aData.fast);
+        break;
+      case "GeckoView:MediaSession:MuteAudio":
+        if (aData.mute) {
+          this.browser.mute();
+        } else {
+          this.browser.unmute();
+        }
+        break;
+    }
   }
 
   receiveMessage(aMsg) {
@@ -87,6 +146,12 @@ class GeckoViewMediaControl extends GeckoViewModule {
       case "positionstatechange":
         this.handlePositionStateChanged(aEvent);
         break;
+      case "metadatachange":
+        this.handleMetadataChanged();
+        break;
+      case "playbackstatechange":
+        this.handlePlaybackStateChanged();
+        break;
       default:
         warn`Unknown event type ${aEvent.type}`;
         break;
@@ -98,7 +163,6 @@ class GeckoViewMediaControl extends GeckoViewModule {
 
     this.eventDispatcher.sendRequest({
       type: "GeckoView:MediaSession:Fullscreen",
-      id: this.controller.id,
       enabled: aData.enabled,
       metadata: aData.metadata,
     });
@@ -109,7 +173,6 @@ class GeckoViewMediaControl extends GeckoViewModule {
 
     this.eventDispatcher.sendRequest({
       type: "GeckoView:MediaSession:Activated",
-      id: this.controller.id,
     });
   }
 
@@ -118,7 +181,6 @@ class GeckoViewMediaControl extends GeckoViewModule {
 
     this.eventDispatcher.sendRequest({
       type: "GeckoView:MediaSession:Deactivated",
-      id: this.controller.id,
     });
   }
 
@@ -127,7 +189,6 @@ class GeckoViewMediaControl extends GeckoViewModule {
 
     this.eventDispatcher.sendRequest({
       type: "GeckoView:MediaSession:PositionState",
-      id: this.controller.id,
       state: {
         duration: aEvent.duration,
         playbackRate: aEvent.playbackRate,
@@ -150,8 +211,51 @@ class GeckoViewMediaControl extends GeckoViewModule {
 
     this.eventDispatcher.sendRequest({
       type: "GeckoView:MediaSession:Features",
-      id: this.controller.id,
       features,
+    });
+  }
+
+  handleMetadataChanged() {
+    let metadata = null;
+    try {
+      metadata = this.controller.getMetadata();
+    } catch (e) {
+      warn`Metadata not available`;
+    }
+    debug`handleMetadataChanged ${metadata}`;
+
+    if (metadata) {
+      this.eventDispatcher.sendRequest({
+        type: "GeckoView:MediaSession:Metadata",
+        metadata,
+      });
+    }
+  }
+
+  handlePlaybackStateChanged() {
+    const state = this.controller.playbackState;
+    let type = null;
+
+    debug`handlePlaybackStateChanged ${state}`;
+
+    switch (state) {
+      case "none":
+        type = "GeckoView:MediaSession:Playback:None";
+        break;
+      case "paused":
+        type = "GeckoView:MediaSession:Playback:Paused";
+        break;
+      case "playing":
+        type = "GeckoView:MediaSession:Playback:Playing";
+        break;
+    }
+
+    if (!type) {
+      return;
+    }
+
+    this.eventDispatcher.sendRequest({
+      type,
     });
   }
 }
