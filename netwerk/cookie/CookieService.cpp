@@ -1699,6 +1699,12 @@ bool CookieService::CheckDomain(CookieStruct& aCookieData, nsIURI* aHostURI,
   nsAutoCString hostFromURI;
   aHostURI->GetAsciiHost(hostFromURI);
 
+  // IPv6 fixup
+  if (hostFromURI.Contains(':')) {
+    hostFromURI.Insert("[", 0);
+    hostFromURI.Append(']');
+  }
+
   // if a domain is given, check the host has permission
   if (!aCookieData.host().IsEmpty()) {
     // Tolerate leading '.' characters, but not if it's otherwise an empty host.
