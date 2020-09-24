@@ -118,7 +118,7 @@ dom/base/test/jsmodules/module_badSyntax.js
 dom/base/test/jsmodules/test_syntaxErrorInline.html
 dom/base/test/jsmodules/test_syntaxErrorInlineAsync.html
 dom/base/test/test_bug687859.html
-dom/media/webrtc/tests/mochitests/identity/idp-bad.js
+dom/media/tests/mochitest/identity/idp-bad.js
 dom/serviceworkers/test/file_js_cache_syntax_error.js
 dom/serviceworkers/test/parse_error_worker.js
 dom/tests/mochitest/bugs/test_bug531176.html
