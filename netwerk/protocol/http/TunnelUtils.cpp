@@ -2060,17 +2060,9 @@ SocketTransportShim::GetFirstRetryError(nsresult* aFirstRetryError) {
 }
 
 NS_IMETHODIMP
-SocketTransportShim::GetEchConfigUsed(bool* aEchConfigUsed) {
+SocketTransportShim::GetEsniUsed(bool* aEsniUsed) {
   if (mIsWebsocket) {
-    LOG3(("WARNING: SocketTransportShim::GetEchConfigUsed %p", this));
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-SocketTransportShim::SetEchConfig(const nsACString& aEchConfig) {
-  if (mIsWebsocket) {
-    LOG3(("WARNING: SocketTransportShim::SetEchConfig %p", this));
+    LOG3(("WARNING: SocketTransportShim::GetEsniUsed %p", this));
   }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
