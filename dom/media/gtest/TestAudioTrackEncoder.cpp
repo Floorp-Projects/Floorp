@@ -214,3 +214,30 @@ TEST(OpusAudioTrackEncoder, FrameEncode)
   const uint64_t five = 48000 * 5;
   EXPECT_EQ(five, totalDuration);
 }
+
+TEST(OpusAudioTrackEncoder, DefaultInitDuration)
+{
+  const TrackRate rate = 44100;
+  OpusTrackEncoder encoder(rate);
+  AudioGenerator<AudioDataValue> generator(2, rate);
+  AudioSegment segment;
+  // 15 seconds should trigger the default-init rate.
+  // The default-init timeout is evaluated once per chunk, so keep chunks
+  // reasonably short.
+  for (int i = 0; i < 150; ++i) {
+    generator.Generate(segment, rate / 10);
+  }
+  encoder.AppendAudioSegment(std::move(segment));
+  encoder.NotifyEndOfStream();
+
+  nsTArray<RefPtr<EncodedFrame>> frames;
+  EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
+  // Verify that encoded data is 15 seconds long.
+  uint64_t totalDuration = 0;
+  for (auto& frame : frames) {
+    totalDuration += frame->mDuration;
+  }
+  // 44100 as used above gets resampled to 48000 for opus.
+  const uint64_t fifteen = 48000 * 15;
+  EXPECT_EQ(fifteen, totalDuration);
+}
