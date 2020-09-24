@@ -466,6 +466,11 @@ class ParserAtomsTable {
                                                   const char16_t* char16Ptr,
                                                   uint32_t length);
 
+  // This only exists for XDR support.
+  JS::Result<const ParserAtom*, OOM> internChar16LE(JSContext* cx,
+                                                    LittleEndianChars twoByteLE,
+                                                    uint32_t length);
+
   JS::Result<const ParserAtom*, OOM> internJSAtom(
       JSContext* cx, CompilationInfo& compilationInfo, JSAtom* atom);
 
