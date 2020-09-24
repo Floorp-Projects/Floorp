@@ -22,8 +22,8 @@ LazyLogModule gTrackEncoderLog("TrackEncoder");
 static const int DEFAULT_CHANNELS = 1;
 static const int DEFAULT_FRAME_WIDTH = 640;
 static const int DEFAULT_FRAME_HEIGHT = 480;
-// 1 second threshold if the audio encoder cannot be initialized.
-static const int AUDIO_INIT_FAILED_DURATION = 1;
+// 10 second threshold if the audio encoder cannot be initialized.
+static const int AUDIO_INIT_FAILED_DURATION = 10;
 // 30 second threshold if the video encoder cannot be initialized.
 static const int VIDEO_INIT_FAILED_DURATION = 30;
 // A maximal key frame interval allowed to set.
@@ -196,14 +196,13 @@ void AudioTrackEncoder::TryInit(const AudioSegment& aSegment,
 
   mNotInitDuration += aDuration;
   if (!mInitialized &&
-      (mNotInitDuration / mTrackRate > AUDIO_INIT_FAILED_DURATION) &&
+      ((mNotInitDuration - 1) / mTrackRate >= AUDIO_INIT_FAILED_DURATION) &&
       mInitCounter > 1) {
     // Perform a best effort initialization since we haven't gotten any
     // data yet. Motivated by issues like Bug 1336367
     TRACK_LOG(LogLevel::Warning,
-              ("[AudioTrackEncoder]: Initialize failed "
-               "for %ds. Attempting to init with %d "
-               "(default) channels!",
+              ("[AudioTrackEncoder]: Initialize failed for %ds. Attempting to "
+               "init with %d (default) channels!",
                AUDIO_INIT_FAILED_DURATION, DEFAULT_CHANNELS));
     nsresult rv = Init(DEFAULT_CHANNELS, mTrackRate);
     Telemetry::Accumulate(
