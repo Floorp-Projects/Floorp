@@ -7,6 +7,7 @@
 #define widget_gtk_GtkCompositorWidget_h
 
 #include "GLDefs.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "WindowSurfaceProvider.h"
 
@@ -76,7 +77,13 @@ class GtkCompositorWidget : public CompositorWidget,
   nsWindow* mWidget;
 
  private:
-  LayoutDeviceIntSize mClientSize;
+  // This field is written to on the main thread and read from on the compositor
+  // or renderer thread. During window resizing, this is subject to a (largely
+  // benign) read/write race, see bug 1665726. The DataMutex doesn't prevent the
+  // read/write race, but it does make it Not Undefined Behaviour, and also
+  // ensures we only ever use the old or new size, and not some weird synthesis
+  // of the two.
+  DataMutex<LayoutDeviceIntSize> mClientSize;
 
   WindowSurfaceProvider mProvider;
 
