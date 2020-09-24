@@ -414,7 +414,7 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
   context->mCreatedDynamically = aInit.mCreatedDynamically;
   if (context->GetHasSessionHistory()) {
     context->CreateChildSHistory();
-    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+    if (StaticPrefs::fission_sessionHistoryInParent()) {
       context->GetChildSessionHistory()->SetIndexAndLength(
           aInit.mSessionHistoryIndex, aInit.mSessionHistoryCount, nsID());
     }
@@ -2084,8 +2084,7 @@ BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
   init.mUseRemoteSubframes = mUseRemoteSubframes;
   init.mCreatedDynamically = mCreatedDynamically;
   init.mOriginAttributes = mOriginAttributes;
-  if (mChildSessionHistory &&
-      StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+  if (mChildSessionHistory && StaticPrefs::fission_sessionHistoryInParent()) {
     init.mSessionHistoryIndex = mChildSessionHistory->Index();
     init.mSessionHistoryCount = mChildSessionHistory->Count();
   }
@@ -2583,7 +2582,7 @@ void BrowsingContext::InitSessionHistory() {
 }
 
 ChildSHistory* BrowsingContext::GetChildSessionHistory() {
-  if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+  if (!StaticPrefs::fission_sessionHistoryInParent()) {
     // For now we're checking that the session history object for the child
     // process is available before returning the ChildSHistory object, because
     // it is the actual implementation that ChildSHistory forwards to. This can
@@ -2641,8 +2640,7 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_PendingInitialization>,
 
 void BrowsingContext::SessionHistoryChanged(int32_t aIndexDelta,
                                             int32_t aLengthDelta) {
-  if (XRE_IsParentProcess() ||
-      StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+  if (XRE_IsParentProcess() || StaticPrefs::fission_sessionHistoryInParent()) {
     // This method is used to test index and length for the session history
     // in child process only.
     return;

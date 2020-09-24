@@ -1873,7 +1873,7 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
       RefPtr<ChildSHistory> childSHistory =
           browsingContext->Top()->GetChildSessionHistory();
       if (childSHistory) {
-        if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+        if (StaticPrefs::fission_sessionHistoryInParent()) {
           browsingContext->RemoveFromSessionHistory();
         } else {
           AutoTArray<nsID, 16> ids({browsingContext->GetHistoryID()});
