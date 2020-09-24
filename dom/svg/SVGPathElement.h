@@ -55,6 +55,12 @@ class SVGPathElement final : public SVGPathElementBase {
    */
   virtual already_AddRefed<Path> GetOrBuildPathForMeasuring() override;
 
+  bool GetDistancesFromOriginToEndsOfVisibleSegments(
+      FallibleTArray<double>* aOutput) const {
+    return mD.GetAnimValue().GetDistancesFromOriginToEndsOfVisibleSegments(
+        aOutput);
+  }
+
   // nsIContent interface
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
