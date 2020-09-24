@@ -315,13 +315,15 @@ browser.Context = class {
         // Open new browser window, and wait until it is fully loaded.
         // Also wait for the window to be focused and activated to prevent a
         // race condition when promptly focusing to the original window again.
-        let win = this.window.OpenBrowserWindow({ private: isPrivate });
+        const win = this.window.OpenBrowserWindow({ private: isPrivate });
 
-        let activated = waitForEvent(win, "activate");
-        let focused = waitForEvent(win, "focus", { capture: true });
-        let startup = waitForObserverTopic(
+        const activated = waitForEvent(win, "activate");
+        const focused = waitForEvent(win, "focus", { capture: true });
+        const startup = waitForObserverTopic(
           "browser-delayed-startup-finished",
-          subject => subject == win
+          {
+            checkFn: subject => subject == win,
+          }
         );
 
         win.focus();
