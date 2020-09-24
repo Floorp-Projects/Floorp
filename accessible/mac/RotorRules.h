@@ -63,23 +63,6 @@ class RotorImageRule final : public PivotRoleRule {
   explicit RotorImageRule(AccessibleOrProxy& aDirectDescendantsFrom);
 };
 
-class RotorStaticTextRule : public PivotRule {
- public:
-  explicit RotorStaticTextRule();
-  explicit RotorStaticTextRule(AccessibleOrProxy& aDirectDescendantsFrom);
-
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-
- protected:
-  AccessibleOrProxy mDirectDescendantsFrom;
-};
-
-class RotorCheckboxRule final : public PivotRoleRule {
- public:
-  explicit RotorCheckboxRule();
-  explicit RotorCheckboxRule(AccessibleOrProxy& aDirectDescendantsFrom);
-};
-
 class RotorControlRule final : public PivotRule {
  public:
   explicit RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom);
@@ -116,17 +99,6 @@ class RotorUnvisitedLinkRule final : public RotorLinkRule {
   explicit RotorUnvisitedLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
 
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-};
-
-class RotorTextFieldRule : public PivotRule {
- public:
-  explicit RotorTextFieldRule();
-  explicit RotorTextFieldRule(AccessibleOrProxy& aDirectDescendantsFrom);
-
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-
- protected:
-  AccessibleOrProxy mDirectDescendantsFrom;
 };
 
 /**
