@@ -1740,7 +1740,7 @@ function getContextSelectorItems(hud) {
   const list = doc.getElementById(
     "webconsole-console-evaluation-context-selector-menu-list"
   );
-  return Array.from(list.querySelectorAll("li.menuitem button"));
+  return Array.from(list.querySelectorAll("li.menuitem button, hr"));
 }
 
 /**
@@ -1798,7 +1798,7 @@ function checkContextSelectorMenu(hud, expected) {
 function selectTargetInContextSelector(hud, targetLabel) {
   const items = getContextSelectorItems(hud);
   const itemToSelect = items.find(
-    item => item.querySelector(".label").innerText === targetLabel
+    item => item.querySelector(".label")?.innerText === targetLabel
   );
   if (!itemToSelect) {
     ok(false, `Couldn't find target with "${targetLabel}" label`);
