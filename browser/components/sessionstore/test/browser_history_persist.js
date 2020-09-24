@@ -27,7 +27,8 @@ add_task(async function check_history_not_persisted() {
 
   if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
     await SpecialPowers.spawn(browser, [], function() {
-      let sessionHistory = docShell.sessionHistory.legacySHistory;
+      let sessionHistory =
+        docShell.browsingContext.childSessionHistory.legacySHistory;
 
       is(sessionHistory.count, 1, "Should be a single history entry");
       is(
@@ -52,7 +53,8 @@ add_task(async function check_history_not_persisted() {
   await promiseBrowserLoaded(browser);
   if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
     await SpecialPowers.spawn(browser, [], function() {
-      let sessionHistory = docShell.sessionHistory.legacySHistory;
+      let sessionHistory =
+        docShell.browsingContext.childSessionHistory.legacySHistory;
 
       is(sessionHistory.count, 1, "Should be a single history entry");
       is(
@@ -99,7 +101,8 @@ add_task(async function check_history_default_persisted() {
   await promiseTabState(tab, state);
   if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
     await SpecialPowers.spawn(browser, [], function() {
-      let sessionHistory = docShell.sessionHistory.legacySHistory;
+      let sessionHistory =
+        docShell.browsingContext.childSessionHistory.legacySHistory;
 
       is(sessionHistory.count, 1, "Should be a single history entry");
       is(
@@ -124,7 +127,8 @@ add_task(async function check_history_default_persisted() {
   await promiseBrowserLoaded(browser);
   if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
     await SpecialPowers.spawn(browser, [], function() {
-      let sessionHistory = docShell.sessionHistory.legacySHistory;
+      let sessionHistory =
+        docShell.browsingContext.childSessionHistory.legacySHistory;
 
       is(sessionHistory.count, 2, "Should be two history entries");
       is(

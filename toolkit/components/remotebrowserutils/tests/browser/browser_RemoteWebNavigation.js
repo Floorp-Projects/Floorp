@@ -50,7 +50,8 @@ add_task(async function test_history() {
   async function checkHistoryIndex(browser, n) {
     if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
       return SpecialPowers.spawn(browser, [n], function(n) {
-        let history = docShell.sessionHistory.legacySHistory;
+        let history =
+          docShell.browsingContext.childSessionHistory.legacySHistory;
 
         is(history.index, n, "Should be at the right place in history");
       });
@@ -75,7 +76,7 @@ add_task(async function test_history() {
       dummy1,
       dummy2,
     ]) {
-      let history = docShell.sessionHistory.legacySHistory;
+      let history = docShell.browsingContext.childSessionHistory.legacySHistory;
 
       is(history.count, 2, "Should be two history items");
       is(history.index, 1, "Should be at the right place in history");
@@ -122,7 +123,8 @@ add_task(async function test_flags() {
         count,
         index,
       ]) {
-        let history = docShell.sessionHistory.legacySHistory;
+        let history =
+          docShell.browsingContext.childSessionHistory.legacySHistory;
         is(history.count, count, "Should be one history item");
         is(history.index, index, "Should be at the right place in history");
         let entry = history.getEntryAtIndex(index);
