@@ -132,7 +132,8 @@ interface nsITransferable : nsISupports
   [must_use] void getTransferData(in string aFlavor, out nsISupports aData);
 
   /**
-    * Returns the first flavor which has data.
+    * Returns the best flavor in the transferable, given those that have
+    * been added to it with |AddFlavor()|
     *
     * @param  aFlavor (out parameter) the flavor of data that was retrieved
     * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
