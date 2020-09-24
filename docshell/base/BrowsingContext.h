@@ -157,7 +157,12 @@ class WindowProxyHolder;
   FIELD(IsSingleToplevelInHistory, bool)                                     \
   FIELD(UseErrorPages, bool)                                                 \
   FIELD(PlatformOverride, nsString)                                          \
-  FIELD(HasLoadedNonInitialDocument, bool)
+  FIELD(HasLoadedNonInitialDocument, bool)                                   \
+  FIELD(CreatedDynamically, bool)                                            \
+  /* Default value for nsIContentViewer::authorStyleDisabled in any new      \
+   * browsing contexts created as a descendant of this one.  Valid only for  \
+   * top BCs. */                                                             \
+  FIELD(AuthorStyleDisabledDefault, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -440,6 +445,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   float FullZoom() const { return GetFullZoom(); }
   float TextZoom() const { return GetTextZoom(); }
+
+  bool AuthorStyleDisabledDefault() const {
+    return GetAuthorStyleDisabledDefault();
+  }
 
   bool UseGlobalHistory() const { return GetUseGlobalHistory(); }
 
@@ -880,6 +889,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void DidSet(FieldIndex<IDX_FullZoom>, float aOldValue);
   void DidSet(FieldIndex<IDX_TextZoom>, float aOldValue);
+  void DidSet(FieldIndex<IDX_AuthorStyleDisabledDefault>);
 
   // True if the process attemping to set field is the same as the owning
   // process.
