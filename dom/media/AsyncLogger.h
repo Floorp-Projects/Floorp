@@ -51,15 +51,6 @@ class AsyncLogger {
     char mPayload[PAYLOAD_TOTAL_SIZE - MPSC_MSG_RESERVERD];
   };
 
-// On 32bits the struct is packed differently and there is a hole we need to
-// account for.
-#if !defined(HAVE_64BIT_BUILD) && \
-    !(defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
-#  define PADDING 8
-#else
-#  define PADDING 0
-#endif
-
   // The order of the fields is important here to minimize padding.
   struct TracePayload {
     // If this marker is of phase B or E (begin or end), this is the time at
@@ -74,8 +65,11 @@ class AsyncLogger {
     // recognizable tag of some sort, to be displayed when analyzing the
     // profile.
     char mName[PAYLOAD_TOTAL_SIZE - sizeof(TracingPhase) - sizeof(int) -
-               sizeof(uint32_t) - sizeof(TimeStamp) - MPSC_MSG_RESERVERD -
-               PADDING];
+               sizeof(uint32_t) - sizeof(TimeStamp) -
+               // Really, we'd want alignof(TracePayload), but it's not fully
+               // declared yet. The alignment is going to be that of TimeStamp.
+               ((MPSC_MSG_RESERVERD + alignof(TimeStamp) - 1) &
+                ~(alignof(TimeStamp) - 1))];
     // A trace payload can be either:
     // - Begin - this marks the beginning of a temporal region
     // - End - this marks the end of a temporal region
@@ -83,16 +77,13 @@ class AsyncLogger {
     // temporal region
     TracingPhase mPhase;
   };
-#undef PADDING
 
   // The goal here is to make it easy on the allocator. We pack a pointer in the
   // message struct, and we still want to do power of two allocations to
   // minimize allocator slop.
-#if !(defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID) && \
-      (defined(__arm__) || defined(__aarch64__)))
-  static_assert(sizeof(MPSCQueue<TracePayload>::Message) <= PAYLOAD_TOTAL_SIZE,
-                "MPSCQueue internal allocations too big.");
-#endif
+  static_assert(sizeof(MPSCQueue<TracePayload>::Message) == PAYLOAD_TOTAL_SIZE,
+                "MPSCQueue internal allocations has an unexpected size.");
+
   // aLogModuleName is the name of the MOZ_LOG module.
   explicit AsyncLogger(const char* aLogModuleName,
                        AsyncLogger::AsyncLoggerOutputMode aMode =
