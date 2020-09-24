@@ -162,8 +162,7 @@ bool SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(
     // this case an equal amount of time is spent on each path segment,
     // except on moveto segments which are jumped over immediately.
 
-    if (i == 0 ||
-        (segType != PATHSEG_MOVETO_ABS && segType != PATHSEG_MOVETO_REL)) {
+    if (i == 0 || !IsMoveto(segType)) {
       if (!aOutput->AppendElement(state.length, fallible)) {
         return false;
       }
@@ -480,8 +479,7 @@ already_AddRefed<Path> SVGPathData::BuildPath(PathBuilder* aBuilder,
                          // seg anyway
     }
 
-    subpathContainsNonMoveTo =
-        segType != PATHSEG_MOVETO_ABS && segType != PATHSEG_MOVETO_REL;
+    subpathContainsNonMoveTo = !IsMoveto(segType);
     i += argCount;
     prevSegType = segType;
     segStart = segEnd;
