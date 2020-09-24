@@ -55,7 +55,7 @@ function canDisableFlashProtectedMode(aPlugin) {
 }
 
 function canDisableFlashBlocking() {
-  return Services.appinfo.fissionAutostart;
+  return Services.prefs.getBoolPref("fission.autostart");
 }
 
 function init() {
