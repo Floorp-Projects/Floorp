@@ -17,7 +17,9 @@ namespace widget {
 GtkCompositorWidget::GtkCompositorWidget(
     const GtkCompositorWidgetInitData& aInitData,
     const layers::CompositorOptions& aOptions, nsWindow* aWindow)
-    : CompositorWidget(aOptions), mWidget(aWindow) {
+    : CompositorWidget(aOptions),
+      mWidget(aWindow),
+      mClientSize("GtkCompositorWidget::mClientSize") {
 #if defined(MOZ_WAYLAND)
   if (!aInitData.IsX11Display()) {
     if (!aWindow) {
@@ -51,7 +53,8 @@ GtkCompositorWidget::GtkCompositorWidget(
                          aInitData.Shaped());
   }
 #endif
-  mClientSize = aInitData.InitialClientSize();
+  auto size = mClientSize.Lock();
+  *size = aInitData.InitialClientSize();
 }
 
 GtkCompositorWidget::~GtkCompositorWidget() {
@@ -86,10 +89,14 @@ nsIWidget* GtkCompositorWidget::RealWidget() { return mWidget; }
 
 void GtkCompositorWidget::NotifyClientSizeChanged(
     const LayoutDeviceIntSize& aClientSize) {
-  mClientSize = aClientSize;
+  auto size = mClientSize.Lock();
+  *size = aClientSize;
 }
 
-LayoutDeviceIntSize GtkCompositorWidget::GetClientSize() { return mClientSize; }
+LayoutDeviceIntSize GtkCompositorWidget::GetClientSize() {
+  auto size = mClientSize.Lock();
+  return *size;
+}
 
 uintptr_t GtkCompositorWidget::GetWidgetKey() {
   return reinterpret_cast<uintptr_t>(mWidget);
