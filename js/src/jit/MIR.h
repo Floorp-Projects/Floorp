@@ -1679,19 +1679,6 @@ class MWasmFloatConstant : public MNullaryInstruction {
 #endif
 };
 
-// Deep clone a constant JSObject.
-class MCloneLiteral : public MUnaryInstruction, public ObjectPolicy<0>::Data {
- protected:
-  explicit MCloneLiteral(MDefinition* obj)
-      : MUnaryInstruction(classOpcode, obj) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(CloneLiteral)
-  TRIVIAL_NEW_WRAPPERS
-};
-
 class MParameter : public MNullaryInstruction {
   int32_t index_;
 

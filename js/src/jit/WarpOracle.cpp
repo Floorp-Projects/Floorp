@@ -394,13 +394,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         break;
       }
 
-      case JSOp::Object: {
-        if (!mirGen_.options.cloneSingletons()) {
-          cx_->realm()->behaviors().setSingletonsAsValues();
-        }
-        break;
-      }
-
       case JSOp::GetImport: {
         PropertyName* name = loc.getPropertyName(script_);
         if (!AddWarpGetImport(alloc_, opSnapshots, offset, script_, name)) {
@@ -714,6 +707,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::InitHiddenElemGetter:
       case JSOp::InitHiddenElemSetter:
       case JSOp::NewTarget:
+      case JSOp::Object:
       case JSOp::CheckIsObj:
       case JSOp::CheckObjCoercible:
       case JSOp::FunWithProto:
