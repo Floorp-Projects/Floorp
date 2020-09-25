@@ -25,7 +25,7 @@ object LoadTimeObserver {
             override fun onUrlChanged(session: Session, url: String) {
                 if ((urlLoading != null && urlLoading != url) || urlLoading == null) {
                     startLoadTime = SystemClock.elapsedRealtime()
-                    Log.i(LOG_TAG, "zerdatime $startLoadTime - url changed to $url, new page load start")
+                    Log.i(LOG_TAG, "zerdatime $startLoadTime - url changed, new page load start")
                     urlLoading = url
                 }
             }

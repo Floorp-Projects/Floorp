@@ -151,3 +151,13 @@
 -dontwarn java.beans.BeanInfo
 -dontwarn java.beans.IntrospectionException
 -dontwarn java.beans.FeatureDescriptor
+
+####################################################################################################
+# REMOVE all Log messages except warnings and errors
+####################################################################################################
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int i(...);
+    public static int d(...);
+}
