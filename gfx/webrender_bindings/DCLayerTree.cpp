@@ -660,6 +660,10 @@ void DCSurfaceVideo::AttachExternalImage(wr::ExternalImageId aExternalImage) {
       RenderThread::Get()->GetRenderTexture(aExternalImage);
   MOZ_RELEASE_ASSERT(texture);
 
+  if (mPrevTexture == texture) {
+    return;
+  }
+
   // XXX if software decoded video frame format is nv12, it could be used as
   // video overlay.
   if (!texture || !texture->AsRenderDXGITextureHostOGL() ||
@@ -692,6 +696,7 @@ void DCSurfaceVideo::AttachExternalImage(wr::ExternalImageId aExternalImage) {
   }
 
   mVideoSwapChain->Present(0, 0);
+  mPrevTexture = texture;
 }
 
 bool DCSurfaceVideo::CreateVideoSwapChain(RenderTextureHost* aTexture) {
