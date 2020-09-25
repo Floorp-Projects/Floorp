@@ -10,10 +10,10 @@
 use api::{ColorF, DebugFlags};
 use api::units::*;
 use euclid::Scale;
-use std::{u32, usize, mem};
+use std::{usize, mem};
 use crate::image_tiling;
 use crate::segment::EdgeAaSegmentMask;
-use crate::clip::{ClipStore, ClipChainStack};
+use crate::clip::{ClipStore, ClipChainStack, ClipNodeRange};
 use crate::composite::CompositeState;
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};
 use crate::clip::{ClipInstance, ClipChainInstance};
@@ -74,14 +74,6 @@ impl<'a> FrameVisibilityState<'a> {
         self.surface_stack.pop().unwrap();
         self.clip_chain_stack.pop_surface();
     }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-pub struct PrimitiveVisibilityIndex(pub u32);
-
-impl PrimitiveVisibilityIndex {
-    pub const INVALID: PrimitiveVisibilityIndex = PrimitiveVisibilityIndex(u32::MAX);
 }
 
 /// A bit mask describing which dirty regions a primitive is visible in.
@@ -147,6 +139,7 @@ bitflags! {
 
 /// Information stored for a visible primitive about the visible
 /// rect and associated clip information.
+#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PrimitiveVisibility {
     /// The clip chain instance that was built for this primitive.
@@ -175,6 +168,29 @@ pub struct PrimitiveVisibility {
     /// The current combined local clip for this primitive, from
     /// the primitive local clip above and the current clip chain.
     pub combined_local_clip_rect: LayoutRect,
+}
+
+impl PrimitiveVisibility {
+    pub fn new() -> Self {
+        PrimitiveVisibility {
+            clip_chain: ClipChainInstance {
+                clips_range: ClipNodeRange {
+                    first: 0,
+                    count: 0,
+                },
+                local_clip_rect: LayoutRect::zero(),
+                has_non_local_clips: false,
+                needs_mask: false,
+                pic_clip_rect: PictureRect::zero(),
+                pic_spatial_node_index: ROOT_SPATIAL_NODE_INDEX,
+            },
+            clipped_world_rect: WorldRect::zero(),
+            clip_task_index: ClipTaskIndex::INVALID,
+            flags: PrimitiveVisibilityFlags::empty(),
+            visibility_mask: PrimitiveVisibilityMask::empty(),
+            combined_local_clip_rect: LayoutRect::zero(),
+        }
+    }
 }
 
 /// Update visibility pass - update each primitive visibility struct, and
@@ -359,20 +375,14 @@ pub fn update_primitive_visibility(
             };
 
             if is_passthrough {
-                let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.primitive.prim_info.len() as u32);
-
-                frame_state.scratch.primitive.prim_info.push(
-                    PrimitiveVisibility {
-                        clipped_world_rect: WorldRect::max_rect(),
-                        clip_chain: ClipChainInstance::empty(),
-                        clip_task_index: ClipTaskIndex::INVALID,
-                        combined_local_clip_rect: LayoutRect::zero(),
-                        visibility_mask: PrimitiveVisibilityMask::empty(),
-                        flags: PrimitiveVisibilityFlags::empty(),
-                    }
-                );
-
-                prim_instance.visibility_info = vis_index;
+                prim_instance.vis = PrimitiveVisibility {
+                    clipped_world_rect: WorldRect::max_rect(),
+                    clip_chain: ClipChainInstance::empty(),
+                    clip_task_index: ClipTaskIndex::INVALID,
+                    combined_local_clip_rect: LayoutRect::zero(),
+                    visibility_mask: PrimitiveVisibilityMask::all(),
+                    flags: PrimitiveVisibilityFlags::empty(),
+                };
             } else {
                 if prim_local_rect.size.width <= 0.0 || prim_local_rect.size.height <= 0.0 {
                     if prim_instance.is_chased() {
@@ -439,7 +449,7 @@ pub fn update_primitive_visibility(
                         if prim_instance.is_chased() {
                             println!("\tunable to build the clip chain, skipping");
                         }
-                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                        prim_instance.clear_visibility();
                         continue;
                     }
                 };
@@ -481,7 +491,7 @@ pub fn update_primitive_visibility(
                     if prim_instance.is_chased() {
                         println!("\tculled for zero local clip rectangle");
                     }
-                    prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                    prim_instance.clear_visibility();
                     continue;
                 }
 
@@ -497,7 +507,7 @@ pub fn update_primitive_visibility(
                         if prim_instance.is_chased() {
                             println!("\tculled for zero visible rectangle");
                         }
-                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                        prim_instance.clear_visibility();
                         continue;
                     }
                 }
@@ -529,7 +539,7 @@ pub fn update_primitive_visibility(
                             vis_flags = flags;
                         }
                         None => {
-                            prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                            prim_instance.clear_visibility();
                             // Ensure the primitive clip is popped - perhaps we can use
                             // some kind of scope to do this automatically in future.
                             continue;
@@ -573,23 +583,18 @@ pub fn update_primitive_visibility(
                     }
                 }
 
-                let vis_index = PrimitiveVisibilityIndex(frame_state.scratch.primitive.prim_info.len() as u32);
                 if prim_instance.is_chased() {
-                    println!("\tvisible {:?} with {:?}", vis_index, combined_local_clip_rect);
+                    println!("\tvisible with {:?}", combined_local_clip_rect);
                 }
 
-                frame_state.scratch.primitive.prim_info.push(
-                    PrimitiveVisibility {
-                        clipped_world_rect,
-                        clip_chain,
-                        clip_task_index: ClipTaskIndex::INVALID,
-                        combined_local_clip_rect,
-                        visibility_mask: PrimitiveVisibilityMask::empty(),
-                        flags: vis_flags,
-                    }
-                );
-
-                prim_instance.visibility_info = vis_index;
+                prim_instance.vis = PrimitiveVisibility {
+                    clipped_world_rect,
+                    clip_chain,
+                    clip_task_index: ClipTaskIndex::INVALID,
+                    combined_local_clip_rect,
+                    visibility_mask: PrimitiveVisibilityMask::all(),
+                    flags: vis_flags,
+                };
 
                 request_resources_for_prim(
                     store,
@@ -742,7 +747,7 @@ fn request_resources_for_prim(
                     // Tighten the clip rect because decomposing the repeated image can
                     // produce primitives that are partially covering the original image
                     // rect and we want to clip these extra parts out.
-                    let prim_info = &frame_state.scratch.primitive.prim_info[prim_instance.visibility_info.0 as usize];
+                    let prim_info = &prim_instance.vis;
                     let tight_clip_rect = prim_info
                         .combined_local_clip_rect
                         .intersection(&common_data.prim_rect).unwrap();
@@ -807,7 +812,7 @@ fn request_resources_for_prim(
 
                     if image_instance.visible_tiles.is_empty() {
                         // Mark as invisible
-                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                        prim_instance.clear_visibility();
                     }
                 }
                 None => {}
