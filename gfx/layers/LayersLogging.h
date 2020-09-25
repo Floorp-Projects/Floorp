@@ -34,9 +34,6 @@ enum class ImageFormat;
 namespace layers {
 struct ZoomConstraints;
 
-void AppendToString(std::stringstream& aStream, ScrollableLayerGuid::ViewID n,
-                    const char* pfx = "", const char* sfx = "");
-
 void AppendToString(std::stringstream& aStream, const gfx::sRGBColor& c,
                     const char* pfx = "", const char* sfx = "");
 

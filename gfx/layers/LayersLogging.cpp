@@ -21,13 +21,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-void AppendToString(std::stringstream& aStream, ScrollableLayerGuid::ViewID n,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  aStream << n;
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const sRGBColor& c,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
@@ -187,14 +180,13 @@ void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
   AppendToString(aStream, m.GetMetrics(), "{ [metrics=");
   AppendToString(aStream, m.GetBackgroundColor(), "] [color=");
   if (m.GetScrollParentId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
-    AppendToString(aStream, m.GetScrollParentId(), "] [scrollParent=");
+    aStream << "] [scrollParent=" << m.GetScrollParentId();
   }
   if (m.HasScrollClip()) {
     AppendToString(aStream, m.ScrollClip().GetClipRect(), "] [clip=");
   }
   if (m.HasMaskLayer()) {
-    AppendToString(aStream, m.ScrollClip().GetMaskLayerIndex().value(),
-                   "] [mask=");
+    aStream << "] [mask=" << m.ScrollClip().GetMaskLayerIndex().value();
   }
   OverscrollBehavior overscrollX = m.GetOverscrollBehavior().mBehaviorX;
   OverscrollBehavior overscrollY = m.GetOverscrollBehavior().mBehaviorY;
@@ -224,7 +216,7 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
   AppendToString(aStream, m.GetDisplayPort(), "] [dp=");
   AppendToString(aStream, m.GetCriticalDisplayPort(), "] [cdp=");
   if (!detailed) {
-    AppendToString(aStream, m.GetScrollId(), "] [scrollId=");
+    aStream << "] [scrollId=" << m.GetScrollId();
     if (m.IsRootContent()) {
       aStream << "] [rcd";
     }
