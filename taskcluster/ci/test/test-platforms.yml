@@ -205,15 +205,6 @@ windows7-32-shippable/opt:
         - browsertime
         - mochitest-webgpu
 
-windows7-32-devedition/opt:
-    build-platform: win32-devedition/opt
-    test-sets:
-        - desktop-screenshot-capture
-        - windows-reftest-gpu
-        - windows-tests
-        - web-platform-tests
-        - mochitest-webgpu
-
 # win7 qr builds for try purposes
 windows7-32-qr/debug:
     build-platform: win64/debug
