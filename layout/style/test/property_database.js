@@ -9141,14 +9141,6 @@ var gCSSProperties = {
     other_values: ["url(#mysym)"],
     invalid_values: [],
   },
-  "math-style": {
-    domProp: "mathStyle",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["normal"],
-    other_values: ["compact"],
-    invalid_values: [],
-  },
   "mix-blend-mode": {
     domProp: "mixBlendMode",
     inherited: false,
@@ -13393,6 +13385,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.aspect-ratio.enabled")) {
       "0 auto",
     ],
     invalid_values: ["none", "1 test", "1 / auto", "auto / 1"],
+  };
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.math-style.enabled")) {
+  gCSSProperties["math-style"] = {
+    domProp: "mathStyle",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["normal"],
+    other_values: ["compact"],
+    invalid_values: [],
   };
 }
 
