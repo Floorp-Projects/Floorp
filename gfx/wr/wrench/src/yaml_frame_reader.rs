@@ -2188,7 +2188,8 @@ impl WrenchThing for YamlFrameReader {
 
         // If YAML isn't read yet, or watching source file, reload from disk.
         if self.yaml_string.is_empty() || self.watch_source {
-            let mut file = File::open(&self.yaml_path).unwrap();
+            let mut file = File::open(&self.yaml_path)
+                .unwrap_or_else(|_| panic!("YAML '{:?}' doesn't exist", self.yaml_path));
             self.yaml_string.clear();
             file.read_to_string(&mut self.yaml_string).unwrap();
             should_build_yaml = true;

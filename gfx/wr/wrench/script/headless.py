@@ -98,8 +98,7 @@ def set_osmesa_env(bin_path):
     """Set proper LD_LIBRARY_PATH and DRIVE for software rendering on Linux and OSX"""
     base = find_dep_path_newest('osmesa-src', bin_path)
     osmesa_path = path.join(base, "out", "mesa", "src", "gallium", "targets", "osmesa")
-    # TODO: switch to `llvmpipe` for faster tests
-    os.environ["GALLIUM_DRIVER"] = "softpipe"
+    os.environ["GALLIUM_DRIVER"] = "llvmpipe"
     if is_linux():
         print(osmesa_path)
         os.environ["LD_LIBRARY_PATH"] = osmesa_path
@@ -150,4 +149,4 @@ set_osmesa_env(target_folder)
 #           between test runs. But we should investigate this further...
 cmd = dbg_cmd + [target_folder + 'wrench', '--no-scissor', '--headless'] + sys.argv[1:]
 print('Running: `' + ' '.join(cmd) + '`')
-subprocess.check_call(cmd)
+subprocess.check_call(cmd, stderr=subprocess.STDOUT)

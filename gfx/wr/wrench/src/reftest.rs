@@ -846,7 +846,14 @@ impl<'a> ReftestHarness<'a> {
         }
 
         let reference = match reference_image {
-            Some(image) => image,
+            Some(image) => {
+                let save_all_png = false; // flip to true to update all the tests!
+                if save_all_png {
+                    let img = images.last().unwrap();
+                    save_flipped(&t.reference, img.data.clone(), img.size);
+                }
+                image
+            }
             None => {
                 let output = self.render_yaml(
                     &t.reference,
