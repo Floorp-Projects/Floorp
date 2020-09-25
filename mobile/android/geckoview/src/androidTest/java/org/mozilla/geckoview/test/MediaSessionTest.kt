@@ -47,6 +47,9 @@ class MediaSessionTest : BaseSessionTest() {
         const val DOM_TEST_ALBUM3 = "mahoots"
         const val DEFAULT_TEST_TITLE1 = "MediaSessionDefaultTest1"
         const val TEST_DURATION1 = 3.37
+        const val WEBM_TEST_DURATION = 5.59
+        const val WEBM_TEST_WIDTH = 560L
+        const val WEBM_TEST_HEIGHT = 320L
 
         val DOM_META = arrayOf(
                 Metadata(
@@ -665,5 +668,147 @@ class MediaSessionTest : BaseSessionTest() {
         mediaSession1!!.play()
         sessionRule.waitForResult(completedStep7)
         sessionRule.waitForResult(completedStep8)
+    }
+
+    @Test
+    fun fullscreenVideoElementMetadata() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "media.autoplay.default" to 0,
+                "full-screen-api.allow-trusted-requests-only" to false))
+
+        val onActivatedCalled = GeckoResult<Void>()
+        val onPlayCalled = GeckoResult<Void>()
+        val onPauseCalled = GeckoResult<Void>()
+        val onFullscreenCalled = arrayOf(
+                GeckoResult<Void>(),
+                GeckoResult<Void>())
+
+        // Test:
+        // 1. Load video test page which contains 1 video element.
+        //    a. Ensure page has loaded.
+        // 2. Play video element.
+        //    a. Ensure onActivated is called.
+        //    b. Ensure onPlay is called.
+        val completedStep2 = GeckoResult.allOf(
+                onActivatedCalled,
+                onPlayCalled)
+
+        // 3. Enter fullscreen of the video.
+        //    a. Ensure onFullscreen is called.
+        val completedStep3 = GeckoResult.allOf(
+                onFullscreenCalled[0])
+
+        // 4. Exit fullscreen of the video.
+        //    a. Ensure onFullscreen is called.
+        val completedStep4 = GeckoResult.allOf(
+                onFullscreenCalled[1])
+
+        // 5. Pause the video.
+        //    a. Ensure onPause is called.
+        val completedStep5 = GeckoResult.allOf(
+                onPauseCalled)
+
+        var mediaSession1 : MediaSession? = null
+
+        val path = VIDEO_WEBM_PATH
+        val session1 = sessionRule.createOpenSession()
+
+        session1.delegateUntilTestEnd(object : Callbacks.MediaSessionDelegate {
+            @AssertCalled(count = 1)
+            override fun onActivated(
+                    session: GeckoSession,
+                    mediaSession: MediaSession) {
+                mediaSession1 = mediaSession
+
+                onActivatedCalled.complete(null)
+
+                assertThat(
+                        "Should be active",
+                        mediaSession.isActive,
+                        equalTo(true))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onPlay(
+                    session: GeckoSession,
+                    mediaSession: MediaSession) {
+                onPlayCalled.complete(null)
+            }
+
+            @AssertCalled(count = 1)
+            override fun onPause(
+                    session: GeckoSession,
+                    mediaSession: MediaSession) {
+                onPauseCalled.complete(null)
+            }
+
+            @AssertCalled(count = 2)
+            override fun onFullscreen(
+                    session: GeckoSession,
+                    mediaSession: MediaSession,
+                    enabled: Boolean,
+                    meta: MediaSession.ElementMetadata?) {
+                if (sessionRule.currentCall.counter == 1) {
+                    assertThat(
+                        "Fullscreen should be enabled",
+                        enabled,
+                        equalTo(true))
+                    assertThat(
+                        "Element metadata should exist",
+                        meta,
+                        notNullValue())
+                    assertThat(
+                        "Duration should match",
+                        meta!!.duration,
+                        closeTo(WEBM_TEST_DURATION, 0.01))
+                    assertThat(
+                        "Width should match",
+                        meta.width,
+                        equalTo(WEBM_TEST_WIDTH))
+                    assertThat(
+                        "Height should match",
+                        meta.height,
+                        equalTo(WEBM_TEST_HEIGHT))
+                    assertThat(
+                        "Audio track count should match",
+                        meta.audioTrackCount,
+                        equalTo(1))
+                    assertThat(
+                        "Video track count should match",
+                        meta.videoTrackCount,
+                        equalTo(1))
+
+                } else {
+                    assertThat(
+                        "Fullscreen should be disabled",
+                        enabled,
+                        equalTo(false))
+                }
+
+                onFullscreenCalled[sessionRule.currentCall.counter - 1]
+                        .complete(null)
+            }
+        })
+
+        // 1.
+        session1.loadTestPath(path)
+        sessionRule.waitForPageStop()
+
+        // 2.
+        session1.evaluateJS("document.querySelector('video').play()")
+        sessionRule.waitForResult(completedStep2)
+
+        // 3.
+        session1.evaluateJS(
+                "document.querySelector('video').requestFullscreen()")
+        sessionRule.waitForResult(completedStep3)
+
+        // 4.
+        session1.evaluateJS("document.exitFullscreen()")
+        sessionRule.waitForResult(completedStep4)
+
+        // 5.
+        mediaSession1!!.pause()
+        sessionRule.waitForResult(completedStep5)
     }
 }
