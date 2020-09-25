@@ -23,6 +23,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsContentUtils.h"
+#include "nsIGfxInfo.h"
 #include "TexUnpackBlob.h"
 #include "WebGLMethodDispatcher.h"
 #include "WebGLChild.h"
@@ -576,21 +577,6 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     if (StaticPrefs::webgl_disable_fail_if_major_performance_caveat()) {
       options.failIfMajorPerformanceCaveat = false;
     }
-
-    if (options.failIfMajorPerformanceCaveat) {
-      const auto backend = GetCompositorBackendType();
-      bool isCompositorSlow = false;
-      isCompositorSlow |= (backend == layers::LayersBackend::LAYERS_BASIC);
-      isCompositorSlow |= (backend == layers::LayersBackend::LAYERS_WR &&
-                           gfx::gfxVars::UseSoftwareWebRender());
-
-      if (isCompositorSlow) {
-        return Err(
-            "failIfMajorPerformanceCaveat: Compositor is not"
-            " hardware-accelerated.");
-      }
-    }
-
     const bool resistFingerprinting = ShouldResistFingerprinting();
 
     const auto& principal = GetCanvas()->NodePrincipal();

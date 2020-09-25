@@ -163,6 +163,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_WEBGL_ANGLE:
       name = BLOCKLIST_PREF_BRANCH "webgl.angle";
       break;
+    case nsIGfxInfo::FEATURE_WEBGL_MSAA:
+      name = BLOCKLIST_PREF_BRANCH "webgl.msaa";
+      break;
     case nsIGfxInfo::FEATURE_STAGEFRIGHT:
       name = BLOCKLIST_PREF_BRANCH "stagefright";
       break;
@@ -374,6 +377,8 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
     return nsIGfxInfo::FEATURE_WEBGL_OPENGL;
   else if (aFeature.EqualsLiteral("WEBGL_ANGLE"))
     return nsIGfxInfo::FEATURE_WEBGL_ANGLE;
+  else if (aFeature.EqualsLiteral("WEBGL_MSAA"))
+    return nsIGfxInfo::FEATURE_WEBGL_MSAA;
   else if (aFeature.EqualsLiteral("STAGEFRIGHT"))
     return nsIGfxInfo::FEATURE_STAGEFRIGHT;
   else if (aFeature.EqualsLiteral("WEBRTC_HW_ACCELERATION_ENCODE"))
@@ -1253,6 +1258,7 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_WEBGL_ANGLE,
                         nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE,
                         nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE,
+                        nsIGfxInfo::FEATURE_WEBGL_MSAA,
                         nsIGfxInfo::FEATURE_STAGEFRIGHT,
                         nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_H264,
                         nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION,
