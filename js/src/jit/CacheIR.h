@@ -975,6 +975,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     MOZ_ASSERT(getter->hasJitEntry());
     uint32_t nargsAndFlags = encodeNargsAndFlags(getter);
     callScriptedGetterResult_(receiver, getter, sameRealm, nargsAndFlags);
+    trialInliningState_ = TrialInliningState::Candidate;
+  }
+
+  void callInlinedGetterResult(ValOperandId receiver, JSFunction* getter,
+                               ICScript* icScript, bool sameRealm) {
+    MOZ_ASSERT(getter->hasJitEntry());
+    uint32_t nargsAndFlags = encodeNargsAndFlags(getter);
+    callInlinedGetterResult_(receiver, getter, icScript, sameRealm,
+                             nargsAndFlags);
+    trialInliningState_ = TrialInliningState::Inlined;
   }
 
   void callNativeGetterResult(ValOperandId receiver, JSFunction* getter,

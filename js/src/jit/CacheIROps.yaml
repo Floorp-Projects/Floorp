@@ -1910,6 +1910,18 @@
     sameRealm: BoolImm
     nargsAndFlags: RawWordField
 
+- name: CallInlinedGetterResult
+  shared: false
+  transpile: true
+  cost_estimate: 5
+  custom_writer: true
+  args:
+    receiver: ValId
+    getter: ObjectField
+    icScript: RawPointerField
+    sameRealm: BoolImm
+    nargsAndFlags: RawWordField
+
 - name: CallNativeGetterResult
   shared: false
   transpile: true
