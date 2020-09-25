@@ -495,12 +495,19 @@ class ScriptStencil {
   // at most once. This is a heuristic only and does not affect correctness.
   bool isSingletonFunction : 1;
 
+  // If this is for the root of delazification, this represents
+  // MutableScriptFlagsEnum::AllowRelazify value of the script *after*
+  // delazification.
+  // False otherwise.
+  bool allowRelazify : 1;
+
   // End of fields.
 
   ScriptStencil()
       : isStandaloneFunction(false),
         wasFunctionEmitted(false),
-        isSingletonFunction(false) {}
+        isSingletonFunction(false),
+        allowRelazify(false) {}
 
   bool isFunction() const {
     bool result = functionFlags.toRaw() != 0x0000;

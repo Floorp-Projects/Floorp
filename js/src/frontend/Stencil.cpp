@@ -388,6 +388,9 @@ static bool InstantiateScriptStencils(JSContext* cx,
     if (scriptStencil.immutableScriptData) {
       // If the function was not referenced by enclosing script's bytecode, we
       // do not generate a BaseScript for it. For example, `(function(){});`.
+      //
+      // `wasFunctionEmitted` is false also for standalone functions and
+      // functions being delazified. they are handled in InstantiateTopLevel.
       if (!scriptStencil.wasFunctionEmitted) {
         continue;
       }
@@ -397,6 +400,13 @@ static bool InstantiateScriptStencils(JSContext* cx,
                                                 scriptStencil, fun));
       if (!script) {
         return false;
+      }
+
+      // NOTE: Inner functions can be marked `allowRelazify` after merging
+      // a stencil for delazification into the top-level stencil.
+      if (scriptStencil.allowRelazify) {
+        MOZ_ASSERT(script->isRelazifiable());
+        script->setAllowRelazify();
       }
     } else if (scriptStencil.functionFlags.isAsmJSNative()) {
       MOZ_ASSERT(fun->isAsmJSNative());
@@ -442,6 +452,11 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInfo& compilationInfo,
       JSScript::fromStencil(cx, compilationInfo, gcOutput, script, fun);
   if (!gcOutput.script) {
     return false;
+  }
+
+  if (script.allowRelazify) {
+    MOZ_ASSERT(gcOutput.script->isRelazifiable());
+    gcOutput.script->setAllowRelazify();
   }
 
   // Finish initializing the ModuleObject if needed.
