@@ -25,7 +25,7 @@ function parseRect(str) {
   var pieces = str.replace(/[()\s]+/g, "").split(",");
   SimpleTest.is(pieces.length, 4, "expected string of form (x,y,w,h)");
   for (var i = 0; i < 4; i++) {
-    var eq = pieces[i].indexOf('=');
+    var eq = pieces[i].indexOf("=");
     if (eq >= 0) {
       pieces[i] = pieces[i].substring(eq + 1);
     }
