@@ -99,6 +99,13 @@ __declspec(dllexport) __attribute__((naked)) void OpcodeFF() {
       "int $3;int $3;int $3;int $3;"
       "int $3;int $3;int $3;int $3;");
 }
+
+__declspec(dllexport) __attribute__((naked)) void IndirectCall() {
+  asm volatile(
+      "call *(%rip);"  // Indirect call to 0x90909090`90909090
+      "nop;nop;nop;nop;nop;nop;nop;nop;"
+      "ret;");
+}
 #  elif defined(_M_IX86)
 constexpr uintptr_t JumpDestination = 0x7fff0000;
 
