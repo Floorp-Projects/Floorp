@@ -150,6 +150,9 @@ urlbar.searchmode.*
   time search mode is entered in the Urlbar. The suffix on the scalar name
   describes how search mode was entered. Possibilities include:
 
+  - ``bookmarkmenu``
+    Used when the user selects the Search Bookmarks menu item in the Library
+    menu.
   - ``handoff``
     Used when the user uses the search box on the new tab page and is handed off
     to the address bar.
@@ -160,6 +163,9 @@ urlbar.searchmode.*
   - ``shortcut``
     Used when the user enters search mode with a keyboard shortcut or menu bar
     item (e.g. ``Accel+K``).
+  - ``tabmenu``
+    Used when the user selects the Search Tabs menu item in the tab overflow
+    menu.
   - ``topsites_newtab``
     Used when the user selects a search shortcut Top Site from the New Tab Page.
   - ``topsites_urlbar``

@@ -133,7 +133,7 @@ add_task(async function test_search_handoff_on_keydown() {
   await UrlbarTestUtils.assertSearchMode(win, {
     engineName: "DuckDuckGo",
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    entry: "typed",
+    entry: "handoff",
   });
   is(win.gURLBar.value, "f", "url bar has search text");
 
@@ -255,7 +255,7 @@ add_task(async function test_search_handoff_on_paste() {
   await UrlbarTestUtils.assertSearchMode(win, {
     engineName: "DuckDuckGo",
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    entry: "typed",
+    entry: "handoff",
   });
   is(win.gURLBar.value, "words", "url bar has search text");
 

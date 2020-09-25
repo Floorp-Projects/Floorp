@@ -173,6 +173,8 @@ var gTabsPanel = {
   },
 
   searchTabs() {
-    gURLBar.search(UrlbarTokenizer.RESTRICT.OPENPAGE);
+    gURLBar.search(UrlbarTokenizer.RESTRICT.OPENPAGE, {
+      searchModeEntry: "tabmenu",
+    });
   },
 };
