@@ -1475,6 +1475,19 @@
     sameRealm: BoolImm
     nargsAndFlags: RawWordField
 
+- name: CallInlinedSetter
+  shared: false
+  transpile: true
+  cost_estimate: 3
+  custom_writer: true
+  args:
+    receiver: ObjId
+    setter: ObjectField
+    rhs: ValId
+    icScript: RawPointerField
+    sameRealm: BoolImm
+    nargsAndFlags: RawWordField
+
 - name: CallDOMSetter
   shared: false
   transpile: true

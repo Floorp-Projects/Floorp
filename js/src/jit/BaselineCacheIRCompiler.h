@@ -83,6 +83,11 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                                     uint32_t getterOffset, bool sameRealm,
                                     uint32_t nargsAndFlagsOffset,
                                     mozilla::Maybe<uint32_t> icScriptOffset);
+  bool emitCallScriptedSetterShared(ObjOperandId receiverId,
+                                    uint32_t setterOffset, ValOperandId rhsId,
+                                    bool sameRealm,
+                                    uint32_t nargsAndFlagsOffset,
+                                    mozilla::Maybe<uint32_t> icScriptOffset);
 
  public:
   friend class AutoStubFrame;

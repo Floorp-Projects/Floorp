@@ -3802,6 +3802,13 @@ bool WarpCacheIRTranspiler::emitCallScriptedSetter(
                         sameRealm, nargsAndFlagsOffset);
 }
 
+bool WarpCacheIRTranspiler::emitCallInlinedSetter(
+    ObjOperandId receiverId, uint32_t setterOffset, ValOperandId rhsId,
+    uint32_t icScriptOffset, bool sameRealm, uint32_t nargsAndFlagsOffset) {
+  return emitCallSetter(CallKind::Scripted, receiverId, setterOffset, rhsId,
+                        sameRealm, nargsAndFlagsOffset);
+}
+
 bool WarpCacheIRTranspiler::emitCallNativeSetter(ObjOperandId receiverId,
                                                  uint32_t setterOffset,
                                                  ValOperandId rhsId,
