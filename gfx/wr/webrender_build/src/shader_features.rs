@@ -75,8 +75,6 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
         shaders.insert(name, vec![String::new()]);
     }
 
-    shaders.insert("cs_scale", vec![String::new()]);
-
     let mut base_prim_features = FeatureList::new();
 
     // Pixel local storage shaders
@@ -151,6 +149,8 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
         let base = texture_type.to_string();
         composite_features.push(base);
     }
+    shaders.insert("cs_scale", composite_features.clone());
+
     // YUV image brush shaders
     let mut yuv_features: Vec<String> = Vec::new();
     for texture_type in &texture_types {
