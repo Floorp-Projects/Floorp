@@ -1330,6 +1330,7 @@ nsGlobalWindowOuter::nsGlobalWindowOuter(uint64_t aWindowID)
       mTopLevelOuterContentWindow(false),
       mStorageAccessPermissionGranted(false),
       mDelayedPrintUntilAfterLoad(false),
+      mDelayedCloseForPrinting(false),
       mShouldDelayPrintUntilAfterLoad(false),
 #ifdef DEBUG
       mSerial(0),
@@ -2136,8 +2137,9 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   nsDocShell::Cast(mDocShell)->MaybeRestoreWindowName();
 
   // We drop the print request for the old document on the floor, it never made
-  // it.
+  // it. We don't close the window here either even if we were asked to.
   mShouldDelayPrintUntilAfterLoad = true;
+  mDelayedCloseForPrinting = false;
   mDelayedPrintUntilAfterLoad = false;
 
   // Take this opportunity to clear mSuspendedDoc. Our old inner window is now
@@ -6251,22 +6253,18 @@ bool nsGlobalWindowOuter::CanClose() {
     return true;
   }
 
-  // Ask the content viewer whether the toplevel window can close.
-  // If the content viewer returns false, it is responsible for calling
-  // Close() as soon as it is possible for the window to close.
-  // This allows us to not close the window while printing is happening.
-
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
     bool canClose;
     nsresult rv = cv->PermitUnload(&canClose);
     if (NS_SUCCEEDED(rv) && !canClose) return false;
+  }
 
-    rv = cv->RequestWindowClose(
-        mShouldDelayPrintUntilAfterLoad && mDelayedPrintUntilAfterLoad,
-        &canClose);
-    if (NS_SUCCEEDED(rv) && !canClose) return false;
+  // If we still have to print, we delay the closing until print has happened.
+  if (mShouldDelayPrintUntilAfterLoad && mDelayedPrintUntilAfterLoad) {
+    mDelayedCloseForPrinting = true;
+    return false;
   }
 
   return true;
