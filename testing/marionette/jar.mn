@@ -37,6 +37,7 @@ marionette.jar:
   content/proxy.js (proxy.js)
   content/reftest.js (reftest.js)
   content/reftest.xhtml (reftest.xhtml)
+  content/reftest-content.js (reftest-content.js)
   content/server.js (server.js)
   content/stream-utils.js (stream-utils.js)
   content/sync.js (sync.js)
