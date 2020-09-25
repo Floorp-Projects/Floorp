@@ -1772,18 +1772,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         "FEATURE_UNQUALIFIED_WEBRENDER_WINDOWS_8_1");
 #endif
 
-    // Previously we had window jumping with certain Intel drivers
-    // which caused us to conservatively block drivers older than
-    // 21.20.16.4590. We're keeping that blocking for now, just to minimize
-    // risk.
-#ifndef EARLY_BETA_OR_EARLIER
-    APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows, DeviceFamily::IntelAll,
-        nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
-        V(21, 20, 16, 4590), "FEATURE_FAILURE_INTEL_WR_OLD_DRIVERS");
-#endif
-
     // Bug 1615421 / 1607860 - Playing videos appear to crash with WebRender
     // with this particular driver.
     APPEND_TO_DRIVER_BLOCKLIST2(
