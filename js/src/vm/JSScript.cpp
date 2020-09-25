@@ -1011,19 +1011,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     MOZ_ASSERT_IF(isFunctionScript, script->function() == funOrMod);
 
-    if (!isFunctionScript && script->treatAsRunOnce() && script->hasRunOnce()) {
-      // This is a toplevel or eval script that's runOnce.  We want to
-      // make sure that we're not XDR-saving an object we emitted for
-      // JSOp::Object that then got modified.  So throw if we're not
-      // cloning in JSOp::Object or if we ever didn't clone in it in the
-      // past.
-      Realm* realm = cx->realm();
-      if (!realm->creationOptions().cloneSingletons() ||
-          !realm->behaviors().getSingletonsAsTemplates()) {
-        return xdr->fail(JS::TranscodeResult_Failure_RunOnceNotSupported);
-      }
-    }
-
     if (!sourceObjectArg) {
       xdrFlags |= OwnSource;
     }

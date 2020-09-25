@@ -2229,17 +2229,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     RootedScript script(cx);
 
     {
-      if (saveBytecode) {
-        if (!JS::RealmCreationOptionsRef(cx).cloneSingletons()) {
-          JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                                    JSSMSG_CACHE_SINGLETON_FAILED);
-          return false;
-        }
-
-        // cloneSingletons implies that singletons are used as template objects.
-        MOZ_ASSERT(JS::RealmBehaviorsRef(cx).getSingletonsAsTemplates());
-      }
-
       if (loadBytecode) {
         JS::TranscodeResult rv;
         if (saveIncrementalBytecode) {
