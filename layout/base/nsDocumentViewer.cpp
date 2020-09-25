@@ -1179,10 +1179,16 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
     outerWin->StopDelayingPrintingUntilAfterLoad();
     if (outerWin->DelayedPrintUntilAfterLoad()) {
       // We call into the inner because it ensures there's an active document
-      // and such.
+      // and such, and it also waits until the whole thing completes, which is
+      // nice because it allows us to close if needed right here.
       if (RefPtr<nsPIDOMWindowInner> inner = window->GetCurrentInnerWindow()) {
         nsGlobalWindowInner::Cast(inner)->Print(IgnoreErrors());
       }
+      if (outerWin->DelayedCloseForPrinting()) {
+        outerWin->Close();
+      }
+    } else {
+      MOZ_ASSERT(!outerWin->DelayedCloseForPrinting());
     }
   }
 #endif
@@ -2220,20 +2226,6 @@ nsDocumentViewer::GetSticky(bool* aSticky) {
 NS_IMETHODIMP
 nsDocumentViewer::SetSticky(bool aSticky) {
   mIsSticky = aSticky;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::RequestWindowClose(bool aIsPrintPending, bool* aCanClose) {
-  *aCanClose = true;
-
-#ifdef NS_PRINTING
-  if (aIsPrintPending || (mPrintJob && mPrintJob->GetIsPrinting())) {
-    *aCanClose = false;
-    mDeferredWindowClose = true;
-  }
-#endif
 
   return NS_OK;
 }
@@ -3687,14 +3679,15 @@ void nsDocumentViewer::OnDonePrinting() {
       printJob->Destroy();
     }
 
-    // We are done printing, now cleanup. For non-print-preview jobs, we are
-    // actually responsible for cleaning up our whole <browser> or window (see
-    // the OPEN_PRINT_BROWSER code), so gotta run window.close() too.
+    // We are done printing, now clean up.
+    //
+    // For non-print-preview jobs, we are actually responsible for cleaning up
+    // our whole <browser> or window (see the OPEN_PRINT_BROWSER code), so gotta
+    // run window.close(), which will take care of this.
     //
     // For print preview jobs the front-end code is responsible for cleaning the
     // UI.
-    if (mDeferredWindowClose || !printJob->CreatedForPrintPreview()) {
-      mDeferredWindowClose = false;
+    if (!printJob->CreatedForPrintPreview()) {
       if (mContainer) {
         if (nsCOMPtr<nsPIDOMWindowOuter> win = mContainer->GetWindow()) {
           win->Close();

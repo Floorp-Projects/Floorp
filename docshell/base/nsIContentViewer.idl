@@ -179,14 +179,6 @@ interface nsIContentViewer : nsISupports
 
   attribute boolean sticky;
 
-  /*
-   * This is called when the DOM window wants to be closed.  Returns true
-   * if the window can close immediately.  Otherwise, returns false and will
-   * close the DOM window as soon as practical.
-   */
-
-  boolean requestWindowClose(in boolean isPrintPending);
-
   /**
    * Attach the content viewer to its DOM window and docshell.
    * @param aState A state object that might be useful in attaching the DOM
