@@ -102,6 +102,6 @@ function isProbablyReaderable(doc, isVisible) {
   });
 }
 
-if (typeof exports === "object") {
-  exports.isProbablyReaderable = isProbablyReaderable;
+if (typeof module === "object") {
+  module.exports = isProbablyReaderable;
 }
