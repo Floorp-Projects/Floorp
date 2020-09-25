@@ -267,6 +267,7 @@ class DCSurfaceVideo : public DCSurface {
   RefPtr<IDXGIDecodeSwapChain> mDecodeSwapChain;
   HANDLE mSwapChainSurfaceHandle;
   gfx::IntSize mSwapChainSize;
+  RefPtr<RenderTextureHost> mPrevTexture;
 };
 
 class DCTile {
