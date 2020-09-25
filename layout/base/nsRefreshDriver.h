@@ -100,7 +100,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    * The observer will be called even if there is no other activity.
    */
   void AddRefreshObserver(nsARefreshObserver* aObserver,
-                          mozilla::FlushType aFlushType);
+                          mozilla::FlushType aFlushType,
+                          const char* aObserverDescription);
   bool RemoveRefreshObserver(nsARefreshObserver* aObserver,
                              mozilla::FlushType aFlushType);
   /**
@@ -432,6 +433,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
   struct ObserverData {
     nsARefreshObserver* mObserver;
+    const char* mDescription;
     mozilla::TimeStamp mRegisterTime;
     mozilla::Maybe<uint64_t> mInnerWindowId;
     mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> mCause;

@@ -1254,7 +1254,8 @@ TimeStamp nsRefreshDriver::MostRecentRefresh() const {
 }
 
 void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
-                                         FlushType aFlushType) {
+                                         FlushType aFlushType,
+                                         const char* aObserverDescription) {
   MOZ_RELEASE_ASSERT(mPresContext);
   ObserverArray& array = ArrayFor(aFlushType);
   Maybe<uint64_t> innerWindowID;
@@ -1262,7 +1263,8 @@ void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
   innerWindowID =
       profiler_get_inner_window_id_from_docshell(mPresContext->GetDocShell());
 #endif
-  array.AppendElement(ObserverData{aObserver, TimeStamp::Now(), innerWindowID,
+  array.AppendElement(ObserverData{aObserver, aObserverDescription,
+                                   TimeStamp::Now(), innerWindowID,
                                    profiler_capture_backtrace()});
   EnsureTimerStarted();
 }
@@ -1278,13 +1280,15 @@ bool nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     auto& data = array.ElementAt(index);
+    nsPrintfCString str("%s [%s]", data.mDescription,
+                        kFlushTypeNames[aFlushType]);
     PROFILER_MARKER_TEXT(
         "RefreshObserver",
         GRAPHICS.WithOptions(
             MarkerStack::TakeBacktrace(std::move(data.mCause)),
             MarkerTiming::IntervalUntilNowFrom(data.mRegisterTime),
             MarkerInnerWindowId(data.mInnerWindowId)),
-        nsCString(kFlushTypeNames[aFlushType]));
+        str);
   }
 #endif
 
@@ -2564,7 +2568,8 @@ bool nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime) {
           if (mRootRefresh) {
             mRootRefresh->RemoveRefreshObserver(this, FlushType::Style);
           }
-          rootRefresh->AddRefreshObserver(this, FlushType::Style);
+          rootRefresh->AddRefreshObserver(this, FlushType::Style,
+                                          "Waiting for paint");
           mRootRefresh = rootRefresh;
         }
         mSkippedPaints = true;

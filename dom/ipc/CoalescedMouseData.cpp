@@ -84,7 +84,8 @@ void CoalescedMouseMoveFlusher::StartObserver() {
   RemoveObserver();
   if (refreshDriver) {
     mRefreshDriver = refreshDriver;
-    mRefreshDriver->AddRefreshObserver(this, FlushType::Event);
+    mRefreshDriver->AddRefreshObserver(this, FlushType::Event,
+                                       "Coalesced mouse move flusher");
   }
 }
 

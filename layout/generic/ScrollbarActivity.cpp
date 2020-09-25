@@ -256,7 +256,8 @@ void ScrollbarActivity::EndFade() {
 void ScrollbarActivity::RegisterWithRefreshDriver() {
   nsRefreshDriver* refreshDriver = GetRefreshDriver();
   if (refreshDriver) {
-    refreshDriver->AddRefreshObserver(this, FlushType::Style);
+    refreshDriver->AddRefreshObserver(this, FlushType::Style,
+                                      "Scrollbar fade animation");
   }
 }
 

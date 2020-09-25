@@ -1134,7 +1134,8 @@ class PresShell final : public nsStubDocumentObserver,
         dom::Document_Binding::KEYPRESS_EVENT_MODEL_SPLIT;
   }
 
-  bool AddRefreshObserver(nsARefreshObserver* aObserver, FlushType aFlushType);
+  bool AddRefreshObserver(nsARefreshObserver* aObserver, FlushType aFlushType,
+                          const char* aObserverDescription);
   bool RemoveRefreshObserver(nsARefreshObserver* aObserver,
                              FlushType aFlushType);
 

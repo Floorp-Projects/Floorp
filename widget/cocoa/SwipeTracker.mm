@@ -138,7 +138,7 @@ void SwipeTracker::StartAnimating(double aTargetValue) {
   // unregister ourselves.
   MOZ_ASSERT(!mRegisteredWithRefreshDriver);
   if (mRefreshDriver) {
-    mRefreshDriver->AddRefreshObserver(this, FlushType::Style);
+    mRefreshDriver->AddRefreshObserver(this, FlushType::Style, "Swipe animation");
     mRegisteredWithRefreshDriver = true;
   }
 }
