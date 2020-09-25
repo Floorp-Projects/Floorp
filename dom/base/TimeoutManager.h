@@ -103,8 +103,6 @@ class TimeoutManager final {
 
   void SetLoading(bool value);
 
-  size_t GetNumPendingInputs();
-
  private:
   void MaybeStartThrottleTimeout();
 
