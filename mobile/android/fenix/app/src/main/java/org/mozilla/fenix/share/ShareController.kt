@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.share
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_SEND
@@ -98,13 +99,19 @@ class DefaultShareController(
             setClassName(app.packageName, app.activityName)
         }
 
+        @Suppress("TooGenericExceptionCaught")
         val result = try {
             context.startActivity(intent)
             ShareController.Result.SUCCESS
-        } catch (e: SecurityException) {
-            snackbar.setText(context.getString(R.string.share_error_snackbar))
-            snackbar.show()
-            ShareController.Result.SHARE_ERROR
+        } catch (e: Exception) {
+            when (e) {
+                is SecurityException, is ActivityNotFoundException -> {
+                    snackbar.setText(context.getString(R.string.share_error_snackbar))
+                    snackbar.show()
+                    ShareController.Result.SHARE_ERROR
+                }
+                else -> throw e
+            }
         }
         dismiss(result)
     }
