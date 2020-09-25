@@ -120,7 +120,7 @@ void gfxConfig::Reenable(Feature aFeature, Fallback aFallback) {
 
   const char* message = state.GetRuntimeMessage();
   EnableFallback(aFallback, message);
-  state.SetRuntime(FeatureStatus::Available, nullptr);
+  state.SetRuntime(FeatureStatus::Available, nullptr, nsCString());
 }
 
 /* static */
