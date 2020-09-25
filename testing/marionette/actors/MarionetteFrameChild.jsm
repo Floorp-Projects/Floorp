@@ -83,6 +83,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:getElementProperty":
           result = await this.getElementProperty(data);
           break;
+        case "MarionetteFrameParent:getElementRect":
+          result = await this.getElementRect(data);
+          break;
         case "MarionetteFrameParent:getElementTagName":
           result = await this.getElementTagName(data);
           break;
@@ -273,6 +276,22 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const el = this.resolveElement(webEl);
 
     return typeof el[name] != "undefined" ? el[name] : null;
+  }
+
+  /**
+   * Get the position and dimensions of the element.
+   */
+  async getElementRect(options = {}) {
+    const { webEl } = options;
+    const el = this.resolveElement(webEl);
+
+    const rect = el.getBoundingClientRect();
+    return {
+      x: rect.x + this.content.pageXOffset,
+      y: rect.y + this.content.pageYOffset,
+      width: rect.width,
+      height: rect.height,
+    };
   }
 
   /**

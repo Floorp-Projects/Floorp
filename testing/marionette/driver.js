@@ -2563,6 +2563,10 @@ GeckoDriver.prototype.getElementRect = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().getElementRect(webEl);
+  }
+
   switch (this.context) {
     case Context.Chrome:
       const win = this.getCurrentWindow();
