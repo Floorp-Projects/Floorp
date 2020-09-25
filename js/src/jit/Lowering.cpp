@@ -43,16 +43,6 @@ LBoxAllocation LIRGenerator::useBoxAtStart(MDefinition* mir,
   return useBox(mir, policy, /* useAtStart = */ true);
 }
 
-void LIRGenerator::visitCloneLiteral(MCloneLiteral* ins) {
-  MOZ_ASSERT(ins->type() == MIRType::Object);
-  MOZ_ASSERT(ins->input()->type() == MIRType::Object);
-
-  LCloneLiteral* lir =
-      new (alloc()) LCloneLiteral(useRegisterAtStart(ins->input()));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitParameter(MParameter* param) {
   ptrdiff_t offset;
   if (param->index() == MParameter::THIS_SLOT) {

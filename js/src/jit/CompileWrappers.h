@@ -109,17 +109,12 @@ class CompileRealm {
   const uint32_t* addressOfGlobalWriteBarriered();
 
   bool hasAllocationMetadataBuilder();
-
-  // Mirror RealmOptions.
-  void setSingletonsAsValues();
 };
 
 class JitCompileOptions {
  public:
   JitCompileOptions();
   explicit JitCompileOptions(JSContext* cx);
-
-  bool cloneSingletons() const { return cloneSingletons_; }
 
   bool profilerSlowAssertionsEnabled() const {
     return profilerSlowAssertionsEnabled_;
@@ -134,7 +129,6 @@ class JitCompileOptions {
 #endif
 
  private:
-  bool cloneSingletons_;
   bool profilerSlowAssertionsEnabled_;
   bool offThreadCompilationAvailable_;
 #ifdef DEBUG

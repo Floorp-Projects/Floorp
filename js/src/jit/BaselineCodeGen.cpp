@@ -913,6 +913,8 @@ static gc::Cell* GetScriptGCThing(JSScript* script, jsbytecode* pc,
       return script->getAtom(pc);
     case ScriptGCThingType::RegExp:
       return script->getRegExp(pc);
+    case ScriptGCThingType::Object:
+      return script->getObject(pc);
     case ScriptGCThingType::Function:
       return script->getFunction(pc);
     case ScriptGCThingType::Scope:
@@ -957,6 +959,7 @@ void BaselineInterpreterCodeGen::loadScriptGCThing(ScriptGCThingType type,
       masm.xorPtr(Imm32(2), dest);
       break;
     case ScriptGCThingType::RegExp:
+    case ScriptGCThingType::Object:
     case ScriptGCThingType::Function:
       // No-op because GCCellPtr tag bits are zero for objects.
       static_assert(uintptr_t(TraceKind::Object) == 0,
@@ -2602,38 +2605,18 @@ bool BaselineInterpreterCodeGen::emit_Symbol() {
   return true;
 }
 
-JSObject* BaselineCompilerHandler::maybeNoCloneSingletonObject() {
-  Realm* realm = script()->realm();
-  if (realm->creationOptions().cloneSingletons()) {
-    return nullptr;
-  }
-
-  realm->behaviors().setSingletonsAsValues();
-  return script()->getObject(pc());
+template <>
+bool BaselineCompilerCodeGen::emit_Object() {
+  frame.push(ObjectValue(*handler.script()->getObject(handler.pc())));
+  return true;
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_Object() {
-  // If we know we don't have to clone the object literal, just push it
-  // directly. Note that the interpreter always does the VM call; that's fine
-  // because this op is only used in run-once code.
-  if (JSObject* obj = handler.maybeNoCloneSingletonObject()) {
-    frame.push(ObjectValue(*obj));
-    return true;
-  }
-
-  prepareVMCall();
-
-  pushBytecodePCArg();
-  pushScriptArg();
-
-  using Fn = JSObject* (*)(JSContext*, HandleScript, jsbytecode*);
-  if (!callVM<Fn, SingletonObjectLiteralOperation>()) {
-    return false;
-  }
-
-  // Box and push return value.
-  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+template <>
+bool BaselineInterpreterCodeGen::emit_Object() {
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
+  loadScriptGCThing(ScriptGCThingType::Object, scratch1, scratch2);
+  masm.tagValue(JSVAL_TYPE_OBJECT, scratch1, R0);
   frame.push(R0);
   return true;
 }
