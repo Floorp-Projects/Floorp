@@ -5683,6 +5683,14 @@ JS_PUBLIC_API void JS::detail::AssertArgumentsAreSane(JSContext* cx,
 JS_PUBLIC_API JS::TranscodeResult JS::EncodeScript(JSContext* cx,
                                                    TranscodeBuffer& buffer,
                                                    HandleScript scriptArg) {
+  // Run-once top-level scripts may mutate singleton objects so do not allow
+  // encoding them. It could be possible to encode early enough to avoid this,
+  // but for consistency with `CopyScriptImpl` we always disallow.
+  MOZ_ASSERT(!scriptArg->isFunction());
+  if (scriptArg->treatAsRunOnce()) {
+    return JS::TranscodeResult_Failure_RunOnceNotSupported;
+  }
+
   XDREncoder encoder(cx, buffer, buffer.length());
   RootedScript script(cx, scriptArg);
   XDRResult res = encoder.codeScript(&script);
