@@ -1299,7 +1299,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "0936301aa8239f833cd0b94d96dcef0dad4b7cf0"
+        "revision": "68f3764b1def17ea11dab0b8f74a891ab78174af"
     },
     "rm": {
         "pin": false,
