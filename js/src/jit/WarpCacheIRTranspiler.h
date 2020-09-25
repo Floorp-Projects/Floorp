@@ -28,13 +28,8 @@ using MDefinitionStackVector = Vector<MDefinition*, 8, SystemAllocPolicy>;
 MOZ_MUST_USE bool TranspileCacheIRToMIR(WarpBuilder* builder,
                                         BytecodeLocation loc,
                                         const WarpCacheIR* cacheIRSnapshot,
-                                        const MDefinitionStackVector& inputs);
-
-// Overload used to pass information for calls to the transpiler.
-MOZ_MUST_USE bool TranspileCacheIRToMIR(WarpBuilder* builder,
-                                        BytecodeLocation loc,
-                                        const WarpCacheIR* cacheIRSnapshot,
-                                        CallInfo& callInfo);
+                                        const MDefinitionStackVector& inputs,
+                                        CallInfo* maybeCallInfo = nullptr);
 
 }  // namespace jit
 }  // namespace js
