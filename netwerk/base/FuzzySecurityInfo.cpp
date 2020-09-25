@@ -311,10 +311,10 @@ FuzzySecurityInfo::SetNPNList(nsTArray<nsCString>& protocolArray) {
 }
 
 NS_IMETHODIMP
-FuzzySecurityInfo::GetEsniTxt(nsACString& aEsniTxt) { return NS_OK; }
+FuzzySecurityInfo::GetEchConfig(nsACString& aEchConfig) { return NS_OK; }
 
 NS_IMETHODIMP
-FuzzySecurityInfo::SetEsniTxt(const nsACString& aEsniTxt) {
+FuzzySecurityInfo::SetEchConfig(const nsACString& aEchConfig) {
   MOZ_CRASH("Unused");
   return NS_OK;
 }
