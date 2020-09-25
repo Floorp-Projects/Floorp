@@ -1470,6 +1470,14 @@ class WindowsDllDetourPatcher final
         if (mod == kModReg && (reg == 0 || reg == 1 || reg == 2 || reg == 6)) {
           // INC|DEC|CALL|PUSH r64
           COPY_CODES(2);
+        } else if (mod == kModNoRegDisp && reg == 2 &&
+                   rm == kRmNoRegDispDisp32) {
+          // FF 15    CALL [disp32]
+          origBytes += 2;
+          if (!GenerateJump(tramp, origBytes.ChasePointerFromDisp(),
+                            JumpType::Call)) {
+            return;
+          }
         } else if (reg == 4) {
           // FF /4 (Opcode=ff, REG=4): JMP r/m
           if (mod == kModNoRegDisp && rm == kRmNoRegDispDisp32) {
