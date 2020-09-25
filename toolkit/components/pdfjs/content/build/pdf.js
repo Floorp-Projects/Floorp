@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.7.69';
-const pdfjsBuild = '26ae7ba2a';
+const pdfjsVersion = '2.7.81';
+const pdfjsBuild = '120c5c226';
 ;
 
 /***/ }),
@@ -1972,7 +1972,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.7.69',
+    apiVersion: '2.7.81',
     source: {
       data: source.data,
       url: source.url,
@@ -3897,9 +3897,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.7.69';
+const version = '2.7.81';
 exports.version = version;
-const build = '26ae7ba2a';
+const build = '120c5c226';
 exports.build = build;
 
 /***/ }),
@@ -9268,7 +9268,7 @@ class AnnotationElement {
     const rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
 
     container.style.transform = `matrix(${viewport.transform.join(",")})`;
-    container.style.transformOrigin = `-${rect[0]}px -${rect[1]}px`;
+    container.style.transformOrigin = `${-rect[0]}px ${-rect[1]}px`;
 
     if (!ignoreBorder && data.borderStyle.width > 0) {
       container.style.borderWidth = `${data.borderStyle.width}px`;
@@ -9689,10 +9689,12 @@ class PopupAnnotationElement extends AnnotationElement {
       modificationDate: this.data.modificationDate,
       contents: this.data.contents
     });
-    const parentLeft = parseFloat(parentElement.style.left);
-    const parentWidth = parseFloat(parentElement.style.width);
-    this.container.style.transformOrigin = `-${parentLeft + parentWidth}px -${parentElement.style.top}`;
-    this.container.style.left = `${parentLeft + parentWidth}px`;
+    const parentTop = parseFloat(parentElement.style.top),
+          parentLeft = parseFloat(parentElement.style.left),
+          parentWidth = parseFloat(parentElement.style.width);
+    const popupLeft = parentLeft + parentWidth;
+    this.container.style.transformOrigin = `${-popupLeft}px ${-parentTop}px`;
+    this.container.style.left = `${popupLeft}px`;
     this.container.appendChild(popup.render());
     return this.container;
   }
