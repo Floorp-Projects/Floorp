@@ -16,8 +16,6 @@ namespace mozilla {
 // The one time initialization for this module
 nsresult InitDocShellModule() {
   mozilla::dom::BrowsingContext::Init();
-  nsresult rv = nsSHistory::Startup();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

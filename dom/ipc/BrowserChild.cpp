@@ -3450,7 +3450,7 @@ nsresult BrowserChild::CanCancelContentJS(
 
   // If we have session history in the parent we've already performed
   // the checks following, so we can return early.
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     *aCanCancel = true;
     return NS_OK;
   }

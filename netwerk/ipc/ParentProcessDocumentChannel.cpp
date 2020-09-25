@@ -69,7 +69,8 @@ ParentProcessDocumentChannel::RedirectToRealChannel(
   mStreamFilterEndpoints = std::move(aStreamFilterEndpoints);
 
   if (mDocumentLoadListener->IsDocumentLoad() &&
-      StaticPrefs::fission_sessionHistoryInParent() && GetDocShell()) {
+      StaticPrefs::fission_sessionHistoryInParent_AtStartup() &&
+      GetDocShell()) {
     GetDocShell()->SetLoadingSessionHistoryInfo(
         *mDocumentLoadListener->GetLoadingSessionHistoryInfo());
   }

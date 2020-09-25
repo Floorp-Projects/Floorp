@@ -238,6 +238,12 @@ nsSHistory::nsSHistory(BrowsingContext* aRootBC)
       mIndex(-1),
       mRequestedIndex(-1),
       mRootDocShellID(aRootBC->GetHistoryID()) {
+  static bool sCalledStartup = false;
+  if (!sCalledStartup) {
+    Startup();
+    sCalledStartup = true;
+  }
+
   // Add this new SHistory object to the list
   gSHistoryList.insertBack(this);
 
@@ -329,7 +335,7 @@ uint32_t nsSHistory::CalcMaxTotalViewers() {
 // static
 void nsSHistory::UpdatePrefs() {
   Preferences::GetInt(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     sHistoryMaxTotalViewers = 0;
     return;
   }
@@ -430,7 +436,7 @@ nsresult nsSHistory::WalkHistoryEntries(nsISHEntry* aRootEntry,
         // If the SH pref is on and we are in the parent process, update
         // canonical BC directly
         bool foundChild = false;
-        if (StaticPrefs::fission_sessionHistoryInParent() &&
+        if (StaticPrefs::fission_sessionHistoryInParent_AtStartup() &&
             XRE_IsParentProcess()) {
           if (child->Canonical()->HasHistoryEntry(childEntry)) {
             childBC = child;
@@ -681,7 +687,7 @@ nsresult nsSHistory::SetChildHistoryEntry(nsISHEntry* aEntry,
 void nsSHistory::HandleEntriesToSwapInDocShell(
     mozilla::dom::BrowsingContext* aBC, nsISHEntry* aOldEntry,
     nsISHEntry* aNewEntry) {
-  bool shPref = StaticPrefs::fission_sessionHistoryInParent();
+  bool shPref = StaticPrefs::fission_sessionHistoryInParent_AtStartup();
   if (aBC->IsInProcess() || !shPref) {
     nsDocShell* docshell = static_cast<nsDocShell*>(aBC->GetDocShell());
     if (docshell) {
@@ -1825,7 +1831,7 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   // a same-document navigation (see nsDocShell::IsSameDocumentNavigation), so
   // record that here in the LoadingSessionHistoryEntry.
   bool loadingFromActiveEntry;
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     loadingFromActiveEntry =
         aFrameBC->Canonical()->GetActiveSessionHistoryEntry() == aFrameEntry;
   } else {
@@ -1836,7 +1842,7 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   loadState->SetLoadIsFromSessionHistory(mRequestedIndex, Length(),
                                          loadingFromActiveEntry);
 
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aFrameEntry);
     aFrameBC->Canonical()->AddLoadingSessionHistoryEntry(
         loadState->GetLoadingSessionHistoryInfo()->mLoadId, she);
@@ -1861,7 +1867,8 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
 NS_IMETHODIMP
 nsSHistory::CreateEntry(nsISHEntry** aEntry) {
   nsCOMPtr<nsISHEntry> entry;
-  if (XRE_IsParentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
+  if (XRE_IsParentProcess() &&
+      StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     entry = new SessionHistoryEntry();
   } else {
     entry = new nsSHEntry();

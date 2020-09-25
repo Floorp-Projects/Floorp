@@ -33,7 +33,7 @@ void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
     return;
   }
 
-  if (mHistory || StaticPrefs::fission_sessionHistoryInParent()) {
+  if (mHistory || StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     return;
   }
 
@@ -41,14 +41,15 @@ void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
 }
 
 int32_t ChildSHistory::Count() {
-  if (StaticPrefs::fission_sessionHistoryInParent() || mAsyncHistoryLength) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup() ||
+      mAsyncHistoryLength) {
     uint32_t length = mLength;
     for (uint32_t i = 0; i < mPendingSHistoryChanges.Length(); ++i) {
       length += mPendingSHistoryChanges[i].mLengthDelta;
     }
 
     if (mAsyncHistoryLength) {
-      MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent());
+      MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent_AtStartup());
       // XXX The assertion may be too strong here, but it fires only
       //    when the pref is enabled.
       MOZ_ASSERT(mHistory->GetCount() == int32_t(length));
@@ -59,14 +60,15 @@ int32_t ChildSHistory::Count() {
 }
 
 int32_t ChildSHistory::Index() {
-  if (StaticPrefs::fission_sessionHistoryInParent() || mAsyncHistoryLength) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup() ||
+      mAsyncHistoryLength) {
     uint32_t index = mIndex;
     for (uint32_t i = 0; i < mPendingSHistoryChanges.Length(); ++i) {
       index += mPendingSHistoryChanges[i].mIndexDelta;
     }
 
     if (mAsyncHistoryLength) {
-      MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent());
+      MOZ_ASSERT(!StaticPrefs::fission_sessionHistoryInParent_AtStartup());
       int32_t realIndex;
       mHistory->GetIndex(&realIndex);
       // XXX The assertion may be too strong here, but it fires only
@@ -106,7 +108,7 @@ void ChildSHistory::SetIndexAndLength(uint32_t aIndex, uint32_t aLength,
 }
 
 void ChildSHistory::Reload(uint32_t aReloadFlags, ErrorResult& aRv) {
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     if (XRE_IsParentProcess()) {
       nsISHistory* shistory =
           mBrowsingContext->Canonical()->GetSessionHistory();
@@ -150,7 +152,7 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
     }
 
     // See Bug 1650095.
-    if (StaticPrefs::fission_sessionHistoryInParent()) {
+    if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
       break;
     }
 
@@ -188,7 +190,7 @@ void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction,
 }
 
 void ChildSHistory::GotoIndex(int32_t aIndex, ErrorResult& aRv) {
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     nsCOMPtr<nsISHistory> shistory = mHistory;
     mBrowsingContext->HistoryGo(aIndex, [shistory](int32_t&& aRequestedIndex) {
       // FIXME Should probably only do this for non-fission.
@@ -206,13 +208,13 @@ void ChildSHistory::RemovePendingHistoryNavigations() {
 }
 
 void ChildSHistory::EvictLocalContentViewers() {
-  if (!StaticPrefs::fission_sessionHistoryInParent()) {
+  if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     mHistory->EvictAllContentViewers();
   }
 }
 
 nsISHistory* ChildSHistory::GetLegacySHistory(ErrorResult& aError) {
-  if (StaticPrefs::fission_sessionHistoryInParent()) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
     aError.ThrowTypeError(
         "legacySHistory is not available with session history in the parent.");
     return nullptr;
@@ -249,7 +251,7 @@ nsISupports* ChildSHistory::GetParentObject() const {
 }
 
 void ChildSHistory::SetAsyncHistoryLength(bool aEnable, ErrorResult& aRv) {
-  if (StaticPrefs::fission_sessionHistoryInParent() || !mHistory) {
+  if (StaticPrefs::fission_sessionHistoryInParent_AtStartup() || !mHistory) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
