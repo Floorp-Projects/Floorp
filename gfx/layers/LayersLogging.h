@@ -181,9 +181,6 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
                     const char* pfx = "", const char* sfx = "",
                     bool detailed = false);
 
-void AppendToString(std::stringstream& aStream, const ScrollableLayerGuid& s,
-                    const char* pfx = "", const char* sfx = "");
-
 void AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
                     const char* pfx = "", const char* sfx = "");
 

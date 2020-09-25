@@ -7,11 +7,10 @@
 #ifndef GFX_SCROLLABLELAYERGUID_H
 #define GFX_SCROLLABLELAYERGUID_H
 
+#include <iosfwd>                        // for ostream
 #include <stdint.h>                      // for uint8_t, uint32_t, uint64_t
-#include "mozilla/gfx/Logging.h"         // for Log
 #include "mozilla/layers/LayersTypes.h"  // for LayersId
 #include "nsHashKeys.h"                  // for nsUint64HashKey
-#include "nsPrintfCString.h"             // for nsPrintfCString
 
 namespace mozilla {
 namespace layers {
@@ -49,6 +48,9 @@ struct ScrollableLayerGuid {
   bool operator!=(const ScrollableLayerGuid& other) const;
   bool operator<(const ScrollableLayerGuid& other) const;
 
+  friend std::ostream& operator<<(std::ostream& aOut,
+                                  const ScrollableLayerGuid& aGuid);
+
   // Helper structs to use as hash/equality functions in std::unordered_map.
   // e.g. std::unordered_map<ScrollableLayerGuid,
   //                    ValueType,
@@ -71,15 +73,6 @@ struct ScrollableLayerGuid {
                     const ScrollableLayerGuid& rhs) const;
   };
 };
-
-template <int LogLevel>
-gfx::Log<LogLevel>& operator<<(gfx::Log<LogLevel>& log,
-                               const ScrollableLayerGuid& aGuid) {
-  return log << nsPrintfCString("(0x%" PRIx64 ", %u, %" PRIu64 ")",
-                                uint64_t(aGuid.mLayersId), aGuid.mPresShellId,
-                                aGuid.mScrollId)
-                    .get();
-}
 
 }  // namespace layers
 }  // namespace mozilla
