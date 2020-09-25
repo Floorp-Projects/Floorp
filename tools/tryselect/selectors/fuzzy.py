@@ -297,7 +297,9 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         return 1
 
     check_working_directory(push)
-    tg = generate_tasks(parameters, full)
+    tg = generate_tasks(parameters,
+                        full=full,
+                        disable_target_task_filter=disable_target_task_filter)
     all_tasks = sorted(tg.tasks.keys())
 
     # graph_Cache created by generate_tasks, recreate the path to that file.

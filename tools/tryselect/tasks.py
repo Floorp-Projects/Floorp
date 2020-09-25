@@ -57,7 +57,7 @@ def invalidate(cache):
         os.remove(cache)
 
 
-def generate_tasks(params=None, full=False):
+def generate_tasks(params=None, full=False, disable_target_task_filter=False):
     cache_dir = os.path.join(get_state_dir(srcdir=True), 'cache', 'taskgraph')
     attr = 'full_task_set' if full else 'target_task_set'
     cache = os.path.join(cache_dir, attr)
@@ -77,10 +77,12 @@ def generate_tasks(params=None, full=False):
     os.chdir(build.topsrcdir)
 
     root = os.path.join(build.topsrcdir, 'taskcluster', 'ci')
+    target_tasks_method = ('try_select_tasks' if not disable_target_task_filter
+                           else 'try_select_tasks_uncommon')
     params = parameters_loader(
         params,
         strict=False,
-        overrides={'try_mode': 'try_select', 'target_tasks_method': 'try_select_tasks'}
+        overrides={'try_mode': 'try_select', 'target_tasks_method': target_tasks_method}
     )
 
     # Cache both full_task_set and target_task_set regardless of whether or not

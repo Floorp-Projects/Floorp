@@ -334,6 +334,21 @@ def target_tasks_try_select(full_task_graph, parameters, graph_config):
     return [l for l in tasks if filter_by_uncommon_try_tasks(l)]
 
 
+@_target_task('try_select_tasks_uncommon')
+def target_tasks_try_select_uncommon(full_task_graph, parameters, graph_config):
+    tasks = set()
+    for project in ('autoland', 'mozilla-central'):
+        params = dict(parameters)
+        params['project'] = project
+        parameters = Parameters(**params)
+        tasks.update([l for l, t in six.iteritems(full_task_graph.tasks)
+                      if standard_filter(t, parameters)
+                      and filter_out_shipping_phase(t, parameters)
+                      and filter_out_devedition(t, parameters)])
+
+    return [l for l in tasks]
+
+
 @_target_task('try_auto')
 def target_tasks_try_auto(full_task_graph, parameters, graph_config):
     """Target the tasks which have indicated they should be run on autoland
