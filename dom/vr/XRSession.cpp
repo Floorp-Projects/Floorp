@@ -96,7 +96,7 @@ already_AddRefed<XRSession> XRSession::CreateInlineSession(
   RefPtr<XRSession> session =
       new XRSession(aWindow, aXRSystem, driver, nullptr, gfx::kVRGroupContent,
                     aEnabledReferenceSpaceTypes);
-  driver->AddRefreshObserver(session, FlushType::Display);
+  driver->AddRefreshObserver(session, FlushType::Display, "XR Session");
   return session.forget();
 }
 

@@ -433,7 +433,8 @@ void NotificationController::ScheduleProcessing() {
   // If notification flush isn't planed yet start notification flush
   // asynchronously (after style and layout).
   if (mObservingState == eNotObservingRefresh) {
-    if (mPresShell->AddRefreshObserver(this, FlushType::Display))
+    if (mPresShell->AddRefreshObserver(this, FlushType::Display,
+                                       "Accessibility notifications"))
       mObservingState = eRefreshObserving;
   }
 }
