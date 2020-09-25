@@ -99,14 +99,20 @@ nsresult nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* a
   }
   data->orientation() = orientation;
 
+  NSSize paperSize = [printInfo paperSize];
   float widthScale, heightScale;
   settingsX->GetInchesScale(&widthScale, &heightScale);
   if (orientation == nsIPrintSettings::kLandscapeOrientation) {
+    // switch widths and heights
     data->widthScale() = heightScale;
     data->heightScale() = widthScale;
+    data->paperWidth() = paperSize.height / heightScale;
+    data->paperHeight() = paperSize.width / widthScale;
   } else {
     data->widthScale() = widthScale;
     data->heightScale() = heightScale;
+    data->paperWidth() = paperSize.width / widthScale;
+    data->paperHeight() = paperSize.height / heightScale;
   }
 
   data->numCopies() = [[dict objectForKey:NSPrintCopies] intValue];
