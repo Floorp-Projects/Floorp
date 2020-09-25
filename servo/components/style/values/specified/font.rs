@@ -2303,7 +2303,7 @@ impl Parse for MozScriptMinSize {
 ///
 /// The main effect of scriptlevel is to control the font size.
 /// https://www.w3.org/TR/MathML3/chapter3.html#presm.scriptlevel
-pub enum MathDepth {
+pub enum MozScriptLevel {
     /// Change `font-size` relatively.
     Relative(i32),
     /// Change `font-size` absolutely.
@@ -2317,17 +2317,17 @@ pub enum MathDepth {
     Auto,
 }
 
-impl Parse for MathDepth {
+impl Parse for MozScriptLevel {
     fn parse<'i, 't>(
         _: &ParserContext,
         input: &mut Parser<'i, 't>,
-    ) -> Result<MathDepth, ParseError<'i>> {
+    ) -> Result<MozScriptLevel, ParseError<'i>> {
         // We don't bother to handle calc here.
         if let Ok(i) = input.try_parse(|i| i.expect_integer()) {
-            return Ok(MathDepth::Relative(i));
+            return Ok(MozScriptLevel::Relative(i));
         }
         input.expect_ident_matching("auto")?;
-        Ok(MathDepth::Auto)
+        Ok(MozScriptLevel::Auto)
     }
 }
 

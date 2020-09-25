@@ -267,7 +267,7 @@ nsresult nsMathMLmmultiscriptsFrame::PlaceMultiScript(
 
     // get sup script shift depending on current script level and display style
     // Rule 18c, App. G, TeXbook
-    if (font->mMathDepth == 0 &&
+    if (font->mScriptLevel == 0 &&
         font->mMathStyle == NS_STYLE_MATH_STYLE_NORMAL &&
         !NS_MATHML_IS_COMPRESSED(presentationData.flags)) {
       // Style D in TeXbook
