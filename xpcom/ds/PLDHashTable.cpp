@@ -799,11 +799,7 @@ MOZ_ALWAYS_INLINE void PLDHashTable::Iterator::MoveToNextLiveEntry() {
 
   // slotIndex now indicates where a live slot is. Rematerialize the entry
   // and the slot.
-  auto entries = reinterpret_cast<char*>(&hashes[capacity]);
-  char* entryPtr = entries + slotIndex * mEntrySize;
-  auto entry = reinterpret_cast<PLDHashEntryHdr*>(entryPtr);
-
-  mCurrent = Slot(entry, &hashes[slotIndex]);
+  mCurrent = mTable->mEntryStore.SlotForIndex(slotIndex, mEntrySize, capacity);
 }
 
 void PLDHashTable::Iterator::Remove() {
