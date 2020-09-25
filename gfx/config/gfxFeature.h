@@ -83,7 +83,7 @@ class FeatureState {
   // aType is "base", "user", "env", or "runtime".
   // aMessage may be null.
   typedef std::function<void(const char* aType, FeatureStatus aStatus,
-                             const char* aMessage)>
+                             const char* aMessage, const nsCString& aFailureId)>
       StatusIterCallback;
   void ForEachStatusChange(const StatusIterCallback& aCallback) const;
 
@@ -93,9 +93,12 @@ class FeatureState {
   bool DisabledByDefault() const;
 
  private:
-  void SetUser(FeatureStatus aStatus, const char* aMessage);
-  void SetEnvironment(FeatureStatus aStatus, const char* aMessage);
-  void SetRuntime(FeatureStatus aStatus, const char* aMessage);
+  void SetUser(FeatureStatus aStatus, const char* aMessage,
+               const nsACString& aFailureId);
+  void SetEnvironment(FeatureStatus aStatus, const char* aMessage,
+                      const nsACString& aFailureId);
+  void SetRuntime(FeatureStatus aStatus, const char* aMessage,
+                  const nsACString& aFailureId);
   bool IsForcedOnByUser() const;
   const char* GetRuntimeMessage() const;
   bool IsInitialized() const { return mDefault.IsInitialized(); }
@@ -106,13 +109,14 @@ class FeatureState {
   void Reset();
 
  private:
-  void SetFailureId(const nsACString& aFailureId);
-
   struct Instance {
     char mMessage[64];
     FeatureStatus mStatus;
+    nsCString mFailureId;
 
-    void Set(FeatureStatus aStatus, const char* aMessage = nullptr);
+    void Set(FeatureStatus aStatus);
+    void Set(FeatureStatus aStatus, const char* aMessage,
+             const nsACString& aFailureId);
     bool IsInitialized() const { return mStatus != FeatureStatus::Unused; }
     const char* MessageOrNull() const {
       return mMessage[0] != '\0' ? mMessage : nullptr;
@@ -121,6 +125,7 @@ class FeatureState {
       MOZ_ASSERT(MessageOrNull());
       return mMessage;
     }
+    const nsCString& FailureId() const { return mFailureId; }
   };
 
   // The default state is the state we decide on startup, based on the operating
@@ -136,10 +141,6 @@ class FeatureState {
   Instance mUser;
   Instance mEnvironment;
   Instance mRuntime;
-
-  // Store the first reported failureId for now but we might want to track this
-  // by instance later if we need a specific breakdown.
-  nsCString mFailureId;
 };
 
 }  // namespace gfx

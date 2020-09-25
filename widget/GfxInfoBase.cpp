@@ -1587,7 +1587,8 @@ bool GfxInfoBase::BuildFeatureStateLog(JSContext* aCx,
   aOut.setObject(*log);
 
   aFeature.ForEachStatusChange([&](const char* aType, FeatureStatus aStatus,
-                                   const char* aMessage) -> void {
+                                   const char* aMessage,
+                                   const nsCString& aFailureId) -> void {
     JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
     if (!obj) {
       return;
