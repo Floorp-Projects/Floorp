@@ -418,7 +418,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   };
 
  private:
-  typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTArray<RefPtr<VVPResizeEvent>> VisualViewportResizeEventArray;
   typedef nsTArray<RefPtr<mozilla::Runnable>> ScrollEventArray;
   typedef nsTArray<RefPtr<VVPScrollEvent>> VisualViewportScrollEventArray;
@@ -431,6 +430,18 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   };
   typedef nsClassHashtable<nsUint32HashKey, ImageStartData> ImageStartTable;
 
+  struct ObserverData {
+    nsARefreshObserver* mObserver;
+    mozilla::TimeStamp mRegisterTime;
+    mozilla::Maybe<uint64_t> mInnerWindowId;
+    mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> mCause;
+
+    bool operator==(nsARefreshObserver* aObserver) const {
+      return mObserver == aObserver;
+    }
+    operator RefPtr<nsARefreshObserver>() { return mObserver; }
+  };
+  typedef nsTObserverArray<ObserverData> ObserverArray;
   void RunFullscreenSteps();
   void DispatchAnimationEvents();
   MOZ_CAN_RUN_SCRIPT
