@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Ғайрибарҷаста</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">Ҳуруфи ғайрибарҷаста</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">Барҷаста</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">Ҳуруфи барҷаста</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Хурд кардани андозаи ҳуруф</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">Калон кардани андозаи ҳуруф</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">Торик</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Нақшаи рангии торик</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">Сепия</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Нақшаи рангии сепия</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Равшан</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Нақшаи рангии равшан</string>
+</resources>

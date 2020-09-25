@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Мушкилии боркунии саҳифа</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Аз нав кӯшиш кардан</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Бозгашт</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Дархостро ба анҷом расонида наметавонад</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Маълумоти иловагӣ дар бораи ин мушкилӣ ё хато ҳоло дастнорас аст.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Пайвасти бехатар иҷро нашуд</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Саҳифае, ки шумо дидан мехоҳед, нишон дода намешавад, зеро эътиборнокии маълумоти гирифташуда наметавонад тасдиқ карда шавад.</li>
+        <li>Лутфан, бо соҳибони сомона дар тамос шавед ва ба онҳо дар бораи ин мушкилӣ хабар диҳед.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Пайвасти бехатар иҷро нашуд</string>
+
+    </resources>
