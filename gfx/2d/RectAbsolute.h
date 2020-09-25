@@ -260,8 +260,8 @@ struct BaseRectAbsolute {
   friend std::ostream& operator<<(
       std::ostream& stream,
       const BaseRectAbsolute<T, Sub, Point, Rect>& aRect) {
-    return stream << '(' << aRect.left << ',' << aRect.top << ',' << aRect.right
-                  << ',' << aRect.bottom << ')';
+    return stream << "(l=" << aRect.left << ", t=" << aRect.top
+                  << ", r=" << aRect.right << ", b=" << aRect.bottom << ')';
   }
 };
 
