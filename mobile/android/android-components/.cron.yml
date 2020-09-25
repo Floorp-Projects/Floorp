@@ -10,5 +10,5 @@ jobs:
           treeherder-symbol: nightly-D
           target-tasks-method: nightly
       when:
-          - {hour: 13, minute: 0}
+          - {hour: 14, minute: 30}
           - {hour: 19, minute: 0}
