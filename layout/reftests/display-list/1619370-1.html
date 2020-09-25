@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html reftest-zoom="1.5" class="reftest-wait">
+<head>
+    <meta charset="UTF-8">
+    <title>Testcase for bug 1619370</title>
+    <style>
+    html, body {
+        padding: 0;
+        margin: 0;
+    }
+
+    html {
+        background-color: red;
+    }
+    </style>
+</head>
+<body>
+    <iframe width="500" height="500" scrolling="no" frameborder="0" src="data:text/html,
+    <div style='background-color: green; width: 100px; height: 100px; position: fixed; top: 495px;'></div>">
+    </iframe>
+
+    <script type="text/javascript">
+    function doTest() {
+        document.documentElement.style["background-color"] = "blue";
+        document.documentElement.classList.remove("reftest-wait");
+    }
+
+    window.addEventListener("MozReftestInvalidate", doTest);
+    </script>
+</body>
+</html>
