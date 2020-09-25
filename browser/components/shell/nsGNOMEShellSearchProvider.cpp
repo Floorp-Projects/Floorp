@@ -15,6 +15,7 @@
 #include "base/task.h"          // for NewRunnableMethod, etc
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
+#include "nsPrintfCString.h"
 #include "nsIIOService.h"
 
 #include <dbus/dbus.h>

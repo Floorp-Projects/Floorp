@@ -22,6 +22,7 @@
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/Telemetry.h"
+#include "nsPrintfCString.h"
 #include "FxROutputHandler.h"
 
 #undef NTDDI_VERSION
