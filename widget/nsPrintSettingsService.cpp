@@ -819,25 +819,6 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
   return NS_OK;
 }
 
-nsresult nsPrintSettingsService::_CreatePrintSettings(
-    nsIPrintSettings** _retval) {
-  // does not initially ref count
-  nsPrintSettings* printSettings = new nsPrintSettings();
-  NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(*_retval = printSettings);  // ref count
-
-  nsString printerName;
-  nsresult rv = GetLastUsedPrinterName(printerName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  (*_retval)->SetPrinterName(printerName);
-
-  (void)InitPrintSettingsFromPrefs(*_retval, false,
-                                   nsIPrintSettings::kInitSaveAll);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsPrintSettingsService::GetDefaultPrintSettingsForPrinting(
     nsIPrintSettings** aGlobalPrintSettings) {
