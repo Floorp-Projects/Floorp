@@ -32,6 +32,7 @@ import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -283,10 +284,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             settings().wasDefaultBrowserOnLastResume = settings().isDefaultBrowser()
 
             if (!settings().manuallyCloseTabs) {
-                components.core.store.state.tabs.filter {
+                val toClose = components.core.store.state.tabs.filter {
                     (System.currentTimeMillis() - it.lastAccess) > settings().getTabTimeout()
-                }.forEach {
-                    components.useCases.tabsUseCases.removeTab(it.id)
+                }
+                // Removal needs to happen on the main thread.
+                lifecycleScope.launch(Main) {
+                    toClose.forEach { components.useCases.tabsUseCases.removeTab(it.id) }
                 }
             }
         }
