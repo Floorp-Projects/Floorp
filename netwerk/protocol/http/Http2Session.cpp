@@ -58,6 +58,20 @@ const uint8_t Http2Session::kMagicHello[] = {
     0x50, 0x52, 0x49, 0x20, 0x2a, 0x20, 0x48, 0x54, 0x54, 0x50, 0x2f, 0x32,
     0x2e, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x53, 0x4d, 0x0d, 0x0a, 0x0d, 0x0a};
 
+Http2Session* Http2Session::CreateSession(nsISocketTransport* aSocketTransport,
+                                          enum SpdyVersion version,
+                                          bool attemptingEarlyData) {
+  if (!gHttpHandler) {
+    RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
+    Unused << handler.get();
+  }
+
+  Http2Session* session =
+      new Http2Session(aSocketTransport, version, attemptingEarlyData);
+  session->SendHello();
+  return session;
+}
+
 Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
                            enum SpdyVersion version, bool attemptingEarlyData)
     : mSocketTransport(aSocketTransport),
@@ -136,7 +150,6 @@ Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
   mInitialRwin = std::max(gHttpHandler->SpdyPullAllowance(), mPushAllowance);
   mMaxConcurrent = gHttpHandler->DefaultSpdyConcurrent();
   mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
-  SendHello();
 
   mLastDataReadEpoch = mLastReadEpoch;
 
