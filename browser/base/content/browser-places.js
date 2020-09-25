@@ -615,7 +615,9 @@ var PlacesCommandHook = {
   },
 
   searchBookmarks() {
-    gURLBar.search(UrlbarTokenizer.RESTRICT.BOOKMARK);
+    gURLBar.search(UrlbarTokenizer.RESTRICT.BOOKMARK, {
+      searchModeEntry: "bookmarkmenu",
+    });
   },
 };
 

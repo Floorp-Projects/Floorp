@@ -1222,18 +1222,54 @@ class UrlbarInput {
    * @param {string} value
    *   The input's value will be set to this value, and the search will
    *   use it as its query.
+   * @param {UrlbarUtils.SEARCH_MODE_ENTRY} [options.searchModeEntry]
+   *   If provided, we will record this parameter as the search mode entry point
+   *   in Telemetry. Consumers should provide this if they expect their call
+   *   to enter search mode.
    * @param {boolean} [options.focus]
    *   If true, the urlbar will be focused.  If false, the focus will remain
    *   unchanged.
    */
-  search(value, { focus = true } = {}) {
+  search(value, { searchModeEntry, focus = true } = {}) {
     if (focus) {
       this.focus();
     }
 
-    // If the value is a restricted token, append a space.
-    if (Object.values(UrlbarTokenizer.RESTRICT).includes(value)) {
-      this.inputField.value = value + " ";
+    let tokens = value.trim().split(UrlbarTokenizer.REGEXP_SPACES);
+    // Enter search mode if the string starts with a restriction token.
+    let searchMode;
+    if (UrlbarPrefs.get("update2")) {
+      // Check if the string starts with a restriction token.
+      searchMode = UrlbarUtils.searchModeForToken(tokens[0]);
+      if (!searchMode) {
+        // Check if the string starts with an engine alias.
+        let engine = Services.search.getEngineByAlias(tokens[0]);
+        if (engine) {
+          searchMode = { engineName: engine.name };
+        }
+      }
+    }
+
+    if (searchMode) {
+      searchMode.entry = searchModeEntry;
+      this.setSearchMode(searchMode);
+      // Remove the restriction token/alias from the string to be searched for
+      // in search mode.
+      value = value.replace(tokens[0], "");
+      if (UrlbarTokenizer.REGEXP_SPACES.test(value[0])) {
+        // If there was a trailing space after the restriction token/alias,
+        // remove it.
+        value = value.slice(1);
+      }
+      this.inputField.value = value;
+      this._revertOnBlurValue = this.value;
+    } else if (Object.values(UrlbarTokenizer.RESTRICT).includes(tokens[0])) {
+      this.setSearchMode({});
+      // If the entire value is a restricted token, append a space.
+      if (Object.values(UrlbarTokenizer.RESTRICT).includes(value)) {
+        value += " ";
+      }
+      this.inputField.value = value;
       this._revertOnBlurValue = this.value;
     } else {
       this.inputField.value = value;
@@ -1252,35 +1288,6 @@ class UrlbarInput {
     let event = this.document.createEvent("UIEvents");
     event.initUIEvent("input", true, false, this.window, 0);
     this.inputField.dispatchEvent(event);
-  }
-
-  /**
-   * Starts a search with a given alias. If update2 is enabled, search mode is
-   * entered. Otherwise, this just calls search().
-   * @param {string} alias
-   *   A search engine alias.
-   * @param {string} entry
-   *   A string describing the caller. Should be a value from
-   *   UrlbarUtils.SEARCH_MODE_ENTRY.
-   * @param {string} [value]
-   *   The input's value will be set to this value, and the search will
-   *   use it as its query.
-   */
-  searchWithAlias(alias, entry, value = "") {
-    alias = alias.trim();
-    if (UrlbarPrefs.get("update2")) {
-      // Enter search mode.
-      let engine = Services.search.getEngineByAlias(alias);
-      if (engine) {
-        this.setSearchMode({ engineName: engine.name, entry });
-        this.search(value);
-      } else {
-        this.search(`${alias} ${value}`);
-      }
-    } else {
-      // Pass the provided text to the Urlbar. Prepend the @engine shortcut.
-      this.search(`${alias} ${value}`);
-    }
   }
 
   /**
@@ -2455,33 +2462,16 @@ class UrlbarInput {
       return null;
     }
 
-    let searchMode = null;
-    switch (result.payload.keyword) {
-      case UrlbarTokenizer.RESTRICT.BOOKMARK:
-        searchMode = { source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS };
-        break;
-      case UrlbarTokenizer.RESTRICT.HISTORY:
-        searchMode = { source: UrlbarUtils.RESULT_SOURCE.HISTORY };
-        break;
-      case UrlbarTokenizer.RESTRICT.OPENPAGE:
-        searchMode = { source: UrlbarUtils.RESULT_SOURCE.TABS };
-        break;
-      case UrlbarTokenizer.RESTRICT.SEARCH:
-        searchMode = {
-          engineName: UrlbarSearchUtils.getDefaultEngine(this.isPrivate).name,
-        };
-        break;
-      default:
-        // If result.originalEngine is set, then the user is Alt+Tabbing
-        // through the one-offs, so the keyword doesn't match the engine.
-        if (
-          result.payload.engine &&
-          (!result.payload.originalEngine ||
-            result.payload.engine == result.payload.originalEngine)
-        ) {
-          searchMode = { engineName: result.payload.engine };
-        }
-        break;
+    let searchMode = UrlbarUtils.searchModeForToken(result.payload.keyword);
+    // If result.originalEngine is set, then the user is Alt+Tabbing
+    // through the one-offs, so the keyword doesn't match the engine.
+    if (
+      !searchMode &&
+      result.payload.engine &&
+      (!result.payload.originalEngine ||
+        result.payload.engine == result.payload.originalEngine)
+    ) {
+      searchMode = { engineName: result.payload.engine };
     }
 
     if (searchMode) {

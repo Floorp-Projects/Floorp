@@ -5336,6 +5336,41 @@ urlbar:
       - main
 
 urlbar.searchmode:
+  bookmarkmenu:
+    bug_numbers:
+      - 1665076
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after selecing the Search Bookmarks menu item in the Library menu.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  handoff:
+    bug_numbers:
+      - 1654680
+      - 1665076
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after selecing the Search Bookmarks menu item in the Library menu.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   keywordoffer:
     bug_numbers:
       - 1654680
@@ -5376,6 +5411,23 @@ urlbar.searchmode:
     description: >
       A keyed uint recording how many times the user entered a particular search
       mode after pressing a keyboard shortcut.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  tabmenu:
+    bug_numbers:
+      - 1665076
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after selecing the Search Tabs menu item in the Tab Overflow menu.
     expires: never
     kind: uint
     keyed: true

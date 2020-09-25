@@ -376,7 +376,7 @@ describe("PlacesFeed", () => {
       assert.calledOnce(feed.fillSearchTopSiteTerm);
     });
     it("should set the URL bar value to the label value", () => {
-      const locationBar = { searchWithAlias: sandbox.stub() };
+      const locationBar = { search: sandbox.stub() };
       const action = {
         type: at.FILL_SEARCH_TERM,
         data: { label: "@Foo" },
@@ -385,12 +385,10 @@ describe("PlacesFeed", () => {
 
       feed.fillSearchTopSiteTerm(action);
 
-      assert.calledOnce(locationBar.searchWithAlias);
-      assert.calledWithExactly(
-        locationBar.searchWithAlias,
-        "@Foo",
-        "topsites_newtab"
-      );
+      assert.calledOnce(locationBar.search);
+      assert.calledWithExactly(locationBar.search, "@Foo", {
+        searchModeEntry: "topsites_newtab",
+      });
     });
     it("should call saveToPocket on SAVE_TO_POCKET", () => {
       const action = {
@@ -554,7 +552,7 @@ describe("PlacesFeed", () => {
     beforeEach(() => {
       fakeUrlBar = {
         focus: sinon.spy(),
-        searchWithAlias: sinon.spy(),
+        search: sinon.spy(),
         setHiddenFocus: sinon.spy(),
         removeHiddenFocus: sinon.spy(),
         addEventListener: (ev, cb) => {
@@ -571,12 +569,12 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.setHiddenFocus);
-      assert.notCalled(fakeUrlBar.searchWithAlias);
+      assert.notCalled(fakeUrlBar.search);
       assert.notCalled(feed.store.dispatch);
 
       // Now type a character.
       listeners.keydown({ key: "f" });
-      assert.calledOnce(fakeUrlBar.searchWithAlias);
+      assert.calledOnce(fakeUrlBar.search);
       assert.calledOnce(fakeUrlBar.removeHiddenFocus);
       assert.calledOnce(feed.store.dispatch);
       assert.calledWith(feed.store.dispatch, {
@@ -595,13 +593,10 @@ describe("PlacesFeed", () => {
         data: { text: "foo" },
         meta: { fromTarget: {} },
       });
-      assert.calledOnce(fakeUrlBar.searchWithAlias);
-      assert.calledWith(
-        fakeUrlBar.searchWithAlias,
-        "@google ",
-        "handoff",
-        "foo"
-      );
+      assert.calledOnce(fakeUrlBar.search);
+      assert.calledWith(fakeUrlBar.search, "@google foo", {
+        searchModeEntry: "handoff",
+      });
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
 
@@ -625,8 +620,10 @@ describe("PlacesFeed", () => {
         data: { text: "foo" },
         meta: { fromTarget: {} },
       });
-      assert.calledOnce(fakeUrlBar.searchWithAlias);
-      assert.calledWith(fakeUrlBar.searchWithAlias, "@bing ", "handoff", "foo");
+      assert.calledOnce(fakeUrlBar.search);
+      assert.calledWith(fakeUrlBar.search, "@bing foo", {
+        searchModeEntry: "handoff",
+      });
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
 
@@ -650,13 +647,10 @@ describe("PlacesFeed", () => {
         data: { text: "foo" },
         meta: { fromTarget: {} },
       });
-      assert.calledOnce(fakeUrlBar.searchWithAlias);
-      assert.calledWithExactly(
-        fakeUrlBar.searchWithAlias,
-        "@google ",
-        "handoff",
-        "foo"
-      );
+      assert.calledOnce(fakeUrlBar.search);
+      assert.calledWithExactly(fakeUrlBar.search, "@google foo", {
+        searchModeEntry: "handoff",
+      });
       assert.notCalled(fakeUrlBar.focus);
 
       // Now call ESC keydown.
@@ -679,13 +673,10 @@ describe("PlacesFeed", () => {
         data: { text: "foo" },
         meta: { fromTarget: {} },
       });
-      assert.calledOnce(fakeUrlBar.searchWithAlias);
-      assert.calledWithExactly(
-        fakeUrlBar.searchWithAlias,
-        "",
-        "handoff",
-        "foo"
-      );
+      assert.calledOnce(fakeUrlBar.search);
+      assert.calledWithExactly(fakeUrlBar.search, "foo", {
+        searchModeEntry: "handoff",
+      });
     });
   });
 

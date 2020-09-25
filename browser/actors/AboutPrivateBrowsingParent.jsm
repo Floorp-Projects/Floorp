@@ -69,7 +69,9 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           urlBar.setHiddenFocus();
         } else {
           // Pass the provided text to the awesomebar. Prepend the @engine shortcut.
-          urlBar.search(`${searchAlias}${aMessage.data.text}`);
+          urlBar.search(`${searchAlias}${aMessage.data.text}`, {
+            searchModeEntry: "handoff",
+          });
           isFirstChange = false;
         }
 
@@ -80,7 +82,7 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           if (isFirstChange) {
             isFirstChange = false;
             urlBar.removeHiddenFocus();
-            urlBar.search(searchAlias);
+            urlBar.search(searchAlias, { searchModeEntry: "handoff" });
             this.sendAsyncMessage("HideSearch");
             urlBar.removeEventListener("compositionstart", checkFirstChange);
             urlBar.removeEventListener("paste", checkFirstChange);
