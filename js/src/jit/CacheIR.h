@@ -1299,9 +1299,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                                       ValOperandId receiverId);
   AttachDecision tryAttachFunction(HandleObject obj, ObjOperandId objId,
                                    HandleId id);
-  AttachDecision tryAttachArgumentsObjectIterator(HandleObject obj,
-                                                  ObjOperandId objId,
-                                                  HandleId id);
 
   AttachDecision tryAttachGenericProxy(HandleObject obj, ObjOperandId objId,
                                        HandleId id, bool handleDOMProxies);
