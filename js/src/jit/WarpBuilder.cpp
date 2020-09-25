@@ -3228,6 +3228,12 @@ bool WarpBuilder::buildInlinedCall(BytecodeLocation loc,
                                    CallInfo& callInfo) {
   jsbytecode* pc = loc.toRawBytecode();
 
+  if (callInfo.isSetter()) {
+    // build_SetProp pushes the rhs argument onto the stack. Remove it
+    // in preparation for pushCallStack.
+    current->pop();
+  }
+
   callInfo.setImplicitlyUsedUnchecked();
 
   // Capture formals in the outer resume point.
@@ -3334,9 +3340,9 @@ MDefinition* WarpBuilder::patchInlinedReturn(CompileInfo* calleeCompileInfo,
     auto* filter = MReturnFromCtor::New(alloc(), rdef, callInfo.thisArg());
     exit->add(filter);
     rdef = filter;
-  }
-  if (callInfo.isSetter()) {
-    MOZ_CRASH("TODO");
+  } else if (callInfo.isSetter()) {
+    // Setters return the rhs argument, not whatever value is returned.
+    rdef = callInfo.getArg(0);
   }
 
   exit->end(MGoto::New(alloc(), returnBlock));

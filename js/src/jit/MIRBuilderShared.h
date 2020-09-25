@@ -213,6 +213,7 @@ class MOZ_STACK_CLASS CallInfo {
   void initForSetterCall(MDefinition* callee, MDefinition* thisVal,
                          MDefinition* rhs) {
     MOZ_ASSERT(args_.empty());
+    markAsSetter();
     setCallee(callee);
     setThis(thisVal);
     static_assert(decltype(args_)::InlineLength >= 1,
