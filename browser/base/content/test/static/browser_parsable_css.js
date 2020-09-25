@@ -61,6 +61,15 @@ let whitelist = [
   },
 ];
 
+if (!Services.prefs.getBoolPref("layout.css.math-style.enabled")) {
+  // mathml.css UA sheet rule for math-style.
+  whitelist.push({
+    sourceName: /(?:res|gre-resources)\/mathml\.css$/i,
+    errorMessage: /Unknown property .*\bmath-style\b/i,
+    isFromDevTools: false,
+  });
+}
+
 if (
   !Services.prefs.getBoolPref(
     "layout.css.xul-box-display-values.content.enabled"
