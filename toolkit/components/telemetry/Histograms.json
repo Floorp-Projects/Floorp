@@ -1677,17 +1677,6 @@
     "description": "Time between receiving a scroll event on the event loop and compositing its result onto the screen (ms)",
     "bug_numbers": [1500465, 1604818]
   },
-  "PENDING_CRITICAL_INPUT_WHEN_TIMEOUT": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["perfteam@mozilla.com", "seanfeng@mozilla.com"],
-    "expires_in_version": "84",
-    "kind": "enumerated",
-    "n_values": 80,
-    "releaseChannelCollection": "opt-out",
-    "description": "Measures the number of pending critical input events in the IPC channel when the timeout handler is about to run",
-    "bug_numbers": [1648284]
-  },
   "CANVAS_2D_USED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
