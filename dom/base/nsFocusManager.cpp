@@ -164,7 +164,7 @@ NS_IMPL_CYCLE_COLLECTION_WEAK(nsFocusManager, mActiveWindow,
                               mFirstBlurEvent, mFirstFocusEvent,
                               mWindowBeingLowered, mDelayedBlurFocusEvents)
 
-nsFocusManager* nsFocusManager::sInstance = nullptr;
+StaticRefPtr<nsFocusManager> nsFocusManager::sInstance;
 bool nsFocusManager::sMouseFocusesFormControl = false;
 bool nsFocusManager::sTestMode = false;
 
@@ -189,9 +189,7 @@ nsFocusManager::~nsFocusManager() {
 
 // static
 nsresult nsFocusManager::Init() {
-  nsFocusManager* fm = new nsFocusManager();
-  NS_ADDREF(fm);
-  sInstance = fm;
+  sInstance = new nsFocusManager();
 
   nsIContent::sTabFocusModelAppliesToXUL =
       Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
@@ -203,18 +201,18 @@ nsresult nsFocusManager::Init() {
   sTestMode = Preferences::GetBool("focusmanager.testmode", false);
 
   Preferences::RegisterCallbacks(nsFocusManager::PrefChanged, kObservedPrefs,
-                                 fm);
+                                 sInstance.get());
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    obs->AddObserver(fm, "xpcom-shutdown", true);
+    obs->AddObserver(sInstance, "xpcom-shutdown", true);
   }
 
   return NS_OK;
 }
 
 // static
-void nsFocusManager::Shutdown() { NS_IF_RELEASE(sInstance); }
+void nsFocusManager::Shutdown() { sInstance = nullptr; }
 
 // static
 void nsFocusManager::PrefChanged(const char* aPref, void* aSelf) {
@@ -396,8 +394,8 @@ nsFocusManager::GetActiveBrowsingContext(BrowsingContext** aBrowsingContext) {
 
 void nsFocusManager::FocusWindow(nsPIDOMWindowOuter* aWindow,
                                  CallerType aCallerType) {
-  if (RefPtr<nsFocusManager> fm = sInstance) {
-    fm->SetFocusedWindowWithCallerType(aWindow, aCallerType);
+  if (sInstance) {
+    sInstance->SetFocusedWindowWithCallerType(aWindow, aCallerType);
   }
 }
 
