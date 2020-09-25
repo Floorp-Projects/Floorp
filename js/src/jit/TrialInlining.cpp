@@ -128,6 +128,18 @@ ICStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
   return stub;
 }
 
+Maybe<InlinableOpData> FindInlinableOpData(ICStub* stub) {
+  Maybe<InlinableCallData> call = FindInlinableCallData(stub);
+  if (call.isSome()) {
+    return call;
+  }
+  Maybe<InlinableGetterData> getter = FindInlinableGetterData(stub);
+  if (getter.isSome()) {
+    return getter;
+  }
+  return mozilla::Nothing();
+}
+
 Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub) {
   Maybe<InlinableCallData> data;
 
