@@ -253,16 +253,98 @@ void nsPrintSettingsX::GetInchesScale(float* aWidthScale, float* aHeightScale) {
   *aHeightScale = mHeightScale;
 }
 
+NS_IMETHODIMP nsPrintSettingsX::GetPaperWidth(double* aPaperWidth) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Only use NSPrintInfo data in the parent process.
+  if (XRE_IsParentProcess()) {
+    NSSize paperSize = [mPrintInfo paperSize];
+    int32_t orientation;
+    GetOrientation(&orientation);
+    if (kLandscapeOrientation == orientation) {
+      *aPaperWidth = paperSize.height / mHeightScale;
+    } else {
+      *aPaperWidth = paperSize.width / mWidthScale;
+    }
+  } else {
+    nsPrintSettings::GetPaperWidth(aPaperWidth);
+  }
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 NS_IMETHODIMP nsPrintSettingsX::SetPaperWidth(double aPaperWidth) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   mPaperWidth = aPaperWidth;
   mAdjustedPaperWidth = aPaperWidth * mWidthScale;
+
+  // Only use NSPrintInfo data in the parent process.
+  if (XRE_IsParentProcess()) {
+    // Preserve orientation, which Cocoa may otherwise reset based on its
+    // interpretation of the paper dimensions given.
+    auto orientation = [mPrintInfo orientation];
+    NSSize paperSize = [mPrintInfo paperSize];
+    if (orientation == kLandscapeOrientation) {
+      paperSize.height = mPaperWidth * mHeightScale;
+    } else {
+      paperSize.width = mAdjustedPaperWidth;
+    }
+    [mPrintInfo setPaperSize:paperSize];
+    [mPrintInfo setOrientation:orientation];
+  }
+
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsPrintSettingsX::GetPaperHeight(double* aPaperHeight) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Only use NSPrintInfo data in the parent process.
+  if (XRE_IsParentProcess()) {
+    NSSize paperSize = [mPrintInfo paperSize];
+    int32_t orientation;
+    GetOrientation(&orientation);
+    if (kLandscapeOrientation == orientation) {
+      *aPaperHeight = paperSize.width / mWidthScale;
+    } else {
+      *aPaperHeight = paperSize.height / mHeightScale;
+    }
+  } else {
+    nsPrintSettings::GetPaperHeight(aPaperHeight);
+  }
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsPrintSettingsX::SetPaperHeight(double aPaperHeight) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   mPaperHeight = aPaperHeight;
   mAdjustedPaperHeight = aPaperHeight * mHeightScale;
+
+  // Only use NSPrintInfo data in the parent process.
+  if (XRE_IsParentProcess()) {
+    // Preserve orientation, which Cocoa may otherwise reset based on its
+    // interpretation of the paper dimensions given.
+    auto orientation = [mPrintInfo orientation];
+    NSSize paperSize = [mPrintInfo paperSize];
+    if (orientation == kLandscapeOrientation) {
+      paperSize.width = mPaperHeight * mWidthScale;
+    } else {
+      paperSize.height = mAdjustedPaperHeight;
+    }
+    [mPrintInfo setPaperSize:paperSize];
+    [mPrintInfo setOrientation:orientation];
+  }
+
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP
