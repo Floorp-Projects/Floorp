@@ -1790,32 +1790,38 @@ impl DirtyRegion {
         self.combined = WorldRect::zero();
     }
 
-    /// Push a dirty rect into this region
-    pub fn push(
+    /// Add a dirty region to the tracker. Returns the visibility mask that corresponds to
+    /// this region in the tracker.
+    pub fn add_dirty_region(
         &mut self,
-        rect: WorldRect,
-        visibility_mask: PrimitiveVisibilityMask,
-    ) {
+        world_rect: WorldRect,
+    ) -> PrimitiveVisibilityMask {
         // Include this in the overall dirty rect
-        self.combined = self.combined.union(&rect);
+        self.combined = self.combined.union(&world_rect);
 
-        // Store the individual dirty rect.
-        self.dirty_rects.push(DirtyRegionRect {
-            world_rect: rect,
-            visibility_mask,
-        });
-    }
+        let dirty_region_index = self.dirty_rects.len();
+        let mut visibility_mask = PrimitiveVisibilityMask::empty();
 
-    /// Include another rect into an existing dirty region.
-    pub fn include_rect(
-        &mut self,
-        region_index: usize,
-        rect: WorldRect,
-    ) {
-        self.combined = self.combined.union(&rect);
+        if dirty_region_index < PrimitiveVisibilityMask::MAX_DIRTY_REGIONS {
+            visibility_mask.set_visible(dirty_region_index);
 
-        let region = &mut self.dirty_rects[region_index];
-        region.world_rect = region.world_rect.union(&rect);
+            self.dirty_rects.push(DirtyRegionRect {
+                world_rect,
+                visibility_mask,
+            });
+        } else {
+            // If we run out of dirty regions, then force the last dirty region to
+            // be a union of any remaining regions. This is an inefficiency, in that
+            // we'll add items to batches later on that are redundant / outside this
+            // tile, but it's really rare except in pathological cases (even on a
+            // 4k screen, the typical dirty region count is < 16).
+            visibility_mask.set_visible(PrimitiveVisibilityMask::MAX_DIRTY_REGIONS - 1);
+
+            let combined_region = self.dirty_rects.last_mut().unwrap();
+            combined_region.world_rect = combined_region.world_rect.union(&world_rect);
+        }
+
+        visibility_mask
     }
 
     // TODO(gw): This returns a heap allocated object. Perhaps we can simplify this
@@ -4714,8 +4720,12 @@ impl PicturePrimitive {
         }
 
         profile_scope!("take_context");
-        let task_id = frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port;
-        frame_state.render_tasks[task_id].children.reserve(self.num_render_tasks);
+        // In rare circumstances (if the entire picture cache slice is drawn by background color
+        // tiles without surfaces) the render_tasks field below will be None.
+        if self.num_render_tasks > 0 {
+            let task_id = frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port;
+            frame_state.render_tasks[task_id].children.reserve(self.num_render_tasks);
+        }
 
         // Extract the raster and surface spatial nodes from the raster
         // config, if this picture establishes a surface. Otherwise just
@@ -5309,8 +5319,15 @@ impl PicturePrimitive {
                                 continue;
                             }
 
+                            // Get the visibility mask bit(s) for this tile from the dirty region tracker. This must be done
+                            // outside the if statement below, so that we include in the dirty region tiles that are handled
+                            // by a background color only (no surface allocation).
+                            let tile_vis_mask = tile_cache.dirty_region.add_dirty_region(world_dirty_rect);
+
                             // Ensure that this texture is allocated.
                             if let TileSurface::Texture { ref mut descriptor, ref mut visibility_mask } = tile.surface.as_mut().unwrap() {
+                                *visibility_mask = tile_vis_mask;
+
                                 match descriptor {
                                     SurfaceTextureDescriptor::TextureCache { ref mut handle } => {
                                         if !frame_state.resource_cache.texture_cache.is_allocated(handle) {
@@ -5367,30 +5384,6 @@ impl PicturePrimitive {
                                             *id = Some(tile_id);
                                         }
                                     }
-                                }
-
-                                *visibility_mask = PrimitiveVisibilityMask::empty();
-                                let dirty_region_index = tile_cache.dirty_region.dirty_rects.len();
-
-                                // If we run out of dirty regions, then force the last dirty region to
-                                // be a union of any remaining regions. This is an inefficiency, in that
-                                // we'll add items to batches later on that are redundant / outside this
-                                // tile, but it's really rare except in pathological cases (even on a
-                                // 4k screen, the typical dirty region count is < 16).
-                                if dirty_region_index < PrimitiveVisibilityMask::MAX_DIRTY_REGIONS {
-                                    visibility_mask.set_visible(dirty_region_index);
-
-                                    tile_cache.dirty_region.push(
-                                        world_dirty_rect,
-                                        *visibility_mask,
-                                    );
-                                } else {
-                                    visibility_mask.set_visible(PrimitiveVisibilityMask::MAX_DIRTY_REGIONS - 1);
-
-                                    tile_cache.dirty_region.include_rect(
-                                        PrimitiveVisibilityMask::MAX_DIRTY_REGIONS - 1,
-                                        world_dirty_rect,
-                                    );
                                 }
 
                                 let content_origin_f = tile.world_tile_rect.origin * device_pixel_scale;
@@ -5703,8 +5696,11 @@ impl PicturePrimitive {
             frame_state.pop_dirty_region();
         }
 
-        let task_id = frame_state.surfaces[parent_surface_index.0].render_tasks.unwrap().port;
-        self.num_render_tasks = frame_state.render_tasks[task_id].children.len();
+        // In rare circumstances (if the entire picture cache slice is drawn by background color
+        // tiles without surfaces) the render_tasks field below will be None.
+        if let Some(task_id) = frame_state.surfaces[parent_surface_index.0].render_tasks.map(|s| s.port) {
+            self.num_render_tasks = frame_state.render_tasks[task_id].children.len();
+        }
 
         self.prim_list = prim_list;
         self.state = Some(state);
