@@ -3954,6 +3954,24 @@ unknowncontenttype:
 
 # The following section contains scalars for printing.
 printing:
+  paper_size:
+    bug_numbers:
+      - 1660686
+    description: >
+      A counter of the number of times a given paper size (recorded as
+      "width x height" in points) is used for printing.
+    keyed: true
+    expires: "89"
+    kind: uint
+    notification_emails:
+      - jwatt@jwatt.org
+      - jkew@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
+
   dialog_opened_without_preview:
     bug_numbers:
       - 1600623
