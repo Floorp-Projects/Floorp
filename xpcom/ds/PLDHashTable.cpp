@@ -282,7 +282,7 @@ PLDHashTable::~PLDHashTable() {
   AutoDestructorOp op(mChecker);
 #endif
 
-  if (!mEntryStore.Get()) {
+  if (!mEntryStore.IsAllocated()) {
     return;
   }
 
@@ -318,7 +318,7 @@ MOZ_ALWAYS_INLINE auto PLDHashTable::SearchTable(const void* aKey,
                                                  PLDHashNumber aKeyHash,
                                                  Success&& aSuccess,
                                                  Failure&& aFailure) const {
-  MOZ_ASSERT(mEntryStore.Get());
+  MOZ_ASSERT(mEntryStore.IsAllocated());
   NS_ASSERTION(!(aKeyHash & kCollisionFlag), "!(aKeyHash & kCollisionFlag)");
 
   // Compute the primary hash address.
@@ -389,7 +389,7 @@ MOZ_ALWAYS_INLINE auto PLDHashTable::SearchTable(const void* aKey,
 // to keys, which means callers can use complex key types more easily.
 MOZ_ALWAYS_INLINE auto PLDHashTable::FindFreeSlot(PLDHashNumber aKeyHash) const
     -> Slot {
-  MOZ_ASSERT(mEntryStore.Get());
+  MOZ_ASSERT(mEntryStore.IsAllocated());
   NS_ASSERTION(!(aKeyHash & kCollisionFlag), "!(aKeyHash & kCollisionFlag)");
 
   // Compute the primary hash address.
@@ -423,7 +423,7 @@ MOZ_ALWAYS_INLINE auto PLDHashTable::FindFreeSlot(PLDHashNumber aKeyHash) const
 }
 
 bool PLDHashTable::ChangeTable(int32_t aDeltaLog2) {
-  MOZ_ASSERT(mEntryStore.Get());
+  MOZ_ASSERT(mEntryStore.IsAllocated());
 
   // Look, but don't touch, until we succeed in getting new entry store.
   int32_t oldLog2 = kPLDHashNumberBits - mHashShift;
@@ -471,7 +471,7 @@ bool PLDHashTable::ChangeTable(int32_t aDeltaLog2) {
 
 MOZ_ALWAYS_INLINE PLDHashNumber
 PLDHashTable::ComputeKeyHash(const void* aKey) const {
-  MOZ_ASSERT(mEntryStore.Get());
+  MOZ_ASSERT(mEntryStore.IsAllocated());
 
   PLDHashNumber keyHash = mozilla::ScrambleHashCode(mOps->hashKey(aKey));
 
@@ -489,7 +489,7 @@ PLDHashEntryHdr* PLDHashTable::Search(const void* aKey) const {
   AutoReadOp op(mChecker);
 #endif
 
-  if (!mEntryStore.Get()) {
+  if (!mEntryStore.IsAllocated()) {
     return nullptr;
   }
 
@@ -506,13 +506,13 @@ PLDHashEntryHdr* PLDHashTable::Add(const void* aKey,
 #endif
 
   // Allocate the entry storage if it hasn't already been allocated.
-  if (!mEntryStore.Get()) {
+  if (!mEntryStore.IsAllocated()) {
     uint32_t nbytes;
     // We already checked this in the constructor, so it must still be true.
     MOZ_RELEASE_ASSERT(
         SizeOfEntryStore(CapacityFromHashShift(), mEntrySize, &nbytes));
     mEntryStore.Set((char*)calloc(1, nbytes), &mGeneration);
-    if (!mEntryStore.Get()) {
+    if (!mEntryStore.IsAllocated()) {
       return nullptr;
     }
   }
@@ -566,7 +566,7 @@ PLDHashEntryHdr* PLDHashTable::Add(const void* aKey,
 PLDHashEntryHdr* PLDHashTable::Add(const void* aKey) {
   PLDHashEntryHdr* entry = Add(aKey, fallible);
   if (!entry) {
-    if (!mEntryStore.Get()) {
+    if (!mEntryStore.IsAllocated()) {
       // We OOM'd while allocating the initial entry storage.
       uint32_t nbytes;
       (void)SizeOfEntryStore(CapacityFromHashShift(), mEntrySize, &nbytes);
@@ -587,7 +587,7 @@ void PLDHashTable::Remove(const void* aKey) {
   AutoWriteOp op(mChecker);
 #endif
 
-  if (!mEntryStore.Get()) {
+  if (!mEntryStore.IsAllocated()) {
     return;
   }
 
@@ -623,7 +623,7 @@ void PLDHashTable::RawRemove(Slot& aSlot) {
   // active, which doesn't fit well into how Checker's mState variable works.
   MOZ_ASSERT(mChecker.IsWritable());
 
-  MOZ_ASSERT(mEntryStore.Get());
+  MOZ_ASSERT(mEntryStore.IsAllocated());
 
   MOZ_ASSERT(aSlot.IsLive());
 
