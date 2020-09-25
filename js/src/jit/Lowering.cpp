@@ -345,6 +345,18 @@ void LIRGenerator::visitArgumentsObjectLength(MArgumentsObjectLength* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitGuardArgumentsObjectNotOverriddenIterator(
+    MGuardArgumentsObjectNotOverriddenIterator* ins) {
+  MDefinition* argsObj = ins->getArgsObject();
+  MOZ_ASSERT(argsObj->type() == MIRType::Object);
+
+  auto* lir = new (alloc())
+      LGuardArgumentsObjectNotOverriddenIterator(useRegister(argsObj), temp());
+  assignSnapshot(lir, BailoutKind::ArgumentsObjectAccess);
+  add(lir, ins);
+  redefine(ins, argsObj);
+}
+
 void LIRGenerator::visitReturnFromCtor(MReturnFromCtor* ins) {
   LReturnFromCtor* lir = new (alloc())
       LReturnFromCtor(useBox(ins->getValue()), useRegister(ins->getObject()));
