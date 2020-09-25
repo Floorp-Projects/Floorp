@@ -14,6 +14,7 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsIWebProgressListener.h"
 #include "nsIX509Cert.h"
+#include "nsPrintfCString.h"
 
 #include "nsNetUtil.h"
 
@@ -218,6 +219,28 @@ nsresult GeckoViewStreamListener::HandleWebResponse(nsIRequest* aRequest) {
     RefPtr<HeaderVisitor> visitor = new HeaderVisitor(builder);
     rv = httpChannel->VisitResponseHeaders(visitor);
     NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // Headers for other responses
+    // try to provide some basic metadata about the response
+    nsString filename;
+    if (NS_SUCCEEDED(channel->GetContentDispositionFilename(filename))) {
+      builder->Header(jni::StringParam(u"content-disposition"_ns),
+                      nsPrintfCString("attachment; filename=\"%s\"",
+                                      NS_ConvertUTF16toUTF8(filename).get()));
+    }
+
+    nsCString contentType;
+    if (NS_SUCCEEDED(channel->GetContentType(contentType))) {
+      builder->Header(jni::StringParam(u"content-type"_ns), contentType);
+    }
+
+    int64_t contentLength = 0;
+    if (NS_SUCCEEDED(channel->GetContentLength(&contentLength))) {
+      nsString contentLengthString;
+      contentLengthString.AppendInt(contentLength);
+      builder->Header(jni::StringParam(u"content-length"_ns),
+                      contentLengthString);
+    }
   }
 
   java::WebResponse::GlobalRef response = builder->Build();
