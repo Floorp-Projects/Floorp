@@ -6,6 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["newAppInfo", "getAppInfo", "updateAppInfo"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"].getService(
   Ci.nsIPlatformInfo
 );
@@ -44,6 +46,7 @@ var newAppInfo = function(options = {}) {
     platformBuildID: origPlatformInfo.platformBuildID,
 
     // nsIXULRuntime
+    ...Ci.nsIXULRuntime,
     inSafeMode: false,
     logConsoleErrors: true,
     OS: options.OS ?? "XPCShell",
@@ -52,6 +55,15 @@ var newAppInfo = function(options = {}) {
     shouldBlockIncompatJaws: false,
     processType: origRuntime.processType,
     uniqueProcessID: origRuntime.uniqueProcessID,
+
+    fissionAutostart: origRuntime.fissionAutostart,
+    browserTabsRemoteAutostart: origRuntime.browserTabsRemoteAutostart,
+    get maxWebProcessCount() {
+      return origRuntime.maxWebProcessCount;
+    },
+    get launcherProcessState() {
+      return origRuntime.launcherProcessState;
+    },
 
     // nsIWinAppHelper
     get userCanElevate() {
@@ -123,6 +135,8 @@ var updateAppInfo = function(options) {
       return currentAppInfo.QueryInterface(iid);
     },
   };
+
+  Services.appinfo = currentAppInfo;
 
   registrar.registerFactory(id, "XULAppInfo", contractid, factory);
 };

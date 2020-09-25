@@ -42,6 +42,47 @@ interface nsIXULRuntime : nsISupports
   readonly attribute boolean inSafeMode;
 
   /**
+   * The status of a given experiment, as stored in a preference by Normandy.
+   */
+  cenum ExperimentStatus : 8 {
+    // The experiment status is unknown, and behavior should not be modified.
+    eUnknown = 0,
+    // The user is enrolled in the control group, and should see the default
+    // behavior.
+    eEnrolledControl = 1,
+    // The user is enrolled in the treatment group, and should see the
+    // experimental behavior which is being tested.
+    eEnrolledTreatment = 2,
+    eExperimentStatusMax = 2,
+  };
+
+  /**
+   * Whether Fission should be automatically enabled for new browser windows.
+   *
+   * This value is guaranteed to remain constant for the length of a browser
+   * session.
+   */
+  readonly attribute boolean fissionAutostart;
+
+  /**
+   * The user's enrollment status in the Fission rollout experiment. May be
+   * one of:
+   *
+   *  - eUnknown: The user's enrollment status is unknown, and the experiment
+   *    should be ignored.
+   *
+   *  - eEnrolledControl: The user is enrolled in the control group, and Fission
+   *    should be disabled.
+   *
+   *  - eEnrolledTreatment: The user is enrolled in the treatment group, and
+   *    Fission should be enabled.
+   *
+   * This value is guaranteed to remain constant for the length of a browser
+   * session.
+   */
+  readonly attribute nsIXULRuntime_ExperimentStatus fissionExperimentStatus;
+
+  /**
    * Whether to write console errors to a log file. If a component
    * encounters startup errors that might prevent the app from showing
    * proper UI, it should set this flag to "true".

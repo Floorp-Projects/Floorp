@@ -89,15 +89,8 @@ ActorManagerParent.flush();
 
 const { promiseDocumentLoaded, promiseEvent, promiseObserved } = ExtensionUtils;
 
-var REMOTE_CONTENT_SCRIPTS = Services.prefs.getBoolPref(
-  "browser.tabs.remote.autostart",
-  false
-);
-
-const REMOTE_CONTENT_SUBFRAMES = Services.prefs.getBoolPref(
-  "fission.autostart",
-  false
-);
+var REMOTE_CONTENT_SCRIPTS = Services.appinfo.browserTabsRemoteAutostart;
+const REMOTE_CONTENT_SUBFRAMES = Services.appinfo.fissionAutostart;
 
 let BASE_MANIFEST = Object.freeze({
   applications: Object.freeze({
