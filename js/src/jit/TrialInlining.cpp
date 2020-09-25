@@ -128,14 +128,24 @@ ICStub* TrialInliner::maybeSingleStub(const ICEntry& entry) {
   return stub;
 }
 
-Maybe<InlinableOpData> FindInlinableOpData(ICStub* stub) {
-  Maybe<InlinableCallData> call = FindInlinableCallData(stub);
-  if (call.isSome()) {
-    return call;
+Maybe<InlinableOpData> FindInlinableOpData(ICStub* stub, BytecodeLocation loc) {
+  if (loc.isInvokeOp()) {
+    Maybe<InlinableCallData> call = FindInlinableCallData(stub);
+    if (call.isSome()) {
+      return call;
+    }
   }
-  Maybe<InlinableGetterData> getter = FindInlinableGetterData(stub);
-  if (getter.isSome()) {
-    return getter;
+  if (loc.isGetPropOp()) {
+    Maybe<InlinableGetterData> getter = FindInlinableGetterData(stub);
+    if (getter.isSome()) {
+      return getter;
+    }
+  }
+  if (loc.isSetPropOp()) {
+    Maybe<InlinableSetterData> setter = FindInlinableSetterData(stub);
+    if (setter.isSome()) {
+      return setter;
+    }
   }
   return mozilla::Nothing();
 }
@@ -270,6 +280,75 @@ Maybe<InlinableGetterData> FindInlinableGetterData(ICStub* stub) {
         uint32_t getterOffset = reader.stubOffset();
         uintptr_t rawTarget = stubInfo->getStubRawWord(stubData, getterOffset);
         data->target = reinterpret_cast<JSFunction*>(rawTarget);
+
+        uint32_t icScriptOffset = reader.stubOffset();
+        uintptr_t rawICScript =
+            stubInfo->getStubRawWord(stubData, icScriptOffset);
+        data->icScript = reinterpret_cast<ICScript*>(rawICScript);
+
+        data->sameRealm = reader.readBool();
+        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
+
+        data->endOfSharedPrefix = opStart;
+        break;
+      }
+      default:
+        if (!opInfo.transpile) {
+          return mozilla::Nothing();
+        }
+        if (data.isSome()) {
+          MOZ_ASSERT(op == CacheOp::ReturnFromIC ||
+                     op == CacheOp::TypeMonitorResult);
+        }
+        reader.skip(argLength);
+        break;
+    }
+    MOZ_ASSERT(argStart + argLength == reader.currentPosition());
+  }
+
+  return data;
+}
+
+Maybe<InlinableSetterData> FindInlinableSetterData(ICStub* stub) {
+  Maybe<InlinableSetterData> data;
+
+  const CacheIRStubInfo* stubInfo = stub->cacheIRStubInfo();
+  const uint8_t* stubData = stub->cacheIRStubData();
+
+  CacheIRReader reader(stubInfo);
+  while (reader.more()) {
+    const uint8_t* opStart = reader.currentPosition();
+
+    CacheOp op = reader.readOp();
+    CacheIROpInfo opInfo = CacheIROpInfos[size_t(op)];
+    uint32_t argLength = opInfo.argLength;
+    mozilla::DebugOnly<const uint8_t*> argStart = reader.currentPosition();
+
+    switch (op) {
+      case CacheOp::CallScriptedSetter: {
+        data.emplace();
+        data->receiverOperand = reader.objOperandId();
+
+        uint32_t setterOffset = reader.stubOffset();
+        uintptr_t rawTarget = stubInfo->getStubRawWord(stubData, setterOffset);
+        data->target = reinterpret_cast<JSFunction*>(rawTarget);
+
+        data->rhsOperand = reader.valOperandId();
+        data->sameRealm = reader.readBool();
+        mozilla::Unused << reader.stubOffset();  // nargsAndFlags
+
+        data->endOfSharedPrefix = opStart;
+        break;
+      }
+      case CacheOp::CallInlinedSetter: {
+        data.emplace();
+        data->receiverOperand = reader.objOperandId();
+
+        uint32_t setterOffset = reader.stubOffset();
+        uintptr_t rawTarget = stubInfo->getStubRawWord(stubData, setterOffset);
+        data->target = reinterpret_cast<JSFunction*>(rawTarget);
+
+        data->rhsOperand = reader.valOperandId();
 
         uint32_t icScriptOffset = reader.stubOffset();
         uintptr_t rawICScript =
@@ -519,6 +598,49 @@ bool TrialInliner::maybeInlineGetter(const ICEntry& entry,
   return true;
 }
 
+bool TrialInliner::maybeInlineSetter(const ICEntry& entry,
+                                     BytecodeLocation loc) {
+  ICStub* stub = maybeSingleStub(entry);
+  if (!stub) {
+    return true;
+  }
+
+  MOZ_ASSERT(!icScript_->hasInlinedChild(entry.pcOffset()));
+
+  Maybe<InlinableSetterData> data = FindInlinableSetterData(stub);
+  if (data.isNothing()) {
+    return true;
+  }
+
+  MOZ_ASSERT(!data->icScript);
+
+  // Decide whether to inline the target.
+  if (!shouldInline(data->target, stub, loc)) {
+    return true;
+  }
+
+  ICScript* newICScript = createInlinedICScript(data->target, loc);
+  if (!newICScript) {
+    return false;
+  }
+
+  CacheIRWriter writer(cx());
+  ValOperandId objValId(writer.setInputOperandId(0));
+  ValOperandId rhsValId(writer.setInputOperandId(1));
+  cloneSharedPrefix(stub, data->endOfSharedPrefix, writer);
+
+  writer.callInlinedSetter(data->receiverOperand, data->target,
+                           data->rhsOperand, newICScript, data->sameRealm);
+  writer.returnFromIC();
+
+  if (!replaceICStub(entry, writer, CacheKind::SetProp)) {
+    icScript_->removeInlinedChild(entry.pcOffset());
+    return false;
+  }
+
+  return true;
+}
+
 bool TrialInliner::tryInlining() {
   uint32_t numICEntries = icScript_->numICEntries();
   BytecodeLocation startLoc = script_->location();
@@ -542,6 +664,12 @@ bool TrialInliner::tryInlining() {
       case JSOp::CallProp:
       case JSOp::Length:
         if (!maybeInlineGetter(entry, loc)) {
+          return false;
+        }
+        break;
+      case JSOp::SetProp:
+      case JSOp::StrictSetProp:
+        if (!maybeInlineSetter(entry, loc)) {
           return false;
         }
         break;

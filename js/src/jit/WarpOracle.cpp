@@ -948,7 +948,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
     WarpOpSnapshotList& snapshots, BytecodeLocation loc, ICStub* stub,
     ICFallbackStub* fallbackStub, uint8_t* stubDataCopy) {
-  Maybe<InlinableOpData> inlineData = FindInlinableOpData(stub);
+  Maybe<InlinableOpData> inlineData = FindInlinableOpData(stub, loc);
   if (inlineData.isNothing() || !inlineData->icScript) {
     return false;
   }
