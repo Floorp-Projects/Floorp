@@ -3890,6 +3890,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadJitCodeNoArgCheck(Register func, Register dest);
   void loadBaselineJitCodeRaw(Register func, Register dest,
                               Label* failure = nullptr);
+  void storeICScriptInJSContext(Register icScript);
 
   void loadBaselineFramePtr(Register framePtr, Register dest);
 

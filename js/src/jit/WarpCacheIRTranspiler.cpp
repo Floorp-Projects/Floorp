@@ -3731,6 +3731,13 @@ bool WarpCacheIRTranspiler::emitCallScriptedGetterResult(
                               sameRealm, nargsAndFlagsOffset);
 }
 
+bool WarpCacheIRTranspiler::emitCallInlinedGetterResult(
+    ValOperandId receiverId, uint32_t getterOffset, uint32_t icScriptOffset,
+    bool sameRealm, uint32_t nargsAndFlagsOffset) {
+  return emitCallGetterResult(CallKind::Scripted, receiverId, getterOffset,
+                              sameRealm, nargsAndFlagsOffset);
+}
+
 bool WarpCacheIRTranspiler::emitCallNativeGetterResult(
     ValOperandId receiverId, uint32_t getterOffset, bool sameRealm,
     uint32_t nargsAndFlagsOffset) {
