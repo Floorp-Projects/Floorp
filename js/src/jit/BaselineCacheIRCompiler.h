@@ -79,6 +79,11 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   enum class StringCode { CodeUnit, CodePoint };
   bool emitStringFromCodeResult(Int32OperandId codeId, StringCode stringCode);
 
+  bool emitCallScriptedGetterShared(ValOperandId receiverId,
+                                    uint32_t getterOffset, bool sameRealm,
+                                    uint32_t nargsAndFlagsOffset,
+                                    mozilla::Maybe<uint32_t> icScriptOffset);
+
  public:
   friend class AutoStubFrame;
 
