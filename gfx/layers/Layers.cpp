@@ -2141,7 +2141,8 @@ void ReadbackLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   Layer::PrintInfo(aStream, aPrefix);
   AppendToString(aStream, mSize, " [size=", "]");
   if (mBackgroundLayer) {
-    AppendToString(aStream, mBackgroundLayer, " [backgroundLayer=", "]");
+    aStream << " [backgroundLayer="
+            << nsPrintfCString("%p", mBackgroundLayer).get() << "]";
     AppendToString(aStream, mBackgroundLayerOffset, " [backgroundOffset=", "]");
   } else if (mBackgroundColor.a == 1.f) {
     AppendToString(aStream, mBackgroundColor, " [backgroundColor=", "]");
