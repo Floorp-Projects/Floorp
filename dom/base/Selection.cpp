@@ -3234,6 +3234,11 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
     return;
   }
 
+  // Make sure the layout is up to date as we access bidi information below.
+  if (RefPtr<Document> doc = GetDocument()) {
+    doc->FlushPendingNotifications(FlushType::Layout);
+  }
+
   // Line moves are always visual.
   bool visual = aDirection.LowerCaseEqualsLiteral("left") ||
                 aDirection.LowerCaseEqualsLiteral("right") ||
@@ -3282,8 +3287,7 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
 
   // If the paragraph direction of the focused frame is right-to-left,
   // we may have to swap the direction of movement.
-  nsIFrame* frame = GetPrimaryFrameForFocusNode(visual);
-  if (frame) {
+  if (nsIFrame* frame = GetPrimaryFrameForFocusNode(visual)) {
     nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
 
     if (paraDir == NSBIDI_RTL && visual) {

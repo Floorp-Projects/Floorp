@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=496275
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 
-<body onload="run()">
+<body onload="run()" style="font-family: monospace">
 <a target="_blank"
    href="https://bugzilla.mozilla.org/show_bug.cgi?id=496275">
   Mozilla Bug 496275
@@ -171,39 +171,40 @@ function run() {
   sel.collapse($("l1"), 0);
   SpecialPowers.wrap(sel).caretBidiLevel = 1;
   sel.modify("extend", "left", "lineboundary");
-  isAt("l1", 0, "l1", 3, "test 8a");
+  isAt("l1", 0, "l1", 0, "test 8a");
   sel.modify("move", "forward", "lineboundary");
   isAt("l1", 9, "l1", 9, "test 8b");
   sel.modify("extend", "backward", "lineboundary");
   isAt("l1", 9, "l1", 0, "test 8c");
   sel.modify("move", "left", "lineboundary");
-  isAt("l1", 3, "l1", 3, "test 8d");
+  isAt("l1", 0, "l1", 0, "test 8d");
   sel.modify("extend", "forward", "lineboundary");
-  isAt("l1", 3, "l1", 9, "test 8e");
+  isAt("l1", 0, "l1", 9, "test 8e");
 
   // Put the cursor at the left edge of the first line so that when we go up
   // and down, where we end up doesn't depend on how the characters line up.
   sel.collapse($("l1"), 0);
   SpecialPowers.wrap(sel).caretBidiLevel = 1;
   sel.modify("move", "left", "lineboundary");
-  isAt("l1", 3, "l1", 3, "test 9a");
+  isAt("l1", 0, "l1", 0, "test 9a");
   sel.modify("move", "forward", "Line");
-  isAt("l2", 0, "l2", 0, "test 9b");
+  // Offset becomes non-zero because the line boundary was in the middle of the
+  // line.  See bug 1667129
+  isAt("l2", 3, "l2", 3, "test 9b");
   sel.modify("extend", "backward", "Line");
-  // Apparently going up from the beginning of the line takes us to offset 3 in
-  // the line above.  This is a little weird, but it's consistent with how the
-  // keyboard works.
-  isAt("l2", 0, "l1", 3, "test 9c");
+  // Going back to the beginning of the previous line
+  isAt("l2", 3, "l1", 0, "test 9c");
 
   // Same test as above, now with absolute directions.
   sel.collapse($("l1"), 0);
   SpecialPowers.wrap(sel).caretBidiLevel = 1;
   sel.modify("move", "left", "lineboundary");
-  isAt("l1", 3, "l1", 3, "test 10a");
+  isAt("l1", 0, "l1", 0, "test 10a");
   sel.modify("move", "right", "line");
-  isAt("l2", 0, "l2", 0, "test 10b");
+  // Also bug 1667129
+  isAt("l2", 3, "l2", 3, "test 10b");
   sel.modify("extend", "left", "line");
-  isAt("l2", 0, "l1", 3, "test 10c");
+  isAt("l2", 3, "l1", 0, "test 10c");
 
   //
   // Test RTL text within a dir=RTL div.
