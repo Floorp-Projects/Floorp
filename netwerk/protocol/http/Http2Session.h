@@ -45,8 +45,9 @@ class Http2Session final : public ASpdySession,
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  Http2Session(nsISocketTransport*, enum SpdyVersion version,
-               bool attemptingEarlyData);
+  static Http2Session* CreateSession(nsISocketTransport*,
+                                     enum SpdyVersion version,
+                                     bool attemptingEarlyData);
 
   [[nodiscard]] bool AddStream(nsAHttpTransaction*, int32_t, bool, bool,
                                nsIInterfaceRequestor*) override;
@@ -278,6 +279,9 @@ class Http2Session final : public ASpdySession,
   bool CanAcceptWebsocket() override;
 
  private:
+  Http2Session(nsISocketTransport*, enum SpdyVersion version,
+               bool attemptingEarlyData);
+
   // These internal states do not correspond to the states of the HTTP/2
   // specification
   enum internalStateType {
