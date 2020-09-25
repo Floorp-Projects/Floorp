@@ -77,6 +77,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:getCurrentUrl":
           result = await this.getCurrentUrl();
           break;
+        case "MarionetteFrameParent:getActiveElement":
+          result = await this.getActiveElement();
+          break;
         case "MarionetteFrameParent:getElementAttribute":
           result = await this.getElementAttribute(data);
           break;
@@ -243,6 +246,18 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const container = { frame: this.contentWindow };
     const els = await element.find(container, strategy, selector, opts);
     return Promise.all(els.map(el => this.getElementId(el)));
+  }
+
+  /**
+   * Return the active element in the document.
+   */
+  async getActiveElement() {
+    let el = this.document.activeElement;
+    if (!el) {
+      throw new error.NoSuchElementError();
+    }
+
+    return this.getElementId(el);
   }
 
   /**

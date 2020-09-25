@@ -97,6 +97,10 @@ class MarionetteFrameParent extends JSWindowActorParent {
     });
   }
 
+  async getActiveElement() {
+    return this.sendQuery("MarionetteFrameParent:getActiveElement");
+  }
+
   async getCurrentUrl() {
     return this.sendQuery("MarionetteFrameParent:getCurrentUrl");
   }

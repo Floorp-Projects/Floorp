@@ -2137,6 +2137,9 @@ GeckoDriver.prototype.getActiveElement = async function() {
   assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().getActiveElement();
+  }
   return this.listener.getActiveElement();
 };
 
