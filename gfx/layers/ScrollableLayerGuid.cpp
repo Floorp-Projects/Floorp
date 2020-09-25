@@ -6,7 +6,9 @@
 
 #include "ScrollableLayerGuid.h"
 
+#include <ostream>
 #include "mozilla/HashFunctions.h"  // for HashGeneric
+#include "nsPrintfCString.h"        // for nsPrintfCString
 
 namespace mozilla {
 namespace layers {
@@ -41,6 +43,13 @@ bool ScrollableLayerGuid::operator<(const ScrollableLayerGuid& other) const {
     }
   }
   return false;
+}
+
+std::ostream& operator<<(std::ostream& aOut, const ScrollableLayerGuid& aGuid) {
+  return aOut << nsPrintfCString("{ l=0x%" PRIx64 ", p=%u, v=%" PRIu64 " }",
+                                 uint64_t(aGuid.mLayersId), aGuid.mPresShellId,
+                                 aGuid.mScrollId)
+                     .get();
 }
 
 std::size_t ScrollableLayerGuid::HashFn::operator()(
