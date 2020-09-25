@@ -28,8 +28,6 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const PREF_E10S = "browser.tabs.remote.autostart";
-const PREF_FISSION = "fission.autostart";
 
 const SCREENSHOT_MODE = {
   unexpected: 0,
@@ -75,8 +73,8 @@ reftest.Runner = class {
     this.isPrint = null;
     this.windowUtils = null;
     this.lastURL = null;
-    this.useRemoteTabs = Preferences.get(PREF_E10S);
-    this.useRemoteSubframes = Preferences.get(PREF_FISSION);
+    this.useRemoteTabs = Services.appinfo.browserTabsRemoteAutostart;
+    this.useRemoteSubframes = Services.appinfo.fissionAutostart;
   }
 
   /**
