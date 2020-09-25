@@ -768,7 +768,6 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-compositor: -1");
   expression_should_not_be_parseable("-moz-windows-classic: -1");
   expression_should_not_be_parseable("-moz-windows-glass: -1");
-  expression_should_not_be_parseable("-moz-touch-enabled: -1");
   expression_should_not_be_parseable("-moz-swipe-animation-enabled: -1");
   expression_should_not_be_parseable("-moz-gtk-csd-available: -1");
   expression_should_not_be_parseable("-moz-gtk-csd-hide-titlebar-by-default: -1");
@@ -791,7 +790,6 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-compositor: true");
   expression_should_not_be_parseable("-moz-windows-classic: true");
   expression_should_not_be_parseable("-moz-windows-glass: true");
-  expression_should_not_be_parseable("-moz-touch-enabled: true");
   expression_should_not_be_parseable("-moz-swipe-animation-enabled: true");
   expression_should_not_be_parseable("-moz-gtk-csd-available: true");
   expression_should_not_be_parseable("-moz-gtk-csd-hide-titlebar-by-default: true");
@@ -806,15 +804,6 @@ function run() {
   expression_should_not_be_parseable("-moz-os-version: windows-win8");
   expression_should_not_be_parseable("-moz-os-version: windows-win10");
   expression_should_not_be_parseable("-moz-os-version: ");
-
-  {
-    let should_be_parseable_if_enabled = SpecialPowers.getBoolPref('layout.css.moz-touch-enabled.enabled')
-      ? expression_should_be_parseable
-      : expression_should_not_be_parseable;
-    should_be_parseable_if_enabled("-moz-touch-enabled");
-    should_be_parseable_if_enabled("-moz-touch-enabled: 0");
-    should_be_parseable_if_enabled("-moz-touch-enabled: 1");
-  }
 
   {
     let should_be_parseable_if_enabled = SpecialPowers.getBoolPref('layout.css.prefers-contrast.enabled')

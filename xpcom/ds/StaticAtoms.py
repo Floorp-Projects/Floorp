@@ -2242,7 +2242,6 @@ STATIC_ATOMS = [
     Atom("_moz_windows_classic", "-moz-windows-classic"),
     Atom("_moz_windows_glass", "-moz-windows-glass"),
     Atom("_moz_os_version", "-moz-os-version"),
-    Atom("_moz_touch_enabled", "-moz-touch-enabled"),
     Atom("_moz_menubar_drag", "-moz-menubar-drag"),
     Atom("_moz_device_pixel_ratio", "-moz-device-pixel-ratio"),
     Atom("_moz_device_orientation", "-moz-device-orientation"),
