@@ -82,7 +82,7 @@ ms[rquote]:after {
    - mathvariant -> -moz-math-variant
    - scriptsizemultiplier -> -moz-script-size-multiplier
    - scriptminsize -> -moz-script-min-size
-   - scriptlevel -> -moz-script-level
+   - scriptlevel -> math-depth
    - mathsize -> font-size
    - mathcolor -> color
    - mathbackground -> background
@@ -226,14 +226,14 @@ mtable[framespacing] > mtr > mtd {
    insufficient to control when the scriptlevel should be incremented. All other
    cases can be described using regular CSS, so we do it this way because it's
    more efficient and less code. */
-:-moz-math-increment-script-level { -moz-script-level: +1; }
+:-moz-math-increment-script-level { math-depth: +1; }
 
 /*
    The mfrac element sets displaystyle to "false", or if it was already false
    increments scriptlevel by 1, within numerator and denominator.
 */
 mfrac > * {
-    -moz-script-level: auto;
+    math-depth: auto;
     math-style: compact;
 }
 
@@ -243,7 +243,7 @@ mfrac > * {
    The msqrt element leaves both attributes unchanged within its argument.
 */
 mroot > :not(:first-child) {
-    -moz-script-level: +2;
+    math-depth: +2;
     math-style: compact;
 }
 
@@ -267,7 +267,7 @@ msub > :not(:first-child),
 msup > :not(:first-child),
 msubsup > :not(:first-child),
 mmultiscripts > :not(:first-child) {
-    -moz-script-level: +1;
+    math-depth: +1;
     math-style: compact;
 }
 
@@ -303,7 +303,7 @@ mtable { math-style: compact; }
    scriptlevel by 1, so the children are typically displayed in a smaller font.
    XXXfredw: This element is not implemented yet. See bug 534967.
 mscarries {
-  -moz-script-level: +1;
+  math-depth: +1;
   math-style: compact;
 }
 */
