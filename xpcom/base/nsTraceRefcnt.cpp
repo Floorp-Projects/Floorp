@@ -317,7 +317,8 @@ static BloatEntry* GetBloatEntry(const char* aTypeName,
         "MOZ_COUNT_{C,D}TOR in the constructor or destructor, respectively. "
         "As a workaround, the MOZ_COUNT_{C,D}TOR calls can be moved to a "
         "non-templated base class. Another possible cause is a runnable with "
-        "an mName that matches another refcounted class.");
+        "an mName that matches another refcounted class, or two refcounted "
+        "classes with the same class name in different C++ namespaces.");
   }
   return entry;
 }
