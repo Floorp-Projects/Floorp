@@ -11,7 +11,7 @@ const MAC = AppConstants.platform == "macosx";
 const HAS_THREAD_NAMES =
   AppConstants.platform != "win" ||
   AppConstants.isPlatformAndVersionAtLeast("win", 10);
-const isFissionEnabled = Services.prefs.getBoolPref("fission.autostart");
+const isFissionEnabled = SpecialPowers.useRemoteSubframes;
 
 const SAMPLE_SIZE = 10;
 

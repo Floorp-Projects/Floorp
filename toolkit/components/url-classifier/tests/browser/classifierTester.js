@@ -10,7 +10,6 @@ var classifierTester = {
   FLASHBLOCK_ENABLE_PREF: "plugins.flashBlock.enabled",
   FLASH_PLUGIN_USER_SETTING_PREF: "plugin.state.flash",
   URLCLASSIFIER_DISALLOW_COMPLETIONS_PREF: "urlclassifier.disallow_completions",
-  FISSION_PREF: "fission.autostart",
   NEVER_ACTIVATE_PREF_VALUE: 0,
   ASK_TO_ACTIVATE_PREF_VALUE: 1,
   ALWAYS_ACTIVATE_PREF_VALUE: 2,
@@ -385,7 +384,7 @@ var classifierTester = {
   checkPluginInfo(pluginInfo, expectedClassification, flashSetting) {
     // Flashblocking is disabled when fission is enabled, so all the classifications
     // should be "unknown"
-    if (Services.prefs.getBoolPref(classifierTester.FISSION_PREF)) {
+    if (Services.appinfo.fissionAutostart) {
       expectedClassification = "unknown";
     }
 
