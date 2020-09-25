@@ -96,6 +96,8 @@ class InlinableGetterData : public InlinableOpData {
   bool sameRealm = false;
 };
 
+mozilla::Maybe<InlinableOpData> FindInlinableOpData(ICStub* stub);
+
 mozilla::Maybe<InlinableCallData> FindInlinableCallData(ICStub* stub);
 mozilla::Maybe<InlinableGetterData> FindInlinableGetterData(ICStub* stub);
 
