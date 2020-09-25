@@ -21,6 +21,8 @@ exclude: true
   Also, [`MediaSession.Delegate.onMetadata`][83.2] is no longer dispatched for
   plain media elements.
   ([bug 1658937]({{bugzilla}}1658937))
+- Replaced android.util.ArrayMap with java.util.TreeMap in [`WebMessage`][65.13] to enable case-insensitive handling of the HTTP headers.
+  ([bug 1666013]({{bugzilla}}1666013))
 
 [83.1]: {{javadoc_uri}}/WebExtension.MetaData.html#temporary
 [83.2]: {{javadoc_uri}}/MediaSession.Delegate.html#onMetadata-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.MediaSession-org.mozilla.geckoview.MediaSession.Metadata-

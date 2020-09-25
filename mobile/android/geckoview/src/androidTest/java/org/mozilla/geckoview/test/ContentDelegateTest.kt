@@ -101,9 +101,10 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("Uri should start with data:", response.uri, startsWith("blob:"))
                 assertThat("We should download the thing", String(response.body?.readBytes()!!), equalTo("Downloaded Data"))
                 // The headers below are special headers that we try to get for responses of any kind (http, blob, etc.)
+                // Note the case of the header keys. In the WebResponse object, all of them are lower case.
                 assertThat("Content type should match", response.headers.get("content-type"), equalTo("text/plain"))
-                assertThat("Content length should be non-zero", response.headers.get("content-length")!!.toLong(), greaterThan(0L))
-                assertThat("Filename should match", response.headers.get("content-disposition"), equalTo("attachment; filename=\"download.txt\""))
+                assertThat("Content length should be non-zero", response.headers.get("Content-Length")!!.toLong(), greaterThan(0L))
+                assertThat("Filename should match", response.headers.get("cONTent-diSPOsiTion"), equalTo("attachment; filename=\"download.txt\""))
             }
         })
     }
