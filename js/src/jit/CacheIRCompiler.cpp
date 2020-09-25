@@ -29,6 +29,7 @@
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo
 #include "js/ScalarType.h"          // js::Scalar::Type
 #include "proxy/Proxy.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/ArrayBufferViewObject.h"
 #include "vm/BigIntType.h"
@@ -3658,6 +3659,22 @@ bool CacheIRCompiler::emitGuardArrayIsPacked(ObjOperandId arrayId) {
   }
 
   masm.branchArrayIsNotPacked(array, scratch, scratch2, failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardArgumentsObjectNotOverriddenIterator(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchArgumentsObjectHasOverridenIterator(obj, scratch,
+                                                 failure->label());
   return true;
 }
 
