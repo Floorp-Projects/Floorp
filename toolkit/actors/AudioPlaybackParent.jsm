@@ -7,23 +7,42 @@
 var EXPORTED_SYMBOLS = ["AudioPlaybackParent"];
 
 class AudioPlaybackParent extends JSWindowActorParent {
+  constructor() {
+    super();
+    this._hasAudioPlayback = false;
+    this._hasBlockMedia = false;
+    this._topLevelBrowser = null;
+  }
   receiveMessage(aMessage) {
-    let topBrowsingContext = this.browsingContext.top;
-    let browser = topBrowsingContext.embedderElement;
-
+    // To ensure we can still access browser element in `didDestroy()` because
+    // we might not be able to access that from browsing context at that time.
+    this._topLevelBrowser = this.browsingContext.top.embedderElement;
     switch (aMessage.name) {
       case "AudioPlayback:Start":
-        browser.audioPlaybackStarted();
+        this._hasAudioPlayback = true;
+        this._topLevelBrowser.audioPlaybackStarted();
         break;
       case "AudioPlayback:Stop":
-        browser.audioPlaybackStopped();
+        this._hasAudioPlayback = false;
+        this._topLevelBrowser.audioPlaybackStopped();
         break;
       case "AudioPlayback:ActiveMediaBlockStart":
-        browser.activeMediaBlockStarted();
+        this._hasBlockMedia = true;
+        this._topLevelBrowser.activeMediaBlockStarted();
         break;
       case "AudioPlayback:ActiveMediaBlockStop":
-        browser.activeMediaBlockStopped();
+        this._hasBlockMedia = false;
+        this._topLevelBrowser.activeMediaBlockStopped();
         break;
     }
+  }
+  didDestroy() {
+    if (this._hasAudioPlayback) {
+      this._topLevelBrowser.audioPlaybackStopped();
+    }
+    if (this._hasBlockMedia) {
+      this._topLevelBrowser.activeMediaBlockStopped();
+    }
+    this._topLevelBrowser = null;
   }
 }
