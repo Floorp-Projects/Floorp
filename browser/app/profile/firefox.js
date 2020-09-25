@@ -1903,17 +1903,10 @@ pref("browser.crashReports.unsubmittedCheck.autoSubmit2", false);
 pref("extensions.formautofill.available", "detect");
 pref("extensions.formautofill.addresses.enabled", true);
 pref("extensions.formautofill.addresses.capture.enabled", false);
-#ifdef NIGHTLY_BUILD
 pref("extensions.formautofill.creditCards.available", true);
 pref("extensions.formautofill.creditCards.enabled", true);
 // Checkbox in sync options for credit card data sync service
 pref("services.sync.engine.creditcards.available", true);
-#else
-pref("extensions.formautofill.creditCards.available", false);
-pref("extensions.formautofill.creditCards.enabled", false);
-// Checkbox in sync options for credit card data sync service
-pref("services.sync.engine.creditcards.available", false);
-#endif
 // Temporary preference to control displaying the UI elements for
 // credit card autofill used for the duration of the A/B test.
 pref("extensions.formautofill.creditCards.hideui", false);
