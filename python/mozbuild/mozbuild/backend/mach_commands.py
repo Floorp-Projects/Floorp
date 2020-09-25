@@ -198,7 +198,12 @@ class MachCommands(MachCommandBase):
             ]
         }
         """
-            % (clangd_path, clangd_cc_path, multiprocessing.cpu_count(), clang_tidy_cfg.checks,)
+            % (
+                clangd_path,
+                clangd_cc_path,
+                int(multiprocessing.cpu_count() / 2),
+                clang_tidy_cfg.checks,
+            )
         )
 
         # Create an empty settings dictionary
