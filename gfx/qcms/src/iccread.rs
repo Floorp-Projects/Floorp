@@ -574,13 +574,13 @@ const TAG_A2B0: u32 = 0x41324230;
 const TAG_B2A0: u32 = 0x42324130;
 const TAG_CHAD: u32 = 0x63686164;
 
-unsafe fn find_tag(mut index: &tag_index, mut tag_id: u32) -> *const tag {
+fn find_tag(mut index: &tag_index, mut tag_id: u32) -> Option<&tag> {
     for t in index {
         if t.signature == tag_id {
-            return t as *const _;
+            return Some(t);
         }
     }
-    0 as *const tag
+    None
 }
 
 pub const XYZ_TYPE: u32 = 0x58595a20; // 'XYZ '
@@ -592,17 +592,17 @@ pub const LUT_MAB_TYPE: u32 = 0x6d414220; // 'mAB '
 pub const LUT_MBA_TYPE: u32 = 0x6d424120; // 'mBA '
 pub const CHROMATIC_TYPE: u32 = 0x73663332; // 'sf32'
 
-unsafe fn read_tag_s15Fixed16ArrayType(
+fn read_tag_s15Fixed16ArrayType(
     mut src: &mut mem_source,
     mut index: &tag_index,
     mut tag_id: u32,
 ) -> matrix {
-    let mut tag: *const tag = find_tag(index, tag_id);
+    let mut tag = find_tag(index, tag_id);
     let mut matrix: matrix = matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
-    if !tag.is_null() {
+    if let Some(tag) = tag {
         let mut i: u8;
         let mut offset: u32 = (*tag).offset;
         let mut type_0: u32 = read_u32(src, offset as usize);
@@ -624,17 +624,13 @@ unsafe fn read_tag_s15Fixed16ArrayType(
     }
     return matrix;
 }
-unsafe fn read_tag_XYZType(
-    mut src: &mut mem_source,
-    mut index: &tag_index,
-    mut tag_id: u32,
-) -> XYZNumber {
+fn read_tag_XYZType(mut src: &mut mem_source, mut index: &tag_index, mut tag_id: u32) -> XYZNumber {
     let mut num: XYZNumber = {
         let mut init = XYZNumber { X: 0, Y: 0, Z: 0 };
         init
     };
-    let mut tag: *const tag = find_tag(&index, tag_id);
-    if !tag.is_null() {
+    let mut tag = find_tag(&index, tag_id);
+    if let Some(tag) = tag {
         let mut offset: u32 = (*tag).offset;
         let mut type_0: u32 = read_u32(src, offset as usize);
         if type_0 != XYZ_TYPE {
@@ -724,9 +720,9 @@ unsafe fn read_tag_curveType(
     mut index: &tag_index,
     mut tag_id: u32,
 ) -> *mut curveType {
-    let mut tag: *const tag = find_tag(index, tag_id);
+    let mut tag = find_tag(index, tag_id);
     let mut curve: *mut curveType = 0 as *mut curveType;
-    if !tag.is_null() {
+    if let Some(tag) = tag {
         let mut len: u32 = 0;
         return read_curveType(src, (*tag).offset, &mut len);
     } else {
@@ -777,12 +773,7 @@ unsafe extern "C" fn mAB_release(mut lut: *mut lutmABType) {
     free(lut as *mut libc::c_void);
 }
 /* See section 10.10 for specs */
-unsafe fn read_tag_lutmABType(
-    mut src: &mut mem_source,
-    mut index: &tag_index,
-    mut tag_id: u32,
-) -> *mut lutmABType {
-    let mut tag: *const tag = find_tag(index, tag_id);
+unsafe fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> *mut lutmABType {
     let mut offset: u32 = (*tag).offset;
     let mut a_curve_offset: u32;
     let mut b_curve_offset: u32;
@@ -934,12 +925,7 @@ unsafe fn read_tag_lutmABType(
     }
     return lut;
 }
-unsafe fn read_tag_lutType(
-    mut src: &mut mem_source,
-    mut index: &tag_index,
-    mut tag_id: u32,
-) -> *mut lutType {
-    let mut tag: *const tag = find_tag(index, tag_id);
+unsafe fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> *mut lutType {
     let mut offset: u32 = (*tag).offset;
     let mut type_0: u32 = read_u32(src, offset as usize);
     let mut num_input_table_entries: u16;
@@ -1422,7 +1408,7 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
         return null_mut();
     }
 
-    if !find_tag(&index, TAG_CHAD).is_null() {
+    if find_tag(&index, TAG_CHAD).is_some() {
         (*profile).chromaticAdaption = read_tag_s15Fixed16ArrayType(src, &index, TAG_CHAD)
     } else {
         (*profile).chromaticAdaption.invalid = true //Signal the data is not present
@@ -1434,29 +1420,23 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
         || (*profile).class_type == COLOR_SPACE_PROFILE
     {
         if (*profile).color_space == RGB_SIGNATURE {
-            if !find_tag(&index, TAG_A2B0).is_null() {
-                if read_u32(src, (*find_tag(&index, TAG_A2B0)).offset as usize) == LUT8_TYPE
-                    || read_u32(src, (*find_tag(&index, TAG_A2B0)).offset as usize) == LUT16_TYPE
-                {
-                    (*profile).A2B0 = read_tag_lutType(src, &index, TAG_A2B0)
-                } else if read_u32(src, (*find_tag(&index, TAG_A2B0)).offset as usize)
-                    == LUT_MAB_TYPE
-                {
-                    (*profile).mAB = read_tag_lutmABType(src, &index, TAG_A2B0)
+            if let Some(A2B0) = find_tag(&index, TAG_A2B0) {
+                let lut_type = read_u32(src, A2B0.offset as usize);
+                if lut_type == LUT8_TYPE || lut_type == LUT16_TYPE {
+                    (*profile).A2B0 = read_tag_lutType(src, A2B0)
+                } else if lut_type == LUT_MAB_TYPE {
+                    (*profile).mAB = read_tag_lutmABType(src, A2B0)
                 }
             }
-            if !find_tag(&index, TAG_B2A0).is_null() {
-                if read_u32(src, (*find_tag(&index, TAG_B2A0)).offset as usize) == LUT8_TYPE
-                    || read_u32(src, (*find_tag(&index, TAG_B2A0)).offset as usize) == LUT16_TYPE
-                {
-                    (*profile).B2A0 = read_tag_lutType(src, &index, TAG_B2A0)
-                } else if read_u32(src, (*find_tag(&index, TAG_B2A0)).offset as usize)
-                    == LUT_MBA_TYPE
-                {
-                    (*profile).mBA = read_tag_lutmABType(src, &index, TAG_B2A0)
+            if let Some(B2A0) = find_tag(&index, TAG_B2A0) {
+                let lut_type = read_u32(src, B2A0.offset as usize);
+                if lut_type == LUT8_TYPE || lut_type == LUT16_TYPE {
+                    (*profile).B2A0 = read_tag_lutType(src, B2A0)
+                } else if lut_type == LUT_MBA_TYPE {
+                    (*profile).mBA = read_tag_lutmABType(src, B2A0)
                 }
             }
-            if !find_tag(&index, TAG_rXYZ).is_null() || !qcms_supports_iccv4.load(Ordering::Relaxed)
+            if find_tag(&index, TAG_rXYZ).is_some() || !qcms_supports_iccv4.load(Ordering::Relaxed)
             {
                 (*profile).redColorant = read_tag_XYZType(src, &index, TAG_rXYZ);
                 (*profile).greenColorant = read_tag_XYZType(src, &index, TAG_gXYZ);
@@ -1466,7 +1446,7 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
                 return null_mut();
             }
 
-            if !find_tag(&index, TAG_rTRC).is_null() || !qcms_supports_iccv4.load(Ordering::Relaxed)
+            if find_tag(&index, TAG_rTRC).is_some() || !qcms_supports_iccv4.load(Ordering::Relaxed)
             {
                 (*profile).redTRC = read_tag_curveType(src, &index, TAG_rTRC);
                 (*profile).greenTRC = read_tag_curveType(src, &index, TAG_gTRC);
