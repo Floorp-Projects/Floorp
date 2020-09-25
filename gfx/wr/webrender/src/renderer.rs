@@ -36,7 +36,7 @@
 
 use api::{BlobImageHandler, ColorF, ColorU, MixBlendMode};
 use api::{DocumentId, Epoch, ExternalImageHandler, ExternalImageId};
-use api::{ExternalImageSource, ExternalImageType, FontRenderMode, ImageFormat};
+use api::{ExternalImageSource, ExternalImageType, ExternalImageType::TextureHandle, FontRenderMode, ImageFormat};
 use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest};
 use api::{VoidPtrToSizeFn, PremultipliedColorF};
 use api::{RenderNotifier, TextureTarget, SharedFontInstanceMap};
@@ -4383,16 +4383,33 @@ impl Renderer {
 
         let _timer = self.gpu_profiler.start_timer(GPU_TAG_SCALE);
 
-        self.shaders
-            .borrow_mut()
-            .cs_scale
-            .bind(
-                &mut self.device,
-                &projection,
-                &mut self.renderer_errors,
-            );
-
         for (source, instances) in scalings {
+            let target = match *source {
+                TextureSource::External(external_image) => {
+                    match external_image.image_type {
+                        TextureHandle(texture_target) => {
+                            texture_target
+                        },
+                        _ => {
+                            TextureTarget::Array
+                        }
+                    }
+                },
+                _ => {
+                    TextureTarget::Array
+                }
+            };
+            let buffer_kind = ImageBufferKind::from(target);
+
+            self.shaders
+                .borrow_mut()
+                .get_scale_shader(buffer_kind)
+                .bind(
+                    &mut self.device,
+                    &projection,
+                    &mut self.renderer_errors,
+                );
+
             self.draw_instanced_batch(
                 instances,
                 VertexArrayKind::Scale,
