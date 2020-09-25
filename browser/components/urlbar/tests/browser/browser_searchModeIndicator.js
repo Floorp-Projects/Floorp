@@ -180,8 +180,9 @@ add_task(async function backspace() {
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
-// Tests the indicator's interaction with the ESC key.
-add_task(async function escape() {
+add_task(async function escapeOnInitialPage() {
+  info("Tests the indicator's interaction with the ESC key");
+
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_QUERY,
@@ -205,6 +206,40 @@ add_task(async function escape() {
   Assert.ok(!UrlbarTestUtils.isPopupOpen(window, "UrlbarView is closed."));
   Assert.ok(!gURLBar.value, "Urlbar value is empty.");
   await UrlbarTestUtils.assertSearchMode(window, null);
+});
+
+add_task(async function escapeOnBrowsingPage() {
+  info("Tests the indicator's interaction with the ESC key on browsing page");
+
+  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: TEST_QUERY,
+    });
+    await UrlbarTestUtils.enterSearchMode(window);
+    await verifySearchModeResultsAdded(window);
+
+    EventUtils.synthesizeKey("KEY_Escape");
+    Assert.ok(!UrlbarTestUtils.isPopupOpen(window, "UrlbarView is closed."));
+    Assert.equal(gURLBar.value, TEST_QUERY, "Urlbar value hasn't changed.");
+
+    const oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
+      window
+    ).getSelectableButtons(true);
+    await UrlbarTestUtils.assertSearchMode(window, {
+      engineName: oneOffs[0].engine.name,
+      entry: "oneoff",
+    });
+
+    EventUtils.synthesizeKey("KEY_Escape");
+    Assert.ok(!UrlbarTestUtils.isPopupOpen(window, "UrlbarView is closed."));
+    Assert.equal(
+      gURLBar.value,
+      "example.com",
+      "Urlbar value indicates the browsing page."
+    );
+    await UrlbarTestUtils.assertSearchMode(window, null);
+  });
 });
 
 // Tests that the indicator is removed when its close button is clicked.
