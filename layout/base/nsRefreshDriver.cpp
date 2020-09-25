@@ -1265,7 +1265,7 @@ void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
 #endif
   array.AppendElement(ObserverData{aObserver, aObserverDescription,
                                    TimeStamp::Now(), innerWindowID,
-                                   profiler_capture_backtrace()});
+                                   profiler_capture_backtrace(), aFlushType});
   EnsureTimerStarted();
 }
 
@@ -1557,6 +1557,52 @@ bool nsRefreshDriver::HasObservers() const {
          !mEarlyRunners.IsEmpty();
 }
 
+void nsRefreshDriver::AppendObserverDescriptionsToString(
+    nsACString& aStr) const {
+  for (const ObserverArray& array : mObservers) {
+    for (const auto& observer : array.EndLimitedRange()) {
+      aStr.AppendPrintf("%s [%s], ", observer.mDescription,
+                        kFlushTypeNames[observer.mFlushType]);
+    }
+  }
+  if (mViewManagerFlushIsPending) {
+    aStr.AppendLiteral("View manager flush pending, ");
+  }
+  if (!mAnimationEventFlushObservers.IsEmpty()) {
+    aStr.AppendPrintf("%zux Animation event flush observer, ",
+                      mAnimationEventFlushObservers.Length());
+  }
+  if (!mResizeEventFlushObservers.IsEmpty()) {
+    aStr.AppendPrintf("%zux Resize event flush observer, ",
+                      mResizeEventFlushObservers.Length());
+  }
+  if (!mStyleFlushObservers.IsEmpty()) {
+    aStr.AppendPrintf("%zux Style flush observer, ",
+                      mStyleFlushObservers.Length());
+  }
+  if (!mLayoutFlushObservers.IsEmpty()) {
+    aStr.AppendPrintf("%zux Layout flush observer, ",
+                      mLayoutFlushObservers.Length());
+  }
+  if (!mPendingFullscreenEvents.IsEmpty()) {
+    aStr.AppendPrintf("%zux Pending fullscreen event, ",
+                      mPendingFullscreenEvents.Length());
+  }
+  if (!mFrameRequestCallbackDocs.IsEmpty()) {
+    aStr.AppendPrintf("%zux Frame request callback doc, ",
+                      mFrameRequestCallbackDocs.Length());
+  }
+  if (!mThrottledFrameRequestCallbackDocs.IsEmpty()) {
+    aStr.AppendPrintf("%zux Throttled frame request callback doc, ",
+                      mThrottledFrameRequestCallbackDocs.Length());
+  }
+  if (!mEarlyRunners.IsEmpty()) {
+    aStr.AppendPrintf("%zux Early runner, ", mEarlyRunners.Length());
+  }
+  // Remove last ", "
+  aStr.Truncate(aStr.Length() - 2);
+}
+
 bool nsRefreshDriver::HasImageRequests() const {
   for (auto iter = mStartTable.ConstIter(); !iter.Done(); iter.Next()) {
     if (!iter.UserData()->mEntries.IsEmpty()) {
@@ -1598,7 +1644,9 @@ void nsRefreshDriver::AppendTickReasonsToString(TickReasons aReasons,
   }
 
   if (aReasons & TickReasons::eHasObservers) {
-    aStr.AppendLiteral(" HasObservers");
+    aStr.AppendLiteral(" HasObservers (");
+    AppendObserverDescriptionsToString(aStr);
+    aStr.AppendLiteral(")");
   }
   if (aReasons & TickReasons::eHasImageRequests) {
     aStr.AppendLiteral(" HasImageRequests");
