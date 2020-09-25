@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 #include "nsIURL.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace dom {

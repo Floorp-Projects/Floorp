@@ -60,6 +60,7 @@
 #include "mozilla/dom/CheckerboardReportService.h"  // for CheckerboardEventStorage
 // note: CheckerboardReportService.h actually lives in gfx/layers/apz/util/
 #include "mozilla/dom/Touch.h"              // for Touch
+#include "mozilla/gfx/gfxVars.h"            // for gfxVars
 #include "mozilla/gfx/BasePoint.h"          // for BasePoint
 #include "mozilla/gfx/BaseRect.h"           // for BaseRect
 #include "mozilla/gfx/Point.h"              // for Point, RoundedToInt, etc
@@ -3626,9 +3627,9 @@ void AsyncPanZoomController::ScaleWithFocus(float aScale,
 /*static*/
 gfx::IntSize AsyncPanZoomController::GetDisplayportAlignmentMultiplier(
     const ScreenSize& aBaseSize) {
-  MOZ_ASSERT(gfxVars::UseWebRender());
+  MOZ_ASSERT(gfx::gfxVars::UseWebRender());
 
-  IntSize multiplier(1, 1);
+  gfx::IntSize multiplier(1, 1);
   float baseWidth = aBaseSize.width;
   while (baseWidth > 500) {
     baseWidth /= 2;
@@ -3673,7 +3674,7 @@ static CSSSize CalculateDisplayPortSize(const CSSSize& aCompositionSize,
     yMultiplier += StaticPrefs::apz_y_skate_highmem_adjust();
   }
 
-  if (gfxVars::UseWebRender()) {
+  if (gfx::gfxVars::UseWebRender()) {
     // Scale down the margin multipliers by the alignment multiplier because
     // the alignment code will expand the displayport outward to the multiplied
     // alignment. This is not necessary for correctness, but for performance;
@@ -3684,7 +3685,7 @@ static CSSSize CalculateDisplayPortSize(const CSSSize& aCompositionSize,
     // calculation doesn't cancel exactly the increased margin from applying
     // the alignment multiplier, but this is simple and should provide
     // reasonable behaviour in most cases.
-    IntSize alignmentMultipler =
+    gfx::IntSize alignmentMultipler =
         AsyncPanZoomController::GetDisplayportAlignmentMultiplier(
             aCompositionSize * aDpPerCSS);
     if (xMultiplier > 1) {
