@@ -7,6 +7,8 @@ package org.mozilla.fenix.settings.logins
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.preference.Preference
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -28,10 +30,15 @@ class SyncLoginsPreferenceView(
 
     init {
         accountManager.register(object : AccountObserver {
-            override fun onAuthenticated(account: OAuthAccount, authType: AuthType) =
-                updateSyncPreferenceStatus()
-            override fun onLoggedOut() = updateSyncPreferenceNeedsLogin()
-            override fun onAuthenticationProblems() = updateSyncPreferenceNeedsReauth()
+            override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+                MainScope().launch { updateSyncPreferenceStatus() }
+            }
+            override fun onLoggedOut() {
+                MainScope().launch { updateSyncPreferenceNeedsLogin() }
+            }
+            override fun onAuthenticationProblems() {
+                MainScope().launch { updateSyncPreferenceNeedsReauth() }
+            }
         }, owner = lifecycleOwner)
 
         val accountExists = accountManager.authenticatedAccount() != null
