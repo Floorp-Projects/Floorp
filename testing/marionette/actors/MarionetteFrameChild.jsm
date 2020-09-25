@@ -96,6 +96,9 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:getElementValueOfCssProperty":
           result = await this.getElementValueOfCssProperty(data);
           break;
+        case "MarionetteFrameParent:getPageSource":
+          result = await this.getPageSource();
+          break;
         case "MarionetteFrameParent:switchToFrame":
           result = await this.switchToFrame(data);
           break;
@@ -303,6 +306,13 @@ class MarionetteFrameChild extends JSWindowActorChild {
 
     const style = this.content.getComputedStyle(el);
     return style.getPropertyValue(name);
+  }
+
+  /**
+   * Get the source of the current browsing context's document.
+   */
+  async getPageSource() {
+    return this.document.documentElement.outerHTML;
   }
 
   /**

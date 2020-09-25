@@ -1282,6 +1282,10 @@ GeckoDriver.prototype.getPageSource = async function() {
   assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().getPageSource();
+  }
+
   switch (this.context) {
     case Context.Chrome:
       const win = this.getCurrentWindow();
