@@ -63,11 +63,10 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   }
 
   bool operator==(const OriginAttributes& aOther) const {
-    return mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
-           mUserContextId == aOther.mUserContextId &&
-           mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
+    return EqualsIgnoringFPD(aOther) &&
            mFirstPartyDomain == aOther.mFirstPartyDomain &&
-           mGeckoViewSessionContextId == aOther.mGeckoViewSessionContextId &&
+           // FIXME(emilio, bug 1667440): Should this be part of
+           // EqualsIgnoringFPD instead?
            mPartitionKey == aOther.mPartitionKey;
   }
 
