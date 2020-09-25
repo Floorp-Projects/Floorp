@@ -21,15 +21,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-void AppendToString(std::stringstream& aStream, const DeviceColor& c,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  aStream << nsPrintfCString("dev_rgba(%d, %d, %d, %f)", uint8_t(c.r * 255.f),
-                             uint8_t(c.g * 255.f), uint8_t(c.b * 255.f), c.a)
-                 .get();
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const nsPoint& p,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
@@ -169,7 +160,7 @@ void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
   AppendToString(aStream, m.GetMetrics(), "{ [metrics=");
-  AppendToString(aStream, m.GetBackgroundColor(), "] [color=");
+  aStream << "] [color=" << m.GetBackgroundColor();
   if (m.GetScrollParentId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
     aStream << "] [scrollParent=" << m.GetScrollParentId();
   }
