@@ -11648,15 +11648,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_regexp(RegExpObject* reobj) {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_object(JSObject* obj) {
-  if (mirGen_.options.cloneSingletons()) {
-    MCloneLiteral* clone =
-        MCloneLiteral::New(alloc(), constant(ObjectValue(*obj)));
-    current->add(clone);
-    current->push(clone);
-    return resumeAfter(clone);
-  }
-
-  realm->setSingletonsAsValues();
   pushConstant(ObjectValue(*obj));
   return Ok();
 }

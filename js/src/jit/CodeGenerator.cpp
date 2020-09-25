@@ -3865,13 +3865,6 @@ void CodeGenerator::visitTableSwitchV(LTableSwitchV* ins) {
   emitTableSwitchDispatch(mir, index, ToRegisterOrInvalid(ins->tempPointer()));
 }
 
-void CodeGenerator::visitCloneLiteral(LCloneLiteral* lir) {
-  pushArg(ToRegister(lir->getObjectLiteral()));
-
-  using Fn = JSObject* (*)(JSContext*, HandleObject);
-  callVM<Fn, DeepCloneObjectLiteral>(lir);
-}
-
 void CodeGenerator::visitParameter(LParameter* lir) {}
 
 void CodeGenerator::visitCallee(LCallee* lir) {

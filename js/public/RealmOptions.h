@@ -129,12 +129,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-  bool cloneSingletons() const { return cloneSingletons_; }
-  RealmCreationOptions& setCloneSingletons(bool flag) {
-    cloneSingletons_ = flag;
-    return *this;
-  }
-
   // Determines whether 1) the global Atomic property is defined and atomic
   // operations are supported, and 2) whether shared-memory operations are
   // supported.
@@ -272,7 +266,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool invisibleToDebugger_ = false;
   bool mergeable_ = false;
   bool preserveJitCode_ = false;
-  bool cloneSingletons_ = false;
   bool sharedMemoryAndAtomics_ = false;
   bool defineSharedArrayBufferConstructor_ = true;
   bool coopAndCoep_ = false;
@@ -338,12 +331,6 @@ class JS_PUBLIC_API RealmBehaviors {
     Mode mode_;
   };
 
-  bool getSingletonsAsTemplates() const { return singletonsAsTemplates_; }
-  RealmBehaviors& setSingletonsAsValues() {
-    singletonsAsTemplates_ = false;
-    return *this;
-  }
-
   // A Realm can stop being "live" in all the ways that matter before its global
   // is actually GCed.  Consumers that tear down parts of a Realm or its global
   // before that point should set isNonLive accordingly.
@@ -357,11 +344,6 @@ class JS_PUBLIC_API RealmBehaviors {
   bool discardSource_ = false;
   bool disableLazyParsing_ = false;
   bool clampAndJitterTime_ = true;
-
-  // To XDR singletons, we need to ensure that all singletons are all used as
-  // templates, by making JSOP_OBJECT return a clone of the JSScript
-  // singleton, instead of returning the value which is baked in the JSScript.
-  bool singletonsAsTemplates_ = true;
   bool isNonLive_ = false;
 };
 

@@ -108,7 +108,6 @@ namespace jit {
   _(DebugLeaveThenRecreateLexicalEnv,                                          \
     js::jit::DebugLeaveThenRecreateLexicalEnv)                                 \
   _(Debug_CheckSelfHosted, js::Debug_CheckSelfHosted)                          \
-  _(DeepCloneObjectLiteral, js::DeepCloneObjectLiteral)                        \
   _(DefFunOperation, js::DefFunOperation)                                      \
   _(DefLexicalOperation, js::DefLexicalOperation)                              \
   _(DefVarOperation, js::DefVarOperation)                                      \
@@ -243,7 +242,6 @@ namespace jit {
   _(SetObjectElementWithReceiver, js::SetObjectElementWithReceiver)            \
   _(SetProperty, js::jit::SetProperty)                                         \
   _(SetPropertySuper, js::SetPropertySuper)                                    \
-  _(SingletonObjectLiteralOperation, js::SingletonObjectLiteralOperation)      \
   _(StartDynamicModuleImport, js::StartDynamicModuleImport)                    \
   _(StrictlyEqual, js::jit::StrictlyEqual<js::jit::EqualityKind::Equal>)       \
   _(StrictlyNotEqual, js::jit::StrictlyEqual<js::jit::EqualityKind::NotEqual>) \

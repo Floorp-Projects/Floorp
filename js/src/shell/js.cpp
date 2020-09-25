@@ -6364,13 +6364,6 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       creationOptions.setInvisibleToDebugger(v.toBoolean());
     }
 
-    if (!JS_GetProperty(cx, opts, "cloneSingletons", &v)) {
-      return false;
-    }
-    if (v.isBoolean()) {
-      creationOptions.setCloneSingletons(v.toBoolean());
-    }
-
     if (!JS_GetProperty(cx, opts, "sameZoneAs", &v)) {
       return false;
     }
@@ -8845,10 +8838,6 @@ JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
 "         as the given object.\n"
 "      newCompartment: If true, the global will always be created in a new\n"
 "         compartment and zone.\n"
-"      cloneSingletons: If true, always clone the objects baked into\n"
-"         scripts, even if it's a top-level script that will only run once\n"
-"         (defaults to using them directly in scripts that will only run\n"
-"         once).\n"
 "      invisibleToDebugger: If true, the global will be invisible to the\n"
 "         debugger (default false)\n"
 "      disableLazyParsing: If true, don't create lazy scripts for functions\n"
