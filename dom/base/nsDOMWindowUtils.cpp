@@ -2617,14 +2617,16 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     // We could try to teach apz to zoom to a rect only without panning, or
     // maybe we could give it a rect offsetted by the root scroll position, if
     // we wanted to do this.
-    //
-    // Note that we only do this if the frame belongs to `presShell` (that is,
-    // we still zoom in fixed elements in subdocuments, as they're not fixed to
-    // the root content document).
-    if (frame->PresShell() == presShell &&
-        nsLayoutUtils::IsInPositionFixedSubtree(frame)) {
-      return true;
+    for (; frame; frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
+      if (frame->PresShell() == presShell) {
+        // Note that we only do this if the frame belongs to `presShell` (that
+        // is, we still zoom in fixed elements in subdocuments, as they're not
+        // fixed to the root content document).
+        return nsLayoutUtils::IsInPositionFixedSubtree(frame);
+      }
+      frame = frame->PresShell()->GetRootFrame();
     }
+
     return false;
   }();
 
