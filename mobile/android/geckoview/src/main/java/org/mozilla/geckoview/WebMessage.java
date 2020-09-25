@@ -10,12 +10,12 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
-import androidx.collection.ArrayMap;
 
 import java.nio.ByteBuffer;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * This is an abstract base class for HTTP request and response types.
@@ -59,7 +59,7 @@ public abstract class WebMessage {
     @AnyThread
     public static abstract class Builder {
         /* package */ String mUri;
-        /* package */ Map<String, String> mHeaders = new ArrayMap<>();
+        /* package */ Map<String, String> mHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         /* package */ ByteBuffer mBody;
 
         /**
@@ -86,7 +86,12 @@ public abstract class WebMessage {
          * Set a HTTP header. This may be called multiple times for additional headers. If an
          * existing header of the same name exists, it will be replaced by this value.
          *
-         * @param key The key for the HTTP header, e.g. "Content-Type".
+         * Please note that the HTTP header keys are case-insensitive.
+         * It means you can retrieve "Content-Type" with map.get("content-type"),
+         * and value for "Content-Type" will be overwritten by map.put("cONTENt-TYpe", value);
+         * The keys are also sorted in natural order.
+         *
+         * @param key The key for the HTTP header, e.g. "content-type".
          * @param value The value for the HTTP header, e.g. "application/json".
          * @return This Builder instance.
          */
@@ -99,7 +104,12 @@ public abstract class WebMessage {
          * Add a HTTP header. This may be called multiple times for additional headers. If an
          * existing header of the same name exists, the values will be merged.
          *
-         * @param key The key for the HTTP header, e.g. "Content-Type".
+         * Please note that the HTTP header keys are case-insensitive.
+         * It means you can retrieve "Content-Type" with map.get("content-type"),
+         * and value for "Content-Type" will be overwritten by map.put("cONTENt-TYpe", value);
+         * The keys are also sorted in natural order.
+         *
+         * @param key The key for the HTTP header, e.g. "content-type".
          * @param value The value for the HTTP header, e.g. "application/json".
          * @return This Builder instance.
          */
