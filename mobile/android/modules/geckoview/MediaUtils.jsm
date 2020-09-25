@@ -49,6 +49,13 @@ const MediaUtils = {
     );
   },
 
+  findMediaElement(aElement) {
+    return (
+      MediaUtils.findVideoElement(aElement) ??
+      MediaUtils.findAudioElement(aElement)
+    );
+  },
+
   findVideoElement(aElement) {
     if (!aElement) {
       return null;
