@@ -135,6 +135,11 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     }
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+        // If we're in a `shouldLoginJustWithEmail = true` state, we won't have a view available,
+        // and can't display a snackbar.
+        if (view == null) {
+            return
+        }
         val snackbarText = requireContext().getString(R.string.sync_syncing_in_progress)
         val snackbarLength = FenixSnackbar.LENGTH_SHORT
 
