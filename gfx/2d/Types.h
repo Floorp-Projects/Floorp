@@ -13,6 +13,7 @@
 #include "mozilla/MacroArgs.h"  // for MOZ_CONCAT
 #include "mozilla/TypedEnumBits.h"
 
+#include <iosfwd>  // for ostream
 #include <stddef.h>
 #include <stdint.h>
 
@@ -571,6 +572,9 @@ struct DeviceColor {
   bool operator!=(const DeviceColor& aColor) const {
     return !(*this == aColor);
   }
+
+  friend std::ostream& operator<<(std::ostream& aOut,
+                                  const DeviceColor& aColor);
 
   Float r, g, b, a;
 };

@@ -2028,7 +2028,7 @@ void ContainerLayer::DumpPacket(layerscope::LayersPacket* aPacket,
 
 void ColorLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   Layer::PrintInfo(aStream, aPrefix);
-  AppendToString(aStream, mColor, " [color=", "]");
+  aStream << "[ color=" << mColor << "]";
   AppendToString(aStream, mBounds, " [bounds=", "]");
 }
 
@@ -2145,7 +2145,7 @@ void ReadbackLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
             << nsPrintfCString("%p", mBackgroundLayer).get() << "]";
     AppendToString(aStream, mBackgroundLayerOffset, " [backgroundOffset=", "]");
   } else if (mBackgroundColor.a == 1.f) {
-    AppendToString(aStream, mBackgroundColor, " [backgroundColor=", "]");
+    aStream << " [backgroundColor=" << mBackgroundColor << "]";
   } else {
     aStream << " [nobackground]";
   }
