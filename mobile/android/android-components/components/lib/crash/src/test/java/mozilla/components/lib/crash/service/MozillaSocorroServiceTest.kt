@@ -198,7 +198,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=GeckoViewVersion\r\n\r\ntest version"))
             assert(request.contains("name=BuildID\r\n\r\ntest build id"))
             assert(request.contains("name=Version\r\n\r\n1.0.1"))
-            assert(request.contains("name=VersionCode\r\n\r\n1000"))
+            assert(request.contains("name=ApplicationBuildID\r\n\r\n1000"))
 
             verify(service).report(crash)
             verify(service).sendReport(123456, null, "dump.path", "extras.path", true, true, crash.breadcrumbs)

@@ -246,7 +246,7 @@ class MozillaSocorroService(
         sendPart(gzipOs, boundary, "ProductName", appName, nameSet)
         sendPart(gzipOs, boundary, "ProductID", appId, nameSet)
         sendPart(gzipOs, boundary, "Version", versionName, nameSet)
-        sendPart(gzipOs, boundary, "VersionCode", versionCode, nameSet)
+        sendPart(gzipOs, boundary, "ApplicationBuildID", versionCode, nameSet)
         sendPart(gzipOs, boundary, "AndroidComponentVersion", AcBuild.version, nameSet)
         sendPart(gzipOs, boundary, "GleanVersion", AcBuild.gleanSdkVersion, nameSet)
         sendPart(gzipOs, boundary, "ApplicationServicesVersion", AcBuild.applicationServicesVersion, nameSet)
