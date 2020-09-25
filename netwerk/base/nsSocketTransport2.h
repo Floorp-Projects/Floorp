@@ -327,12 +327,8 @@ class nsSocketTransport final : public nsASocketHandler,
   nsCOMPtr<nsICancelable> mDNSRequest;
   nsCOMPtr<nsIDNSAddrRecord> mDNSRecord;
 
-  nsresult mDNSLookupStatus;
-  PRIntervalTime mDNSARequestFinished;
-  nsCOMPtr<nsICancelable> mDNSTxtRequest;
-  nsCString mDNSRecordTxt;
-  bool mEsniQueried;
-  bool mEsniUsed;
+  nsCString mEchConfig;
+  bool mEchConfigUsed;
   bool mResolvedByTRR;
 
   // mNetAddr/mSelfAddr is valid from GetPeerAddr()/GetSelfAddr() once we have
