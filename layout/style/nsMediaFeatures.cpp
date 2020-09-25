@@ -426,11 +426,6 @@ void nsMediaFeatures::InitSystemMetrics() {
         (nsStaticAtom*)nsGkAtoms::_moz_windows_classic);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::IntID::TouchEnabled, &metricResult);
-  if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement((nsStaticAtom*)nsGkAtoms::_moz_touch_enabled);
-  }
-
   rv = LookAndFeel::GetInt(LookAndFeel::IntID::SwipeAnimationEnabled,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
