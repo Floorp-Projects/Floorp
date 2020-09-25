@@ -58,7 +58,7 @@ hw-g5-view-fenix:
             --perfherder
             --perfherder-app fenix
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --browsertime-iterations 14
+            --browsertime-iterations 25
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_android_view.js
 
@@ -89,7 +89,7 @@ hw-p2-view-fenix:
             --perfherder
             --perfherder-app fenix
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --browsertime-iterations 14
+            --browsertime-iterations 25
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_android_view.js
 
