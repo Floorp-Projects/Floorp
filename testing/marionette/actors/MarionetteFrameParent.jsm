@@ -137,6 +137,10 @@ class MarionetteFrameParent extends JSWindowActorParent {
     );
   }
 
+  async getPageSource() {
+    return this.sendQuery("MarionetteFrameParent:getPageSource");
+  }
+
   async switchToFrame(id) {
     const {
       browsingContextId,
