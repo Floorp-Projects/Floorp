@@ -4246,7 +4246,7 @@ bool ScrollFrameHelper::DecideScrollableLayer(
           MOZ_LOG(
               sDisplayportLog, LogLevel::Verbose,
               ("Scroll id %" PRIu64 " has visible rect %s, scroll port %s\n",
-               viewID, Stringify(aVisibleRect).c_str(),
+               viewID, Stringify(*aVisibleRect).c_str(),
                Stringify(mScrollPort).c_str()));
         }
 

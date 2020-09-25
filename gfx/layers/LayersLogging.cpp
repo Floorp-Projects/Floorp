@@ -21,13 +21,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-void AppendToString(std::stringstream& aStream, const void* p, const char* pfx,
-                    const char* sfx) {
-  aStream << pfx;
-  aStream << nsPrintfCString("%p", p).get();
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, ScrollableLayerGuid::ViewID n,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
