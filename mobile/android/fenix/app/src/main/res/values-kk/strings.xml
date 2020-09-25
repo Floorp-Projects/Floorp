@@ -1155,6 +1155,8 @@
     <string name="sign_in_with_camera">Камерамен кіріңіз</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Оның орнына эл. поштаны пайдалану</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Тіркелгіңіз жоқ па? Firefox-ты құрылғылар арасында синхрондау үшін, <u>тіркелгі жасаңыз</u>.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox тіркелгіңізбен синхрондауды тоқтатады, бірақ, бұл құрылғыда барлық шолу деректері қалады.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1266,6 +1268,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Ашық библиотекалар</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Қайта бағыттайтын трекерлер</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Белгілі бақылайтын веб-сайттарға қайта бағыттау арқылы орнатылған cookie файлдарын тазарту.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Қолдау</string>

@@ -1203,6 +1203,8 @@
     <string name="sign_in_with_camera">使用相机登录</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">改用电子邮件</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[尚无账户？<u>立即创建</u>以在设备间同步 Firefox。]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox 将停止与您的账号的同步，但不会删除此设备上的任何浏览数据。</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1310,6 +1312,11 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | 开源软件库</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">重定向跟踪器</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">清除通过重定向设置到已知跟踪网站的 Cookie。</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">用户支持</string>
@@ -1594,7 +1601,7 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">请启用标签页同步。</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string name="synced_tabs_no_tabs">您其他设备上的 Firefox 中没有打开任何标签页。</string>
+    <string name="synced_tabs_no_tabs">您其他设备上的 Firefox 没有打开任何标签页。</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">查看您其他设备上的标签页列表。</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

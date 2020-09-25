@@ -1162,6 +1162,8 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="sign_in_with_camera">Mewngofnodi gyda’ch camera</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Defnyddiwch e-bost yn lle hynny</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Dim cyfrif? <u>Crëwch un</u> i gydweddu Firefox rhwng dyfeisiau.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Bydd Firefox yn peidio cydweddu eich cyfrif ond ni fydd yn dileu eich data pori ar y ddyfais hon.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1269,6 +1271,11 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s| Llyfrgelloedd OSS</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Ailgyfeirio Tracwyr</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Yn clirio cwcis wedi’u gosod i ailgyfeirio i wefannau tracio hysbys.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Cefnogaeth</string>

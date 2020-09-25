@@ -1176,6 +1176,8 @@
     <string name="sign_in_with_camera">Logg inn med kameraet ditt</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Bruk e-post i staden</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Ingen konto? <u>Lag ein</u> for å synkronisere Firefox mellom einingar.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox vil stoppe synkroniseringa med kontoen din, men vil ikkje slette nettleserdataa dine på denne eininga.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
