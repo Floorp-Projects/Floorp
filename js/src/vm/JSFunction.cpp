@@ -1566,7 +1566,6 @@ bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, HandleFunction fun,
 
   size_t sourceStart = lazy->sourceStart();
   size_t sourceLength = lazy->sourceEnd() - lazy->sourceStart();
-  bool hadLazyScriptData = lazy->hasPrivateScriptData();
 
   {
     MOZ_ASSERT(ss->hasSourceText());
@@ -1609,17 +1608,10 @@ bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, HandleFunction fun,
     }
   }
 
-  RootedScript script(cx, fun->nonLazyScript());
-
-  // NOTE: Only allow relazification if there was no lazy PrivateScriptData.
-  // This excludes non-leaf functions and all script class constructors.
-  if (script->isRelazifiable() && !hadLazyScriptData) {
-    script->setAllowRelazify();
-  }
-
   // XDR the newly delazified function.
   if (ss->hasEncoder()) {
-    RootedScriptSourceObject sourceObject(cx, script->sourceObject());
+    RootedScriptSourceObject sourceObject(cx,
+                                          fun->nonLazyScript()->sourceObject());
     if (!ss->xdrEncodeFunction(cx, fun, sourceObject)) {
       return false;
     }

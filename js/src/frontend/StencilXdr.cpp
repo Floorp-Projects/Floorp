@@ -131,7 +131,8 @@ static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
     IsStandaloneFunction,
     WasFunctionEmitted,
     IsSingletonFunction,
-    HasImmutableScriptData
+    HasImmutableScriptData,
+    AllowRelazify,
   };
 
   uint8_t xdrFlags = 0;
@@ -174,6 +175,9 @@ static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
     if (stencil.isSingletonFunction) {
       xdrFlags |= 1 << uint8_t(XdrFlags::IsSingletonFunction);
     }
+    if (stencil.allowRelazify) {
+      xdrFlags |= 1 << uint8_t(XdrFlags::AllowRelazify);
+    }
   }
 
   MOZ_TRY(xdr->codeUint8(&xdrFlags));
@@ -213,6 +217,9 @@ static XDRResult XDRScriptStencil(XDRState<mode>* xdr, ScriptStencil& stencil) {
     }
     if (xdrFlags & (1 << uint8_t(XdrFlags::IsSingletonFunction))) {
       stencil.isSingletonFunction = true;
+    }
+    if (xdrFlags & (1 << uint8_t(XdrFlags::AllowRelazify))) {
+      stencil.allowRelazify = true;
     }
   }
 

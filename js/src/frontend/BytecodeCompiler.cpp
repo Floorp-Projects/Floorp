@@ -1000,6 +1000,13 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
     return false;
   }
 
+  // NOTE: Only allow relazification if there was no lazy PrivateScriptData.
+  // This excludes non-leaf functions and all script class constructors.
+  bool hadLazyScriptData = lazy->hasPrivateScriptData();
+  bool isRelazifiableAfterDelazify = lazy->isRelazifiableAfterDelazify();
+  compilationInfo.stencil.scriptData[CompilationInfo::TopLevelIndex]
+      .allowRelazify = isRelazifiableAfterDelazify && !hadLazyScriptData;
+
   assertException.reset();
   return true;
 }
