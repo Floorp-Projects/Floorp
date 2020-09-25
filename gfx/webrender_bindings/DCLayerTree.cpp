@@ -15,6 +15,7 @@
 #include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/Telemetry.h"
+#include "nsPrintfCString.h"
 
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_WINBLUE
