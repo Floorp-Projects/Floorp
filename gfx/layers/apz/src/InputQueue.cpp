@@ -11,6 +11,7 @@
 #include "InputBlockState.h"
 #include "LayersLogging.h"
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/ToString.h"
 #include "OverscrollHandoffState.h"
 #include "QueuedInput.h"
 #include "mozilla/StaticPrefs_apz.h"
@@ -787,7 +788,7 @@ void InputQueue::SetConfirmedTargetApzc(
   APZThreadUtils::AssertOnControllerThread();
 
   INPQ_LOG("got a target apzc; block=%" PRIu64 " guid=%s\n", aInputBlockId,
-           aTargetApzc ? Stringify(aTargetApzc->GetGuid()).c_str() : "");
+           aTargetApzc ? ToString(aTargetApzc->GetGuid()).c_str() : "");
   bool success = false;
   InputData* firstInput = nullptr;
   InputBlockState* inputBlock = FindBlockForId(aInputBlockId, &firstInput);
@@ -818,7 +819,7 @@ void InputQueue::ConfirmDragBlock(
   INPQ_LOG("got a target apzc; block=%" PRIu64 " guid=%s dragtarget=%" PRIu64
            "\n",
            aInputBlockId,
-           aTargetApzc ? Stringify(aTargetApzc->GetGuid()).c_str() : "",
+           aTargetApzc ? ToString(aTargetApzc->GetGuid()).c_str() : "",
            aDragMetrics.mViewId);
   bool success = false;
   InputData* firstInput = nullptr;
