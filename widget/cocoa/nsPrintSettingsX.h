@@ -31,9 +31,6 @@ class nsPrintSettingsX : public nsPrintSettings {
   nsresult GetEffectivePageSize(double* aWidth, double* aHeight) override;
   void GetFilePageSize(double* aWidth, double* aHeight);
 
-  nsresult GetPaperWidth(double* aPaperWidth) override;
-  nsresult GetPaperHeight(double* aPaperWidth) override;
-
   // In addition to setting the paper width and height, these
   // overrides set the adjusted width and height returned from
   // GetEffectivePageSize. This is needed when a paper size is
