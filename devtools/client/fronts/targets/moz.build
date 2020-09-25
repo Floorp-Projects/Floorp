@@ -7,7 +7,6 @@
 DevToolsModules(
     'browsing-context.js',
     'content-process.js',
-    'local-tab.js',
     'target-mixin.js',
     'worker.js',
 )
