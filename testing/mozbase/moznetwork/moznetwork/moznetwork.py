@@ -53,7 +53,7 @@ def _get_interface_list():
             namestr = names.tobytes()
         else:
             namestr = names.tostring()
-        return [(namestr[i:i + 32].split(b'\0', 1)[0],
+        return [(six.ensure_str(namestr[i:i + 32].split(b'\0', 1)[0]),
                  socket.inet_ntoa(namestr[i + 20:i + 24]))
                 for i in range(0, outbytes, struct_size)]
 
