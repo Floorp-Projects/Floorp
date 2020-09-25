@@ -796,9 +796,12 @@ class TestPageLoadStrategy(BaseNavigationTestCase):
         self.marionette.delete_session()
         self.marionette.start_session({"pageLoadStrategy": "none"})
 
-        # With a strategy of "none" there should be no wait for the page load, and the
-        # current load state is unknown. So only test that the command executes successfully.
         self.marionette.navigate(self.test_page_slow_resource)
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            lambda _: self.marionette.get_url() == self.test_page_slow_resource,
+            message="Target page has not been loaded"
+        )
+        self.marionette.find_element(By.ID, "slow")
 
     def test_eager(self):
         self.marionette.delete_session()
