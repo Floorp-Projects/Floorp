@@ -170,6 +170,9 @@ urlbar.searchmode.*
     Used when the user selects a search shortcut Top Site from the New Tab Page.
   - ``topsites_urlbar``
     Used when the user selects a search shortcut Top Site from the Urlbar.
+  - ``touchbar``
+    Used when the user taps a search shortct on the Touch Bar, available on some
+    Macs.
   - ``typed``
     Used when the user types an engine alias in the Urlbar.
   - ``other``

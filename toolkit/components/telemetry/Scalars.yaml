@@ -5473,6 +5473,23 @@ urlbar.searchmode:
       - 'firefox'
     record_in_processes:
       - main
+  touchbar:
+    bug_numbers:
+      - 1657414
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after selecting a search shortcut on the macOS Touch Bar.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   typed:
     bug_numbers:
       - 1654680
