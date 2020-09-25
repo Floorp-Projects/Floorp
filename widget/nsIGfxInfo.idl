@@ -117,8 +117,6 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBGL_OPENGL = 6;
   /* Whether WebGL is supported via ANGLE (D3D9 -- does not check for the presence of ANGLE libs). */
   const long FEATURE_WEBGL_ANGLE = 7;
-  /* Whether WebGL antialiasing is supported. */
-  const long FEATURE_WEBGL_MSAA = 8;
   /* Whether Stagefright is supported, starting in 17. */
   const long FEATURE_STAGEFRIGHT = 9;
   /* Whether Webrtc Hardware H.264 acceleration is supported, starting in 71. */
