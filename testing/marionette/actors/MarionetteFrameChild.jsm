@@ -29,10 +29,6 @@ class MarionetteFrameChild extends JSWindowActorChild {
     super();
   }
 
-  get content() {
-    return this.docShell.domWindow;
-  }
-
   get innerWindowId() {
     return this.manager.innerWindowId;
   }
@@ -158,7 +154,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
       webEl = WebElement.fromJSON(id.webElRef);
     }
     const el = ContentDOMReference.resolve(id);
-    if (element.isStale(el, this.content)) {
+    if (element.isStale(el, this.contentWindow)) {
       throw new error.StaleElementReferenceError(
         pprint`The element reference of ${el || webEl?.uuid} is stale; ` +
           "either the element is no longer attached to the DOM, " +
@@ -216,7 +212,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
       opts.startNode = this.resolveElement(opts.startNode);
     }
 
-    const container = { frame: this.content };
+    const container = { frame: this.contentWindow };
     const el = await element.find(container, strategy, selector, opts);
     return this.getElementId(el);
   }
@@ -241,7 +237,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
       opts.startNode = this.resolveElement(opts.startNode);
     }
 
-    const container = { frame: this.content };
+    const container = { frame: this.contentWindow };
     const els = await element.find(container, strategy, selector, opts);
     return Promise.all(els.map(el => this.getElementId(el)));
   }
@@ -250,7 +246,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
    * Get the current URL.
    */
   async getCurrentUrl() {
-    return this.content.location.href;
+    return this.contentWindow.location.href;
   }
 
   /**
@@ -294,7 +290,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
   async getElementText(options = {}) {
     const { webEl } = options;
     const el = this.resolveElement(webEl);
-    return atom.getElementText(el, this.content);
+    return atom.getElementText(el, this.contentWindow);
   }
 
   /**
@@ -304,7 +300,7 @@ class MarionetteFrameChild extends JSWindowActorChild {
     const { name, webEl } = options;
     const el = this.resolveElement(webEl);
 
-    const style = this.content.getComputedStyle(el);
+    const style = this.contentWindow.getComputedStyle(el);
     return style.getPropertyValue(name);
   }
 
