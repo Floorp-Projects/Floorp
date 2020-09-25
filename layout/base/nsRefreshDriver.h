@@ -415,7 +415,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     eNeedsToUpdateIntersectionObservations = 1 << 2,
     eHasVisualViewportResizeEvents = 1 << 3,
     eHasScrollEvents = 1 << 4,
-    eHasVisualVieportScrollEvents = 1 << 5,
+    eHasVisualViewportScrollEvents = 1 << 5,
   };
 
  private:
