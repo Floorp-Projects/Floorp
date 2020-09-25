@@ -2946,6 +2946,24 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     return buildBailoutForColdIC(loc, kind);
   }
 
+  if (const auto* inliningSnapshot = getOpSnapshot<WarpInlinedCall>(loc)) {
+    // The CallInfo will be initialized by the transpiler.
+    jsbytecode* pc = loc.toRawBytecode();
+    bool ignoresRval = BytecodeIsPopped(pc);
+    CallInfo callInfo(alloc(), pc, /*constructing =*/false, ignoresRval);
+    callInfo.markAsInlined();
+
+    MDefinitionStackVector inputs_;
+    if (!inputs_.append(inputs.begin(), inputs.end())) {
+      return false;
+    }
+    if (!TranspileCacheIRToMIR(this, loc, inliningSnapshot->cacheIRSnapshot(),
+                               inputs_, &callInfo)) {
+      return false;
+    }
+    return buildInlinedCall(loc, inliningSnapshot, callInfo);
+  }
+
   // Work around std::initializer_list not defining operator[].
   auto getInput = [&](size_t index) -> MDefinition* {
     MOZ_ASSERT(index < numInputs);
