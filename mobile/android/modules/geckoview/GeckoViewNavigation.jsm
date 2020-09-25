@@ -27,6 +27,35 @@ XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
   )
 );
 
+// Filter out request headers as per discussion in Bug #1567549
+// CONNECTION: Used by Gecko to manage connections
+// HOST: Relates to how gecko will ultimately interpret the resulting resource as that
+//       determines the effective request URI
+const BAD_HEADERS = ["connection", "host"];
+
+// Headers use |\r\n| as separator so these characters cannot appear
+// in the header name or value
+const FORBIDDEN_HEADER_CHARACTERS = ["\n", "\r"];
+
+function validateHeader(key, value) {
+  if (!key) {
+    // Key cannot be empty
+    return false;
+  }
+
+  for (let c of FORBIDDEN_HEADER_CHARACTERS) {
+    if (key.includes(c) || value?.includes(c)) {
+      return false;
+    }
+  }
+
+  if (BAD_HEADERS.includes(key.toLowerCase().trim())) {
+    return false;
+  }
+
+  return true;
+}
+
 // Create default ReferrerInfo instance for the given referrer URI string.
 const createReferrerInfo = aReferrer => {
   let referrerUri;
@@ -184,22 +213,16 @@ class GeckoViewNavigation extends GeckoViewModule {
 
         let additionalHeaders = null;
         if (headers) {
-          // Filter out request headers as per discussion in Bug #1567549
-          // CONNECTION: Used by Gecko to manage connections
-          // HOST: Relates to how gecko will ultimately interpret the resulting resource as that
-          //       determines the effective request URI
-          const badHeaders = ["connection", "host"];
           additionalHeaders = "";
-          headers.forEach(entry => {
-            const key = entry
-              .split(/:/)[0]
-              .toLowerCase()
-              .trim();
-
-            if (!badHeaders.includes(key)) {
-              additionalHeaders += entry + "\r\n";
+          for (let [key, value] of Object.entries(headers)) {
+            if (!validateHeader(key, value)) {
+              Cu.reportError(`Ignoring invalid header '${key}'='${value}'.`);
+              continue;
             }
-          });
+
+            additionalHeaders += `${key}:${value ?? ""}\r\n`;
+          }
+
           if (additionalHeaders != "") {
             additionalHeaders = E10SUtils.makeInputStream(additionalHeaders);
           } else {

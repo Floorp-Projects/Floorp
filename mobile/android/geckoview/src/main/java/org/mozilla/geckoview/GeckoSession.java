@@ -1531,21 +1531,16 @@ public class GeckoSession {
      */
     public static final int LOAD_FLAGS_REPLACE_HISTORY = 1 << 6;
 
-    /**
-     * Formats the map of additional request headers into an ArrayList
-     * @param additionalHeaders Request headers to be formatted
-     * @return Correctly formatted request headers as a ArrayList
-     */
-    private ArrayList<String> additionalHeadersToStringArray(final @NonNull Map<String, String> additionalHeaders) {
-        ArrayList<String> headers = new ArrayList<String>();
-        for (String key : additionalHeaders.keySet()) {
-            // skip null key if one exists
-            if (key == null)
+    private GeckoBundle additionalHeadersToBundle(final Map<String, String> additionalHeaders) {
+        final GeckoBundle bundle = new GeckoBundle(additionalHeaders.size());
+        for (Map.Entry<String, String> entry : additionalHeaders.entrySet()) {
+            if (entry.getKey() == null) {
+                // Ignore null keys
                 continue;
-
-            headers.add( String.format("%s:%s", key, additionalHeaders.get(key)) );
+            }
+            bundle.putString(entry.getKey(), entry.getValue());
         }
-        return headers;
+        return bundle;
     }
 
     /**
@@ -1611,7 +1606,7 @@ public class GeckoSession {
         }
 
         if (additionalHeaders != null) {
-            msg.putStringArray("headers", additionalHeadersToStringArray(additionalHeaders));
+            msg.putBundle("headers", additionalHeadersToBundle(additionalHeaders));
         }
         mEventDispatcher.dispatch("GeckoView:LoadUri", msg);
     }
@@ -1669,7 +1664,7 @@ public class GeckoSession {
             }
 
             if (additionalHeaders != null) {
-                msg.putStringArray("headers", additionalHeadersToStringArray(additionalHeaders));
+                msg.putBundle("headers", additionalHeadersToBundle(additionalHeaders));
             }
 
             mEventDispatcher.dispatch("GeckoView:LoadUri", msg);
