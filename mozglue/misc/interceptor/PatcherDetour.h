@@ -1464,36 +1464,38 @@ class WindowsDllDetourPatcher final
           return;
         }
       } else if (*origBytes == 0xff) {
-        if ((origBytes[1] & (kMaskMod | kMaskReg)) == 0xf0) {
-          // push r64
+        uint8_t mod = origBytes[1] & kMaskMod;
+        uint8_t reg = (origBytes[1] & kMaskReg) >> kRegFieldShift;
+        uint8_t rm = origBytes[1] & kMaskRm;
+        if (mod == kModReg && (reg == 0 || reg == 1 || reg == 2 || reg == 6)) {
+          // INC|DEC|CALL|PUSH r64
           COPY_CODES(2);
-        } else if (origBytes[1] == 0x25) {
-          // jmp absolute indirect m32
-          foundJmp = true;
+        } else if (reg == 4) {
+          // FF /4 (Opcode=ff, REG=4): JMP r/m
+          if (mod == kModNoRegDisp && rm == kRmNoRegDispDisp32) {
+            // FF 25    JMP [disp32]
+            foundJmp = true;
 
-          origBytes += 2;
+            origBytes += 2;
 
-          uintptr_t jmpDest = origBytes.ChasePointerFromDisp();
+            uintptr_t jmpDest = origBytes.ChasePointerFromDisp();
 
-          if (!GenerateJump(tramp, jmpDest, JumpType::Jmp)) {
-            return;
+            if (!GenerateJump(tramp, jmpDest, JumpType::Jmp)) {
+              return;
+            }
+          } else {
+            // JMP r/m except JMP [disp32]
+            int len = CountModRmSib(origBytes + 1);
+            if (len < 0) {
+              // RIP-relative not yet supported
+              MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
+              return;
+            }
+
+            COPY_CODES(len + 1);
+
+            foundJmp = true;
           }
-        } else if ((origBytes[1] & (kMaskMod | kMaskReg)) ==
-                   BuildModRmByte(kModReg, 2, 0)) {
-          // CALL reg (ff nn)
-          COPY_CODES(2);
-        } else if (((origBytes[1] & kMaskReg) >> kRegFieldShift) == 4) {
-          // JMP r/m
-          int len = CountModRmSib(origBytes + 1);
-          if (len < 0) {
-            // RIP-relative not yet supported
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
-            return;
-          }
-
-          COPY_CODES(len + 1);
-
-          foundJmp = true;
         } else {
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
