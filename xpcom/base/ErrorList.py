@@ -850,10 +850,9 @@ with modules["SECURITY"]:
 
     # Error code for Sub-Resource Integrity
     errors["NS_ERROR_SRI_CORRUPT"] = FAILURE(200)
-    errors["NS_ERROR_SRI_DISABLED"] = FAILURE(201)
-    errors["NS_ERROR_SRI_NOT_ELIGIBLE"] = FAILURE(202)
-    errors["NS_ERROR_SRI_UNEXPECTED_HASH_TYPE"] = FAILURE(203)
-    errors["NS_ERROR_SRI_IMPORT"] = FAILURE(204)
+    errors["NS_ERROR_SRI_NOT_ELIGIBLE"] = FAILURE(201)
+    errors["NS_ERROR_SRI_UNEXPECTED_HASH_TYPE"] = FAILURE(202)
+    errors["NS_ERROR_SRI_IMPORT"] = FAILURE(203)
 
     # CMS specific nsresult error codes.  Note: the numbers used here correspond
     # to the values in nsICMSMessageErrors.idl.
