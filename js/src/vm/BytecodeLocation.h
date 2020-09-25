@@ -201,6 +201,10 @@ class BytecodeLocation {
 
   bool isInvokeOp() const { return IsInvokeOp(getOp()); }
 
+  bool isGetPropOp() const { return IsGetPropOp(getOp()); }
+
+  bool isSetPropOp() const { return IsSetPropOp(getOp()); }
+
   bool resultIsPopped() const {
     MOZ_ASSERT(StackDefs(rawBytecode_) == 1);
     return BytecodeIsPopped(rawBytecode_);
