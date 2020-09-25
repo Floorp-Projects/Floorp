@@ -1255,15 +1255,41 @@ TimeStamp nsRefreshDriver::MostRecentRefresh() const {
 
 void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
                                          FlushType aFlushType) {
+  MOZ_RELEASE_ASSERT(mPresContext);
   ObserverArray& array = ArrayFor(aFlushType);
-  array.AppendElement(aObserver);
+  Maybe<uint64_t> innerWindowID;
+#ifdef MOZ_GECKO_PROFILER
+  innerWindowID =
+      profiler_get_inner_window_id_from_docshell(mPresContext->GetDocShell());
+#endif
+  array.AppendElement(ObserverData{aObserver, TimeStamp::Now(), innerWindowID,
+                                   profiler_capture_backtrace()});
   EnsureTimerStarted();
 }
 
 bool nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
                                             FlushType aFlushType) {
   ObserverArray& array = ArrayFor(aFlushType);
-  return array.RemoveElement(aObserver);
+  auto index = array.IndexOf(aObserver);
+  if (index == ObserverArray::array_type::NoIndex) {
+    return false;
+  }
+
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_can_accept_markers()) {
+    auto& data = array.ElementAt(index);
+    PROFILER_MARKER_TEXT(
+        "RefreshObserver",
+        GRAPHICS.WithOptions(
+            MarkerStack::TakeBacktrace(std::move(data.mCause)),
+            MarkerTiming::IntervalUntilNowFrom(data.mRegisterTime),
+            MarkerInnerWindowId(data.mInnerWindowId)),
+        nsCString(kFlushTypeNames[aFlushType]));
+  }
+#endif
+
+  array.RemoveElementAt(index);
+  return true;
 }
 
 void nsRefreshDriver::AddTimerAdjustmentObserver(
