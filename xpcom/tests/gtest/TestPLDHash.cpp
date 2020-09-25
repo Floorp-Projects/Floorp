@@ -30,7 +30,7 @@ extern unsigned int _gdb_sleep_duration;
 //   up when running this test locally, which is surprising and annoying.
 // - On ASAN builds, because ASAN alters the way a MOZ_CRASHing process
 //   terminates, which makes it harder to test if the right thing has occurred.
-static void TestCrashyOperation(void (*aCrashyOperation)()) {
+static void TestCrashyOperation(const char* label, void (*aCrashyOperation)()) {
 #if defined(XP_UNIX) && defined(DEBUG) && !defined(MOZ_ASAN)
   // We're about to trigger a crash. When it happens don't pause to allow GDB
   // to be attached.
@@ -52,10 +52,11 @@ static void TestCrashyOperation(void (*aCrashyOperation)()) {
 
     // Child: perform the crashy operation.
     fprintf(stderr,
-            "TestCrashyOperation: The following crash is expected. Do not "
-            "panic.\n");
+            "TestCrashyOperation %s: The following crash is expected. Do not "
+            "panic.\n",
+            label);
     aCrashyOperation();
-    fprintf(stderr, "TestCrashyOperation: didn't crash?!\n");
+    fprintf(stderr, "TestCrashyOperation %s: didn't crash?!\n", label);
     ASSERT_TRUE(false);  // shouldn't reach here
   }
 
@@ -70,7 +71,8 @@ static void TestCrashyOperation(void (*aCrashyOperation)()) {
     // It returns the number of the caught signal.
     int signum = WEXITSTATUS(status);
     if (signum != SIGSEGV && signum != SIGBUS) {
-      fprintf(stderr, "TestCrashyOperation 'exited' failure: %d\n", signum);
+      fprintf(stderr, "TestCrashyOperation %s: 'exited' failure: %d\n", label,
+              signum);
       ASSERT_TRUE(false);
     }
   } else if (WIFSIGNALED(status)) {
@@ -78,7 +80,8 @@ static void TestCrashyOperation(void (*aCrashyOperation)()) {
     // number of the terminating signal.
     int signum = WTERMSIG(status);
     if (signum != SIGSEGV && signum != SIGBUS) {
-      fprintf(stderr, "TestCrashyOperation 'signaled' failure: %d\n", signum);
+      fprintf(stderr, "TestCrashyOperation %s: 'signaled' failure: %d\n", label,
+              signum);
       ASSERT_TRUE(false);
     }
   }
@@ -117,17 +120,18 @@ TEST(PLDHashTableTest, InitCapacityOk)
   PLDHashTable t2(PLDHashTable::StubOps(), (uint32_t)1 << 7, (uint32_t)1 << 23);
 
   // Try a too-large capacity (which aborts).
-  TestCrashyOperation(InitCapacityOk_InitialLengthTooBig);
+  TestCrashyOperation("length too big", InitCapacityOk_InitialLengthTooBig);
 
   // Try a large capacity combined with a large entry size that when multiplied
   // overflow (causing abort).
-  TestCrashyOperation(InitCapacityOk_InitialEntryStoreTooBig);
+  TestCrashyOperation("entry store too big",
+                      InitCapacityOk_InitialEntryStoreTooBig);
 
   // Try the largest allowed entry size.
   PLDHashTable t3(PLDHashTable::StubOps(), 255);
 
   // Try an overly large entry size.
-  TestCrashyOperation(InitCapacityOk_EntrySizeTooBig);
+  TestCrashyOperation("entry size too big", InitCapacityOk_EntrySizeTooBig);
 
   // Ideally we'd also try a large-but-ok capacity that almost but doesn't
   // quite overflow, but that would result in allocating slightly less than 4
