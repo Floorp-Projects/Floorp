@@ -693,7 +693,7 @@ fn main() {
             Some("gpu-cache") => png::ReadSurface::GpuCache,
             _ => panic!("Unknown surface argument value")
         };
-        let output_path = subargs.value_of("OUTPUT").map(|s| PathBuf::from(s));
+        let output_path = subargs.value_of("OUTPUT").map(PathBuf::from);
         let reader = YamlFrameReader::new_from_args(subargs);
         png::png(&mut wrench, surface, &mut window, reader, rx.unwrap(), output_path);
     } else if let Some(subargs) = args.subcommand_matches("reftest") {

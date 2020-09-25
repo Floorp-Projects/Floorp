@@ -25,6 +25,7 @@ apt-get install -y \
     libfontconfig1-dev \
     libgl1-mesa-dev \
     libx11-dev \
+    llvm-dev \
     ninja-build \
     openjdk-8-jdk \
     pkg-config \

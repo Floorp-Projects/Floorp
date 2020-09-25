@@ -21,7 +21,7 @@ platform(linux,mac) == border-image-empty-slice.yaml border-image-empty-slice-re
 platform(linux,mac) == border-image-round.yaml border-image-round-ref.png
 == border-image-crash.yaml border-image-crash-ref.yaml
 fuzzy(1,5000) == border-image-fill.yaml border-image-fill-ref.png
-fuzzy(2,18000) == border-image-fill-2.yaml border-image-fill-2-ref.png
+fuzzy(2,25326) == border-image-fill-2.yaml border-image-fill-2-ref.png
 == border-no-bogus-line.yaml border-no-bogus-line-ref.png
 platform(linux,mac) == dotted-corner-small-radius.yaml dotted-corner-small-radius.png
 == overlapping.yaml overlapping.png

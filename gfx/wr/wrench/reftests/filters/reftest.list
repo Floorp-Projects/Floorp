@@ -36,7 +36,7 @@ platform(linux,mac) == filter-drop-shadow-on-viewport-edge.yaml filter-drop-shad
 platform(linux,mac) == blend-clipped.yaml blend-clipped.png
 platform(linux,mac) == filter-drop-shadow-clip.yaml filter-drop-shadow-clip.png
 fuzzy(2,10) platform(linux,mac) == filter-drop-shadow-clip-2.yaml filter-drop-shadow-clip-2.png
-platform(linux) == filter-drop-shadow-clip-3.yaml filter-drop-shadow-clip-3.png
+fuzzy(1,23) platform(linux) == filter-drop-shadow-clip-3.yaml filter-drop-shadow-clip-3.png
 fuzzy(5,100000) == filter-drop-shadow-scaled.yaml filter-drop-shadow-scaled-ref.yaml
 == filter-segments.yaml filter-segments-ref.yaml
 == iframe-dropshadow.yaml iframe-dropshadow-ref.yaml
@@ -57,7 +57,7 @@ skip_on(android,device) == svg-filter-color-matrix.yaml filter-color-matrix-ref.
 platform(linux,mac) == draw_calls(8) color_targets(8) alpha_targets(0) svg-filter-blur.yaml filter-blur.png # Extra draw call is due to render task graph workaround
 platform(linux,mac) == svg-filter-drop-shadow.yaml svg-filter-drop-shadow.png
 == fuzzy(1,10000) svg-srgb-to-linear.yaml srgb-to-linear-ref.yaml
-platform(linux,mac) == fuzzy(4,28250) svg-filter-drop-shadow-rotate.yaml svg-filter-drop-shadow-rotate-ref.yaml
+platform(linux,mac) == fuzzy(5,35250) svg-filter-drop-shadow-rotate.yaml svg-filter-drop-shadow-rotate-ref.yaml
 platform(linux,mac) fuzzy(3,3184) == svg-filter-blur-transforms.yaml svg-filter-blur-transforms.png
 platform(linux,mac) == svg-filter-drop-shadow-on-viewport-edge.yaml svg-filter-drop-shadow-on-viewport-edge.png
 platform(linux,mac) == svg-filter-drop-shadow-perspective.yaml svg-filter-drop-shadow-perspective.png

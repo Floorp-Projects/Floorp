@@ -19,6 +19,7 @@ CARGOFLAGS=${CARGOFLAGS:-""}  # default to empty if not set
 WRENCH_BINARY=${WRENCH_BINARY:-""}
 
 pushd wrench
+
 python script/headless.py reftest
 if [[ -z "${WRENCH_BINARY}" ]]; then
     cargo build ${CARGOFLAGS} --release
