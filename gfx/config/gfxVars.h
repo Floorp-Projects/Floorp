@@ -23,7 +23,6 @@ class gfxVarReceiver;
 // Generator for graphics vars.
 #define GFX_VARS_LIST(_)                                           \
   /* C++ Name,                  Data Type,        Default Value */ \
-  _(AllowWebgl2, bool, true)                                       \
   _(BrowserTabsRemoteAutostart, bool, false)                       \
   _(ContentBackend, BackendType, BackendType::NONE)                \
   _(SoftwareBackend, BackendType, BackendType::NONE)               \
@@ -50,8 +49,6 @@ class gfxVarReceiver;
   _(UseWebRenderOptimizedShaders, bool, false)                     \
   _(UseWebRenderMultithreading, bool, false)                       \
   _(UseWebRenderScissoredCacheClears, bool, true)                  \
-  _(WebglAllowCoreProfile, bool, true)                             \
-  _(WebglAllowWindowsNativeGl, bool, false)                        \
   _(WebRenderMaxPartialPresentRects, int32_t, 0)                   \
   _(WebRenderDebugFlags, int32_t, 0)                               \
   _(WebRenderBatchingLookback, int32_t, 10)                        \
