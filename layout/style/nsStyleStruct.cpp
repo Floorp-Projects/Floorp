@@ -226,7 +226,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
       mFontSizeOffset(aSrc.mFontSizeOffset),
       mFontSizeKeyword(aSrc.mFontSizeKeyword),
       mGenericID(aSrc.mGenericID),
-      mScriptLevel(aSrc.mScriptLevel),
+      mMathDepth(aSrc.mMathDepth),
       mMathVariant(aSrc.mMathVariant),
       mMathStyle(aSrc.mMathStyle),
       mMinFontSizeRatio(aSrc.mMinFontSizeRatio),
@@ -247,7 +247,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mFontSizeOffset{0},
       mFontSizeKeyword(StyleFontSizeKeyword::Medium),
       mGenericID(StyleGenericFontFamily::None),
-      mScriptLevel(0),
+      mMathDepth(0),
       mMathVariant(NS_MATHML_MATHVARIANT_NONE),
       mMathStyle(NS_STYLE_MATH_STYLE_NORMAL),
       mMinFontSizeRatio(100),  // 100%
@@ -293,8 +293,7 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
   }
 
   // XXX Should any of these cause a non-nsChangeHint_NeutralChange change?
-  if (mGenericID != aNewData.mGenericID ||
-      mScriptLevel != aNewData.mScriptLevel ||
+  if (mGenericID != aNewData.mGenericID || mMathDepth != aNewData.mMathDepth ||
       mScriptUnconstrainedSize != aNewData.mScriptUnconstrainedSize ||
       mScriptMinSize != aNewData.mScriptMinSize ||
       mScriptSizeMultiplier != aNewData.mScriptSizeMultiplier) {
