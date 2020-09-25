@@ -34,11 +34,13 @@ class nsCUPSShim {
   X(cupsCopyDest)              \
   X(cupsCopyDestInfo)          \
   X(cupsDoRequest)             \
+  X(cupsFindDestDefault)       \
   X(cupsFreeDestInfo)          \
   X(cupsFreeDests)             \
   X(cupsGetDestMediaDefault)   \
   X(cupsGetDestMediaCount)     \
   X(cupsGetDestMediaByIndex)   \
+  X(cupsGetDestMediaByName)    \
   X(cupsGetDest)               \
   X(cupsGetDests)              \
   X(cupsGetNamedDest)          \

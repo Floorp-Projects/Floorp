@@ -96,9 +96,23 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings() const {
 
   cups_size_t media;
 
+// cupsGetDestMediaDefault appears to return more accurate defaults on macOS,
+// and the IPP attribute appears to return more accurate defaults on Linux.
+#ifdef XP_MACOSX
   bool hasDefaultMedia =
       mShim.cupsGetDestMediaDefault(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
                                     CUPS_MEDIA_FLAGS_DEFAULT, &media);
+#else
+  ipp_attribute_t* defaultMediaIPP = mShim.cupsFindDestDefault(
+      CUPS_HTTP_DEFAULT, mPrinter, printerInfo, "media");
+
+  const char* defaultMediaName =
+      mShim.ippGetString(defaultMediaIPP, 0, nullptr);
+
+  bool hasDefaultMedia = mShim.cupsGetDestMediaByName(
+      CUPS_HTTP_DEFAULT, mPrinter, printerInfo, defaultMediaName,
+      CUPS_MEDIA_FLAGS_DEFAULT, &media);
+#endif
 
   if (!hasDefaultMedia) {
     return PrintSettingsInitializer{
