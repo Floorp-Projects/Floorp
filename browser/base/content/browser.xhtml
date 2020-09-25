@@ -2043,6 +2043,22 @@
              customizable="true">
       <toolbartabstop skipintoolbarset="true"/>
 
+      <toolbarbutton id="managed-bookmarks"
+                     class="bookmark-item"
+                     data-l10n-id="managed-bookmarks"
+                     context="placesContextManaged"
+                     container="true"
+                     removable="false"
+                     hidden="true"
+                     type="menu">
+        <menupopup id="managed-bookmarks-popup"
+                   oncommand="PlacesToolbarHelper.openManagedBookmark(event);"
+                   onclick="checkForMiddleClick(this, event);"
+                   ondragover="event.dataTransfer.effectAllowed='none';"
+                   ondragstart="PlacesToolbarHelper.onDragStartManaged(event);"
+                   onpopupshowing="PlacesToolbarHelper.populateManagedBookmarks(this);"/>
+      </toolbarbutton>
+
       <toolbaritem id="personal-bookmarks"
                    title="&bookmarksToolbarItem.label;"
                    cui-areatype="toolbar"
