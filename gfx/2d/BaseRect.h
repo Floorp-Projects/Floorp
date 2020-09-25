@@ -653,8 +653,8 @@ struct BaseRect {
   friend std::ostream& operator<<(
       std::ostream& stream,
       const BaseRect<T, Sub, Point, SizeT, MarginT>& aRect) {
-    return stream << '(' << aRect.x << ',' << aRect.y << ',' << aRect.width
-                  << ',' << aRect.height << ')';
+    return stream << "(x=" << aRect.x << ", y=" << aRect.y
+                  << ", w=" << aRect.width << ", h=" << aRect.height << ')';
   }
 
  private:

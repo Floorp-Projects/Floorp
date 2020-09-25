@@ -21,15 +21,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-void AppendToString(std::stringstream& aStream, const nsRect& r,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-  aStream << nsPrintfCString("(x=%d, y=%d, w=%d, h=%d)", r.X(), r.Y(),
-                             r.Width(), r.Height())
-                 .get();
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const nsRectAbsolute& r,
                     const char* pfx, const char* sfx) {
   aStream << pfx;
@@ -84,8 +75,7 @@ void AppendToString(std::stringstream& aStream, const nsRegion& r,
 
   aStream << "< ";
   for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
-    AppendToString(aStream, iter.Get());
-    aStream << "; ";
+    aStream << iter.Get() << "; ";
   }
   aStream << ">";
 
