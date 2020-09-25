@@ -4901,7 +4901,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetIntValue(
     property: nsCSSPropertyID,
     value: i32,
 ) {
-    use style::properties::longhands::math_depth::SpecifiedValue as MathDepth;
+    use style::properties::longhands::_moz_script_level::SpecifiedValue as MozScriptLevel;
     use style::properties::PropertyDeclaration;
     use style::values::specified::Integer;
 
@@ -4909,7 +4909,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetIntValue(
     let prop = match_wrap_declared! { long,
         XSpan => Integer::new(value),
         // Gecko uses Integer values to signal that it is relative
-        MathDepth => MathDepth::Relative(value),
+        MozScriptLevel => MozScriptLevel::Relative(value),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
@@ -5072,7 +5072,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetNumberValue(
     property: nsCSSPropertyID,
     value: f32,
 ) {
-    use style::properties::longhands::math_depth::SpecifiedValue as MathDepth;
+    use style::properties::longhands::_moz_script_level::SpecifiedValue as MozScriptLevel;
     use style::properties::longhands::_moz_script_size_multiplier::SpecifiedValue as MozScriptSizeMultiplier;
     use style::properties::PropertyDeclaration;
 
@@ -5081,7 +5081,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetNumberValue(
     let prop = match_wrap_declared! { long,
         MozScriptSizeMultiplier => MozScriptSizeMultiplier(value),
         // Gecko uses Number values to signal that it is absolute
-        MathDepth => MathDepth::MozAbsolute(value as i32),
+        MozScriptLevel => MozScriptLevel::MozAbsolute(value as i32),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);

@@ -1342,8 +1342,8 @@ impl LonghandId {
             // preferences properly, see bug 1165538.
             LonghandId::MozMinFontSizeRatio |
 
-            // font-size depends on math-depth's computed value.
-            LonghandId::MathDepth |
+            // Needed to do font-size for MathML. :(
+            LonghandId::MozScriptLevel |
             % endif
 
             // Needed to compute the first available font, in order to
