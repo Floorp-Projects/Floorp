@@ -47,7 +47,7 @@
     -moz-list-reversed: initial;
     -moz-font-smoothing-background-color: initial;
     -moz-min-font-size-ratio: initial;
-    math-depth: initial;
+    -moz-script-level: initial;
     /* As long as inert implies pointer-events: none as it does now, we're
      * good. */
     -moz-inert: initial;
