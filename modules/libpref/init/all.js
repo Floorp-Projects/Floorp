@@ -2237,9 +2237,6 @@ pref("security.notification_enable_delay", 500);
   pref("security.disallow_non_local_systemprincipal_in_tests", false);
 #endif
 
-// Sub-resource integrity
-pref("security.sri.enable", true);
-
 // OCSP must-staple
 pref("security.ssl.enable_ocsp_must_staple", true);
 

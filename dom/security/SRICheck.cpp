@@ -94,11 +94,6 @@ nsresult SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
   NS_ENSURE_ARG_POINTER(aReporter);
   MOZ_ASSERT(outMetadata->IsEmpty());  // caller must pass empty metadata
 
-  if (!Preferences::GetBool("security.sri.enable", false)) {
-    SRILOG(("SRICheck::IntegrityMetadata, sri is disabled (pref)"));
-    return NS_ERROR_SRI_DISABLED;
-  }
-
   // put a reasonable bound on the length of the metadata
   NS_ConvertUTF16toUTF8 metadataList(aMetadataList);
   if (metadataList.Length() > SRICheck::MAX_METADATA_LENGTH) {
@@ -183,10 +178,6 @@ SRICheckDataVerifier::SRICheckDataVerifier(const SRIMetadata& aMetadata,
       mInvalidMetadata(false),
       mComplete(false) {
   MOZ_ASSERT(!aMetadata.IsEmpty());  // should be checked by caller
-
-  // IntegrityMetadata() checks this and returns "no metadata" if
-  // it's disabled so we should never make it this far
-  MOZ_ASSERT(Preferences::GetBool("security.sri.enable", false));
   MOZ_ASSERT(aReporter);
 
   if (!aMetadata.IsValid()) {
