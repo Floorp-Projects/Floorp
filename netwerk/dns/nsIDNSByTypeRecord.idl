@@ -92,6 +92,7 @@ interface nsISVCBRecord : nsISupports {
   readonly attribute ACString name;
   [noscript, nostdcall, notxpcom] readonly attribute MaybePort port;
   [noscript, nostdcall, notxpcom] readonly attribute MaybeAlpn alpn;
+  readonly attribute ACString echConfig;
   readonly attribute bool hasIPHintAddress;
   readonly attribute Array<nsISVCParam> values;
 };
