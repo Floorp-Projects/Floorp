@@ -843,8 +843,9 @@
      * new object every time it's evaluated, so this instruction must not be
      * used anywhere it might be executed more than once.
      *
-     * There's a shell-only option, `newGlobal({cloneSingletons: true})`, that
-     * makes this instruction do a deep copy of the object. A few tests use it.
+     * This may only be used in non-function run-once scripts. Care also must
+     * be taken to not emit in loops or other constructs where it could run
+     * more than once.
      *
      *   Category: Objects
      *   Type: Creating objects
