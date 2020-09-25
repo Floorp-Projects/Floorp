@@ -70,7 +70,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
 
-  // One time initialization method called upon docshell module construction
+  // One time initialization method
   static nsresult Startup();
   static void Shutdown();
   static void UpdatePrefs();
