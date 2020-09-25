@@ -34,9 +34,6 @@ enum class ImageFormat;
 namespace layers {
 struct ZoomConstraints;
 
-void AppendToString(std::stringstream& aStream, const nsPoint& p,
-                    const char* pfx = "", const char* sfx = "");
-
 void AppendToString(std::stringstream& aStream, const nsRect& r,
                     const char* pfx = "", const char* sfx = "");
 

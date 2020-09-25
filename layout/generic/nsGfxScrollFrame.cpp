@@ -68,6 +68,7 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
+#include "mozilla/ToString.h"
 #include "ScrollAnimationPhysics.h"
 #include "ScrollAnimationBezierPhysics.h"
 #include "ScrollAnimationMSDPhysics.h"
@@ -6309,7 +6310,7 @@ bool ScrollFrameHelper::ReflowFinished() {
                  mScrollGeneration);
       MOZ_ASSERT(mScrollUpdates.LastElement().GetDestination() == CSSPoint());
       SCROLLRESTORE_LOG("%p: updating initial SPU to pos %s\n", this,
-                        Stringify(currentScrollPos).c_str());
+                        ToString(currentScrollPos).c_str());
       mScrollUpdates.Clear();
       // Scroll generation bump not strictly necessary, but good for
       // consistency.

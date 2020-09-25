@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_ui.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "nsFrameList.h"  // for DEBUG_FRAME_DUMP
 #include "nsHTMLParts.h"
@@ -477,7 +478,7 @@ nsIFrame* FindFrameTargetedByInputEvent(
       "Found initial target %p for event class %s message %s point %s "
       "relative to root frame %s\n",
       target, ToChar(aEvent->mClass), ToChar(aEvent->mMessage),
-      mozilla::layers::Stringify(aPointRelativeToRootFrame).c_str(),
+      mozilla::ToString(aPointRelativeToRootFrame).c_str(),
       ToString(aRootFrame).c_str());
 
   EventRadiusPrefs prefs(aEvent->mClass);
