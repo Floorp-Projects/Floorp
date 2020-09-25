@@ -922,6 +922,7 @@ bool BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed,
                                                   ObjOperandId objId,
                                                   uint32_t offsetOffset,
                                                   ValOperandId rhsId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Address offsetAddr = stubAddress(offsetOffset);
 
   // Allocate the fixed registers first. These need to be fixed for
@@ -977,6 +978,7 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
     CacheOp op, ObjOperandId objId, uint32_t offsetOffset, ValOperandId rhsId,
     bool changeGroup, uint32_t newGroupOffset, uint32_t newShapeOffset,
     Maybe<uint32_t> numNewSlotsOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Address offsetAddr = stubAddress(offsetOffset);
 
   // Allocate the fixed registers first. These need to be fixed for
