@@ -530,6 +530,7 @@ UNIFIED_SOURCES += [
     'RotatedBuffer.cpp',
     'SampleTime.cpp',
     'ScreenshotGrabber.cpp',
+    'ScrollableLayerGuid.cpp',
     'ShareableCanvasRenderer.cpp',
     'SourceSurfaceSharedData.cpp',
     'SourceSurfaceVolatileData.cpp',
