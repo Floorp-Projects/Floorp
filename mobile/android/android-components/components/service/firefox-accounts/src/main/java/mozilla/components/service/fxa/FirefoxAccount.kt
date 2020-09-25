@@ -184,8 +184,10 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    override fun getTokenServerEndpointURL(): String {
-        return inner.getTokenServerEndpointURL()
+    override suspend fun getTokenServerEndpointURL() = withContext(scope.coroutineContext) {
+        handleFxaExceptions(logger, "getTokenServerEndpointURL", { null }) {
+            inner.getTokenServerEndpointURL()
+        }
     }
 
     override fun getPairingAuthorityURL(): String {

@@ -35,6 +35,7 @@ import mozilla.components.service.fxa.sync.SyncDispatcher
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.test.any
@@ -91,6 +92,8 @@ internal open class TestableFxaAccountManager(
     override fun getAccountStorage(): AccountStorage {
         return storage
     }
+
+    override fun createSyncManager(config: SyncConfig): SyncManager = mock()
 }
 
 const val EXPECTED_AUTH_STATE = "goodAuthState"
@@ -743,7 +746,7 @@ class FxaAccountManagerTest {
             return ableToRecoverFromAuthError
         }
 
-        override fun getTokenServerEndpointURL(): String {
+        override suspend fun getTokenServerEndpointURL(): String? {
             if (tokenServerEndpointUrl != null) return tokenServerEndpointUrl
 
             fail()
@@ -946,6 +949,14 @@ class FxaAccountManagerTest {
 
         assertEquals(mockAccount, manager.authenticatedAccount())
         assertEquals(profile, manager.accountProfile())
+
+        val cachedAuthInfo = SyncAuthInfoCache(testContext).getCached()
+        assertNotNull(cachedAuthInfo)
+        assertEquals("kid", cachedAuthInfo!!.kid)
+        assertEquals("someToken", cachedAuthInfo.fxaAccessToken)
+        assertEquals("k", cachedAuthInfo.syncKey)
+        assertEquals("some://url", cachedAuthInfo.tokenServerUrl)
+        assertTrue(cachedAuthInfo.fxaAccessTokenExpiresAt > 0)
     }
 
     @Test(expected = FxaPanicException::class)
@@ -1679,17 +1690,26 @@ class FxaAccountManagerTest {
         crashReporter: CrashReporting? = null
     ): FxaAccountManager {
 
+        val accessTokenInfo = AccessTokenInfo(
+            "testSc0pe", "someToken", OAuthScopedKey("kty", "testSc0pe", "kid", "k"), System.currentTimeMillis() + 1000 * 10
+        )
+
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(profile)
         `when`(mockAccount.beginOAuthFlow(any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(mockAccount.beginPairingFlow(anyString(), any(), anyString())).thenReturn(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url"))
         `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(true)
+        `when`(mockAccount.getAccessToken(anyString())).thenReturn(accessTokenInfo)
+        `when`(mockAccount.getTokenServerEndpointURL()).thenReturn("some://url")
+
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
             testContext,
-                ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
-                accountStorage, capabilities, coroutineContext = coroutineContext, crashReporter = crashReporter
+            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            accountStorage, capabilities,
+            SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), PeriodicSyncConfig()),
+            coroutineContext = coroutineContext, crashReporter = crashReporter
         ) {
             mockAccount
         }

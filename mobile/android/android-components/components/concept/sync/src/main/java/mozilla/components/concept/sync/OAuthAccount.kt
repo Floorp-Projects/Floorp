@@ -169,9 +169,9 @@ interface OAuthAccount : AutoCloseable {
     /**
      * Fetches the token server endpoint, for authentication using the SAML bearer flow.
      *
-     * @return Token server endpoint URL string
+     * @return Token server endpoint URL string, `null` if it couldn't be obtained.
      */
-    fun getTokenServerEndpointURL(): String
+    suspend fun getTokenServerEndpointURL(): String?
 
     /**
      * Get the pairing URL to navigate to on the Authority side (typically a computer).

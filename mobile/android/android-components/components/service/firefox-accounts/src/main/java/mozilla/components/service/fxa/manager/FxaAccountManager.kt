@@ -837,12 +837,22 @@ open class FxaAccountManager(
             return
         }
 
-        // NB: this call will call into GlobalAccountManager.authError if necessary.
-        // Network failures are ignored.
-        account.getAccessToken(SCOPE_SYNC)?.let {
-            SyncAuthInfoCache(context).setToCache(
-                it.asSyncAuthInfo(account.getTokenServerEndpointURL())
-            )
+        val accessToken = account.getAccessToken(SCOPE_SYNC)
+        val tokenServerUrl = if (accessToken != null) {
+            // Only try to get the endpoint if we have an access token.
+            account.getTokenServerEndpointURL()
+        } else {
+            null
+        }
+
+        if (accessToken != null && tokenServerUrl != null) {
+            SyncAuthInfoCache(context).setToCache(accessToken.asSyncAuthInfo(tokenServerUrl))
+        } else {
+            // At this point, SyncAuthInfoCache may be entirely empty. In this case, we won't be
+            // able to sync via the background worker. We will attempt to populate SyncAuthInfoCache
+            // again in `syncNow` (in response to a direct user action) and after application restarts.
+            logger.warn("Couldn't populate SyncAuthInfoCache. Sync may not work.")
+            logger.warn("Is null? - accessToken: ${accessToken == null}, tokenServerUrl: ${tokenServerUrl == null}")
         }
     }
 
