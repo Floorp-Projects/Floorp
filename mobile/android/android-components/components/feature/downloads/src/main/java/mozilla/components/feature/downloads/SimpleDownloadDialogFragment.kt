@@ -84,7 +84,7 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
             rootView.title.text = if (getLong(KEY_CONTENT_LENGTH) <= 0L) {
                 getString(R.string.mozac_feature_downloads_dialog_download)
             } else {
-                val contentSize = getLong(KEY_CONTENT_LENGTH).toMegabyteString()
+                val contentSize = getLong(KEY_CONTENT_LENGTH).toMegabyteOrKilobyteString()
                 getString(getInt(KEY_TITLE_TEXT, R.string.mozac_feature_downloads_dialog_title2), contentSize)
             }
 
