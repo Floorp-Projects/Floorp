@@ -28,6 +28,9 @@ pull_request_rules:
       - status-success=complete-pr
       - label=🛬 needs landing
       - "#approved-reviews-by>=1"
+      - -draft
+      - label!=work in progress
+      - label!=do not land
     actions:
       merge:
         method: rebase
