@@ -608,8 +608,9 @@ class UrlbarInput {
 
   handleRevert() {
     this.window.gBrowser.userTypedValue = null;
-    this.setURI(null, true);
+    // Nullify search mode before setURI so it won't try to restore it.
     this.setSearchMode({});
+    this.setURI(null, true);
     if (this.value && this.focused) {
       this.select();
     }
