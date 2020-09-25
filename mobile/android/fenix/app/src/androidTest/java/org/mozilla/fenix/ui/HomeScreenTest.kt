@@ -72,9 +72,9 @@ class HomeScreenTest {
             verifyGetToKnowHeader()
 
             // See What's new
-            scrollToElementByText("See what’s new")
-            verifyWhatsNewHeader()
-            verifyWhatsNewLink()
+            // scrollToElementByText("See what’s new")
+            // verifyWhatsNewHeader()
+            // verifyWhatsNewLink()
 
             // Automatic privacy
             scrollToElementByText("Automatic privacy")
