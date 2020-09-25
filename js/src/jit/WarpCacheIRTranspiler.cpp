@@ -3909,11 +3909,13 @@ static void MaybeSetImplicitlyUsed(uint32_t numInstructionIdsBefore,
 
 bool jit::TranspileCacheIRToMIR(WarpBuilder* builder, BytecodeLocation loc,
                                 const WarpCacheIR* cacheIRSnapshot,
-                                const MDefinitionStackVector& inputs) {
+                                const MDefinitionStackVector& inputs,
+                                CallInfo* maybeCallInfo) {
   uint32_t numInstructionIdsBefore =
       builder->mirGen().graph().getNumInstructionIds();
 
-  WarpCacheIRTranspiler transpiler(builder, loc, nullptr, cacheIRSnapshot);
+  WarpCacheIRTranspiler transpiler(builder, loc, maybeCallInfo,
+                                   cacheIRSnapshot);
   if (!transpiler.transpile(inputs)) {
     return false;
   }
@@ -3922,32 +3924,12 @@ bool jit::TranspileCacheIRToMIR(WarpBuilder* builder, BytecodeLocation loc,
     MaybeSetImplicitlyUsed(numInstructionIdsBefore, input);
   }
 
-  return true;
-}
-
-bool jit::TranspileCacheIRToMIR(WarpBuilder* builder, BytecodeLocation loc,
-                                const WarpCacheIR* cacheIRSnapshot,
-                                CallInfo& callInfo) {
-  uint32_t numInstructionIdsBefore =
-      builder->mirGen().graph().getNumInstructionIds();
-
-  // Synthesize the constant number of arguments for this call op.
-  auto* argc = MConstant::New(builder->alloc(), Int32Value(callInfo.argc()));
-  builder->currentBlock()->add(argc);
-
-  MDefinitionStackVector inputs;
-  if (!inputs.append(argc)) {
-    return false;
+  if (maybeCallInfo) {
+    auto maybeSetFlag = [numInstructionIdsBefore](MDefinition* def) {
+      MaybeSetImplicitlyUsed(numInstructionIdsBefore, def);
+    };
+    maybeCallInfo->forEachCallOperand(maybeSetFlag);
   }
 
-  WarpCacheIRTranspiler transpiler(builder, loc, &callInfo, cacheIRSnapshot);
-  if (!transpiler.transpile(inputs)) {
-    return false;
-  }
-
-  auto maybeSetFlag = [numInstructionIdsBefore](MDefinition* def) {
-    MaybeSetImplicitlyUsed(numInstructionIdsBefore, def);
-  };
-  callInfo.forEachCallOperand(maybeSetFlag);
   return true;
 }

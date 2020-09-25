@@ -1767,6 +1767,21 @@ bool WarpBuilder::build_IsNoIter(BytecodeLocation) {
   return true;
 }
 
+bool WarpBuilder::transpileCall(BytecodeLocation loc,
+                                const WarpCacheIR* cacheIRSnapshot,
+                                CallInfo* callInfo) {
+  // Synthesize the constant number of arguments for this call op.
+  auto* argc = MConstant::New(alloc(), Int32Value(callInfo->argc()));
+  current->add(argc);
+
+  MDefinitionStackVector inputs;
+  if (!inputs.append(argc)) {
+    return false;
+  }
+
+  return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, inputs, callInfo);
+}
+
 bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
   uint32_t argc = loc.getCallArgc();
   JSOp op = loc.getOp();
@@ -1780,11 +1795,20 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
   }
 
   if (const auto* inliningSnapshot = getOpSnapshot<WarpInlinedCall>(loc)) {
+    // Transpile the CacheIR to generate the correct guards before
+    // inlining.  In this case, CacheOp::CallInlinedFunction updates
+    // the CallInfo, but does not generate a call.
+    callInfo.markAsInlined();
+    if (!transpileCall(loc, inliningSnapshot->cacheIRSnapshot(), &callInfo)) {
+      return false;
+    }
+
+    // Generate the body of the inlined function.
     return buildInlinedCall(loc, inliningSnapshot, callInfo);
   }
 
   if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
-    return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, callInfo);
+    return transpileCall(loc, cacheIRSnapshot, &callInfo);
   }
 
   if (getOpSnapshot<WarpBailout>(loc)) {
@@ -2644,7 +2668,7 @@ bool WarpBuilder::build_SpreadCall(BytecodeLocation loc) {
   callInfo.initForSpreadCall(current);
 
   if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
-    return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, callInfo);
+    return transpileCall(loc, cacheIRSnapshot, &callInfo);
   }
 
   MInstruction* call = makeSpreadCall(callInfo);
@@ -3184,16 +3208,6 @@ MDefinition* WarpBuilder::maybeGuardNotOptimizedArguments(MDefinition* def) {
 bool WarpBuilder::buildInlinedCall(BytecodeLocation loc,
                                    const WarpInlinedCall* inlineSnapshot,
                                    CallInfo& callInfo) {
-  // We transpile the CacheIR to generate the correct guards before
-  // inlining.  In this case, CacheOp::CallInlinedFunction updates the
-  // CallInfo, but does not generate a call. The body of the inlined
-  // function is generated below.
-  callInfo.markAsInlined();
-  if (!TranspileCacheIRToMIR(this, loc, inlineSnapshot->cacheIRSnapshot(),
-                             callInfo)) {
-    return false;
-  }
-
   jsbytecode* pc = loc.toRawBytecode();
 
   callInfo.setImplicitlyUsedUnchecked();

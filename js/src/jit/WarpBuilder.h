@@ -200,6 +200,10 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   bool usesEnvironmentChain() const;
   MDefinition* walkEnvironmentChain(uint32_t numHops);
 
+  MOZ_MUST_USE bool transpileCall(BytecodeLocation loc,
+                                  const WarpCacheIR* cacheIRSnapshot,
+                                  CallInfo* callInfo);
+
   MOZ_MUST_USE bool buildInlinedCall(BytecodeLocation loc,
                                      const WarpInlinedCall* snapshot,
                                      CallInfo& callInfo);
