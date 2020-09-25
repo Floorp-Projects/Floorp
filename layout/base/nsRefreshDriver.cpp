@@ -1631,7 +1631,7 @@ auto nsRefreshDriver::GetReasonsToTick() const -> TickReasons {
     reasons |= TickReasons::eHasScrollEvents;
   }
   if (!mVisualViewportScrollEvents.IsEmpty()) {
-    reasons |= TickReasons::eHasVisualVieportScrollEvents;
+    reasons |= TickReasons::eHasVisualViewportScrollEvents;
   }
   return reasons;
 }
@@ -1660,8 +1660,8 @@ void nsRefreshDriver::AppendTickReasonsToString(TickReasons aReasons,
   if (aReasons & TickReasons::eHasScrollEvents) {
     aStr.AppendLiteral(" HasScrollEvents");
   }
-  if (aReasons & TickReasons::eHasVisualVieportScrollEvents) {
-    aStr.AppendLiteral(" HasVisualVieportScrollEvents");
+  if (aReasons & TickReasons::eHasVisualViewportScrollEvents) {
+    aStr.AppendLiteral(" HasVisualViewportScrollEvents");
   }
 }
 
