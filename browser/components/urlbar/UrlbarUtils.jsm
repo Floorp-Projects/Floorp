@@ -208,6 +208,7 @@ var UrlbarUtils = {
     "tabmenu",
     "topsites_newtab",
     "topsites_urlbar",
+    "touchbar",
     "typed",
   ]),
 
