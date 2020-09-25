@@ -459,7 +459,7 @@ Safety utilities
      - Header
      - STL equivalent
      - Notes
-   * - ``mo- zilla::Array``
+   * - ``mozilla::Array``
      - ``mfbt/Array.h``
      -
      - safe array index
@@ -601,7 +601,7 @@ Miscellaneous
    * - ``mozilla::MaybeOneOf``
      - mfbt/MaybeOneOf.h
      - ``std::optional<std::variant<T1, T2>>``
-     - ~``mozilla::Maybe<union {T1, T2}>``   * -
+     - ~ ``mozilla::Maybe<union {T1, T2}>``
    * - ``mozilla::Pair``
      - mfbt/Pair.h
      - ``std::tuple<T1, T2>``
