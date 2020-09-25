@@ -77,8 +77,11 @@ class TargetList extends EventEmitter {
     this.onLocalTabRemotenessChange = this.onLocalTabRemotenessChange.bind(
       this
     );
-    if (targetFront.isLocalTab) {
-      targetFront.on("remoteness-change", this.onLocalTabRemotenessChange);
+    if (this.descriptorFront?.isLocalTab) {
+      this.descriptorFront.on(
+        "remoteness-change",
+        this.onLocalTabRemotenessChange
+      );
     }
 
     // Reports if we have at least one listener for the given target type
@@ -521,15 +524,16 @@ class TargetList extends EventEmitter {
   }
 
   /**
-   * This function is triggered by an event sent by LocalTabTarget when
-   * the tab navigates to a distinct content process.
+   * This function is triggered by an event sent by the TabDescriptor when
+   * the tab navigates to a distinct process.
    *
    * @param TargetFront targetFront
-   *        The LocalTabTarget instance that navigated to another process
+   *        The BrowsingContextTargetFront instance that navigated to another process
    */
   async onLocalTabRemotenessChange(targetFront) {
-    // Cache the client as this property will be nullified when the target is closed
+    // Cache the tab & client as this property will be nullified when the target is closed
     const client = targetFront.client;
+    const localTab = targetFront.localTab;
 
     // By default, we do close the DevToolsClient when the target is destroyed.
     // This happens when we close the toolbox (Toolbox.destroy calls Target.destroy),
@@ -544,7 +548,7 @@ class TargetList extends EventEmitter {
     await targetFront.once("target-destroyed");
 
     // Fetch the new target from the existing client so that the new target uses the same client.
-    const newTarget = await TargetFactory.forTab(targetFront.localTab, client);
+    const newTarget = await TargetFactory.forTab(localTab, client);
 
     this.switchToTarget(newTarget);
   }
@@ -558,9 +562,6 @@ class TargetList extends EventEmitter {
    */
   async switchToTarget(newTarget) {
     newTarget.setIsTopLevel(true);
-    if (newTarget.isLocalTab) {
-      newTarget.on("remoteness-change", this.onLocalTabRemotenessChange);
-    }
 
     // Notify about this new target to creation listeners
     await this._onTargetAvailable(newTarget, true);

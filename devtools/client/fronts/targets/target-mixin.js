@@ -46,11 +46,11 @@ function TargetMixin(parentClass) {
 
       this.threadFront = null;
 
-      // By default, we close the DevToolsClient of local tabs which
-      // are instanciated from TargetFactory module.
-      // This flag will also be set on local targets opened from about:debugging,
-      // for which a dedicated DevToolsClient is also created.
-      this.shouldCloseClient = this.isLocalTab;
+      // This flag will be set to true from:
+      // - TabDescriptorFront getTarget(), for local tab targets
+      // - targetFromURL(), for local targets (about:debugging)
+      // - initToolbox(), for some test-only targets
+      this.shouldCloseClient = false;
 
       this._client = client;
 
@@ -77,6 +77,11 @@ function TargetMixin(parentClass) {
      * by targets created by RootActor methods (listSomething methods).
      */
     get descriptorFront() {
+      if (this.isDestroyed()) {
+        // If the target was already destroyed, parentFront will be null.
+        return null;
+      }
+
       if (this.parentFront.typeName.endsWith("Descriptor")) {
         return this.parentFront;
       }
@@ -291,18 +296,12 @@ function TargetMixin(parentClass) {
       return this.client.traits[traitName];
     }
 
-    /**
-     * The following getters: isLocalTab, localTab, ... will be overriden for
-     * local tabs by some code in devtools/client/fronts/targets/local-tab.js.
-     * They are all specific to local tabs, i.e. when you are debugging a tab of
-     * the current Firefox instance.
-     */
     get isLocalTab() {
-      return false;
+      return !!this.descriptorFront?.isLocalTab;
     }
 
     get localTab() {
-      return null;
+      return this.descriptorFront?.localTab || null;
     }
 
     // Get a promise of the RootActor's form
