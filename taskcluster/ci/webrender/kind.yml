@@ -112,7 +112,7 @@ jobs:
             toolchain:
                 - linux64-rust-macos
                 - linux64-cctools-port
-                - linux64-clang
+                - linux64-clang-11-macosx-cross
                 - linux64-llvm-dsymutil
                 - wrench-deps
         run:

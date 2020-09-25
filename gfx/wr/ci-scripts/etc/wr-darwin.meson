@@ -1,0 +1,15 @@
+[binaries]
+llvm-config = '/builds/worker/fetches/clang/bin/llvm-config'
+
+[properties]
+# When linking `libOSMesa.dylib` Meson uses options provided by `llvm-config`.
+# The binary for `llvm-config` in Firefox CI comes from native Linux build,
+# it's not cross-compiled. It instructs Meson to link with `-lLLVM-11`, erroneously.
+# Linker fails to link with `libLLVM-11.so` but only warns about it.
+cpp_link_args = ['-lLLVM']
+
+[host_machine]
+system = 'darwin'
+cpu_family = 'x86_64'
+cpu = 'i686'
+endian = 'little'
