@@ -1663,9 +1663,8 @@ void js::gc::VisitTraceList(JSTracer* trc, JSObject* obj,
                             const uint32_t* traceList, uint8_t* memory) {
   if (trc->isMarkingTracer()) {
     auto* marker = GCMarker::fromTracer(trc);
-    VisitTraceListWithFunctor(
-        [=](auto thingp) { marker->traverseEdge(obj, *thingp); }, traceList,
-        memory);
+    VisitTraceListWithFunctor([=](auto thingp) { DoMarking(marker, *thingp); },
+                              traceList, memory);
     return;
   }
 
