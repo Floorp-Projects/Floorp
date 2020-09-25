@@ -72,7 +72,16 @@ class nsHTTPSOnlyUtils {
                                  nsIURI* aURI = nullptr);
 
   /**
-   * Tests if the HTTPS-Only Mode upgrade exception is set for a given channel.
+   * Tests if the HTTPS-Only upgrade exception is set for a given principal.
+   * @param  aPrincipal The principal for whom the exception should be checked
+   * @return            True if exempt
+   */
+  static bool TestIfPrincipalIsExempt(nsIPrincipal* aPrincipal);
+
+  /**
+   * Tests if the HTTPS-Only Mode upgrade exception is set for channel result
+   * principal and sets or removes the httpsOnlyStatus-flag on the loadinfo
+   * accordingly.
    * Note: This function only adds an exemption for loads of TYPE_DOCUMENT.
    * @param  aChannel The channel to be checked
    */
