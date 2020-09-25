@@ -183,20 +183,20 @@ var gBuiltInInputs = {
                 UrlbarTokenizer.RESTRICT.BOOKMARK
               ),
           },
-          History: {
-            title: "search-history",
-            type: kInputTypes.BUTTON,
-            callback: () =>
-              gTouchBarHelper.insertRestrictionInUrlbar(
-                UrlbarTokenizer.RESTRICT.HISTORY
-              ),
-          },
           OpenTabs: {
             title: "search-opentabs",
             type: kInputTypes.BUTTON,
             callback: () =>
               gTouchBarHelper.insertRestrictionInUrlbar(
                 UrlbarTokenizer.RESTRICT.OPENPAGE
+              ),
+          },
+          History: {
+            title: "search-history",
+            type: kInputTypes.BUTTON,
+            callback: () =>
+              gTouchBarHelper.insertRestrictionInUrlbar(
+                UrlbarTokenizer.RESTRICT.HISTORY
               ),
           },
           Tags: {
@@ -415,7 +415,10 @@ class TouchBarHelper {
       }
     }
 
-    TouchBarHelper.window.gURLBar.search(`${restrictionToken} ${searchString}`);
+    TouchBarHelper.window.gURLBar.search(
+      `${restrictionToken} ${searchString}`,
+      { searchModeEntry: "touchbar" }
+    );
   }
 
   observe(subject, topic, data) {
