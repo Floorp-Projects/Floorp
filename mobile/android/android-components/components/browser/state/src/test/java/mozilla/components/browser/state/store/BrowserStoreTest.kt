@@ -5,11 +5,16 @@
 package mozilla.components.browser.state.store
 
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.lib.state.Middleware
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BrowserStoreTest {
@@ -55,5 +60,21 @@ class BrowserStoreTest {
 
         assertEquals(1, store.state.tabs.size)
         assertEquals(tab.id, store.state.selectedTabId)
+    }
+
+    @Test
+    fun `Dispatches init action when created`() {
+        var initActionObserved = false
+        val testMiddleware: Middleware<BrowserState, BrowserAction> = { _, next, action ->
+            if (action == InitAction) {
+                initActionObserved = true
+            }
+
+            next(action)
+        }
+
+        val store = BrowserStore(middleware = listOf(testMiddleware))
+        store.waitUntilIdle()
+        assertTrue(initActionObserved)
     }
 }

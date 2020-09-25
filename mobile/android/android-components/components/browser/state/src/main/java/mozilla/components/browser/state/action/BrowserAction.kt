@@ -47,6 +47,14 @@ import mozilla.components.lib.state.Action
 sealed class BrowserAction : Action
 
 /**
+ * [BrowserAction] dispatched to indicate that the store is initialized and
+ * ready to use. This action is dispatched automatically before any other
+ * action is processed. Its main purpose is to trigger initialization logic
+ * in middlewares. The action itself has no effect on the [BrowserState].
+ */
+object InitAction : BrowserAction()
+
+/**
  * [BrowserAction] implementations to react to system events.
  */
 sealed class SystemAction : BrowserAction() {

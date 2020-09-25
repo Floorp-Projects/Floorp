@@ -7,7 +7,6 @@ package mozilla.components.feature.tabs
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -35,6 +34,7 @@ class WindowFeatureTest {
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     private lateinit var store: BrowserStore
+    private lateinit var engineSession: EngineSession
     private lateinit var tabsUseCases: TabsUseCases
     private lateinit var addTabUseCase: TabsUseCases.AddNewTabUseCase
     private lateinit var addPrivateTabUseCase: TabsUseCases.AddNewPrivateTabUseCase
@@ -44,9 +44,10 @@ class WindowFeatureTest {
 
     @Before
     fun setup() {
+        engineSession = mock()
         store = spy(BrowserStore(BrowserState(
             tabs = listOf(
-                createTab(id = tabId, url = "https://www.mozilla.org"),
+                createTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession),
                 createTab(id = privateTabId, url = "https://www.mozilla.org", private = true)
             ),
             selectedTabId = tabId
@@ -95,9 +96,6 @@ class WindowFeatureTest {
     fun `handles request to close window`() {
         val feature = WindowFeature(store, tabsUseCases)
         feature.start()
-
-        val engineSession: EngineSession = mock()
-        store.dispatch(EngineAction.LinkEngineSessionAction(tabId, engineSession))
 
         val windowRequest: WindowRequest = mock()
         whenever(windowRequest.type).thenReturn(WindowRequest.Type.CLOSE)

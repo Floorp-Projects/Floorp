@@ -1161,6 +1161,6 @@ class SessionManagerTest {
 
         assertTrue(captor.allValues[0] is TabListAction.RestoreAction)
         assertTrue(captor.allValues[1] is LastAccessAction.UpdateLastAccessAction)
-        assertEquals(123, store.state.tabs[0].lastAccess)
+        assertEquals(123, (captor.allValues[1] as LastAccessAction.UpdateLastAccessAction).lastAccess)
     }
 }

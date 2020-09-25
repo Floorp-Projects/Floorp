@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.state
 
+import mozilla.components.concept.engine.EngineSession
 import java.util.UUID
 
 /**
@@ -48,16 +49,23 @@ data class CustomTabSessionState(
 /**
  * Convenient function for creating a custom tab.
  */
+@Suppress("LongParameterList")
 fun createCustomTab(
     url: String,
     id: String = UUID.randomUUID().toString(),
     config: CustomTabConfig = CustomTabConfig(),
-    contextId: String? = null
+    contextId: String? = null,
+    engineSession: EngineSession? = null,
+    crashed: Boolean = false
 ): CustomTabSessionState {
     return CustomTabSessionState(
         id = id,
         content = ContentState(url),
         config = config,
-        contextId = contextId
+        contextId = contextId,
+        engineState = EngineState(
+            engineSession = engineSession,
+            crashed = crashed
+        )
     )
 }

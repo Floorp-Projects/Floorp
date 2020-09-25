@@ -15,12 +15,11 @@ import mozilla.components.browser.state.state.ContainerState.Icon
 import mozilla.components.feature.containers.db.ContainerDatabase
 import mozilla.components.feature.containers.db.ContainerEntity
 import mozilla.components.feature.containers.db.toContainerEntity
-import java.util.UUID
 
 /**
  * A storage implementation for organizing containers (contextual identities).
  */
-internal class ContainerStorage(context: Context) {
+internal class ContainerStorage(context: Context) : ContainerMiddleware.Storage {
 
     @VisibleForTesting
     internal var database: Lazy<ContainerDatabase> =
@@ -30,8 +29,8 @@ internal class ContainerStorage(context: Context) {
     /**
      * Adds a new [Container].
      */
-    suspend fun addContainer(
-        contextId: String = UUID.randomUUID().toString(),
+    override suspend fun addContainer(
+        contextId: String,
         name: String,
         color: Color,
         icon: Icon
@@ -49,7 +48,7 @@ internal class ContainerStorage(context: Context) {
     /**
      * Returns a [Flow] list of all the [Container] instances.
      */
-    fun getContainers(): Flow<List<Container>> {
+    override fun getContainers(): Flow<List<Container>> {
         return containerDao.getContainers().map { list ->
             list.map { entity -> entity.toContainer() }
         }
@@ -67,7 +66,7 @@ internal class ContainerStorage(context: Context) {
     /**
      * Removes the given [Container].
      */
-    suspend fun removeContainer(container: Container) {
+    override suspend fun removeContainer(container: Container) {
         containerDao.deleteContainer(container.toContainerEntity())
     }
 }

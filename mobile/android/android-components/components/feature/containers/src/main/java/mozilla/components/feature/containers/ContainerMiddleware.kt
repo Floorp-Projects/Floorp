@@ -5,17 +5,20 @@
 package mozilla.components.feature.containers
 
 import android.content.Context
-import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContainerAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.Container
+import mozilla.components.browser.state.state.ContainerState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
+import java.util.UUID
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -24,11 +27,10 @@ import kotlin.coroutines.CoroutineContext
  */
 class ContainerMiddleware(
     applicationContext: Context,
-    coroutineContext: CoroutineContext = Dispatchers.IO
+    coroutineContext: CoroutineContext = Dispatchers.IO,
+    private val containerStorage: Storage = ContainerStorage(applicationContext)
 ) : Middleware<BrowserState, BrowserAction> {
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val containerStorage: ContainerStorage = ContainerStorage(applicationContext)
     private var scope = CoroutineScope(coroutineContext)
 
     override fun invoke(
@@ -71,5 +73,30 @@ class ContainerMiddleware(
         store.state.containers[action.contextId]?.let {
             containerStorage.removeContainer(it)
         }
+    }
+
+    /**
+     * Interface for a storage to be passed to the middleware.
+     */
+    interface Storage {
+        /**
+         * Returns a [Flow] list of all the [Container] instances.
+         */
+        fun getContainers(): Flow<List<Container>>
+
+        /**
+         * Adds a new [Container].
+         */
+        suspend fun addContainer(
+            contextId: String = UUID.randomUUID().toString(),
+            name: String,
+            color: ContainerState.Color,
+            icon: ContainerState.Icon
+        )
+
+        /**
+         * Removes the given [Container].
+         */
+        suspend fun removeContainer(container: Container)
     }
 }

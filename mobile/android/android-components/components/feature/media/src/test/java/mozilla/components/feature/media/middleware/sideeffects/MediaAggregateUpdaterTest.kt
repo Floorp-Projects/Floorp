@@ -11,24 +11,30 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.media.createMockMediaElement
-import mozilla.components.support.test.any
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.verify
 
 class MediaAggregateUpdaterTest {
     @Test
     fun `WHEN NONE state THEN empty state will not aggregate new state`() {
-        val store = aggregate()
-        verify(store, never()).dispatch(any())
+        val aggregator = MediaAggregateUpdater()
+        val store = BrowserStore()
+
+        val before = store.state.media.aggregate
+
+        aggregator.process(store)
+
+        aggregator.waitForCompletion()
+        store.waitUntilIdle()
+
+        assertTrue(before === store.state.media.aggregate)
     }
 
     @Test
     fun `WHEN has playing media THEN aggregate will have PLAYING state`() {
-        val store = aggregate(
+        val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
                 media = MediaState(
@@ -44,8 +50,10 @@ class MediaAggregateUpdaterTest {
             )
         )
 
-        verify(store).dispatch(any())
+        val aggregator = MediaAggregateUpdater()
+        aggregator.process(store)
 
+        aggregator.waitForCompletion()
         store.waitUntilIdle()
 
         val result = store.state.media.aggregate
@@ -59,7 +67,7 @@ class MediaAggregateUpdaterTest {
 
     @Test
     fun `WHEN has media in fullscreen THEN aggregate will have fullscreen state`() {
-        val store = aggregate(
+        val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
                 media = MediaState(
@@ -77,8 +85,10 @@ class MediaAggregateUpdaterTest {
             )
         )
 
-        verify(store).dispatch(any())
+        val aggregator = MediaAggregateUpdater()
+        aggregator.process(store)
 
+        aggregator.waitForCompletion()
         store.waitUntilIdle()
 
         val result = store.state.media.aggregate
@@ -95,7 +105,7 @@ class MediaAggregateUpdaterTest {
 
     @Test
     fun `WHEN is PLAYING state and media is paused THEN aggregate will have PAUSED state`() {
-        val store = aggregate(
+        val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
                 media = MediaState(
@@ -116,8 +126,10 @@ class MediaAggregateUpdaterTest {
             )
         )
 
-        verify(store).dispatch(any())
+        val aggregator = MediaAggregateUpdater()
+        aggregator.process(store)
 
+        aggregator.waitForCompletion()
         store.waitUntilIdle()
 
         val result = store.state.media.aggregate
@@ -131,7 +143,7 @@ class MediaAggregateUpdaterTest {
 
     @Test
     fun `WHEN is PLAYING state and media changes but still plays THEN aggregate will have PLAYING state`() {
-        val store = aggregate(
+        val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
                 media = MediaState(
@@ -152,8 +164,10 @@ class MediaAggregateUpdaterTest {
             )
         )
 
-        verify(store).dispatch(any())
+        val aggregator = MediaAggregateUpdater()
+        aggregator.process(store)
 
+        aggregator.waitForCompletion()
         store.waitUntilIdle()
 
         val result = store.state.media.aggregate
@@ -167,7 +181,7 @@ class MediaAggregateUpdaterTest {
 
     @Test
     fun `WHEN media has short length THEN does not switch to PLAYING state`() {
-        val store = aggregate(
+        val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
                 media = MediaState(
@@ -189,12 +203,18 @@ class MediaAggregateUpdaterTest {
             )
         )
 
-        verify(store, never()).dispatch(any())
+        val aggregator = MediaAggregateUpdater()
+        aggregator.process(store)
+
+        aggregator.waitForCompletion()
+        store.waitUntilIdle()
+
+        assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
     }
 
     @Test
     fun `WHEN media is muted THEN does not switch to PLAYING state`() {
-        val store = aggregate(
+        val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
                 media = MediaState(
@@ -211,12 +231,18 @@ class MediaAggregateUpdaterTest {
             )
         )
 
-        verify(store, never()).dispatch(any())
+        val aggregator = MediaAggregateUpdater()
+        aggregator.process(store)
+
+        aggregator.waitForCompletion()
+        store.waitUntilIdle()
+
+        assertEquals(MediaState.State.NONE, store.state.media.aggregate.state)
     }
 
     @Test
     fun `WHEN state is PAUSED and media is paused THEN state remains PAUSED`() {
-        val store = aggregate(
+        val store = BrowserStore(
             BrowserState(
                 tabs = listOf(createTab("https://www.mozilla.org", id = "test-tab")),
                 media = MediaState(
@@ -237,8 +263,10 @@ class MediaAggregateUpdaterTest {
             )
         )
 
-        verify(store).dispatch(any())
+        val aggregator = MediaAggregateUpdater()
+        aggregator.process(store)
 
+        aggregator.waitForCompletion()
         store.waitUntilIdle()
 
         val result = store.state.media.aggregate
@@ -249,19 +277,10 @@ class MediaAggregateUpdaterTest {
         assertEquals(MediaState.State.PAUSED, result.state)
         assertEquals(null, result.activeFullscreenOrientation)
     }
+}
 
-    private fun aggregate(
-        initialState: BrowserState = BrowserState()
-    ): BrowserStore {
-        val aggregator = MediaAggregateUpdater()
-        val store = spy(BrowserStore(initialState))
-
-        aggregator.process(store)
-
-        runBlocking {
-            aggregator.updateAggregateJob?.join() ?: return@runBlocking null
-        }
-
-        return store
+private fun MediaAggregateUpdater.waitForCompletion() {
+    runBlocking {
+        updateAggregateJob?.join() ?: return@runBlocking null
     }
 }

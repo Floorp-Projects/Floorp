@@ -8,9 +8,8 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.CrashAction
-import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -19,7 +18,6 @@ import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.support.test.argumentCaptor
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -118,11 +116,17 @@ class SessionUseCasesTest {
 
     @Test
     fun stopLoading() = runBlocking {
-        val store = spy(BrowserStore())
-        val useCases = SessionUseCases(store, sessionManager)
         val engineSession: EngineSession = mock()
-        store.dispatch(TabListAction.AddTabAction(createTab("https://wwww.mozilla.org", id = selectedSessionId))).joinBlocking()
-        store.dispatch(EngineAction.LinkEngineSessionAction(selectedSessionId, engineSession)).joinBlocking()
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(createTab(
+                    url = "https://wwww.mozilla.org",
+                    id = selectedSessionId,
+                    engineSession = engineSession)
+                )
+            )
+        )
+        val useCases = SessionUseCases(store, sessionManager)
 
         useCases.stopLoading()
         verify(engineSession).stopLoading()
@@ -262,13 +266,19 @@ class SessionUseCasesTest {
 
     @Test
     fun `CrashRecoveryUseCase will restore list of crashed sessions`() {
-        val store = spy(BrowserStore())
+        val store = spy(BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(url = "https://wwww.mozilla.org", id = "tab1", crashed = true)
+                ),
+                customTabs = listOf(
+                    createCustomTab("https://wwww.mozilla.org", id = "customTab1",
+                        crashed = true)
+                    )
+                )
+            )
+        )
         val useCases = SessionUseCases(store, sessionManager)
-
-        store.dispatch(TabListAction.AddTabAction(createTab("https://wwww.mozilla.org", id = "tab1"))).joinBlocking()
-        store.dispatch(CustomTabListAction.AddCustomTabAction(createCustomTab("https://wwww.mozilla.org", id = "customTab1"))).joinBlocking()
-        store.dispatch(CrashAction.SessionCrashedAction("tab1")).joinBlocking()
-        store.dispatch(CrashAction.SessionCrashedAction("customTab1")).joinBlocking()
 
         useCases.crashRecovery.invoke()
         verify(store).dispatch(CrashAction.RestoreCrashedSessionAction("tab1"))

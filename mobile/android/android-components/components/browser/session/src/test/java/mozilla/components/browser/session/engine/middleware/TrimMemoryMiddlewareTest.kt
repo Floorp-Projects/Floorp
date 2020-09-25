@@ -24,7 +24,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
@@ -50,46 +49,44 @@ class TrimMemoryMiddlewareTest {
         engineSessionStateTheVerge = mock()
         engineSessionStateTwitch = mock()
 
-        store = Mockito.spy(
-            BrowserStore(
-                middleware = listOf(
-                    TrimMemoryMiddleware(),
-                    SuspendMiddleware(scope)
+        store = BrowserStore(
+            middleware = listOf(
+                TrimMemoryMiddleware(),
+                SuspendMiddleware(scope)
+            ),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "mozilla"),
+                    createTab("https://www.theverge.com/", id = "theverge").copy(
+                        engineState = EngineState(
+                            engineSession = engineSessionTheVerge,
+                            engineSessionState = engineSessionStateTheVerge,
+                            engineObserver = mock())
+                    ),
+                    createTab(
+                        "https://www.reddit.com/r/firefox/",
+                        id = "reddit",
+                        private = true
+                    ).copy(
+                        engineState = EngineState(
+                            engineSession = engineSessionReddit,
+                            engineSessionState = engineSessionStateReddit,
+                            engineObserver = mock()
+                        )
+                    ),
+                    createTab("https://github.com/", id = "github")
                 ),
-                initialState = BrowserState(
-                    tabs = listOf(
-                        createTab("https://www.mozilla.org", id = "mozilla"),
-                        createTab("https://www.theverge.com/", id = "theverge").copy(
-                            engineState = EngineState(
-                                engineSession = engineSessionTheVerge,
-                                engineSessionState = engineSessionStateTheVerge,
-                                engineObserver = mock())
-                        ),
-                        createTab(
-                            "https://www.reddit.com/r/firefox/",
-                            id = "reddit",
-                            private = true
-                        ).copy(
-                            engineState = EngineState(
-                                engineSession = engineSessionReddit,
-                                engineSessionState = engineSessionStateReddit,
-                                engineObserver = mock()
-                            )
-                        ),
-                        createTab("https://github.com/", id = "github")
+                customTabs = listOf(
+                    createCustomTab("https://www.twitch.tv/", id = "twitch").copy(
+                        engineState = EngineState(
+                            engineSession = engineSessionTwitch,
+                            engineSessionState = engineSessionStateTwitch,
+                            engineObserver = mock()
+                        )
                     ),
-                    customTabs = listOf(
-                        createCustomTab("https://www.twitch.tv/", id = "twitch").copy(
-                            engineState = EngineState(
-                                engineSession = engineSessionTwitch,
-                                engineSessionState = engineSessionStateTwitch,
-                                engineObserver = mock()
-                            )
-                        ),
-                        createCustomTab("https://twitter.com/home", id = "twitter")
-                    ),
-                    selectedTabId = "reddit"
-                )
+                    createCustomTab("https://twitter.com/home", id = "twitter")
+                ),
+                selectedTabId = "reddit"
             )
         )
     }

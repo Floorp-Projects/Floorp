@@ -31,7 +31,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -50,10 +49,10 @@ class TabsRemovedMiddlewareTest {
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab = createTab("https://www.mozilla.org", id = "1")
-        val store = spy(BrowserStore(
+        val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab)),
             middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
-        ))
+        )
 
         val engineSession = linkEngineSession(store, tab.id)
         store.dispatch(TabListAction.RemoveTabAction(tab.id)).joinBlocking()
@@ -71,10 +70,10 @@ class TabsRemovedMiddlewareTest {
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = false)
         val tab2 = createTab("https://www.firefox.com", id = "2", private = false)
         val tab3 = createTab("https://www.getpocket.com", id = "3", private = true)
-        val store = spy(BrowserStore(
+        val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2, tab3)),
             middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
-        ))
+        )
 
         val engineSession1 = linkEngineSession(store, tab1.id)
         val engineSession2 = linkEngineSession(store, tab2.id)
@@ -99,10 +98,10 @@ class TabsRemovedMiddlewareTest {
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = true)
         val tab2 = createTab("https://www.firefox.com", id = "2", private = true)
         val tab3 = createTab("https://www.getpocket.com", id = "3", private = false)
-        val store = spy(BrowserStore(
+        val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2, tab3)),
             middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
-        ))
+        )
 
         val engineSession1 = linkEngineSession(store, tab1.id)
         val engineSession2 = linkEngineSession(store, tab2.id)
@@ -127,10 +126,10 @@ class TabsRemovedMiddlewareTest {
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = true)
         val tab2 = createTab("https://www.firefox.com", id = "2", private = false)
         val tab3 = createCustomTab("https://www.getpocket.com", id = "3")
-        val store = spy(BrowserStore(
+        val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2), customTabs = listOf(tab3)),
             middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
-        ))
+        )
 
         val engineSession1 = linkEngineSession(store, tab1.id)
         val engineSession2 = linkEngineSession(store, tab2.id)
@@ -153,10 +152,10 @@ class TabsRemovedMiddlewareTest {
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab = createCustomTab("https://www.mozilla.org", id = "1")
-        val store = spy(BrowserStore(
+        val store = BrowserStore(
             initialState = BrowserState(customTabs = listOf(tab)),
             middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
-        ))
+        )
 
         val engineSession = linkEngineSession(store, tab.id)
         store.dispatch(CustomTabListAction.RemoveCustomTabAction(tab.id)).joinBlocking()
@@ -174,10 +173,10 @@ class TabsRemovedMiddlewareTest {
         val tab1 = createCustomTab("https://www.mozilla.org", id = "1")
         val tab2 = createCustomTab("https://www.firefox.com", id = "2")
         val tab3 = createTab("https://www.getpocket.com", id = "3")
-        val store = spy(BrowserStore(
+        val store = BrowserStore(
             initialState = BrowserState(customTabs = listOf(tab1, tab2), tabs = listOf(tab3)),
             middleware = listOf(middleware, ConsumeRemoveTabActionsMiddleware())
-        ))
+        )
 
         val engineSession1 = linkEngineSession(store, tab1.id)
         val engineSession2 = linkEngineSession(store, tab2.id)

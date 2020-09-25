@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.store
 
 import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.reducer.BrowserStateReducer
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
@@ -41,5 +42,7 @@ class BrowserStore(
         ) {
             throw IllegalArgumentException("Duplicate tabs found")
         }
+
+        dispatch(InitAction)
     }
 }

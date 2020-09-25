@@ -19,7 +19,6 @@ import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @ExperimentalCoroutinesApi
@@ -38,17 +37,15 @@ class ContainerMiddlewareTest {
     fun `container storage stores the provided container on add container action`() =
         runBlockingTest {
             val storage: ContainerStorage = mock()
-            val middleware = spy(ContainerMiddleware(testContext, coroutineContext))
+            val middleware = ContainerMiddleware(testContext, coroutineContext, containerStorage = storage)
             val store = BrowserStore(
                 initialState = BrowserState(),
                 middleware = listOf(middleware)
             )
 
-            whenever(middleware.containerStorage).thenReturn(storage)
-
             store.dispatch(ContainerAction.AddContainerAction(container)).joinBlocking()
 
-            verify(middleware.containerStorage).addContainer(
+            verify(storage).addContainer(
                 container.contextId,
                 container.name,
                 container.color,
@@ -60,19 +57,16 @@ class ContainerMiddlewareTest {
     fun `fetch the containers from the container storage and load into browser state on initialize container state action`() =
         runBlockingTest {
             val storage: ContainerStorage = mock()
-            val middleware = spy(ContainerMiddleware(testContext, coroutineContext))
-            val store = spy(
-                BrowserStore(
-                    initialState = BrowserState(),
-                    middleware = listOf(middleware)
-                )
-            )
-
-            whenever(middleware.containerStorage).thenReturn(storage)
             whenever(storage.getContainers()).thenReturn(
                 flow {
                     emit(listOf(container))
                 }
+            )
+
+            val middleware = ContainerMiddleware(testContext, coroutineContext, containerStorage = storage)
+            val store = BrowserStore(
+                initialState = BrowserState(),
+                middleware = listOf(middleware)
             )
 
             store.dispatch(ContainerAction.InitializeContainerState).joinBlocking()
@@ -85,7 +79,7 @@ class ContainerMiddlewareTest {
     fun `container storage removes the provided container on remove container action`() =
         runBlockingTest {
             val storage: ContainerStorage = mock()
-            val middleware = spy(ContainerMiddleware(testContext, coroutineContext))
+            val middleware = ContainerMiddleware(testContext, coroutineContext, containerStorage = storage)
             val store = BrowserStore(
                 initialState = BrowserState(
                     containers = mapOf(
@@ -94,8 +88,6 @@ class ContainerMiddlewareTest {
                 ),
                 middleware = listOf(middleware)
             )
-
-            whenever(middleware.containerStorage).thenReturn(storage)
 
             store.dispatch(ContainerAction.RemoveContainerAction(container.contextId))
                 .joinBlocking()
