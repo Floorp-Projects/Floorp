@@ -3544,6 +3544,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(Symbol)
 
     CASE(Object) {
+      MOZ_ASSERT(script->treatAsRunOnce());
       JSObject* obj = SingletonObjectLiteralOperation(cx, script, REGS.pc);
       if (!obj) {
         goto error;
