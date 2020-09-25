@@ -78,7 +78,7 @@ function checkLoadFlags(flags, url) {
           // have the flag, so we just ignore them.
           // We also see, eg, resource://gre-resources/loading-image.png, so
           // skip resource:// URLs too.
-          // We may also see, eg, chrome://global/skin/icons/resizer.svg, so
+          // We may also see, eg, chrome://browser/skin/chevron.svg, so
           // skip chrome:// URLs too.
           if (
             request.name.startsWith("about:") ||
