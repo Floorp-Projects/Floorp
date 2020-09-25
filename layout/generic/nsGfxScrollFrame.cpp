@@ -1957,7 +1957,8 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
     NS_ASSERTION(aCallee && !mCallee,
                  "AsyncSmoothMSDScroll::SetRefreshObserver - Invalid usage.");
 
-    RefreshDriver(aCallee)->AddRefreshObserver(this, FlushType::Style);
+    RefreshDriver(aCallee)->AddRefreshObserver(this, FlushType::Style,
+                                               "Smooth scroll (MSD) animation");
     mCallee = aCallee;
   }
 
@@ -2063,7 +2064,8 @@ class ScrollFrameHelper::AsyncScroll final : public nsARefreshObserver {
     NS_ASSERTION(aCallee && !mCallee,
                  "AsyncScroll::SetRefreshObserver - Invalid usage.");
 
-    RefreshDriver(aCallee)->AddRefreshObserver(this, FlushType::Style);
+    RefreshDriver(aCallee)->AddRefreshObserver(this, FlushType::Style,
+                                               "Smooth scroll animation");
     mCallee = aCallee;
     PresShell* presShell = mCallee->mOuter->PresShell();
     MOZ_ASSERT(presShell);

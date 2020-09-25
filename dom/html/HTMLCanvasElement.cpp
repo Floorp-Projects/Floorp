@@ -181,7 +181,8 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
 
     MOZ_ASSERT(mRefreshDriver);
     if (mRefreshDriver) {
-      mRefreshDriver->AddRefreshObserver(this, FlushType::Display);
+      mRefreshDriver->AddRefreshObserver(this, FlushType::Display,
+                                         "Canvas frame capture listeners");
       mRegistered = true;
     }
   }

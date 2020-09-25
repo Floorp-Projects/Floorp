@@ -49,7 +49,7 @@ void ResizeObserverNotificationHelper::Register() {
     return;
   }
 
-  refreshDriver->AddRefreshObserver(this, FlushType::Display);
+  refreshDriver->AddRefreshObserver(this, FlushType::Display, "ResizeObserver");
   mRegistered = true;
 }
 
