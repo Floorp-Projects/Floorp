@@ -38,14 +38,15 @@ add_task(async function basic() {
   );
 });
 
-// Calls search() with an "@engine" search engine alias so that the one-off
-// search buttons are disabled.
+// Calls search() with an invalid "@engine" search engine alias so that the
+// one-off search buttons are disabled.
 add_task(async function searchEngineAlias() {
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () =>
     gURLBar.search("@example")
   );
   ok(gURLBar.hasAttribute("focused"), "url bar is focused");
+  UrlbarTestUtils.assertSearchMode(window, null);
   await assertUrlbarValue("@example");
 
   assertOneOffButtonsVisible(false);
@@ -83,6 +84,7 @@ add_task(async function searchRestriction_legacy() {
   assertOneOffButtonsVisible(false);
 
   await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function searchRestriction() {
@@ -94,14 +96,85 @@ add_task(async function searchRestriction() {
     gURLBar.search(UrlbarTokenizer.RESTRICT.SEARCH)
   );
   ok(gURLBar.hasAttribute("focused"), "url bar is focused");
-  UrlbarTestUtils.assertSearchMode(window, {
+  await UrlbarTestUtils.assertSearchMode(window, {
     engineName: UrlbarSearchUtils.getDefaultEngine().name,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    entry: "typed",
+    // Entry is "other" because we didn't pass searchModeEntry to search().
+    entry: "other",
   });
   assertOneOffButtonsVisible(true);
-  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+  await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function historyRestriction() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+  gURLBar.blur();
+  await UrlbarTestUtils.promisePopupOpen(window, () =>
+    gURLBar.search(UrlbarTokenizer.RESTRICT.HISTORY)
+  );
+  ok(gURLBar.hasAttribute("focused"), "url bar is focused");
+  await UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    entry: "other",
+  });
+  assertOneOffButtonsVisible(true);
+  Assert.ok(!gURLBar.value, "The Urlbar has no value.");
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function historyRestrictionWithString() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+  gURLBar.blur();
+  // The leading and trailing spaces are intentional to verify that search()
+  // preserves them.
+  let searchString = " foo bar ";
+  await UrlbarTestUtils.promisePopupOpen(window, () =>
+    gURLBar.search(`${UrlbarTokenizer.RESTRICT.HISTORY} ${searchString}`)
+  );
+  ok(gURLBar.hasAttribute("focused"), "url bar is focused");
+  await UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    entry: "other",
+  });
+  // We don't use assertUrlbarValue here since we expect to open a local search
+  // mode. In those modes, we don't show a heuristic search result, which
+  // assertUrlbarValue checks for.
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  Assert.equal(
+    gURLBar.value,
+    searchString,
+    "The Urlbar value should be the search string."
+  );
+  assertOneOffButtonsVisible(true);
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function tagRestriction() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.update2", true]],
+  });
+  gURLBar.blur();
+  await UrlbarTestUtils.promisePopupOpen(window, () =>
+    gURLBar.search(UrlbarTokenizer.RESTRICT.TAG)
+  );
+  ok(gURLBar.hasAttribute("focused"), "url bar is focused");
+  // Since tags are not a supported search mode, we should just insert the tag
+  // restriction token and not enter search mode.
+  await UrlbarTestUtils.assertSearchMode(window, null);
+  await assertUrlbarValue(`${UrlbarTokenizer.RESTRICT.TAG} `);
+  assertOneOffButtonsVisible(true);
+  await UrlbarTestUtils.promisePopupClose(window);
+  await SpecialPowers.popPrefEnv();
 });
 
 // Calls search() twice with the same value. The popup should reopen.
@@ -148,73 +221,25 @@ add_task(async function searchIME() {
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
-// Calls searchWithAlias(), a companion function to search().
+// Calls search() with an engine alias.
 add_task(async function searchWithAlias() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.update2", true]],
   });
 
-  await UrlbarTestUtils.promisePopupOpen(window, () =>
-    gURLBar.searchWithAlias(ALIAS, "test", "test")
+  await UrlbarTestUtils.promisePopupOpen(window, async () =>
+    gURLBar.search(`${ALIAS} test`, { searchModeEntry: "handoff" })
   );
   Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
-  UrlbarTestUtils.assertSearchMode(window, {
+
+  await UrlbarTestUtils.assertSearchMode(window, {
     engineName: aliasEngine.name,
-    entry: "other",
+    entry: "handoff",
   });
   await assertUrlbarValue("test");
   assertOneOffButtonsVisible(true);
-  await UrlbarTestUtils.exitSearchMode(window, { backspace: true });
+  await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
-
-  await SpecialPowers.popPrefEnv();
-});
-
-// Calls searchWithAlias() with update2 disabled.
-add_task(async function searchWithAlias_legacy() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", false]],
-  });
-
-  await UrlbarTestUtils.promisePopupOpen(window, () =>
-    gURLBar.searchWithAlias(ALIAS, "test", "test")
-  );
-  Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
-  Assert.equal(gURLBar.value, `${ALIAS} test`);
-  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  Assert.equal(
-    result.type,
-    UrlbarUtils.RESULT_TYPE.SEARCH,
-    "Should have type search for the first result"
-  );
-  Assert.equal(
-    result.searchParams.query,
-    "test",
-    "Should have the correct query for the first result"
-  );
-
-  assertOneOffButtonsVisible(false);
-  await UrlbarTestUtils.promisePopupClose(window);
-
-  await SpecialPowers.popPrefEnv();
-});
-
-// Calls searchWithAlias() with an invalid alias.
-add_task(async function searchWithAliasInvalidAlias() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update2", true]],
-  });
-
-  await UrlbarTestUtils.promisePopupOpen(window, () =>
-    gURLBar.searchWithAlias("@invalidalias", "test", "test")
-  );
-  Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
-  UrlbarTestUtils.assertSearchMode(window, null);
-  await assertUrlbarValue("@invalidalias test");
-  assertOneOffButtonsVisible(false);
-  await UrlbarTestUtils.promisePopupClose(window);
-
   await SpecialPowers.popPrefEnv();
 });
 
@@ -256,9 +281,8 @@ async function assertUrlbarValue(value) {
     UrlbarUtils.RESULT_TYPE.SEARCH,
     "Should have type search for the first result"
   );
-  // Strip restriction token from value.
-  let restrictTokens = Object.values(UrlbarTokenizer.RESTRICT);
-  if (restrictTokens.includes(value[0])) {
+  // Strip search restriction token from value.
+  if (value[0] == UrlbarTokenizer.RESTRICT.SEARCH) {
     value = value.substring(1).trim();
   }
   Assert.equal(
