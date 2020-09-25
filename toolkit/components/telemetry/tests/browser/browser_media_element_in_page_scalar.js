@@ -14,6 +14,9 @@ const MEDIA_SCALAR_NAME = "media.element_in_page_count";
  * check if that scalar can be accumulated correctly under different situations.
  */
 add_task(async function start_tests() {
+  // Clean all scalars first to prevent being interfered by former test.
+  TelemetryTestUtils.getProcessScalars("parent", false, true /* clear */);
+
   await testMediaInPageScalar({
     description: "load a page with one media element",
     url: "file_media.html",
