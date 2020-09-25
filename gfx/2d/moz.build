@@ -193,6 +193,7 @@ UNIFIED_SOURCES += [
     'SourceSurfaceCapture.cpp',
     'SourceSurfaceRawData.cpp',
     'Swizzle.cpp',
+    'Types.cpp',
 ]
 
 SOURCES += [
