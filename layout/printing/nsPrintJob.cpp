@@ -110,7 +110,6 @@ static const char kPrintingPromptService[] =
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLFrameElement.h"
 #include "nsContentList.h"
-#include "PrintPreviewUserEventSuppressor.h"
 #include "xpcpublic.h"
 #include "nsVariant.h"
 #include "mozilla/ServoStyleSet.h"
@@ -426,25 +425,6 @@ nsresult nsPrintJob::Cancel() {
     return mPrt->mPrintSettings->SetIsCancelled(true);
   }
   return NS_ERROR_FAILURE;
-}
-
-//-------------------------------------------------------
-// Install our event listeners on the document to prevent
-// some events from being processed while in PrintPreview
-//
-// No return code - if this fails, there isn't much we can do
-void nsPrintJob::SuppressPrintPreviewUserEvents() {
-  if (!mPrt->mPPEventSuppressor) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
-    if (!docShell) {
-      return;
-    }
-
-    if (nsPIDOMWindowOuter* win = docShell->GetWindow()) {
-      nsCOMPtr<EventTarget> target = win->GetFrameElementInternal();
-      mPrt->mPPEventSuppressor = new PrintPreviewUserEventSuppressor(target);
-    }
-  }
 }
 
 //-----------------------------------------------------------------
@@ -807,7 +787,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     ShowPrintProgress(false, notifyOnInit, aDoc);
 
     if (!notifyOnInit) {
-      SuppressPrintPreviewUserEvents();
       rv = InitPrintDocConstruction(false);
     } else {
       rv = NS_OK;

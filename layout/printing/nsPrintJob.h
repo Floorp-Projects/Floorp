@@ -168,13 +168,6 @@ class nsPrintJob final : public nsIObserver,
                        nsresult& aStatus);
   nsresult DoPrint(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
-  /**
-   * Filters out certain user events while Print Preview is open to prevent
-   * the user from interacting with the Print Preview document and breaking
-   * printing invariants.
-   */
-  void SuppressPrintPreviewUserEvents();
-
   nsresult ReflowDocList(const mozilla::UniquePtr<nsPrintObject>& aPO,
                          bool aSetPixelScale);
 
