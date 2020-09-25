@@ -2946,7 +2946,6 @@ exports.CSS_PROPERTIES = {
       "font-variation-settings",
       "font-language-override",
       "font-optical-sizing",
-      "math-depth",
       "math-style",
       "-moz-osx-font-smoothing",
       "visibility",
@@ -10853,10 +10852,6 @@ exports.PREFERENCES = [
   [
     "masonry-auto-flow",
     "layout.css.grid-template-masonry-value.enabled"
-  ],
-  [
-    "math-depth",
-    "layout.css.math-depth.enabled"
   ],
   [
     "math-style",
