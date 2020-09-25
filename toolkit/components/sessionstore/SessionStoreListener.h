@@ -65,11 +65,9 @@ class ContentSessionStore {
   // Return true if there is a new storage change which is appended.
   bool AppendSessionStorageChange(StorageEvent* aEvent);
 
-  void SetSHistoryChanged() { mSHistoryChanged = mSHistoryInParent; }
+  void SetSHistoryChanged();
   // request "collect sessionHistory" which is happened in the parent process
-  void SetSHistoryFromParentChanged() {
-    mSHistoryChangedFromParent = mSHistoryInParent;
-  }
+  void SetSHistoryFromParentChanged();
   bool GetAndClearSHistoryChanged() {
     bool ret = mSHistoryChanged;
     mSHistoryChanged = false;
@@ -110,8 +108,6 @@ class ContentSessionStore {
   nsTArray<nsCString> mOrigins;
   nsTArray<nsString> mKeys;
   nsTArray<nsString> mValues;
-  // need to collect sessionHistory
-  bool mSHistoryInParent;
   // mSHistoryChanged means there are history changes which are found
   // in the child process. The flag is set when
   //    1. webProgress changes to STATE_START
@@ -170,8 +166,6 @@ class TabListener : public nsIDOMEventListener,
   bool mTimeoutDisabled;
   int32_t mUpdateInterval;
   uint32_t mEpoch;
-  // sessionHistory in the parent process
-  bool mSHistoryInParent;
 };
 
 }  // namespace dom
