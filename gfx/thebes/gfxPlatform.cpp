@@ -3213,6 +3213,7 @@ uint32_t gfxPlatform::TargetFrameRate() {
 
 /* static */
 bool gfxPlatform::UseDesktopZoomingScrollbars() {
+  // bug 1657822 to enable this by default
   return StaticPrefs::apz_allow_zooming() &&
          !StaticPrefs::apz_force_disable_desktop_zooming_scrollbars();
 }
