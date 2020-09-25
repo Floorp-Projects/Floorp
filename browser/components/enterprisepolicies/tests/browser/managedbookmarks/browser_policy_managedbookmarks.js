@@ -117,7 +117,7 @@ add_task(async function test_open_managedbookmark() {
   managedBookmarksMenu.open = true;
   await promise;
 
-  let context = document.getElementById("placesContext");
+  let context = document.getElementById("placesContextManaged");
   let openContextMenuPromise = BrowserTestUtils.waitForEvent(
     context,
     "popupshown"
@@ -134,7 +134,9 @@ add_task(async function test_open_managedbookmark() {
 
   let tabCreatedPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-  let openInNewTabOption = document.getElementById("placesContext_open:newtab");
+  let openInNewTabOption = document.getElementById(
+    "placesContextManaged_open:newtab"
+  );
   EventUtils.synthesizeMouseAtCenter(openInNewTabOption, {
     button: 0,
   });
@@ -162,7 +164,7 @@ add_task(async function test_copy_managedbookmark() {
   managedBookmarksMenu.open = true;
   await promise;
 
-  let context = document.getElementById("placesContext");
+  let context = document.getElementById("placesContextManaged");
   let openContextMenuPromise = BrowserTestUtils.waitForEvent(
     context,
     "popupshown"
@@ -177,7 +179,7 @@ add_task(async function test_copy_managedbookmark() {
   await openContextMenuPromise;
   info("Opened context menu");
 
-  let copyOption = document.getElementById("placesContext_copy");
+  let copyOption = document.getElementById("placesContextManaged_copy");
 
   await new Promise((resolve, reject) => {
     SimpleTest.waitForClipboard(
