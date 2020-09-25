@@ -538,13 +538,18 @@ static bool MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
          NativeDefineDataProperty(cx, argsobj, id, v, attrs, result);
 }
 
-/* static */
-bool ArgumentsObject::getArgumentsIterator(JSContext* cx,
-                                           MutableHandleValue val) {
+static bool DefineArgumentsIterator(JSContext* cx,
+                                    Handle<ArgumentsObject*> argsobj) {
+  RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
   HandlePropertyName shName = cx->names().ArrayValues;
   RootedAtom name(cx, cx->names().values);
-  return GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, 0,
-                                             val);
+  RootedValue val(cx);
+  if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, 0,
+                                           &val)) {
+    return false;
+  }
+  return NativeDefineDataProperty(cx, argsobj, iteratorId, val,
+                                  JSPROP_RESOLVING);
 }
 
 /* static */
@@ -570,12 +575,7 @@ bool ArgumentsObject::reifyIterator(JSContext* cx,
     return true;
   }
 
-  RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
-  RootedValue val(cx);
-  if (!ArgumentsObject::getArgumentsIterator(cx, &val)) {
-    return false;
-  }
-  if (!NativeDefineDataProperty(cx, obj, iteratorId, val, JSPROP_RESOLVING)) {
+  if (!DefineArgumentsIterator(cx, obj)) {
     return false;
   }
 
@@ -594,7 +594,7 @@ bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
       return true;
     }
 
-    if (!reifyIterator(cx, argsobj)) {
+    if (!DefineArgumentsIterator(cx, argsobj)) {
       return false;
     }
     *resolvedp = true;
@@ -817,7 +817,7 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
       return true;
     }
 
-    if (!reifyIterator(cx, argsobj)) {
+    if (!DefineArgumentsIterator(cx, argsobj)) {
       return false;
     }
     *resolvedp = true;

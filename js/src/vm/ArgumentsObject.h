@@ -277,11 +277,6 @@ class ArgumentsObject : public NativeObject {
    */
   static bool reifyIterator(JSContext* cx, Handle<ArgumentsObject*> obj);
 
-  /*
-   * Return the arguments iterator function.
-   */
-  static bool getArgumentsIterator(JSContext* cx, MutableHandleValue val);
-
   /* True iff any element has been assigned or its attributes
    * changed. */
   bool hasOverriddenElement() const {
