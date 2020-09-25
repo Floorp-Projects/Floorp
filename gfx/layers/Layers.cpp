@@ -1690,7 +1690,7 @@ void Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
                    " [scrolled-clip=", "]");
     if (const Maybe<size_t>& ix =
             mSimpleAttrs.GetScrolledClip()->GetMaskLayerIndex()) {
-      AppendToString(aStream, ix.value(), " [scrolled-mask=", "]");
+      aStream << " [scrolled-mask=" << ix.value() << "]";
     }
   }
   if (1.0 != mSimpleAttrs.GetPostXScale() ||
@@ -2116,7 +2116,7 @@ void ImageLayer::DumpPacket(layerscope::LayersPacket* aPacket,
 void RefLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   ContainerLayer::PrintInfo(aStream, aPrefix);
   if (mId.IsValid()) {
-    AppendToString(aStream, uint64_t(mId), " [id=", "]");
+    aStream << " [id=" << uint64_t(mId) << "]";
   }
   if (mEventRegionsOverride & EventRegionsOverride::ForceDispatchToContent) {
     aStream << " [force-dtc]";
