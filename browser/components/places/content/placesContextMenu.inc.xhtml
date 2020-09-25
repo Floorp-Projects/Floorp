@@ -3,8 +3,13 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <menupopup id="placesContext"
-           onpopupshowing="return PlacesUIUtils.placesContextShowing(event);"
-           onpopuphiding="PlacesUIUtils.placesContextHiding(event);">
+           onpopupshowing="this._view = PlacesUIUtils.getViewForNode(document.popupNode);
+                           if (!PlacesUIUtils.openInTabClosesMenu) {
+                             document.getElementById('placesContext_open:newtab')
+                             .setAttribute('closemenu', 'single');
+                           }
+                           return this._view.buildContextMenu(this);"
+           onpopuphiding="this._view.destroyContextMenu();">
   <menuitem id="placesContext_open"
             command="placesCmd_open"
             data-l10n-id="places-open"
@@ -18,13 +23,15 @@
             selectiontype="single"
             selection="link"/>
   <menuitem id="placesContext_openContainer:tabs"
-            oncommand="PlacesUIUtils.openSelectionInTabs(event);"
+            oncommand="var view = PlacesUIUtils.getViewForNode(document.popupNode);
+                       view.controller.openSelectionInTabs(event);"
             onclick="checkForMiddleClick(this, event);"
             data-l10n-id="places-open-all-in-tabs"
             selectiontype="single|none"
             selection="folder|host|query"/>
   <menuitem id="placesContext_openLinks:tabs"
-            oncommand="PlacesUIUtils.openSelectionInTabs(event);"
+            oncommand="var view = PlacesUIUtils.getViewForNode(document.popupNode);
+                       view.controller.openSelectionInTabs(event);"
             onclick="checkForMiddleClick(this, event);"
             data-l10n-id="places-open-all-in-tabs"
             selectiontype="multiple"
@@ -108,4 +115,26 @@
             command="placesCmd_show:info"
             data-l10n-id="places-properties"
             selection="bookmark|folder|query"/>
+</menupopup>
+
+<menupopup id="placesContextManaged"
+           onpopupshowing="PlacesToolbarHelper.updateManagedBookmarksContextMenu(this)">
+  <menuitem id="placesContextManaged_open:newtab"
+            oncommand="PlacesToolbarHelper.openManagedBookmark(event, 'tab');"
+            data-l10n-id="places-open-tab"/>
+  <menuitem id="placesContextManaged_openContainer:tabs"
+            oncommand="PlacesToolbarHelper.openManagedFolder(event);"
+            onclick="checkForMiddleClick(this, event);"
+            data-l10n-id="places-open-all-in-tabs"/>
+  <menuitem id="placesContextManaged_open:newwindow"
+            oncommand="PlacesToolbarHelper.openManagedBookmark(event, 'window');"
+            data-l10n-id="places-open-window"/>
+  <menuitem id="placesContextManaged_open:newprivatewindow"
+            oncommand="PlacesToolbarHelper.openManagedBookmark(event, 'window', true);"
+            data-l10n-id="places-open-private-window"
+            hideifprivatebrowsing="true"/>
+  <menuseparator id="placesContextManaged_openSeparator"/>
+  <menuitem id="placesContextManaged_copy"
+            oncommand="PlacesToolbarHelper.copyManagedBookmark(event);"
+            data-l10n-id="text-action-copy"/>
 </menupopup>
