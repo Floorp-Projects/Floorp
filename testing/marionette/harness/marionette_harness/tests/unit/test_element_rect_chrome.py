@@ -23,8 +23,9 @@ class TestElementSizeChrome(WindowManagerMixin, MarionetteTestCase):
         self.close_all_windows()
         super(TestElementSizeChrome, self).tearDown()
 
-    def testShouldReturnTheSizeOfAnInput(self):
-        shrinko = self.marionette.find_element(By.ID, 'textInput')
-        size = shrinko.rect
-        self.assertTrue(size['width'] > 0)
-        self.assertTrue(size['height'] > 0)
+    def test_payload(self):
+        rect = self.marionette.find_element(By.ID, 'textInput').rect
+        self.assertTrue(rect['x'] > 0)
+        self.assertTrue(rect['y'] > 0)
+        self.assertTrue(rect['width'] > 0)
+        self.assertTrue(rect['height'] > 0)
