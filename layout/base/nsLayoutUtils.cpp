@@ -9245,13 +9245,6 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
                               ? metrics.GetCriticalDisplayPort()
                               : metrics.GetDisplayPort());
     }
-
-    DisplayPortMarginsPropertyData* marginsData =
-        static_cast<DisplayPortMarginsPropertyData*>(
-            aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
-    if (marginsData) {
-      metrics.SetDisplayPortMargins(marginsData->mMargins);
-    }
   }
 
   nsIScrollableFrame* scrollableFrame = nullptr;
