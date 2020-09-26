@@ -203,6 +203,7 @@ try:
             - 'sm-msan-linux64'
             - 'sm-fuzzing-linux64'
             - 'sm-rust-bindings-linux64'
+            - 'sm-nowarp-linux64'
         'win32':
             - 'sm-plain-win32'
             - 'sm-compacting-win32'
