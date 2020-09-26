@@ -308,7 +308,7 @@ bool CheckEdgeTracer::onChild(const JS::GCCellPtr& thing) {
   return true;
 }
 
-void js::gc::AssertSafeToSkipBarrier(TenuredCell* thing) {
+void js::gc::AssertSafeToSkipPreWriteBarrier(TenuredCell* thing) {
   mozilla::DebugOnly<Zone*> zone = thing->zoneFromAnyThread();
   MOZ_ASSERT(!zone->needsIncrementalBarrier() || zone->isAtomsZone());
 }

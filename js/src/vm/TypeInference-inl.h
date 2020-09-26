@@ -112,13 +112,13 @@ inline JSObject* TypeSet::ObjectKey::singletonNoBarrier() {
 
 inline ObjectGroup* TypeSet::ObjectKey::group() {
   ObjectGroup* res = groupNoBarrier();
-  ObjectGroup::readBarrier(res);
+  gc::ReadBarrier(res);
   return res;
 }
 
 inline JSObject* TypeSet::ObjectKey::singleton() {
   JSObject* res = singletonNoBarrier();
-  JSObject::readBarrier(res);
+  gc::ReadBarrier(res);
   return res;
 }
 

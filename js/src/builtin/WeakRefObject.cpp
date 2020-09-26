@@ -240,7 +240,7 @@ void WeakRefObject::readBarrier(JSContext* cx, Handle<WeakRefObject*> self) {
     }
   }
 
-  JSObject::readBarrier(obj);
+  gc::ReadBarrier(obj.get());
 }
 
 namespace gc {

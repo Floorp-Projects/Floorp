@@ -211,7 +211,7 @@ bool AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing) {
     return true;
   }
 
-  if (ThingIsPermanent(thing)) {
+  if (thing->isPermanentAndMayBeShared()) {
     return true;
   }
 
