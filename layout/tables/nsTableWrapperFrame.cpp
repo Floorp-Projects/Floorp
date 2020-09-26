@@ -340,7 +340,7 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
         maxISize += capMin;
       } break;
       default: {
-        nsLayoutUtils::IntrinsicISizeType iwt;
+        IntrinsicISizeType iwt;
         if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
             captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
           // Don't let the caption's pref isize expand the table's pref
