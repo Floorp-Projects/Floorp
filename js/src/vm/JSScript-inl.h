@@ -64,7 +64,7 @@ inline void ScriptWarmUpData::initEnclosingScript(BaseScript* enclosingScript) {
                 "BaseScript must be TenuredCell to avoid post-barriers");
 }
 inline void ScriptWarmUpData::clearEnclosingScript() {
-  BaseScript::preWriteBarrier(toEnclosingScript());
+  gc::PreWriteBarrier(toEnclosingScript());
   data_ = ResetState();
 }
 
@@ -75,7 +75,7 @@ inline void ScriptWarmUpData::initEnclosingScope(Scope* enclosingScope) {
                 "Scope must be TenuredCell to avoid post-barriers");
 }
 inline void ScriptWarmUpData::clearEnclosingScope() {
-  Scope::preWriteBarrier(toEnclosingScope());
+  gc::PreWriteBarrier(toEnclosingScope());
   data_ = ResetState();
 }
 

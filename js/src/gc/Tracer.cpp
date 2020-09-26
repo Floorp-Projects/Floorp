@@ -98,7 +98,7 @@ void js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind) {
   MOZ_ASSERT(thing);
   ApplyGCThingTyped(thing, kind, [trc](auto t) {
     MOZ_ASSERT_IF(t->runtimeFromAnyThread() != trc->runtime(),
-                  ThingIsPermanentAtomOrWellKnownSymbol(t) ||
+                  t->isPermanentAndMayBeShared() ||
                       t->zoneFromAnyThread()->isSelfHostingZone());
     t->traceChildren(trc);
   });

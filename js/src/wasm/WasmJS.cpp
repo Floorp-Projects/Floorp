@@ -3270,7 +3270,7 @@ void WasmGlobalObject::setVal(JSContext* cx, wasm::HandleVal hval) {
           // TODO/AnyRef-boxing: With boxed immediates and strings, the write
           // barrier is going to have to be more complicated.
           ASSERT_ANYREF_IS_JSOBJECT;
-          JSObject::preWriteBarrier(prevPtr.asJSObject());
+          gc::PreWriteBarrier(prevPtr.asJSObject());
           cell->ref = val.ref();
           if (!cell->ref.isNull()) {
             JSObject::postWriteBarrier(cell->ref.asJSObjectAddress(),

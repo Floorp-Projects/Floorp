@@ -608,15 +608,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     }
   };
 
-  // Barrier methods so we can have WeakHeapPtr<Debugger*>.
-  static void readBarrier(Debugger* dbg) {
-    InternalBarrierMethods<JSObject*>::readBarrier(dbg->object);
-  }
-  static void postWriteBarrier(Debugger** vp, Debugger* prev, Debugger* next) {}
-#ifdef DEBUG
-  static void assertThingIsNotGray(Debugger* dbg) { return; }
-#endif
-
  private:
   GCPtrNativeObject object; /* The Debugger object. Strong reference. */
   WeakGlobalObjectSet
@@ -1269,6 +1260,22 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
  private:
   Debugger(const Debugger&) = delete;
   Debugger& operator=(const Debugger&) = delete;
+};
+
+// Specialize InternalBarrierMethods so we can have WeakHeapPtr<Debugger*>.
+template <>
+struct InternalBarrierMethods<Debugger*> {
+  static bool isMarkable(Debugger* dbg) { return dbg->toJSObject(); }
+
+  static void postBarrier(Debugger** vp, Debugger* prev, Debugger* next) {}
+
+  static void readBarrier(Debugger* dbg) {
+    InternalBarrierMethods<JSObject*>::readBarrier(dbg->toJSObject());
+  }
+
+#ifdef DEBUG
+  static void assertThingIsNotGray(Debugger* dbg) {}
+#endif
 };
 
 /**

@@ -29,6 +29,26 @@ extern bool CurrentThreadIsGCMarking();
 
 namespace gc {
 
+// Map from all trace kinds to the base GC type.
+template <JS::TraceKind kind>
+struct MapTraceKindToType {};
+
+#define DEFINE_TRACE_KIND_MAP(name, type, _, _1)   \
+  template <>                                      \
+  struct MapTraceKindToType<JS::TraceKind::name> { \
+    using Type = type;                             \
+  };
+JS_FOR_EACH_TRACEKIND(DEFINE_TRACE_KIND_MAP);
+#undef DEFINE_TRACE_KIND_MAP
+
+// Map from a possibly-derived type to the base GC type.
+template <typename T>
+struct BaseGCType {
+  using type =
+      typename MapTraceKindToType<JS::MapTypeToTraceKind<T>::kind>::Type;
+  static_assert(std::is_base_of_v<type, T>, "Failed to find base type");
+};
+
 class Arena;
 class ArenaCellSet;
 
@@ -619,6 +639,8 @@ class ArenaCellSet {
   static size_t offsetOfBits() { return offsetof(ArenaCellSet, bits); }
 };
 
+// Post-write barrier implementation for GC cells.
+
 // Implement the post-write barrier for nursery allocateable cell type |T|. Call
 // this from |T::postWriteBarrier|.
 template <typename T>
@@ -644,6 +666,20 @@ MOZ_ALWAYS_INLINE void PostWriteBarrierImpl(void* cellp, T* prev, T* next) {
   if (prev && (buffer = prev->storeBuffer())) {
     buffer->unputCell(static_cast<T**>(cellp));
   }
+}
+
+template <typename T>
+MOZ_ALWAYS_INLINE void PostWriteBarrier(T** vp, T* prev, T* next) {
+  static_assert(std::is_base_of_v<Cell, T>);
+  static_assert(!std::is_same_v<Cell, T> && !std::is_same_v<TenuredCell, T>);
+
+  if constexpr (!std::is_base_of_v<gc::TenuredCell, T>) {
+    using BaseT = typename gc::BaseGCType<T>::type;
+    gc::PostWriteBarrierImpl<BaseT>(vp, prev, next);
+    return;
+  }
+
+  MOZ_ASSERT(!IsInsideNursery(next));
 }
 
 } /* namespace gc */

@@ -664,22 +664,8 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
   void traceChildren(JSTracer* trc);
 
-  static MOZ_ALWAYS_INLINE void readBarrier(JSString* thing) {
-    if (!thing->isPermanentAtom()) {
-      Cell::readBarrier(thing);
-    }
-  }
-
-  static MOZ_ALWAYS_INLINE void preWriteBarrier(JSString* thing) {
-    if (thing && !thing->isPermanentAtom()) {
-      Cell::preWriteBarrier(thing);
-    }
-  }
-
-  static MOZ_ALWAYS_INLINE void postWriteBarrier(void* cellp, JSString* prev,
-                                                 JSString* next) {
-    js::gc::PostWriteBarrierImpl<JSString>(cellp, prev, next);
-  }
+  // Override base class implementation to tell GC about permanent atoms.
+  bool isPermanentAndMayBeShared() const { return isPermanentAtom(); }
 
   static void addCellAddressToStoreBuffer(js::gc::StoreBuffer* buffer,
                                           js::gc::Cell** cellp) {

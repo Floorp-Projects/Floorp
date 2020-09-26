@@ -104,15 +104,19 @@ AutoTouchingGrayThings::~AutoTouchingGrayThings() {
 #endif  // DEBUG
 
 void gc::ValueReadBarrier(const Value& v) {
-  ApplyGCThingTyped(v, [](auto t) { t->readBarrier(t); });
+  ApplyGCThingTyped(v, [](auto t) { gc::ReadBarrier(t); });
 }
 
 void gc::ValuePreWriteBarrier(const Value& v) {
-  ApplyGCThingTyped(v, [](auto t) { t->preWriteBarrier(t); });
+  ApplyGCThingTyped(v, [](auto t) { gc::PreWriteBarrier(t); });
 }
 
 void gc::IdPreWriteBarrier(jsid id) {
-  ApplyGCThingTyped(id, [](auto t) { t->preWriteBarrier(t); });
+  ApplyGCThingTyped(id, [](auto t) { gc::PreWriteBarrier(t); });
+}
+
+void gc::CellPtrPreWriteBarrier(JS::GCCellPtr thing) {
+  ApplyGCThingTyped(thing, [](auto t) { gc::PreWriteBarrier(t); });
 }
 
 template <typename T>
