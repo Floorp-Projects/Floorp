@@ -92,8 +92,13 @@ struct PropertyKey {
     return reinterpret_cast<JS::Symbol*>(asBits ^ JSID_TYPE_SYMBOL);
   }
 
+  js::gc::Cell* toGCThing() const {
+    MOZ_ASSERT(isGCThing());
+    return reinterpret_cast<js::gc::Cell*>(asBits & ~(size_t)JSID_TYPE_MASK);
+  }
+
   GCCellPtr toGCCellPtr() const {
-    void* thing = (void*)(asBits & ~(size_t)JSID_TYPE_MASK);
+    js::gc::Cell* thing = toGCThing();
     if (isString()) {
       return JS::GCCellPtr(thing, JS::TraceKind::String);
     }
