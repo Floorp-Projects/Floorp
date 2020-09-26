@@ -39,6 +39,12 @@ JITFLAGS = {
         ['--warp'],
         ['--warp', '--ion-eager', '--ion-offthread-compile=off']
     ],
+    'nowarp': [
+        ['--no-warp'],
+        ['--no-warp', '--ion-eager', '--ion-offthread-compile=off',
+         '--more-compartments'],
+        ['--no-warp', '--baseline-eager'],
+    ],
     # Run reduced variants on debug builds, since they take longer time.
     'debug': [
         [],  # no flags, normal baseline and ion
