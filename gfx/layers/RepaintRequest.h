@@ -61,6 +61,7 @@ struct RepaintRequest {
         mIsScrollInfoLayer(false) {}
 
   RepaintRequest(const FrameMetrics& aOther,
+                 const ScreenMargin& aDisplayportMargins,
                  const ScrollOffsetUpdateType aScrollUpdateType,
                  bool aIsAnimationInProgress)
       : mScrollId(aOther.GetScrollId()),
@@ -71,7 +72,7 @@ struct RepaintRequest {
         mScrollOffset(aOther.GetVisualScrollOffset()),
         mZoom(aOther.GetZoom()),
         mScrollGeneration(aOther.GetScrollGeneration()),
-        mDisplayPortMargins(aOther.GetDisplayPortMargins()),
+        mDisplayPortMargins(aDisplayportMargins),
         mPresShellId(aOther.GetPresShellId()),
         mLayoutViewport(aOther.GetLayoutViewport()),
         mExtraResolution(aOther.GetExtraResolution()),
