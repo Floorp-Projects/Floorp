@@ -5510,12 +5510,11 @@ static bool IsReplacedBoxResolvedAgainstZero(
  */
 static nscoord AddIntrinsicSizeOffset(
     gfxContext* aRenderingContext, nsIFrame* aFrame,
-    const nsIFrame::IntrinsicSizeOffsetData& aOffsets,
-    nsLayoutUtils::IntrinsicISizeType aType, StyleBoxSizing aBoxSizing,
-    nscoord aContentSize, nscoord aContentMinSize, const StyleSize& aStyleSize,
-    const nscoord* aFixedMinSize, const StyleSize& aStyleMinSize,
-    const nscoord* aFixedMaxSize, const StyleMaxSize& aStyleMaxSize,
-    uint32_t aFlags, PhysicalAxis aAxis) {
+    const nsIFrame::IntrinsicSizeOffsetData& aOffsets, IntrinsicISizeType aType,
+    StyleBoxSizing aBoxSizing, nscoord aContentSize, nscoord aContentMinSize,
+    const StyleSize& aStyleSize, const nscoord* aFixedMinSize,
+    const StyleSize& aStyleMinSize, const nscoord* aFixedMaxSize,
+    const StyleMaxSize& aStyleMaxSize, uint32_t aFlags, PhysicalAxis aAxis) {
   nscoord result = aContentSize;
   nscoord min = aContentMinSize;
   nscoord coordOutsideSize = 0;

@@ -1555,9 +1555,8 @@ class nsLayoutUtils {
    * size by reducing the *content size* (flooring at zero).  This is used for:
    * https://drafts.csswg.org/css-grid/#min-size-auto
    */
-  enum class IntrinsicISizeType { MinISize, PrefISize };
-  static const auto MIN_ISIZE = IntrinsicISizeType::MinISize;
-  static const auto PREF_ISIZE = IntrinsicISizeType::PrefISize;
+  static const auto MIN_ISIZE = mozilla::IntrinsicISizeType::MinISize;
+  static const auto PREF_ISIZE = mozilla::IntrinsicISizeType::PrefISize;
   enum {
     IGNORE_PADDING = 0x01,
     BAIL_IF_REFLOW_NEEDED = 0x02,  // returns NS_INTRINSIC_ISIZE_UNKNOWN if so
@@ -1565,7 +1564,7 @@ class nsLayoutUtils {
   };
   static nscoord IntrinsicForAxis(
       mozilla::PhysicalAxis aAxis, gfxContext* aRenderingContext,
-      nsIFrame* aFrame, IntrinsicISizeType aType,
+      nsIFrame* aFrame, mozilla::IntrinsicISizeType aType,
       const mozilla::Maybe<LogicalSize>& aPercentageBasis = mozilla::Nothing(),
       uint32_t aFlags = 0, nscoord aMarginBoxMinSizeClamp = NS_MAXSIZE);
   /**
@@ -1573,7 +1572,7 @@ class nsLayoutUtils {
    */
   static nscoord IntrinsicForContainer(gfxContext* aRenderingContext,
                                        nsIFrame* aFrame,
-                                       IntrinsicISizeType aType,
+                                       mozilla::IntrinsicISizeType aType,
                                        uint32_t aFlags = 0);
 
   /**
@@ -1597,7 +1596,7 @@ class nsLayoutUtils {
    */
   static nscoord MinSizeContributionForAxis(mozilla::PhysicalAxis aAxis,
                                             gfxContext* aRC, nsIFrame* aFrame,
-                                            IntrinsicISizeType aType,
+                                            mozilla::IntrinsicISizeType aType,
                                             const LogicalSize& aPercentageBasis,
                                             uint32_t aFlags = 0);
 

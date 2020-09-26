@@ -13,8 +13,12 @@
 
 struct ComputedFlexItemInfo;
 
+class nsINode;
+
 namespace mozilla {
 namespace dom {
+
+class DOMRectReadOnly;
 
 class FlexLineValues;
 
