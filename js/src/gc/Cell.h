@@ -490,15 +490,14 @@ bool TenuredCell::isInsideZone(JS::Zone* zone) const {
     TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp,
                                              "read barrier");
     MOZ_ASSERT(tmp == thing);
+    return;
   }
 
   if (thing->isMarkedGray()) {
     // There shouldn't be anything marked gray unless we're on the main thread.
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
-    if (!JS::RuntimeHeapIsCollecting()) {
-      JS::UnmarkGrayGCThingRecursively(
-          JS::GCCellPtr(thing, thing->getTraceKind()));
-    }
+    JS::UnmarkGrayGCThingRecursively(
+        JS::GCCellPtr(thing, thing->getTraceKind()));
   }
 }
 
