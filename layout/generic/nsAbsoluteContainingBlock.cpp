@@ -199,7 +199,8 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
                             kidFrame->GetPosition(),
                         aContainingBlock.Size())
                 .BEnd(containerWM);
-        MOZ_ASSERT(kidOverflowBEnd >= kidBEnd);
+        NS_ASSERTION(kidOverflowBEnd >= kidBEnd,
+                     "overflow area should be at least as large as frame rect");
         if (kidOverflowBEnd > availBSize ||
             (kidBEnd < availBSize && kidFrame->GetNextInFlow())) {
           kidNeedsReflow = true;
