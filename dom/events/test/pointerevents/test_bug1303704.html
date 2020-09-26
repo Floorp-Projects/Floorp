@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1303704
   <title>Test for Bug 1303704</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
     #scrollable {
@@ -52,6 +53,10 @@ scroll
 /** Test for Bug 1303704 **/
 SimpleTest.waitForExplicitFinish();
 
+function waitToClearOutAnyPotentialScrolls(aWindow) {
+  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(() => { aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(resolve); } ); }, aWindow); }); }); });
+}
+
 function runTests() {
   let link1 = window.document.getElementById("link1");
   let mouseEvents = ["mousedown", "mouseup", "mousemove"];
@@ -86,7 +91,7 @@ function runTests() {
     return;
   }
 
-  function scrollTest() {
+  async function scrollTest() {
     var scrollable = document.getElementById("scrollable");
     scrollable.addEventListener('pointerdown', function(ev) {
       ev.preventDefault();
@@ -105,15 +110,16 @@ function runTests() {
     synthesizeMouse(scrollable, offsetX, offsetY,
                     { type: "mouseup",
                       inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
-    requestAnimationFrame(function() {
-      if (scrollable.scrollTop != 0) {
-        isnot(scrollable.scrollTop, 0,
-            "Scrollable element should have been scrolled.");
-        SimpleTest.finish();
-      } else {
-        setTimeout(scrollTest);
-      }
-    });
+
+    await waitToClearOutAnyPotentialScrolls(window);
+
+    if (scrollable.scrollTop != 0) {
+      isnot(scrollable.scrollTop, 0,
+          "Scrollable element should have been scrolled.");
+      SimpleTest.finish();
+    } else {
+      setTimeout(scrollTest);
+    }
   }
 
   setTimeout(() => {
@@ -125,7 +131,7 @@ function runTests() {
 }
 
 SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true], ["general.smoothScroll", false]]}, runTests);
 });
 
 </script>
