@@ -110,8 +110,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
 
   mozilla::StyleGenericFontFamily mGenericID;
 
-  // MathML scriptlevel support
-  int8_t mScriptLevel;
+  // math-depth support (used for MathML scriptlevel)
+  int8_t mMathDepth;
   // MathML  mathvariant support
   uint8_t mMathVariant;
   // math-style support (used for MathML displaystyle)
