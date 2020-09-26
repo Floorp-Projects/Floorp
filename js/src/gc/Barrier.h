@@ -301,14 +301,11 @@ class NativeObject;
 bool CurrentThreadIsIonCompiling();
 
 bool CurrentThreadIsIonCompilingSafeForMinorGC();
-
 bool CurrentThreadIsGCSweeping();
-
 bool CurrentThreadIsGCFinalizing();
+bool CurrentThreadIsTouchingGrayThings();
 
 bool IsMarkedBlack(JSObject* obj);
-
-bool CurrentThreadIsTouchingGrayThings();
 
 #endif
 
@@ -341,11 +338,21 @@ struct InternalBarrierMethods<T*> {
 #endif
 };
 
+namespace gc {
+void ValueReadBarrier(const Value& v);
+void ValuePreWriteBarrier(const Value& v);
+void IdPreWriteBarrier(jsid id);
+}  // namespace gc
+
 template <>
 struct InternalBarrierMethods<Value> {
   static bool isMarkable(const Value& v) { return v.isGCThing(); }
 
-  static void preBarrier(const Value& v);
+  static void preBarrier(const Value& v) {
+    if (v.isGCThing()) {
+      gc::ValuePreWriteBarrier(v);
+    }
+  }
 
   static MOZ_ALWAYS_INLINE void postBarrier(Value* vp, const Value& prev,
                                             const Value& next) {
@@ -374,7 +381,11 @@ struct InternalBarrierMethods<Value> {
     }
   }
 
-  static void readBarrier(const Value& v);
+  static void readBarrier(const Value& v) {
+    if (v.isGCThing()) {
+      gc::ValueReadBarrier(v);
+    }
+  }
 
 #ifdef DEBUG
   static void assertThingIsNotGray(const Value& v) {
@@ -386,7 +397,11 @@ struct InternalBarrierMethods<Value> {
 template <>
 struct InternalBarrierMethods<jsid> {
   static bool isMarkable(jsid id) { return id.isGCThing(); }
-  static void preBarrier(jsid id);
+  static void preBarrier(jsid id) {
+    if (id.isGCThing()) {
+      gc::IdPreWriteBarrier(id);
+    }
+  }
   static void postBarrier(jsid* idp, jsid prev, jsid next) {}
 #ifdef DEBUG
   static void assertThingIsNotGray(jsid id) { JS::AssertIdIsNotGray(id); }
