@@ -842,6 +842,7 @@ class AsyncPanZoomController {
    */
   void RequestContentRepaint(const FrameMetrics& aFrameMetrics,
                              const ParentLayerPoint& aVelocity,
+                             const ScreenMargin& aDisplayportMargins,
                              RepaintUpdateType aUpdateType);
 
   /**
