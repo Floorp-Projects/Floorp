@@ -468,7 +468,7 @@ struct FrameMetrics {
   ParentLayerRect mCompositionBounds;
 
   // The area of a scroll frame's contents that has been painted, relative to
-  // mScrollOffset.
+  // GetLayoutScrollOffset().
   //
   // Should not be larger than GetExpandedScrollableRect().
   //
