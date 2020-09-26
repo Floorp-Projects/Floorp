@@ -13,7 +13,6 @@
 #include "mozilla/gfx/2D.h"
 #include "imgIContainer.h"
 #include "nsContainerFrame.h"
-#include "nsLayoutUtils.h"
 #include "imgINotificationObserver.h"
 #include "mozilla/SVGGeometryFrame.h"
 #include "nsIReflowCallback.h"
