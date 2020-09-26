@@ -2881,6 +2881,7 @@ bool CacheIRCompiler::emitInt32NegationResult(Int32OperandId inputId) {
 }
 
 bool CacheIRCompiler::emitInt32IncResult(Int32OperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register input = allocator.useRegister(masm, inputId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
@@ -2898,6 +2899,7 @@ bool CacheIRCompiler::emitInt32IncResult(Int32OperandId inputId) {
 }
 
 bool CacheIRCompiler::emitInt32DecResult(Int32OperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register input = allocator.useRegister(masm, inputId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
@@ -2973,10 +2975,12 @@ bool CacheIRCompiler::emitDoubleIncDecResult(bool isInc,
 }
 
 bool CacheIRCompiler::emitDoubleIncResult(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   return emitDoubleIncDecResult(true, inputId);
 }
 
 bool CacheIRCompiler::emitDoubleDecResult(NumberOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   return emitDoubleIncDecResult(false, inputId);
 }
 
@@ -3566,6 +3570,7 @@ bool CacheIRCompiler::emitGuardObjectGroupNotPretenured(uint32_t groupOffset) {
 
 bool CacheIRCompiler::emitGuardFunctionHasJitEntry(ObjOperandId funId,
                                                    bool constructing) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register fun = allocator.useRegister(masm, funId);
 
   FailurePath* failure;
@@ -3635,6 +3640,7 @@ bool CacheIRCompiler::emitGuardFunctionIsConstructor(ObjOperandId funId) {
 }
 
 bool CacheIRCompiler::emitGuardNotClassConstructor(ObjOperandId funId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register fun = allocator.useRegister(masm, funId);
   AutoScratchRegister scratch(allocator, masm);
 
@@ -3649,6 +3655,7 @@ bool CacheIRCompiler::emitGuardNotClassConstructor(ObjOperandId funId) {
 }
 
 bool CacheIRCompiler::emitGuardArrayIsPacked(ObjOperandId arrayId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register array = allocator.useRegister(masm, arrayId);
   AutoScratchRegister scratch(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
@@ -4703,7 +4710,6 @@ bool CacheIRCompiler::emitStoreTypedElement(ObjOperandId objId,
                                             Scalar::Type elementType,
                                             Int32OperandId indexId,
                                             uint32_t rhsId, bool handleOOB) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
 
@@ -4800,6 +4806,7 @@ bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
                                                  Int32OperandId indexId,
                                                  uint32_t rhsId,
                                                  bool handleOOB) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   return emitStoreTypedElement(objId, TypedThingLayout::TypedArray, elementType,
                                indexId, rhsId, handleOOB);
 }
@@ -4809,6 +4816,7 @@ bool CacheIRCompiler::emitStoreTypedObjectElement(ObjOperandId objId,
                                                   Scalar::Type elementType,
                                                   Int32OperandId indexId,
                                                   uint32_t rhsId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   return emitStoreTypedElement(objId, layout, elementType, indexId, rhsId,
                                false);
 }
@@ -4846,7 +4854,6 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
 bool CacheIRCompiler::emitLoadTypedElementResult(
     ObjOperandId objId, Int32OperandId indexId, TypedThingLayout layout,
     Scalar::Type elementType, bool handleOOB, bool allowDoubleForUint32) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
@@ -4974,6 +4981,7 @@ bool CacheIRCompiler::emitLoadTypedElementResult(
 bool CacheIRCompiler::emitLoadTypedArrayElementResult(
     ObjOperandId objId, Int32OperandId indexId, Scalar::Type elementType,
     bool handleOOB, bool allowDoubleForUint32) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   return emitLoadTypedElementResult(objId, indexId,
                                     TypedThingLayout::TypedArray, elementType,
                                     handleOOB, allowDoubleForUint32);
@@ -4982,6 +4990,7 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
 bool CacheIRCompiler::emitLoadTypedObjectElementResult(
     ObjOperandId objId, Int32OperandId indexId, TypedThingLayout layout,
     Scalar::Type elementType) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   return emitLoadTypedElementResult(objId, indexId, layout, elementType,
                                     /* handleOOB = */ false,
                                     /* allowDoubleForUint32 = */ true);
