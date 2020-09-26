@@ -1335,6 +1335,45 @@ function TypedArraySubarray(begin, end) {
     return TypedArraySpeciesCreateWithBuffer(obj, buffer, beginByteOffset, newLength);
 }
 
+// https://github.com/tc39/proposal-item-method
+// %TypedArray%.prototype.item ( index )
+function TypedArrayItem(index) {
+    // Step 1.
+    var obj = this;
+
+    // Step 2.
+    // This function is not generic.
+    if (!IsObject(obj) || !IsTypedArray(obj)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, obj, index,
+                            "TypedArrayItem");
+    }
+    GetAttachedArrayBuffer(obj);
+
+    // If we got here, `this` is either a typed array or a wrapper for one.
+
+    // Step 3.
+    var len = TypedArrayLength(obj);
+
+    // Step 4.
+    var relativeIndex = ToInteger(index);
+
+    // Steps 5-6.
+    var k;
+    if (relativeIndex >= 0) {
+        k = relativeIndex;
+    } else {
+        k = len + relativeIndex;
+    }
+
+    // Step 7.
+    if (k < 0 || k >= len) {
+        return undefined;
+    }
+
+    // Step 8.
+    return obj[k];
+}
+
 // ES6 draft rev30 (2014/12/24) 22.2.3.30 %TypedArray%.prototype.values()
 //
 // Uncloned functions with `$` prefix are allocated as extended function
