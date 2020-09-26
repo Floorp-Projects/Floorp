@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 #include "mozilla/EventForwards.h"
-#include "nsLayoutUtils.h"
+#include "RelativeTo.h"
 
 class nsIFrame;
 struct nsPoint;

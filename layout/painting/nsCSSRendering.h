@@ -14,7 +14,6 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/TypedEnumBits.h"
-#include "nsLayoutUtils.h"
 #include "nsStyleStruct.h"
 #include "nsIFrame.h"
 #include "nsImageRenderer.h"
