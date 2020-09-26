@@ -3,6 +3,7 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
+<script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
 <style>
   .spacer { height: 200vh; }
   .scroller { height: 300px; overflow: scroll; }
@@ -32,6 +33,10 @@ function doPageDown(targetExpectedToScroll) {
   return promise;
 }
 
+function waitToClearOutAnyPotentialScrolls(aWindow) {
+  return new Promise(resolve => {aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(() => { flushApzRepaints(() => { aWindow.requestAnimationFrame(() => { aWindow.requestAnimationFrame(resolve); } ); }, aWindow); }); }); });
+}
+
 promise_test(async function() {
   await SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]});
 
@@ -48,10 +53,12 @@ promise_test(async function() {
   assert_equals(unscrollable.scrollTopMax, 0, "#unscrollable should not be able to scroll at all (checking scrollTopMax)");
 
   scrollable.focus();
+  await waitToClearOutAnyPotentialScrolls(window);
   await doPageDown(scrollable);
   assert_not_equals(scrollable.scrollTop, 0, "Should have scrolled when pressing space");
 
   unscrollable.focus();
+  await waitToClearOutAnyPotentialScrolls(window);
   let rootScrollTop = rootScroller.scrollTop; // Could've scrolled to scroll `scrollable` into view before.
   await doPageDown(window);
   assert_equals(unscrollable.scrollTop, 0, "Should not be able to scroll the unscrollable div");
