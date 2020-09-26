@@ -558,11 +558,4 @@ class MOZ_RAII AutoSetMarkColor {
 
 } /* namespace js */
 
-// Exported for Tracer.cpp
-inline bool ThingIsPermanentAtomOrWellKnownSymbol(js::gc::Cell* thing) {
-  return false;
-}
-bool ThingIsPermanentAtomOrWellKnownSymbol(JSString*);
-bool ThingIsPermanentAtomOrWellKnownSymbol(JS::Symbol*);
-
 #endif /* gc_GCMarker_h */

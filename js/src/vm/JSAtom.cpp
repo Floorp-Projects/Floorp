@@ -184,7 +184,7 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
 inline JSAtom* js::AtomStateEntry::asPtr(JSContext* cx) const {
   JSAtom* atom = asPtrUnbarriered();
   if (!cx->isHelperThreadContext()) {
-    JSString::readBarrier(atom);
+    gc::ReadBarrier(atom);
   }
   return atom;
 }

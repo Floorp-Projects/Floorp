@@ -1289,7 +1289,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                                 gc::Cell** location) {
   MOZ_ASSERT(SASigPreBarrierFiltering.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(location);
-  JSObject::preWriteBarrier(*reinterpret_cast<JSObject**>(location));
+  gc::PreWriteBarrier(*reinterpret_cast<JSObject**>(location));
 }
 
 /* static */ void Instance::postBarrier(Instance* instance,

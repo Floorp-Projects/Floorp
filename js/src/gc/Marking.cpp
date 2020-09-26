@@ -170,17 +170,10 @@ bool js::IsTracerKind(JSTracer* trc, JS::CallbackTracer::TracerKind kind) {
 }
 #endif
 
-bool ThingIsPermanentAtomOrWellKnownSymbol(JSString* str) {
-  return str->isPermanentAtom();
-}
-bool ThingIsPermanentAtomOrWellKnownSymbol(JS::Symbol* sym) {
-  return sym->isWellKnownSymbol();
-}
-
 template <typename T>
 static inline bool IsOwnedByOtherRuntime(JSRuntime* rt, T thing) {
   bool other = thing->runtimeFromAnyThread() != rt;
-  MOZ_ASSERT_IF(other, ThingIsPermanentAtomOrWellKnownSymbol(thing) ||
+  MOZ_ASSERT_IF(other, thing->isPermanentAndMayBeShared() ||
                            thing->zoneFromAnyThread()->isSelfHostingZone());
   return other;
 }
@@ -601,7 +594,7 @@ template void js::TraceWeakMapKeyEdgeInternal<BaseScript>(JSTracer*, Zone*,
 template <typename T>
 void js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name) {
   AssertRootMarkingPhase(trc);
-  MOZ_ASSERT(ThingIsPermanentAtomOrWellKnownSymbol(thing));
+  MOZ_ASSERT(thing->isPermanentAndMayBeShared());
 
   // We have to mark permanent atoms and well-known symbols through a special
   // method because the default DoMarking implementation automatically skips
@@ -1013,7 +1006,7 @@ JS_PUBLIC_API void js::gc::PerformIncrementalReadBarrier(JS::GCCellPtr thing) {
 // tracing will not recurse.
 template <typename T>
 void js::GCMarker::markAndTraceChildren(T* thing) {
-  if (ThingIsPermanentAtomOrWellKnownSymbol(thing)) {
+  if (thing->isPermanentAndMayBeShared()) {
     return;
   }
   if (mark(thing)) {
@@ -1045,7 +1038,7 @@ void GCMarker::traverse(RegExpShared* thing) {
 // manual inlining, implemented by eagerlyTraceChildren.
 template <typename T>
 void js::GCMarker::markAndScan(T* thing) {
-  if (ThingIsPermanentAtomOrWellKnownSymbol(thing)) {
+  if (thing->isPermanentAndMayBeShared()) {
     return;
   }
   if (mark(thing)) {
@@ -1109,16 +1102,16 @@ template <typename S, typename T>
 static void CheckTraversedEdge(S source, T* target) {
   // Atoms and Symbols do not have or mark their internal pointers,
   // respectively.
-  MOZ_ASSERT(!ThingIsPermanentAtomOrWellKnownSymbol(source));
+  MOZ_ASSERT(!source->isPermanentAndMayBeShared());
 
   // The Zones must match, unless the target is an atom.
   MOZ_ASSERT_IF(
-      !ThingIsPermanentAtomOrWellKnownSymbol(target),
+      !target->isPermanentAndMayBeShared(),
       target->zone()->isAtomsZone() || target->zone() == source->zone());
 
   // If we are marking an atom, that atom must be marked in the source zone's
   // atom bitmap.
-  MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(target) &&
+  MOZ_ASSERT_IF(!target->isPermanentAndMayBeShared() &&
                     target->zone()->isAtomsZone() &&
                     !source->zone()->isAtomsZone(),
                 target->runtimeFromAnyThread()->gc.atomMarking.atomIsMarked(
@@ -1126,7 +1119,7 @@ static void CheckTraversedEdge(S source, T* target) {
 
   // Atoms and Symbols do not have access to a compartment pointer, or we'd need
   // to adjust the subsequent check to catch that case.
-  MOZ_ASSERT_IF(ThingIsPermanentAtomOrWellKnownSymbol(target),
+  MOZ_ASSERT_IF(target->isPermanentAndMayBeShared(),
                 !target->maybeCompartment());
   MOZ_ASSERT_IF(target->zoneFromAnyThread()->isAtomsZone(),
                 !target->maybeCompartment());
@@ -3806,7 +3799,7 @@ static inline void CheckIsMarkedThing(T* thingp) {
 
   // Allow any thread access to uncollected things.
   T thing = *thingp;
-  if (ThingIsPermanentAtomOrWellKnownSymbol(thing)) {
+  if (thing->isPermanentAndMayBeShared()) {
     return;
   }
 
@@ -3887,7 +3880,7 @@ bool js::gc::IsAboutToBeFinalizedInternal(T** thingp) {
   JSRuntime* rt = thing->runtimeFromAnyThread();
 
   /* Permanent atoms are never finalized by non-owning runtimes. */
-  if (ThingIsPermanentAtomOrWellKnownSymbol(thing) &&
+  if (thing->isPermanentAndMayBeShared() &&
       TlsContext.get()->runtime() != rt) {
     return false;
   }
@@ -3929,7 +3922,7 @@ inline bool SweepingTracer::sweepEdge(T** thingp) {
   T* thing = *thingp;
   JSRuntime* rt = thing->runtimeFromAnyThread();
 
-  if (ThingIsPermanentAtomOrWellKnownSymbol(thing) && runtime() != rt) {
+  if (thing->isPermanentAndMayBeShared() && runtime() != rt) {
     return true;
   }
 

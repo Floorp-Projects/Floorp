@@ -8528,7 +8528,7 @@ JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(JSObject* obj) {
   AutoGeckoProfilerEntry profilingStackFrame(
       TlsContext.get(), "IncrementalPreWriteBarrier(JSObject*)",
       JS::ProfilingCategoryPair::GCCC_Barrier);
-  JSObject::preWriteBarrier(obj);
+  PreWriteBarrier(obj);
 }
 
 JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(GCCellPtr thing) {
@@ -8539,7 +8539,7 @@ JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(GCCellPtr thing) {
   AutoGeckoProfilerEntry profilingStackFrame(
       TlsContext.get(), "IncrementalPreWriteBarrier(GCCellPtr)",
       JS::ProfilingCategoryPair::GCCC_Barrier);
-  TenuredCell::preWriteBarrier(&thing.asCell()->asTenured());
+  CellPtrPreWriteBarrier(thing);
 }
 
 JS_PUBLIC_API bool JS::WasIncrementalGC(JSRuntime* rt) {
