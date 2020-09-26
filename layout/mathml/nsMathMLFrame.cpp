@@ -211,6 +211,22 @@ nscoord nsMathMLFrame::CalcLength(nsPresContext* aPresContext,
 }
 
 /* static */
+void nsMathMLFrame::GetSubDropFromChild(nsIFrame* aChild, nscoord& aSubDrop,
+                                        float aFontSizeInflation) {
+  RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetFontMetricsForFrame(aChild, aFontSizeInflation);
+  GetSubDrop(fm, aSubDrop);
+}
+
+/* static */
+void nsMathMLFrame::GetSupDropFromChild(nsIFrame* aChild, nscoord& aSupDrop,
+                                        float aFontSizeInflation) {
+  RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetFontMetricsForFrame(aChild, aFontSizeInflation);
+  GetSupDrop(fm, aSupDrop);
+}
+
+/* static */
 void nsMathMLFrame::ParseNumericValue(const nsString& aString,
                                       nscoord* aLengthValue, uint32_t aFlags,
                                       nsPresContext* aPresContext,
