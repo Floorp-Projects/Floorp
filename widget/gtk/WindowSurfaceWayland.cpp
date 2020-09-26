@@ -10,6 +10,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Tools.h"
+#include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "MozContainer.h"
 #include "nsTArray.h"

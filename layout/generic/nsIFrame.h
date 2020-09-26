@@ -58,13 +58,13 @@
 #include "mozilla/Result.h"
 #include "mozilla/SmallPointerArray.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ToString.h"
 #include "mozilla/WritingModes.h"
 #include "nsDirection.h"
 #include "nsFrameList.h"
 #include "nsFrameState.h"
 #include "mozilla/ReflowInput.h"
 #include "nsITheme.h"
-#include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsStyleStruct.h"
@@ -106,6 +106,7 @@ class nsISelectionController;
 class nsBoxLayoutState;
 class nsBoxLayout;
 class nsILineIterator;
+class nsDisplayItem;
 class nsDisplayItemBase;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
@@ -5722,15 +5723,6 @@ template <bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
     }
   }
   return result;
-}
-
-template <bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-/* static */ void nsIFrame::SortFrameList(nsFrameList& aFrameList) {
-  nsIFrame* head = MergeSort<IsLessThanOrEqual>(aFrameList.FirstChild());
-  aFrameList.Clear();
-  aFrameList = nsFrameList(head, nsLayoutUtils::GetLastSibling(head));
-  MOZ_ASSERT(IsFrameListSorted<IsLessThanOrEqual>(aFrameList),
-             "After we sort a frame list, it should be in sorted order...");
 }
 
 template <bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>

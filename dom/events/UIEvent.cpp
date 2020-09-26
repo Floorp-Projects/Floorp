@@ -19,6 +19,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 #include "prtime.h"
 
 namespace mozilla {
