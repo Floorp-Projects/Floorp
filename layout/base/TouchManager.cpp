@@ -10,6 +10,7 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/PresShell.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsView.h"
 #include "PositionedEventTargeting.h"
 
