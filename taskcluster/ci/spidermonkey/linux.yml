@@ -70,6 +70,16 @@ sm-plain-linux64/opt:
     run:
         spidermonkey-variant: plain
 
+sm-nowarp-linux64/debug:
+    description: "Spidermonkey No Warp"
+    index:
+        job-name: sm-plain-linux64-nowarp
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(nowarp)
+    run:
+        spidermonkey-variant: nowarpdebug
+
 sm-smoosh-linux64/debug:
     description: "Spidermonkey SmooshMonkey"
     index:
