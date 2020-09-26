@@ -51,6 +51,8 @@ struct Chunk;
 class StoreBuffer;
 class TenuredCell;
 
+extern void UnmarkGrayGCThingRecursively(TenuredCell* cell);
+
 // Like gc::MarkColor but allows the possibility of the cell being unmarked.
 //
 // This class mimics an enum class, but supports operator overloading.
@@ -487,8 +489,7 @@ MOZ_ALWAYS_INLINE void ReadBarrierImpl(TenuredCell* thing) {
   if (thing->isMarkedGray()) {
     // There shouldn't be anything marked gray unless we're on the main thread.
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
-    JS::UnmarkGrayGCThingRecursively(
-        JS::GCCellPtr(thing, thing->getTraceKind()));
+    UnmarkGrayGCThingRecursively(thing);
   }
 }
 
