@@ -5003,33 +5003,6 @@ static bool SetDiscardSource(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool GetConstructorName(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "getConstructorName", 1)) {
-    return false;
-  }
-
-  if (!args[0].isObject()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NOT_EXPECTED_TYPE, "getConstructorName",
-                              "Object", InformalValueTypeName(args[0]));
-    return false;
-  }
-
-  RootedAtom name(cx);
-  RootedObject obj(cx, &args[0].toObject());
-  if (!JSObject::constructorDisplayAtom(cx, obj, &name)) {
-    return false;
-  }
-
-  if (name) {
-    args.rval().setString(name);
-  } else {
-    args.rval().setNull();
-  }
-  return true;
-}
-
 class AllocationMarkerObject : public NativeObject {
  public:
   static const JSClass class_;
@@ -7099,11 +7072,6 @@ gc::ZealModeHelpText),
 "setDiscardSource(bool)",
 "  Explicitly enable source discarding in the current compartment.  The default is that "
 "  source discarding is not explicitly enabled."),
-
-    JS_FN_HELP("getConstructorName", GetConstructorName, 1, 0,
-"getConstructorName(object)",
-"  If the given object was created with `new Ctor`, return the constructor's display name. "
-"  Otherwise, return null."),
 
     JS_FN_HELP("allocationMarker", AllocationMarker, 0, 0,
 "allocationMarker([options])",

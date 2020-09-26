@@ -177,20 +177,6 @@ BEGIN_TEST(test_ubiNodeCompartment) {
 }
 END_TEST(test_ubiNodeCompartment)
 
-BEGIN_TEST(test_ubiNodeJSObjectConstructorName) {
-  JS::RootedValue val(cx);
-  EVAL("this.Ctor = function Ctor() {}; new Ctor", &val);
-  CHECK(val.isObject());
-
-  UniqueTwoByteChars ctorName;
-  CHECK(JS::ubi::Node(&val.toObject()).jsObjectConstructorName(cx, ctorName));
-  CHECK(ctorName);
-  CHECK(EqualChars(ctorName.get(), u"Ctor", js_strlen(u"Ctor") + 1));
-
-  return true;
-}
-END_TEST(test_ubiNodeJSObjectConstructorName)
-
 template <typename F, typename G>
 static bool checkString(const char* expected, F fillBufferFunction,
                         G stringGetterFunction) {
