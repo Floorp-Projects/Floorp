@@ -3850,36 +3850,39 @@ MDefinition* MToInt64::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MToNumberInt32::foldsTo(TempAllocator& alloc) {
-  MDefinition* input = getOperand(0);
-
   // Fold this operation if the input operand is constant.
-  if (input->isConstant()) {
-    DebugOnly<IntConversionInputKind> convert = conversion();
-    switch (input->type()) {
+  if (MConstant* cst = input()->maybeConstantValue()) {
+    switch (cst->type()) {
       case MIRType::Null:
-        MOZ_ASSERT(convert.value == IntConversionInputKind::Any);
-        return MConstant::New(alloc, Int32Value(0));
+        if (conversion() == IntConversionInputKind::Any) {
+          return MConstant::New(alloc, Int32Value(0));
+        }
+        break;
       case MIRType::Boolean:
-        MOZ_ASSERT(convert.value == IntConversionInputKind::Any ||
-                   convert.value == IntConversionInputKind::NumbersOrBoolsOnly);
-        return MConstant::New(alloc,
-                              Int32Value(input->toConstant()->toBoolean()));
+        if (conversion() == IntConversionInputKind::Any ||
+            conversion() == IntConversionInputKind::NumbersOrBoolsOnly) {
+          return MConstant::New(alloc, Int32Value(cst->toBoolean()));
+        }
+        break;
       case MIRType::Int32:
-        return MConstant::New(alloc,
-                              Int32Value(input->toConstant()->toInt32()));
+        return MConstant::New(alloc, Int32Value(cst->toInt32()));
       case MIRType::Float32:
       case MIRType::Double:
         int32_t ival;
         // Only the value within the range of Int32 can be substituted as
         // constant.
-        if (mozilla::NumberIsInt32(input->toConstant()->numberToDouble(),
-                                   &ival)) {
+        if (mozilla::NumberIsInt32(cst->numberToDouble(), &ival)) {
           return MConstant::New(alloc, Int32Value(ival));
         }
         break;
       default:
         break;
     }
+  }
+
+  MDefinition* input = getOperand(0);
+  if (input->isBox()) {
+    input = input->toBox()->input();
   }
 
   // Do not fold the TruncateToInt32 node when the input is uint32 (e.g. ursh
