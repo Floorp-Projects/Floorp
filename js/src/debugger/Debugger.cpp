@@ -2874,25 +2874,12 @@ bool Debugger::appendAllocationSite(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  // Try to get the constructor name from the ObjectGroup's TypeNewScript.
-  // This is only relevant for native objects.
-  RootedAtom ctorName(cx);
-  if (obj->is<NativeObject>()) {
-    AutoRealm ar(cx, obj);
-    if (!JSObject::constructorDisplayAtom(cx, obj, &ctorName)) {
-      return false;
-    }
-  }
-  if (ctorName) {
-    cx->markAtom(ctorName);
-  }
-
   auto className = obj->getClass()->name;
   auto size =
       JS::ubi::Node(obj.get()).size(cx->runtime()->debuggerMallocSizeOf);
   auto inNursery = gc::IsInsideNursery(obj);
 
-  if (!allocationsLog.emplaceBack(wrappedFrame, when, className, ctorName, size,
+  if (!allocationsLog.emplaceBack(wrappedFrame, when, className, size,
                                   inNursery)) {
     ReportOutOfMemory(cx);
     return false;

@@ -239,14 +239,6 @@ bool DebuggerMemory::CallData::drainAllocationsLog() {
       return false;
     }
 
-    RootedValue ctorName(cx, NullValue());
-    if (entry.ctorName) {
-      ctorName.setString(entry.ctorName);
-    }
-    if (!DefineDataProperty(cx, obj, cx->names().constructor, ctorName)) {
-      return false;
-    }
-
     RootedValue size(cx, NumberValue(entry.size));
     if (!DefineDataProperty(cx, obj, cx->names().size, size)) {
       return false;

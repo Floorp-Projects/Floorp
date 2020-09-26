@@ -582,12 +582,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   struct AllocationsLogEntry {
     AllocationsLogEntry(HandleObject frame, mozilla::TimeStamp when,
-                        const char* className, HandleAtom ctorName, size_t size,
-                        bool inNursery)
+                        const char* className, size_t size, bool inNursery)
         : frame(frame),
           when(when),
           className(className),
-          ctorName(ctorName),
           size(size),
           inNursery(inNursery) {
       MOZ_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>() ||
@@ -597,14 +595,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     HeapPtr<JSObject*> frame;
     mozilla::TimeStamp when;
     const char* className;
-    HeapPtr<JSAtom*> ctorName;
     size_t size;
     bool inNursery;
 
     void trace(JSTracer* trc) {
       TraceNullableEdge(trc, &frame, "Debugger::AllocationsLogEntry::frame");
-      TraceNullableEdge(trc, &ctorName,
-                        "Debugger::AllocationsLogEntry::ctorName");
     }
   };
 
