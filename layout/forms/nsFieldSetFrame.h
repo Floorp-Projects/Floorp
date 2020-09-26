@@ -21,7 +21,7 @@ class nsFieldSetFrame final : public nsContainerFrame {
   explicit nsFieldSetFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   nscoord GetIntrinsicISize(gfxContext* aRenderingContext,
-                            nsLayoutUtils::IntrinsicISizeType);
+                            mozilla::IntrinsicISizeType);
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 

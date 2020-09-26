@@ -644,7 +644,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * Helper for GetMinISize / GetPrefISize.
    */
   nscoord IntrinsicISize(gfxContext* aRenderingContext,
-                         nsLayoutUtils::IntrinsicISizeType aType);
+                         mozilla::IntrinsicISizeType aType);
 
   /**
    * Cached values to optimize GetMinISize/GetPrefISize.

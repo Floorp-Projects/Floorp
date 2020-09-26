@@ -313,7 +313,6 @@ class nsGridContainerFrame final : public nsContainerFrame {
   typedef mozilla::LogicalRect LogicalRect;
   typedef mozilla::LogicalSize LogicalSize;
   typedef mozilla::WritingMode WritingMode;
-  typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
   struct Grid;
   struct GridArea;
   class LineNameMap;
@@ -363,7 +362,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
    * Helper for GetMinISize / GetPrefISize.
    */
   nscoord IntrinsicISize(gfxContext* aRenderingContext,
-                         IntrinsicISizeType aConstraint);
+                         mozilla::IntrinsicISizeType aConstraint);
 
   bool GetBBaseline(BaselineSharingGroup aBaselineGroup,
                     nscoord* aResult) const {

@@ -75,6 +75,12 @@ enum class ComputeSizeFlag : uint8_t {
 };
 using ComputeSizeFlags = mozilla::EnumSet<ComputeSizeFlag>;
 
+/**
+ * This is used in some nsLayoutUtils functions.
+ * Declared here so that fewer files need to include nsLayoutUtils.h.
+ */
+enum class IntrinsicISizeType { MinISize, PrefISize };
+
 }  // namespace mozilla
 
 #endif  // LayoutConstants_h___

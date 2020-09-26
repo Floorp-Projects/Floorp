@@ -11,6 +11,8 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Types.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
@@ -37,11 +39,18 @@
 #include "mozilla/AutoRestore.h"
 #include "nsIFrameInlines.h"
 #include "nsPrintfCString.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
+
+using mozilla::gfx::ColorPattern;
+using mozilla::gfx::DeviceColor;
+using mozilla::gfx::Rect;
+using mozilla::gfx::sRGBColor;
+using mozilla::gfx::ToDeviceColor;
 
 nsContainerFrame::~nsContainerFrame() = default;
 
@@ -873,9 +882,9 @@ static nscoord GetCoord(const LengthPercentageOrAuto& aCoord,
   return GetCoord(aCoord.AsLengthPercentage(), aIfNotCoord);
 }
 
-void nsContainerFrame::DoInlineIntrinsicISize(
-    gfxContext* aRenderingContext, InlineIntrinsicISizeData* aData,
-    nsLayoutUtils::IntrinsicISizeType aType) {
+void nsContainerFrame::DoInlineIntrinsicISize(gfxContext* aRenderingContext,
+                                              InlineIntrinsicISizeData* aData,
+                                              IntrinsicISizeType aType) {
   if (GetPrevInFlow()) return;  // Already added.
 
   MOZ_ASSERT(

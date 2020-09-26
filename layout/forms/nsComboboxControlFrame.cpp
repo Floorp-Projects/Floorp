@@ -723,8 +723,8 @@ nscoord nsComboboxControlFrame::DropDownButtonISize() {
   return presContext->DevPixelsToAppUnits(dropdownButtonSize.width);
 }
 
-nscoord nsComboboxControlFrame::GetIntrinsicISize(
-    gfxContext* aRenderingContext, nsLayoutUtils::IntrinsicISizeType aType) {
+nscoord nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
+                                                  IntrinsicISizeType aType) {
   // get the scrollbar width, we'll use this later
   nscoord scrollbarWidth = 0;
   nsPresContext* presContext = PresContext();

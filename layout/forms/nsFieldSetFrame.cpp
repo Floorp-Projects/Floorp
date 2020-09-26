@@ -13,6 +13,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
@@ -340,8 +341,8 @@ image::ImgDrawResult nsFieldSetFrame::PaintBorder(
   return result;
 }
 
-nscoord nsFieldSetFrame::GetIntrinsicISize(
-    gfxContext* aRenderingContext, nsLayoutUtils::IntrinsicISizeType aType) {
+nscoord nsFieldSetFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
+                                           IntrinsicISizeType aType) {
   nscoord legendWidth = 0;
   nscoord contentWidth = 0;
   if (!StyleDisplay()->IsContainSize()) {

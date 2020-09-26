@@ -30,6 +30,7 @@
 struct nsStyleDisplay;
 struct nsGenConInitializer;
 
+class nsBlockFrame;
 class nsContainerFrame;
 class nsFirstLineFrame;
 class nsFirstLetterFrame;

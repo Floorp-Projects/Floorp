@@ -42,7 +42,6 @@ using namespace mozilla;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 typedef nsGridContainerFrame::TrackSize TrackSize;
 typedef mozilla::CSSAlignUtils::AlignJustifyFlags AlignJustifyFlags;
-typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
 
 using GridTemplate = StyleGridTemplateComponent;
 using TrackListValue =

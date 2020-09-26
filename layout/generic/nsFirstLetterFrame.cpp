@@ -15,6 +15,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsIContent.h"
+#include "nsLayoutUtils.h"
 #include "nsLineLayout.h"
 #include "nsGkAtoms.h"
 #include "nsFrameManager.h"
