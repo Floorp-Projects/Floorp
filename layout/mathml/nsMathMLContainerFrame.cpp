@@ -1142,7 +1142,7 @@ class nsMathMLContainerFrame::RowChildFrameIterator {
     // add inter frame spacing
     const nsStyleFont* font = mParentFrame->StyleFont();
     nscoord space =
-        GetInterFrameSpacing(font->mScriptLevel, prevFrameType, mChildFrameType,
+        GetInterFrameSpacing(font->mMathDepth, prevFrameType, mChildFrameType,
                              &mFromFrameType, &mCarrySpace);
     mX += space * GetThinSpace(font);
     return *this;
@@ -1293,7 +1293,7 @@ static nscoord AddInterFrameSpacingToSize(ReflowOutput& aDesiredSize,
     return 0;
   }
   if (parentContent->IsAnyOfMathMLElements(nsGkAtoms::math, nsGkAtoms::mtd_)) {
-    gap = GetInterFrameSpacingFor(aFrame->StyleFont()->mScriptLevel, parent,
+    gap = GetInterFrameSpacingFor(aFrame->StyleFont()->mMathDepth, parent,
                                   aFrame);
     // add our own italic correction
     nscoord leftCorrection = 0, italicCorrection = 0;
