@@ -75,8 +75,8 @@ class TabCollectionStorage(
         return collectionStorage.getTabCollectionsCount()
     }
 
-    fun getCollections(limit: Int = 20): LiveData<List<TabCollection>> {
-        return collectionStorage.getCollections(limit).asLiveData()
+    fun getCollections(): LiveData<List<TabCollection>> {
+        return collectionStorage.getCollections().asLiveData()
     }
 
     fun getCollectionsPaged(): DataSource.Factory<Int, TabCollection> {
