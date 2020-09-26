@@ -4170,6 +4170,10 @@ JS_FRIEND_API bool JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing) {
   return UnmarkGrayGCThingUnchecked(rt, thing);
 }
 
+void js::gc::UnmarkGrayGCThingRecursively(TenuredCell* cell) {
+  JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr(cell, cell->getTraceKind()));
+}
+
 bool js::UnmarkGrayShapeRecursively(Shape* shape) {
   return JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr(shape));
 }
