@@ -1209,7 +1209,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "1daf5e6c1551bcd404e62e4f1d1ed2eb4510281c"
+        "revision": "145a6f69fa9221a9f4d7b5778a59a99433693f04"
     },
     "oc": {
         "pin": false,
