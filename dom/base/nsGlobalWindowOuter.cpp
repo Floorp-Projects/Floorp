@@ -5357,6 +5357,8 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       aError.ThrowNotAllowedError("No browsing context");
       return nullptr;
     }
+
+    Unused << bc->Top()->SetIsPrinting(true);
     nsCOMPtr<nsIDocShell> cloneDocShell = bc->GetDocShell();
     MOZ_DIAGNOSTIC_ASSERT(cloneDocShell);
     cloneDocShell->GetContentViewer(getter_AddRefs(cv));
