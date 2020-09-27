@@ -304,10 +304,10 @@ fn read_uInt16Number(mut mem: &mut mem_source, mut offset: usize) -> uInt16Numbe
     return read_u16(mem, offset);
 }
 unsafe extern "C" fn write_u32(mut mem: *mut libc::c_void, mut offset: usize, mut value: u32) {
-    *((mem as *mut libc::c_uchar).offset(offset as isize) as *mut u32) = cpu_to_be32(value);
+    std::ptr::write_unaligned(mem.offset(offset as isize) as *mut u32, cpu_to_be32(value));
 }
 unsafe extern "C" fn write_u16(mut mem: *mut libc::c_void, mut offset: usize, mut value: u16) {
-    *((mem as *mut libc::c_uchar).offset(offset as isize) as *mut u16) = cpu_to_be16(value);
+    std::ptr::write_unaligned(mem.offset(offset as isize) as *mut u16, cpu_to_be16(value));
 }
 
 /* An arbitrary 4MB limit on profile size */
