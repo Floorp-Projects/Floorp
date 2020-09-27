@@ -39,7 +39,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::storage;
 use crate::util::Recycler;
 use crate::internal_types::LayoutPrimitiveInfo;
-use crate::visibility::{PrimitiveVisibility, PrimitiveVisibilityMask};
+use crate::visibility::{PrimitiveVisibility, PrimitiveVisibilityIndex};
 
 pub mod backdrop;
 pub mod borders;
@@ -1024,14 +1024,12 @@ pub struct PrimitiveInstance {
     #[cfg(debug_assertions)]
     pub prepared_frame_id: FrameId,
 
+    /// If this primitive is visible, an index into the instance
+    /// visibility scratch buffer. If not visible, INVALID.
+    pub visibility_info: PrimitiveVisibilityIndex,
+
     /// All information and state related to clip(s) for this primitive
     pub clip_set: ClipSet,
-
-    /// Information related to the current visibility state of this
-    /// primitive.
-    // TODO(gw): Currently built each frame, but can be retained.
-    // TODO(gw): Remove clipped_world_rect (use tile bounds to determine vis flags)
-    pub vis: PrimitiveVisibility,
 }
 
 impl PrimitiveInstance {
@@ -1046,7 +1044,7 @@ impl PrimitiveInstance {
             prepared_frame_id: FrameId::INVALID,
             #[cfg(debug_assertions)]
             id: PrimitiveDebugId(NEXT_PRIM_ID.fetch_add(1, Ordering::Relaxed)),
-            vis: PrimitiveVisibility::new(),
+            visibility_info: PrimitiveVisibilityIndex::INVALID,
             clip_set: ClipSet {
                 local_clip_rect,
                 clip_chain_id,
@@ -1056,19 +1054,7 @@ impl PrimitiveInstance {
 
     // Reset any pre-frame state for this primitive.
     pub fn reset(&mut self) {
-        self.clear_visibility();
-    }
-
-    pub fn is_visible(&self) -> bool {
-        !self.vis.visibility_mask.is_empty()
-    }
-
-    pub fn clear_visibility(&mut self) {
-        self.set_visibility(PrimitiveVisibilityMask::empty());
-    }
-
-    pub fn set_visibility(&mut self, mask: PrimitiveVisibilityMask) {
-        self.vis.visibility_mask = mask;
+        self.visibility_info = PrimitiveVisibilityIndex::INVALID;
     }
 
     #[cfg(debug_assertions)]
@@ -1178,6 +1164,9 @@ pub struct PrimitiveScratchBuffer {
     /// per-tile information.
     pub gradient_tiles: GradientTileStorage,
 
+    /// List of the visibility information for currently visible primitives.
+    pub prim_info: Vec<PrimitiveVisibility>,
+
     /// List of dirty regions for the cached pictures in this document, used to
     /// verify invalidation in wrench reftests. Only collected in testing.
     pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
@@ -1197,6 +1186,7 @@ impl Default for PrimitiveScratchBuffer {
             gradient_tiles: GradientTileStorage::new(0),
             recorded_dirty_regions: Vec::new(),
             debug_items: Vec::new(),
+            prim_info: Vec::new(),
         }
     }
 }
@@ -1204,6 +1194,7 @@ impl Default for PrimitiveScratchBuffer {
 impl PrimitiveScratchBuffer {
     pub fn recycle(&mut self, recycler: &mut Recycler) {
         recycler.recycle_vec(&mut self.clip_mask_instances);
+        recycler.recycle_vec(&mut self.prim_info);
         self.glyph_keys.recycle(recycler);
         self.border_cache_handles.recycle(recycler);
         self.segments.recycle(recycler);
@@ -1226,6 +1217,8 @@ impl PrimitiveScratchBuffer {
         //           every frame. This maintains the existing behavior, but we
         //           should fix this in the future to retain handles.
         self.gradient_tiles.clear();
+
+        self.prim_info.clear();
 
         self.debug_items.clear();
 
