@@ -403,11 +403,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
       const Element* aEditingHost);
 
   /**
-   * GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries() returns
+   * GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries() returns
    * extended range if range boundaries of aRange are in invisible white-spaces.
    */
-  static EditorDOMRange
-  GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
+  static EditorDOMRange GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
       const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange);
 
   /**
