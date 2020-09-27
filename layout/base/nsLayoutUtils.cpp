@@ -2093,19 +2093,17 @@ nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
   for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
     if (scrollableFrame) {
-      ScrollStyles ss = scrollableFrame->GetScrollStyles();
-      uint32_t directions = scrollableFrame->GetAvailableScrollingDirections();
+      uint32_t directions =
+          scrollableFrame->GetAvailableScrollingDirectionsForUserInputEvents();
       if (aDirection == ScrollableDirection::Vertical ||
           aDirection == ScrollableDirection::Either) {
-        if (ss.mVertical != StyleOverflow::Hidden &&
-            (directions & nsIScrollableFrame::VERTICAL)) {
+        if (directions & nsIScrollableFrame::VERTICAL) {
           return scrollableFrame;
         }
       }
       if (aDirection == ScrollableDirection::Horizontal ||
           aDirection == ScrollableDirection::Either) {
-        if (ss.mHorizontal != StyleOverflow::Hidden &&
-            (directions & nsIScrollableFrame::HORIZONTAL)) {
+        if (directions & nsIScrollableFrame::HORIZONTAL) {
           return scrollableFrame;
         }
       }
