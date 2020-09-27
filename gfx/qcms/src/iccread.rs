@@ -707,9 +707,9 @@ fn read_tag_curveType(
     return None;
 }
 // arbitrary
-unsafe extern "C" fn read_nested_curveType(
+fn read_nested_curveType(
     mut src: &mut mem_source,
-    mut curveArray: *mut [Option<Box<curveType>>; 10],
+    mut curveArray: &mut [Option<Box<curveType>>; 10],
     mut num_channels: u8,
     mut curve_offset: u32,
 ) {
