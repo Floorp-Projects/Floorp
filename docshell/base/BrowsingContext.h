@@ -121,6 +121,16 @@ class WindowProxyHolder;
   FIELD(HistoryID, nsID)                                                     \
   FIELD(InRDMPane, bool)                                                     \
   FIELD(Loading, bool)                                                       \
+  /* A field only set on top browsing contexts, which indicates that either: \
+   *                                                                         \
+   *  * This is a browsing context created explicitly for printing or print  \
+   *    preview (thus hosting static documents).                             \
+   *                                                                         \
+   *  * This is a browsing context where something in this tree is calling   \
+   *    window.print() (and thus showing a modal dialog).                    \
+   *                                                                         \
+   * We use it exclusively to block navigation for both of these cases. */   \
+  FIELD(IsPrinting, bool)                                                    \
   FIELD(AncestorLoading, bool)                                               \
   FIELD(AllowPlugins, bool)                                                  \
   FIELD(AllowContentRetargeting, bool)                                       \

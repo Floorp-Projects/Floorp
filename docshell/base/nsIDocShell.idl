@@ -477,12 +477,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute boolean isOffScreenBrowser;
 
   /**
-   * Allows nsDocumentViewer to tell the top-level same-type docshell that
-   * one of the documents under it is printing.
-   */
-  [noscript, notxpcom] void setIsPrinting(in boolean aIsPrinting);
-
-  /**
    * Propagated to the print preview document viewer.  Must only be called on
    * a document viewer that has been initialized for print preview.
    */
