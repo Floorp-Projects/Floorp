@@ -3581,6 +3581,29 @@ EditorBase::CreateTransactionForCollapsedRange(
   return deleteNodeTransaction.forget();
 }
 
+bool EditorBase::FlushPendingNotificationsIfToHandleDeletionWithFrameSelection(
+    nsIEditor::EDirection aDirectionAndAmount) const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(Destroyed())) {
+    return false;
+  }
+  if (!EditorUtils::IsFrameSelectionRequiredToExtendSelection(
+          aDirectionAndAmount, *SelectionRefPtr())) {
+    return true;
+  }
+  // Although AutoRangeArray::ExtendAnchorFocusRangeFor() will use
+  // nsFrameSelection, if it still has dirty frame, nsFrameSelection doesn't
+  // extend selection since we block script.
+  if (RefPtr<PresShell> presShell = GetPresShell()) {
+    presShell->FlushPendingNotifications(FlushType::Layout);
+    if (NS_WARN_IF(Destroyed())) {
+      return false;
+    }
+  }
+  return true;
+}
+
 nsresult EditorBase::DeleteSelectionAsAction(
     nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers, nsIPrincipal* aPrincipal) {
@@ -3682,47 +3705,15 @@ nsresult EditorBase::DeleteSelectionAsAction(
     }
   }
 
-  if (EditorUtils::IsFrameSelectionRequiredToExtendSelection(
-          aDirectionAndAmount, *SelectionRefPtr())) {
-    // Although AutoRangeArray::ExtendAnchorFocusRangeFor() will use
-    // nsFrameSelection, if it still has dirty frame, nsFrameSelection doesn't
-    // extend selection since we block script.
-    if (RefPtr<PresShell> presShell = GetPresShell()) {
-      presShell->FlushPendingNotifications(FlushType::Layout);
-      if (NS_WARN_IF(Destroyed())) {
-        editActionData.Abort();
-        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-    }
+  if (!FlushPendingNotificationsIfToHandleDeletionWithFrameSelection(
+          aDirectionAndAmount)) {
+    NS_WARNING("Flusing pending notifications caused destroying the editor");
+    editActionData.Abort();
+    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
   }
 
-  // TODO: This should be done when selection is not collapsed and the edit
-  //       action requires to delete the range first.
-  if (IsHTMLEditor() && editActionData.NeedsToDispatchBeforeInputEvent()) {
-    AutoRangeArray rangesToDelete(*SelectionRefPtr());
-    if (!rangesToDelete.Ranges().IsEmpty()) {
-      nsresult rv =
-          MOZ_KnownLive(AsHTMLEditor())
-              ->ComputeTargetRanges(aDirectionAndAmount, rangesToDelete);
-      if (rv == NS_ERROR_EDITOR_DESTROYED) {
-        NS_WARNING("HTMLEditor::ComputeTargetRanges() destroyed the editor");
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "HTMLEditor::ComputeTargetRanges() failed, but ignored");
-      for (auto& range : rangesToDelete.Ranges()) {
-        RefPtr<StaticRange> staticRange =
-            StaticRange::Create(range, IgnoreErrors());
-        if (NS_WARN_IF(!staticRange)) {
-          continue;
-        }
-        editActionData.AppendTargetRange(*staticRange);
-      }
-    }
-  }
-
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
+  nsresult rv =
+      editActionData.MaybeDispatchBeforeInputEvent(aDirectionAndAmount);
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
                          "MaybeDispatchBeforeInputEvent() failed");
@@ -3742,6 +3733,11 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
     nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  // If handling edit action is for table editing, this may be called with
+  // selecting an any table element by the caller, but it's not usual work of
+  // this so that `MayEditActionDeleteSelection()` returns false.
+  MOZ_ASSERT(MayEditActionDeleteSelection(GetEditAction()) ||
+             IsEditActionTableEditing(GetEditAction()));
   MOZ_ASSERT(mPlaceholderBatch);
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
   NS_ASSERTION(IsHTMLEditor() || aStripWrappers == nsIEditor::eNoStrip,
@@ -5307,11 +5303,14 @@ bool EditorBase::AutoEditActionDataSetter::IsBeforeInputEventEnabled() const {
   return true;
 }
 
-nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent() {
+nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
+    nsIEditor::EDirection aDeleteDirectionAndAmount /* nsIEditor::eNone */) {
   MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
              "We've already handled beforeinput event");
   MOZ_ASSERT(CanHandle());
   MOZ_ASSERT(!IsBeforeInputEventEnabled() || NeedsToDispatchBeforeInputEvent());
+  MOZ_ASSERT_IF(!MayEditActionDeleteAroundCollapsedSelection(mEditAction),
+                aDeleteDirectionAndAmount == nsIEditor::eNone);
 
   mHasTriedToDispatchBeforeInputEvent = true;
 
@@ -5333,28 +5332,63 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent() {
   }
   OwningNonNull<TextEditor> textEditor = *mEditorBase.AsTextEditor();
   EditorInputType inputType = ToInputType(mEditAction);
-  // If mTargetRanges has not been initialized yet, it means that we may need
-  // to set it to selection ranges.
-  if (textEditor->AsHTMLEditor() && mTargetRanges.IsEmpty() &&
-      MayHaveTargetRangesOnHTMLEditor(inputType)) {
-    if (uint32_t rangeCount = textEditor->SelectionRefPtr()->RangeCount()) {
-      mTargetRanges.SetCapacity(rangeCount);
-      for (uint32_t i = 0; i < rangeCount; i++) {
-        const nsRange* range = textEditor->SelectionRefPtr()->GetRangeAt(i);
-        if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
-          continue;
+  if (textEditor->IsHTMLEditor() && mTargetRanges.IsEmpty()) {
+    // If the edit action will delete selected ranges, compute the range
+    // strictly.
+    if (MayEditActionDeleteAroundCollapsedSelection(mEditAction) ||
+        (!textEditor->SelectionRefPtr()->IsCollapsed() &&
+         MayEditActionDeleteSelection(mEditAction))) {
+      if (!textEditor
+               ->FlushPendingNotificationsIfToHandleDeletionWithFrameSelection(
+                   aDeleteDirectionAndAmount)) {
+        NS_WARNING(
+            "Flusing pending notifications caused destroying the editor");
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+
+      AutoRangeArray rangesToDelete(*textEditor->SelectionRefPtr());
+      if (!rangesToDelete.Ranges().IsEmpty()) {
+        nsresult rv = MOZ_KnownLive(textEditor->AsHTMLEditor())
+                          ->ComputeTargetRanges(aDeleteDirectionAndAmount,
+                                                rangesToDelete);
+        if (rv == NS_ERROR_EDITOR_DESTROYED) {
+          NS_WARNING("HTMLEditor::ComputeTargetRanges() destroyed the editor");
+          return NS_ERROR_EDITOR_DESTROYED;
         }
-        // Now, we need to fix the offset of target range because it may
-        // be referred after modifying the DOM tree and range boundaries
-        // of `range` may have not computed offset yet.
-        RefPtr<StaticRange> targetRange = StaticRange::Create(
-            range->GetStartContainer(), range->StartOffset(),
-            range->GetEndContainer(), range->EndOffset(), IgnoreErrors());
-        if (NS_WARN_IF(!targetRange) ||
-            NS_WARN_IF(!targetRange->IsPositioned())) {
-          continue;
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "HTMLEditor::ComputeTargetRanges() failed, but ignored");
+        for (auto& range : rangesToDelete.Ranges()) {
+          RefPtr<StaticRange> staticRange =
+              StaticRange::Create(range, IgnoreErrors());
+          if (NS_WARN_IF(!staticRange)) {
+            continue;
+          }
+          AppendTargetRange(*staticRange);
         }
-        mTargetRanges.AppendElement(std::move(targetRange));
+      }
+    }
+    // Otherwise, just set target ranges to selection ranges.
+    else if (MayHaveTargetRangesOnHTMLEditor(inputType)) {
+      if (uint32_t rangeCount = textEditor->SelectionRefPtr()->RangeCount()) {
+        mTargetRanges.SetCapacity(rangeCount);
+        for (uint32_t i = 0; i < rangeCount; i++) {
+          const nsRange* range = textEditor->SelectionRefPtr()->GetRangeAt(i);
+          if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
+            continue;
+          }
+          // Now, we need to fix the offset of target range because it may
+          // be referred after modifying the DOM tree and range boundaries
+          // of `range` may have not computed offset yet.
+          RefPtr<StaticRange> targetRange = StaticRange::Create(
+              range->GetStartContainer(), range->StartOffset(),
+              range->GetEndContainer(), range->EndOffset(), IgnoreErrors());
+          if (NS_WARN_IF(!targetRange) ||
+              NS_WARN_IF(!targetRange->IsPositioned())) {
+            continue;
+          }
+          mTargetRanges.AppendElement(std::move(targetRange));
+        }
       }
     }
   }
