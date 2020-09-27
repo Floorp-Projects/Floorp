@@ -418,8 +418,7 @@ fn adapt_matrix_to_D50(mut r: matrix, mut source_white_pt: qcms_CIE_xyY) -> matr
     }
     return matrix_multiply(Bradford, r);
 }
-#[no_mangle]
-pub unsafe extern "C" fn set_rgb_colorants(
+pub fn set_rgb_colorants(
     mut profile: &mut qcms_profile,
     mut white_point: qcms_CIE_xyY,
     mut primaries: qcms_CIE_xyYTRIPLE,
