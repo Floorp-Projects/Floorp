@@ -469,7 +469,7 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInfo& compilationInfo,
     }
 
     // Off-thread compilation with parseGlobal will freeze the module object
-    // in GlobalHelperThreadState::finishModuleParseTask instead
+    // in GlobalHelperThreadState::finishSingleParseTask instead.
     if (!cx->isHelperThreadContext()) {
       if (!ModuleObject::Freeze(cx, gcOutput.module)) {
         return false;
