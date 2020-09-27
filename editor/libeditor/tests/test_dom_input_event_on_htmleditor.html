@@ -84,6 +84,7 @@ async function runTests() {
     let beforeInputEvent = null;
     let inputEvent = null;
     let selectionRanges = [];
+    let expectedTargetRanges = [];
     function reset() {
       beforeInputEvent = null;
       inputEvent = null;
@@ -500,6 +501,12 @@ async function runTests() {
     selection.selectAllChildren(editTarget);
     reset();
     cancelBeforeInput = false;
+    expectedTargetRanges = [{
+      startContainer: editTarget.firstChild,
+      startOffset: 0,
+      endContainer: editTarget.firstChild,
+      endOffset: editTarget.firstChild.length,
+    }];
     synthesizeKey("KEY_Backspace", {}, aWindow);
     is(editTarget.innerHTML, "<br>", `${aDescription}"a" should've been removed by ${action}`);
     ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
@@ -508,7 +515,7 @@ async function runTests() {
        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);
+    checkTargetRanges(beforeInputEvent, expectedTargetRanges);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentBackward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -521,6 +528,12 @@ async function runTests() {
     reset();
     cancelBeforeInput = true;
     action = 'removing "a" with "Delete" (with selection)';
+    expectedTargetRanges = [{
+      startContainer: editTarget.firstChild,
+      startOffset: 0,
+      endContainer: editTarget.firstChild,
+      endOffset: editTarget.firstChild.length,
+    }];
     synthesizeKey("KEY_Delete", {}, aWindow);
     is(editTarget.innerHTML, "a", `${aDescription}"a" should've been removed by ${action} since "beforeinput" was canceled`);
     ok(beforeInputEvent, `${aDescription}"beforeinput" event should be fired at ${action} even if it won't remove any content`);
@@ -528,7 +541,7 @@ async function runTests() {
     is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);
+    checkTargetRanges(beforeInputEvent, expectedTargetRanges);
     ok(!inputEvent, `${aDescription}${action} should not fire "input" event since "beforeinput" was canceled`);
 
     editTarget.innerHTML = "a";
@@ -537,6 +550,12 @@ async function runTests() {
     reset();
     cancelBeforeInput = false;
     action = 'removing "a" with "Delete" (with selection)';
+    expectedTargetRanges = [{
+      startContainer: editTarget.firstChild,
+      startOffset: 0,
+      endContainer: editTarget.firstChild,
+      endOffset: editTarget.firstChild.length,
+    }];
     synthesizeKey("KEY_Delete", {}, aWindow);
     is(editTarget.innerHTML, "<br>", `${aDescription}" " should've been removed by ${action}`);
     ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
@@ -544,7 +563,7 @@ async function runTests() {
     is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
     is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
     is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    checkTargetRanges(beforeInputEvent, selectionRanges);
+    checkTargetRanges(beforeInputEvent, expectedTargetRanges);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentForward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
