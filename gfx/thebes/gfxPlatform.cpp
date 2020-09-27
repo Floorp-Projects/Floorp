@@ -16,6 +16,7 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/layers/PaintThread.h"
+#include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/gfxConfigManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -2549,6 +2550,28 @@ void gfxPlatform::InitAcceleration() {
       gfxVars::SetUseDoubleBufferingWithCompositor(true);
     }
 #endif
+
+    if (NS_SUCCEEDED(
+            gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL2,
+                                      discardFailureId, &status))) {
+      gfxVars::SetAllowWebgl2(status == nsIGfxInfo::FEATURE_STATUS_OK);
+    }
+    if (NS_SUCCEEDED(
+            gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL,
+                                      discardFailureId, &status))) {
+      gfxVars::SetWebglAllowWindowsNativeGl(status == nsIGfxInfo::FEATURE_STATUS_OK);
+    }
+
+    if (kIsMacOS) {
+      // Avoid crash for Intel HD Graphics 3000 on OSX. (Bug 1413269)
+      nsString vendorID, deviceID;
+      gfxInfo->GetAdapterVendorID(vendorID);
+      gfxInfo->GetAdapterDeviceID(deviceID);
+      if (vendorID.EqualsLiteral("0x8086") &&
+          (deviceID.EqualsLiteral("0x0116") || deviceID.EqualsLiteral("0x0126"))) {
+        gfxVars::SetWebglAllowCoreProfile(false);
+      }
+    }
   }
 
   if (Preferences::GetBool("media.hardware-video-decoding.enabled", false) &&
