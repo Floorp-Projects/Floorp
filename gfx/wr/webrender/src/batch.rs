@@ -30,7 +30,7 @@ use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageProperties, ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
-use crate::visibility::{PrimitiveVisibilityIndex, PrimitiveVisibilityMask, PrimitiveVisibility, PrimitiveVisibilityFlags};
+use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibility, PrimitiveVisibilityFlags};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use crate::util::{project_rect, TransformedRectKind};
@@ -769,7 +769,7 @@ impl BatchBuilder {
                 continue;
             }
             for prim_instance in &pic.prim_list.prim_instances[cluster.prim_range()] {
-                if prim_instance.visibility_info == PrimitiveVisibilityIndex::INVALID {
+                if !prim_instance.is_visible() {
                     continue;
                 }
 
@@ -881,9 +881,8 @@ impl BatchBuilder {
         #[cfg(debug_assertions)] //TODO: why is this needed?
         debug_assert_eq!(prim_instance.prepared_frame_id, render_tasks.frame_id());
 
-        assert_ne!(prim_instance.visibility_info, PrimitiveVisibilityIndex::INVALID,
+        assert!(prim_instance.is_visible(),
             "Invisible primitive {:?} shouldn't be added to the batch", prim_instance);
-
         let is_chased = prim_instance.is_chased();
 
         let transform_id = transforms
@@ -897,7 +896,7 @@ impl BatchBuilder {
         //           wasteful. We should probably cache this in
         //           the scroll node...
         let transform_kind = transform_id.transform_kind();
-        let prim_info = &ctx.scratch.prim_info[prim_instance.visibility_info.0 as usize];
+        let prim_info = &prim_instance.vis;
         let bounding_rect = &prim_info.clip_chain.pic_clip_rect;
 
         // If this primitive is a backdrop, that means that it is known to cover
@@ -1387,7 +1386,7 @@ impl BatchBuilder {
                     Picture3DContext::In { root_data: Some(ref list), .. } => {
                         for child in list {
                             let child_prim_instance = &picture.prim_list.prim_instances[child.anchor.instance_index];
-                            let child_prim_info = &ctx.scratch.prim_info[child_prim_instance.visibility_info.0 as usize];
+                            let child_prim_info = &child_prim_instance.vis;
 
                             let child_pic_index = match child_prim_instance.kind {
                                 PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
