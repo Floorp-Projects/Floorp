@@ -593,6 +593,190 @@ inline EditorInputType ToInputType(EditAction aEditAction) {
   }
 }
 
+inline bool MayEditActionDeleteAroundCollapsedSelection(
+    const EditAction aEditAction) {
+  switch (aEditAction) {
+    case EditAction::eDeleteSelection:
+    case EditAction::eDeleteBackward:
+    case EditAction::eDeleteForward:
+    case EditAction::eDeleteWordBackward:
+    case EditAction::eDeleteWordForward:
+    case EditAction::eDeleteToBeginningOfSoftLine:
+    case EditAction::eDeleteToEndOfSoftLine:
+      return true;
+    default:
+      return false;
+  }
+}
+
+inline bool IsEditActionTableEditing(const EditAction aEditAction) {
+  switch (aEditAction) {
+    case EditAction::eInsertTableRowElement:
+    case EditAction::eRemoveTableRowElement:
+    case EditAction::eInsertTableColumn:
+    case EditAction::eRemoveTableColumn:
+    case EditAction::eRemoveTableElement:
+    case EditAction::eRemoveTableCellElement:
+    case EditAction::eDeleteTableCellContents:
+    case EditAction::eInsertTableCellElement:
+    case EditAction::eJoinTableCellElements:
+    case EditAction::eSplitTableCellElement:
+    case EditAction::eSetTableCellElementType:
+      return true;
+    default:
+      return false;
+  }
+}
+
+inline bool MayEditActionDeleteSelection(const EditAction aEditAction) {
+  switch (aEditAction) {
+    case EditAction::eNone:
+    case EditAction::eNotEditing:
+      return false;
+
+    // EditActions modifying around selection.
+    case EditAction::eInsertText:
+    case EditAction::eInsertParagraphSeparator:
+    case EditAction::eInsertLineBreak:
+    case EditAction::eDeleteSelection:
+    case EditAction::eDeleteBackward:
+    case EditAction::eDeleteForward:
+    case EditAction::eDeleteWordBackward:
+    case EditAction::eDeleteWordForward:
+    case EditAction::eDeleteToBeginningOfSoftLine:
+    case EditAction::eDeleteToEndOfSoftLine:
+    case EditAction::eDeleteByDrag:
+      return true;
+
+    case EditAction::eStartComposition:
+      return false;
+
+    case EditAction::eUpdateComposition:
+    case EditAction::eCommitComposition:
+    case EditAction::eCancelComposition:
+    case EditAction::eDeleteByComposition:
+      return true;
+
+    case EditAction::eUndo:
+    case EditAction::eRedo:
+    case EditAction::eSetTextDirection:
+      return false;
+
+    case EditAction::eCut:
+      return true;
+
+    case EditAction::eCopy:
+      return false;
+
+    case EditAction::ePaste:
+    case EditAction::ePasteAsQuotation:
+      return true;
+
+    case EditAction::eDrop:
+      return false;  // Not deleting selection at drop.
+
+    // EditActions changing format around selection.
+    case EditAction::eIndent:
+    case EditAction::eOutdent:
+      return false;
+
+    // EditActions inserting or deleting something at specified position.
+    case EditAction::eInsertTableRowElement:
+    case EditAction::eRemoveTableRowElement:
+    case EditAction::eInsertTableColumn:
+    case EditAction::eRemoveTableColumn:
+    case EditAction::eResizingElement:
+    case EditAction::eResizeElement:
+    case EditAction::eMovingElement:
+    case EditAction::eMoveElement:
+    case EditAction::eUnknown:
+    case EditAction::eSetAttribute:
+    case EditAction::eRemoveAttribute:
+    case EditAction::eRemoveNode:
+    case EditAction::eInsertBlockElement:
+      return false;
+
+    // EditActions inserting someting around selection or replacing selection
+    // with something.
+    case EditAction::eReplaceText:
+    case EditAction::eInsertNode:
+    case EditAction::eInsertHorizontalRuleElement:
+      return true;
+
+    // EditActions chaning format around selection or inserting or deleting
+    // something at specific position.
+    case EditAction::eInsertLinkElement:
+    case EditAction::eInsertUnorderedListElement:
+    case EditAction::eInsertOrderedListElement:
+    case EditAction::eRemoveUnorderedListElement:
+    case EditAction::eRemoveOrderedListElement:
+    case EditAction::eRemoveListElement:
+    case EditAction::eInsertBlockquoteElement:
+    case EditAction::eNormalizeTable:
+    case EditAction::eRemoveTableElement:
+    case EditAction::eRemoveTableCellElement:
+    case EditAction::eDeleteTableCellContents:
+    case EditAction::eInsertTableCellElement:
+    case EditAction::eJoinTableCellElements:
+    case EditAction::eSplitTableCellElement:
+    case EditAction::eSetTableCellElementType:
+    case EditAction::eSetInlineStyleProperty:
+    case EditAction::eRemoveInlineStyleProperty:
+    case EditAction::eSetFontWeightProperty:
+    case EditAction::eRemoveFontWeightProperty:
+    case EditAction::eSetTextStyleProperty:
+    case EditAction::eRemoveTextStyleProperty:
+    case EditAction::eSetTextDecorationPropertyUnderline:
+    case EditAction::eRemoveTextDecorationPropertyUnderline:
+    case EditAction::eSetTextDecorationPropertyLineThrough:
+    case EditAction::eRemoveTextDecorationPropertyLineThrough:
+    case EditAction::eSetVerticalAlignPropertySuper:
+    case EditAction::eRemoveVerticalAlignPropertySuper:
+    case EditAction::eSetVerticalAlignPropertySub:
+    case EditAction::eRemoveVerticalAlignPropertySub:
+    case EditAction::eSetFontFamilyProperty:
+    case EditAction::eRemoveFontFamilyProperty:
+    case EditAction::eSetColorProperty:
+    case EditAction::eRemoveColorProperty:
+    case EditAction::eSetBackgroundColorPropertyInline:
+    case EditAction::eRemoveBackgroundColorPropertyInline:
+    case EditAction::eRemoveAllInlineStyleProperties:
+    case EditAction::eIncrementFontSize:
+    case EditAction::eDecrementFontSize:
+    case EditAction::eSetAlignment:
+    case EditAction::eAlignLeft:
+    case EditAction::eAlignRight:
+    case EditAction::eAlignCenter:
+    case EditAction::eJustify:
+    case EditAction::eSetBackgroundColor:
+    case EditAction::eSetPositionToAbsoluteOrStatic:
+    case EditAction::eIncreaseOrDecreaseZIndex:
+      return false;
+
+    // EditActions controlling editor feature or state.
+    case EditAction::eEnableOrDisableCSS:
+    case EditAction::eEnableOrDisableAbsolutePositionEditor:
+    case EditAction::eEnableOrDisableResizer:
+    case EditAction::eEnableOrDisableInlineTableEditingUI:
+    case EditAction::eSetCharacterSet:
+    case EditAction::eSetWrapWidth:
+    case EditAction::eRewrap:
+      return false;
+
+    case EditAction::eSetText:
+    case EditAction::eSetHTML:
+      return true;
+
+    case EditAction::eInsertHTML:
+      return true;
+
+    case EditAction::eHidePassword:
+    case EditAction::eCreatePaddingBRElementForEmptyEditor:
+      return false;
+  }
+  return false;
+}
+
 }  // namespace mozilla
 
 inline bool operator!(const mozilla::EditSubAction& aEditSubAction) {
