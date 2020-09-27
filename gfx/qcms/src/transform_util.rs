@@ -24,7 +24,7 @@
 use ::libc;
 use libc::{free, malloc};
 
-use crate::{iccread::PARAMETRIC_CURVE_TYPE, matrix::matrix};
+use crate::matrix::matrix;
 use crate::{
     iccread::{curveType, qcms_profile},
     s15Fixed16Number_to_float,
@@ -73,7 +73,7 @@ pub fn clamp_float(mut a: f32) -> f32 {
 #[no_mangle]
 pub unsafe extern "C" fn lut_interp_linear(
     mut input_value: f64,
-    mut table: *mut u16,
+    mut table: *const u16,
     mut length: i32,
 ) -> f32 {
     input_value = input_value * (length - 1) as f64;
@@ -91,7 +91,7 @@ pub unsafe extern "C" fn lut_interp_linear(
 #[no_mangle]
 pub unsafe extern "C" fn lut_interp_linear16(
     mut input_value: u16,
-    mut table: *mut u16,
+    mut table: *const u16,
     mut length: i32,
 ) -> u16 {
     /* Start scaling input_value to the length of the array: 65535*(length-1).
@@ -162,22 +162,18 @@ pub unsafe extern "C" fn compute_curve_gamma_table_type1(
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn compute_curve_gamma_table_type2(
-    mut gamma_table: *mut f32,
-    mut table: *mut u16,
-    mut length: i32,
-) {
+pub unsafe fn compute_curve_gamma_table_type2(mut gamma_table: *mut f32, mut table: &[u16]) {
     let mut i: libc::c_uint = 0;
     while i < 256 {
-        *gamma_table.offset(i as isize) = lut_interp_linear(i as f64 / 255.0f64, table, length);
+        *gamma_table.offset(i as isize) =
+            lut_interp_linear(i as f64 / 255.0f64, table.as_ptr(), table.len() as i32);
         i = i + 1
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn compute_curve_gamma_table_type_parametric(
+pub unsafe fn compute_curve_gamma_table_type_parametric(
     mut gamma_table: *mut f32,
-    mut parameter: *mut f32,
-    mut count: i32,
+    mut params: &[f32],
 ) {
     let mut interval: f32;
     let mut a: f32;
@@ -185,42 +181,43 @@ pub unsafe extern "C" fn compute_curve_gamma_table_type_parametric(
     let mut c: f32;
     let mut e: f32;
     let mut f: f32;
-    let mut y: f32 = *parameter.offset(0isize);
-    if count == 0 {
+    let mut y: f32 = params[0];
+    // XXX: this could probably be cleaner with slice patterns
+    if params.len() == 1 {
         a = 1.;
         b = 0.;
         c = 0.;
         e = 0.;
         f = 0.;
         interval = -1.
-    } else if count == 1 {
-        a = *parameter.offset(1isize);
-        b = *parameter.offset(2isize);
+    } else if params.len() == 3 {
+        a = params[1];
+        b = params[2];
         c = 0.;
         e = 0.;
         f = 0.;
-        interval = -1. * *parameter.offset(2isize) / *parameter.offset(1isize)
-    } else if count == 2 {
-        a = *parameter.offset(1isize);
-        b = *parameter.offset(2isize);
+        interval = -1. * params[2] / params[1]
+    } else if params.len() == 4 {
+        a = params[1];
+        b = params[2];
         c = 0.;
-        e = *parameter.offset(3isize);
-        f = *parameter.offset(3isize);
-        interval = -1. * *parameter.offset(2isize) / *parameter.offset(1isize)
-    } else if count == 3 {
-        a = *parameter.offset(1isize);
-        b = *parameter.offset(2isize);
-        c = *parameter.offset(3isize);
+        e = params[3];
+        f = params[3];
+        interval = -1. * params[2] / params[1]
+    } else if params.len() == 5 {
+        a = params[1];
+        b = params[2];
+        c = params[3];
         e = -c;
         f = 0.;
-        interval = *parameter.offset(4isize)
-    } else if count == 4 {
-        a = *parameter.offset(1isize);
-        b = *parameter.offset(2isize);
-        c = *parameter.offset(3isize);
-        e = *parameter.offset(5isize) - c;
-        f = *parameter.offset(6isize);
-        interval = *parameter.offset(4isize)
+        interval = params[4]
+    } else if params.len() == 7 {
+        a = params[1];
+        b = params[2];
+        c = params[3];
+        e = params[5] - c;
+        f = params[6];
+        interval = params[4]
     } else {
         debug_assert!(false, "invalid parametric function type.");
         a = 1.;
@@ -256,28 +253,26 @@ pub unsafe extern "C" fn compute_curve_gamma_table_type0(mut gamma_table: *mut f
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn build_input_gamma_table(mut TRC: *mut curveType) -> *mut f32 {
-    if TRC.is_null() {
-        return 0 as *mut f32;
-    }
+pub unsafe extern "C" fn build_input_gamma_table(mut TRC: Option<&curveType>) -> *mut f32 {
+    let TRC = match TRC {
+        Some(TRC) => TRC,
+        None => return 0 as *mut f32,
+    };
     let mut gamma_table: *mut f32 = malloc(::std::mem::size_of::<f32>() * 256) as *mut f32;
     if !gamma_table.is_null() {
-        if (*TRC).type_0 == PARAMETRIC_CURVE_TYPE {
-            compute_curve_gamma_table_type_parametric(
-                gamma_table,
-                (*TRC).parameter.as_mut_ptr(),
-                (*TRC).count as i32,
-            );
-        } else if (*TRC).count == 0 {
-            compute_curve_gamma_table_type0(gamma_table);
-        } else if (*TRC).count == 1 {
-            compute_curve_gamma_table_type1(gamma_table, *(*TRC).data.as_mut_ptr().offset(0isize));
-        } else {
-            compute_curve_gamma_table_type2(
-                gamma_table,
-                (*TRC).data.as_mut_ptr(),
-                (*TRC).count as i32,
-            );
+        match TRC {
+            curveType::Parametric(params) => {
+                compute_curve_gamma_table_type_parametric(gamma_table, params)
+            }
+            curveType::Curve(data) => {
+                if data.len() == 0 {
+                    compute_curve_gamma_table_type0(gamma_table);
+                } else if data.len() == 1 {
+                    compute_curve_gamma_table_type1(gamma_table, data[0]);
+                } else {
+                    compute_curve_gamma_table_type2(gamma_table, data);
+                }
+            }
         }
     }
     return gamma_table;
@@ -307,7 +302,7 @@ pub unsafe extern "C" fn build_colorant_matrix(mut p: *mut qcms_profile) -> matr
 #[no_mangle]
 pub unsafe extern "C" fn lut_inverse_interp16(
     mut Value: u16,
-    mut LutTable: *mut u16,
+    mut LutTable: *const u16,
     mut length: i32,
 ) -> uint16_fract_t {
     let mut l: i32 = 1; // 'int' Give spacing for negative values
@@ -413,7 +408,7 @@ which has an maximum error of about 9855 (pixel difference of ~38.346)
 
 For now, we punt the decision of output size to the caller. */
 unsafe extern "C" fn invert_lut(
-    mut table: *mut u16,
+    mut table: *const u16,
     mut length: i32,
     mut out_length: i32,
 ) -> *mut u16 {
@@ -464,62 +459,60 @@ pub unsafe extern "C" fn compute_precache_linear(mut output: *mut u8) {
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn compute_precache(mut trc: *mut curveType, mut output: *mut u8) -> bool {
-    if (*trc).type_0 == PARAMETRIC_CURVE_TYPE {
-        let mut gamma_table: [f32; 256] = [0.; 256];
-        let mut gamma_table_uint: [u16; 256] = [0; 256];
+pub unsafe extern "C" fn compute_precache(mut trc: &curveType, mut output: *mut u8) -> bool {
+    match trc {
+        curveType::Parametric(params) => {
+            let mut gamma_table: [f32; 256] = [0.; 256];
+            let mut gamma_table_uint: [u16; 256] = [0; 256];
 
-        let mut inverted_size: i32 = 256;
-        compute_curve_gamma_table_type_parametric(
-            gamma_table.as_mut_ptr(),
-            (*trc).parameter.as_mut_ptr(),
-            (*trc).count as i32,
-        );
-        let mut i: u16 = 0u16;
-        while (i as i32) < 256 {
-            gamma_table_uint[i as usize] = (gamma_table[i as usize] * 65535f32) as u16;
-            i = i + 1
+            let mut inverted_size: i32 = 256;
+            compute_curve_gamma_table_type_parametric(gamma_table.as_mut_ptr(), params);
+            let mut i: u16 = 0u16;
+            while (i as i32) < 256 {
+                gamma_table_uint[i as usize] = (gamma_table[i as usize] * 65535f32) as u16;
+                i = i + 1
+            }
+            //XXX: the choice of a minimum of 256 here is not backed by any theory,
+            //     measurement or data, howeve r it is what lcms uses.
+            //     the maximum number we would need is 65535 because that's the
+            //     accuracy used for computing the pre cache table
+            if inverted_size < 256 {
+                inverted_size = 256
+            }
+            let mut inverted: *mut u16 =
+                invert_lut(gamma_table_uint.as_mut_ptr(), 256, inverted_size);
+            if inverted.is_null() {
+                return false;
+            }
+            compute_precache_lut(output, inverted, inverted_size);
+            free(inverted as *mut libc::c_void);
         }
-        //XXX: the choice of a minimum of 256 here is not backed by any theory,
-        //     measurement or data, howeve r it is what lcms uses.
-        //     the maximum number we would need is 65535 because that's the
-        //     accuracy used for computing the pre cache table
-        if inverted_size < 256 {
-            inverted_size = 256
+        curveType::Curve(data) => {
+            if data.len() == 0 {
+                compute_precache_linear(output);
+            } else if data.len() == 1 {
+                compute_precache_pow(
+                    output,
+                    (1.0f64 / u8Fixed8Number_to_float(data[0]) as f64) as f32,
+                );
+            } else {
+                let mut inverted_size_0: i32 = data.len() as i32;
+                //XXX: the choice of a minimum of 256 here is not backed by any theory,
+                //     measurement or data, howeve r it is what lcms uses.
+                //     the maximum number we would need is 65535 because that's the
+                //     accuracy used for computing the pre cache table
+                if inverted_size_0 < 256 {
+                    inverted_size_0 = 256
+                } //XXX turn this conversion into a function
+                let mut inverted_0: *mut u16 =
+                    invert_lut(data.as_ptr(), data.len() as i32, inverted_size_0);
+                if inverted_0.is_null() {
+                    return false;
+                }
+                compute_precache_lut(output, inverted_0, inverted_size_0);
+                free(inverted_0 as *mut libc::c_void);
+            }
         }
-        let mut inverted: *mut u16 = invert_lut(gamma_table_uint.as_mut_ptr(), 256, inverted_size);
-        if inverted.is_null() {
-            return false;
-        }
-        compute_precache_lut(output, inverted, inverted_size);
-        free(inverted as *mut libc::c_void);
-    } else if (*trc).count == 0 {
-        compute_precache_linear(output);
-    } else if (*trc).count == 1 {
-        compute_precache_pow(
-            output,
-            (1.0f64 / u8Fixed8Number_to_float(*(*trc).data.as_mut_ptr().offset(0isize)) as f64)
-                as f32,
-        );
-    } else {
-        let mut inverted_size_0: i32 = (*trc).count as i32;
-        //XXX: the choice of a minimum of 256 here is not backed by any theory,
-        //     measurement or data, howeve r it is what lcms uses.
-        //     the maximum number we would need is 65535 because that's the
-        //     accuracy used for computing the pre cache table
-        if inverted_size_0 < 256 {
-            inverted_size_0 = 256
-        } //XXX turn this conversion into a function
-        let mut inverted_0: *mut u16 = invert_lut(
-            (*trc).data.as_mut_ptr(),
-            (*trc).count as i32,
-            inverted_size_0,
-        );
-        if inverted_0.is_null() {
-            return false;
-        }
-        compute_precache_lut(output, inverted_0, inverted_size_0);
-        free(inverted_0 as *mut libc::c_void);
     }
     return true;
 }
@@ -555,50 +548,49 @@ unsafe extern "C" fn build_pow_table(mut gamma: f32, mut length: i32) -> *mut u1
 
 #[no_mangle]
 pub unsafe extern "C" fn build_output_lut(
-    mut trc: *mut curveType,
+    mut trc: &curveType,
     mut output_gamma_lut: *mut *mut u16,
     mut output_gamma_lut_length: *mut usize,
 ) {
-    if (*trc).type_0 == PARAMETRIC_CURVE_TYPE {
-        let mut gamma_table: [f32; 256] = [0.; 256];
+    match trc {
+        curveType::Parametric(params) => {
+            let mut gamma_table: [f32; 256] = [0.; 256];
 
-        let mut output: *mut u16 = malloc(::std::mem::size_of::<u16>() * 256) as *mut u16;
-        if output.is_null() {
-            *output_gamma_lut = 0 as *mut u16;
-            return;
+            let mut output: *mut u16 = malloc(::std::mem::size_of::<u16>() * 256) as *mut u16;
+            if output.is_null() {
+                *output_gamma_lut = 0 as *mut u16;
+                return;
+            }
+            compute_curve_gamma_table_type_parametric(gamma_table.as_mut_ptr(), params);
+            *output_gamma_lut_length = 256;
+            let mut i: u16 = 0u16;
+            while (i as i32) < 256 {
+                *output.offset(i as isize) = (gamma_table[i as usize] * 65535f32) as u16;
+                i = i + 1
+            }
+            *output_gamma_lut = output
         }
-        compute_curve_gamma_table_type_parametric(
-            gamma_table.as_mut_ptr(),
-            (*trc).parameter.as_mut_ptr(),
-            (*trc).count as i32,
-        );
-        *output_gamma_lut_length = 256;
-        let mut i: u16 = 0u16;
-        while (i as i32) < 256 {
-            *output.offset(i as isize) = (gamma_table[i as usize] * 65535f32) as u16;
-            i = i + 1
+        curveType::Curve(data) => {
+            if data.len() == 0 {
+                *output_gamma_lut = build_linear_table(4096);
+                *output_gamma_lut_length = 4096
+            } else if data.len() == 1 {
+                let mut gamma: f32 = (1.0f64 / u8Fixed8Number_to_float(data[0]) as f64) as f32;
+                *output_gamma_lut = build_pow_table(gamma, 4096);
+                *output_gamma_lut_length = 4096
+            } else {
+                //XXX: the choice of a minimum of 256 here is not backed by any theory,
+                //     measurement or data, however it is what lcms uses.
+                *output_gamma_lut_length = data.len();
+                if *output_gamma_lut_length < 256 {
+                    *output_gamma_lut_length = 256
+                }
+                *output_gamma_lut = invert_lut(
+                    data.as_ptr(),
+                    data.len() as i32,
+                    *output_gamma_lut_length as i32,
+                )
+            }
         }
-        *output_gamma_lut = output
-    } else if (*trc).count == 0 {
-        *output_gamma_lut = build_linear_table(4096);
-        *output_gamma_lut_length = 4096
-    } else if (*trc).count == 1 {
-        let mut gamma: f32 = (1.0f64
-            / u8Fixed8Number_to_float(*(*trc).data.as_mut_ptr().offset(0isize)) as f64)
-            as f32;
-        *output_gamma_lut = build_pow_table(gamma, 4096);
-        *output_gamma_lut_length = 4096
-    } else {
-        //XXX: the choice of a minimum of 256 here is not backed by any theory,
-        //     measurement or data, however it is what lcms uses.
-        *output_gamma_lut_length = (*trc).count as usize;
-        if *output_gamma_lut_length < 256 {
-            *output_gamma_lut_length = 256
-        }
-        *output_gamma_lut = invert_lut(
-            (*trc).data.as_mut_ptr(),
-            (*trc).count as i32,
-            *output_gamma_lut_length as i32,
-        )
-    };
+    }
 }
