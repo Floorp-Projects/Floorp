@@ -1115,13 +1115,8 @@ unsafe extern "C" fn build_sRGB_gamma_table(mut num_entries: i32) -> *mut u16 {
     }
     return table;
 }
-unsafe extern "C" fn curve_from_table(mut table: *mut u16, mut num_entries: i32) -> Box<curveType> {
-    let mut curve: *mut curveType;
-    let mut data = Vec::with_capacity(num_entries as usize);
-    for i in 0..num_entries {
-        data.push(*table.offset(i as isize));
-    }
-    return Box::new(curveType::Curve(data));
+fn curve_from_table(mut table: &[u16]) -> Box<curveType> {
+    return Box::new(curveType::Curve(table.to_vec()));
 }
 fn float_to_u8Fixed8Number(mut a: f32) -> u16 {
     if a > 255.0 + 255.0 / 256f32 {
@@ -1203,9 +1198,10 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
     if !set_rgb_colorants(&mut profile, white_point, primaries) {
         return 0 as *mut qcms_profile;
     }
-    (*profile).redTRC = Some(curve_from_table(table, num_entries));
-    (*profile).blueTRC = Some(curve_from_table(table, num_entries));
-    (*profile).greenTRC = Some(curve_from_table(table, num_entries));
+    let table = slice::from_raw_parts(table, num_entries as usize);
+    (*profile).redTRC = Some(curve_from_table(table));
+    (*profile).blueTRC = Some(curve_from_table(table));
+    (*profile).greenTRC = Some(curve_from_table(table));
     if (*profile).redTRC.is_none() || (*profile).blueTRC.is_none() || (*profile).greenTRC.is_none()
     {
         return 0 as *mut qcms_profile;
