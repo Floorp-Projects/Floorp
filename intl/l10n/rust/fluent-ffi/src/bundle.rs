@@ -3,42 +3,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::builtins::{FluentDateTime, FluentDateTimeOptions, NumberFormat};
-use fluent::resolve::ResolverError;
-use fluent::{FluentArgs, FluentBundle, FluentError, FluentResource, FluentValue};
+use fluent::resolver::ResolverError;
+pub use fluent::{FluentArgs, FluentBundle, FluentError, FluentResource, FluentValue};
 use fluent_pseudo::transform_dom;
-use intl_memoizer::IntlLangMemoizer;
+pub use intl_memoizer::IntlLangMemoizer;
 use nsstring::{nsACString, nsCString};
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::mem;
-use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use thin_vec::ThinVec;
 use unic_langid::LanguageIdentifier;
 
-// Workaround for cbindgen limitation with types.
-// See: https://github.com/eqrion/cbindgen/issues/488
-pub struct FluentBundleRc(FluentBundle<Rc<FluentResource>>);
-
-impl Deref for FluentBundleRc {
-    type Target = FluentBundle<Rc<FluentResource>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for FluentBundleRc {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl Into<FluentBundleRc> for FluentBundle<Rc<FluentResource>> {
-    fn into(self) -> FluentBundleRc {
-        FluentBundleRc(self)
-    }
-}
+pub type FluentBundleRc = FluentBundle<Rc<FluentResource>>;
 
 #[derive(Debug)]
 #[repr(C, u8)]
@@ -166,7 +142,7 @@ fn fluent_bundle_new_internal(
             _ => bundle.set_transform(None),
         }
     }
-    Box::new(bundle.into())
+    Box::new(bundle)
 }
 
 #[no_mangle]
@@ -198,9 +174,10 @@ pub unsafe extern "C" fn fluent_bundle_get_message(
 ) -> bool {
     match bundle.get_message(id.as_str_unchecked()) {
         Some(message) => {
+            attrs.reserve(message.attributes.len());
             *has_value = message.value.is_some();
-            for key in message.attributes.keys() {
-                attrs.push((*key).into());
+            for attr in message.attributes {
+                attrs.push(attr.id.into());
             }
             true
         }
@@ -221,8 +198,7 @@ pub unsafe extern "C" fn fluent_bundle_format_pattern(
     ret_val: &mut nsACString,
     ret_errors: &mut ThinVec<nsCString>,
 ) -> bool {
-    let arg_ids = arg_ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
-    let args = convert_args(&arg_ids, arg_vals);
+    let args = convert_args(arg_ids, arg_vals);
 
     let message = match bundle.get_message(id.as_str_unchecked()) {
         Some(message) => message,
@@ -230,8 +206,8 @@ pub unsafe extern "C" fn fluent_bundle_format_pattern(
     };
 
     let pattern = if !attr.is_empty() {
-        match message.attributes.get(attr.as_str_unchecked()) {
-            Some(attr) => attr,
+        match message.get_attribute(attr.as_str_unchecked()) {
+            Some(attr) => attr.value,
             None => return false,
         }
     } else {
@@ -242,8 +218,8 @@ pub unsafe extern "C" fn fluent_bundle_format_pattern(
     };
 
     let mut errors = vec![];
-    let value = bundle.format_pattern(pattern, args.as_ref(), &mut errors);
-    ret_val.assign(value.as_bytes());
+    bundle.write_pattern(ret_val, pattern, args.as_ref(), &mut errors)
+        .expect("Failed to write to a nsCString.");
     append_fluent_errors_to_ret_errors(ret_errors, &errors);
     true
 }
@@ -265,20 +241,20 @@ pub unsafe extern "C" fn fluent_bundle_add_resource(
     }
 }
 
-fn convert_args<'a>(ids: &'a [String], arg_vals: &'a [FluentArgument]) -> Option<FluentArgs<'a>> {
-    debug_assert_eq!(ids.len(), arg_vals.len());
+fn convert_args<'a>(arg_ids: &'a [nsCString], arg_vals: &'a [FluentArgument]) -> Option<FluentArgs<'a>> {
+    debug_assert_eq!(arg_ids.len(), arg_vals.len());
 
-    if ids.is_empty() {
+    if arg_ids.is_empty() {
         return None;
     }
 
-    let mut args = HashMap::with_capacity(arg_vals.len());
-    for (id, val) in ids.iter().zip(arg_vals.iter()) {
+    let mut args = FluentArgs::with_capacity(arg_ids.len());
+    for (id, val) in arg_ids.iter().zip(arg_vals.iter()) {
         let val = match val {
             FluentArgument::Double_(d) => FluentValue::from(d),
             FluentArgument::String(s) => FluentValue::from(unsafe { (**s).to_string() }),
         };
-        args.insert(id.as_str(), val);
+        args.add(id.to_string(), val);
     }
     Some(args)
 }

@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use intl_pluralrules::operands::PluralOperands;
 
-use crate::bundle::FluentArgs;
+use crate::args::FluentArgs;
 use crate::types::FluentValue;
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -87,8 +87,8 @@ impl Default for FluentNumberOptions {
 
 impl FluentNumberOptions {
     pub fn merge(&mut self, opts: &FluentArgs) {
-        for (key, value) in opts {
-            match (*key, value) {
+        for (key, value) in opts.iter() {
+            match (key, value) {
                 ("style", FluentValue::String(n)) => {
                     self.style = n.as_ref().into();
                 }
@@ -159,7 +159,7 @@ impl FromStr for FluentNumber {
                 minimum_fraction_digits: mfd,
                 ..Default::default()
             };
-            FluentNumber::new(n, opts)
+            Self::new(n, opts)
         })
     }
 }
@@ -174,7 +174,7 @@ macro_rules! from_num {
     ($num:ty) => {
         impl From<$num> for FluentNumber {
             fn from(n: $num) -> Self {
-                FluentNumber {
+                Self {
                     value: n as f64,
                     options: FluentNumberOptions::default(),
                 }
@@ -182,7 +182,7 @@ macro_rules! from_num {
         }
         impl From<&$num> for FluentNumber {
             fn from(n: &$num) -> Self {
-                FluentNumber {
+                Self {
                     value: *n as f64,
                     options: FluentNumberOptions::default(),
                 }
@@ -216,7 +216,7 @@ macro_rules! from_num {
 
 impl From<&FluentNumber> for PluralOperands {
     fn from(input: &FluentNumber) -> Self {
-        let mut operands: PluralOperands = input
+        let mut operands: Self = input
             .value
             .try_into()
             .expect("Failed to generate operands out of FluentNumber");

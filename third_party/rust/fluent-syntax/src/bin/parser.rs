@@ -1,4 +1,4 @@
-use fluent_syntax::parser::parse;
+use fluent_syntax::parser::Parser;
 use std::env;
 use std::fs::File;
 use std::io;
@@ -15,13 +15,14 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let source = read_file(args.get(1).expect("Pass an argument")).expect("Failed to fetch file");
 
-    let ast = parse(&source).expect("Failed to parse the source.");
-
+    let (ast, errors) = match Parser::new(source.as_str()).parse() {
+        Ok(ast) => (ast, None),
+        Err((ast, err)) => (ast, Some(err)),
+    };
 
     #[cfg(feature = "json")]
     {
-        use fluent_syntax::json;
-        let target_json = json::serialize_to_pretty_json(&ast).unwrap();
+        let target_json = serde_json::to_string_pretty(&ast).unwrap();
         println!("{}", target_json);
     }
     #[cfg(not(feature = "json"))]
@@ -30,5 +31,12 @@ fn main() {
         let mut result = String::new();
         write!(result, "{:#?}", ast).unwrap();
         println!("{}", result);
+    }
+
+    if let Some(errors) = errors {
+        println!("\n======== Errors ========== \n");
+        for err in errors {
+            println!("Err: {:#?}", err);
+        }
     }
 }
