@@ -1186,7 +1186,7 @@ pub unsafe extern "C" fn qcms_profile_precache_output_transform(mut profile: *mu
         }
     }
     /* don't precache if we do not have the TRC curves */
-    if (*profile).redTRC.is_null() || (*profile).greenTRC.is_null() || (*profile).blueTRC.is_null()
+    if (*profile).redTRC.is_none() || (*profile).greenTRC.is_none() || (*profile).blueTRC.is_none()
     {
         return;
     }
@@ -1194,7 +1194,7 @@ pub unsafe extern "C" fn qcms_profile_precache_output_transform(mut profile: *mu
         (*profile).output_table_r = precache_create();
         if !(*profile).output_table_r.is_null()
             && !compute_precache(
-                (*profile).redTRC,
+                (*profile).redTRC.as_deref().unwrap(),
                 (*(*profile).output_table_r).data.as_mut_ptr(),
             )
         {
@@ -1206,7 +1206,7 @@ pub unsafe extern "C" fn qcms_profile_precache_output_transform(mut profile: *mu
         (*profile).output_table_g = precache_create();
         if !(*profile).output_table_g.is_null()
             && !compute_precache(
-                (*profile).greenTRC,
+                (*profile).greenTRC.as_deref().unwrap(),
                 (*(*profile).output_table_g).data.as_mut_ptr(),
             )
         {
@@ -1218,7 +1218,7 @@ pub unsafe extern "C" fn qcms_profile_precache_output_transform(mut profile: *mu
         (*profile).output_table_b = precache_create();
         if !(*profile).output_table_b.is_null()
             && !compute_precache(
-                (*profile).blueTRC,
+                (*profile).blueTRC.as_deref().unwrap(),
                 (*(*profile).output_table_b).data.as_mut_ptr(),
             )
         {
@@ -1367,22 +1367,22 @@ pub unsafe extern "C" fn qcms_transform_create(
         (*transform).output_table_g = precache_reference((*out).output_table_g);
         (*transform).output_table_b = precache_reference((*out).output_table_b)
     } else {
-        if (*out).redTRC.is_null() || (*out).greenTRC.is_null() || (*out).blueTRC.is_null() {
+        if (*out).redTRC.is_none() || (*out).greenTRC.is_none() || (*out).blueTRC.is_none() {
             qcms_transform_release(transform);
             return 0 as *mut qcms_transform;
         }
         build_output_lut(
-            (*out).redTRC,
+            (*out).redTRC.as_deref().unwrap(),
             &mut (*transform).output_gamma_lut_r,
             &mut (*transform).output_gamma_lut_r_length,
         );
         build_output_lut(
-            (*out).greenTRC,
+            (*out).greenTRC.as_deref().unwrap(),
             &mut (*transform).output_gamma_lut_g,
             &mut (*transform).output_gamma_lut_g_length,
         );
         build_output_lut(
-            (*out).blueTRC,
+            (*out).blueTRC.as_deref().unwrap(),
             &mut (*transform).output_gamma_lut_b,
             &mut (*transform).output_gamma_lut_b_length,
         );
@@ -1449,9 +1449,9 @@ pub unsafe extern "C" fn qcms_transform_create(
             (*transform).transform_fn = Some(qcms_transform_data_bgra_out_lut)
         }
         //XXX: avoid duplicating tables if we can
-        (*transform).input_gamma_table_r = build_input_gamma_table((*in_0).redTRC);
-        (*transform).input_gamma_table_g = build_input_gamma_table((*in_0).greenTRC);
-        (*transform).input_gamma_table_b = build_input_gamma_table((*in_0).blueTRC);
+        (*transform).input_gamma_table_r = build_input_gamma_table((*in_0).redTRC.as_deref());
+        (*transform).input_gamma_table_g = build_input_gamma_table((*in_0).greenTRC.as_deref());
+        (*transform).input_gamma_table_b = build_input_gamma_table((*in_0).blueTRC.as_deref());
         if (*transform).input_gamma_table_r.is_null()
             || (*transform).input_gamma_table_g.is_null()
             || (*transform).input_gamma_table_b.is_null()
@@ -1494,7 +1494,7 @@ pub unsafe extern "C" fn qcms_transform_create(
         (*transform).matrix[1][2] = result_0.m[2][1];
         (*transform).matrix[2][2] = result_0.m[2][2]
     } else if (*in_0).color_space == 0x47524159 {
-        (*transform).input_gamma_table_gray = build_input_gamma_table((*in_0).grayTRC);
+        (*transform).input_gamma_table_gray = build_input_gamma_table((*in_0).grayTRC.as_deref());
         if (*transform).input_gamma_table_gray.is_null() {
             qcms_transform_release(transform);
             return 0 as *mut qcms_transform;

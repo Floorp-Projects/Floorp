@@ -84,10 +84,10 @@ pub struct qcms_profile {
     pub redColorant: XYZNumber,
     pub blueColorant: XYZNumber,
     pub greenColorant: XYZNumber,
-    pub redTRC: *mut curveType,
-    pub blueTRC: *mut curveType,
-    pub greenTRC: *mut curveType,
-    pub grayTRC: *mut curveType,
+    pub redTRC: Option<Box<curveType>>,
+    pub blueTRC: Option<Box<curveType>>,
+    pub greenTRC: Option<Box<curveType>>,
+    pub grayTRC: Option<Box<curveType>>,
     pub A2B0: *mut lutType,
     pub B2A0: *mut lutType,
     pub mAB: *mut lutmABType,
@@ -122,16 +122,12 @@ impl Drop for qcms_profile {
             if !self.mBA.is_null() {
                 mAB_release(self.mBA);
             }
-            free(self.redTRC as *mut libc::c_void);
-            free(self.blueTRC as *mut libc::c_void);
-            free(self.greenTRC as *mut libc::c_void);
-            free(self.grayTRC as *mut libc::c_void);
         }
     }
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct lutmABType {
     pub num_in_channels: u8,
     pub num_out_channels: u8,
@@ -150,19 +146,17 @@ pub struct lutmABType {
     pub e23: s15Fixed16Number,
     pub reversed: bool,
     pub clut_table: *mut f32,
-    pub a_curves: [*mut curveType; 10],
-    pub b_curves: [*mut curveType; 10],
-    pub m_curves: [*mut curveType; 10],
+    pub a_curves: [Option<Box<curveType>>; 10],
+    pub b_curves: [Option<Box<curveType>>; 10],
+    pub m_curves: [Option<Box<curveType>>; 10],
     pub clut_table_data: [f32; 0],
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub struct curveType {
-    pub type_0: u32,
-    pub count: u32,
-    pub parameter: [f32; 7],
-    pub data: [uInt16Number; 0],
+#[derive(Clone)]
+pub enum curveType {
+    Curve(Vec<uInt16Number>),
+    Parametric(Vec<f32>),
 }
 pub type uInt16Number = u16;
 
@@ -647,93 +641,75 @@ fn read_tag_XYZType(mut src: &mut mem_source, mut index: &tag_index, mut tag_id:
 // Read the tag at a given offset rather then the tag_index.
 // This method is used when reading mAB tags where nested curveType are
 // present that are not part of the tag_index.
-unsafe extern "C" fn read_curveType(
+fn read_curveType(
     mut src: &mut mem_source,
     mut offset: u32,
-    mut len: *mut u32,
-) -> *mut curveType {
-    static mut COUNT_TO_LENGTH: [u32; 5] = [1, 3, 4, 5, 7]; //PARAMETRIC_CURVE_TYPE
+    mut len: &mut u32,
+) -> Option<Box<curveType>> {
+    const COUNT_TO_LENGTH: [u32; 5] = [1, 3, 4, 5, 7]; //PARAMETRIC_CURVE_TYPE
     let mut curve: *mut curveType;
     let mut type_0: u32 = read_u32(src, offset as usize);
     let mut count: u32;
     let mut i: u32;
     if type_0 != CURVE_TYPE && type_0 != PARAMETRIC_CURVE_TYPE {
         invalid_source(src, "unexpected type, expected CURV or PARA");
-        return 0 as *mut curveType;
+        return None;
     }
     if type_0 == CURVE_TYPE {
         count = read_u32(src, (offset + 8) as usize);
         //arbitrary
         if count > 40000 {
             invalid_source(src, "curve size too large");
-            return 0 as *mut curveType;
+            return None;
         }
-        curve = malloc(
-            ::std::mem::size_of::<curveType>()
-                + ::std::mem::size_of::<uInt16Number>() * count as usize,
-        ) as *mut curveType;
-        if curve.is_null() {
-            return 0 as *mut curveType;
+        let mut table = Vec::with_capacity(count as usize);
+        for i in 0..count {
+            table.push(read_u16(src, (offset + 12 + i * 2) as usize));
         }
-        (*curve).count = count;
-        (*curve).type_0 = CURVE_TYPE;
-        i = 0;
-        while i < count {
-            *(*curve).data.as_mut_ptr().offset(i as isize) =
-                read_u16(src, (offset + 12 + i * 2) as usize);
-            i = i + 1
-        }
-        *len = 12 + count * 2
+        *len = 12 + count * 2;
+        return Some(Box::new(curveType::Curve(table)));
     } else {
         count = read_u16(src, (offset + 8) as usize) as u32;
         if count > 4 {
             invalid_source(src, "parametric function type not supported.");
-            return 0 as *mut curveType;
+            return None;
         }
-        curve = malloc(::std::mem::size_of::<curveType>()) as *mut curveType;
-        if curve.is_null() {
-            return 0 as *mut curveType;
-        }
-        (*curve).count = count;
-        (*curve).type_0 = PARAMETRIC_CURVE_TYPE;
-        i = 0;
-        while i < COUNT_TO_LENGTH[count as usize] {
-            (*curve).parameter[i as usize] = s15Fixed16Number_to_float(read_s15Fixed16Number(
+        let mut params = Vec::with_capacity(count as usize);
+        for i in 0..COUNT_TO_LENGTH[count as usize] {
+            params.push(s15Fixed16Number_to_float(read_s15Fixed16Number(
                 src,
                 (offset + 12 + i * 4) as usize,
-            ));
-            i = i + 1
+            )));
         }
         *len = 12 + COUNT_TO_LENGTH[count as usize] * 4;
         if count == 1 || count == 2 {
             /* we have a type 1 or type 2 function that has a division by 'a' */
-            let mut a: f32 = (*curve).parameter[1];
+            let mut a: f32 = params[1];
             if a == 0.0 {
                 invalid_source(src, "parametricCurve definition causes division by zero");
             }
         }
+        return Some(Box::new(curveType::Parametric(params)));
     }
-    return curve;
 }
-unsafe fn read_tag_curveType(
+fn read_tag_curveType(
     mut src: &mut mem_source,
     mut index: &tag_index,
     mut tag_id: u32,
-) -> *mut curveType {
+) -> Option<Box<curveType>> {
     let mut tag = find_tag(index, tag_id);
-    let mut curve: *mut curveType = 0 as *mut curveType;
     if let Some(tag) = tag {
         let mut len: u32 = 0;
         return read_curveType(src, (*tag).offset, &mut len);
     } else {
         invalid_source(src, "missing curvetag");
     }
-    return curve;
+    return None;
 }
 // arbitrary
 unsafe extern "C" fn read_nested_curveType(
     mut src: &mut mem_source,
-    mut curveArray: *mut [*mut curveType; 10],
+    mut curveArray: *mut [Option<Box<curveType>>; 10],
     mut num_channels: u8,
     mut curve_offset: u32,
 ) {
@@ -744,7 +720,7 @@ unsafe extern "C" fn read_nested_curveType(
         let mut tag_len: u32 = 0;
         (*curveArray)[i as usize] =
             read_curveType(src, curve_offset + channel_offset, &mut tag_len);
-        if (*curveArray)[i as usize].is_null() {
+        if (*curveArray)[i as usize].is_none() {
             invalid_source(src, "invalid nested curveType curve");
             break;
         } else {
@@ -761,13 +737,13 @@ unsafe extern "C" fn mAB_release(mut lut: *mut lutmABType) {
     let mut i: u8;
     i = 0u8;
     while (i as i32) < (*lut).num_in_channels as i32 {
-        free((*lut).a_curves[i as usize] as *mut libc::c_void);
+        (*lut).a_curves[i as usize] = None;
         i = i + 1
     }
     i = 0u8;
     while (i as i32) < (*lut).num_out_channels as i32 {
-        free((*lut).b_curves[i as usize] as *mut libc::c_void);
-        free((*lut).m_curves[i as usize] as *mut libc::c_void);
+        (*lut).b_curves[i as usize] = None;
+        (*lut).m_curves[i as usize] = None;
         i = i + 1
     }
     free(lut as *mut libc::c_void);
@@ -1139,26 +1115,15 @@ unsafe extern "C" fn build_sRGB_gamma_table(mut num_entries: i32) -> *mut u16 {
     }
     return table;
 }
-unsafe extern "C" fn curve_from_table(mut table: *mut u16, mut num_entries: i32) -> *mut curveType {
+unsafe extern "C" fn curve_from_table(mut table: *mut u16, mut num_entries: i32) -> Box<curveType> {
     let mut curve: *mut curveType;
-    let mut i: i32;
-    curve = malloc(
-        ::std::mem::size_of::<curveType>()
-            + ::std::mem::size_of::<uInt16Number>() * num_entries as usize,
-    ) as *mut curveType;
-    if curve.is_null() {
-        return 0 as *mut curveType;
+    let mut data = Vec::with_capacity(num_entries as usize);
+    for i in 0..num_entries {
+        data.push(*table.offset(i as isize));
     }
-    (*curve).type_0 = CURVE_TYPE;
-    (*curve).count = num_entries as u32;
-    i = 0;
-    while i < num_entries {
-        *(*curve).data.as_mut_ptr().offset(i as isize) = *table.offset(i as isize);
-        i += 1
-    }
-    return curve;
+    return Box::new(curveType::Curve(data));
 }
-unsafe extern "C" fn float_to_u8Fixed8Number(mut a: f32) -> u16 {
+fn float_to_u8Fixed8Number(mut a: f32) -> u16 {
     if a > 255.0 + 255.0 / 256f32 {
         return 0xffffu16;
     } else if a < 0.0 {
@@ -1167,20 +1132,9 @@ unsafe extern "C" fn float_to_u8Fixed8Number(mut a: f32) -> u16 {
         return (a * 256.0 + 0.5).floor() as u16;
     };
 }
-unsafe extern "C" fn curve_from_gamma(mut gamma: f32) -> *mut curveType {
-    let mut curve: *mut curveType;
-    let mut num_entries: i32 = 1;
-    curve = malloc(
-        ::std::mem::size_of::<curveType>()
-            + ::std::mem::size_of::<uInt16Number>() * num_entries as usize,
-    ) as *mut curveType;
-    if curve.is_null() {
-        return 0 as *mut curveType;
-    }
-    (*curve).count = num_entries as u32;
-    *(*curve).data.as_mut_ptr().offset(0isize) = float_to_u8Fixed8Number(gamma);
-    (*curve).type_0 = CURVE_TYPE;
-    return curve;
+
+fn curve_from_gamma(mut gamma: f32) -> Box<curveType> {
+    Box::new(curveType::Curve(vec![float_to_u8Fixed8Number(gamma)]))
 }
 //XXX: it would be nice if we had a way of ensuring
 // everything in a profile was initialized regardless of how it was created
@@ -1200,10 +1154,10 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
     if !set_rgb_colorants(&mut profile, white_point, primaries) {
         return 0 as *mut qcms_profile;
     }
-    (*profile).redTRC = curve_from_gamma(redGamma);
-    (*profile).blueTRC = curve_from_gamma(blueGamma);
-    (*profile).greenTRC = curve_from_gamma(greenGamma);
-    if (*profile).redTRC.is_null() || (*profile).blueTRC.is_null() || (*profile).greenTRC.is_null()
+    (*profile).redTRC = Some(curve_from_gamma(redGamma));
+    (*profile).blueTRC = Some(curve_from_gamma(blueGamma));
+    (*profile).greenTRC = Some(curve_from_gamma(greenGamma));
+    if (*profile).redTRC.is_none() || (*profile).blueTRC.is_none() || (*profile).greenTRC.is_none()
     {
         return 0 as *mut qcms_profile;
     }
@@ -1218,8 +1172,8 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_gamma_set(
 pub unsafe extern "C" fn qcms_profile_create_gray_with_gamma(mut gamma: f32) -> *mut qcms_profile {
     let mut profile = qcms_profile_create();
 
-    (*profile).grayTRC = curve_from_gamma(gamma);
-    if (*profile).grayTRC.is_null() {
+    (*profile).grayTRC = Some(curve_from_gamma(gamma));
+    if (*profile).grayTRC.is_none() {
         return 0 as *mut qcms_profile;
     }
     (*profile).class_type = DISPLAY_DEVICE_PROFILE;
@@ -1249,10 +1203,10 @@ pub unsafe extern "C" fn qcms_profile_create_rgb_with_table(
     if !set_rgb_colorants(&mut profile, white_point, primaries) {
         return 0 as *mut qcms_profile;
     }
-    (*profile).redTRC = curve_from_table(table, num_entries);
-    (*profile).blueTRC = curve_from_table(table, num_entries);
-    (*profile).greenTRC = curve_from_table(table, num_entries);
-    if (*profile).redTRC.is_null() || (*profile).blueTRC.is_null() || (*profile).greenTRC.is_null()
+    (*profile).redTRC = Some(curve_from_table(table, num_entries));
+    (*profile).blueTRC = Some(curve_from_table(table, num_entries));
+    (*profile).greenTRC = Some(curve_from_table(table, num_entries));
+    if (*profile).redTRC.is_none() || (*profile).blueTRC.is_none() || (*profile).greenTRC.is_none()
     {
         return 0 as *mut qcms_profile;
     }
@@ -1451,16 +1405,16 @@ pub unsafe extern "C" fn qcms_profile_from_memory(
                 (*profile).redTRC = read_tag_curveType(src, &index, TAG_rTRC);
                 (*profile).greenTRC = read_tag_curveType(src, &index, TAG_gTRC);
                 (*profile).blueTRC = read_tag_curveType(src, &index, TAG_bTRC);
-                if (*profile).redTRC.is_null()
-                    || (*profile).blueTRC.is_null()
-                    || (*profile).greenTRC.is_null()
+                if (*profile).redTRC.is_none()
+                    || (*profile).blueTRC.is_none()
+                    || (*profile).greenTRC.is_none()
                 {
                     return null_mut();
                 }
             }
         } else if (*profile).color_space == GRAY_SIGNATURE {
             (*profile).grayTRC = read_tag_curveType(src, &index, TAG_kTRC);
-            if (*profile).grayTRC.is_null() {
+            if (*profile).grayTRC.is_none() {
                 return null_mut();
             }
         } else {
