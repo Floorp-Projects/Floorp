@@ -17,9 +17,9 @@
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/CompilationInfo.h"  // frontend::CompilationInfo, frontend::CompilationGCOutput
 #include "jit/IonCompileTask.h"
-#include "js/ContextOptions.h"              // JS::ContextOptions
-#include "js/friend/StackLimits.h"          // js::ReportOverRecursed
-#include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
+#include "js/ContextOptions.h"      // JS::ContextOptions
+#include "js/friend/StackLimits.h"  // js::ReportOverRecursed
+#include "js/OffThreadScriptCompilation.h"  // JS::OffThreadToken, JS::OffThreadCompileCallback
 #include "js/SourceText.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -1895,6 +1895,13 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
       cx->releaseCheck(script);
     }
 
+    if (kind == ParseTaskKind::Module) {
+      if (parseTask->scripts.length() > 0) {
+        MOZ_ASSERT(parseTask->scripts[0]->isModule());
+        parseTask->scripts[0]->module()->fixEnvironmentsAfterRealmMerge();
+      }
+    }
+
     // Finish initializing ScriptSourceObject now that we are back on
     // main-thread and in the correct realm.
     for (auto& sourceObject : parseTask->sourceObjects) {
@@ -2024,6 +2031,15 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
       return nullptr;
     }
 
+    if (kind == ParseTaskKind::Module) {
+      // See: InstantiateTopLevel in frontend/Stencil.cpp.
+      MOZ_ASSERT(script->isModule());
+      RootedModuleObject module(cx, script->module());
+      if (!ModuleObject::Freeze(cx, module)) {
+        return nullptr;
+      }
+    }
+
     // The Debugger only needs to be told about the topmost script that was
     // compiled.
     if (!parseTask->options.hideScriptFromDebugger) {
@@ -2116,21 +2132,7 @@ JSObject* GlobalHelperThreadState::finishModuleParseTask(
     return nullptr;
   }
 
-  MOZ_ASSERT(script->isModule());
-
-  // NOTE: StartOffThreadParseTask alters CompileOption only for decode task.
-  // UseOffThreadParseGlobal() should match CompileOption here.
-  if (!UseOffThreadParseGlobal()) {
-    return script->module();
-  }
-
-  RootedModuleObject module(cx, script->module());
-  module->fixEnvironmentsAfterRealmMerge();
-  if (!ModuleObject::Freeze(cx, module)) {
-    return nullptr;
-  }
-
-  return module;
+  return script->module();
 }
 
 void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
