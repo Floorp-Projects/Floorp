@@ -237,8 +237,8 @@ pub struct FluentDateTimeOptions {
 
 impl FluentDateTimeOptions {
     pub fn merge(&mut self, opts: &FluentArgs) {
-        for (key, value) in opts {
-            match (*key, value) {
+        for (key, value) in opts.iter() {
+            match (key, value) {
                 ("dateStyle", FluentValue::String(n)) => {
                     self.date_style = n.as_ref().into();
                 }

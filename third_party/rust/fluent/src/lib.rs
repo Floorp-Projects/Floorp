@@ -46,7 +46,7 @@
 //! assert_eq!(&value, "Hello, world!");
 //!
 //! let mut args = FluentArgs::new();
-//! args.insert("name", FluentValue::from("John"));
+//! args.add("name", FluentValue::from("John"));
 //!
 //! let msg = bundle.get_message("intro")
 //!     .expect("Message doesn't exist.");
@@ -100,7 +100,7 @@ macro_rules! fluent_args {
         {
             let mut args: $crate::FluentArgs = $crate::FluentArgs::new();
             $(
-                args.insert($key, $value.into());
+                args.add($key, $value.into());
             )*
             args
         }
