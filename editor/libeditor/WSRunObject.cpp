@@ -3451,7 +3451,7 @@ EditorDOMRange WSRunScanner::GetRangeForDeletingBlockElementBoundaries(
 
 // static
 EditorDOMRange
-WSRunScanner::GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
+WSRunScanner::GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
     const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange) {
   MOZ_ASSERT(aRange.IsPositionedAndValid());
   MOZ_ASSERT(aRange.EndRef().IsSetAndValid());
@@ -3466,8 +3466,6 @@ WSRunScanner::GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
           textFragmentDataAtStart.InvisibleLeadingWhiteSpaceRangeRef());
   if (invisibleLeadingWhiteSpacesAtStart.IsPositioned() &&
       !invisibleLeadingWhiteSpacesAtStart.Collapsed()) {
-    MOZ_ASSERT(invisibleLeadingWhiteSpacesAtStart.StartRef().EqualsOrIsBefore(
-        aRange.StartRef()));
     result.SetStart(invisibleLeadingWhiteSpacesAtStart.StartRef());
   } else {
     const EditorDOMRangeInTexts invisibleTrailingWhiteSpacesAtStart =
@@ -3480,6 +3478,13 @@ WSRunScanner::GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
               aRange.StartRef()));
       result.SetStart(invisibleTrailingWhiteSpacesAtStart.StartRef());
     }
+    // If there is no invisible white-space and the line starts with a
+    // text node, shrink the range to start of the text node.
+    else if (!aRange.StartRef().IsInTextNode() &&
+             textFragmentDataAtStart.StartsFromBlockBoundary() &&
+             textFragmentDataAtStart.EndRef().IsInTextNode()) {
+      result.SetStart(textFragmentDataAtStart.EndRef());
+    }
   }
   if (!result.StartRef().IsSet()) {
     result.SetStart(aRange.StartRef());
@@ -3491,8 +3496,6 @@ WSRunScanner::GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
           textFragmentDataAtEnd.InvisibleTrailingWhiteSpaceRangeRef());
   if (invisibleLeadingWhiteSpacesAtEnd.IsPositioned() &&
       !invisibleLeadingWhiteSpacesAtEnd.Collapsed()) {
-    MOZ_ASSERT(aRange.EndRef().EqualsOrIsBefore(
-        invisibleLeadingWhiteSpacesAtEnd.EndRef()));
     result.SetEnd(invisibleLeadingWhiteSpacesAtEnd.EndRef());
   } else {
     const EditorDOMRangeInTexts invisibleLeadingWhiteSpacesAtEnd =
@@ -3503,6 +3506,14 @@ WSRunScanner::GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
       MOZ_ASSERT(aRange.EndRef().EqualsOrIsBefore(
           invisibleLeadingWhiteSpacesAtEnd.EndRef()));
       result.SetEnd(invisibleLeadingWhiteSpacesAtEnd.EndRef());
+    }
+    // If there is no invisible white-space and the line ends with a text
+    // node, shrink the range to end of the text node.
+    else if (!aRange.EndRef().IsInTextNode() &&
+             textFragmentDataAtEnd.EndsByBlockBoundary() &&
+             textFragmentDataAtEnd.StartRef().IsInTextNode()) {
+      result.SetEnd(EditorDOMPoint::AtEndOf(
+          *textFragmentDataAtEnd.StartRef().ContainerAsText()));
     }
   }
   if (!result.EndRef().IsSet()) {

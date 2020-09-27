@@ -4995,8 +4995,8 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteNonCollapsedRanges(
 
   if (!aHTMLEditor.IsPlaintextEditor()) {
     EditorDOMRange firstRange(aRangesToDelete.FirstRangeRef());
-    EditorDOMRange extendedRange = WSRunScanner::
-        GetRangeExtendToContainInvisibleWhiteSpacesAtRangeBoundaries(
+    EditorDOMRange extendedRange =
+        WSRunScanner::GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
             aHTMLEditor, EditorDOMRange(aRangesToDelete.FirstRangeRef()));
     if (firstRange != extendedRange) {
       nsresult rv = aRangesToDelete.FirstRangeRef()->SetStartAndEnd(
