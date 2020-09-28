@@ -209,6 +209,12 @@ class nsFocusManager final : public nsIFocusManager,
                                        nsIContent** aNextContent);
 
   /**
+   * Setter for focusedWindow with CallerType
+   */
+  nsresult SetFocusedWindowWithCallerType(mozIDOMWindowProxy* aWindowToFocus,
+                                          mozilla::dom::CallerType aCallerType);
+
+  /**
    * Given an element, which must be the focused element, activate the remote
    * frame it embeds, if any.
    */
