@@ -262,11 +262,11 @@ class TabbedBrowsingTest {
         }.openTabTray {
             verifyNoTabsOpened()
             verifyNewTabButton()
-            verifyTabTrayOverflowMenu(false)
+            verifyTabTrayOverflowMenu(true)
         }.toggleToPrivateTabs {
             verifyNoTabsOpened()
             verifyNewTabButton()
-            verifyTabTrayOverflowMenu(false)
+            verifyTabTrayOverflowMenu(true)
         }
     }
 
