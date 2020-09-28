@@ -214,6 +214,14 @@ Http3Session::~Http3Session() {
   LOG3(("Http3Session::~Http3Session %p", this));
 
   Telemetry::Accumulate(Telemetry::HTTP3_REQUEST_PER_CONN, mTransactionCount);
+  Telemetry::Accumulate(Telemetry::HTTP3_BLOCKED_BY_STREAM_LIMIT_PER_CONN,
+                        mBlockedByStreamLimitCount);
+  Telemetry::Accumulate(Telemetry::HTTP3_TRANS_BLOCKED_BY_STREAM_LIMIT_PER_CONN,
+                        mTransactionsBlockedByStreamLimitCount);
+
+  Telemetry::Accumulate(
+      Telemetry::HTTP3_TRANS_SENDING_BLOCKED_BY_FLOW_CONTROL_PER_CONN,
+      mTransactionsSenderBlockedByFlowControlCount);
 
   Shutdown();
 }
@@ -763,6 +771,10 @@ nsresult Http3Session::TryActivating(
           ("Http3Session::TryActivating %p stream=%p no room for more "
            "concurrent streams\n",
            this, aStream));
+      mTransactionsBlockedByStreamLimitCount++;
+      if (mQueuedStreams.GetSize() == 0) {
+          mBlockedByStreamLimitCount++;
+      }
       QueueStream(aStream);
     }
     return rv;
@@ -801,8 +813,13 @@ void Http3Session::CloseSendingSide(uint64_t aStreamId) {
 nsresult Http3Session::SendRequestBody(uint64_t aStreamId, const char* buf,
                                        uint32_t count, uint32_t* countRead) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  return mHttp3Connection->SendRequestBody(aStreamId, (const uint8_t*)buf,
-                                           count, countRead);
+  nsresult rv = mHttp3Connection->SendRequestBody(
+      aStreamId, (const uint8_t*)buf, count, countRead);
+  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+    mTransactionsSenderBlockedByFlowControlCount++;
+  }
+
+  return rv;
 }
 
 void Http3Session::ResetRecvd(uint64_t aStreamId, uint64_t aError) {
