@@ -146,18 +146,8 @@ nsresult runTestSuite(const PolicyTest* aPolicies, uint32_t aPolicyCount,
                       uint32_t aExpectedPolicyCount) {
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  bool experimentalEnabledCache = false;
-  bool strictDynamicEnabledCache = false;
   bool navigateTo = false;
   if (prefs) {
-    prefs->GetBoolPref("security.csp.experimentalEnabled",
-                       &experimentalEnabledCache);
-    prefs->SetBoolPref("security.csp.experimentalEnabled", true);
-
-    prefs->GetBoolPref("security.csp.enableStrictDynamic",
-                       &strictDynamicEnabledCache);
-    prefs->SetBoolPref("security.csp.enableStrictDynamic", true);
-
     prefs->GetBoolPref("security.csp.enableNavigateTo", &navigateTo);
     prefs->SetBoolPref("security.csp.enableNavigateTo", true);
   }
@@ -169,10 +159,6 @@ nsresult runTestSuite(const PolicyTest* aPolicies, uint32_t aPolicyCount,
   }
 
   if (prefs) {
-    prefs->SetBoolPref("security.csp.experimentalEnabled",
-                       experimentalEnabledCache);
-    prefs->SetBoolPref("security.csp.enableStrictDynamic",
-                       strictDynamicEnabledCache);
     prefs->SetBoolPref("security.csp.enableNavigateTo", navigateTo);
   }
 
