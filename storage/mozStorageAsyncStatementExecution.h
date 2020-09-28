@@ -236,13 +236,6 @@ class AsyncExecuteStatements final : public Runnable,
    * about the error message, the user gets reliable error messages.
    */
   SQLiteMutex& mDBMutex;
-
-  /**
-   * The instant at which the request was started.
-   *
-   * Used by telemetry.
-   */
-  TimeStamp mRequestStartDate;
 };
 
 }  // namespace mozilla::storage

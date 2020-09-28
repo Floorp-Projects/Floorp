@@ -5234,24 +5234,6 @@
     "n_buckets": 3,
     "description": "SQLite write (bytes)"
   },
-  "MOZ_STORAGE_ASYNC_REQUESTS_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 32768,
-    "n_buckets": 20,
-    "description": "mozStorage async requests completion (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "MOZ_STORAGE_ASYNC_REQUESTS_SUCCESS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "mozStorage async requests success *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
   "STARTUP_CACHE_REQUESTS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
