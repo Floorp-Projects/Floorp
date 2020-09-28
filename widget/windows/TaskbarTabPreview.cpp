@@ -26,10 +26,7 @@ TaskbarTabPreview::TaskbarTabPreview(ITaskbarList4* aTaskbar,
     : TaskbarPreview(aTaskbar, aController, aHWND, aShell),
       mProxyWindow(nullptr),
       mIcon(nullptr),
-      mRegistered(false) {
-  WindowHook& hook = GetWindowHook();
-  hook.AddMonitor(WM_WINDOWPOSCHANGED, MainWindowHook, this);
-}
+      mRegistered(false) {}
 
 TaskbarTabPreview::~TaskbarTabPreview() {
   if (mIcon) {
@@ -47,6 +44,20 @@ TaskbarTabPreview::~TaskbarTabPreview() {
   } else {
     mWnd = nullptr;
   }
+}
+
+nsresult TaskbarTabPreview::Init() {
+  nsresult rv = TaskbarPreview::Init();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  WindowHook* hook = GetWindowHook();
+  if (!hook) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return hook->AddMonitor(WM_WINDOWPOSCHANGED, MainWindowHook, this);
 }
 
 nsresult TaskbarTabPreview::ShowActive(bool active) {
@@ -253,9 +264,9 @@ nsresult TaskbarTabPreview::Disable() {
 
 void TaskbarTabPreview::DetachFromNSWindow() {
   (void)SetVisible(false);
-  WindowHook& hook = GetWindowHook();
-  hook.RemoveMonitor(WM_WINDOWPOSCHANGED, MainWindowHook, this);
-
+  if (WindowHook* hook = GetWindowHook()) {
+    hook->RemoveMonitor(WM_WINDOWPOSCHANGED, MainWindowHook, this);
+  }
   TaskbarPreview::DetachFromNSWindow();
 }
 
