@@ -242,3 +242,16 @@ manifest_loaders = {
     'bugbug': BugbugLoader,
     'default': DefaultLoader,
 }
+
+_loader_cache = {}
+
+
+def get_manifest_loader(name, params):
+    # Ensure we never create more than one instance of the same loader type for
+    # performance reasons.
+    if name in _loader_cache:
+        return _loader_cache[name]
+
+    loader = manifest_loaders[name](dict(params))
+    _loader_cache[name] = loader
+    return loader
