@@ -1713,8 +1713,7 @@ void Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
     aStream << " [perspective]";
   }
   if (!mVisibleRegion.IsEmpty()) {
-    AppendToString(aStream, mVisibleRegion.ToUnknownRegion(),
-                   " [visible=", "]");
+    aStream << " [visible=" << mVisibleRegion << "]";
   } else {
     aStream << " [not visible]";
   }
@@ -1986,7 +1985,7 @@ void PaintedLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   Layer::PrintInfo(aStream, aPrefix);
   nsIntRegion validRegion = GetValidRegion();
   if (!validRegion.IsEmpty()) {
-    AppendToString(aStream, validRegion, " [valid=", "]");
+    aStream << " [valid=" << validRegion << "]";
   }
 }
 
@@ -2309,9 +2308,8 @@ void PrintInfo(std::stringstream& aStream, HostLayer* aLayerComposite) {
   }
   if (!aLayerComposite->GetLayer()->Extend3DContext() &&
       !aLayerComposite->GetShadowVisibleRegion().IsEmpty()) {
-    AppendToString(aStream,
-                   aLayerComposite->GetShadowVisibleRegion().ToUnknownRegion(),
-                   " [shadow-visible=", "]");
+    aStream << " [shadow-visible=" << aLayerComposite->GetShadowVisibleRegion()
+            << "]";
   }
 }
 
