@@ -29,6 +29,7 @@ class TaskbarWindowPreview : public TaskbarPreview,
   TaskbarWindowPreview(ITaskbarList4* aTaskbar,
                        nsITaskbarPreviewController* aController, HWND aHWND,
                        nsIDocShell* aShell);
+  virtual nsresult Init() override;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITASKBARWINDOWPREVIEW
