@@ -21,6 +21,7 @@ class TaskbarTabPreview : public nsITaskbarTabPreview, public TaskbarPreview {
   TaskbarTabPreview(ITaskbarList4* aTaskbar,
                     nsITaskbarPreviewController* aController, HWND aHWND,
                     nsIDocShell* aShell);
+  virtual nsresult Init() override;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITASKBARTABPREVIEW
