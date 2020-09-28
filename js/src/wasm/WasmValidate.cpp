@@ -401,8 +401,8 @@ bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {
 }
 
 bool wasm::DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
-                              bool refTypesEnabled, bool gcTypesEnabled,
-                              bool v128Enabled, ValTypeVector* locals) {
+                              const FeatureArgs& features,
+                              ValTypeVector* locals) {
   uint32_t numLocalEntries;
   if (!d.readVarU32(&numLocalEntries)) {
     return d.fail("failed to read number of local entries");
@@ -419,8 +419,7 @@ bool wasm::DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
     }
 
     ValType type;
-    if (!d.readValType(types, refTypesEnabled, gcTypesEnabled, v128Enabled,
-                       &type)) {
+    if (!d.readValType(types, features, &type)) {
       return false;
     }
 
@@ -1501,8 +1500,7 @@ bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
 
   const uint8_t* bodyBegin = d.currentPosition();
 
-  if (!DecodeLocalEntries(d, env.types, env.refTypesEnabled(),
-                          env.gcTypesEnabled(), env.v128Enabled(), &locals)) {
+  if (!DecodeLocalEntries(d, env.types, env.features, &locals)) {
     return false;
   }
 
@@ -1576,9 +1574,7 @@ static bool DecodeTypeVector(Decoder& d, ModuleEnvironment* env,
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
-                       env->gcTypesEnabled(), env->v128Enabled(),
-                       &(*types)[i])) {
+    if (!d.readValType(env->types.length(), env->features, &(*types)[i])) {
       return false;
     }
     if (!ValidateTypeState(d, typeState, (*types)[i])) {
@@ -1647,9 +1643,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
 
   StructMetaTypeDescr::Layout layout;
   for (uint32_t i = 0; i < numFields; i++) {
-    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
-                       env->gcTypesEnabled(), env->v128Enabled(),
-                       &fields[i].type)) {
+    if (!d.readValType(env->types.length(), env->features, &fields[i].type)) {
       return false;
     }
 
@@ -1883,15 +1877,14 @@ static bool DecodeLimits(Decoder& d, Limits* limits,
   return true;
 }
 
-static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
-                                     bool gcTypesEnabled,
+static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
                                      const TypeDefVector& types,
                                      TableDescVector* tables) {
   RefType tableElemType;
-  if (!d.readRefType(types, gcTypesEnabled, &tableElemType)) {
+  if (!d.readRefType(types, features.withRefTypes(true), &tableElemType)) {
     return false;
   }
-  if (!refTypesEnabled && !tableElemType.isFunc()) {
+  if (!features.refTypes && !tableElemType.isFunc()) {
     return d.fail("expected 'funcref' element type");
   }
   if (!tableElemType.isNullable()) {
@@ -1959,10 +1952,9 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
 }
 
 static bool DecodeGlobalType(Decoder& d, const TypeDefVector& types,
-                             bool refTypesEnabled, bool gcTypesEnabled,
-                             bool v128Enabled, ValType* type, bool* isMutable) {
-  if (!d.readValType(types, refTypesEnabled, gcTypesEnabled, v128Enabled,
-                     type)) {
+                             const FeatureArgs& features, ValType* type,
+                             bool* isMutable) {
+  if (!d.readValType(types, features, type)) {
     return d.fail("expected global type");
   }
 
@@ -2062,8 +2054,7 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       break;
     }
     case DefinitionKind::Table: {
-      if (!DecodeTableTypeAndLimits(d, env->refTypesEnabled(),
-                                    env->gcTypesEnabled(), env->types,
+      if (!DecodeTableTypeAndLimits(d, env->features, env->types,
                                     &env->tables)) {
         return false;
       }
@@ -2079,9 +2070,7 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
     case DefinitionKind::Global: {
       ValType type;
       bool isMutable;
-      if (!DecodeGlobalType(d, env->types, env->refTypesEnabled(),
-                            env->gcTypesEnabled(), env->v128Enabled(), &type,
-                            &isMutable)) {
+      if (!DecodeGlobalType(d, env->types, env->features, &type, &isMutable)) {
         return false;
       }
       if (!GlobalIsJSCompatible(d, type)) {
@@ -2190,9 +2179,7 @@ static bool DecodeTableSection(Decoder& d, ModuleEnvironment* env) {
   }
 
   for (uint32_t i = 0; i < numTables; ++i) {
-    if (!DecodeTableTypeAndLimits(d, env->refTypesEnabled(),
-                                  env->gcTypesEnabled(), env->types,
-                                  &env->tables)) {
+    if (!DecodeTableTypeAndLimits(d, env->features, env->types, &env->tables)) {
       return false;
     }
   }
@@ -2287,7 +2274,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
     case uint16_t(Op::RefNull): {
       MOZ_ASSERT_IF(env->isStructType(expected), env->gcTypesEnabled());
       RefType initType;
-      if (!d.readHeapType(env->types, env->gcTypesEnabled(), true, &initType)) {
+      if (!d.readHeapType(env->types, env->features, true, &initType)) {
         return false;
       }
       if (!expected.isReference() ||
@@ -2397,9 +2384,7 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
   for (uint32_t i = 0; i < numDefs; i++) {
     ValType type;
     bool isMutable;
-    if (!DecodeGlobalType(d, env->types, env->refTypesEnabled(),
-                          env->gcTypesEnabled(), env->v128Enabled(), &type,
-                          &isMutable)) {
+    if (!DecodeGlobalType(d, env->types, env->features, &type, &isMutable)) {
       return false;
     }
 
@@ -2681,7 +2666,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     } else {
       switch (payload) {
         case ElemSegmentPayload::ElemExpression: {
-          if (!d.readRefType(env->types, env->gcTypesEnabled(), &elemType)) {
+          if (!d.readRefType(env->types, env->features, &elemType)) {
             return false;
           }
           break;
@@ -2764,7 +2749,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
             initType = RefType::func();
             break;
           case uint16_t(Op::RefNull):
-            if (!d.readRefType(env->types, env->gcTypesEnabled(), &initType)) {
+            if (!d.readRefType(env->types, env->features, &initType)) {
               return false;
             }
             needIndex = false;
