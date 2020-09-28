@@ -16,6 +16,8 @@ import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -72,5 +74,43 @@ class StrictModeManagerTest {
 
         callbacks.captured.onFragmentResumed(fragmentManager, mockk())
         verify { fragmentManager.unregisterFragmentLifecycleCallbacks(callbacks.captured) }
+    }
+
+    @Test
+    fun `GIVEN we're in a release build WHEN resetAfter is called THEN we return the value from the function block`() {
+        val expected = "Hello world"
+        val actual = releaseManager.resetAfter(StrictMode.allowThreadDiskReads()) { expected }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `GIVEN we're in a debug build WHEN resetAfter is called THEN we return the value from the function block`() {
+        val expected = "Hello world"
+        val actual = debugManager.resetAfter(StrictMode.allowThreadDiskReads()) { expected }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `GIVEN we're in a release build WHEN resetAfter is called THEN the old policy is not set`() {
+        releaseManager.resetAfter(StrictMode.allowThreadDiskReads()) { "" }
+        verify(exactly = 0) { StrictMode.setThreadPolicy(any()) }
+    }
+
+    @Test
+    fun `GIVEN we're in a debug build WHEN resetAfter is called THEN the old policy is set`() {
+        val expectedPolicy = StrictMode.allowThreadDiskReads()
+        debugManager.resetAfter(expectedPolicy) { "" }
+        verify { StrictMode.setThreadPolicy(expectedPolicy) }
+    }
+
+    @Test
+    fun `GIVEN we're in a debug build WHEN resetAfter is called and an exception is thrown from the function THEN the old policy is set`() {
+        val expectedPolicy = StrictMode.allowThreadDiskReads()
+        try {
+            debugManager.resetAfter(expectedPolicy) { throw IllegalStateException() }
+            @Suppress("UNREACHABLE_CODE") fail("Expected previous method to throw.")
+        } catch (e: IllegalStateException) { /* Do nothing */ }
+
+        verify { StrictMode.setThreadPolicy(expectedPolicy) }
     }
 }
