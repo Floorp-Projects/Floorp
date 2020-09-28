@@ -417,7 +417,7 @@ void ContentHostTexture::PrintInfo(std::stringstream& aStream,
   aStream << nsPrintfCString("ContentHost (0x%p)", this).get();
 
   AppendToString(aStream, mBufferRect, " [buffer-rect=", "]");
-  AppendToString(aStream, mBufferRotation, " [buffer-rotation=", "]");
+  aStream << " [buffer-rotation=" << mBufferRotation << "]";
   if (PaintWillResample()) {
     aStream << " [paint-will-resample]";
   }

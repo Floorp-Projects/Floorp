@@ -1592,8 +1592,10 @@ static void DumpGeometry(std::stringstream& aStream,
   const nsTArray<gfx::Point4D>& points = aGeometry->GetPoints();
   for (size_t i = 0; i < points.Length(); ++i) {
     const gfx::IntPoint point = TruncatedToInt(points[i].As2DPoint());
-    const char* sfx = (i != points.Length() - 1) ? "," : "";
-    AppendToString(aStream, point, "", sfx);
+    aStream << point;
+    if (i != points.Length() - 1) {
+      aStream << ",";
+    }
   }
 
   aStream << "]]";
@@ -2143,7 +2145,7 @@ void ReadbackLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   if (mBackgroundLayer) {
     aStream << " [backgroundLayer="
             << nsPrintfCString("%p", mBackgroundLayer).get() << "]";
-    AppendToString(aStream, mBackgroundLayerOffset, " [backgroundOffset=", "]");
+    aStream << " [backgroundOffset=" << mBackgroundLayerOffset << "]";
   } else if (mBackgroundColor.a == 1.f) {
     aStream << " [backgroundColor=" << mBackgroundColor << "]";
   } else {

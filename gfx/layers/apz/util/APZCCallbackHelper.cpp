@@ -599,7 +599,7 @@ static bool PrepareForSetTargetAPZCNotification(
       dpElement->Describe(dpElementDesc);
     }
     APZCCH_LOG("For event at %s found scrollable element %p (%s)\n",
-               Stringify(aRefPoint).c_str(), dpElement.get(),
+               ToString(aRefPoint).c_str(), dpElement.get(),
                NS_LossyConvertUTF16toASCII(dpElementDesc).get());
   }
 

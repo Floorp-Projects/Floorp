@@ -36,13 +36,6 @@ struct ZoomConstraints;
 
 template <class T>
 void AppendToString(std::stringstream& aStream,
-                    const mozilla::gfx::IntPointTyped<T>& p,
-                    const char* pfx = "", const char* sfx = "") {
-  aStream << pfx << p << sfx;
-}
-
-template <class T>
-void AppendToString(std::stringstream& aStream,
                     const mozilla::gfx::RectTyped<T>& r, const char* pfx = "",
                     const char* sfx = "") {
   aStream << pfx;

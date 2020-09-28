@@ -16,8 +16,8 @@
 #include "mozilla/StaticPrefs_mousewheel.h"
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/Telemetry.h"                // for Telemetry
+#include "mozilla/ToString.h"
 #include "mozilla/layers/IAPZCTreeManager.h"  // for AllowedTouchBehavior
-#include "LayersLogging.h"                    // for Stringify
 #include "OverscrollHandoffState.h"
 #include "QueuedInput.h"
 
@@ -799,7 +799,7 @@ bool TouchBlockState::UpdateSlopState(const MultiTouchInput& aInput,
     if (mInSlop) {
       mSlopOrigin = aInput.mTouches[0].mScreenPoint;
       TBS_LOG("%p entering slop with origin %s\n", this,
-              Stringify(mSlopOrigin).c_str());
+              ToString(mSlopOrigin).c_str());
     }
     return false;
   }
