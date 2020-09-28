@@ -1031,16 +1031,16 @@ UniqueChars wasm::ToString(ValType type) {
         const char* heapType = nullptr;
         switch (type.refTypeKind()) {
           case RefType::Extern:
-            heapType = "externref";
+            heapType = "extern";
             break;
           case RefType::Func:
-            heapType = "funcref";
+            heapType = "func";
             break;
           case RefType::TypeIndex:
-            return JS_smprintf("ref %s%d", type.isNullable() ? "null " : " ",
+            return JS_smprintf("(ref %s%d)", type.isNullable() ? "null " : "",
                                type.refType().typeIndex());
         }
-        return JS_smprintf("ref %s%s", type.isNullable() ? "null " : " ",
+        return JS_smprintf("(ref %s%s)", type.isNullable() ? "null " : "",
                            heapType);
       }
       break;
