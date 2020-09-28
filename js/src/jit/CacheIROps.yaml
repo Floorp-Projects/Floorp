@@ -2544,13 +2544,14 @@
     lhs: StringId
     rhs: BigIntId
 
-- name: CompareObjectUndefinedNullResult
+- name: CompareNullUndefinedResult
   shared: true
   transpile: false
   cost_estimate: 2
   args:
     op: JSOpImm
-    obj: ObjId
+    isUndefined: BoolImm
+    input: ValId
 
 - name: CompareDoubleSameValueResult
   shared: true

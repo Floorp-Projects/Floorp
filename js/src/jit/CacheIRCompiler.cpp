@@ -6539,33 +6539,63 @@ bool CacheIRCompiler::emitCompareStringBigIntResult(JSOp op,
   return true;
 }
 
-bool CacheIRCompiler::emitCompareObjectUndefinedNullResult(JSOp op,
-                                                           ObjOperandId objId) {
+bool CacheIRCompiler::emitCompareNullUndefinedResult(JSOp op, bool isUndefined,
+                                                     ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
 
-  Register obj = allocator.useRegister(masm, objId);
+  AutoOutputRegister output(*this);
+  ValueOperand input = allocator.useValueRegister(masm, inputId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  if (IsStrictEqualityOp(op)) {
+    if (isUndefined) {
+      masm.testUndefinedSet(JSOpToCondition(op, false), input, scratch);
+    } else {
+      masm.testNullSet(JSOpToCondition(op, false), input, scratch);
+    }
+    EmitStoreResult(masm, scratch, JSVAL_TYPE_BOOLEAN, output);
+    return true;
+  }
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  if (op == JSOp::StrictEq || op == JSOp::StrictNe) {
-    // obj !== undefined/null for all objects.
-    EmitStoreBoolean(masm, op == JSOp::StrictNe, output);
-  } else {
-    MOZ_ASSERT(op == JSOp::Eq || op == JSOp::Ne);
-    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-    Label done, emulatesUndefined;
-    masm.branchIfObjectEmulatesUndefined(obj, scratch, failure->label(),
-                                         &emulatesUndefined);
-    EmitStoreBoolean(masm, op == JSOp::Ne, output);
-    masm.jump(&done);
-    masm.bind(&emulatesUndefined);
-    EmitStoreBoolean(masm, op == JSOp::Eq, output);
-    masm.bind(&done);
+  MOZ_ASSERT(IsLooseEqualityOp(op));
+
+  Label nullOrLikeUndefined, notNullOrLikeUndefined, done;
+  {
+    ScratchTagScope tag(masm, input);
+    masm.splitTagForTest(input, tag);
+
+    if (isUndefined) {
+      masm.branchTestUndefined(Assembler::Equal, tag, &nullOrLikeUndefined);
+      masm.branchTestNull(Assembler::Equal, tag, &nullOrLikeUndefined);
+    } else {
+      masm.branchTestNull(Assembler::Equal, tag, &nullOrLikeUndefined);
+      masm.branchTestUndefined(Assembler::Equal, tag, &nullOrLikeUndefined);
+    }
+    masm.branchTestObject(Assembler::NotEqual, tag, &notNullOrLikeUndefined);
+
+    {
+      ScratchTagScopeRelease _(&tag);
+
+      masm.unboxObject(input, scratch);
+      masm.branchIfObjectEmulatesUndefined(scratch, scratch, failure->label(),
+                                           &nullOrLikeUndefined);
+      masm.jump(&notNullOrLikeUndefined);
+    }
   }
+
+  masm.bind(&nullOrLikeUndefined);
+  EmitStoreBoolean(masm, op == JSOp::Eq, output);
+  masm.jump(&done);
+
+  masm.bind(&notNullOrLikeUndefined);
+  EmitStoreBoolean(masm, op == JSOp::Ne, output);
+
+  masm.bind(&done);
   return true;
 }
 
