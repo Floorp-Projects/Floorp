@@ -38,6 +38,7 @@ tls13_HkdfExtract(PK11SymKey *ikm1, PK11SymKey *ikm2, SSLHashType baseHash,
     SECItem paramsi;
     PK11SymKey *prk;
     static const PRUint8 zeroKeyBuf[HASH_LENGTH_MAX];
+    SECItem zeroKeyItem = { siBuffer, CONST_CAST(PRUint8, zeroKeyBuf), kTlsHkdfInfo[baseHash].hashSize };
     PK11SlotInfo *slot = NULL;
     PK11SymKey *newIkm2 = NULL;
     PK11SymKey *newIkm1 = NULL;
@@ -102,44 +103,14 @@ tls13_HkdfExtract(PK11SymKey *ikm1, PK11SymKey *ikm2, SSLHashType baseHash,
 
     /* A zero ikm2 is a key of hash-length 0s. */
     if (!ikm2) {
-        CK_OBJECT_CLASS ckoData = CKO_DATA;
-        CK_ATTRIBUTE template[2] = {
-            { CKA_CLASS, (CK_BYTE_PTR)&ckoData, sizeof(ckoData) },
-            { CKA_VALUE, (CK_BYTE_PTR)zeroKeyBuf, kTlsHkdfInfo[baseHash].hashSize }
-        };
-        CK_OBJECT_HANDLE handle;
-        PK11GenericObject *genObject;
-
         /* if we have ikm1, put the zero key in the same slot */
         slot = ikm1 ? PK11_GetSlotFromKey(ikm1) : PK11_GetBestSlot(CKM_HKDF_DERIVE, NULL);
         if (!slot) {
             return SECFailure;
         }
-        genObject = PK11_CreateGenericObject(slot, template,
-                                             PR_ARRAY_SIZE(template), PR_FALSE);
-        if (genObject == NULL) {
-            return SECFailure;
-        }
-        handle = PK11_GetObjectHandle(PK11_TypeGeneric, genObject, NULL);
-        if (handle == CK_INVALID_HANDLE) {
-            return SECFailure;
-        }
-        /* A note about ownership of the PKCS #11 handle.
-         * PK11_CreateGenericObject() will not destroy the object it creates
-         * on Free, For that you want PK11_CreateManagedGenericObject().
-         * Below we import the handle into the symKey structure. We pass
-         * PR_TRUE as the owner so that the symKey will destroy the object
-         * once it's freed. This is way it's safe to free now */
-        PK11_DestroyGenericObject(genObject);
 
-        /* NOTE: we can't both be in this block, and the block above where
-         * we moved the keys (because this block requires ikm2 to be NULL and
-         * the other requires ikm2 to be non-NULL. It's therefore safe to
-         * use newIkm2 in both cases and have a single free at the end for
-         * both */
-        PORT_Assert(newIkm2 == NULL); /* verify logic of the above statement */
-        newIkm2 = PK11_SymKeyFromHandle(slot, NULL, PK11_OriginUnwrap,
-                                        CKM_HKDF_DERIVE, handle, PR_TRUE, NULL);
+        newIkm2 = PK11_ImportDataKey(slot, CKM_HKDF_DERIVE, PK11_OriginUnwrap,
+                                     CKA_DERIVE, &zeroKeyItem, NULL);
         if (!newIkm2) {
             return SECFailure;
         }
