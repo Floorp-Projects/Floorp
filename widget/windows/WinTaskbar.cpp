@@ -316,6 +316,11 @@ WinTaskbar::CreateTaskbarTabPreview(nsIDocShell* shell,
       new TaskbarTabPreview(mTaskbar, controller, toplevelHWND, shell));
   if (!preview) return NS_ERROR_OUT_OF_MEMORY;
 
+  nsresult rv = preview->Init();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   preview.forget(_retval);
 
   return NS_OK;
@@ -340,9 +345,19 @@ WinTaskbar::GetTaskbarWindowPreview(nsIDocShell* shell,
   if (!preview) {
     RefPtr<DefaultController> defaultController =
         new DefaultController(toplevelHWND);
-    preview = new TaskbarWindowPreview(mTaskbar, defaultController,
-                                       toplevelHWND, shell);
-    if (!preview) return NS_ERROR_OUT_OF_MEMORY;
+
+    TaskbarWindowPreview* previewRaw = new TaskbarWindowPreview(
+        mTaskbar, defaultController, toplevelHWND, shell);
+    if (!previewRaw) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    preview = previewRaw;
+
+    nsresult rv = previewRaw->Init();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     window->SetTaskbarPreview(preview);
   }
 

@@ -58,11 +58,6 @@ TaskbarWindowPreview::TaskbarWindowPreview(
     mThumbButtons[i].iId = i;
     mThumbButtons[i].dwFlags = THBF_HIDDEN;
   }
-
-  WindowHook& hook = GetWindowHook();
-  if (!CanMakeTaskbarCalls())
-    hook.AddMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
-                    TaskbarWindowHook, this);
 }
 
 TaskbarWindowPreview::~TaskbarWindowPreview() {
@@ -76,6 +71,25 @@ TaskbarWindowPreview::~TaskbarWindowPreview() {
   } else {
     mWnd = nullptr;
   }
+}
+
+nsresult TaskbarWindowPreview::Init() {
+  nsresult rv = TaskbarPreview::Init();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (CanMakeTaskbarCalls()) {
+    return NS_OK;
+  }
+
+  WindowHook* hook = GetWindowHook();
+  if (!hook) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return hook->AddMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
+                          TaskbarWindowHook, this);
 }
 
 nsresult TaskbarWindowPreview::ShowActive(bool active) {
@@ -106,8 +120,11 @@ nsresult TaskbarWindowPreview::GetButton(uint32_t index,
   if (!mHaveButtons) {
     mHaveButtons = true;
 
-    WindowHook& hook = GetWindowHook();
-    (void)hook.AddHook(WM_COMMAND, WindowHookProc, this);
+    WindowHook* hook = GetWindowHook();
+    if (!hook) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    (void)hook->AddHook(WM_COMMAND, WindowHookProc, this);
 
     if (mVisible && FAILED(mTaskbar->ThumbBarAddButtons(
                         mWnd, nsITaskbarWindowPreview::NUM_TOOLBAR_BUTTONS,
@@ -122,17 +139,23 @@ nsresult TaskbarWindowPreview::GetButton(uint32_t index,
 NS_IMETHODIMP
 TaskbarWindowPreview::SetEnableCustomDrawing(bool aEnable) {
   if (aEnable == mCustomDrawing) return NS_OK;
+
+  WindowHook* hook = GetWindowHook();
+  if (!hook) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   mCustomDrawing = aEnable;
   TaskbarPreview::EnableCustomDrawing(mWnd, aEnable);
 
-  WindowHook& hook = GetWindowHook();
   if (aEnable) {
-    (void)hook.AddHook(WM_DWMSENDICONICTHUMBNAIL, WindowHookProc, this);
-    (void)hook.AddHook(WM_DWMSENDICONICLIVEPREVIEWBITMAP, WindowHookProc, this);
+    (void)hook->AddHook(WM_DWMSENDICONICTHUMBNAIL, WindowHookProc, this);
+    (void)hook->AddHook(WM_DWMSENDICONICLIVEPREVIEWBITMAP, WindowHookProc,
+                        this);
   } else {
-    (void)hook.RemoveHook(WM_DWMSENDICONICLIVEPREVIEWBITMAP, WindowHookProc,
-                          this);
-    (void)hook.RemoveHook(WM_DWMSENDICONICTHUMBNAIL, WindowHookProc, this);
+    (void)hook->RemoveHook(WM_DWMSENDICONICLIVEPREVIEWBITMAP, WindowHookProc,
+                           this);
+    (void)hook->RemoveHook(WM_DWMSENDICONICTHUMBNAIL, WindowHookProc, this);
   }
   return NS_OK;
 }
@@ -269,11 +292,11 @@ void TaskbarWindowPreview::DetachFromNSWindow() {
   // Remove the hooks we have for drawing
   SetEnableCustomDrawing(false);
 
-  WindowHook& hook = GetWindowHook();
-  (void)hook.RemoveHook(WM_COMMAND, WindowHookProc, this);
-  (void)hook.RemoveMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
-                           TaskbarWindowHook, this);
-
+  if (WindowHook* hook = GetWindowHook()) {
+    (void)hook->RemoveHook(WM_COMMAND, WindowHookProc, this);
+    (void)hook->RemoveMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
+                              TaskbarWindowHook, this);
+  }
   TaskbarPreview::DetachFromNSWindow();
 }
 
