@@ -2411,6 +2411,10 @@ GeckoDriver.prototype.isElementDisplayed = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().isElementDisplayed(webEl, this.capabilities);
+  }
+
   switch (this.context) {
     case Context.Chrome:
       let el = this.curBrowser.seenEls.get(webEl);
@@ -2496,6 +2500,10 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
 
+  if (MarionettePrefs.useActors) {
+    return this.getActor().isElementEnabled(webEl, this.capabilities);
+  }
+
   switch (this.context) {
     case Context.Chrome:
       // Selenium atom doesn't quite work here
@@ -2534,6 +2542,10 @@ GeckoDriver.prototype.isElementSelected = async function(cmd) {
 
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
+
+  if (MarionettePrefs.useActors) {
+    return this.getActor().isElementSelected(webEl, this.capabilities);
+  }
 
   switch (this.context) {
     case Context.Chrome:
