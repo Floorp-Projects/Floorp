@@ -72,12 +72,12 @@ fn lerp(mut a: f32, mut b: f32, mut t: f32) -> f32 {
     return a * (1.0 - t) + b * t;
 }
 
-unsafe extern "C" fn build_lut_matrix(mut lut: *mut lutType) -> matrix {
+unsafe extern "C" fn build_lut_matrix(mut lut: Option<&lutType>) -> matrix {
     let mut result: matrix = matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
-    if !lut.is_null() {
+    if let Some(lut) = lut {
         result.m[0][0] = s15Fixed16Number_to_float((*lut).e00);
         result.m[0][1] = s15Fixed16Number_to_float((*lut).e01);
         result.m[0][2] = s15Fixed16Number_to_float((*lut).e02);
@@ -992,7 +992,7 @@ unsafe extern "C" fn qcms_modular_transform_create_mAB(
     return 0 as *mut qcms_modular_transform;
 }
 unsafe extern "C" fn qcms_modular_transform_create_lut(
-    mut lut: *mut lutType,
+    mut lut: &lutType,
 ) -> *mut qcms_modular_transform {
     let mut first_transform: *mut qcms_modular_transform = 0 as *mut qcms_modular_transform;
     let mut next_transform: *mut *mut qcms_modular_transform = &mut first_transform;
@@ -1006,7 +1006,7 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
     let mut transform: *mut qcms_modular_transform = qcms_modular_transform_alloc();
     if !transform.is_null() {
         append_transform(transform, &mut next_transform);
-        (*transform).matrix = build_lut_matrix(lut);
+        (*transform).matrix = build_lut_matrix(Some(lut));
         if !(*transform).matrix.invalid {
             (*transform).transform_module_fn = Some(
                 qcms_transform_module_matrix
@@ -1027,7 +1027,7 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
                 if !in_curves.is_null() {
                     memcpy(
                         in_curves as *mut libc::c_void,
-                        (*lut).input_table as *const libc::c_void,
+                        (*lut).input_table.as_ptr() as *mut libc::c_void,
                         in_curve_len,
                     );
                     (*transform).input_clut_table_r =
@@ -1045,7 +1045,7 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
                     if !clut.is_null() {
                         memcpy(
                             clut as *mut libc::c_void,
-                            (*lut).clut_table as *const libc::c_void,
+                            (*lut).clut_table.as_ptr() as *const libc::c_void,
                             clut_length,
                         );
                         (*transform).r_clut = clut.offset(0isize);
@@ -1060,7 +1060,7 @@ unsafe extern "C" fn qcms_modular_transform_create_lut(
                         if !out_curves.is_null() {
                             memcpy(
                                 out_curves as *mut libc::c_void,
-                                (*lut).output_table as *const libc::c_void,
+                                (*lut).output_table.as_ptr() as *const libc::c_void,
                                 out_curve_len,
                             );
                             (*transform).output_clut_table_r = out_curves
@@ -1097,9 +1097,9 @@ pub unsafe extern "C" fn qcms_modular_transform_create_input(
     let mut current_block: u64;
     let mut first_transform: *mut qcms_modular_transform = 0 as *mut qcms_modular_transform;
     let mut next_transform: *mut *mut qcms_modular_transform = &mut first_transform;
-    if !(*in_0).A2B0.is_null() {
+    if !(*in_0).A2B0.is_none() {
         let mut lut_transform: *mut qcms_modular_transform =
-            qcms_modular_transform_create_lut((*in_0).A2B0);
+            qcms_modular_transform_create_lut((*in_0).A2B0.as_deref().unwrap());
         if lut_transform.is_null() {
             current_block = 8903102000210989603;
         } else {
@@ -1201,9 +1201,9 @@ unsafe extern "C" fn qcms_modular_transform_create_output(
     let mut current_block: u64;
     let mut first_transform: *mut qcms_modular_transform = 0 as *mut qcms_modular_transform;
     let mut next_transform: *mut *mut qcms_modular_transform = &mut first_transform;
-    if !(*out).B2A0.is_null() {
+    if !(*out).B2A0.is_none() {
         let mut lut_transform: *mut qcms_modular_transform =
-            qcms_modular_transform_create_lut((*out).B2A0);
+            qcms_modular_transform_create_lut((*out).B2A0.as_deref().unwrap());
         if lut_transform.is_null() {
             current_block = 15713701561912628542;
         } else {

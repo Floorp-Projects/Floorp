@@ -1167,7 +1167,7 @@ pub unsafe extern "C" fn qcms_profile_precache_output_transform(mut profile: *mu
     }
     if qcms_supports_iccv4.load(Ordering::Relaxed) {
         /* don't precache since we will use the B2A LUT */
-        if !(*profile).B2A0.is_null() {
+        if !(*profile).B2A0.is_none() {
             return;
         }
         /* don't precache since we will use the mBA LUT */
@@ -1333,8 +1333,8 @@ pub unsafe extern "C" fn qcms_transform_create(
         && (in_type == QCMS_DATA_RGB_8
             || in_type == QCMS_DATA_RGBA_8
             || in_type == QCMS_DATA_BGRA_8)
-        && (!(*in_0).A2B0.is_null()
-            || !(*out).B2A0.is_null()
+        && (!(*in_0).A2B0.is_none()
+            || !(*out).B2A0.is_none()
             || !(*in_0).mAB.is_null()
             || !(*out).mAB.is_null())
     {
