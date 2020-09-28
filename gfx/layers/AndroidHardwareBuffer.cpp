@@ -11,6 +11,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtrExtensions.h"
 
@@ -332,6 +333,20 @@ bool AndroidHardwareBuffer::WaitForBufferOwnership() {
 
 bool AndroidHardwareBuffer::IsWaitingForBufferOwnership() {
   return AndroidHardwareBufferManager::Get()->IsWaitingForBufferOwnership(this);
+}
+
+RefPtr<TextureClient>
+AndroidHardwareBuffer::GetTextureClientOfSharedSurfaceTextureData(
+    const layers::SurfaceDescriptor& aDesc, const gfx::SurfaceFormat aFormat,
+    const gfx::IntSize& aSize, const TextureFlags aFlags,
+    LayersIPCChannel* aAllocator) {
+  if (mTextureClientOfSharedSurfaceTextureData) {
+    return mTextureClientOfSharedSurfaceTextureData;
+  }
+  mTextureClientOfSharedSurfaceTextureData =
+      SharedSurfaceTextureData::CreateTextureClient(aDesc, aFormat, aSize,
+                                                    aFlags, aAllocator);
+  return mTextureClientOfSharedSurfaceTextureData;
 }
 
 StaticAutoPtr<AndroidHardwareBufferManager>
