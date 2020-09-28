@@ -246,7 +246,8 @@ internal class RustPushConnection(
         pushApi.close()
     }
 
-    override fun isInitialized() = api != null
+    @GuardedBy("this")
+    override fun isInitialized() = synchronized(this) { api != null }
 }
 
 /**
