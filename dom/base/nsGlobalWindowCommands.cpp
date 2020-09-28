@@ -237,7 +237,7 @@ nsresult nsSelectionCommandsBase::GetSelectionControllerFromWindow(
 // Helpers for nsSelectMoveScrollCommand and nsPhysicalSelectMoveScrollCommand
 static void AdjustFocusAfterCaretMove(nsPIDOMWindowOuter* aWindow) {
   // adjust the focus to the new caret position
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     RefPtr<dom::Element> result;
     fm->MoveFocus(aWindow, nullptr, nsIFocusManager::MOVEFOCUS_CARET,
