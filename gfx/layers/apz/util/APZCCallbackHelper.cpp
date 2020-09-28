@@ -20,6 +20,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/ToString.h"
 #include "mozilla/ViewportUtils.h"
 #include "nsContainerFrame.h"
 #include "nsContentUtils.h"
@@ -169,7 +170,7 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
       if (!APZCCallbackHelper::IsScrollInProgress(sf)) {
         if (RefPtr<PresShell> presShell = GetPresShell(aContent)) {
           APZCCH_LOG("Setting VV offset to %s on presShell %p\n",
-                     Stringify(aRequest.GetVisualScrollOffset()).c_str(),
+                     ToString(aRequest.GetVisualScrollOffset()).c_str(),
                      presShell.get());
           if (presShell->SetVisualViewportOffset(
                   CSSPoint::ToAppUnits(aRequest.GetVisualScrollOffset()),
@@ -524,7 +525,7 @@ void APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
     return;
   }
   APZCCH_LOG("Dispatching single-tap component events to %s\n",
-             Stringify(aPoint).c_str());
+             ToString(aPoint).c_str());
   int time = 0;
   DispatchSynthesizedMouseEvent(eMouseMove, time, aPoint, aModifiers,
                                 aClickCount, aWidget);
