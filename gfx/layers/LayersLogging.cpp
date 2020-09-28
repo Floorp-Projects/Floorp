@@ -163,14 +163,14 @@ void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
 void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
                     const char* pfx, const char* sfx, bool detailed) {
   aStream << pfx;
-  AppendToString(aStream, m.GetCompositionBounds(), "{ [cb=");
-  AppendToString(aStream, m.GetScrollableRect(), "] [sr=");
-  aStream << "] [s=" << m.GetVisualScrollOffset();
+  aStream << "{ [cb=" << m.GetCompositionBounds()
+          << "] [sr=" << m.GetScrollableRect()
+          << "] [s=" << m.GetVisualScrollOffset();
   if (m.GetVisualScrollUpdateType() != FrameMetrics::eNone) {
     aStream << "] [vd=" << m.GetVisualDestination();
   }
-  AppendToString(aStream, m.GetDisplayPort(), "] [dp=");
-  AppendToString(aStream, m.GetCriticalDisplayPort(), "] [cdp=");
+  aStream << "] [dp=" << m.GetDisplayPort()
+          << "] [cdp=" << m.GetCriticalDisplayPort();
   if (!detailed) {
     aStream << "] [scrollId=" << m.GetScrollId();
     if (m.IsRootContent()) {
@@ -179,8 +179,8 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     AppendToString(aStream, m.GetZoom(), "] [z=", "] }");
   } else {
     AppendToString(aStream, m.GetRootCompositionSize(), "] [rcs=");
-    AppendToString(aStream, m.GetLayoutViewport(), "] [v=");
-    aStream << nsPrintfCString("] [z=(ld=%.3f r=%.3f",
+    aStream << "] [v=" << m.GetLayoutViewport()
+            << nsPrintfCString("] [z=(ld=%.3f r=%.3f",
                                m.GetDevPixelsPerCSSPixel().scale,
                                m.GetPresShellResolution())
                    .get();
