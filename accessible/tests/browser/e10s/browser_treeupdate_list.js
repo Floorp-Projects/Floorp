@@ -25,7 +25,7 @@ addAccessibleTask(
       role: ROLE_LISTITEM,
       children: [
         {
-          role: ROLE_STATICTEXT,
+          role: ROLE_LISTITEM_MARKER,
           children: [],
         },
         {
