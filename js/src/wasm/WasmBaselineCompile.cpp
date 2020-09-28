@@ -7801,6 +7801,8 @@ class BaseCompiler final : public BaseCompilerInterface {
     latentType_ = operandType;
   }
 
+  bool hasLatentOp() const { return latentOp_ != LatentOp::None; }
+
   void resetLatentOp() { latentOp_ = LatentOp::None; }
 
   void branchTo(Assembler::DoubleCondition c, RegF64 lhs, RegF64 rhs,
@@ -7829,12 +7831,16 @@ class BaseCompiler final : public BaseCompilerInterface {
     masm.branch64(c, lhs, rhs, l);
   }
 
+  void branchTo(Assembler::Condition c, RegPtr lhs, ImmWord rhs, Label* l) {
+    masm.branchPtr(c, lhs, rhs, l);
+  }
+
   // Emit a conditional branch that optionally and optimally cleans up the CPU
   // stack before we branch.
   //
   // Cond is either Assembler::Condition or Assembler::DoubleCondition.
   //
-  // Lhs is RegI32, RegI64, or RegF32, or RegF64.
+  // Lhs is RegI32, RegI64, or RegF32, RegF64, or RegPtr.
   //
   // Rhs is either the same as Lhs, or an immediate expression compatible with
   // Lhs "when applicable".
@@ -8061,6 +8067,10 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitRefFunc();
   MOZ_MUST_USE bool emitRefNull();
   MOZ_MUST_USE bool emitRefIsNull();
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  MOZ_MUST_USE bool emitRefAsNonNull();
+  MOZ_MUST_USE bool emitBrOnNull();
+#endif
 
   MOZ_MUST_USE bool emitAtomicCmpXchg(ValType type, Scalar::Type viewType);
   MOZ_MUST_USE bool emitAtomicLoad(ValType type, Scalar::Type viewType);
@@ -9819,6 +9829,41 @@ bool BaseCompiler::emitBrIf() {
   return true;
 }
 
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+bool BaseCompiler::emitBrOnNull() {
+  MOZ_ASSERT(!hasLatentOp());
+
+  uint32_t relativeDepth;
+  ResultType type;
+  NothingVector unused_values;
+  Nothing unused_condition;
+  if (!iter_.readBrOnNull(&relativeDepth, &type, &unused_values,
+                          &unused_condition)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  Control& target = controlItem(relativeDepth);
+  target.bceSafeOnExit &= bceSafe_;
+
+  BranchState b(&target.label, target.stackHeight, InvertBranch(false), type);
+  if (b.hasBlockResults()) {
+    needResultRegisters(b.resultType);
+  }
+  RegPtr rp = popRef();
+  if (b.hasBlockResults()) {
+    freeResultRegisters(b.resultType);
+  }
+  jumpConditionalWithResults(&b, Assembler::Equal, rp, ImmWord(NULLREF_VALUE));
+  pushRef(rp);
+
+  return true;
+}
+#endif
+
 bool BaseCompiler::emitBrTable() {
   Uint32Vector depths;
   uint32_t defaultDepth;
@@ -11416,6 +11461,28 @@ bool BaseCompiler::emitRefIsNull() {
   pushI32(rd);
   return true;
 }
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+bool BaseCompiler::emitRefAsNonNull() {
+  Nothing nothing;
+  if (!iter_.readRefAsNonNull(&nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  RegPtr rp = popRef();
+  Label ok;
+  masm.branchTestPtr(Assembler::NonZero, rp, rp, &ok);
+  trap(Trap::NullPointerDereference);
+  masm.bind(&ok);
+  pushRef(rp);
+
+  return true;
+}
+#endif
 
 bool BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType) {
   LinearMemoryAddress<Nothing> addr;
@@ -14303,6 +14370,18 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::MemorySize):
         CHECK_NEXT(emitMemorySize());
 
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      case uint16_t(Op::RefAsNonNull):
+        if (!env_.functionReferencesEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK_NEXT(emitRefAsNonNull());
+      case uint16_t(Op::BrOnNull):
+        if (!env_.functionReferencesEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK_NEXT(emitBrOnNull());
+#endif
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq):
         if (!env_.gcTypesEnabled()) {

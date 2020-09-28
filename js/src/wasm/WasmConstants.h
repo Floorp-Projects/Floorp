@@ -389,6 +389,10 @@ enum class Op {
   RefIsNull = 0xd1,
   RefFunc = 0xd2,
 
+  // Function references
+  RefAsNonNull = 0xd3,
+  BrOnNull = 0xd4,
+
   // GC (experimental)
   RefEq = 0xd5,
 
