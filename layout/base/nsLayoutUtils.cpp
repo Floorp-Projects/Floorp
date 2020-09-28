@@ -90,6 +90,7 @@
 #include "mozilla/SVGTextFrame.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/ToString.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/ViewportUtils.h"
@@ -1346,14 +1347,14 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
       MOZ_LOG(sDisplayportLog, LogLevel::Debug,
               ("SetDisplayPortMargins %s on scrollId=%" PRIu64 ", newDp=%s\n",
                Stringify(aMargins).c_str(), viewID,
-               Stringify(newDisplayPort).c_str()));
+               ToString(newDisplayPort).c_str()));
     } else {
       // Use verbose level logging for when an existing displayport got its
       // margins updated.
       MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
               ("SetDisplayPortMargins %s on scrollId=%" PRIu64 ", newDp=%s\n",
                Stringify(aMargins).c_str(), viewID,
-               Stringify(newDisplayPort).c_str()));
+               ToString(newDisplayPort).c_str()));
     }
   }
 
@@ -1406,7 +1407,7 @@ void nsLayoutUtils::SetDisplayPortBase(nsIContent* aContent,
     ViewID viewId = FindOrCreateIDFor(aContent);
     MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
             ("Setting base rect %s for scrollId=%" PRIu64 "\n",
-             Stringify(aBase).c_str(), viewId));
+             ToString(aBase).c_str(), viewId));
   }
   aContent->SetProperty(nsGkAtoms::DisplayPortBase, new nsRect(aBase),
                         nsINode::DeleteProperty<nsRect>);

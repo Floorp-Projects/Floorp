@@ -26,7 +26,6 @@
 #include "nsIContentInlines.h"
 #include "nsIFrame.h"
 #include <algorithm>
-#include "LayersLogging.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -396,7 +395,7 @@ static nsIFrame* GetClosest(RelativeTo aRoot,
         f, nsRect(nsPoint(0, 0), f->GetSize()), aRoot,
         &preservesAxisAlignedRectangles);
     PET_LOG("Checking candidate %p with border box %s\n", f,
-            mozilla::layers::Stringify(borderBox).c_str());
+            ToString(borderBox).c_str());
     nsRegion region;
     region.And(exposedRegion, borderBox);
     if (region.IsEmpty()) {
@@ -478,7 +477,7 @@ nsIFrame* FindFrameTargetedByInputEvent(
       "Found initial target %p for event class %s message %s point %s "
       "relative to root frame %s\n",
       target, ToChar(aEvent->mClass), ToChar(aEvent->mMessage),
-      mozilla::ToString(aPointRelativeToRootFrame).c_str(),
+      ToString(aPointRelativeToRootFrame).c_str(),
       ToString(aRootFrame).c_str());
 
   EventRadiusPrefs prefs(aEvent->mClass);
@@ -506,8 +505,7 @@ nsIFrame* FindFrameTargetedByInputEvent(
 
   nsRect targetRect = GetTargetRect(aRootFrame, aPointRelativeToRootFrame,
                                     restrictToDescendants, prefs, aFlags);
-  PET_LOG("Expanded point to target rect %s\n",
-          mozilla::layers::Stringify(targetRect).c_str());
+  PET_LOG("Expanded point to target rect %s\n", ToString(targetRect).c_str());
   AutoTArray<nsIFrame*, 8> candidates;
   nsresult rv = nsLayoutUtils::GetFramesForArea(aRootFrame, targetRect,
                                                 candidates, options);
