@@ -37,6 +37,10 @@ class SharedSurfaceTextureData : public TextureData {
   const gfx::SurfaceFormat mFormat;
   const gfx::IntSize mSize;
 
+  static already_AddRefed<TextureClient> CreateTextureClient(
+      const layers::SurfaceDescriptor& aDesc, const gfx::SurfaceFormat aFormat,
+      gfx::IntSize aSize, TextureFlags aFlags, LayersIPCChannel* aAllocator);
+
   SharedSurfaceTextureData(const SurfaceDescriptor&, gfx::SurfaceFormat,
                            gfx::IntSize);
   virtual ~SharedSurfaceTextureData();

@@ -14,10 +14,22 @@
 #include "nsThreadUtils.h"
 #include "SharedSurface.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/layers/AndroidHardwareBuffer.h"
+#endif
+
 using namespace mozilla::gl;
 
 namespace mozilla {
 namespace layers {
+
+/* static */
+already_AddRefed<TextureClient> SharedSurfaceTextureData::CreateTextureClient(
+    const layers::SurfaceDescriptor& aDesc, const gfx::SurfaceFormat aFormat,
+    gfx::IntSize aSize, TextureFlags aFlags, LayersIPCChannel* aAllocator) {
+  auto data = MakeUnique<SharedSurfaceTextureData>(aDesc, aFormat, aSize);
+  return TextureClient::CreateWithData(data.release(), aFlags, aAllocator);
+}
 
 SharedSurfaceTextureData::SharedSurfaceTextureData(
     const SurfaceDescriptor& desc, const gfx::SurfaceFormat format,
@@ -38,8 +50,47 @@ void SharedSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
 }
 
 bool SharedSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
-  aOutDescriptor = mDesc;
+  if (mDesc.type() !=
+      SurfaceDescriptor::TSurfaceDescriptorAndroidHardwareBuffer) {
+    aOutDescriptor = mDesc;
+    return true;
+  }
+
+#ifdef MOZ_WIDGET_ANDROID
+  // File descriptor is created heare for reducing its allocation.
+  const SurfaceDescriptorAndroidHardwareBuffer& desc =
+      mDesc.get_SurfaceDescriptorAndroidHardwareBuffer();
+  RefPtr<AndroidHardwareBuffer> buffer =
+      AndroidHardwareBufferManager::Get()->GetBuffer(desc.bufferId());
+  if (!buffer) {
+    return false;
+  }
+
+  int fd[2] = {};
+  if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd) != 0) {
+    return false;
+  }
+
+  UniqueFileHandle readerFd(fd[0]);
+  UniqueFileHandle writerFd(fd[1]);
+
+  // Send the AHardwareBuffer to an AF_UNIX socket. It does not acquire or
+  // retain a reference to the buffer object. The caller is therefore
+  // responsible for ensuring that the buffer remains alive through the lifetime
+  // of this file descriptor.
+  int ret = buffer->SendHandleToUnixSocket(writerFd.get());
+  if (ret < 0) {
+    return false;
+  }
+
+  aOutDescriptor = layers::SurfaceDescriptorAndroidHardwareBuffer(
+      ipc::FileDescriptor(readerFd.release()), buffer->mId, buffer->mSize,
+      buffer->mFormat);
   return true;
+#else
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+  return false;
+#endif
 }
 
 TextureFlags SharedSurfaceTextureData::GetTextureFlags() const {

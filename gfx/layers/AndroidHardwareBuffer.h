@@ -126,6 +126,11 @@ class AndroidHardwareBuffer
 
   ipc::FileDescriptor GetAcquireFence();
 
+  RefPtr<TextureClient> GetTextureClientOfSharedSurfaceTextureData(
+      const layers::SurfaceDescriptor& aDesc, const gfx::SurfaceFormat aFormat,
+      const gfx::IntSize& aSize, const TextureFlags aFlags,
+      LayersIPCChannel* aAllocator);
+
   const gfx::IntSize mSize;
   const uint32_t mStride;
   const gfx::SurfaceFormat mFormat;
@@ -171,6 +176,14 @@ class AndroidHardwareBuffer
   // Acquire fence is a fence that is used for waiting until rendering to
   // its AHardwareBuffer is completed.
   ipc::FileDescriptor mAcquireFenceFd;
+
+  // Only TextureClient of SharedSurfaceTextureData could be here.
+  // SharedSurfaceTextureData does not own AndroidHardwareBuffer,
+  // then it does not affect to a lifetime of AndroidHardwareBuffer.
+  // It is used for reducing SharedSurfaceTextureData re-creation to
+  // avoid re-allocating file descriptor by
+  // SharedSurfaceTextureData::Serialize().
+  RefPtr<TextureClient> mTextureClientOfSharedSurfaceTextureData;
 
   static uint64_t GetNextId();
 

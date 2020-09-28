@@ -120,27 +120,14 @@ void SharedSurface_AndroidHardwareBuffer::ProducerReleaseImpl() {
 
 Maybe<layers::SurfaceDescriptor>
 SharedSurface_AndroidHardwareBuffer::ToSurfaceDescriptor() {
-  // XXX File descriptor usage is not efficient. This function is called for
-  // each WebGL rendering. See Bug 1663381.
-  int fd[2] = {};
-  if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fd) != 0) {
-    return Nothing();
-  }
-
-  UniqueFileHandle readerFd(fd[0]);
-  UniqueFileHandle writerFd(fd[1]);
-
-  // Send the AHardwareBuffer to an AF_UNIX socket. It does not acquire or
-  // retain a reference to the buffer object. The caller is therefore
-  // responsible for ensuring that the buffer remains alive through the lifetime
-  // of this file descriptor.
-  int ret = mAndroidHardwareBuffer->SendHandleToUnixSocket(writerFd.get());
-  if (ret < 0) {
-    return Nothing();
-  }
-
+  // Create SurfaceDescriptor without a valid file descriptor.
+  // The valid file descriptor is created by
+  // SharedSurfaceTextureData::Serialize().
+  // When valid file descriptor is created in this function,
+  // It causes out of file descriptor in this process, since the function is
+  // called for each layer transaction.
   return Some(layers::SurfaceDescriptorAndroidHardwareBuffer(
-      ipc::FileDescriptor(readerFd.release()), mAndroidHardwareBuffer->mId,
+      ipc::FileDescriptor(), mAndroidHardwareBuffer->mId,
       mAndroidHardwareBuffer->mSize, mAndroidHardwareBuffer->mFormat));
 }
 
