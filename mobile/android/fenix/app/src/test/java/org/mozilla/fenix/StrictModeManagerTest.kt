@@ -49,21 +49,21 @@ class StrictModeManagerTest {
     }
 
     @Test
-    fun `test enableStrictMode in release`() {
+    fun `GIVEN we're in a release build WHEN we enable strict mode THEN we don't set policies`() {
         releaseManager.enableStrictMode(false)
         verify(exactly = 0) { StrictMode.setThreadPolicy(any()) }
         verify(exactly = 0) { StrictMode.setVmPolicy(any()) }
     }
 
     @Test
-    fun `test enableStrictMode in debug`() {
+    fun `GIVEN we're in a debug build WHEN we enable strict mode THEN we set policies`() {
         debugManager.enableStrictMode(false)
         verify { StrictMode.setThreadPolicy(any()) }
         verify { StrictMode.setVmPolicy(any()) }
     }
 
     @Test
-    fun `test changeStrictModePolicies in debug`() {
+    fun `GIVEN we're in a debug build WHEN we attach a listener THEN we attach to the fragment lifecycle and detach when onFragmentResumed is called`() {
         val callbacks = slot<FragmentManager.FragmentLifecycleCallbacks>()
 
         debugManager.attachListenerToDisablePenaltyDeath(fragmentManager)
