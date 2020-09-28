@@ -669,7 +669,7 @@ addAccessibleTask(
       range,
     ];
 
-    for (let i = 0; i < toCheck.length; i) {
+    for (let i = 0; i < toCheck.length; i++) {
       is(
         toCheck[i].getAttributeValue("AXValue"),
         controls[i].getAttributeValue("AXValue"),
@@ -1045,135 +1045,6 @@ addAccessibleTask(
       results[0].getAttributeValue("AXRole"),
       "AXWebArea",
       "Got web area accessible"
-    );
-  }
-);
-
-/**
- * Test rotor with radiogroups
- */
-addAccessibleTask(
-  `
-  <div role="radiogroup" id="radios" aria-labelledby="desc">
-    <h1 id="desc">some radio buttons</h1>
-    <div id="radio1" role="radio"> Radio 1</div>
-    <div id="radio2" role="radio"> Radio 2</div>
-  </div>
-  `,
-  async (browser, accDoc) => {
-    const searchPred = {
-      AXSearchKey: "AXRadioGroupSearchKey",
-      AXImmediateDescendants: 1,
-      AXResultsLimit: -1,
-      AXDirection: "AXDirectionNext",
-    };
-
-    const webArea = accDoc.nativeInterface.QueryInterface(
-      Ci.nsIAccessibleMacInterface
-    );
-    is(
-      webArea.getAttributeValue("AXRole"),
-      "AXWebArea",
-      "Got web area accessible"
-    );
-
-    const radiogroupCount = webArea.getParameterizedAttributeValue(
-      "AXUIElementCountForSearchPredicate",
-      NSDictionary(searchPred)
-    );
-    is(1, radiogroupCount, "Found 1 radio group");
-
-    const controls = webArea.getParameterizedAttributeValue(
-      "AXUIElementsForSearchPredicate",
-      NSDictionary(searchPred)
-    );
-
-    const radios = getNativeInterface(accDoc, "radios");
-
-    is(
-      radios.getAttributeValue("AXDescription"),
-      controls[0].getAttributeValue("AXDescription"),
-      "Found correct group of radios"
-    );
-  }
-);
-
-/**
- * Test rotor with static text
- */
-addAccessibleTask(
-  `
-  <h1>Hello I am a heading</h1>
-  This is some regular text.<p>this is some paragraph text</p><br>
-  This is a list:<ul>
-    <li>List item one</li>
-    <li>List item two</li>
-  </ul>
-
-  <a href="http://example.com">This is a link</a>
-  `,
-  async (browser, accDoc) => {
-    const searchPred = {
-      AXSearchKey: "AXStaticTextSearchKey",
-      AXImmediateDescendants: 0,
-      AXResultsLimit: -1,
-      AXDirection: "AXDirectionNext",
-    };
-
-    const webArea = accDoc.nativeInterface.QueryInterface(
-      Ci.nsIAccessibleMacInterface
-    );
-    is(
-      webArea.getAttributeValue("AXRole"),
-      "AXWebArea",
-      "Got web area accessible"
-    );
-
-    const textCount = webArea.getParameterizedAttributeValue(
-      "AXUIElementCountForSearchPredicate",
-      NSDictionary(searchPred)
-    );
-    is(7, textCount, "Found 7 pieces of text");
-
-    const text = webArea.getParameterizedAttributeValue(
-      "AXUIElementsForSearchPredicate",
-      NSDictionary(searchPred)
-    );
-
-    is(
-      "Hello I am a heading",
-      text[0].getAttributeValue("AXValue"),
-      "Found correct text node for heading"
-    );
-    is(
-      "This is some regular text.",
-      text[1].getAttributeValue("AXValue"),
-      "Found correct text node"
-    );
-    is(
-      "this is some paragraph text",
-      text[2].getAttributeValue("AXValue"),
-      "Found correct text node for paragraph"
-    );
-    is(
-      "This is a list:",
-      text[3].getAttributeValue("AXValue"),
-      "Found correct text node for pre-list text node"
-    );
-    is(
-      "List item one",
-      text[4].getAttributeValue("AXValue"),
-      "Found correct text node for list item one"
-    );
-    is(
-      "List item two",
-      text[5].getAttributeValue("AXValue"),
-      "Found correct text node for list item two"
-    );
-    is(
-      "This is a link",
-      text[6].getAttributeValue("AXValue"),
-      "Found correct text node for link"
     );
   }
 );
