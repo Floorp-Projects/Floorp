@@ -712,3 +712,7 @@ Upload macOS and windows system symbols to tecken.
 scriptworker-canary
 -------------------
 Push tasks to try to test new scriptworker deployments.
+
+updatebot
+------------------
+Check for updates to (supported) third party libraries, and manage their lifecycle.
