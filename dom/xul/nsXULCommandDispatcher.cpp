@@ -150,7 +150,7 @@ nsXULCommandDispatcher::GetFocusedWindow(mozIDOMWindowProxy** aWindow) {
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::SetFocusedElement(Element* aElement) {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, NS_ERROR_FAILURE);
 
   if (aElement) {
@@ -170,7 +170,7 @@ nsXULCommandDispatcher::SetFocusedWindow(mozIDOMWindowProxy* aWindow) {
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, NS_ERROR_FAILURE);
 
   // get the containing frame for the window, and set it as focused. This will
@@ -196,7 +196,7 @@ nsXULCommandDispatcher::RewindFocus() {
   GetRootFocusedContentAndWindow(getter_AddRefs(win));
 
   RefPtr<Element> result;
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm)
     return fm->MoveFocus(win, nullptr, nsIFocusManager::MOVEFOCUS_BACKWARD, 0,
                          getter_AddRefs(result));
@@ -209,7 +209,7 @@ nsXULCommandDispatcher::AdvanceFocusIntoSubtree(Element* aElt) {
   GetRootFocusedContentAndWindow(getter_AddRefs(win));
 
   RefPtr<Element> result;
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm)
     return fm->MoveFocus(win, aElt, nsIFocusManager::MOVEFOCUS_FORWARD, 0,
                          getter_AddRefs(result));
