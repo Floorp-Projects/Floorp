@@ -77,6 +77,7 @@ class DebugScript;
 
 namespace frontend {
 struct CompilationInfo;
+struct CompilationStencil;
 struct CompilationGCOutput;
 class ScriptStencil;
 }  // namespace frontend
@@ -544,7 +545,7 @@ class ScriptSource {
   // function should be recorded before their first execution.
   // This value is logically owned by the canonical ScriptSourceObject, and
   // will be released in the canonical SSO's finalizer.
-  UniquePtr<XDRIncrementalEncoder> xdrEncoder_ = nullptr;
+  UniquePtr<XDRIncrementalEncoderBase> xdrEncoder_ = nullptr;
 
   // A string indicating how this source code was introduced into the system.
   // This is a constant, statically allocated C string, so does not need memory
@@ -1016,6 +1017,26 @@ class ScriptSource {
   // successfully.
   bool xdrEncodeTopLevel(JSContext* cx, HandleScript script);
 
+  // Create a new XDR encoder, and encode the stencil for the initial
+  // compilation. The created XDR encoder isn't stored into `xdrEncoder_`
+  // field. Caller is responsible for calling `setIncrementalEncoder` after
+  // instantiating stencil (so, corresponding canonical ScriptSourceObject
+  // gets created).
+  bool xdrEncodeInitialStencil(
+      JSContext* cx, frontend::CompilationInfo& compilationInfo,
+      UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder);
+
+  // Create a new XDR encoder, and encode the stencils.
+  // The created XDR encoder isn't stored into `xdrEncoder_` field.
+  // Caller is responsible for calling `setIncrementalEncoder` after
+  // instantiating stencil (so, corresponding canonical ScriptSourceObject
+  // gets created).
+  bool xdrEncodeStencils(JSContext* cx,
+                         frontend::CompilationInfoVector& compilationInfos,
+                         UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder);
+
+  void setIncrementalEncoder(XDRIncrementalEncoderBase* xdrEncoder);
+
   // Encode a delazified JSFunction.  In case of errors, the XDR encoder is
   // freed and the |buffer| provided as argument to |xdrEncodeTopLevel| is
   // considered undefined.
@@ -1025,10 +1046,23 @@ class ScriptSource {
   bool xdrEncodeFunction(JSContext* cx, HandleFunction fun,
                          HandleScriptSourceObject sourceObject);
 
+  // Encode a delazified function's stencil.  In case of errors, the XDR
+  // encoder is freed.
+  bool xdrEncodeFunctionStencil(JSContext* cx,
+                                frontend::CompilationStencil& stencil);
+
+ private:
+  // Encode a delazified function's stencil.  In case of errors, the passed
+  // XDR encoder is freed.
+  bool xdrEncodeFunctionStencilWith(
+      JSContext* cx, frontend::CompilationStencil& stencil,
+      UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder);
+
+ public:
   // Linearize the encoded content in the |buffer| provided as argument to
   // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
   // |buffer| is considered undefined.
-  bool xdrFinalizeEncoder(JS::TranscodeBuffer& buffer);
+  bool xdrFinalizeEncoder(JSContext* cx, JS::TranscodeBuffer& buffer);
 
  private:
   template <typename Unit,

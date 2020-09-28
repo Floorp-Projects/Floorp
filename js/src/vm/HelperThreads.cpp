@@ -589,6 +589,9 @@ void ParseTask::trace(JSTracer* trc) {
   if (compilationInfo_) {
     compilationInfo_->trace(trc);
   }
+  if (compilationInfos_) {
+    compilationInfos_->trace(trc);
+  }
 }
 
 size_t ParseTask::sizeOfExcludingThis(
@@ -688,12 +691,17 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
 }
 
 bool ParseTask::instantiateStencils(JSContext* cx) {
-  if (!compilationInfo_) {
+  if (!compilationInfo_ && !compilationInfos_) {
     return false;
   }
 
   frontend::CompilationGCOutput gcOutput(cx);
-  bool result = frontend::InstantiateStencils(cx, *compilationInfo_, gcOutput);
+  bool result;
+  if (compilationInfo_) {
+    result = frontend::InstantiateStencils(cx, *compilationInfo_, gcOutput);
+  } else {
+    result = frontend::InstantiateStencils(cx, *compilationInfos_, gcOutput);
+  }
 
   // Whatever happens to the top-level script compilation (even if it fails),
   // we must finish initializing the SSO.  This is because there may be valid
@@ -756,6 +764,33 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   RootedScript resultScript(cx);
   Rooted<ScriptSourceObject*> sourceObject(cx);
 
+  if (!options.useOffThreadParseGlobal) {
+    // The buffer contains stencil.
+    Rooted<UniquePtr<frontend::CompilationInfoVector>> compilationInfos(
+        cx, js_new<frontend::CompilationInfoVector>(cx, options));
+    if (!compilationInfos) {
+      ReportOutOfMemory(cx);
+      return;
+    }
+
+    XDRStencilDecoder decoder(
+        cx, &compilationInfos.get()->initial.input.options, range,
+        compilationInfos.get()->initial.stencil.parserAtoms);
+    if (!compilationInfos.get()->initial.input.initForGlobal(cx)) {
+      return;
+    }
+
+    XDRResult res = decoder.codeStencils(*compilationInfos);
+    if (!res.isOk()) {
+      return;
+    }
+
+    compilationInfos_ = std::move(compilationInfos.get());
+
+    return;
+  }
+
+  // The buffer contains JSScript.
   Rooted<UniquePtr<XDROffThreadDecoder>> decoder(
       cx,
       js::MakeUnique<XDROffThreadDecoder>(
@@ -999,7 +1034,6 @@ static bool QueueOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task) {
   AutoLockHelperThreadState lock;
 
   bool needsParseGlobal = task->options.useOffThreadParseGlobal ||
-                          (task->kind == ParseTaskKind::ScriptDecode) ||
                           (task->kind == ParseTaskKind::MultiScriptsDecode);
   bool mustWait =
       needsParseGlobal && OffThreadParsingMustWaitForGC(cx->runtime());
@@ -1038,9 +1072,8 @@ static bool StartOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task,
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
   AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
-  // FIXME: XDR currently requires the parse global.
-  bool forceParseGlobal = (task->kind == ParseTaskKind::ScriptDecode) ||
-                          (task->kind == ParseTaskKind::MultiScriptsDecode);
+  // FIXME: XDR for ScriptPreloader currently requires the parse global.
+  bool forceParseGlobal = (task->kind == ParseTaskKind::MultiScriptsDecode);
 
   JSObject* global = nullptr;
   if (options.useOffThreadParseGlobal || forceParseGlobal) {
@@ -2009,6 +2042,16 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 
   if (parseTask->compilationInfo_.get() &&
       !parseTask->options.useOffThreadParseGlobal) {
+    UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+
+    if (startEncoding == StartEncoding::Yes) {
+      auto compilationInfo = parseTask->compilationInfo_.get();
+      if (!compilationInfo->input.source()->xdrEncodeInitialStencil(
+              cx, *compilationInfo, xdrEncoder)) {
+        return nullptr;
+      }
+    }
+
     if (!parseTask->instantiateStencils(cx)) {
       return nullptr;
     }
@@ -2016,6 +2059,33 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
     MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
 
     script = parseTask->scripts[0];
+
+    if (startEncoding == StartEncoding::Yes) {
+      script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
+    }
+  } else if (parseTask->compilationInfos_.get() &&
+             !parseTask->options.useOffThreadParseGlobal) {
+    UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+
+    if (startEncoding == StartEncoding::Yes) {
+      auto compilationInfos = parseTask->compilationInfos_.get();
+      if (!compilationInfos->initial.input.source()->xdrEncodeStencils(
+              cx, *compilationInfos, xdrEncoder)) {
+        return nullptr;
+      }
+    }
+
+    if (!parseTask->instantiateStencils(cx)) {
+      return nullptr;
+    }
+
+    MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
+
+    script = parseTask->scripts[0];
+
+    if (startEncoding == StartEncoding::Yes) {
+      script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
+    }
   } else {
     MOZ_RELEASE_ASSERT(parseTask->scripts.length() <= 1);
 
@@ -2047,9 +2117,11 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
     }
   }
 
-  if (startEncoding == StartEncoding::Yes) {
-    if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
-      return nullptr;
+  if (parseTask->options.useOffThreadParseGlobal) {
+    if (startEncoding == StartEncoding::Yes) {
+      if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
+        return nullptr;
+      }
     }
   }
 

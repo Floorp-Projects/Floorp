@@ -33,6 +33,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
+#include "frontend/CompilationInfo.h"  // frontend::CompilationStencil
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "gc/FreeOp.h"
@@ -2229,7 +2230,7 @@ template <typename Unit>
 MOZ_MUST_USE bool ScriptSource::setUncompressedSourceHelper(
     JSContext* cx, EntryUnits<Unit>&& source, size_t length,
     SourceRetrievable retrievable) {
-  auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
+  auto& cache = cx->runtime()->sharedImmutableStrings();
 
   auto uniqueChars = SourceTypeTraits<Unit>::toCacheable(std::move(source));
   auto deduped = cache.getOrCreate(std::move(uniqueChars), length);
@@ -2333,7 +2334,7 @@ MOZ_MUST_USE bool ScriptSource::initializeWithUnretrievableCompressedSource(
   MOZ_ASSERT(data.is<Missing>(), "shouldn't be double-initializing");
   MOZ_ASSERT(compressed != nullptr);
 
-  auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
+  auto& cache = cx->runtime()->sharedImmutableStrings();
   auto deduped = cache.getOrCreate(std::move(compressed), rawLength);
   if (!deduped) {
     ReportOutOfMemory(cx);
@@ -2675,6 +2676,58 @@ bool ScriptSource::xdrEncodeTopLevel(JSContext* cx, HandleScript script) {
   return true;
 }
 
+bool ScriptSource::xdrEncodeInitialStencil(
+    JSContext* cx, frontend::CompilationInfo& compilationInfo,
+    UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder) {
+  // Encoding failures are reported by the xdrFinalizeEncoder function.
+  if (containsAsmJS()) {
+    return true;
+  }
+
+  xdrEncoder = js::MakeUnique<XDRIncrementalStencilEncoder>(cx);
+  if (!xdrEncoder) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  auto failureCase = mozilla::MakeScopeExit([&] { xdrEncoder.reset(nullptr); });
+
+  XDRResult res = xdrEncoder->codeStencil(compilationInfo);
+  if (res.isErr()) {
+    // On encoding failure, let failureCase destroy encoder and return true
+    // to avoid failing any currently executing script.
+    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
+      return true;
+    }
+
+    return false;
+  }
+
+  failureCase.release();
+  return true;
+}
+
+bool ScriptSource::xdrEncodeStencils(
+    JSContext* cx, frontend::CompilationInfoVector& compilationInfos,
+    UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder) {
+  if (!xdrEncodeInitialStencil(cx, compilationInfos.initial, xdrEncoder)) {
+    return false;
+  }
+
+  for (auto& delazification : compilationInfos.delazifications) {
+    if (!xdrEncodeFunctionStencilWith(cx, delazification.stencil, xdrEncoder)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void ScriptSource::setIncrementalEncoder(
+    XDRIncrementalEncoderBase* xdrEncoder) {
+  xdrEncoder_.reset(xdrEncoder);
+}
+
 bool ScriptSource::xdrEncodeFunction(JSContext* cx, HandleFunction fun,
                                      HandleScriptSourceObject sourceObject) {
   MOZ_ASSERT(sourceObject->source() == this);
@@ -2697,8 +2750,35 @@ bool ScriptSource::xdrEncodeFunction(JSContext* cx, HandleFunction fun,
   return true;
 }
 
-bool ScriptSource::xdrFinalizeEncoder(JS::TranscodeBuffer& buffer) {
+bool ScriptSource::xdrEncodeFunctionStencil(
+    JSContext* cx, frontend::CompilationStencil& stencil) {
+  MOZ_ASSERT(hasEncoder());
+  return xdrEncodeFunctionStencilWith(cx, stencil, xdrEncoder_);
+}
+
+bool ScriptSource::xdrEncodeFunctionStencilWith(
+    JSContext* cx, frontend::CompilationStencil& stencil,
+    UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder) {
+  auto failureCase = mozilla::MakeScopeExit([&] { xdrEncoder.reset(nullptr); });
+
+  XDRResult res = xdrEncoder->codeFunctionStencil(stencil);
+  if (res.isErr()) {
+    // On encoding failure, let failureCase destroy encoder and return true
+    // to avoid failing any currently executing script.
+    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
+      return true;
+    }
+    return false;
+  }
+
+  failureCase.release();
+  return true;
+}
+
+bool ScriptSource::xdrFinalizeEncoder(JSContext* cx,
+                                      JS::TranscodeBuffer& buffer) {
   if (!hasEncoder()) {
+    JS_ReportErrorASCII(cx, "XDR encoding failure");
     return false;
   }
 

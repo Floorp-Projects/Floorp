@@ -2,9 +2,9 @@ load(libdir + "asserts.js")
 
 // JS::EncodeScript cannot be use for run-once scripts.
 evaluate(cacheEntry(""), { saveBytecode: true });
-evaluate(cacheEntry(""), { saveBytecode: true, isRunOnce: false })
+evaluate(cacheEntry(""), { saveBytecode: true, isRunOnce: false });
 assertErrorMessage(() => {
-  evaluate(cacheEntry(""), { saveBytecode: true, isRunOnce: true })
+  evaluate(cacheEntry(""), { saveBytecode: true, isRunOnce: true });
 }, Error, "run-once script are not supported by XDR");
 
 // Incremental XDR doesn't have any of these restrictions.

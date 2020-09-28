@@ -25,6 +25,8 @@ class JS_PUBLIC_API JSScript;
 
 namespace JS {
 
+class ReadOnlyCompileOptions;
+
 using TranscodeBuffer = mozilla::Vector<uint8_t>;
 using TranscodeRange = mozilla::Range<uint8_t>;
 
@@ -70,14 +72,32 @@ extern JS_PUBLIC_API TranscodeResult
 DecodeScript(JSContext* cx, const TranscodeRange& range,
              MutableHandle<JSScript*> scriptp);
 
-// Decode JSScript from the buffer, and register an encoder on its script
-// source, such that all functions can be encoded as they are parsed. This
-// strategy is used to avoid blocking the main thread in a non-interruptible
-// way.
+// If js::UseOffThreadParseGlobal is true, decode JSScript from the buffer.
+//
+// If js::UseOffThreadParseGlobal is false, decode CompilationStencil from the
+// buffer and instantiate JSScript from it.
+//
+// options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
+extern JS_PUBLIC_API TranscodeResult DecodeScriptMaybeStencil(
+    JSContext* cx, TranscodeBuffer& buffer,
+    const ReadOnlyCompileOptions& options, MutableHandle<JSScript*> scriptp,
+    size_t cursorIndex = 0);
+
+// If js::UseOffThreadParseGlobal is true, decode JSScript from the buffer.
+//
+// If js::UseOffThreadParseGlobal is false, decode CompilationStencil from the
+// buffer and instantiate JSScript from it.
+//
+// And then register an encoder on its script source, such that all functions
+// can be encoded as they are parsed. This strategy is used to avoid blocking
+// the main thread in a non-interruptible way.
 //
 // See also JS::FinishIncrementalEncoding.
+//
+// options.useOffThreadParseGlobal should match JS::SetUseOffThreadParseGlobal.
 extern JS_PUBLIC_API TranscodeResult DecodeScriptAndStartIncrementalEncoding(
-    JSContext* cx, TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
+    JSContext* cx, TranscodeBuffer& buffer,
+    const ReadOnlyCompileOptions& options, MutableHandle<JSScript*> scriptp,
     size_t cursorIndex = 0);
 
 // Finish incremental encoding started by one of:
@@ -91,6 +111,11 @@ extern JS_PUBLIC_API TranscodeResult DecodeScriptAndStartIncrementalEncoding(
 // The |buffer| argument of |FinishIncrementalEncoding| is used for appending
 // the encoded bytecode into the buffer. If any of these functions failed, the
 // content of |buffer| would be undefined.
+//
+// If js::UseOffThreadParseGlobal is true, |buffer| contains encoded JSScript.
+//
+// If js::UseOffThreadParseGlobal is false, |buffer| contains encoded
+// CompilationStencil.
 extern JS_PUBLIC_API bool FinishIncrementalEncoding(JSContext* cx,
                                                     Handle<JSScript*> script,
                                                     TranscodeBuffer& buffer);

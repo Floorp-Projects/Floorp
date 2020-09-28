@@ -346,6 +346,32 @@ bool frontend::InstantiateStencils(JSContext* cx,
   return true;
 }
 
+bool frontend::InstantiateStencils(JSContext* cx,
+                                   CompilationInfoVector& compilationInfos,
+                                   CompilationGCOutput& gcOutput) {
+  {
+    AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
+                                       JS::ProfilingCategoryPair::JS_Parsing);
+
+    if (!compilationInfos.instantiateStencils(cx, gcOutput)) {
+      return false;
+    }
+  }
+
+  // Enqueue an off-thread source compression task after finishing parsing.
+  if (!cx->isHelperThreadContext()) {
+    if (!compilationInfos.initial.input.source()->tryCompressOffThread(cx)) {
+      return false;
+    }
+  }
+
+  tellDebuggerAboutCompiledScript(
+      cx, compilationInfos.initial.input.options.hideScriptFromDebugger,
+      gcOutput.script);
+
+  return true;
+}
+
 template <typename Unit>
 static JSScript* CompileGlobalScriptImpl(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,

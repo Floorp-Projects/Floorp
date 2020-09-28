@@ -84,13 +84,52 @@ template <typename Unit>
 static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<Unit>& srcBuf) {
-  Rooted<JSScript*> script(cx, CompileSourceBuffer(cx, options, srcBuf));
+  ScopeKind scopeKind =
+      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
+
+  MOZ_ASSERT(!cx->zone()->isAtomsZone());
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  Rooted<frontend::CompilationInfo> compilationInfo(
+      cx, frontend::CompilationInfo(cx, options));
+  if (!compilationInfo.get().input.initForGlobal(cx)) {
+    return nullptr;
+  }
+  if (!frontend::CompileGlobalScriptToStencil(cx, compilationInfo.get(), srcBuf,
+                                              scopeKind)) {
+    return nullptr;
+  }
+
+  UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+  MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
+  if (!js::UseOffThreadParseGlobal()) {
+    if (!compilationInfo.get().input.source()->xdrEncodeInitialStencil(
+            cx, compilationInfo.get(), xdrEncoder)) {
+      return nullptr;
+    }
+  }
+
+  frontend::CompilationGCOutput gcOutput(cx);
+  if (!frontend::InstantiateStencils(cx, compilationInfo.get(), gcOutput)) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(gcOutput.script);
+  if (!js::UseOffThreadParseGlobal()) {
+    gcOutput.script->scriptSource()->setIncrementalEncoder(
+        xdrEncoder.release());
+  }
+
+  Rooted<JSScript*> script(cx, gcOutput.script);
   if (!script) {
     return nullptr;
   }
 
-  if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
-    return nullptr;
+  if (js::UseOffThreadParseGlobal()) {
+    if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
+      return nullptr;
+    }
   }
 
   return script;

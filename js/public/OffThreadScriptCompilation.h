@@ -117,6 +117,11 @@ extern JS_PUBLIC_API void CancelOffThreadModule(JSContext* cx,
 extern JS_PUBLIC_API bool CanDecodeOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
 
+// If options.useOffThreadParseGlobal is true,
+// decode JSScript from the buffer.
+//
+// If options.useOffThreadParseGlobal is false,
+// decode stencil from the buffer and instantiate JSScript from it.
 extern JS_PUBLIC_API bool DecodeOffThreadScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
@@ -135,6 +140,7 @@ extern JS_PUBLIC_API JSScript* FinishOffThreadScriptDecoder(
 extern JS_PUBLIC_API void CancelOffThreadScriptDecoder(JSContext* cx,
                                                        OffThreadToken* token);
 
+// Decode multiple JSScript from the sources.
 extern JS_PUBLIC_API bool DecodeMultiOffThreadScripts(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     mozilla::Vector<TranscodeSource>& sources,
@@ -157,6 +163,11 @@ extern JS_PUBLIC_API void SetUseOffThreadParseGlobal(bool value);
 }  // namespace JS
 
 namespace js {
+// Returns the value set by JS::SetUseOffThreadParseGlobal.
+// The default value is true.
+//
+// This value is consumed internally, and public API consumer shouldn't
+// directly use this value.
 extern bool UseOffThreadParseGlobal();
 }  // namespace js
 

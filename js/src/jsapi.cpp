@@ -42,7 +42,9 @@
 #ifdef JS_HAS_TYPED_OBJECTS
 #  include "builtin/TypedObject.h"
 #endif
+#include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToStencil, frontend::InstantiateStencils
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/CompilationInfo.h"  // frontend::CompilationInfo, frontend::CompilationInfoVector, frontend::CompilationGCOutput
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
@@ -5719,6 +5721,57 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
   return JS::TranscodeResult_Ok;
 }
 
+static JS::TranscodeResult DecodeStencil(
+    JSContext* cx, JS::TranscodeBuffer& buffer,
+    frontend::CompilationInfoVector& compilationInfos, size_t cursorIndex) {
+  XDRStencilDecoder decoder(cx, &compilationInfos.initial.input.options, buffer,
+                            cursorIndex,
+                            compilationInfos.initial.stencil.parserAtoms);
+
+  if (!compilationInfos.initial.input.initForGlobal(cx)) {
+    return JS::TranscodeResult_Throw;
+  }
+
+  XDRResult res = decoder.codeStencils(compilationInfos);
+  if (res.isErr()) {
+    return res.unwrapErr();
+  }
+
+  return JS::TranscodeResult_Ok;
+}
+
+JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
+    JSContext* cx, TranscodeBuffer& buffer,
+    const ReadOnlyCompileOptions& options, JS::MutableHandleScript scriptp,
+    size_t cursorIndex) {
+  MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
+  if (js::UseOffThreadParseGlobal()) {
+    // The buffer contains JSScript.
+    return JS::DecodeScript(cx, buffer, scriptp, cursorIndex);
+  }
+
+  // The buffer contains stencil.
+
+  Rooted<frontend::CompilationInfoVector> compilationInfos(
+      cx, frontend::CompilationInfoVector(cx, options));
+
+  JS::TranscodeResult res =
+      DecodeStencil(cx, buffer, compilationInfos.get(), cursorIndex);
+  if (res != JS::TranscodeResult_Ok) {
+    return res;
+  }
+
+  frontend::CompilationGCOutput gcOutput(cx);
+  if (!frontend::InstantiateStencils(cx, compilationInfos.get(), gcOutput)) {
+    return JS::TranscodeResult_Throw;
+  }
+
+  MOZ_ASSERT(gcOutput.script);
+  scriptp.set(gcOutput.script);
+
+  return JS::TranscodeResult_Ok;
+}
+
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
     JSContext* cx, const TranscodeRange& range,
     JS::MutableHandleScript scriptp) {
@@ -5737,16 +5790,48 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
 }
 
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
-    JSContext* cx, TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
+    JSContext* cx, TranscodeBuffer& buffer,
+    const ReadOnlyCompileOptions& options, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
-  JS::TranscodeResult res = JS::DecodeScript(cx, buffer, scriptp, cursorIndex);
+  MOZ_ASSERT(options.useOffThreadParseGlobal == js::UseOffThreadParseGlobal());
+  if (js::UseOffThreadParseGlobal()) {
+    JS::TranscodeResult res =
+        JS::DecodeScript(cx, buffer, scriptp, cursorIndex);
+    if (res != JS::TranscodeResult_Ok) {
+      return res;
+    }
+
+    if (!scriptp->scriptSource()->xdrEncodeTopLevel(cx, scriptp)) {
+      return JS::TranscodeResult_Throw;
+    }
+
+    return JS::TranscodeResult_Ok;
+  }
+
+  Rooted<frontend::CompilationInfoVector> compilationInfos(
+      cx, frontend::CompilationInfoVector(cx, options));
+
+  JS::TranscodeResult res =
+      DecodeStencil(cx, buffer, compilationInfos.get(), cursorIndex);
   if (res != JS::TranscodeResult_Ok) {
     return res;
   }
 
-  if (!scriptp->scriptSource()->xdrEncodeTopLevel(cx, scriptp)) {
+  UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+  if (!compilationInfos.get().initial.input.source()->xdrEncodeStencils(
+          cx, compilationInfos.get(), xdrEncoder)) {
     return JS::TranscodeResult_Throw;
   }
+
+  frontend::CompilationGCOutput gcOutput(cx);
+  if (!frontend::InstantiateStencils(cx, compilationInfos.get(), gcOutput)) {
+    return JS::TranscodeResult_Throw;
+  }
+
+  MOZ_ASSERT(gcOutput.script);
+  gcOutput.script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
+
+  scriptp.set(gcOutput.script);
 
   return JS::TranscodeResult_Ok;
 }
@@ -5757,7 +5842,7 @@ JS_PUBLIC_API bool JS::FinishIncrementalEncoding(JSContext* cx,
   if (!script) {
     return false;
   }
-  if (!script->scriptSource()->xdrFinalizeEncoder(buffer)) {
+  if (!script->scriptSource()->xdrFinalizeEncoder(cx, buffer)) {
     return false;
   }
   return true;
