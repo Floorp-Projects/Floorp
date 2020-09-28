@@ -122,9 +122,9 @@ function waitForWorkerListChanged(targetFront) {
   return targetFront.once("workerListChanged");
 }
 
-async function waitForWorkerClose(workerTargetFront) {
+async function waitForWorkerClose(workerDescriptorFront) {
   info("Waiting for worker to close.");
-  await workerTargetFront.once("close");
+  await workerDescriptorFront.once("close");
   info("Worker did close.");
 }
 
@@ -178,10 +178,10 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   await createWorkerInTab(tab, WORKER_URL);
 
   const { workers } = await listWorkers(target);
-  const workerTargetFront = findWorker(workers, WORKER_URL);
+  const workerDescriptorFront = findWorker(workers, WORKER_URL);
 
   const toolbox = await gDevTools.showToolbox(
-    workerTargetFront,
+    workerDescriptorFront,
     "jsdebugger",
     Toolbox.HostType.WINDOW
   );
@@ -197,7 +197,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
     client,
     tab,
     target,
-    workerTargetFront,
+    workerDescriptorFront,
     toolbox,
     gDebugger,
   };

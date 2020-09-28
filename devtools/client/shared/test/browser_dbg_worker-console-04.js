@@ -25,10 +25,12 @@ const TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
 const WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function testPausedByConsole() {
-  const { client, tab, workerTargetFront, toolbox } = await initWorkerDebugger(
-    TAB_URL,
-    WORKER_URL
-  );
+  const {
+    client,
+    tab,
+    workerDescriptorFront,
+    toolbox,
+  } = await initWorkerDebugger(TAB_URL, WORKER_URL);
 
   info("Check Date objects can be used in the console");
   const console = await getSplitConsole(toolbox);
@@ -48,7 +50,7 @@ add_task(async function testPausedByConsole() {
   ok(executed, "Text for message appeared correct");
 
   terminateWorkerInTab(tab, WORKER_URL);
-  await waitForWorkerClose(workerTargetFront);
+  await waitForWorkerClose(workerDescriptorFront);
   await toolbox.destroy();
   await close(client);
   await removeTab(tab);
