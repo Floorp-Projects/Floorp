@@ -1113,6 +1113,14 @@ Download.prototype = {
         }
         changeMade = true;
       }
+
+      if (
+        this.hasProgress &&
+        this.target &&
+        !this.target.partFileExists
+      ) {
+        this.target.refreshPartFileState();
+      }
     }
 
     if (changeMade) {
@@ -1510,6 +1518,12 @@ DownloadTarget.prototype = {
   exists: false,
 
   /**
+   * Indicates whether the part file exists. Like `exists`, this is updated
+   * dynamically to reduce I/O compared to checking the target file directly.
+   */
+  partFileExists: false,
+
+  /**
    * Size in bytes of the target file, or zero if the download has not finished.
    *
    * Even if the target file does not exist anymore, this property may still
@@ -1540,15 +1554,31 @@ DownloadTarget.prototype = {
    */
   async refresh() {
     try {
-      this.size = (await OS.File.stat(this.path)).size;
+      this.size = (await IOUtils.stat(this.path)).size;
       this.exists = true;
     } catch (ex) {
       // Report any error not caused by the file not being there. In any case,
       // the size of the download is not updated and the known value is kept.
-      if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
+      if (ex.name != "NotFoundError") {
         Cu.reportError(ex);
       }
       this.exists = false;
+    }
+    this.refreshPartFileState();
+  },
+
+  async refreshPartFileState() {
+    if (!this.partFilePath) {
+      this.partFileExists = false;
+      return;
+    }
+    try {
+      this.partFileExists = (await IOUtils.stat(this.partFilePath)).size > 0;
+    } catch (ex) {
+      if (ex.name != "NotFoundError") {
+        Cu.reportError(ex);
+      }
+      this.partFileExists = false;
     }
   },
 
