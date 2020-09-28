@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebuggingIsSupported(); exitstatus:3
+// |jit-test| skip-if: !wasmDebuggingEnabled(); exitstatus:3
 
 function userError() {};
 

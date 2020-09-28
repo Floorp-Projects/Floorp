@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmThreadsSupported()
+// |jit-test| skip-if: !wasmThreadsEnabled()
 
 const oob = /index out of bounds/;
 const unaligned = /unaligned memory access/;

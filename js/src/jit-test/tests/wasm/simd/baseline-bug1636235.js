@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdSupported()
+// |jit-test| skip-if: !wasmSimdEnabled()
 
 // Bug 1636235: assorted corner case baseline SIMD bugs.
 

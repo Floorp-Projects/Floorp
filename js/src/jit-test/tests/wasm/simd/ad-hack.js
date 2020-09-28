@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmSimdSupported()
+// |jit-test| skip-if: !wasmSimdEnabled()
 
 // Ad-hoc test cases used during development.  Generally these are ordered from
 // easier toward harder.

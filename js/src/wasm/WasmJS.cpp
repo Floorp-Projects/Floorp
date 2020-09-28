@@ -238,9 +238,8 @@ static inline bool WasmDebuggerActive(JSContext* cx) {
  * For example, --wasm-gc selects the GC feature, and if Baseline is available
  * then the feature is available.
  *
- * In a shell build, there are per-feature testing functions (usually of the
- * form wasmFeatureEnabled, wasmFeatureSupport, or wasmFeatureSupported) to
- * probe whether specific features are available.
+ * In a shell build, there are per-feature testing functions (of the form
+ * wasmFeatureEnabled) to probe whether specific features are available.
  */
 
 // Compiler availability predicates.  These must be kept in sync with the

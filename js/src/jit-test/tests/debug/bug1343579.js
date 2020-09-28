@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-compiler=ion; skip-if: !wasmDebuggingIsSupported()
+// |jit-test| test-also=--wasm-compiler=ion; skip-if: !wasmDebuggingEnabled()
 // Checking if Debugger.Script.isInCatchScope return false for wasm.
 
 load(libdir + "wasm.js");

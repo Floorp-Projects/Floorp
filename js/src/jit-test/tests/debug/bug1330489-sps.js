@@ -2,7 +2,7 @@
 
 load(libdir + "asserts.js");
 
-if (!wasmDebuggingIsSupported())
+if (!wasmDebuggingEnabled())
     throw "TestComplete";
 
 // Single-step profiling currently only works in the ARM simulator

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmStreamingIsSupported()
+// |jit-test| skip-if: !wasmStreamingEnabled()
 
 load(libdir + "wasm-binary.js");
 

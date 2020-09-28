@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmThreadsSupported()
+// |jit-test| skip-if: !wasmThreadsEnabled()
 
 // Basic structured cloning tests (specific to SpiderMonkey shell)
 
