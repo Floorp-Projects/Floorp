@@ -907,16 +907,18 @@ org.do
 sld.do
 web.do
 
-// dz : https://en.wikipedia.org/wiki/.dz
+// dz : http://www.nic.dz/images/pdf_nic/charte.pdf
 dz
+art.dz
+asso.dz
 com.dz
+edu.dz
+gov.dz
 org.dz
 net.dz
-gov.dz
-edu.dz
-asso.dz
 pol.dz
-art.dz
+soc.dz
+tm.dz
 
 // ec : http://www.nic.ec/reg/paso1.asp
 // Submitted by registry <vabboud@nic.ec>
@@ -13373,7 +13375,9 @@ cx.ua
 
 // WP Engine : https://wpengine.com/
 // Submitted by Michael Smith <michael.smith@wpengine.com>
+// Submitted by Brandon DuRette <brandon.durette@wpengine.com>
 wpenginepowered.com
+js.wpenginepowered.com
 
 // Impertrix Solutions : <https://impertrixcdn.com>
 // Submitted by Zhixiang Zhao <csuite@impertrix.com>
