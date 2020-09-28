@@ -1156,3 +1156,8 @@ void CompilationInput::trace(JSTracer* trc) {
 }
 
 void CompilationInfo::trace(JSTracer* trc) { input.trace(trc); }
+
+void CompilationInfoVector::trace(JSTracer* trc) {
+  initial.trace(trc);
+  delazifications.trace(trc);
+}

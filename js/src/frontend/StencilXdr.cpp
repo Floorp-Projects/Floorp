@@ -859,27 +859,47 @@ template <XDRMode mode>
 namespace js {
 
 template <XDRMode mode>
-XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
-                                CompilationStencil& stencil) {
-  if (!stencil.asmJS.empty()) {
-    return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
-  }
-
+XDRResult XDRCompilationInput(XDRState<mode>* xdr, CompilationInput& input) {
   // XDR the ScriptSource
-  CompilationInfo& compilationInfo = xdr->stencilCompilationInfo();
+
+  // Instrumented scripts cannot be encoded, as they have extra instructions
+  // which are not normally present. Globals with instrumentation enabled must
+  // compile scripts via the bytecode emitter, which will insert these
+  // instructions.
+  if (mode == XDR_ENCODE) {
+    if (!!input.options.instrumentationKinds) {
+      return xdr->fail(JS::TranscodeResult_Failure);
+    }
+  }
 
   // Copy the options out for passing into `ScriptSource::XDR`.
   mozilla::Maybe<JS::CompileOptions> opts;
-  opts.emplace(xdr->cx(), compilationInfo.input.options);
+  opts.emplace(xdr->cx(), input.options);
 
   Rooted<ScriptSourceHolder> holder(xdr->cx());
   if (mode == XDR_ENCODE) {
-    holder.get().reset(compilationInfo.input.source_.get());
+    holder.get().reset(input.source_.get());
   }
   MOZ_TRY(ScriptSource::XDR(xdr, opts, &holder));
 
   if (mode == XDR_DECODE) {
-    compilationInfo.input.source_.reset(holder.get().get());
+    input.source_.reset(holder.get().get());
+  }
+
+  return Ok();
+}
+
+template XDRResult XDRCompilationInput(XDRState<XDR_ENCODE>* xdr,
+                                       CompilationInput& input);
+
+template XDRResult XDRCompilationInput(XDRState<XDR_DECODE>* xdr,
+                                       CompilationInput& input);
+
+template <XDRMode mode>
+XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
+                                CompilationStencil& stencil) {
+  if (!stencil.asmJS.empty()) {
+    return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
   }
 
   // All of the vector-indexed data elements referenced by the

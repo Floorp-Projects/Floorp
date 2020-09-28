@@ -386,9 +386,6 @@ struct CompilationInfo {
                                         CompilationGCOutput& gcOutput);
   MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
                                       bool* succeededOut = nullptr);
-  MOZ_MUST_USE bool deserializeStencils(JSContext* cx,
-                                        const JS::TranscodeRange& range,
-                                        bool* succeededOut = nullptr);
 
   JSAtom* liftParserAtomToJSAtom(JSContext* cx, const ParserAtom* parserAtom) {
     return parserAtom->toJSAtom(cx, *this).unwrapOr(nullptr);
@@ -409,6 +406,44 @@ struct CompilationInfo {
   ScriptStencilIterable functionScriptStencils(CompilationGCOutput& gcOutput) {
     return ScriptStencilIterable(stencil, gcOutput);
   }
+
+  void trace(JSTracer* trc);
+};
+
+// A set of CompilationInfo, for XDR purpose.
+// This contains the initial compilation, and a vector of delazification.
+struct CompilationInfoVector {
+ private:
+  using FunctionKey = uint64_t;
+  using FunctionMap = HashMap<FunctionKey, FunctionIndex>;
+
+  static FunctionKey toFunctionKey(const SourceExtent& extent) {
+    return (FunctionKey)extent.sourceStart << 32 | extent.sourceEnd;
+  }
+
+  MOZ_MUST_USE bool buildDelazificationStencilMap(FunctionMap& functionMap);
+
+ public:
+  frontend::CompilationInfo initial;
+  GCVector<frontend::CompilationInfo, 0, js::SystemAllocPolicy> delazifications;
+
+  CompilationInfoVector(JSContext* cx,
+                        const JS::ReadOnlyCompileOptions& options)
+      : initial(cx, options) {}
+
+  // Move constructor is necessary to use Rooted.
+  CompilationInfoVector(CompilationInfoVector&&) = default;
+
+  // To avoid any misuses, make sure this is neither copyable or assignable.
+  CompilationInfoVector(const CompilationInfoVector&) = delete;
+  CompilationInfoVector& operator=(const CompilationInfoVector&) = delete;
+  CompilationInfoVector& operator=(CompilationInfoVector&&) = delete;
+
+  MOZ_MUST_USE bool instantiateStencils(JSContext* cx,
+                                        CompilationGCOutput& gcOutput);
+  MOZ_MUST_USE bool deserializeStencils(JSContext* cx,
+                                        const JS::TranscodeRange& range,
+                                        bool* succeededOut = nullptr);
 
   void trace(JSTracer* trc);
 };
