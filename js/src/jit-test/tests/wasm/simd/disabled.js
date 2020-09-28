@@ -1,7 +1,7 @@
-// |jit-test| skip-if: wasmSimdSupported()
+// |jit-test| skip-if: wasmSimdEnabled()
 
 // ../binary.js checks that all SIMD extended opcodes in the 0..255 range are
-// rejected if !wasmSimdSupported, so no need to check that here.
+// rejected if !wasmSimdEnabled, so no need to check that here.
 
 // Non-opcode cases that should also be rejected, lest feature sniffing may
 // erroneously conclude that simd is available when it's not.  The error message

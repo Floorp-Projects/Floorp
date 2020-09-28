@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-compiler=ion; skip-if: !wasmDebuggingIsSupported()
+// |jit-test| test-also=--wasm-compiler=ion; skip-if: !wasmDebuggingEnabled()
 // Tests that wasm frame opPop event can access function resumption value.
 
 load(libdir + "wasm.js");

@@ -60,7 +60,7 @@ assertThrowsInstanceOf(() => setSharedObject(() => 37), Error);
 
 // We can store wasm shared memories, too
 
-if (!this.WebAssembly || !wasmThreadsSupported()) {
+if (!this.WebAssembly || !wasmThreadsEnabled()) {
     reportCompare(true, true);
     quit(0);
 }

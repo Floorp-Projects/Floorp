@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebuggingIsSupported()
+// |jit-test| skip-if: !wasmDebuggingEnabled()
 
 // Tests that onEnterFrame events are enabled when Debugger callbacks set
 // before Instance creation.

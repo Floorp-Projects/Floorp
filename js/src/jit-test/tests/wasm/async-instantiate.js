@@ -34,7 +34,7 @@ instantiate(code, importObj).then(({module,instance}) => {
 drainJobQueue();
 assertEq(g.value, 3);
 
-if (wasmStreamingIsSupported()) {
+if (wasmStreamingEnabled()) {
   g.value = 0;
   instantiateStreaming(code, importObj).then(({module,instance}) => {
       assertEq(module instanceof Module, true);

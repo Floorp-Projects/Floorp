@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebuggingIsSupported()
+// |jit-test| skip-if: !wasmDebuggingEnabled()
 // Draining the job queue from an onNewScript hook reporting a streamed wasm
 // module should not deadlock.
 
