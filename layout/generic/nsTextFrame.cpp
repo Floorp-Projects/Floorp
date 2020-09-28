@@ -7921,7 +7921,10 @@ bool ClusterIterator::NextCluster() {
       mCharIndex = mIterator.GetOriginalOffset();
       mIterator.AdvanceOriginal(1);
     } else {
-      if (mIterator.GetOriginalOffset() <= mTrimmed.mStart) return false;
+      if (mIterator.GetOriginalOffset() <= mTrimmed.mStart) {
+        // Trimming can skip backward word breakers, see bug 1667138
+        return mHaveWordBreak;
+      }
       mIterator.AdvanceOriginal(-1);
       keepGoing = mIterator.IsOriginalCharSkipped() ||
                   mIterator.GetOriginalOffset() >= mTrimmed.GetEnd() ||
