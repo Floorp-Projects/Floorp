@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // Attempt to test intercalls from ion to baseline and back.
 //

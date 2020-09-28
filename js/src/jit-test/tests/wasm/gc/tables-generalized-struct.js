@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled() || wasmCompileMode() != 'baseline'
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // table.set in bounds with i32 x externref - works, no value generated
 // table.set with (ref null T) - works

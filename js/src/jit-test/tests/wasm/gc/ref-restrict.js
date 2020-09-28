@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // For the time being, we do not want to expose struct types outside of the
 // module where they are defined, and so there are restrictions on how functions
