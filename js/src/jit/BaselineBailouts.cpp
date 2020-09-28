@@ -2160,6 +2160,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::FunctionKindGuard:
     case BailoutKind::FunctionScriptGuard:
     case BailoutKind::PackedArrayGuard:
+    case BailoutKind::HasGetterSetterGuard:
       // Do nothing.
       break;
 

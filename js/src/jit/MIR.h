@@ -12647,6 +12647,47 @@ class MLoadWrapperTarget : public MUnaryInstruction,
   }
 };
 
+// Guard the accessor shape is present on the object or its prototype chain.
+class MGuardHasGetterSetter : public MUnaryInstruction,
+                              public SingleObjectPolicy::Data {
+  CompilerShape shape_;
+
+  MGuardHasGetterSetter(MDefinition* obj, Shape* shape)
+      : MUnaryInstruction(classOpcode, obj), shape_(shape) {
+    setResultType(MIRType::Object);
+    setResultTypeSet(obj->resultTypeSet());
+    setMovable();
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardHasGetterSetter)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  Shape* shape() const { return shape_; }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields);
+  }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardHasGetterSetter()) {
+      return false;
+    }
+    if (ins->toGuardHasGetterSetter()->shape() != shape()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+
+  bool possiblyCalls() const override { return true; }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(shape_);
+  }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.
