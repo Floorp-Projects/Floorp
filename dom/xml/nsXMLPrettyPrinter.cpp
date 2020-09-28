@@ -89,6 +89,7 @@ nsresult nsXMLPrettyPrinter::PrettyPrint(Document* aDocument,
   RefPtr<ShadowRoot> shadowRoot = rootElement->GetShadowRoot();
   MOZ_RELEASE_ASSERT(shadowRoot && shadowRoot->IsUAWidget(),
                      "There should be a UA Shadow Root here.");
+  shadowRoot->SetIsStaticUAWidget();
 
   // Append the document fragment to the shadow dom.
   shadowRoot->AppendChild(*resultFragment, err);
