@@ -30,6 +30,7 @@ class TaskbarPreview : public nsITaskbarPreview {
   TaskbarPreview(ITaskbarList4* aTaskbar,
                  nsITaskbarPreviewController* aController, HWND aHWND,
                  nsIDocShell* aShell);
+  virtual nsresult Init();
 
   friend class TaskbarPreviewCallback;
 
@@ -66,7 +67,7 @@ class TaskbarPreview : public nsITaskbarPreview {
   bool CanMakeTaskbarCalls();
 
   // Gets the WindowHook for the nsWindow
-  WindowHook& GetWindowHook();
+  WindowHook* GetWindowHook();
 
   // Enables/disables custom drawing for the given window
   static void EnableCustomDrawing(HWND aHWND, bool aEnable);
