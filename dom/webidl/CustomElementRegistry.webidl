@@ -12,7 +12,7 @@ interface CustomElementRegistry {
   void setElementCreationCallback(DOMString name, CustomElementCreationCallback callback);
   any get(DOMString name);
   [Throws]
-  Promise<void> whenDefined(DOMString name);
+  Promise<CustomElementConstructor> whenDefined(DOMString name);
   [CEReactions] void upgrade(Node root);
 };
 
