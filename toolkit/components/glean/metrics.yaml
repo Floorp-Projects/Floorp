@@ -13,3 +13,20 @@
 
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+fog:
+  initialization:
+    type: timespan
+    time_unit: nanosecond
+    description: |
+      Time the FOG initialization takes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1662123
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1662123#c3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - jrediger@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
