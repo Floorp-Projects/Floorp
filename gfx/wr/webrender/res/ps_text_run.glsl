@@ -25,18 +25,18 @@ void text_shader_main_vs(
 
 #include brush
 
-#define V_COLOR             flat_varying_vec4_0
-#define V_MASK_SWIZZLE      flat_varying_vec4_1.xy
+flat varying vec4 v_color;
+flat varying vec2 v_mask_swizzle;
 // Normalized bounds of the source image in the texture.
-#define V_UV_BOUNDS         flat_varying_vec4_2
+flat varying vec4 v_uv_bounds;
 
 // Interpolated UV coordinates to sample.
-#define V_UV                varying_vec4_0.xy
-#define V_LAYER             varying_vec4_0.z
+varying vec2 v_uv;
+flat varying float v_layer;
 
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
-#define V_UV_CLIP           varying_vec4_1
+varying vec4 v_uv_clip;
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -239,7 +239,7 @@ void text_shader_main_vs(
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     vec2 f = (glyph_transform * vi.local_pos - glyph_rect.p0) / glyph_rect.size;
-    V_UV_CLIP = vec4(f, 1.0 - f);
+    v_uv_clip = vec4(f, 1.0 - f);
 #else
     vec2 f = (vi.local_pos - glyph_rect.p0) / glyph_rect.size;
 #endif
@@ -249,36 +249,36 @@ void text_shader_main_vs(
     switch (color_mode) {
         case COLOR_MODE_ALPHA:
         case COLOR_MODE_BITMAP:
-            V_MASK_SWIZZLE = vec2(0.0, 1.0);
-            V_COLOR = text.color;
+            v_mask_swizzle = vec2(0.0, 1.0);
+            v_color = text.color;
             break;
         case COLOR_MODE_SUBPX_BG_PASS2:
         case COLOR_MODE_SUBPX_DUAL_SOURCE:
-            V_MASK_SWIZZLE = vec2(1.0, 0.0);
-            V_COLOR = text.color;
+            v_mask_swizzle = vec2(1.0, 0.0);
+            v_color = text.color;
             break;
         case COLOR_MODE_SUBPX_CONST_COLOR:
         case COLOR_MODE_SUBPX_BG_PASS0:
         case COLOR_MODE_COLOR_BITMAP:
-            V_MASK_SWIZZLE = vec2(1.0, 0.0);
-            V_COLOR = vec4(text.color.a);
+            v_mask_swizzle = vec2(1.0, 0.0);
+            v_color = vec4(text.color.a);
             break;
         case COLOR_MODE_SUBPX_BG_PASS1:
-            V_MASK_SWIZZLE = vec2(-1.0, 1.0);
-            V_COLOR = vec4(text.color.a) * text.bg_color;
+            v_mask_swizzle = vec2(-1.0, 1.0);
+            v_color = vec4(text.color.a) * text.bg_color;
             break;
         default:
-            V_MASK_SWIZZLE = vec2(0.0);
-            V_COLOR = vec4(1.0);
+            v_mask_swizzle = vec2(0.0);
+            v_color = vec4(1.0);
     }
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
     vec2 st0 = res.uv_rect.xy / texture_size;
     vec2 st1 = res.uv_rect.zw / texture_size;
 
-    V_UV = mix(st0, st1, f);
-    V_LAYER = res.layer;
-    V_UV_BOUNDS = (res.uv_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
+    v_uv = mix(st0, st1, f);
+    v_layer = res.layer;
+    v_uv_bounds = (res.uv_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
 }
 
 void text_brush_vs(
@@ -307,29 +307,21 @@ void text_brush_vs(
 Fragment text_brush_fs(void) {
     Fragment frag;
 
-    vec3 tc = vec3(clamp(V_UV, V_UV_BOUNDS.xy, V_UV_BOUNDS.zw), V_LAYER);
+    vec3 tc = vec3(clamp(v_uv, v_uv_bounds.xy, v_uv_bounds.zw), v_layer);
     vec4 mask = texture(sColor0, tc);
-    mask.rgb = mask.rgb * V_MASK_SWIZZLE.x + mask.aaa * V_MASK_SWIZZLE.y;
+    mask.rgb = mask.rgb * v_mask_swizzle.x + mask.aaa * v_mask_swizzle.y;
 
     #ifdef WR_FEATURE_GLYPH_TRANSFORM
-        mask *= float(all(greaterThanEqual(V_UV_CLIP, vec4(0.0))));
+        mask *= float(all(greaterThanEqual(v_uv_clip, vec4(0.0))));
     #endif
 
-    frag.color = V_COLOR * mask;
+    frag.color = v_color * mask;
 
     #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
-        frag.blend = V_COLOR.a * mask;
+        frag.blend = v_color.a * mask;
     #endif
 
     return frag;
 }
 
 #endif // WR_FRAGMENT_SHADER
-
-// Undef macro names that could be re-defined by other shaders.
-#undef V_COLOR
-#undef V_MASK_SWIZZLE
-#undef V_UV_BOUNDS
-#undef V_UV
-#undef V_LAYER
-#undef V_UV_CLIP
