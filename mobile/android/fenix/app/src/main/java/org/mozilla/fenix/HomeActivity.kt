@@ -756,7 +756,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     override fun attachBaseContext(base: Context) {
-        components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+        base.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             super.attachBaseContext(base)
         }
     }
