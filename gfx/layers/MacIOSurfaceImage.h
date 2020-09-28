@@ -21,7 +21,9 @@ class MacIOSurfaceImage : public Image {
   explicit MacIOSurfaceImage(MacIOSurface* aSurface)
       : Image(nullptr, ImageFormat::MAC_IOSURFACE), mSurface(aSurface) {
     if (aSurface) {
-      mPictureRect = gfx::IntRect(gfx::IntPoint{}, aSurface->GetSize(0));
+      mPictureRect = gfx::IntRect(
+          gfx::IntPoint{}, gfx::IntSize(aSurface->GetDevicePixelWidth(0),
+                                        aSurface->GetDevicePixelHeight(0)));
     }
   }
 
