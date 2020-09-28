@@ -51,6 +51,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/ToString.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/AutoPrintEventDispatcher.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
@@ -1286,7 +1287,7 @@ void BrowserChild::HandleDoubleTap(const CSSPoint& aPoint,
                                    const ScrollableLayerGuid& aGuid) {
   MOZ_LOG(
       sApzChildLog, LogLevel::Debug,
-      ("Handling double tap at %s with %p %p\n", Stringify(aPoint).c_str(),
+      ("Handling double tap at %s with %p %p\n", ToString(aPoint).c_str(),
        mBrowserChildMessageManager ? mBrowserChildMessageManager->GetWrapper()
                                    : nullptr,
        mBrowserChildMessageManager.get()));
