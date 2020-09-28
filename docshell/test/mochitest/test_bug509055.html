@@ -16,81 +16,101 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=509055
 <div id="content">
 </div>
 <pre id="test">
-<script type="application/javascript">
+  <script type="application/javascript">
 
-/** Test for Bug 509055 **/
+    /** Test for Bug 509055 **/
 
-SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForExplicitFinish();
 
-var gGen;
+    var gGen;
 
-function shortWait() {
-  setTimeout(function() { gGen.next(); }, 0, false);
-}
+    function shortWait() {
+      setTimeout(function() { gGen.next(); }, 0, false);
+    }
 
-function onChildHashchange(e) {
-  // gGen might be undefined when we refresh the page, so we have to check here
-  dump("onChildHashchange() called.\n");
-  if (gGen)
-    gGen.next();
-}
+    function onChildHashchange(e) {
+      // gGen might be undefined when we refresh the page, so we have to check here
+      dump("onChildHashchange() called.\n");
+      if (gGen)
+        gGen.next();
+    }
 
-function onChildLoad(e) {
-  if (gGen)
-    gGen.next();
-}
+    function onChildLoad(e) {
+      if (gGen)
+        gGen.next();
+    }
 
-function* runTest() {
-  var popup = window.open("file_bug509055.html", "popup 0",
-                           "height=200,width=200,location=yes," +
-                           "menubar=yes,status=yes,toolbar=yes,dependent=yes");
-  popup.hashchangeCallback = onChildHashchange;
-  popup.onload = onChildLoad;
-  dump("Waiting for initial load.\n");
-  yield undefined;
+    async function* runTest() {
+      var popup = window.open("file_bug509055.html", "popup 0",
+                              "height=200,width=200,location=yes," +
+                              "menubar=yes,status=yes,toolbar=yes,dependent=yes");
+      popup.hashchangeCallback = onChildHashchange;
+      popup.onload = onChildLoad;
+      dump("Waiting for initial load.\n");
+      yield undefined;
 
-  // Without this wait, the change to location.hash below doesn't create a
-  // SHEntry or enable the back button.
-  shortWait();
-  dump("Got initial load.  Spinning event loop.\n");
-  yield undefined;
+      // Without this wait, the change to location.hash below doesn't create a
+      // SHEntry or enable the back button.
+      shortWait();
+      dump("Got initial load.  Spinning event loop.\n");
+      yield undefined;
 
-  popup.location.hash = "#1";
-  dump("Waiting for hashchange.\n");
-  yield undefined;
+      popup.location.hash = "#1";
+      dump("Waiting for hashchange.\n");
+      yield undefined;
 
-  popup.history.back();
-  dump("Waiting for second hashchange.\n");
-  yield undefined; // wait for hashchange
+      popup.history.back();
+      dump("Waiting for second hashchange.\n");
+      yield undefined; // wait for hashchange
 
-  popup.document.title = "Changed";
+      popup.document.title = "Changed";
 
-  // Wait for listeners to be notified of the title change.
-  shortWait();
-  dump("Got second hashchange.  Spinning event loop.\n");
-  yield undefined;
+      // Wait for listeners to be notified of the title change.
+      shortWait();
+      dump("Got second hashchange.  Spinning event loop.\n");
+      yield undefined;
 
-  var sh = SpecialPowers.wrap(popup)
-                        .docShell
-                        .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
-                        .sessionHistory;
+      let sheTitle = "";
+      if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+        var sh = SpecialPowers.wrap(popup)
+                              .docShell
+                              .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
+                              .sessionHistory;
 
-  // Get the title of the inner popup's current SHEntry
-  var sheTitle = sh.legacySHistory.getEntryAtIndex(sh.index).title;
-  is(sheTitle, "Changed", "SHEntry's title should change when we change.");
+        // Get the title of the inner popup's current SHEntry
+        sheTitle = sh.legacySHistory.getEntryAtIndex(sh.index).title;
+      } else {
+        let chromeScript = SpecialPowers.loadChromeScript(() => {
+          // eslint-disable-next-line no-undef
+          addMessageListener("getTitle", browsingContext => {
+            // eslint-disable-next-line no-shadow
+            let sh = browsingContext.sessionHistory;
+            let title = sh.getEntryAtIndex(sh.index).title;
+            // eslint-disable-next-line no-undef
+            sendAsyncMessage("title", title);
+          });
+        });
 
-  popup.close();
+        let p = chromeScript.promiseOneMessage("title");
+        let browsingContext = SpecialPowers.wrap(popup)
+                                           .docShell.browsingContext;
+        chromeScript.sendAsyncMessage("getTitle", browsingContext);
+        sheTitle = await p;
+        chromeScript.destroy();
+      }
+      is(sheTitle, "Changed", "SHEntry's title should change when we change.");
 
-  SimpleTest.executeSoon(SimpleTest.finish);
-}
+      popup.close();
 
-window.addEventListener("load", function() {
-  gGen = runTest();
-  gGen.next();
-});
+      SimpleTest.executeSoon(SimpleTest.finish);
+    }
 
-</script>
+    window.addEventListener("load", function() {
+      gGen = runTest();
+      gGen.next();
+    });
+
+  </script>
 
 </body>
 </html>
-
