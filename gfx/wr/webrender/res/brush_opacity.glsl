@@ -11,18 +11,17 @@
 #include shared,prim_shared,brush
 
 // Interpolated UV coordinates to sample.
-#define V_UV                varying_vec4_0.zw
-#define V_LOCAL_POS         varying_vec4_0.xy
+varying vec2 v_uv;
+varying vec2 v_local_pos;
 
 // Normalized bounds of the source image in the texture.
-#define V_UV_BOUNDS         flat_varying_vec4_1
+flat varying vec4 v_uv_bounds;
 
 // Layer index to sample.
-#define V_LAYER             flat_varying_vec4_2.x
 // Flag to allow perspective interpolation of UV.
-#define V_PERSPECTIVE       flat_varying_vec4_2.y
+flat varying vec2 v_layer_and_perspective;
 
-#define V_OPACITY           flat_varying_vec4_2.z
+flat varying float v_opacity;
 
 #ifdef WR_VERTEX_SHADER
 void opacity_brush_vs(
@@ -47,45 +46,37 @@ void opacity_brush_vs(
     vec2 uv = mix(uv0, uv1, f);
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
 
-    V_UV = uv / texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
-    V_LAYER = res.layer;
-    V_PERSPECTIVE = perspective_interpolate;
+    v_uv = uv / texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
+    v_layer_and_perspective.x = res.layer;
+    v_layer_and_perspective.y = perspective_interpolate;
 
     // TODO: The image shader treats this differently: deflate the rect by half a pixel on each side and
     // clamp the uv in the frame shader. Does it make sense to do the same here?
-    V_UV_BOUNDS = vec4(uv0, uv1) / texture_size.xyxy;
-    V_LOCAL_POS = vi.local_pos;
+    v_uv_bounds = vec4(uv0, uv1) / texture_size.xyxy;
+    v_local_pos = vi.local_pos;
 
-    V_OPACITY = float(prim_user_data.y) / 65536.0;
+    v_opacity = float(prim_user_data.y) / 65536.0;
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 Fragment opacity_brush_fs() {
-    float perspective_divisor = mix(gl_FragCoord.w, 1.0, V_PERSPECTIVE);
-    vec2 uv = V_UV * perspective_divisor;
-    vec4 Cs = texture(sColor0, vec3(uv, V_LAYER));
+    float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_layer_and_perspective.y);
+    vec2 uv = v_uv * perspective_divisor;
+    vec4 Cs = texture(sColor0, vec3(uv, v_layer_and_perspective.x));
 
     // Un-premultiply the input.
     float alpha = Cs.a;
     vec3 color = alpha != 0.0 ? Cs.rgb / alpha : Cs.rgb;
 
-    alpha *= V_OPACITY;
+    alpha *= v_opacity;
 
     // Fail-safe to ensure that we don't sample outside the rendered
     // portion of a blend source.
-    alpha *= min(point_inside_rect(uv, V_UV_BOUNDS.xy, V_UV_BOUNDS.zw),
-                 init_transform_fs(V_LOCAL_POS));
+    alpha *= min(point_inside_rect(uv, v_uv_bounds.xy, v_uv_bounds.zw),
+                 init_transform_fs(v_local_pos));
 
     // Pre-multiply the alpha into the output value.
     return Fragment(alpha * vec4(color, 1.0));
 }
 #endif
-
-// Undef macro names that could be re-defined by other shaders.
-#undef V_UV
-#undef V_LOCAL_POS
-#undef V_UV_BOUNDS
-#undef V_LAYER
-#undef V_PERSPECTIVE
-#undef V_OPACITY
