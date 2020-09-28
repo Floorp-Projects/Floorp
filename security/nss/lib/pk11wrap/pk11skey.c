@@ -506,10 +506,37 @@ PK11_ImportSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
                                         keyTemplate, templateCount, key, wincx);
     return symKey;
 }
+/* Import a PKCS #11 data object and return it as a key. This key is
+ * only useful in a limited number of mechanisms, such as HKDF. */
+PK11SymKey *
+PK11_ImportDataKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, PK11Origin origin,
+                   CK_ATTRIBUTE_TYPE operation, SECItem *key, void *wincx)
+{
+    CK_OBJECT_CLASS ckoData = CKO_DATA;
+    CK_ATTRIBUTE template[2] = { { CKA_CLASS, (CK_BYTE_PTR)&ckoData, sizeof(ckoData) },
+                                 { CKA_VALUE, (CK_BYTE_PTR)key->data, key->len } };
+    CK_OBJECT_HANDLE handle;
+    PK11GenericObject *genObject;
 
-/*
- * turn key bits into an appropriate key object
- */
+    genObject = PK11_CreateGenericObject(slot, template, PR_ARRAY_SIZE(template), PR_FALSE);
+    if (genObject == NULL) {
+        return NULL;
+    }
+    handle = PK11_GetObjectHandle(PK11_TypeGeneric, genObject, NULL);
+    if (handle == CK_INVALID_HANDLE) {
+        return NULL;
+    }
+    /* A note about ownership of the PKCS #11 handle:
+     * PK11_CreateGenericObject() will not destroy the object it creates
+     * on Free, For that you want PK11_CreateManagedGenericObject().
+     * Below we import the handle into the symKey structure. We pass
+     * PR_TRUE as the owner so that the symKey will destroy the object
+     * once it's freed. This is way it's safe to free now. */
+    PK11_DestroyGenericObject(genObject);
+    return PK11_SymKeyFromHandle(slot, NULL, origin, type, handle, PR_TRUE, wincx);
+}
+
+/* turn key bits into an appropriate key object */
 PK11SymKey *
 PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
                            PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key,

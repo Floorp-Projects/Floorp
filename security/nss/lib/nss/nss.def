@@ -1187,3 +1187,9 @@ PK11_FindEncodedCertInSlot;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.58 { 	# NSS 3.58 release
+;+    global:
+PK11_ImportDataKey;
+;+    local:
+;+       *;
+;+};

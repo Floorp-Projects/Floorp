@@ -26,7 +26,12 @@ const int kPkcs11HkdfSaltDerive = 3;
 const int kPkcs11HkdfData = 4;
 const int kPKCS11NumTypes = 5;
 
-class Pkcs11HkdfTest : public ::testing::TestWithParam<hkdf_vector> {
+enum class Pk11ImportType { data = 0, key = 1 };
+static const Pk11ImportType kImportTypesAll[] = {Pk11ImportType::data,
+                                                 Pk11ImportType::key};
+
+class Pkcs11HkdfTest
+    : public ::testing::TestWithParam<std::tuple<hkdf_vector, Pk11ImportType>> {
  protected:
   CK_MECHANISM_TYPE Pk11HkdfToHash(CK_MECHANISM_TYPE nssHkdfMech) {
     switch (nssHkdfMech) {
@@ -45,14 +50,15 @@ class Pkcs11HkdfTest : public ::testing::TestWithParam<hkdf_vector> {
     return CKM_INVALID_MECHANISM;
   }
 
-  ScopedPK11SymKey ImportKey(CK_KEY_TYPE keyType, SECItem *ikm_item) {
+  ScopedPK11SymKey ImportKey(CK_KEY_TYPE key_type, SECItem *ikm_item,
+                             Pk11ImportType import_type) {
     ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
     CK_MECHANISM_TYPE mech = CKM_HKDF_KEY_GEN;
     if (!slot) {
       ADD_FAILURE() << "Can't get slot";
       return nullptr;
     }
-    switch (keyType) {
+    switch (key_type) {
       case CKK_GENERIC_SECRET:
         mech = CKM_GENERIC_SECRET_KEY_GEN;
         break;
@@ -61,13 +67,21 @@ class Pkcs11HkdfTest : public ::testing::TestWithParam<hkdf_vector> {
         break;
     }
 
-    ScopedPK11SymKey ikm(PK11_ImportSymKey(slot.get(), mech, PK11_OriginUnwrap,
-                                           CKA_SIGN, ikm_item, nullptr));
+    ScopedPK11SymKey ikm;
+
+    if (import_type == Pk11ImportType::key) {
+      ikm.reset(PK11_ImportSymKey(slot.get(), mech, PK11_OriginUnwrap, CKA_SIGN,
+                                  ikm_item, nullptr));
+    } else {
+      ikm.reset(PK11_ImportDataKey(slot.get(), mech, PK11_OriginUnwrap,
+                                   CKA_SIGN, ikm_item, nullptr));
+    }
 
     return ikm;
   }
 
-  void RunTest(hkdf_vector vec, HkdfTestType type, CK_KEY_TYPE keyType) {
+  void RunTest(hkdf_vector vec, HkdfTestType test_type, CK_KEY_TYPE key_type,
+               Pk11ImportType import_type) {
     SECItem ikm_item = {siBuffer, vec.ikm.data(),
                         static_cast<unsigned int>(vec.ikm.size())};
     SECItem salt_item = {siBuffer, vec.salt.data(),
@@ -88,33 +102,23 @@ class Pkcs11HkdfTest : public ::testing::TestWithParam<hkdf_vector> {
     SECItem params_item = {siBuffer, (unsigned char *)&nss_hkdf_params,
                            sizeof(nss_hkdf_params)};
 
-    ScopedPK11SymKey ikm = ImportKey(keyType, &ikm_item);
+    ScopedPK11SymKey ikm = ImportKey(key_type, &ikm_item, import_type);
     ScopedPK11SymKey salt_key = NULL;
     ASSERT_NE(nullptr, ikm.get());
 
-    switch (type) {
+    switch (test_type) {
       case kNSSHkdfLegacy:
         printf("kNSSHkdfLegacy\n");
         break; /* already set up */
       case kPkcs11HkdfDeriveDataKey: {
         ScopedPK11SlotInfo slot(PK11_GetSlotFromKey(ikm.get()));
-        CK_OBJECT_CLASS ckoData = CKO_DATA;
-        CK_OBJECT_HANDLE handle;
-        CK_ATTRIBUTE pk11template[2] = {
-            {CKA_CLASS, (CK_BYTE_PTR)&ckoData, sizeof(ckoData)},
-            {CKA_VALUE, vec.ikm.data(), static_cast<CK_ULONG>(vec.ikm.size())}};
-
-        ScopedPK11GenericObject dataKey(PK11_CreateGenericObject(
-            slot.get(), pk11template, PR_ARRAY_SIZE(pk11template), PR_FALSE));
-        ASSERT_NE(nullptr, dataKey.get());
-        handle = PK11_GetObjectHandle(PK11_TypeGeneric, dataKey.get(), NULL);
-        ASSERT_NE((CK_ULONG)CK_INVALID_HANDLE, (CK_ULONG)handle);
         /* replaces old key with our new data key */
-        ikm = ScopedPK11SymKey(
-            PK11_SymKeyFromHandle(slot.get(), NULL, PK11_OriginUnwrap,
-                                  CKM_HKDF_DERIVE, handle, PR_TRUE, NULL));
+        SECItem data_item = {siBuffer, vec.ikm.data(),
+                             static_cast<unsigned int>(vec.ikm.size())};
+        ikm = ScopedPK11SymKey(PK11_ImportDataKey(slot.get(), CKM_HKDF_DERIVE,
+                                                  PK11_OriginUnwrap, CKA_DERIVE,
+                                                  &data_item, NULL));
         ASSERT_NE(nullptr, ikm.get());
-        /* generic object is freed, ikm owns the handle */
       }
       /* fall through */
       case kPkcs11HkdfSaltDerive:
@@ -122,8 +126,8 @@ class Pkcs11HkdfTest : public ::testing::TestWithParam<hkdf_vector> {
         if (hkdf_params.ulSaltLen == 0) {
           hkdf_params.ulSaltType = CKF_HKDF_SALT_NULL;
           printf("kPkcs11HkdfNullSaltDerive\n");
-        } else if (type == kPkcs11HkdfSaltDerive) {
-          salt_key = ImportKey(keyType, &salt_item);
+        } else if (test_type == kPkcs11HkdfSaltDerive) {
+          salt_key = ImportKey(key_type, &salt_item, import_type);
           hkdf_params.ulSaltType = CKF_HKDF_SALT_KEY;
           hkdf_params.ulSaltLen = 0;
           hkdf_params.pSalt = NULL;
@@ -131,7 +135,7 @@ class Pkcs11HkdfTest : public ::testing::TestWithParam<hkdf_vector> {
           printf("kPkcs11HkdfSaltDerive\n");
         } else {
           printf("kPkcs11HkdfDerive%s\n",
-                 (type == kPkcs11HkdfDeriveDataKey) ? "DataKey" : "");
+                 (test_type == kPkcs11HkdfDeriveDataKey) ? "DataKey" : "");
         }
         hkdf_params.prfHashMechanism = Pk11HkdfToHash(vec.mech);
         params_item.data = (unsigned char *)&hkdf_params;
@@ -166,23 +170,27 @@ class Pkcs11HkdfTest : public ::testing::TestWithParam<hkdf_vector> {
       ASSERT_EQ(nullptr, okm.get());
     }
   }
-  void RunTest(hkdf_vector vec) {
+  void RunTest(hkdf_vector vec, Pk11ImportType import_type) {
     HkdfTestType test_type;
 
     for (test_type = kNSSHkdfLegacy; test_type < kPKCS11NumTypes; test_type++) {
-      RunTest(vec, test_type, CKK_GENERIC_SECRET);
+      RunTest(vec, test_type, CKK_GENERIC_SECRET, import_type);
       if (test_type == kPkcs11HkdfDeriveDataKey) {
         continue;
       }
-      RunTest(vec, test_type, CKK_HKDF);
+      RunTest(vec, test_type, CKK_HKDF, import_type);
     }
   }
 };
 
-TEST_P(Pkcs11HkdfTest, TestVectors) { RunTest(GetParam()); }
+TEST_P(Pkcs11HkdfTest, TestVectors) {
+  RunTest(std::get<0>(GetParam()), std::get<1>(GetParam()));
+}
 
-INSTANTIATE_TEST_CASE_P(Pkcs11HkdfTests, Pkcs11HkdfTest,
-                        ::testing::ValuesIn(kHkdfTestVectors));
+INSTANTIATE_TEST_CASE_P(
+    Pkcs11HkdfTests, Pkcs11HkdfTest,
+    ::testing::Combine(::testing::ValuesIn(kHkdfTestVectors),
+                       ::testing::ValuesIn(kImportTypesAll)));
 
 TEST_F(Pkcs11HkdfTest, OkmLimits) {
   hkdf_vector vector{
@@ -198,44 +206,44 @@ TEST_F(Pkcs11HkdfTest, OkmLimits) {
   };
 
   // SHA1 limit
-  RunTest(vector);
+  RunTest(vector, Pk11ImportType::key);
 
   // SHA1 limit + 1
   vector.l += 1;
   vector.res.expect_rv = SECFailure;
-  RunTest(vector);
+  RunTest(vector, Pk11ImportType::key);
 
   // SHA256 limit
   vector.mech = CKM_NSS_HKDF_SHA256;
   vector.l = 255 * SHA256_LENGTH; /* per rfc5869 */
   vector.res.expect_rv = SECSuccess;
-  RunTest(vector);
+  RunTest(vector, Pk11ImportType::data);
 
   // SHA256 limit + 1
   vector.l += 1;
   vector.res.expect_rv = SECFailure;
-  RunTest(vector);
+  RunTest(vector, Pk11ImportType::data);
 
   // SHA384 limit
   vector.mech = CKM_NSS_HKDF_SHA384;
   vector.l = 255 * SHA384_LENGTH; /* per rfc5869 */
   vector.res.expect_rv = SECSuccess;
-  RunTest(vector);
+  RunTest(vector, Pk11ImportType::key);
 
   // SHA384 limit + 1
   vector.l += 1;
   vector.res.expect_rv = SECFailure;
-  RunTest(vector);
+  RunTest(vector, Pk11ImportType::key);
 
   // SHA512 limit
   vector.mech = CKM_NSS_HKDF_SHA512;
   vector.l = 255 * SHA512_LENGTH; /* per rfc5869 */
   vector.res.expect_rv = SECSuccess;
-  RunTest(vector);
+  RunTest(vector, Pk11ImportType::data);
 
   // SHA512 limit + 1
   vector.l += 1;
   vector.res.expect_rv = SECFailure;
-  RunTest(vector);
+  RunTest(vector, Pk11ImportType::data);
 }
 }  // namespace nss_test
