@@ -6,7 +6,7 @@
 
 if CONFIG['MOZ_GLEAN']:
     UNIFIED_SOURCES += [
-        'TestFog.cpp',
+        'TestFogInit.cpp',
         'TestFogIPC.cpp',
     ]
 
