@@ -20,6 +20,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/ToString.h"
 #include "nsThreadUtils.h"
 
 static mozilla::LazyLogModule sApzFlgLog("apz.fling");
@@ -190,7 +191,7 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
       // the lock ordering. Instead we schedule HandleFlingOverscroll() to be
       // called after mRecursiveMutex is released.
       FLING_LOG("%p fling went into overscroll, handing off with velocity %s\n",
-                &mApzc, Stringify(velocity).c_str());
+                &mApzc, ToString(velocity).c_str());
       mDeferredTasks.AppendElement(
           NewRunnableMethod<ParentLayerPoint,
                             RefPtr<const OverscrollHandoffChain>,

@@ -2798,8 +2798,7 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
     return hit;
   }
 
-  APZCTM_LOG("Hit-testing point %s with WR\n",
-             Stringify(aHitTestPoint).c_str());
+  APZCTM_LOG("Hit-testing point %s with WR\n", ToString(aHitTestPoint).c_str());
   std::vector<wr::WrHitResult> results =
       wr->HitTest(wr::ToWorldPoint(aHitTestPoint));
 
@@ -3036,10 +3035,9 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPoint(
         // are more "in front".
         Maybe<LayerPoint> hitTestPoint = aNode->Untransform(
             hitTestPointForParent, ComputeTransformForNode(aNode));
-        APZCTM_LOG(
-            "Transformed ParentLayer point %s to layer %s\n",
-            Stringify(hitTestPointForParent).c_str(),
-            hitTestPoint ? Stringify(hitTestPoint.ref()).c_str() : "nil");
+        APZCTM_LOG("Transformed ParentLayer point %s to layer %s\n",
+                   ToString(hitTestPointForParent).c_str(),
+                   hitTestPoint ? ToString(hitTestPoint.ref()).c_str() : "nil");
         if (!hitTestPoint) {
           return TraversalFlag::Skip;
         }
@@ -3050,7 +3048,7 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPoint(
         CompositorHitTestInfo hitResult = aNode->HitTest(hitTestPoints.top());
         hitTestPoints.pop();
         APZCTM_LOG("Testing Layer point %s against node %p\n",
-                   Stringify(hitTestPoints.top()).c_str(), aNode);
+                   ToString(hitTestPoints.top()).c_str(), aNode);
         if (hitResult != CompositorHitTestInvisibleToHit) {
           resultNode = aNode;
           hit.mHitResult = hitResult;

@@ -167,7 +167,7 @@ void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
                                      const CSSToLayoutDeviceScale& aScale,
                                      Modifiers aModifiers,
                                      int32_t aClickCount) {
-  APZES_LOG("Handling single tap at %s with %d\n", Stringify(aPoint).c_str(),
+  APZES_LOG("Handling single tap at %s with %d\n", ToString(aPoint).c_str(),
             mTouchEndCancelled);
 
   RefPtr<nsIContent> touchRollup = GetTouchRollup();
@@ -253,7 +253,7 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
                                    const CSSToLayoutDeviceScale& aScale,
                                    Modifiers aModifiers,
                                    uint64_t aInputBlockId) {
-  APZES_LOG("Handling long tap at %s\n", Stringify(aPoint).c_str());
+  APZES_LOG("Handling long tap at %s\n", ToString(aPoint).c_str());
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {

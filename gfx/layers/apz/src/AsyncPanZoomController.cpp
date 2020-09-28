@@ -998,7 +998,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
     scrollOffset.y = scrollPosition;
   }
   APZC_LOG("%p set scroll offset to %s from scrollbar drag\n", this,
-           Stringify(scrollOffset).c_str());
+           ToString(scrollOffset).c_str());
   SetVisualScrollOffset(scrollOffset);
   ScheduleCompositeAndMaybeRepaint();
   UpdateSharedCompositorFrameMetrics();
@@ -1943,7 +1943,7 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
     // the desired physics. Note that SmoothMsdScrollTo() will re-use an
     // existing smooth scroll animation if there is one.
     APZC_LOG("%p keyboard scrolling to snap point %s\n", this,
-             Stringify(destination).c_str());
+             ToString(destination).c_str());
     SmoothMsdScrollTo(destination);
     return nsEventStatus_eConsumeDoDefault;
   }
@@ -2225,7 +2225,7 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
   }
 
   APZC_LOG("%p got a scroll-wheel with delta in parent-layer pixels: %s\n",
-           this, Stringify(delta).c_str());
+           this, ToString(delta).c_str());
 
   if (adjustedByAutoDir) {
     MOZ_ASSERT(delta.x || delta.y,
@@ -2310,7 +2310,7 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
         // the desired physics. Note that SmoothMsdScrollTo() will re-use an
         // existing smooth scroll animation if there is one.
         APZC_LOG("%p wheel scrolling to snap point %s\n", this,
-                 Stringify(startPosition).c_str());
+                 ToString(startPosition).c_str());
         SmoothMsdScrollTo(startPosition);
         break;
       }
@@ -3252,7 +3252,7 @@ ParentLayerPoint AsyncPanZoomController::AttemptFling(
   // We may have a pre-existing velocity for whatever reason (for example,
   // a previously handed off fling). We don't want to clobber that.
   APZC_LOG("%p accepting fling with velocity %s\n", this,
-           Stringify(aHandoffState.mVelocity).c_str());
+           ToString(aHandoffState.mVelocity).c_str());
   ParentLayerPoint residualVelocity = aHandoffState.mVelocity;
   if (mX.CanScroll()) {
     mX.SetVelocity(mX.GetVelocity() + aHandoffState.mVelocity.x);
@@ -3361,7 +3361,7 @@ void AsyncPanZoomController::HandleFlingOverscroll(
     ParentLayerPoint residualVelocity =
         treeManagerLocal->DispatchFling(this, handoffState);
     FLING_LOG("APZC %p left with residual velocity %s\n", this,
-              Stringify(residualVelocity).c_str());
+              ToString(residualVelocity).c_str());
     if (!IsZero(residualVelocity) && IsPannable() &&
         StaticPrefs::apz_overscroll_enabled()) {
       // Obey overscroll-behavior.
@@ -5385,7 +5385,7 @@ Maybe<CSSPoint> AsyncPanZoomController::FindSnapPointNear(
     const CSSPoint& aDestination, ScrollUnit aUnit) {
   mRecursiveMutex.AssertCurrentThreadIn();
   APZC_LOG("%p scroll snapping near %s\n", this,
-           Stringify(aDestination).c_str());
+           ToString(aDestination).c_str());
   CSSRect scrollRange = Metrics().CalculateScrollRange();
   if (Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
           mScrollMetadata.GetSnapInfo(), aUnit,
@@ -5407,7 +5407,7 @@ void AsyncPanZoomController::ScrollSnapNear(const CSSPoint& aDestination) {
           FindSnapPointNear(aDestination, ScrollUnit::DEVICE_PIXELS)) {
     if (*snapPoint != Metrics().GetVisualScrollOffset()) {
       APZC_LOG("%p smooth scrolling to snap point %s\n", this,
-               Stringify(*snapPoint).c_str());
+               ToString(*snapPoint).c_str());
       SmoothMsdScrollTo(*snapPoint);
     }
   }
