@@ -48,43 +48,7 @@
 
 #ifdef WR_VERTEX_SHADER
 
-#define FWD_DECLARE_VS_FUNCTION(name)   \
-void name(                              \
-    VertexInfo vi,                      \
-    int prim_address,                   \
-    RectWithSize local_rect,            \
-    RectWithSize segment_rect,          \
-    ivec4 prim_user_data,               \
-    int specific_resource_address,      \
-    mat4 transform,                     \
-    PictureTask pic_task,               \
-    int brush_flags,                    \
-    vec4 segment_data                   \
-);
-
-// Forward-declare all brush vertex entry points.
-FWD_DECLARE_VS_FUNCTION(image_brush_vs)
-FWD_DECLARE_VS_FUNCTION(solid_brush_vs)
-FWD_DECLARE_VS_FUNCTION(blend_brush_vs)
-FWD_DECLARE_VS_FUNCTION(mix_blend_brush_vs)
-FWD_DECLARE_VS_FUNCTION(linear_gradient_brush_vs)
-FWD_DECLARE_VS_FUNCTION(radial_gradient_brush_vs)
-FWD_DECLARE_VS_FUNCTION(conic_gradient_brush_vs)
-FWD_DECLARE_VS_FUNCTION(yuv_brush_vs)
-FWD_DECLARE_VS_FUNCTION(opacity_brush_vs)
-FWD_DECLARE_VS_FUNCTION(text_brush_vs)
-
-// Forward-declare the text vertex shader entry point which is currently
-// different from other brushes.
-void text_shader_main(
-    Instance instance,
-    PrimitiveHeader ph,
-    Transform transform,
-    PictureTask task,
-    ClipArea clip_area
-);
-
-void multi_brush_vs(
+void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -94,8 +58,17 @@ void multi_brush_vs(
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
-    vec4 texel_rect,
-    int brush_kind
+    vec4 segment_data
+);
+
+// Forward-declare the text vertex shader entry point which is currently
+// different from other brushes.
+void text_shader_main(
+    Instance instance,
+    PrimitiveHeader ph,
+    Transform transform,
+    PictureTask task,
+    ClipArea clip_area
 );
 
 #define VECS_PER_SEGMENT                    2
@@ -191,7 +164,7 @@ void brush_shader_main_vs(
 #endif
 
     // Run the specific brush VS code to write interpolators.
-    WR_BRUSH_VS_FUNCTION(
+    brush_vs(
         vi,
         ph.specific_prim_address,
         ph.local_rect,
@@ -226,25 +199,14 @@ void main(void) {
 
 #ifdef WR_FRAGMENT_SHADER
 
-// Foward-declare all brush entry-points.
-Fragment image_brush_fs();
-Fragment solid_brush_fs();
-Fragment blend_brush_fs();
-Fragment mix_blend_brush_fs();
-Fragment linear_gradient_brush_fs();
-Fragment radial_gradient_brush_fs();
-Fragment conic_gradient_brush_fs();
-Fragment yuv_brush_fs();
-Fragment opacity_brush_fs();
-Fragment text_brush_fs();
-Fragment multi_brush_fs(int brush_kind);
+Fragment brush_fs();
 
 void main(void) {
 #ifdef WR_FEATURE_DEBUG_OVERDRAW
     oFragColor = WR_DEBUG_OVERDRAW_COLOR;
 #else
 
-    Fragment frag = WR_BRUSH_FS_FUNCTION();
+    Fragment frag = brush_fs();
 
 #ifdef WR_FEATURE_ALPHA_PASS
     // Apply the clip mask
