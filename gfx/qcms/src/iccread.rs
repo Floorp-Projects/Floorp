@@ -88,8 +88,8 @@ pub struct qcms_profile {
     pub blueTRC: Option<Box<curveType>>,
     pub greenTRC: Option<Box<curveType>>,
     pub grayTRC: Option<Box<curveType>>,
-    pub A2B0: *mut lutType,
-    pub B2A0: *mut lutType,
+    pub A2B0: Option<Box<lutType>>,
+    pub B2A0: Option<Box<lutType>>,
     pub mAB: *mut lutmABType,
     pub mBA: *mut lutmABType,
     pub chromaticAdaption: matrix,
@@ -109,12 +109,6 @@ impl Drop for qcms_profile {
             }
             if !self.output_table_b.is_null() {
                 precache_release(self.output_table_b);
-            }
-            if !self.A2B0.is_null() {
-                lut_release(self.A2B0);
-            }
-            if !self.B2A0.is_null() {
-                lut_release(self.B2A0);
             }
             if !self.mAB.is_null() {
                 mAB_release(self.mAB);
@@ -161,7 +155,7 @@ pub enum curveType {
 pub type uInt16Number = u16;
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct lutType {
     pub num_input_channels: u8,
     pub num_output_channels: u8,
@@ -177,10 +171,9 @@ pub struct lutType {
     pub e22: s15Fixed16Number,
     pub num_input_table_entries: u16,
     pub num_output_table_entries: u16,
-    pub input_table: *mut f32,
-    pub clut_table: *mut f32,
-    pub output_table: *mut f32,
-    pub table_data: [f32; 0],
+    pub input_table: Vec<f32>,
+    pub clut_table: Vec<f32>,
+    pub output_table: Vec<f32>,
 }
 
 #[repr(C)]
@@ -489,8 +482,8 @@ pub extern "C" fn qcms_profile_is_bogus(mut profile: &mut qcms_profile) -> bool 
     if (*profile).color_space != RGB_SIGNATURE {
         return false;
     }
-    if !(*profile).A2B0.is_null()
-        || !(*profile).B2A0.is_null()
+    if !(*profile).A2B0.is_none()
+        || !(*profile).B2A0.is_none()
         || !(*profile).mAB.is_null()
         || !(*profile).mBA.is_null()
     {
@@ -901,7 +894,7 @@ unsafe fn read_tag_lutmABType(mut src: &mut mem_source, mut tag: &tag) -> *mut l
     }
     return lut;
 }
-unsafe fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> *mut lutType {
+fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> Option<Box<lutType>> {
     let mut offset: u32 = (*tag).offset;
     let mut type_0: u32 = read_u32(src, offset as usize);
     let mut num_input_table_entries: u16;
@@ -914,7 +907,6 @@ unsafe fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> *mut lutT
     let mut output_offset: u32;
     let mut clut_size: u32;
     let mut entry_size: usize;
-    let mut lut: *mut lutType;
     let mut i: u32;
     if type_0 == LUT8_TYPE {
         num_input_table_entries = 256u16;
@@ -926,14 +918,14 @@ unsafe fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> *mut lutT
         num_output_table_entries = read_u16(src, (offset + 50) as usize);
         if num_input_table_entries as i32 == 0 || num_output_table_entries as i32 == 0 {
             invalid_source(src, "Bad channel count");
-            return 0 as *mut lutType;
+            return None;
         }
         entry_size = 2;
         input_offset = 52
     } else {
         debug_assert!(false);
         invalid_source(src, "Unexpected lut type");
-        return 0 as *mut lutType;
+        return None;
     }
     in_chan = read_u8(src, (offset + 8) as usize);
     out_chan = read_u8(src, (offset + 9) as usize);
@@ -941,120 +933,112 @@ unsafe fn read_tag_lutType(mut src: &mut mem_source, mut tag: &tag) -> *mut lutT
     clut_size = (grid_points as f64).powf(in_chan as f64) as u32;
     if clut_size > 500000 {
         invalid_source(src, "CLUT too large");
-        return 0 as *mut lutType;
+        return None;
     }
     if clut_size <= 0 {
         invalid_source(src, "CLUT must not be empty.");
-        return 0 as *mut lutType;
+        return None;
     }
     if in_chan as i32 != 3 || out_chan as i32 != 3 {
         invalid_source(src, "CLUT only supports RGB");
-        return 0 as *mut lutType;
+        return None;
     }
-    lut = malloc(
-        ::std::mem::size_of::<lutType>()
-            + ((num_input_table_entries as i32 * in_chan as i32) as libc::c_uint
-                + clut_size * out_chan as libc::c_uint
-                + (num_output_table_entries as i32 * out_chan as i32) as libc::c_uint)
-                as usize
-                * ::std::mem::size_of::<f32>(),
-    ) as *mut lutType;
-    if lut.is_null() {
-        invalid_source(src, "CLUT too large");
-        return 0 as *mut lutType;
-    }
-    /* compute the offsets of tables */
-    (*lut).input_table = &mut *(*lut).table_data.as_mut_ptr().offset(0isize) as *mut f32;
-    (*lut).clut_table = &mut *(*lut)
-        .table_data
-        .as_mut_ptr()
-        .offset((in_chan as i32 * num_input_table_entries as i32) as isize)
-        as *mut f32;
-    (*lut).output_table = &mut *(*lut).table_data.as_mut_ptr().offset(
-        ((in_chan as i32 * num_input_table_entries as i32) as libc::c_uint
-            + clut_size * out_chan as libc::c_uint) as isize,
-    ) as *mut f32;
-    (*lut).num_input_table_entries = num_input_table_entries;
-    (*lut).num_output_table_entries = num_output_table_entries;
-    (*lut).num_input_channels = in_chan;
-    (*lut).num_output_channels = out_chan;
-    (*lut).num_clut_grid_points = grid_points;
-    (*lut).e00 = read_s15Fixed16Number(src, (offset + 12) as usize);
-    (*lut).e01 = read_s15Fixed16Number(src, (offset + 16) as usize);
-    (*lut).e02 = read_s15Fixed16Number(src, (offset + 20) as usize);
-    (*lut).e10 = read_s15Fixed16Number(src, (offset + 24) as usize);
-    (*lut).e11 = read_s15Fixed16Number(src, (offset + 28) as usize);
-    (*lut).e12 = read_s15Fixed16Number(src, (offset + 32) as usize);
-    (*lut).e20 = read_s15Fixed16Number(src, (offset + 36) as usize);
-    (*lut).e21 = read_s15Fixed16Number(src, (offset + 40) as usize);
-    (*lut).e22 = read_s15Fixed16Number(src, (offset + 44) as usize);
-    i = 0;
-    while i < ((*lut).num_input_table_entries as i32 * in_chan as i32) as u32 {
+
+    let e00 = read_s15Fixed16Number(src, (offset + 12) as usize);
+    let e01 = read_s15Fixed16Number(src, (offset + 16) as usize);
+    let e02 = read_s15Fixed16Number(src, (offset + 20) as usize);
+    let e10 = read_s15Fixed16Number(src, (offset + 24) as usize);
+    let e11 = read_s15Fixed16Number(src, (offset + 28) as usize);
+    let e12 = read_s15Fixed16Number(src, (offset + 32) as usize);
+    let e20 = read_s15Fixed16Number(src, (offset + 36) as usize);
+    let e21 = read_s15Fixed16Number(src, (offset + 40) as usize);
+    let e22 = read_s15Fixed16Number(src, (offset + 44) as usize);
+
+    let mut input_table = Vec::with_capacity((num_input_table_entries * in_chan as u16) as usize);
+    for i in 0..(num_input_table_entries * in_chan as u16) {
         if type_0 == LUT8_TYPE {
-            *(*lut).input_table.offset(i as isize) = uInt8Number_to_float(read_uInt8Number(
+            input_table.push(uInt8Number_to_float(read_uInt8Number(
                 src,
                 (offset + input_offset) as usize + i as usize * entry_size,
-            ))
+            )))
         } else {
-            *(*lut).input_table.offset(i as isize) = uInt16Number_to_float(read_uInt16Number(
+            input_table.push(uInt16Number_to_float(read_uInt16Number(
                 src,
                 (offset + input_offset) as usize + i as usize * entry_size,
-            ))
+            )))
         }
-        i = i + 1
     }
     clut_offset = ((offset + input_offset) as usize
-        + ((*lut).num_input_table_entries as i32 * in_chan as i32) as usize * entry_size)
+        + (num_input_table_entries as i32 * in_chan as i32) as usize * entry_size)
         as u32;
-    i = 0;
-    while i < clut_size * out_chan as libc::c_uint {
+
+    let mut clut_table = Vec::with_capacity((clut_size * out_chan as u32) as usize);
+    for i in (0..clut_size * out_chan as u32).step_by(3) {
         if type_0 == LUT8_TYPE {
-            *(*lut).clut_table.offset((i + 0) as isize) = uInt8Number_to_float(read_uInt8Number(
+            clut_table.push(uInt8Number_to_float(read_uInt8Number(
                 src,
                 clut_offset as usize + i as usize * entry_size + 0,
-            ));
-            *(*lut).clut_table.offset((i + 1) as isize) = uInt8Number_to_float(read_uInt8Number(
+            )));
+            clut_table.push(uInt8Number_to_float(read_uInt8Number(
                 src,
                 clut_offset as usize + i as usize * entry_size + 1,
-            ));
-            *(*lut).clut_table.offset((i + 2) as isize) = uInt8Number_to_float(read_uInt8Number(
+            )));
+            clut_table.push(uInt8Number_to_float(read_uInt8Number(
                 src,
                 clut_offset as usize + i as usize * entry_size + 2,
-            ))
+            )))
         } else {
-            *(*lut).clut_table.offset((i + 0) as isize) = uInt16Number_to_float(read_uInt16Number(
+            clut_table.push(uInt16Number_to_float(read_uInt16Number(
                 src,
                 clut_offset as usize + i as usize * entry_size + 0,
-            ));
-            *(*lut).clut_table.offset((i + 1) as isize) = uInt16Number_to_float(read_uInt16Number(
+            )));
+            clut_table.push(uInt16Number_to_float(read_uInt16Number(
                 src,
                 clut_offset as usize + i as usize * entry_size + 2,
-            ));
-            *(*lut).clut_table.offset((i + 2) as isize) = uInt16Number_to_float(read_uInt16Number(
+            )));
+            clut_table.push(uInt16Number_to_float(read_uInt16Number(
                 src,
                 clut_offset as usize + i as usize * entry_size + 4,
-            ))
+            )))
         }
-        i = i + 3
     }
     output_offset =
         (clut_offset as usize + (clut_size * out_chan as u32) as usize * entry_size) as u32;
-    i = 0;
-    while i < ((*lut).num_output_table_entries as i32 * out_chan as i32) as u32 {
+
+    let mut output_table =
+        Vec::with_capacity((num_output_table_entries * out_chan as u16) as usize);
+    for i in 0..num_output_table_entries * out_chan as u16 {
         if type_0 == LUT8_TYPE {
-            *(*lut).output_table.offset(i as isize) = uInt8Number_to_float(read_uInt8Number(
+            output_table.push(uInt8Number_to_float(read_uInt8Number(
                 src,
                 output_offset as usize + i as usize * entry_size,
-            ))
+            )))
         } else {
-            *(*lut).output_table.offset(i as isize) = uInt16Number_to_float(read_uInt16Number(
+            output_table.push(uInt16Number_to_float(read_uInt16Number(
                 src,
                 output_offset as usize + i as usize * entry_size,
-            ))
+            )))
         }
-        i = i + 1
     }
-    return lut;
+    Some(Box::new(lutType {
+        num_input_table_entries: num_input_table_entries,
+        num_output_table_entries: num_output_table_entries,
+        num_input_channels: in_chan,
+        num_output_channels: out_chan,
+        num_clut_grid_points: grid_points,
+        e00,
+        e01,
+        e02,
+        e10,
+        e11,
+        e12,
+        e20,
+        e21,
+        e22,
+        input_table,
+        clut_table,
+        output_table,
+    }))
 }
 fn read_rendering_intent(mut profile: &mut qcms_profile, mut src: &mut mem_source) {
     (*profile).rendering_intent = read_u32(src, 64);
@@ -1439,9 +1423,7 @@ pub unsafe extern "C" fn qcms_profile_get_color_space(
 ) -> icColorSpaceSignature {
     return (*profile).color_space;
 }
-unsafe extern "C" fn lut_release(mut lut: *mut lutType) {
-    free(lut as *mut libc::c_void);
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_release(mut profile: *mut qcms_profile) {
     drop(Box::from_raw(profile));
