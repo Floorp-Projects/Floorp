@@ -101,6 +101,15 @@ class MarionetteFrameChild extends JSWindowActorChild {
         case "MarionetteFrameParent:getPageSource":
           result = await this.getPageSource();
           break;
+        case "MarionetteFrameParent:isElementDisplayed":
+          result = await this.isElementDisplayed(data);
+          break;
+        case "MarionetteFrameParent:isElementEnabled":
+          result = await this.isElementEnabled(data);
+          break;
+        case "MarionetteFrameParent:isElementSelected":
+          result = await this.isElementSelected(data);
+          break;
         case "MarionetteFrameParent:switchToFrame":
           result = await this.switchToFrame(data);
           break;
@@ -343,6 +352,45 @@ class MarionetteFrameChild extends JSWindowActorChild {
    */
   async getPageSource() {
     return this.document.documentElement.outerHTML;
+  }
+
+  /**
+   * Determine the element displayedness of the given web element.
+   */
+  async isElementDisplayed(options = {}) {
+    const { capabilities, webEl } = options;
+    const el = this.resolveElement(webEl);
+
+    return interaction.isElementDisplayed(
+      el,
+      capabilities["moz:accessibilityChecks"]
+    );
+  }
+
+  /**
+   * Check if element is enabled.
+   */
+  async isElementEnabled(options = {}) {
+    const { capabilities, webEl } = options;
+    const el = this.resolveElement(webEl);
+
+    return interaction.isElementEnabled(
+      el,
+      capabilities["moz:accessibilityChecks"]
+    );
+  }
+
+  /**
+   * Determine whether the referenced element is selected or not.
+   */
+  async isElementSelected(options = {}) {
+    const { capabilities, webEl } = options;
+    const el = this.resolveElement(webEl);
+
+    return interaction.isElementSelected(
+      el,
+      capabilities["moz:accessibilityChecks"]
+    );
   }
 
   /**
