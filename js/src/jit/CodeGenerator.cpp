@@ -15128,6 +15128,23 @@ void CodeGenerator::visitLoadWrapperTarget(LLoadWrapperTarget* lir) {
       output);
 }
 
+void CodeGenerator::visitGuardHasGetterSetter(LGuardHasGetterSetter* lir) {
+  Register object = ToRegister(lir->object());
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
+
+  masm.movePtr(ImmGCPtr(lir->mir()->shape()), temp2);
+
+  masm.setupUnalignedABICall(temp1);
+  masm.loadJSContext(temp1);
+  masm.passABIArg(temp1);
+  masm.passABIArg(object);
+  masm.passABIArg(temp2);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectHasGetterSetterPure));
+
+  bailoutIfFalseBool(ReturnReg, lir->snapshot());
+}
+
 template <size_t NumDefs>
 void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
   wasm::JitCallStackArgVector stackArgs;
