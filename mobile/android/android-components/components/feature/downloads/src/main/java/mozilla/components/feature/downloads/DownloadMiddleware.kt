@@ -56,7 +56,7 @@ class DownloadMiddleware(
             is DownloadAction.UpdateDownloadAction -> updateDownload(action.download, context)
             is DownloadAction.RestoreDownloadsStateAction -> restoreDownloads(context.store)
             is DownloadAction.AddDownloadAction -> {
-                if (!saveDownload(context.store, action.download)) {
+                if (!action.download.private && !saveDownload(context.store, action.download)) {
                     // The download was already added before, so we are ignoring this request.
                     logger.debug("Ignored add action for ${action.download.id} " +
                             "download already in store.downloads")
@@ -88,6 +88,7 @@ class DownloadMiddleware(
     }
 
     private fun updateDownload(updated: DownloadState, context: MiddlewareContext<BrowserState, BrowserAction>) {
+        if (updated.private) return
         context.state.downloads[updated.id]?.let { old ->
             // To not overwhelm the storage, we only send updates that are relevant,
             // we only care about properties, that we are stored on the storage.
@@ -103,7 +104,7 @@ class DownloadMiddleware(
     private fun restoreDownloads(store: Store<BrowserState, BrowserAction>) = scope.launch {
         downloadStorage.getDownloads().collect { downloads ->
             downloads.forEach { download ->
-                if (!store.state.downloads.containsKey(download.id)) {
+                if (!store.state.downloads.containsKey(download.id) && !download.private) {
                     store.dispatch(DownloadAction.RestoreDownloadStateAction(download))
                     logger.debug("Download restored from the storage ${download.fileName}")
                 }
@@ -111,8 +112,9 @@ class DownloadMiddleware(
         }
     }
 
-    private fun saveDownload(store: Store<BrowserState, BrowserAction>, download: DownloadState): Boolean {
-        return if (!store.state.downloads.containsKey(download.id)) {
+    @VisibleForTesting
+    internal fun saveDownload(store: Store<BrowserState, BrowserAction>, download: DownloadState): Boolean {
+        return if (!store.state.downloads.containsKey(download.id) && !download.private) {
             scope.launch {
                 downloadStorage.add(download)
                 logger.debug("Added download ${download.fileName} to the storage")

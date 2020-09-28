@@ -84,6 +84,39 @@ class DownloadMiddlewareTest {
         val intentCaptor = argumentCaptor<Intent>()
         verify(downloadMiddleware).startForegroundService(intentCaptor.capture())
         assertEquals(download.id, intentCaptor.value.getStringExtra(EXTRA_DOWNLOAD_ID))
+
+        reset(downloadMiddleware)
+
+        // We don't store private downloads in the storage.
+        val privateDownload = download.copy(id = "newId", private = true)
+
+        store.dispatch(DownloadAction.AddDownloadAction(privateDownload)).joinBlocking()
+
+        verify(downloadMiddleware, never()).saveDownload(any(), any())
+        verify(downloadMiddleware.downloadStorage, never()).add(privateDownload)
+        verify(downloadMiddleware).startForegroundService(intentCaptor.capture())
+        assertEquals(privateDownload.id, intentCaptor.value.getStringExtra(EXTRA_DOWNLOAD_ID))
+    }
+
+    @Test
+    fun `saveDownload do not store private downloads`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            coroutineContext = dispatcher,
+            downloadStorage = mock()
+        ))
+        val store = BrowserStore(
+            initialState = BrowserState(),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        val privateDownload = DownloadState("https://mozilla.org/download", private = true)
+
+        store.dispatch(DownloadAction.AddDownloadAction(privateDownload)).joinBlocking()
+
+        verify(downloadMiddleware.downloadStorage, never()).add(privateDownload)
     }
 
     @Test
@@ -214,6 +247,12 @@ class DownloadMiddlewareTest {
         store.dispatch(DownloadAction.UpdateDownloadAction(updatedDownload)).joinBlocking()
 
         verify(downloadStorage, times(1)).update(any())
+
+        // Private downloads are not updated in the storage.
+        updatedDownload = updatedDownload.copy(private = true)
+
+        store.dispatch(DownloadAction.UpdateDownloadAction(updatedDownload)).joinBlocking()
+        verify(downloadStorage, times(1)).update(any())
     }
 
     @Test
@@ -247,6 +286,39 @@ class DownloadMiddlewareTest {
         store.waitUntilIdle()
 
         assertEquals(download, store.state.downloads.values.first())
+    }
+
+    @Test
+    fun `private downloads MUST NOT be restored`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadStorage: DownloadStorage = mock()
+        val dispatcher = TestCoroutineDispatcher()
+        val downloadMiddleware = DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            downloadStorage = downloadStorage,
+            coroutineContext = dispatcher
+        )
+        val store = BrowserStore(
+            initialState = BrowserState(),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        val download = DownloadState("https://mozilla.org/download", private = true)
+        whenever(downloadStorage.getDownloads()).thenReturn(
+            flow {
+                emit(listOf(download))
+            }
+        )
+
+        assertTrue(store.state.downloads.isEmpty())
+
+        store.dispatch(DownloadAction.RestoreDownloadsStateAction).joinBlocking()
+
+        dispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        assertTrue(store.state.downloads.isEmpty())
     }
 
     @Test
