@@ -99,11 +99,8 @@ public final class GeckoLoader {
         if (prefs != null) {
             final StringBuilder prefsEnv = new StringBuilder("MOZ_DEFAULT_PREFS=");
             for (final String key : prefs.keySet()) {
-                final Object value = prefs.get(key);
-                if (value == null) {
-                    continue;
-                }
                 prefsEnv.append(String.format("pref(\"%s\",", escapeDoubleQuotes(key)));
+                final Object value = prefs.get(key);
                 if (value instanceof String) {
                     prefsEnv.append(String.format("\"%s\"", escapeDoubleQuotes(value.toString())));
                 } else if (value instanceof Boolean) {
