@@ -764,7 +764,7 @@ void nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
 static void CheckCaretDrawingState() {
   // There is 1 caret per document, we need to find the focused
   // document and erase its caret.
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     nsCOMPtr<mozIDOMWindowProxy> window;
     fm->GetFocusedWindow(getter_AddRefs(window));

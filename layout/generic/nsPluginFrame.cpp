@@ -1476,13 +1476,13 @@ nsresult nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
   mInstanceOwner->ConsiderNewEventloopNestingLevel();
 
   if (anEvent->mMessage == ePluginActivate) {
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       RefPtr<dom::Element> elem = GetContent()->AsElement();
       return fm->SetFocus(elem, 0);
     }
   } else if (anEvent->mMessage == ePluginFocus) {
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       RefPtr<dom::Element> elem = GetContent()->AsElement();
       return fm->FocusPlugin(elem);

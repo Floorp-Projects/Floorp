@@ -1474,7 +1474,7 @@ nsresult nsPluginInstanceOwner::ProcessMouseDown(Event* aMouseEvent) {
   // otherwise, we might not get key events
   if (mPluginFrame && mPluginWindow &&
       mPluginWindow->type == NPWindowTypeDrawable) {
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       nsCOMPtr<Element> elem = do_QueryReferent(mContent);
       fm->SetFocus(elem, 0);
