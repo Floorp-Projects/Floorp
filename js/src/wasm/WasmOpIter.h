@@ -1547,7 +1547,7 @@ inline bool OpIter<Policy>::readSelect(bool typed, StackType* type,
 
   if (!falseType.isValidForUntypedSelect() ||
       !trueType.isValidForUntypedSelect()) {
-    return fail("invalid types for old-style 'select'");
+    return fail("invalid types for untyped select");
   }
 
   if (falseType.isBottom()) {
