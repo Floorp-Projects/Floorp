@@ -1000,13 +1000,9 @@ void nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow,
   }
 }
 
-NS_IMETHODIMP
-nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
-  // if there is no window or it is not the same or an ancestor of the
-  // currently focused window, just return, as the current focus will not
-  // be affected.
+void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
+  MOZ_ASSERT(aWindow);
 
-  NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
@@ -1036,7 +1032,11 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
     }
   }
 
-  if (!IsSameOrAncestor(window, mFocusedWindow)) return NS_OK;
+  // If it is not the same or an ancestor of the currently focused window, just
+  // return, as the current focus will not be affected.
+  if (!IsSameOrAncestor(window, mFocusedWindow)) {
+    return;
+  }
 
   // at this point, we know that the window being hidden is either the focused
   // window, or an ancestor of the focused window. Either way, the focus is no
@@ -1046,7 +1046,7 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
 
   nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
   if (!focusedDocShell) {
-    return NS_OK;
+    return;
   }
 
   RefPtr<PresShell> presShell = focusedDocShell->GetPresShell();
@@ -1110,7 +1110,7 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
         }  // else do nothing when an out-of-process iframe is torn down
       }
     }
-    return NS_OK;
+    return;
   }
 
   // if the window being hidden is an ancestor of the focused window, adjust
@@ -1133,8 +1133,6 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
 
     SetFocusedWindowInternal(window);
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
