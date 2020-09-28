@@ -10,10 +10,10 @@
 
 #include shared,prim_shared,brush
 
-#define V_COLOR             flat_varying_vec4_0
+flat varying vec4 v_color;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-#define V_LOCAL_POS         varying_vec4_0.xy
+varying vec2 v_local_pos;
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -42,24 +42,20 @@ void solid_brush_vs(
     SolidBrush prim = fetch_solid_primitive(prim_address);
 
     float opacity = float(prim_user_data.x) / 65535.0;
-    V_COLOR = prim.color * opacity;
+    v_color = prim.color * opacity;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    V_LOCAL_POS = vi.local_pos;
+    v_local_pos = vi.local_pos;
 #endif
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 Fragment solid_brush_fs() {
-    vec4 color = V_COLOR;
+    vec4 color = v_color;
 #ifdef WR_FEATURE_ALPHA_PASS
-    color *= init_transform_fs(V_LOCAL_POS);
+    color *= init_transform_fs(v_local_pos);
 #endif
     return Fragment(color);
 }
 #endif
-
-// Undef macro names that could be re-defined by other shaders.
-#undef V_COLOR
-#undef V_LOCAL_POS
