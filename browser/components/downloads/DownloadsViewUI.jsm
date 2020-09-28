@@ -740,16 +740,9 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         // This property is false if the download did not succeed.
         return this.download.target.exists;
       case "downloadsCmd_show":
-        // TODO: Bug 827010 - Handle part-file asynchronously.
-        if (this.download.target.partFilePath) {
-          let partFile = new FileUtils.File(this.download.target.partFilePath);
-          if (partFile.exists()) {
-            return true;
-          }
-        }
+        let { target } = this.download;
+        return target.exists || target.partFileExists;
 
-        // This property is false if the download did not succeed.
-        return this.download.target.exists;
       case "downloadsCmd_delete":
       case "cmd_delete":
         // We don't want in-progress downloads to be removed accidentally.
