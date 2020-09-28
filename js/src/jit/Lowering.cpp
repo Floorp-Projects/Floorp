@@ -5551,6 +5551,19 @@ void LIRGenerator::visitLoadWrapperTarget(MLoadWrapperTarget* ins) {
   define(new (alloc()) LLoadWrapperTarget(useRegisterAtStart(object)), ins);
 }
 
+void LIRGenerator::visitGuardHasGetterSetter(MGuardHasGetterSetter* ins) {
+  MDefinition* object = ins->object();
+  MOZ_ASSERT(object->type() == MIRType::Object);
+
+  auto* guard = new (alloc())
+      LGuardHasGetterSetter(useRegisterAtStart(object), tempFixed(CallTempReg0),
+                            tempFixed(CallTempReg1));
+  assignSnapshot(guard, BailoutKind::HasGetterSetterGuard);
+  add(guard, ins);
+  redefine(ins, object);
+  assignSafepoint(guard, ins);
+}
+
 void LIRGenerator::visitConstant(MConstant* ins) {
   if (!IsFloatingPointType(ins->type()) && ins->canEmitAtUses()) {
     emitAtUses(ins);

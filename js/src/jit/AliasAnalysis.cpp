@@ -185,6 +185,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::AtomicExchangeTypedArrayElement:
     case MDefinition::Opcode::AtomicTypedArrayElementBinop:
     case MDefinition::Opcode::LoadWrapperTarget:
+    case MDefinition::Opcode::GuardHasGetterSetter:
     case MDefinition::Opcode::AsmJSLoadHeap:
     case MDefinition::Opcode::AsmJSStoreHeap:
     case MDefinition::Opcode::WasmHeapBase:
