@@ -91,10 +91,10 @@ class TestMemoryUsage(AwsyTestCase):
         self.marionette.set_pref('dom.ipc.processPrelaunch.enabled', enabled)
 
     def test_open_tabs(self):
-        """Marionette test entry that returns an array of checkoint arrays.
+        """Marionette test entry that returns an array of checkpoint arrays.
 
         This will generate a set of checkpoints for each iteration requested.
-        Upon succesful completion the results will be stored in
+        Upon successful completion the results will be stored in
         |self.testvars["results"]| and accessible to the test runner via the
         |testvars| object it passed in.
         """
