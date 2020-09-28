@@ -272,16 +272,25 @@ void ICScript::trace(JSTracer* trc) {
 bool ICScript::addInlinedChild(JSContext* cx, UniquePtr<ICScript> child,
                                uint32_t pcOffset) {
   MOZ_ASSERT(!hasInlinedChild(pcOffset));
+
   if (!inlinedChildren_) {
     inlinedChildren_ = cx->make_unique<Vector<CallSite>>(cx);
     if (!inlinedChildren_) {
       return false;
     }
   }
-  if (!inlinedChildren_->emplaceBack(child.get(), pcOffset)) {
+
+  // First reserve space in inlinedChildren_ to ensure that if the ICScript is
+  // added to the inlining root, it can also be added to inlinedChildren_.
+  CallSite callsite(child.get(), pcOffset);
+  if (!inlinedChildren_->reserve(inlinedChildren_->length() + 1)) {
     return false;
   }
-  return inliningRoot()->addInlinedScript(std::move(child));
+  if (!inliningRoot()->addInlinedScript(std::move(child))) {
+    return false;
+  }
+  inlinedChildren_->infallibleAppend(callsite);
+  return true;
 }
 
 ICScript* ICScript::findInlinedChild(uint32_t pcOffset) {
