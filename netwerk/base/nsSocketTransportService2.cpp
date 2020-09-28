@@ -57,8 +57,7 @@ static Atomic<PRThread*, Relaxed> gSocketThread(nullptr);
 #define MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN \
   "network.sts.max_time_for_pr_close_during_shutdown"
 #define POLLABLE_EVENT_TIMEOUT "network.sts.pollable_event_timeout"
-#define ESNI_ENABLED "network.security.esni.enabled"
-#define ESNI_DISABLED_MITM "security.pki.mitm_detected"
+#define MITM_DETECTED "security.pki.mitm_detected"
 
 #define REPAIR_POLLABLE_EVENT_TIME 10
 
@@ -151,7 +150,6 @@ nsSocketTransportService::nsSocketTransportService()
       mPolling(false)
 #endif
       ,
-      mEsniEnabled(false),
       mTrustedMitmDetected(false),
       mNotTrustedMitmDetected(false) {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
@@ -743,8 +741,7 @@ static const char* gCallbackPrefs[] = {
     MAX_TIME_BETWEEN_TWO_POLLS,
     MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN,
     POLLABLE_EVENT_TIMEOUT,
-    ESNI_ENABLED,
-    ESNI_DISABLED_MITM,
+    MITM_DETECTED,
     "network.socket.forcePort",
     nullptr,
 };
@@ -1510,16 +1507,10 @@ nsresult nsSocketTransportService::UpdatePrefs() {
     mPollableEventTimeout = TimeDuration::FromSeconds(pollableEventTimeout);
   }
 
-  bool esniPref = false;
-  rv = Preferences::GetBool(ESNI_ENABLED, &esniPref);
+  bool mitmPref = false;
+  rv = Preferences::GetBool(MITM_DETECTED, &mitmPref);
   if (NS_SUCCEEDED(rv)) {
-    mEsniEnabled = esniPref;
-  }
-
-  bool esniMitmPref = false;
-  rv = Preferences::GetBool(ESNI_DISABLED_MITM, &esniMitmPref);
-  if (NS_SUCCEEDED(rv)) {
-    mTrustedMitmDetected = esniMitmPref;
+    mTrustedMitmDetected = mitmPref;
   }
 
   nsAutoCString portMappingPref;
