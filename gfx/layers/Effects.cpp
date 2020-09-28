@@ -15,8 +15,8 @@ using namespace mozilla::layers;
 void TexturedEffect::PrintInfo(std::stringstream& aStream,
                                const char* aPrefix) {
   aStream << aPrefix;
-  aStream << nsPrintfCString("%s (0x%p)", Name(), this).get();
-  AppendToString(aStream, mTextureCoords, " [texture-coords=", "]");
+  aStream << nsPrintfCString("%s (0x%p)", Name(), this).get()
+          << " [texture-coords=" << mTextureCoords << "]";
 
   if (mPremultiplied) {
     aStream << " [premultiplied]";

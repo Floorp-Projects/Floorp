@@ -3796,7 +3796,7 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
   APZC_LOGV_FM(
       aFrameMetrics,
       "Calculated displayport as %s from velocity %s paint time %f metrics",
-      Stringify(displayPort).c_str(), ToString(aVelocity).c_str(), paintFactor);
+      ToString(displayPort).c_str(), ToString(aVelocity).c_str(), paintFactor);
 
   CSSMargin cssMargins;
   cssMargins.left = -displayPort.X();
@@ -4360,7 +4360,7 @@ uint32_t AsyncPanZoomController::GetCheckerboardMagnitude(
   if (area) {
     APZC_LOG_FM(Metrics(),
                 "%p is currently checkerboarding (painted %s visible %s)", this,
-                Stringify(painted).c_str(), Stringify(visible).c_str());
+                ToString(painted).c_str(), ToString(visible).c_str());
   }
   return area;
 }
