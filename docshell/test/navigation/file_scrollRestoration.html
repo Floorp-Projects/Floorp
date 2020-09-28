@@ -4,6 +4,13 @@
       var oldHistoryObject = null;
 
       function test(event) {
+        // Disable the subtest for now since it relies on the bfcache.
+        if (opener.SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+          opener.nextTest();
+          window.close();
+          return;
+        }
+
         if (!opener.scrollRestorationTest) {
           opener.scrollRestorationTest = 0;
         }

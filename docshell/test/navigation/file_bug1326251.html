@@ -177,6 +177,13 @@
 
     function test() {
       if (opener) {
+        // Disable the subtest for now since it relies on the bfcache.
+        if (opener.SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+          opener.nextTest();
+          window.close();
+          return;
+        }
+
         // Ensure the tests are not executed in onload hander.
         setTimeout(testSteps[opener.testCount++], 0);
       }
