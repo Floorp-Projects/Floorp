@@ -288,7 +288,6 @@ nsHttpHandler::nsHttpHandler()
       mRequestTokenBucketHz(100),
       mRequestTokenBucketBurst(32),
       mCriticalRequestPrioritization(true),
-      mRespectDocumentNoSniff(true),
       mTCPKeepaliveShortLivedEnabled(false),
       mTCPKeepaliveShortLivedTimeS(60),
       mTCPKeepaliveShortLivedIdleTimeS(10),
@@ -1628,14 +1627,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetBool(
         HTTP_PREF("rendering-critical-requests-prioritization"), &cVar);
     if (NS_SUCCEEDED(rv)) mCriticalRequestPrioritization = cVar;
-  }
-
-  // Whether to respect X-Content-Type nosniff on Page loads
-  if (PREF_CHANGED("dom.security.respect_document_nosniff")) {
-    rv = Preferences::GetBool("dom.security.respect_document_nosniff", &cVar);
-    if (NS_SUCCEEDED(rv)) {
-      mRespectDocumentNoSniff = cVar;
-    }
   }
 
   // on transition of network.http.diagnostics to true print
