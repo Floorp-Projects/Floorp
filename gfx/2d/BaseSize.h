@@ -105,7 +105,7 @@ struct BaseSize {
 
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const BaseSize<T, Sub>& aSize) {
-    return aStream << aSize.width << " x " << aSize.height;
+    return aStream << '(' << aSize.width << " x " << aSize.height << ')';
   }
 };
 

@@ -494,7 +494,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
 
   nsSize visualViewportSize = scrollPortSize;
   ROOT_SCROLLBAR_LOG("TryLayout with VV %s\n",
-                     Stringify(visualViewportSize).c_str());
+                     ToString(visualViewportSize).c_str());
   mozilla::PresShell* presShell = PresShell();
   // Note: we check for a non-null MobileViepwortManager here, but ideally we
   // should be able to drop that clause as well. It's just that in some cases
@@ -514,7 +514,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     visualViewportSize.width /= resolution;
     visualViewportSize.height /= resolution;
     ROOT_SCROLLBAR_LOG("TryLayout now with VV %s\n",
-                       Stringify(visualViewportSize).c_str());
+                       ToString(visualViewportSize).c_str());
   }
 
   nsRect overflowRect = aState->mContentsOverflowAreas.ScrollableOverflow();
@@ -537,7 +537,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   ROOT_SCROLLBAR_LOG(
       "TryLayout scrolledRect:%s overflowRect:%s scrollportSize:%s\n",
       Stringify(scrolledRect).c_str(), Stringify(overflowRect).c_str(),
-      Stringify(scrollPortSize).c_str());
+      ToString(scrollPortSize).c_str());
   nscoord oneDevPixel = aState->mBoxState.PresContext()->DevPixelsToAppUnits(1);
 
   if (!aForce) {
@@ -614,7 +614,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
           aState->mShowHScrollbar = true;
           aState->mOnlyNeedHScrollbarToScrollVVInsideLV = true;
           ROOT_SCROLLBAR_LOG("TryLayout added H scrollbar for VV, VV now %s\n",
-                             Stringify(visualViewportSize).c_str());
+                             ToString(visualViewportSize).c_str());
         }
       }
 
@@ -628,7 +628,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
           aState->mShowVScrollbar = true;
           aState->mOnlyNeedVScrollbarToScrollVVInsideLV = true;
           ROOT_SCROLLBAR_LOG("TryLayout added V scrollbar for VV, VV now %s\n",
-                             Stringify(visualViewportSize).c_str());
+                             ToString(visualViewportSize).c_str());
         }
       }
     }
