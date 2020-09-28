@@ -316,17 +316,25 @@ void gfxConfigManager::ConfigureWebRender() {
     }
   }
 
-  mFeatureWrDComp->DisableByDefault(
-      FeatureStatus::OptIn, "WebRender DirectComposition is an opt-in feature",
-      "FEATURE_FAILURE_DEFAULT_OFF"_ns);
-
-  if (mWrDCompWinEnabled) {
-    // XXX relax win version to windows 8.
-    if (mIsWin10OrLater && mFeatureWr->IsEnabled() &&
-        mFeatureWrAngle->IsEnabled()) {
-      mFeatureWrDComp->UserEnable("Enabled");
-    }
+  mFeatureWrDComp->EnableByDefault();
+  if (!mWrDCompWinEnabled) {
+    mFeatureWrDComp->UserDisable("User disabled via pref",
+                                 "FEATURE_FAILURE_DCOMP_PREF_DISABLED"_ns);
   }
+
+  if (!mIsWin10OrLater) {
+    // XXX relax win version to windows 8.
+    mFeatureWrDComp->Disable(FeatureStatus::Unavailable,
+                             "Requires Windows 10 or later",
+                             "FEATURE_FAILURE_DCOMP_NOT_WIN10"_ns);
+  }
+
+  mFeatureWrDComp->MaybeSetFailed(
+      mFeatureWr->IsEnabled(), FeatureStatus::Unavailable, "Requires WebRender",
+      "FEATURE_FAILURE_DCOMP_NOT_WR"_ns);
+  mFeatureWrDComp->MaybeSetFailed(mFeatureWrAngle->IsEnabled(),
+                                  FeatureStatus::Unavailable, "Requires ANGLE",
+                                  "FEATURE_FAILURE_DCOMP_NOT_ANGLE"_ns);
 
   if (!mWrPictureCaching) {
     mFeatureWrCompositor->ForceDisable(
