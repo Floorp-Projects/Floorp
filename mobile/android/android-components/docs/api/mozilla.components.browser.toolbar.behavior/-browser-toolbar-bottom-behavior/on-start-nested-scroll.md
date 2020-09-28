@@ -1,5 +1,0 @@
-[android-components](../../index.md) / [mozilla.components.browser.toolbar.behavior](../index.md) / [BrowserToolbarBottomBehavior](index.md) / [onStartNestedScroll](./on-start-nested-scroll.md)
-
-# onStartNestedScroll
-
-`fun onStartNestedScroll(coordinatorLayout: CoordinatorLayout, child: `[`BrowserToolbar`](../../mozilla.components.browser.toolbar/-browser-toolbar/index.md)`, directTargetChild: <ERROR CLASS>, target: <ERROR CLASS>, axes: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, type: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/behavior/BrowserToolbarBottomBehavior.kt#L87)
