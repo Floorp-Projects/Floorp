@@ -1005,7 +1005,7 @@ void CustomElementRegistry::Define(
   RefPtr<Promise> promise;
   mWhenDefinedPromiseMap.Remove(nameAtom, getter_AddRefs(promise));
   if (promise) {
-    promise->MaybeResolveWithUndefined();
+    promise->MaybeResolve(def->mConstructor);
   }
 
   // Dispatch a "customelementdefined" event for DevTools.
@@ -1099,8 +1099,9 @@ already_AddRefed<Promise> CustomElementRegistry::WhenDefined(
     return promise.forget();
   }
 
-  if (mCustomDefinitions.GetWeak(nameAtom)) {
-    promise->MaybeResolve(JS::UndefinedHandleValue);
+  if (CustomElementDefinition* definition =
+          mCustomDefinitions.GetWeak(nameAtom)) {
+    promise->MaybeResolve(definition->mConstructor);
     return promise.forget();
   }
 
