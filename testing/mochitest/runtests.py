@@ -210,8 +210,8 @@ class MessageLogger(object):
         if 'message' in message:
             if isinstance(message['message'], bytes):
                 message['message'] = message['message'].decode('utf-8', 'replace')
-            elif not isinstance(message['message'], unicode):
-                message['message'] = unicode(message['message'])
+            elif not isinstance(message['message'], six.text_type):
+                message['message'] = six.text_type(message['message'])
 
     def parse_line(self, line):
         """Takes a given line of input (structured or not) and
@@ -844,7 +844,7 @@ def findTestMediaDevices(log):
         log.error('Could not list currently loaded modules')
         return None
 
-    null_sink = filter(lambda x: 'module-null-sink' in x, o.splitlines())
+    null_sink = [x for x in o.splitlines() if 'module-null-sink' in x]
 
     if not null_sink:
         try:
@@ -1577,26 +1577,21 @@ toolbar#nav-bar {
         # we can't tell what comes from DEFAULT or not. So to validate this, we
         # stash all prefs from tests in the same manifest into a set. If the
         # length of the set > 1, then we know 'prefs' didn't come from DEFAULT.
-        pref_not_default = [m for m, p in self.prefs_by_manifest.iteritems() if len(p) > 1]
+        pref_not_default = [m for m, p in six.iteritems(self.prefs_by_manifest) if len(p) > 1]
         if pref_not_default:
             self.log.error("The 'prefs' key must be set in the DEFAULT section of a "
                            "manifest. Fix the following manifests: {}".format(
                             '\n'.join(pref_not_default)))
             sys.exit(1)
         # The 'environment' key needs to be set in the DEFAULT section too.
-        env_not_default = [m for m, p in self.env_vars_by_manifest.iteritems() if len(p) > 1]
+        env_not_default = [m for m, p in six.iteritems(self.env_vars_by_manifest) if len(p) > 1]
         if env_not_default:
             self.log.error("The 'environment' key must be set in the DEFAULT section of a "
                            "manifest. Fix the following manifests: {}".format(
                             '\n'.join(env_not_default)))
             sys.exit(1)
 
-        def path_sort(ob1, ob2):
-            path1 = ob1['path'].split('/')
-            path2 = ob2['path'].split('/')
-            return cmp(path1, path2)
-
-        paths.sort(path_sort)
+        paths.sort(key=lambda p: p['path'].split('/'))
         if options.dump_tests:
             options.dump_tests = os.path.expanduser(options.dump_tests)
             assert os.path.exists(os.path.dirname(options.dump_tests))
@@ -1654,7 +1649,7 @@ toolbar#nav-bar {
 
         # strip certain unnecessary items to avoid serialization errors in json.dumps()
         d = dict((k, v) for k, v in options.__dict__.items() if (v is None) or
-                 isinstance(v, (basestring, numbers.Number)))
+                 isinstance(v, (six.string_types, numbers.Number)))
         d['testRoot'] = self.testRoot
         if options.jscov_dir_prefix:
             d['jscovDirPrefix'] = options.jscov_dir_prefix
@@ -1801,7 +1796,8 @@ toolbar#nav-bar {
                     self.log.info(line)
 
             process = mozprocess.ProcessHandler(['ps', '-f'],
-                                                processOutputLine=_psInfo)
+                                                processOutputLine=_psInfo,
+                                                universal_newlines=True)
             process.run()
             process.wait()
 
@@ -1818,7 +1814,8 @@ toolbar#nav-bar {
                             self.log.info("NOT killing %s (pid %d) (not an orphan?)" %
                                           (pname, pid))
             process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
-                                                processOutputLine=_psKill)
+                                                processOutputLine=_psKill,
+                                                universal_newlines=True)
             process.run()
             process.wait()
 
@@ -1955,8 +1952,7 @@ toolbar#nav-bar {
         if (platform.system() == "Linux" or
             platform.system() in ("Windows", "Microsoft")):
             # Trailing slashes are needed to indicate directories on Linux and Windows
-            sandbox_whitelist_paths = map(lambda p: os.path.join(p, ""),
-                                          sandbox_whitelist_paths)
+            sandbox_whitelist_paths = [os.path.join(p, "") for p in sandbox_whitelist_paths]
 
         # Create the profile
         self.profile = Profile(profile=options.profilePath,
@@ -2545,7 +2541,7 @@ toolbar#nav-bar {
             stepOptions = copy.deepcopy(options)
             stepOptions.repeat = 0
             stepOptions.keep_open = False
-            for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
+            for i in range(VERIFY_REPEAT_SINGLE_BROWSER):
                 stepOptions.profilePath = None
                 result = self.runTests(stepOptions)
                 result = result or (-2 if self.countfail > 0 else 0)
@@ -2570,7 +2566,7 @@ toolbar#nav-bar {
             stepOptions.repeat = 0
             stepOptions.keep_open = False
             stepOptions.environment.append("MOZ_CHAOSMODE=0xfb")
-            for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
+            for i in range(VERIFY_REPEAT_SINGLE_BROWSER):
                 stepOptions.profilePath = None
                 result = self.runTests(stepOptions)
                 result = result or (-2 if self.countfail > 0 else 0)
@@ -3286,7 +3282,7 @@ def run_test_harness(parser, options):
     parser.validate(options)
 
     logger_options = {
-        key: value for key, value in vars(options).iteritems()
+        key: value for key, value in six.iteritems(vars(options))
         if key.startswith('log') or key == 'valgrind'}
 
     runner = MochitestDesktop(options.flavor, logger_options, options.stagedAddons,

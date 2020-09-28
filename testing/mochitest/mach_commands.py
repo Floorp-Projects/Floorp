@@ -9,6 +9,7 @@ from collections import defaultdict
 import functools
 import logging
 import os
+import six
 import sys
 import warnings
 
@@ -300,14 +301,14 @@ class MachCommands(MachCommandBase):
 
         flavors = None
         if flavor:
-            for fname, fobj in ALL_FLAVORS.iteritems():
+            for fname, fobj in six.iteritems(ALL_FLAVORS):
                 if flavor in fobj['aliases']:
                     if buildapp not in fobj['enabled_apps']:
                         continue
                     flavors = [fname]
                     break
         else:
-            flavors = [f for f, v in ALL_FLAVORS.iteritems() if buildapp in v['enabled_apps']]
+            flavors = [f for f, v in six.iteritems(ALL_FLAVORS) if buildapp in v['enabled_apps']]
 
         from mozbuild.controller.building import BuildDriver
         self._ensure_state_subdir_exists('.')
