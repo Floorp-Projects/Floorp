@@ -6954,7 +6954,22 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
     emitLoadStubFieldConstant(val, dest);
   } else {
     Address load(ICStubReg, stubDataOffset_ + val.getOffset());
-    masm.loadPtr(load, dest);
+
+    switch (val.getStubFieldType()) {
+      case StubField::Type::Shape:
+      case StubField::Type::ObjectGroup:
+      case StubField::Type::JSObject:
+      case StubField::Type::Symbol:
+      case StubField::Type::String:
+      case StubField::Type::Id:
+        masm.loadPtr(load, dest);
+        break;
+      case StubField::Type::RawWord:
+        masm.load32(load, dest);
+        break;
+      default:
+        MOZ_CRASH("Unhandled stub field constant type");
+    }
   }
 }
 
