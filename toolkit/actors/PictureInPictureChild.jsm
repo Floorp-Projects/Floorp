@@ -1305,19 +1305,15 @@ class PictureInPictureChild extends JSWindowActorChild {
       return;
     }
 
-    this.contentWindow.location.reload();
-    let webProgress = this.docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebProgress);
-    if (webProgress.isLoadingDocument) {
-      await new Promise(resolve => {
-        this.contentWindow.addEventListener("load", resolve, {
-          once: true,
-          mozSystemGroup: true,
-          capture: true,
-        });
+    let loadPromise = new Promise(resolve => {
+      this.contentWindow.addEventListener("load", resolve, {
+        once: true,
+        mozSystemGroup: true,
+        capture: true,
       });
-    }
+    });
+    this.contentWindow.location.reload();
+    await loadPromise;
 
     // We're committed to adding the video to this window now. Ensure we track
     // the content window before we do so, so that the toggle actor can
