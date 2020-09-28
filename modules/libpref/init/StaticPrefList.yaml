@@ -9085,11 +9085,6 @@
   value: true
   mirror: always
 
-- name: security.csp.enableStrictDynamic
-  type: bool
-  value: true
-  mirror: always
-
 - name: security.csp.reporting.script-sample.max-length
   type: int32_t
   value: 40
