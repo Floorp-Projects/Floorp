@@ -68,7 +68,7 @@ class Instance {
   void tracePrivate(JSTracer* trc);
 
   bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc,
-                  const uint64_t* argv, MutableHandleValue rval);
+                  uint64_t* argv);
 
  public:
   Instance(JSContext* cx, HandleWasmInstanceObject object, SharedCode code,
@@ -184,13 +184,7 @@ class Instance {
 
  public:
   // Functions to be called directly from wasm code.
-  static int32_t callImport_void(Instance*, int32_t, int32_t, uint64_t*);
-  static int32_t callImport_i32(Instance*, int32_t, int32_t, uint64_t*);
-  static int32_t callImport_i64(Instance*, int32_t, int32_t, uint64_t*);
-  static int32_t callImport_v128(Instance*, int32_t, int32_t, uint64_t*);
-  static int32_t callImport_f64(Instance*, int32_t, int32_t, uint64_t*);
-  static int32_t callImport_anyref(Instance*, int32_t, int32_t, uint64_t*);
-  static int32_t callImport_funcref(Instance*, int32_t, int32_t, uint64_t*);
+  static int32_t callImport_general(Instance*, int32_t, int32_t, uint64_t*);
   static uint32_t memoryGrow_i32(Instance* instance, uint32_t delta);
   static uint32_t memorySize_i32(Instance* instance);
   static int32_t wait_i32(Instance* instance, uint32_t byteOffset,
