@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
       const allow_linethickness_names = !SpecialPowers.getBoolPref('mathml.mfrac_linethickness_names.disabled');
       const allow_mathsize_names = !SpecialPowers.getBoolPref('mathml.mathsize_names.disabled');
       const allow_mathspace_names = !SpecialPowers.getBoolPref('mathml.mathspace_names.disabled');
+      const allow_scriptsizemultiplier_attribute = !SpecialPowers.getBoolPref('mathml.scriptsizemultiplier_attribute.disabled');
       
       var g_errorInfo = {
       /*<math><mroot></mroot></math>
@@ -39,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
       /*<math scriptlevel="BAD!"></math>
         <math scriptsizemultiplier="BAD!"></math>*/
         AttributeParsingErrorNoTag: {
-          status: [false, false],
+          status: [false, !allow_scriptsizemultiplier_attribute],
           args: [["BAD!","scriptlevel"], ["BAD!","scriptsizemultiplier"]]
         },
       /* <math><mo rspace="2..0px">+</mo></math>
