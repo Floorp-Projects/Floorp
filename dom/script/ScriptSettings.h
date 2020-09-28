@@ -494,6 +494,22 @@ class MOZ_RAII AutoDisableJSInterruptCallback {
   bool mOld;
 };
 
+/**
+ * A helper class which allows to allow-list legacy callers executing script
+ * in the AutoEntryScript constructor. The goal is to remove these exceptions
+ * one by one. Do not add a new one without review from a DOM peer.
+ */
+class MOZ_RAII AutoAllowLegacyScriptExecution {
+ public:
+  AutoAllowLegacyScriptExecution();
+  ~AutoAllowLegacyScriptExecution();
+
+  static bool IsAllowed();
+
+ private:
+  static int sAutoAllowLegacyScriptExecution;
+};
+
 }  // namespace mozilla
 
 #endif  // mozilla_dom_ScriptSettings_h
