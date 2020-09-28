@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebuggingIsSupported()
+// |jit-test| skip-if: !wasmDebuggingEnabled()
 // clearAllBreakpoints should clear breakpoints for WASM scripts.
 
 var g = newGlobal({newCompartment: true});

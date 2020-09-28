@@ -1,6 +1,6 @@
 // |jit-test| test-also=--wasm-compiler=ion; error: TestComplete
 
-if (!wasmDebuggingIsSupported())
+if (!wasmDebuggingEnabled())
      throw "TestComplete";
 
 (function createShortLivedDebugger() {

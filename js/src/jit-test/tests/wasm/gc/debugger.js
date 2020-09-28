@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmDebuggingIsSupported()
+// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmDebuggingEnabled()
 
 (function() {
     let g = newGlobal({newCompartment: true});

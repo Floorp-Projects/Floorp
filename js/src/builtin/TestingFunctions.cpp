@@ -809,25 +809,25 @@ static bool WasmIsSupportedByHardware(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool WasmDebuggingIsSupported(JSContext* cx, unsigned argc, Value* vp) {
+static bool WasmDebuggingEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::HasSupport(cx) && wasm::BaselineAvailable(cx));
   return true;
 }
 
-static bool WasmStreamingIsSupported(JSContext* cx, unsigned argc, Value* vp) {
+static bool WasmStreamingEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::StreamingCompilationAvailable(cx));
   return true;
 }
 
-static bool WasmCachingIsSupported(JSContext* cx, unsigned argc, Value* vp) {
+static bool WasmCachingEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::CodeCachingAvailable(cx));
   return true;
 }
 
-static bool WasmHugeMemoryIsSupported(JSContext* cx, unsigned argc, Value* vp) {
+static bool WasmHugeMemorySupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
   args.rval().setBoolean(true);
@@ -837,7 +837,7 @@ static bool WasmHugeMemoryIsSupported(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp) {
+static bool WasmThreadsEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::ThreadsAvailable(cx));
   return true;
@@ -868,7 +868,7 @@ static bool WasmMultiValueEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool WasmSimdSupported(JSContext* cx, unsigned argc, Value* vp) {
+static bool WasmSimdEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::SimdAvailable(cx));
   return true;
@@ -6758,33 +6758,55 @@ gc::ZealModeHelpText),
 "wasmIsSupportedByHardware()",
 "  Returns a boolean indicating whether WebAssembly is supported on the current hardware (regardless of whether we've enabled support)."),
 
-    JS_FN_HELP("wasmDebuggingIsSupported", WasmDebuggingIsSupported, 0, 0,
-"wasmDebuggingIsSupported()",
+    JS_FN_HELP("wasmDebuggingEnabled", WasmDebuggingEnabled, 0, 0,
+"wasmDebuggingEnabled()",
 "  Returns a boolean indicating whether WebAssembly debugging is supported on the current device;\n"
 "  returns false also if WebAssembly is not supported"),
 
-    JS_FN_HELP("wasmStreamingIsSupported", WasmStreamingIsSupported, 0, 0,
-"wasmStreamingIsSupported()",
+    JS_FN_HELP("wasmStreamingEnabled", WasmStreamingEnabled, 0, 0,
+"wasmStreamingEnabled()",
 "  Returns a boolean indicating whether WebAssembly caching is supported by the runtime."),
 
-    JS_FN_HELP("wasmCachingIsSupported", WasmCachingIsSupported, 0, 0,
-"wasmCachingIsSupported()",
+    JS_FN_HELP("wasmCachingEnabled", WasmCachingEnabled, 0, 0,
+"wasmCachingEnabled()",
 "  Returns a boolean indicating whether WebAssembly caching is supported by the runtime."),
 
-    JS_FN_HELP("wasmHugeMemoryIsSupported", WasmHugeMemoryIsSupported, 0, 0,
-"wasmHugeMemoryIsSupported()",
+    JS_FN_HELP("wasmHugeMemorySupported", WasmHugeMemorySupported, 0, 0,
+"wasmHugeMemorySupported()",
 "  Returns a boolean indicating whether WebAssembly supports using a large"
 "  virtual memory reservation in order to elide bounds checks on this platform."),
 
-    JS_FN_HELP("wasmThreadsSupported", WasmThreadsSupported, 0, 0,
-"wasmThreadsSupported()",
+    JS_FN_HELP("wasmThreadsEnabled", WasmThreadsEnabled, 0, 0,
+"wasmThreadsEnabled()",
 "  Returns a boolean indicating whether the WebAssembly threads proposal is\n"
 "  supported on the current device."),
 
-    JS_FN_HELP("wasmSimdSupported", WasmSimdSupported, 0, 0,
-"wasmSimdSupported()",
+    JS_FN_HELP("wasmSimdEnabled", WasmSimdEnabled, 0, 0,
+"wasmSimdEnabled()",
 "  Returns a boolean indicating whether WebAssembly SIMD is supported by the\n"
 "  compilers and runtime."),
+
+    JS_FN_HELP("wasmReftypesEnabled", WasmReftypesEnabled, 1, 0,
+"wasmReftypesEnabled()",
+"  Returns a boolean indicating whether the WebAssembly reftypes proposal is enabled."),
+
+    JS_FN_HELP("wasmFunctionReferencesEnabled", WasmFunctionReferencesEnabled, 1, 0,
+"wasmFunctionReferencesEnabled()",
+"  Returns a boolean indicating whether the WebAssembly function-references proposal is enabled."),
+
+    JS_FN_HELP("wasmGcEnabled", WasmGcEnabled, 1, 0,
+"wasmGcEnabled()",
+"  Returns a boolean indicating whether the WebAssembly GC types proposal is enabled."),
+
+    JS_FN_HELP("wasmMultiValueEnabled", WasmMultiValueEnabled, 1, 0,
+"wasmMultiValueEnabled()",
+"  Returns a boolean indicating whether the WebAssembly multi-value proposal is enabled."),
+
+#if defined(ENABLE_WASM_SIMD) && defined(DEBUG)
+    JS_FN_HELP("wasmSimdAnalysis", WasmSimdAnalysis, 1, 0,
+"wasmSimdAnalysis(...)",
+"  Unstable API for white-box testing.\n"),
+#endif
 
     JS_FN_HELP("wasmCompilersPresent", WasmCompilersPresent, 0, 0,
 "wasmCompilersPresent()",
@@ -6835,28 +6857,6 @@ gc::ZealModeHelpText),
 "wasmLoadedFromCache(module)",
 "  Returns a boolean indicating whether a given module was deserialized directly from a\n"
 "  cache (as opposed to compiled from bytecode)."),
-
-    JS_FN_HELP("wasmReftypesEnabled", WasmReftypesEnabled, 1, 0,
-"wasmReftypesEnabled()",
-"  Returns a boolean indicating whether the WebAssembly reftypes proposal is enabled."),
-
-    JS_FN_HELP("wasmFunctionReferencesEnabled", WasmFunctionReferencesEnabled, 1, 0,
-"wasmFunctionReferencesEnabled()",
-"  Returns a boolean indicating whether the WebAssembly function-references proposal is enabled."),
-
-    JS_FN_HELP("wasmGcEnabled", WasmGcEnabled, 1, 0,
-"wasmGcEnabled()",
-"  Returns a boolean indicating whether the WebAssembly GC types proposal is enabled."),
-
-    JS_FN_HELP("wasmMultiValueEnabled", WasmMultiValueEnabled, 1, 0,
-"wasmMultiValueEnabled()",
-"  Returns a boolean indicating whether the WebAssembly multi-value proposal is enabled."),
-
-#if defined(ENABLE_WASM_SIMD) && defined(DEBUG)
-    JS_FN_HELP("wasmSimdAnalysis", WasmSimdAnalysis, 1, 0,
-"wasmSimdAnalysis(...)",
-"  Unstable API for white-box testing.\n"),
-#endif
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",

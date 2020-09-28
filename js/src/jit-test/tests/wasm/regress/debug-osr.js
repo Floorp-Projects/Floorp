@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebuggingIsSupported()
+// |jit-test| skip-if: !wasmDebuggingEnabled()
 g = newGlobal({newCompartment: true});
 g.parent = this;
 g.eval("(" + function() {

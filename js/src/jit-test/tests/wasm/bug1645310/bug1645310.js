@@ -41,7 +41,7 @@ try { WebAssembly.instantiate(bits); } catch (e) { exn = e; }
 assertEq(Boolean(exn), true);
 assertEq(Boolean(String(exn).match(msg)), true);
 
-// We do not use wasmStreamingIsSupported() here because that checks whether
+// We do not use wasmStreamingEnabled() here because that checks whether
 // compilers are available, and that is precisely what we want to be checking
 // ourselves.  But streaming compilation is available only if there are helper
 // threads, so that's an OK proxy.

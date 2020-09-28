@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebuggingIsSupported()
+// |jit-test| skip-if: !wasmDebuggingEnabled()
 var g = newGlobal({newCompartment: true});
 var dbg = new g.Debugger(this);
 var dbg = new Debugger;

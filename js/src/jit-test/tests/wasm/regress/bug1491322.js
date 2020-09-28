@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebuggingIsSupported()
+// |jit-test| skip-if: !wasmDebuggingEnabled()
 var evalInFrame = (function(global) {
     var dbgGlobal = newGlobal({newCompartment: true});
     var dbg = new dbgGlobal.Debugger();

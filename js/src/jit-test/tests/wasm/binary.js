@@ -297,7 +297,7 @@ for (let i = 0; i < 256; i++) {
 // Illegal SIMD opcodes - the upper bound is actually very large, not much to be
 // done about that.
 
-if (!wasmSimdSupported()) {
+if (!wasmSimdEnabled()) {
     for (let i = 0; i < 256; i++) {
         checkIllegalPrefixed(SimdPrefix, i);
     }

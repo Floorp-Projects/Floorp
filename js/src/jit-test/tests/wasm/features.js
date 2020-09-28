@@ -43,7 +43,7 @@ for (let [name, enabled, test] of nightlyOnlyFeatures) {
 
 let releasedFeaturesMaybeDisabledAnyway = [
   // SIMD will be disabled dynamically on x86/x64 if the hardware isn't SSE4.1+.
-  ['simd', wasmSimdSupported(), `(module (func (result v128) i32.const 0 i8x16.splat))`]
+  ['simd', wasmSimdEnabled(), `(module (func (result v128) i32.const 0 i8x16.splat))`]
 ];
 
 for (let [name, enabled, test] of releasedFeaturesMaybeDisabledAnyway) {
@@ -58,7 +58,7 @@ for (let [name, enabled, test] of releasedFeaturesMaybeDisabledAnyway) {
 
 let releasedFeatures = [
   ['multi-value', wasmMultiValueEnabled(), `(module (func (result i32 i32) i32.const 0 i32.const 0))`],
-  ['threads', wasmThreadsSupported(), `(module (memory 1 1 shared))`],
+  ['threads', wasmThreadsEnabled(), `(module (memory 1 1 shared))`],
   ['reference-types', wasmReftypesEnabled(), `(module (func (param externref)))`],
 ];
 

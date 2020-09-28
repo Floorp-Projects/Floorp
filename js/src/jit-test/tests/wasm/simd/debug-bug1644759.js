@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebuggingIsSupported() || !wasmSimdSupported()
+// |jit-test| skip-if: !wasmDebuggingEnabled() || !wasmSimdEnabled()
 
 var g7 = newGlobal({newCompartment: true});
 g7.parent = this;

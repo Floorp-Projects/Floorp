@@ -1,4 +1,4 @@
-// |jit-test| test-also=--no-threads; skip-if: !wasmSimdSupported()
+// |jit-test| test-also=--no-threads; skip-if: !wasmSimdEnabled()
 
 // SIMD JS API
 //

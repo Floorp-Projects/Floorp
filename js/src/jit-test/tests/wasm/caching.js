@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmCachingIsSupported()
+// |jit-test| skip-if: !wasmCachingEnabled()
 
 load(libdir + "wasm-binary.js");
 

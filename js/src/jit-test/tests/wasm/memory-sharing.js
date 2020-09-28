@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmThreadsSupported()
+// |jit-test| skip-if: !wasmThreadsEnabled()
 
 const WASMPAGE = 65536;
 

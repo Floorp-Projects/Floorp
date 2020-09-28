@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmDebuggingIsSupported()
+// |jit-test| skip-if: !wasmDebuggingEnabled()
 
 fullcompartmentchecks(true);
 var g = newGlobal({newCompartment: true});
