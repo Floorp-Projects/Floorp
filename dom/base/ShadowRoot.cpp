@@ -50,7 +50,8 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
     : DocumentFragment(std::move(aNodeInfo)),
       DocumentOrShadowRoot(this),
       mMode(aMode),
-      mIsUAWidget(false) {
+      mIsUAWidget(false),
+      mIsStaticUAWidget(false) {
   SetHost(aElement);
 
   // Nodes in a shadow tree should never store a value
@@ -95,8 +96,13 @@ JSObject* ShadowRoot::WrapNode(JSContext* aCx,
 }
 
 void ShadowRoot::CloneInternalDataFrom(ShadowRoot* aOther) {
+  MOZ_ASSERT(aOther->ShouldStaticClone());
+
   if (aOther->IsUAWidget()) {
     SetIsUAWidget();
+  }
+  if (aOther->IsStaticUAWidget()) {
+    SetIsStaticUAWidget();
   }
 
   size_t sheetCount = aOther->SheetCount();
