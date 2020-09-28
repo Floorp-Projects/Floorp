@@ -142,8 +142,8 @@ void WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const {
                 " inner: %s outer: %s\n",
                 mStickyPosScrollContainerId,
                 mStickyPositionAnimationId.valueOr(0),
-                Stringify(mStickyScrollRangeInner).c_str(),
-                Stringify(mStickyScrollRangeOuter).c_str());
+                ToString(mStickyScrollRangeInner).c_str(),
+                ToString(mStickyScrollRangeOuter).c_str());
   printf_stderr("  fixed/sticky side bits: 0x%x\n", (int)mFixedPositionSides);
 }
 
