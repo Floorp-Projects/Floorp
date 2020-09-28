@@ -529,7 +529,7 @@
     result: ObjId
 
 - name: GuardHasGetterSetter
-  shared: false
+  shared: true
   transpile: false
   cost_estimate: 4
   args:

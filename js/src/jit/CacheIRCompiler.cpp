@@ -7129,6 +7129,40 @@ bool CacheIRCompiler::emitMegamorphicStoreSlot(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
+                                               uint32_t shapeOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  StubFieldOffset shape(shapeOffset, StubField::Type::Shape);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
+                               liveVolatileFloatRegs());
+  volatileRegs.takeUnchecked(scratch1);
+  volatileRegs.takeUnchecked(scratch2);
+  masm.PushRegsInMask(volatileRegs);
+
+  masm.setupUnalignedABICall(scratch1);
+  masm.loadJSContext(scratch1);
+  masm.passABIArg(scratch1);
+  masm.passABIArg(obj);
+  emitLoadStubField(shape, scratch2);
+  masm.passABIArg(scratch2);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectHasGetterSetterPure));
+  masm.mov(ReturnReg, scratch1);
+  masm.PopRegsInMask(volatileRegs);
+
+  masm.branchIfFalseBool(scratch1, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardGroupHasUnanalyzedNewScript(
     uint32_t groupOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
