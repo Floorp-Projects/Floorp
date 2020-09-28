@@ -4,20 +4,7 @@ setJitCompilerOption("baseline.warmup.trigger", 5);
 setJitCompilerOption("ion.warmup.trigger", 10);
 
 var iter = 1000;
-let objs = [null,
-            undefined,
-            true,
-            false,
-            {x:1337},
-            ["abracadabra"],
-            1337,
-            13.37,
-            "hi",
-            37n,
-            new Number(42),
-            new Boolean(true),
-            Symbol("status"),
-            () => 1337];
+let objs = WasmExternrefValues;
 var index = 0;
 
 // Tests that:
