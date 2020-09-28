@@ -10,6 +10,7 @@
 #include "nsStructuredCloneContainer.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/PresState.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 
@@ -1259,13 +1260,17 @@ namespace ipc {
 void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
     IPC::Message* aMsg, IProtocol* aActor,
     const dom::SessionHistoryInfo& aParam) {
-  Maybe<dom::ClonedMessageData> stateData;
+  Maybe<Tuple<uint32_t, dom::ClonedMessageData>> stateData;
   if (aParam.mStateData) {
     stateData.emplace();
+    uint32_t version;
+    NS_ENSURE_SUCCESS_VOID(aParam.mStateData->GetFormatVersion(&version));
+    Get<0>(*stateData) = version;
+
     JSStructuredCloneData& data = aParam.mStateData->Data();
     auto iter = data.Start();
     bool success;
-    stateData->data().data = data.Borrow(iter, data.Size(), &success);
+    Get<1>(*stateData).data().data = data.Borrow(iter, data.Size(), &success);
     if (NS_WARN_IF(!success)) {
       return;
     }
@@ -1307,7 +1312,7 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
 bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
     dom::SessionHistoryInfo* aResult) {
-  Maybe<dom::ClonedMessageData> stateData;
+  Maybe<Tuple<uint32_t, dom::ClonedMessageData>> stateData;
   uint64_t sharedId;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mURI) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mOriginalURI) ||
@@ -1400,11 +1405,14 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
   }
 
   if (stateData.isSome()) {
-    aResult->mStateData = new nsStructuredCloneContainer();
+    uint32_t version = Get<0>(*stateData);
+    aResult->mStateData = new nsStructuredCloneContainer(version);
     if (aActor->GetSide() == ChildSide) {
-      aResult->mStateData->StealFromClonedMessageDataForChild(stateData.ref());
+      aResult->mStateData->StealFromClonedMessageDataForChild(
+          Get<1>(*stateData));
     } else {
-      aResult->mStateData->StealFromClonedMessageDataForParent(stateData.ref());
+      aResult->mStateData->StealFromClonedMessageDataForParent(
+          Get<1>(*stateData));
     }
   }
   MOZ_ASSERT_IF(stateData.isNothing(), !aResult->mStateData);
