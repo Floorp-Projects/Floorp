@@ -748,15 +748,9 @@ void HttpConnectionUDP::SetEvent(nsresult aStatus) {
     case NS_NET_STATUS_CONNECTING_TO:
       mBootstrappedTimings.connectStart = TimeStamp::Now();
       break;
-    case NS_NET_STATUS_CONNECTED_TO: {
-      TimeStamp tnow = TimeStamp::Now();
-      mBootstrappedTimings.tcpConnectEnd = tnow;
-      mBootstrappedTimings.connectEnd = tnow;
-      if (!mBootstrappedTimings.secureConnectionStart.IsNull()) {
-        mBootstrappedTimings.secureConnectionStart = tnow;
-      }
+    case NS_NET_STATUS_CONNECTED_TO:
+      mBootstrappedTimings.connectEnd = TimeStamp::Now();
       break;
-    }
     case NS_NET_STATUS_TLS_HANDSHAKE_STARTING:
       mBootstrappedTimings.secureConnectionStart = TimeStamp::Now();
       break;
