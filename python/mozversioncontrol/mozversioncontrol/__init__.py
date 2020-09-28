@@ -372,6 +372,9 @@ class HgRepository(Repository):
             # No username is set
             return None
         match = re.search(r'<(.*)>', username)
+        if not match:
+            # "ui.username" doesn't follow the "Full Name <email@domain>" convention
+            return None
         return match.group(1)
 
     def get_upstream(self):
