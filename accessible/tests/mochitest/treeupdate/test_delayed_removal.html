@@ -197,7 +197,7 @@
 
     function listItemReframe() {
       testAccessibleTree("li",{ LISTITEM: [
-        { STATICTEXT: [] },
+        { LISTITEM_MARKER: [] },
         { TEXT_LEAF: [] },
       ] });
 
@@ -206,7 +206,7 @@
       window.windowUtils.advanceTimeAndRefresh(100);
 
       testAccessibleTree("li",{ LISTITEM: [
-        { STATICTEXT: [] },
+        { LISTITEM_MARKER: [] },
         { TEXT_LEAF: [] },
       ] });
 
