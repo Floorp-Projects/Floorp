@@ -20,6 +20,7 @@ pub use std::arch::x86_64::{
 #[repr(align(32))]
 struct Output([u32; 8]);
 
+#[target_feature(enable = "avx")]
 unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
     mut transform: *const qcms_transform,
     mut src: *const libc::c_uchar,
@@ -199,6 +200,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
     };
 }
 #[no_mangle]
+#[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_avx(
     mut transform: *const qcms_transform,
     mut src: *const libc::c_uchar,
@@ -208,6 +210,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_avx(
     qcms_transform_data_template_lut_avx::<RGB>(transform, src, dest, length);
 }
 #[no_mangle]
+#[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_avx(
     mut transform: *const qcms_transform,
     mut src: *const libc::c_uchar,
@@ -217,6 +220,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_avx(
     qcms_transform_data_template_lut_avx::<RGBA>(transform, src, dest, length);
 }
 #[no_mangle]
+#[target_feature(enable = "avx")]
 pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_avx(
     mut transform: *const qcms_transform,
     mut src: *const libc::c_uchar,
