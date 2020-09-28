@@ -236,9 +236,9 @@ registerTestCase({
   func: function() {
     // this test case is very slow in chrome, reduce the total duration to avoid
     // timeout
-    var duration_adjusted = DURATION / 8;
+    var duration_adjusted = DURATION / 16;
     var oac = new OfflineAudioContext(1, duration_adjusted * samplerate, samplerate);
-    var duration = DURATION * samplerate;
+    var duration = duration_adjusted * samplerate;
     var audiobuffer = getSpecificFile({rate: samplerate, channels:1});
     var offset = 0;
     while (offset < duration / samplerate) {
