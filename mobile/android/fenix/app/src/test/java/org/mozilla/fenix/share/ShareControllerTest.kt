@@ -5,6 +5,7 @@
 package org.mozilla.fenix.share
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import androidx.navigation.NavController
@@ -129,6 +130,31 @@ class ShareControllerTest {
         val testController = DefaultShareController(activityContext, shareSubject, shareData, mockk(),
             snackbar, mockk(), mockk(), testCoroutineScope, dismiss)
         every { activityContext.startActivity(capture(shareIntent)) } throws SecurityException()
+        every { activityContext.getString(R.string.share_error_snackbar) } returns "Cannot share to this app"
+
+        testController.handleShareToApp(appShareOption)
+
+        verifyOrder {
+            activityContext.startActivity(shareIntent.captured)
+            snackbar.setText("Cannot share to this app")
+            snackbar.show()
+            dismiss(ShareController.Result.SHARE_ERROR)
+        }
+    }
+
+    @Test
+    fun `handleShareToApp should dismiss with an error start when a ActivityNotFoundException occurs`() {
+        val appPackageName = "package"
+        val appClassName = "activity"
+        val appShareOption = AppShareOption("app", mockk(), appPackageName, appClassName)
+        val shareIntent = slot<Intent>()
+        // Our share Intent uses `FLAG_ACTIVITY_NEW_TASK` but when resolving the startActivity call
+        // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we
+        // need to use an Activity Context.
+        val activityContext: Context = mockk<Activity>()
+        val testController = DefaultShareController(activityContext, shareSubject, shareData, mockk(),
+            snackbar, mockk(), mockk(), testCoroutineScope, dismiss)
+        every { activityContext.startActivity(capture(shareIntent)) } throws ActivityNotFoundException()
         every { activityContext.getString(R.string.share_error_snackbar) } returns "Cannot share to this app"
 
         testController.handleShareToApp(appShareOption)
