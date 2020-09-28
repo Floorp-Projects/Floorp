@@ -192,6 +192,14 @@ using namespace mozilla::a11y;
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
+    if ([key isEqualToString:@"AXRadioGroupSearchKey"]) {
+      RotorRoleRule rule =
+          mImmediateDescendantsOnly
+              ? RotorRoleRule(roles::RADIO_GROUP, geckoStartAcc)
+              : RotorRoleRule(roles::RADIO_GROUP);
+      [matches addObjectsFromArray:[self getMatchesForRule:rule]];
+    }
+
     if ([key isEqualToString:@"AXFrameSearchKey"]) {
       RotorRoleRule rule = mImmediateDescendantsOnly
                                ? RotorRoleRule(roles::DOCUMENT, geckoStartAcc)
