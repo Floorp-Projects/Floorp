@@ -20,6 +20,7 @@ import mozilla.components.feature.downloads.db.DownloadsDatabase
 import mozilla.components.feature.downloads.db.Migrations
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -85,6 +86,43 @@ class OnDeviceDownloadStorageTest {
 
             cursor.moveToFirst()
             assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("is_private")))
+        }
+    }
+
+    @Test
+    fun migrate2to3() {
+        helper.createDatabase(MIGRATION_TEST_DB, 2).apply {
+            query("SELECT * FROM downloads").use { cursor ->
+                assertTrue(cursor.columnNames.contains("is_private"))
+            }
+            // A private download
+            execSQL(
+                    "INSERT INTO " +
+                            "downloads " +
+                            "(id, url, file_name, content_type,content_length,status,destination_directory,created_at,is_private) " +
+                            "VALUES " +
+                            "(1,'url','file_name','content_type',1,1,'destination_directory',1,1)"
+            )
+
+            // A normal download
+            execSQL(
+                    "INSERT INTO " +
+                            "downloads " +
+                            "(id, url, file_name, content_type,content_length,status,destination_directory,created_at,is_private) " +
+                            "VALUES " +
+                            "(2,'url','file_name','content_type',1,1,'destination_directory',1,0)"
+            )
+        }
+
+        val dbVersion2 = helper.runMigrationsAndValidate(MIGRATION_TEST_DB, 3, true, Migrations.migration_2_3)
+
+        dbVersion2.query("SELECT * FROM downloads").use { cursor ->
+            assertFalse(cursor.columnNames.contains("is_private"))
+            assertEquals(1, cursor.count)
+
+            cursor.moveToFirst()
+            // Only non private downloads should be in the db.
+            assertEquals(2, cursor.getInt(cursor.getColumnIndexOrThrow("id")))
         }
     }
 
