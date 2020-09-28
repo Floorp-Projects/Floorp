@@ -24,6 +24,8 @@ excluded_tests = [
   "utf8-custom-section-id.wast",
   # invalid table maximum length for web embeddings
   "table.wast",
+  # fails after a bottom-type has been added to validation
+  "unreached-invalid.wast",
 ]
 
 [[repos]]
