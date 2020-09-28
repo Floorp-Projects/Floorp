@@ -35,7 +35,7 @@
       }
 
       // Work around bug 467960
-      if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
         let history = gBrowser.browsingContext.sessionHistory;
         history.purgeHistory(history.count);
       } else {

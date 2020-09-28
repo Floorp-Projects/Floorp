@@ -22,6 +22,10 @@ uint32_t GetMaxWebProcessCount();
 // environment variable MOZ_FORCE_ENABLE_FISSION, used by mach run to
 // enable fission regardless of pref settings.
 bool FissionAutostart();
+
+// Returns true if fission.sessionHistoryInParent is true
+// (and will return true also when FissionAutostart() is true).
+bool SessionHistoryInParent();
 }
 
 %}
@@ -81,6 +85,11 @@ interface nsIXULRuntime : nsISupports
    * session.
    */
   readonly attribute nsIXULRuntime_ExperimentStatus fissionExperimentStatus;
+
+  /**
+   * Whether session history is stored in the parent process.
+   */
+  readonly attribute boolean sessionHistoryInParent;
 
   /**
    * Whether to write console errors to a log file. If a component

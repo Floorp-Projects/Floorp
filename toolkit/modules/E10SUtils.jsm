@@ -71,12 +71,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/uriloader/external-protocol-service;1",
   "nsIExternalProtocolService"
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "sessionHistoryInParent",
-  "fission.sessionHistoryInParent",
-  false
-);
 
 function getAboutModule(aURL) {
   // Needs to match NS_GetAboutModuleName
@@ -1004,7 +998,7 @@ var E10SUtils = {
     }
 
     // Allow history load if loaded in this process before.
-    if (!sessionHistoryInParent) {
+    if (!Services.appinfo.sessionHistoryInParent) {
       let requestedIndex = sessionHistory.legacySHistory.requestedIndex;
       if (requestedIndex >= 0) {
         this.log().debug("Checking history case\n");
@@ -1050,7 +1044,7 @@ var E10SUtils = {
       csp: aCsp ? this.serializeCSP(aCsp) : null,
     };
     // Retarget the load to the correct process
-    if (sessionHistoryInParent) {
+    if (Services.appinfo.sessionHistoryInParent) {
       let sessionHistory = aDocShell.QueryInterface(Ci.nsIWebNavigation)
         .sessionHistory;
       actor.sendAsyncMessage("Browser:LoadURI", {

@@ -38,7 +38,7 @@ add_task(async function test_add_interesting_window() {
     content.location = newPage;
   });
 
-  if (Services.prefs.getBoolPref("fission.sessionHistoryInParent", false)) {
+  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     let tab = newWin.gBrowser.selectedTab;
     await promiseOnHistoryReplaceEntry(tab);
   } else {

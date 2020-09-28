@@ -50,8 +50,8 @@
 #include "ReferrerInfo.h"
 #include "nsIOpenWindowInfo.h"
 #include "nsISHistory.h"
-
 #include "nsIURI.h"
+#include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 
 #include "nsGkAtoms.h"
@@ -1881,7 +1881,7 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
       RefPtr<ChildSHistory> childSHistory =
           browsingContext->Top()->GetChildSessionHistory();
       if (childSHistory) {
-        if (StaticPrefs::fission_sessionHistoryInParent_AtStartup()) {
+        if (mozilla::SessionHistoryInParent()) {
           browsingContext->RemoveFromSessionHistory();
         } else {
           AutoTArray<nsID, 16> ids({browsingContext->GetHistoryID()});

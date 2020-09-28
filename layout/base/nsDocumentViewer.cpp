@@ -91,7 +91,7 @@
 #include "nsIPromptCollection.h"
 #include "nsIPromptService.h"
 #include "imgIContainer.h"  // image animation mode constants
-
+#include "nsIXULRuntime.h"
 #include "nsSandboxFlags.h"
 
 #include "mozilla/DocLoadingTimelineMarker.h"
@@ -2066,7 +2066,7 @@ nsDocumentViewer::Show(void) {
       treeItem->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
       nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(root);
       RefPtr<ChildSHistory> history = webNav->GetSessionHistory();
-      if (!StaticPrefs::fission_sessionHistoryInParent_AtStartup() && history) {
+      if (!mozilla::SessionHistoryInParent() && history) {
         int32_t prevIndex, loadedIndex;
         nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
         docShell->GetPreviousEntryIndex(&prevIndex);
