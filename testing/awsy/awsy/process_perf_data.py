@@ -75,7 +75,7 @@ def update_checkpoint_paths(checkpoint_files, checkpoints):
             if indices:
                 checkpoints[indices[0]]['path'] = paths[idx]
             else:
-                print("found files but couldn't find {}").format(name)
+                print("found files but couldn't find {}".format(name))
 
 
 def create_suite(name, node, data_path, checkpoints=CHECKPOINTS,
@@ -196,6 +196,6 @@ if __name__ == '__main__':
     # Determine which revisions we need to process.
     data_path = args[0]
     perf_blob = create_perf_data(data_path)
-    print("PERFHERDER_DATA: {}").format(json.dumps(perf_blob))
+    print("PERFHERDER_DATA: {}".format(json.dumps(perf_blob)))
 
     sys.exit(0)
