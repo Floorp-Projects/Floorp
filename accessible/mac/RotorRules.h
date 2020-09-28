@@ -11,78 +11,46 @@
 using namespace mozilla::a11y;
 
 /**
- * These rules match accessibles on a given role, filtering out non-direct
- * descendants if necessary.
+ * This rule matches all accessibles that satisfy the "boilerplate"
+ * pivot conditions and have a corresponding native accessible.
  */
-
-class RotorHeadingRule final : public PivotRoleRule {
+class RotorRule : public PivotRule {
  public:
-  explicit RotorHeadingRule();
-  explicit RotorHeadingRule(AccessibleOrProxy& aDirectDescendantsFrom);
-};
-
-class RotorArticleRule final : public PivotRoleRule {
- public:
-  explicit RotorArticleRule();
-  explicit RotorArticleRule(AccessibleOrProxy& aDirectDescendantsFrom);
-};
-
-class RotorTableRule final : public PivotRoleRule {
- public:
-  explicit RotorTableRule();
-  explicit RotorTableRule(AccessibleOrProxy& aDirectDescendantsFrom);
-};
-
-class RotorLandmarkRule final : public PivotRoleRule {
- public:
-  explicit RotorLandmarkRule();
-  explicit RotorLandmarkRule(AccessibleOrProxy& aDirectDescendantsFrom);
-};
-
-class RotorListRule final : public PivotRoleRule {
- public:
-  explicit RotorListRule();
-  explicit RotorListRule(AccessibleOrProxy& aDirectDescendantsFrom);
-};
-
-class RotorButtonRule final : public PivotRoleRule {
- public:
-  explicit RotorButtonRule();
-  explicit RotorButtonRule(AccessibleOrProxy& aDirectDescendantsFrom);
-};
-
-class RotorFrameRule final : public PivotRoleRule {
- public:
-  explicit RotorFrameRule();
-  explicit RotorFrameRule(AccessibleOrProxy& aDirectDescendantsFrom);
-};
-
-class RotorImageRule final : public PivotRoleRule {
- public:
-  explicit RotorImageRule();
-  explicit RotorImageRule(AccessibleOrProxy& aDirectDescendantsFrom);
-};
-
-class RotorControlRule final : public PivotRule {
- public:
-  explicit RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom);
-  explicit RotorControlRule();
-
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+  explicit RotorRule(AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorRule();
+  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
 
  private:
   AccessibleOrProxy mDirectDescendantsFrom;
 };
 
-class RotorLinkRule : public PivotRule {
+/**
+ * This rule matches all accessibles of a given role.
+ */
+class RotorRoleRule final : public RotorRule {
+ public:
+  explicit RotorRoleRule(role aRole, AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorRoleRule(role aRole);
+  uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+
+ private:
+  role mRole;
+};
+
+class RotorControlRule final : public RotorRule {
+ public:
+  explicit RotorControlRule(AccessibleOrProxy& aDirectDescendantsFrom);
+  explicit RotorControlRule();
+
+  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
+};
+
+class RotorLinkRule : public RotorRule {
  public:
   explicit RotorLinkRule();
   explicit RotorLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
 
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-
- protected:
-  AccessibleOrProxy mDirectDescendantsFrom;
 };
 
 class RotorVisitedLinkRule final : public RotorLinkRule {
@@ -99,19 +67,4 @@ class RotorUnvisitedLinkRule final : public RotorLinkRule {
   explicit RotorUnvisitedLinkRule(AccessibleOrProxy& aDirectDescendantsFrom);
 
   virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-};
-
-/**
- * This rule matches all accessibles, filtering out non-direct
- * descendants if necessary.
- */
-class RotorAllRule final : public PivotRule {
- public:
-  explicit RotorAllRule(AccessibleOrProxy& aDirectDescendantsFrom);
-  explicit RotorAllRule();
-
-  virtual uint16_t Match(const AccessibleOrProxy& aAccOrProxy) override;
-
- private:
-  AccessibleOrProxy mDirectDescendantsFrom;
 };
