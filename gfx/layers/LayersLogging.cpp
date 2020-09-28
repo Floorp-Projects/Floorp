@@ -53,19 +53,6 @@ void AppendToString(std::stringstream& aStream, const wr::StickyOffsetBounds& s,
   aStream << sfx;
 }
 
-void AppendToString(std::stringstream& aStream, const nsRegion& r,
-                    const char* pfx, const char* sfx) {
-  aStream << pfx;
-
-  aStream << "< ";
-  for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
-    aStream << iter.Get() << "; ";
-  }
-  aStream << ">";
-
-  aStream << sfx;
-}
-
 void AppendToString(std::stringstream& aStream, const nsIntRegion& r,
                     const char* pfx, const char* sfx) {
   aStream << pfx;

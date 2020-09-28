@@ -87,7 +87,6 @@
 #include "mozilla/Unused.h"
 #include "MobileViewportManager.h"
 #include "VisualViewport.h"
-#include "LayersLogging.h"  // for Stringify
 #include <algorithm>
 #include <cstdlib>  // for std::abs(int/long)
 #include <cmath>    // for std::abs(float/double)
@@ -536,7 +535,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
       mHelper.GetUnsnappedScrolledRectInternal(overflowRect, scrollPortSize);
   ROOT_SCROLLBAR_LOG(
       "TryLayout scrolledRect:%s overflowRect:%s scrollportSize:%s\n",
-      Stringify(scrolledRect).c_str(), Stringify(overflowRect).c_str(),
+      ToString(scrolledRect).c_str(), ToString(overflowRect).c_str(),
       ToString(scrollPortSize).c_str());
   nscoord oneDevPixel = aState->mBoxState.PresContext()->DevPixelsToAppUnits(1);
 
@@ -4117,7 +4116,7 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
     // call below will add it back.
     MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
             ("RestrictToRootDisplayPort: Existing root displayport is %s\n",
-             Stringify(rootDisplayPort).c_str()));
+             ToString(rootDisplayPort).c_str()));
     if (nsIContent* content = rootFrame->GetContent()) {
       if (void* property =
               content->GetProperty(nsGkAtoms::apzCallbackTransform)) {
@@ -4141,7 +4140,7 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
           sDisplayportLog, LogLevel::Verbose,
           ("RestrictToRootDisplayPort: Removing resolution %f from root "
            "composition bounds %s\n",
-           rootPresShell->GetResolution(), Stringify(rootCompBounds).c_str()));
+           rootPresShell->GetResolution(), ToString(rootCompBounds).c_str()));
       rootCompBounds =
           rootCompBounds.RemoveResolution(rootPresShell->GetResolution());
     }
@@ -4150,7 +4149,7 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
   }
   MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
           ("RestrictToRootDisplayPort: Intermediate root displayport %s\n",
-           Stringify(rootDisplayPort).c_str()));
+           ToString(rootDisplayPort).c_str()));
 
   // We want to convert the root display port from the
   // coordinate space of |rootFrame| to the coordinate space of
@@ -4167,12 +4166,12 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
   nsLayoutUtils::TransformRect(rootFrame, mOuter, rootDisplayPort);
   MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
           ("RestrictToRootDisplayPort: Transformed root displayport %s\n",
-           Stringify(rootDisplayPort).c_str()));
+           ToString(rootDisplayPort).c_str()));
   rootDisplayPort += CSSPoint::ToAppUnits(
       nsLayoutUtils::GetCumulativeApzCallbackTransform(mOuter));
   MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
           ("RestrictToRootDisplayPort: Final root displayport %s\n",
-           Stringify(rootDisplayPort).c_str()));
+           ToString(rootDisplayPort).c_str()));
 
   // We want to limit aDisplayportBase to be no larger than
   // rootDisplayPort on either axis, but we don't want to just
@@ -4205,11 +4204,11 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
              rootDisplayPort.YMost() < aDisplayportBase.YMost()) {
     rootDisplayPort.y = aDisplayportBase.y;
   }
-  MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
-          ("RestrictToRootDisplayPort: Root displayport translated to %s to "
-           "better enclose %s\n",
-           Stringify(rootDisplayPort).c_str(),
-           Stringify(aDisplayportBase).c_str()));
+  MOZ_LOG(
+      sDisplayportLog, LogLevel::Verbose,
+      ("RestrictToRootDisplayPort: Root displayport translated to %s to "
+       "better enclose %s\n",
+       ToString(rootDisplayPort).c_str(), ToString(aDisplayportBase).c_str()));
 
   // Now we can do the intersection
   return aDisplayportBase.Intersect(rootDisplayPort);
@@ -4249,8 +4248,8 @@ bool ScrollFrameHelper::DecideScrollableLayer(
           MOZ_LOG(
               sDisplayportLog, LogLevel::Verbose,
               ("Scroll id %" PRIu64 " has visible rect %s, scroll port %s\n",
-               viewID, Stringify(*aVisibleRect).c_str(),
-               Stringify(mScrollPort).c_str()));
+               viewID, ToString(*aVisibleRect).c_str(),
+               ToString(mScrollPort).c_str()));
         }
 
         // Only restrict to the root displayport bounds if necessary,
@@ -4259,7 +4258,7 @@ bool ScrollFrameHelper::DecideScrollableLayer(
           displayportBase = RestrictToRootDisplayPort(displayportBase);
           MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
                   ("Scroll id %" PRIu64 " has restricted base %s\n", viewID,
-                   Stringify(displayportBase).c_str()));
+                   ToString(displayportBase).c_str()));
         }
         displayportBase -= mScrollPort.TopLeft();
       }
