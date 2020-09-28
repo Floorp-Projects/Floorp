@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_OPACITY_BRUSH 3
-#define VECS_PER_SPECIFIC_BRUSH VECS_PER_OPACITY_BRUSH
-
-#define WR_BRUSH_VS_FUNCTION opacity_brush_vs
-#define WR_BRUSH_FS_FUNCTION opacity_brush_fs
+#define VECS_PER_SPECIFIC_BRUSH 3
 
 #include shared,prim_shared,brush
 
@@ -24,7 +20,7 @@ flat varying vec2 v_layer_and_perspective;
 flat varying float v_opacity;
 
 #ifdef WR_VERTEX_SHADER
-void opacity_brush_vs(
+void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -60,7 +56,7 @@ void opacity_brush_vs(
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-Fragment opacity_brush_fs() {
+Fragment brush_fs() {
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_layer_and_perspective.y);
     vec2 uv = v_uv * perspective_divisor;
     vec4 Cs = texture(sColor0, vec3(uv, v_layer_and_perspective.x));

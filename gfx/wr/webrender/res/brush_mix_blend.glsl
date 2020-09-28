@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_MIX_BLEND_BRUSH 3
-#define VECS_PER_SPECIFIC_BRUSH VECS_PER_MIX_BLEND_BRUSH
-
-#define WR_BRUSH_VS_FUNCTION mix_blend_brush_vs
-#define WR_BRUSH_FS_FUNCTION mix_blend_brush_fs
+#define VECS_PER_SPECIFIC_BRUSH 3
 
 #include shared,prim_shared,brush
 
@@ -22,7 +18,7 @@ flat varying int v_op;
 
 #ifdef WR_VERTEX_SHADER
 
-void mix_blend_brush_vs(
+void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -215,7 +211,7 @@ const int MixBlendMode_Saturation  = 13;
 const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
 
-Fragment mix_blend_brush_fs() {
+Fragment brush_fs() {
     vec4 Cb = textureLod(sPrevPassColor, vec3(v_backdrop_uv.xy, v_backdrop_uv.z), 0.0);
     vec4 Cs = textureLod(sPrevPassColor, vec3(v_src_uv.xy, v_src_uv.z), 0.0);
 

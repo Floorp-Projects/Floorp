@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_IMAGE_BRUSH 3
-#define VECS_PER_SPECIFIC_BRUSH VECS_PER_IMAGE_BRUSH
-
-#define WR_BRUSH_VS_FUNCTION image_brush_vs
-#define WR_BRUSH_FS_FUNCTION image_brush_fs
+#define VECS_PER_SPECIFIC_BRUSH 3
 
 #include shared,prim_shared,brush
 
@@ -54,7 +50,7 @@ ImageBrushData fetch_image_data(int address) {
     return data;
 }
 
-void image_brush_vs(
+void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize prim_rect,
@@ -301,7 +297,7 @@ vec2 compute_repeated_uvs(float perspective_divisor) {
     return repeated_uv;
 }
 
-Fragment image_brush_fs() {
+Fragment brush_fs() {
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_layer_and_perspective.y);
 
 #ifdef WR_FEATURE_REPETITION

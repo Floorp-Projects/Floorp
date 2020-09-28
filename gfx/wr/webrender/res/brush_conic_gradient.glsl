@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_CONIC_GRADIENT_BRUSH 2
-#define VECS_PER_SPECIFIC_BRUSH VECS_PER_CONIC_GRADIENT_BRUSH
-
-#define WR_BRUSH_VS_FUNCTION conic_gradient_brush_vs
-#define WR_BRUSH_FS_FUNCTION conic_gradient_brush_fs
+#define VECS_PER_SPECIFIC_BRUSH 2
 
 #include shared,prim_shared,brush
 
@@ -54,7 +50,7 @@ ConicGradient fetch_gradient(int address) {
     );
 }
 
-void conic_gradient_brush_vs(
+void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
@@ -97,7 +93,7 @@ void conic_gradient_brush_vs(
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-Fragment conic_gradient_brush_fs() {
+Fragment brush_fs() {
 
 #ifdef WR_FEATURE_ALPHA_PASS
     // Handle top and left inflated edges (see brush_image).
