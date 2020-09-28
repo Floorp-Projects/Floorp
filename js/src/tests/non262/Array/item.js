@@ -1,3 +1,5 @@
+// |reftest| skip-if(!Array.prototype.item)
+
 function basic() {
   assertEq([0].item(0), 0);
   assertEq([0].item(-1), 0);
