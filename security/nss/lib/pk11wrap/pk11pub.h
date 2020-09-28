@@ -267,6 +267,8 @@ CK_MECHANISM_TYPE PK11_MapSignKeyType(KeyType keyType);
  **********************************************************************/
 void PK11_FreeSymKey(PK11SymKey *key);
 PK11SymKey *PK11_ReferenceSymKey(PK11SymKey *symKey);
+PK11SymKey *PK11_ImportDataKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, PK11Origin origin,
+                               CK_ATTRIBUTE_TYPE operation, SECItem *key, void *wincx);
 PK11SymKey *PK11_ImportSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
                               PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key, void *wincx);
 PK11SymKey *PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot,
