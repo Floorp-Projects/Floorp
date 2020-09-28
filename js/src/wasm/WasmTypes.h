@@ -625,6 +625,11 @@ class ValType {
     return IsReferenceType(tc_);
   }
 
+  bool isDefaultable() const {
+    MOZ_ASSERT(isValid());
+    return !isReference() || isNullable();
+  }
+
   Kind kind() const {
     MOZ_ASSERT(isValid());
     return Kind(UnpackTypeCodeTypeAbstracted(tc_));

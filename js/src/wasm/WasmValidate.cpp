@@ -423,6 +423,10 @@ bool wasm::DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
       return false;
     }
 
+    if (!type.isDefaultable()) {
+      return d.fail("cannot have a non-defaultable local");
+    }
+
     if (!locals->appendN(type, count)) {
       return false;
     }
