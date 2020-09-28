@@ -44,15 +44,13 @@ For lack of any progress in debugging this, revert those two patches.
    if(APPLE)
      set(LLVM_ENABLE_LIBCXX ON CACHE BOOL "")
    endif()
-@@ -380,6 +381,8 @@
-                              # Builtins were built separately above
+@@ -381,4 +382,6 @@
                               CMAKE_ARGS -DCOMPILER_RT_BUILD_BUILTINS=Off
                                          -DLLVM_INCLUDE_TESTS=${LLVM_INCLUDE_TESTS}
 +                                        -DLLVM_BINARY_DIR=${LLVM_BINARY_DIR}
 +                                        -DLLVM_LIBRARY_DIR=${LLVM_LIBRARY_DIR}
                                          -DLLVM_DEFAULT_TARGET_TRIPLE=${TARGET_TRIPLE}
                                          -DLLVM_ENABLE_PROJECTS_USED=${LLVM_ENABLE_PROJECTS_USED}
-                                         -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=ON
 @@ -470,6 +473,8 @@
                               # Builtins were built separately above
                               CMAKE_ARGS -DCOMPILER_RT_BUILD_BUILTINS=Off
