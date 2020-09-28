@@ -1048,8 +1048,6 @@ void AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
 
 JSAtom* js::Atomize(JSContext* cx, const char* bytes, size_t length,
                     PinningBehavior pin, const Maybe<uint32_t>& indexValue) {
-  CHECK_THREAD(cx);
-
   const Latin1Char* chars = reinterpret_cast<const Latin1Char*>(bytes);
   return AtomizeAndCopyChars(cx, chars, length, pin, indexValue);
 }
@@ -1057,7 +1055,6 @@ JSAtom* js::Atomize(JSContext* cx, const char* bytes, size_t length,
 template <typename CharT>
 JSAtom* js::AtomizeChars(JSContext* cx, const CharT* chars, size_t length,
                          PinningBehavior pin) {
-  CHECK_THREAD(cx);
   return AtomizeAndCopyChars(cx, chars, length, pin, Nothing());
 }
 
@@ -1242,8 +1239,6 @@ template JSAtom* js::ToAtom<NoGC>(JSContext* cx, const Value& v);
 static JSAtom* AtomizeLittleEndianTwoByteChars(JSContext* cx,
                                                const uint8_t* leTwoByte,
                                                size_t length) {
-  CHECK_THREAD(cx);
-
   LittleEndianChars chars(leTwoByte);
 
   if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
