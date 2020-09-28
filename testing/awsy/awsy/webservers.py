@@ -42,14 +42,14 @@ class WebServers(object):
             except socket.error as error:
                 if isinstance(error, socket.error):
                     if error.errno == 98:
-                        print("port {} is in use.").format(port)
+                        print("port {} is in use.".format(port))
                     else:
-                        print("port {} error {}").format(port, error)
+                        print("port {} error {}".format(port, error))
                 elif isinstance(error, str):
-                    print("port {} error {}").format(port, error)
+                    print("port {} error {}".format(port, error))
                 self.servers.pop()
             except Exception as error:
-                print("port {} error {}").format(port, error)
+                print("port {} error {}".format(port, error))
                 self.servers.pop()
 
             port += 1
