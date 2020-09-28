@@ -9,7 +9,7 @@ An often-overlooked first line of testing is "what do the logs say?".
 To turn on logging for FOG, use any of the following:
 * Run Firefox with `RUST_LOG="fog_control,fog,glean_core"`.
     * On some platforms this will use terminal colours to indicate log level.
-* Run Firefox with `MOZ_LOG="timestamp,glean::*:5,fog::*:5,fog_control::*:5,glean_core::*:5"`.
+* Run Firefox with `MOZ_LOG="timestamp,glean::*:5,fog::*:5,glean_core::*:5"`.
 * Set the following prefs:
     * `logging.config.timestamp` to `true`
     * `logging.fog_control::*` to `5`
@@ -79,12 +79,6 @@ Because Gecko symbols aren't built for the
 any test that is written for code that uses Gecko symbols should be written as a
 [`gtest`](https://github.com/google/googletest)
 in `toolkit/components/glean/gtest/`.
-You can write the actual test code in Rust.
-It needs to be accompanied by a C++ GTest that calls a C FFI-exported Rust function.
-See [Testing & Debugging Rust Code](/testing-rust-code/) for more.
-See [`toolkit/components/glean/gtest/TestFog.cpp`](https://searchfox.org/mozilla-central/source/toolkit/components/glean/gtest/TestFog.cpp)
-and [`toolkit/components/glean/gtest/test.rs`](https://searchfox.org/mozilla-central/source/toolkit/components/glean/gtest/test.rs)
-for an example.
 
 By necessity these can only be integration tests against the compiled crate.
 
