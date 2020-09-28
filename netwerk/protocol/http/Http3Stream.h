@@ -150,6 +150,8 @@ class Http3Stream final : public nsAHttpSegmentReader,
   bool mFin;
 
   bool mAttempting0RTT = false;
+
+  uint32_t mSendingBlockedByFlowControlCount = 0;
 };
 
 }  // namespace net

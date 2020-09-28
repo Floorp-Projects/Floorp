@@ -202,6 +202,9 @@ class Http3Session final : public nsAHttpTransaction,
   TimeStamp mConnectionIdleEnd;
   Maybe<uint64_t> mFirstStreamIdReuseIdleConnection;
   TimeStamp mTimerShouldTrigger;
+  uint64_t mBlockedByStreamLimitCount = 0;
+  uint64_t mTransactionsBlockedByStreamLimitCount = 0;
+  uint64_t mTransactionsSenderBlockedByFlowControlCount = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);

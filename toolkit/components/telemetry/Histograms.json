@@ -3318,6 +3318,50 @@
     "bug_numbers": [1652104],
     "description": "HTTP3: Streams created per connection"
   },
+  "HTTP3_BLOCKED_BY_STREAM_LIMIT_PER_CONN": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "bug_numbers": [1655566],
+    "description": "HTTP3: number of times a connection is blocked by maximum allowed number of parallel streams per connection"
+  },
+  "HTTP3_TRANS_BLOCKED_BY_STREAM_LIMIT_PER_CONN": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "bug_numbers": [1655566],
+    "description": "HTTP3: number of transactions that are blocked by maximum allowed number of parallel streams per connection"
+  },
+  "HTTP3_TRANS_SENDING_BLOCKED_BY_FLOW_CONTROL_PER_CONN": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "bug_numbers": [1655566],
+    "description": "HTTP3: number of times streams are blocked by the flow control while sending data per connection"
+  },
+  "HTTP3_SENDING_BLOCKED_BY_FLOW_CONTROL_PER_TRANS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "bug_numbers": [1655566],
+    "description": "HTTP3: number of times when a stream is blocked by the flow control while sendnig data."
+  },
   "HTTP_CONTENT_ENCODING": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
