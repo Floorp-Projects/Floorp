@@ -7,7 +7,7 @@ use std::sync::{Arc, RwLock};
 use super::{CommonMetricData, Instant, TimeUnit};
 
 use crate::dispatcher;
-use crate::ipc::{need_ipc, MetricId};
+use crate::ipc::{need_ipc, with_ipc_payload, MetricId, TimespanCommand};
 
 /// A timespan metric.
 ///
@@ -36,35 +36,47 @@ impl TimespanMetric {
     }
 
     pub fn start(&self) {
+        let now = Instant::now();
+
         match self {
             TimespanMetric::Parent(p) => {
-                let now = Instant::now();
                 let metric = Arc::clone(&p);
                 dispatcher::launch(move || metric.start(now));
             }
-            TimespanMetric::Child(_) => {
-                log::error!(
-                    "Unable to start timespan metric {:?} in non-main process. Ignoring.",
-                    self
-                );
-                // TODO: Record an error.
+            TimespanMetric::Child(c) => {
+                let cmd = TimespanCommand::Start(now);
+                with_ipc_payload(move |payload| {
+                    if let Some(v) = payload.timespans.get_mut(&c.0) {
+                        v.push(cmd);
+                    } else {
+                        let mut v = vec![];
+                        v.push(cmd);
+                        payload.timespans.insert(c.0.clone(), v);
+                    }
+                });
             }
         }
     }
 
     pub fn stop(&self) {
+        let now = Instant::now();
+
         match self {
             TimespanMetric::Parent(p) => {
-                let now = Instant::now();
                 let metric = Arc::clone(&p);
                 dispatcher::launch(move || metric.stop(now));
             }
-            TimespanMetric::Child(_) => {
-                log::error!(
-                    "Unable to stop timespan metric {:?} in non-main process. Ignoring.",
-                    self
-                );
-                // TODO: Record an error.
+            TimespanMetric::Child(c) => {
+                let cmd = TimespanCommand::Stop(now);
+                with_ipc_payload(move |payload| {
+                    if let Some(v) = payload.timespans.get_mut(&c.0) {
+                        v.push(cmd);
+                    } else {
+                        let mut v = vec![];
+                        v.push(cmd);
+                        payload.timespans.insert(c.0.clone(), v);
+                    }
+                });
             }
         }
     }
@@ -75,12 +87,17 @@ impl TimespanMetric {
                 let metric = Arc::clone(&p);
                 dispatcher::launch(move || metric.cancel());
             }
-            TimespanMetric::Child(_) => {
-                log::error!(
-                    "Unable to cancel timespan metric {:?} in non-main process. Ignoring.",
-                    self
-                );
-                // TODO: Record an error.
+            TimespanMetric::Child(c) => {
+                let cmd = TimespanCommand::Cancel;
+                with_ipc_payload(move |payload| {
+                    if let Some(v) = payload.timespans.get_mut(&c.0) {
+                        v.push(cmd);
+                    } else {
+                        let mut v = vec![];
+                        v.push(cmd);
+                        payload.timespans.insert(c.0.clone(), v);
+                    }
+                });
             }
         }
     }
