@@ -1171,13 +1171,14 @@ nsresult nsFocusManager::FocusPlugin(Element* aPlugin) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFocusManager::ParentActivated(mozIDOMWindowProxy* aWindow, bool aActive) {
+void nsFocusManager::ParentActivated(mozIDOMWindowProxy* aWindow,
+                                     bool aActive) {
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
+  if (!window) {
+    return;
+  }
 
   ActivateOrDeactivate(window, aActive);
-  return NS_OK;
 }
 
 static bool ShouldMatchFocusVisible(const Element& aElement,
