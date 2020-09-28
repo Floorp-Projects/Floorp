@@ -272,9 +272,9 @@ class RemoteAutomation(object):
             return False
         if not newLogContent:
             return False
-        newLogContent = six.ensure_str(newLogContent, errors='replace')
 
         self.stdoutlen += len(newLogContent)
+        newLogContent = six.ensure_str(newLogContent, errors='replace')
 
         if self.messageLogger is None:
             testStartFilenames = re.findall(r"TEST-START \| ([^\s]*)", newLogContent)
