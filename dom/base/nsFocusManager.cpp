@@ -1135,9 +1135,8 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
   }
 }
 
-NS_IMETHODIMP
-nsFocusManager::FireDelayedEvents(Document* aDocument) {
-  NS_ENSURE_ARG(aDocument);
+void nsFocusManager::FireDelayedEvents(Document* aDocument) {
+  MOZ_ASSERT(aDocument);
 
   // fire any delayed focus and blur events in the same order that they were
   // added
@@ -1164,8 +1163,6 @@ nsFocusManager::FireDelayedEvents(Document* aDocument) {
       }
     }
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
