@@ -250,6 +250,12 @@ class nsFocusManager final : public nsIFocusManager,
   void FireDelayedEvents(Document* aDocument);
 
   /**
+   * Used in a child process to indicate that the parent window is now
+   * active or deactive.
+   */
+  void ParentActivated(mozIDOMWindowProxy* aWindow, bool aActive);
+
+  /**
    * Indicate that a plugin wishes to take the focus. This is similar to a
    * normal focus except that the widget focus is not changed. Updating the
    * widget focus state is the responsibility of the caller.
