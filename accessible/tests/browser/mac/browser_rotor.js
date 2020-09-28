@@ -1050,6 +1050,55 @@ addAccessibleTask(
 );
 
 /**
+ * Test rotor with radiogroups
+ */
+addAccessibleTask(
+  `
+  <div role="radiogroup" id="radios" aria-labelledby="desc">
+    <h1 id="desc">some radio buttons</h1>
+    <div id="radio1" role="radio"> Radio 1</div>
+    <div id="radio2" role="radio"> Radio 2</div>
+  </div>
+  `,
+  async (browser, accDoc) => {
+    const searchPred = {
+      AXSearchKey: "AXRadioGroupSearchKey",
+      AXImmediateDescendants: 1,
+      AXResultsLimit: -1,
+      AXDirection: "AXDirectionNext",
+    };
+
+    const webArea = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    is(
+      webArea.getAttributeValue("AXRole"),
+      "AXWebArea",
+      "Got web area accessible"
+    );
+
+    const radiogroupCount = webArea.getParameterizedAttributeValue(
+      "AXUIElementCountForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+    is(1, radiogroupCount, "Found 1 radio group");
+
+    const controls = webArea.getParameterizedAttributeValue(
+      "AXUIElementsForSearchPredicate",
+      NSDictionary(searchPred)
+    );
+
+    const radios = getNativeInterface(accDoc, "radios");
+
+    is(
+      radios.getAttributeValue("AXDescription"),
+      controls[0].getAttributeValue("AXDescription"),
+      "Found correct group of radios"
+    );
+  }
+);
+
+/**
  * Test rotor with lists
  */
 addAccessibleTask(
