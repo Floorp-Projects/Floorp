@@ -79,8 +79,7 @@ void AppendToString(std::stringstream& aStream, const nsIntRegion& r,
 
   aStream << "< ";
   for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
-    AppendToString(aStream, iter.Get());
-    aStream << "; ";
+    aStream << iter.Get() << "; ";
   }
   aStream << ">";
 
@@ -139,7 +138,7 @@ void AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
     aStream << "] [scrollParent=" << m.GetScrollParentId();
   }
   if (m.HasScrollClip()) {
-    AppendToString(aStream, m.ScrollClip().GetClipRect(), "] [clip=");
+    aStream << "] [clip=" << m.ScrollClip().GetClipRect();
   }
   if (m.HasMaskLayer()) {
     aStream << "] [mask=" << m.ScrollClip().GetMaskLayerIndex().value();

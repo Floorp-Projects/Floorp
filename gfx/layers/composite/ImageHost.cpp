@@ -358,7 +358,7 @@ void ImageHost::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   for (const auto& img : Images()) {
     aStream << "\n";
     img.mTextureHost->PrintInfo(aStream, pfx.get());
-    AppendToString(aStream, img.mPictureRect, " [picture-rect=", "]");
+    aStream << " [picture-rect=" << img.mPictureRect << "]";
   }
 }
 

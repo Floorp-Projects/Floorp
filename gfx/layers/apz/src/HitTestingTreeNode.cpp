@@ -442,7 +442,7 @@ void HitTestingTreeNode::Dump(const char* aPrefix) const {
            ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get()
            : "",
        Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
-       mClipRegion ? Stringify(mClipRegion.ref()).c_str() : "none",
+       mClipRegion ? ToString(mClipRegion.ref()).c_str() : "none",
        mScrollbarData.mDirection.isSome() ? " scrollbar" : "",
        IsScrollThumbNode() ? " scrollthumb" : ""));
 
