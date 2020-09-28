@@ -1866,14 +1866,4 @@ ROLE(TIME_EDITOR,
      ROLE_SYSTEM_GROUPING,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNameFromSubtreeIfReqRule)
-
-ROLE(LISTITEM_MARKER,
-     "list item marker",
-     ATK_ROLE_UNKNOWN,
-     @"AXListMarker",
-     NSAccessibilityUnknownSubrole,
-     ROLE_SYSTEM_STATICTEXT,
-     ROLE_SYSTEM_STATICTEXT,
-     java::SessionAccessibility::CLASSNAME_VIEW,
-     eNoNameRule)
 // clang-format on
