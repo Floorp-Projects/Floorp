@@ -2250,6 +2250,25 @@ bool WarpCacheIRTranspiler::emitCompareSymbolResult(JSOp op,
   return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_Symbol);
 }
 
+bool WarpCacheIRTranspiler::emitCompareNullUndefinedResult(
+    JSOp op, bool isUndefined, ValOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  MOZ_ASSERT(IsEqualityOp(op));
+
+  // A previously emitted guard ensures that one side of the comparison
+  // is null or undefined.
+  MDefinition* cst =
+      isUndefined ? constant(UndefinedValue()) : constant(NullValue());
+  auto* ins = MCompare::New(alloc(), input, cst, op);
+  ins->setCompareType(isUndefined ? MCompare::Compare_Undefined
+                                  : MCompare::Compare_Null);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitCompareDoubleSameValueResult(
     NumberOperandId lhsId, NumberOperandId rhsId) {
   MDefinition* lhs = getOperand(lhsId);

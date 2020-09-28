@@ -2546,7 +2546,7 @@
 
 - name: CompareNullUndefinedResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     op: JSOpImm
