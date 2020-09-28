@@ -185,7 +185,8 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
                       &childReflowOuput, myWM, childOffset, borderBoxSize,
                       ReflowChildFlags::Default);
 
-    if (!aReflowInput.mStyleDisplay->IsContainLayout()) {
+    if (!aReflowInput.mStyleDisplay->IsContainLayout() &&
+        childDesiredSize.BlockStartAscent() != ReflowOutput::ASK_FOR_BASELINE) {
       nsSize contentBoxSize =
           LogicalSize(myWM, contentBoxISize, contentBoxBSize)
               .GetPhysicalSize(myWM);
@@ -193,7 +194,7 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
           childDesiredSize.BlockStartAscent() +
           inputAreaFrame->BStart(aReflowInput.GetWritingMode(),
                                  contentBoxSize));
-    }  // else: we're layout-contained, and so we have no baseline.
+    }  // else, leave ascent unset (we don't have one or don't know it)
   }
 
   LogicalSize logicalDesiredSize(myWM, borderBoxISize, borderBoxBSize);
