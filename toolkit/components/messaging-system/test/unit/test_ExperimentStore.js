@@ -25,6 +25,56 @@ add_task(async function test_usageBeforeInitialization() {
   );
 });
 
+add_task(async function test_addExperiment_eventEmit() {
+  const store = ExperimentFakes.store();
+  const slugStub = sinon.stub();
+  const featureStub = sinon.stub();
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+
+  await store.init();
+
+  store.on("update:foo", slugStub);
+  store.on("update:purple", featureStub);
+
+  store.addExperiment(experiment);
+
+  Assert.equal(slugStub.callCount, 1);
+  Assert.equal(slugStub.firstCall.args[1].slug, experiment.slug);
+  Assert.equal(featureStub.callCount, 1);
+  Assert.equal(featureStub.firstCall.args[1].slug, experiment.slug);
+});
+
+add_task(async function test_updateExperiment_eventEmit() {
+  const store = ExperimentFakes.store();
+  const slugStub = sinon.stub();
+  const featureStub = sinon.stub();
+  const experiment = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "variant",
+      feature: { featureId: "purple", enabled: true },
+    },
+  });
+
+  await store.init();
+
+  store.addExperiment(experiment);
+
+  store.on("update:foo", slugStub);
+  store.on("update:purple", featureStub);
+
+  store.updateExperiment(experiment.slug, experiment);
+
+  Assert.equal(slugStub.callCount, 1);
+  Assert.equal(slugStub.firstCall.args[1].slug, experiment.slug);
+  Assert.equal(featureStub.callCount, 1);
+  Assert.equal(featureStub.firstCall.args[1].slug, experiment.slug);
+});
+
 add_task(async function test_getExperimentForGroup() {
   const store = ExperimentFakes.store();
   const experiment = ExperimentFakes.experiment("foo", {

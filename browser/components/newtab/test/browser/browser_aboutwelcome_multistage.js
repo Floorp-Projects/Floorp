@@ -3,6 +3,9 @@
 const { ExperimentAPI } = ChromeUtils.import(
   "resource://messaging-system/experiments/ExperimentAPI.jsm"
 );
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/MSTestUtils.jsm"
+);
 
 const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF =
@@ -183,8 +186,9 @@ async function onButtonClick(browser, elementId) {
  */
 add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
   await setAboutWelcomePref(true);
-  let updatePromise = new Promise(resolve =>
-    ExperimentAPI._store.on("update:mochitest-1-aboutwelcome", resolve)
+  let updatePromise = ExperimentFakes.waitForExperimentUpdate(
+    ExperimentAPI,
+    "mochitest-1-aboutwelcome"
   );
   ExperimentAPI._store.addExperiment({
     slug: "mochitest-1-aboutwelcome",
@@ -232,8 +236,9 @@ add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
 add_task(async function test_multistage_aboutwelcome_experimentAPI() {
   await setAboutWelcomePref(true);
   await setAboutWelcomeMultiStage({});
-  let updatePromise = new Promise(resolve =>
-    ExperimentAPI._store.on("update:mochitest-aboutwelcome", resolve)
+  let updatePromise = ExperimentFakes.waitForExperimentUpdate(
+    ExperimentAPI,
+    "mochitest-aboutwelcome"
   );
   ExperimentAPI._store.addExperiment({
     slug: "mochitest-aboutwelcome",
