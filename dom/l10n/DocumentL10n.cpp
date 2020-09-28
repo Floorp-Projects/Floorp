@@ -101,6 +101,8 @@ void DocumentL10n::TriggerInitialTranslation() {
     return;
   }
 
+  AutoAllowLegacyScriptExecution exemption;
+
   nsTArray<RefPtr<Promise>> promises;
 
   ErrorResult rv;
@@ -189,6 +191,8 @@ already_AddRefed<Promise> DocumentL10n::TranslateDocument(ErrorResult& aRv) {
     // We populate the sequence in reverse order. Let's bring it
     // back to top->bottom one.
     nonProtoElements.Reverse();
+
+    AutoAllowLegacyScriptExecution exemption;
 
     nsTArray<RefPtr<Promise>> promises;
 

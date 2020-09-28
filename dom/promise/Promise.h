@@ -174,6 +174,7 @@ class Promise : public SupportsWeakPtr {
   // Mark a settled promise as already handled so that rejections will not
   // be reported as unhandled.
   void SetSettledPromiseIsHandled() {
+    AutoAllowLegacyScriptExecution exemption;
     AutoEntryScript aes(mGlobal, "Set settled promise handled");
     JSContext* cx = aes.cx();
     JS::RootedObject promiseObj(cx, mPromiseObj);
@@ -315,6 +316,7 @@ class Promise : public SupportsWeakPtr {
   void MaybeSomething(T&& aArgument, MaybeFunc aFunc) {
     MOZ_ASSERT(PromiseObj());  // It was preserved!
 
+    AutoAllowLegacyScriptExecution exemption;
     AutoEntryScript aes(mGlobal, "Promise resolution or rejection");
     JSContext* cx = aes.cx();
 

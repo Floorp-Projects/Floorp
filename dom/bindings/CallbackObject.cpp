@@ -268,6 +268,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     return;
   }
 
+  AutoAllowLegacyScriptExecution exemption;
   mAutoEntryScript.emplace(globalObject, aExecutionReason, mIsMainThread);
   mAutoEntryScript->SetWebIDLCallerPrincipal(webIDLCallerPrincipal);
   nsIGlobalObject* incumbent = aCallback->IncumbentGlobalOrNull();

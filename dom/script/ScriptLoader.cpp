@@ -546,6 +546,9 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
   }
 
   nsAutoMicroTask mt;
+
+  AutoAllowLegacyScriptExecution exemption;
+
   AutoEntryScript aes(globalObject, "CompileModule", true);
 
   bool oldProcessingScriptTag = context->GetProcessingScriptTag();
@@ -3223,6 +3226,7 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
   // removal of all request from the current list and these large buffers would
   // be removed at the same time as the source object.
   nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
+  AutoAllowLegacyScriptExecution exemption;
   Maybe<AutoEntryScript> aes;
 
   if (globalObject) {
