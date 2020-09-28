@@ -90,9 +90,8 @@ using namespace mozilla::a11y;
   NSMutableArray* matches = [[NSMutableArray alloc] init];
   for (id key in mSearchKeys) {
     if ([key isEqualToString:@"AXAnyTypeSearchKey"]) {
-      RotorAllRule rule = mImmediateDescendantsOnly
-                              ? RotorAllRule(geckoStartAcc)
-                              : RotorAllRule();
+      RotorRule rule =
+          mImmediateDescendantsOnly ? RotorRule(geckoStartAcc) : RotorRule();
 
       if (mSearchForward) {
         if ([mStartElem isKindOfClass:[MOXWebAreaAccessible class]]) {
@@ -124,37 +123,37 @@ using namespace mozilla::a11y;
     }
 
     if ([key isEqualToString:@"AXHeadingSearchKey"]) {
-      RotorHeadingRule rule = mImmediateDescendantsOnly
-                                  ? RotorHeadingRule(geckoStartAcc)
-                                  : RotorHeadingRule();
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::HEADING, geckoStartAcc)
+                               : RotorRoleRule(roles::HEADING);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXArticleSearchKey"]) {
-      RotorArticleRule rule = mImmediateDescendantsOnly
-                                  ? RotorArticleRule(geckoStartAcc)
-                                  : RotorArticleRule();
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::ARTICLE, geckoStartAcc)
+                               : RotorRoleRule(roles::ARTICLE);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXTableSearchKey"]) {
-      RotorTableRule rule = mImmediateDescendantsOnly
-                                ? RotorTableRule(geckoStartAcc)
-                                : RotorTableRule();
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::TABLE, geckoStartAcc)
+                               : RotorRoleRule(roles::TABLE);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXLandmarkSearchKey"]) {
-      RotorLandmarkRule rule = mImmediateDescendantsOnly
-                                   ? RotorLandmarkRule(geckoStartAcc)
-                                   : RotorLandmarkRule();
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::LANDMARK, geckoStartAcc)
+                               : RotorRoleRule(roles::LANDMARK);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXListSearchKey"]) {
-      RotorListRule rule = mImmediateDescendantsOnly
-                               ? RotorListRule(geckoStartAcc)
-                               : RotorListRule();
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::LIST, geckoStartAcc)
+                               : RotorRoleRule(roles::LIST);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
@@ -180,9 +179,9 @@ using namespace mozilla::a11y;
     }
 
     if ([key isEqualToString:@"AXButtonSearchKey"]) {
-      RotorButtonRule rule = mImmediateDescendantsOnly
-                                 ? RotorButtonRule(geckoStartAcc)
-                                 : RotorButtonRule();
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::PUSHBUTTON, geckoStartAcc)
+                               : RotorRoleRule(roles::PUSHBUTTON);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
@@ -194,16 +193,16 @@ using namespace mozilla::a11y;
     }
 
     if ([key isEqualToString:@"AXFrameSearchKey"]) {
-      RotorFrameRule rule = mImmediateDescendantsOnly
-                                ? RotorFrameRule(geckoStartAcc)
-                                : RotorFrameRule();
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::DOCUMENT, geckoStartAcc)
+                               : RotorRoleRule(roles::DOCUMENT);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
 
     if ([key isEqualToString:@"AXImageSearchKey"]) {
-      RotorImageRule rule = mImmediateDescendantsOnly
-                                ? RotorImageRule(geckoStartAcc)
-                                : RotorImageRule();
+      RotorRoleRule rule = mImmediateDescendantsOnly
+                               ? RotorRoleRule(roles::GRAPHIC, geckoStartAcc)
+                               : RotorRoleRule(roles::GRAPHIC);
       [matches addObjectsFromArray:[self getMatchesForRule:rule]];
     }
   }
