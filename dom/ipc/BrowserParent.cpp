@@ -763,7 +763,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvMoveFocus(
     return IPC_OK();
   }
 
-  RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (fm) {
     RefPtr<Element> dummy;
 
@@ -1983,7 +1983,7 @@ bool BrowserParent::SendHandleTap(TapType aType,
     return false;
   }
   if ((aType == TapType::eSingleTap || aType == TapType::eSecondTap)) {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
       if (frameLoader) {

@@ -4269,10 +4269,9 @@ void nsGlobalWindowInner::SetReadyForFocus() {
   bool oldNeedsFocus = mNeedsFocus;
   mNeedsFocus = false;
 
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  nsPIDOMWindowOuter* outer = GetOuterWindow();
-  if (fm && outer) {
-    fm->WindowShown(outer, oldNeedsFocus);
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    fm->WindowShown(GetOuterWindow(), oldNeedsFocus);
   }
 }
 
@@ -4281,10 +4280,9 @@ void nsGlobalWindowInner::PageHidden() {
   // no longer valid. Use the persisted field to determine if the document
   // is being destroyed.
 
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  nsPIDOMWindowOuter* outer = GetOuterWindow();
-  if (fm && outer) {
-    fm->WindowHidden(outer);
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    fm->WindowHidden(GetOuterWindow());
   }
 
   mNeedsFocus = true;

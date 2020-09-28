@@ -209,12 +209,6 @@ class nsFocusManager final : public nsIFocusManager,
                                        nsIContent** aNextContent);
 
   /**
-   * Setter for focusedWindow with CallerType
-   */
-  nsresult SetFocusedWindowWithCallerType(mozIDOMWindowProxy* aWindowToFocus,
-                                          mozilla::dom::CallerType aCallerType);
-
-  /**
    * Given an element, which must be the focused element, activate the remote
    * frame it embeds, if any.
    */
@@ -225,48 +219,6 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void RaiseWindow(nsPIDOMWindowOuter* aWindow,
                    mozilla::dom::CallerType aCallerType);
-
-  /**
-   * Called when a window has been raised.
-   */
-  void WindowRaised(mozIDOMWindowProxy* aWindow);
-
-  /**
-   * Called when a window has been lowered.
-   */
-  void WindowLowered(mozIDOMWindowProxy* aWindow);
-
-  /**
-   * Called when a new document in a window is shown.
-   *
-   * If aNeedsFocus is true, then focus events are expected to be fired on the
-   * window if this window is in the focused window chain.
-   */
-  void WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus);
-
-  /**
-   * Called when a document in a window has been hidden or otherwise can no
-   * longer accept focus.
-   */
-  void WindowHidden(mozIDOMWindowProxy* aWindow);
-
-  /**
-   * Fire any events that have been delayed due to synchronized actions.
-   */
-  void FireDelayedEvents(Document* aDocument);
-
-  /**
-   * Used in a child process to indicate that the parent window is now
-   * active or deactive.
-   */
-  void ParentActivated(mozIDOMWindowProxy* aWindow, bool aActive);
-
-  /**
-   * Indicate that a plugin wishes to take the focus. This is similar to a
-   * normal focus except that the widget focus is not changed. Updating the
-   * widget focus state is the responsibility of the caller.
-   */
-  nsresult FocusPlugin(mozilla::dom::Element* aPlugin);
 
   static uint32_t FocusOptionsToFocusManagerFlags(
       const mozilla::dom::FocusOptions& aOptions);

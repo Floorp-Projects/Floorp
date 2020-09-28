@@ -405,7 +405,7 @@ nsFocusManager::GetFocusedWindow(mozIDOMWindowProxy** aFocusedWindow) {
   return NS_OK;
 }
 
-nsresult nsFocusManager::SetFocusedWindowWithCallerType(
+NS_IMETHODIMP nsFocusManager::SetFocusedWindowWithCallerType(
     mozIDOMWindowProxy* aWindowToFocus, CallerType aCallerType) {
   LOGFOCUS(("<<SetFocusedWindow begin>>"));
 
@@ -647,9 +647,9 @@ nsFocusManager::MoveCaretToFocus(mozIDOMWindowProxy* aWindow) {
   return NS_OK;
 }
 
-void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
-  MOZ_ASSERT(aWindow);
-
+NS_IMETHODIMP
+nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
+  NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
@@ -679,7 +679,7 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
       // what the focus manager thinks should be the current widget is actually
       // focused.
       EnsureCurrentWidgetFocused(CallerType::System);
-      return;
+      return NS_OK;
     }
 
     // lower the existing window, if any. This shouldn't happen usually.
@@ -693,7 +693,7 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
       if (active == bc && !mActiveBrowsingContextInContentSetFromOtherProcess) {
         // EnsureCurrentWidgetFocused() should not be necessary with
         // PuppetWidget.
-        return;
+        return NS_OK;
       }
 
       if (active && active != bc) {
@@ -711,9 +711,7 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = window->GetDocShell();
   // If there's no docShellAsItem, this window must have been closed,
   // in that case there is no tree owner.
-  if (!docShellAsItem) {
-    return;
-  }
+  NS_ENSURE_TRUE(docShellAsItem, NS_OK);
 
   // set this as the active window
   if (XRE_IsParentProcess()) {
@@ -732,7 +730,7 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   if (baseWindow) {
     bool isEnabled = true;
     if (NS_SUCCEEDED(baseWindow->GetEnabled(&isEnabled)) && !isEnabled) {
-      return;
+      return NS_ERROR_FAILURE;
     }
 
     baseWindow->SetVisibility(true);
@@ -769,17 +767,19 @@ void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
 
   NS_ASSERTION(currentWindow, "window raised with no window current");
   if (!currentWindow) {
-    return;
+    return NS_OK;
   }
 
   nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(baseWindow));
   Focus(currentWindow, currentFocus, 0, true, false, appWin != nullptr, true,
         focusInOtherContentProcess);
+
+  return NS_OK;
 }
 
-void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
-  MOZ_ASSERT(aWindow);
-
+NS_IMETHODIMP
+nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
+  NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
@@ -801,13 +801,13 @@ void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
 
   if (XRE_IsParentProcess()) {
     if (mActiveWindow != window) {
-      return;
+      return NS_OK;
     }
   } else {
     BrowsingContext* bc = window->GetBrowsingContext();
     BrowsingContext* active = GetActiveBrowsingContext();
     if (active != bc->Top()) {
-      return;
+      return NS_OK;
     }
   }
 
@@ -856,6 +856,8 @@ void nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
   }
 
   mWindowBeingLowered = nullptr;
+
+  return NS_OK;
 }
 
 nsresult nsFocusManager::ContentRemoved(Document* aDocument,
@@ -939,10 +941,9 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
   return NS_OK;
 }
 
-void nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow,
-                                 bool aNeedsFocus) {
-  MOZ_ASSERT(aWindow);
-
+NS_IMETHODIMP
+nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus) {
+  NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
@@ -971,7 +972,7 @@ void nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow,
   }
 
   if (mFocusedWindow != window) {
-    return;
+    return NS_OK;
   }
 
   if (aNeedsFocus) {
@@ -998,11 +999,17 @@ void nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow,
     // When the window becomes visible, make sure the right widget is focused.
     EnsureCurrentWidgetFocused(CallerType::System);
   }
+
+  return NS_OK;
 }
 
-void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
-  MOZ_ASSERT(aWindow);
+NS_IMETHODIMP
+nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
+  // if there is no window or it is not the same or an ancestor of the
+  // currently focused window, just return, as the current focus will not
+  // be affected.
 
+  NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
@@ -1032,11 +1039,7 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
     }
   }
 
-  // If it is not the same or an ancestor of the currently focused window, just
-  // return, as the current focus will not be affected.
-  if (!IsSameOrAncestor(window, mFocusedWindow)) {
-    return;
-  }
+  if (!IsSameOrAncestor(window, mFocusedWindow)) return NS_OK;
 
   // at this point, we know that the window being hidden is either the focused
   // window, or an ancestor of the focused window. Either way, the focus is no
@@ -1046,7 +1049,7 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
 
   nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
   if (!focusedDocShell) {
-    return;
+    return NS_OK;
   }
 
   RefPtr<PresShell> presShell = focusedDocShell->GetPresShell();
@@ -1110,7 +1113,7 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
         }  // else do nothing when an out-of-process iframe is torn down
       }
     }
-    return;
+    return NS_OK;
   }
 
   // if the window being hidden is an ancestor of the focused window, adjust
@@ -1133,10 +1136,13 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
 
     SetFocusedWindowInternal(window);
   }
+
+  return NS_OK;
 }
 
-void nsFocusManager::FireDelayedEvents(Document* aDocument) {
-  MOZ_ASSERT(aDocument);
+NS_IMETHODIMP
+nsFocusManager::FireDelayedEvents(Document* aDocument) {
+  NS_ENSURE_ARG(aDocument);
 
   // fire any delayed focus and blur events in the same order that they were
   // added
@@ -1163,22 +1169,24 @@ void nsFocusManager::FireDelayedEvents(Document* aDocument) {
       }
     }
   }
+
+  return NS_OK;
 }
 
-nsresult nsFocusManager::FocusPlugin(Element* aPlugin) {
+NS_IMETHODIMP
+nsFocusManager::FocusPlugin(Element* aPlugin) {
   NS_ENSURE_ARG(aPlugin);
   SetFocusInner(aPlugin, 0, true, false);
   return NS_OK;
 }
 
-void nsFocusManager::ParentActivated(mozIDOMWindowProxy* aWindow,
-                                     bool aActive) {
+NS_IMETHODIMP
+nsFocusManager::ParentActivated(mozIDOMWindowProxy* aWindow, bool aActive) {
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
-  if (!window) {
-    return;
-  }
+  NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
 
   ActivateOrDeactivate(window, aActive);
+  return NS_OK;
 }
 
 static bool ShouldMatchFocusVisible(const Element& aElement,

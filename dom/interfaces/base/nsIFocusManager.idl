@@ -71,6 +71,11 @@ interface nsIFocusManager : nsISupports
   attribute mozIDOMWindowProxy focusedWindow;
 
   /**
+   * Setter for focusedWindow with CallerType
+   */
+  [noscript] void SetFocusedWindowWithCallerType(in mozIDOMWindowProxy aWindow, in CallerType aCallerType);
+
+  /**
    * The element that is currently focused. This will always be an element
    * within the document loaded in focusedWindow or null if no element in that
    * document is focused.
@@ -252,4 +257,48 @@ interface nsIFocusManager : nsISupports
   const unsigned long MOVEFOCUS_FIRSTDOC = 9;
   /** move focus to the last focusable document */
   const unsigned long MOVEFOCUS_LASTDOC = 10;
+
+  /**
+   * Called when a window has been raised.
+   */
+  [noscript] void windowRaised(in mozIDOMWindowProxy aWindow);
+
+  /**
+   * Called when a window has been lowered.
+   */
+  [noscript] void windowLowered(in mozIDOMWindowProxy aWindow);
+
+  /**
+   * Called when a new document in a window is shown.
+   *
+   * If aNeedsFocus is true, then focus events are expected to be fired on the
+   * window if this window is in the focused window chain.
+   */
+  [noscript] void windowShown(in mozIDOMWindowProxy aWindow,
+                              in boolean aNeedsFocus);
+
+  /**
+   * Called when a document in a window has been hidden or otherwise can no
+   * longer accept focus.
+   */
+  [noscript] void windowHidden(in mozIDOMWindowProxy aWindow);
+
+  /**
+   * Fire any events that have been delayed due to synchronized actions.
+   */
+  [noscript] void fireDelayedEvents(in Document aDocument);
+
+  /**
+   * Indicate that a plugin wishes to take the focus. This is similar to a
+   * normal focus except that the widget focus is not changed. Updating the
+   * widget focus state is the responsibility of the caller.
+   */
+  [noscript] void focusPlugin(in Element aPlugin);
+
+  /**
+   * Used in a child process to indicate that the parent window is now
+   * active or deactive.
+   */
+  [noscript] void parentActivated(in mozIDOMWindowProxy aWindow,
+                                  in bool active);
 };

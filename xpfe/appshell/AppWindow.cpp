@@ -2846,9 +2846,7 @@ void AppWindow::WindowActivated() {
   nsCOMPtr<nsPIDOMWindowOuter> window =
       mDocShell ? mDocShell->GetWindow() : nullptr;
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && window) {
-    fm->WindowRaised(window);
-  }
+  if (fm && window) fm->WindowRaised(window);
 
   if (mChromeLoaded) {
     PersistentAttributesDirty(PAD_POSITION | PAD_SIZE | PAD_MISC);
@@ -2862,9 +2860,7 @@ void AppWindow::WindowDeactivated() {
   nsCOMPtr<nsPIDOMWindowOuter> window =
       mDocShell ? mDocShell->GetWindow() : nullptr;
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && window && !fm->IsTestMode()) {
-    fm->WindowLowered(window);
-  }
+  if (fm && window && !fm->IsTestMode()) fm->WindowLowered(window);
 }
 
 #ifdef USE_NATIVE_MENUS

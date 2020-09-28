@@ -118,7 +118,7 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvMoveFocus(
     const bool& aForward, const bool& aForDocumentNavigation) {
   // Adapted from BrowserParent
-  RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return IPC_OK();
   }

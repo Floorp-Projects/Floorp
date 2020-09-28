@@ -4327,7 +4327,7 @@ void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise,
     return;
   }
 
-  RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return;
   }

@@ -210,7 +210,7 @@ nsresult nsXULPopupListener::FireFocusOnTargetContent(
     currFrame = currFrame->GetParent();
   }
 
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     if (newFocusElement) {
       uint32_t focusFlags =
