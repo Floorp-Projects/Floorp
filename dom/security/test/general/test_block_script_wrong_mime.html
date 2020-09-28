@@ -79,15 +79,13 @@ function testWorkerImportScripts([mime, shouldLoad]) {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({set: [["security.block_script_with_wrong_mime", true]]}, function() {
-  Promise.all(MIMETypes.map(testScript)).then(() => {
-    return Promise.all(MIMETypes.map(testWorker));
-  }).then(() => {
-    return Promise.all(MIMETypes.map(testWorkerImportScripts));
-  }).then(() => {
-    return SpecialPowers.popPrefEnv();
-  }).then(SimpleTest.finish);
-});
+Promise.all(MIMETypes.map(testScript)).then(() => {
+  return Promise.all(MIMETypes.map(testWorker));
+}).then(() => {
+  return Promise.all(MIMETypes.map(testWorkerImportScripts));
+}).then(() => {
+  return SpecialPowers.popPrefEnv();
+}).then(SimpleTest.finish);
 
 </script>
 </body>

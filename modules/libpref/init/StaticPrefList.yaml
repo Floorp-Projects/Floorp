@@ -9278,18 +9278,6 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
-# Block scripts with _some_ wrong MIME types such as image/, video/ or text/csv
-- name: security.block_script_with_wrong_mime
-  type: bool
-  value: true
-  mirror: always
-
-# Block scripts with wrong MIME type when loading via importScripts().
-- name: security.block_importScripts_with_wrong_mime
-  type: bool
-  value: true
-  mirror: always
-
 # Block Worker/SharedWorker scripts with wrong MIME type.
 - name: security.block_Worker_with_wrong_mime
   type: bool
