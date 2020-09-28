@@ -6714,6 +6714,20 @@
   value: true
   mirror: always
 
+# Whether to disable the scriptminsize attribute.
+# Note that this only disables parsing, not the default effect when no attribute
+# is unspecified.
+- name: mathml.scriptminsize_attribute.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# Whether to disable the scriptsizemultiplier attribute.
+- name: mathml.scriptsizemultiplier_attribute.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to disable support for XLink on MathML elements.
 - name: mathml.xlink.disabled
   type: bool

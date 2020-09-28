@@ -2,11 +2,11 @@
 != 345563-sub.xhtml 345563-sup.xhtml
 == 347348-1.xhtml 347348-1-ref.xhtml
 == 347496-1.xhtml 347496-1-ref.xhtml
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-1.xml 355548-1-ref.xml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-2.xml 355548-2-ref.xml # Bug 1392106
-pref(mathml.deprecated_style_attributes.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-4.xml 355548-4-ref.xml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-5.xml 355548-5-ref.xml # Bug 1392106
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-1.xml 355548-1-ref.xml # Bug 1392106
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-2.xml 355548-2-ref.xml # Bug 1392106
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) pref(mathml.deprecated_style_attributes.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-4.xml 355548-4-ref.xml # Bug 1392106
+pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultiplier_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-5.xml 355548-5-ref.xml # Bug 1392106
 == 370692-1.xhtml 370692-1-ref.xhtml
 == 373533-1.xhtml about:blank
 == 373533-2.xhtml about:blank
@@ -146,7 +146,7 @@ fails-if(skiaContent&&OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.
 random-if(gtkWidget) fails-if(geckoview&&webrender&&device) == mpadded-7.html mpadded-7-ref.html # bug 1309430
 random-if(gtkWidget) == mpadded-8.html mpadded-8-ref.html # bug 1309430
 random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
-== scriptlevel-1.html scriptlevel-1-ref.html
+pref(mathml.scriptsizemultiplier_attribute.disabled,false) == scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == munderover-align-accent-false.html munderover-align-accent-false-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == munderover-align-accent-true.html munderover-align-accent-true-ref.html # Bug 1392106
@@ -295,8 +295,8 @@ pref(mathml.deprecated_style_attributes.disabled,false) == mathvariant-5.html ma
 == dtls-3.html dtls-3-ref.html
 == ssty-1.html ssty-1-ref.html
 == ssty-2.html ssty-2-ref.html
-== ssty-3.html ssty-3-ref.html
-== ssty-4.html ssty-4-ref.html
+pref(mathml.scriptsizemultiplier_attribute.disabled,false) == ssty-3.html ssty-3-ref.html
+pref(mathml.scriptsizemultiplier_attribute.disabled,false) == ssty-4.html ssty-4-ref.html
 == mathscript-1.html mathscript-1-ref.html
 == mathscript-2.html mathscript-2-ref.html
 == mo-accent-dynamic.html mo-accent-dynamic-ref.html

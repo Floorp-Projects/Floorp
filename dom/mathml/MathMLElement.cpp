@@ -132,10 +132,6 @@ static Element::MappedAttributeEntry sGlobalAttributes[] = {
     {nsGkAtoms::mathvariant_},  {nsGkAtoms::scriptlevel_},
     {nsGkAtoms::displaystyle_}, {nullptr}};
 
-// XXXfredw(bug 1548471): Add a runtime flag to disable these attributes.
-static Element::MappedAttributeEntry sDeprecatedScriptAttributes[] = {
-    {nsGkAtoms::scriptminsize_}, {nsGkAtoms::scriptsizemultiplier_}, {nullptr}};
-
 static Element::MappedAttributeEntry sDeprecatedStyleAttributes[] = {
     {nsGkAtoms::background},
     {nsGkAtoms::color},
@@ -148,14 +144,17 @@ static Element::MappedAttributeEntry sDeprecatedStyleAttributes[] = {
 bool MathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   MOZ_ASSERT(IsMathMLElement());
 
-  static const MappedAttributeEntry* const globalMap[] = {
-      sGlobalAttributes, sDeprecatedScriptAttributes};
+  static const MappedAttributeEntry* const globalMap[] = {sGlobalAttributes};
   static const MappedAttributeEntry* const styleMap[] = {
       sDeprecatedStyleAttributes};
 
   return FindAttributeDependence(aAttribute, globalMap) ||
          (!StaticPrefs::mathml_deprecated_style_attributes_disabled() &&
           FindAttributeDependence(aAttribute, styleMap)) ||
+         (!StaticPrefs::mathml_scriptminsize_attribute_disabled() &&
+          aAttribute == nsGkAtoms::scriptminsize_) ||
+         (!StaticPrefs::mathml_scriptsizemultiplier_attribute_disabled() &&
+          aAttribute == nsGkAtoms::scriptsizemultiplier_) ||
          (mNodeInfo->Equals(nsGkAtoms::mtable_) &&
           aAttribute == nsGkAtoms::width);
 }
@@ -383,6 +382,8 @@ void MathMLElement::MapMathMLAttributesInto(
       aAttributes->GetAttr(nsGkAtoms::scriptsizemultiplier_);
   if (value && value->Type() == nsAttrValue::eString &&
       !aDecls.PropertyIsSet(eCSSProperty__moz_script_size_multiplier)) {
+    aDecls.Document()->WarnOnceAbout(
+        dom::Document::eMathML_DeprecatedScriptsizemultiplierAttribute);
     auto str = value->GetStringValue();
     str.CompressWhitespace();
     // MathML numbers can't have leading '+'
@@ -414,6 +415,8 @@ void MathMLElement::MapMathMLAttributesInto(
   value = aAttributes->GetAttr(nsGkAtoms::scriptminsize_);
   if (value && value->Type() == nsAttrValue::eString &&
       !aDecls.PropertyIsSet(eCSSProperty__moz_script_min_size)) {
+    aDecls.Document()->WarnOnceAbout(
+        dom::Document::eMathML_DeprecatedScriptminsizeAttribute);
     nsCSSValue scriptMinSize;
     ParseNumericValue(value->GetStringValue(), scriptMinSize,
                       PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT,
