@@ -4282,8 +4282,9 @@ void nsGlobalWindowInner::PageHidden() {
   // is being destroyed.
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    fm->WindowHidden(GetOuterWindow());
+  nsPIDOMWindowOuter* outer = GetOuterWindow();
+  if (fm && outer) {
+    fm->WindowHidden(outer);
   }
 
   mNeedsFocus = true;
