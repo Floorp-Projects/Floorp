@@ -17,8 +17,8 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "frontend/CompilationInfo.h"  // CompilationInfo, CompilationGCOutput
-#include "frontend/ParseContext.h"     // js::frontend::UsedNameTracker
+#include "frontend/CompilationInfo.h"  // CompilationInfo, CompilationInfoVector, CompilationGCOutput
+#include "frontend/ParseContext.h"  // js::frontend::UsedNameTracker
 #include "frontend/SharedContext.h"  // js::frontend::Directives, js::frontend::{,Eval,Global}SharedContext
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h"      // JS::{,Mutable}Handle, JS::Rooted
@@ -68,6 +68,10 @@ extern UniquePtr<CompilationInfo> CompileGlobalScriptToStencil(
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
 extern bool InstantiateStencils(JSContext* cx, CompilationInfo& compilationInfo,
+                                CompilationGCOutput& gcOutput);
+
+extern bool InstantiateStencils(JSContext* cx,
+                                CompilationInfoVector& compilationInfos,
                                 CompilationGCOutput& gcOutput);
 
 extern JSScript* CompileGlobalScript(JSContext* cx,

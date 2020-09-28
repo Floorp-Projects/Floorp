@@ -122,7 +122,7 @@
 #include "js/MemoryFunctions.h"
 #include "js/Modules.h"  // JS::GetModulePrivate, JS::SetModule{DynamicImport,Metadata,Resolve}Hook, JS::SetModulePrivate
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
-#include "js/OffThreadScriptCompilation.h"  // JS::SetUseOffThreadParseGlobal
+#include "js/OffThreadScriptCompilation.h"  // JS::SetUseOffThreadParseGlobal, js::UseOffThreadParseGlobal
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
 #include "js/Realm.h"
@@ -1910,9 +1910,16 @@ static void my_LargeAllocFailCallback() {
 
 static const uint32_t CacheEntry_SOURCE = 0;
 static const uint32_t CacheEntry_BYTECODE = 1;
+static const uint32_t CacheEntry_KIND = 2;
+
+enum class BytecodeCacheKind : uint32_t {
+  Undefined = 0,
+  Script,
+  Stencil,
+};
 
 static const JSClass CacheEntry_class = {"CacheEntryObject",
-                                         JSCLASS_HAS_RESERVED_SLOTS(2)};
+                                         JSCLASS_HAS_RESERVED_SLOTS(3)};
 
 static bool CacheEntry(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1930,6 +1937,8 @@ static bool CacheEntry(JSContext* cx, unsigned argc, JS::Value* vp) {
 
   JS::SetReservedSlot(obj, CacheEntry_SOURCE, args[0]);
   JS::SetReservedSlot(obj, CacheEntry_BYTECODE, UndefinedValue());
+  JS::SetReservedSlot(obj, CacheEntry_KIND,
+                      Int32Value(int32_t(BytecodeCacheKind::Undefined)));
   args.rval().setObject(*obj);
   return true;
 }
@@ -1948,6 +1957,18 @@ static JSString* CacheEntry_getSource(JSContext* cx, HandleObject cache) {
   }
 
   return v.toString();
+}
+
+static BytecodeCacheKind CacheEntry_getKind(JSContext* cx, HandleObject cache) {
+  MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
+  Value v = JS::GetReservedSlot(cache, CacheEntry_KIND);
+  return BytecodeCacheKind(v.toInt32());
+}
+
+static void CacheEntry_setKind(JSContext* cx, HandleObject cache,
+                               BytecodeCacheKind kind) {
+  MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
+  JS::SetReservedSlot(cache, CacheEntry_KIND, Int32Value(int32_t(kind)));
 }
 
 static uint8_t* CacheEntry_getBytecode(JSContext* cx, HandleObject cache,
@@ -2210,6 +2231,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
 
   JS::TranscodeBuffer loadBuffer;
   JS::TranscodeBuffer saveBuffer;
+  BytecodeCacheKind loadCacheKind = BytecodeCacheKind::Undefined;
+  BytecodeCacheKind saveCacheKind = BytecodeCacheKind::Undefined;
 
   if (loadBytecode) {
     uint32_t loadLength = 0;
@@ -2222,6 +2245,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       JS_ReportOutOfMemory(cx);
       return false;
     }
+    loadCacheKind = CacheEntry_getKind(cx, cacheEntry);
   }
 
   {
@@ -2232,13 +2256,48 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       if (loadBytecode) {
         JS::TranscodeResult rv;
         if (saveIncrementalBytecode) {
+          if (js::UseOffThreadParseGlobal()) {
+            if (CacheEntry_getKind(cx, cacheEntry) !=
+                BytecodeCacheKind::Script) {
+              // NOTE: This shouldn't happen unless the cache is used across
+              // processes with different --no-off-thread-parse-global option.
+              JS_ReportErrorASCII(
+                  cx,
+                  "if both loadBytecode and saveIncrementalBytecode are set "
+                  "and --no-off-thread-parse-global isn't used, bytecode "
+                  "should be saved with saveBytecode");
+              return false;
+            }
+          } else {
+            if (CacheEntry_getKind(cx, cacheEntry) !=
+                BytecodeCacheKind::Stencil) {
+              // This can happen.
+              JS_ReportErrorASCII(
+                  cx,
+                  "if both loadBytecode and saveIncrementalBytecode are set "
+                  "and --no-off-thread-parse-global is used, bytecode should "
+                  "be saved with saveIncrementalBytecode");
+              return false;
+            }
+          }
+
           rv = JS::DecodeScriptAndStartIncrementalEncoding(cx, loadBuffer,
-                                                           &script);
-        } else {
+                                                           options, &script);
+          if (!ConvertTranscodeResultToJSException(cx, rv)) {
+            return false;
+          }
+        } else if (loadCacheKind == BytecodeCacheKind::Script) {
           rv = JS::DecodeScript(cx, loadBuffer, &script);
-        }
-        if (!ConvertTranscodeResultToJSException(cx, rv)) {
-          return false;
+          if (!ConvertTranscodeResultToJSException(cx, rv)) {
+            return false;
+          }
+        } else {
+          MOZ_ASSERT(loadCacheKind == BytecodeCacheKind::Stencil);
+          MOZ_ASSERT(!js::UseOffThreadParseGlobal());
+          rv = JS::DecodeScriptMaybeStencil(cx, loadBuffer, options, &script);
+          if (!ConvertTranscodeResultToJSException(cx, rv)) {
+            return false;
+          }
         }
       } else {
         mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
@@ -2254,13 +2313,15 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
 
         if (saveIncrementalBytecode) {
           script = JS::CompileAndStartIncrementalEncoding(cx, options, srcBuf);
+          if (!script) {
+            return false;
+          }
         } else {
           script = JS::Compile(cx, options, srcBuf);
+          if (!script) {
+            return false;
+          }
         }
-      }
-
-      if (!script) {
-        return false;
       }
     }
 
@@ -2302,6 +2363,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       if (!ConvertTranscodeResultToJSException(cx, rv)) {
         return false;
       }
+      saveCacheKind = BytecodeCacheKind::Script;
     }
 
     // Serialize the encoded bytecode, recorded before the execution, into a
@@ -2309,6 +2371,11 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     if (saveIncrementalBytecode) {
       if (!FinishIncrementalEncoding(cx, script, saveBuffer)) {
         return false;
+      }
+      if (js::UseOffThreadParseGlobal()) {
+        saveCacheKind = BytecodeCacheKind::Script;
+      } else {
+        saveCacheKind = BytecodeCacheKind::Stencil;
       }
     }
   }
@@ -2347,6 +2414,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       js_free(saveData);
       return false;
     }
+    MOZ_ASSERT(saveCacheKind != BytecodeCacheKind::Undefined);
+    CacheEntry_setKind(cx, cacheEntry, saveCacheKind);
   }
 
   return JS_WrapValue(cx, args.rval());
@@ -5756,6 +5825,10 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   CompileOptions options(cx);
   options.setIntroductionType("js shell offThreadDecodeScript")
       .setFileAndLine("<string>", 1);
+  // NOTE: If --no-off-thread-parse-global is used, input can be either script
+  // for saveBytecode, or stencil for saveIncrementalBytecode.
+  options.useOffThreadParseGlobal =
+      CacheEntry_getKind(cx, cacheEntry) == BytecodeCacheKind::Script;
 
   if (args.length() >= 2) {
     if (args[1].isPrimitive()) {
@@ -8503,8 +8576,18 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      saveBytecode: if true, and if the source is a CacheEntryObject,\n"
 "         the bytecode would be encoded and saved into the cache entry after\n"
 "         the script execution.\n"
-"      assertEqBytecode: if true, and if both loadBytecode and saveBytecode are \n"
-"         true, then the loaded bytecode and the encoded bytecode are compared.\n"
+"         The encoded bytecode's kind is 'script'\n"
+"      saveIncrementalBytecode: if true, and if the source is a\n"
+"         CacheEntryObject, the bytecode would be incrementally encoded and\n"
+"         saved into the cache entry.\n"
+"         If --no-off-thread-parse-global is used, the encoded bytecode's\n"
+"         kind is 'stencil'. If not, the encoded bytecode's kind is 'script'\n"
+"         If both loadBytecode and saveIncrementalBytecode are set,\n"
+"         and --no-off-thread-parse-global is used, the input bytecode's\n"
+"         kind should be 'stencil'."
+"      assertEqBytecode: if true, and if both loadBytecode and either\n"
+"         saveBytecode or saveIncrementalBytecode is true, then the loaded\n"
+"         bytecode and the encoded bytecode are compared.\n"
 "         and an assertion is raised if they differ.\n"
 "      envChainObject: object to put on the scope chain, with its fields added\n"
 "         as var bindings, akin to how elements are added to the environment in\n"
