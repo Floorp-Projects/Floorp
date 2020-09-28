@@ -20,7 +20,7 @@ add_task(async function test() {
 });
 
 async function promiseGetIndex(browser) {
-  if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+  if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     return SpecialPowers.spawn(browser, [], function() {
       let shistory =
         docShell.browsingContext.childSessionHistory.legacySHistory;

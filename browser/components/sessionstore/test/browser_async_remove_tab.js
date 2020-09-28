@@ -35,7 +35,7 @@ function restoreClosedTabWithValue(rval) {
 function promiseNewLocationAndHistoryEntryReplaced(tab, snippet) {
   let browser = tab.linkedBrowser;
 
-  if (Services.prefs.getBoolPref("fission.sessionHistoryInParent", false)) {
+  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
     SpecialPowers.spawn(browser, [snippet], async function(codeSnippet) {
       // Need to define 'webNavigation' for 'codeSnippet'
       // eslint-disable-next-line no-unused-vars

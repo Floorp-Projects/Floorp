@@ -3591,6 +3591,7 @@
   type: bool
   value: false
   mirror: once
+  do_not_use_directly: true
 
 # Allow renaming of process names to the origin on nightly
 # Setting this pref creates a privacy leak, but helps greatly with

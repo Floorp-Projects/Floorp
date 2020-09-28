@@ -532,10 +532,7 @@ class ContentSessionStore {
 
     this.handlers = [new EventListener(this), this.messageQueue];
 
-    this._shistoryInParent = Services.prefs.getBoolPref(
-      "fission.sessionHistoryInParent",
-      false
-    );
+    this._shistoryInParent = Services.appinfo.sessionHistoryInParent;
     if (this._shistoryInParent) {
       this.mm.sendAsyncMessage("SessionStore:addSHistoryListener");
     } else {

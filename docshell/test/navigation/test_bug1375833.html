@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
     let webNav, shistory;
     let frameDocShellId;
     let chromeScript = null;
-    if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+    if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
       chromeScript = SpecialPowers.loadChromeScript(() => {
         const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -77,7 +77,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
           ok(newFrameDocShellId, "sanity check for docshell ID");
           is(newFrameDocShellId, frameDocShellId, "check docshell ID remains after reload");
 
-          if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+          if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
             let entry = shistory.legacySHistory.getEntryAtIndex(shistory.index);
             let frameEntry = entry.GetChildAt(0);
             is(String(frameEntry.docshellID), frameDocShellId, "check newly added shentry uses the same docshell ID");

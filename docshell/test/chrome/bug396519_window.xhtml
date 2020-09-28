@@ -59,7 +59,7 @@
 
     function doTest() {
       let history;
-      if (SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
         history = gBrowser.browsingContext.sessionHistory;
       } else {
         history = gBrowser.webNavigation.sessionHistory.legacySHistory;

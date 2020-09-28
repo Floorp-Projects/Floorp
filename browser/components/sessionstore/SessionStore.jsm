@@ -900,10 +900,7 @@ var SessionStoreInternal = {
     );
     Services.prefs.addObserver("privacy.resistFingerprinting", this);
 
-    this._shistoryInParent = Services.prefs.getBoolPref(
-      "fission.sessionHistoryInParent",
-      false
-    );
+    this._shistoryInParent = Services.appinfo.sessionHistoryInParent;
   },
 
   /**
