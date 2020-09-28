@@ -259,15 +259,6 @@ interface nsIFocusManager : nsISupports
   const unsigned long MOVEFOCUS_LASTDOC = 10;
 
   /**
-   * Called when a new document in a window is shown.
-   *
-   * If aNeedsFocus is true, then focus events are expected to be fired on the
-   * window if this window is in the focused window chain.
-   */
-  [noscript] void windowShown(in mozIDOMWindowProxy aWindow,
-                              in boolean aNeedsFocus);
-
-  /**
    * Called when a document in a window has been hidden or otherwise can no
    * longer accept focus.
    */
