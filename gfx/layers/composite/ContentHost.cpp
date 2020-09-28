@@ -414,10 +414,9 @@ bool ContentHostDoubleBuffered::UpdateThebes(
 void ContentHostTexture::PrintInfo(std::stringstream& aStream,
                                    const char* aPrefix) {
   aStream << aPrefix;
-  aStream << nsPrintfCString("ContentHost (0x%p)", this).get();
-
-  AppendToString(aStream, mBufferRect, " [buffer-rect=", "]");
-  aStream << " [buffer-rotation=" << mBufferRotation << "]";
+  aStream << nsPrintfCString("ContentHost (0x%p)", this).get()
+          << " [buffer-rect=" << mBufferRect << "]"
+          << " [buffer-rotation=" << mBufferRotation << "]";
   if (PaintWillResample()) {
     aStream << " [paint-will-resample]";
   }

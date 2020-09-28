@@ -1685,11 +1685,11 @@ void Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   layers::PrintInfo(aStream, AsHostLayer());
 
   if (mClipRect) {
-    AppendToString(aStream, *mClipRect, " [clip=", "]");
+    aStream << " [clip=" << *mClipRect << "]";
   }
   if (mSimpleAttrs.GetScrolledClip()) {
-    AppendToString(aStream, mSimpleAttrs.GetScrolledClip()->GetClipRect(),
-                   " [scrolled-clip=", "]");
+    aStream << " [scrolled-clip="
+            << mSimpleAttrs.GetScrolledClip()->GetClipRect() << "]";
     if (const Maybe<size_t>& ix =
             mSimpleAttrs.GetScrolledClip()->GetMaskLayerIndex()) {
       aStream << " [scrolled-mask=" << ix.value() << "]";
@@ -2030,8 +2030,7 @@ void ContainerLayer::DumpPacket(layerscope::LayersPacket* aPacket,
 
 void ColorLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   Layer::PrintInfo(aStream, aPrefix);
-  aStream << "[ color=" << mColor << "]";
-  AppendToString(aStream, mBounds, " [bounds=", "]");
+  aStream << " [color=" << mColor << "] [bounds=" << mBounds << "]";
 }
 
 void ColorLayer::DumpPacket(layerscope::LayersPacket* aPacket,
@@ -2302,7 +2301,7 @@ void PrintInfo(std::stringstream& aStream, HostLayer* aLayerComposite) {
   }
   if (const Maybe<ParentLayerIntRect>& clipRect =
           aLayerComposite->GetShadowClipRect()) {
-    AppendToString(aStream, *clipRect, " [shadow-clip=", "]");
+    aStream << " [shadow-clip=" << *clipRect << "]";
   }
   if (!aLayerComposite->GetShadowBaseTransform().IsIdentity()) {
     AppendToString(aStream, aLayerComposite->GetShadowBaseTransform(),
