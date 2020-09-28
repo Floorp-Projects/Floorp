@@ -37,9 +37,9 @@ nsTArray<uint8_t> nsPrinterWin::CopyDefaultDevmodeW() const {
   auto devmodeStorageWLock = mDefaultDevmodeWStorage.Lock();
   if (devmodeStorageWLock->IsEmpty()) {
     nsHPRINTER hPrinter = nullptr;
-    BOOL status = ::OpenPrinterW(mName.get(), &hPrinter, nullptr);
-    MOZ_DIAGNOSTIC_ASSERT(status, "OpenPrinterW failed");
-    if (!status) {
+    // OpenPrinter could fail if, for example, the printer has been removed
+    // or otherwise become inaccessible since it was selected.
+    if (NS_WARN_IF(!::OpenPrinterW(mName.get(), &hPrinter, nullptr))) {
       return devmodeStorageW;
     }
     nsAutoPrinter autoPrinter(hPrinter);
@@ -211,9 +211,7 @@ bool nsPrinterWin::SupportsMonochrome() const {
   }
 
   nsHPRINTER hPrinter = nullptr;
-  BOOL status = ::OpenPrinterW(mName.get(), &hPrinter, nullptr);
-  MOZ_DIAGNOSTIC_ASSERT(status, "OpenPrinterW failed");
-  if (!status) {
+  if (NS_WARN_IF(!::OpenPrinterW(mName.get(), &hPrinter, nullptr))) {
     return false;
   }
   nsAutoPrinter autoPrinter(hPrinter);
