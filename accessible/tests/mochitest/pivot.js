@@ -62,7 +62,7 @@ var ObjectTraversalRule = {
       rv = FILTER_IGNORE_SUBTREE | FILTER_MATCH;
     } else if (
       aAccessible.childCount == 0 &&
-      role != ROLE_STATICTEXT &&
+      role != ROLE_LISTITEM_MARKER &&
       aAccessible.name.trim()
     ) {
       rv = FILTER_MATCH;
