@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled() || wasmCompileMode() != 'baseline'
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // Moving a JS value through a wasm externref is a pair of boxing/unboxing
 // conversions that leaves the value unchanged.  There are many cases,
