@@ -41,6 +41,7 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/BuiltinObjectKind.h"
+#include "vm/BytecodeIterator.h"  // for AllBytecodesIterable
 #include "vm/BytecodeLocation.h"
 #include "vm/CodeCoverage.h"
 #include "vm/EnvironmentObject.h"
@@ -2705,9 +2706,9 @@ JS_FRIEND_API JSString* js::GetPCCountScriptSummary(JSContext* cx,
 
   uint64_t total = 0;
 
-  jsbytecode* codeEnd = script->codeEnd();
-  for (jsbytecode* pc = script->code(); pc < codeEnd; pc = GetNextPc(pc)) {
-    if (const PCCounts* counts = sac.maybeGetPCCounts(pc)) {
+  AllBytecodesIterable iter(script);
+  for (BytecodeLocation loc : iter) {
+    if (const PCCounts* counts = sac.maybeGetPCCounts(loc.toRawBytecode())) {
       total += counts->numExec();
     }
   }
