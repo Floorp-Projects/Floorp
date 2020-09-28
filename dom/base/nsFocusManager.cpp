@@ -647,9 +647,9 @@ nsFocusManager::MoveCaretToFocus(mozIDOMWindowProxy* aWindow) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
-  NS_ENSURE_TRUE(aWindow, NS_ERROR_INVALID_ARG);
+void nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
+  MOZ_ASSERT(aWindow);
+
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   if (MOZ_LOG_TEST(gFocusLog, LogLevel::Debug)) {
@@ -679,7 +679,7 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
       // what the focus manager thinks should be the current widget is actually
       // focused.
       EnsureCurrentWidgetFocused(CallerType::System);
-      return NS_OK;
+      return;
     }
 
     // lower the existing window, if any. This shouldn't happen usually.
@@ -693,7 +693,7 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
       if (active == bc && !mActiveBrowsingContextInContentSetFromOtherProcess) {
         // EnsureCurrentWidgetFocused() should not be necessary with
         // PuppetWidget.
-        return NS_OK;
+        return;
       }
 
       if (active && active != bc) {
@@ -711,7 +711,9 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = window->GetDocShell();
   // If there's no docShellAsItem, this window must have been closed,
   // in that case there is no tree owner.
-  NS_ENSURE_TRUE(docShellAsItem, NS_OK);
+  if (!docShellAsItem) {
+    return;
+  }
 
   // set this as the active window
   if (XRE_IsParentProcess()) {
@@ -730,7 +732,7 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   if (baseWindow) {
     bool isEnabled = true;
     if (NS_SUCCEEDED(baseWindow->GetEnabled(&isEnabled)) && !isEnabled) {
-      return NS_ERROR_FAILURE;
+      return;
     }
 
     baseWindow->SetVisibility(true);
@@ -767,14 +769,12 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
 
   NS_ASSERTION(currentWindow, "window raised with no window current");
   if (!currentWindow) {
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(baseWindow));
   Focus(currentWindow, currentFocus, 0, true, false, appWin != nullptr, true,
         focusInOtherContentProcess);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
