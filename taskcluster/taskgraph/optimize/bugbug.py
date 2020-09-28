@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from fnmatch import fnmatch
 from collections import defaultdict
 
 from six.moves.urllib.parse import urlsplit
@@ -19,6 +20,36 @@ from taskgraph.util.bugbug import (
 from taskgraph.util.hg import get_push_data
 
 FALLBACK = "skip-unless-has-relevant-tests"
+
+
+def merge_bugbug_replies(data, new_data):
+    """Merge a bugbug reply (stored in the `new_data` argument) into another (stored
+    in the `data` argument).
+    """
+    for key, value in new_data.items():
+        if isinstance(value, dict):
+            if key not in data:
+                data[key] = {}
+
+            if len(value) == 0:
+                continue
+
+            dict_value = next(iter(value.values()))
+            if isinstance(dict_value, list):
+                for name, configs in value.items():
+                    if name not in data[key]:
+                        data[key][name] = set()
+
+                    data[key][name].update(configs)
+            else:
+                for name, confidence in value.items():
+                    if name not in data[key] or data[key][name] < confidence:
+                        data[key][name] = confidence
+        elif isinstance(value, list):
+            if key not in data:
+                data[key] = set()
+
+            data[key].update(value)
 
 
 @register_strategy("bugbug-low", args=(CT_LOW,))
@@ -49,6 +80,8 @@ class BugBugPushSchedules(OptimizationStrategy):
             was a failure in bugbug (default: None)
         num_pushes (int): The number of pushes to consider for the selection
             (default: 1).
+        select_configs (bool): Whether to select configurations for manifests
+            too (default: False).
     """
 
     def __init__(
@@ -58,12 +91,14 @@ class BugBugPushSchedules(OptimizationStrategy):
         use_reduced_tasks=False,
         fallback=None,
         num_pushes=1,
+        select_configs=False,
     ):
         self.confidence_threshold = confidence_threshold
         self.use_reduced_tasks = use_reduced_tasks
         self.fallback = fallback
         self.tasks_only = tasks_only
         self.num_pushes = num_pushes
+        self.select_configs = select_configs
         self.timedout = False
 
     def should_remove_task(self, task, params, importance):
@@ -97,19 +132,7 @@ class BugBugPushSchedules(OptimizationStrategy):
 
             try:
                 new_data = push_schedules(branch, rev)
-                for key, value in new_data.items():
-                    if isinstance(value, dict):
-                        if key not in data:
-                            data[key] = {}
-
-                        for name, confidence in value.items():
-                            if name not in data[key] or data[key][name] < confidence:
-                                data[key][name] = confidence
-                    elif isinstance(value, list):
-                        if key not in data:
-                            data[key] = set()
-
-                        data[key].update(value)
+                merge_bugbug_replies(data, new_data)
             except BugbugTimeoutException:
                 if not self.fallback:
                     raise
@@ -139,6 +162,24 @@ class BugBugPushSchedules(OptimizationStrategy):
         confidences = [c for g, c in groups.items() if g in test_manifests]
         if not confidences or max(confidences) < self.confidence_threshold:
             return True
+
+        # If the task configuration doesn't match the ones selected by bugbug for
+        # the manifests, optimize out.
+        if self.select_configs:
+            selected_groups = [
+                g
+                for g, c in groups.items()
+                if g in test_manifests and c > self.confidence_threshold
+            ]
+
+            config_groups = data.get("config_groups", defaultdict(list))
+
+            if not any(
+                fnmatch(task.label, config)
+                for group in selected_groups
+                for config in config_groups[group]
+            ):
+                return True
 
         # Store group importance so future optimizers can access it.
         for manifest in test_manifests:
