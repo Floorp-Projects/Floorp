@@ -205,6 +205,10 @@ class Http3Session final : public nsAHttpTransaction,
   uint64_t mBlockedByStreamLimitCount = 0;
   uint64_t mTransactionsBlockedByStreamLimitCount = 0;
   uint64_t mTransactionsSenderBlockedByFlowControlCount = 0;
+
+  // NS_NET_STATUS_CONNECTED_TO event will be created by the Http3Session.
+  // We want to  propagate it to the first transaction.
+  RefPtr<nsHttpTransaction> mFirstHttpTransaction;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);
