@@ -1750,13 +1750,12 @@ inline bool OpIter<Policy>::readRefIsNull(Value* input) {
 
 template <typename Policy>
 inline bool OpIter<Policy>::readValType(ValType* type) {
-  return d_.readValType(env_.types, env_.refTypesEnabled(),
-                        env_.gcTypesEnabled(), env_.v128Enabled(), type);
+  return d_.readValType(env_.types, env_.features, type);
 }
 
 template <typename Policy>
 inline bool OpIter<Policy>::readHeapType(bool nullable, RefType* type) {
-  return d_.readHeapType(env_.types, env_.gcTypesEnabled(), nullable, type);
+  return d_.readHeapType(env_.types, env_.features, nullable, type);
 }
 
 template <typename Policy>

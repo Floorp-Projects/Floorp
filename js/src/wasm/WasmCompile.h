@@ -54,6 +54,12 @@ struct FeatureArgs {
 
   static FeatureArgs build(JSContext* cx);
 
+  FeatureArgs withRefTypes(bool refTypes) const {
+    FeatureArgs features = *this;
+    features.refTypes = refTypes;
+    return features;
+  }
+
   Shareable sharedMemory;
   bool refTypes;
   bool functionReferences;

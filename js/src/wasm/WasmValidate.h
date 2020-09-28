@@ -203,22 +203,34 @@ struct ModuleEnvironment {
     if (one == two) {
       return true;
     }
-#if defined(ENABLE_WASM_GC)
-    if (gcTypesEnabled()) {
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+    if (functionReferencesEnabled()) {
       // A subtype must have the same nullability as the supertype or the
       // supertype must be nullable.
       if (!(one.isNullable() == two.isNullable() || two.isNullable())) {
         return false;
       }
 
-      // Structs are subtypes of ExternRef.
-      if (isStructType(one) && two.isExtern()) {
+      // Non type-index reftypes are subtypes if they are equal
+      if (!one.isTypeIndex() && !two.isTypeIndex() &&
+          one.kind() == two.kind()) {
         return true;
       }
-      // Struct One is a subtype of struct Two if Two is a prefix of One.
-      if (isStructType(one) && isStructType(two)) {
-        return isStructPrefixOf(two, one);
+
+#  ifdef ENABLE_WASM_GC
+      // gc can only be enabled if function-references is enabled
+      if (gcTypesEnabled()) {
+        // Structs are subtypes of ExternRef.
+        if (isStructType(one) && two.isExtern()) {
+          return true;
+        }
+        // Struct One is a subtype of struct Two if Two is a prefix of One.
+        if (isStructType(one) && isStructType(two)) {
+          return isStructPrefixOf(two, one);
+        }
       }
+#  endif
+      return false;
     }
 #endif
     return false;
@@ -667,8 +679,7 @@ class Decoder {
         return ValType::fromNonRefTypeCode(TypeCode(code));
     }
   }
-  MOZ_MUST_USE bool readValType(uint32_t numTypes, bool refTypesEnabled,
-                                bool gcTypesEnabled, bool v128Enabled,
+  MOZ_MUST_USE bool readValType(uint32_t numTypes, const FeatureArgs& features,
                                 ValType* type) {
     static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
     uint8_t code;
@@ -684,7 +695,7 @@ class Decoder {
         return true;
 #ifdef ENABLE_WASM_SIMD
       case uint8_t(TypeCode::V128):
-        if (!v128Enabled) {
+        if (!features.v128) {
           return fail("v128 not enabled");
         }
         *type = ValType::fromNonRefTypeCode(TypeCode(code));
@@ -693,45 +704,43 @@ class Decoder {
 #ifdef ENABLE_WASM_REFTYPES
       case uint8_t(TypeCode::FuncRef):
       case uint8_t(TypeCode::ExternRef):
-        if (!refTypesEnabled) {
+        if (!features.refTypes) {
           return fail("reference types not enabled");
         }
         *type = RefType::fromTypeCode(TypeCode(code), true);
         return true;
-#  ifdef ENABLE_WASM_GC
+#endif
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case uint8_t(TypeCode::Ref):
       case uint8_t(TypeCode::NullableRef): {
-        if (!gcTypesEnabled) {
+        if (!features.functionReferences) {
           return fail("(ref T) types not enabled");
         }
         bool nullable = code == uint8_t(TypeCode::NullableRef);
         RefType refType;
-        if (!readHeapType(numTypes, true, nullable, &refType)) {
+        if (!readHeapType(numTypes, features, nullable, &refType)) {
           return false;
         }
         *type = refType;
         return true;
       }
-#  endif
 #endif
       default:
         return fail("bad type");
     }
   }
   MOZ_MUST_USE bool readValType(const TypeDefVector& types,
-                                bool refTypesEnabled, bool gcTypesEnabled,
-                                bool v128Enabled, ValType* type) {
-    if (!readValType(types.length(), refTypesEnabled, gcTypesEnabled,
-                     v128Enabled, type)) {
+                                const FeatureArgs& features, ValType* type) {
+    if (!readValType(types.length(), features, type)) {
       return false;
     }
     if (type->isTypeIndex() &&
-        !types[type->refType().typeIndex()].isStructType()) {
-      return fail("type index does not reference a struct type");
+        !validateTypeIndex(types, features, type->refType())) {
+      return false;
     }
     return true;
   }
-  MOZ_MUST_USE bool readHeapType(uint32_t numTypes, bool gcTypesEnabled,
+  MOZ_MUST_USE bool readHeapType(uint32_t numTypes, const FeatureArgs& features,
                                  bool nullable, RefType* type) {
     uint8_t nextByte;
     if (!peekByte(&nextByte)) {
@@ -754,36 +763,34 @@ class Decoder {
       }
     }
 
-#ifndef ENABLE_WASM_GC
-    return fail("invalid heap type");
-#else
-    if (!gcTypesEnabled) {
-      return fail("(ref T) types not enabled");
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+    if (features.functionReferences) {
+      int32_t x;
+      if (!readVarS32(&x) || x < 0 || uint32_t(x) >= numTypes) {
+        return fail("invalid heap type index");
+      }
+      *type = RefType::fromTypeIndex(x, nullable);
+      return true;
     }
-
-    int32_t x;
-    if (!readVarS32(&x) || x < 0 || uint32_t(x) >= numTypes) {
-      return fail("invalid heap type index");
-    }
-    *type = RefType::fromTypeIndex(x, nullable);
-    return true;
 #endif
+    return fail("invalid heap type");
   }
   MOZ_MUST_USE bool readHeapType(const TypeDefVector& types,
-                                 bool gcTypesEnabled, bool nullable,
+                                 const FeatureArgs& features, bool nullable,
                                  RefType* type) {
-    if (!readHeapType(types.length(), gcTypesEnabled, nullable, type)) {
+    if (!readHeapType(types.length(), features, nullable, type)) {
       return false;
     }
-    if (type->isTypeIndex() && !types[type->typeIndex()].isStructType()) {
-      return fail("type index does not reference a struct type");
+
+    if (type->isTypeIndex() && !validateTypeIndex(types, features, *type)) {
+      return false;
     }
     return true;
   }
-  MOZ_MUST_USE bool readRefType(uint32_t numTypes, bool gcTypesEnabled,
+  MOZ_MUST_USE bool readRefType(uint32_t numTypes, const FeatureArgs& features,
                                 RefType* type) {
     ValType valType;
-    if (!readValType(numTypes, true, gcTypesEnabled, false, &valType)) {
+    if (!readValType(numTypes, features, &valType)) {
       return false;
     }
     if (!valType.isReference()) {
@@ -792,10 +799,10 @@ class Decoder {
     *type = valType.refType();
     return true;
   }
-  MOZ_MUST_USE bool readRefType(const TypeDefVector& types, bool gcTypesEnabled,
-                                RefType* type) {
+  MOZ_MUST_USE bool readRefType(const TypeDefVector& types,
+                                const FeatureArgs& features, RefType* type) {
     ValType valType;
-    if (!readValType(types, true, gcTypesEnabled, false, &valType)) {
+    if (!readValType(types, features, &valType)) {
       return false;
     }
     if (!valType.isReference()) {
@@ -803,6 +810,16 @@ class Decoder {
     }
     *type = valType.refType();
     return true;
+  }
+  MOZ_MUST_USE bool validateTypeIndex(const TypeDefVector& types,
+                                      const FeatureArgs& features,
+                                      RefType type) {
+    MOZ_ASSERT(type.isTypeIndex());
+
+    if (features.gcTypes && types[type.typeIndex()].isStructType()) {
+      return true;
+    }
+    return fail("type index references an invalid type");
   }
   MOZ_MUST_USE bool readOp(OpBytes* op) {
     static_assert(size_t(Op::Limit) == 256, "fits");
@@ -932,8 +949,8 @@ MOZ_MUST_USE bool DecodeValidatedLocalEntries(Decoder& d,
 // This validates the entries.
 
 MOZ_MUST_USE bool DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
-                                     bool refTypesEnabled, bool gcTypesEnabled,
-                                     bool v128Enabled, ValTypeVector* locals);
+                                     const FeatureArgs& features,
+                                     ValTypeVector* locals);
 
 // Returns whether the given [begin, end) prefix of a module's bytecode starts a
 // code section and, if so, returns the SectionRange of that code section.
